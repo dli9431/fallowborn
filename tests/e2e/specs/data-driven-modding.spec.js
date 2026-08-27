@@ -120,6 +120,7 @@ test('milestone-zero registries merge through mods and drive their engine consum
       const me = state.chars[state.player.charId];
       const originalCulture = me.culture;
       const originalFaith = me.religion;
+      state.player.tier = 3;
       me.culture = 'e2e_raider';
       me.religion = 'catholic';
       const playerCultureRaids = FB.canRaid(state);

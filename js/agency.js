@@ -595,6 +595,154 @@ window.FB = window.FB || {};
     };
   };
 
+  function royalKinCourtReach(state, rid) {
+    var realm = state && state.realms && state.realms[rid];
+    if (!realm || !realm.alive || rid === 'player') return false;
+    var chain = state.player.liege && FB.liegeChain
+      ? FB.liegeChain(state, state.player.liege) : [];
+    if (chain.indexOf(rid) >= 0) return true;
+    return !!(FB.isPlayerSovereign && FB.isPlayerSovereign(state) &&
+      state.realms.player && state.realms.player.rank >= 3 &&
+      !realm.liege && realm.rank >= 3 && FB.realmsAdjacent &&
+      FB.realmsAdjacent(state, 'player', rid));
+  }
+
+  function royalKinMatchReason(code, values) {
+    if (code === 'descendant') {
+      return FB.T('Choose a resident child or grandchild whose marriage you manage.');
+    }
+    if (code === 'partner') return FB.T('This person is not an available royal family member.');
+    if (code === 'age') return FB.T('Both partners must be at least 12.');
+    if (code === 'pledged') return FB.T('One of these characters is already married or betrothed.');
+    if (code === 'captive') return FB.T('A captive cannot enter or arrange a marriage.');
+    if (code === 'faith') return FB.T('The royal court requires an exact shared faith for this arranged match.');
+    if (code === 'doctrine') return FB.T('Marriage doctrine or a celibate office forbids this match.');
+    if (code === 'kinship') return FB.T('Close kin cannot be joined through an arranged match.');
+    if (code === 'courtship') return FB.T('This royal family member is already part of the protagonist’s courtship.');
+    if (code === 'reach') return FB.T('Only your liege chain or an adjacent sovereign court will hear this proposal.');
+    if (code === 'access') return values && values.accessReason ||
+      FB.T('Your house lacks access to this court.');
+    if (code === 'station') return FB.T('The royal match stands two or more stations above your house.');
+    if (code === 'prestige') {
+      return FB.T('Requires {prestige} prestige; you have {current}.', {
+        prestige:values.prestigeNeed,
+        current:Math.floor(values.prestige)
+      });
+    }
+    if (code === 'gold') {
+      return FB.T('Your house must provide {money:cost}; you have {money:current}.', {
+        cost:values.goldCost,
+        current:Math.floor(values.gold)
+      });
+    }
+    if (code === 'refused') return FB.T('This royal court has already refused this exact match.');
+    return FB.T('This arranged match is unavailable.');
+  }
+
+  /* A player-initiated royal arrangement is distinct from protagonist
+     courtship and from the three ordinary sounded-out families. It targets
+     one eager royal-family record and one resident managed descendant. */
+  FB.royalKinMatchStatus = function (state, target, partner) {
+    var rid = partner && partner.royalLine && partner.royalLine.realmId;
+    var realm = rid && state && state.realms && state.realms[rid];
+    var memberId = partner && partner.royalLine && partner.royalLine.memberId;
+    var member = realm && realm.succession && realm.succession.members &&
+      realm.succession.members[memberId];
+    var descendantKind = target && FB.playerDescendantKind &&
+      FB.playerDescendantKind(state, target.id);
+    var access = rid && FB.rankAccessStatus
+      ? FB.rankAccessStatus(state, { kind:'realm', id:rid }) : null;
+    var offer = partner && target
+      ? FB.agencyMarriageOfferStatus(state, partner, target) : null;
+    var terms = partner && target
+      ? FB.marriageTerms(state, target, partner) : null;
+    var values = {
+      accessReason:access && access.reason,
+      prestigeNeed:offer && offer.prestigeNeed || 0,
+      prestige:Number(state && state.player && state.player.prestige || 0),
+      goldCost:terms && terms.subjectPays ? terms.amount : 0,
+      gold:Number(state && state.player && state.player.gold || 0)
+    };
+    var reason = null;
+    if (!state || !state.player || !target || !descendantKind ||
+        !FB.isHouseholdCharacter ||
+        !FB.isHouseholdCharacter(state, target.id)) reason = 'descendant';
+    else if (!partner || !realm || !member || member.alive === false ||
+        String(member.charId || '') !== String(partner.id) ||
+        partner.dead || (FB.isReigningRealmRuler &&
+          FB.isReigningRealmRuler(state, partner))) reason = 'partner';
+    else if (FB.ageOf(target, state.date.year) < 12 ||
+        FB.ageOf(partner, state.date.year) < 12) reason = 'age';
+    else if (charCommitted(state, target) || charCommitted(state, partner)) {
+      reason = 'pledged';
+    } else if ((state.player.flags && state.player.flags.in_prison) ||
+        (FB.intrigueCaptivityOf &&
+          (FB.intrigueCaptivityOf(state, target.id) ||
+            FB.intrigueCaptivityOf(state, partner.id)))) reason = 'captive';
+    else if (target.sex === partner.sex) reason = 'doctrine';
+    else if (target.religion !== partner.religion) reason = 'faith';
+    else if (FB.papacyCelibateSnapshot &&
+        (FB.papacyCelibateSnapshot(state, target) ||
+          FB.papacyCelibateSnapshot(state, partner))) reason = 'doctrine';
+    else if (FB.closeMarriageKinSnapshot &&
+        FB.closeMarriageKinSnapshot(state, target, partner)) reason = 'kinship';
+    else if (state.player.courtingId === partner.id) reason = 'courtship';
+    else if (!royalKinCourtReach(state, rid)) reason = 'reach';
+    else if (!access || !access.ready) reason = 'access';
+    else if (!offer || offer.reason === 'station') reason = 'station';
+    else if (offer.reason === 'prestige') reason = 'prestige';
+    else if (values.goldCost > values.gold + 0.0001) reason = 'gold';
+    else if (Array.isArray(partner.royalMatchRefusals) &&
+        partner.royalMatchRefusals.indexOf(target.id) >= 0) reason = 'refused';
+
+    var chance = 0;
+    if (!reason) {
+      var me = state.chars[state.player.charId];
+      var stationGap = FB.stationOf(partner) -
+        Math.max(FB.playerStation(state), FB.stationOf(target));
+      chance = 0.30 + FB.rulerRegard(state, rid, 'player') / 400 +
+        Number(state.player.prestige || 0) / 600 +
+        Number(state.player.tier || 0) * 0.05 +
+        (me ? FB.skillOf(me, 'dip') * 0.01 : 0) +
+        FB.skillOf(target, 'dip') * 0.005;
+      if (stationGap > 0) {
+        chance -= stationGap * FBDATA.balance.proposalStationPenalty;
+      } else {
+        chance += Math.min(0.1, -stationGap * 0.05);
+      }
+      var aim = FB.rulerAimSnapshot(state, rid);
+      if (aim && aim.id === 'secure_dynasty') chance += 0.12;
+      else if (aim && aim.id === 'keep_peace') chance += 0.04;
+      else if (aim && aim.id === 'strengthen_crown') chance -= 0.05;
+      chance = FB.clamp(chance, 0.05, 0.90);
+    }
+    return {
+      relevant:!!(partner && partner.royalLine && realm && member &&
+        String(member.charId || '') === String(partner.id) &&
+        !(FB.isReigningRealmRuler &&
+          FB.isReigningRealmRuler(state, partner))),
+      ready:!reason,
+      reasonCode:reason,
+      reason:reason ? royalKinMatchReason(reason, values) : '',
+      realmId:rid || null,
+      descendantKind:descendantKind || null,
+      terms:terms,
+      prestigeNeed:values.prestigeNeed,
+      chance:chance
+    };
+  };
+
+  FB.royalKinMatchCandidates = function (state, partner) {
+    var out = [];
+    var family = FB.agencyFamilyMembers ? FB.agencyFamilyMembers(state) : [];
+    for (var i = 0; i < family.length; i++) {
+      var c = family[i];
+      if (!FB.playerDescendantKind(state, c.id)) continue;
+      out.push({ character:c, status:FB.royalKinMatchStatus(state, c, partner) });
+    }
+    return out;
+  };
+
   function marriagePair(state, rid, familySnapshot) {
     var relevance = FB.rulerPlayerRelevance(state, rid);
     if (!relevance.eligible) return null;
@@ -977,10 +1125,10 @@ window.FB = window.FB || {};
       (ctx.playerPays !== 'yes' || state.player.gold >= Number(ctx.dowry || 0));
   };
 
-  FB.fns.agency_marriage_accept = function (state, ctx) {
-    if (!FB.fns.agency_marriage_affordable(state, ctx)) return false;
+  function sealRoyalFamilyMatch(state, ctx, beforeWedding) {
     var target = state.chars[ctx.studentId];
     var partner = state.chars[ctx.partnerId];
+    if (!target || !partner) return false;
     var dowry = Math.max(0, Number(ctx.dowry) || 0);
     if (ctx.playerPays === 'yes') state.player.gold -= dowry;
     else partner.dowryDue = dowry;
@@ -991,6 +1139,7 @@ window.FB = window.FB || {};
     FB.adjustRulerRegard(state, ctx.realmId, 'player', 15,
       'agency:marriage_offer_accepted');
     state.player.prestige += 8;
+    if (beforeWedding) beforeWedding();
     if (FB.ageOf(target, state.date.year) >= 16 &&
         FB.ageOf(partner, state.date.year) >= 16) {
       FB.doKinWedding(state, target, partner);
@@ -998,11 +1147,62 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.fns.agency_marriage_accept = function (state, ctx) {
+    if (!FB.fns.agency_marriage_affordable(state, ctx)) return false;
+    return sealRoyalFamilyMatch(state, ctx);
+  };
+
   FB.fns.agency_marriage_decline = function (state, ctx) {
     if (!FB.fns.agency_ruler_context_valid(state, ctx)) return false;
     FB.adjustRulerRegard(state, ctx.realmId, 'player', -8,
       'agency:marriage_offer_declined');
     return true;
+  };
+
+  FB.proposeRoyalKinMatch = function (state, targetId, partnerId) {
+    var target = state && state.chars && state.chars[targetId];
+    var partner = state && state.chars && state.chars[partnerId];
+    var status = FB.royalKinMatchStatus(state, target, partner);
+    if (!status.ready) return { resolved:false, accepted:false, status:status };
+    var realm = state.realms[status.realmId];
+    var accepted = FB.chance(status.chance);
+    if (!accepted) {
+      if (!Array.isArray(partner.royalMatchRefusals)) {
+        partner.royalMatchRefusals = [];
+      }
+      if (partner.royalMatchRefusals.indexOf(target.id) < 0) {
+        partner.royalMatchRefusals.push(target.id);
+      }
+      FB.adjustRulerRegard(state, status.realmId, 'player', -5,
+        'agency:royal_match_refused');
+      FB.news(state, FB.msg('news.agency.royal_match_refused',
+        'ðŸ“œ The court of {realm} refuses the proposed match between {student} and {partner}.', {
+          realm:realm.name,
+          student:target.name,
+          partner:partner.name
+        }));
+      return { resolved:true, accepted:false, status:status };
+    }
+    var terms = status.terms;
+    var ctx = {
+      realmId:status.realmId,
+      rulerGeneration:rulerGeneration(realm),
+      studentId:target.id,
+      partnerId:partner.id,
+      dowry:terms.amount,
+      playerPays:terms.subjectPays ? 'yes' : 'no'
+    };
+    if (!sealRoyalFamilyMatch(state, ctx, function () {
+      FB.news(state, FB.msg('news.agency.royal_match_accepted',
+        'ðŸ¤ {realm} accepts the match between {student} and {partner}.', {
+          realm:realm.name,
+          student:target.name,
+          partner:partner.name
+        }));
+    })) {
+      return { resolved:false, accepted:false, status:status };
+    }
+    return { resolved:true, accepted:true, status:status };
   };
 
   FB.fns.agency_family_context_valid = function (state, ctx) {

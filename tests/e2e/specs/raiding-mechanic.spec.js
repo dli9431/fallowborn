@@ -31,7 +31,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('raiding eligibility respects historical cultures and pagan religions',
+test('independent raiding requires a landed ruler with a personal tradition',
   async function ({ page }) {
     var result = await page.evaluate(function () {
       var s = FB.state;
@@ -78,11 +78,29 @@ test('raiding eligibility respects historical cultures and pagan religions',
       me.religion = 'slavic_pagan';
       var paganAdoptedEligible = FB.canRaid(s);
 
-      // Serf station exclusion
+      // Unlanded station exclusions
       p.tier = 0;
       me.culture = 'norse';
       me.religion = 'norse_pagan';
       var serfEligible = FB.canRaid(s);
+      p.tier = 1;
+      var freeholderEligible = FB.canRaid(s);
+      p.tier = 2;
+      var gentryEligible = FB.canRaid(s);
+
+      // A sovereign's tradition does not grant an unrelated subject a
+      // private warband. Independent raiding follows the landed ruler's own
+      // culture or faith.
+      p.tier = 3;
+      me.culture = 'frankish';
+      me.religion = 'catholic';
+      var realmId = FB.playerRealmId(s);
+      var realm = realmId && s.realms[realmId];
+      if (realm) {
+        realm.culture = 'norse';
+        realm.religion = 'norse_pagan';
+      }
+      var realmTraditionEligible = FB.canRaid(s);
 
       return {
         norse: norseEligible,
@@ -93,7 +111,11 @@ test('raiding eligibility respects historical cultures and pagan religions',
         gaelic: gaelicEligible,
         frankish: frankishEligible,
         paganAdopted: paganAdoptedEligible,
-        serf: serfEligible
+        serf: serfEligible,
+        freeholder: freeholderEligible,
+        gentry: gentryEligible,
+        realmFound: !!realm,
+        realmTradition: realmTraditionEligible
       };
     });
 
@@ -106,6 +128,10 @@ test('raiding eligibility respects historical cultures and pagan religions',
     expect(result.frankish).toBe(false);
     expect(result.paganAdopted).toBe(true);
     expect(result.serf).toBe(false);
+    expect(result.freeholder).toBe(false);
+    expect(result.gentry).toBe(false);
+    expect(result.realmFound).toBe(true);
+    expect(result.realmTradition).toBe(false);
   });
 
 test('technology tree extends raid reach and unlocks deep overseas raiding',

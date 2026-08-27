@@ -431,6 +431,146 @@ test('AI royal offers hard-gate a lowborn sibling by station and prestige',
     expect(result.staleContext).toBe(false);
   });
 
+test('a royal family sheet arranges an exact match with a managed descendant',
+  async function ({ page }, testInfo) {
+    await startAgencyGame(page, testInfo);
+    const setup = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var rid = Object.keys(s.realms).filter(function (id) {
+        var realm = s.realms[id];
+        return id !== 'player' && realm && realm.alive && realm.ruler &&
+          FB.realmFamilySnapshot(s, id).some(function (member) {
+            var c = member.charId && s.chars[member.charId];
+            return c && !c.dead && FB.ageOf(c, s.date.year) >= 12 &&
+              !(FB.isReigningRealmRuler &&
+                FB.isReigningRealmRuler(s, c)) &&
+              !FB.spousesSnapshot(s, c).length && !c.betrothedId &&
+              !(FB.papacyCelibateSnapshot &&
+                FB.papacyCelibateSnapshot(s, c));
+          });
+      })[0];
+      var realm = s.realms[rid];
+      var partner = FB.realmFamilySnapshot(s, rid).map(function (member) {
+        return member.charId && s.chars[member.charId];
+      }).filter(function (c) {
+        return c && !c.dead && FB.ageOf(c, s.date.year) >= 12 &&
+          !(FB.isReigningRealmRuler && FB.isReigningRealmRuler(s, c)) &&
+          !FB.spousesSnapshot(s, c).length && !c.betrothedId &&
+          !(FB.papacyCelibateSnapshot &&
+            FB.papacyCelibateSnapshot(s, c));
+      })[0];
+      p.tier = 4;
+      p.liege = rid;
+      p.prestige = 500;
+      p.gold = 500;
+      partner.religion = me.religion;
+      partner.spouseId = null;
+      partner.betrothedId = null;
+      var child = FB.makeCharacter(s, {
+        name:'Negotiated Child',
+        sex:partner.sex === 'm' ? 'f' : 'm',
+        culture:me.culture,
+        religion:me.religion,
+        born:s.date.year - 14,
+        dyn:me.dyn,
+        fatherId:me.id,
+        station:4,
+        traitsN:0
+      });
+      child.homeProvinceId = p.provinceId;
+      child.betrothedId = null;
+      me.childrenIds = me.childrenIds || [];
+      me.childrenIds.push(child.id);
+      FB.touchFamily();
+      FB.ensureAgency(s);
+      if (FB.invalidateRealmCache) FB.invalidateRealmCache();
+      var status = FB.royalKinMatchStatus(s, child, partner);
+      var model = FB.ui.characterInteractionCard(s, partner.id);
+      var action = model.actions.filter(function (item) {
+        return item.id === 'relationship.royal-family-match';
+      })[0];
+      return {
+        rid:rid,
+        partnerId:partner.id,
+        childId:child.id,
+        ready:status.ready,
+        reason:status.reason,
+        dowry:status.terms.amount,
+        playerPays:status.terms.subjectPays,
+        actionEnabled:action && action.enabled
+      };
+    });
+
+    expect(setup.ready, setup.reason).toBe(true);
+    expect(setup.actionEnabled).toBe(true);
+    await page.evaluate(function (partnerId) {
+      FB.ui.showCharModal(partnerId);
+    }, setup.partnerId);
+    const arrange = page.locator(
+      '[data-interaction-action="relationship.royal-family-match"]');
+    await expect(arrange).toBeVisible();
+    await arrange.click();
+    const candidate = page.locator(
+      '[data-royal-kin-match="' + setup.childId + '"]');
+    await expect(candidate).toBeEnabled();
+    await expect(page.locator('#gm-title')).toContainText('Marriage to');
+
+    await page.evaluate(function () {
+      var originalChance = FB.chance;
+      FB.chance = function () {
+        FB.chance = originalChance;
+        return false;
+      };
+    });
+    await candidate.click();
+    const refused = await page.evaluate(function (ids) {
+      var child = FB.state.chars[ids.childId];
+      var partner = FB.state.chars[ids.partnerId];
+      return {
+        childBetrothed:child.betrothedId,
+        partnerBetrothed:partner.betrothedId,
+        refused:partner.royalMatchRefusals.indexOf(child.id) >= 0,
+        status:FB.royalKinMatchStatus(FB.state, child, partner).reasonCode
+      };
+    }, setup);
+    expect(refused).toEqual({
+      childBetrothed:null,
+      partnerBetrothed:null,
+      refused:true,
+      status:'refused'
+    });
+
+    await page.evaluate(function (ids) {
+      var partner = FB.state.chars[ids.partnerId];
+      partner.royalMatchRefusals = [];
+      var originalChance = FB.chance;
+      FB.chance = function () {
+        FB.chance = originalChance;
+        return true;
+      };
+      FB.ui.showCharModal(ids.partnerId);
+    }, setup);
+    await page.locator(
+      '[data-interaction-action="relationship.royal-family-match"]').click();
+    await page.locator(
+      '[data-royal-kin-match="' + setup.childId + '"]').click();
+    const accepted = await page.evaluate(function (ids) {
+      var child = FB.state.chars[ids.childId];
+      var partner = FB.state.chars[ids.partnerId];
+      return {
+        childBetrothed:child.betrothedId,
+        partnerBetrothed:partner.betrothedId,
+        gold:FB.state.player.gold
+      };
+    }, setup);
+    expect(accepted.childBetrothed).toBe(setup.partnerId);
+    expect(accepted.partnerBetrothed).toBe(setup.childId);
+    expect(accepted.gold).toBe(setup.playerPays
+      ? 500 - setup.dowry : 500);
+  });
+
 test('AI royal offers revalidate exact managed kin, ruler generation, and dowry',
   async function ({ page }, testInfo) {
     await startAgencyGame(page, testInfo);

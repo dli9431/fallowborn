@@ -8988,18 +8988,14 @@ window.FB = window.FB || {};
     const currentYear = (state.date && state.date.year) || 867;
     if (FB.ageOf(c, currentYear) < 16) return false;
     if (state.player.flags && state.player.flags.in_prison) return false;
-    if (state.player.tier < 1) return false;
+    /* Independent expeditions require a landed warband. Freeholders and
+       gentry may serve in a lord's campaigns, but do not command the county
+       host represented by the raid resolver. */
+    if (state.player.tier < 3) return false;
 
     const cult = c.culture;
     const faith = c.religion;
-    if (FB.hasRaidingTradition(cult, faith, state)) return true;
-
-    const realmId = FB.playerRealmId ? FB.playerRealmId(state) : null;
-    const r = realmId && state.realms && state.realms[realmId];
-    if (r) {
-      if (FB.hasRaidingTradition(r.culture, r.religion, state)) return true;
-    }
-    return false;
+    return FB.hasRaidingTradition(cult, faith, state);
   };
 
   FB.raidRange = function (state, charId) {

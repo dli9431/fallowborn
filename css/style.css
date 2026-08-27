@@ -1393,25 +1393,27 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   filter: none;
 }
 .enterprise-worker-lock {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px;
-  align-items: start; margin: 0 0 10px; padding: 10px 12px;
-  border: 1px solid #55452a; border-radius: 8px;
-  background: #211b12; color: var(--main-text-color); cursor: pointer;
+  color: var(--main-text-color);
 }
-.enterprise-worker-lock input { margin-top: 3px; }
-.enterprise-worker-lock .adesc {
-  grid-column: 2; color: var(--helper-text-color); font-size: 12px; line-height: 1.35;
+.enterprise-worker-lock label {
+  display: flex; gap: 8px; align-items: center; min-width: 0; cursor: pointer;
 }
+.enterprise-worker-lock input { margin: 0; }
 .enterprise-worker-lock.disabled { opacity: .58; cursor: default; }
+.enterprise-worker-lock.disabled label { cursor: default; }
 .enterprise-upgrade-panel {
-  display: grid; gap: 7px; margin: 10px 0; padding: 10px 12px;
-  border: 1px solid #66522f; border-radius: 8px; background: #211a12;
+  border-color: #66522f; background: #211a12;
 }
-.enterprise-upgrade-panel h3 { margin: 0; color: #d8bd7b; font-size: 14px; }
-.enterprise-upgrade-panel .hint {
-  display: flex; flex-direction: column; gap: 3px; margin: 0;
+.enterprise-upgrade-panel > .actionbtn {
+  width: 100%; margin: 8px 0 0;
 }
-.enterprise-upgrade-panel .actionbtn { margin: 0; }
+.enterprise-management-action .settcard-head > .actionbtn {
+  flex: 1 1 auto; width: 100%; min-width: 0; margin: 0;
+}
+.enterprise-upgrade-next-details {
+  display: flex; flex-direction: column; gap: 3px; margin-top: 8px;
+  padding-top: 8px; border-top: 1px solid #4d4029;
+}
 .enterprise-catalogue-summary {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px; margin: 8px 0 12px;
@@ -1452,12 +1454,22 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .enterprise-purchase-review { margin-top: 2px; }
 .enterprise-requirement-summary,
 .enterprise-requirement-warning,
-.enterprise-management-status,
-.enterprise-worker-empty {
+.enterprise-management-card {
   display: flex; flex-direction: column; gap: 3px;
   margin: 0 0 10px; padding: 10px 12px;
   border: 1px solid #55452a; border-radius: 8px; background: #211b12;
 }
+.enterprise-management-card .settcard-head { min-height: 32px; }
+.enterprise-management-details {
+  padding-top: 8px; border-top: 1px solid #4d4029;
+  color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
+}
+.enterprise-management-details p { margin: 0 0 7px; }
+.enterprise-management-details > span:not(.asset-effect-summary) {
+  display: block; margin-top: 3px;
+}
+.enterprise-management-details .warning { color: #d09a78; }
+.enterprise-management-details .asset-effect-summary { margin-top: 9px; }
 .enterprise-requirement-summary.ready,
 .enterprise-management-status.staffed { border-color: #566d3b; }
 .enterprise-requirement-summary.warning,
@@ -1467,9 +1479,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .enterprise-management-status.blocked,
 .enterprise-worker-empty { border-color: #704737; }
 .enterprise-requirement-summary span,
-.enterprise-requirement-warning span,
-.enterprise-management-status span,
-.enterprise-worker-empty span {
+.enterprise-requirement-warning span {
   color: var(--helper-text-color); font-size: 12px; line-height: 1.4;
 }
 .enterprise-requirement-list { display: grid; gap: 8px; margin-bottom: 10px; }
@@ -1478,8 +1488,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   border-left: 3px solid #704737; background: #241d15;
 }
 .enterprise-requirement-row b { color: #d09a78; font-size: 13px; }
-.enterprise-requirement-row span,
-.enterprise-management-guidance { color: var(--helper-text-color); font-size: 12px; }
+.enterprise-requirement-row span { color: var(--helper-text-color); font-size: 12px; }
 .enterprise-staffing-hint { margin: 8px 0; }
 .enterprise-staffing-modal .modalcard { width: min(96vw, 820px); }
 .enterprise-staffing-notice {
@@ -3686,6 +3695,18 @@ textarea.modjson, textarea.savetext {
 .autorow input { margin-right: 7px; }
 .autorow .adesc { display: block; color: var(--helper-text-color); font-size: 12px; margin: 2px 0 0 26px; }
 .autorow.auto-select { margin-left: 26px; cursor: default; }
+.settings-detail-toggle {
+  margin: 7px 0; padding: 8px 10px; border: 1px solid #55452a;
+  border-radius: 8px; background: #211b12;
+}
+.settings-detail-toggle .settcard-head > label {
+  display: flex; align-items: center; flex: 1 1 auto; min-width: 0;
+  min-height: 32px; margin: 0;
+}
+.settings-detail-toggle-details {
+  padding-top: 8px; border-top: 1px solid #4d4029;
+  color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
+}
 
 /* Semantic desktop shortcuts are edited as key/action pairs. Status stays on
    its own line so long translated blocking reasons do not squeeze selects. */
@@ -4208,6 +4229,7 @@ textarea.modjson, textarea.savetext {
     max-width: none;
   }
   body.showself #left { display: flex; }
+  body.showself #toasts { display: none; }
   .drawer-footer {
     display: flex; flex: 0 0 auto; margin-top: 0;
     padding: 12px max(12px, env(safe-area-inset-right))

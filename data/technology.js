@@ -241,6 +241,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Local courtship networks and mixed household identities are baseline social behavior with no credible technology dependency.'
       },
+      player_initiated_royal_family_matches:{
+        mode:'none',
+        rationale:'Negotiating a marriage between a managed descendant and an accessible royal family is baseline dynastic diplomacy, not a capability created by research.'
+      },
       auction_item_lots:{
         mode:'none',
         rationale:'Fine and famed household goods need no additional innovation beyond access to the auction itself.'

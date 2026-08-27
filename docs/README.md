@@ -48,7 +48,9 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   `Tab` moves between buttons.
 - **Mobile / touch:** drag to pan, pinch to zoom, tap provinces. In portrait the map sits
   above a full-width Deeds/Land/Network/Chronicle panel with the time controls fixed at the bottom
-  in thumb reach; **tap your portrait in the top bar** to open the Self/Kin sheet. Dialogs
+  in thumb reach; **tap your portrait in the top bar** to open the Self/Kin sheet. Running
+  time pauses while that phone/tablet sheet is open and resumes when it closes; an already
+  paused game remains paused. Dialogs
   open as bottom sheets, and tapping an item chip opens its exact card — appearance,
   quality, powers, worth, wearer, and valid actions. The speed of days lives in
   **☰ → Settings**.
@@ -67,6 +69,9 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   from the bookmark you selected while you watch the map, tap provinces, and read the
   chronicle. Its ☰ →
   Settings can also silence the news toasts or hide the panel for a pure-map view.
+- Event-result toasts dismiss without changing panels. **☰ → Settings → Notifications**
+  can instead make them open Chronicle Choices when dismissed; the Chronicle record is
+  retained either way.
 - The game autosaves every spring. Three manual save slots live in the ☰ menu, beside
   **Download save file** / **Load save file** for keeping a `.txt` backup if a browser wipes
   local storage (some iPhones), or moving a life between devices. Copy and paste remains
@@ -196,7 +201,9 @@ Time passes **day by day** (90-day seasons, 360-day years).
    targeted visit before courtship begins. Any
    listed child makes a dynastic tie, but only the designated heir's branch can transmit
    the crown: the royal spouse succeeds first, shared descendants follow that branch, and
-   the realms join only when the rightful ruler becomes your protagonist.
+   the realms join only when the rightful ruler becomes your protagonist. An available
+   royal family member's own character sheet can instead propose an arranged match with one of
+   your resident children or grandchildren; it shows the court's chance and terms first.
    When death comes (it will), continue as your heir — and if
    your heir is still a child, their upbringing is yours to direct from the *Self* tab.
    From age ten onward (depending on the trade), **Work & Enterprises** on a family

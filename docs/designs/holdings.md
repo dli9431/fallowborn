@@ -225,6 +225,13 @@ and its lock when the worker dies, leaves the managed household, becomes career/
 ineligible, or can no longer work personally after a rank change. Valid locks survive
 save/restore and succession.
 
+The owned-enterprise manager is deliberately terse. Its permanent face contains section
+titles, worker states, and action labels only. Enterprise description, staffing status and
+guidance, owner/scope/cost/effect/transfer terms, upgrade details and blockers, staffing-lock
+behavior, hire wages, and removal consequences all use the standard desktop hover/focus
+tooltip or compact-layout `?` disclosure. This is presentation only; all staffing,
+contract, upgrade, and inheritance rules remain unchanged.
+
 The opt-in staffing assistant is a no-day, preview-first batch operation.
 `FB.enterpriseStaffingPlan` fixes every valid locked pairing and paid enterprise-labor
 contract, then considers all

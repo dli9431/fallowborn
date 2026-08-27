@@ -16877,47 +16877,83 @@ window.FB = window.FB || {};
       }));
       return parts.join(' ');
     }
+    function managementCard(id, title, details, body, classes) {
+      return '<section class="enterprise-management-card settcard' +
+        (classes ? ' ' + classes : '') + '"' +
+        (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+        ' aria-labelledby="' + id + '-title" aria-describedby="' + id +
+        '-details"><div class="settcard-head">' +
+        '<b id="' + id + '-title">' + esc(title) + '</b>' +
+        '<span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" ' +
+        'aria-controls="' + id + '-details" title="' +
+        esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+        '">?</button></span></div>' + (body || '') +
+        '<div class="settcard-details enterprise-management-details hidden" id="' +
+        id + '-details">' + details + '</div></section>';
+    }
+    function managementActionCard(id, label, details, disabled, icon) {
+      return '<section class="enterprise-management-card ' +
+        'enterprise-management-action settcard"' +
+        (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+        ' aria-labelledby="' + id + '"><div class="settcard-head">' +
+        '<button type="button" class="actionbtn" id="' + id + '"' +
+        (disabled ? ' disabled' : '') + ' aria-describedby="' + id +
+        '-details"><b>' + (icon || '') + esc(label) + '</b></button>' +
+        '<span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" ' +
+        'aria-controls="' + id + '-details" title="' +
+        esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+        '">?</button></span></div><div class="settcard-details ' +
+        'enterprise-management-details hidden" id="' + id + '-details">' +
+        details + '</div></section>';
+    }
     const staffingLabel = staffing.state === 'staffed'
       ? FB.T('Fully staffed') : (staffing.state === 'idle'
         ? FB.T('Inactive until fully staffed') : FB.T('Blocked from staffing'));
     const currentTierName = level
       ? enterpriseUpgradeName(s, e, level) : FB.T('Base enterprise');
-    let upgradeHtml = '<section class="enterprise-upgrade-panel"><h3>' +
-      esc(FB.T('Enterprise upgrades')) + '</h3><div class="hint"><b>' +
-      esc(FB.T('Current tier: {tier}', { tier:currentTierName })) + '</b>' +
+    let upgradeDetails = '<p><b>' +
+      esc(FB.T('Current tier: {tier}', { tier:currentTierName })) + '</b></p>' +
       (level ? '<span>' + esc(enterpriseUpgradeDesc(s, e, level)) + '</span>' : '') +
       (level ? '<span>' + esc(FB.T('Cumulative benefit while fully staffed: {benefit}', {
         benefit:enterpriseUpgradeBenefitText(e, level)
       })) + '</span>' : '') +
       '<span>' + esc(FB.T('{assigned} of {required} staffing positions filled', {
         assigned:assignedIds.length, required:required
-      })) + '</span></div>';
+      })) + '</span>';
+    let upgradeAction = '';
     if (upgradeStatus.next) {
-      upgradeHtml += '<button type="button" class="actionbtn" ' +
-        'id="enterprise-upgrade"' + (!upgradeStatus.ready ? ' disabled' : '') + '><b>' +
-        esc(FB.T('Upgrade to {upgrade}', {
-          upgrade:enterpriseUpgradeName(s, e, level + 1)
-        })) + '</b><span class="adesc">' +
-        esc(enterpriseUpgradeDesc(s, e, level + 1)) + '</span><span class="adesc">' +
+      const nextName = enterpriseUpgradeName(s, e, level + 1);
+      upgradeDetails += '<div class="enterprise-upgrade-next-details"><b>' +
+        esc(FB.T('Upgrade to {upgrade}', { upgrade:nextName })) + '</b><span>' +
+        esc(enterpriseUpgradeDesc(s, e, level + 1)) + '</span><span>' +
         esc(FB.T('Costs {money:cost}; requires {staff} workers when complete.', {
           cost:upgradeStatus.cost,
           staff:Math.max(1, Math.floor(Number(upgradeStatus.next.staff) || required))
         })) + '</span>' + (!upgradeStatus.ready
-          ? '<span class="adesc warning">' + esc(upgradeStatus.reason) + '</span>' : '') +
-        '</button>';
+          ? '<span class="warning">' + esc(upgradeStatus.reason) + '</span>' : '') +
+        '</div>';
+      upgradeAction = '<button type="button" class="actionbtn" ' +
+        'id="enterprise-upgrade" aria-describedby="enterprise-upgrades-details"' +
+        (!upgradeStatus.ready ? ' disabled' : '') + '><b>' +
+        esc(FB.T('Upgrade to {upgrade}', {
+          upgrade:nextName
+        })) + '</b></button>';
     } else {
-      upgradeHtml += '<div class="hint">' +
-        esc(FB.T('This enterprise is fully upgraded.')) + '</div>';
+      upgradeDetails += '<span>' +
+        esc(FB.T('This enterprise is fully upgraded.')) + '</span>';
     }
-    upgradeHtml += '</section>';
+    const upgradeHtml = managementCard(
+      'enterprise-upgrades', FB.T('Enterprise upgrades'), upgradeDetails,
+      upgradeAction, 'enterprise-upgrade-panel');
     const hireStatus = FB.canHireEnterpriseWorker(s, uid);
     const hirePay = FB.enterpriseLaborPay(s, e);
-    let h = '<div class="gm-body-text"><p>' +
-      esc(dt(s, 'enterprise', e.type, def, 'desc')) + '</p>' +
-      '<div class="enterprise-management-status ' + staffing.state + '"><b>' +
-      esc(staffingLabel) + '</b><span>' + esc(staffing.reason) + '</span>' +
-      (staffing.guidance ? '<span class="enterprise-management-guidance">' +
-        esc(staffing.guidance) + '</span>' : '') + '</div>' + assetEffectSummary({
+    const overviewDetails = '<p>' +
+      esc(dt(s, 'enterprise', e.type, def, 'desc')) + '</p><p><b>' +
+      esc(staffingLabel) + '</b></p><span>' + esc(staffing.reason) + '</span>' +
+      (staffing.guidance ? '<span>' + esc(staffing.guidance) + '</span>' : '') +
+      assetEffectSummary({
         owner:FB.T('Household dynasty'),
         scope:enterprisePlace(s, e),
         setupCost:FB.T('Paid on purchase'),
@@ -16925,19 +16961,34 @@ window.FB = window.FB || {};
         effect:enterpriseEffectText(s, e, def, false),
         transferRule:enterpriseTransferRule(),
         expiry:FB.T('No fixed end')
-      }) + upgradeHtml + '</div><label class="enterprise-worker-lock' +
-      (!assignedIds.length ? ' disabled' : '') + '"><input type="checkbox" ' +
+      });
+    let h = managementCard(
+      'enterprise-overview', FB.T('Enterprise details'), overviewDetails, '',
+      'enterprise-management-status ' + staffing.state) + upgradeHtml +
+      '<section class="enterprise-management-card enterprise-worker-lock settcard' +
+      (!assignedIds.length ? ' disabled' : '') + '"' +
+      (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+      ' aria-labelledby="enterprise-worker-lock-title" ' +
+      'aria-describedby="enterprise-worker-lock-details"><div class="settcard-head">' +
+      '<label id="enterprise-worker-lock-title"><input type="checkbox" ' +
       'id="enterprise-worker-lock"' + (e.workerLocked ? ' checked' : '') +
-      (!assignedIds.length ? ' disabled' : '') + '> <span>' +
-      esc(FB.T('Lock this staff to this enterprise')) + '</span>' +
-      '<span class="adesc">' + esc(assignedIds.length
+      (!assignedIds.length ? ' disabled' : '') +
+      ' aria-describedby="enterprise-worker-lock-details"> <span>' +
+      esc(FB.T('Lock this staff to this enterprise')) + '</span></label>' +
+      '<span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" ' +
+      'aria-controls="enterprise-worker-lock-details" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+      '">?</button></span></div><div class="settcard-details ' +
+      'enterprise-management-details hidden" id="enterprise-worker-lock-details">' +
+      esc(assignedIds.length
         ? FB.T('The staffing assistant will preserve these assignments. Manual changes remain available.')
         : FB.T('Assign workers before locking this enterprise.')) +
-      '</span></label><div class="gm-list">';
+      '</div></section><div class="gm-list enterprise-worker-list">';
     if (!eligibleWorkers.length) {
-      h += '<div class="enterprise-worker-empty"><b>' +
-        esc(FB.T('No worker can be assigned yet.')) + '</b><span>' +
-        esc(staffing.guidance) + '</span></div>';
+      h += managementCard(
+        'enterprise-worker-empty', FB.T('No worker can be assigned yet.'),
+        esc(staffing.guidance), '', 'enterprise-worker-empty');
     }
     for (const c of eligibleWorkers) {
       const current = workerAssignment(c.id);
@@ -16996,21 +17047,24 @@ window.FB = window.FB || {};
             : FB.T('Reserve from staffing assistant')) + '</button>';
       }
     }
-    h += '<button class="actionbtn" id="enterprise-hire"' +
-      (hireStatus !== true ? ' disabled' : '') + '><b>' +
-      esc(FB.T('Hire a local worker')) + '</b><span class="adesc">' +
-      esc(FB.T('Pay {money:pay} now and each season. The worker is qualified and tied to this enterprise.', {
+    const hireDetails = esc(FB.T(
+      'Pay {money:pay} now and each season. The worker is qualified and tied to this enterprise.', {
         pay:hirePay
-      })) + '</span>' + (hireStatus !== true
-        ? '<span class="adesc warning">' + esc(hireStatus) + '</span>' : '') +
-      '</button>' + (assignedIds.some(function (id) { return !hiredIds[id]; })
-        ? '<button class="actionbtn" id="enterprise-clear-household">○ ' +
-          esc(FB.T('Remove household workers')) + '<span class="adesc">' +
-          esc(FB.T('Paid workers remain contracted. The enterprise may become inactive.')) +
-          '</span></button>' : '') + '</div><button class="btn" id="gm-cancel">' +
+      })) + (hireStatus !== true
+        ? '<span class="warning">' + esc(hireStatus) + '</span>' : '');
+    h += managementActionCard(
+      'enterprise-hire', FB.T('Hire a local worker'), hireDetails,
+      hireStatus !== true) +
+      (assignedIds.some(function (id) { return !hiredIds[id]; })
+        ? managementActionCard(
+          'enterprise-clear-household', FB.T('Remove household workers'),
+          esc(FB.T('Paid workers remain contracted. The enterprise may become inactive.')),
+          false, '○ ') : '') +
+      '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button>';
     const managementOptions = livelihoodsHistoryOptions(returnContext);
     managementOptions.replaceView = !!replaceView;
+    managementOptions.modalClass = 'enterprise-management-modal';
     openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h,
       managementOptions);
     FB.paintFaces($('gm-body'), s);
@@ -18835,6 +18889,29 @@ window.FB = window.FB || {};
         route:'match'
       });
     }
+    if (c.royalLine && !descendantKind && !reigningRealmId &&
+        FB.ageOf(c, s.date.year) >= 12 &&
+        !FB.spouseSnapshot(s, c) && !c.betrothedId &&
+        FB.royalKinMatchCandidates) {
+      const royalKin = FB.royalKinMatchCandidates(s, c);
+      addInteractionAction(model, {
+        id:'relationship.royal-family-match',
+        group:'relationship',
+        label:FB.T('Arrange a family marriageâ€¦'),
+        detail:royalKin.length
+          ? FB.T(
+            'Choose one of your {count} managed children or grandchildren to propose for this royal match.', {
+              count:royalKin.length
+            })
+          : FB.T('No resident child or grandchild is available for you to propose.'),
+        enabled:royalKin.length > 0,
+        blockedReason:royalKin.length ? null :
+          FB.T('No managed child or grandchild is available.'),
+        consequence:FB.T(
+          'The court weighs the proposal after you spend the day; refusal closes this exact pairing.'),
+        route:'royal-family-match'
+      });
+    }
     if (reigningRealmId) {
       const realmModel = buildRealmInteractionCard(s, reigningRealmId);
       if (realmModel) {
@@ -19435,6 +19512,12 @@ window.FB = window.FB || {};
             characterId:c.id,
             returnContext:returnContext
           });
+        } else if (action.route === 'royal-family-match') {
+          UI.showRoyalKinMatchPicker(c.id, {
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
         }
       });
     }
@@ -19920,6 +20003,108 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', function () {
       finishManagementReturn(returnContext, function () {
         modalHistoryBack(function () { UI.showCharModal(cid); });
+      });
+    });
+  };
+
+  /* ================= negotiated royal-family match =================
+     The royal family member's character sheet fixes one side of the proposal. The
+     picker supplies only resident children and grandchildren whose marriage
+     remains under the protagonist's management. */
+  UI.showRoyalKinMatchPicker = function (partnerId, returnContext, replaceView) {
+    const s = FB.state;
+    const partner = s && s.chars[partnerId];
+    if (!s || !partner || partner.dead || !partner.royalLine ||
+        !FB.royalKinMatchCandidates || UI.eventsBusy()) return;
+    const entries = FB.royalKinMatchCandidates(s, partner);
+    let h = '<div class="gm-list">';
+    for (const entry of entries) {
+      const child = entry.character;
+      const status = entry.status;
+      const detailsId = 'royal-kin-match-details-' + child.id;
+      const relation = status.descendantKind === 'grandchild'
+        ? FB.T(child.sex === 'f' ? 'Granddaughter' : 'Grandson')
+        : FB.T(child.sex === 'f' ? 'Daughter' : 'Son');
+      const terms = [];
+      let explanation = status.reason;
+      if (status.ready) {
+        terms.push(FB.T('{chance}% acceptance chance', {
+          chance:Math.round(status.chance * 100)
+        }));
+        if (status.terms && status.terms.amount) {
+          terms.push(status.terms.subjectPays
+            ? FB.T('your house provides {money:gold}', {
+              gold:status.terms.amount
+            })
+            : FB.T('their house provides {money:gold}', {
+              gold:status.terms.amount
+            }));
+        }
+        if (status.prestigeNeed) {
+          terms.push(FB.T('requires {prestige} prestige', {
+            prestige:status.prestigeNeed
+          }));
+        }
+        explanation = FB.T(
+          'The court decides after you spend the day. Refusal closes only this exact pairing.');
+      }
+      h += '<section class="settcard royal-kin-match-card"' +
+        (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+        ' aria-labelledby="' + esc(detailsId) + '-title" aria-describedby="' +
+        esc(detailsId) + '"><div class="settcard-head"><b id="' +
+        esc(detailsId) + '-title">' + esc(FB.fullName(child)) + '</b>' +
+        '<span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+        esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button><button type="button" ' +
+        'class="btn small settcard-raise" data-royal-kin-match="' +
+        esc(child.id) + '"' + (status.ready ? '' : ' disabled') + '>' +
+        esc(FB.T('Propose')) + '</button></span></div>' +
+        '<div class="settcard-meta">' + esc(FB.T('{relation} Â· {station} Â· age {age}', {
+          relation:relation,
+          station:FB.stationName(FB.stationOf(child)),
+          age:FB.ageOf(child, s.date.year)
+        })) + '</div>' + (terms.length
+          ? '<div class="settcard-fx">' + esc(terms.join(' Â· ')) + '</div>' : '') +
+        '<div class="settcard-details hidden" id="' + esc(detailsId) + '">' +
+        '<div class="settdesc">' + esc(explanation) + '</div></div></section>';
+    }
+    if (!entries.length) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        'No resident child or grandchild is available for this proposal.')) +
+        '</div>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button>';
+    const options = {
+      historyView:!replaceView,
+      replaceView:!!replaceView
+    };
+    if (returnsToInteractionManagement(returnContext)) {
+      options.historyBackRender = function () {
+        interactionReturn(returnContext);
+      };
+    }
+    openModal(FB.T('Marriage to {name}', {
+      name:FB.fullName(partner)
+    }), h, options);
+    bindCardInfoToggles($('gm-body'));
+    document.querySelectorAll('[data-royal-kin-match]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const result = FB.proposeRoyalKinMatch(
+          s, button.getAttribute('data-royal-kin-match'), partner.id);
+        if (!result || !result.resolved) {
+          UI.showRoyalKinMatchPicker(partner.id, returnContext, true);
+          return;
+        }
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext);
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      finishManagementReturn(returnContext, function () {
+        modalHistoryBack(function () { UI.showCharModal(partner.id); });
       });
     });
   };
@@ -22507,6 +22692,22 @@ window.FB = window.FB || {};
     const startTierNames = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
     const highestStartName = FB.T(
       startTierNames[startProgress.highestStartTier] || 'Serf');
+    function settingsDetailToggle(id, label, details, checked) {
+      const detailsId = id + '-details';
+      return '<section class="settings-detail-toggle settcard"' +
+        (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+        ' aria-labelledby="' + id + '-label" aria-describedby="' +
+        detailsId + '"><div class="settcard-head"><label class="autorow">' +
+        '<input type="checkbox" id="' + id + '"' +
+        (checked ? ' checked' : '') + ' aria-describedby="' + detailsId +
+        '"> <b id="' + id + '-label">' + esc(FB.T(label)) +
+        '</b></label><span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" ' +
+        'aria-controls="' + detailsId + '" title="' + esc(FB.T('Details')) +
+        '" aria-label="' + esc(FB.T('Details')) + '">?</button></span></div>' +
+        '<div class="settcard-details settings-detail-toggle-details hidden" id="' +
+        detailsId + '">' + esc(FB.T(details)) + '</div></section>';
+    }
     let h = '<div class="gm-body-text"><p>' + (desktopKeyboard
       ? esc(FB.T('How quickly the days flow while time runs — on a keyboard, −/+ change it at any time.'))
       : esc(FB.T('How quickly the days flow while time runs.'))) +
@@ -22592,6 +22793,12 @@ window.FB = window.FB || {};
             esc(FB.T('Download a bank or the complete soundtrack before going offline.')) + '</span></button>'
           : '');
     }
+    h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
+      esc(FB.T('Notifications')) + '</p></div>' + settingsDetailToggle(
+        'set-event-toast-opens-chronicle',
+        'Open Chronicle when dismissing event toasts',
+        'Automatic event results are always recorded in the Chronicle. Enable this to switch to Chronicle Choices when their popup is dismissed.',
+        G.uiPrefs.eventToastOpensChronicle);
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Guidance')) + '</p></div>' +
       '<label class="autorow"><input type="checkbox" id="set-hide-beginner-hints"' +
@@ -22748,6 +22955,11 @@ window.FB = window.FB || {};
         });
       }
     }
+    $('set-event-toast-opens-chronicle').addEventListener('change', function () {
+      G.uiPrefs.eventToastOpensChronicle =
+        $('set-event-toast-opens-chronicle').checked;
+      G.saveUiPrefs();
+    });
     $('set-hide-beginner-hints').addEventListener('change', function () {
       G.uiPrefs.hideBeginnerHints = $('set-hide-beginner-hints').checked;
       G.saveUiPrefs();

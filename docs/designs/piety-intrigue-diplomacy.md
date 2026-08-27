@@ -225,7 +225,10 @@ validation, preview math, resolution, repair, and all RNG calls remain in
 
 Raid eligibility is likewise one validated configuration record rather than duplicated
 culture and faith literals. `FBDATA.raidingTraditions` owns ordered culture, exact-faith,
-and root-faith-group lists; `FB.hasRaidingTradition` is the shared player/AI reader.
+and root-faith-group lists; `FB.hasRaidingTradition` is the shared player/AI tradition
+reader. A player expedition additionally requires an adult landed ruler and reads that
+protagonist's personal culture and faith rather than inheriting the sovereign realm's
+tradition. AI sovereigns continue to read their own realm identity.
 Range, technology extensions, spoils, cooldowns, AI cadence, and raid resolution remain
 engine behavior. This configuration exposure changes no baseline capability, so it does
 not add a technology-impact ledger entry.

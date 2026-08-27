@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/technology.js',
+  'js/main.js',
   'js/technology.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -210,4 +211,45 @@ test('Self skill Guide links close back to Self on desktop and phones',
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await expect(page.locator('body')).toHaveClass(/showself/);
     await expect(skill).toBeVisible();
+  });
+
+test('phone and tablet Self drawers pause running time and restore it on close',
+  async function ({ page }) {
+    await page.setViewportSize({ width:390, height:844 });
+    await page.evaluate(function () {
+      const toast = document.createElement('div');
+      toast.id = 'drawer-toast-fixture';
+      toast.className = 'toast';
+      toast.textContent = 'Existing notice';
+      document.getElementById('toasts').appendChild(toast);
+      FB.game.setPaused(false);
+      document.getElementById('tb-portrait').click();
+    });
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+    await expect(page.locator('#drawer-toast-fixture')).toBeHidden();
+    await page.locator('#lefttabs .tab[data-tab="family"]').click();
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+    await page.locator('#btn-closeself').click();
+    await expect(page.locator('body')).not.toHaveClass(/showself/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(false);
+    await expect(page.locator('#drawer-toast-fixture')).toBeVisible();
+
+    await page.evaluate(function () { FB.game.setPaused(true); });
+    await page.setViewportSize({ width:820, height:1180 });
+    await page.evaluate(function () {
+      FB.game.setPaused(false);
+      document.getElementById('tb-portrait').click();
+    });
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+    await page.locator('#btn-closeself').click();
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(false);
+
+    await page.evaluate(function () {
+      FB.game.setPaused(true);
+      document.getElementById('tb-portrait').click();
+    });
+    await page.locator('#btn-closeself').click();
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
   });

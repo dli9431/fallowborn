@@ -1963,7 +1963,9 @@ window.FB = window.FB || {};
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'toast event-receipt-toast';
-    el.title = FB.T('Open Choices in the Chronicle');
+    el.title = FB.T(FB.game && FB.game.uiPrefs &&
+      FB.game.uiPrefs.eventToastOpensChronicle
+      ? 'Open Choices in the Chronicle' : 'Dismiss');
     let h = '<span class="event-receipt-headline">' + esc(outcome
       ? FB.T('{event} — {outcome}', { event:title, outcome:outcome })
       : FB.T('{event} — {choice}', { event:title, choice:option })) + '</span>';
@@ -1989,6 +1991,11 @@ window.FB = window.FB || {};
     }
     el.innerHTML = h;
     el.addEventListener('click', function () {
+      if (!FB.game || !FB.game.uiPrefs ||
+          !FB.game.uiPrefs.eventToastOpensChronicle) {
+        removeToastElement(el);
+        return;
+      }
       if (UI.eventsBusy && UI.eventsBusy()) return;
       if (UI.showTab) UI.showTab('log');
       if (UI.setChronicleFilter) UI.setChronicleFilter('choices');
@@ -3832,7 +3839,7 @@ window.FB = window.FB || {};
         if (ev.detail > 0) t.blur();
       });
     });
-    // the topbar portrait opens your own sheet (a drawer on phones)
+    // the topbar portrait opens your own sheet (a drawer on phones/tablets)
     $('tb-portrait').addEventListener('click', function () {
       if (FB.state) UI.showTab('char');
     });

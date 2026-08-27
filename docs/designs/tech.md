@@ -264,6 +264,11 @@ entry or adds one for a separately gateable option. This procedural rule catches
 the validator can verify a declaration but cannot infer that arbitrary JavaScript introduced
 a semantic feature.
 
+Player-initiated descendant-to-royal marriage negotiation is recorded as
+`player_initiated_royal_family_matches` with mode `none`. It is baseline dynastic and
+social play, while the counterpart court's research is AI-controlled, so no credible
+technology gate belongs on access to the proposal.
+
 Most entries expose a discrete practice, rule, building, enterprise, career, unit access,
 or research slot through `unlocks`. Data definitions use `requiresTech` for buildings,
 schooling, household standards, careers, career specialties, enterprises, auction lot

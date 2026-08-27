@@ -95,6 +95,79 @@ test('game speed defaults to fastest and persists as a bounded browser preferenc
     })).toEqual({ speedIdx:4, preference:4, fastest:4 });
   });
 
+test('event toasts dismiss in place unless Settings enables Chronicle navigation',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const beforeLog = await page.evaluate(function () {
+      FB.ui.showTab('actions', { history:false });
+      FB.ui.eventReceiptToast({
+        title:FB.msg('news.e2e.toast.title', 'A Result'),
+        option:FB.msg('news.e2e.toast.option', 'Continue.'),
+        outcome:FB.msg('news.e2e.toast.outcome', 'The matter is settled.'),
+        impacts:[]
+      });
+      return FB.state.log.length;
+    });
+    const firstToast = page.locator('.event-receipt-toast');
+    await expect(firstToast).toHaveAttribute('title', 'Dismiss');
+    await firstToast.click();
+    await expect(firstToast).toHaveCount(0);
+    await expect(page.locator('.tab[data-tab="actions"]')).toHaveClass(/active/);
+    expect(await page.evaluate(function () { return FB.state.log.length; }))
+      .toBe(beforeLog);
+
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    const redirect = page.getByRole('checkbox', {
+      name:'Open Chronicle when dismissing event toasts'
+    });
+    await expect(redirect).not.toBeChecked();
+    const setting = page.locator('.settings-detail-toggle', { has:redirect });
+    await setting.hover();
+    await expect(page.locator('#tooltip'))
+      .toContainText('always recorded in the Chronicle');
+    await redirect.check();
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return {
+          preference:FB.game.uiPrefs.eventToastOpensChronicle,
+          stored:JSON.parse(localStorage.getItem('fb_ui'))
+            .eventToastOpensChronicle
+        };
+      });
+    }).toEqual({ preference:true, stored:true });
+
+    await page.evaluate(function () {
+      FB.ui.closeModal();
+      FB.ui.showTab('actions', { history:false });
+      FB.ui.eventReceiptToast({
+        title:FB.msg('news.e2e.toast.title', 'A Result'),
+        option:FB.msg('news.e2e.toast.option', 'Continue.'),
+        outcome:FB.msg('news.e2e.toast.outcome', 'The matter is settled.'),
+        impacts:[]
+      });
+    });
+    const secondToast = page.locator('.event-receipt-toast');
+    await expect(secondToast)
+      .toHaveAttribute('title', 'Open Choices in the Chronicle');
+    await secondToast.click();
+    await expect(page.locator('.tab[data-tab="log"]')).toHaveClass(/active/);
+
+    await page.setViewportSize({ width:390, height:844 });
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    const compactSetting = page.locator('.settings-detail-toggle', {
+      has:page.getByRole('checkbox', {
+        name:'Open Chronicle when dismissing event toasts'
+      })
+    });
+    const info = compactSetting.locator('.settcard-info');
+    await expect(info).toBeVisible();
+    await info.click();
+    await expect(compactSetting.locator('.settings-detail-toggle-details'))
+      .toBeVisible();
+    await expect(compactSetting.locator('.settings-detail-toggle-details'))
+      .toContainText('always recorded in the Chronicle');
+  });
+
 test('map interaction defers exact Deeds and Land war-card rebuilds until release',
   async function ({ page }) {
     await startDeterministicGame(page);

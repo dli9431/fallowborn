@@ -884,10 +884,14 @@ or captor succession removes that penalty.
 
 ## Raiding expeditions
 
-Historical cultures (`norse`, `magyar`, `turkic`, `khazar`, `berber`, `andalusi`, `arabic`,
-`baltic`, `gaelic`, `brezhon`) and pagan faiths (`norse_pagan`, `tengri`, `baltic_pagan`,
-`slavic_pagan`, and all pagan traditions) possess the ability to launch raiding expeditions
-against foreign counties (`FB.canRaid`, `FB.raidTargets`, `FB.calculateRaidSpoils`, `FB.executeRaid`).
+Adult landed rulers (tier 3+) from historical raiding cultures (`norse`, `magyar`, `turkic`,
+`khazar`, `berber`, `andalusi`, `arabic`, `baltic`, `gaelic`, `brezhon`) or pagan faiths
+(`norse_pagan`, `tengri`, `baltic_pagan`, `slavic_pagan`, and all pagan traditions) may launch
+raiding expeditions against foreign counties (`FB.canRaid`, `FB.raidTargets`,
+`FB.calculateRaidSpoils`, `FB.executeRaid`). Eligibility follows the protagonist's own culture
+and faith, not the sovereign realm's: Freeholders and gentry may join military service, but do
+not independently command the county host used by this resolver. Christian Gaelic rulers retain
+historical border and cattle raiding; their unrelated subjects do not inherit a private warband.
 
 Raiding does not declare a formal conquest war, nor does it occupy land permanently:
 

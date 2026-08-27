@@ -75,6 +75,21 @@ remain the standard gates. The court itself must also be reachable through the r
 access chain; the ruler sheet leaves an otherwise eligible approach visible with the
 missing-intermediary reason.
 
+The household head may also initiate a negotiated royal-family match from an
+unwed royal family member's character sheet. That sheet opens a bounded picker containing
+only resident, managed children and grandchildren. Both partners must be at least
+twelve, opposite-sex under the modeled doctrine, exact-faith compatible, and
+outside the close-kin and celibate-office gates. The court must lie in the player's
+liege chain or be an adjacent sovereign peer, ordinary rank access must be ready,
+and the existing one-station/prestige and bride's-house dowry rules remain
+authoritative. The ruler's current aim, realm Standing, house rank and prestige,
+and the household head's and descendant's Diplomacy shape the displayed acceptance
+chance. Making the proposal spends one day. Acceptance seals the ordinary betrothal
+and uses `FB.doKinWedding` at majority; refusal lowers realm Standing and permanently
+closes only that exact pair through the royal family member's bounded
+`royalMatchRefusals` id list. This match creates royal lineage and succession normally,
+but does not create the protagonist's personal royal compact or alliance.
+
 Every ordinary, matchmade, or royal courtship assigns the player's one
 `player.socialAttention` slot to that suitor while leaving the normal work/study focus
 alone. A proposal is unavailable until the suitor reaches the shared
@@ -198,6 +213,11 @@ payout fns `dower_*`/`claim_*` in events.js — a won claim can lift a commoner 
 Technology impact review: `local_marriage_prospect_identity` is `mode:'none'` in
 `FBDATA.techImpactReviews`. Local courtship networks and mixed household identities are
 baseline social behavior with no credible research dependency.
+
+Player-initiated descendant-to-royal arrangements add
+`player_initiated_royal_family_matches` with `mode:'none'`. Negotiating an accessible
+dynastic marriage is a baseline personal and social action, and the relevant court's
+technology is controlled by AI; no credible research gate belongs on the option.
 
 `FB.marriageTerms` is the single transfer rule for protagonist and descendant
 marriages: the bride's house pays the displayed dowry. A protagonist courtship

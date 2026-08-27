@@ -280,12 +280,28 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
     await expect(page.locator('#tooltip')).toContainText(
       'No adult resident household member is eligible for Craft work');
     await row.click();
-    await expect(page.locator('.enterprise-management-status.idle'))
+    const overview = page.locator('.enterprise-management-status.idle');
+    await expect(overview.locator('.settcard-head > b'))
+      .toHaveText('Enterprise details');
+    await expect(overview.locator('.settcard-head'))
+      .not.toContainText('Inactive until fully staffed');
+    await expect(page.locator(
+      '.enterprise-management-modal .enterprise-management-details:visible'))
+      .toHaveCount(0);
+    await overview.hover();
+    await expect(page.locator('#tooltip'))
       .toContainText('Inactive until fully staffed');
-    await expect(page.locator('.enterprise-worker-empty'))
+    await expect(page.locator('#tooltip')).toContainText('Owner');
+    await expect(page.locator('#tooltip')).toContainText('Household dynasty');
+    const empty = page.locator('.enterprise-worker-empty');
+    await expect(empty.locator('.settcard-head'))
+      .not.toContainText('Assign or train an eligible household member');
+    await empty.hover();
+    await expect(page.locator('#tooltip'))
       .toContainText('Assign or train an eligible household member');
     await expect(page.getByRole('button', { name:/Hire a local worker/ }))
       .toBeEnabled();
+    await expect(page.locator('#enterprise-hire .adesc')).toHaveCount(0);
 
     await page.evaluate(function (uid) {
       const s = FB.state;
@@ -298,10 +314,11 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
       })[0].id;
       FB.ui.showEnterpriseManage(uid, undefined, true);
     }, fixture.uid);
-    await expect(page.locator('.enterprise-management-status.idle'))
+    await page.locator('.enterprise-management-status.idle').hover();
+    await expect(page.locator('#tooltip'))
       .toContainText('No eligible household worker lives in');
-    await expect(page.locator('.enterprise-worker-empty'))
-      .toContainText('Move the household back');
+    await page.locator('.enterprise-worker-empty').hover();
+    await expect(page.locator('#tooltip')).toContainText('Move the household back');
 
     await page.evaluate(function (value) {
       const s = FB.state;
@@ -317,8 +334,8 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
       };
       FB.ui.showEnterpriseManage(value.uid, undefined, true);
     }, fixture);
-    await expect(page.locator('.enterprise-management-status.idle'))
-      .toContainText('Guild member rank');
+    await page.locator('.enterprise-management-status.idle').hover();
+    await expect(page.locator('#tooltip')).toContainText('Guild member rank');
 
     await page.evaluate(function (value) {
       const s = FB.state;
@@ -330,7 +347,8 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
       });
       FB.ui.showEnterpriseManage(value.uid, undefined, true);
     }, fixture);
-    await expect(page.locator('.enterprise-management-status.idle'))
+    await page.locator('.enterprise-management-status.idle').hover();
+    await expect(page.locator('#tooltip'))
       .toContainText('each currently works another enterprise');
     const candidate = page.locator(
       '[data-enterprise-worker="' + fixture.workerId + '"]');
@@ -733,14 +751,21 @@ test('enterprise manager exposes upgrades, staffing thresholds, and paid labor c
 
     await expect(page.locator('#gm-body')).toContainText('Enterprise upgrades');
     await expect(page.locator('#gm-body')).toContainText('Upgrade to Joined Fields');
+    await expect(page.locator('.enterprise-upgrade-panel .adesc')).toHaveCount(0);
+    await page.locator('.enterprise-upgrade-panel').hover();
+    await expect(page.locator('#tooltip')).toContainText('Current tier: Base enterprise');
+    await expect(page.locator('#tooltip')).toContainText('Costs');
     await page.getByRole('button', { name:/Upgrade to Joined Fields/ }).click();
-    await expect(page.locator('#gm-body')).toContainText(
-      '1 of 2 staffing positions filled');
+    await expect(page.locator('.enterprise-upgrade-panel > .settcard-head'))
+      .not.toContainText('1 of 2 staffing positions filled');
+    await page.locator('.enterprise-upgrade-panel').hover();
+    await expect(page.locator('#tooltip'))
+      .toContainText('1 of 2 staffing positions filled');
     await expect(page.getByRole('button', { name:/Hire a local worker/ }))
       .toBeEnabled();
     await page.getByRole('button', { name:/Hire a local worker/ }).click();
-    await expect(page.locator('.enterprise-management-status.staffed'))
-      .toContainText('Fully staffed');
+    await page.locator('.enterprise-management-status.staffed').hover();
+    await expect(page.locator('#tooltip')).toContainText('Fully staffed');
     await expect(page.getByRole('button', { name:'Dismiss paid worker' }))
       .toBeVisible();
     const state = await page.evaluate(function (enterpriseUid) {
@@ -754,6 +779,21 @@ test('enterprise manager exposes upgrades, staffing thresholds, and paid labor c
       };
     }, uid);
     expect(state).toEqual({ level:1, workers:2, contracts:1 });
+
+    await page.setViewportSize({ width:390, height:844 });
+    await page.evaluate(function (enterpriseUid) {
+      FB.ui.showEnterpriseManage(enterpriseUid, undefined, true);
+    }, uid);
+    const compactOverview = page.locator('.enterprise-management-status.staffed');
+    const compactInfo = compactOverview.locator('.settcard-info');
+    await expect(compactInfo).toBeVisible();
+    await compactInfo.click();
+    await expect(compactOverview.locator('.enterprise-management-details'))
+      .toBeVisible();
+    await expect(compactOverview.locator('.enterprise-management-details'))
+      .toContainText('Fully staffed');
+    await expect(compactOverview.locator('.enterprise-management-details'))
+      .toContainText('Owner');
   });
 
 test('staffing assistant completes an upgraded crew instead of scattering partial staffs',

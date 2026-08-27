@@ -439,6 +439,12 @@ unmanaged family, and validates family offices through current occupation and
 residence rules. Missing state therefore means no history and requires no save
 version bump.
 
+Player-initiated royal descendant proposals add only a bounded character field:
+`royalMatchRefusals` is an array of managed descendant character ids on the royal
+family member who refused those exact pairings. Missing or malformed values read as an empty
+list and are replaced only when a refusal is recorded. Acceptance uses the existing
+betrothal, dowry, `royalLine`, and wedding fields, so save format remains 3.
+
 National technology is additive version-3 state. `state.realmTech[realmId]` stores
 `{completed,exposed,active,progress,reserve,priorities}` for that sovereign identity;
 `active` is an array of up to three project ids and `priorities` maps advocated ids to

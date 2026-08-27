@@ -302,6 +302,15 @@ participant rows, event choices, and fixed equipment slots remain aligned rather
 mixing 40–52 px controls. Better Household standard steppers use that same switch:
 roomy pointers get action-specific hover/focus terms, while compact layouts get one
 48 px `?` that expands both decrease and increase consequences inline.
+
+**Helper text always belongs in that tooltip/disclosure path.** Explanatory prose,
+instructions, ownership and scope audits, costs already represented by an action,
+consequences, and disabled reasons must not remain as permanent copy beneath a title or
+control. Keep the title, action label, selected value, progress needed for a decision,
+and urgent warning state on the face; put the supporting explanation in the shared
+desktop hover/focus tooltip and compact `?` disclosure. This applies to modal sections
+and standalone actions as well as list cards.
+
 One-time deed rows use this convention too: the card face keeps only the enlarged action
 name, with gold, green, or blue-green border accents distinguishing day-spending immediate,
 choice-backed, and no-day immediate actions. Timing and descriptive copy live together in
@@ -355,7 +364,11 @@ Deeds/Land/Chronicle panel takes the full width and Self/Kin becomes a drawer (`
 fixed, shown by `body.showself` — toggled in
 `setTab`, opened by tapping the mobile-only topbar portrait, closed by `#btn-closeself`).
 The drawer Close uses the same footer control at the bottom middle, immediately above the
-fixed time bar.
+fixed time bar. On compact phone and tablet layouts, opening that drawer pauses a running
+game and records that it owns the pause; closing it, including through browser Back, resumes
+only when the drawer paused previously running time. A game opened while already paused
+stays paused. The map toast rail is hidden behind the full-screen drawer and returns with
+any still-live notices after the drawer closes.
 The redundant topbar portrait is hidden when the Self panel is persistently visible on
 desktop. The time controls become a fixed thumb-zone bar above the drawer (hidden by
 `body.picking` during
@@ -621,11 +634,12 @@ a business. The sheet treats a tier-3+ protagonist's career as a read-only forme
 Career changes, guild steps, and personal enterprise assignment are removed while household
 occupations, religious-office advancement, business staffing, and local hiring remain
 available. Its Group enterprises and Enterprise order selectors use the
-same parchment treatment as the Market basket picker. The owned-enterprise manager shows
-the current upgrade tier, next construction cost and technology blocker, resulting staffing
-threshold, and authored non-gold benefit. Open positions offer both eligible household
-workers and **Hire a local worker**, with the first and recurring wage stated before the
-action; paid workers have an explicit dismissal control. Each enterprise with assignments
+same parchment treatment as the Market basket picker. The owned-enterprise manager keeps
+only section titles, worker states, and action labels on its permanent face. Its description,
+active/idle explanation, owner/scope/effect ledger, upgrade tier and terms, staffing guidance,
+lock behavior, local-hire wage, and removal consequences use the shared desktop tooltip or
+compact `?` disclosure. Open positions offer both eligible household workers and **Hire a
+local worker**; paid workers have an explicit dismissal control. Each enterprise with assignments
 has a saved **Lock this staff to this enterprise** checkbox; locked pairings are marked in both this sheet and Household
 Plan. Whenever an owned enterprise is idle, **Staff all idle enterprisesâ€¦** opens a
 no-day static review of the maximum-yield result across all unlocked assignments. The
@@ -838,6 +852,10 @@ semantic gain, danger, and warning colors. Settings also owns a dedicated Map se
 browser-local realm-map color and fill-opacity controls. They set the
 focus outline and the independent player realm's displayed political fill without mutating
 saved political state; lowering opacity reveals terrain while keeping the outline clear.
+Its Notifications section also owns the browser-local event-toast navigation preference.
+The unchecked default dismisses a receipt toast without changing panels; enabling it makes
+that same activation open Chronicle Choices. The Chronicle record is unaffected either way,
+and the setting's explanation follows the shared desktop tooltip/compact disclosure rule.
 The map also exposes a keyboard/touch **Market** lens with one styled native basket
 selector. Narrow screens stack its label above an action area that keeps the selector
 and Market button paired when they fit and wraps them into full-width rows before they
@@ -998,6 +1016,12 @@ explanation that their objects remain under shared-armory management. A cross-so
 recipient instead shows the frozen courier days and explains that Standing/cooldown begin
 on arrival. While a delivery is outbound or returning, both the character button and
 picker show its destination, phase, and remaining ETA and disable another gift.
+
+An available person in a ruler's displayed family exposes **Arrange a family marriageâ€¦**
+on that person's character sheet. Its bounded picker lists only the protagonist's managed
+children and grandchildren, with age, station, acceptance chance, dowry direction, and
+any exact blocking reason. The proposal spends its day only after one descendant is
+chosen; Back returns to the same royal character sheet.
 
 All counterpart sheets use the shared Standing presentation: a clamped signed value,
 the Hostile/Guarded/Neutral/Favorable/Warm band, and the same positive/neutral/negative
@@ -1686,9 +1710,12 @@ the event layer in the map's bottom-left toast region, and the queue advances im
 It remains the bottom-most toast when tutorial notices stack above it and stays within the
 map on narrow layouts, including throughout its fade-in, so it cannot cover panel action
 buttons or climb into the top bar.
-The toast replaces an older receipt instead of stacking; when no event blocks input,
-activating it opens the Chronicle's Choices filter. Exceptional choices that automation
-intentionally shows remain protected.
+The toast replaces an older receipt instead of stacking. Activating it dismisses the
+popup in place by default, without changing the active Self, Kin, Deeds, Land, Network,
+or Chronicle panel; the durable receipt remains in the Chronicle. The browser-local
+Settings option **Open Chronicle when dismissing event toasts** restores the former route
+to the Chronicle's Choices filter. Exceptional choices that automation intentionally
+shows remain protected.
 
 The Chronicle has session-local **All / Choices / News** filters. Choices are typed event
 receipts with rich exact-change chips; News includes legacy untyped entries and ordinary

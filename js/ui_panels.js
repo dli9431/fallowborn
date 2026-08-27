@@ -6624,7 +6624,26 @@ window.FB = window.FB || {};
     return document.body.classList.contains('showself');
   }
 
+  let selfDrawerResumePlay = false;
+  function selfDrawerUsesOverlay() {
+    return typeof window.matchMedia === 'function' &&
+      window.matchMedia('(max-width: 820px), (max-height: 520px)').matches;
+  }
+  function pauseForSelfDrawer() {
+    if (!selfDrawerUsesOverlay() || selfDrawerOpen() || !FB.game ||
+        FB.game.observe) return;
+    const wasRunning = !FB.game.paused;
+    selfDrawerResumePlay = wasRunning && !FB.game.fastForwarding;
+    if (wasRunning && FB.game.setPaused) FB.game.setPaused(true);
+  }
+  function restoreAfterSelfDrawer() {
+    const resume = selfDrawerResumePlay;
+    selfDrawerResumePlay = false;
+    if (resume && FB.game && FB.game.setPaused) FB.game.setPaused(false);
+  }
+
   function openSelfDrawerRaw() {
+    pauseForSelfDrawer();
     document.body.classList.add('showself');
     if (FB.state && !(FB.game && FB.game.observe)) {
       renderTab(activeLeftTab);
@@ -6634,6 +6653,7 @@ window.FB = window.FB || {};
 
   function closeSelfDrawerRaw() {
     document.body.classList.remove('showself');
+    restoreAfterSelfDrawer();
     if ($('tb-portrait').offsetParent !== null) $('tb-portrait').focus();
   }
 
@@ -6654,9 +6674,15 @@ window.FB = window.FB || {};
     const body = isLeft ? $('leftbody') : $('sidebody');
     body.querySelectorAll('.tabpane').forEach(function (p) { p.classList.remove('active'); });
     $('tab-' + name).classList.add('active');
-    // on phones Self/Kin is a drawer (body.showself); the class is inert on desktop
-    if (isLeft) document.body.classList.add('showself');
-    else document.body.classList.remove('showself');
+    // on compact phone/tablet layouts Self/Kin is a drawer (body.showself);
+    // the class is inert on desktop
+    if (isLeft) {
+      if (!drawerWasOpen) pauseForSelfDrawer();
+      document.body.classList.add('showself');
+    } else {
+      document.body.classList.remove('showself');
+      if (drawerWasOpen) restoreAfterSelfDrawer();
+    }
     /* A tab switch changes only one retained panel column. Rendering the
        other column here used to make a Deeds/Land rebuild part of every
        Self/Kin switch, and repeated all Self/Kin calculations and portrait

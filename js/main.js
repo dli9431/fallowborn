@@ -10,8 +10,15 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.164.3';
+  FB.VERSION = '1.165.0';
   FB.CHANGELOG = [
+    { v: '1.165.0', date: '2026-08-27', changes: [
+      'Enterprise management is now easier to scan, with supporting rules and terms available through details.',
+      'Event-result toasts now dismiss without changing panels by default, with their Chronicle shortcut available in Settings.',
+      'Phone and tablet Self/Kin sheets now pause running time until closed and keep map toasts behind the sheet.',
+      'Independent raiding now requires a landed ruler with a personal raiding tradition.',
+      'Royal family character sheets can now arrange marriages with managed children and grandchildren.'
+    ] },
     { v: '1.164.3', date: '2026-08-27', changes: [
       'Household and building ledgers now keep compact controls aligned and place section guidance behind details.',
       'Work & Enterprises remains available at every adult rank, and county-title petitions now require a real titled holder.'
@@ -3133,6 +3140,7 @@ window.FB = window.FB || {};
     workFiltersCollapsed:true,
     hideBeginnerHints:false,
     hideTips:false,
+    eventToastOpensChronicle:false,
     tipsSeen:{},
     tipsGrandfathered:false,
     onboardingStarted:false,
@@ -3176,6 +3184,8 @@ window.FB = window.FB || {};
           : true;
       G.uiPrefs.hideBeginnerHints = !!storedUiPrefs.hideBeginnerHints;
       G.uiPrefs.hideTips = !!storedUiPrefs.hideTips;
+      G.uiPrefs.eventToastOpensChronicle =
+        !!storedUiPrefs.eventToastOpensChronicle;
       if (storedUiPrefs.tipsSeen && typeof storedUiPrefs.tipsSeen === 'object') {
         G.uiPrefs.tipsSeen = storedUiPrefs.tipsSeen;
       }

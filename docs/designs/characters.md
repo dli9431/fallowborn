@@ -903,7 +903,10 @@ Standing, current personal attention, courtship, friendship, rivalry,
 betrothal, travel, and household-service commitments. Its actions route to the
 existing gift, targeted visit, courtship/proposal, friendship, rivalry,
 retainer, equipment, education, work, arranged-match, and exact-relative
-manumission mechanics. A free household head may redeem a living serf parent,
+manumission mechanics. An available royal family member's sheet also opens the negotiated
+picker for pairing that person with a managed child or grandchild; the marriage
+engine retains all access, faith, rank, kinship, dowry, acceptance, and refusal rules.
+A free household head may redeem a living serf parent,
 sibling, spouse, or descendant from that person's sheet; the quoted action changes only
 that character's station and spends one day. The card
 does not store a relationship model and does not replace biography, the
