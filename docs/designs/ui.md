@@ -104,6 +104,12 @@ music to continue in play. Choosing silence hides the card and records the same 
 preference. The title menu is hidden behind the unresolved first-visit choice and is disabled
 during boot for returning players.
 
+The procedural Fallowborn crest is repainted whenever the centralized screen controller reveals
+the title, not only during initial boot. This restores the bitmap after a hidden canvas backing
+store is discarded during world compilation on a memory-constrained browser. A restored 2D
+context also triggers the same repaint, and a missing context fails without interrupting title
+boot or recovery navigation.
+
 The title boot does not activate a default bookmark. New Game activates the date the player
 chooses, while Continue and Load activate the bookmark stored in that save. The loading screen
 is reserved for those real world-construction paths and keeps its title and progress state inside

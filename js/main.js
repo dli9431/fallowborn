@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.163.2';
+  FB.VERSION = '1.163.3';
   FB.CHANGELOG = [
+    { v: '1.163.3', date: '2026-08-26', changes: [
+      'The title-screen heraldry now redraws whenever the menu returns and recovers safely if its canvas context is discarded.'
+    ] },
     { v: '1.163.2', date: '2026-08-26', changes: [
       'Continue now skips isolated legacy-record repair failures so an otherwise readable saved life can resume, while unrecoverable saves show the failed stage and error.'
     ] },
@@ -1673,7 +1676,6 @@ window.FB = window.FB || {};
     FB.map.init($('map'));
     FB.ui.wire();
     wireMenus();
-    FB.drawCrest($('titlecrest'), 'Fallowborn');
     refreshTitle();
     FB.ui.showScreen('title');
     document.documentElement.classList.remove('boot-loading');

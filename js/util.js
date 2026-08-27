@@ -247,7 +247,15 @@ window.FB = window.FB || {};
 
   /* procedural coat of arms drawn onto a canvas ctx */
   FB.drawCrest = function (canvas, seedStr) {
-    const ctx = canvas.getContext('2d');
+    if (!canvas || typeof canvas.getContext !== 'function') return false;
+    let ctx;
+    try {
+      ctx = canvas.getContext('2d');
+    } catch (error) {
+      return false;
+    }
+    if (!ctx) return false;
+    seedStr = String(seedStr || 'Fallowborn');
     const w = canvas.width, h = canvas.height;
     let hsh = 0;
     for (let i = 0; i < seedStr.length; i++) hsh = (Math.imul(hsh, 31) + seedStr.charCodeAt(i)) | 0;
@@ -290,6 +298,7 @@ window.FB = window.FB || {};
     ctx.quadraticCurveTo(w * 0.1, h * 0.85, w * 0.1, h * 0.55);
     ctx.closePath();
     ctx.strokeStyle = '#d8b24a'; ctx.lineWidth = Math.max(1.5, w * 0.05); ctx.stroke();
+    return true;
   };
 
   /* crest markup for cards: painted by FB.paintCrests once the html lands */

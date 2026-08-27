@@ -1763,6 +1763,12 @@ window.FB = window.FB || {};
   }
 
   /* ================= screens ================= */
+  function paintTitleCrest() {
+    const crest = $('titlecrest');
+    return !!(crest && FB.drawCrest && FB.drawCrest(crest, 'Fallowborn'));
+  }
+  UI.paintTitleCrest = paintTitleCrest;
+
   UI.showScreen = function (id) {
     UI.coachmarkReset(); // a screen switch retires any lesson in flight
     if (id !== null && SH.travelPicker) {
@@ -1775,6 +1781,10 @@ window.FB = window.FB || {};
       el.classList.remove('asbar');
     }
     $('game').classList.toggle('hidden', id !== null);
+    /* Canvas backing stores may be discarded while the title is hidden,
+       especially after compiling a world on a memory-constrained phone.
+       Repaint on every title transition instead of relying on the boot draw. */
+    if (id === 'title') paintTitleCrest();
     /* the birthplace and character screens put their Back button in the
        bottom-left corner the title music controls occupy — CSS hides the
        controls there on phone-sized screens */
@@ -3798,6 +3808,10 @@ window.FB = window.FB || {};
   }
 
   UI.wire = function () {
+    const titleCrest = $('titlecrest');
+    if (titleCrest) {
+      titleCrest.addEventListener('contextrestored', paintTitleCrest);
+    }
     FB.fx.on(function (intent) {
       if (intent.kind !== 'toast') return;
       if (FB.game.observe && FB.game.obsQuiet) return;

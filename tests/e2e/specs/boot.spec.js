@@ -106,6 +106,49 @@ test('boots the real game without browser, asset, or network errors',
     expect([null, -1, 0]).toContain(contract.registrations);
   });
 
+test('title transitions repaint discarded heraldry without a canvas error',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const crest = document.getElementById('titlecrest');
+      const context = crest.getContext('2d');
+      function hasPaint() {
+        const pixels = context.getImageData(0, 0, crest.width, crest.height).data;
+        for (let i = 3; i < pixels.length; i += 4) {
+          if (pixels[i]) return true;
+        }
+        return false;
+      }
+      const initial = hasPaint();
+      context.clearRect(0, 0, crest.width, crest.height);
+      const discarded = !hasPaint();
+      FB.ui.showScreen('bookmarks');
+      FB.ui.showScreen('title');
+      const repainted = hasPaint();
+      context.clearRect(0, 0, crest.width, crest.height);
+      crest.dispatchEvent(new Event('contextrestored'));
+      return {
+        initial:initial,
+        discarded:discarded,
+        repainted:repainted,
+        restored:hasPaint(),
+        missingCanvasSafe:FB.drawCrest(null, 'Fallowborn') === false,
+        contextErrorSafe:FB.drawCrest({
+          getContext:function () { throw new Error('synthetic context loss'); }
+        }, 'Fallowborn') === false
+      };
+    });
+
+    expect(result).toEqual({
+      initial:true,
+      discarded:true,
+      repainted:true,
+      restored:true,
+      missingCanvasSafe:true,
+      contextErrorSafe:true
+    });
+  });
+
 test('a translated boot loads English first and keeps incomplete Preview coverage active',
   async function ({ page }, testInfo) {
     await page.addInitScript(function () {
