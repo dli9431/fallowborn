@@ -1558,7 +1558,9 @@ window.FB = window.FB || {};
     deedStatusRefreshedTurn = s.turn;
 
     const visible = FB.listInstants(s, { deferEligibility:true });
+    const visibleIds = {};
     const signature = visible.map(function (item) {
+      visibleIds[item.a.id] = true;
       return item.a.id;
     }).join('|');
     if (signature !== actionsVisibleSignature) {
@@ -1570,8 +1572,16 @@ window.FB = window.FB || {};
     for (let i = 0; i < buttons.length; i++) {
       const btn = buttons[i];
       const id = btn.getAttribute('data-action-id');
-      const status = FB.instantStatus(s, id);
-      if (!status.action || !status.shown) {
+      if (!visibleIds[id]) {
+        renderActions();
+        return;
+      }
+      /* listInstants already established visibility above. Status-only live
+         refreshes need eligibility, not presentation previews. */
+      const status = FB.instantStatus(s, id, {
+        shown:true, deferPreview:true
+      });
+      if (!status.action) {
         renderActions();
         return;
       }
@@ -3658,7 +3668,7 @@ window.FB = window.FB || {};
     sortReadableRows(householdRows);
     const householdCost = FB.householdUpkeepParts(s);
     const standardSummary = householdStandardsSummary(s);
-    let householdSummary =
+    let householdSummary = '<div class="network-household-summary">' +
       kv('Resident family', esc(String(family.length))) +
       kv('Paid retainers', esc(FB.T('{used} of {capacity}', {
         used:retainers.length, capacity:capacity
@@ -3669,8 +3679,9 @@ window.FB = window.FB || {};
         esc(FB.money(householdCost.total))) +
       kv('Maintained standards each season',
         esc(FB.money(FB.householdStandardsUpkeep(s)))) +
-      kv('Active household standards',
-        esc(standardSummary || FB.T('None')));
+      '<div class="kv network-household-standards"><span>' +
+      esc(FB.T('Active household standards')) + '</span><b>' +
+      esc(standardSummary || FB.T('None')) + '</b></div>';
     if (retainers.length) {
       householdSummary += kv('Retainer contracts each season',
         esc(FB.money(FB.retainerSeasonCost(s))));
@@ -3679,7 +3690,7 @@ window.FB = window.FB || {};
       householdSummary += kv('Enterprise wages each season',
         esc(FB.money(FB.enterpriseLaborSeasonCost(s))));
     }
-    householdSummary += networkActionHtml('household-plan',
+    householdSummary += '</div>' + networkActionHtml('household-plan',
       'id="network-household-plan" data-network-action',
       '📋 ' + esc(FB.T('Household Plan…')),
       esc(FB.T(

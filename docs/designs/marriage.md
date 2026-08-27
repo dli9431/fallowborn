@@ -75,8 +75,10 @@ remain the standard gates. The court itself must also be reachable through the r
 access chain; the ruler sheet leaves an otherwise eligible approach visible with the
 missing-intermediary reason.
 
-The household head may also initiate a negotiated royal-family match from an
-unwed royal family member's character sheet. That sheet opens a bounded picker containing
+The household head may also initiate a negotiated royal-family match from a
+royal family member's character sheet. The action remains visible with an exact blocked
+reason when age, marriage, another pledge, or the absence of managed descendants prevents
+it. When available, that sheet opens a bounded picker containing
 only resident, managed children and grandchildren. Both partners must be at least
 twelve, opposite-sex under the modeled doctrine, exact-faith compatible, and
 outside the close-kin and celibate-office gates. The court must lie in the player's
@@ -89,6 +91,9 @@ and uses `FB.doKinWedding` at majority; refusal lowers realm Standing and perman
 closes only that exact pair through the royal family member's bounded
 `royalMatchRefusals` id list. This match creates royal lineage and succession normally,
 but does not create the protagonist's personal royal compact or alliance.
+After acceptance, the same royal-family action remains visible as **Review or change this
+family marriage** and opens the managed descendant's exact replacement flow. Betrothal
+status on either character sheet links directly to the pledged character's sheet.
 
 Every ordinary, matchmade, or royal courtship assigns the player's one
 `player.socialAttention` slot to that suitor while leaving the normal work/study focus
@@ -214,6 +219,10 @@ Technology impact review: `local_marriage_prospect_identity` is `mode:'none'` in
 `FBDATA.techImpactReviews`. Local courtship networks and mixed household identities are
 baseline social behavior with no credible research dependency.
 
+Household-arranged first pledges and exact replacements are recorded as
+`descendant_betrothal_replacement` with `mode:'none'`: both are baseline family and social
+authority, so no credible technology gate belongs on correcting a descendant's match.
+
 Player-initiated descendant-to-royal arrangements add
 `player_initiated_royal_family_matches` with `mode:'none'`. Negotiating an accessible
 dynastic marriage is a baseline personal and social action, and the relevant court's
@@ -281,7 +290,7 @@ a widowed Bishop may later petition for the red hat, but cannot remarry while ho
 either office.
 
 The household head arranges descendant matches: from age 12 an unwed resident child or
-grandchild's sheet offers three sounded-out families
+grandchild's sheet or actionable Household Plan match cell offers three sounded-out families
 (`FB.spawnMatchCandidates`/`FB.sealKinMatch`/`FB.doKinWedding` in events.js, picker in
 ui_modals.js; the candidates persist on the descendant as `matchIds`). The
 initial search records a lazy `matchSearchTurn`; **Sound out new families** may
@@ -302,6 +311,14 @@ relationships swing prestige at half the player's own `marryUpPrestige` rates, a
 above the player's station gate on prestige (20 per step). Marriage removes that descendant
 from the managed household, clears work and equipment assignments, and leaves their outfit
 in the shared armory.
+
+A living mutual betrothal remains actionable in Household Plan until the wedding. Opening
+it sounds out alternatives without disturbing the current pledge; choosing an alternative
+atomically validates and clears both sides of the former pledge, discards an ordinary
+generated former match, and seals the selected replacement. Any dowry already paid on the
+former pledge is forfeited rather than refunded, and the replacement warning states that
+before the player commits. Stale, dead, one-sided, married, or non-descendant records remain
+read-only instead of granting replacement authority.
 
 ## Child culture, faith, and house
 

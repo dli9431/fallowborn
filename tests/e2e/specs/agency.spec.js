@@ -569,6 +569,38 @@ test('a royal family sheet arranges an exact match with a managed descendant',
     expect(accepted.partnerBetrothed).toBe(setup.childId);
     expect(accepted.gold).toBe(setup.playerPays
       ? 500 - setup.dowry : 500);
+
+    await page.evaluate(function (partnerId) {
+      FB.ui.showCharModal(partnerId);
+    }, setup.partnerId);
+    const review = page.locator(
+      '[data-interaction-action="relationship.royal-family-match"]');
+    await expect(review).toContainText('Review or change this family marriage');
+    const partnerPledge = page.locator(
+      '[data-interaction-commitment="betrothal"] ' +
+      '[data-interaction-character="' + setup.childId + '"]');
+    await expect(partnerPledge).toContainText('Pledged to Negotiated Child');
+
+    await review.click();
+    await expect(page.locator('#gm-title')).toContainText(
+      'Change the Match for Negotiated Child');
+    await expect(page.locator('.match-candidate-card')).toHaveCount(3);
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator(
+      '[data-interaction-action="relationship.royal-family-match"]'))
+      .toBeVisible();
+
+    await partnerPledge.click();
+    await expect(page.locator('#gm-title')).toContainText('Negotiated Child');
+    const childPledge = page.locator(
+      '[data-interaction-commitment="betrothal"] ' +
+      '[data-interaction-character="' + setup.partnerId + '"]');
+    await expect(childPledge).toBeVisible();
+    await childPledge.click();
+    await expect(page.locator('#gm-title')).toContainText(
+      await page.evaluate(function (partnerId) {
+        return FB.fullName(FB.state.chars[partnerId]);
+      }, setup.partnerId));
   });
 
 test('AI royal offers revalidate exact managed kin, ruler generation, and dowry',

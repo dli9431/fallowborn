@@ -455,6 +455,28 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
     await expect(page.locator(
       '#tab-network .large-list-attention-count')).toHaveCount(0);
     await expect(page.locator('#tab-network .large-list-state')).toHaveCount(0);
+    const householdSummary = page.locator(
+      '[data-list-section="household"] .network-household-summary');
+    await expect(householdSummary).toBeVisible();
+    const householdStandards = householdSummary.locator(
+      '.network-household-standards');
+    expect(await householdStandards.evaluate(function (row) {
+      const value = row.querySelector('b');
+      const style = getComputedStyle(value);
+      return {
+        rowDisplay:getComputedStyle(row).display,
+        valueDisplay:style.display,
+        textAlign:style.textAlign,
+        whiteSpace:style.whiteSpace,
+        overflowWrap:style.overflowWrap
+      };
+    })).toEqual({
+      rowDisplay:'block',
+      valueDisplay:'block',
+      textAlign:'left',
+      whiteSpace:'normal',
+      overflowWrap:'normal'
+    });
     await connectionsToggle.hover();
     await expect(page.locator('#tooltip')).toContainText('Connections');
     await expect(page.locator('#tooltip')).toContainText('3 total');

@@ -123,6 +123,59 @@ test('gates the Papacy & College deed to church-facing roles', async function ({
   expect(result.baron).toBe(true);
   expect(result.bishop).toBe(true);
 });
+
+test('dismissing a rival Papal sponsorship request records refusal',
+  async function ({ page }) {
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const papacy = FB.ensurePapacy(s);
+      const obedience = papacy.obediences[papacy.romanObedience];
+      const rivalId = obedience.college.filter(function (id) {
+        return s.chars[id] && !s.chars[id].dead;
+      })[0];
+      papacy.pendingSchism = {
+        electionObedienceId:obedience.id,
+        sponsor:'player',
+        leaderId:obedience.claimantId,
+        rivalId:rivalId,
+        madeTurn:s.turn
+      };
+      FB.ui.showPapacy(obedience.id);
+      return { obedienceId:obedience.id, rivalId:rivalId };
+    });
+
+    await expect(page.getByText('A rival claimant seeks your backing'))
+      .toBeVisible();
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    expect(await page.evaluate(function () {
+      return {
+        pending:!!FB.state.papacy.pendingSchism,
+        decision:FB.papacyPendingDecision(FB.state),
+        active:Object.keys(FB.state.papacy.obediences).filter(function (id) {
+          return FB.state.papacy.obediences[id].status === 'active';
+        }).length
+      };
+    })).toEqual({ pending:false, decision:null, active:1 });
+
+    await page.evaluate(function (values) {
+      const s = FB.state;
+      s.papacy.pendingSchism = {
+        electionObedienceId:values.obedienceId,
+        sponsor:'player',
+        leaderId:s.papacy.obediences[values.obedienceId].claimantId,
+        rivalId:values.rivalId,
+        madeTurn:s.turn
+      };
+      FB.ui.showPapacy(values.obedienceId);
+    }, setup);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    expect(await page.evaluate(function () {
+      return !!FB.state.papacy.pendingSchism;
+    })).toBe(false);
+  });
+
 test('Papacy sheet groups the saved ballot and moves supporting detail to tooltips',
   async function ({ page }) {
     const setup = await page.evaluate(function () {

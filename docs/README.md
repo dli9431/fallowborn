@@ -204,6 +204,8 @@ Time passes **day by day** (90-day seasons, 360-day years).
    the realms join only when the rightful ruler becomes your protagonist. An available
    royal family member's own character sheet can instead propose an arranged match with one of
    your resident children or grandchildren; it shows the court's chance and terms first.
+   Once pledged, that control reviews or changes the family marriage, and either person's
+   Betrothal row links to the other's character sheet.
    When death comes (it will), continue as your heir — and if
    your heir is still a child, their upbringing is yours to direct from the *Self* tab.
    From age ten onward (depending on the trade), **Work & Enterprises** on a family
@@ -236,6 +238,8 @@ Time passes **day by day** (90-day seasons, 360-day years).
    in one place: education, instruction and fees, work and standing, enterprise or office
    assignments, match eligibility, and equipped-item/slot counts. Select an available cell
    to use the same detailed controls found on character and Work & Enterprises sheets.
+   An eligible descendant's Match cell can arrange a first pledge or reopen a living
+   betrothal to choose another family; changing it forfeits any dowry already paid.
    **Work & Enterprises** uses the same counted sections and large-list search. Its filters
    separate attention, settled work, staffed or idle enterprises, and unavailable people;
    every enterprise row still opens the exact owned instance.

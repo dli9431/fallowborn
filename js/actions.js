@@ -10170,7 +10170,7 @@ window.FB = window.FB || {};
     return out;
   };
 
-  function instantStatusForAction(state, action, shown) {
+  function instantStatusForAction(state, action, shown, options) {
     shown = shown === undefined ? !!action.show(state) : !!shown;
     let can = shown, reason = '';
     if (can && action.requiresAdult && !adult(state)) {
@@ -10207,16 +10207,18 @@ window.FB = window.FB || {};
       shown:shown,
       can:can,
       reason:reason,
-      preview:shown && action.preview ? action.preview(state) : null
+      preview:shown && action.preview && !(options && options.deferPreview)
+        ? action.preview(state) : null
     };
   }
 
-  FB.instantStatus = function (state, id) {
+  FB.instantStatus = function (state, id, options) {
     const action = deedById[id] || null;
     if (!action) return {
       action:null, shown:false, can:false, reason:''
     };
-    return instantStatusForAction(state, action);
+    return instantStatusForAction(state, action,
+      options && options.shown, options);
   };
 
   FB.listInstants = function (state, options) {

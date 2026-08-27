@@ -497,6 +497,145 @@ test('descendant picker refreshes in place without spending time or resources',
     });
   });
 
+test('Household Plan arranges a descendant match and can replace its pledge',
+  async function ({ page }) {
+    const family = await addEligibleDescendant(page);
+    await page.evaluate(function (childId) {
+      const state = FB.state;
+      state.chars[childId].born = state.date.year - 14;
+      FB.touchFamily();
+      FB.ui.showHouseholdPlan();
+    }, family.childId);
+
+    const matchCell = page.locator(
+      '[data-household-plan-action="match"]' +
+      '[data-household-plan-cid="' + family.childId + '"]');
+    await expect(matchCell).toContainText('Arrange a match');
+    await matchCell.click();
+    await expect(page.getByRole('heading', {
+      name:'A Match for ' + family.childName,
+      exact:true
+    })).toBeVisible();
+    const candidateCards = page.locator('.match-candidate-card');
+    await expect(candidateCards).toHaveCount(3);
+    await expect(page.locator('[data-match] .adesc')).toHaveCount(0);
+    await expect(candidateCards.first().locator('.settcard-meta'))
+      .toContainText('age');
+    await candidateCards.first().hover();
+    await expect(page.locator('#tooltip')).toContainText('Match details');
+    await expect(page.locator('#tooltip')).toContainText(
+      'Child identity preview');
+
+    const firstChoice = page.locator('[data-match]').last();
+    const firstId = await firstChoice.getAttribute('data-match');
+    const firstTerms = await page.evaluate(function (candidateId) {
+      const state = FB.state;
+      const candidate = state.chars[candidateId];
+      return {
+        gold:state.player.gold,
+        dowry:Math.max(0, Number(candidate.dowryAsk) || 0)
+      };
+    }, firstId);
+    expect(firstTerms.dowry).toBeGreaterThan(0);
+    await firstChoice.click();
+
+    await expect(page.getByRole('heading', {
+      name:/Household Plan/
+    })).toBeVisible();
+    await expect(matchCell).toContainText('Betrothed');
+    await expect(matchCell).toContainText('Promised to');
+    await expect(matchCell).toContainText('Select to change this match');
+    const firstPledge = await page.evaluate(function (ids) {
+      const state = FB.state;
+      const child = state.chars[ids.childId];
+      const former = state.chars[ids.formerId];
+      return {
+        childBetrothedId:child.betrothedId,
+        formerBetrothedId:former && former.betrothedId,
+        gold:state.player.gold,
+        turn:state.turn
+      };
+    }, { childId:family.childId, formerId:firstId });
+    expect(firstPledge).toEqual({
+      childBetrothedId:firstId,
+      formerBetrothedId:family.childId,
+      gold:firstTerms.gold - firstTerms.dowry,
+      turn:1
+    });
+
+    await matchCell.click();
+    await expect(page.getByRole('heading', {
+      name:'Change the Match for ' + family.childName,
+      exact:true
+    })).toBeVisible();
+    await expect(page.getByText(
+      /Choosing another match sets aside the current pledge/
+    )).toBeVisible();
+    await expect(page.getByText(
+      /Any dowry already paid is not refunded/
+    )).toBeVisible();
+    const browsing = await page.evaluate(function (ids) {
+      const state = FB.state;
+      const child = state.chars[ids.childId];
+      const former = state.chars[ids.formerId];
+      return {
+        childBetrothedId:child.betrothedId,
+        formerBetrothedId:former && former.betrothedId,
+        alternatives:child.matchIds && child.matchIds.length
+      };
+    }, { childId:family.childId, formerId:firstId });
+    expect(browsing).toEqual({
+      childBetrothedId:firstId,
+      formerBetrothedId:family.childId,
+      alternatives:3
+    });
+
+    const replacementChoice = page.locator('[data-match]').first();
+    const replacementId = await replacementChoice.getAttribute('data-match');
+    const replacementTerms = await page.evaluate(function (candidateId) {
+      const state = FB.state;
+      const candidate = state.chars[candidateId];
+      return {
+        gold:state.player.gold,
+        dowry:Math.max(0, Number(candidate.dowryAsk) || 0)
+      };
+    }, replacementId);
+    await replacementChoice.click();
+
+    await expect(page.getByRole('heading', {
+      name:/Household Plan/
+    })).toBeVisible();
+    const replaced = await page.evaluate(function (ids) {
+      const state = FB.state;
+      const child = state.chars[ids.childId];
+      const replacement = state.chars[ids.replacementId];
+      return {
+        childBetrothedId:child.betrothedId,
+        replacementBetrothedId:replacement && replacement.betrothedId,
+        formerStillTracked:!!state.chars[ids.formerId],
+        gold:state.player.gold,
+        turn:state.turn,
+        forfeitureLogged:state.log.some(function (entry) {
+          return entry.msg &&
+            entry.msg.key === 'news.event.kin_pledge_replaced_forfeit' &&
+            entry.msg.params.former;
+        })
+      };
+    }, {
+      childId:family.childId,
+      formerId:firstId,
+      replacementId:replacementId
+    });
+    expect(replaced).toEqual({
+      childBetrothedId:replacementId,
+      replacementBetrothedId:family.childId,
+      formerStillTracked:false,
+      gold:replacementTerms.gold - replacementTerms.dowry,
+      turn:2,
+      forfeitureLogged:true
+    });
+  });
+
 test('descendant search clocks survive restore and legacy pools refresh immediately',
   async function ({ page }) {
     const family = await addEligibleDescendant(page);

@@ -136,8 +136,8 @@ next due date, and materialized ruler synchronization reuses each ruler
 projection within a pass. These retained paths never batch RNG-bearing
 mechanics or move expiry boundaries; focus, travel, armies, events, and dated
 transitions keep their ordinary per-day order. The player-facing skip is
-frame-sliced to a four-millisecond
-budget (and at most two days per frame), with per-day UI refresh requests,
+frame-sliced to a four-millisecond budget (and at most six days per frame as a
+coarse-timer safeguard), with per-day UI refresh requests,
 political-map base
 rebuilds, canvas renders, transient Chronicle-news toasts, and the replaceable
 autoresolve receipt toast deferred until the burst ends. Completion refreshes
@@ -146,7 +146,8 @@ retaining the mounted panel tree. If Deeds is open, its already-mounted deed
 rows receive one status-only cooldown and eligibility pass; the same pass runs
 at most every seven game days during ordinary flowing time. It does not turn a
 large data-driven Deeds catalogue into a synchronous end-of-skip rebuild, and
-only a rare change in deed visibility promotes the pass to an exact render.
+it reuses that pass's visibility result without materializing deed previews.
+Only a rare change in deed visibility promotes the pass to an exact render.
 Chronicle entries are still recorded on their exact simulation day; only the last five notices that
 the live toast rail could have retained are rendered afterward. This keeps input
 and painting responsive without making

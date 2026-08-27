@@ -2791,12 +2791,20 @@ window.FB = window.FB || {};
     return state.player.matchPolicy;
   };
 
-  function managedMatchKind(state, descendant) {
+  function managedMatchKind(state, descendant, options) {
+    const replacingId = options && options.replacingBetrothedId;
+    const replacing = replacingId && state && state.chars &&
+      state.chars[replacingId];
+    const replacingExact = !!(replacing && !replacing.dead && descendant &&
+      descendant.betrothedId === replacing.id &&
+      replacing.betrothedId === descendant.id);
     if (!descendant || descendant.dead ||
         FB.ageOf(descendant, state.date.year) < 12 ||
         (FB.intrigueCaptivityOf &&
           FB.intrigueCaptivityOf(state, descendant.id)) ||
-        FB.spousesOf(state, descendant).length || descendant.betrothedId ||
+        FB.spousesOf(state, descendant).length ||
+        (descendant.betrothedId && !replacingExact) ||
+        (replacingId && !replacingExact) ||
         (FB.isHouseholdCharacter &&
           !FB.isHouseholdCharacter(state, descendant.id))) return null;
     return FB.playerDescendantKind(state, descendant.id);
@@ -2807,8 +2815,8 @@ window.FB = window.FB || {};
     return isFinite(days) ? Math.max(0, Math.floor(days)) : 30;
   };
 
-  FB.matchCandidateRefreshStatus = function (state, child) {
-    const eligible = !!(state && child && managedMatchKind(state, child));
+  FB.matchCandidateRefreshStatus = function (state, child, options) {
+    const eligible = !!(state && child && managedMatchKind(state, child, options));
     const value = child && child.matchSearchTurn;
     const hasTurn = !!state && value !== undefined && value !== null &&
       isFinite(Number(value));
@@ -2839,7 +2847,7 @@ window.FB = window.FB || {};
     return Math.max(0, station - FB.playerStation(state)) * 20;
   };
 
-  FB.kinMatchTerms = function (state, child, cand) {
+  FB.kinMatchTerms = function (state, child, cand, options) {
     const station = cand ? FB.stationOf(cand) : 0;
     const savedAmount = cand
       ? (cand.dowryAsk !== undefined ? cand.dowryAsk : cand.dowryDue)
@@ -2848,7 +2856,7 @@ window.FB = window.FB || {};
     const dowry = marriage.subjectPays ? marriage.amount : 0;
     const prestigeNeed = cand ? FB.kinMatchPrestigeNeed(state, cand) : 0;
     let reason = null;
-    if (!managedMatchKind(state, child)) reason = 'descendant';
+    if (!managedMatchKind(state, child, options)) reason = 'descendant';
     else if (!cand || cand.dead || cand.role !== 'match') reason = 'candidate';
     else if (FB.intrigueCaptivityOf &&
         FB.intrigueCaptivityOf(state, cand.id)) reason = 'captive';
@@ -3038,9 +3046,9 @@ window.FB = window.FB || {};
     return { candidate:candidate, terms:terms };
   };
 
-  FB.spawnMatchCandidates = function (state, child) {
+  FB.spawnMatchCandidates = function (state, child, options) {
     const out = [];
-    if (!managedMatchKind(state, child)) {
+    if (!managedMatchKind(state, child, options)) {
       if (child && FB.discardMatches) FB.discardMatches(state, child, null);
       return out;
     }
@@ -3087,15 +3095,15 @@ window.FB = window.FB || {};
     return out;
   };
 
-  FB.refreshMatchCandidates = function (state, child) {
-    const status = FB.matchCandidateRefreshStatus(state, child);
+  FB.refreshMatchCandidates = function (state, child, options) {
+    const status = FB.matchCandidateRefreshStatus(state, child, options);
     if (!status.ready) return null;
     FB.discardMatches(state, child, null);
-    const candidates = FB.spawnMatchCandidates(state, child);
+    const candidates = FB.spawnMatchCandidates(state, child, options);
     child.matchSearchTurn = state.turn;
     delete child.matchRecommendation;
     const policy = FB.ensureMatchPolicy(state);
-    if (policy.enabled &&
+    if (!options && policy.enabled &&
         !FB.isProtected(state, 'matchCharacter', child.id)) {
       const entry = FB.matchPolicyRecommendation(
         state, child, policy, candidates);
@@ -3129,14 +3137,37 @@ window.FB = window.FB || {};
     }
   };
 
-  FB.sealKinMatch = function (state, child, cand) {
-    const kind = managedMatchKind(state, child);
+  FB.sealKinMatch = function (state, child, cand, options) {
+    const replacingId = options && options.replacingBetrothedId;
+    const former = replacingId && state.chars[replacingId];
+    const kind = managedMatchKind(state, child, options);
     const listed = child && child.matchIds &&
       child.matchIds.indexOf(cand && cand.id) >= 0;
-    const terms = FB.kinMatchTerms(state, child, cand);
+    const terms = FB.kinMatchTerms(state, child, cand, options);
     if (!kind || !listed || !terms.ok) return false;
     const p = state.player;
     FB.discardMatches(state, child, cand.id);
+    if (former) {
+      const formerName = former.name;
+      const forfeited = Math.max(0, Number(former.dowryAsk) || 0);
+      child.betrothedId = null;
+      if (former.betrothedId === child.id) former.betrothedId = null;
+      delete former.dowryAsk;
+      delete former.dowryDue;
+      if (former.role === 'kinspouse') former.role = null;
+      if (!former.royalLine && state.player.courtingId !== former.id) {
+        delete state.chars[former.id];
+      }
+      FB.news(state, forfeited
+        ? FB.msg('news.event.kin_pledge_replaced_forfeit',
+          '💔 The pledge between {child} and {former} is set aside; the paid dowry of {money:gold} is not recovered.', {
+            child:child.name, former:formerName, gold:forfeited
+          })
+        : FB.msg('news.event.kin_pledge_replaced',
+          '💔 The pledge between {child} and {former} is set aside.', {
+            child:child.name, former:formerName
+          }));
+    }
     child.betrothedId = cand.id;
     cand.betrothedId = child.id;
     cand.role = 'kinspouse';
@@ -7494,6 +7525,8 @@ window.FB = window.FB || {};
     'old_custom_won', 'old_custom_lost', 'old_custom_compromise',
     'old_custom_betrayed', 'rights_evidence', 'rights_collaborator'
   ];
+  const OLD_CUSTOM_ALL_FLAGS = OLD_CUSTOM_STAGE_FLAGS.concat(
+    OLD_CUSTOM_OUTCOME_FLAGS);
 
   function oldCustomStage(state) {
     const flags = state.player.flags || {};
@@ -7508,7 +7541,7 @@ window.FB = window.FB || {};
   function clearOldCustom(state, reason, quiet) {
     const p = state.player;
     delete p.serfStory;
-    for (const flag of OLD_CUSTOM_STAGE_FLAGS.concat(OLD_CUSTOM_OUTCOME_FLAGS)) {
+    for (const flag of OLD_CUSTOM_ALL_FLAGS) {
       delete p.flags[flag];
     }
     state.eventQueue = (state.eventQueue || []).filter(function (item) {
@@ -7690,7 +7723,7 @@ window.FB = window.FB || {};
     let story = p.serfStory;
     if (!stage) {
       let staleFlags = false;
-      for (const flag of OLD_CUSTOM_STAGE_FLAGS.concat(OLD_CUSTOM_OUTCOME_FLAGS)) {
+      for (const flag of OLD_CUSTOM_ALL_FLAGS) {
         if (p.flags && p.flags[flag]) { staleFlags = true; break; }
       }
       if (story || staleFlags) clearOldCustom(state, 'tenure');

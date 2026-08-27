@@ -269,6 +269,10 @@ Player-initiated descendant-to-royal marriage negotiation is recorded as
 social play, while the counterpart court's research is AI-controlled, so no credible
 technology gate belongs on access to the proposal.
 
+Household-initiated first matches and exact betrothal replacement are recorded as
+`descendant_betrothal_replacement` with mode `none`. They exercise baseline family and
+social authority; research should not prevent correcting a managed descendant's pledge.
+
 Most entries expose a discrete practice, rule, building, enterprise, career, unit access,
 or research slot through `unlocks`. Data definitions use `requiresTech` for buildings,
 schooling, household standards, careers, career specialties, enterprises, auction lot

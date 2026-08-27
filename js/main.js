@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.0';
+  FB.VERSION = '1.165.1';
   FB.CHANGELOG = [
+    { v: '1.165.1', date: '2026-08-27', changes: [
+      'Household Plan and royal-family sheets now arrange, review, and replace descendant betrothals, with linked partners and clearer match terms.',
+      'Rival Papal sponsorships treat dismissal as refusal, household standards remain readable in Network, and fast-forward reaches its next interruption sooner.'
+    ] },
     { v: '1.165.0', date: '2026-08-27', changes: [
       'Enterprise management is now easier to scan, with supporting rules and terms available through details.',
       'Event-result toasts now dismiss without changing panels by default, with their Chronicle shortcut available in Settings.',
@@ -3056,7 +3060,10 @@ window.FB = window.FB || {};
      The simulation remains one authoritative day at a time, but a whole
      autoresolved season must not monopolize the browser's main thread. */
   const FAST_FORWARD_FRAME_BUDGET = 4;
-  const FAST_FORWARD_MAX_DAYS_PER_FRAME = 2;
+  /* The time budget is the primary responsiveness guard. A two-day cap added
+     a 45-frame floor to a quiet season, so retain a modest coarse-timer cap
+     without forcing cheap days to wait for dozens of paints. */
+  const FAST_FORWARD_MAX_DAYS_PER_FRAME = 6;
   G.fastForwarding = false;
 
   function notePlayerTimeStarted() {

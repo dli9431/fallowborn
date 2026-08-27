@@ -13366,12 +13366,17 @@ window.FB = window.FB || {};
     }
     if (c.betrothedId) {
       const betrothed = s.chars[c.betrothedId];
+      const mutual = !!(FB.playerDescendantKind(s, c.id) &&
+        betrothed && !betrothed.dead && betrothed.betrothedId === c.id);
+      const changeable = !!(mutual && FB.matchCandidateRefreshStatus(
+        s, c, { replacingBetrothedId:betrothed.id }).eligible);
       return {
         content:householdPlanLines(FB.T('Betrothed'),
           betrothed && !betrothed.dead
             ? FB.T('Promised to {name}', { name:betrothed.name })
-            : FB.T('A pledge is recorded')),
-        action:null
+            : FB.T('A pledge is recorded'),
+          changeable ? FB.T('Select to change this match') : null),
+        action:changeable ? 'match' : null
       };
     }
     if (!FB.playerDescendantKind(s, c.id)) {
@@ -13421,9 +13426,7 @@ window.FB = window.FB || {};
     const policy = FB.ensureMatchPolicy ? FB.ensureMatchPolicy(s) : null;
     return {
       content:householdPlanLines(
-        policy && policy.enabled
-          ? FB.T('No recommendation')
-          : FB.T('Eligible'),
+        FB.T('Arrange a match…'),
         policy && policy.enabled
           ? FB.T('No sounded-out family meets the assistant limits')
           : FB.T('No match arranged')),
@@ -16196,9 +16199,16 @@ window.FB = window.FB || {};
 
     h += '<div class="modal-actions"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Close')) + '</button></div>';
+    const pendingSchism = papacy.pendingSchism || null;
     openModal(FB.T('Papacy and College'), h, {
       modalClass:'fullsheet-modal papacy-modal',
       titleDetailsHtml:titleDetails,
+      onDismiss:pendingSchism ? function () {
+        if (s.papacy && s.papacy.pendingSchism === pendingSchism) {
+          FB.resolvePapalSchismSponsorship(s, false);
+          UI.refresh();
+        }
+      } : null,
       guide:guideModalOption('papacy-guide', 'roles', 'Guide: social and religious roles')
     });
 
@@ -18316,12 +18326,17 @@ window.FB = window.FB || {};
     }
     if (c.betrothedId && s.chars[c.betrothedId] &&
         !s.chars[c.betrothedId].dead) {
+      const betrothed = s.chars[c.betrothedId];
+      const betrothalText = FB.T('Pledged to {name}.', {
+        name:FB.fullName(betrothed)
+      });
       model.commitments.push({
         id:'betrothal',
         label:FB.T('Betrothal'),
-        detail:FB.T('Pledged to {name}.', {
-          name:FB.fullName(s.chars[c.betrothedId])
-        })
+        detail:betrothalText,
+        detailHtml:'<button type="button" class="linklike interaction-character-link" ' +
+          'data-interaction-character="' + esc(betrothed.id) + '">' +
+          esc(betrothalText) + '</button>'
       });
     }
     if (retainer) {
@@ -18890,26 +18905,58 @@ window.FB = window.FB || {};
       });
     }
     if (c.royalLine && !descendantKind && !reigningRealmId &&
-        FB.ageOf(c, s.date.year) >= 12 &&
-        !FB.spouseSnapshot(s, c) && !c.betrothedId &&
         FB.royalKinMatchCandidates) {
+      const pledged = c.betrothedId && s.chars[c.betrothedId];
+      const managedPledge = !!(pledged && !pledged.dead &&
+        pledged.betrothedId === c.id &&
+        FB.playerDescendantKind(s, pledged.id));
       const royalKin = FB.royalKinMatchCandidates(s, c);
+      const ageReady = FB.ageOf(c, s.date.year) >= 12;
+      const unwed = !FB.spouseSnapshot(s, c);
+      let label = FB.T('Arrange a family marriage…');
+      let detail = royalKin.length
+        ? FB.T(
+          'Choose one of your {count} managed children or grandchildren to propose for this royal match.', {
+            count:royalKin.length
+          })
+        : FB.T('No resident child or grandchild is available for you to propose.');
+      let enabled = ageReady && unwed && !c.betrothedId && royalKin.length > 0;
+      let blockedReason = null;
+      let route = 'royal-family-match';
+      let matchCharacterId = null;
+      if (managedPledge) {
+        label = FB.T('Review or change this family marriage…');
+        detail = FB.T('Pledged to your descendant {name}.', {
+          name:FB.fullName(pledged)
+        });
+        enabled = !!FB.matchCandidateRefreshStatus(s, pledged, {
+          replacingBetrothedId:c.id
+        }).eligible;
+        blockedReason = enabled ? null : FB.T('This pledge cannot be changed now.');
+        route = 'match';
+        matchCharacterId = pledged.id;
+      } else if (!ageReady) {
+        blockedReason = FB.T('Royal family matches become available at age 12.');
+      } else if (!unwed) {
+        blockedReason = FB.T('This person is already married.');
+      } else if (c.betrothedId) {
+        blockedReason = FB.T('This person is already pledged to another match.');
+      } else if (!royalKin.length) {
+        blockedReason = FB.T('No managed child or grandchild is available.');
+      }
       addInteractionAction(model, {
         id:'relationship.royal-family-match',
         group:'relationship',
-        label:FB.T('Arrange a family marriageâ€¦'),
-        detail:royalKin.length
-          ? FB.T(
-            'Choose one of your {count} managed children or grandchildren to propose for this royal match.', {
-              count:royalKin.length
-            })
-          : FB.T('No resident child or grandchild is available for you to propose.'),
-        enabled:royalKin.length > 0,
-        blockedReason:royalKin.length ? null :
-          FB.T('No managed child or grandchild is available.'),
-        consequence:FB.T(
-          'The court weighs the proposal after you spend the day; refusal closes this exact pairing.'),
-        route:'royal-family-match'
+        label:label,
+        detail:detail,
+        enabled:enabled,
+        blockedReason:blockedReason,
+        consequence:managedPledge
+          ? FB.T('Choosing a replacement sets aside this pledge; any paid dowry is not refunded.')
+          : FB.T(
+            'The court weighs the proposal after you spend the day; refusal closes this exact pairing.'),
+        route:route,
+        matchCharacterId:matchCharacterId
       });
     }
     if (reigningRealmId) {
@@ -18953,6 +19000,19 @@ window.FB = window.FB || {};
       familyButtons[i].addEventListener('click', function () {
         UI.showCharModal(familyButtons[i].getAttribute(
           'data-realm-family-cid'), returnContext, true);
+      });
+    }
+  }
+
+  function bindCharacterCommitmentNavigation(root, cid, returnContext) {
+    const links = root.querySelectorAll('[data-interaction-character]');
+    for (let i = 0; i < links.length; i++) {
+      links[i].addEventListener('click', function () {
+        const targetId = links[i].getAttribute('data-interaction-character');
+        if (!targetId || !FB.state.chars[targetId]) return;
+        UI.showCharModal(targetId, {
+          view:'character', characterId:cid, returnContext:returnContext
+        });
       });
     }
   }
@@ -19199,6 +19259,7 @@ window.FB = window.FB || {};
     });
     FB.paintFaces($('gm-body'), s);
     bindCharacterSkillsGuides($('gm-body'));
+    bindCharacterCommitmentNavigation($('gm-body'), c.id, returnContext);
     if (familyContext) bindRealmFamilyNavigation($('gm-body'), familyContext);
     if (displayRealmId) {
       bindWarRealmLinks($('gm-body'), s, displayRealmId, c.id, returnContext);
@@ -19507,7 +19568,7 @@ window.FB = window.FB || {};
             returnContext:returnContext
           });
         } else if (action.route === 'match') {
-          UI.showMatchPicker(c.id, {
+          UI.showMatchPicker(action.matchCharacterId || c.id, {
             view:'character',
             characterId:c.id,
             returnContext:returnContext
@@ -19876,25 +19937,32 @@ window.FB = window.FB || {};
   /* ================= arranged match picker =================
      Three families sounded out for a managed descendant's hand — the same
      three wait until a pledge is sealed, the search cooldown permits a new
-     pool, or the descendant weds elsewhere.
+     pool, or the descendant weds elsewhere. A sealed mutual pledge may reopen
+     the picker; browsing preserves it and choosing another family replaces it.
      A daughter's or granddaughter's dowry is paid at the pledge; a son's or
      grandson's bride brings hers to the wedding. */
   UI.showMatchPicker = function (cid, returnContext, replaceView) {
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
     const c = s.chars[cid];
+    const replacingId = c && c.betrothedId;
+    const former = replacingId && s.chars[replacingId];
+    const replacing = !!(former && !former.dead &&
+      former.betrothedId === c.id);
+    const matchOptions = replacing
+      ? { replacingBetrothedId:former.id } : undefined;
     if (!c || c.dead || !FB.playerDescendantKind(s, cid) ||
         !FB.isHouseholdCharacter(s, cid) || FB.ageOf(c, s.date.year) < 12 ||
-        FB.spouseOf(s, c) || c.betrothedId) return;
-    let cands = FB.spawnMatchCandidates(s, c);
+        FB.spouseOf(s, c) || (c.betrothedId && !replacing)) return;
+    let cands = FB.spawnMatchCandidates(s, c, matchOptions);
     const matchPolicy = FB.ensureMatchPolicy(s);
-    if (matchPolicy.enabled) {
+    if (!replacing && matchPolicy.enabled) {
       FB.recommendDescendantMatches(s, { notify:false });
     }
-    const recommendation = FB.matchRecommendationOf(s, c);
+    const recommendation = replacing ? null : FB.matchRecommendationOf(s, c);
     const recommendedId = recommendation && recommendation.candidate.id;
     const matchProtected = FB.isProtected(s, 'matchCharacter', c.id);
-    const refreshStatus = FB.matchCandidateRefreshStatus(s, c);
+    const refreshStatus = FB.matchCandidateRefreshStatus(s, c, matchOptions);
     cands = cands.map(function (candidate, order) {
       return { candidate:candidate, order:order };
     }).sort(function (a, b) {
@@ -19910,7 +19978,11 @@ window.FB = window.FB || {};
         'The match assistant will omit this person from future recommendations. Manual matching remains available.')) +
       '</span></label><div class="gm-body-text"><p>' + esc(FB.T(
       'Families willing to hear an offer for {name}’s hand:', { name: c.name })) +
-      '</p>' + (recommendedId ? '<p class="hint">' + esc(FB.T(
+      '</p>' + (replacing ? '<p class="household-warning op-bad">' + esc(FB.T(
+        'Choosing another match sets aside the current pledge to {name}. Any dowry already paid is not refunded.', {
+          name:former.name
+        })) + '</p>' : '') +
+      (recommendedId ? '<p class="hint">' + esc(FB.T(
         'The assistant’s recommendation is listed first. Every family remains your decision.')) +
         '</p>' : '') +
       '</div><button class="actionbtn" id="match-candidate-refresh"' +
@@ -19924,45 +19996,73 @@ window.FB = window.FB || {};
     for (const m of cands) {
       if (s.player.courtingId === m.id) continue; // no pledging your own paramour
       const gap = FB.stationOf(m) - ps;
-      const terms = FB.kinMatchTerms(s, c, m);
+      const terms = FB.kinMatchTerms(s, c, m, matchOptions);
       const need = terms.prestigeNeed;
       const ask = terms.dowry;
       const ok = terms.ok;
-      const details = [
-        FB.stationName(FB.stationOf(m)),
-        FB.T('age {age}', { age: FB.ageOf(m, s.date.year) })
-      ];
+      const detailsId = 'match-candidate-details-' + m.id;
+      const details = [];
       if (m.id === recommendedId) {
-        details.unshift(FB.T('Recommended by your assistant limits'));
+        details.push(FB.T('Recommended by your assistant limits'));
       }
-      if (ask) details.push(FB.T('their kin ask a dowry of {money:gold}', { gold: ask }));
-      if (m.dowryDue) {
-        details.push(FB.T('she would bring a dowry of {money:gold}', { gold: m.dowryDue }));
+      const transfer = ask
+        ? FB.T('Dowry {money:gold}', { gold:ask })
+        : (m.dowryDue
+          ? FB.T('Brings {money:gold}', { gold:m.dowryDue })
+          : FB.T('No dowry'));
+      if (terms.reason === 'gold') {
+        details.push(FB.T('Requires {money:gold}; you have {money:current}.', {
+          gold:ask, current:Math.floor(s.player.gold)
+        }));
       }
       if (need) {
         details.push(s.player.prestige >= need
-          ? FB.T('needs {prestige} prestige', { prestige: need })
-          : FB.T('needs {prestige} prestige (you have {current})',
+          ? FB.T('Requires {prestige} prestige', { prestige: need })
+          : FB.T('Requires {prestige} prestige; you have {current}.',
             { prestige: need, current: Math.floor(s.player.prestige) }));
-      } else if (gap < 0) details.push(FB.T('a step down — folk will mark it'));
+      }
+      if (gap < 0) details.push(FB.T('A step down — folk will mark it.'));
       if (!ok && terms.reason !== 'gold' && terms.reason !== 'prestige') {
         const blocked = terms.reason === 'faith'
-          ? FB.T('blocked by faith')
+          ? FB.T('Blocked by faith.')
           : terms.reason === 'kinship'
-            ? FB.T('blocked by close kinship')
+            ? FB.T('Blocked by close kinship.')
             : terms.reason === 'compact'
-              ? FB.T('royal compacts are reserved for the household head')
+              ? FB.T('Royal compacts are reserved for the household head.')
               : terms.reason === 'doctrine'
-                ? FB.T('blocked by marriage doctrine')
-                : FB.T('no longer eligible');
+                ? FB.T('Blocked by marriage doctrine.')
+                : FB.T('No longer eligible.');
         details.push(blocked);
       }
       details.push(childIdentityPreviewText(s, c, m, false));
-      h += '<button class="actionbtn' +
-        (m.id === recommendedId ? ' match-policy-recommended' : '') +
-        '" data-match="' + m.id + '"' + (ok ? '' : ' disabled') +
-        '>💍 ' + esc((epithetText(s, m) ? epithetText(s, m) + ' — ' : '') + m.name) +
-        '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
+      const displayName = (epithetText(s, m)
+        ? epithetText(s, m) + ' — ' : '') + m.name;
+      h += '<section class="settcard match-candidate-card' +
+        (m.id === recommendedId ? ' match-policy-recommended' : '') + '"' +
+        (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+        ' aria-labelledby="' + esc(detailsId) + '-title" aria-describedby="' +
+        esc(detailsId) + '"><div class="match-candidate-main">' +
+        FB.faceTag(m, 44, 50) + '<div class="match-candidate-copy">' +
+        '<div class="settcard-head"><b id="' + esc(detailsId) + '-title">' +
+        esc(displayName) + '</b><span class="settcard-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detailsId) +
+        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button><button type="button" ' +
+        'class="btn small settcard-raise" data-match="' + esc(m.id) + '"' +
+        (ok ? '' : ' disabled') + '>' +
+        esc(replacing ? FB.T('Choose') : FB.T('Pledge')) +
+        '</button></span></div><div class="settcard-meta">' +
+        esc(FB.T('{station} · age {age}', {
+          station:FB.stationName(FB.stationOf(m)),
+          age:FB.ageOf(m, s.date.year)
+        })) + '</div><div class="settcard-fx' + (ok ? '' : ' unaffordable') + '">' +
+        esc(transfer + (need ? ' · ' + FB.T('{prestige} prestige', {
+          prestige:need
+        }) : '')) + '</div></div></div>' +
+        '<div class="settcard-details hidden" id="' + esc(detailsId) + '">' +
+        '<b>' + esc(FB.T('Match details')) + '</b><div class="settdesc">' +
+        esc(details.join(' · ')) + '</div></div></section>';
     }
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Decide nothing today')) +
@@ -19978,9 +20078,13 @@ window.FB = window.FB || {};
         interactionReturn(returnContext);
       };
     }
-    openModal(FB.T('A Match for {name}', { name: c.name }), h, historyOptions);
+    openModal(replacing
+      ? FB.T('Change the Match for {name}', { name:c.name })
+      : FB.T('A Match for {name}', { name:c.name }), h, historyOptions);
+    FB.paintFaces($('gm-body'), s);
+    bindCardInfoToggles($('gm-body'));
     $('match-candidate-refresh').addEventListener('click', function () {
-      if (!FB.refreshMatchCandidates(s, c)) return;
+      if (!FB.refreshMatchCandidates(s, c, matchOptions)) return;
       UI.showMatchPicker(cid, returnContext, true);
     });
     $('match-policy-protection').addEventListener('change', function () {
@@ -19994,7 +20098,7 @@ window.FB = window.FB || {};
       b.addEventListener('click', function () {
         const m = s.chars[b.dataset.match];
         if (!m) return;
-        if (!FB.sealKinMatch(s, c, m)) return;
+        if (!FB.sealKinMatch(s, c, m, matchOptions)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus: true });
         resumeManagementAfterDay(returnContext);

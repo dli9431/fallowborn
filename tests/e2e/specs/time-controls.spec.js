@@ -567,7 +567,7 @@ test('fast-forward completion refreshes visible deeds without rebuilding the pan
     await expect(page.locator('#fast-forward-panel-sentinel')).toHaveCount(0);
   });
 
-test('fast-forward yields after two days without requesting per-day UI refreshes',
+test('fast-forward batches six cheap days without requesting per-day UI refreshes',
   async function ({ page }) {
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
@@ -579,8 +579,14 @@ test('fast-forward yields after two days without requesting per-day UI refreshes
 
       const originalAnimationFrame = window.requestAnimationFrame;
       const originalRefresh = FB.ui.refresh;
+      const originalNow = Object.getOwnPropertyDescriptor(
+        window.performance, 'now');
       const callbacks = [];
       let refreshes = 0;
+      Object.defineProperty(window.performance, 'now', {
+        configurable:true,
+        value:function () { return 0; }
+      });
       window.requestAnimationFrame = function (callback) {
         callbacks.push(callback);
         return callbacks.length;
@@ -602,6 +608,11 @@ test('fast-forward yields after two days without requesting per-day UI refreshes
           continuationQueued:callbacks.length
         };
       } finally {
+        if (originalNow) {
+          Object.defineProperty(window.performance, 'now', originalNow);
+        } else {
+          delete window.performance.now;
+        }
         window.requestAnimationFrame = originalAnimationFrame;
         FB.ui.refresh = originalRefresh;
         FB.game.fastForwarding = false;
@@ -610,11 +621,54 @@ test('fast-forward yields after two days without requesting per-day UI refreshes
     });
 
     expect(result.scheduledBeforeWork).toBe(1);
-    expect(result.days).toBeGreaterThan(0);
-    expect(result.days).toBeLessThanOrEqual(2);
+    expect(result.days).toBe(6);
     expect(result.refreshes).toBe(0);
     expect(result.stillRunning).toBe(true);
     expect(result.continuationQueued).toBe(1);
+  });
+
+test('status-only deed refresh reuses visibility and skips previews',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      FB.game.setPaused(true);
+      FB.ui.showTab('actions', { history:false });
+    });
+    await waitForUiRefresh(page);
+
+    const calls = await page.evaluate(function () {
+      const mounted = document.querySelector(
+        '#tab-actions [data-action-id]');
+      let action = null;
+      for (const candidate of FB.instants) {
+        if (mounted && candidate.id === mounted.getAttribute('data-action-id')) {
+          action = candidate;
+          break;
+        }
+      }
+      const originalShow = action.show;
+      const originalPreview = action.preview;
+      let shows = 0, previews = 0;
+      action.show = function () {
+        shows++;
+        return originalShow.apply(this, arguments);
+      };
+      action.preview = function () {
+        previews++;
+        return originalPreview
+          ? originalPreview.apply(this, arguments) : {};
+      };
+      try {
+        FB.ui._shared.refreshVisibleDeedStatuses({ force:true });
+        return { shows:shows, previews:previews };
+      } finally {
+        action.show = originalShow;
+        if (originalPreview) action.preview = originalPreview;
+        else delete action.preview;
+      }
+    });
+
+    expect(calls).toEqual({ shows:1, previews:0 });
   });
 
 test('daily maintenance skips vassal discovery for non-landed households',

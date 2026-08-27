@@ -3241,6 +3241,7 @@ window.FB = window.FB || {};
     view.body = document.createDocumentFragment();
     view.scrollTop = body.scrollTop;
     view.dismiss = UI._gmDismiss;
+    view.onDismiss = UI._gmOnDismiss;
     view.modalKey = UI._gmModalKey;
     view.modalTarget = UI._gmModalTarget;
     view.modalAction = UI._gmModalAction;
@@ -3270,6 +3271,7 @@ window.FB = window.FB || {};
     body.scrollTop = view.scrollTop || 0;
     setModalClasses(gm, view.modalClass);
     UI._gmDismiss = view.dismiss;
+    UI._gmOnDismiss = view.onDismiss;
     UI._gmModalKey = view.modalKey;
     UI._gmModalTarget = view.modalTarget;
     UI._gmModalAction = view.modalAction;
@@ -3277,6 +3279,7 @@ window.FB = window.FB || {};
     UI._gmReturnAction = view.returnAction;
     genericNavSnapshot = {
       dismiss:view.dismiss,
+      onDismiss:view.onDismiss,
       historyBack:view.historyBack,
       historyBackRender:view.historyBackRender,
       returnFocus:view.returnFocus,
@@ -3408,6 +3411,7 @@ window.FB = window.FB || {};
   function reopenGenericModalRaw() {
     if (!genericNavSnapshot) return;
     UI._gmDismiss = genericNavSnapshot.dismiss;
+    UI._gmOnDismiss = genericNavSnapshot.onDismiss;
     UI._gmNoHotkeys = genericNavSnapshot.noHotkeys;
     UI._gmReturnFocus = genericNavSnapshot.returnFocus;
     UI._gmReturnAction = genericNavSnapshot.returnAction;
@@ -3432,8 +3436,10 @@ window.FB = window.FB || {};
   UI._gmModalAction = null;
 
   function closeGenericModalRaw() {
+    const onDismiss = UI._gmOnDismiss;
     $('genmodal').classList.add('hidden');
     UI._gmDismiss = true;
+    UI._gmOnDismiss = null;
     UI._gmNoHotkeys = false;
     UI._gmModalKey = null;
     UI._gmModalTarget = null;
@@ -3442,6 +3448,7 @@ window.FB = window.FB || {};
     const actionId = UI._gmReturnAction;
     UI._gmReturnFocus = null;
     UI._gmReturnAction = null;
+    if (onDismiss) onDismiss();
     if (back && document.documentElement.contains(back)) {
       back.focus();
       return;
@@ -3481,6 +3488,9 @@ window.FB = window.FB || {};
       captureModalView(previousView);
     }
     UI._gmDismiss = !(opts && opts.dismissable === false);
+    UI._gmOnDismiss = opts && Object.prototype.hasOwnProperty.call(opts, 'onDismiss')
+      ? (typeof opts.onDismiss === 'function' ? opts.onDismiss : null)
+      : retainedNavigation && retainedNavigation.onDismiss || null;
     UI._gmNoHotkeys = !!(opts && opts.noHotkeys);
     UI._gmModalKey = (opts && opts.modalKey) || UI._gmModalKey || null;
     UI._gmModalTarget = (opts && opts.modalTarget) || UI._gmModalTarget || null;
@@ -3529,6 +3539,7 @@ window.FB = window.FB || {};
     genericNavSnapshot = {
       dismiss:retainedNavigation
         ? retainedNavigation.dismiss : UI._gmDismiss,
+      onDismiss:UI._gmOnDismiss,
       noHotkeys:retainedNavigation
         ? retainedNavigation.noHotkeys : UI._gmNoHotkeys,
       historyBack:retainedNavigation
@@ -3576,6 +3587,7 @@ window.FB = window.FB || {};
   }
   UI.openModal = openModal;
   UI._gmDismiss = true;
+  UI._gmOnDismiss = null;
 
   function modalHotkeyClose(key, shift) {
     const gm = $('genmodal');

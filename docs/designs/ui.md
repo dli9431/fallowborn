@@ -939,6 +939,10 @@ even after the child switches to another arrangement. From age 12, child and gra
 sheets also expose the same arranged-match picker. Career, guild, religious-standing,
 enterprise, and equipment controls use managed household eligibility at both render and
 action time, so a stale sheet cannot manage someone who has married out or otherwise left.
+Every live betrothal commitment names the other party as a character-sheet link. Royal
+family sheets keep their family-marriage control visible after a pledge: a pledge to a
+managed descendant reopens that descendant's replacement picker, while other commitments
+show the exact reason a new arrangement cannot be proposed.
 
 Person-selection flows for education tutors, enterprise workers, household retainers,
 and council offices use the shared `UI.personAssignmentCard`. The component keeps the
@@ -1626,9 +1630,21 @@ without an intermediate review modal, and explicitly states that no pledge, reso
 spend, or day advance occurs. Recommended match cells name the candidate and
 terms; their ordinary match picker puts that candidate first with a visible marker while
 retaining every manual family choice.
+An eligible unpledged descendant's match cell explicitly offers to arrange a match. A
+living mutual pledge remains an actionable cell: reopening it labels the picker as a
+change, keeps the current pledge intact while alternatives are reviewed, and warns that
+selecting another family forfeits any dowry already paid before sealing the replacement.
+Ordinary candidate rows use a compact portrait, name, station, age, and dowry summary.
+Recommendation rationale, eligibility explanations, prestige detail, social consequences,
+and child-identity projection live in the shared desktop tooltip or touch/tablet `?`
+disclosure instead of filling every row.
 The match picker exposes a whole-descendant manual-management reservation. It removes an
 existing recommendation and omits that descendant from future assistant passes without
 removing their candidates or manual pledge choices.
+
+The Network Household summary keeps ordinary counts and costs as aligned two-sided rows.
+The potentially long active-standards value receives its own full-width line, preventing
+icons, levels, or translated names from collapsing into one-character columns.
 
 Trade & Guild begins with explicit incoming and outgoing monopoly slots. Active rows name
 the profession, issuer or abstract recipient, optional household advocate, grantor tier,

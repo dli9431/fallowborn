@@ -174,7 +174,9 @@ ordinary queued events and may be accepted or refused.
 A rival obedience may form after ballot nine only when authority is 30 or lower, both
 leaders command at least one third of the College, and a top-quartile Catholic sovereign
 will sponsor the runner-up. AI sponsorship has a saved 25% crisis roll; an eligible player
-sponsor receives a mandatory choice.
+sponsor receives an accept-or-refuse request. Explicitly closing or dismissing that Papacy
+sheet is a refusal: it clears the saved request without founding a rival obedience, so the
+same unresolved appeal cannot block the calendar and reopen indefinitely.
 
 Each active obedience owns its claimant, authority, College, supporters, sanctions,
 election, and strongest patron. Independent Catholic sovereigns publish one saved

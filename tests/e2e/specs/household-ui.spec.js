@@ -428,7 +428,6 @@ test('ruler establishments sink gold into research, administration, and military
       const before = {
         research:FB.techResearchRate(s, realmId),
         domain:FB.domainCap(s),
-        composition:FB.playerCompositionBreakdown(s).units,
         battle:FB.armyBattlePower(s, probe, FB.homeProv(s), 'attack')
       };
       s.player.householdStandards = {
@@ -440,7 +439,7 @@ test('ruler establishments sink gold into research, administration, and military
       const after = {
         research:FB.techResearchRate(s, realmId),
         domain:FB.domainCap(s),
-        composition:FB.playerCompositionBreakdown(s).units,
+        composition:FB.playerCompositionBreakdown(s),
         battle:FB.armyBattlePower(s, probe, FB.homeProv(s), 'attack'),
         upkeep:FB.householdStandardsUpkeep(s),
         guardFloor:FB.householdStandardMinimumLevel(s, 'household_guard')
@@ -493,8 +492,13 @@ test('ruler establishments sink gold into research, administration, and military
     });
     expect(result.after.research - result.before.research).toBeCloseTo(0.75, 8);
     expect(result.after.domain - result.before.domain).toBe(1);
-    expect(result.after.composition.levy - result.before.composition.levy).toBe(40);
-    expect(result.after.composition.ret - result.before.composition.ret).toBe(25);
+    const householdForces = result.after.composition.entries.filter(function (entry) {
+      return entry.kind === 'household_standard';
+    }).reduce(function (units, entry) {
+      units[entry.unit] = (units[entry.unit] || 0) + entry.amount;
+      return units;
+    }, {});
+    expect(householdForces).toMatchObject({ levy:40, ret:25 });
     expect(result.after.battle).toBeGreaterThan(result.before.battle);
     expect(result.after.upkeep).toBeGreaterThan(0);
     expect(result.after.guardFloor).toBe(0);

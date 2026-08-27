@@ -813,6 +813,7 @@ test('staffing assistant completes an upgraded crew instead of scattering partia
         });
         me.spouseId = helper.id;
         helper.spouseId = me.id;
+        FB.touchFamily();
       }
       for (const worker of FB.householdWorkers(s)) {
         worker.career = {
