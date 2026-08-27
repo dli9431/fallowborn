@@ -796,6 +796,84 @@ test('enterprise manager exposes upgrades, staffing thresholds, and paid labor c
       .toContainText('Owner');
   });
 
+test('staffing preview discloses details and staffs each idle enterprise directly',
+  async function ({ page }) {
+    await page.setViewportSize({ width:900, height:844 });
+    const fixture = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      me.career = {
+        profession:'farmer', rank:'journeyman', experience:4,
+        startedYear:s.date.year - 4, guildRank:'none', guildStanding:0,
+        chosen:true
+      };
+      s.player.profession = 'farmer';
+      s.player.enterpriseMigration = 1;
+      s.player.gold = 100;
+      const enterprise = {
+        uid:'staffing_preview_actions_fixture', type:'field_strip',
+        provinceId:s.player.provinceId, settlement:0, workerId:null
+      };
+      s.player.enterprises = [enterprise];
+      FB.ui.showEnterpriseStaffingPreview();
+      return { uid:enterprise.uid, workerId:me.id };
+    });
+
+    const titleInfo = page.locator('.modal-title-info');
+    await expect(titleInfo).toBeVisible();
+    await titleInfo.click();
+    await expect(page.locator('#gm-title-details')).toContainText(
+      'Locked pairings and reserved workers stay fixed');
+
+    let row = page.locator(
+      '[data-enterprise-staffing-uid="' + fixture.uid + '"]');
+    const rowInfo = row.locator('.settcard-info');
+    await expect(rowInfo).toBeVisible();
+    await expect(row.locator('.enterprise-staffing-place')).toBeHidden();
+    await expect(row.locator('.enterprise-staffing-comparison small').first())
+      .toBeHidden();
+    await rowInfo.click();
+    await expect(row.locator('.enterprise-staffing-details')).toContainText(
+      'Hire a local worker');
+    await expect(row.locator('.enterprise-staffing-details')).toContainText(
+      'of 1 workers');
+    await expect(row.locator('.enterprise-staffing-details')).toContainText(
+      'Pay');
+    await expect(row.locator('[data-enterprise-staffing-manage]'))
+      .toBeVisible();
+    await expect(row.locator('[data-enterprise-staffing-hire]'))
+      .toBeEnabled();
+
+    await row.locator('[data-enterprise-staffing-manage]').click();
+    await expect(page.locator('.enterprise-management-modal')).toBeVisible();
+    await expect(page.locator(
+      '[data-enterprise-worker="' + fixture.workerId + '"]')).toBeVisible();
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#gm-title')).toContainText(
+      'Enterprise staffing preview');
+
+    row = page.locator(
+      '[data-enterprise-staffing-uid="' + fixture.uid + '"]');
+    await row.locator('[data-enterprise-staffing-hire]').click();
+    await expect(page.locator('#gm-title')).toContainText(
+      'Enterprise staffing preview');
+    await expect(page.locator('.enterprise-staffing-notice')).toContainText(
+      'A local worker was hired');
+    await expect(page.locator(
+      '[data-enterprise-staffing-uid="' + fixture.uid + '"] ' +
+      '[data-enterprise-staffing-hire]')).toHaveCount(0);
+    const staffed = await page.evaluate(function (uid) {
+      const enterprise = FB.state.player.enterprises.filter(function (entry) {
+        return entry.uid === uid;
+      })[0];
+      return {
+        workers:FB.enterpriseWorkerIds(enterprise).length,
+        contracts:FB.enterpriseLaborRecords(FB.state).length
+      };
+    }, fixture.uid);
+    expect(staffed).toEqual({ workers:1, contracts:1 });
+  });
+
 test('staffing assistant completes an upgraded crew instead of scattering partial staffs',
   async function ({ page }) {
     const result = await page.evaluate(function () {

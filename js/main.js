@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.1';
+  FB.VERSION = '1.165.2';
   FB.CHANGELOG = [
+    { v: '1.165.2', date: '2026-08-27', changes: [
+      'Household Plan now restores compact scroll position, moves supporting text into details, and keeps enterprise staffing controls inside the sheet.',
+      'Enterprise staffing previews now support assigning existing workers or hiring local workers for idle businesses.'
+    ] },
     { v: '1.165.1', date: '2026-08-27', changes: [
       'Household Plan and royal-family sheets now arrange, review, and replace descendant betrothals, with linked partners and clearer match terms.',
       'Rival Papal sponsorships treat dismissal as refusal, household standards remain readable in Network, and fast-forward reaches its next interruption sooner.'
