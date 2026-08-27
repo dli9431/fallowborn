@@ -5170,7 +5170,9 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     const ste = me ? FB.skillOf(me, 'ste') : 0;
     return (B.domainBase || 4) + Math.floor(ste / (B.domainStewPer || 5)) +
-      FB.techBonus(state, 'domain');
+      FB.techBonus(state, 'domain') +
+      (FB.householdStandardEffect
+        ? FB.householdStandardEffect(state, 'domain') : 0);
   };
   FB.domainPenaltyForCount = function (state, held) {
     const over = Math.max(0, Math.max(0, Number(held) || 0) -

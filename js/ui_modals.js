@@ -12249,7 +12249,8 @@ window.FB = window.FB || {};
 
   /* ================= household standards & permanent holdings ================= */
   function householdStandardScope(s, def) {
-    if (def.kind !== 'work') return FB.T('Commoner household');
+    if (def.kind === 'ruler') return FB.T('Ruler household and realm');
+    if (def.kind !== 'work') return FB.T('Resident household');
     const career = FBDATA.careers && FBDATA.careers[def.profession];
     return career
       ? FB.T('{profession} work and enterprises', {
@@ -12598,8 +12599,25 @@ window.FB = window.FB || {};
       '</p><div class="household-catalogue-list">';
     for (const id of FB.householdStandardIds()) {
       const def = FBDATA.householdStandards[id];
-      if (def.kind === 'work') continue;
+      if (def.kind === 'work' || def.kind === 'ruler') continue;
       h += householdStandardRow(s, id);
+    }
+    h += '</div></section><section class="household-catalogue-section" ' +
+      'id="household-ruler" aria-labelledby="household-ruler-title">' +
+      '<h4 id="household-ruler-title">' + esc(FB.T('Ruler establishments')) +
+      '</h4><p class="household-section-hint">' + esc(FB.T(
+        'Paid guards, scholars, and clerks strengthen a landed ruler’s realm. They are discretionary and go dormant below Baron rank.')) +
+      '</p><div class="household-catalogue-list">';
+    let rulerStandards = 0;
+    for (const id of FB.householdStandardIds()) {
+      const def = FBDATA.householdStandards[id];
+      if (def.kind !== 'ruler') continue;
+      h += householdStandardRow(s, id);
+      rulerStandards++;
+    }
+    if (!rulerStandards) {
+      h += '<div class="household-empty">' + esc(FB.T(
+        'No ruler establishment is available.')) + '</div>';
     }
     h += '</div></section><section class="household-catalogue-section" ' +
       'id="household-outfits" aria-labelledby="household-outfits-title">' +

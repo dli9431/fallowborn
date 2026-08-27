@@ -1448,8 +1448,9 @@ window.FB = window.FB || {};
   FB.householdStandardActive = function (state, id) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
     if (!def || !FB.householdStandardLevel(state, id)) return false;
+    if (def.kind === 'ruler' && state.player.tier < 3) return false;
     const current = FB.householdStandardLevelDef(state, id);
-    if (current && current.requiresTech &&
+    if (current && current.requiresTech && !current.grandfatherTech &&
         !FB.techRequirementMet(state, current.requiresTech)) return false;
     return def.kind !== 'work' || FB.householdStandardWorkerEligible(state, id);
   };
@@ -1457,6 +1458,7 @@ window.FB = window.FB || {};
   FB.householdStandardEffects = function (state) {
     const out = {
       mortality:0, education:0, retainers:0, prestige:0,
+      research:0, domain:0, levy:0, retinue:0, battle:0,
       travelCost:1, travelLegDays:null, work:{}
     };
     const standards = FB.ensureHouseholdStandards(state);
@@ -1476,6 +1478,11 @@ window.FB = window.FB || {};
       if (fx.education) out.education += fx.education;
       if (fx.retainers) out.retainers += fx.retainers;
       if (fx.prestige) out.prestige += fx.prestige;
+      if (fx.research) out.research += fx.research;
+      if (fx.domain) out.domain += fx.domain;
+      if (fx.levy) out.levy += fx.levy;
+      if (fx.retinue) out.retinue += fx.retinue;
+      if (fx.battle) out.battle += fx.battle;
       if (fx.travelCost !== undefined) out.travelCost *= fx.travelCost;
       if (fx.travelLegDays !== undefined) {
         out.travelLegDays = out.travelLegDays === null ? fx.travelLegDays :
@@ -1542,7 +1549,7 @@ window.FB = window.FB || {};
     }
     if (state.player.tier < tierMin) {
       return FB.T('Requires {rank} rank.', {
-        rank:tierMin >= 2 ? FB.T('Gentry') : tierMin >= 1 ? FB.T('Freeholder') : FB.T('Serf')
+        rank:FB.titleWordFor(state, tierMin)
       });
     }
     if (def.kind === 'work' && !FB.householdStandardWorkerEligible(state, id)) {
@@ -1579,12 +1586,14 @@ window.FB = window.FB || {};
     return true;
   };
 
-  /* Landed households may shed trade tools, but their general living
-     standards cannot fall below the dignity of the current title. The three
-     authored commoner bands double as Baron, Count, and Duke+ floors. */
+  /* Landed households may shed trade tools and ruler establishments, but
+     general living standards cannot fall below the dignity of the current
+     title. Successive title tiers raise that floor through the authored list. */
   FB.householdStandardMinimumLevel = function (state, id) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
     if (!def || !Array.isArray(def.levels) || def.kind === 'work' ||
+        def.kind === 'ruler' ||
+        def.titleFloor === false ||
         state.player.tier < 3) return 0;
     return Math.min(def.levels.length, Math.max(1, state.player.tier - 2));
   };

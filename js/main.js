@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.162.0';
+  FB.VERSION = '1.163.0';
   FB.CHANGELOG = [
+    { v: '1.163.0', date: '2026-08-26', changes: [
+      'Better the Household now offers ruler-grade living standards and paid guard, scholarly, and chancery establishments for military, research, and domain power.'
+    ] },
     { v: '1.162.0', date: '2026-08-26', changes: [
       'Family enterprises can now be expanded into larger, multi-worker businesses with non-gold household and county benefits, including paid local staffing.'
     ] },

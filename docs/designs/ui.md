@@ -1031,6 +1031,9 @@ otherwise fit the child's station and situation remain in their normal groups as
 rows whose disclosure says they unlock at age 16; they are not removed and do not renumber
 the surrounding catalogue. Better the Household remains actionable when an inherited
 standard can be reduced, while its purchase controls expose their childhood restriction.
+Its full sheet separates Living standards, Ruler establishments, and Work outfits. Ruler
+rows remain visible before Baron rank so the exact rank and technology path is legible;
+owned entries show as dormant when landed authority is lost.
 Building Deeds first evaluates only each deed's visibility so every accordion retains an
 exact count. Cooldowns, technology gates, and potentially expensive eligibility reasons are
 evaluated only for open groups, when their controls are constructed. Returning through a

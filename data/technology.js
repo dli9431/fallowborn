@@ -115,6 +115,17 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Ruler households maintaining the same living standards and work outfits as commoner households needs no separate innovation; every purchased level retains its existing authored technology requirement.'
       },
+      ruler_household_establishments:{
+        mode:'hard',
+        tech:[
+          'annual_fairs','bills_of_exchange','bureaucratic_offices','census_records',
+          'double_entry_bookkeeping','mail_hauberks','martial_drill',
+          'paved_causeways','professional_retinues','road_surveys','royal_chancery',
+          'scholarly_networks','scriptoria','three_field','universities'
+        ],
+        fallback:'existing_household_standards',
+        rationale:'The existing household catalogue remains available, while each optional ruler-grade living standard and guard, scholarly, or chancery establishment stays visible behind the specific practice needed to establish it and remains grandfathered once purchased.'
+      },
       enterprise_hired_labor:{
         mode:'none',
         rationale:'Hiring a qualified local worker for an owned household enterprise is a baseline labor contract with recurring pay, not an advanced capability unlocked by national research.'

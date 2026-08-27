@@ -5761,6 +5761,12 @@ window.FB = window.FB || {};
       add('ret', 'episcopal_household',
         FB.bishopricRetinue ? FB.bishopricRetinue(state) : 120);
     }
+    if (FB.householdStandardEffect) {
+      add('levy', 'household_standard',
+        FB.householdStandardEffect(state, 'levy'));
+      add('ret', 'household_standard',
+        FB.householdStandardEffect(state, 'retinue'));
+    }
 
     if (p.tier >= 3) {
       buildingEntries('levy', 'levy');

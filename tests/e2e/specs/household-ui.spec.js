@@ -7,11 +7,14 @@ dependsOnRuntime(__filename, [
   'data/technology.js',
   'js/main.js',
   'js/actions.js',
+  'js/armies.js',
   'js/economy.js',
   'js/model.js',
+  'js/technology.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
+  'js/world.js',
   'css/style.css'
 ]);
 
@@ -40,7 +43,10 @@ test('adjusts living standards and work outfits inline with tooltip terms',
       FB.ui.showHousehold();
       return {
         generalStandards:FB.householdStandardIds().filter(function (id) {
-          return FBDATA.householdStandards[id].kind !== 'work';
+          return FBDATA.householdStandards[id].kind === 'general';
+        }).length,
+        rulerStandards:FB.householdStandardIds().filter(function (id) {
+          return FBDATA.householdStandards[id].kind === 'ruler';
         }).length,
         visibleOutfits:FB.householdStandardIds().filter(function (id) {
           return FBDATA.householdStandards[id].kind === 'work' &&
@@ -63,6 +69,8 @@ test('adjusts living standards and work outfits inline with tooltip terms',
       .toHaveCount(setup.generalStandards * 2);
     await expect(page.locator('#household-outfits .household-standard-stepper'))
       .toHaveCount(setup.visibleOutfits);
+    await expect(page.locator('#household-ruler .household-standard-stepper'))
+      .toHaveCount(setup.rulerStandards);
     await expect(page.locator(
       '#household-property [data-holding]'))
       .toHaveCount(setup.availableHoldings);
@@ -312,7 +320,7 @@ test('landed rulers keep household standards active with title-scaled reduction 
       outfitUpgrade:true
     });
     expect(result.landedActivity.upkeep).toBeGreaterThan(0);
-    expect(result.floors).toEqual([0, 1, 2, 3, 3]);
+    expect(result.floors).toEqual([0, 1, 2, 3, 5]);
     expect(result.countBlocked).toBe(false);
     expect(result.reductions).toEqual([true, true, false]);
     expect(result.boardLevel).toBe(1);
@@ -349,6 +357,132 @@ test('landed rulers keep household standards active with title-scaled reduction 
       '[data-household-standard-row="outfit_farmer"]');
     await expect(outfitRow).not.toContainText('Dormant');
     await expect(outfitRow).toContainText('Raises farming output by 5%.');
+  });
+
+test('ruler establishments sink gold into research, administration, and military power',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const record = FB.realmTechRecord(s, FB.techRealmId(s));
+      for (const id in FBDATA.tech) {
+        if (record.completed.indexOf(id) < 0) record.completed.push(id);
+      }
+      s.player.tier = 3;
+      s.player.gold = 100000;
+      s.player.householdStandards = {};
+      const realmId = FB.techRealmId(s);
+      const probe = {
+        id:'household_guard_probe', realm:'player', men:1000, size:1000,
+        units:{ levy:1000, arch:0, cav:0, ret:0, mercs:0 },
+        at:FB.homeProv(s), supply:100
+      };
+      const before = {
+        research:FB.techResearchRate(s, realmId),
+        domain:FB.domainCap(s),
+        composition:FB.playerCompositionBreakdown(s).units,
+        battle:FB.armyBattlePower(s, probe, FB.homeProv(s), 'attack')
+      };
+      s.player.householdStandards = {
+        household_guard:1,
+        scholarly_household:1,
+        chancery_household:1
+      };
+      const effects = FB.householdStandardEffects(s);
+      const after = {
+        research:FB.techResearchRate(s, realmId),
+        domain:FB.domainCap(s),
+        composition:FB.playerCompositionBreakdown(s).units,
+        battle:FB.armyBattlePower(s, probe, FB.homeProv(s), 'attack'),
+        upkeep:FB.householdStandardsUpkeep(s),
+        guardFloor:FB.householdStandardMinimumLevel(s, 'household_guard')
+      };
+      const mailIndex = record.completed.indexOf('mail_hauberks');
+      if (mailIndex >= 0) record.completed.splice(mailIndex, 1);
+      const guardGrandfathered = FB.householdStandardActive(s, 'household_guard');
+      if (mailIndex >= 0) record.completed.push('mail_hauberks');
+      FB.ui.showHousehold();
+      return {
+        before:before,
+        after:after,
+        effects:effects,
+        guardActive:FB.householdStandardActive(s, 'household_guard'),
+        guardGrandfathered:guardGrandfathered,
+        rulerCount:FB.householdStandardIds().filter(function (id) {
+          return FBDATA.householdStandards[id].kind === 'ruler';
+        }).length,
+        generalDepths:FB.householdStandardIds().filter(function (id) {
+          return FBDATA.householdStandards[id].kind === 'general';
+        }).map(function (id) {
+          return FBDATA.householdStandards[id].levels.length;
+        }),
+        rulerDepths:FB.householdStandardIds().filter(function (id) {
+          return FBDATA.householdStandards[id].kind === 'ruler';
+        }).map(function (id) {
+          return FBDATA.householdStandards[id].levels.length;
+        }),
+        rulerGoldEffects:FB.householdStandardIds().filter(function (id) {
+          return FBDATA.householdStandards[id].kind === 'ruler';
+        }).some(function (id) {
+          return FBDATA.householdStandards[id].levels.some(function (level) {
+            return !!(level.fx && level.fx.gold);
+          });
+        })
+      };
+    });
+
+    expect(result.guardActive).toBe(true);
+    expect(result.guardGrandfathered).toBe(true);
+    expect(result.generalDepths).toEqual([5, 5, 5, 5, 5]);
+    expect(result.rulerDepths).toEqual([3, 3, 3]);
+    expect(result.rulerGoldEffects).toBe(false);
+    expect(result.effects).toMatchObject({
+      research:0.75,
+      domain:1,
+      levy:40,
+      retinue:25,
+      battle:0.02
+    });
+    expect(result.after.research - result.before.research).toBeCloseTo(0.75, 8);
+    expect(result.after.domain - result.before.domain).toBe(1);
+    expect(result.after.composition.levy - result.before.composition.levy).toBe(40);
+    expect(result.after.composition.ret - result.before.composition.ret).toBe(25);
+    expect(result.after.battle).toBeGreaterThan(result.before.battle);
+    expect(result.after.upkeep).toBeGreaterThan(0);
+    expect(result.after.guardFloor).toBe(0);
+
+    await expect(page.locator('#household-ruler .household-standard-stepper'))
+      .toHaveCount(result.rulerCount);
+    await expect(page.locator('#household-ruler')).toContainText(
+      'Ruler establishments');
+    const guard = page.locator('[data-household-standard="household_guard"]');
+    await expect(guard).toContainText('Level 1: Sworn Hall Guard');
+    await expect(guard).toContainText(
+      'Adds 40 levy, 25 men-at-arms, and 2% field-battle power.');
+    const guardIncrease = page.locator(
+      '[data-household-standard-id="household_guard"]' +
+      '[data-household-standard-adjust="1"]');
+    await guardIncrease.hover();
+    await expect(page.locator('#tooltip')).toContainText('Ruler household and realm');
+    await expect(page.locator('#tooltip')).toContainText('Requires Duke rank.');
+
+    const dormant = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.tier = 2;
+      return {
+        level:FB.householdStandardLevel(s, 'household_guard'),
+        active:FB.householdStandardActive(s, 'household_guard'),
+        levy:FB.householdStandardEffect(s, 'levy'),
+        upkeep:FB.householdStandardsUpkeep(s),
+        available:FB.householdStandardUpgradeAvailable(s, 'household_guard')
+      };
+    });
+    expect(dormant).toEqual({
+      level:1,
+      active:false,
+      levy:0,
+      upkeep:0,
+      available:'Requires Duke rank.'
+    });
   });
 
 test('minor succession keeps adult deeds visible, limits focuses to Study and Play, and permits only inherited-standard reductions',

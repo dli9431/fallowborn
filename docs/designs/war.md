@@ -707,7 +707,8 @@ next army tick clears the command and restores the prior focus without a grant.
 **One computed levy ledger is authoritative.** `FB.playerCompositionBreakdown` returns
 the levy, archers, cavalry, and retinue together with ordered source entries for direct counties,
 buildings, technology, Royal Constable, ruler Martial, domain penalty, each vassal,
-standing barony troops, and position or retainer contributions.
+standing barony troops, household guard establishments, and position or retainer
+contributions.
 `FB.playerComposition` and `FB.playerLevy` derive from that object; no second army total
 is stored. The Network Realm section renders the same entries, preserving the existing
 calculation order in which percentages and the domain penalty affect direct levy before
@@ -717,6 +718,12 @@ Grouped `war.levy` trait rates are itemized by localized trait name against the 
 levy base after flat county/building/technology troops. Muster-Bred contributes +5%.
 That line is added before ruler Martial and the domain penalty, and vassal contributions
 remain outside all direct-domain percentages.
+
+An active ruler household guard contributes its authored flat levy and men-at-arms once,
+outside county and vassal scaling. Its `battle` fraction joins technology, holdings,
+items, and war blessings in both real field-battle power and the event battle estimate.
+The same guard is dormant below Baron rank, so saved investment alone never strengthens a
+commoner host.
 
 A loyal vassal at Standing 40+ may supply one bounded exceptional-levy promise. Calling it
 lowers Standing by 15, records a one-year `player.vassalLevyFavors[realmId]` modifier, and raises that

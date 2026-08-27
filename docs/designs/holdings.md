@@ -41,18 +41,32 @@ outfits advance one purchased level at a time. Each level has its own setup cost
 seasonal upkeep, rank gate, and complete current-level effect. Levels pass through
 succession in `player.householdStandards`, but cannot be sold, pledged, or used as
 event holdings. Level one is generally open to serfs, level two to freeholders, and
-level three to gentry; transport starts at freeholder rank.
+level three to gentry; transport starts at freeholder rank. The five general categories
+also have Baron-grade and King-grade levels with substantially larger setup and upkeep
+costs. Their effects remain household-facing: health, education and research, retainer
+space, prestige, and faster travel.
+
+Three `kind:'ruler'` establishments form a separate ruler catalogue. The household guard
+adds flat levy, men-at-arms, and field-battle power; the scholarly household adds flat
+national research; and the household chancery adds domain capacity. Each has Baron,
+Duke, and Emperor levels gated by the military, learning, or governance technology it
+represents. These are discretionary gold sinks and never add income. They have no title
+floor, remain saved but dormant below Baron rank, and return without a second setup cost
+if the dynasty regains landed authority. This expansion is hard-gated in the prospective
+technology ledger (`ruler_household_establishments`), with the existing household
+catalogue as its ungated fallback.
 
 `FB.ensureHouseholdStandards` lazily creates and clamps the JSON-safe saved map, so old
 format-3 saves begin at level zero. `FB.householdStandardEffects` supplies mortality,
-education, retainer-capacity, prestige, travel, and profession-output modifiers.
+education, retainer-capacity, prestige, travel, research, domain, levy, men-at-arms,
+battle-power, and profession-output modifiers.
 `FB.householdStandardsUpkeepParts` and `FB.householdStandardsUpkeep` expose only active
 upkeep. Work outfits are dormant without an eligible resident worker (or a retainer
 staffing a matching enterprise). Living standards and eligible work outfits remain active
 after the dynasty becomes landed, so their benefits and upkeep continue at ruler ranks.
 General standards gain a title floor when reduced: level 1 for a Baron, level 2 for a
-Count, and level 3 for a Duke, King, or Emperor. Work outfits may still be reduced to
-baseline because vocational tools do not express title dignity.
+Count, level 3 for a Duke, level 4 for a King, and level 5 for an Emperor. Work outfits
+may still be reduced to baseline because vocational tools do not express title dignity.
 This ruler-rank expansion has technology impact **none**
 (`landed_household_standards`): rank does not add a second technology lock, while every
 standard level continues to enforce its existing authored `requiresTech` requirement.
@@ -72,7 +86,8 @@ stepper: a minus button on the left, a read-only current-state card in the
 middle, and a plus button on the right. The card keeps the icon, name, current
 level, current or next effect, next setup price, and live upkeep visible in the
 same scan pattern as the technology catalogue; it is no longer a large
-navigation action.
+navigation action. Ruler establishments use the same control in their own section, so
+their realm effects and rank or technology blockers remain visible before purchase.
 
 Hovering or focusing the plus button shows the complete next-level ownership,
 scope, transfer, expiry, affordability, and projected-finance terms in the

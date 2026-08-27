@@ -227,6 +227,7 @@ test('the prospective review ledger and every gate schema validate together',
       'rare_auction_invitations',
       'royal_religious_tolerance_policy',
       'royal_settlement_policy',
+      'ruler_household_establishments',
       'serf_freedom_petition',
       'settlement_dynamic_rents',
       'soldier_command_assignments',
@@ -249,9 +250,12 @@ test('the prospective review ledger and every gate schema validate together',
     ];
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
       .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none']);
-    const additiveHardIds = ['enterprise_upgrades'];
+    const additiveHardIds = [
+      'enterprise_upgrades',
+      'ruler_household_establishments'
+    ];
     expect(additiveHardIds.map(function (id) { return result.modes[id]; }))
-      .toEqual(['hard']);
+      .toEqual(['hard', 'hard']);
     const establishedModes = result.featureIds.filter(function (id) {
       return additiveNoneIds.indexOf(id) < 0 && additiveHardIds.indexOf(id) < 0;
     }).map(function (id) { return result.modes[id]; });

@@ -2246,9 +2246,9 @@ collateral.
 ## Maintained household standards
 
 `FBDATA.householdStandards` (in `data/economy.js`, mod key
-`householdStandards`) defines maintained living standards and profession
-outfits. A same-id mod entry replaces the complete definition, including its ordered
-level array:
+`householdStandards`) defines maintained living standards, ruler establishments, and
+profession outfits. A same-id mod entry replaces the complete definition, including its
+ordered level array:
 
 ```json
 {
@@ -2281,19 +2281,27 @@ level array:
 }
 ```
 
-- `kind` is `"general"` or `"work"`. A work definition also requires
-  `profession`, naming an id in `FBDATA.careers`.
+- `kind` is `"general"`, `"ruler"`, or `"work"`. A work definition also requires
+  `profession`, naming an id in `FBDATA.careers`. A ruler definition is active only at
+  tier 3 or higher. Set `titleFloor:false` for a discretionary definition that rulers may
+  reduce to baseline; core ruler establishments use this form.
 - `levels` are sequential. `cost` is the one-time setup price to advance from the
   previous level; `upkeep` is the complete seasonal cost of the current level, not a
   cumulative sum. `tierMin` gates that level. Purchased levels remain active at ruler
   ranks; general standards cannot be reduced below the ruler's title floor.
+- `requiresTech` gates purchase and normally also current activity. Set
+  `grandfatherTech:true` on a level when an already purchased establishment should remain
+  active after the household changes to a realm that lacks that technology.
 - A work outfit is dormant without an adult resident family member practicing that
   profession, or a matching retainer currently staffing an enterprise. Dormant levels
   keep their saved purchase but have no upkeep or effect.
-- General `fx` keys are `mortality` (subtracted from yearly household mortality chance),
+- General and ruler `fx` keys are `mortality` (subtracted from yearly household mortality chance),
   `education` (added to yearly directed-learning chance), `retainers` (flat household
   capacity), `prestige` (per season), `travelCost` (multiplier on a new journey's whole
-  upfront cost), and `travelLegDays` (days per county leg, snapshotted at departure).
+  upfront cost), `travelLegDays` (days per county leg, snapshotted at departure),
+  `research` (flat national research per season), `domain` (flat domain capacity),
+  `levy` and `retinue` (flat host composition), and `battle` (fractional player
+  field-battle power).
 - Work levels use `fx.work`, a fractional multiplier on matching vocational focus
   resources, resident-family wages or clerical yield, and staffed-enterprise output.
   It does not modify skills or combat. Multiple active mod definitions for one profession
@@ -2306,8 +2314,8 @@ level array:
   or referenced by holding event effects.
 - If upkeep is unaffordable, core discretionary ids lapse first in this order:
   `luxuries`, `wares`, `transport`, `quarters`, `board`. Other general definitions follow
-  in stable definition order, then active work outfits. Work outfits lose the highest
-  active level first, with definition order breaking ties.
+  in stable definition order, including ruler establishments, then active work outfits.
+  Work outfits lose the highest active level first, with definition order breaking ties.
 
 The public engine helpers are `FB.ensureHouseholdStandards`,
 `FB.householdStandardLevel`, `FB.householdStandardLevelDef`,

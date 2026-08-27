@@ -710,7 +710,8 @@ player's *realm* controls — held directly or by a vassal beneath him in the ch
 (`playerShare` in `js/world.js` walks each county's holder up the liege chain to
 `'player'`), so granting land to vassals never costs progress toward a duchy, kingdom,
 or empire. That frees a **domain limit**: the player may hold at most
-`balance.domainBase + ⌊stewardship / balance.domainStewPer⌋` counties directly
+`balance.domainBase + ⌊stewardship / balance.domainStewPer⌋ + technology + active
+household chancery` counties directly
 (`FB.domainCap`); each county over the cap multiplies his *own* demesne income and levy
 by `1 − balance.overDomainPenalty` (`FB.domainPenalty`, applied inside `FB.playerTax`
 and `FB.playerLevy` — vassal dues and vassal levies are never penalized). The remedy is

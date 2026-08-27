@@ -893,6 +893,9 @@ window.FB = window.FB || {};
     var rid = FB.techRealmId(state, realmId);
     var dev = FB.realmStrength ? FB.realmStrength(state, rid) : 0;
     var rate = 2 + Math.min(4, dev * 0.04) + FB.techBonus(state, 'research', rid);
+    if (rid === FB.techRealmId(state) && FB.householdStandardEffect) {
+      rate += FB.householdStandardEffect(state, 'research');
+    }
     /* Standing royal tolerance policy speeds or slows the player realm's
        scholarship (js/institutions.js). */
     if (FB.realmPolicyResearchFactor) {

@@ -805,6 +805,10 @@ map lazily and clamps known entries to their current moddable definition. Purcha
 pass unchanged through succession because the player household object persists. Rank or
 worker dormancy changes neither the map nor the save shape. No active-effect total,
 seasonal upkeep total, localized level name, or travel modifier is serialized.
+Ruler establishments use the same map and level numbers. Falling below Baron rank makes
+`kind:'ruler'` entries dormant without deleting them; regaining a title reactivates them
+without rechecking the purchase technology. The technology remains mandatory for buying
+the level, so already established ruler investments are grandfathered across realm changes.
 
 Network state is additive and lazily validated. `player.friendContacts` maps known
 character ids to current-life contact timestamps; the canonical friend remains

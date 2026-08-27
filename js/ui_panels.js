@@ -3286,6 +3286,7 @@ window.FB = window.FB || {};
       }) : name;
     }
     if (entry.kind === 'enterprise') return FB.T('Expanded family enterprises');
+    if (entry.kind === 'household_standard') return FB.T('Household guard establishment');
     if (entry.kind === 'modifier') {
       const def = FBDATA.modifiers && FBDATA.modifiers[entry.modifierId];
       const pr = FB.world.byId[entry.pid];

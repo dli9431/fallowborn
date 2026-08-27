@@ -2382,7 +2382,10 @@ window.FB = window.FB || {};
       pw = army.men * q * (1 + (me ? FB.skillOf(me, 'mar') : 5) / (B().battleMarPlayer || 14));
       // the standing edges — tech, holdings, items, the war blessing — carry onto the field
       pw *= 1 + FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') +
-        FB.itemBonus(state, 'battle') + (state.player.flags.blessed_war ? 0.06 : 0);
+        FB.itemBonus(state, 'battle') +
+        (FB.householdStandardEffect
+          ? FB.householdStandardEffect(state, 'battle') : 0) +
+        (state.player.flags.blessed_war ? 0.06 : 0);
       /* …and so does the campaign itself: condition (war.strength, fed by the
          wartime supply/discipline events), days spent leading the host, and a
          refit all tilt the real fight, matching the war card's estimate

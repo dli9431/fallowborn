@@ -4163,7 +4163,9 @@ window.FB = window.FB || {};
             (invader && invader.at) || w.enemyTarget || FB.homeProv(state),
             { realm:'player' });
         }
-        c += FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') + FB.itemBonus(state, 'battle');
+        c += FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') +
+          FB.itemBonus(state, 'battle') + (FB.householdStandardEffect
+            ? FB.householdStandardEffect(state, 'battle') : 0);
         if (f.blessed_war) c += 0.06;
         return FB.clamp(c, 0.1, 0.9);
       }

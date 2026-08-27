@@ -168,12 +168,17 @@ There is one national research pool. Each season `FB.techSeason` calculates:
 
 ```text
 2 + min(4, realm development × 0.04) + completed research bonuses
+  + active household research establishments
 ```
 
 The total, including reserve, is divided evenly among active projects. Each project's
 share is applied independently; completion overflow returns to reserve. If fewer slots
 are occupied, unused research remains reserve. Direct `research` effects, building
 research, and Patronize Scholars enter the same pool.
+The effective national realm also receives the active ruler household's flat `research`
+effect. A vassal ruler therefore supports the sovereign research pool they use, while a
+demoted scholarly household contributes nothing. Once purchased, a ruler-grade level is
+grandfathered if the household later joins a realm that lacks its purchase technology.
 Patronize Scholars contributes `2 + min(3, Learning / 10)` research per season, capped at
 5, in exchange for its continuing focus and gold cost. It accelerates a national project
 without overwhelming the passive realm rate or the historical cost curve.

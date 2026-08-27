@@ -523,6 +523,16 @@ FBDATA.householdStandards = {
         name:'Spiced and Imported Table', cost:120, upkeep:4, tierMin:2, requiresTech:'trade_houses',
         desc:'Reduces yearly household mortality by 0.3 percentage points.',
         fx:{ mortality:0.003 }
+      },
+      {
+        name:'Great Hall Table', cost:600, upkeep:14, tierMin:3, requiresTech:'three_field', grandfatherTech:true,
+        desc:'Reduces yearly household mortality by 0.4 percentage points.',
+        fx:{ mortality:0.004 }
+      },
+      {
+        name:'Royal Kitchens and Provisioners', cost:4500, upkeep:70, tierMin:6, requiresTech:'annual_fairs', grandfatherTech:true,
+        desc:'Reduces yearly household mortality by 0.6 percentage points.',
+        fx:{ mortality:0.006 }
       }
     ]
   },
@@ -544,6 +554,16 @@ FBDATA.householdStandards = {
         name:'Painted Furniture and Fine Hangings', cost:150, upkeep:3, tierMin:2, requiresTech:'glazed_pottery',
         desc:'Adds 4 percentage points to yearly education chances.',
         fx:{ education:0.04 }
+      },
+      {
+        name:'Furnished Household Library', cost:750, upkeep:12, tierMin:3, requiresTech:'scriptoria', grandfatherTech:true,
+        desc:'Adds 5.5 percentage points to yearly education chances and 0.25 national research each season.',
+        fx:{ education:0.055, research:0.25 }
+      },
+      {
+        name:'Royal Library and Collections', cost:6000, upkeep:60, tierMin:6, requiresTech:'universities', grandfatherTech:true,
+        desc:'Adds 7.5 percentage points to yearly education chances and 0.5 national research each season.',
+        fx:{ education:0.075, research:0.5 }
       }
     ]
   },
@@ -565,6 +585,16 @@ FBDATA.householdStandards = {
         name:'Hall, Chambers and Outbuildings', cost:250, upkeep:5, tierMin:2, requiresTech:'stone_castles',
         desc:'Reduces yearly household mortality by 0.2 percentage points and adds room for two retainers.',
         fx:{ mortality:0.002, retainers:2 }
+      },
+      {
+        name:'Baronial Household Range', cost:1000, upkeep:18, tierMin:3, requiresTech:'census_records', grandfatherTech:true,
+        desc:'Reduces yearly household mortality by 0.3 percentage points and adds room for three retainers.',
+        fx:{ mortality:0.003, retainers:3 }
+      },
+      {
+        name:'Royal Palace Household', cost:8000, upkeep:90, tierMin:6, requiresTech:'royal_chancery', grandfatherTech:true,
+        desc:'Reduces yearly household mortality by 0.4 percentage points and adds room for five retainers.',
+        fx:{ mortality:0.004, retainers:5 }
       }
     ]
   },
@@ -586,6 +616,16 @@ FBDATA.householdStandards = {
         name:'Imported Cloth and Silver Plate', cost:250, upkeep:6, tierMin:2, requiresTech:'annual_fairs',
         desc:'Adds 1.5 prestige each season.',
         fx:{ prestige:1.5 }
+      },
+      {
+        name:'Noble Plate and State Hangings', cost:1200, upkeep:22, tierMin:3, requiresTech:'bills_of_exchange', grandfatherTech:true,
+        desc:'Adds 2.5 prestige each season.',
+        fx:{ prestige:2.5 }
+      },
+      {
+        name:'Crown Jewels and Royal Display', cost:9000, upkeep:100, tierMin:6, requiresTech:'double_entry_bookkeeping', grandfatherTech:true,
+        desc:'Adds 5 prestige each season.',
+        fx:{ prestige:5 }
       }
     ]
   },
@@ -607,6 +647,79 @@ FBDATA.householdStandards = {
         name:'Riding Horses and Covered Wagon', cost:300, upkeep:4, tierMin:2, requiresTech:'horse_collar',
         desc:'Journey costs are multiplied by 0.60; each county leg takes 1 day.',
         fx:{ travelCost:0.60, travelLegDays:1 }
+      },
+      {
+        name:'Household Stable and Remounts', cost:1400, upkeep:20, tierMin:3, requiresTech:'road_surveys', grandfatherTech:true,
+        desc:'Journey costs are multiplied by 0.50; each county leg takes 1 day.',
+        fx:{ travelCost:0.50, travelLegDays:1 }
+      },
+      {
+        name:'Royal Mews and Relay Posts', cost:10000, upkeep:110, tierMin:6, requiresTech:'paved_causeways', grandfatherTech:true,
+        desc:'Journey costs are multiplied by 0.40; each county leg takes 1 day.',
+        fx:{ travelCost:0.40, travelLegDays:1 }
+      }
+    ]
+  },
+  household_guard: {
+    name:'Household guard', icon:'⚔', kind:'ruler', titleFloor:false,
+    desc:'A paid establishment of guards, armorers, and drillmasters maintained around a landed ruler.',
+    levels:[
+      {
+        name:'Sworn Hall Guard', cost:700, upkeep:16, tierMin:3, requiresTech:'mail_hauberks', grandfatherTech:true,
+        desc:'Adds 40 levy, 25 men-at-arms, and 2% field-battle power.',
+        fx:{ levy:40, retinue:25, battle:0.02 }
+      },
+      {
+        name:'Drilled Household Guard', cost:2800, upkeep:55, tierMin:5, requiresTech:'martial_drill', grandfatherTech:true,
+        desc:'Adds 100 levy, 75 men-at-arms, and 4% field-battle power.',
+        fx:{ levy:100, retinue:75, battle:0.04 }
+      },
+      {
+        name:'Royal Guard Establishment', cost:11000, upkeep:160, tierMin:7, requiresTech:'professional_retinues', grandfatherTech:true,
+        desc:'Adds 200 levy, 160 men-at-arms, and 7% field-battle power.',
+        fx:{ levy:200, retinue:160, battle:0.07 }
+      }
+    ]
+  },
+  scholarly_household: {
+    name:'Scholarly household', icon:'📚', kind:'ruler', titleFloor:false,
+    desc:'Resident clerks, translators, and scholars who turn a ruler’s household into a center of learning.',
+    levels:[
+      {
+        name:'Household Scriptorium', cost:800, upkeep:18, tierMin:3, requiresTech:'scriptoria', grandfatherTech:true,
+        desc:'Adds 0.75 national research each season.',
+        fx:{ research:0.75 }
+      },
+      {
+        name:'College of Household Scholars', cost:3200, upkeep:60, tierMin:5, requiresTech:'scholarly_networks', grandfatherTech:true,
+        desc:'Adds 1.75 national research each season.',
+        fx:{ research:1.75 }
+      },
+      {
+        name:'Royal Academy', cost:12000, upkeep:170, tierMin:7, requiresTech:'universities', grandfatherTech:true,
+        desc:'Adds 3 national research each season.',
+        fx:{ research:3 }
+      }
+    ]
+  },
+  chancery_household: {
+    name:'Household chancery', icon:'📜', kind:'ruler', titleFloor:false,
+    desc:'A permanent staff of seal keepers, surveyors, and record clerks for governing a wider domain.',
+    levels:[
+      {
+        name:'Seal and Record Office', cost:900, upkeep:20, tierMin:3, requiresTech:'census_records', grandfatherTech:true,
+        desc:'Adds 1 to domain capacity.',
+        fx:{ domain:1 }
+      },
+      {
+        name:'Territorial Chancery', cost:3600, upkeep:70, tierMin:5, requiresTech:'bureaucratic_offices', grandfatherTech:true,
+        desc:'Adds 2 to domain capacity.',
+        fx:{ domain:2 }
+      },
+      {
+        name:'Royal Chancery Household', cost:14000, upkeep:190, tierMin:7, requiresTech:'royal_chancery', grandfatherTech:true,
+        desc:'Adds 3 to domain capacity.',
+        fx:{ domain:3 }
       }
     ]
   },
