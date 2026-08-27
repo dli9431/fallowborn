@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
+  'js/economy.js',
   'js/i18n.js',
   'js/events.js',
   'js/ui_modals.js',
@@ -76,6 +77,82 @@ test('served origin provides persistent storage for save slots',
       autoSeed: START_CODE,
       slotSeed: START_CODE
     });
+  });
+
+test('a restore exception releases the completed world loader with a recoverable message',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const accepted = await page.evaluate(function () {
+      const data = JSON.parse(FB.save.serialize());
+      window.__restoreBeforeFailureTest = FB.save.restore;
+      FB.save.restore = function () {
+        throw new Error('synthetic restore failure');
+      };
+      return FB.game.loadData(data);
+    });
+
+    expect(accepted).toBe(true);
+    await expect(page.locator('#loading')).toHaveClass(/hidden/);
+    await expect(page.locator('#title')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#gm-title')).toHaveText('Save could not be restored');
+    await expect(page.locator('#gm-body')).toContainText(
+      'The saved life is still stored and unchanged');
+    expect(await page.evaluate(function () {
+      const message = FB.game.lastLoadError && FB.game.lastLoadError.message;
+      FB.save.restore = window.__restoreBeforeFailureTest;
+      delete window.__restoreBeforeFailureTest;
+      return message;
+    })).toBe('synthetic restore failure');
+  });
+
+test('continue repairs malformed enterprise records and reaches the game screen',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const data = JSON.parse(FB.save.serialize());
+      data.state.player.enterpriseMigration = 1;
+      data.state.player.enterpriseLabor = { interrupted:'write' };
+      data.state.player.enterprises = [
+        null,
+        { uid:'load_repair_enterprise', type:'field_strip',
+          provinceId:'missing_county', settlement:'bad', workerIds:{} },
+        { uid:'unknown_enterprise', type:'removed_enterprise',
+          provinceId:data.state.player.provinceId, settlement:0 }
+      ];
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(data, function () {
+          resolve({
+            loadingHidden:document.getElementById('loading').classList.contains('hidden'),
+            gameVisible:!document.getElementById('game').classList.contains('hidden'),
+            home:FB.state.player.provinceId,
+            enterprises:FB.state.player.enterprises.map(function (enterprise) {
+              return {
+                uid:enterprise.uid,
+                type:enterprise.type,
+                provinceId:enterprise.provinceId,
+                settlement:enterprise.settlement,
+                workerIds:enterprise.workerIds
+              };
+            }),
+            laborArray:Array.isArray(FB.state.player.enterpriseLabor)
+          });
+        })) reject(new Error('Synthetic repaired save was rejected'));
+      });
+    });
+
+    expect(result.loadingHidden).toBe(true);
+    expect(result.gameVisible).toBe(true);
+    expect(result.laborArray).toBe(true);
+    expect(result.enterprises).toHaveLength(1);
+    expect(result.enterprises[0]).toMatchObject({
+      uid:'load_repair_enterprise',
+      type:'field_strip',
+      provinceId:result.home,
+      settlement:0
+    });
+    expect(result.enterprises[0].workerIds).toBeUndefined();
   });
 
 test('an eager-court save stays within the storage budget and reloads whole',

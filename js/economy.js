@@ -2890,13 +2890,52 @@ window.FB = window.FB || {};
     return total;
   };
 
+  /* Save format 3 predates enterprise instances, upgrades, and multi-worker
+     staffing. Keep the load boundary fail-soft when an old or interrupted
+     write leaves a non-array collection, an empty record, duplicate ids, or
+     a removed definition behind. Known property survives with a canonical
+     id and location; records that cannot name any enterprise are discarded. */
+  function normalizeEnterpriseCollection(state) {
+    const p = state.player;
+    if (!Array.isArray(p.enterprises)) p.enterprises = [];
+    const out = [], seen = {};
+    for (const enterprise of p.enterprises) {
+      if (!enterprise || typeof enterprise !== 'object' ||
+          Array.isArray(enterprise) || typeof enterprise.type !== 'string' ||
+          !FBDATA.enterprises[enterprise.type]) continue;
+      let uid = typeof enterprise.uid === 'string' && enterprise.uid
+        ? enterprise.uid : 'enterprise_' + FB.uid();
+      while (seen[uid]) uid = 'enterprise_' + FB.uid();
+      seen[uid] = 1;
+      enterprise.uid = uid;
+      if (!enterprise.provinceId || !FB.world ||
+          !FB.world.byId[enterprise.provinceId]) {
+        enterprise.provinceId = p.provinceId;
+      }
+      const settlement = Number(enterprise.settlement);
+      enterprise.settlement = isFinite(settlement)
+        ? Math.max(0, Math.floor(settlement)) : 0;
+      const sites = FB.settlementsOf
+        ? FB.settlementsOf(state, enterprise.provinceId) : [];
+      if (!sites.length || enterprise.settlement >= sites.length) {
+        enterprise.settlement = 0;
+      }
+      if (enterprise.workerIds !== undefined &&
+          !Array.isArray(enterprise.workerIds)) delete enterprise.workerIds;
+      out.push(enterprise);
+    }
+    p.enterprises = out;
+    return out;
+  }
+
   FB.enterpriseList = function (state) {
     const p = state.player;
-    p.enterprises = p.enterprises || [];
+    normalizeEnterpriseCollection(state);
     if (!p.enterpriseMigration) {
       p.enterpriseMigration = 1;
       const firstMigrated = p.enterprises.length;
-      const holdings = p.holdings || [];
+      if (!Array.isArray(p.holdings)) p.holdings = [];
+      const holdings = p.holdings;
       for (let i = holdings.length - 1; i >= 0; i--) {
         const type = LEGACY_ENTERPRISES[holdings[i]];
         if (!type) continue;

@@ -650,6 +650,61 @@ test('enterprise upgrades spend gold, require larger staffs, and add only ancill
     expect(result.fullHireStatus).toContain('already filled');
   });
 
+test('enterprise loading repairs malformed legacy collections before staffing',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const home = s.player.provinceId;
+      s.player.enterpriseMigration = 1;
+      s.player.enterpriseLabor = { interrupted:'write' };
+      s.player.enterprises = [
+        null,
+        'broken',
+        { uid:'missing_definition', type:'removed_enterprise',
+          provinceId:home, settlement:0 },
+        { uid:'duplicate_enterprise', type:'field_strip',
+          provinceId:'missing_county', settlement:'bad', workerIds:{} },
+        { uid:'duplicate_enterprise', type:'field_strip',
+          provinceId:home, settlement:999 }
+      ];
+      const repaired = FB.enterpriseList(s).map(function (enterprise) {
+        return {
+          uid:enterprise.uid,
+          type:enterprise.type,
+          provinceId:enterprise.provinceId,
+          settlement:enterprise.settlement,
+          workerIds:enterprise.workerIds
+        };
+      });
+      const laborArray = Array.isArray(s.player.enterpriseLabor);
+      s.player.enterprises = { interrupted:'write' };
+      const nonArrayCount = FB.enterpriseList(s).length;
+      return {
+        repaired:repaired,
+        laborArray:laborArray,
+        nonArrayCount:nonArrayCount,
+        home:home
+      };
+    });
+
+    expect(result.repaired).toHaveLength(2);
+    expect(result.repaired[0]).toMatchObject({
+      uid:'duplicate_enterprise',
+      type:'field_strip',
+      provinceId:result.home,
+      settlement:0
+    });
+    expect(result.repaired[0].workerIds).toBeUndefined();
+    expect(result.repaired[1].uid).not.toBe('duplicate_enterprise');
+    expect(result.repaired[1]).toMatchObject({
+      type:'field_strip',
+      provinceId:result.home,
+      settlement:0
+    });
+    expect(result.laborArray).toBe(true);
+    expect(result.nonArrayCount).toBe(0);
+  });
+
 test('enterprise manager exposes upgrades, staffing thresholds, and paid labor controls',
   async function ({ page }) {
     const uid = await page.evaluate(function () {

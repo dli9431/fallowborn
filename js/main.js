@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.163.0';
+  FB.VERSION = '1.163.1';
   FB.CHANGELOG = [
+    { v: '1.163.1', date: '2026-08-26', changes: [
+      'Continue now repairs malformed enterprise records and returns a recovery message instead of freezing after world creation when a save cannot be restored.'
+    ] },
     { v: '1.163.0', date: '2026-08-26', changes: [
       'Better the Household now offers ruler-grade living standards and paid guard, scholarly, and chancery establishments for military, research, and domain power.'
     ] },
@@ -4917,6 +4920,7 @@ window.FB = window.FB || {};
       FB.ui.toast('That life uses a starting date this game does not know.');
       return false;
     }
+    G.lastLoadError = null;
     FB.ui.showScreen('loading');
     $('loadbar').style.width = '0%';
     FB.activateBookmark(bookmarkId, function (frac, msg) {
@@ -4928,40 +4932,51 @@ window.FB = window.FB || {};
         FB.ui.toast('That life’s world could not be activated.');
         return;
       }
-      FB.save.restore(data);
-      FB.syncPlayerCareer(FB.state);
-      if (FB.enterpriseList) FB.enterpriseList(FB.state);
-      if (FB.travelEnsure) FB.travelEnsure(FB.state);
-      if (FB.travelValidate) FB.travelValidate(FB.state);
-      if (FB.validateFocus) FB.validateFocus(FB.state);
-      G.observe = false;
-      document.body.classList.remove('observing');
-      G.pickMode = false;
-      G.paused = true;
-      FB.ui.mapDirty();
-      FB.map.playerProv = FB.state.player.provinceId;
-      FB.ui.showGame();
-      const wakeLocation = FB.travelLocation ? FB.travelLocation(FB.state) : null;
-      FB.map.centerOn(wakeLocation ? wakeLocation.id : FB.state.player.provinceId, 2.0);
-      FB.map.select(null);
-      FB.ui.refresh();
-      FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
-        season: FB.seasonName(FB.state.date.season),
-        year: FB.state.date.year
-      });
-      FB.save.warnIfBlocked();
-      beginTelemetrySession('resumed-campaign');
-      if (!telemetryResumeReported) {
-        telemetryResumeReported = true;
-        trackTelemetry('campaign-resumed', {
-          entry_type:'resumed-campaign'
+      try {
+        FB.save.restore(data);
+        FB.syncPlayerCareer(FB.state);
+        if (FB.enterpriseList) FB.enterpriseList(FB.state);
+        if (FB.travelEnsure) FB.travelEnsure(FB.state);
+        if (FB.travelValidate) FB.travelValidate(FB.state);
+        if (FB.validateFocus) FB.validateFocus(FB.state);
+        G.observe = false;
+        document.body.classList.remove('observing');
+        G.pickMode = false;
+        G.paused = true;
+        FB.ui.mapDirty();
+        FB.map.playerProv = FB.state.player.provinceId;
+        FB.ui.showGame();
+        const wakeLocation = FB.travelLocation ? FB.travelLocation(FB.state) : null;
+        FB.map.centerOn(wakeLocation ? wakeLocation.id : FB.state.player.provinceId, 2.0);
+        FB.map.select(null);
+        FB.ui.refresh();
+        FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
+          season: FB.seasonName(FB.state.date.season),
+          year: FB.state.date.year
         });
+        FB.save.warnIfBlocked();
+        beginTelemetrySession('resumed-campaign');
+        if (!telemetryResumeReported) {
+          telemetryResumeReported = true;
+          trackTelemetry('campaign-resumed', {
+            entry_type:'resumed-campaign'
+          });
+        }
+        if (FB.ui.resumeFirstPlayerTip) FB.ui.resumeFirstPlayerTip();
+        if (FB.ui.showPendingMarriageResidence) {
+          FB.ui.showPendingMarriageResidence();
+        }
+        if (afterLoad) afterLoad();
+      } catch (loadError) {
+        G.lastLoadError = loadError;
+        FB.ui.showScreen('title');
+        FB.ui.openModal('Save could not be restored',
+          '<div class="gm-body-text"><p>' + FB.esc(FB.T(
+            'The saved life is still stored and unchanged, but one of its records could not be repaired. Reload the game and try again; if it still fails, download or share the save for recovery.')) +
+          '</p></div><button class="btn primary" id="gm-go">' +
+          FB.esc(FB.T('Close')) + '</button>');
+        $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
       }
-      if (FB.ui.resumeFirstPlayerTip) FB.ui.resumeFirstPlayerTip();
-      if (FB.ui.showPendingMarriageResidence) {
-        FB.ui.showPendingMarriageResidence();
-      }
-      if (afterLoad) afterLoad();
     });
     return true;
   };

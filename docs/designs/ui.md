@@ -1034,6 +1034,9 @@ standard can be reduced, while its purchase controls expose their childhood rest
 Its full sheet separates Living standards, Ruler establishments, and Work outfits. Ruler
 rows remain visible before Baron rank so the exact rank and technology path is legible;
 owned entries show as dormant when landed authority is lost.
+Continue-game restoration is guarded after the world reaches 100 percent. If a synchronous
+save repair still throws, the loader returns to the title and opens a persistent recovery
+message instead of remaining on “The world is made”; the stored slot is not rewritten.
 Building Deeds first evaluates only each deed's visibility so every accordion retains an
 exact count. Cooldowns, technology gates, and potentially expensive eligibility reasons are
 evaluated only for open groups, when their controls are constructed. Returning through a

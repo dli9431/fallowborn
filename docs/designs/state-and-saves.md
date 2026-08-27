@@ -783,6 +783,13 @@ mean no contracts. Normalization discards dead, duplicate, or orphaned contracts
 removes their assignment; valid contracts and their named characters pass through ordinary
 save, succession, and papal custody paths.
 
+`FB.enterpriseList` is also the fail-soft load boundary for the property collection. A
+non-array collection becomes empty; null, primitive, or definitionless records are
+discarded; duplicate or missing instance ids are replaced; invalid counties fall back to
+the household home; and malformed settlement or worker-list fields are canonicalized.
+This repair runs before staffing eligibility so one damaged legacy record cannot stop the
+rest of a valid life from loading.
+
 Guild monopoly state is additive and keeps save format 3.
 `player.guildMonopolies = {incoming,outgoing}` is created lazily by
 `FB.ensureGuildMonopolies`; either slot is `null` or a plain JSON record. Each record
