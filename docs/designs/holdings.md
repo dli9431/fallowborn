@@ -156,17 +156,21 @@ Related: [development.md](development.md) for the tier-3+ equivalent (buildings)
 **Productive property is an enterprise, not a unique improvement.**
 `FBDATA.enterprises` (`data/economy.js`) defines repeatable family businesses. Instances
 live in `player.enterprises` as
-`{uid,type,provinceId,settlement,workerId,workerLocked?}` and pass to heirs.
+`{uid,type,provinceId,settlement,workerId,workerIds?,workerLocked?,level?,devAppliedLevel?}`
+and pass to heirs. `workerId` remains the first assignment for compatibility;
+`workerIds` is present only when more than one person is assigned. Missing `level` means
+the baseline enterprise.
 Acquisition order remains array order and authored `cost` is the stable base-value sort
 key; neither needs a new save field. Work & Enterprises derives localized name, exact
 settlement, live yield, and staffing state when sorting or grouping instances. These are
 session UI choices. Household Plan reuses the selected sort for assignment labels, so
 drilling between the screens cannot imply a different enterprise order.
-`workerLocked:true` preserves that explicit worker-enterprise pairing from batch
+`workerLocked:true` preserves all current worker-enterprise pairings from batch
 staffing; a missing field means unlocked, so the addition remains compatible with
 save format 3. One copy of a type may stand in each derived settlement, so a family may
 own several workshops or stalls; further copies grow dearer by
-`balance.enterpriseRepeatCostGrowth`. An enterprise earns nothing while idle.
+`balance.enterpriseRepeatCostGrowth`. An enterprise earns nothing unless every staffing
+position required by its current level is filled.
 `FB.enterpriseWorkersFor` limits staffing to resident family, a paid retainer,
 or a manageable resident unwed sibling (`FB.manageableKinKind`; see
 [characters.md](characters.md)) in the matching career (and, where required,
@@ -180,6 +184,11 @@ follows the household home by fallback, so a permanent household move carries
 their labor along instead of orphaning assignments. A retained factor or
 steward is still paid through the household contract ledger; staffing an
 enterprise does not turn that person into family or grant a second wage. A
+separate local hire uses `player.enterpriseLabor` and creates a named, qualified worker
+tied to one enterprise. The first wage is paid on hiring and the same wage recurs each
+season. These contracts use no retainer or household-office capacity, cannot be moved by
+the staffing assistant, and end on dismissal, death, loss of the enterprise, or after two
+unpaid seasons. A
 permanent household move preserves remote enterprise ownership but immediately
 clears its worker and lock; an additional yield guard keeps such property idle
 even before normalization. Relocation confirmation derives the exact affected
@@ -189,24 +198,25 @@ Press, Shop, Stall, and Trading House holdings migrate lazily to equivalent
 enterprise instances; household rights, equipment, and cultural capital remain
 unique holdings.
 The staffing picker uses the shared person-assignment card to preview each eligible
-worker's live yield, occupation, Standing, present enterprise, and every worker or enterprise
-that reassignment would displace. Manual replacement or unassignment may override a lock
+worker's live yield, occupation, Standing, present enterprise, and the staffing consequence
+of adding or removing that person. Manual reassignment or unassignment may override a lock
 and clears every affected lock. Lazy enterprise normalization also clears an assignment
 and its lock when the worker dies, leaves the managed household, becomes career/guild
 ineligible, or can no longer work personally after a rank change. Valid locks survive
 save/restore and succession.
 
 The opt-in staffing assistant is a no-day, preview-first batch operation.
-`FB.enterpriseStaffingPlan` fixes every valid locked pairing, then considers all
+`FB.enterpriseStaffingPlan` fixes every valid locked pairing and paid enterprise-labor
+contract, then considers all
 remaining enterprises and eligible household workers, including workers on unlocked
-enterprises. It maximizes the sum of `FB.enterpriseYield` rounded per pairing to
+enterprises. It maximizes the sum of `FB.enterpriseYield` rounded per staffing position to
 thousandths of seasonal currency. Equal totals preserve the most current assignments,
 then resolve by stable enterprise UID and character ID; no RNG is consumed. Locale-neutral
 rows record the current/proposed ids and yields, lock/status state, and one of
 `no_eligible_worker`, `eligible_workers_locked`, or `allocated_higher_yield` for each
 unresolved enterprise. `FB.applyEnterpriseStaffingPlan` rejects a stale signature for
 another review, clears only unlocked assignments, and reapplies the reviewed mapping
-through `FB.assignEnterprise`.
+through `FB.setEnterpriseWorker`.
 The separate `staffingWorker` protection scope reserves a person from the assistant rather
 than one enterprise pairing. A protected assigned worker and that current enterprise are
 fixed in the preview even when `workerLocked` is false; a protected idle worker is not a
@@ -218,6 +228,16 @@ Enterprise yield consumes the shared computed benefits shown in Network: guild r
 the legacy guild-member work benefit, and position/retainer enterprise modifiers. These
 are not copied into enterprise instances, so a lost office, departed retainer, or changed
 guild rank affects the next calculation without migrating property state.
+
+Every core enterprise has two authored upgrades. Construction is deliberately expensive
+and never raises the enterprise's seasonal gold yield. Instead, a completed tier increases
+the number of required workers and supplies ancillary power only while fully staffed:
+county population capacity, famine or population-crisis protection, migration attraction,
+levy or men-at-arms support, retainer capacity, seasonal prestige, and a one-time county
+development gain. `FB.enterpriseUpgradeStatus` keeps a locked tier visible with its exact
+technology or money blocker. `FB.upgradeEnterprise` pays the quoted construction price and
+records only the new level. `devAppliedLevel` prevents a development grant from repeating
+after the first fully staffed season. Downgrading is not supported.
 
 A consumer enterprise may name an input type in `def.chainFrom`. While at least
 one household enterprise of the input type is producing (positive yield under the

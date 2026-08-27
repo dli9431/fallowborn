@@ -4699,10 +4699,8 @@ window.FB = window.FB || {};
           promotedTurn:state.turn,
           queued:false
         };
-      for (const enterprise of (p.enterprises || [])) {
-        if (enterprise.workerId !== p.charId) continue;
-        enterprise.workerId = null;
-        if (enterprise.workerLocked !== undefined) delete enterprise.workerLocked;
+      if (FB.unassignEnterpriseWorker) {
+        FB.unassignEnterpriseWorker(state, p.charId);
       }
     } else if (oldTier >= 3 && tier < 3) {
       p.stationFarewell = null;
@@ -10958,6 +10956,11 @@ window.FB = window.FB || {};
     p.provs = [];
     p.holdings = [];
     p.enterprises = [];
+    for (const record of (p.enterpriseLabor || [])) {
+      const worker = record && state.chars[record.charId];
+      if (worker && worker.role === 'laborer') worker.role = null;
+    }
+    p.enterpriseLabor = [];
     p.householdStandards = {};
     p.landPlots = [];
     p.manor = null;

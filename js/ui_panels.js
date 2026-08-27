@@ -3285,6 +3285,7 @@ window.FB = window.FB || {};
         building:name, count:entry.count
       }) : name;
     }
+    if (entry.kind === 'enterprise') return FB.T('Expanded family enterprises');
     if (entry.kind === 'modifier') {
       const def = FBDATA.modifiers && FBDATA.modifiers[entry.modifierId];
       const pr = FB.world.byId[entry.pid];
@@ -3549,14 +3550,15 @@ window.FB = window.FB || {};
     const businesses = FB.enterpriseList(s);
     const workAssignments = {};
     for (const enterprise of businesses) {
-      if (!enterprise.workerId) continue;
       const def = FBDATA.enterprises[enterprise.type];
-      if (!workAssignments[enterprise.workerId]) {
-        workAssignments[enterprise.workerId] = [];
+      for (const workerId of FB.enterpriseWorkerIds(enterprise)) {
+        if (!workAssignments[workerId]) {
+          workAssignments[workerId] = [];
+        }
+        workAssignments[workerId].push(def
+          ? dt(s, 'enterprise', enterprise.type, def, 'name')
+          : enterprise.type);
       }
-      workAssignments[enterprise.workerId].push(def
-        ? dt(s, 'enterprise', enterprise.type, def, 'name')
-        : enterprise.type);
     }
 
     const householdById = {};
@@ -3659,6 +3661,8 @@ window.FB = window.FB || {};
       kv('Paid retainers', esc(FB.T('{used} of {capacity}', {
         used:retainers.length, capacity:capacity
       }))) +
+      kv('Paid enterprise workers', esc(String(FB.enterpriseLaborRecords
+        ? FB.enterpriseLaborRecords(s).length : 0))) +
       kv('Family establishment each season',
         esc(FB.money(householdCost.total))) +
       kv('Maintained standards each season',
@@ -3668,6 +3672,10 @@ window.FB = window.FB || {};
     if (retainers.length) {
       householdSummary += kv('Retainer contracts each season',
         esc(FB.money(FB.retainerSeasonCost(s))));
+    }
+    if (FB.enterpriseLaborSeasonCost && FB.enterpriseLaborSeasonCost(s)) {
+      householdSummary += kv('Enterprise wages each season',
+        esc(FB.money(FB.enterpriseLaborSeasonCost(s))));
     }
     householdSummary += networkActionHtml('household-plan',
       'id="network-household-plan" data-network-action',

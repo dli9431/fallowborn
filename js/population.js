@@ -106,6 +106,9 @@ window.FB = window.FB || {};
         bonus += Number(def.populationCrisisProtection) || 0;
       }
     }
+    if (FB.enterpriseUpgradeEffect) {
+      bonus += FB.enterpriseUpgradeEffect(state, 'populationCrisisProtection', pid);
+    }
     return FB.clamp(bonus, 0, 0.20);
   };
 
@@ -120,6 +123,9 @@ window.FB = window.FB || {};
         bonus += Number(def.populationFamineProtection) || 0;
       }
     }
+    if (FB.enterpriseUpgradeEffect) {
+      bonus += FB.enterpriseUpgradeEffect(state, 'famineProtection', pid);
+    }
     return FB.clamp(bonus, 0, balance('populationMaxFamineProtection', 0.60));
   };
 
@@ -133,6 +139,9 @@ window.FB = window.FB || {};
       if (def && def.migrationAttraction) {
         attraction += Number(def.migrationAttraction) || 0;
       }
+    }
+    if (FB.enterpriseUpgradeEffect) {
+      attraction += FB.enterpriseUpgradeEffect(state, 'migrationAttraction', pid);
     }
     return Math.max(0, attraction);
   };
@@ -153,11 +162,13 @@ window.FB = window.FB || {};
     if (!pr || pr.wasteland) return 0;
     var baseCap = countyBaseCapacity(state, pid);
     var bldgBonus = FB.countyBuildingCapacityBonus(state, pid);
+    var enterpriseBonus = FB.enterpriseUpgradeEffect
+      ? FB.enterpriseUpgradeEffect(state, 'populationCapacity', pid) : 0;
     var owner = provinceOwner(state, pid);
     var techBonus = FB.techBonus ? FB.techBonus(state, 'populationCapacity', owner) : 0;
     var maxTech = balance('populationMaxTechCapacityBonus', 0.35);
     techBonus = FB.clamp(techBonus, 0, maxTech);
-    var mult = 1 + bldgBonus + techBonus;
+    var mult = 1 + bldgBonus + enterpriseBonus + techBonus;
     return Math.max(populationFloor(), Math.round(baseCap * mult));
   };
 

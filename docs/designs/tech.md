@@ -152,6 +152,11 @@ and Bureaucratic Offices unlock Scholarship, Medicine, and Administration respec
 Reverse discovery also scans each learned career's `specializations` table, so Notarial
 Contracts, Professional Bailiffs, Court Physicians, Compound Pharmacology, Scriptoria,
 and the Astrolabe detail which specialty examination they make available.
+It also scans every enterprise definition's `upgrades` array. An expansion therefore
+appears as a reverse unlock on the exact technology that gates it, while the owned baseline
+enterprise continues operating at its completed level. The prospective-impact ledger
+records enterprise upgrades as hard-gated and local enterprise hiring as an ungated
+baseline labor contract.
 
 ## Research slots, reserve, and completion
 

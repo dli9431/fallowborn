@@ -762,7 +762,9 @@ serialization, succession, and resumption. They need no migration because missin
 fields retain the ordinary career behavior. A legacy master Administration record is
 normalized to the Bailiff specialty on first read, while existing Merchant officers and
 guildmasters remain grandfathered through their already-saved rank. Repeatable enterprises live in `player.enterprises` as
-`{uid,type,provinceId,settlement,workerId,workerLocked?}`. Only `workerLocked:true` is
+`{uid,type,provinceId,settlement,workerId,workerIds?,workerLocked?,level?,devAppliedLevel?}`.
+The singular worker id remains the compatibility first assignment; `workerIds` is written
+only for a multi-person staff. Missing `level` and `devAppliedLevel` mean zero. Only `workerLocked:true` is
 stored; absence means the current assignment is available to batch staffing. Old
 characters gain a career deterministically from the current compatibility
 profession/station when first read. Old business-like holdings migrate once into
@@ -774,6 +776,12 @@ worker id and lock. The enterprise itself remains owned.
 Manual reassignment and explicit unassignment clear affected locks as well. Staffing
 previews and their signatures are transient derived values and are never serialized, so
 the assistant remains an additive save-format-3 feature.
+
+Paid enterprise-worker contracts are additive compact records in
+`player.enterpriseLabor` as `{charId,enterpriseUid,pay,startedTurn,unpaid}`. Missing arrays
+mean no contracts. Normalization discards dead, duplicate, or orphaned contracts and
+removes their assignment; valid contracts and their named characters pass through ordinary
+save, succession, and papal custody paths.
 
 Guild monopoly state is additive and keeps save format 3.
 `player.guildMonopolies = {incoming,outgoing}` is created lazily by

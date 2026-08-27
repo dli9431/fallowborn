@@ -649,6 +649,14 @@ The retainer candidate picker uses the shared person-assignment card to preview 
 effect, entry and seasonal pay, occupation, Standing, and additive-office consequence before
 the existing hire action spends the day.
 
+**Paid enterprise labor is a narrower contract.** `player.enterpriseLabor` stores
+`{charId,enterpriseUid,pay,startedTurn,unpaid}` for named local workers generated with the
+enterprise's required career and guild rank. They belong to one enterprise, consume no
+retainer capacity, hold no household office, and do not become family. Their first wage is
+paid at hiring and recurs each season; dismissal or two missed seasonal wages ends the
+contract and clears the assignment. They exist so larger enterprises do not depend on the
+player producing enough eligible relatives.
+
 **Political household authorities never enter the managed household.**
 `FB.isExternalHouseholdAuthority` is the shared boundary for both a reigning realm ruler and
 a generated local lord, recognized by the active `state.roles.lord` seat or the character's

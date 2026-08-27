@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.161.2';
+  FB.VERSION = '1.162.0';
   FB.CHANGELOG = [
+    { v: '1.162.0', date: '2026-08-26', changes: [
+      'Family enterprises can now be expanded into larger, multi-worker businesses with non-gold household and county benefits, including paid local staffing.'
+    ] },
     { v: '1.161.2', date: '2026-08-26', changes: [
       'Household living standards and eligible work outfits now keep their benefits and upkeep at landed rank.'
     ] },
@@ -2489,7 +2492,7 @@ window.FB = window.FB || {};
         capitalRelocation: null,
         protections: {},
         holdings: (startEffects.holdings || []).slice(),
-        enterprises: [], retainers: [], householdStandards: {},
+        enterprises: [], enterpriseLabor: [], retainers: [], householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         matchPolicy: {
           enabled:false, minStation:0, maxDowry:null,
@@ -2916,12 +2919,14 @@ window.FB = window.FB || {};
         FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);
+      if (FB.enterpriseUpgradeSeason) FB.enterpriseUpgradeSeason(s);
       if (FB.marketSettleHouseholdNecessities) {
         FB.marketSettleHouseholdNecessities(s);
       } else p.gold -= Math.min(Math.max(0, p.gold), FB.householdUpkeep(s));
       if (FB.papacySeason) FB.papacySeason(s);
       if (FB.householdStandardsSeason) FB.householdStandardsSeason(s);
       if (FB.retainerSeason) FB.retainerSeason(s);
+      if (FB.enterpriseLaborSeason) FB.enterpriseLaborSeason(s);
       FB.educationSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');

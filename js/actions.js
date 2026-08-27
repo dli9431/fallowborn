@@ -5593,6 +5593,7 @@ window.FB = window.FB || {};
       for (const line of FB.livelihoodBreakdown(state)) total += line.amount;
     }
     if (FB.retainerSeasonCost) total -= FB.retainerSeasonCost(state);
+    if (FB.enterpriseLaborSeasonCost) total -= FB.enterpriseLaborSeasonCost(state);
     if (FB.schoolingSeasonCost) total -= FB.schoolingSeasonCost(state);
     const focus = FB.focusIncome(state);
     if (focus && focus.gold) total += focus.gold;
@@ -5753,6 +5754,10 @@ window.FB = window.FB || {};
       add('prestige', FB.T('Household luxuries'),
         FB.householdStandardEffect(state, 'prestige'));
     }
+    if (FB.enterpriseUpgradeEffect) {
+      add('prestige', FB.T('Expanded family enterprises'),
+        FB.enterpriseUpgradeEffect(state, 'prestige'));
+    }
     if (upkeep.marketAdjustment) {
       add('gold', FB.T('Local market prices for household necessities'),
         -upkeep.marketAdjustment);
@@ -5816,6 +5821,14 @@ window.FB = window.FB || {};
           position:FB.dataText(state, p.charId, 'position', record.office, def, 'name'),
           name:c.name
         }), -(record.pay || 0));
+      }
+    }
+    if (FB.enterpriseLaborRecords) {
+      for (const record of FB.enterpriseLaborRecords(state)) {
+        const c = state.chars[record.charId];
+        if (!c) continue;
+        add('gold', FB.T('Enterprise wage: {name}', { name:c.name }),
+          -(record.pay || 0));
       }
     }
     if (FB.schoolingCostBreakdown) {

@@ -13188,7 +13188,7 @@ window.FB = window.FB || {};
     const staffed = [];
     const staffedIds = [];
     for (const enterprise of enterprises) {
-      if (enterprise.workerId !== c.id) continue;
+      if (FB.enterpriseWorkerIds(enterprise).indexOf(c.id) < 0) continue;
       const def = FBDATA.enterprises[enterprise.type];
       if (!def) continue;
       const name = dt(s, 'enterprise', enterprise.type, def, 'name');
@@ -13449,7 +13449,9 @@ window.FB = window.FB || {};
         '</tr>';
     }
     let idleEnterprises = 0;
-    for (const enterprise of enterprises) if (!enterprise.workerId) idleEnterprises++;
+    for (const enterprise of enterprises) {
+      if (!FB.enterpriseFullyStaffed(s, enterprise)) idleEnterprises++;
+    }
     h += '</tbody></table></div>' +
       (!idleEnterprises && enterprises.length
         ? '<div class="hint enterprise-staffing-hint">' +
@@ -13967,19 +13969,95 @@ window.FB = window.FB || {};
           amount:def.yield || 0
         });
     }
-    const worker = enterprise.workerId && s.chars[enterprise.workerId];
-    if (!worker || worker.dead) {
-      return FB.T('Idle — assign an eligible worker.');
+    const ids = FB.enterpriseOperationalWorkerIds
+      ? FB.enterpriseOperationalWorkerIds(s, enterprise)
+      : (FB.enterpriseWorkerIds ? FB.enterpriseWorkerIds(enterprise) :
+        (enterprise.workerId ? [enterprise.workerId] : []));
+    const workers = ids.map(function (id) { return s.chars[id]; }).filter(Boolean);
+    const required = FB.enterpriseStaffRequired
+      ? FB.enterpriseStaffRequired(enterprise) : 1;
+    if (workers.length < required) {
+      return FB.T('Idle: {assigned} of {required} staffing positions filled.', {
+        assigned:workers.length, required:required
+      });
     }
     return FB.T(
-      'About {money:amount} each season while worked by {name}; shown in Money each season', {
-      amount:Math.round(FB.enterpriseYield(s, enterprise) * 10) / 10,
-      name:worker.name
-    });
+      'About {money:amount} each season while fully staffed by {count} workers; shown in Money each season', {
+        amount:Math.round(FB.enterpriseYield(s, enterprise) * 10) / 10,
+        count:workers.length
+      });
   }
 
-  function enterpriseRecurringCost() {
-    return FB.T('No property upkeep; worker contracts remain separate');
+  function enterpriseRecurringCost(s, enterprise) {
+    let wages = 0;
+    if (s && enterprise && FB.enterpriseLaborRecords) {
+      for (const record of FB.enterpriseLaborRecords(s)) {
+        if (record.enterpriseUid === enterprise.uid) wages += record.pay || 0;
+      }
+    }
+    return wages
+      ? FB.T('{money:wages} hired-worker wages each season; no property upkeep', {
+        wages:wages
+      })
+      : FB.T('No property upkeep; hired-worker wages remain separate');
+  }
+
+  function enterpriseUpgradeName(s, enterprise, level) {
+    const def = FBDATA.enterprises[enterprise.type];
+    const upgrade = def && def.upgrades && def.upgrades[level - 1];
+    return upgrade ? FB.dataText(s, s.player.charId, 'enterprise', enterprise.type,
+      def, 'upgrades.' + (level - 1) + '.name', {}) : FB.T('Base enterprise');
+  }
+
+  function enterpriseUpgradeDesc(s, enterprise, level) {
+    const def = FBDATA.enterprises[enterprise.type];
+    const upgrade = def && def.upgrades && def.upgrades[level - 1];
+    return upgrade ? FB.dataText(s, s.player.charId, 'enterprise', enterprise.type,
+      def, 'upgrades.' + (level - 1) + '.desc', {}) : '';
+  }
+
+  function enterpriseUpgradeBenefitText(enterprise, throughLevel) {
+    const totals = {
+      populationCapacity:0, famineProtection:0,
+      populationCrisisProtection:0, migrationAttraction:0,
+      levy:0, retinue:0, retainers:0, prestige:0, dev:0
+    };
+    for (let level = 1; level <= throughLevel; level++) {
+      const upgrade = FB.enterpriseUpgradeDef(enterprise, level);
+      const fx = upgrade && upgrade.fx || {};
+      for (const key in totals) {
+        if (key !== 'dev') totals[key] += Number(fx[key]) || 0;
+      }
+      totals.dev += Number(upgrade && upgrade.dev) || 0;
+    }
+    const parts = [];
+    if (totals.populationCapacity) parts.push(FB.T('+{amount}% population capacity', {
+      amount:Math.round(totals.populationCapacity * 1000) / 10
+    }));
+    if (totals.famineProtection) parts.push(FB.T('+{amount}% famine protection', {
+      amount:Math.round(totals.famineProtection * 1000) / 10
+    }));
+    if (totals.populationCrisisProtection) parts.push(FB.T(
+      '+{amount}% population-crisis protection', {
+        amount:Math.round(totals.populationCrisisProtection * 1000) / 10
+      }));
+    if (totals.migrationAttraction) parts.push(FB.T('+{amount} migration attraction', {
+      amount:totals.migrationAttraction
+    }));
+    if (totals.levy) parts.push(FB.T('+{amount} levy support', { amount:totals.levy }));
+    if (totals.retinue) parts.push(FB.T('+{amount} men-at-arms support', {
+      amount:totals.retinue
+    }));
+    if (totals.retainers) parts.push(FB.T('+{amount} retainer capacity', {
+      amount:totals.retainers
+    }));
+    if (totals.prestige) parts.push(FB.T('+{amount} prestige each season', {
+      amount:totals.prestige
+    }));
+    if (totals.dev) parts.push(FB.T('+{amount} one-time county development', {
+      amount:totals.dev
+    }));
+    return parts.join(' · ');
   }
 
   function enterpriseCategoryName(profession) {
@@ -14491,12 +14569,13 @@ window.FB = window.FB || {};
     const enterprises = sortedEnterpriseRecords(s, FB.enterpriseList(s).slice());
     const assignments = {};
     for (const enterprise of enterprises) {
-      if (!enterprise.workerId) continue;
       const def = FBDATA.enterprises[enterprise.type];
-      if (!assignments[enterprise.workerId]) assignments[enterprise.workerId] = [];
-      assignments[enterprise.workerId].push(def
-        ? dt(s, 'enterprise', enterprise.type, def, 'name')
-        : enterprise.type);
+      for (const workerId of FB.enterpriseWorkerIds(enterprise)) {
+        if (!assignments[workerId]) assignments[workerId] = [];
+        assignments[workerId].push(def
+          ? dt(s, 'enterprise', enterprise.type, def, 'name')
+          : enterprise.type);
+      }
     }
 
     const workModels = [];
@@ -14628,6 +14707,8 @@ window.FB = window.FB || {};
       if (!def) continue;
       const staffing = FB.enterpriseStaffingStatus(s, e);
       const worker = staffing.currentWorker;
+      const workers = staffing.currentWorkers || (worker ? [worker] : []);
+      const required = staffing.requiredCount || FB.enterpriseStaffRequired(e);
       const unresolved = !staffing.staffed;
       const blocked = staffing.blocked;
       const attention = unresolved;
@@ -14636,8 +14717,9 @@ window.FB = window.FB || {};
       let workerText;
       if (!unresolved) {
         staffedEnterprises++;
-        workerText = FB.T('Worked by {name}{lock}', {
-          name:worker.name,
+        workerText = FB.T('Staffed by {count} workers: {names}{lock}', {
+          count:workers.length,
+          names:workers.map(function (person) { return person.name; }).join(', '),
           lock:e.workerLocked ? FB.T(' · 🔒 locked') : ''
         });
       } else if (blocked) {
@@ -14662,7 +14744,10 @@ window.FB = window.FB || {};
       });
       const detailsId = 'work-enterprise-details-' + e.uid;
       const faceText = FB.T('{worker} · {place} · about {money:amount}/season', {
-        worker:worker ? FB.T('Worked by {name}', { name:worker.name }) : stateLabel,
+        worker:workers.length
+          ? FB.T('{count} of {required} workers', {
+            count:workers.length, required:required
+          }) : stateLabel,
         place:enterprisePlace(s, e),
         amount:Math.round(liveYield * 10) / 10
       });
@@ -16608,6 +16693,14 @@ window.FB = window.FB || {};
     const def = FBDATA.enterprises[e.type];
     const staffing = FB.enterpriseStaffingStatus(s, e);
     const eligibleWorkers = staffing.eligibleWorkers;
+    const assignedIds = FB.enterpriseWorkerIds(e);
+    const required = FB.enterpriseStaffRequired(e);
+    const level = FB.enterpriseUpgradeLevel(e);
+    const upgradeStatus = FB.enterpriseUpgradeStatus(s, e);
+    const hiredIds = {};
+    for (const record of FB.enterpriseLaborRecords(s)) {
+      if (record.enterpriseUid === uid) hiredIds[record.charId] = record;
+    }
     function enterpriseLabel(item) {
       const itemDef = item && FBDATA.enterprises[item.type];
       if (!itemDef) return FB.T('Unknown enterprise');
@@ -16622,35 +16715,69 @@ window.FB = window.FB || {};
     }
     function workerAssignment(cid) {
       for (const item of FB.enterpriseList(s)) {
-        if (item.workerId === cid) return item;
+        if (FB.enterpriseWorkerIds(item).indexOf(cid) >= 0) return item;
       }
       return null;
     }
     function assignmentConsequence(worker, current) {
-      if (current && current.uid === e.uid) return FB.T('Keeps the current assignment.');
+      if (current && current.uid === e.uid) {
+        return hiredIds[worker.id]
+          ? FB.T('This paid worker remains contracted to this enterprise.')
+          : FB.T('Removing this worker may leave the enterprise inactive.');
+      }
       const parts = [];
-      const displaced = e.workerId && s.chars[e.workerId];
-      if (displaced && displaced.id !== worker.id) {
-        parts.push(FB.T(
-          'Replaces {name}, who returns to ordinary household work.',
-          { name:displaced.name }));
-        if (e.workerLocked) {
-          parts.push(FB.T('This enterprise’s staffing lock will be cleared.'));
-        }
+      if (assignedIds.length >= required) {
+        return FB.T('Remove a current worker before filling this position.');
       }
       if (current && current.uid !== e.uid) {
-        parts.push(FB.T('{enterprise} becomes idle.', {
+        parts.push(FB.T('{name} moves here from {enterprise}.', {
+          name:worker.name,
           enterprise:enterpriseLabel(current)
         }));
         if (current.workerLocked) {
-          parts.push(FB.T('That enterprise’s staffing lock will be cleared.'));
+          parts.push(FB.T('That enterprise\'s staffing lock will be cleared.'));
         }
       }
-      return parts.length ? parts.join(' ') : FB.T('No one is displaced.');
+      parts.push(FB.T('Fills one of {required} staffing positions.', {
+        required:required
+      }));
+      return parts.join(' ');
     }
     const staffingLabel = staffing.state === 'staffed'
-      ? FB.T('Staffed') : (staffing.state === 'idle'
-        ? FB.T('Idle — worker available') : FB.T('Blocked from staffing'));
+      ? FB.T('Fully staffed') : (staffing.state === 'idle'
+        ? FB.T('Inactive until fully staffed') : FB.T('Blocked from staffing'));
+    const currentTierName = level
+      ? enterpriseUpgradeName(s, e, level) : FB.T('Base enterprise');
+    let upgradeHtml = '<section class="enterprise-upgrade-panel"><h3>' +
+      esc(FB.T('Enterprise upgrades')) + '</h3><div class="hint"><b>' +
+      esc(FB.T('Current tier: {tier}', { tier:currentTierName })) + '</b>' +
+      (level ? '<span>' + esc(enterpriseUpgradeDesc(s, e, level)) + '</span>' : '') +
+      (level ? '<span>' + esc(FB.T('Cumulative benefit while fully staffed: {benefit}', {
+        benefit:enterpriseUpgradeBenefitText(e, level)
+      })) + '</span>' : '') +
+      '<span>' + esc(FB.T('{assigned} of {required} staffing positions filled', {
+        assigned:assignedIds.length, required:required
+      })) + '</span></div>';
+    if (upgradeStatus.next) {
+      upgradeHtml += '<button type="button" class="actionbtn" ' +
+        'id="enterprise-upgrade"' + (!upgradeStatus.ready ? ' disabled' : '') + '><b>' +
+        esc(FB.T('Upgrade to {upgrade}', {
+          upgrade:enterpriseUpgradeName(s, e, level + 1)
+        })) + '</b><span class="adesc">' +
+        esc(enterpriseUpgradeDesc(s, e, level + 1)) + '</span><span class="adesc">' +
+        esc(FB.T('Costs {money:cost}; requires {staff} workers when complete.', {
+          cost:upgradeStatus.cost,
+          staff:Math.max(1, Math.floor(Number(upgradeStatus.next.staff) || required))
+        })) + '</span>' + (!upgradeStatus.ready
+          ? '<span class="adesc warning">' + esc(upgradeStatus.reason) + '</span>' : '') +
+        '</button>';
+    } else {
+      upgradeHtml += '<div class="hint">' +
+        esc(FB.T('This enterprise is fully upgraded.')) + '</div>';
+    }
+    upgradeHtml += '</section>';
+    const hireStatus = FB.canHireEnterpriseWorker(s, uid);
+    const hirePay = FB.enterpriseLaborPay(s, e);
     let h = '<div class="gm-body-text"><p>' +
       esc(dt(s, 'enterprise', e.type, def, 'desc')) + '</p>' +
       '<div class="enterprise-management-status ' + staffing.state + '"><b>' +
@@ -16660,18 +16787,18 @@ window.FB = window.FB || {};
         owner:FB.T('Household dynasty'),
         scope:enterprisePlace(s, e),
         setupCost:FB.T('Paid on purchase'),
-        recurringCost:enterpriseRecurringCost(),
+        recurringCost:enterpriseRecurringCost(s, e),
         effect:enterpriseEffectText(s, e, def, false),
         transferRule:enterpriseTransferRule(),
         expiry:FB.T('No fixed end')
-      }) + '</div><label class="enterprise-worker-lock' +
-      (!e.workerId ? ' disabled' : '') + '"><input type="checkbox" ' +
+      }) + upgradeHtml + '</div><label class="enterprise-worker-lock' +
+      (!assignedIds.length ? ' disabled' : '') + '"><input type="checkbox" ' +
       'id="enterprise-worker-lock"' + (e.workerLocked ? ' checked' : '') +
-      (!e.workerId ? ' disabled' : '') + '> <span>' +
-      esc(FB.T('Lock this worker to this enterprise')) + '</span>' +
-      '<span class="adesc">' + esc(e.workerId
-        ? FB.T('The staffing assistant will preserve this pairing. Manual changes may still replace it.')
-        : FB.T('Assign a worker before locking this enterprise.')) +
+      (!assignedIds.length ? ' disabled' : '') + '> <span>' +
+      esc(FB.T('Lock this staff to this enterprise')) + '</span>' +
+      '<span class="adesc">' + esc(assignedIds.length
+        ? FB.T('The staffing assistant will preserve these assignments. Manual changes remain available.')
+        : FB.T('Assign workers before locking this enterprise.')) +
       '</span></label><div class="gm-list">';
     if (!eligibleWorkers.length) {
       h += '<div class="enterprise-worker-empty"><b>' +
@@ -16680,26 +16807,36 @@ window.FB = window.FB || {};
     }
     for (const c of eligibleWorkers) {
       const current = workerAssignment(c.id);
+      const selected = assignedIds.indexOf(c.id) >= 0;
+      const previewIds = assignedIds.slice();
+      if (!selected && previewIds.length < required) previewIds.push(c.id);
       const preview = {
         type:e.type, provinceId:e.provinceId, settlement:e.settlement,
-        workerId:c.id
+        level:level, workerId:previewIds[0] || null, workerIds:previewIds
       };
       h += personAssignmentCard({
         person:c,
-        selected:e.workerId === c.id,
-        eligibility:e.workerId === c.id
-          ? (FB.isProtected(s, 'staffingWorker', c.id)
+        selected:selected,
+        disabled:!!hiredIds[c.id] || (!selected && assignedIds.length >= required),
+        eligibility:selected
+          ? (hiredIds[c.id]
+            ? FB.T('Hired worker; paid each season')
+            : FB.isProtected(s, 'staffingWorker', c.id)
             ? FB.T('Currently assigned and reserved from the staffing assistant')
             : FB.T('Currently assigned'))
           : (FB.isProtected(s, 'staffingWorker', c.id)
             ? FB.T('Reserved from the staffing assistant; manual choice remains available')
-            : FB.T('Eligible worker')),
+            : (assignedIds.length >= required
+              ? FB.T('All staffing positions are filled; remove a worker first')
+              : FB.T('Eligible worker'))),
         data:{ enterpriseWorker:c.id },
         rows:[
           { label:'Expected yield', value:FB.T('About {money:amount} each season', {
             amount:Math.round(FB.enterpriseYield(s, preview) * 10) / 10
           }) },
-          { label:'Cost / pay', value:FB.T('No assignment fee') },
+          { label:'Cost / pay', value:hiredIds[c.id]
+            ? FB.T('{money:pay} each season', { pay:hiredIds[c.id].pay || 0 })
+            : FB.T('No assignment fee') },
           { label:'Occupation', value:FB.careerTitle(s, c) },
           { label:'Standing', value:standingText(FB.standingOf(s, {
             kind:'character', id:c.id
@@ -16711,18 +16848,33 @@ window.FB = window.FB || {};
             value:assignmentConsequence(c, current) }
         ]
       });
-      h += '<button type="button" class="btn small staffing-worker-protection" ' +
-        'data-staffing-worker-protection="' + esc(c.id) +
-        '" aria-pressed="' +
-        (FB.isProtected(s, 'staffingWorker', c.id) ? 'true' : 'false') + '">' +
-        esc(FB.isProtected(s, 'staffingWorker', c.id)
-          ? FB.T('Allow staffing assistant')
-          : FB.T('Reserve from staffing assistant')) + '</button>';
+      if (hiredIds[c.id]) {
+        h += '<button type="button" class="btn small danger" ' +
+          'data-enterprise-dismiss="' + esc(c.id) + '">' +
+          esc(FB.T('Dismiss paid worker')) + '</button>';
+      } else {
+        h += '<button type="button" class="btn small staffing-worker-protection" ' +
+          'data-staffing-worker-protection="' + esc(c.id) +
+          '" aria-pressed="' +
+          (FB.isProtected(s, 'staffingWorker', c.id) ? 'true' : 'false') + '">' +
+          esc(FB.isProtected(s, 'staffingWorker', c.id)
+            ? FB.T('Allow staffing assistant')
+            : FB.T('Reserve from staffing assistant')) + '</button>';
+      }
     }
-    h += '<button class="actionbtn" data-enterprise-worker="">' +
-      (e.workerId ? '○ ' : '◉ ') + esc(FB.T('Leave it idle')) +
-      '<span class="adesc">' + esc(FB.T('An idle enterprise produces no seasonal income.')) +
-      '</span></button></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    h += '<button class="actionbtn" id="enterprise-hire"' +
+      (hireStatus !== true ? ' disabled' : '') + '><b>' +
+      esc(FB.T('Hire a local worker')) + '</b><span class="adesc">' +
+      esc(FB.T('Pay {money:pay} now and each season. The worker is qualified and tied to this enterprise.', {
+        pay:hirePay
+      })) + '</span>' + (hireStatus !== true
+        ? '<span class="adesc warning">' + esc(hireStatus) + '</span>' : '') +
+      '</button>' + (assignedIds.some(function (id) { return !hiredIds[id]; })
+        ? '<button class="actionbtn" id="enterprise-clear-household">○ ' +
+          esc(FB.T('Remove household workers')) + '<span class="adesc">' +
+          esc(FB.T('Paid workers remain contracted. The enterprise may become inactive.')) +
+          '</span></button>' : '') + '</div><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button>';
     const managementOptions = livelihoodsHistoryOptions(returnContext);
     managementOptions.replaceView = !!replaceView;
     openModal(def.icon + ' ' + dt(s, 'enterprise', e.type, def, 'name'), h,
@@ -16737,6 +16889,28 @@ window.FB = window.FB || {};
         UI.refresh();
       });
     }
+    if ($('enterprise-upgrade')) {
+      $('enterprise-upgrade').addEventListener('click', function () {
+        if (!FB.upgradeEnterprise(s, uid)) return;
+        UI.refresh();
+        UI.showEnterpriseManage(uid, returnContext, true);
+      });
+    }
+    if ($('enterprise-hire')) {
+      $('enterprise-hire').addEventListener('click', function () {
+        if (!FB.hireEnterpriseWorker(s, uid)) return;
+        UI.refresh();
+        UI.showEnterpriseManage(uid, returnContext, true);
+      });
+    }
+    document.querySelectorAll('[data-enterprise-dismiss]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!FB.removeEnterpriseWorker(s, button.dataset.enterpriseDismiss,
+            'dismissed')) return;
+        UI.refresh();
+        UI.showEnterpriseManage(uid, returnContext, true);
+      });
+    });
     document.querySelectorAll('[data-staffing-worker-protection]').forEach(
       function (button) {
         button.addEventListener('click', function () {
@@ -16748,11 +16922,24 @@ window.FB = window.FB || {};
       });
     document.querySelectorAll('[data-enterprise-worker]').forEach(function (b) {
       b.addEventListener('click', function () {
-        FB.assignEnterprise(s, uid, b.dataset.enterpriseWorker || null);
+        const cid = b.dataset.enterpriseWorker;
+        if (!cid || hiredIds[cid]) return;
+        FB.setEnterpriseWorker(s, uid, cid, assignedIds.indexOf(cid) < 0);
         UI.refresh();
-        finishLivelihoodsReturn(returnContext);
+        UI.showEnterpriseManage(uid, returnContext, true);
       });
     });
+    if ($('enterprise-clear-household')) {
+      $('enterprise-clear-household').addEventListener('click', function () {
+        for (const cid of FB.enterpriseWorkerIds(e)) {
+          if (!FB.enterpriseLaborRecord(s, cid)) {
+            FB.setEnterpriseWorker(s, uid, cid, false);
+          }
+        }
+        UI.refresh();
+        UI.showEnterpriseManage(uid, returnContext, true);
+      });
+    }
     $('gm-cancel').addEventListener('click', function () {
       finishLivelihoodsReturn(returnContext);
     });
@@ -16792,7 +16979,8 @@ window.FB = window.FB || {};
     if (row.unresolvedReason === 'no_eligible_worker') {
       return FB.enterpriseStaffingStatus(s, {
         uid:row.uid, type:row.type, provinceId:row.provinceId,
-        settlement:row.settlement, workerId:row.currentWorkerId
+        settlement:row.settlement, level:row.level,
+        workerId:row.currentWorkerId, workerIds:row.currentWorkerIds
       }).reason;
     }
     if (row.unresolvedReason === 'eligible_workers_locked') {
@@ -16806,51 +16994,37 @@ window.FB = window.FB || {};
   }
 
   function enterpriseStaffingChange(s, row, rowByUid) {
-    const current = row.currentWorkerId && s.chars[row.currentWorkerId];
-    const proposed = row.proposedWorkerId && s.chars[row.proposedWorkerId];
+    const currentIds = row.currentWorkerIds || [];
+    const proposedIds = row.proposedWorkerIds || [];
+    const added = proposedIds.filter(function (id) {
+      return currentIds.indexOf(id) < 0;
+    });
+    const removed = currentIds.filter(function (id) {
+      return proposedIds.indexOf(id) < 0;
+    });
+    function names(ids) {
+      return ids.map(function (id) {
+        return s.chars[id] ? s.chars[id].name : FB.T('Unknown worker');
+      }).join(', ');
+    }
     if (row.status === 'reserved') {
-      return FB.T('Reserved worker; the assistant will preserve this assignment.');
+      return FB.T('Reserved workers stay with this enterprise.');
     }
     if (row.status === 'locked') {
-      return FB.T('Locked assignment; the assistant will not move this worker.');
+      return FB.T('Locked staff stay with this enterprise.');
     }
     if (row.status === 'unchanged') return FB.T('Kept in place.');
-    if (row.status === 'assigned') {
-      return FB.T('{name} is assigned from ordinary household work.', {
-        name:proposed ? proposed.name : FB.T('This worker')
+    if (added.length && removed.length) return FB.T('{incoming} join; {outgoing} leave.', {
+      incoming:names(added), outgoing:names(removed)
+    });
+    if (added.length) return FB.T('{workers} join this staff.', { workers:names(added) });
+    if (removed.length) return FB.T('{workers} leave this staff.', {
+      workers:names(removed)
+    });
+    return enterpriseStaffingReason(s, row) || FB.T(
+      '{count} of {required} staffing positions can be filled.', {
+        count:proposedIds.length, required:row.requiredCount || 1
       });
-    }
-    if (row.status === 'moved') {
-      const source = rowByUid[row.proposedFromUid];
-      const label = source ? enterpriseStaffingLabel(s, source).name :
-        FB.T('another enterprise');
-      return FB.T('{name} moves here from {enterprise}.', {
-        name:proposed ? proposed.name : FB.T('This worker'),
-        enterprise:label
-      });
-    }
-    if (row.status === 'replaced') {
-      if (row.proposedFromUid) {
-        const source = rowByUid[row.proposedFromUid];
-        const label = source ? enterpriseStaffingLabel(s, source).name :
-          FB.T('another enterprise');
-        return FB.T('{incoming} moves here from {enterprise}, replacing {outgoing}.', {
-          incoming:proposed ? proposed.name : FB.T('The new worker'),
-          enterprise:label,
-          outgoing:current ? current.name : FB.T('the current worker')
-        });
-      }
-      return FB.T('{incoming} replaces {outgoing}.', {
-        incoming:proposed ? proposed.name : FB.T('The new worker'),
-        outgoing:current ? current.name : FB.T('the current worker')
-      });
-    }
-    if (current) {
-      return FB.T('{name} moves to another assignment, leaving this enterprise unresolved.', {
-        name:current.name
-      });
-    }
-    return enterpriseStaffingReason(s, row);
   }
 
   UI.showEnterpriseStaffingPreview = function (returnContext, notice) {
@@ -16878,8 +17052,14 @@ window.FB = window.FB || {};
     h += '<div class="enterprise-staffing-rows">';
     for (const row of plan.rows) {
       const label = enterpriseStaffingLabel(s, row);
-      const current = row.currentWorkerId && s.chars[row.currentWorkerId];
-      const proposed = row.proposedWorkerId && s.chars[row.proposedWorkerId];
+      function workerList(ids, fallback) {
+        const names = (ids || []).map(function (id) {
+          return s.chars[id] && s.chars[id].name;
+        }).filter(Boolean);
+        return names.length ? names.join(', ') : fallback;
+      }
+      const current = workerList(row.currentWorkerIds, FB.T('Idle'));
+      const proposed = workerList(row.proposedWorkerIds, FB.T('Unresolved'));
       const reason = row.status === 'unresolved'
         ? enterpriseStaffingReason(s, row) : '';
       const change = enterpriseStaffingChange(s, row, rowByUid);
@@ -16901,10 +17081,16 @@ window.FB = window.FB || {};
         '<div class="enterprise-staffing-place">' + esc(label.place) + '</div>' +
         '<div class="enterprise-staffing-comparison"><div><span>' +
         esc(FB.T('Current')) + '</span><b>' +
-        esc(current ? current.name : FB.T('Idle')) + '</b><small>' +
+        esc(current) + '</b><small>' +
+        esc(FB.T('{count} of {required} workers', {
+          count:(row.currentWorkerIds || []).length, required:row.requiredCount || 1
+        })) + ' · ' +
         esc(FB.T('{money:amount} each season', { amount:row.currentYield })) +
         '</small></div><div><span>' + esc(FB.T('Proposed')) + '</span><b>' +
-        esc(proposed ? proposed.name : FB.T('Unresolved')) + '</b><small>' +
+        esc(proposed) + '</b><small>' +
+        esc(FB.T('{count} of {required} workers', {
+          count:(row.proposedWorkerIds || []).length, required:row.requiredCount || 1
+        })) + ' · ' +
         esc(FB.T('{money:amount} each season', { amount:row.proposedYield })) +
         '</small></div></div><div class="settcard-details ' +
         'enterprise-staffing-details hidden" id="' + esc(detailsId) + '">' +

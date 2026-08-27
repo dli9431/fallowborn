@@ -115,6 +115,20 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Ruler households maintaining the same living standards and work outfits as commoner households needs no separate innovation; every purchased level retains its existing authored technology requirement.'
       },
+      enterprise_hired_labor:{
+        mode:'none',
+        rationale:'Hiring a qualified local worker for an owned household enterprise is a baseline labor contract with recurring pay, not an advanced capability unlocked by national research.'
+      },
+      enterprise_upgrades:{
+        mode:'hard',
+        tech:[
+          'annual_fairs','bills_of_exchange','double_entry_bookkeeping','dry_docks',
+          'heavy_plough','improved_furnaces','improved_husbandry','letters_of_credit',
+          'powered_mills','sternpost_rudder','three_field'
+        ],
+        fallback:'baseline_enterprise',
+        rationale:'Each optional expansion represents a specific advanced practice or organization, remains visible with its exact requirement, preserves the working baseline enterprise, and grandfathers completed levels.'
+      },
       county_population_demographics:{
         mode:'soft',
         tech:[

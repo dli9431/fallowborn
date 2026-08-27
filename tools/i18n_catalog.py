@@ -819,6 +819,21 @@ def extract_structured(inv: Inventory) -> None:
                                 f"{field}, faith branch {branch}.",
                                 TOKEN_RE.findall(record["text"]),
                             )
+            if data_name == "enterprises":
+                upgrades = node_array(item.get("upgrades")) or []
+                for upgrade_index, upgrade_node in enumerate(upgrades):
+                    upgrade = node_object(upgrade_node) or {}
+                    for field in DATA_FIELDS:
+                        for branch, record, line in branch_records(upgrade.get(field)):
+                            inv.add(
+                                f"{namespace}.{item_id}.upgrades.{upgrade_index}."
+                                f"{field}.{branch}",
+                                record,
+                                f"{rel}:{line}",
+                                f"{namespace} {item_id}, upgrade {upgrade_index + 1}, "
+                                f"{field}, faith branch {branch}.",
+                                TOKEN_RE.findall(record["text"]),
+                            )
             if data_name == "policies":
                 levels = node_array(item.get("levels")) or []
                 for level_index, level_node in enumerate(levels):

@@ -2546,6 +2546,19 @@ productive property:
   "name": "Brew House", "icon": "🍺", "cost": 70,
   "profession": "brewer", "yield": 3, "devMin": 2,
   "guildRank": "member",
+  "laborPay": 1.5,
+  "upgrades": [
+    {
+      "name": "Brewing Yard", "desc": "Supports local growth.",
+      "cost": 240, "staff": 2, "requiresTech": "improved_furnaces",
+      "fx": { "populationCapacity": 0.02 }
+    },
+    {
+      "name": "Great Brewery", "desc": "Draws workers to the county.",
+      "cost": 720, "staff": 3, "requiresTech": "powered_mills",
+      "dev": 1, "fx": { "migrationAttraction": 1 }
+    }
+  ],
   "desc": "A public brew-house staffed by a trained household member."
 } } }
 ```
@@ -2564,21 +2577,34 @@ productive property:
 - `yield` is the base seasonal gold before worker skill, local development, guild
   rank, and any matching active guild-monopoly percentages modify it. Incoming and
   outgoing percentages add, capped at +50%.
+- `laborPay` is the first and recurring seasonal wage for a locally hired enterprise
+  worker. Hired workers are generated with the required profession and guild rank, remain
+  tied to this enterprise, and consume no retainer capacity.
+- `upgrades` is an ordered expansion path. Each entry requires `name`, `desc`, `cost`, and
+  `staff`; `requiresTech` and `dev` are optional. Construction does not modify `yield`.
+  Supported `fx` keys are `populationCapacity`, `famineProtection`,
+  `populationCrisisProtection`, `migrationAttraction`, `levy`, `retinue`, `retainers`,
+  and `prestige`. Effects accumulate through completed levels but apply only while all
+  current staffing positions are filled. `dev` is granted once on the first fully staffed
+  season for that level. Do not author a `gold` upgrade effect.
 - Instances live in `player.enterprises` as
-  `{uid,type,provinceId,settlement,workerId,workerLocked?}`. Optional
-  `workerLocked:true` reserves a valid current pairing from batch staffing; missing or
+  `{uid,type,provinceId,settlement,workerId,workerIds?,workerLocked?,level?,devAppliedLevel?}`.
+  `workerId` remains the first assignment and `workerIds` is present for multi-person
+  staffing. Optional `workerLocked:true` reserves all valid current pairings from batch staffing; missing or
   false means unlocked. One type may stand once per settlement, but the family may own
   further copies elsewhere; repeat cost grows by `balance.enterpriseRepeatCostGrowth`.
-- An idle or invalidly staffed enterprise earns nothing.
+- An idle, partially staffed, or invalidly staffed enterprise earns nothing and supplies
+  none of its upgrade effects.
 - `FB.enterpriseAvailable(state, provinceId, settlement, includeTechLocked?)` and
   `FB.acquireEnterprise(state, type, provinceId, settlement, opts?)` accept an explicit
   site; the legacy local-site availability and buy calls remain valid. Acquisition uses
   the same normal availability and resident-worker checks at the specified site.
-- Runtime normalization removes both `workerId` and `workerLocked` when a worker dies,
+- Runtime normalization removes the affected assignment and `workerLocked` when a worker dies,
   leaves the household or enterprise province, becomes career/guild ineligible, or is
   manually replaced or unassigned. Valid locks survive saves and succession.
-- The core staffing preview optimizes all unlocked instances together against all
-  eligible household workers. It maximizes `FB.enterpriseYield` rounded to thousandths,
+- The core staffing preview optimizes all unlocked staffing positions together against all
+  eligible household workers. Paid enterprise labor and locked or protected assignments
+  remain fixed. It maximizes `FB.enterpriseYield` rounded to thousandths,
   preserves current pairings on a yield tie, then uses stable enterprise UID and
   character ID order without RNG. Unstaffed rows report locale-neutral
   `no_eligible_worker`, `eligible_workers_locked`, or `allocated_higher_yield`.

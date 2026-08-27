@@ -1292,6 +1292,7 @@ window.FB = window.FB || {};
       formerTier:p.tier,
       formerProvinceId:p.provinceId,
       enterprises:(p.enterprises || []).slice(),
+      enterpriseLabor:(p.enterpriseLabor || []).slice(),
       holdings:(p.holdings || []).slice(),
       manor:p.manor || null,
       landPlots:(p.landPlots || []).slice(),
@@ -1314,6 +1315,7 @@ window.FB = window.FB || {};
     }
     p.provs = [];
     p.enterprises = [];
+    p.enterpriseLabor = [];
     p.holdings = [];
     p.landPlots = [];
     p.manor = null;
@@ -2452,6 +2454,7 @@ window.FB = window.FB || {};
     var custody = papacy.custody[me.id];
     if (custody) {
       state.player.enterprises = custody.enterprises || [];
+      state.player.enterpriseLabor = custody.enterpriseLabor || [];
       state.player.holdings = custody.holdings || [];
       state.player.landPlots = custody.landPlots || [];
       state.player.manor = custody.manor || null;
@@ -2603,6 +2606,7 @@ window.FB = window.FB || {};
     if (!custody) return false;
     var p = state.player;
     p.enterprises = custody.enterprises || [];
+    p.enterpriseLabor = custody.enterpriseLabor || [];
     p.holdings = custody.holdings || [];
     p.landPlots = custody.landPlots || [];
     p.manor = custody.manor || null;

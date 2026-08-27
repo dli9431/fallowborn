@@ -3111,8 +3111,18 @@ window.FB = window.FB || {};
       FB.unassignEnterpriseWorker(state, c.id);
     } else {
       for (const enterprise of (p.enterprises || [])) {
-        if (enterprise.workerId !== c.id) continue;
-        enterprise.workerId = null;
+        const ids = [];
+        if (enterprise.workerId) ids.push(enterprise.workerId);
+        for (const workerId of (enterprise.workerIds || [])) {
+          if (ids.indexOf(workerId) < 0) ids.push(workerId);
+        }
+        if (ids.indexOf(c.id) < 0) continue;
+        const remaining = ids.filter(function (workerId) {
+          return workerId !== c.id;
+        });
+        enterprise.workerId = remaining[0] || null;
+        if (remaining.length > 1) enterprise.workerIds = remaining;
+        else if (enterprise.workerIds !== undefined) delete enterprise.workerIds;
         if (enterprise.workerLocked !== undefined) {
           delete enterprise.workerLocked;
         }
@@ -5702,6 +5712,12 @@ window.FB = window.FB || {};
         const popFactor = (baseline || !FB.countyPopulationFactor) ? 1 : FB.countyPopulationFactor(state, pid);
         const countyLevy = (state.dev[pid] || 1) * popFactor * B.levyPerDev;
         add('levy', 'county', countyLevy, { pid:pid });
+        if (FB.enterpriseUpgradeEffect) {
+          add('levy', 'enterprise',
+            FB.enterpriseUpgradeEffect(state, 'levy', pid), { pid:pid });
+          add('ret', 'enterprise',
+            FB.enterpriseUpgradeEffect(state, 'retinue', pid), { pid:pid });
+        }
         if (FB.countyModifierRecords) {
           for (const record of FB.countyModifierRecords(state, pid)) {
             const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
@@ -5724,6 +5740,11 @@ window.FB = window.FB || {};
          the household the baron actually raises, by the same ownership rule
          that charges them upkeep for that record. See FB.modifierCounties. */
       const seat = FB.modifierSeat ? FB.modifierSeat(state) : null;
+      if (seat && FB.enterpriseUpgradeEffect) {
+        add('ret', 'enterprise',
+          FB.enterpriseUpgradeEffect(state, 'levy', seat) +
+          FB.enterpriseUpgradeEffect(state, 'retinue', seat), { pid:seat });
+      }
       if (seat && FB.countyModifierRecords) {
         for (const record of FB.countyModifierRecords(state, seat)) {
           const def = FBDATA.modifiers && FBDATA.modifiers[record.id];

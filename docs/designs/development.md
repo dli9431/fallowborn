@@ -179,6 +179,15 @@ projection used by auctions and mods; acquisition revalidates the full status be
 spends coin. These status APIs do not change enterprise eligibility or auction
 grandfathering.
 
+Enterprise expansions are another county-development input, but not another source of
+gold. Authored upgrade effects apply only while every required staffing position is
+operational. Population capacity, famine and crisis protection, and migration attraction
+feed the same county demographic calculations as technology and buildings. Levy and
+men-at-arms support enter the player's directly held county composition, while retainer
+capacity and prestige remain household effects. An authored `dev` grant is applied once,
+on the first fully staffed seasonal boundary after that level is built, and is remembered
+by the enterprise instance rather than recalculated from the definition.
+
 A settlement building can be demolished without a refund. Demolition is permanent: the
 entry gains `ruined:true`, loses every ongoing bonus and upkeep charge, and continues to
 occupy that settlement slot. New construction records the exact applied `dev` amount as

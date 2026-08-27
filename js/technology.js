@@ -1852,6 +1852,14 @@ window.FB = window.FB || {};
           table[itemId] && table[itemId].requiresTech);
       }
     }
+    var enterprises = FBDATA.enterprises || {};
+    for (var enterpriseId in enterprises) if (own(enterprises, enterpriseId)) {
+      var upgrades = enterprises[enterpriseId].upgrades || [];
+      for (var upgradeIndex = 0; upgradeIndex < upgrades.length; upgradeIndex++) {
+        validateRequirement('Enterprise upgrade',
+          enterpriseId + '.' + upgradeIndex, upgrades[upgradeIndex].requiresTech);
+      }
+    }
     var careers = FBDATA.careers || {};
     for (var careerId in careers) if (own(careers, careerId)) {
       var career = careers[careerId] || {};

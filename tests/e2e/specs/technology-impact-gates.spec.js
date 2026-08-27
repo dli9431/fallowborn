@@ -4,7 +4,8 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/technology.js',
-  'data/technology.js'
+  'data/technology.js',
+  'data/economy.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -78,6 +79,14 @@ test('the prospective review ledger and every gate schema validate together',
       });
       FBDATA.fortLevels[1].requiresTech = originalFortRequirement;
 
+      var fieldUpgrade = FBDATA.enterprises.field_strip.upgrades[0];
+      var originalUpgradeRequirement = fieldUpgrade.requiresTech;
+      fieldUpgrade.requiresTech = 'missing_e2e_technology';
+      var enterpriseUpgradeErrors = FB.validateTechnologyData().filter(function (error) {
+        return error.indexOf('Enterprise upgrade field_strip.0') >= 0;
+      });
+      fieldUpgrade.requiresTech = originalUpgradeRequirement;
+
       var wreck = FB.eventById('strange_bounty');
       var compact = wreck.options[wreck.options.length - 1];
       var technology = FB.realmTechRecord(FB.state);
@@ -138,6 +147,7 @@ test('the prospective review ledger and every gate schema validate together',
         auctionLotErrors:auctionLotErrors,
         consumerErrors:consumerErrors,
         fortConsumerErrors:fortConsumerErrors,
+        enterpriseUpgradeErrors:enterpriseUpgradeErrors,
         structurallyHidden:structurallyHidden,
         eligibleButLocked:eligibleButLocked,
         guildCharterCount:guildCharterOptions.length,
@@ -179,6 +189,8 @@ test('the prospective review ledger and every gate schema validate together',
       'data_defined_focuses',
       'direct_vassal_charter_of_liberties',
       'earned_starting_stations',
+      'enterprise_hired_labor',
+      'enterprise_upgrades',
       'estates_scutage',
       'faith_conversion',
       'family_freedom_record',
@@ -227,6 +239,7 @@ test('the prospective review ledger and every gate schema validate together',
       'war_justification_selection'
     ]);
     const additiveNoneIds = [
+      'enterprise_hired_labor',
       'family_freedom_record',
       'landed_household_standards',
       'minor_household_standard_reduction',
@@ -235,9 +248,12 @@ test('the prospective review ledger and every gate schema validate together',
       'serf_freedom_petition'
     ];
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
-      .toEqual(['none', 'none', 'none', 'none', 'none', 'none']);
+      .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none']);
+    const additiveHardIds = ['enterprise_upgrades'];
+    expect(additiveHardIds.map(function (id) { return result.modes[id]; }))
+      .toEqual(['hard']);
     const establishedModes = result.featureIds.filter(function (id) {
-      return additiveNoneIds.indexOf(id) < 0;
+      return additiveNoneIds.indexOf(id) < 0 && additiveHardIds.indexOf(id) < 0;
     }).map(function (id) { return result.modes[id]; });
     expect(establishedModes).toEqual([
       'none', 'none', 'none', 'hard', 'none', 'hard', 'hard', 'hard', 'hard',
@@ -276,6 +292,8 @@ test('the prospective review ledger and every gate schema validate together',
       'Policy redress: missing required technology missing_e2e_technology.');
     expect(result.fortConsumerErrors).toContain(
       'Fort 1: missing required technology missing_e2e_technology.');
+    expect(result.enterpriseUpgradeErrors).toContain(
+      'Enterprise upgrade field_strip.0: missing required technology missing_e2e_technology.');
     expect(result.structurallyHidden).toMatchObject({
       visible:false, ready:false, techLocked:true
     });

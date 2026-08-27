@@ -405,35 +405,98 @@ FBDATA.enterprises = {
   field_strip: {
     name:'Leased Field', icon:'🌾', cost:20, profession:'farmer', yield:1.5, requiresTech:'scratch_plough',
     terrains:['farmland','steppe'],
+    laborPay:1,
+    upgrades:[
+      { name:'Joined Fields', cost:80, staff:2, requiresTech:'heavy_plough',
+        desc:'Supports 2% more county population while fully staffed.',
+        fx:{ populationCapacity:0.02 } },
+      { name:'Open-Field Farm', cost:240, staff:3, requiresTech:'three_field', dev:1,
+        desc:'Supports another 4% county population and 25 additional levy while fully staffed; first full operation adds 1 county development.',
+        fx:{ populationCapacity:0.04, levy:25 } }
+    ],
     desc:'Another strip under the plough. It pays only while someone works it.'
   },
   orchard_business: {
     name:'Orchard', icon:'🌳', cost:30, profession:'farmer', yield:2,
     terrains:['farmland','forest','hills'],
+    laborPay:1,
+    upgrades:[
+      { name:'Grafted Orchard', cost:120, staff:2, requiresTech:'improved_husbandry',
+        desc:'Supports 2% more county population and provides 3% famine protection while fully staffed.',
+        fx:{ populationCapacity:0.02, famineProtection:0.03 } },
+      { name:'Orchard Estate', cost:360, staff:3, requiresTech:'annual_fairs', dev:1,
+        desc:'Supports another 4% county population and adds 1 migration attraction while fully staffed; first full operation adds 1 county development.',
+        fx:{ populationCapacity:0.04, migrationAttraction:1 } }
+    ],
     desc:'Fruit trees planted for sale as well as the household table. A household press pays more when it works this harvest.'
   },
   press_business: {
     name:{ default:'Press House', muslim:'Oil Press' }, icon:'🏺', cost:60,
     profession:'farmer', yield:3, devMin:2, requiresTech:'olive_press',
     chainFrom:'orchard_business',
+    laborPay:1.25,
+    upgrades:[
+      { name:'Beam Press Yard', cost:180, staff:2, requiresTech:'improved_furnaces',
+        desc:'Provides 3% famine protection and 2% population-crisis protection while fully staffed.',
+        fx:{ famineProtection:0.03, populationCrisisProtection:0.02 } },
+      { name:'Powered Press Works', cost:540, staff:3, requiresTech:'powered_mills', dev:1,
+        desc:'Adds 1 migration attraction and another 3% population-crisis protection while fully staffed; first full operation adds 1 county development.',
+        fx:{ migrationAttraction:1, populationCrisisProtection:0.03 } }
+    ],
     desc:'Lever-press work for the neighbors’ harvests needs no trees of your own; a producing household orchard in the same county fattens the take.'
   },
   workshop_business: {
     name:'Workshop', icon:'⚒', cost:80, profession:'craftsman', yield:4, devMin:2,
     guildRank:'member', requiresTech:'horizontal_loom', tags:['workshop'],
+    laborPay:1.5,
+    upgrades:[
+      { name:'Guild Workshop', cost:240, staff:2, requiresTech:'improved_furnaces',
+        desc:'Supports 10 additional men-at-arms while fully staffed.',
+        fx:{ retinue:10 } },
+      { name:'Manufacturing Yard', cost:720, staff:4, requiresTech:'powered_mills', dev:1,
+        desc:'Supports another 25 men-at-arms while fully staffed; first full operation adds 1 county development.',
+        fx:{ retinue:25 } }
+    ],
     desc:'A public bench and your mark above the door. A guild member must staff it.'
   },
   market_stall_business: {
     name:'Market Stall', icon:'⛺', cost:60, profession:'merchant', yield:3.5, devMin:2, requiresTech:'urban_markets', tags:['market'],
+    laborPay:1.5,
+    upgrades:[
+      { name:'Permanent Shopfront', cost:180, staff:2, requiresTech:'annual_fairs',
+        desc:'Adds 1 county migration attraction and 0.25 prestige each season while fully staffed.',
+        fx:{ migrationAttraction:1, prestige:0.25 } },
+      { name:'Merchant Hall', cost:540, staff:3, requiresTech:'bills_of_exchange', dev:1,
+        desc:'Adds another 2 migration attraction and 0.5 prestige each season while fully staffed; first full operation adds 1 county development.',
+        fx:{ migrationAttraction:2, prestige:0.5 } }
+    ],
     desc:'A fixed place in the market, profitable while a practiced seller tends it.'
   },
   trade_house_business: {
     name:'Trading House', icon:'🏛', cost:150, profession:'merchant', yield:6, devMin:5,
     guildRank:'member', requiresTech:'trade_houses', tags:['trade-house'],
+    laborPay:2,
+    upgrades:[
+      { name:'Regional Agency', cost:450, staff:2, requiresTech:'letters_of_credit',
+        desc:'Adds room for 1 household retainer and 0.5 prestige each season while fully staffed.',
+        fx:{ retainers:1, prestige:0.5 } },
+      { name:'Great Counting House', cost:1350, staff:4, requiresTech:'double_entry_bookkeeping', dev:1,
+        desc:'Adds room for another 2 retainers, 2 county migration attraction, and 1 prestige each season while fully staffed; first full operation adds 1 county development.',
+        fx:{ retainers:2, migrationAttraction:2, prestige:1 } }
+    ],
     desc:'Stores, ledgers, and agents gathered beneath one family name.'
   },
   fishing_boat_business: {
     name:'Fishing Boat', icon:'🛶', cost:40, profession:'farmer', yield:2.5, coastal:true, requiresTech:'knarrs',
+    laborPay:1.25,
+    upgrades:[
+      { name:'Decked Fishing Boat', cost:140, staff:2, requiresTech:'sternpost_rudder',
+        desc:'Supports 2% more county population and 15 additional levy while fully staffed.',
+        fx:{ populationCapacity:0.02, levy:15 } },
+      { name:'Fishing Flotilla', cost:420, staff:3, requiresTech:'dry_docks', dev:1,
+        desc:'Supports another 4% county population and 25 levy while fully staffed; first full operation adds 1 county development.',
+        fx:{ populationCapacity:0.04, levy:25 } }
+    ],
     desc:'A working boat whose catch is sold beyond the household.'
   }
 };

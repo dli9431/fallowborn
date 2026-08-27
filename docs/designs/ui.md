@@ -613,8 +613,12 @@ The Work & Enterprises sheet treats a tier-3+ protagonist's career as a read-onl
 former calling. Career changes, guild steps, and personal enterprise assignment are
 removed while household occupations, religious-office advancement, and business
 staffing remain available. Its Group enterprises and Enterprise order selectors use the
-same parchment treatment as the Market basket picker. Each staffed enterprise has a saved **Lock this worker to
-this enterprise** checkbox; locked pairings are marked in both this sheet and Household
+same parchment treatment as the Market basket picker. The owned-enterprise manager shows
+the current upgrade tier, next construction cost and technology blocker, resulting staffing
+threshold, and authored non-gold benefit. Open positions offer both eligible household
+workers and **Hire a local worker**, with the first and recurring wage stated before the
+action; paid workers have an explicit dismissal control. Each enterprise with assignments
+has a saved **Lock this staff to this enterprise** checkbox; locked pairings are marked in both this sheet and Household
 Plan. Whenever an owned enterprise is idle, **Staff all idle enterprisesâ€¦** opens a
 no-day static review of the maximum-yield result across all unlocked assignments. The
 review shows current/proposed totals and pairings on the face. Each row's kept/changed state,

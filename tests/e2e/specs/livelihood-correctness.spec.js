@@ -4,10 +4,14 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/economy.js',
+  'js/population.js',
+  'js/technology.js',
+  'js/world.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'css/style.css',
-  'data/economy.js'
+  'data/economy.js',
+  'data/technology.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -260,6 +264,7 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
         };
       }
       s.player.profession = 'farmer';
+      s.player.gold = 100;
       s.player.enterprises = [enterprise];
       FB.ui.showLivelihoods();
       return {
@@ -268,17 +273,19 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
     });
 
     const row = page.locator('[data-enterprise="' + fixture.uid + '"]');
-    await expect(row).toContainText('Blocked');
+    await expect(row).toContainText('Idle');
     await expect(row).not.toContainText(
       'No adult resident household member is eligible for Craft work');
     await row.hover();
     await expect(page.locator('#tooltip')).toContainText(
       'No adult resident household member is eligible for Craft work');
     await row.click();
-    await expect(page.locator('.enterprise-management-status.blocked'))
-      .toContainText('Blocked from staffing');
+    await expect(page.locator('.enterprise-management-status.idle'))
+      .toContainText('Inactive until fully staffed');
     await expect(page.locator('.enterprise-worker-empty'))
       .toContainText('Assign or train an eligible household member');
+    await expect(page.getByRole('button', { name:/Hire a local worker/ }))
+      .toBeEnabled();
 
     await page.evaluate(function (uid) {
       const s = FB.state;
@@ -291,7 +298,7 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
       })[0].id;
       FB.ui.showEnterpriseManage(uid, undefined, true);
     }, fixture.uid);
-    await expect(page.locator('.enterprise-management-status.blocked'))
+    await expect(page.locator('.enterprise-management-status.idle'))
       .toContainText('No eligible household worker lives in');
     await expect(page.locator('.enterprise-worker-empty'))
       .toContainText('Move the household back');
@@ -310,7 +317,7 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
       };
       FB.ui.showEnterpriseManage(value.uid, undefined, true);
     }, fixture);
-    await expect(page.locator('.enterprise-management-status.blocked'))
+    await expect(page.locator('.enterprise-management-status.idle'))
       .toContainText('Guild member rank');
 
     await page.evaluate(function (value) {
@@ -541,4 +548,203 @@ test('press house pays a chain bonus only while a household orchard produces',
     expect(result.orchardYield).toBeGreaterThan(0);
     expect(result.unfed).toBeGreaterThan(0);
     expect(result.fed).toBeCloseTo(result.unfed * (1 + result.bonus), 5);
+  });
+
+test('enterprise upgrades spend gold, require larger staffs, and add only ancillary power',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const home = s.player.provinceId;
+      const technology = FB.realmTechRecord(s, FB.techRealmId(s));
+      ['heavy_plough', 'three_field'].forEach(function (id) {
+        if (technology.completed.indexOf(id) < 0) technology.completed.push(id);
+      });
+      me.career = {
+        profession:'farmer', rank:'journeyman', experience:5,
+        startedYear:s.date.year - 5, guildRank:'none', guildStanding:0,
+        chosen:true
+      };
+      s.player.profession = 'farmer';
+      s.player.enterpriseMigration = 1;
+      s.player.gold = 10000;
+      s.dev[home] = 3;
+      const enterprise = {
+        uid:'upgrade_field_fixture', type:'field_strip',
+        provinceId:home, settlement:0, workerId:me.id
+      };
+      s.player.enterprises = [enterprise];
+      const baseYield = FB.enterpriseYield(s, enterprise);
+      const firstCost = FB.enterpriseUpgradeCost(s, enterprise);
+      const firstUpgrade = FB.upgradeEnterprise(s, enterprise.uid);
+      const yieldWithOneOfTwo = FB.enterpriseYield(s, enterprise);
+      const dormantEffects = FB.enterpriseUpgradeEffects(s, home);
+      const firstHire = FB.hireEnterpriseWorker(s, enterprise.uid);
+      const firstExpandedYield = FB.enterpriseYield(s, enterprise);
+      const firstEffects = FB.enterpriseUpgradeEffects(s, home);
+      const secondCost = FB.enterpriseUpgradeCost(s, enterprise);
+      const secondUpgrade = FB.upgradeEnterprise(s, enterprise.uid);
+      const yieldWithTwoOfThree = FB.enterpriseYield(s, enterprise);
+      const secondHire = FB.hireEnterpriseWorker(s, enterprise.uid);
+      const fullYield = FB.enterpriseYield(s, enterprise);
+      const fullEffects = FB.enterpriseUpgradeEffects(s, home);
+      const developmentBefore = s.dev[home];
+      FB.enterpriseUpgradeSeason(s);
+      const developmentAfterFirstSeason = s.dev[home];
+      FB.enterpriseUpgradeSeason(s);
+      const developmentAfterSecondSeason = s.dev[home];
+      const wages = FB.enterpriseLaborSeasonCost(s);
+      const goldBeforeWages = s.player.gold;
+      FB.enterpriseLaborSeason(s);
+      return {
+        firstUpgrade:firstUpgrade,
+        secondUpgrade:secondUpgrade,
+        firstCost:firstCost,
+        secondCost:secondCost,
+        level:FB.enterpriseUpgradeLevel(enterprise),
+        required:FB.enterpriseStaffRequired(enterprise),
+        workers:FB.enterpriseWorkerIds(enterprise).length,
+        laborers:FB.enterpriseLaborRecords(s).length,
+        firstHire:!!firstHire,
+        secondHire:!!secondHire,
+        baseYield:baseYield,
+        yieldWithOneOfTwo:yieldWithOneOfTwo,
+        firstExpandedYield:firstExpandedYield,
+        yieldWithTwoOfThree:yieldWithTwoOfThree,
+        fullYield:fullYield,
+        dormantPopulation:dormantEffects.populationCapacity,
+        firstPopulation:firstEffects.populationCapacity,
+        fullPopulation:fullEffects.populationCapacity,
+        fullLevy:fullEffects.levy,
+        developmentGain:developmentAfterFirstSeason - developmentBefore,
+        repeatedDevelopmentGain:
+          developmentAfterSecondSeason - developmentAfterFirstSeason,
+        wages:wages,
+        seasonalWageSpend:goldBeforeWages - s.player.gold,
+        fullHireStatus:FB.canHireEnterpriseWorker(s, enterprise.uid)
+      };
+    });
+
+    expect(result.firstUpgrade).toBe(true);
+    expect(result.secondUpgrade).toBe(true);
+    expect(result.firstCost).toBeGreaterThan(0);
+    expect(result.secondCost).toBeGreaterThan(result.firstCost);
+    expect(result.level).toBe(2);
+    expect(result.required).toBe(3);
+    expect(result.workers).toBe(3);
+    expect(result.laborers).toBe(2);
+    expect(result.firstHire).toBe(true);
+    expect(result.secondHire).toBe(true);
+    expect(result.yieldWithOneOfTwo).toBe(0);
+    expect(result.yieldWithTwoOfThree).toBe(0);
+    expect(result.firstExpandedYield).toBeCloseTo(result.baseYield, 5);
+    expect(result.fullYield).toBeCloseTo(result.baseYield, 5);
+    expect(result.dormantPopulation).toBe(0);
+    expect(result.firstPopulation).toBeCloseTo(0.02, 5);
+    expect(result.fullPopulation).toBeCloseTo(0.06, 5);
+    expect(result.fullLevy).toBe(25);
+    expect(result.developmentGain).toBe(1);
+    expect(result.repeatedDevelopmentGain).toBe(0);
+    expect(result.wages).toBeGreaterThan(0);
+    expect(result.seasonalWageSpend).toBeCloseTo(result.wages, 5);
+    expect(result.fullHireStatus).toContain('already filled');
+  });
+
+test('enterprise manager exposes upgrades, staffing thresholds, and paid labor controls',
+  async function ({ page }) {
+    const uid = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const technology = FB.realmTechRecord(s, FB.techRealmId(s));
+      if (technology.completed.indexOf('heavy_plough') < 0) {
+        technology.completed.push('heavy_plough');
+      }
+      me.career = {
+        profession:'farmer', rank:'journeyman', experience:4,
+        startedYear:s.date.year - 4, guildRank:'none', guildStanding:0,
+        chosen:true
+      };
+      s.player.profession = 'farmer';
+      s.player.enterpriseMigration = 1;
+      s.player.gold = 1000;
+      const enterprise = {
+        uid:'upgrade_manager_fixture', type:'field_strip',
+        provinceId:s.player.provinceId, settlement:0, workerId:me.id
+      };
+      s.player.enterprises = [enterprise];
+      FB.ui.showEnterpriseManage(enterprise.uid);
+      return enterprise.uid;
+    });
+
+    await expect(page.locator('#gm-body')).toContainText('Enterprise upgrades');
+    await expect(page.locator('#gm-body')).toContainText('Upgrade to Joined Fields');
+    await page.getByRole('button', { name:/Upgrade to Joined Fields/ }).click();
+    await expect(page.locator('#gm-body')).toContainText(
+      '1 of 2 staffing positions filled');
+    await expect(page.getByRole('button', { name:/Hire a local worker/ }))
+      .toBeEnabled();
+    await page.getByRole('button', { name:/Hire a local worker/ }).click();
+    await expect(page.locator('.enterprise-management-status.staffed'))
+      .toContainText('Fully staffed');
+    await expect(page.getByRole('button', { name:'Dismiss paid worker' }))
+      .toBeVisible();
+    const state = await page.evaluate(function (enterpriseUid) {
+      const enterprise = FB.state.player.enterprises.filter(function (entry) {
+        return entry.uid === enterpriseUid;
+      })[0];
+      return {
+        level:enterprise.level,
+        workers:FB.enterpriseWorkerIds(enterprise).length,
+        contracts:FB.enterpriseLaborRecords(FB.state).length
+      };
+    }, uid);
+    expect(state).toEqual({ level:1, workers:2, contracts:1 });
+  });
+
+test('staffing assistant completes an upgraded crew instead of scattering partial staffs',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      s.player.tier = 0;
+      let helper = FB.householdWorkers(s).filter(function (worker) {
+        return worker.id !== me.id;
+      })[0];
+      if (!helper) {
+        const province = FB.world.byId[s.player.provinceId];
+        helper = FB.makeCharacter(s, {
+          culture:province.culture, religion:province.religion,
+          born:s.date.year - 28, station:s.player.tier, quality:1
+        });
+        me.spouseId = helper.id;
+        helper.spouseId = me.id;
+      }
+      for (const worker of FB.householdWorkers(s)) {
+        worker.career = {
+          profession:worker.id === me.id || worker.id === helper.id
+            ? 'farmer' : 'soldier',
+          rank:'journeyman', experience:3, startedYear:s.date.year - 3,
+          guildRank:'none', guildStanding:0, chosen:true
+        };
+      }
+      s.player.enterpriseMigration = 1;
+      s.player.enterprises = [
+        { uid:'expanded_staff_a', type:'field_strip',
+          provinceId:s.player.provinceId, settlement:0, level:1, workerId:null },
+        { uid:'expanded_staff_b', type:'field_strip',
+          provinceId:s.player.provinceId, settlement:1, level:1, workerId:null }
+      ];
+      const plan = FB.enterpriseStaffingPlan(s);
+      return {
+        proposed:plan.rows.map(function (row) {
+          return row.proposedWorkerIds.length;
+        }).sort(),
+        proposedTotal:plan.proposedTotal,
+        unresolved:plan.unresolvedCount
+      };
+    });
+
+    expect(result.proposed).toEqual([0, 2]);
+    expect(result.proposedTotal).toBeGreaterThan(0);
+    expect(result.unresolved).toBe(1);
   });
