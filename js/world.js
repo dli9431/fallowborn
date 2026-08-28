@@ -7016,16 +7016,22 @@ window.FB = window.FB || {};
   };
   FB.fns.war_can_hunt = function (state) {
     const w = state.player.war;
-    return !!(w && FB.playerHost && FB.playerHost(state) && FB.hostOf && FB.hostOf(state, w.enemy));
+    return !!(w && !(FB.hostAutomationManual && FB.hostAutomationManual()) &&
+      FB.playerHost && FB.playerHost(state) &&
+      FB.hostOf && FB.hostOf(state, w.enemy));
   };
   FB.fns.war_hunt = function (state) {
     const w = state.player.war; if (!w) return;
+    if (FB.hostAutomationManual && FB.hostAutomationManual()) return;
     const host = FB.playerHost && FB.playerHost(state);
     const prey = FB.hostOf && FB.hostOf(state, w.enemy);
     if (!host || !prey) return;
     const ename = state.realms[w.enemy] ? state.realms[w.enemy].name : '';
     if (FB.orderArmy(state, host, prey.at)) {
       host.huntPrey = w.enemy; // track the prey: re-path onto it each day
+      host.eventOrder = 1;
+      host.manual = 0;
+      host.holdManual = 0;
       FB.news(state, FB.msg('news.war.hunt_enemy', {
         forms: {
           select: 'value', param: 'named', cases: {

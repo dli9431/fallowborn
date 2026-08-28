@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'data/map_data.js',
   'data/actions.js',
   'js/actions.js',
+  'js/armies.js',
   'js/events.js',
   'js/main.js',
   'js/model.js',
@@ -170,6 +171,15 @@ test('common households do not see ruler-only technology or automation controls'
       FB.ui.showAutoResolve();
     });
     await expect(page.locator('input[name="ar-hosts"]')).toHaveCount(3);
+    await expect(page.locator('#ar-host-resupply')).toBeVisible();
+    await expect(page.locator('#ar-host-resupply')).toBeChecked();
+    await page.locator('#ar-host-resupply').uncheck();
+    expect(await page.evaluate(function () {
+      return {
+        live:FB.game.auto.hostResupply,
+        stored:JSON.parse(localStorage.getItem('fb_automation')).hostResupply
+      };
+    })).toEqual({ live:false, stored:false });
     await expect(page.locator('#ar-build')).toBeVisible();
     await expect(page.locator('#ar-research')).toHaveCount(0);
     await expect(page.locator('#gm-body')).toContainText(

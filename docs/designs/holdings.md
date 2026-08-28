@@ -225,6 +225,13 @@ and its lock when the worker dies, leaves the managed household, becomes career/
 ineligible, or can no longer work personally after a rank change. Valid locks survive
 save/restore and succession.
 
+The all-enterprise staffing preview is also an entry point for resolving an idle row. Its
+Assign workers action opens the same owned-enterprise manager and returns to a newly derived
+preview, while Hire a local worker calls the canonical paid-labor mutation directly and
+refreshes the preview in place. Disabled hiring retains the exact wage or affordability
+reason in the row's tooltip/touch disclosure; the batch proposal is never silently applied
+by either per-row action.
+
 The owned-enterprise manager is deliberately terse. Its permanent face contains section
 titles, worker states, and action labels only. Enterprise description, staffing status and
 guidance, owner/scope/cost/effect/transfer terms, upgrade details and blockers, staffing-lock

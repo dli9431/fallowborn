@@ -384,6 +384,9 @@ window.FB = window.FB || {};
       h += hr('manual', 'Manually — you march the host yourself');
       h += hr('def', 'Defensive — throw back invaders, then refit at home');
       h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
+      h += cb('ar-host-resupply', a.hostResupply !== false,
+        '<b>Return automated hosts to friendly land when supplies run low</b>',
+        'At one week of supply remaining, or after supplies run out, automated hosts retreat to reachable friendly territory and refill before resuming their stance. Manual routes and holds remain yours.');
     }
     if (access.build) {
       h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
@@ -421,13 +424,18 @@ window.FB = window.FB || {};
       if (r) a.style = r.value;
       const hsel = document.querySelector('input[name=ar-hosts]:checked');
       if (hsel) a.hosts = hsel.value;
+      const hostResupply = $('ar-host-resupply');
+      if (hostResupply) a.hostResupply = hostResupply.checked;
+      if (a.hosts === 'manual' && FB.state && FB.enforceManualHostControl) {
+        FB.enforceManualHostControl(FB.state);
+      }
       FB.game.saveAuto();
       if (research && a.research && FB.state && FB.autoResearch) {
         FB.autoResearch(FB.state, a.researchMode);
       }
       if (FB.state) UI.refresh();
     }
-    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-build',
+    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-host-resupply', 'ar-build',
       'ar-research', 'ar-research-mode'].forEach(function (id) {
       const control = $(id);
       if (control) control.addEventListener('change', sync);
@@ -8317,6 +8325,8 @@ window.FB = window.FB || {};
       UI.showParliament(returnContext.returnView);
     } else if (returnContext.view === 'realm') {
       UI.showLiegeModal(returnContext.realmId, returnContext.returnContext);
+    } else if (returnContext.view === 'self') {
+      UI.closeModal();
     } else if (returnContext.view === 'character') {
       UI.showCharModal(returnContext.characterId, returnContext.returnContext);
     } else if (returnContext.view === 'family-tree') {
@@ -13020,14 +13030,30 @@ window.FB = window.FB || {};
 
   /* ================= consolidated household plan ================= */
   const HOUSEHOLD_PLAN_RETURN = 'household-plan';
+  const ENTERPRISE_STAFFING_RETURN = 'enterprise-staffing-preview';
+  let householdPlanDetailSerial = 0;
+  let householdPlanReturnPosition = null;
 
   function returnsToHouseholdPlan(returnContext) {
     return returnContext === HOUSEHOLD_PLAN_RETURN;
   }
 
+  function returnsToEnterpriseStaffingPreview(returnContext) {
+    return !!(returnContext && typeof returnContext === 'object' &&
+      returnContext.view === ENTERPRISE_STAFFING_RETURN);
+  }
+
+  function enterpriseStaffingReturnContext(returnContext) {
+    return {
+      view:ENTERPRISE_STAFFING_RETURN,
+      returnContext:returnContext
+    };
+  }
+
   function returnsToInteractionManagement(returnContext) {
     return !!(returnContext && typeof returnContext === 'object' &&
-      (returnContext.view === 'character' ||
+      (returnContext.view === 'self' ||
+        returnContext.view === 'character' ||
         returnContext.view === 'retainer'));
   }
 
@@ -13067,6 +13093,14 @@ window.FB = window.FB || {};
   }
 
   function livelihoodsHistoryOptions(returnContext) {
+    if (returnsToEnterpriseStaffingPreview(returnContext)) {
+      return {
+        historyView:true,
+        historyBackRender:function () {
+          UI.showEnterpriseStaffingPreview(returnContext.returnContext);
+        }
+      };
+    }
     return householdPlanHistoryOptions(returnContext) || {
       historyView:true,
       historyBackRender:function () {
@@ -13088,6 +13122,12 @@ window.FB = window.FB || {};
   }
 
   function finishLivelihoodsReturn(returnContext) {
+    if (returnsToEnterpriseStaffingPreview(returnContext)) {
+      modalHistoryBack(function () {
+        UI.showEnterpriseStaffingPreview(returnContext.returnContext);
+      });
+      return;
+    }
     if (returnsToHouseholdPlan(returnContext)) {
       finishHouseholdPlanReturn(returnContext, UI.showLivelihoods);
       return;
@@ -13098,26 +13138,71 @@ window.FB = window.FB || {};
   }
 
   function householdPlanLines(primary, secondary, tertiary, warning) {
-    return '<span class="household-plan-primary">' + esc(primary) + '</span>' +
-      (secondary ? '<span class="household-plan-secondary">' +
-        esc(secondary) + '</span>' : '') +
-      (tertiary ? '<span class="household-plan-tertiary">' +
-        esc(tertiary) + '</span>' : '') +
-      (warning ? '<span class="household-plan-warning">' +
-        esc(warning) + '</span>' : '');
+    return {
+      primary:primary,
+      secondary:secondary || '',
+      tertiary:tertiary || '',
+      warning:warning || '',
+      prefix:'',
+      className:''
+    };
+  }
+
+  function householdPlanHelperHtml(content) {
+    return (content.secondary
+      ? '<span class="household-plan-secondary">' +
+        esc(content.secondary) + '</span>' : '') +
+      (content.tertiary
+        ? '<span class="household-plan-tertiary">' +
+          esc(content.tertiary) + '</span>' : '');
+  }
+
+  function householdPlanCellContent(content) {
+    const helper = householdPlanHelperHtml(content);
+    let h = '<span class="household-plan-primary">' +
+      esc(content.primary) + '</span>' +
+      (helper ? '<span class="household-plan-visible-details">' +
+        helper + '</span>' : '') +
+      (content.warning ? '<span class="household-plan-warning">' +
+        esc(content.warning) + '</span>' : '');
+    if (content.prefix || content.className) {
+      h = '<span class="' + esc(content.className || 'household-plan-copy') +
+        '">' + (content.prefix || '') + '<span class="household-plan-copy">' +
+        h + '</span></span>';
+    }
+    return h;
+  }
+
+  function householdPlanDetailsButton(label, detailsId) {
+    return '<span class="settcard-actions household-plan-cell-actions">' +
+      '<button type="button" class="btn small settcard-info" ' +
+      'aria-expanded="false" aria-controls="' + detailsId + '" title="' +
+      esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details for {section}', { section:label })) +
+      '">?</button></span>';
   }
 
   function householdPlanCell(label, content, action, cid, target) {
-    let h = '<td data-label="' + esc(label) + '">';
+    const helper = householdPlanHelperHtml(content);
+    const detailsId = helper
+      ? 'household-plan-cell-details-' + (++householdPlanDetailSerial) : '';
+    let h = '<td data-label="' + esc(label) + '"><div class="household-plan-cell' +
+      (helper ? ' has-details' : '') + '">';
     if (action) {
       h += '<button type="button" class="actionbtn household-plan-action" ' +
         'data-household-plan-action="' + esc(action) + '" data-household-plan-cid="' +
         esc(cid) + '"' + (target ? ' data-household-plan-target="' +
-          esc(target) + '"' : '') + '>' + content + '</button>';
+          esc(target) + '"' : '') + '>' + householdPlanCellContent(content) + '</button>';
     } else {
-      h += '<div class="household-plan-static">' + content + '</div>';
+      h += '<div class="household-plan-static">' +
+        householdPlanCellContent(content) + '</div>';
     }
-    return h + '</td>';
+    if (helper) {
+      h += householdPlanDetailsButton(label, detailsId) +
+        '<div class="settcard-details household-plan-details hidden" id="' +
+        detailsId + '">' + helper + '</div>';
+    }
+    return h + '</div></td>';
   }
 
   function householdPlanPerson(s, c, kind, retainer) {
@@ -13137,9 +13222,79 @@ window.FB = window.FB || {};
       relationship = isSpouse ? FB.T('Your spouse') :
         (relationText(s, c) || relationship);
     }
-    return '<div class="household-plan-person">' + FB.faceTag(c, 36, 42) +
-      '<span>' + householdPlanLines(FB.fullName(c), relationship,
-        FB.T('Age {age}', { age:FB.ageOf(c, s.date.year) })) + '</span></div>';
+    const content = householdPlanLines(FB.fullName(c), relationship,
+      FB.T('Age {age}', { age:FB.ageOf(c, s.date.year) }));
+    content.prefix = FB.faceTag(c, 36, 42);
+    content.className = 'household-plan-person';
+    return content;
+  }
+
+  function householdPolicySummaryHtml(className, title, lines, detailsId,
+    manageId, manageAria, manageLabel) {
+    let details = '';
+    for (const line of lines) {
+      details += '<span class="household-policy-detail-line">' +
+        esc(line) + '</span>';
+    }
+    return '<div class="household-policy-summary ' + className + '">' +
+      '<div class="household-policy-copy"><div class="household-policy-heading">' +
+      '<strong>' + esc(title) + '</strong>' +
+      householdPlanDetailsButton(title, detailsId) + '</div>' +
+      '<div class="household-policy-visible-details">' + details + '</div></div>' +
+      '<button type="button" class="btn household-policy-manage" id="' +
+      manageId + '" aria-label="' + esc(manageAria) + '">' +
+      esc(manageLabel) + '</button>' +
+      '<div class="settcard-details household-policy-details hidden" id="' +
+      detailsId + '">' + details + '</div></div>';
+  }
+
+  function rememberHouseholdPlanPosition(cid) {
+    if (!eventChoiceUsesDisclosure()) return;
+    const ledger = $('gm-body').querySelector('.household-plan-content');
+    if (!ledger) return;
+    const rows = ledger.querySelectorAll('tr[data-household-plan-cid]');
+    let row = null;
+    for (let i = 0; i < rows.length; i++) {
+      if (String(rows[i].getAttribute('data-household-plan-cid')) === String(cid)) {
+        row = rows[i];
+        break;
+      }
+    }
+    const ledgerRect = ledger.getBoundingClientRect();
+    const rowRect = row && row.getBoundingClientRect();
+    householdPlanReturnPosition = {
+      cid:String(cid),
+      scrollTop:ledger.scrollTop,
+      offset:rowRect ? rowRect.top - ledgerRect.top : 0
+    };
+  }
+
+  function restoreHouseholdPlanPosition() {
+    const position = householdPlanReturnPosition;
+    householdPlanReturnPosition = null;
+    if (!position || !eventChoiceUsesDisclosure()) return;
+    window.requestAnimationFrame(function () {
+      const ledger = $('gm-body').querySelector('.household-plan-content');
+      if (!ledger) return;
+      const rows = ledger.querySelectorAll('tr[data-household-plan-cid]');
+      let row = null;
+      for (let i = 0; i < rows.length; i++) {
+        if (String(rows[i].getAttribute('data-household-plan-cid')) === position.cid) {
+          row = rows[i];
+          break;
+        }
+      }
+      if (!row) {
+        ledger.scrollTop = position.scrollTop;
+        return;
+      }
+      const ledgerRect = ledger.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      const target = ledger.scrollTop + rowRect.top - ledgerRect.top -
+        position.offset;
+      ledger.scrollTop = Math.max(0, Math.min(
+        ledger.scrollHeight - ledger.clientHeight, target));
+    });
   }
 
   function educationPolicyAnnotation(s, c, dimension) {
@@ -13456,6 +13611,7 @@ window.FB = window.FB || {};
     }
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
+    householdPlanDetailSerial = 0;
     const head = s.chars[s.player.charId];
     if (!head || head.dead) return;
     const matchPolicy = FB.ensureMatchPolicy(s);
@@ -13543,23 +13699,18 @@ window.FB = window.FB || {};
     const matchPolicyExpenses = [
       matchDowrySummary, matchGoldSummary, matchPrestigeSummary
     ].join(' · ');
-    let h = '<div class="household-plan-content"><div class="gm-body-text household-plan-intro"><p>' + esc(FB.T(
-      'Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls.')) +
-      '</p></div><div class="household-policy-summary education-policy-summary"><div><strong>' +
-      esc(FB.T('Education Policy')) + '</strong><span>' +
-      esc(educationFocusSummary) + '</span><span>' +
-      esc(educationInstructionSummary) + '</span></div>' +
-      '<button type="button" class="btn" id="household-education-policy" aria-label="' +
-      esc(FB.T('Manage household education policy')) + '">' +
-      esc(FB.T('Manage policy…')) + '</button></div>' +
-      '<div class="household-policy-summary match-policy-summary"><div><strong>' +
-      esc(FB.T('Descendant Match Assistant')) + '</strong><span>' +
-      esc(matchPolicyState) + '</span><span>' +
-      esc(matchPolicyStation) + '</span><span>' +
-      esc(matchPolicyExpenses) + '</span></div>' +
-      '<button type="button" class="btn" id="household-match-policy" aria-label="' +
-      esc(FB.T('Manage descendant match assistant')) + '">' +
-      esc(FB.T('Manage assistant…')) + '</button></div>' +
+    const planIntro = FB.T(
+      'Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls.');
+    let h = '<div class="household-plan-content">' + householdPolicySummaryHtml(
+        'education-policy-summary', FB.T('Education Policy'),
+        [educationFocusSummary, educationInstructionSummary],
+        'household-education-policy-details', 'household-education-policy',
+        FB.T('Manage household education policy'), FB.T('Manage policy…')) +
+      householdPolicySummaryHtml(
+        'match-policy-summary', FB.T('Descendant Match Assistant'),
+        [matchPolicyState, matchPolicyStation, matchPolicyExpenses],
+        'household-match-policy-details', 'household-match-policy',
+        FB.T('Manage descendant match assistant'), FB.T('Manage assistant…')) +
       (enterprises.length ? enterpriseViewControlsHtml('household', false) : '') +
       '<div class="household-plan-wrap"><table class="household-plan-table">' +
       '<thead><tr>';
@@ -13573,7 +13724,8 @@ window.FB = window.FB || {};
       const assignment = householdPlanAssignment(s, c, enterprises, row.retainer);
       const match = householdPlanMatch(s, c);
       const equipment = householdPlanEquipment(s, c);
-      h += '<tr class="household-plan-' + row.kind + '">' +
+      h += '<tr class="household-plan-' + row.kind + '" ' +
+        'data-household-plan-cid="' + esc(c.id) + '">' +
         householdPlanCell(labels.person, householdPlanPerson(s, c, row.kind, row.retainer),
           null, c.id) +
         householdPlanCell(labels.education, education.content, education.action, c.id) +
@@ -13594,20 +13746,36 @@ window.FB = window.FB || {};
         ? '<div class="hint enterprise-staffing-hint">' +
           esc(FB.T('All family enterprises are staffed.')) + '</div>'
         : '') +
-      '</div><div class="gm-footer">' +
       (idleEnterprises
-        ? '<button type="button" class="btn" id="household-plan-staff-enterprises">' +
-          esc(FB.T('Staff all idle enterprises…')) + '</button>'
+        ? '<div class="household-plan-staffing-entry settcard"' +
+          (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+          ' aria-describedby="household-plan-staffing-details">' +
+          '<button type="button" class="actionbtn" ' +
+          'id="household-plan-staff-enterprises" ' +
+          'aria-describedby="household-plan-staffing-details">' +
+          esc(FB.T('Staff all idle enterprises…')) + '</button>' +
+          '<span class="settcard-actions"><button type="button" ' +
+          'class="btn small settcard-info" aria-expanded="false" ' +
+          'aria-controls="household-plan-staffing-details" title="' +
+          esc(FB.T('Details')) + '" aria-label="' +
+          esc(FB.T('Details')) + '">?</button></span>' +
+          '<div class="settcard-details hidden" ' +
+          'id="household-plan-staffing-details">' + esc(FB.T(
+            'Review a maximum-yield assignment across every unlocked enterprise. Applying it spends no day or money.')) +
+          '</div></div>'
         : '') +
+      '</div><div class="gm-footer">' +
       '<button type="button" class="btn" id="household-plan-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('📋 Household Plan'), h, {
       modalClass:'fullsheet-modal household-plan-modal',
       replaceView:!!replaceView,
+      titleDetailsHtml:'<p>' + esc(planIntro) + '</p>',
       guide:guideModalOption('household-plan-guide', 'family-scopes',
         'Guide: family and household scope')
     });
     FB.paintFaces($('gm-body'), s);
+    restoreHouseholdPlanPosition();
     wireEnterpriseViewControls('household', function () {
       UI.showHouseholdPlan(true);
     });
@@ -13623,6 +13791,7 @@ window.FB = window.FB || {};
         const action = actions[i].getAttribute('data-household-plan-action');
         const cid = actions[i].getAttribute('data-household-plan-cid');
         const target = actions[i].getAttribute('data-household-plan-target');
+        rememberHouseholdPlanPosition(cid);
         if (action === 'education') UI.showEduFocus(cid, HOUSEHOLD_PLAN_RETURN);
         else if (action === 'instruction') UI.showTutorPick(cid, HOUSEHOLD_PLAN_RETURN);
         else if (action === 'work') UI.showCareerPicker(cid, HOUSEHOLD_PLAN_RETURN);
@@ -13642,7 +13811,10 @@ window.FB = window.FB || {};
         UI.showEnterpriseStaffingPreview(HOUSEHOLD_PLAN_RETURN);
       });
     }
-    $('household-plan-close').addEventListener('click', UI.closeModal);
+    $('household-plan-close').addEventListener('click', function () {
+      householdPlanReturnPosition = null;
+      UI.closeModal();
+    });
   };
 
   function educationPolicyDraft(value) {
@@ -17230,10 +17402,9 @@ window.FB = window.FB || {};
     const plan = FB.enterpriseStaffingPlan(s);
     const rowByUid = {};
     for (const row of plan.rows) rowByUid[row.uid] = row;
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Review the complete result before applying it. Locked pairings and reserved workers stay fixed; every other enterprise and eligible household worker may be rebalanced. Applying it spends no day or money.')) +
-      '</p></div>' +
-      (notice ? '<div class="hint enterprise-staffing-notice">' +
+    const intro = FB.T(
+      'Review the complete result before applying it. Locked pairings and reserved workers stay fixed; every other enterprise and eligible household worker may be rebalanced. Applying it spends no day or money.');
+    let h = (notice ? '<div class="hint enterprise-staffing-notice">' +
         esc(notice) + '</div>' : '') +
       '<div class="enterprise-staffing-totals">' +
       '<div><span>' + esc(FB.T('Current total')) + '</span><b>' +
@@ -17258,15 +17429,35 @@ window.FB = window.FB || {};
       }
       const current = workerList(row.currentWorkerIds, FB.T('Idle'));
       const proposed = workerList(row.proposedWorkerIds, FB.T('Unresolved'));
+      const currentCount = FB.T('{count} of {required} workers', {
+        count:(row.currentWorkerIds || []).length,
+        required:row.requiredCount || 1
+      });
+      const proposedCount = FB.T('{count} of {required} workers', {
+        count:(row.proposedWorkerIds || []).length,
+        required:row.requiredCount || 1
+      });
       const reason = row.status === 'unresolved'
         ? enterpriseStaffingReason(s, row) : '';
       const change = enterpriseStaffingChange(s, row, rowByUid);
       const detailsId = 'enterprise-staffing-details-' + row.uid;
+      const idle = (row.currentWorkerIds || []).length <
+        (row.requiredCount || 1);
+      const hireStatus = idle
+        ? (FBDATA.enterprises[row.type]
+            ? FB.canHireEnterpriseWorker(s, row.uid)
+            : FB.T('This enterprise is not recognized.'))
+        : null;
+      const hirePay = idle ? FB.enterpriseLaborPay(s, {
+        type:row.type
+      }) : 0;
       h += '<div class="enterprise-staffing-row settcard ' +
         (row.status === 'unresolved' ? 'unresolved' :
           (row.status === 'locked' || row.status === 'reserved'
-            ? 'locked' : '')) + '" tabindex="0" aria-describedby="' +
-        esc(detailsId) + '">' +
+            ? 'locked' : '')) + '" data-enterprise-staffing-uid="' +
+        esc(row.uid) + '"' +
+        (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+        ' aria-describedby="' + esc(detailsId) + '">' +
         '<div class="enterprise-staffing-head"><span class="enterprise-staffing-name">' +
         esc(label.icon + ' ' + label.name) + '</span>' +
         '<span class="enterprise-staffing-state">' +
@@ -17280,22 +17471,47 @@ window.FB = window.FB || {};
         '<div class="enterprise-staffing-comparison"><div><span>' +
         esc(FB.T('Current')) + '</span><b>' +
         esc(current) + '</b><small>' +
-        esc(FB.T('{count} of {required} workers', {
-          count:(row.currentWorkerIds || []).length, required:row.requiredCount || 1
-        })) + ' · ' +
+        esc(currentCount) + ' · ' +
         esc(FB.T('{money:amount} each season', { amount:row.currentYield })) +
         '</small></div><div><span>' + esc(FB.T('Proposed')) + '</span><b>' +
         esc(proposed) + '</b><small>' +
-        esc(FB.T('{count} of {required} workers', {
-          count:(row.proposedWorkerIds || []).length, required:row.requiredCount || 1
-        })) + ' · ' +
+        esc(proposedCount) + ' · ' +
         esc(FB.T('{money:amount} each season', { amount:row.proposedYield })) +
-        '</small></div></div><div class="settcard-details ' +
+        '</small></div></div>' + (idle
+          ? '<div class="enterprise-staffing-row-actions">' +
+            '<button type="button" class="btn" ' +
+            'data-enterprise-staffing-manage="' + esc(row.uid) +
+            '" aria-describedby="' + esc(detailsId) + '">' +
+            esc(FB.T('Assign workers…')) + '</button>' +
+            '<button type="button" class="btn" ' +
+            'data-enterprise-staffing-hire="' + esc(row.uid) +
+            '" aria-describedby="' + esc(detailsId) + '"' +
+            (hireStatus === true ? '' : ' disabled') + '>' +
+            esc(FB.T('Hire a local worker')) + '</button></div>'
+          : '') + '<div class="settcard-details ' +
         'enterprise-staffing-details hidden" id="' + esc(detailsId) + '">' +
         '<b>' + esc(enterpriseStaffingStatus(row)) + '</b>' +
+        '<div class="enterprise-staffing-detail-place">' +
+        esc(label.place) + '</div>' +
+        '<div class="enterprise-staffing-detail-pair"><span>' +
+        esc(FB.T('Current')) + '</span><b>' + esc(current) + '</b><small>' +
+        esc(currentCount) + ' · ' +
+        esc(FB.T('{money:amount} each season', { amount:row.currentYield })) +
+        '</small></div><div class="enterprise-staffing-detail-pair"><span>' +
+        esc(FB.T('Proposed')) + '</span><b>' + esc(proposed) + '</b><small>' +
+        esc(proposedCount) + ' · ' +
+        esc(FB.T('{money:amount} each season', { amount:row.proposedYield })) +
+        '</small></div>' +
         '<div class="enterprise-staffing-change">' + esc(change) + '</div>' +
         (reason && reason !== change
           ? '<div class="enterprise-staffing-reason">' + esc(reason) + '</div>'
+          : '') + (idle
+          ? '<div class="enterprise-staffing-hire-details"><b>' +
+            esc(FB.T('Hire a local worker')) + '</b><span>' +
+            esc(hireStatus === true ? FB.T(
+              'Pay {money:pay} now and each season. The worker is qualified and tied to this enterprise.', {
+                pay:hirePay
+              }) : hireStatus) + '</span></div>'
           : '') + '</div></div>';
     }
     h += '</div><div class="gm-footer">' +
@@ -17307,7 +17523,38 @@ window.FB = window.FB || {};
     const options = livelihoodsHistoryOptions(returnContext);
     options.modalClass = 'enterprise-staffing-modal';
     options.replaceView = !!notice;
+    options.titleDetailsHtml = '<p>' + esc(intro) + '</p>';
     openModal(FB.T('⚙ Enterprise staffing preview'), h, options);
+    document.querySelectorAll('[data-enterprise-staffing-manage]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showEnterpriseManage(button.dataset.enterpriseStaffingManage,
+            enterpriseStaffingReturnContext(returnContext));
+        });
+      });
+    document.querySelectorAll('[data-enterprise-staffing-hire]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const uid = button.dataset.enterpriseStaffingHire;
+          let enterprise = null;
+          for (const item of FB.enterpriseList(s)) {
+            if (item.uid === uid) enterprise = item;
+          }
+          const status = enterprise && FBDATA.enterprises[enterprise.type]
+            ? FB.canHireEnterpriseWorker(s, uid)
+            : FB.T('This enterprise is not recognized.');
+          if (status !== true || !FB.hireEnterpriseWorker(s, uid)) {
+            UI.showEnterpriseStaffingPreview(returnContext,
+              status === true
+                ? FB.T('Household staffing changed after this review. A fresh plan is shown; review it before applying.')
+                : status);
+            return;
+          }
+          UI.refresh();
+          UI.showEnterpriseStaffingPreview(returnContext, FB.T(
+            'A local worker was hired. Review the refreshed staffing plan.'));
+        });
+      });
     $('enterprise-staffing-apply').addEventListener('click', function () {
       const result = FB.applyEnterpriseStaffingPlan(s, plan);
       if (!result.ok) {

@@ -72,6 +72,78 @@ test('operational war events expire when their exact war ends or is replaced',
     expect(result.validAfterPeace).toBe(false);
   });
 
+test('manual host control rejects war-event movement and stale hunt routes',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const home = p.provinceId;
+      const enemyId = Object.keys(s.realms).filter(function (rid) {
+        const realm = s.realms[rid];
+        return rid !== 'player' && realm && realm.alive &&
+          !realm.liege && realm.capital !== home;
+      })[0];
+      const enemyAt = s.realms[enemyId].capital;
+      const oldHosts = FB.game.auto.hosts;
+      FB.game.auto.hosts = 'manual';
+      p.war = {
+        enemy:enemyId, target:enemyAt, wins:0, losses:0,
+        seasons:0, defending:false, strength:1
+      };
+      s.armies = [
+        {
+          id:'manual-event-host', realm:'player', men:600, size:600,
+          units:{ levy:600 }, at:home, from:home, moveLeft:0,
+          path:[], goal:null, supply:100
+        },
+        {
+          id:'manual-event-enemy', realm:enemyId, men:300, size:300,
+          units:{ levy:300 }, at:enemyAt, from:enemyAt, moveLeft:0,
+          path:[], goal:null, supply:100
+        }
+      ];
+      const host = s.armies[0];
+      const canHunt = FB.fns.war_can_hunt(s);
+      FB.fns.war_hunt(s);
+      const afterEvent = {
+        goal:host.goal,
+        path:host.path.slice(),
+        huntPrey:host.huntPrey || null
+      };
+
+      FB.orderArmy(s, host, enemyAt);
+      host.eventOrder = 1;
+      host.huntPrey = enemyId;
+      FB.armyTick(s);
+      const afterTick = {
+        at:host.at,
+        goal:host.goal,
+        path:host.path.slice(),
+        moveLeft:host.moveLeft,
+        huntPrey:host.huntPrey || null,
+        held:!!host.holdManual
+      };
+      FB.game.auto.hosts = oldHosts;
+      return {
+        home:home,
+        canHunt:canHunt,
+        afterEvent:afterEvent,
+        afterTick:afterTick
+      };
+    });
+
+    expect(result.canHunt).toBe(false);
+    expect(result.afterEvent).toEqual({ goal:null, path:[], huntPrey:null });
+    expect(result.afterTick).toEqual({
+      at:result.home,
+      goal:null,
+      path:[],
+      moveLeft:0,
+      huntPrey:null,
+      held:true
+    });
+  });
+
 test('the daily picker yields one blocking event and leaves the rest queued',
   async function ({ page }) {
     const result = await page.evaluate(function () {

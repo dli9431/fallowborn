@@ -1557,10 +1557,47 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   overflow-wrap: anywhere; color: var(--main-text-color); font-size: 13px;
 }
 .enterprise-staffing-comparison small { color: var(--helper-text-color); font-size: 11px; }
+.enterprise-staffing-row-actions {
+  display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;
+}
+.enterprise-staffing-row-actions .btn {
+  min-width: 150px; min-height: 40px; margin: 0;
+}
+.enterprise-staffing-detail-pair {
+  display: grid; grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+  gap: 3px 8px; margin-top: 7px;
+}
+.enterprise-staffing-detail-place {
+  margin-top: 3px; color: var(--helper-text-color); font-size: 12px;
+}
+.enterprise-staffing-detail-pair > span {
+  grid-row: 1 / span 2; align-self: start; color: var(--helper-text-color);
+  font-size: 10px; font-weight: bold; letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.enterprise-staffing-detail-pair > b {
+  min-width: 0; overflow-wrap: anywhere; color: var(--main-text-color);
+  font-size: 13px;
+}
+.enterprise-staffing-detail-pair > small {
+  color: var(--helper-text-color); font-size: 11px;
+}
 .enterprise-staffing-change, .enterprise-staffing-reason {
   margin-top: 7px; color: var(--helper-text-color); font-size: 12px; line-height: 1.4;
 }
 .enterprise-staffing-reason { color: #d09a78; }
+.enterprise-staffing-hire-details {
+  margin-top: 8px; padding-top: 7px; border-top: 1px solid #493c27;
+}
+.enterprise-staffing-hire-details > b,
+.enterprise-staffing-hire-details > span { display: block; }
+.enterprise-staffing-hire-details > span {
+  margin-top: 2px; color: var(--helper-text-color);
+}
+@media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
+  .enterprise-staffing-place,
+  .enterprise-staffing-comparison small { display: none; }
+}
 .actiongroup-toggle {
   display:flex; justify-content:space-between; gap:10px; width:100%; min-height:44px;
   margin:10px 0 6px; padding:9px 10px; border:1px solid #55452a; border-radius:8px;
@@ -2621,20 +2658,28 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 #genmodal.household-plan-modal .gm-footer {
   position: relative; bottom: auto; flex: 0 0 auto; margin-top: 0;
 }
-.household-plan-intro { margin-bottom: 8px; }
 .household-policy-summary {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center; gap: 10px 14px;
   margin-bottom: 10px; padding: 10px 12px;
   border: 1px solid #6b5831; border-radius: 8px; background: #2a2216;
 }
-.household-policy-summary > div { min-width: 0; }
+.household-policy-copy { min-width: 0; }
+.household-policy-heading {
+  display: flex; min-width: 0; align-items: center; justify-content: space-between;
+  gap: 8px;
+}
 .household-policy-summary strong {
   display: block; color: #e3c66e; font-size: 14px;
 }
-.household-policy-summary span {
+.household-policy-detail-line {
   display: block; margin-top: 2px; color: var(--helper-text-color); font-size: 12px;
 }
-.household-policy-summary .btn { flex: 0 0 auto; }
+.household-policy-manage { min-width: 0; }
+.household-policy-details {
+  grid-column: 1 / -1; margin: 0; padding-top: 8px;
+  border-top: 1px solid #493c27;
+}
 .education-policy-form {
   width: min(100%, 720px); margin: 0 auto 12px; padding: 12px;
   border: 1px solid #55452a; border-radius: 8px; background: #241d15;
@@ -2732,6 +2777,9 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   tr.household-plan-retainer td {
   border-top: 2px solid #7a6234;
 }
+.household-plan-cell {
+  position: relative; height: 100%; min-height: 100%;
+}
 .household-plan-action.actionbtn, .household-plan-static {
   width: 100%; min-height: 100%; margin: 0; padding: 9px 8px;
   border: 0; border-radius: 0; background: transparent;
@@ -2744,6 +2792,7 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .household-plan-primary {
   display: block; color: var(--main-text-color); font-weight: bold;
 }
+.household-plan-visible-details { display: block; }
 .household-plan-secondary, .household-plan-tertiary {
   display: block; margin-top: 2px; color: var(--helper-text-color);
 }
@@ -2756,7 +2805,47 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   display: block; margin-top: 3px; color: #db8b65;
 }
 .household-plan-person { display: flex; align-items: flex-start; gap: 7px; }
-.household-plan-person > span { min-width: 0; }
+.household-plan-person > .household-plan-copy { min-width: 0; }
+.household-plan-details {
+  margin: 0; padding: 8px; border-top: 1px solid #493c27;
+  background: #211a12;
+}
+.household-plan-details .household-plan-secondary:first-child,
+.household-plan-details .household-plan-tertiary:first-child { margin-top: 0; }
+.household-plan-staffing-entry {
+  position: relative; margin: 10px 0 4px;
+}
+.household-plan-staffing-entry > .actionbtn { margin: 0; }
+.household-plan-staffing-entry > .settcard-actions {
+  position: absolute; z-index: 2; top: 4px; right: 4px;
+}
+.household-plan-staffing-entry > .settcard-details {
+  margin: 0; padding: 8px 10px; border: 1px solid #493c27;
+  border-top: 0; border-radius: 0 0 8px 8px;
+  color: var(--helper-text-color); font-size: 12px; line-height: 1.4;
+}
+
+@media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
+  .household-plan-visible-details,
+  .household-policy-visible-details { display: none; }
+  .household-plan-action.actionbtn {
+    border: 1px solid #826a38; border-radius: 6px;
+    background: linear-gradient(135deg, #392e1c, #2c2417);
+    box-shadow: inset 4px 0 0 #d8b24a, 0 2px 4px rgba(0,0,0,.28);
+  }
+  .household-plan-action.actionbtn:hover,
+  .household-plan-action.actionbtn:focus-visible {
+    border-color: #c9a24a; background: #40331d;
+    box-shadow: inset 4px 0 0 #e6c45d, 0 2px 5px rgba(0,0,0,.38);
+  }
+  .household-plan-action .household-plan-primary { color: #f0d47c; }
+  .household-plan-cell.has-details .household-plan-action,
+  .household-plan-cell.has-details .household-plan-static { padding-right: 58px; }
+  .household-plan-staffing-entry > .actionbtn { padding-right: 58px; }
+  .household-plan-cell > .household-plan-cell-actions {
+    position: absolute; z-index: 2; top: 3px; right: 4px;
+  }
+}
 
 .papacy-summary {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4040,9 +4129,9 @@ textarea.modjson, textarea.savetext {
   }
   .political-motion-row .btn { min-height: 44px; }
   .household-policy-summary {
-    align-items: stretch; flex-direction: column;
+    grid-template-columns: minmax(0, 1fr); align-items: stretch;
   }
-  .household-policy-summary .btn { width: 100%; }
+  .household-policy-manage { width: 100%; }
   .education-policy-preview-list { grid-template-columns: 1fr; }
   .education-policy-field select,
   .education-policy-field input[type="number"] { width: 100%; min-height: 48px; }
@@ -4316,6 +4405,8 @@ textarea.modjson, textarea.savetext {
   .household-plan-action.actionbtn, .household-plan-static {
     min-height: 48px; padding: 10px; font-size: 14px;
   }
+  .household-plan-cell.has-details .household-plan-action,
+  .household-plan-cell.has-details .household-plan-static { padding-right: 58px; }
   .household-plan-person { align-items: center; }
   .equip-picker-overlay.embedded-history-back .equip-picker-heading {
     position: sticky; top: 0; z-index: 2;
@@ -4507,6 +4598,8 @@ textarea.modjson, textarea.savetext {
   .enterprise-staffing-comparison { grid-template-columns: 1fr; }
   .enterprise-staffing-head { align-items: flex-start; flex-direction: column; gap: 5px; }
   .enterprise-staffing-state { max-width: 100%; text-align: left; }
+  .enterprise-staffing-row-actions { align-items: stretch; flex-direction: column; }
+  .enterprise-staffing-row-actions .btn { width: 100%; min-height: 48px; }
 }
 
 @media (max-width: 600px) and (max-height: 600px) {

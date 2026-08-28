@@ -306,6 +306,111 @@ test('a host drains supply abroad, starves at 0, and refills at home',
     expect(result.homeStatus.daysToAttrition).toBeNull();
   });
 
+test('automated hosts retreat with a week of supply and refit before resuming',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const p = state.player;
+      const enemyId = Object.keys(state.realms).filter(function (rid) {
+        const realm = state.realms[rid];
+        return rid !== 'player' && realm && realm.alive && !realm.liege;
+      })[0];
+      for (const rid in state.realms) {
+        if (state.realms[rid]) state.realms[rid].war = null;
+      }
+      FB.world = {
+        adj:{ a:{ b:1 }, b:{ a:1, c:1 }, c:{ b:1 } },
+        waterAdj:{ a:{}, b:{}, c:{} },
+        byId:{
+          a:{ id:'a', name:'Friendly A', cx:0, cy:0, terrain:'farmland' },
+          b:{ id:'b', name:'Foreign B', cx:20, cy:0, terrain:'farmland' },
+          c:{ id:'c', name:'Target C', cx:40, cy:0, terrain:'farmland' }
+        }
+      };
+      p.provinceId = 'a';
+      p.provs = ['a'];
+      state.owner.a = 'player';
+      state.holder.a = 'player';
+      state.owner.b = enemyId;
+      state.holder.b = enemyId;
+      state.owner.c = enemyId;
+      state.holder.c = enemyId;
+      state.realms[enemyId].capital = 'c';
+      p.war = {
+        enemy:enemyId, target:'c', wins:0, losses:0,
+        seasons:0, defending:false, strength:1
+      };
+      const host = {
+        id:'auto-resupply-host', realm:'player', men:500, size:500,
+        units:{ levy:500 }, at:'b', from:'b', moveLeft:0,
+        path:[], goal:null, supply:1
+      };
+      state.armies = [host];
+      state.armyDown = {};
+      state.armyDown[enemyId] = state.turn;
+      state.armyDetachmentDown = {};
+      state.armyCohorts = {};
+      FB.invalidateRealmCache();
+      FB.invalidateFortIndex();
+      FB.game.auto.hosts = 'off';
+      FB.game.auto.hostResupply = true;
+
+      const warning = FB.hostSupplyStatus(state, host);
+      FB.armyTick(state);
+      const retreat = {
+        goal:host.goal,
+        refitting:!!host.autoResupply,
+        automated:!!host.automatedOrder
+      };
+
+      host.at = 'a';
+      host.from = 'a';
+      host.path = [];
+      host.goal = null;
+      host.moveLeft = 0;
+      host.supply = 5;
+      FB.armyTick(state);
+      const refill = {
+        at:host.at,
+        goal:host.goal,
+        supply:host.supply,
+        refitting:!!host.autoResupply
+      };
+
+      host.at = 'b';
+      host.from = 'b';
+      host.path = [];
+      host.goal = null;
+      host.moveLeft = 0;
+      host.supply = 100;
+      host.manual = 0;
+      host.holdManual = 0;
+      delete host.autoResupply;
+      delete host.automatedOrder;
+      FB.game.auto.hostResupply = false;
+      FB.armyTick(state);
+      return {
+        warning:warning,
+        retreat:retreat,
+        refill:refill,
+        disabledGoal:host.goal
+      };
+    });
+
+    expect(result.warning.friendly).toBe(false);
+    expect(result.warning.daysToAttrition).toBeLessThanOrEqual(7);
+    expect(result.retreat).toEqual({
+      goal:'a',
+      refitting:true,
+      automated:true
+    });
+    expect(result.refill.at).toBe('a');
+    expect(result.refill.goal).toBeNull();
+    expect(result.refill.supply).toBeGreaterThan(5);
+    expect(result.refill.refitting).toBe(true);
+    expect(result.disabledGoal).toBe('c');
+  });
+
 test('daily troop replenishment redraws the map on a bounded cadence',
   async function ({ page }) {
     const result = await page.evaluate(function () {

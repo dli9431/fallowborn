@@ -367,7 +367,10 @@ The drawer Close uses the same footer control at the bottom middle, immediately 
 fixed time bar. On compact phone and tablet layouts, opening that drawer pauses a running
 game and records that it owns the pause; closing it, including through browser Back, resumes
 only when the drawer paused previously running time. A game opened while already paused
-stays paused. The map toast rail is hidden behind the full-screen drawer and returns with
+stays paused. Education-focus and schooling sheets opened from Self carry an explicit Self
+return context, so their visible or browser Back closes the sheet directly onto the open
+drawer instead of inserting the protagonist's character sheet. The map toast rail is hidden
+behind the full-screen drawer and returns with
 any still-live notices after the drawer closes.
 The redundant topbar portrait is hidden when the Self panel is persistently visible on
 desktop. The time controls become a fixed thumb-zone bar above the drawer (hidden by
@@ -383,6 +386,9 @@ the rest. A 44 px drag target straddles the boundary without consuming its full 
 panel. Dragging it resizes continuously and release snaps to Panel-first, Balanced, or Map-first;
 tapping cycles those states, while Up/Down and Home/End provide the equivalent keyboard path.
 The chosen snap state lasts for the page session and is recalculated when the viewport changes.
+Opening a generic sheet snapshots the divider's exact current height. Closing that sheet, including
+a linked ruler-sheet chain, restores the snapshot so modal focus or mobile browser chrome cannot
+silently shrink the map underneath it.
 Panel-first leaves a small live map strip and hides its dense HUD and overlays until the map is
 expanded again. The map HUD uses two columns while the map is below 324 px so all seven controls
 retain their 44 px touch targets without forcing the old minimum; dragging into a tall Map-first
@@ -641,11 +647,15 @@ lock behavior, local-hire wage, and removal consequences use the shared desktop 
 compact `?` disclosure. Open positions offer both eligible household workers and **Hire a
 local worker**; paid workers have an explicit dismissal control. Each enterprise with assignments
 has a saved **Lock this staff to this enterprise** checkbox; locked pairings are marked in both this sheet and Household
-Plan. Whenever an owned enterprise is idle, **Staff all idle enterprisesâ€¦** opens a
-no-day static review of the maximum-yield result across all unlocked assignments. The
-review shows current/proposed totals and pairings on the face. Each row's kept/changed state,
-eligibility, lock-contention, or higher-yield-allocation reason uses the shared tooltip or
-touch disclosure.
+Plan. Whenever an owned enterprise is idle, **Staff all idle enterprises…** opens a
+no-day review of the maximum-yield result across all unlocked assignments. The modal's
+scope explanation uses title details, while current/proposed totals and pairings remain on
+the face. Each row's counts, yields, kept/changed state, eligibility, lock-contention,
+higher-yield-allocation reason, and local-hire terms use the shared desktop tooltip or
+touch disclosure. An idle row can open its exact enterprise manager to assign household
+workers, with Back returning to the refreshed preview, or hire a qualified local directly.
+Hiring pays the first wage immediately, assigns the worker through the owning enterprise
+API, and replaces the current preview with a freshly derived plan.
 Owned enterprise rows and management sheets consume `FB.enterpriseStaffingStatus`: their
 compact text and detail view therefore agree on remote residence, missing vocation,
 missing guild rank, and reassignment availability. A management sheet with no candidate
@@ -1596,13 +1606,25 @@ On narrow or short layouts, each person becomes a stacked card and every cell re
 localized column label. Education, instruction, work/standing, assignment, match, and
 equipment summaries are derived from their owning APIs; actionable cells are native
 buttons that retain modal focus, number shortcuts, Tab/Enter/Space, minimum touch sizes,
-and browser-history Back. Picker cancellation and no-day changes re-render the plan, while
-day-spending career, retainer, enterprise-purchase, religious-office, and match choices
-advance the day and then rebuild the originating plan or person manager beneath any queued
-event. Its bottom-pinned footer is outside the ledger's own scroll pane and also offers the
-enterprise-staffing preview
-whenever an enterprise is idle, and a successful no-day apply returns to this authoritative
-table rather than the intermediate Work & Enterprises sheet.
+and browser-history Back. The scope introduction uses the modal-title details affordance.
+Touch, tablet-width, and short layouts keep each primary status and warning on the card
+while moving secondary and tertiary helper lines behind an adjacent touch-sized `?`
+disclosure. Actionable cells retain a raised parchment fill, bronze border, and gold edge
+accent in their resting state, so they remain visibly distinct from read-only text before
+the player taps or focuses them. The Education Policy and Descendant Match Assistant
+summaries use the same
+compact disclosure for the helper lines beneath their titles. Opening a
+character-specific picker records that person's row and its current offset inside the
+ledger; Back, Cancel, or a completed return rebuilds the authoritative plan and restores
+that row at the same reading position, with the old numeric scroll position as a fallback if
+the person no longer belongs in the plan. Picker cancellation and no-day changes re-render
+the plan, while day-spending career, retainer, enterprise-purchase, religious-office, and
+match choices advance the day and then rebuild the originating plan or person manager beneath
+any queued event. Its bottom-pinned footer is outside the ledger's own scroll pane and owns
+only Close. Whenever an enterprise is idle, the staffing-preview action stays inside the
+scrollable plan beneath the ledger and uses the same tooltip/disclosure treatment as other
+helper copy. A successful no-day apply returns to this authoritative table rather than the
+intermediate Work & Enterprises sheet.
 
 An **Education Policy** summary and native management button sit above the Household Plan
 ledger. Its keyboard/mobile-safe flow uses a native focus select, instruction checkbox,

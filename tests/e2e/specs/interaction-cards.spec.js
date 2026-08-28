@@ -954,3 +954,46 @@ test('war-realm links open the full ruler sheet, even for your own realm',
     await page.locator('#cm-stack-close').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
+
+test('closing a mobile ruler sheet preserves the adjusted map divider',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    await page.setViewportSize({ width:390, height:844 });
+    const realmId = await page.evaluate(function () {
+      const s = FB.state;
+      const id = Object.keys(s.realms).filter(function (candidate) {
+        return candidate !== 'player' && s.realms[candidate] &&
+          s.realms[candidate].alive && !s.realms[candidate].liege;
+      })[0];
+      FB.materializeRealmRuler(s, id);
+      return id;
+    });
+    await waitForUiRefresh(page);
+
+    const divider = page.locator('#mobile-pane-resizer');
+    const map = page.locator('#mapwrap');
+    await divider.focus();
+    await page.keyboard.press('End');
+    await expect(divider).toHaveAttribute('aria-valuetext', 'Map-first');
+    const adjustedHeight = await map.evaluate(function (node) {
+      return node.getBoundingClientRect().height;
+    });
+
+    await page.evaluate(function (id) { FB.ui.showLiegeModal(id); }, realmId);
+    await expect(page.locator(
+      '.character-interaction-modal .realm-ruler-card')).toBeVisible();
+    await page.evaluate(function () {
+      document.getElementById('main').style.setProperty(
+        '--mobile-map-height', '190px');
+    });
+    expect(await map.evaluate(function (node) {
+      return node.getBoundingClientRect().height;
+    })).toBeLessThan(adjustedHeight);
+
+    await page.locator('#cm-close').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(divider).toHaveAttribute('aria-valuetext', 'Map-first');
+    expect(await map.evaluate(function (node) {
+      return node.getBoundingClientRect().height;
+    })).toBeCloseTo(adjustedHeight, 0);
+  });

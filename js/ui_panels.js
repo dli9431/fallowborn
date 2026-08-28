@@ -2814,9 +2814,13 @@ window.FB = window.FB || {};
       });
     }
     const sef = $('self-edufocus');
-    if (sef) sef.addEventListener('click', function () { UI.showEduFocus(me.id); });
+    if (sef) sef.addEventListener('click', function () {
+      UI.showEduFocus(me.id, { view:'self' });
+    });
     const stu = $('self-tutor');
-    if (stu) stu.addEventListener('click', function () { UI.showTutorPick(me.id); });
+    if (stu) stu.addEventListener('click', function () {
+      UI.showTutorPick(me.id, { view:'self' });
+    });
     const bishopric = $('self-bishopric');
     if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
     const srh = $('self-rename-house');
@@ -6418,6 +6422,9 @@ window.FB = window.FB || {};
       /* the keyboard twin of tapping the selected host: halt and hold */
       hostToShow.path = []; hostToShow.goal = null; hostToShow.moveLeft = 0; hostToShow.huntPrey = null;
       hostToShow.manual = 0; hostToShow.holdManual = 1;
+      delete hostToShow.autoResupply;
+      delete hostToShow.automatedOrder;
+      delete hostToShow.eventOrder;
       FB.selectArmy(null);
       if (FB.map) FB.map.request();
       renderProv();

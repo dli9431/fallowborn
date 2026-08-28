@@ -298,6 +298,9 @@ queues `ghw_called` on the call day, and the first active-day tick queues
 `ghw_muster_complete` after the campaign hosts have had their raising pass. With
 war-event automation off, both open normally and stop fast-forward; war-event
 automation may resolve them into the Chronicle like other wartime notices.
+The War Council's live-host hunt order is unavailable while host command is Manual. Its
+custom effect also rechecks that boundary, so autoresolution, a stale queued council, or a
+direct event resolution cannot write a route or tracking target around manual control.
 
 Great holy-war field recruitment instead uses the ordinary random-event path.
 `ghw_pilgrims_under_arms` has a 1% slot-day gate, low weight, and a 36-season

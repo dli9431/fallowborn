@@ -4,11 +4,13 @@ dependsOnRuntime(__filename, [
   'css/style.css',
   'data/actions.js',
   'js/actions.js',
+  'js/economy.js',
   'js/main.js',
   'js/save.js',
   'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'data/economy.js',
   'data/starts.js'
 ]);
 
@@ -449,6 +451,11 @@ test.describe('sibling and collateral-household agency', function () {
           child.health = 8;
           me.childrenIds.push(child.id);
         }
+        s.player.enterpriseMigration = 1;
+        s.player.enterprises = [{
+          uid:'household_plan_footer_fixture', type:'field_strip',
+          provinceId:s.player.provinceId, settlement:0, workerId:null
+        }];
         FB.touchFamily();
         FB.ui.showHouseholdPlan();
       });
@@ -462,12 +469,20 @@ test.describe('sibling and collateral-household agency', function () {
         const footerRect = footer.getBoundingClientRect();
         ledger.scrollTop = ledger.scrollHeight;
         const lastRow = ledger.querySelector('.household-plan-table tbody tr:last-child');
+        const staff = document.getElementById(
+          'household-plan-staff-enterprises');
         const lastRowRect = lastRow.getBoundingClientRect();
+        const staffRect = staff.getBoundingClientRect();
         return {
           ledgerScrolls:ledger.scrollHeight > ledger.clientHeight,
           footerBelowLedger:footerRect.top >= ledgerRect.bottom - 1,
           footerAtCardBottom:Math.abs(footerRect.bottom - cardRect.bottom) <= 1,
-          finalRowClear:lastRowRect.bottom <= ledgerRect.bottom + 1
+          finalRowClear:lastRowRect.bottom <= ledgerRect.bottom + 1,
+          staffInLedger:ledger.contains(staff),
+          staffOutsideFooter:!footer.contains(staff),
+          staffBelowTable:staffRect.top >= lastRowRect.bottom - 1,
+          footerOnlyClose:footer.children.length === 1 &&
+            footer.firstElementChild.id === 'household-plan-close'
         };
       });
 
@@ -475,8 +490,157 @@ test.describe('sibling and collateral-household agency', function () {
         ledgerScrolls:true,
         footerBelowLedger:true,
         footerAtCardBottom:true,
-        finalRowClear:true
+        finalRowClear:true,
+        staffInLedger:true,
+        staffOutsideFooter:true,
+        staffBelowTable:true,
+        footerOnlyClose:true
       });
+      const staffingEntry = page.locator('.household-plan-staffing-entry');
+      await expect(staffingEntry.locator('.settcard-info')).toBeVisible();
+      await staffingEntry.locator('.settcard-info').click();
+      await expect(staffingEntry.locator('.settcard-details')).toContainText(
+        'Review a maximum-yield assignment');
+      await page.locator('#household-plan-close').click();
+    });
+
+  test('Household Plan restores the compact character row after Back',
+    async function ({ page }) {
+      await page.setViewportSize({ width:390, height:740 });
+      await startDeterministicGame(page);
+      const targetId = await page.evaluate(function () {
+        const s = FB.state;
+        const me = s.chars[s.player.charId];
+        let targetId = null;
+        for (let i = 0; i < 6; i++) {
+          const child = FB.makeCharacter(s, {
+            name:'Return child ' + i, sex:i % 2 ? 'f' : 'm',
+            culture:me.culture, religion:me.religion,
+            born:s.date.year - 20, motherId:me.id, dyn:me.dyn, traitsN:0
+          });
+          child.health = 8;
+          me.childrenIds.push(child.id);
+          targetId = child.id;
+        }
+        FB.touchFamily();
+        FB.ui.showHouseholdPlan();
+        return targetId;
+      });
+      const action = page.locator(
+        '[data-household-plan-action="work"]' +
+        '[data-household-plan-cid="' + targetId + '"]');
+      await action.scrollIntoViewIfNeeded();
+      const before = await page.evaluate(function (targetId) {
+        const ledger = document.querySelector('.household-plan-content');
+        const row = document.querySelector(
+          '[data-household-plan-cid="' + targetId + '"]');
+        return {
+          offset:row.getBoundingClientRect().top -
+            ledger.getBoundingClientRect().top,
+          scrollTop:ledger.scrollTop
+        };
+      }, targetId);
+      expect(before.scrollTop).toBeGreaterThan(0);
+
+      await action.click();
+      await expect(page.locator('#gm-title')).toContainText('Work of');
+      await page.locator('#gm-cancel').click();
+      await expect(page.locator('#gm-title')).toContainText('Household Plan');
+      await expect.poll(async function () {
+        return page.evaluate(function (args) {
+          const ledger = document.querySelector('.household-plan-content');
+          const row = document.querySelector(
+            '[data-household-plan-cid="' + args.targetId + '"]');
+          return Math.abs(row.getBoundingClientRect().top -
+            ledger.getBoundingClientRect().top - args.offset);
+        }, { targetId:targetId, offset:before.offset });
+      }).toBeLessThanOrEqual(2);
+      await page.locator('#household-plan-close').click();
+    });
+
+  test('Household Plan puts compact helper copy behind details disclosures',
+    async function ({ page }) {
+      await page.setViewportSize({ width:900, height:800 });
+      await startDeterministicGame(page);
+      const childId = await arrangeFamily(page, 12);
+      await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+
+      const titleInfo = page.locator('.modal-title-info');
+      await expect(titleInfo).toBeVisible();
+      await expect(page.locator('#gm-title-details')).toBeHidden();
+      await titleInfo.click();
+      await expect(page.locator('#gm-title-details')).toBeVisible();
+      await expect(page.locator('#gm-title-details')).toContainText(
+        'Every living person managed by the household');
+
+      const row = page.locator(
+        'tr[data-household-plan-cid="' + childId + '"]');
+      const education = row.locator(
+        '[data-household-plan-action="education"]');
+      const cell = education.locator('xpath=..');
+      await expect(cell.locator(
+        '.household-plan-visible-details')).toBeHidden();
+      await expect(cell.locator('.settcard-info')).toBeVisible();
+      await expect(cell.locator('.household-plan-details')).toBeHidden();
+      await cell.locator('.settcard-info').click();
+      await expect(cell.locator('.household-plan-details')).toBeVisible();
+      await expect(cell.locator('.household-plan-details')).toContainText(
+        'Choose a subject');
+
+      const policy = page.locator('.education-policy-summary');
+      await expect(policy.locator(
+        '.household-policy-visible-details')).toBeHidden();
+      await expect(policy.locator('.settcard-info')).toBeVisible();
+      await expect(policy.locator('.household-policy-details')).toBeHidden();
+      await policy.locator('.settcard-info').click();
+      await expect(policy.locator('.household-policy-details')).toBeVisible();
+      await expect(policy.locator('.household-policy-details')).toContainText(
+        'Focus chosen manually for each child');
+
+      const missingDisclosures = await page.evaluate(function () {
+        return Array.prototype.filter.call(document.querySelectorAll(
+          '.household-plan-cell'), function (cell) {
+          return cell.querySelector('.household-plan-visible-details') &&
+            !cell.querySelector('.settcard-info');
+        }).length;
+      });
+      expect(missingDisclosures).toBe(0);
+      await page.locator('#household-plan-close').click();
+    });
+
+  test('Household Plan keeps actions visibly button-like on phone and tablet',
+    async function ({ page }) {
+      await page.setViewportSize({ width:390, height:740 });
+      await startDeterministicGame(page);
+      await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+
+      for (const viewport of [
+        { width:390, height:740 },
+        { width:900, height:800 }
+      ]) {
+        await page.setViewportSize(viewport);
+        const appearance = await page.locator(
+          '.household-plan-action').first().evaluate(function (button) {
+          const style = getComputedStyle(button);
+          const readOnly = document.querySelector('.household-plan-static');
+          const readOnlyStyle = readOnly ? getComputedStyle(readOnly) : null;
+          return {
+            backgroundImage:style.backgroundImage,
+            borderStyle:style.borderTopStyle,
+            borderWidth:parseFloat(style.borderTopWidth),
+            boxShadow:style.boxShadow,
+            readOnlyBorderWidth:readOnlyStyle
+              ? parseFloat(readOnlyStyle.borderTopWidth) : 0
+          };
+        });
+        expect(appearance.backgroundImage).not.toBe('none');
+        expect(appearance.borderStyle).toBe('solid');
+        expect(appearance.borderWidth).toBeGreaterThan(0);
+        expect(appearance.boxShadow).not.toBe('none');
+        expect(appearance.borderWidth).toBeGreaterThan(
+          appearance.readOnlyBorderWidth);
+      }
+
       await page.locator('#household-plan-close').click();
     });
 

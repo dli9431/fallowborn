@@ -29,7 +29,9 @@ window.FB = window.FB || {};
        manual / holdManual (player-realm or commanded patron host) mark a
        hand-tapped route still
        playing out and a hand-given halt — the automated stances never touch
-       either.
+       either. automatedOrder / eventOrder distinguish routes created without
+       a map tap, and autoResupply holds an automated host in friendly land
+       until its supply is fit for campaigning again.
        units: { <classId>: men } — the host's composition, keyed by
        FBDATA.unitClasses (data/units.js); men is always the total. Each class
        fights at its own table attack/defense values (falling back to
@@ -504,6 +506,10 @@ window.FB = window.FB || {};
   };
 
   function B() { return FBDATA.balance; }
+  FB.hostAutomationManual = function () {
+    return !FB.game || !FB.game.auto ||
+      (FB.game.auto.hosts || 'manual') === 'manual';
+  };
   let armyRenderRevision = 0;
   function requestMap() {
     armyRenderRevision++;
@@ -2323,6 +2329,61 @@ window.FB = window.FB || {};
     return er ? er.capital : army.at;
   }
 
+  /* Manual host control is a hard boundary. It preserves a route issued by
+     a map tap and a forced battlefield rout, but cancels council-event and
+     automated routes, including unmarked routes saved by older versions. */
+  FB.enforceManualHostControl = function (state) {
+    if (!state || !FB.hostAutomationManual()) return;
+    for (const host of state.armies || []) {
+      if (host.realm !== 'player') continue;
+      const forcedRetreat = host.broken !== undefined &&
+        state.turn - host.broken < 40;
+      const routeActive = host.moveLeft > 0 ||
+        !!(host.path && host.path.length);
+      const nonmanualRoute = host.eventOrder || host.automatedOrder ||
+        (routeActive && !host.manual && !host.holdManual);
+      host.huntPrey = null;
+      delete host.autoResupply;
+      if (nonmanualRoute && !forcedRetreat) {
+        host.path = [];
+        host.goal = null;
+        host.moveLeft = 0;
+        host.holdManual = 1;
+        requestMap();
+      }
+      delete host.eventOrder;
+      delete host.automatedOrder;
+    }
+  };
+
+  function automatedResupplyGoal(state, host) {
+    const auto = FB.game && FB.game.auto;
+    if (!auto || auto.hostResupply === false) {
+      delete host.autoResupply;
+      return null;
+    }
+    const status = FB.hostSupplyStatus(state, host);
+    const low = B().supplyLowThreshold === undefined
+      ? 30 : B().supplyLowThreshold;
+    if (host.autoResupply) {
+      if (status.friendly) {
+        if (status.supply >= low) {
+          delete host.autoResupply;
+          return null;
+        }
+        return host.at;
+      }
+      return FB.armyRetreatGoal(state, host) || host.at;
+    }
+    const weekLeft = status.daysToAttrition !== null &&
+      status.daysToAttrition <= 7;
+    if (!status.friendly && (status.supply <= 0 || weekLeft)) {
+      host.autoResupply = 1;
+      return FB.armyRetreatGoal(state, host) || host.at;
+    }
+    return null;
+  }
+
   /* what an automated player host wants (G.auto.hosts, the ⚙ stances):
      limp home when broken; a defensive host stands at home unless an
      invader stands in the player's lands (the same ground the enemy-advance
@@ -2336,6 +2397,8 @@ window.FB = window.FB || {};
     if (host.broken !== undefined && state.turn - host.broken < 40) {
       return FB.armyRetreatGoal(state, host) || host.at;
     }
+    const resupplyGoal = automatedResupplyGoal(state, host);
+    if (resupplyGoal) return resupplyGoal;
     if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, host)) return host.at;
     if (!w && FB.playerGreatHolyWarHostActive &&
         FB.playerGreatHolyWarHostActive(state) && FB.greatHolyWarArmyGoal) {
@@ -3062,6 +3125,9 @@ window.FB = window.FB || {};
 
     // orders & marches
     const autoHosts = FB.game.auto && FB.game.auto.hosts;
+    if (!autoHosts || autoHosts === 'manual') {
+      FB.enforceManualHostControl(state);
+    }
     // automated command re-raises a destroyed host once the rearm window passes
     if (autoHosts && autoHosts !== 'manual' &&
         (p.war || playerGhwHost) &&
@@ -3113,7 +3179,7 @@ window.FB = window.FB || {};
         if (!a.holdManual && !a.manual) {
           const pgoal = playerGoal(state, a, autoHosts);
           if (pgoal !== a.goal || ((!a.path || !a.path.length) && pgoal !== a.at && a.moveLeft <= 0)) {
-            FB.orderArmy(state, a, pgoal);
+            if (FB.orderArmy(state, a, pgoal)) a.automatedOrder = 1;
           }
         }
       } else if (a.huntPrey) {
@@ -3530,6 +3596,9 @@ window.FB = window.FB || {};
           const held = stack[selIndex];
           held.path = []; held.goal = null; held.moveLeft = 0; held.huntPrey = null;
           held.manual = 0; held.holdManual = 1;
+          delete held.autoResupply;
+          delete held.automatedOrder;
+          delete held.eventOrder;
           FB.selectArmy(null);
           if (FB.ui) FB.ui.toast('🚩 The host holds at {province}.',
             { province: provName(held.at) });
@@ -3546,6 +3615,9 @@ window.FB = window.FB || {};
         // tapping the already selected host halts it
         hit.path = []; hit.goal = null; hit.moveLeft = 0; hit.huntPrey = null;
         hit.manual = 0; hit.holdManual = 1; // a hand-halted host holds, automation or no
+        delete hit.autoResupply;
+        delete hit.automatedOrder;
+        delete hit.eventOrder;
         FB.selectArmy(null);
         if (FB.ui) FB.ui.toast('🚩 The host holds at {province}.',
           { province: provName(hit.at) });
@@ -3566,6 +3638,9 @@ window.FB = window.FB || {};
         if (FB.orderArmy(state, sel, pr.id, orderPlan)) {
           sel.huntPrey = null; // a hand-given order ends any hunt
           sel.manual = 1; sel.holdManual = 0; // and plays out before automation resumes
+          delete sel.autoResupply;
+          delete sel.automatedOrder;
+          delete sel.eventOrder;
           FB.selectArmy(null); // and lets go, so further taps browse the map
           if (FB.ui && orderPlan.blockedByFort) {
             const blockedFort = FB.fortAt &&
