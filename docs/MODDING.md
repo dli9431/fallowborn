@@ -3913,6 +3913,13 @@ Player-capital relocation uses three signed/core numeric keys:
 `capitalRelocationVassalFavor` (-15, applied to each direct vassal). The first is
 clamped to a non-negative price; the two signed standing changes are clamped to the
 ordinary -100…100 range before application.
+Adding one county or a grouped set of remaining de jure counties to an existing direct
+vassal uses `vassalLandGrantStanding` (10) once per confirmed grant. The recipient's
+existing feudal-service charter and tenure continue unchanged. A grouped grant that
+leaves a count controlling the complete de jure duchy promotes the realm to rank 2 and
+restyles it as that duchy; individual grants do not change rank. Existing saves receive
+the same recognition once during restore, and later province transfers check only the
+receiving count, so the rule adds no realm-wide work to daily or yearly fast-forward.
 War-of-Aggression tuning uses `warAggressionMemoryDays` (2,880),
 `warAggressionPrestige` (-20), `warAggressionCommonVoice` (-8),
 `warAggressionVassalStanding` (-10), `warAggressionForeignStanding` (-5),

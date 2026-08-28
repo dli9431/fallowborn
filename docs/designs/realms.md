@@ -732,6 +732,31 @@ the `grant_land` deed: enfeoff the surplus to a new count (`FB.grantCounty`, rea
 hand (`FB.grantableDuchies`) — raise a duke over the whole duchy (`FB.grantDuchy`, realm
 `pd_<did>`, holding all its counties directly).
 
+An existing living direct vassal can instead receive more land from their ruler sheet.
+`FB.vassalLandGrantOptions` lists every unreserved county still held in the player's own
+hand and groups the player's remaining counties in a de jure duchy when that vassal
+already rules at least one county there. The player may grant one county
+(`FB.grantCountiesToVassal`) or all such remaining counties in that duchy
+(`FB.grantRemainingDuchyCountiesToVassal`), but must keep one county personally.
+This adds land to the existing realm without changing its ruler, dynasty, capital,
+service charter, or tenure. An individual county never changes rank. After a grouped
+duchy grant, however, a count who now controls every de jure county is raised to duke
+tier and the realm is restyled as the Duchy of that title; an existing duke or higher
+ruler is never demoted. The same recognition applies to pre-existing counts on save
+restore and to a count who completes a duchy through a later province transfer, provided
+the count is independent or serves a king/emperor (a duke cannot have a duke-tier peer
+as a vassal). Restore performs one bounded pass over eligible count realms, while later
+transfers inspect only the recipient; ducal recognition is absent from rendering, daily
+simulation, and the yearly fast-forward loop. Each confirmed grant raises that ruler's
+Standing by
+`balance.vassalLandGrantStanding` (10 by default), regardless of the number of counties
+in a grouped grant. Reservations are authoritative and stale confirmations recheck the
+complete county set before changing any holder. The technology impact remains **none**
+under the existing `family_land_grants` review: ordinary feudal patronage needs no
+research gate, while the vassal's already-saved charter keeps its own technology
+history. `FB.repairCompleteDuchyRanks` is the restore-only migration boundary;
+`FB.recognizeCompleteDuchy` is the single-realm mutation boundary.
+
 Every grant combines a service charter with a separate tenure. The charter records
 true shares of the county's normal tax and levy bases, so the grant preview can show
 exact gold and soldiers rather than an ambiguous per-development rate:

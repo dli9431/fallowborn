@@ -7041,6 +7041,171 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* Existing rulers receive land through their existing realm rather than
+     through the new-house recipient path above. Only a living direct vassal
+     is relevant: granting to a foreign ruler or an indirect vassal would
+     silently rewrite sovereignty or the liege hierarchy. The projection is
+     read-only and groups counties by a duchy only when that vassal already
+     rules at least one de jure county there. */
+  FB.vassalLandGrantOptions = function (state, rid) {
+    const p = state && state.player;
+    const realm = state && state.realms && state.realms[rid];
+    const relevant = !!(p && realm && realm.alive && realm.liege === 'player');
+    const configuredStanding = Number(
+      FBDATA.balance.vassalLandGrantStanding);
+    const out = {
+      realmId:rid || null,
+      relevant:relevant,
+      ready:false,
+      reason:null,
+      standingGain:isFinite(configuredStanding)
+        ? Math.max(0, configuredStanding) : 10,
+      counties:[],
+      duchies:[]
+    };
+    if (!relevant) {
+      out.reason = FB.T('Land can be added only to one of your living direct vassals.');
+      return out;
+    }
+    const held = (p.provs || []).slice();
+    for (const pid of held) {
+      const pr = FB.world.byId[pid];
+      if (!pr || pr.wasteland) continue;
+      out.counties.push({
+        pid:pid,
+        name:pr.name,
+        duchy:pr.duchy || null,
+        reserved:FB.isProtected(state, 'grantCounty', pid)
+      });
+    }
+    out.counties.sort(function (a, b) {
+      return a.name < b.name ? -1 : a.name > b.name ? 1 :
+        (a.pid < b.pid ? -1 : 1);
+    });
+    const recipientDuchies = {};
+    const territory = FB.realmTerritory ? FB.realmTerritory(state, rid) : [];
+    const recipientTerritory = {};
+    for (const pid of territory) {
+      recipientTerritory[pid] = 1;
+      const did = (FB.world.byId[pid] || {}).duchy;
+      if (did) recipientDuchies[did] = (recipientDuchies[did] || 0) + 1;
+    }
+    for (const did in recipientDuchies) {
+      const countyIds = [], reservedIds = [];
+      for (const row of out.counties) {
+        if (row.duchy !== did) continue;
+        countyIds.push(row.pid);
+        if (row.reserved) reservedIds.push(row.pid);
+      }
+      if (!countyIds.length) continue;
+      const def = FBDATA.duchies[did] || {};
+      const deJureIds = FB.duchyCounties(did);
+      const completesDuchy = deJureIds.length >= 2 &&
+        deJureIds.every(function (pid) {
+          return !!recipientTerritory[pid] || countyIds.indexOf(pid) >= 0;
+        });
+      out.duchies.push({
+        did:did,
+        name:def.name || did,
+        countyIds:countyIds,
+        reservedIds:reservedIds,
+        recipientCount:recipientDuchies[did],
+        completesDuchy:completesDuchy,
+        promotesDuchy:completesDuchy &&
+          (!FB.realmMayAssumeDuchy || FB.realmMayAssumeDuchy(state, rid)),
+        ready:!reservedIds.length && held.length - countyIds.length >= 1
+      });
+    }
+    out.duchies.sort(function (a, b) {
+      return a.name < b.name ? -1 : a.name > b.name ? 1 :
+        (a.did < b.did ? -1 : 1);
+    });
+    if (held.length < 2) {
+      out.reason = FB.T('You must keep at least one county in your own hand.');
+      return out;
+    }
+    out.ready = out.counties.some(function (row) { return !row.reserved; });
+    if (!out.ready) {
+      out.reason = FB.T('Every county available to grant is reserved.');
+    }
+    return out;
+  };
+
+  /* Add demesne counties to one existing direct vassal. Their realm record,
+     ruler, capital, service charter, and tenure remain untouched. The grouped
+     duchy wrapper below may then raise a count whose de jure duchy is full. */
+  FB.grantCountiesToVassal = function (state, rid, countyIds, options) {
+    const projection = FB.vassalLandGrantOptions(state, rid);
+    if (!projection.relevant || !Array.isArray(countyIds) ||
+        !countyIds.length) return false;
+    const p = state.player;
+    const unique = [], seen = {};
+    for (const pid of countyIds) {
+      if (!pid || seen[pid] || p.provs.indexOf(pid) < 0 ||
+          FB.isProtected(state, 'grantCounty', pid)) return false;
+      const pr = FB.world.byId[pid];
+      if (!pr || pr.wasteland) return false;
+      seen[pid] = 1;
+      unique.push(pid);
+    }
+    if (p.provs.length - unique.length < 1) return false;
+    const realm = state.realms[rid];
+    const owner = FB.playerRealmId(state) || 'player';
+    for (const pid of unique) {
+      p.provs.splice(p.provs.indexOf(pid), 1);
+      state.holder[pid] = rid;
+      state.owner[pid] = owner;
+    }
+    const standing = projection.standingGain;
+    FB.adjustStanding(state, { kind:'realm', id:rid }, standing,
+      'deed:grant_existing_vassal');
+    FB.invalidateRealmCache();
+    options = options || {};
+    if (options.duchyId) {
+      const duchy = FBDATA.duchies[options.duchyId] || {};
+      FB.news(state, FB.msg('news.realm.vassal_duchy_land_granted', {
+        forms:{
+          select:'plural', param:'count', cases:{
+            one:'🎁 The remaining county you hold in {duchy} is granted to {ruler} of {realm}; Standing rises by {standing}.',
+            other:'🎁 The {count} remaining counties you hold in {duchy} are granted to {ruler} of {realm}; Standing rises by {standing}.'
+          }
+        }
+      }, {
+        count:unique.length,
+        duchy:duchy.name || options.duchyId,
+        ruler:realm.ruler.name,
+        realm:realm.name,
+        standing:standing
+      }));
+    } else {
+      const province = FB.world.byId[unique[0]];
+      FB.news(state, FB.msg('news.realm.vassal_county_granted',
+        '🎁 {province} is granted to {ruler} of {realm}; Standing rises by {standing}.', {
+          province:province.name,
+          ruler:realm.ruler.name,
+          realm:realm.name,
+          standing:standing
+        }));
+    }
+    return true;
+  };
+
+  FB.grantRemainingDuchyCountiesToVassal = function (state, rid, did) {
+    const options = FB.vassalLandGrantOptions(state, rid);
+    let choice = null;
+    for (const duchy of options.duchies) {
+      if (duchy.did === did) { choice = duchy; break; }
+    }
+    if (!choice || !choice.ready) return false;
+    if (!FB.grantCountiesToVassal(state, rid, choice.countyIds, {
+      duchyId:did
+    })) return false;
+    if (FB.recognizeCompleteDuchy) {
+      FB.recognizeCompleteDuchy(state, rid, { duchyId:did });
+    }
+    return true;
+  };
+
   function namedGrantRecipient(state, recipientId, realmId) {
     if (recipientId === undefined || recipientId === null) return null;
     const status = FB.landGrantRecipientStatus(state, recipientId);

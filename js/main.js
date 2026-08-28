@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.11';
+  FB.VERSION = '1.165.12';
   FB.CHANGELOG = [
+    { v: '1.165.12', date: '2026-08-28', changes: [
+      'Ruler sheets now let you grant a direct vassal one county or every county still in your hand within one of their de jure duchies. Counts who already control a full duchy are recognized at duke tier too.'
+    ] },
     { v: '1.165.11', date: '2026-08-28', changes: [
       'Automated wartime hosts now resume their stance during fast-forward after leaving manual command.'
     ] },

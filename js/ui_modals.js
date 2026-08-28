@@ -7922,7 +7922,8 @@ window.FB = window.FB || {};
     const upward = p.liege ? FB.liegeChain(s, p.liege) : [];
     if (rid === p.liege) return FB.T('Direct liege');
     if (upward.indexOf(rid) >= 0) return FB.T('Higher liege');
-    if (FB.playerVassals(s).indexOf(rid) >= 0) return FB.T('Direct vassal');
+    if (s.realms[rid] && s.realms[rid].alive &&
+        s.realms[rid].liege === 'player') return FB.T('Direct vassal');
     if (p.war && p.war.enemy === rid) return FB.T('War enemy');
     if (FB.areAlliedSnapshot(s, 'player', rid)) {
       return FB.T('Defensive ally');
@@ -8214,7 +8215,11 @@ window.FB = window.FB || {};
     }
 
     const upward = p.liege ? FB.liegeChain(s, p.liege) : [];
-    const directVassal = FB.playerVassals(s).indexOf(rid) >= 0;
+    /* The sheet already has the authoritative realm record. Do not gate its
+       feudal actions through the derived hierarchy cache: a title or
+       inheritance rewrite can make that cache one render behind even though
+       the realm's saved liege relationship is already correct. */
+    const directVassal = realm.liege === 'player';
     if (upward.indexOf(rid) >= 0) {
       for (const id of ['pay_homage', 'appeal_lord']) {
         const action = instantInteractionAction(s, id, 'feudal');
@@ -8233,6 +8238,27 @@ window.FB = window.FB || {};
       for (const id of ['demand_taxes', 'revoke_county']) {
         const action = instantInteractionAction(s, id, 'feudal');
         if (action) addInteractionAction(model, action);
+      }
+      const landGrant = FB.vassalLandGrantOptions
+        ? FB.vassalLandGrantOptions(s, rid) : null;
+      if (landGrant && landGrant.relevant) {
+        addInteractionAction(model, {
+          id:'feudal.grant-land',
+          group:'feudal',
+          label:FB.T('Grant land to this ruler…'),
+          detail:landGrant.ready
+            ? FB.T(
+              'Choose one directly held county, or complete a de jure duchy where this ruler already holds land.')
+            : landGrant.reason,
+          enabled:landGrant.ready,
+          blockedReason:landGrant.ready ? null : landGrant.reason,
+          consequence:FB.T(
+            'The ruler’s capital, service charter, and tenure remain unchanged; completing a full duchy raises a count to duke. Standing rises by {standing}.', {
+              standing:landGrant.standingGain
+            }),
+          route:'vassal-land-grant',
+          domId:'rm-grant-land'
+        });
       }
       const favor = FB.vassalLevyFavorStatus(s, rid);
       addInteractionAction(model, {
@@ -8376,7 +8402,8 @@ window.FB = window.FB || {};
     } else if (returnContext.view === 'self') {
       UI.closeModal();
     } else if (returnContext.view === 'character') {
-      UI.showCharModal(returnContext.characterId, returnContext.returnContext);
+      UI.showCharModal(returnContext.characterId, returnContext.returnContext,
+        false, returnContext.realmId || null);
     } else if (returnContext.view === 'family-tree') {
       UI.showFamilyTree(returnContext.familyTreeState);
     } else if (returnContext.view === 'retainer') {
@@ -8677,6 +8704,10 @@ window.FB = window.FB || {};
         UI.showLiegeModal(rid, returnContext, true);
         mobileNavClosedAll('modal-view', true);
         UI.refresh();
+      } else if (action.route === 'vassal-land-grant') {
+        UI.showVassalLandGrant(rid, {
+          view:'realm', realmId:rid, returnContext:returnContext
+        });
       } else if (action.route === 'council') {
         UI.showCouncil(null, {
           view:'realm',
@@ -8741,7 +8772,10 @@ window.FB = window.FB || {};
       ? s.chars[s.player.charId]
       : (interactionRealmRulerCharacter(s, rid) ||
         (FB.materializeRealmRuler && FB.materializeRealmRuler(s, rid)));
-    if (ruler) return UI.showCharModal(ruler.id, returnContext, replaceView);
+    if (ruler) {
+      return showCharacterInteractionSheet(ruler.id, returnContext,
+        replaceView, rid === 'player' ? null : rid);
+    }
     return showRealmInteractionSheet(rid, returnContext, replaceView);
   };
 
@@ -9051,6 +9085,207 @@ window.FB = window.FB || {};
     const def = FBDATA.feudalServiceCharters[charterId];
     return def ? dt(s, 'feudalServiceCharter', charterId, def, 'name') : charterId;
   }
+
+  function vassalLandGrantSelection(s, rid, kind, id) {
+    const options = FB.vassalLandGrantOptions(s, rid);
+    let row = null;
+    if (kind === 'duchy') {
+      for (const duchy of options.duchies) {
+        if (duchy.did === id) { row = duchy; break; }
+      }
+      if (!row || !row.ready) return null;
+      return {
+        kind:kind,
+        id:id,
+        countyIds:row.countyIds.slice(),
+        name:row.name,
+        completesDuchy:row.completesDuchy,
+        promotesDuchy:row.promotesDuchy,
+        standingGain:options.standingGain
+      };
+    }
+    for (const county of options.counties) {
+      if (county.pid === id) { row = county; break; }
+    }
+    if (!row || row.reserved || (s.player.provs || []).length < 2) return null;
+    return {
+      kind:'county',
+      id:id,
+      countyIds:[id],
+      name:row.name,
+      standingGain:options.standingGain
+    };
+  }
+
+  /* A reigning direct vassal keeps their established realm and feudal terms.
+     This ruler-sheet flow therefore bypasses the new-house grant recipient
+     picker and offers only counties currently held in the player's demesne. */
+  UI.showVassalLandGrant = function (rid, returnContext, notice,
+      replaceView) {
+    const s = FB.state;
+    const realm = s && s.realms && s.realms[rid];
+    const options = s && FB.vassalLandGrantOptions(s, rid);
+    if (!realm || !options || !options.relevant) {
+      interactionReturn(returnContext);
+      return;
+    }
+    const contract = FB.feudalContractOf(s, rid);
+    let h = '<p class="hint">' + esc(FB.T(
+      'Add land to this ruler’s existing realm. Their capital, service charter, and tenure do not change; completing a full de jure duchy raises a count to duke.')) +
+      '</p><div class="progressnote"><b>' +
+      esc(FB.T('Existing terms')) + '</b><br>' + esc(FB.T(
+        '{charter} · {tenure} tenure · Standing +{standing} when confirmed.', {
+          charter:feudalCharterName(s, contract.charterId),
+          tenure:feudalTenureText(contract.tenure),
+          standing:options.standingGain
+        })) + '</div>';
+    if (notice) {
+      h += '<div class="progressnote warnote">' + esc(notice) + '</div>';
+    }
+    if (options.duchies.length) {
+      h += '<div class="panelh">' + esc(FB.T(
+        'Grant remaining de jure counties')) + '</div><div class="gm-list">';
+      for (const duchy of options.duchies) {
+        let reason = FB.T(
+          '{count} counties in your hand · this ruler already holds {held}.', {
+            count:duchy.countyIds.length,
+            held:duchy.recipientCount
+          });
+        if (duchy.reservedIds.length) {
+          reason = FB.T(
+            '{count} counties in your hand · blocked by {reserved} reserved.', {
+              count:duchy.countyIds.length,
+              reserved:duchy.reservedIds.length
+            });
+        } else if (!duchy.ready) {
+          reason = FB.T('This grant would leave you without a county.');
+        } else if (duchy.promotesDuchy) {
+          reason += ' ' + FB.T(
+            'This completes the duchy and raises the ruler to duke tier.');
+        } else if (duchy.completesDuchy) {
+          reason += ' ' + FB.T('This completes the de jure duchy.');
+        }
+        h += '<button type="button" class="actionbtn" ' +
+          'data-vassal-grant-duchy="' + esc(duchy.did) + '"' +
+          (duchy.ready ? '' : ' disabled') + '>♛ ' + esc(FB.L(duchy.name)) +
+          '<span class="adesc">' + esc(reason) + '</span></button>';
+      }
+      h += '</div>';
+    }
+    h += '<div class="panelh">' + esc(FB.T('Grant a single county')) +
+      '</div><div class="gm-list">';
+    for (const county of options.counties) {
+      const province = FB.world.byId[county.pid];
+      h += '<div class="protected-choice"><button type="button" ' +
+        'class="actionbtn" data-vassal-grant-county="' + esc(county.pid) +
+        '"' + (county.reserved ? ' disabled' : '') + '>♜ ' +
+        esc(FB.L(county.name)) + '<span class="adesc">' + esc(FB.T(
+          'dev {development} · {terrain}', {
+            development:s.dev[county.pid] || 1,
+            terrain:terrainName(province.terrain)
+          })) + (county.reserved ? ' · ' + esc(FB.T(
+            'reserved from grants')) : '') + '</span></button>' +
+        grantProtectionButton(county.pid) + '</div>';
+    }
+    h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
+      'id="vassal-grant-back">' + esc(returnContext ? FB.T('Back') :
+        FB.T('Not now')) + '</button></div>';
+    const modalOptions = managementModalOptions(returnContext) || {};
+    modalOptions.replaceView = !!replaceView;
+    openModal(FB.T('Grant Land to {realm}', { realm:FB.L(realm.name) }),
+      h, modalOptions);
+    document.querySelectorAll('[data-vassal-grant-duchy]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showVassalLandGrantConfirm(rid, 'duchy',
+            button.dataset.vassalGrantDuchy, returnContext);
+        });
+      });
+    document.querySelectorAll('[data-vassal-grant-county]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showVassalLandGrantConfirm(rid, 'county',
+            button.dataset.vassalGrantCounty, returnContext);
+        });
+      });
+    document.querySelectorAll('[data-grant-protection]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const pid = button.dataset.grantProtection;
+          FB.setProtected(s, 'grantCounty', pid,
+            !FB.isProtected(s, 'grantCounty', pid));
+          UI.showVassalLandGrant(rid, returnContext, null, true);
+        });
+      });
+    $('vassal-grant-back').addEventListener('click', function () {
+      managementBack(returnContext, UI.closeModal);
+    });
+  };
+
+  UI.showVassalLandGrantConfirm = function (rid, kind, id, returnContext,
+      replaceView) {
+    const s = FB.state;
+    const realm = s && s.realms && s.realms[rid];
+    const selection = realm && vassalLandGrantSelection(s, rid, kind, id);
+    if (!selection) {
+      UI.showVassalLandGrant(rid, returnContext, FB.T(
+        'The available land changed before confirmation. Choose again.'), true);
+      return;
+    }
+    const contract = FB.feudalContractOf(s, rid);
+    const countyNames = selection.countyIds.map(function (pid) {
+      return FB.L(FB.world.byId[pid].name);
+    }).join(', ');
+    let h = '<p class="hint">' + esc(kind === 'duchy' ? FB.T(
+      'Grant every county still in your hand within {duchy} to {ruler} of {realm}.', {
+        duchy:FB.L(selection.name),
+        ruler:realm.ruler.name,
+        realm:FB.L(realm.name)
+      }) : FB.T(
+      'Grant {county} to {ruler} of {realm}.', {
+        county:FB.L(selection.name),
+        ruler:realm.ruler.name,
+        realm:FB.L(realm.name)
+      })) + '</p><div class="progressnote"><b>' +
+      esc(FB.T('Counties transferred')) + '</b><br>' + esc(countyNames) +
+      '<br><br><b>' + esc(FB.T('Terms retained')) + '</b><br>' + esc(FB.T(
+        '{charter} · {tenure} tenure', {
+          charter:feudalCharterName(s, contract.charterId),
+          tenure:feudalTenureText(contract.tenure)
+        })) + (selection.promotesDuchy
+          ? '<br><br><b>' + esc(FB.T('Rank gained')) + '</b><br>' +
+            esc(FB.T('This complete duchy raises the ruler to duke tier.'))
+          : '') + '<br><br><b>' + esc(FB.T('Standing')) + '</b><br>+' +
+      esc(selection.standingGain) + '</div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="vassal-grant-confirm">' +
+      esc(FB.T('Confirm grant')) + '</button>' +
+      '<button type="button" class="btn" id="vassal-grant-confirm-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Confirm Land Grant'), h, {
+      historyView:!replaceView,
+      replaceView:!!replaceView,
+      historyBackRender:function () {
+        UI.showVassalLandGrant(rid, returnContext);
+      }
+    });
+    $('vassal-grant-confirm').addEventListener('click', function () {
+      const applied = kind === 'duchy'
+        ? FB.grantRemainingDuchyCountiesToVassal(s, rid, id)
+        : FB.grantCountiesToVassal(s, rid, [id]);
+      if (!applied) {
+        UI.showVassalLandGrant(rid, returnContext, FB.T(
+          'The available land changed before confirmation. Choose again.'),
+        true);
+        return;
+      }
+      managementFinish(returnContext, UI.closeModal);
+    });
+    $('vassal-grant-confirm-back').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showVassalLandGrant(rid, returnContext);
+      });
+    });
+  };
 
   /* Service and tenure are chosen after the land and recipient. Every
      charter card uses the authoritative projection, and confirmation repeats
@@ -18573,7 +18808,7 @@ window.FB = window.FB || {};
     };
   }
 
-  function buildCharacterInteractionCard(s, cid) {
+  function buildCharacterInteractionCard(s, cid, realmIdHint) {
     const c = s && s.chars[cid];
     if (!c) return null;
     const me = s.chars[s.player.charId];
@@ -18583,8 +18818,12 @@ window.FB = window.FB || {};
     const residenceId = FB.characterResidence
       ? FB.characterResidence(s, c) : FB.homeOf(s, c);
     const residence = residenceId && FB.world.byId[residenceId];
-    const reigningRealmId = FB.realmIdForRulerCharacter &&
-      FB.realmIdForRulerCharacter(s, c);
+    const hintedRuler = realmIdHint && interactionRealmRulerCharacter(
+      s, realmIdHint);
+    const reigningRealmId = hintedRuler && hintedRuler.id === c.id
+      ? realmIdHint
+      : (FB.realmIdForRulerCharacter &&
+        FB.realmIdForRulerCharacter(s, c));
     const descendantKind = FB.playerDescendantKind(s, c.id);
     const household = !c.dead && FB.isHouseholdCharacter &&
       FB.isHouseholdCharacter(s, c.id);
@@ -19539,16 +19778,20 @@ window.FB = window.FB || {};
     }
   }
 
-  function showCharacterInteractionSheet(cid, returnContext, replaceView) {
+  function showCharacterInteractionSheet(cid, returnContext, replaceView,
+      realmIdHint) {
     const s = FB.state;
     const c = s && s.chars[cid];
     if (!s || !c) return;
-    const initialRealmId = FB.realmIdForRulerCharacter &&
-      FB.realmIdForRulerCharacter(s, c);
+    const hintedRealm = realmIdHint && s.realms[realmIdHint];
+    const initialRealmId = hintedRealm && hintedRealm.alive
+      ? realmIdHint
+      : (FB.realmIdForRulerCharacter &&
+        FB.realmIdForRulerCharacter(s, c));
     if (initialRealmId && FB.ensureRealmCourtForDisplay) {
       FB.ensureRealmCourtForDisplay(s, initialRealmId);
     }
-    const model = buildCharacterInteractionCard(s, cid);
+    const model = buildCharacterInteractionCard(s, cid, realmIdHint);
     if (!model) return;
     /* realmIdForRulerCharacter indexes AI realms only, so a war-realm link
        that resolves to the player's own realm used to land on a bare self
@@ -19836,6 +20079,12 @@ window.FB = window.FB || {};
           UI.showCharModal(c.id, returnContext, true);
           mobileNavClosedAll('modal-view', true);
           UI.refresh();
+        } else if (action.route === 'vassal-land-grant') {
+          if (!model.realmId) return;
+          UI.showVassalLandGrant(model.realmId, {
+            view:'character', characterId:c.id, realmId:model.realmId,
+            returnContext:returnContext
+          });
         } else if (action.route === 'council') {
           if (!model.realmId) return;
           UI.showCouncil(null, {
@@ -19949,8 +20198,9 @@ window.FB = window.FB || {};
     }
   }
 
-  UI.showCharModal = function (cid, returnContext, replaceView) {
-    return showCharacterInteractionSheet(cid, returnContext, replaceView);
+  UI.showCharModal = function (cid, returnContext, replaceView, realmIdHint) {
+    return showCharacterInteractionSheet(cid, returnContext, replaceView,
+      realmIdHint);
   };
 
   UI.showEquipmentModal = function (cid, exitMode, returnContext) {

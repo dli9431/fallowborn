@@ -195,7 +195,7 @@ window.FBDATA = window.FBDATA || {};
       },
       family_land_grants:{
         mode:'none',
-        rationale:'Enfeoffing an adult relative is baseline dynastic patronage rather than an advanced capability; optional service charters retain their own authored technology requirements.'
+        rationale:'Enfeoffing an adult relative, adding demesne counties to an existing direct vassal, and recognizing a completed duchy at ducal rank are baseline dynastic and feudal patronage rather than advanced capabilities; optional service charters retain their own authored technology requirements.'
       },
       royal_religious_tolerance_policy:{
         mode:'none',

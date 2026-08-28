@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
   'js/parliament.js',
   'js/politics.js',
   'js/portrait.js',
+  'js/save.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -678,6 +679,256 @@ test('family land-grant recipients are deterministic, read-only, and stale-safe'
     expect(result.staleAtomic).toBe(true);
   });
 
+test('a completed direct-vassal duchy promotes its existing count',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    const setup = await configureGovernance(page, 'king');
+    const result = await page.evaluate(function (ids) {
+      var s = FB.state;
+      var p = s.player;
+      var rid = ids.vassalId;
+      var realm = s.realms[rid];
+      var did = null;
+      var duchyIds = [];
+      for (var candidateDid in FBDATA.duchies) {
+        var candidates = FB.duchyCounties(candidateDid);
+        if (candidates.length >= 2 &&
+            candidates.indexOf(p.provinceId) < 0 &&
+            candidates.indexOf(realm.capital) < 0) {
+          did = candidateDid;
+          duchyIds = candidates;
+          break;
+        }
+      }
+      var recipientCounty = duchyIds[0];
+      for (var i = 0; i < duchyIds.length; i++) {
+        var pid = duchyIds[i];
+        s.owner[pid] = 'player';
+        s.holder[pid] = i === 0 ? rid : 'player';
+        var existingIndex = p.provs.indexOf(pid);
+        if (i === 0 && existingIndex >= 0) p.provs.splice(existingIndex, 1);
+        if (i > 0 && existingIndex < 0) p.provs.push(pid);
+      }
+      var outside = p.provs.filter(function (pid) {
+        return duchyIds.indexOf(pid) < 0;
+      });
+      for (var worldIndex = 0;
+          worldIndex < FB.world.provs.length && outside.length < 3;
+          worldIndex++) {
+        var province = FB.world.provs[worldIndex];
+        if (province.wasteland || duchyIds.indexOf(province.id) >= 0 ||
+            outside.indexOf(province.id) >= 0) continue;
+        p.provs.push(province.id);
+        outside.push(province.id);
+        s.owner[province.id] = 'player';
+        s.holder[province.id] = 'player';
+      }
+      realm.feudalContract = {
+        liegeId:'player',
+        charterId:'host_duty',
+        tenure:'term',
+        grantTurn:s.turn - 12,
+        expiryTurn:s.turn + 3588,
+        renewal:null
+      };
+      FB.setRealmRulerStanding(s, rid, 20);
+      var standingBefore = FB.standingOf(s, { kind:'realm', id:rid });
+      FB.invalidateRealmCache();
+      var continuityBefore = JSON.stringify({
+        capital:realm.capital,
+        rulerName:realm.ruler.name,
+        rulerSex:realm.ruler.sex,
+        contract:realm.feudalContract
+      });
+      var reserved = duchyIds[1];
+      FB.setProtected(s, 'grantCounty', reserved, true);
+      var projectionBefore = FB.save.serialize();
+      var projectionRng = JSON.stringify(FB.getRngState());
+      var options = FB.vassalLandGrantOptions(s, rid);
+      var grouped = options.duchies.filter(function (row) {
+        return row.did === did;
+      })[0];
+      var projectionReadOnly = projectionBefore === FB.save.serialize() &&
+        projectionRng === JSON.stringify(FB.getRngState());
+      var blockedBefore = FB.save.serialize();
+      var blockedRng = JSON.stringify(FB.getRngState());
+      var blocked = FB.grantRemainingDuchyCountiesToVassal(s, rid, did);
+      var blockedAtomic = blocked === false &&
+        blockedBefore === FB.save.serialize() &&
+        blockedRng === JSON.stringify(FB.getRngState());
+
+      FB.setProtected(s, 'grantCounty', reserved, false);
+      var singleCounty = p.provs.filter(function (pid) {
+        return duchyIds.indexOf(pid) < 0;
+      })[0];
+      var singleApplied = FB.grantCountiesToVassal(
+        s, rid, [singleCounty]);
+      var rankAfterSingle = realm.rank;
+      var groupedIds = FB.vassalLandGrantOptions(s, rid).duchies.filter(
+        function (row) { return row.did === did; })[0].countyIds.slice();
+      var groupedApplied = FB.grantRemainingDuchyCountiesToVassal(
+        s, rid, did);
+      var continuityAfter = JSON.stringify({
+        capital:realm.capital,
+        rulerName:realm.ruler.name,
+        rulerSex:realm.ruler.sex,
+        contract:realm.feudalContract
+      });
+      var newsKeys = s.news.slice(-3).map(function (entry) {
+        return entry.msg && entry.msg.key;
+      });
+      return {
+        relevant:options.relevant,
+        projectionReadOnly:projectionReadOnly,
+        groupedFound:!!grouped,
+        groupedPromotes:grouped && grouped.completesDuchy === true &&
+          grouped.promotesDuchy === true,
+        groupedBlocked:grouped && grouped.ready === false &&
+          grouped.reservedIds.indexOf(reserved) >= 0,
+        blockedAtomic:blockedAtomic,
+        groupedApplied:groupedApplied,
+        singleApplied:singleApplied,
+        recipientPresence:s.holder[recipientCounty] === rid,
+        groupedHolders:groupedIds.every(function (pid) {
+          return s.holder[pid] === rid && p.provs.indexOf(pid) < 0;
+        }),
+        singleHolder:s.holder[singleCounty] === rid &&
+          p.provs.indexOf(singleCounty) < 0,
+        keptCounty:p.provs.length >= 1,
+        continuityPreserved:continuityBefore === continuityAfter,
+        rankAfterSingle:rankAfterSingle,
+        promotedRank:realm.rank,
+        promotedName:realm.name,
+        expectedName:'Duchy of ' + FBDATA.duchies[did].name,
+        standing:FB.standingOf(s, { kind:'realm', id:rid }),
+        expectedStanding:Math.min(100, standingBefore + 20),
+        newsKeys:newsKeys
+      };
+    }, setup);
+
+    expect(result.relevant).toBe(true);
+    expect(result.projectionReadOnly).toBe(true);
+    expect(result.groupedFound).toBe(true);
+    expect(result.groupedPromotes).toBe(true);
+    expect(result.groupedBlocked).toBe(true);
+    expect(result.blockedAtomic).toBe(true);
+    expect(result.groupedApplied).toBe(true);
+    expect(result.singleApplied).toBe(true);
+    expect(result.recipientPresence).toBe(true);
+    expect(result.groupedHolders).toBe(true);
+    expect(result.singleHolder).toBe(true);
+    expect(result.keptCounty).toBe(true);
+    expect(result.continuityPreserved).toBe(true);
+    expect(result.rankAfterSingle).toBe(1);
+    expect(result.promotedRank).toBe(2);
+    expect(result.promotedName).toBe(result.expectedName);
+    expect(result.standing).toBe(result.expectedStanding);
+    expect(result.newsKeys).toEqual([
+      'news.realm.vassal_county_granted',
+      'news.realm.vassal_duchy_land_granted',
+      'news.realm.vassal_promoted_duchy'
+    ]);
+  });
+
+test('restore recognizes a pre-existing complete duchy with one bounded count pass',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    const setup = await configureGovernance(page, 'emperor');
+    const result = await page.evaluate(function (ids) {
+      var s = FB.state;
+      var p = s.player;
+      var rid = ids.vassalId;
+      var realm = s.realms[rid];
+      var did = null;
+      var counties = [];
+      for (var candidateDid in FBDATA.duchies) {
+        var candidateCounties = FB.duchyCounties(candidateDid);
+        if (candidateCounties.length >= 2 &&
+            candidateCounties.indexOf(p.provinceId) < 0) {
+          did = candidateDid;
+          counties = candidateCounties;
+          break;
+        }
+      }
+      for (var i = 0; i < counties.length; i++) {
+        var pid = counties[i];
+        s.owner[pid] = 'player';
+        s.holder[pid] = rid;
+        var heldIndex = p.provs.indexOf(pid);
+        if (heldIndex >= 0) p.provs.splice(heldIndex, 1);
+      }
+      realm.rank = 1;
+      realm.name = 'County of ' + FB.world.byId[counties[0]].name;
+      realm.capital = counties[0];
+      realm.feudalContract = {
+        liegeId:'player', charterId:'host_duty', tenure:'term',
+        grantTurn:s.turn - 9, expiryTurn:s.turn + 3591, renewal:null
+      };
+      FB.invalidateRealmCache();
+      var continuityBefore = JSON.stringify({
+        capital:realm.capital,
+        rulerName:realm.ruler.name,
+        rulerSex:realm.ruler.sex,
+        contract:realm.feudalContract
+      });
+      var newsBefore = s.news.filter(function (entry) {
+        return entry.msg &&
+          entry.msg.key === 'news.realm.vassal_promoted_duchy';
+      }).length;
+      var originalRepair = FB.repairCompleteDuchyRanks;
+      var repairCalls = 0;
+      var territoryCalls = 0;
+      var eligibleCounts = 0;
+      FB.repairCompleteDuchyRanks = function (state) {
+        repairCalls++;
+        for (var realmId in state.realms) {
+          if (FB.realmMayAssumeDuchy(state, realmId)) eligibleCounts++;
+        }
+        var originalTerritory = FB.realmTerritory;
+        FB.realmTerritory = function () {
+          territoryCalls++;
+          return originalTerritory.apply(FB, arguments);
+        };
+        try {
+          return originalRepair(state);
+        } finally {
+          FB.realmTerritory = originalTerritory;
+        }
+      };
+      var saved = JSON.parse(FB.save.serialize());
+      FB.save.restore(saved);
+      FB.repairCompleteDuchyRanks = originalRepair;
+      s = FB.state;
+      realm = s.realms[rid];
+      var continuityAfter = JSON.stringify({
+        capital:realm.capital,
+        rulerName:realm.ruler.name,
+        rulerSex:realm.ruler.sex,
+        contract:realm.feudalContract
+      });
+      var newsAfter = s.news.filter(function (entry) {
+        return entry.msg &&
+          entry.msg.key === 'news.realm.vassal_promoted_duchy';
+      }).length;
+      return {
+        repairCalls:repairCalls,
+        boundedPass:territoryCalls === eligibleCounts,
+        rank:realm.rank,
+        name:realm.name,
+        expectedName:'Duchy of ' + FBDATA.duchies[did].name,
+        continuityPreserved:continuityBefore === continuityAfter,
+        silent:newsAfter === newsBefore
+      };
+    }, setup);
+
+    expect(result.repairCalls).toBe(1);
+    expect(result.boundedPass).toBe(true);
+    expect(result.rank).toBe(2);
+    expect(result.name).toBe(result.expectedName);
+    expect(result.continuityPreserved).toBe(true);
+    expect(result.silent).toBe(true);
+  });
+
 test('named county grants preserve family identity and release household assignments',
   async function ({ page }, testInfo) {
     await startGovernanceGame(page, testInfo);
@@ -1118,6 +1369,135 @@ test('Grant Land combines recipient and terms while preserving Back and Governan
       return realm && realm.generated === true &&
         realm.ruler.name !== 'Grant UI Relative';
     }, generatedCounty)).toBe(true);
+  });
+
+test('an emperor realm link grants land despite stale ruler and vassal indexes',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    const governance = await configureGovernance(page, 'emperor');
+    const setup = await page.evaluate(function (ids) {
+      var s = FB.state;
+      var p = s.player;
+      var rid = ids.vassalId;
+      var realm = s.realms[rid];
+      var did = null;
+      var duchyIds = [];
+      for (var candidateDid in FBDATA.duchies) {
+        var candidates = FB.duchyCounties(candidateDid);
+        if (candidates.length >= 2 &&
+            candidates.indexOf(p.provinceId) < 0 &&
+            candidates.indexOf(realm.capital) < 0) {
+          did = candidateDid;
+          duchyIds = candidates;
+          break;
+        }
+      }
+      for (var i = 0; i < duchyIds.length; i++) {
+        var pid = duchyIds[i];
+        s.owner[pid] = 'player';
+        s.holder[pid] = i === 0 ? rid : 'player';
+        var heldIndex = p.provs.indexOf(pid);
+        if (i === 0 && heldIndex >= 0) p.provs.splice(heldIndex, 1);
+        if (i > 0 && heldIndex < 0) p.provs.push(pid);
+      }
+      var outside = p.provs.filter(function (pid) {
+        return duchyIds.indexOf(pid) < 0;
+      });
+      for (var worldIndex = 0;
+          worldIndex < FB.world.provs.length && outside.length < 2;
+          worldIndex++) {
+        var province = FB.world.provs[worldIndex];
+        if (province.wasteland || duchyIds.indexOf(province.id) >= 0 ||
+            outside.indexOf(province.id) >= 0) continue;
+        p.provs.push(province.id);
+        outside.push(province.id);
+        s.owner[province.id] = 'player';
+        s.holder[province.id] = 'player';
+      }
+      realm.feudalContract = {
+        liegeId:'player', charterId:'host_duty', tenure:'term',
+        grantTurn:s.turn, expiryTurn:s.turn + 3600, renewal:null
+      };
+      /* Reproduce the reported imperial sheet regression: the saved realm
+         relationship says direct vassal while the derived hierarchy cache is
+         one render behind. Ruler actions must trust the realm record. */
+      realm.liege = null;
+      FB.invalidateRealmCache();
+      FB.playerVassals(s);
+      realm.liege = 'player';
+      var cacheOmitted = FB.playerVassals(s).indexOf(rid) < 0;
+      var ruler = FB.ensureRealmCourtForDisplay(s, rid) ||
+        FB.materializeRealmRuler(s, rid);
+      var rulerResolver = FB.realmIdForRulerCharacter;
+      FB.realmIdForRulerCharacter = function () { return null; };
+      try {
+        FB.ui.showLiegeModal(rid);
+      } finally {
+        FB.realmIdForRulerCharacter = rulerResolver;
+      }
+      return {
+        rid:rid,
+        rulerId:ruler.id,
+        did:did,
+        duchyName:FBDATA.duchies[did].name,
+        groupedIds:duchyIds.slice(1),
+        singleCounty:outside[0],
+        capital:realm.capital,
+        cacheOmitted:cacheOmitted,
+        reverseLookupRestored:FB.realmIdForRulerCharacter === rulerResolver
+      };
+    }, governance);
+
+    expect(setup.cacheOmitted).toBe(true);
+    expect(setup.reverseLookupRestored).toBe(true);
+    const grantAction = page.locator(
+      '[data-interaction-action="feudal.grant-land"]');
+    await expect(grantAction).toBeVisible();
+    await expect(grantAction).toContainText('Grant land to this ruler');
+    await grantAction.click();
+    await expect(page.getByRole('heading', {
+      name:'Grant Land to Ash March', exact:true
+    })).toBeVisible();
+    await expect(page.locator('#gm-body')).toContainText(
+      'Host Duty · Ten-year tenure');
+    await expect(page.locator(
+      '[data-vassal-grant-county="' + setup.singleCounty + '"]'))
+      .toBeVisible();
+    const duchyChoice = page.locator(
+      '[data-vassal-grant-duchy="' + setup.did + '"]');
+    await expect(duchyChoice).toBeEnabled();
+    await expect(duchyChoice).toContainText(
+      'raises the ruler to duke tier');
+    await duchyChoice.click();
+    await expect(page.getByRole('heading', {
+      name:'Confirm Land Grant', exact:true
+    })).toBeVisible();
+    await expect(page.locator('#gm-body')).toContainText('Terms retained');
+    await expect(page.locator('#gm-body')).toContainText(
+      'Host Duty · Ten-year tenure');
+    await expect(page.locator('#gm-body')).toContainText(
+      'This complete duchy raises the ruler to duke tier.');
+    await page.locator('#vassal-grant-confirm-back').click();
+    await expect(page.getByRole('heading', {
+      name:'Grant Land to Ash March', exact:true
+    })).toBeVisible();
+    await page.locator(
+      '[data-vassal-grant-duchy="' + setup.did + '"]').click();
+    await page.locator('#vassal-grant-confirm').click();
+    await expect(page.locator(
+      '[data-interaction-action="feudal.grant-land"]')).toBeVisible();
+    expect(await page.evaluate(function (result) {
+      var s = FB.state;
+      var realm = s.realms[result.rid];
+      var contract = FB.feudalContractOf(s, result.rid);
+      return result.groupedIds.every(function (pid) {
+        return s.holder[pid] === result.rid &&
+          s.player.provs.indexOf(pid) < 0;
+      }) && realm.capital === result.capital &&
+        realm.rank === 2 && realm.name === 'Duchy of ' + result.duchyName &&
+        FB.realmRulerCharacterSnapshot(s, result.rid).id === result.rulerId &&
+        contract.charterId === 'host_duty' && contract.tenure === 'term';
+    }, setup)).toBe(true);
   });
 
 test('Grant Land explains when no adult family recipient is eligible',

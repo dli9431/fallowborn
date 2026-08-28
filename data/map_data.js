@@ -1502,6 +1502,7 @@ FBDATA.balance = {
      ordinary player-vassal dues now come from feudalServiceCharters. */
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
   vassalLevyRate: 0.15,
+  vassalLandGrantStanding: 10, // Standing gained when an existing direct vassal receives land
   /* a count-or-higher ruler's one voluntary capital move per lifetime */
   capitalRelocationPrestigeCost: 200,
   capitalRelocationPopularOpinion: -15,

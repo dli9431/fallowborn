@@ -984,6 +984,14 @@ window.FB = window.FB || {};
     if (FB.repairVassalLieges) restoreRepair('vassal hierarchy', function () {
       FB.repairVassalLieges(FB.state);
     });
+    /* Counts in older saves may already control a complete de jure duchy.
+       Recognize them once here, after liege repair, rather than adding a
+       realm-wide scan to yearly fast-forward simulation. */
+    if (FB.repairCompleteDuchyRanks) {
+      restoreRepair('ducal recognition', function () {
+        FB.repairCompleteDuchyRanks(FB.state);
+      });
+    }
     if (FB.ensureModifiers) restoreRepair('modifiers', function () {
       FB.ensureModifiers(FB.state);
     });

@@ -4491,6 +4491,87 @@ window.FB = window.FB || {};
     for (const rid in state.realms) FB.checkCrownRecognition(state, rid);
   };
 
+  /* ---- ducal recognition --------------------------------------------------
+     A count who controls a whole multi-county de jure duchy may bear its
+     ducal title when independent or beneath a king/emperor. Recognition is
+     checked only at bounded mutation/restore boundaries: never from a read,
+     render, daily tick, or the yearly realm loop. */
+  FB.realmMayAssumeDuchy = function (state, rid) {
+    const r = state.realms[rid];
+    if (!r || !r.alive || rid === 'player' || r.rank !== 1) return false;
+    if (!r.liege) return true;
+    const liege = state.realms[r.liege];
+    return !!(liege && liege.alive && liege.rank >= 3);
+  };
+
+  FB.completeDuchyForRealm = function (state, rid, preferredDid) {
+    if (!FB.realmMayAssumeDuchy(state, rid)) return null;
+    const r = state.realms[rid];
+    const territory = FB.realmTerritory(state, rid);
+    if (!territory.length) return null;
+    const held = {}, candidates = {};
+    for (const pid of territory) {
+      held[pid] = 1;
+      const did = (FB.world.byId[pid] || {}).duchy;
+      if (did) candidates[did] = 1;
+    }
+    const capitalDuchy = (FB.world.byId[r.capital] || {}).duchy;
+    const ids = Object.keys(candidates).sort();
+    if (capitalDuchy && candidates[capitalDuchy]) {
+      ids.splice(ids.indexOf(capitalDuchy), 1);
+      ids.unshift(capitalDuchy);
+    }
+    if (preferredDid && candidates[preferredDid]) {
+      ids.splice(ids.indexOf(preferredDid), 1);
+      ids.unshift(preferredDid);
+    }
+    for (const did of ids) {
+      const counties = FB.duchyCounties(did);
+      if (counties.length >= 2 && counties.every(function (pid) {
+        return !!held[pid];
+      })) return did;
+    }
+    return null;
+  };
+
+  FB.recognizeCompleteDuchy = function (state, rid, options) {
+    options = options || {};
+    const did = FB.completeDuchyForRealm(state, rid, options.duchyId);
+    if (!did) return null;
+    const realm = state.realms[rid];
+    const duchy = FBDATA.duchies[did] || {};
+    const duchyName = duchy.name || did;
+    realm.rank = 2;
+    realm.name = 'Duchy of ' + duchyName;
+    if (!options.silent) {
+      FB.news(state, FB.msg('news.realm.vassal_promoted_duchy', {
+        forms:{
+          select:'value', param:'sex', cases:{
+            f:'👑 {ruler} is raised as Duchess of {duchy}; the realm now bears ducal rank.',
+            other:'👑 {ruler} is raised as Duke of {duchy}; the realm now bears ducal rank.'
+          }
+        }
+      }, {
+        sex:realm.ruler.sex === 'f' ? 'f' : 'm',
+        ruler:realm.ruler.name,
+        duchy:duchyName
+      }));
+    }
+    return did;
+  };
+
+  /* One restore-only pass repairs pre-existing count realms. This is kept
+     separate from ensureDynasticState because that function also runs yearly. */
+  FB.repairCompleteDuchyRanks = function (state) {
+    let promoted = 0;
+    for (const rid in state.realms) {
+      const r = state.realms[rid];
+      if (!r || !r.alive || r.rank !== 1) continue;
+      if (FB.recognizeCompleteDuchy(state, rid, { silent:true })) promoted++;
+    }
+    return promoted;
+  };
+
   FB.realmsAdjacent = function (state, r1, r2) {
     rcEnsure(state);
     for (const pid of (rc.provs[r1] || [])) {
@@ -4560,6 +4641,8 @@ window.FB = window.FB || {};
     // a crown with no land left in its kingdom loses the world's recognition
     FB.checkCrownRecognition(state, from);
     if (oldHolder !== from) FB.checkCrownRecognition(state, oldHolder);
+    // only the receiving count can gain a ducal title from this transfer
+    if (toRealm !== 'player') FB.recognizeCompleteDuchy(state, toRealm);
     // a tier-3 baron or Bishop is bound to the home county: if it changes
     // hands, the office answers to its new holder even while the old lord's
     // house survives elsewhere
