@@ -2814,9 +2814,13 @@ window.FB = window.FB || {};
       });
     }
     const sef = $('self-edufocus');
-    if (sef) sef.addEventListener('click', function () { UI.showEduFocus(me.id); });
+    if (sef) sef.addEventListener('click', function () {
+      UI.showEduFocus(me.id, { view:'self' });
+    });
     const stu = $('self-tutor');
-    if (stu) stu.addEventListener('click', function () { UI.showTutorPick(me.id); });
+    if (stu) stu.addEventListener('click', function () {
+      UI.showTutorPick(me.id, { view:'self' });
+    });
     const bishopric = $('self-bishopric');
     if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
     const srh = $('self-rename-house');

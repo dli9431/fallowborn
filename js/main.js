@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.2';
+  FB.VERSION = '1.165.3';
   FB.CHANGELOG = [
+    { v: '1.165.3', date: '2026-08-27', changes: [
+      'Household Plan actions now remain visibly button-like on phone and tablet layouts.',
+      'Education and schooling sheets opened from Self now return directly to the Self drawer.'
+    ] },
     { v: '1.165.2', date: '2026-08-27', changes: [
       'Household Plan now restores compact scroll position, moves supporting text into details, and keeps enterprise staffing controls inside the sheet.',
       'Enterprise staffing previews now support assigning existing workers or hiring local workers for idle businesses.'

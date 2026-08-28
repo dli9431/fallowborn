@@ -213,6 +213,44 @@ test('Self skill Guide links close back to Self on desktop and phones',
     await expect(skill).toBeVisible();
   });
 
+test('phone and tablet Self education flows return directly to the drawer',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.chars[s.player.charId].born = s.date.year - 12;
+      FB.ui.refresh();
+    });
+    for (const viewport of [
+      { width:390, height:844 },
+      { width:820, height:1180 }
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.locator('#tb-portrait').click();
+      await expect(page.locator('body')).toHaveClass(/showself/);
+
+      await page.locator('#self-edufocus').click();
+      await expect(page.getByRole('heading', {
+        name:'Your education', exact:false
+      })).toBeVisible();
+      await page.locator('#edu-back').click();
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await expect(page.locator('body')).toHaveClass(/showself/);
+      await expect(page.locator('#self-edufocus')).toBeVisible();
+      await expect(page.locator('#cm-close')).toHaveCount(0);
+
+      await page.locator('#self-tutor').click();
+      await expect(page.getByRole('heading', {
+        name:'Your schooling', exact:false
+      })).toBeVisible();
+      await page.locator('#tut-back').click();
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await expect(page.locator('body')).toHaveClass(/showself/);
+      await expect(page.locator('#self-tutor')).toBeVisible();
+      await expect(page.locator('#cm-close')).toHaveCount(0);
+      await page.locator('#btn-closeself').click();
+    }
+  });
+
 test('phone and tablet Self drawers pause running time and restore it on close',
   async function ({ page }) {
     await page.setViewportSize({ width:390, height:844 });

@@ -2828,6 +2828,17 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 @media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
   .household-plan-visible-details,
   .household-policy-visible-details { display: none; }
+  .household-plan-action.actionbtn {
+    border: 1px solid #826a38; border-radius: 6px;
+    background: linear-gradient(135deg, #392e1c, #2c2417);
+    box-shadow: inset 4px 0 0 #d8b24a, 0 2px 4px rgba(0,0,0,.28);
+  }
+  .household-plan-action.actionbtn:hover,
+  .household-plan-action.actionbtn:focus-visible {
+    border-color: #c9a24a; background: #40331d;
+    box-shadow: inset 4px 0 0 #e6c45d, 0 2px 5px rgba(0,0,0,.38);
+  }
+  .household-plan-action .household-plan-primary { color: #f0d47c; }
   .household-plan-cell.has-details .household-plan-action,
   .household-plan-cell.has-details .household-plan-static { padding-right: 58px; }
   .household-plan-staffing-entry > .actionbtn { padding-right: 58px; }

@@ -608,6 +608,42 @@ test.describe('sibling and collateral-household agency', function () {
       await page.locator('#household-plan-close').click();
     });
 
+  test('Household Plan keeps actions visibly button-like on phone and tablet',
+    async function ({ page }) {
+      await page.setViewportSize({ width:390, height:740 });
+      await startDeterministicGame(page);
+      await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+
+      for (const viewport of [
+        { width:390, height:740 },
+        { width:900, height:800 }
+      ]) {
+        await page.setViewportSize(viewport);
+        const appearance = await page.locator(
+          '.household-plan-action').first().evaluate(function (button) {
+          const style = getComputedStyle(button);
+          const readOnly = document.querySelector('.household-plan-static');
+          const readOnlyStyle = readOnly ? getComputedStyle(readOnly) : null;
+          return {
+            backgroundImage:style.backgroundImage,
+            borderStyle:style.borderTopStyle,
+            borderWidth:parseFloat(style.borderTopWidth),
+            boxShadow:style.boxShadow,
+            readOnlyBorderWidth:readOnlyStyle
+              ? parseFloat(readOnlyStyle.borderTopWidth) : 0
+          };
+        });
+        expect(appearance.backgroundImage).not.toBe('none');
+        expect(appearance.borderStyle).toBe('solid');
+        expect(appearance.borderWidth).toBeGreaterThan(0);
+        expect(appearance.boxShadow).not.toBe('none');
+        expect(appearance.borderWidth).toBeGreaterThan(
+          appearance.readOnlyBorderWidth);
+      }
+
+      await page.locator('#household-plan-close').click();
+    });
+
   test('Education Policy uses shared details and a direct canonical save action',
     async function ({ page }) {
       await startDeterministicGame(page);

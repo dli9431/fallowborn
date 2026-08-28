@@ -8317,6 +8317,8 @@ window.FB = window.FB || {};
       UI.showParliament(returnContext.returnView);
     } else if (returnContext.view === 'realm') {
       UI.showLiegeModal(returnContext.realmId, returnContext.returnContext);
+    } else if (returnContext.view === 'self') {
+      UI.closeModal();
     } else if (returnContext.view === 'character') {
       UI.showCharModal(returnContext.characterId, returnContext.returnContext);
     } else if (returnContext.view === 'family-tree') {
@@ -13042,7 +13044,8 @@ window.FB = window.FB || {};
 
   function returnsToInteractionManagement(returnContext) {
     return !!(returnContext && typeof returnContext === 'object' &&
-      (returnContext.view === 'character' ||
+      (returnContext.view === 'self' ||
+        returnContext.view === 'character' ||
         returnContext.view === 'retainer'));
   }
 

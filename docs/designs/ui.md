@@ -367,7 +367,10 @@ The drawer Close uses the same footer control at the bottom middle, immediately 
 fixed time bar. On compact phone and tablet layouts, opening that drawer pauses a running
 game and records that it owns the pause; closing it, including through browser Back, resumes
 only when the drawer paused previously running time. A game opened while already paused
-stays paused. The map toast rail is hidden behind the full-screen drawer and returns with
+stays paused. Education-focus and schooling sheets opened from Self carry an explicit Self
+return context, so their visible or browser Back closes the sheet directly onto the open
+drawer instead of inserting the protagonist's character sheet. The map toast rail is hidden
+behind the full-screen drawer and returns with
 any still-live notices after the drawer closes.
 The redundant topbar portrait is hidden when the Self panel is persistently visible on
 desktop. The time controls become a fixed thumb-zone bar above the drawer (hidden by
@@ -1603,7 +1606,10 @@ buttons that retain modal focus, number shortcuts, Tab/Enter/Space, minimum touc
 and browser-history Back. The scope introduction uses the modal-title details affordance.
 Touch, tablet-width, and short layouts keep each primary status and warning on the card
 while moving secondary and tertiary helper lines behind an adjacent touch-sized `?`
-disclosure. The Education Policy and Descendant Match Assistant summaries use the same
+disclosure. Actionable cells retain a raised parchment fill, bronze border, and gold edge
+accent in their resting state, so they remain visibly distinct from read-only text before
+the player taps or focuses them. The Education Policy and Descendant Match Assistant
+summaries use the same
 compact disclosure for the helper lines beneath their titles. Opening a
 character-specific picker records that person's row and its current offset inside the
 ledger; Back, Cancel, or a completed return rebuilds the authoritative plan and restores
