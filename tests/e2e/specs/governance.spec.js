@@ -1196,8 +1196,11 @@ test('Governance county and grant flows return to Domain while Council reservati
     expect(result.automaticallySeated).toBe(false);
     expect(result.manualHolder).toBe(result.reservedRealm);
 
-    await page.locator('#governance-domain [data-governance-county="' +
-      result.countyId + '"]').click();
+    const countyRow = page.locator(
+      '#governance-domain [data-governance-county="' +
+      result.countyId + '"]');
+    await countyRow.focus();
+    await page.keyboard.press('Enter');
     await expect(page.getByRole('heading', {
       name:'County of ' + result.countyName,
       exact:true
@@ -1480,14 +1483,18 @@ test('Council, realm, and character views agree with Governance Standing',
         infoSize:parseFloat(getComputedStyle(
           card.querySelector('.council-ruler-info')).fontSize),
         buttonCount:buttons.length,
-        widthSpread:Math.max.apply(Math, widths) - Math.min.apply(Math, widths)
+        firstRowWidthSpread:Math.abs(widths[0] - widths[1]),
+        lastActionSpans:widths[widths.length - 1] > widths[0] * 1.5
       };
     });
     expect(officerLayout.columns).toBe(2);
     expect(officerLayout.nameSize).toBeGreaterThanOrEqual(16);
     expect(officerLayout.infoSize).toBeGreaterThanOrEqual(14);
-    expect(officerLayout.buttonCount).toBe(4);
-    expect(officerLayout.widthSpread).toBeLessThanOrEqual(1);
+    /* Replacement is conditional: a one-vassal council correctly offers
+       ruler card, gift, and dismissal without an empty replacement action. */
+    expect(officerLayout.buttonCount).toBe(3);
+    expect(officerLayout.firstRowWidthSpread).toBeLessThanOrEqual(1);
+    expect(officerLayout.lastActionSpans).toBe(true);
     const heraldry = page.locator('.council-ruler-heraldry').first();
     await expect(heraldry.locator('.council-ruler-heraldry-button'))
       .toHaveAttribute('aria-label', /Open ruler card for/);

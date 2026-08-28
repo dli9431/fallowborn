@@ -3955,7 +3955,10 @@ window.FB = window.FB || {};
     /* A fort remains a map landmark even if later development decline would
        ordinarily conceal its settlement. The cached fort lookup keeps this
        allocation-free renderer seam constant-time. */
-    if (state && FB.fortAt) {
+    /* A supplied building floor already includes every standing record,
+       including walls. Avoid warming the separate fort index just to recover
+       the same settlement anchor after a building aggregate was requested. */
+    if (state && FB.fortAt && typeof buildingFloor !== 'number') {
       const fort = FB.fortAt(state, pid);
       if (fort && !fort.ruined) visible = Math.max(visible, (fort.s | 0) + 1);
     }

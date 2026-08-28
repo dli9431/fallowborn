@@ -89,7 +89,9 @@ array or changing its length is detected at the read boundary. Same-length gamep
 and AI construction invalidate the affected county immediately. Construction enumeration also
 reuses one county context, including its visible-settlement count, across every building and
 slot check; county-picker availability counts do not calculate unused market price quotes. The
-index is derived runtime state only and never enters a save or changes RNG order.
+building floor supplied to that settlement projection already includes standing forts, so it
+does not warm the separate fort index for the same county scan. The index is derived runtime
+state only and never enters a save or changes RNG order.
 
 **Bonuses stay demesne-wide; prices climb per county.** Ongoing bonuses flow through
 `FB.buildingBonus` (tax, levy, piety, research, upkeep, and the war keys `retinue`/`archers`
