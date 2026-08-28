@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.8';
+  FB.VERSION = '1.165.9';
   FB.CHANGELOG = [
+    { v: '1.165.9', date: '2026-08-28', changes: [
+      'Self and Kin now keep ages, health, skills, portraits, adulthood deeds, household standards, and succession wording current; closing Automation restores the Space play/pause shortcut.',
+      'Raiding target selection opens faster with large target lists, preserves exact previews, and sorts value by displayed estimated spoils.'
+    ] },
     { v: '1.165.8', date: '2026-08-28', changes: [
       'Large realms now reuse settlement and building summaries during late-game simulation and management.',
       'Grant Land now lists eligible adult relatives across social stations, and their fiefs pass safely through succession.'

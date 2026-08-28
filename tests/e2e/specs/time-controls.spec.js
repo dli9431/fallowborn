@@ -17,6 +17,7 @@ dependsOnRuntime(__filename, [
   'js/events.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
+  'js/portrait.js',
   'js/keys.js',
   'js/ui_topbar.js',
   'js/ui_modals.js',
@@ -452,7 +453,7 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
     await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('499');
   });
 
-test('natural ticks retain Self and Network trees while updating visible Self values',
+test('natural ticks retain Self and Network trees while updating visible player values',
   async function ({ page }) {
     await startDeterministicGame(page);
     await page.setViewportSize({ width:1280, height:800 });
@@ -473,25 +474,56 @@ test('natural ticks retain Self and Network trees while updating visible Self va
       document.getElementById('tab-network').appendChild(networkSentinel);
       const s = FB.state;
       const me = s.chars[s.player.charId];
+      const selfPortraitStamp = document.getElementById('selfportrait')._fbPortraitStamp;
+      const topbarPortraitStamp = document.getElementById('tb-portrait')._fbPortraitStamp;
       me.born = s.date.year - 42;
       me.health = 4;
+      for (let i = 0; i < FB.SKILLS.length; i++) {
+        me.skills[FB.SKILLS[i]] += i + 1;
+      }
       s.player.pop = 73;
+      s.player.gold = 123;
+      s.player.prestige = 456;
+      s.player.piety = 789;
       FB.state.turn++;
       FB.ui.refresh({ liveTick:true });
       return {
         age:String(FB.ageOf(me, s.date.year)),
-        voice:String(Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop))
+        voice:String(Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)),
+        skills:FB.SKILLS.reduce(function (values, key) {
+          values[key] = String(FB.skillOf(me, key));
+          return values;
+        }, {}),
+        gold:FB.money(s.player.gold, { omitPrimarySymbol:true }),
+        selfPortraitStamp:selfPortraitStamp,
+        topbarPortraitStamp:topbarPortraitStamp
       };
     });
     await waitForUiRefresh(page);
     await expect(page.locator('#self-live-tick-sentinel')).toHaveCount(1);
     await expect(page.locator('#network-live-tick-sentinel')).toHaveCount(1);
-    await expect(page.locator('#tab-char .kv:has(span:text-is("Age")) b'))
+    await expect(page.locator('#tab-char [data-self-value="age"] b'))
       .toHaveText(liveValues.age);
-    await expect(page.locator('#tab-char .kv:has(span:text-is("Health")) b'))
+    await expect(page.locator('#tab-char [data-self-value="health"] b'))
       .toHaveText('4 / 10 ' + String.fromCharCode(183) + ' Grievously wounded');
-    await expect(page.locator('#tab-char .kv:has(span:text-is("Common Voice")) b'))
+    await expect(page.locator('#tab-char [data-self-value="voice"] b'))
       .toHaveText(liveValues.voice);
+    for (const key of Object.keys(liveValues.skills)) {
+      await expect(page.locator('#tab-char [data-self-skill="' + key + '"] .num'))
+        .toHaveText(liveValues.skills[key]);
+    }
+    await expect(page.locator('#tb-gold .mono')).toHaveText(liveValues.gold);
+    await expect(page.locator('#tb-prestige .mono')).toHaveText('456');
+    await expect(page.locator('#tb-piety .mono')).toHaveText('789');
+    await expect(page.locator('#tb-health .mono')).toHaveText('4');
+    const portraitStamps = await page.evaluate(function () {
+      return {
+        self:document.getElementById('selfportrait')._fbPortraitStamp,
+        topbar:document.getElementById('tb-portrait')._fbPortraitStamp
+      };
+    });
+    expect(portraitStamps.self).not.toBe(liveValues.selfPortraitStamp);
+    expect(portraitStamps.topbar).not.toBe(liveValues.topbarPortraitStamp);
 
     await page.evaluate(function () {
       FB.ui._shared.resetPanelMarkup();
@@ -500,6 +532,54 @@ test('natural ticks retain Self and Network trees while updating visible Self va
     await waitForUiRefresh(page);
     await expect(page.locator('#self-live-tick-sentinel')).toHaveCount(0);
     await expect(page.locator('#network-live-tick-sentinel')).toHaveCount(0);
+  });
+
+test('natural ticks retain Kin while updating spouse and child ages',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width:1280, height:800 });
+    const family = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const spouse = FB.makeCharacter(s, {
+        name:'Live Spouse', sex:me.sex === 'm' ? 'f' : 'm',
+        born:s.date.year - 30, culture:me.culture, religion:me.religion,
+        dyn:'Live House', traitsN:0
+      });
+      const child = FB.makeCharacter(s, {
+        name:'Live Child', sex:'m', born:s.date.year - 15,
+        fatherId:me.sex === 'm' ? me.id : spouse.id,
+        motherId:me.sex === 'f' ? me.id : spouse.id,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        traitsN:0
+      });
+      me.spouseId = spouse.id;
+      spouse.spouseId = me.id;
+      me.childrenIds.push(child.id);
+      spouse.childrenIds.push(child.id);
+      child.edu = { focus:'dip' };
+      FB.game.setPaused(true);
+      FB.ui.showTab('family', { history:false });
+      FB.ui.refresh();
+      return { spouseId:spouse.id, childId:child.id };
+    });
+    await waitForUiRefresh(page);
+
+    await page.evaluate(function () {
+      const sentinel = document.createElement('i');
+      sentinel.id = 'kin-live-tick-sentinel';
+      document.getElementById('tab-family').appendChild(sentinel);
+      FB.state.date.year++;
+      FB.state.turn++;
+      FB.ui.refresh({ liveTick:true });
+    });
+    await waitForUiRefresh(page);
+
+    await expect(page.locator('#kin-live-tick-sentinel')).toHaveCount(1);
+    await expect(page.locator('[data-live-kin-age="spouse"]' +
+      '[data-live-age-cid="' + family.spouseId + '"]')).toHaveText('Age 31');
+    await expect(page.locator('[data-live-kin-age="child"]' +
+      '[data-live-age-cid="' + family.childId + '"]')).toHaveText('Son · age 16');
   });
 
 test('daily focus validation skips presentation preview work',
@@ -1125,6 +1205,36 @@ test('clicking a panel tab leaves Space as the pause hotkey', async function ({ 
     return page.evaluate(function () { return FB.game.paused; });
   }).toBe(false);
 });
+
+test('closing pointer-opened Automation leaves Space as the pause hotkey',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      FB.state.eventQueue = [];
+      FB.state.slotDays = [];
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.setPaused(true);
+    });
+
+    await page.locator('#btn-auto').click();
+    await expect(page.getByRole('heading', { name:'⚙ Automation' })).toBeVisible();
+    await page.locator('#ar-close').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator('#btn-endturn')).toBeFocused();
+
+    await page.keyboard.press('Space');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.game.paused; });
+    }).toBe(false);
+    await page.keyboard.press('Space');
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.game.paused; });
+    }).toBe(true);
+  });
 
 test('tab switches render only the selected desktop panel column',
   async function ({ page }) {

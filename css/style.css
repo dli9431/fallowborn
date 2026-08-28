@@ -1683,6 +1683,12 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 }
 .kv { display: flex; justify-content: space-between; font-size: 14px; padding: 3px 0; }
 .kv b { color: var(--main-text-color); font-weight: normal; }
+.self-household-standards { display: block; }
+.self-household-standards > b {
+  display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 3px;
+  line-height: 1.4;
+}
+.household-standard-summary-item { white-space: nowrap; }
 .land-section {
   margin: 0 0 9px; padding: 7px 9px 8px;
   border: 1px solid #40331f; border-radius: 7px; background: #1c1710;

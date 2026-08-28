@@ -352,7 +352,8 @@ window.FB = window.FB || {};
     if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
   }
 
-  UI.showAutoResolve = function () {
+  UI.showAutoResolve = function (options) {
+    options = options || {};
     const a = FB.game.auto;
     const s = FB.state;
     const access = automationAccess(s);
@@ -409,7 +410,10 @@ window.FB = window.FB || {};
         '</div>';
     }
     h += '<div class="gm-footer"><button class="btn primary" id="ar-close">' + esc(FB.T('Close')) + '</button></div>';
-    openModal('⚙ Automation', h, { modalClass: 'fullsheet-modal', modalKey: 'v' });
+    openModal('⚙ Automation', h, {
+      modalClass:'fullsheet-modal', modalKey:'v',
+      returnFocus:options.returnFocus || null
+    });
     function sync() {
       a.minor = $('ar-minor').checked;
       a.major = $('ar-major').checked;
@@ -4621,14 +4625,52 @@ window.FB = window.FB || {};
   }
 
   function compareRaidNames(a, b) {
-    const aKey = raidNameSortKey(a.name);
-    const bKey = raidNameSortKey(b.name);
+    const aKey = a._raidNameSortKey ||
+      (a._raidNameSortKey = raidNameSortKey(a.name));
+    const bKey = b._raidNameSortKey ||
+      (b._raidNameSortKey = raidNameSortKey(b.name));
     return (aKey < bKey ? -1 : (aKey > bKey ? 1 : 0)) ||
       a.name.localeCompare(b.name) || String(a.pid).localeCompare(String(b.pid));
   }
 
-  function sortRaidTargets(targets, lastPid) {
+  function raidTargetViewFor(state, existing) {
+    if (existing && existing.state === state && existing.turn === state.turn) {
+      return existing;
+    }
+    return {
+      state:state,
+      turn:state.turn,
+      targets:FB.raidTargets ? FB.raidTargets(state) : [],
+      previews:{},
+      previewShared:{}
+    };
+  }
+
+  function raidPreviewFor(state, view, target, strategy) {
+    const key = strategy + ':' + target.pid;
+    if (Object.prototype.hasOwnProperty.call(view.previews, key)) {
+      return view.previews[key];
+    }
+    const preview = FB.calculateRaidSpoils
+      ? FB.calculateRaidSpoils(state, target.pid, strategy, null, true, {
+          target:target,
+          shared:view.previewShared
+        })
+      : { gold:0, captives:0 };
+    view.previews[key] = preview;
+    return preview;
+  }
+
+  function sortRaidTargets(state, view, targets, lastPid) {
     const sorted = targets.slice();
+    let valuePreviews = null;
+    if (raidViewSort === 'value-asc' || raidViewSort === 'value-desc') {
+      valuePreviews = {};
+      for (let i = 0; i < targets.length; i++) {
+        valuePreviews[targets[i].pid] = raidPreviewFor(
+          state, view, targets[i], raidViewStrategy);
+      }
+    }
     sorted.sort(function (a, b) {
       if (raidViewKeepTarget && lastPid) {
         if (a.pid === lastPid && b.pid !== lastPid) return -1;
@@ -4642,7 +4684,15 @@ window.FB = window.FB || {};
         const distanceOrder = a.distance - b.distance;
         if (distanceOrder) return raidViewSort === 'distance-desc' ? -distanceOrder : distanceOrder;
       } else {
-        const valueOrder = a.wealthScore - b.wealthScore;
+        const aPreview = valuePreviews[a.pid];
+        const bPreview = valuePreviews[b.pid];
+        const aGold = aPreview.success ? aPreview.gold : 0;
+        const bGold = bPreview.success ? bPreview.gold : 0;
+        let valueOrder = aGold - bGold;
+        if (!valueOrder) {
+          valueOrder = (aPreview.success ? aPreview.captives : 0) -
+            (bPreview.success ? bPreview.captives : 0);
+        }
         if (valueOrder) return raidViewSort === 'value-asc' ? valueOrder : -valueOrder;
       }
       return compareRaidNames(a, b);
@@ -4659,10 +4709,11 @@ window.FB = window.FB || {};
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
   }
 
-  UI.showRaidTargets = function (returnContext) {
+  UI.showRaidTargets = function (returnContext, existingView) {
     const s = FB.state;
     if (!s || !s.player) return;
-    let targets = FB.raidTargets ? FB.raidTargets(s) : [];
+    const targetView = raidTargetViewFor(s, existingView);
+    let targets = targetView.targets;
     const maxRange = FB.raidRange ? FB.raidRange(s) : 2;
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
     const hasLongships = FB.hasTech && FB.hasTech(s, 'longships', playerRealm);
@@ -4682,7 +4733,7 @@ window.FB = window.FB || {};
     const reachableLast = lastPid && targets.some(function (target) {
       return target.pid === lastPid;
     });
-    targets = sortRaidTargets(targets, lastPid);
+    targets = sortRaidTargets(s, targetView, targets, lastPid);
 
     let h = '<div class="raid-target-toolbar" id="raid-target-toolbar">' +
       '<label class="raid-strategy-label"><span>' + esc(FB.T('Expedition Strategy')) + '</span>' +
@@ -4735,7 +4786,8 @@ window.FB = window.FB || {};
     } else {
       for (let i = 0; i < targets.length; i++) {
         const t = targets[i];
-        const spoilsPreview = FB.calculateRaidSpoils ? FB.calculateRaidSpoils(s, t.pid, raidViewStrategy, null, true) : { gold:0, captives:0 };
+        const spoilsPreview = raidPreviewFor(
+          s, targetView, t, raidViewStrategy);
         const endNames = (t.endowments || []).map(function (eid) {
           const ed = FBDATA.marketEndowmentTypes && FBDATA.marketEndowmentTypes[eid];
           return ed ? ed.name : eid;
@@ -4801,7 +4853,7 @@ window.FB = window.FB || {};
     if (sortSelect) {
       sortSelect.addEventListener('change', function () {
         raidViewSort = sortSelect.value;
-        UI.showRaidTargets(returnContext);
+        UI.showRaidTargets(returnContext, targetView);
       });
     }
 
@@ -4809,7 +4861,7 @@ window.FB = window.FB || {};
     if (keepTarget) {
       keepTarget.addEventListener('change', function () {
         raidViewKeepTarget = keepTarget.checked;
-        UI.showRaidTargets(returnContext);
+        UI.showRaidTargets(returnContext, targetView);
       });
     }
 
@@ -4841,7 +4893,7 @@ window.FB = window.FB || {};
         raidViewStrategy = strategySelect.value;
         const hintEl = $('raid-strategy-hint');
         if (hintEl) hintEl.textContent = raidStrategyHint(raidViewStrategy);
-        UI.showRaidTargets(returnContext);
+        UI.showRaidTargets(returnContext, targetView);
       });
     }
 
@@ -4892,7 +4944,7 @@ window.FB = window.FB || {};
     const pickMapBtn = $('raid-pick-map');
     if (pickMapBtn) {
       pickMapBtn.addEventListener('click', function () {
-        UI.openRaidMapPicker(returnContext);
+        UI.openRaidMapPicker(returnContext, targetView);
       });
     }
 
@@ -4911,6 +4963,7 @@ window.FB = window.FB || {};
   };
 
   let raidMapPickerContext = null;
+  let raidMapTargetView = null;
 
   UI.raidPickerOpen = function () {
     const el = $('raid-picker');
@@ -4928,19 +4981,22 @@ window.FB = window.FB || {};
       FB.map.select(null);
       FB.map.request();
     }
+    if (discard) raidMapTargetView = null;
     mobileNavClosed('raid-picker', !!discard);
   };
 
-  UI.openRaidMapPicker = function (returnContext) {
+  UI.openRaidMapPicker = function (returnContext, existingView) {
     const s = FB.state;
     if (!s || !s.player) return;
-    const rawTargets = FB.raidTargets ? FB.raidTargets(s) : [];
+    const targetView = raidTargetViewFor(s, existingView);
+    const rawTargets = targetView.targets;
     if (!rawTargets.length) {
       UI.toast(FB.T('No foreign target counties are currently within reach.'));
       return;
     }
 
     raidMapPickerContext = returnContext;
+    raidMapTargetView = targetView;
     UI.closeModal();
 
     const p = s.player;
@@ -4987,7 +5043,7 @@ window.FB = window.FB || {};
 
     mobileNavPush('raid-picker',
       function () { UI.closeRaidMapPicker(true); },
-      function () { UI.openRaidMapPicker(returnContext); },
+      function () { UI.openRaidMapPicker(returnContext, targetView); },
       function () { return UI.raidPickerOpen(); },
       function () { return true; });
   };
@@ -5023,7 +5079,9 @@ window.FB = window.FB || {};
     }
 
     const strat = ($('raid-picker-strategy') && $('raid-picker-strategy').value) || raidViewStrategy || 'sack';
-    const spoils = FB.calculateRaidSpoils ? FB.calculateRaidSpoils(s, pid, strat, null, true) : { gold: 0, captives: 0 };
+    const targetView = raidTargetViewFor(s, raidMapTargetView);
+    raidMapTargetView = targetView;
+    const spoils = raidPreviewFor(s, targetView, item, strat);
     const pr = FB.world.byId[pid];
 
     const riskLabel = (spoils.combatAdvantage < 0.40)
@@ -5050,8 +5108,9 @@ window.FB = window.FB || {};
 
   UI.returnToRaidList = function () {
     const returnCtx = raidMapPickerContext;
+    const targetView = raidMapTargetView;
     UI.closeRaidMapPicker(false);
-    UI.showRaidTargets(returnCtx);
+    UI.showRaidTargets(returnCtx, targetView);
   };
 
   UI.raidStrategyChanged = function (val) {
@@ -5069,6 +5128,7 @@ window.FB = window.FB || {};
     const returnCtx = raidMapPickerContext;
     UI.closeRaidMapPicker(false);
     const report = FB.executeRaid(FB.state, targetPid, strat);
+    raidMapTargetView = null;
     finishRaid(report, returnCtx);
   };
 

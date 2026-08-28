@@ -88,6 +88,8 @@ level, current or next effect, next setup price, and live upkeep visible in the
 same scan pattern as the technology catalogue; it is no longer a large
 navigation action. Ruler establishments use the same control in their own section, so
 their realm effects and rank or technology blockers remain visible before purchase.
+Self's read-only active-standards summary wraps each icon-and-level pair as one
+indivisible item, keeping dense established households legible in the narrow panel.
 
 Hovering or focusing the plus button shows the complete next-level ownership,
 scope, transfer, expiry, affordability, and projected-finance terms in the

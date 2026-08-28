@@ -3457,7 +3457,8 @@ window.FB = window.FB || {};
           days: Math.max(1, s.player.raidCooldownUntil - s.turn)
         });
       }
-      const targets = FB.raidTargets ? FB.raidTargets(s) : [];
+      const targets = FB.raidTargets
+        ? FB.raidTargets(s, null, { firstOnly:true }) : [];
       if (!targets.length) {
         return FB.T('No foreign target counties are within reach of your raiders.');
       }
@@ -9245,7 +9246,38 @@ window.FB = window.FB || {};
     return { overland: overlandPx, naval: navalPx };
   };
 
-  FB.raidTargets = function (state, charId) {
+  let raidNavalReachWorld = null;
+  let raidNavalReachable = null;
+
+  function navalRaidReachable() {
+    if (raidNavalReachWorld === FB.world && raidNavalReachable) {
+      return raidNavalReachable;
+    }
+    const reachable = {};
+    const coasts = [];
+    for (let i = 0; i < FB.world.provs.length; i++) {
+      if (FB.world.provs[i].coastal) coasts.push(FB.world.provs[i]);
+    }
+    for (let i = 0; i < FB.world.provs.length; i++) {
+      const province = FB.world.provs[i];
+      if (province.coastal) {
+        reachable[province.id] = true;
+        continue;
+      }
+      for (let k = 0; k < coasts.length; k++) {
+        if (Math.hypot(province.sx - coasts[k].sx,
+            province.sy - coasts[k].sy) <= 55) {
+          reachable[province.id] = true;
+          break;
+        }
+      }
+    }
+    raidNavalReachWorld = FB.world;
+    raidNavalReachable = reachable;
+    return reachable;
+  }
+
+  FB.raidTargets = function (state, charId, options) {
     const out = [];
     if (!FB.canRaid(state, charId) || !FB.world || !FB.world.byId) return out;
     const p = state.player;
@@ -9255,10 +9287,11 @@ window.FB = window.FB || {};
     const hasLongships = rangePx.naval > 0;
 
     const startPids = [];
+    if (p.provinceId) startPids.push(p.provinceId);
     if (p.provs && p.provs.length) {
-      for (let i = 0; i < p.provs.length; i++) startPids.push(p.provs[i]);
-    } else if (p.provinceId) {
-      startPids.push(p.provinceId);
+      for (let i = 0; i < p.provs.length; i++) {
+        if (startPids.indexOf(p.provs[i]) < 0) startPids.push(p.provs[i]);
+      }
     }
     if (!startPids.length) return out;
 
@@ -9270,6 +9303,10 @@ window.FB = window.FB || {};
       if (spr) startPrs.push(spr);
       dist[sp] = 0;
     }
+
+    /* River reach depends only on immutable world geometry. Reuse it across
+       deed availability, the target sheet, and the map picker. */
+    const navalReachable = hasLongships ? navalRaidReachable() : {};
 
     // Evaluate all target provinces by physical distance from raider territory
     for (let j = 0; j < FB.world.provs.length; j++) {
@@ -9283,37 +9320,16 @@ window.FB = window.FB || {};
         const sp = startPrs[i];
         const sameLand = (sp.landmass && tp.landmass && sp.landmass === tp.landmass) ||
                          (FB.world.waterAdj && FB.world.waterAdj[sp.id] && FB.world.waterAdj[sp.id][tp.id]);
+        const dPx = Math.hypot(tp.sx - sp.sx, tp.sy - sp.sy);
         if (sameLand) {
-          const dPx = Math.hypot(tp.sx - sp.sx, tp.sy - sp.sy);
           if (dPx <= rangePx.overland && dPx < bestDistPx) {
             bestDistPx = dPx;
           }
         }
-      }
-
-      // 2. Naval longship distance from coastal territories
-      if (hasLongships) {
-        for (let i = 0; i < startPrs.length; i++) {
-          const sp = startPrs[i];
-          const dPx = Math.hypot(tp.sx - sp.sx, tp.sy - sp.sy);
-          if (dPx <= rangePx.naval && dPx < bestDistPx) {
-            if (tp.coastal) {
-              bestDistPx = dPx;
-            } else {
-              // River penetration: within 55px of a reachable foreign coast
-              let nearCoast = false;
-              for (let k = 0; k < FB.world.provs.length; k++) {
-                const cp = FB.world.provs[k];
-                if (cp.coastal && Math.hypot(tp.sx - cp.sx, tp.sy - cp.sy) <= 55) {
-                  nearCoast = true;
-                  break;
-                }
-              }
-              if (nearCoast) {
-                bestDistPx = dPx;
-              }
-            }
-          }
+        // 2. Naval longship distance from coastal or river-reachable targets
+        if (hasLongships && navalReachable[tp.id] &&
+            dPx <= rangePx.naval && dPx < bestDistPx) {
+          bestDistPx = dPx;
         }
       }
 
@@ -9356,7 +9372,7 @@ window.FB = window.FB || {};
       const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
       const fortLevel = (fort && !fort.ruined) ? (Number(fort.level) || 0) : 0;
       const dev = (state.dev && state.dev[pid]) || pr.dev0 || pr.dev || 1;
-      const pop = FB.countyPopulation ? FB.countyPopulation(state, pid) : 5000;
+      const pop = FB.countyPopulation ? FB.countyPopulation(state, pid) : 6000;
       const endowmentObj = FB.marketEndowments ? FB.marketEndowments(state, pid) : null;
       const endowments = (endowmentObj && Array.isArray(endowmentObj.tags)) ? endowmentObj.tags : (Array.isArray(endowmentObj) ? endowmentObj : []);
       const buildingCount = FB.standingBuildingCountIn(state, pid, true);
@@ -9384,10 +9400,11 @@ window.FB = window.FB || {};
         dev: dev,
         pop: pop,
         endowments: endowments,
-        buildingCount: buildings.length,
+        buildingCount: buildingCount,
         wealthScore: wealthScore,
         hazardScore: hazardScore
       });
+      if (options && options.firstOnly) return out;
     }
 
     out.sort(function (a, b) {
@@ -9517,20 +9534,45 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.calculateRaidSpoils = function (state, targetPid, strategy, charId, preview) {
+  FB.calculateRaidSpoils = function (state, targetPid, strategy, charId, preview, previewOptions) {
+    const previewTarget = preview && previewOptions && previewOptions.target;
+    const previewShared = preview && previewOptions && previewOptions.shared;
     const pr = FB.world.byId[targetPid];
-    const dev = (state.dev && state.dev[targetPid]) || (pr && (pr.dev0 || pr.dev)) || 1;
-    const pop = FB.countyPopulation ? FB.countyPopulation(state, targetPid) : 6000;
-    const fort = FB.fortAt ? FB.fortAt(state, targetPid) : null;
-    const fortLevel = (fort && !fort.ruined) ? (Number(fort.level) || 0) : 0;
-    const endowmentObj = FB.marketEndowments ? FB.marketEndowments(state, targetPid) : null;
-    const endowments = (endowmentObj && Array.isArray(endowmentObj.tags)) ? endowmentObj.tags : (Array.isArray(endowmentObj) ? endowmentObj : []);
-    const buildings = FB.builtIn ? FB.builtIn(state, targetPid).filter(function (b) { return !b.ruined; }) : [];
+    const dev = previewTarget ? previewTarget.dev :
+      ((state.dev && state.dev[targetPid]) || (pr && (pr.dev0 || pr.dev)) || 1);
+    const pop = previewTarget ? previewTarget.pop :
+      (FB.countyPopulation ? FB.countyPopulation(state, targetPid) : 6000);
+    const fort = previewTarget ? null : (FB.fortAt ? FB.fortAt(state, targetPid) : null);
+    const fortLevel = previewTarget ? previewTarget.fortLevel :
+      ((fort && !fort.ruined) ? (Number(fort.level) || 0) : 0);
+    const endowmentObj = previewTarget ? null :
+      (FB.marketEndowments ? FB.marketEndowments(state, targetPid) : null);
+    const endowments = previewTarget ? (previewTarget.endowments || []) :
+      ((endowmentObj && Array.isArray(endowmentObj.tags)) ? endowmentObj.tags :
+        (Array.isArray(endowmentObj) ? endowmentObj : []));
+    const buildings = preview ? [] :
+      (FB.builtIn ? FB.builtIn(state, targetPid).filter(function (b) { return !b.ruined; }) : []);
+    const buildingCount = previewTarget ? previewTarget.buildingCount :
+      (preview && FB.standingBuildingCountIn
+        ? FB.standingBuildingCountIn(state, targetPid, true) : buildings.length);
 
     const cid = charId || state.player.charId;
     const c = state.chars && state.chars[cid];
-    const mar = FB.skillOf ? FB.skillOf(c, 'mar') : 10;
-    const prowess = (c && c.prowess) || 10;
+    let mar;
+    let prowess;
+    if (previewShared && previewShared.charId === cid &&
+        previewShared.martial !== undefined) {
+      mar = previewShared.martial;
+      prowess = previewShared.prowess;
+    } else {
+      mar = FB.skillOf ? FB.skillOf(c, 'mar') : 10;
+      prowess = (c && c.prowess) || 10;
+      if (previewShared) {
+        previewShared.charId = cid;
+        previewShared.martial = mar;
+        previewShared.prowess = prowess;
+      }
+    }
 
     const isSack = strategy === 'sack';
     const mult = isSack ? 1.35 : 0.65;
@@ -9540,7 +9582,13 @@ window.FB = window.FB || {};
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
 
     // 1. Initial Raider Strength
-    const initialMen = (FB.playerLevy ? FB.playerLevy(state) : 0) || 120;
+    let initialMen;
+    if (previewShared && previewShared.initialMen !== undefined) {
+      initialMen = previewShared.initialMen;
+    } else {
+      initialMen = (FB.playerLevy ? FB.playerLevy(state) : 0) || 120;
+      if (previewShared) previewShared.initialMen = initialMen;
+    }
     let currentMen = initialMen;
     let totalCasualties = 0;
     let wounded = false;
@@ -9549,7 +9597,8 @@ window.FB = window.FB || {};
     const marchSkirmishes = [];
 
     // Calculate march route through intermediate counties (respecting fort zone of control)
-    const route = FB.raidMarchRoute ? FB.raidMarchRoute(state, homePid, targetPid) : [targetPid];
+    const route = previewTarget && previewTarget.route ? previewTarget.route :
+      (FB.raidMarchRoute ? FB.raidMarchRoute(state, homePid, targetPid) : [targetPid]);
     if (!route || !route.length) {
       return {
         targetPid: targetPid,
@@ -9597,14 +9646,48 @@ window.FB = window.FB || {};
         continue;
       }
 
-      const stepDev = (state.dev && state.dev[stepPid]) || (stepPr && (stepPr.dev0 || stepPr.dev)) || 1;
-      const stepFort = FB.fortAt ? FB.fortAt(state, stepPid) : null;
-      const stepFortLevel = (stepFort && !stepFort.ruined) ? (Number(stepFort.level) || 0) : 0;
-      const stepRealmMen = (stepOwner && stepOwner !== 'player' && FB.realmDefensiveStrength)
-        ? FB.realmDefensiveStrength(state, stepOwner)
-        : 0;
-      const stepRealmDev = (stepOwner && stepOwner !== 'player' && FB.realmStrength)
-        ? FB.realmStrength(state, stepOwner) : 0;
+      let stepData = previewShared && previewShared.steps && previewShared.steps[stepPid];
+      if (!stepData) {
+        const stepFort = FB.fortAt ? FB.fortAt(state, stepPid) : null;
+        stepData = {
+          dev:(state.dev && state.dev[stepPid]) ||
+            (stepPr && (stepPr.dev0 || stepPr.dev)) || 1,
+          fortLevel:(stepFort && !stepFort.ruined) ?
+            (Number(stepFort.level) || 0) : 0
+        };
+        if (previewShared) {
+          previewShared.steps = previewShared.steps || {};
+          previewShared.steps[stepPid] = stepData;
+        }
+      }
+      const stepDev = stepData.dev;
+      const stepFortLevel = stepData.fortLevel;
+      let stepRealmMen = 0;
+      let stepRealmDev = 0;
+      if (stepOwner && stepOwner !== 'player') {
+        if (previewShared) {
+          previewShared.realmMen = previewShared.realmMen || {};
+          previewShared.realmDev = previewShared.realmDev || {};
+        }
+        if (FB.realmDefensiveStrength) {
+          if (previewShared && Object.prototype.hasOwnProperty.call(
+              previewShared.realmMen, stepOwner)) {
+            stepRealmMen = previewShared.realmMen[stepOwner];
+          } else {
+            stepRealmMen = FB.realmDefensiveStrength(state, stepOwner);
+            if (previewShared) previewShared.realmMen[stepOwner] = stepRealmMen;
+          }
+        }
+        if (FB.realmStrength) {
+          if (previewShared && Object.prototype.hasOwnProperty.call(
+              previewShared.realmDev, stepOwner)) {
+            stepRealmDev = previewShared.realmDev[stepOwner];
+          } else {
+            stepRealmDev = FB.realmStrength(state, stepOwner);
+            if (previewShared) previewShared.realmDev[stepOwner] = stepRealmDev;
+          }
+        }
+      }
 
       // Base defensive power: county population levies + dedicated fort garrison
       let stepDefenders = stepDev * 18;
@@ -9713,7 +9796,7 @@ window.FB = window.FB || {};
     const hostSurvivalFrac = Math.max(0.40, currentMen / Math.max(1, initialMen));
 
     let baseGold = Math.round((dev * 7 + mar * 2 + (isSack ? 30 : 12)) * mult * hostSurvivalFrac);
-    if (buildings.length) baseGold += Math.round(buildings.length * 6 * mult * hostSurvivalFrac);
+    if (buildingCount) baseGold += Math.round(buildingCount * 6 * mult * hostSurvivalFrac);
     if (endowments.indexOf('luxury_entrepot') >= 0 || endowments.indexOf('wine_oil') >= 0) {
       baseGold += Math.round(20 * mult * hostSurvivalFrac);
     }

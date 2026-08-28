@@ -798,6 +798,8 @@ their checkpoint, so no old lord, witness Standing, or unresolved proposal trans
 that review instead of rebuilding the order. The review preserves the existing named
 heir, children-first, then same-house grandchildren/siblings/nieces-nephews/
 uncles-aunts/cousins order and attaches a stable eligibility code for UI prose.
+An eligible direct child is described as a living son or living daughter from the
+candidate's recorded sex rather than by the generic child category.
 Spouses, dead relatives, different-house branches, and branches behind living
 children remain visible with an explicit reason rather than silently disappearing.
 

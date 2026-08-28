@@ -20,6 +20,7 @@ window.FB = window.FB || {};
   const foreignPolicyStanceText = SH.foreignPolicyStanceText;
   const foreignPolicyStatusText = SH.foreignPolicyStatusText;
   const householdStandardsSummary = SH.householdStandardsSummary;
+  const householdStandardsSummaryParts = SH.householdStandardsSummaryParts;
   const initLargeListSurface = SH.initLargeListSurface;
   const kv = SH.kv;
   const largeListRowAttrs = SH.largeListRowAttrs;
@@ -75,6 +76,7 @@ window.FB = window.FB || {};
   let actionsRenderedLocale = '';
   let actionsRenderedGrouping = '';
   let actionsVisibleSignature = '';
+  let actionsLifeStage = '';
   let deedStatusRefreshedState = null;
   let deedStatusRefreshedTurn = 0;
   let actionsDirty = true;
@@ -82,6 +84,14 @@ window.FB = window.FB || {};
   let focusSectionOpen = true;
   function markActionsDirty() {
     actionsDirty = true;
+  }
+
+  function actionLifeStage(state) {
+    const player = state && state.player;
+    const character = player && state.chars && state.chars[player.charId];
+    if (!player || !character) return '';
+    return player.charId + ':' +
+      (FB.ageOf(character, state.date.year) >= 16 ? 'adult' : 'minor');
   }
 
   function deedGroupingStyle() {
@@ -888,6 +898,7 @@ window.FB = window.FB || {};
        pass that leaves its catalogue and listeners mounted. */
     if (liveTick) {
       refreshLiveSelfValues();
+      refreshLiveKinValues();
       if (SH.activeTab === 'actions') refreshVisibleDeedStatuses();
       else if (SH.activeTab === 'log') renderLog();
       updateTabNudges(FB.state);
@@ -1584,6 +1595,7 @@ window.FB = window.FB || {};
     actionsRenderedLocale = FB.locale;
     actionsRenderedGrouping = groupingStyle;
     actionsVisibleSignature = visibleSignature;
+    actionsLifeStage = actionLifeStage(s);
     deedStatusRefreshedState = s;
     deedStatusRefreshedTurn = s.turn;
     actionsDirty = false;
@@ -1599,6 +1611,14 @@ window.FB = window.FB || {};
     const box = $('tab-actions');
     if (!s || SH.activeTab !== 'actions' || !box || !box.hasChildNodes()) return;
     const force = !!(options && options.force);
+    /* Coming of age changes the focus catalogue and every requiresAdult deed
+       at once. It is a lifecycle boundary, not an ordinary cooldown update:
+       rebuild immediately even when the bounded live-status interval has not
+       elapsed, so child-era disabled controls cannot survive past age 16. */
+    if (actionLifeStage(s) !== actionsLifeStage) {
+      renderActions();
+      return;
+    }
     if (!force && deedStatusRefreshedState === s &&
         s.turn - deedStatusRefreshedTurn < LIVE_DEED_STATUS_DAYS) return;
     deedStatusRefreshedState = s;
@@ -1718,7 +1738,8 @@ window.FB = window.FB || {};
       const name = FB.skillName(k);
       // the bar fills to the soft cap; past it the number keeps climbing and
       // the bar turns bright to mark mastery beyond the soft cap
-      h += '<div class="skillrow"><button type="button" class="skill-label linklike" ' +
+      h += '<div class="skillrow" data-self-skill="' + esc(k) +
+        '"><button type="button" class="skill-label linklike" ' +
         'data-guide-skill="' + esc(k) + '" title="' +
         esc(FB.T('What does {skill} affect?', { skill:name })) + '">' +
         esc(name) + '</button>' +
@@ -1783,16 +1804,9 @@ window.FB = window.FB || {};
       hp >= 3 ? 'Grievously wounded' : 'At death’s door');
   }
 
-  function selfValue(panel, label) {
-    const rows = panel ? panel.querySelectorAll('.kv') : [];
-    const translated = FB.T(label);
-    for (let i = 0; i < rows.length; i++) {
-      const rowLabel = rows[i].querySelector('span');
-      if (rowLabel && rowLabel.textContent === translated) {
-        return rows[i].querySelector('b');
-      }
-    }
-    return null;
+  function selfLiveValueRow(id, label, value) {
+    return '<div class="kv" data-self-value="' + esc(id) + '"><span>' +
+      esc(FB.T(label)) + '</span><b>' + value + '</b></div>';
   }
 
   function refreshLiveSelfValues() {
@@ -1800,12 +1814,36 @@ window.FB = window.FB || {};
     const panel = $('tab-char');
     const me = s && s.player && s.chars[s.player.charId];
     if (!me || !panel || panel.offsetParent === null) return;
-    const age = selfValue(panel, 'Age');
-    const health = selfValue(panel, 'Health');
-    const voice = selfValue(panel, 'Common Voice');
+    const portrait = panel.querySelector('#selfportrait');
+    if (portrait && FB.paintPortrait) {
+      /* The retained Self tree skips its normal render on live ticks, but
+         the protagonist's face is live state too: age, health, ailments,
+         appearance, equipment, profession, and rank all affect it. The
+         canvas stamp makes an unchanged call cheap and changed art paints
+         synchronously. */
+      FB.paintPortrait(portrait, me, s.date.year, { state:s });
+    }
+    const age = panel.querySelector('[data-self-value="age"] b');
+    const health = panel.querySelector('[data-self-value="health"] b');
+    const voice = panel.querySelector('[data-self-value="voice"] b');
     if (age) age.textContent = FB.ageOf(me, s.date.year);
-    if (health) health.textContent = Math.round(me.health) + ' / 10 ' + String.fromCharCode(183) + ' ' + healthWord(me.health);
-    if (voice) voice.textContent = Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop);
+    if (health) health.textContent = Math.round(me.health) + ' / 10 ' +
+      String.fromCharCode(183) + ' ' + healthWord(me.health);
+    if (voice) voice.textContent = Math.round(
+      FB.popEffective ? FB.popEffective(s) : s.player.pop);
+    const soft = FBDATA.balance.skillSoftCap || 20;
+    for (const key of FB.SKILLS) {
+      const row = panel.querySelector('[data-self-skill="' + key + '"]');
+      if (!row) continue;
+      const value = FB.skillOf(me, key);
+      const number = row.querySelector('.num');
+      const fill = row.querySelector('.bar i');
+      if (number) number.textContent = value;
+      if (fill) {
+        fill.style.width = Math.min(100, value / soft * 100) + '%';
+        fill.classList.toggle('over', value > soft);
+      }
+    }
   }
 
   /* the named wounds & sicknesses the player carries (see FBDATA.ailments) */
@@ -2756,13 +2794,22 @@ window.FB = window.FB || {};
     return true;
   };
 
+  function selfHouseholdStandardsHtml(parts) {
+    let h = '<div class="kv self-household-standards"><span>' +
+      esc(FB.T('Active household standards')) + '</span><b>';
+    for (const part of parts) {
+      h += '<span class="household-standard-summary-item">' + esc(part) + '</span>';
+    }
+    return h + '</b></div>';
+  }
+
   function renderChar() {
     const s = FB.state, me = s.chars[s.player.charId];
     const rel = FB.religionOf(me.religion, s), cul = FB.cultureOf(me.culture);
     const titles = FB.playerTitles(s);
     const titleCount = titles.high.length + titles.counties.length;
     const items = FB.itemList(s);
-    const standardSummary = householdStandardsSummary(s);
+    const standardSummaryParts = householdStandardsSummaryParts(s);
     const houseRow = me.dyn
       ? '<div class="kv dynasty-house-row"><span>' + esc(FB.T('House')) +
         '</span><span class="dynasty-house-value"><b>' + esc(me.dyn) +
@@ -2788,15 +2835,17 @@ window.FB = window.FB || {};
       '<div class="self-details-divider" aria-hidden="true"></div>' +
       kv('Rank', rankDetailsLink(s)) +
       papalOfficeHtml(s, me) +
-      kv('Age', FB.ageOf(me, s.date.year)) +
+      selfLiveValueRow('age', 'Age', FB.ageOf(me, s.date.year)) +
       kv('Culture', esc(cultureName(s, me.culture))) +
       kv('Faith', faithDetailsLink(s, me.religion, 'self-faith-details')) +
       religiousHeadStatusRow(s, me.religion) +
       (FB.playerExcommunicated && FB.playerExcommunicated(s)
         ? kv('Church standing', esc(FB.T('Excommunicated'))) : '') +
-      kv('Health', Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
+      selfLiveValueRow('health', 'Health',
+        Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
-      kv('Common Voice', Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)) +
+      selfLiveValueRow('voice', 'Common Voice',
+        Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)) +
       (s.player.liege ? kv('Standing with your liege',
         standingSpan(FB.standingOf(s, {
           kind:'realm', id:s.player.liege
@@ -2815,8 +2864,8 @@ window.FB = window.FB || {};
           'Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements.')) +
         '</span></button>';
     }
-    if (standardSummary) {
-      h += kv('Active household standards', esc(standardSummary));
+    if (standardSummaryParts.length) {
+      h += selfHouseholdStandardsHtml(standardSummaryParts);
     }
     if (FB.ageOf(me, s.date.year) < 16) {
       h += panelh('Upbringing') + upbringingNote(s, me) +
@@ -2944,9 +2993,13 @@ window.FB = window.FB || {};
     }
   };
 
-  function charRow(s, c, meta, stats) {
+  function charRow(s, c, meta, stats, liveAgeKind) {
     const standing = FB.standingOf(s, { kind:'character', id:c.id });
-    let mid = '<span class="cname">' + esc(FB.fullName(c)) + '</span><br><span class="cmeta">' + esc(meta) + '</span>';
+    let mid = '<span class="cname">' + esc(FB.fullName(c)) +
+      '</span><br><span class="cmeta"' + (liveAgeKind
+        ? ' data-live-kin-age="' + esc(liveAgeKind) +
+          '" data-live-age-cid="' + esc(c.id) + '"' : '') + '>' +
+      esc(meta) + '</span>';
     if (stats) {
       let sk = '';
       for (const k of FB.SKILLS) {
@@ -2961,6 +3014,36 @@ window.FB = window.FB || {};
       '<span>' + mid + '</span>' +
       '<span class="cop ' + standingClass(standing) + '">' +
       esc(standingValue(standing)) + '</span></div>';
+  }
+
+  function childKinMeta(s, child) {
+    const age = FB.ageOf(child, s.date.year);
+    const meta = [
+      FB.T(child.sex === 'm' ? 'Son' : 'Daughter'),
+      FB.T('age {age}', { age:age })
+    ];
+    if (age < 16 && child.edu && child.edu.focus) {
+      meta.push('🎓 ' + FB.skillName(child.edu.focus));
+    }
+    if (child.betrothedId && s.chars[child.betrothedId] &&
+        !s.chars[child.betrothedId].dead) {
+      meta.push(FB.T('🤝 betrothed'));
+    }
+    return meta.join(' · ');
+  }
+
+  function refreshLiveKinValues() {
+    const s = FB.state;
+    const panel = $('tab-family');
+    if (!s || !panel || panel.offsetParent === null) return;
+    const ages = panel.querySelectorAll('[data-live-kin-age][data-live-age-cid]');
+    for (let i = 0; i < ages.length; i++) {
+      const character = s.chars[ages[i].getAttribute('data-live-age-cid')];
+      if (!character || character.dead) continue;
+      ages[i].textContent = ages[i].getAttribute('data-live-kin-age') === 'child'
+        ? childKinMeta(s, character)
+        : FB.T('Age {age}', { age:FB.ageOf(character, s.date.year) });
+    }
   }
 
   function relationText(s, c) {
@@ -3234,7 +3317,8 @@ window.FB = window.FB || {};
     h += panelh(sps.length > 1 ? 'Wives' : 'Spouse');
     if (sps.length) {
       for (const sp of sps) {
-        h += charRow(s, sp, FB.T('Age {age}', { age: FB.ageOf(sp, s.date.year) }));
+        h += charRow(s, sp,
+          FB.T('Age {age}', { age:FB.ageOf(sp, s.date.year) }), false, 'spouse');
       }
       if (s.player.flags.noChildren) {
         h += '<div class="hint" style="margin:2px 0 0">' + esc(FB.T(
@@ -3251,16 +3335,7 @@ window.FB = window.FB || {};
       .filter(function (c) { return c && !c.dead; });
     if (kids.length) {
       for (const k of kids) {
-        const a = FB.ageOf(k, s.date.year);
-        const meta = [
-          FB.T(k.sex === 'm' ? 'Son' : 'Daughter'),
-          FB.T('age {age}', { age: a })
-        ];
-        if (a < 16 && k.edu && k.edu.focus) meta.push('🎓 ' + FB.skillName(k.edu.focus));
-        if (k.betrothedId && s.chars[k.betrothedId] && !s.chars[k.betrothedId].dead) {
-          meta.push(FB.T('🤝 betrothed'));
-        }
-        h += charRow(s, k, meta.join(' · '));
+        h += charRow(s, k, childKinMeta(s, k), false, 'child');
       }
       h += '<div class="hint" style="margin:2px 0 0">Tap a child to set their education focus and schooling.</div>';
     } else h += '<div class="cmeta" style="font-size:13px">No living children. Without an heir, your story ends with you.</div>';

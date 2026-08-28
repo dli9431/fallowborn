@@ -514,6 +514,10 @@ test('succession and child identity explanations use the live family rules',
       const spouseRow = review.filter(function (row) {
         return row.character.id === spouse.id;
       })[0];
+      const daughterEligibility = FB.ui._shared.heirEligibilityText(s, childRow);
+      child.sex = 'm';
+      const sonEligibility = FB.ui._shared.heirEligibilityText(s, childRow);
+      child.sex = 'f';
       return {
         child:{
           id:child.id, eligible:childRow.eligible, code:childRow.code
@@ -522,6 +526,8 @@ test('succession and child identity explanations use the live family rules',
           id:spouse.id, eligible:spouseRow.eligible, code:spouseRow.code
         },
         collateralSpouseId:collateralSpouse.id,
+        daughterEligibility:daughterEligibility,
+        sonEligibility:sonEligibility,
         line:line,
         collateral:collateral
       };
@@ -531,6 +537,10 @@ test('succession and child identity explanations use the live family rules',
     expect(result.child.code).toBe('child');
     expect(result.spouse.eligible).toBe(false);
     expect(result.spouse.code).toBe('spouse');
+    expect(result.daughterEligibility).toBe(
+      'Eligible: living daughter of the current playable head.');
+    expect(result.sonEligibility).toBe(
+      'Eligible: living son of the current playable head.');
     expect(result.line.dynastyParentId).toBe(
       await page.evaluate(function () { return FB.state.player.charId; }));
     expect(result.collateral.cultureParentId).toBe(result.child.id);
@@ -541,7 +551,7 @@ test('succession and child identity explanations use the live family rules',
       FB.ui.showHeirPick();
     });
     await expect(page.locator('[data-namedheir]').first())
-      .toContainText('Eligible: living child');
+      .toContainText('Eligible: living daughter');
     await expect(page.locator('.succession-review')).toContainText(
       'marriage joins the household');
     await expect(page.locator('#gm-body > .gm-footer > #hp-cancel'))

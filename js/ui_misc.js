@@ -164,7 +164,9 @@ window.FB = window.FB || {};
     if (!row) return '';
     if (row.eligible) {
       const eligible = {
-        child:FB.T('Eligible: living child of the current playable head.'),
+        child:row.character && row.character.sex === 'f'
+          ? FB.T('Eligible: living daughter of the current playable head.')
+          : FB.T('Eligible: living son of the current playable head.'),
         grandchildren:FB.T('Eligible: same-house grandchild; no living child is ahead of this branch.'),
         siblings:FB.T('Eligible: same-house sibling; no living child or grandchild is ahead.'),
         nieces_nephews:FB.T('Eligible: same-house niece or nephew; closer branches have no living candidate.'),
@@ -366,7 +368,7 @@ window.FB = window.FB || {};
       ? dt(s, 'householdStandard', id, def, 'levels.' + (level - 1) + '.desc')
       : FB.T('No maintained improvement.');
   }
-  function householdStandardsSummary(s) {
+  function householdStandardsSummaryParts(s) {
     const parts = [];
     for (const id of FB.householdStandardIds()) {
       const level = FB.householdStandardLevel(s, id);
@@ -376,7 +378,10 @@ window.FB = window.FB || {};
         icon:def.icon || '🏠', level:level
       }));
     }
-    return parts.join(' · ');
+    return parts;
+  }
+  function householdStandardsSummary(s) {
+    return householdStandardsSummaryParts(s).join(' · ');
   }
   function positionEffectText(id) {
     const def = FBDATA.positions && FBDATA.positions[id];
@@ -3530,7 +3535,10 @@ window.FB = window.FB || {};
     UI._gmModalTarget = (opts && opts.modalTarget) || UI._gmModalTarget || null;
     UI._gmModalAction = (opts && opts.modalAction) || UI._gmModalAction || UI._gmReturnAction || null;
     if (wasHidden) {
-      UI._gmReturnFocus = modalOpenTrigger &&
+      const requestedReturnFocus = opts && opts.returnFocus;
+      UI._gmReturnFocus = requestedReturnFocus &&
+        document.documentElement.contains(requestedReturnFocus)
+        ? requestedReturnFocus : modalOpenTrigger &&
         document.documentElement.contains(modalOpenTrigger)
         ? modalOpenTrigger : document.activeElement;
       UI._gmReturnAction = UI._gmReturnFocus && UI._gmReturnFocus.dataset
@@ -3939,8 +3947,13 @@ window.FB = window.FB || {};
         FB.game.skipAhead();
       }
     });
-    $('btn-auto').addEventListener('click', function () {
-      if (!UI.eventsBusy()) UI.showAutoResolve();
+    $('btn-auto').addEventListener('click', function (event) {
+      if (!UI.eventsBusy()) UI.showAutoResolve({
+        /* Pointer users expect the global Space command immediately after
+           closing this sheet. Return them to Play/Pause instead of leaving
+           Automation focused, where Space would natively reopen it. */
+        returnFocus:event.detail ? $('btn-endturn') : null
+      });
     });
     $('btn-menu').addEventListener('click', UI.showMenu);
     $('btn-zoomin').addEventListener('click', function () { FB.map.zoomIn(); });
@@ -4614,6 +4627,7 @@ window.FB = window.FB || {};
   SH.householdStandardLevelDesc = householdStandardLevelDesc;
   SH.householdStandardLevelName = householdStandardLevelName;
   SH.householdStandardName = householdStandardName;
+  SH.householdStandardsSummaryParts = householdStandardsSummaryParts;
   SH.householdStandardsSummary = householdStandardsSummary;
   SH.initLargeListSurface = initLargeListSurface;
   SH.interactionCardHtml = interactionCardHtml;

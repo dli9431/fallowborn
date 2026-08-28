@@ -134,6 +134,57 @@ test('independent raiding requires a landed ruler with a personal tradition',
     expect(result.realmTradition).toBe(false);
   });
 
+test('raid availability stops after finding the first valid target',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      p.tier = 3;
+      me.culture = 'norse';
+      me.religion = 'norse_pagan';
+
+      var realmId = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
+      FB.realmTechRecord(s, realmId).completed.push('longships');
+
+      var originalRoute = FB.raidMarchRoute;
+      var routeCalls = 0;
+      FB.raidMarchRoute = function () {
+        routeCalls++;
+        return originalRoute.apply(FB, arguments);
+      };
+      try {
+        var first = FB.raidTargets(s, null, { firstOnly:true });
+        var firstRouteCalls = routeCalls;
+        routeCalls = 0;
+        var all = FB.raidTargets(s);
+        var allRouteCalls = routeCalls;
+        var directPreview = FB.calculateRaidSpoils(
+          s, all[0].pid, 'sack', null, true);
+        var sharedPreview = FB.calculateRaidSpoils(
+          s, all[0].pid, 'sack', null, true, {
+            target:all[0],
+            shared:{}
+          });
+        return {
+          firstCount:first.length,
+          allCount:all.length,
+          firstRouteCalls:firstRouteCalls,
+          allRouteCalls:allRouteCalls,
+          previewsMatch:JSON.stringify(sharedPreview) ===
+            JSON.stringify(directPreview)
+        };
+      } finally {
+        FB.raidMarchRoute = originalRoute;
+      }
+    });
+
+    expect(result.firstCount).toBe(1);
+    expect(result.allCount).toBeGreaterThan(1);
+    expect(result.firstRouteCalls).toBeLessThan(result.allRouteCalls);
+    expect(result.previewsMatch).toBe(true);
+  });
+
 test('technology tree extends raid reach and unlocks deep overseas raiding',
   async function ({ page }) {
     var result = await page.evaluate(function () {
@@ -147,9 +198,16 @@ test('technology tree extends raid reach and unlocks deep overseas raiding',
       var realmId = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
       var baseRange = FB.raidRange(s);
 
-      var baseTargets = FB.raidTargets(s).map(function (t) { return t.pid; });
+      var baseTargetRows = FB.raidTargets(s);
+      var baseTargets = baseTargetRows.map(function (t) { return t.pid; });
       var baseHasRome = baseTargets.indexOf('rome') >= 0;
       var baseHasRouen = baseTargets.indexOf('rouen') >= 0;
+      var baseBuildingCounts = baseTargetRows.every(function (target) {
+        return typeof target.buildingCount === 'number' &&
+          isFinite(target.buildingCount) &&
+          target.buildingCount === FB.standingBuildingCountIn(
+            s, target.pid, true);
+      });
 
       // Complete longships technology
       var record = FB.realmTechRecord(s, realmId);
@@ -169,6 +227,7 @@ test('technology tree extends raid reach and unlocks deep overseas raiding',
         baseRange: baseRange,
         baseHasRome: baseHasRome,
         baseHasRouen: baseHasRouen,
+        baseBuildingCounts: baseBuildingCounts,
         longshipRange: longshipRange,
         longshipHasRouen: longshipHasRouen,
         longshipHasRome: longshipHasRome,
@@ -179,6 +238,7 @@ test('technology tree extends raid reach and unlocks deep overseas raiding',
     expect(result.baseRange).toBe(2);
     expect(result.baseHasRome).toBe(false);
     expect(result.baseHasRouen).toBe(false);
+    expect(result.baseBuildingCounts).toBe(true);
     expect(result.longshipRange).toBe(6);
     expect(result.longshipHasRouen).toBe(true);
     expect(result.longshipHasRome).toBe(false);
@@ -316,10 +376,34 @@ test('raiding expedition modal uses header details and offers sorting, last targ
 
       FB.setRngState(24680);
       var before = FB.getRngState();
+      var originalTargets = FB.raidTargets;
+      var originalSpoils = FB.calculateRaidSpoils;
+      window.__raidModalPerf = { targetCalls:0, previewCalls:0 };
+      window.__raidPreviewGold = {};
+      FB.raidTargets = function () {
+        window.__raidModalPerf.targetCalls++;
+        return originalTargets.apply(FB, arguments);
+      };
+      FB.calculateRaidSpoils = function () {
+        if (arguments[4]) window.__raidModalPerf.previewCalls++;
+        var result = originalSpoils.apply(FB, arguments);
+        if (arguments[4]) {
+          window.__raidPreviewGold[arguments[2] + ':' + arguments[1]] =
+            result.success ? result.gold : 0;
+        }
+        return result;
+      };
       FB.ui.showRaidTargets();
-      return { before:before, after:FB.getRngState() };
+      return {
+        before:before,
+        after:FB.getRngState(),
+        targetCalls:window.__raidModalPerf.targetCalls,
+        previewCalls:window.__raidModalPerf.previewCalls
+      };
     });
     expect(previewRng.after).toBe(previewRng.before);
+    expect(previewRng.targetCalls).toBe(1);
+    expect(previewRng.previewCalls).toBeGreaterThan(1);
 
     const toolbar = page.locator('#raid-target-toolbar');
     await expect(toolbar).toBeVisible();
@@ -369,6 +453,19 @@ test('raiding expedition modal uses header details and offers sorting, last targ
         });
       });
     }
+    async function visibleTargetGold(strategy) {
+      return page.locator('.raid-target-row').evaluateAll(function (rows, strat) {
+        return rows.map(function (row) {
+          return window.__raidPreviewGold[
+            strat + ':' + row.getAttribute('data-target-pid')];
+        });
+      }, strategy);
+    }
+
+    const descendingGold = await visibleTargetGold('sack');
+    expect(descendingGold).toEqual(descendingGold.slice().sort(function (a, b) {
+      return b - a;
+    }));
 
     await sortSelect.selectOption('name-asc');
     const ascendingNames = await visibleTargetNames();
@@ -379,8 +476,22 @@ test('raiding expedition modal uses header details and offers sorting, last targ
     const descendingNames = await visibleTargetNames();
     const descendingKeys = descendingNames.map(foldedName);
     expect(descendingKeys).toEqual(descendingKeys.slice().sort().reverse());
+
+    await sortSelect.selectOption('value-asc');
+    const ascendingGold = await visibleTargetGold('sack');
+    expect(ascendingGold).toEqual(ascendingGold.slice().sort(function (a, b) {
+      return a - b;
+    }));
+    await sortSelect.selectOption('value-desc');
+    expect(await visibleTargetGold('sack')).toEqual(descendingGold);
     expect(await page.evaluate(function () { return FB.getRngState(); })).toBe(
       previewRng.before);
+    expect(await page.evaluate(function () {
+      return window.__raidModalPerf;
+    })).toEqual({
+      targetCalls:1,
+      previewCalls:previewRng.previewCalls
+    });
 
     const controlSizes = await page.locator(
       '#raid-strategy-select, #raid-target-search, #raid-pick-map, ' +
@@ -399,6 +510,33 @@ test('raiding expedition modal uses header details and offers sorting, last targ
     await expect(page.locator('#raid-last-target')).toBeDisabled();
     await page.locator('#raid-keep-target').check();
     await expect(page.locator('#raid-keep-target')).toBeChecked();
+    expect(await page.evaluate(function () {
+      return window.__raidModalPerf;
+    })).toEqual({
+      targetCalls:1,
+      previewCalls:previewRng.previewCalls
+    });
+
+    await strategySelect.selectOption('swift');
+    await expect(strategySelect).toHaveValue('swift');
+    const swiftDescendingGold = await visibleTargetGold('swift');
+    expect(swiftDescendingGold).toEqual(swiftDescendingGold.slice().sort(
+      function (a, b) { return b - a; }));
+    expect(await page.evaluate(function () {
+      return window.__raidModalPerf;
+    })).toEqual({
+      targetCalls:1,
+      previewCalls:previewRng.previewCalls * 2
+    });
+
+    await strategySelect.selectOption('sack');
+    await expect(strategySelect).toHaveValue('sack');
+    expect(await page.evaluate(function () {
+      return window.__raidModalPerf;
+    })).toEqual({
+      targetCalls:1,
+      previewCalls:previewRng.previewCalls * 2
+    });
     await page.locator('#raid-skip-summary').check();
     await expect(page.locator('#raid-skip-summary')).toBeChecked();
 
@@ -457,8 +595,28 @@ test('selecting raid target on map opens floating picker, highlights in-range co
       var record = FB.realmTechRecord(s, realmId);
       record.completed.push('longships');
 
+      var originalTargets = FB.raidTargets;
+      var originalSpoils = FB.calculateRaidSpoils;
+      window.__raidMapPerf = { targetCalls:0, previewCalls:0 };
+      FB.raidTargets = function () {
+        window.__raidMapPerf.targetCalls++;
+        return originalTargets.apply(FB, arguments);
+      };
+      FB.calculateRaidSpoils = function () {
+        if (arguments[4]) window.__raidMapPerf.previewCalls++;
+        return originalSpoils.apply(FB, arguments);
+      };
       FB.ui.showRaidTargets();
     });
+
+    const initialPerf = await page.evaluate(function () {
+      return {
+        targetCalls:window.__raidMapPerf.targetCalls,
+        previewCalls:window.__raidMapPerf.previewCalls
+      };
+    });
+    expect(initialPerf.targetCalls).toBe(1);
+    expect(initialPerf.previewCalls).toBeGreaterThan(1);
 
     const pickMapBtn = page.locator('#raid-pick-map');
     await expect(pickMapBtn).toBeVisible();
@@ -487,6 +645,27 @@ test('selecting raid target on map opens floating picker, highlights in-range co
       var targetPid = FB.map.raidTargets[0];
       FB.ui.raidPickProvince(targetPid, true);
     });
+    expect(await page.evaluate(function () {
+      return window.__raidMapPerf;
+    })).toEqual(initialPerf);
+
+    await page.evaluate(function () {
+      FB.ui.returnToRaidList();
+    });
+    await expect(page.locator('#raid-target-toolbar')).toBeVisible();
+    expect(await page.evaluate(function () {
+      return window.__raidMapPerf;
+    })).toEqual(initialPerf);
+
+    await pickMapBtn.click();
+    await expect(raidPicker).toBeVisible();
+    await page.evaluate(function () {
+      var targetPid = FB.map.raidTargets[0];
+      FB.ui.raidPickProvince(targetPid, true);
+    });
+    expect(await page.evaluate(function () {
+      return window.__raidMapPerf;
+    })).toEqual(initialPerf);
 
     const launchBtn = page.locator('#raid-picker-launch');
     await expect(launchBtn).toBeEnabled();

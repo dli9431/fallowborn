@@ -951,8 +951,10 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
   reach behind the shared header tooltip, leaving the target choice itself compact. Its toolbar
   uses one 44 px control height for strategy, search, map, sorting, last-target, and preference
   controls. Name sorting folds diacritics into their base letter, so Á/Å remain with A and É with
-  E in both directions. The toolbar also provides distance/value sorting, a dedicated **Select on
-  Map** action, and a saved last-target shortcut. Target previews and toolbar rerenders are read-only:
+  E in both directions. The toolbar also provides distance/value sorting; value uses the displayed
+  strategy-specific estimated gold, then captives to break ties, so its order matches the target
+  rows. A dedicated **Select on Map** action and saved last-target shortcut round out the picker.
+  Target previews and toolbar rerenders are read-only:
   random wounds and devastation roll only when the expedition launches. **Keep raiding** pins that
   last target for the next eligible expedition without bypassing the normal cooldown. **Skip raid
   summary** suppresses the result sheet while retaining the Chronicle entry and its ordinary
@@ -960,5 +962,9 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
   target/victim ids, strategy, outcome, forces, casualties, spoils, captives, route skirmishes,
   and physical damage. The Chronicle outcome links back to the same lazy result renderer, so
   skipping the immediate summary never loses the report:
+  - *Large-target performance*: Deed availability stops after the first valid county, and immutable
+    coastal/river reach is indexed once per loaded world. One open picker session reuses its target
+    routes, player levy, realm strengths, and per-strategy previews across sorting, preference
+    changes, and list/map navigation. Launching still performs the normal live execution calculation.
   - *Target List*: Each candidate row summarizes the march route (e.g. `Passes 2 counties (1 fort)` or `Direct landing`), destination fort tier (e.g. `🏰 Stone Keep (Tier 2)`), garrison size, and combat risk assessment.
   - *Interactive Map Overlay*: When selecting on the map, reachable unfortified counties are illuminated with clean pips, while fortified counties display distinct square fortress badges with `🏰` emblems. Selecting a target renders the full dotted march path through intermediate counties, highlighting intermediate forts along the march route and displaying live spoils and defender counts in the floating `#raid-picker` card.

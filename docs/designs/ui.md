@@ -173,6 +173,9 @@ Costed election tactics, full default settlement, family ambition and office cha
 unlawful privilege revocation, and exceptional sibling courtship use that neutral entry.
 Closing a generic dialog restores its activating control after keyboard or pointer
 activation, including browsers that do not focus a button when it is clicked.
+Pointer-opening Automation deliberately returns to Play/Pause when the sheet closes,
+so the global Space command resumes or pauses time instead of natively reopening Automation.
+Keyboard activation still returns to its actual opener.
 An Enter handler that closes a dialog and changes screens must prevent the key's
 native default before focus restoration; otherwise that same key can activate the
 restored opener and place the old dialog over the new screen.
@@ -411,9 +414,12 @@ repeated there, so the button never changes width as the days flow.
 
 Natural clock ticks and the completion handoff from fast-forward use a low-priority
 `UI.refresh({ liveTick:true })`: the lightweight topbar and date remain current, while the retained Self, Kin, Deeds, Land, and Network trees
-stay mounted. The visible retained Self tree patches Age, Health, and Common Voice on every live
-tick, so those changing values remain exact without rebuilding its portraits, sections,
-or listeners. An open Deeds panel performs a bounded status-only pass every seven game days
+stay mounted. The visible retained Self tree patches every player skill, Age, Health, and
+Common Voice on every live tick. Its retained protagonist portrait also checks the complete
+live visual key and repaints synchronously when age, health, ailments, appearance, equipment,
+profession, or rank changes. The visible Kin tree likewise patches spouse and child ages,
+so those changing personal values remain exact without rebuilding sections or listeners.
+An open Deeds panel performs a bounded status-only pass every seven game days
 and once when fast-forward ends, updating its mounted deed buttons and cooldown explanations
 without rebuilding the catalogue; a rare change to which deeds are visible promotes that
 pass to an exact Deeds render. A changing host value
@@ -1104,7 +1110,9 @@ and expanded details. Any exact or natural state refresh marks that tree stale i
 the next Deeds visit then performs the full exact render before reuse is allowed again.
 While Deeds remains open, natural time updates mounted deed statuses every seven game days
 and at fast-forward completion; collapsed groups still calculate their current status only
-when opened.
+when opened. The playable character crossing age sixteen is an immediate lifecycle boundary:
+the retained tree rebuilds on that live refresh so Study and Play give way to adult focuses
+and every otherwise-eligible adult deed unlocks without waiting for the bounded interval.
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers
 a browser-local **Disable guide hints** preference (`fb_ui`) so experienced players can
 remove it without changing progression or available deeds. The preference covers the

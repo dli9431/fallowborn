@@ -27,6 +27,39 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('Self keeps each active household standard summary item intact while wrapping',
+  async function ({ page }) {
+    await page.setViewportSize({ width:390, height:844 });
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.tier = 7;
+      s.player.householdStandards = {
+        board:1, wares:2, quarters:2, luxuries:2, transport:2
+      };
+      const record = FB.realmTechRecord(s, FB.techRealmId(s));
+      for (const id in s.player.householdStandards) {
+        const level = s.player.householdStandards[id];
+        const levelDef = FBDATA.householdStandards[id].levels[level - 1];
+        if (levelDef.requiresTech &&
+            record.completed.indexOf(levelDef.requiresTech) < 0) {
+          record.completed.push(levelDef.requiresTech);
+        }
+      }
+      FB.ui.showTab('char', { history:false });
+    });
+
+    const summary = page.locator('#tab-char .self-household-standards');
+    const items = summary.locator('.household-standard-summary-item');
+    await expect(summary).toBeVisible();
+    await expect(summary).toContainText('Active household standards');
+    await expect(items).toHaveCount(5);
+    await expect(summary).toHaveCSS('display', 'block');
+    await expect(summary.locator(':scope > b')).toHaveCSS('flex-wrap', 'wrap');
+    for (let i = 0; i < 5; i++) {
+      await expect(items.nth(i)).toHaveCSS('white-space', 'nowrap');
+    }
+  });
+
 test('adjusts living standards and work outfits inline with tooltip terms',
   async function ({ page }) {
     const setup = await page.evaluate(function () {
@@ -641,4 +674,66 @@ test('minor succession keeps adult deeds visible, limits focuses to Study and Pl
       holding:false,
       ownsGarden:false
     });
+  });
+
+test('coming of age immediately unlocks adult and raiding deeds in the retained panel',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state;
+      const former = s.chars[s.player.charId];
+      s.player.tier = 3;
+      FB.game.uiPrefs.groupDeedsByActionType = true;
+      const child = FB.makeCharacter(s, {
+        name:'Alden', sex:'m', born:s.date.year - 15,
+        fatherId:former.sex === 'm' ? former.id : null,
+        motherId:former.sex === 'f' ? former.id : null,
+        culture:'norse', religion:'catholic',
+        dyn:former.dyn, traitsN:0
+      });
+      former.childrenIds = former.childrenIds || [];
+      former.childrenIds.push(child.id);
+      FB.game.succeedTo(child.id, { livingAbdication:true });
+      const realmId = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
+      const technology = FB.realmTechRecord(s, realmId);
+      if (technology.completed.indexOf('longships') < 0) {
+        technology.completed.push('longships');
+      }
+      FB.ui.showTab('actions');
+    });
+
+    const town = page.locator('[data-action-id="go_to_town"]');
+    await expect(page.locator('[data-focus-id="study"]')).toBeVisible();
+    await expect(page.locator('[data-focus-id="play"]')).toBeVisible();
+    await expect(town).toBeDisabled();
+
+    const adult = await page.evaluate(function () {
+      const s = FB.state;
+      s.date.year++;
+      FB.ui.refresh({ liveTick:true });
+      const status = FB.instantStatus(s, 'go_to_town');
+      const raid = FB.instantStatus(s, 'raid_expedition');
+      const raidTargets = FB.raidTargets(s);
+      return {
+        age:FB.ageOf(s.chars[s.player.charId], s.date.year),
+        shown:status.shown,
+        can:status.can,
+        raidShown:raid.shown,
+        raidTargets:raidTargets.length,
+        raidBuildingCounts:raidTargets.every(function (target) {
+          return typeof target.buildingCount === 'number' &&
+            isFinite(target.buildingCount);
+        })
+      };
+    });
+
+    expect(adult).toMatchObject({
+      age:16, shown:true, can:true, raidShown:true,
+      raidBuildingCounts:true
+    });
+    expect(adult.raidTargets).toBeGreaterThan(0);
+    await expect(page.locator('[data-focus-id="study"]')).toHaveCount(0);
+    await expect(page.locator('[data-focus-id="play"]')).toHaveCount(0);
+    await expect(page.locator('[data-focus-id]').first()).toBeVisible();
+    await expect(town).toBeEnabled();
+    await expect(page.locator('[data-action-id="raid_expedition"]')).toBeVisible();
   });
