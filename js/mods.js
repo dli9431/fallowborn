@@ -290,10 +290,11 @@ window.FBMODS = window.FBMODS || [];
     if (!Array.isArray(additions)) fail(kind, 'must be an array.');
     const baselineAllowed = kind === 'focuses'
       ? { id:true, label:true, desc:true, order:true, eligibility:true }
-      : { id:true, label:true, desc:true, order:true, group:true,
+      : { id:true, label:true, desc:true, order:true, group:true, layoutGroup:true,
           cooldownDays:true, requiresTech:true, eligibility:true };
     const declarativeDeedAllowed = {
       id:true, handler:true, label:true, desc:true, order:true, group:true,
+      layoutGroup:true,
       cooldownDays:true, spendsDay:true, requiresTech:true, visibility:true,
       eligibility:true, costs:true, effects:true, queueEvent:true,
       capability:true, choices:true

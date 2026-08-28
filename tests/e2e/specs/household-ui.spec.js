@@ -518,8 +518,15 @@ test('ruler establishments sink gold into research, administration, and military
       '[data-household-standard-id="household_guard"]' +
       '[data-household-standard-adjust="1"]');
     await guardIncrease.hover();
-    await expect(page.locator('#tooltip')).toContainText('Ruler household and realm');
-    await expect(page.locator('#tooltip')).toContainText(result.guardRequirement);
+    const tooltip = page.locator('#tooltip');
+    await expect(tooltip).toContainText(
+      'Drilled Household Guard: Adds 100 levy, 75 men-at-arms, and 4% field-battle power.');
+    await expect(tooltip).toContainText('Cost');
+    await expect(tooltip).toContainText('Ongoing');
+    await expect(tooltip).toContainText('Next season');
+    await expect(tooltip).toContainText(result.guardRequirement);
+    await expect(tooltip).not.toContainText('Ruler household and realm');
+    await expect(tooltip).not.toContainText('Scope');
 
     const dormant = await page.evaluate(function () {
       const s = FB.state;

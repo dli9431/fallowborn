@@ -205,7 +205,7 @@ FBDATA.deeds = [
   { id:'appeal_lord', label:'⚖ Appeal over your liege’s head…', order:70,
     desc:'Carry your suit to a higher lord: escape a harsh liege, or rise under a greater one.', group:'war', flow:'choices', layoutGroup:'ruler', cooldownDays:360, handler:'appeal_lord' },
   { id:'swear_fealty', label:'🤝 Swear fealty…', order:71,
-    desc:'Offer your sword and your lands to a neighboring sovereign.', group:'war', flow:'choices', layoutGroup:'ruler', handler:'swear_fealty' },
+    desc:'Offer your sword and your lands to a higher-ranked neighboring sovereign.', group:'war', flow:'choices', layoutGroup:'ruler', handler:'swear_fealty' },
   { id:'grant_land', label:'🎁 Grant land…', order:72,
     desc:'Enfeoff a new loyal vassal or an adult relative with a county — or a whole duchy. Vassals pay taxes, send levies — and remember.', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'grant_land' },
   { id:'demand_taxes', label:'💰 Demand extraordinary taxes', order:73,

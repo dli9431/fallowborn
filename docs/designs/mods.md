@@ -226,7 +226,8 @@ inert without deleting its value, so no save migration is required.
 
 Focus and deed metadata lives under `FBDATA.focuses` and `FBDATA.deeds`. Phase 4B exposes
 both as partial-override arrays for baseline ids only. Mods may replace presentation,
-ordering, thematic and optional action-type deed grouping, fixed cooldowns, technology requirements, and bounded static
+ordering, thematic `group` and optional action-type `layoutGroup` deed grouping, fixed
+cooldowns, technology requirements, and bounded static
 eligibility. Private handlers, flow capabilities, execution timing, modal ownership, and
 tutorial behavior remain non-overridable. Static eligibility composes after the handler's
 invariant guard, so it may narrow availability but never manufacture missing execution

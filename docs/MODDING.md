@@ -359,6 +359,7 @@ separate declarative contracts below.
       "label": "🕯 Endow the poor",
       "desc": "Give bread and coin at the gate.",
       "group": "work",
+      "layoutGroup": "personal",
       "cooldownDays": 14,
       "requiresTech": [],
       "eligibility": {
@@ -372,7 +373,7 @@ separate declarative contracts below.
 
 A focus override accepts `id` plus any of `label`, `desc`, `order`, and
 `eligibility`. A deed override accepts `id` plus any of `label`, `desc`, `order`,
-`group`, `cooldownDays`, `requiresTech`, and `eligibility`.
+`group`, `layoutGroup`, `cooldownDays`, `requiresTech`, and `eligibility`.
 
 - `label` and `desc` are localized display sources. They replace even a built-in
   state-dependent label or description. Their stable owners remain
@@ -385,6 +386,8 @@ A focus override accepts `id` plus any of `label`, `desc`, `order`, and
   requires giving the displaced action the old order in the same mod, as in the focus
   example above.
 - A deed `group` is one of `work`, `life`, `faith`, `realm`, or `war`.
+- A deed `layoutGroup` is one of `deeds`, `personal`, or `ruler`; omission derives
+  the action-type layout from the deed's protected flow.
 - `cooldownDays` is a fixed integer from 0 through 36000. A deed whose core handler
   calculates a dynamic cooldown cannot replace it with a fixed value.
 - `requiresTech` is one technology id or an array of up to 64 unique technology ids;

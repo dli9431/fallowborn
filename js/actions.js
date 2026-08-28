@@ -3519,7 +3519,7 @@ window.FB = window.FB || {};
     } },
   { id: 'swear_fealty', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4 && s.player.provs && s.player.provs.length && !s.player.war; },
-    can: function (s) { return FB.fealtyTargets(s).length ? true : 'No neighboring sovereign would take your oath.'; },
+    can: function (s) { return FB.fealtyTargets(s).length ? true : 'No higher-ranked neighboring sovereign would take your oath.'; },
     run: function (s, options) {
       if (FB.ui && FB.ui.showFealty) {
         FB.ui.showFealty(options && options.returnContext);
@@ -6799,30 +6799,35 @@ window.FB = window.FB || {};
       '🙇 You bend the knee at the court of {realm}.', { realm: r.name }));
   };
 
-  /* sovereign realms bordering the player's lands (fealty candidates) */
+  /* higher-ranked sovereign realms bordering the player's lands */
   FB.fealtyTargets = function (state) {
     const p = state.player;
     const cur = FB.playerRealmId(state);
+    const playerRank = Math.max(1, p.tier - 3);
     const out = [];
     if (cur && FB.isRealmAtWar(state, cur)) return out;
     for (const pid of (p.provs || [])) {
       for (const nb in (FB.world.adj[pid] || {})) {
         const own = state.owner[nb];
         if (!own || own === cur || own === 'player' || out.indexOf(own) >= 0) continue;
-        if (state.realms[own] && state.realms[own].alive && !state.realms[own].liege &&
+        const realm = state.realms[own];
+        if (realm && realm.alive && !realm.liege &&
+            (realm.rank || 1) > playerRank &&
             !FB.isRealmAtWar(state, own)) out.push(own);
       }
     }
     return out;
   };
 
-  /* offer the player's lands to another sovereign (or one of its great
-     vassals — the chosen realm becomes the direct liege). An independent
-     player's realm dissolves; a vassal's old sovereign may call it treason. */
+  /* offer the player's lands to a higher-ranked neighboring sovereign. An
+     independent player's realm dissolves; a vassal's old sovereign may call
+     it treason. */
   FB.swearFealty = function (state, rid) {
     const p = state.player;
     const r = state.realms[rid];
-    if (!r || !r.alive || p.war) return false;
+    if (!r || !r.alive || p.war || FB.fealtyTargets(state).indexOf(rid) < 0) {
+      return false;
+    }
     const oldTop = p.liege ? FB.topRealm(state, p.liege) : null;
     const newTop = FB.topRealm(state, rid);
     if ((oldTop && FB.isRealmAtWar(state, oldTop)) || FB.isRealmAtWar(state, newTop)) {

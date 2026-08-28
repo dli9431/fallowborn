@@ -462,6 +462,12 @@ dissolution rule of `FB.realmBuryIfEmpty`/`FB.transferProvince` — restore
 (`FB.repairVassalLieges`) reattaches vassals left sworn to a dead house by
 saves that predate that rule.
 
+`swear_fealty` offers only peaceful neighboring sovereigns whose realm rank is
+strictly greater than the player's current title rank. Counts may therefore kneel
+to dukes, kings, or emperors; dukes to kings or emperors; kings only to emperors;
+and emperors to nobody. The mutation rechecks the same target list so a stale picker
+cannot create an equal- or lower-ranked liege.
+
 The Land panel's **Notable folk** is a live political view of this hierarchy. It lists
 the selected county's direct holder, every living realm sworn directly to that holder
 (rank first, then stable realm name/id), and the holder's complete liege chain through

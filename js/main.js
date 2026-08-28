@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.5';
+  FB.VERSION = '1.165.6';
   FB.CHANGELOG = [
+    { v: '1.165.6', date: '2026-08-28', changes: [
+      'Swear Fealty now only permits neighboring sovereigns with a higher title. Modded deeds may choose their optional action-type group.'
+    ] },
     { v: '1.165.5', date: '2026-08-27', changes: [
       'Deeds can now be grouped by action type from Settings, separating direct deeds, personal decisions, and ruler decisions.'
     ] },

@@ -1309,6 +1309,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
             label:'Make the chartered exchange',
             desc:'Trade coin and standing for a pious endowment.',
             order:80, group:'life', cooldownDays:12, spendsDay:false,
+            layoutGroup:'personal',
             requiresTech:'crop_rotation',
             visibility:{ flagsAll:['e2e_deed_visible'] },
             eligibility:{
@@ -1380,6 +1381,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
         ready:{
           shown:ready.shown, can:ready.can,
           flow:ready.action.flow, noConsume:ready.action.noConsume,
+          layoutGroup:ready.action.layoutGroup,
           manualOnly:ready.action.manualOnly,
           declarative:ready.action.declarative,
           preview:ready.preview
@@ -1405,6 +1407,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
     expect(setup.costBlocked.reason).toContain('Requires');
     expect(setup.ready).toEqual({
       shown:true, can:true, flow:'no_day', noConsume:true,
+      layoutGroup:'personal',
       manualOnly:true, declarative:true,
       preview:{
         costs:[

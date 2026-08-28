@@ -7352,10 +7352,10 @@ window.FB = window.FB || {};
     });
   };
 
-  /* offer your lands to a neighboring sovereign */
+  /* offer your lands to a higher-ranked neighboring sovereign */
   UI.showFealty = function (returnContext) {
     const s = FB.state;
-    let h = '<p class="hint">Kneel to a neighboring sovereign: your lands join his realm and he becomes your liege. If you already serve another, he may call it treason.</p><div class="gm-list">';
+    let h = '<p class="hint">Kneel to a higher-ranked neighboring sovereign: your lands join his realm and he becomes your liege. If you already serve another, he may call it treason.</p><div class="gm-list">';
     for (const rid of FB.fealtyTargets(s)) {
       const r = s.realms[rid];
       const men = FB.aiBaseHost(s, rid);
