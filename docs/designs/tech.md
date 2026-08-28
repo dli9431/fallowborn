@@ -188,6 +188,11 @@ eligible technologies or prioritize one domain. A domain preference fills from t
 domain first and falls back to the cheapest eligible projects elsewhere, so cross-domain
 prerequisites cannot leave slots idle. It fills open slots immediately and after each
 completion, deterministically and without consuming random rolls.
+The sovereign may pause an active project without losing its accumulated progress. If every
+slot is occupied, choosing another eligible technology opens a switch picker for the project
+to pause. With automatic research enabled, a separately paused project is protected from
+immediate reselection and the resulting open slot is filled according to the selected
+automation mode; an explicit switch replaces the chosen project directly.
 An incomplete inactive technology may be placed in the `researchTech` protection scope
 from its detail sheet. Player automation omits protected entries in either selection mode;
 AI selection and vassal advocacy do not consult the player household preference. The

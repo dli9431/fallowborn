@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.6';
+  FB.VERSION = '1.165.7';
   FB.CHANGELOG = [
+    { v: '1.165.7', date: '2026-08-28', changes: [
+      'Sovereigns can now pause active technology research or switch an occupied slot without losing progress.'
+    ] },
     { v: '1.165.6', date: '2026-08-28', changes: [
       'Swear Fealty now only permits neighboring sovereigns with a higher title. Modded deeds may choose their optional action-type group.'
     ] },

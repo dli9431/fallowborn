@@ -18160,18 +18160,27 @@ window.FB = window.FB || {};
           'Automation will skip this technology. You may still begin it manually.')) +
         '</span></label>';
     }
-    h += '<div class="gm-footer">';
+    h += '<div class="tech-detail-actions">';
     if (canChoose && item.available &&
         record.active.length < FB.techSlotCount(s, rid)) {
       h += '<button class="btn primary" id="tech-start">' +
         esc(FB.T('Begin research')) + '</button>';
     }
+    if (canChoose && item.available &&
+        record.active.length >= FB.techSlotCount(s, rid)) {
+      h += '<button class="btn primary" id="tech-switch">' +
+        esc(FB.T('Switch research')) + '</button>';
+    }
+    if (canChoose && item.active) {
+      h += '<button class="btn" id="tech-pause">' +
+        esc(FB.T('Pause research')) + '</button>';
+    }
     if (FB.canAdvocateTech(s, id)) {
       h += '<button class="btn primary" id="tech-advocate">' +
         esc(FB.T('Advocate · {money:20} · Standing −15')) + '</button>';
     }
-    h += '<button class="btn" id="tech-back">' + esc(FB.T('Back')) +
-      '</button></div>';
+    h += '</div><div class="gm-footer"><button class="btn" id="tech-back">' +
+      esc(FB.T('Back')) + '</button></div>';
     openModal(def.icon + ' ' + dt(s, 'tech', id, def, 'name'), h,
       {
         modalClass:'fullsheet-modal technology-modal',
@@ -18194,6 +18203,21 @@ window.FB = window.FB || {};
         backAction();
       }
     });
+    const switchButton = $('tech-switch');
+    if (switchButton) switchButton.addEventListener('click', function () {
+      UI.showTechSwitch(id, returnContext);
+    });
+    const pause = $('tech-pause');
+    if (pause) pause.addEventListener('click', function () {
+      if (FB.pauseTechProject(s, id)) {
+        if (FB.game.auto && FB.game.auto.research) {
+          FB.setProtected(s, 'researchTech', id, true);
+          FB.autoResearch(s, FB.game.auto.researchMode);
+        }
+        UI.refresh();
+        backAction();
+      }
+    });
     const protection = $('tech-auto-protection');
     if (protection) protection.addEventListener('change', function () {
       FB.setProtected(s, 'researchTech', id, this.checked);
@@ -18207,6 +18231,52 @@ window.FB = window.FB || {};
       }
     });
     $('tech-back').addEventListener('click', backAction);
+  };
+
+  UI.showTechSwitch = function (id, returnContext) {
+    const s = FB.state, def = FBDATA.tech[id];
+    if (!def || !FB.techUiRelevant(s) || !FB.isPlayerSovereign(s)) return false;
+    const rid = FB.techRealmId(s);
+    const record = FB.realmTechRecord(s, rid);
+    const item = FB.techCandidate(s, id, rid);
+    if (!item || !item.available || !record.active.length ||
+        record.active.length < FB.techSlotCount(s, rid)) {
+      return UI.showTechDetail(id, returnContext);
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose the active project to pause. Its research progress will be kept.')) +
+      '</p></div><div class="gm-list">';
+    for (const activeId of record.active) {
+      const activeDef = FBDATA.tech[activeId];
+      if (!activeDef) continue;
+      h += '<button class="actionbtn" data-tech-switch-from="' + esc(activeId) + '">' +
+        esc(activeDef.icon + ' ' + dt(s, 'tech', activeId, activeDef, 'name')) +
+        '<span class="adesc">' + esc(FB.T('{progress}/{cost} research; progress kept', {
+          progress:researchNumber(record.progress[activeId] || 0),
+          cost:researchNumber(FB.techCost(s, activeId, rid))
+        })) + '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="tech-switch-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Switch to {technology}', {
+      technology:dt(s, 'tech', id, def, 'name')
+    }), h, { modalClass:'fullsheet-modal technology-modal' });
+    document.querySelectorAll('[data-tech-switch-from]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const fromId = button.dataset.techSwitchFrom;
+        if (FB.switchTechProject(s, fromId, id, rid)) {
+          if (FB.game.auto && FB.game.auto.research) {
+            FB.setProtected(s, 'researchTech', fromId, true);
+          }
+          UI.refresh();
+          if (typeof returnContext === 'function') returnContext();
+          else UI.showTech();
+        }
+      });
+    });
+    $('tech-switch-back').addEventListener('click', function () {
+      UI.showTechDetail(id, returnContext);
+    });
   };
 
   /* ================= character sheet & trait dialogs ================= */

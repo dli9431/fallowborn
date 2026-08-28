@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/main.js',
+  'js/technology.js',
   'js/ui_modals.js'
 ]);
 
@@ -130,6 +131,11 @@ test('technology and county reservations constrain automation but not manual act
       name:/Reserve from automatic research/
     });
     await expect(techProtection).toBeChecked();
+    expect(await page.locator('#tech-start').evaluate(function (button) {
+      const back = document.querySelector('#tech-back');
+      return !!(button.compareDocumentPosition(back) &
+        Node.DOCUMENT_POSITION_FOLLOWING);
+    })).toBe(true);
     await page.getByRole('button', {
       name:'Begin research', exact:true
     }).click();
@@ -180,6 +186,76 @@ test('technology and county reservations constrain automation but not manual act
     expect(building.manual).toBe(true);
     expect(building.protected).toBe(true);
     await expect(page.locator('#building-auto-protection')).toBeChecked();
+  });
+
+test('sovereigns can switch full research slots and pause without losing progress',
+  async function ({ page }) {
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const home = p.provinceId;
+      p.tier = 4;
+      p.liege = null;
+      p.provs = [home];
+      s.owner[home] = 'player';
+      s.holder[home] = 'player';
+      FB.foundPlayerRealm(s);
+      s.realms.player.alive = true;
+      s.realms.player.rank = 1;
+      s.realms.player.liege = null;
+      s.realms.player.capital = home;
+      FB.invalidateRealmCache();
+
+      FB.game.auto.research = false;
+      const record = FB.realmTechRecord(s, 'player');
+      record.active = [];
+      record.completed = record.completed.filter(function (id) {
+        return id !== 'scholarly_networks' && id !== 'universities';
+      });
+      const available = FB.techCandidates(s, 'player', true).filter(
+        function (item) { return item.available; });
+      if (available.length < 2) throw new Error('Expected two available technologies');
+      const fromId = available[0].id;
+      const toId = available[1].id;
+      record.active = [fromId];
+      record.progress[fromId] = 7;
+      FB.ui.showTechDetail(toId);
+      return { fromId:fromId, toId:toId };
+    });
+
+    await expect(page.getByRole('button', {
+      name:'Switch research', exact:true
+    })).toBeVisible();
+    await expect(page.getByRole('button', {
+      name:'Begin research', exact:true
+    })).toHaveCount(0);
+    await page.getByRole('button', { name:'Switch research', exact:true }).click();
+    await expect(page.locator('#gm-body')).toContainText(
+      'Its research progress will be kept.');
+    await page.locator('[data-tech-switch-from="' + setup.fromId + '"]').click();
+
+    const switched = await page.evaluate(function (ids) {
+      const record = FB.realmTechRecord(FB.state, 'player');
+      return {
+        active:record.active.slice(),
+        oldProgress:record.progress[ids.fromId]
+      };
+    }, setup);
+    expect(switched.active).toEqual([setup.toId]);
+    expect(switched.oldProgress).toBe(7);
+
+    await page.evaluate(function (id) {
+      FB.ui.showTechDetail(id);
+    }, setup.toId);
+    await page.getByRole('button', { name:'Pause research', exact:true }).click();
+    const paused = await page.evaluate(function (id) {
+      const record = FB.realmTechRecord(FB.state, 'player');
+      return {
+        active:record.active.slice(),
+        progress:record.progress[id] || 0
+      };
+    }, setup.toId);
+    expect(paused).toEqual({ active:[], progress:0 });
   });
 
 test('worker reservations follow people while manual staffing remains available',

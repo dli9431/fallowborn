@@ -3995,6 +3995,8 @@ textarea.modjson, textarea.savetext {
 .tech-entry-cost { color: #d0ad54; font-size: 13px; text-align: right; }
 .tech-empty { padding: 22px 8px; color: var(--helper-text-color); text-align: center; }
 .tech-detail-meta { margin-bottom: 8px; color: var(--helper-text-color); font-size: 13px; }
+.tech-detail-actions { display: grid; gap: 8px; margin: 16px 0 8px; }
+.tech-detail-actions:empty { display: none; }
 .tech-detail-facts {
   margin: 9px 0 4px; cursor: help;
 }

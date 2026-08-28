@@ -869,6 +869,36 @@ window.FB = window.FB || {};
     return FB.selectTechProject(state, id, realmId, false);
   };
 
+  FB.pauseTechProject = function (state, id, realmId) {
+    var rid = FB.techRealmId(state, realmId);
+    if (rid !== 'player' || !FB.isPlayerSovereign(state)) return false;
+    var record = FB.realmTechRecord(state, rid);
+    var index = record.active.indexOf(id);
+    if (index < 0) return false;
+    record.active.splice(index, 1);
+    return true;
+  };
+
+  FB.switchTechProject = function (state, fromId, toId, realmId) {
+    var rid = FB.techRealmId(state, realmId);
+    if (rid !== 'player' || !FB.isPlayerSovereign(state) || fromId === toId) {
+      return false;
+    }
+    var record = FB.realmTechRecord(state, rid);
+    var index = record.active.indexOf(fromId);
+    var def = FBDATA.tech[toId];
+    if (index < 0 || !def || record.active.indexOf(toId) >= 0 ||
+        record.completed.indexOf(toId) >= 0 ||
+        !techMatchesCulture(def, FB.techCulture(state, rid)) ||
+        !prerequisitesMetFromLookup(def, listLookup(record.completed))) {
+      return false;
+    }
+    record.active.splice(index, 1, toId);
+    delete record.priorities[toId];
+    FB.setProtected(state, 'researchTech', toId, false);
+    return true;
+  };
+
   FB.addResearch = function (state, amount, realmId) {
     amount = Number(amount) || 0;
     if (amount <= 0) return 0;
