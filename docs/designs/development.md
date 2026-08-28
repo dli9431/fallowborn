@@ -80,6 +80,17 @@ the demesne/tier/buildable gates. Because the commodity market belongs to the co
 only the county-head sheet (`s: 0`) carries its Market shortcut; the Land panel presents
 the same county-wide destination as a card inside Development.
 
+Building reads share one unsaved per-state, per-county index. The first read of a county
+projects legacy records and aggregates standing/all-time counts, occupied settlement slots,
+numeric bonuses, and non-fort production buildings; finance, population, markets, host
+composition, automation, and the building ledger then reuse those results. Replacing a county
+array or changing its length is detected at the read boundary. Same-length gameplay mutations
+(demolition, raid ruin, and fort state changes) call `FB.invalidateBuildingIndex`, while player
+and AI construction invalidate the affected county immediately. Construction enumeration also
+reuses one county context, including its visible-settlement count, across every building and
+slot check; county-picker availability counts do not calculate unused market price quotes. The
+index is derived runtime state only and never enters a save or changes RNG order.
+
 **Bonuses stay demesne-wide; prices climb per county.** Ongoing bonuses flow through
 `FB.buildingBonus` (tax, levy, piety, research, upkeep, and the war keys `retinue`/`archers`
 — flat men added to the host's composition at muster, see [war.md](war.md)), which sums every

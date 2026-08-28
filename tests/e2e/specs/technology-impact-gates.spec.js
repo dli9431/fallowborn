@@ -195,6 +195,7 @@ test('the prospective review ledger and every gate schema validate together',
       'estates_scutage',
       'faith_conversion',
       'family_freedom_record',
+      'family_land_grants',
       'field_supply_attrition',
       'formal_confirmation_of_custom',
       'formal_market_charters',
@@ -250,6 +251,7 @@ test('the prospective review ledger and every gate schema validate together',
       'descendant_betrothal_replacement',
       'enterprise_hired_labor',
       'family_freedom_record',
+      'family_land_grants',
       'individual_family_manumission',
       'landed_household_standards',
       'minor_household_standard_reduction',
@@ -264,7 +266,7 @@ test('the prospective review ledger and every gate schema validate together',
     ];
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
       .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
-        'none', 'none', 'none', 'none', 'none', 'none']);
+        'none', 'none', 'none', 'none', 'none', 'none', 'none']);
     const additiveHardIds = [
       'enterprise_upgrades',
       'ruler_household_establishments'

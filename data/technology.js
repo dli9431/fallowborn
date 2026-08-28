@@ -193,6 +193,10 @@ window.FBDATA = window.FBDATA || {};
         fallback:'other_service_charters',
         rationale:'A durable liberties charter requires recorded law and an authenticated seal.'
       },
+      family_land_grants:{
+        mode:'none',
+        rationale:'Enfeoffing an adult relative is baseline dynastic patronage rather than an advanced capability; optional service charters retain their own authored technology requirements.'
+      },
       royal_religious_tolerance_policy:{
         mode:'none',
         rationale:'Tolerance and persecution are social and confessional prerogatives of the crown; no innovation credibly unlocks or improves proclaiming them.'

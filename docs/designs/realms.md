@@ -314,12 +314,15 @@ to crown policy. The summary and `FB.politicalMotionForecast` derive all
 membership details, reasons, influence, postures, and probabilities without
 consuming RNG or mutating game state.
 
-When a materialized rightful ruler becomes the protagonist, `FB.absorbRealm` joins that
-realm to the player's: its ruler's demesne enters the player's hand, its vassals reattach
-intact, hierarchy cycles are prevented, outgoing wars end in white peace, and title,
+When a materialized rightful ruler or appointed family grantee becomes the protagonist,
+`FB.absorbRealm` joins the realm they actually rule to the player's: its ruler's demesne
+enters the player's hand, its vassals reattach intact, hierarchy cycles are prevented,
+outgoing wars end in white peace, and title,
 rank, capital, and map ownership are synchronized. Only a sovereign inherited title
-changes the sovereign owner of the combined hierarchy. An intact player crown handed
-to a downfall usurper may instead leave the displaced rightful character one narrow
+changes the sovereign owner of the combined hierarchy. Absorbing a fief directly sworn
+to the special `'player'` realm preserves the player's existing outside liege or
+independence rather than creating a self-liege. An intact player crown handed to a
+downfall usurper may instead leave the displaced rightful character one narrow
 restoration right; ordinary county conquest never creates one.
 
 Marriage-residence abdication performs the inverse political handoff without
@@ -774,9 +777,11 @@ in an options object while retaining the older recipient-only and charter-plus-t
 call shapes. Omitting the recipient retains the generated loyal-vassal path used by
 Domain Cleanup and compatibility callers. `FB.landGrantRecipientStatus` and
 `FB.landGrantRecipients` provide the deterministic, read-only family projection: a
-candidate must be living adult kin, not the protagonist's spouse, and neither reigning nor
-landed through station or `royalLine`. Sex, faith, marriage to somebody else, captivity,
-and vocation do not disqualify them. A named recipient is revalidated before any land or
+candidate must be living adult kin, not the protagonist's spouse, and must not already
+govern another realm or local lordship. Social station and a non-reigning `royalLine` are
+not landholdings: Freeholder, Gentry, Noble, and Royal relatives remain eligible. Sex,
+faith, marriage to somebody else, captivity, and vocation do not disqualify them. A named
+recipient is revalidated before any land or
 RNG mutation and installed with `FB.assignRealmRulerCharacter`; the new realm is still an
 ordinary direct vassal and receives the same charter- and tenure-adjusted Standing as a
 generated grantee (+40 for the Customary/Hereditary default).
@@ -787,8 +792,13 @@ theirs. Living children seed the granted realm's ordinary succession line. Gover
 household is incompatible with serving in the player's, so installation releases enterprise
 work, household office and retainer records, family-agency ambitions, tutoring, and armory
 loadout assignments. The character's residence then resolves to the granted realm's capital.
+If that grantee later becomes the protagonist, succession resolves the realm they actually
+rule before consulting any retained birth claim, then absorbs the appointed fief so one
+character never remains on both the player throne and a vassal throne.
 Eligibility and the modal draft are derived rather than saved, so family grants add no save
-field and require no migration.
+field and require no migration. Family land grants have technology impact **none**:
+enfeoffing adult kin is baseline dynastic patronage, while the optional advanced service
+charters retain their existing authored technology requirements.
 
 Governance exposes a preview-first **Domain Cleanup** assistant while the player is over
 that limit. `FB.domainCleanupPlan` is read-only, deterministic, and never consumes RNG. It

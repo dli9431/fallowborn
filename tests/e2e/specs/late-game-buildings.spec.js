@@ -1,6 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/actions.js',
+  'js/market.js',
+  'js/population.js',
   'js/settlement.js',
   'js/technology.js',
   'js/world.js',
@@ -189,5 +192,131 @@ test('demographic and research bonuses from late-game buildings apply correctly'
     expect(result.bonusTax).toBe(5);
     expect(result.crisisProt).toBe(20);
     expect(result.famineProt).toBe(5);
+  }
+);
+
+test('late-game building reads reuse county aggregates and refresh after mutations',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const home = s.player.provinceId;
+      const other = FB.world.provs.filter(function (province) {
+        return !province.wasteland && province.id !== home;
+      })[0].id;
+      let idReads = 0;
+
+      function watched(settlement, id) {
+        const record = { s:settlement };
+        Object.defineProperty(record, 'id', {
+          configurable:true,
+          enumerable:true,
+          get:function () { idReads++; return id; }
+        });
+        return record;
+      }
+
+      s.player.tier = 6;
+      s.player.provs = [home, other];
+      s.dev[home] = 10;
+      s.dev[other] = 10;
+      s.buildings = {};
+      s.buildings[home] = [watched(0, 'mill'), watched(1, 'market')];
+      s.buildings[other] = [watched(0, 'foundry'), watched(1, 'granary')];
+      const technology = FB.realmTechRecord(s);
+      for (const id in FBDATA.buildings) {
+        const requirement = FBDATA.buildings[id].requiresTech;
+        if (requirement && technology.completed.indexOf(requirement) < 0) {
+          technology.completed.push(requirement);
+        }
+      }
+
+      const initial = {
+        tax:FB.buildingBonus(s, 'tax'),
+        upkeep:FB.buildingBonus(s, 'upkeep'),
+        taxBuildings:Object.keys(FB.buildingBonusCounts(s, 'tax')).length,
+        foundries:FB.buildingBonusCounts(s, 'retinue').foundry || 0,
+        capacity:FB.countyBuildingCapacityBonus(s, home),
+        standing:FB.standingBuildingCountIn(s, other),
+        settlementTax:FB.countySettlementTax(s, home)
+      };
+      const readsAfterWarm = idReads;
+
+      FB.buildingBonus(s, 'tax');
+      FB.buildingBonus(s, 'upkeep');
+      FB.buildingBonusCounts(s, 'tax');
+      FB.buildingBonusCounts(s, 'retinue');
+      FB.countyBuildingCapacityBonus(s, home);
+      FB.standingBuildingCountIn(s, other);
+      const readsAfterRepeat = idReads;
+
+      const originalMarketCostQuote = FB.marketCostQuote;
+      let marketQuoteCalls = 0;
+      let openCount = 0;
+      try {
+        FB.marketCostQuote = function () {
+          marketQuoteCalls++;
+          return originalMarketCostQuote.apply(this, arguments);
+        };
+        openCount = FB.buildingOpenCount(s, home);
+      } finally {
+        FB.marketCostQuote = originalMarketCostQuote;
+      }
+
+      /* A direct append is detected by length for old mods and compatibility
+         callers even without an explicit invalidation. */
+      s.buildings[other].push(watched(2, 'windmill'));
+      const taxAfterAppend = FB.buildingBonus(s, 'tax');
+
+      /* Gameplay mutations invalidate same-length record changes explicitly. */
+      const demolished = FB.demolishBuilding(s, home, 0, 'mill');
+      const afterDemolition = {
+        tax:FB.buildingBonus(s, 'tax'),
+        millsStanding:FB.buildingCountIn(s, home, 'mill', false),
+        millsEver:FB.buildingCountIn(s, home, 'mill', true),
+        capacity:FB.countyBuildingCapacityBonus(s, home)
+      };
+
+      const settlements = FB.settlementsOf(s, home);
+      const B = FBDATA.balance;
+      const projectedSettlementTax = settlements.reduce(function (sum, settlement) {
+        if (settlement.kind === 'city') return sum + B.settlementCityTax;
+        if (settlement.kind === 'town') return sum + B.settlementTownTax;
+        return sum + B.settlementVillageTax;
+      }, 0);
+
+      return {
+        initial:initial,
+        readsAfterWarm:readsAfterWarm,
+        readsAfterRepeat:readsAfterRepeat,
+        marketQuoteCalls:marketQuoteCalls,
+        openCount:openCount,
+        taxAfterAppend:taxAfterAppend,
+        demolished:demolished,
+        afterDemolition:afterDemolition,
+        projectedSettlementTax:projectedSettlementTax
+      };
+    });
+
+    expect(result.initial).toMatchObject({
+      tax:8,
+      upkeep:3,
+      taxBuildings:3,
+      foundries:1,
+      capacity:0.05,
+      standing:2
+    });
+    expect(result.initial.settlementTax).toBe(result.projectedSettlementTax);
+    expect(result.readsAfterWarm).toBe(4);
+    expect(result.readsAfterRepeat).toBe(result.readsAfterWarm);
+    expect(result.openCount).toBeGreaterThan(0);
+    expect(result.marketQuoteCalls).toBe(0);
+    expect(result.taxAfterAppend).toBe(10);
+    expect(result.demolished).toBe(true);
+    expect(result.afterDemolition).toEqual({
+      tax:8,
+      millsStanding:0,
+      millsEver:1,
+      capacity:0
+    });
   }
 );

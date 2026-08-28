@@ -5493,25 +5493,20 @@ window.FB = window.FB || {};
     return FB.T('No open settlement remains.');
   }
 
-  function buildingOpenCount(s, pid) {
-    let open = 0;
-    const sts = FB.settlementsOf(s, pid);
-    for (let idx = 0; idx < sts.length; idx++) {
-      open += FB.buildable(s, pid, idx).length;
-    }
-    return open;
+  function buildingOpenCount(s, pid, demesneContext) {
+    return FB.buildingOpenCount(s, pid, demesneContext);
   }
 
   /* Keep county choice in reach while the long building ledger scrolls.
      Native selects use the platform's dependable full-screen picker on
      phones and remain keyboard-accessible on desktop. */
-  function buildingCountyPicker(s, provs, pid) {
+  function buildingCountyPicker(s, provs, pid, demesneContext) {
     if (provs.length < 2) return '';
     let h = '<label class="building-county-picker"><span>' +
       esc(FB.T('County')) + '</span><select id="gm-building-county">';
     for (const id of provs) {
       const pr = FB.world.byId[id];
-      const open = buildingOpenCount(s, id);
+      const open = buildingOpenCount(s, id, demesneContext);
       h += '<option value="' + esc(id) + '"' +
         (id === pid ? ' selected' : '') +
         (open || id === pid ? '' : ' disabled') + '>' +
@@ -5526,16 +5521,17 @@ window.FB = window.FB || {};
   UI.showBuildings = function (pid, idx, keep) {
     const s = FB.state;
     const provs = FB.demesne(s);
+    const demesneContext = FB.buildingDemesneContext(s);
     if (!pid && provs.length > 1) {
       let h = '<div class="gm-list">';
       for (const id of provs) {
         const pr = FB.world.byId[id];
-        const open = buildingOpenCount(s, id);
+        const open = buildingOpenCount(s, id, demesneContext);
         h += '<button class="actionbtn" data-bprov="' + esc(id) + '"' + (open ? '' : ' disabled') + '>🏘 ' + esc(pr.name) +
           '<span class="adesc">' + esc(FB.T(
             'development {development} · {built} built · {remaining}', {
               development: s.dev[id] || 1,
-              built: FB.builtIn(s, id).filter(function (e) { return !e.ruined; }).length,
+              built: FB.standingBuildingCountIn(s, id, true),
               remaining: open
                 ? FB.T('{count} possible', { count: open })
                 : FB.T('nothing more to raise')
@@ -5552,9 +5548,10 @@ window.FB = window.FB || {};
     pid = pid || provs[0];
     const pr = FB.world.byId[pid];
     const sts = FB.settlementsOf(s, pid);
+    const buildingContext = FB.buildingContext(s, pid, demesneContext);
     if (idx === undefined || idx === null) {
       const growth = Math.round(((FBDATA.balance.buildingRepeatCostGrowth || 1.5) - 1) * 100);
-      let h = buildingCountyPicker(s, provs, pid) +
+      let h = buildingCountyPicker(s, provs, pid, demesneContext) +
         '<label class="autorow building-auto-protection"><input type="checkbox" ' +
         'id="building-auto-protection"' +
         (FB.isProtected(s, 'autoBuildCounty', pid) ? ' checked' : '') + '> ' +
@@ -5568,7 +5565,7 @@ window.FB = window.FB || {};
       for (const id in FBDATA.buildings) {
         const d = FBDATA.buildings[id];
         if (d.fort) continue;
-        const slots = FB.buildingSlots(s, pid, id);
+        const slots = FB.buildingSlots(s, pid, id, buildingContext);
         const standing = FB.buildingCountIn(s, pid, id, false);
         const copies = FB.buildingCountIn(s, pid, id, true);
         const cost = FB.buildCost(s, pid, id);
@@ -5684,7 +5681,7 @@ window.FB = window.FB || {};
     }
     h += '<div class="gm-list">';
     let cardSeq = 0;
-    for (const b of FB.buildable(s, pid, idx)) {
+    for (const b of FB.buildable(s, pid, idx, buildingContext)) {
       const short = s.player.gold < b.cost;
       const copies = FB.buildingCountIn(s, pid, b.id, true);
       const repeat = copies
@@ -9230,24 +9227,33 @@ window.FB = window.FB || {};
         'Grant {land} to a new loyal vassal.', { land:grantLabel })) + '">' +
       '🎁 ' + esc(FB.T('New loyal vassal')) + '<span class="adesc">' +
       esc(FB.T('Generate a new ruler and dynasty for this land.')) +
-      '</span></button>';
-    for (const row of FB.landGrantRecipients(s)) {
-      const name = FB.fullName(row.c);
-      const relationship = FB.T(row.rel);
-      h += '<button type="button" class="actionbtn" data-grant-recipient="' +
-        esc(row.id) + '" aria-label="' + esc(FB.T(
-          'Grant {land} to {name}, your {relationship}, age {age}.', {
-            land:grantLabel,
-            name:name,
-            relationship:relationship,
-            age:row.age
-          })) + '">👤 ' + esc(name) + '<span class="adesc">' + esc(FB.T(
-            '{relationship} · age {age}', {
+      '</span></button></div>';
+    const recipients = FB.landGrantRecipients(s);
+    h += '<div class="panelh">' + esc(FB.T('Family')) + '</div>';
+    if (recipients.length) {
+      h += '<div class="gm-list">';
+      for (const row of recipients) {
+        const name = FB.fullName(row.c);
+        const relationship = FB.T(row.rel);
+        h += '<button type="button" class="actionbtn" data-grant-recipient="' +
+          esc(row.id) + '" aria-label="' + esc(FB.T(
+            'Grant {land} to {name}, your {relationship}, age {age}.', {
+              land:grantLabel,
+              name:name,
               relationship:relationship,
               age:row.age
-            })) + '</span></button>';
+            })) + '">👤 ' + esc(name) + '<span class="adesc">' + esc(FB.T(
+              '{relationship} · age {age}', {
+                relationship:relationship,
+                age:row.age
+              })) + '</span></button>';
+      }
+      h += '</div>';
+    } else {
+      h += '<p class="hint">' + esc(FB.T(
+        'No adult relative is currently eligible. Your spouse and relatives who already rule elsewhere cannot receive a separate grant.')) + '</p>';
     }
-    h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
+    h += '<div class="gm-footer"><button type="button" class="btn" ' +
       'id="grant-recipient-back">' + esc(FB.T('Back')) +
       '</button></div>';
     openModal(FB.T('Choose a Recipient'), h, {

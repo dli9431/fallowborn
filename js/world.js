@@ -3946,7 +3946,7 @@ window.FB = window.FB || {};
     return map;
   }
 
-  FB.settlementVisibleCount = function (state, pid) {
+  FB.settlementVisibleCount = function (state, pid, buildingFloor) {
     const info = FB.world && FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
     if (!info) return 0;
     const dev = settlementDev(state, pid);
@@ -3959,17 +3959,21 @@ window.FB = window.FB || {};
       const fort = FB.fortAt(state, pid);
       if (fort && !fort.ruined) visible = Math.max(visible, (fort.s | 0) + 1);
     }
-    /* Player investments anchor their settlement the same way: any standing
-       building (only counties something was built in carry a list at all,
-       so this scan never runs for ordinary AI land), any family enterprise,
-       and the player's own home settlement. */
+    /* Investments anchor their settlement the same way: any standing
+       building, family enterprise, and the player's own home settlement.
+       Building-heavy callers pass their already-indexed floor; direct map
+       reads retain the allocation-free raw county scan. */
     if (state) {
-      const built = state.buildings && state.buildings[pid];
-      if (built) {
-        for (let bi = 0; bi < built.length; bi++) {
-          const b = built[bi];
-          if (b && typeof b === 'object' && !b.ruined) {
-            visible = Math.max(visible, (b.s | 0) + 1);
+      if (typeof buildingFloor === 'number') {
+        visible = Math.max(visible, buildingFloor);
+      } else {
+        const built = state.buildings && state.buildings[pid];
+        if (built) {
+          for (let bi = 0; bi < built.length; bi++) {
+            const b = built[bi];
+            if (b && typeof b === 'object' && !b.ruined) {
+              visible = Math.max(visible, (b.s | 0) + 1);
+            }
           }
         }
       }
@@ -5289,6 +5293,9 @@ window.FB = window.FB || {};
           const list = state.buildings[chosen.pid] = state.buildings[chosen.pid] || [];
           const record = { s: chosen.s, id: chosen.id };
           list.push(record);
+          if (FB.invalidateBuildingIndex) {
+            FB.invalidateBuildingIndex(state, chosen.pid);
+          }
           if (chosen.def.dev) {
             record.devGranted = FB.changeCountyDevelopment(state, chosen.pid,
               chosen.def.dev, 'ai_construction');
@@ -5691,12 +5698,17 @@ window.FB = window.FB || {};
       entries.push(entry);
     }
     function buildingEntries(key, unit) {
-      const count = {};
-      for (const pid of FB.demesne(state)) {
-        for (const built of FB.builtIn(state, pid)) {
-          const def = FBDATA.buildings[built.id];
-          if (!built.ruined && def && def[key]) {
-            count[built.id] = (count[built.id] || 0) + 1;
+      let count;
+      if (FB.buildingBonusCounts) {
+        count = FB.buildingBonusCounts(state, key);
+      } else {
+        count = {};
+        for (const pid of FB.demesne(state)) {
+          for (const built of FB.builtIn(state, pid)) {
+            const def = FBDATA.buildings[built.id];
+            if (!built.ruined && def && def[key]) {
+              count[built.id] = (count[built.id] || 0) + 1;
+            }
           }
         }
       }
@@ -7574,7 +7586,8 @@ window.FB = window.FB || {};
     const mine = state.realms.player;
     if (sovereignTitle) {
       FB.changePlayerLiege(state, null, 'realm:inherit_sovereign');
-    } else if (mine.rank < inherited.rank || !mine.liege) {
+    } else if (inheritedLiege !== 'player' &&
+        (mine.rank < inherited.rank || !mine.liege)) {
       FB.changePlayerLiege(state, inheritedLiege, 'realm:inherit_vassal');
     }
     const demesne = FB.realmHeldCounties(state, rid).slice();

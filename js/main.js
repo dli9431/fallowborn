@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.7';
+  FB.VERSION = '1.165.8';
   FB.CHANGELOG = [
+    { v: '1.165.8', date: '2026-08-28', changes: [
+      'Large realms now reuse settlement and building summaries during late-game simulation and management.',
+      'Grant Land now lists eligible adult relatives across social stations, and their fiefs pass safely through succession.'
+    ] },
     { v: '1.165.7', date: '2026-08-28', changes: [
       'Sovereigns can now pause active technology research or switch an occupied slot without losing progress.'
     ] },
@@ -4827,7 +4831,14 @@ window.FB = window.FB || {};
         FB.changePlayerLiege(s, rid, 'succession:restore_liege');
       }
     }
-    if (heir.royalLine) {
+    /* A named family grantee may rule a player vassal while retaining a birth
+       royalLine in another house. Absorb the realm actually ruled before
+       consulting that inherited claim, preserving one character/one throne. */
+    const reigningHeirRealm = FB.realmIdForRulerCharacter
+      ? FB.realmIdForRulerCharacter(s, heir) : null;
+    if (reigningHeirRealm) {
+      FB.absorbRealm(s, reigningHeirRealm, heir);
+    } else if (heir.royalLine) {
       const rr = s.realms[heir.royalLine.realmId];
       const rs = rr && FB.ensureRealmSuccession(s, heir.royalLine.realmId);
       if (rr && rr.alive && rs && rs.rulerMemberId === heir.royalLine.memberId) {

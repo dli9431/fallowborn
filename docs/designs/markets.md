@@ -167,6 +167,12 @@ reports. The county report shown in the UI is an in-memory view of the last
 season only. The market save target is under 64 KB and the complete long-campaign
 save target remains under 1.6 MB.
 
+Standing non-fort building counts come from the shared transient county building index
+rather than rescanning every settlement record during market production. Long campaigns can
+therefore accumulate AI and player construction without multiplying the seasonal market pass
+by the number of repeated building consumers; construction and ruin invalidate the affected
+county before its next read.
+
 ## Production, distribution, and shocks
 
 Staffed Farms, Orchards, and Fishing Boats supply provisions. Presses split

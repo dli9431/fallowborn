@@ -80,32 +80,27 @@ window.FB = window.FB || {};
     return Math.max(pop0, calculated);
   }
 
-  FB.countyBuildingCapacityBonus = function (state, pid) {
+  function countyBuildingBonus(state, pid, key) {
+    if (FB.buildingBonusIn) return FB.buildingBonusIn(state, pid, key);
     var built = FB.builtIn ? FB.builtIn(state, pid) : [];
     var bonus = 0;
     for (var i = 0; i < built.length; i++) {
       var b = built[i];
       if (!b || b.ruined) continue;
       var def = FBDATA.buildings && FBDATA.buildings[b.id];
-      if (def && def.populationCapacity) {
-        bonus += Number(def.populationCapacity) || 0;
-      }
+      if (def && def[key]) bonus += Number(def[key]) || 0;
     }
+    return bonus;
+  }
+
+  FB.countyBuildingCapacityBonus = function (state, pid) {
+    var bonus = countyBuildingBonus(state, pid, 'populationCapacity');
     var cap = balance('populationMaxBuildingCapacityBonus', 0.40);
     return FB.clamp(bonus, 0, cap);
   };
 
   FB.countyBuildingCrisisProtection = function (state, pid) {
-    var built = FB.builtIn ? FB.builtIn(state, pid) : [];
-    var bonus = 0;
-    for (var i = 0; i < built.length; i++) {
-      var b = built[i];
-      if (!b || b.ruined) continue;
-      var def = FBDATA.buildings && FBDATA.buildings[b.id];
-      if (def && def.populationCrisisProtection) {
-        bonus += Number(def.populationCrisisProtection) || 0;
-      }
-    }
+    var bonus = countyBuildingBonus(state, pid, 'populationCrisisProtection');
     if (FB.enterpriseUpgradeEffect) {
       bonus += FB.enterpriseUpgradeEffect(state, 'populationCrisisProtection', pid);
     }
@@ -113,16 +108,7 @@ window.FB = window.FB || {};
   };
 
   FB.countyBuildingFamineProtection = function (state, pid) {
-    var built = FB.builtIn ? FB.builtIn(state, pid) : [];
-    var bonus = 0;
-    for (var i = 0; i < built.length; i++) {
-      var b = built[i];
-      if (!b || b.ruined) continue;
-      var def = FBDATA.buildings && FBDATA.buildings[b.id];
-      if (def && def.populationFamineProtection) {
-        bonus += Number(def.populationFamineProtection) || 0;
-      }
-    }
+    var bonus = countyBuildingBonus(state, pid, 'populationFamineProtection');
     if (FB.enterpriseUpgradeEffect) {
       bonus += FB.enterpriseUpgradeEffect(state, 'famineProtection', pid);
     }
@@ -130,16 +116,7 @@ window.FB = window.FB || {};
   };
 
   FB.countyBuildingAttraction = function (state, pid) {
-    var built = FB.builtIn ? FB.builtIn(state, pid) : [];
-    var attraction = 0;
-    for (var i = 0; i < built.length; i++) {
-      var b = built[i];
-      if (!b || b.ruined) continue;
-      var def = FBDATA.buildings && FBDATA.buildings[b.id];
-      if (def && def.migrationAttraction) {
-        attraction += Number(def.migrationAttraction) || 0;
-      }
-    }
+    var attraction = countyBuildingBonus(state, pid, 'migrationAttraction');
     if (FB.enterpriseUpgradeEffect) {
       attraction += FB.enterpriseUpgradeEffect(state, 'migrationAttraction', pid);
     }

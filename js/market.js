@@ -639,12 +639,16 @@
     const tech = cached ? cached.tradeTech :
       (FB.techBonus ? Math.max(0,
         Number(FB.techBonus(state, 'trade', owner)) || 0) : 0);
-    const buildings = state.buildings && state.buildings[pid] || [];
     let building = 0;
-    for (let i = 0; i < buildings.length; i++) {
-      const entry = buildings[i];
-      if (typeof entry === 'string') building += entry === 'walls' ? 0 : 0.012;
-      else if (entry && !entry.ruined && entry.id !== 'walls') building += 0.012;
+    if (FB.standingBuildingCountIn) {
+      building = FB.standingBuildingCountIn(state, pid) * 0.012;
+    } else {
+      const buildings = state.buildings && state.buildings[pid] || [];
+      for (let i = 0; i < buildings.length; i++) {
+        const entry = buildings[i];
+        if (typeof entry === 'string') building += entry === 'walls' ? 0 : 0.012;
+        else if (entry && !entry.ruined && entry.id !== 'walls') building += 0.012;
+      }
     }
     const out = [];
     for (let i = 0; i < ids.length; i++) {

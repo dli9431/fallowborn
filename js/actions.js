@@ -5289,12 +5289,22 @@ window.FB = window.FB || {};
     const townRate = Number(B.settlementTownTax !== undefined ? B.settlementTownTax : 2.0);
     const cityRate = Number(B.settlementCityTax !== undefined ? B.settlementCityTax : 4.5);
     let sum = 0;
-    const settlements = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
-    for (let i = 0; i < settlements.length; i++) {
-      const k = settlements[i].kind;
-      if (k === 'city') sum += cityRate;
-      else if (k === 'town') sum += townRate;
-      else sum += villageRate;
+    const info = FB.world && FB.world.sitesByProv && FB.world.sitesByProv[pid];
+    if (info && FB.settlementVisibleCount && FB.siteKindRank) {
+      const count = FB.settlementVisibleCount(
+        state, pid, buildingIndexFor(state, pid).visibleFloor);
+      for (let i = 0; i < count; i++) {
+        const rank = FB.siteKindRank(state, info.list[i]);
+        sum += rank >= 2 ? cityRate : (rank === 1 ? townRate : villageRate);
+      }
+    } else {
+      const settlements = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
+      for (let i = 0; i < settlements.length; i++) {
+        const k = settlements[i].kind;
+        if (k === 'city') sum += cityRate;
+        else if (k === 'town') sum += townRate;
+        else sum += villageRate;
+      }
     }
     return sum;
   };
@@ -5855,11 +5865,18 @@ window.FB = window.FB || {};
        appends lines for one def key (tax feeds gold, piety feeds piety)
        and returns the summed amount for the tax arithmetic below */
     function addBuildings(stat, key, multiplier, isUpkeep) {
-      const count = {};
-      for (const pid of FB.demesne(state)) {
-        for (const e of FB.builtIn(state, pid)) {
-          const def = FBDATA.buildings[e.id];
-          if (!e.ruined && def && def[key]) count[e.id] = (count[e.id] || 0) + 1;
+      let count;
+      if (FB.buildingBonusCounts) {
+        count = FB.buildingBonusCounts(state, key);
+      } else {
+        count = {};
+        for (const pid of FB.demesne(state)) {
+          for (const e of FB.builtIn(state, pid)) {
+            const def = FBDATA.buildings[e.id];
+            if (!e.ruined && def && def[key]) {
+              count[e.id] = (count[e.id] || 0) + 1;
+            }
+          }
         }
       }
       let sum = 0;
@@ -6963,9 +6980,10 @@ window.FB = window.FB || {};
   };
 
   /* A grant may found a new branch of the player's family, but it cannot be
-     used to stack land on an existing household or realm. This projection is
-     deliberately read-only: callers may safely use it for lists and stale
-     confirmation checks without consuming RNG or normalizing save state. */
+     used to stack land on an existing ruling household or realm. Social
+     station and an unexercised royal-line claim are not landholdings. This
+     projection is deliberately read-only: callers may safely use it for lists
+     and stale confirmation checks without consuming RNG or normalizing save state. */
   FB.landGrantRecipientStatus = function (state, charId) {
     const c = state && state.chars && state.chars[charId];
     const me = state && state.player && state.chars &&
@@ -6991,7 +7009,10 @@ window.FB = window.FB || {};
     if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
       return { ready:false, code:'reigning', charId:c.id, relation:relation };
     }
-    if (FB.stationOf(c) >= 1 || c.royalLine) {
+    const externalAuthority = FB.isExternalHouseholdAuthority
+      ? FB.isExternalHouseholdAuthority(state, c)
+      : c.role === 'lord' || (state.roles && state.roles.lord === c.id);
+    if (externalAuthority) {
       return { ready:false, code:'landed', charId:c.id, relation:relation };
     }
     return { ready:true, code:'eligible', charId:c.id, relation:relation };
@@ -8187,11 +8208,12 @@ window.FB = window.FB || {};
   FB.autoBuild = function (state) {
     let best = null, bestPid = null, bestIdx = 0;
     const steadyGold = FB.reliableGoldIncome(state);
-    for (const pid of FB.demesne(state)) {
+    const demesneContext = FB.buildingDemesneContext(state);
+    for (const pid of demesneContext.provinces) {
       if (FB.isProtected(state, 'autoBuildCounty', pid)) continue;
-      const sts = FB.settlementsOf(state, pid);
-      for (let idx = 0; idx < sts.length; idx++) {
-        for (const b of FB.buildable(state, pid, idx)) {
+      const context = FB.buildingContext(state, pid, demesneContext);
+      for (let idx = 0; idx < context.visibleCount; idx++) {
+        for (const b of FB.buildable(state, pid, idx, context)) {
           if (b.def.upkeep && steadyGold < b.def.upkeep) continue;
           if (!best || b.cost < best.cost) { best = b; bestPid = pid; bestIdx = idx; }
         }
@@ -8217,21 +8239,130 @@ window.FB = window.FB || {};
     return FB.demesne(state)[0];
   };
 
-  FB.builtIn = function (state, pid) {
-    const list = state.buildings && state.buildings[pid];
-    if (!list) return [];
-    /* Read paths must not change the save. Old bare ids still project into the
-       head settlement; a later building write persists that normalization. */
+  /* Building reads fan out through seasonal finance, population, markets,
+     host composition, automation, and the county ledger. Retain one transient
+     per-county aggregation until that county's list changes. Nothing here is
+     serialized, and callers still receive the original canonical list (or a
+     fresh legacy compatibility projection) from FB.builtIn. */
+  let buildingIndexState = null;
+  let buildingIndexStore = null;
+  let buildingIndexByCounty = Object.create(null);
+  const BUILDING_COUNT_BONUS_KEYS = {
+    tax:1, upkeep:1, piety:1, levy:1, retinue:1, archers:1
+  };
+  const EMPTY_BUILDING_INDEX = {
+    raw:null,
+    length:0,
+    list:[],
+    all:Object.create(null),
+    standing:Object.create(null),
+    usable:Object.create(null),
+    occupied:Object.create(null),
+    bonuses:Object.create(null),
+    bonusCounts:Object.create(null),
+    standingNonFort:0,
+    standingTotal:0,
+    visibleFloor:0
+  };
+
+  function resetBuildingIndex() {
+    buildingIndexState = null;
+    buildingIndexStore = null;
+    buildingIndexByCounty = Object.create(null);
+  }
+
+  FB.invalidateBuildingIndex = function (state, pid) {
+    const store = state && state.buildings || null;
+    if (state && pid !== undefined && buildingIndexState === state &&
+        buildingIndexStore === store) {
+      delete buildingIndexByCounty[pid];
+      return;
+    }
+    resetBuildingIndex();
+  };
+
+  function buildingIndexFor(state, pid) {
+    const store = state && state.buildings || null;
+    if (buildingIndexState !== state || buildingIndexStore !== store) {
+      buildingIndexState = state;
+      buildingIndexStore = store;
+      buildingIndexByCounty = Object.create(null);
+    }
+    const raw = store && Array.isArray(store[pid]) ? store[pid] : null;
+    const previous = buildingIndexByCounty[pid];
+    /* Array replacement and direct append/pop are common in compatibility
+       code and test setup, so detect both without walking the records again. */
+    if (previous && previous.raw === raw &&
+        previous.length === (raw ? raw.length : 0)) return previous;
+
+    if (!raw) {
+      buildingIndexByCounty[pid] = EMPTY_BUILDING_INDEX;
+      return EMPTY_BUILDING_INDEX;
+    }
+
+    const index = {
+      raw:raw,
+      length:raw.length,
+      list:raw,
+      all:Object.create(null),
+      standing:Object.create(null),
+      usable:Object.create(null),
+      occupied:Object.create(null),
+      bonuses:Object.create(null),
+      bonusCounts:Object.create(null),
+      standingNonFort:0,
+      standingTotal:0,
+      visibleFloor:0
+    };
+
     let legacy = false;
-    for (let i = 0; i < list.length; i++) {
-      if (typeof list[i] === 'string') {
-        legacy = true;
-        break;
+    for (let i = 0; i < raw.length; i++) {
+      if (typeof raw[i] === 'string') { legacy = true; break; }
+    }
+    if (legacy) {
+      index.list = raw.map(function (entry) {
+        return typeof entry === 'string' ? { s:0, id:entry } : entry;
+      });
+    }
+
+    for (let i = 0; i < index.list.length; i++) {
+      const entry = index.list[i];
+      if (!entry || typeof entry !== 'object') continue;
+      const id = entry.id;
+      if (!id) continue;
+      index.all[id] = (index.all[id] || 0) + 1;
+      index.occupied[(entry.s | 0) + ':' + id] = 1;
+      if (entry.ruined) continue;
+      index.visibleFloor = Math.max(index.visibleFloor, (entry.s | 0) + 1);
+      index.standingTotal++;
+      index.standing[id] = (index.standing[id] || 0) + 1;
+      if (id !== 'walls' || (Number(entry.level) || 0) > 0) {
+        index.usable[id] = (index.usable[id] || 0) + 1;
+      }
+      const def = FBDATA.buildings[id];
+      if (id !== 'walls' && !(def && def.fort)) index.standingNonFort++;
+      if (!def || def.fort) continue;
+      for (const key in def) {
+        const amount = def[key];
+        if (typeof amount !== 'number' || !amount) continue;
+        index.bonuses[key] = (index.bonuses[key] || 0) + amount;
+        if (BUILDING_COUNT_BONUS_KEYS[key]) {
+          const counts = index.bonusCounts[key] ||
+            (index.bonusCounts[key] = Object.create(null));
+          counts[id] = (counts[id] || 0) + 1;
+        }
       }
     }
-    if (!legacy) return list;
-    return list.map(function (entry) {
-      return typeof entry === 'string' ? { s: 0, id: entry } : entry;
+    buildingIndexByCounty[pid] = index;
+    return index;
+  }
+
+  FB.builtIn = function (state, pid) {
+    const index = buildingIndexFor(state, pid);
+    if (!index.raw) return [];
+    if (index.list === index.raw) return index.raw;
+    return index.raw.map(function (entry) {
+      return typeof entry === 'string' ? { s:0, id:entry } : entry;
     });
   };
 
@@ -8245,11 +8376,8 @@ window.FB = window.FB || {};
   }
 
   FB.buildingCountIn = function (state, pid, id, includeRuins) {
-    let count = 0;
-    for (const e of FB.builtIn(state, pid)) {
-      if (e.id === id && (includeRuins || !e.ruined)) count++;
-    }
-    return count;
+    const index = buildingIndexFor(state, pid);
+    return (includeRuins ? index.all[id] : index.standing[id]) || 0;
   };
 
   FB.buildingCount = function (state, id, includeRuins) {
@@ -8261,35 +8389,80 @@ window.FB = window.FB || {};
   /* built anywhere in the demesne (the reading used by event triggers) */
   FB.hasBuilding = function (state, id) {
     for (const pid of FB.demesne(state)) {
-      const done = FB.builtIn(state, pid);
-      for (const e of done) {
-        if (e.id === id && !e.ruined &&
-            (id !== 'walls' || (Number(e.level) || 0) > 0)) return true;
-      }
+      if (buildingIndexFor(state, pid).usable[id]) return true;
     }
     return false;
   };
 
   /* built in ONE province (walls guard the county they stand in) */
   FB.hasBuildingIn = function (state, pid, id) {
-    const done = FB.builtIn(state, pid);
-    for (const e of done) {
-      if (e.id === id && !e.ruined &&
-          (id !== 'walls' || (Number(e.level) || 0) > 0)) return true;
+    return !!buildingIndexFor(state, pid).usable[id];
+  };
+
+  FB.buildingBonusIn = function (state, pid, key) {
+    return buildingIndexFor(state, pid).bonuses[key] || 0;
+  };
+
+  FB.standingBuildingCountIn = function (state, pid, includeForts) {
+    const index = buildingIndexFor(state, pid);
+    return includeForts ? index.standingTotal : index.standingNonFort;
+  };
+
+  FB.buildingBonusCounts = function (state, key) {
+    const out = Object.create(null);
+    for (const pid of FB.demesne(state)) {
+      const counts = buildingIndexFor(state, pid).bonusCounts[key];
+      if (!counts) continue;
+      for (const id in counts) out[id] = (out[id] || 0) + counts[id];
     }
-    return false;
+    return out;
   };
 
   FB.buildingBonus = function (state, key) {
     let sum = 0;
-    for (const pid of FB.demesne(state)) {
-      for (const e of FB.builtIn(state, pid)) {
-        const def = FBDATA.buildings[e.id];
-        if (!e.ruined && def && !def.fort && def[key]) sum += def[key];
-      }
-    }
+    for (const pid of FB.demesne(state)) sum += FB.buildingBonusIn(state, pid, key);
     return sum;
   };
+
+  FB.buildingDemesneContext = function (state) {
+    const provinces = FB.demesne(state);
+    const standing = Object.create(null);
+    const byProvince = Object.create(null);
+    for (const pid of provinces) {
+      byProvince[pid] = 1;
+      const counts = buildingIndexFor(state, pid).standing;
+      for (const id in counts) standing[id] = (standing[id] || 0) + counts[id];
+    }
+    return {
+      state:state,
+      store:state.buildings || null,
+      provinces:provinces,
+      byProvince:byProvince,
+      standing:standing
+    };
+  };
+
+  FB.buildingContext = function (state, pid, demesneContext) {
+    if (!demesneContext || demesneContext.state !== state ||
+        demesneContext.store !== (state.buildings || null)) {
+      demesneContext = null;
+    }
+    const index = buildingIndexFor(state, pid);
+    return {
+      state:state,
+      pid:pid,
+      index:index,
+      visibleCount:FB.settlementVisibleCount(state, pid, index.visibleFloor),
+      held:demesneContext
+        ? !!demesneContext.byProvince[pid] : FB.demesne(state).indexOf(pid) >= 0,
+      demesne:demesneContext
+    };
+  };
+
+  function buildingContextDemesneCount(state, context, id) {
+    if (!context.demesne) context.demesne = FB.buildingDemesneContext(state);
+    return context.demesne.standing[id] || 0;
+  }
 
   /* copies of the same building beyond the first in the same county cost
      cost × buildingRepeatCostGrowth^(copies standing) — the price climbs
@@ -8308,19 +8481,23 @@ window.FB = window.FB || {};
       def.marketBasket, pid, 'up') : Math.round(c);
   };
 
-  FB.canBuildAt = function (state, pid, idx, id) {
+  FB.canBuildAt = function (state, pid, idx, id, context) {
     const def = FBDATA.buildings[id];
     const pr = FB.world.byId[pid];
-    if (!def || def.fort || FB.demesne(state).indexOf(pid) < 0 || !FB.settlementsOf(state, pid)[idx]) return false;
+    context = context && context.state === state && context.pid === pid
+      ? context : FB.buildingContext(state, pid);
+    if (!def || def.fort || typeof idx !== 'number' || !isFinite(idx) ||
+        Math.floor(idx) !== idx || !context.held ||
+        idx < 0 || idx >= context.visibleCount) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
-    const done = FB.builtIn(state, pid);
-    for (const e of done) if (e.id === id && e.s === idx) return false;
+    if (context.index.occupied[(idx | 0) + ':' + id]) return false;
     if (def.devMin && (state.dev[pid] || 1) < def.devMin) return false;
     if (def.coastal && (!pr || !pr.coastal)) return false;
     if (def.terrains && (!pr || def.terrains.indexOf(pr.terrain) < 0)) return false;
     if (def.homeOnly && FB.homeProv(state) !== pid) return false;
     if (def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) return false;
-    if (def.maxDemesne && FB.buildingCount(state, id, false) >= def.maxDemesne) return false;
+    if (def.maxDemesne &&
+        buildingContextDemesneCount(state, context, id) >= def.maxDemesne) return false;
     return true;
   };
 
@@ -8346,31 +8523,54 @@ window.FB = window.FB || {};
 
   /* what one settlement can still raise: one of each building per
      settlement, subject to county/demesne limits and siting gates */
-  FB.buildable = function (state, pid, idx) {
+  FB.buildable = function (state, pid, idx, context) {
+    context = context && context.state === state && context.pid === pid
+      ? context : FB.buildingContext(state, pid);
     const out = [];
     for (const id in FBDATA.buildings) {
       const def = FBDATA.buildings[id];
       if (def.fort) continue;
-      if (!FB.canBuildAt(state, pid, idx, id)) continue;
+      if (!FB.canBuildAt(state, pid, idx, id, context)) continue;
       out.push({ id: id, def: def, cost: FB.buildCost(state, pid, id) });
     }
     return out;
   };
 
-  FB.buildingSlots = function (state, pid, id) {
+  FB.buildingSlots = function (state, pid, id, context) {
+    context = context && context.state === state && context.pid === pid
+      ? context : FB.buildingContext(state, pid);
     const out = [];
-    const sts = FB.settlementsOf(state, pid);
-    for (let idx = 0; idx < sts.length; idx++) {
-      if (FB.canBuildAt(state, pid, idx, id)) out.push(idx);
+    for (let idx = 0; idx < context.visibleCount; idx++) {
+      if (FB.canBuildAt(state, pid, idx, id, context)) out.push(idx);
     }
     return out;
   };
 
+  FB.buildableCount = function (state, pid, idx, context) {
+    context = context && context.state === state && context.pid === pid
+      ? context : FB.buildingContext(state, pid);
+    let count = 0;
+    for (const id in FBDATA.buildings) {
+      if (!FBDATA.buildings[id].fort &&
+          FB.canBuildAt(state, pid, idx, id, context)) count++;
+    }
+    return count;
+  };
+
+  FB.buildingOpenCount = function (state, pid, demesneContext) {
+    const context = FB.buildingContext(state, pid, demesneContext);
+    let open = 0;
+    for (let idx = 0; idx < context.visibleCount; idx++) {
+      open += FB.buildableCount(state, pid, idx, context);
+    }
+    return open;
+  };
+
   /* anything raisable in any settlement of the county (deed/picker gates) */
   FB.anyBuildable = function (state, pid) {
-    const sts = FB.settlementsOf(state, pid);
-    for (let idx = 0; idx < sts.length; idx++) {
-      if (FB.buildable(state, pid, idx).length) return true;
+    const context = FB.buildingContext(state, pid);
+    for (let idx = 0; idx < context.visibleCount; idx++) {
+      if (FB.buildableCount(state, pid, idx, context)) return true;
     }
     return false;
   };
@@ -8385,6 +8585,7 @@ window.FB = window.FB || {};
     delete state.player.flags.mason_visit; // the mason's discount is spent
     const record = { s: idx, id: id };
     done.push(record);
+    FB.invalidateBuildingIndex(state, pid);
     if (def.dev) {
       record.devGranted = FB.changeCountyDevelopment(state, pid, def.dev,
         'building');
@@ -8412,6 +8613,7 @@ window.FB = window.FB || {};
       if (done[i].id === id && done[i].s === idx && !done[i].ruined) {
         const record = builtInForWrite(state, pid)[i];
         record.ruined = true;
+        FB.invalidateBuildingIndex(state, pid);
         const granted = Number(record.devGranted);
         if (isFinite(granted) && granted) {
           FB.changeCountyDevelopment(state, pid, -granted, 'demolition');
@@ -9157,9 +9359,9 @@ window.FB = window.FB || {};
       const pop = FB.countyPopulation ? FB.countyPopulation(state, pid) : 5000;
       const endowmentObj = FB.marketEndowments ? FB.marketEndowments(state, pid) : null;
       const endowments = (endowmentObj && Array.isArray(endowmentObj.tags)) ? endowmentObj.tags : (Array.isArray(endowmentObj) ? endowmentObj : []);
-      const buildings = FB.builtIn ? FB.builtIn(state, pid).filter(function (b) { return !b.ruined; }) : [];
+      const buildingCount = FB.standingBuildingCountIn(state, pid, true);
 
-      let wealthScore = dev * 10 + buildings.length * 8 + endowments.length * 15;
+      let wealthScore = dev * 10 + buildingCount * 8 + endowments.length * 15;
       if (pr.coastal) wealthScore += 10;
 
       let hazardScore = fortLevel * 45 + intermediateForts * 30;
@@ -9652,10 +9854,15 @@ window.FB = window.FB || {};
 
       if (spoils.ruinedBuildings.length && state.buildings && state.buildings[targetPid]) {
         const bList = state.buildings[targetPid];
+        let buildingsChanged = false;
         for (let i = 0; i < bList.length; i++) {
           if (spoils.ruinedBuildings.indexOf(bList[i].id) >= 0) {
             bList[i].ruined = true;
+            buildingsChanged = true;
           }
+        }
+        if (buildingsChanged && FB.invalidateBuildingIndex) {
+          FB.invalidateBuildingIndex(state, targetPid);
         }
       }
 

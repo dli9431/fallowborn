@@ -4,12 +4,15 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/council.js',
+  'js/main.js',
+  'js/model.js',
   'js/parliament.js',
   'js/politics.js',
   'js/portrait.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
+  'js/world.js',
   'data/map_data.js',
   'data/political_institutions.js',
   'css/style.css'
@@ -561,10 +564,12 @@ test('family land-grant recipients are deterministic, read-only, and stale-safe'
       me.spouseId = spouse.id;
       var dead = child('grant_dead', 'Dead Kin', 40, 'm');
       dead.dead = true;
-      var landed = child('grant_landed', 'Landed Kin', 34, 'm');
-      landed.station = 2;
+      var gentry = child('grant_gentry', 'Gentry Kin', 34, 'm');
+      gentry.station = 2;
       var royal = child('grant_royal', 'Royal Kin', 29, 'f');
       royal.royalLine = { realmId:'old_line', memberId:'old_member' };
+      var localLord = child('grant_local_lord', 'Local Lord Kin', 42, 'm');
+      localLord.role = 'lord';
       var reigning = child('grant_reigning', 'Reigning Kin', 38, 'm');
       var reignRealm = FB.makeVassalRealm(s, {
         id:'grant_reigning_realm',
@@ -590,8 +595,9 @@ test('family land-grant recipients are deterministic, read-only, and stale-safe'
         minor:FB.landGrantRecipientStatus(s, minor.id).code,
         spouse:FB.landGrantRecipientStatus(s, spouse.id).code,
         dead:FB.landGrantRecipientStatus(s, dead.id).code,
-        landed:FB.landGrantRecipientStatus(s, landed.id).code,
+        gentry:FB.landGrantRecipientStatus(s, gentry.id).code,
         royal:FB.landGrantRecipientStatus(s, royal.id).code,
+        localLord:FB.landGrantRecipientStatus(s, localLord.id).code,
         reigning:FB.landGrantRecipientStatus(s, reigning.id).code,
         outsider:FB.landGrantRecipientStatus(s, partner.id).code,
         missing:FB.landGrantRecipientStatus(s, 'no_such_person').code
@@ -630,7 +636,7 @@ test('family land-grant recipients are deterministic, read-only, and stale-safe'
           }
         }
       }
-      eligible.station = 2;
+      eligible.dead = true;
       var staleBefore = FB.save.serialize();
       var staleRng = JSON.stringify(FB.getRngState());
       var countyGrant = FB.grantCounty(s, staleCounty, eligible.id);
@@ -639,6 +645,8 @@ test('family land-grant recipients are deterministic, read-only, and stale-safe'
       return {
         statuses:statuses,
         eligibleListed:first.indexOf(eligible.id + ':Daughter:31') >= 0,
+        gentryListed:first.indexOf(gentry.id + ':Son:34') >= 0,
+        royalListed:first.indexOf(royal.id + ':Daughter:29') >= 0,
         stable:JSON.stringify(first) === JSON.stringify(second),
         projectionReadOnly:projectionReadOnly,
         countyRejected:countyGrant === false,
@@ -653,13 +661,16 @@ test('family land-grant recipients are deterministic, read-only, and stale-safe'
       minor:'minor',
       spouse:'spouse',
       dead:'dead',
-      landed:'landed',
-      royal:'landed',
+      gentry:'eligible',
+      royal:'eligible',
+      localLord:'landed',
       reigning:'reigning',
       outsider:'not_kin',
       missing:'missing'
     });
     expect(result.eligibleListed).toBe(true);
+    expect(result.gentryListed).toBe(true);
+    expect(result.royalListed).toBe(true);
     expect(result.stable).toBe(true);
     expect(result.projectionReadOnly).toBe(true);
     expect(result.countyRejected).toBe(true);
@@ -837,6 +848,62 @@ test('named county grants preserve family identity and release household assignm
     expect(result.dynasty).toBeTruthy();
   });
 
+test('a family grantee absorbs the appointed fief on player succession despite a birth claim',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var pid = p.provs[p.provs.length - 1];
+      var rid = 'pv_' + pid;
+      var heir = FB.makeCharacter(s, {
+        id:'family_grantee_heir', name:'Appointed Heir', sex:'f',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 30, dyn:me.dyn || 'House Test', traits:[],
+        station:4,
+        fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null
+      });
+      heir.royalLine = {
+        realmId:'family_grantee_birth_claim',
+        memberId:'family_grantee_birth_member'
+      };
+      me.childrenIds.push(heir.id);
+      FB.touchFamily();
+
+      var granted = FB.grantCounty(s, pid, heir.id);
+      var woreAppointedCrown = FB.realmIdForRulerCharacter(s, heir) === rid;
+      var succeeded = FB.game.succeedTo(heir.id);
+      return {
+        granted:granted,
+        woreAppointedCrown:woreAppointedCrown,
+        succeeded:succeeded,
+        playerId:s.player.charId,
+        direct:s.player.provs.indexOf(pid) >= 0,
+        holder:s.holder[pid],
+        playerLiege:s.player.liege || null,
+        realmLiege:s.realms.player.liege || null,
+        appointedRealmAlive:!!(s.realms[rid] && s.realms[rid].alive),
+        secondThrone:FB.realmIdForRulerCharacter(s, heir)
+      };
+    });
+
+    expect(result).toEqual({
+      granted:true,
+      woreAppointedCrown:true,
+      succeeded:true,
+      playerId:'family_grantee_heir',
+      direct:true,
+      holder:'player',
+      playerLiege:null,
+      realmLiege:null,
+      appointedRealmAlive:false,
+      secondThrone:null
+    });
+  });
+
 test('named duchy grants map every county and seed succession from existing children',
   async function ({ page }, testInfo) {
     await startGovernanceGame(page, testInfo);
@@ -966,9 +1033,13 @@ test('Grant Land combines recipient and terms while preserving Back and Governan
         id:'grant_ui_relative', name:'Grant UI Relative', sex:'m',
         culture:me.culture, religion:me.religion,
         born:s.date.year - 24, dyn:me.dyn || 'House Test', traits:[],
+        station:4,
         fatherId:me.sex === 'm' ? me.id : null,
         motherId:me.sex === 'f' ? me.id : null
       });
+      recipient.royalLine = {
+        realmId:'grant_ui_birth_line', memberId:'grant_ui_birth_member'
+      };
       me.childrenIds.push(recipient.id);
       FB.touchFamily();
       FB.ui.showGovernance('domain');
@@ -988,6 +1059,8 @@ test('Grant Land combines recipient and terms while preserving Back and Governan
     await expect(page.getByRole('button', {
       name:/new loyal vassal/i
     })).toBeVisible();
+    await expect(page.locator('#gm-body .panelh', { hasText:'Family' }))
+      .toBeVisible();
     const familyChoice = page.locator(
       '[data-grant-recipient="' + setup.recipientId + '"]');
     await expect(familyChoice).toContainText('Grant UI Relative');
@@ -1021,6 +1094,8 @@ test('Grant Land combines recipient and terms while preserving Back and Governan
       return FB.state.holder[ids.firstCounty] === rid &&
         FB.realmRulerCharacterSnapshot(
           FB.state, rid).id === ids.recipientId &&
+        FB.state.chars[ids.recipientId].royalLine.realmId ===
+          'grant_ui_birth_line' &&
         contract.charterId === 'host_duty' && contract.tenure === 'term';
     }, setup)).toBe(true);
 
@@ -1043,6 +1118,27 @@ test('Grant Land combines recipient and terms while preserving Back and Governan
       return realm && realm.generated === true &&
         realm.ruler.name !== 'Grant UI Relative';
     }, generatedCounty)).toBe(true);
+  });
+
+test('Grant Land explains when no adult family recipient is eligible',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    await page.evaluate(function () {
+      var s = FB.state;
+      var current = FB.landGrantRecipients(s);
+      for (var i = 0; i < current.length; i++) current[i].c.dead = true;
+      FB.touchFamily();
+      FB.ui.showGrantLandRecipients(
+        'county', s.player.provs[s.player.provs.length - 1]);
+    });
+
+    await expect(page.locator('#gm-body .panelh', { hasText:'Family' }))
+      .toBeVisible();
+    await expect(page.locator('#gm-body')).toContainText(
+      'No adult relative is currently eligible.');
+    await expect(page.getByRole('button', { name:/new loyal vassal/i }))
+      .toBeVisible();
   });
 
 test('Governance county and grant flows return to Domain while Council reservations stay manual',

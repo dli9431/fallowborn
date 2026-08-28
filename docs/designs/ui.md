@@ -1344,8 +1344,12 @@ Manual **Grant Land** is a three-step modal: first choose a single county or com
 duchy, then choose a generated loyal vassal or an eligible adult relative, and finally set
 the service charter and tenure. Family rows name
 the character, relationship, and age and expose the complete grant sentence as their
-accessible label. Visible and browser Back from the recipient step restore the unchanged
-land picker; Back from the terms step restores the recipient picker; canceling still returns
+accessible label. The recipient sheet gives family its own heading; when nobody qualifies,
+an explicit empty state explains that the protagonist's spouse and relatives who already
+rule elsewhere cannot receive a separate fief. Social station and an unexercised royal
+claim do not hide otherwise eligible kin. Visible and browser Back from the recipient step
+restore the unchanged land picker; Back from the terms step restores the recipient picker;
+canceling still returns
 through the original Governance Domain context.
 The generated option preserves the same path used by Domain Cleanup, while a family choice
 is revalidated before mutation and returns to Governance after a successful grant.

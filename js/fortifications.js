@@ -81,15 +81,18 @@ window.FB = window.FB || {};
       }
       if (projectIndex >= 0) current.projects.splice(projectIndex, 1);
     }
+    if (FB.invalidateBuildingIndex) FB.invalidateBuildingIndex(state, pid);
   }
 
   FB.invalidateFortIndex = function () {
     cacheState = null;
     cacheBuildings = null;
     cache = null;
+    if (FB.invalidateBuildingIndex) FB.invalidateBuildingIndex();
   };
 
   FB.rebuildFortIndex = function (state) {
+    if (FB.invalidateBuildingIndex) FB.invalidateBuildingIndex(state);
     return rebuildIndex(state);
   };
 
@@ -354,6 +357,9 @@ window.FB = window.FB || {};
       delete fort.targetLevel;
       delete fort.completeTurn;
       delete fort.maintenanceGraceUntil;
+      if (FB.invalidateBuildingIndex) {
+        FB.invalidateBuildingIndex(state, item.pid);
+      }
       completed++;
       if (playerHolds(state, item.pid) && def) {
         state.player.prestige += def.prestige;
