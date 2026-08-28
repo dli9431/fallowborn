@@ -53179,6 +53179,16 @@
         "text": "Campaign losses from the live host: none recorded"
       }
     },
+    "src.01af58d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the active project to pause. Its research progress will be kept."
+      }
+    },
     "src.01b02b3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53357,6 +53367,16 @@
       ],
       "source": {
         "text": "Minimum acceptable station"
+      }
+    },
+    "src.02195bae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living daughter of the current playable head."
       }
     },
     "src.021ac3e1": {
@@ -63588,6 +63608,16 @@
         "text": "Ask a mediator to bind a peace. Spends the day."
       }
     },
+    "src.15bb503e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Pause research"
+      }
+    },
     "src.15bd0d68": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64458,6 +64488,16 @@
       ],
       "source": {
         "text": "The court decides after you spend the day. Refusal closes only this exact pairing."
+      }
+    },
+    "src.1729d0ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Switch research"
       }
     },
     "src.172a26fe": {
@@ -85155,16 +85195,6 @@
       ],
       "source": {
         "text": "The dice do not love you tonight."
-      }
-    },
-    "src.4085b1fa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Eligible: living child of the current playable head."
       }
     },
     "src.408879be": {
@@ -116390,6 +116420,16 @@
       ],
       "source": {
         "text": "Find the weakness no one else sees."
+      }
+    },
+    "src.7d165e5c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Switch to {technology}"
       }
     },
     "src.7d1a5880": {
@@ -152356,6 +152396,16 @@
         "text": "Build a fortune"
       }
     },
+    "src.c19e4568": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living son of the current playable head."
+      }
+    },
     "src.c19f06dd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156210,6 +156260,16 @@
       ],
       "source": {
         "text": "Mechanical bows trade shooting speed for power and modest training demands."
+      }
+    },
+    "src.c8871393": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No adult relative is currently eligible. Your spouse and relatives who already rule elsewhere cannot receive a separate grant."
       }
     },
     "src.c8887d35": {
@@ -174533,6 +174593,16 @@
       ],
       "source": {
         "text": "through a duchy, kingdom, or empire you hold, or your one"
+      }
+    },
+    "src.ecbaff85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{progress}/{cost} research; progress kept"
       }
     },
     "src.ecbb8d34": {
@@ -195646,6 +195716,14 @@
         "text": "Choose the Target"
       }
     },
+    "ui:Choose the active project to pause. Its research progress will be kept.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the active project to pause. Its research progress will be kept."
+      }
+    },
     "ui:Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -198993,12 +199071,20 @@
         "text": "Eligible workers produce more total yield in the assignments shown elsewhere."
       }
     },
-    "ui:Eligible: living child of the current playable head.": {
+    "ui:Eligible: living daughter of the current playable head.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "Eligible: living child of the current playable head."
+        "text": "Eligible: living daughter of the current playable head."
+      }
+    },
+    "ui:Eligible: living son of the current playable head.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Eligible: living son of the current playable head."
       }
     },
     "ui:Eligible: same-house cousin; closer branches have no living candidate.": {
@@ -205672,6 +205758,14 @@
         "text": "No active war or banner service."
       }
     },
+    "ui:No adult relative is currently eligible. Your spouse and relatives who already rule elsewhere cannot receive a separate grant.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No adult relative is currently eligible. Your spouse and relatives who already rule elsewhere cannot receive a separate grant."
+      }
+    },
     "ui:No adult resident household member is eligible for {profession} work.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -208770,6 +208864,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Patronymic suffix (-ovich)"
+      }
+    },
+    "ui:Pause research": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Pause research"
       }
     },
     "ui:Paused": {
@@ -215642,6 +215744,24 @@
       "location": "js/items.js",
       "source": {
         "text": "Swept back"
+      }
+    },
+    "ui:Switch research": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Switch research"
+      }
+    },
+    "ui:Switch to {technology}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "technology"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Switch to {technology}"
       }
     },
     "ui:Sworn peace pacts protect every reachable neighboring target.": {
@@ -228526,6 +228646,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{progress}/{cost} research"
+      }
+    },
+    "ui:{progress}/{cost} research; progress kept": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "progress"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{progress}/{cost} research; progress kept"
       }
     },
     "ui:{protagonist} bought lawful freedom from {lord} at {home} for {money:price} in {year}.": {

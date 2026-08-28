@@ -2331,7 +2331,10 @@ window.FB = window.FB || {};
 
   /* Manual host control is a hard boundary. It preserves a route issued by
      a map tap and a forced battlefield rout, but cancels council-event and
-     automated routes, including unmarked routes saved by older versions. */
+     automated routes, including unmarked routes saved by older versions.
+     Canceling an automatic route is not a hand-issued hold: leaving
+     automation free to command the now-idle host again is what lets a later
+     defensive/offensive selection take effect, including during a skip. */
   FB.enforceManualHostControl = function (state) {
     if (!state || !FB.hostAutomationManual()) return;
     for (const host of state.armies || []) {
@@ -2348,7 +2351,6 @@ window.FB = window.FB || {};
         host.path = [];
         host.goal = null;
         host.moveLeft = 0;
-        host.holdManual = 1;
         requestMap();
       }
       delete host.eventOrder;

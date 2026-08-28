@@ -140,7 +140,7 @@ test('manual host control rejects war-event movement and stale hunt routes',
       path:[],
       moveLeft:0,
       huntPrey:null,
-      held:true
+      held:false
     });
   });
 

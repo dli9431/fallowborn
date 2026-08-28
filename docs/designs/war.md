@@ -497,6 +497,8 @@ overrides either, and while active it supersedes the council's `huntPrey`.
 Manual host control is also a hard boundary for event outcomes: the War Council's hunt
 order is unavailable in manual mode, and stale event or automated routes are halted before
 the daily march while a hand-tapped route and a forced battlefield retreat remain intact.
+Canceling such a route does not create a hand-given halt, so selecting Defensive or
+Offensive again can command the idle host immediately, including during fast-forward.
 Automated stances have a persistent **Return automated hosts to friendly land when supplies
 run low** setting. When enabled, a host abroad with seven or fewer projected supply days,
 or no supply, seeks reachable friendly territory before its ordinary stance goal. It stays

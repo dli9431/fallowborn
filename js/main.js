@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.10';
+  FB.VERSION = '1.165.11';
   FB.CHANGELOG = [
+    { v: '1.165.11', date: '2026-08-28', changes: [
+      'Automated wartime hosts now resume their stance during fast-forward after leaving manual command.'
+    ] },
     { v: '1.165.10', date: '2026-08-28', changes: [
       'Late-game building summaries now avoid a redundant fort scan when calculating settlement visibility.'
     ] },

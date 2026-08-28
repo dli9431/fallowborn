@@ -253,7 +253,10 @@ heir (`hasHeirPick`) or a title/independence choice (`hasTitleChoice`); under `a
 `pickHeir` effect instead names the first in line
 silently (`UI.autoResolving`). A separate three-way host command (`G.auto.hosts`:
 manual / defensive / offensive) automates the war host's marches — see
-[war.md](war.md). `G.auto.hostResupply` independently controls the default-on low-supply
+[war.md](war.md). A route canceled by choosing manual control remains idle rather than
+becoming a persistent hand-issued halt, so choosing an automated stance again takes effect
+on the next daily tick whether time is flowing normally or fast-forwarding.
+`G.auto.hostResupply` independently controls the default-on low-supply
 return for defensive and offensive host command. It sends an automated host toward friendly
 territory at one week of projected supply or when empty, then keeps it refitting through the
 normal low-supply threshold. It never moves a manually controlled host. Death is never

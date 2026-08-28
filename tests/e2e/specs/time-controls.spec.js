@@ -778,6 +778,109 @@ test('fast-forward batches six cheap days without requesting per-day UI refreshe
     expect(result.continuationQueued).toBe(1);
   });
 
+test('offensive host automation resumes during fast-forward after manual control',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const player = state.player;
+      const enemyId = Object.keys(state.realms).filter(function (rid) {
+        const realm = state.realms[rid];
+        return rid !== 'player' && realm && realm.alive && !realm.liege;
+      })[0];
+      const originalWorld = FB.world;
+      const originalPassDay = FB.game.passDay;
+      const originalAnimationFrame = window.requestAnimationFrame;
+      const originalFinished = FB.ui.fastForwardFinished;
+      const originalMapRequest = FB.map.request;
+      const originalHosts = FB.game.auto.hosts;
+      const callbacks = [];
+      let days = 0;
+      try {
+        for (const rid in state.realms) {
+          if (state.realms[rid]) state.realms[rid].war = null;
+        }
+        FB.world = {
+          adj:{ home:{ target:1 }, target:{ home:1 } },
+          waterAdj:{ home:{}, target:{} },
+          byId:{
+            home:{ id:'home', name:'Home', cx:0, cy:0, terrain:'farmland' },
+            target:{ id:'target', name:'Target', cx:20, cy:0,
+              terrain:'farmland' }
+          }
+        };
+        player.provinceId = 'home';
+        player.provs = ['home'];
+        state.realms[enemyId].capital = 'target';
+        state.owner.home = 'player';
+        state.holder.home = 'player';
+        state.owner.target = enemyId;
+        state.holder.target = enemyId;
+        player.war = {
+          enemy:enemyId, target:'target', wins:0, losses:0,
+          seasons:0, defending:false, strength:1
+        };
+        state.armies = [{
+          id:'fast-forward-auto-host', realm:'player', men:500, size:500,
+          units:{ levy:500 }, at:'home', from:'home', moveLeft:0,
+          path:[], goal:null, supply:100
+        }];
+        state.armyDown = {};
+        state.armyDown[enemyId] = state.turn;
+        state.armyDetachmentDown = {};
+        state.armyCohorts = {};
+        FB.invalidateRealmCache();
+        FB.invalidateFortIndex();
+        FB.map.request = function () {};
+
+        FB.game.auto.hosts = 'off';
+        FB.armyTick(state);
+        FB.game.auto.hosts = 'manual';
+        FB.enforceManualHostControl(state);
+        const heldAfterManual = !!state.armies[0].holdManual;
+        FB.game.auto.hosts = 'off';
+
+        FB.game.passDay = function () {
+          state.turn++;
+          days++;
+          FB.armyTick(state);
+          return state.armies[0].at === 'target' ? 'season' : 'day';
+        };
+        window.requestAnimationFrame = function (callback) {
+          callbacks.push(callback);
+          return callbacks.length;
+        };
+        FB.ui.fastForwardFinished = function () {};
+        FB.game.paused = true;
+        FB.game.skipAhead();
+        while (callbacks.length && FB.game.fastForwarding) callbacks.shift()();
+        return {
+          heldAfterManual:heldAfterManual,
+          at:state.armies[0].at,
+          days:days,
+          paused:FB.game.paused
+        };
+      } finally {
+        FB.game.passDay = originalPassDay;
+        window.requestAnimationFrame = originalAnimationFrame;
+        FB.ui.fastForwardFinished = originalFinished;
+        FB.map.request = originalMapRequest;
+        FB.game.auto.hosts = originalHosts;
+        FB.game.fastForwarding = false;
+        FB.game.paused = true;
+        FB.world = originalWorld;
+        FB.invalidateRealmCache();
+        FB.invalidateFortIndex();
+      }
+    });
+
+    expect(result.heldAfterManual).toBe(false);
+    expect(result.at).toBe('target');
+    expect(result.days).toBeGreaterThan(0);
+    expect(result.days).toBeLessThan(92);
+    expect(result.paused).toBe(true);
+  });
+
 test('status-only deed refresh reuses visibility and skips previews',
   async function ({ page }) {
     await startDeterministicGame(page);
