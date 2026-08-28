@@ -448,6 +448,8 @@ test('ruler establishments sink gold into research, administration, and military
       if (mailIndex >= 0) record.completed.splice(mailIndex, 1);
       const guardGrandfathered = FB.householdStandardActive(s, 'household_guard');
       if (mailIndex >= 0) record.completed.push('mail_hauberks');
+      const guardRequirement = FB.householdStandardUpgradeAvailable(
+        s, 'household_guard');
       FB.ui.showHousehold();
       return {
         before:before,
@@ -455,6 +457,7 @@ test('ruler establishments sink gold into research, administration, and military
         effects:effects,
         guardActive:FB.householdStandardActive(s, 'household_guard'),
         guardGrandfathered:guardGrandfathered,
+        guardRequirement:guardRequirement,
         rulerCount:FB.householdStandardIds().filter(function (id) {
           return FBDATA.householdStandards[id].kind === 'ruler';
         }).length,
@@ -516,7 +519,7 @@ test('ruler establishments sink gold into research, administration, and military
       '[data-household-standard-adjust="1"]');
     await guardIncrease.hover();
     await expect(page.locator('#tooltip')).toContainText('Ruler household and realm');
-    await expect(page.locator('#tooltip')).toContainText('Requires Duke rank.');
+    await expect(page.locator('#tooltip')).toContainText(result.guardRequirement);
 
     const dormant = await page.evaluate(function () {
       const s = FB.state;
@@ -534,7 +537,7 @@ test('ruler establishments sink gold into research, administration, and military
       active:false,
       levy:0,
       upkeep:0,
-      available:'Requires Duke rank.'
+      available:result.guardRequirement
     });
   });
 

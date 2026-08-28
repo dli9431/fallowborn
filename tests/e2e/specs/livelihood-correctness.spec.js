@@ -802,8 +802,10 @@ test('staffing assistant completes an upgraded crew instead of scattering partia
       const s = FB.state;
       const me = s.chars[s.player.charId];
       s.player.tier = 0;
+      me.born = s.date.year - 28;
       let helper = FB.householdWorkers(s).filter(function (worker) {
-        return worker.id !== me.id;
+        return worker.id !== me.id &&
+          !(FB.familyOfficeRecord && FB.familyOfficeRecord(s, worker.id));
       })[0];
       if (!helper) {
         const province = FB.world.byId[s.player.provinceId];
@@ -815,6 +817,7 @@ test('staffing assistant completes an upgraded crew instead of scattering partia
         helper.spouseId = me.id;
         FB.touchFamily();
       }
+      helper.born = s.date.year - 28;
       for (const worker of FB.householdWorkers(s)) {
         worker.career = {
           profession:worker.id === me.id || worker.id === helper.id
