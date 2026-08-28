@@ -51,7 +51,10 @@ window.FB = window.FB || {};
   SH.activeTab = 'actions';    // right panel: actions | prov | network | log
   let activeLeftTab = 'char';   // left panel: char | family (Self open by default)
   const LEFT_TABS = ['char', 'family'];
-  const actionGroupsOpen = { work:true, life:false, faith:false, realm:false, war:false };
+  const actionGroupsOpen = {
+    work:true, life:false, faith:false, realm:false, war:false,
+    deeds:true, personal:false, ruler:false
+  };
   const selfSectionsOpen = { titles:false, possessions:false };
   const ACTION_GROUPS = [
     { id:'work', label:'🧰 Work & Wealth' },
@@ -60,11 +63,17 @@ window.FB = window.FB || {};
     { id:'realm', label:'👑 Rank & Realm' },
     { id:'war', label:'⚔ War & Diplomacy' }
   ];
+  const ACTION_TYPE_GROUPS = [
+    { id:'deeds', label:'⚡ One-shot & recurring deeds' },
+    { id:'personal', label:'🌿 Personal decisions' },
+    { id:'ruler', label:'👑 Ruler decisions' }
+  ];
   const DEED_ITEM_KEYS = ['q', 'w', 'e', 'a', 's', 'd', 'z', 'x', 'c'];
   let activeActionSection = null;
   let activeActionState = null;
   let actionsRenderedState = null;
   let actionsRenderedLocale = '';
+  let actionsRenderedGrouping = '';
   let actionsVisibleSignature = '';
   let deedStatusRefreshedState = null;
   let deedStatusRefreshedTurn = 0;
@@ -73,6 +82,31 @@ window.FB = window.FB || {};
   let focusSectionOpen = true;
   function markActionsDirty() {
     actionsDirty = true;
+  }
+
+  function deedGroupingStyle() {
+    return FB.game && FB.game.uiPrefs && FB.game.uiPrefs.groupDeedsByActionType
+      ? 'action-type' : 'theme';
+  }
+
+  function deedActionGroups() {
+    return deedGroupingStyle() === 'action-type'
+      ? ACTION_TYPE_GROUPS : ACTION_GROUPS;
+  }
+
+  function deedGroupForAction(action) {
+    if (deedGroupingStyle() !== 'action-type') {
+      return action && action.group || 'realm';
+    }
+    if (action && action.layoutGroup) return action.layoutGroup;
+    return action && action.flow === 'choices' ? 'personal' : 'deeds';
+  }
+
+  function deedGroupForId(id) {
+    for (const action of FB.instants || []) {
+      if (action.id === id) return deedGroupForAction(action);
+    }
+    return deedGroupingStyle() === 'action-type' ? 'personal' : 'realm';
   }
   const NETWORK_SECTIONS = [
     'household', 'connections', 'trade', 'politics', 'realm'
@@ -121,8 +155,9 @@ window.FB = window.FB || {};
 
   function actionSectionIndex(id) {
     if (id === 'focus') return 0;
-    for (let i = 0; i < ACTION_GROUPS.length; i++) {
-      if (ACTION_GROUPS[i].id === id) return i + 1;
+    const groups = deedActionGroups();
+    for (let i = 0; i < groups.length; i++) {
+      if (groups[i].id === id) return i + 1;
     }
     return -1;
   }
@@ -202,10 +237,11 @@ window.FB = window.FB || {};
   }
 
   UI.activateDeedSection = function (index) {
-    if (index < 0 || index > ACTION_GROUPS.length) return false;
+    const groups = deedActionGroups();
+    if (index < 0 || index > groups.length) return false;
     const box = $('tab-actions');
     if (!box) return true;
-    const id = index === 0 ? 'focus' : ACTION_GROUPS[index - 1].id;
+    const id = index === 0 ? 'focus' : groups[index - 1].id;
     const header = box.querySelector('[data-action-section="' + id + '"]');
     if (!header) return true;
     const repeatToggles = !!(FB.game && FB.game.uiPrefs &&
@@ -232,7 +268,7 @@ window.FB = window.FB || {};
         break;
       }
     }
-    const group = action && action.group || 'realm';
+    const group = deedGroupForAction(action);
     actionGroupsOpen[group] = true;
     activeActionSection = group;
     setTab('actions', { history:false });
@@ -930,7 +966,7 @@ window.FB = window.FB || {};
       detailsHtml += '<div>' + esc(FB.warLossesText(s, feedback)) + '</div>';
       const effectText = FB.warEffectsText(s, feedback);
       if (effectText) detailsHtml += '<div>' + esc(effectText) + '</div>';
-      detailsHtml += '<div style="font-size:12px;color:var(--helper-text-color);margin-top:3px">' +
+      detailsHtml += '<div class="war-detail-note">' +
         esc(FB.T('Campaign condition, leadership, and refits tilt every field battle; live troop totals change only when a loss names the host.')) + '</div>';
     }
 
@@ -1004,8 +1040,10 @@ window.FB = window.FB || {};
     /* A player returning to Deeds without an intervening refresh can keep the
        mounted controls, listeners, and disclosure state.
        Programmatic callers and dirty state always take the exact rebuild. */
+    const groupingStyle = deedGroupingStyle();
     if (reuse && !actionsDirty && actionsRenderedState === s &&
-        actionsRenderedLocale === FB.locale && box.hasChildNodes()) {
+        actionsRenderedLocale === FB.locale &&
+        actionsRenderedGrouping === groupingStyle && box.hasChildNodes()) {
       return;
     }
     /* Give desktop players a complete, stable keyboard map as soon as a life
@@ -1015,6 +1053,9 @@ window.FB = window.FB || {};
       activeActionState = s;
       activeActionSection = FB.isTouch ? null : 'focus';
       focusSectionOpen = true;
+    } else if (activeActionSection &&
+        actionSectionIndex(activeActionSection) < 0) {
+      activeActionSection = FB.isTouch ? null : 'focus';
     }
     let h = '';
     if (FB.tutorialActive && FB.tutorialActive(s) &&
@@ -1193,7 +1234,11 @@ window.FB = window.FB || {};
       body.setAttribute('data-action-group-body', groupId);
       const ih = document.createElement('div');
       ih.className = 'actionsubhead';
-      ih.textContent = FB.T('One-time deeds');
+      ih.textContent = FB.T(groupingStyle === 'action-type'
+        ? (groupId === 'deeds' ? 'One-shot & recurring deeds'
+          : (groupId === 'personal' ? 'Personal decisions'
+            : 'Ruler decisions'))
+        : 'One-time deeds');
       body.appendChild(ih);
       for (const listedItem of items) {
         let item = listedItem;
@@ -1409,9 +1454,10 @@ window.FB = window.FB || {};
       for (const item of focuses) appendFocus(item, focusBody);
       box.appendChild(focusBody);
     }
-    for (const group of ACTION_GROUPS) {
+    const actionGroups = deedActionGroups();
+    for (const group of actionGroups) {
       const ga = instants.filter(function (item) {
-        return (item.a.group || 'realm') === group.id;
+        return deedGroupForAction(item.a) === group.id;
       });
       if (!ga.length) continue;
       const toggle = document.createElement('button');
@@ -1511,7 +1557,7 @@ window.FB = window.FB || {};
           } else if (commitment === 'research') {
             UI.showTech();
           } else if (commitment === 'travel') {
-            revealActionControl('life',
+            revealActionControl(deedGroupForId('travel_turn_back'),
               '[data-action-id="travel_turn_back"], ' +
               '[data-action-id="travel_return_cargo"], ' +
               '[data-action-id="travel_marriage_residence"], ' +
@@ -1536,6 +1582,7 @@ window.FB = window.FB || {};
     if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
     actionsRenderedState = s;
     actionsRenderedLocale = FB.locale;
+    actionsRenderedGrouping = groupingStyle;
     actionsVisibleSignature = visibleSignature;
     deedStatusRefreshedState = s;
     deedStatusRefreshedTurn = s.turn;

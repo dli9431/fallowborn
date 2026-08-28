@@ -61,15 +61,78 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media (pointer: coarse) { .keyhint { display: none; } }
 /* live counters: monospace digits so changing numbers never change width */
 .mono { font-family: Consolas, Menlo, 'Courier New', monospace; font-size: 0.95em; }
+#tooltip,
+.family-tree-info-tooltip {
+  --tooltip-accent-color: #e0c060;
+  --tooltip-warning-color: #e0bd79;
+  --tooltip-danger-color: #d79579;
+  --tooltip-positive-color: #9fc06a;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14px; line-height: 1.4;
+  color: var(--main-text-color); text-align: left;
+}
 #tooltip {
   position: fixed; z-index: 80; pointer-events: auto; box-sizing: border-box;
   background: #2c2418; border: 1px solid #a5842f; border-radius: 8px;
-  max-width: 320px; padding: 9px 11px; font-size: 15px; line-height: 1.4;
-  color: var(--main-text-color); box-shadow: 0 4px 18px #000;
+  max-width: 320px; padding: 10px 12px; box-shadow: 0 4px 18px #000;
   max-height: calc(100vh - 16px); overflow-y: auto;
 }
-#tooltip b { color: #e0c060; }
-#tooltip .actionbtn { margin-top: 6px; width: 100%; text-align: left; }
+#tooltip .tooltip-content {
+  display: block; width: auto; max-width: none;
+  margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none;
+  background: transparent; color: var(--main-text-color);
+  font-family: inherit; font-size: inherit; font-weight: normal; line-height: inherit;
+  overflow-wrap: anywhere;
+}
+#tooltip b, #tooltip strong {
+  color: var(--main-text-color); font-family: inherit;
+  font-size: inherit; line-height: inherit;
+}
+#tooltip .tooltip-title {
+  margin: 0 0 4px; color: var(--tooltip-accent-color);
+  font-size: 14px; font-weight: bold; line-height: 1.35;
+}
+#tooltip .tooltip-copy { color: var(--main-text-color); }
+#tooltip .tooltip-meta,
+#tooltip i, #tooltip em,
+#tooltip .hint, #tooltip .adesc, #tooltip .odesc,
+#tooltip .cmeta, #tooltip .muted, #tooltip .path-hint,
+#tooltip small, #tooltip dt, #tooltip .war-detail-note,
+#tooltip .governance-markers {
+  color: var(--helper-text-color); font-family: inherit;
+  font-size: 13px; font-style: normal; line-height: 1.4;
+}
+#tooltip .tooltip-meta { margin-top: 4px; }
+#tooltip .tooltip-title + .tooltip-meta { margin-top: 0; }
+#tooltip .tooltip-meta + .tooltip-copy { margin-top: 4px; }
+#tooltip .tooltip-content > .adesc { display: block; margin: 0; }
+#tooltip .tooltip-content > .adesc + .adesc { margin-top: 4px; }
+#tooltip p { margin: 0; }
+#tooltip p + p { margin-top: 7px; }
+#tooltip ul, #tooltip ol { margin: 4px 0 0; padding-left: 18px; }
+#tooltip li + li { margin-top: 2px; }
+#tooltip .kv { gap: 12px; padding: 2px 0; font-size: 13px; line-height: 1.4; }
+#tooltip .kv > span:first-child,
+#tooltip .governance-vassal-stats .kv > span:first-child,
+#tooltip .charcard .ccmeta, #tooltip .charcard .ccskills,
+#tooltip .event-participant-identity > span {
+  font-family: inherit; font-size: 13px; line-height: 1.4;
+}
+#tooltip .land-section-title,
+#tooltip .event-consequence-section > b,
+#tooltip .fort-next-tier > b {
+  color: var(--tooltip-accent-color); font-size: 13px; line-height: 1.35;
+}
+#tooltip .op-good { color: var(--tooltip-positive-color); }
+#tooltip .op-bad, #tooltip .warning, #tooltip .warnote,
+#tooltip .unaffordable { color: var(--tooltip-danger-color); }
+#tooltip .op-warn { color: var(--tooltip-warning-color); }
+#tooltip .op-mid { color: var(--helper-text-color); }
+#tooltip .asset-effect-cost b { color: var(--helper-text-color); }
+#tooltip .actionbtn, #tooltip .btn {
+  font-family: inherit; font-size: 13px; line-height: 1.3;
+}
+#tooltip .actionbtn { margin-top: 7px; width: 100%; text-align: left; }
 #tooltip .fort-next-tier { margin: 6px 0 4px; padding: 6px 8px; }
 #tooltip .fort-detail { margin: 6px 0 4px; }
 .hidden { display: none !important; }
@@ -1019,32 +1082,32 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .person-assignment-value { min-width: 0; color: var(--main-text-color); }
 .person-assignment-row.consequence .person-assignment-value { color: #d0ad76; }
 .asset-effect-summary {
-  display: block; width: 100%; margin-top: 8px; text-align: left;
+  display: flex; flex-direction: column; gap: 4px;
+  width: 100%; margin-top: 8px; text-align: left;
 }
-.asset-effect-cell {
-  display: grid; grid-template-columns: minmax(96px, .62fr) minmax(0, 1.62fr);
-  gap: 8px; min-width: 0; padding: 2px 0;
+.asset-effect-stakes {
+  min-width: 0; color: var(--main-text-color); font-size: 14px;
+  font-weight: bold; line-height: 1.4; overflow-wrap: anywhere;
 }
-.asset-effect-label {
-  color: var(--helper-text-color); font-size: 11px; font-weight: bold;
-  letter-spacing: .04em; text-transform: uppercase; padding-top: 2px;
+.asset-effect-context,
+.asset-effect-terms {
+  min-width: 0; color: var(--helper-text-color); font-size: 13px;
+  line-height: 1.35; overflow-wrap: anywhere;
 }
-.asset-effect-value {
-  min-width: 0; color: var(--main-text-color); font-size: 13px; line-height: 1.4;
-  overflow-wrap: anywhere;
+.asset-effect-costs {
+  display: flex; flex-wrap: wrap; gap: 3px 14px; min-width: 0;
+  color: var(--main-text-color); font-size: 13px; line-height: 1.35;
 }
-.asset-effect-cell.unaffordable .asset-effect-value { color: #d79579; }
-.fullsheet-modal .asset-effect-summary {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 18px;
-}
+.asset-effect-cost { min-width: 0; overflow-wrap: anywhere; }
+.asset-effect-cost b { color: var(--helper-text-color); margin-right: 3px; }
+.asset-effect-cost.unaffordable { color: #d79579; }
 .asset-owned-list { display: grid; gap: 8px; margin: 6px 0 10px; }
 .asset-owned-row {
   padding: 9px 10px; border: 1px solid #55452a; border-radius: 8px;
   background: #2a2216; color: var(--main-text-color); font-size: 14px;
 }
 .asset-owned-row > b { display: block; color: var(--main-text-color); }
-/* settlement sheet cards: name row with icon actions; audit table behind ? */
+/* settlement sheet cards: name row with icon actions; stakes summary behind ? */
 .settcard-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .settcard-head > b { color: var(--main-text-color); font-size: 15px; }
 .settcard-actions { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
@@ -1307,6 +1370,12 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 }
 .household-standard-adjustment-section > b {
   display: block; margin-bottom: 5px; color: #d8b24a;
+}
+.household-standard-projection {
+  margin: 6px 0 0; color: var(--helper-text-color); font-size: 13px;
+}
+.household-standard-projection > b {
+  color: var(--main-text-color); margin-right: 3px;
 }
 .household-entry.actionbtn > .keyhint {
   position: absolute; z-index: 1; top: 50%; left: 7px;
@@ -1700,6 +1769,9 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   font-size: 12px;
   color: #dfd2ab;
   line-height: 1.35;
+}
+.war-detail-note {
+  margin-top: 3px; color: var(--helper-text-color); font-size: 12px;
 }
 .war-card .actionbtn {
   margin-top: 6px;
@@ -3687,9 +3759,8 @@ textarea.modjson, textarea.savetext {
 .family-tree-info-tooltip {
   display: none; position: absolute; z-index: 4; top: calc(100% + 4px); right: 0;
   width: min(430px, calc(100vw - 48px)); padding: 10px 12px;
-  border: 1px solid #6f5a30; border-radius: 7px; background: #211a13;
-  color: var(--main-text-color); font-size: 14px; font-style: normal; font-weight: normal;
-  line-height: 1.4; text-align: left; box-shadow: 0 6px 20px #000a;
+  border: 1px solid #a5842f; border-radius: 8px; background: #2c2418;
+  font-style: normal; font-weight: normal; box-shadow: 0 4px 18px #000;
 }
 .family-tree-info-tooltip.is-open { display: block; }
 .family-tree-modal #gm-body { min-width: 0; }
@@ -4588,8 +4659,6 @@ textarea.modjson, textarea.savetext {
   .household-standard-choice.actionbtn { grid-template-columns: 1fr; }
   .household-standard-choice-terms { grid-column: 1; }
   .household-standard-choice-terms { min-width: 0; }
-  .fullsheet-modal .asset-effect-summary { display: block; }
-  .asset-effect-cell { grid-template-columns: 1fr; gap: 0; padding: 3px 0; }
   .enterprise-staffing-totals {
     grid-template-columns: 1fr; gap: 5px; padding: 9px;
   }

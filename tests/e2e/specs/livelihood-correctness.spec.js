@@ -291,8 +291,9 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
     await overview.hover();
     await expect(page.locator('#tooltip'))
       .toContainText('Inactive until fully staffed');
-    await expect(page.locator('#tooltip')).toContainText('Owner');
-    await expect(page.locator('#tooltip')).toContainText('Household dynasty');
+    await expect(page.locator('#tooltip')).toContainText(
+      'Passes to heirs as family property');
+    await expect(page.locator('#tooltip')).not.toContainText('Owner');
     const empty = page.locator('.enterprise-worker-empty');
     await expect(empty.locator('.settcard-head'))
       .not.toContainText('Assign or train an eligible household member');
@@ -793,7 +794,9 @@ test('enterprise manager exposes upgrades, staffing thresholds, and paid labor c
     await expect(compactOverview.locator('.enterprise-management-details'))
       .toContainText('Fully staffed');
     await expect(compactOverview.locator('.enterprise-management-details'))
-      .toContainText('Owner');
+      .toContainText('Passes to heirs as family property');
+    await expect(compactOverview.locator('.enterprise-management-details'))
+      .not.toContainText('Owner');
   });
 
 test('staffing preview discloses details and staffs each idle enterprise directly',

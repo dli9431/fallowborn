@@ -356,6 +356,13 @@ test('family tree highlights and connects founders, opens on you, pans, previews
     await expect(treeInfoTip).toBeVisible();
     await expect(treeInfoTip).toContainText(
       'Click a face to open their sheet; hover it for details.');
+    expect(await treeInfoTip.evaluate(function (tip) {
+      const style = getComputedStyle(tip);
+      return {
+        fontSize:style.fontSize,
+        usesGeorgia:style.fontFamily.indexOf('Georgia') >= 0
+      };
+    })).toEqual({ fontSize:'14px', usesGeorgia:true });
     const primaryTree = page.locator('.family-tree-primary');
     const currentChip = primaryTree.locator(
       '.ftchip[data-cid="' + family.meId + '"]').first();

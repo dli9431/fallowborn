@@ -1178,8 +1178,8 @@ window.FB = window.FB || {};
   }
 
   /* Shared presentation for assets and persistent effects. The owning system
-     supplies every value; this renderer only keeps the audit's comparison
-     order, localization, affordability cue, and responsive markup common. */
+     supplies every value; this renderer leads with the consequence and keeps
+     only the costs and terms that matter to the decision. */
   function assetSummaryValue(value, fallback) {
     const supplied = value !== undefined && value !== null && value !== '';
     const source = supplied ? value : fallback;
@@ -1194,26 +1194,51 @@ window.FB = window.FB || {};
 
   function assetEffectSummary(options) {
     const opts = options || {};
-    const fields = [
-      { key:'owner', label:FB.T('Owner'), fallback:FB.T('Not applicable') },
-      { key:'scope', label:FB.T('Scope'), fallback:FB.T('Not applicable') },
-      { key:'setupCost', label:FB.T('Setup cost'), fallback:FB.T('None') },
-      { key:'recurringCost', label:FB.T('Recurring cost'), fallback:FB.T('None') },
-      { key:'effect', label:FB.T('Effect'), fallback:FB.T('No mechanical effect') },
-      { key:'transferRule', label:FB.T('Transfer rule'),
-        fallback:FB.T('Cannot be transferred') },
-      { key:'expiry', label:FB.T('Expiry'), fallback:FB.T('No fixed end') }
-    ];
+    const effect = assetSummaryValue(opts.effect, FB.T('No mechanical effect'));
+    const scope = assetSummaryValue(opts.scope, '');
+    const setup = assetSummaryValue(opts.setupCost, '');
+    const recurring = assetSummaryValue(opts.recurringCost, '');
+    const transfer = assetSummaryValue(opts.transferRule, '');
+    const expiry = assetSummaryValue(opts.expiry, '');
+    const none = FB.T('None');
+    const noFixedEnd = FB.T('No fixed end');
+    function useful(value) {
+      return value.text && value.text !== none &&
+        value.text !== FB.T('Not applicable');
+    }
+    const hasSetup = useful(setup);
+    const hasRecurring = useful(recurring);
+    const hasTransfer = useful(transfer);
+    const hasExpiry = useful(expiry) && expiry.text !== noFixedEnd;
     let h = '<span class="asset-effect-summary' +
       (opts.compact ? ' compact' : '') + '" role="group" aria-label="' +
-      esc(FB.T('Asset and effect summary')) + '">';
-    for (const field of fields) {
-      const value = assetSummaryValue(opts[field.key], field.fallback);
-      const fieldClass = field.key.replace(/([A-Z])/g, '-$1').toLowerCase();
-      h += '<span class="asset-effect-cell asset-effect-' + fieldClass +
-        (value.tone ? ' ' + esc(value.tone) : '') + '">' +
-        '<span class="asset-effect-label">' + esc(field.label) + '</span>' +
-        '<span class="asset-effect-value">' + esc(value.text) + '</span></span>';
+      esc(FB.T('What is at stake')) + '">' +
+      '<span class="asset-effect-stakes' +
+      (effect.tone ? ' ' + esc(effect.tone) : '') + '">' +
+      esc(effect.text) + '</span>';
+    if (useful(scope)) {
+      h += '<span class="asset-effect-context">' + esc(scope.text) + '</span>';
+    }
+    if (hasSetup || hasRecurring) {
+      h += '<span class="asset-effect-costs">';
+      if (hasSetup) {
+        h += '<span class="asset-effect-cost' +
+          (setup.tone ? ' ' + esc(setup.tone) : '') + '"><b>' +
+          esc(FB.T('Cost')) + '</b> ' + esc(setup.text) + '</span>';
+      }
+      if (hasRecurring) {
+        h += '<span class="asset-effect-cost' +
+          (recurring.tone ? ' ' + esc(recurring.tone) : '') + '"><b>' +
+          esc(FB.T('Ongoing')) + '</b> ' + esc(recurring.text) + '</span>';
+      }
+      h += '</span>';
+    }
+    if (hasTransfer || hasExpiry) {
+      const terms = [];
+      if (hasTransfer) terms.push(transfer.text);
+      if (hasExpiry) terms.push(expiry.text);
+      h += '<span class="asset-effect-terms">' +
+        esc(terms.join(' · ')) + '</span>';
     }
     return h + '</span>';
   }
@@ -1232,14 +1257,12 @@ window.FB = window.FB || {};
   function assetSeasonalMoneyCost(amount) {
     amount = Number(amount) || 0;
     return amount
-      ? FB.T('{money:amount} each season · shown in Money each season', {
-        amount:amount
-      })
+      ? FB.T('{money:amount} each season', { amount:amount })
       : FB.T('None');
   }
 
   /* Compact asset card: icon, name, one-line effect, optional meta line; the
-     full audit table and description sit behind the ? button — an inline
+     concise stakes summary and description sit behind the ? button — an inline
      toggle on touch/tablet layouts, replaced by the hover/focus side tooltip
      on desktop (never both at once; the CSS hides the ? where the tooltip
      serves). Callers compose the action
@@ -4098,6 +4121,7 @@ window.FB = window.FB || {};
       const tip = document.createElement('div');
       tip.id = 'tooltip';
       tip.className = 'hidden';
+      tip.setAttribute('role', 'tooltip');
       document.body.appendChild(tip);
       let hideTipTimer = null;
       function cancelHideTip() {
@@ -4128,6 +4152,27 @@ window.FB = window.FB || {};
         tip.style.overflowY = '';
         tip.style.boxSizing = '';
       }
+      function tooltipContentHtml(detailsHtml, contentClass) {
+        const classes = String(contentClass || '').split(/\s+/).filter(function (name) {
+          return name && name !== 'hidden' && /^[a-zA-Z0-9_-]+$/.test(name);
+        });
+        return '<div class="tooltip-content' +
+          (classes.length ? ' ' + classes.map(function (name) {
+            return esc(name);
+          }).join(' ') : '') + '">' +
+          detailsHtml + '</div>';
+      }
+      function simpleTooltipHtml(title, body, leadMeta, metaParts) {
+        let h = '<div class="tooltip-title">' + esc(title) + '</div>';
+        if (leadMeta) {
+          h += '<div class="tooltip-meta">' + esc(leadMeta) + '</div>';
+        }
+        if (body) h += '<div class="tooltip-copy">' + esc(body) + '</div>';
+        for (const part of metaParts || []) {
+          if (part) h += '<div class="tooltip-meta">' + esc(part) + '</div>';
+        }
+        return tooltipContentHtml(h, 'tooltip-simple');
+      }
       function showSideTip(anchorEl, detailsHtml, options) {
         if (!detailsHtml) return false;
         const opts = options || {};
@@ -4149,7 +4194,7 @@ window.FB = window.FB || {};
         const maxH = Math.max(120, window.innerHeight - edge * 2);
         tip.style.maxHeight = maxH + 'px';
         tip.style.overflowY = 'auto';
-        tip.innerHTML = detailsHtml;
+        tip.innerHTML = tooltipContentHtml(detailsHtml, opts.contentClass);
         if (FB.paintFaces && FB.state &&
             tip.querySelector('canvas.pface, canvas.crest')) {
           FB.paintFaces(tip, FB.state, { immediate:true });
@@ -4183,7 +4228,9 @@ window.FB = window.FB || {};
           ? control.closest('.event-choice') : null;
         const details = row && row.querySelector('.event-choice-details');
         if (!details) return false;
-        return showSideTip(control, details.innerHTML);
+        return showSideTip(control, details.innerHTML, {
+          contentClass:details.className
+        });
       }
       function showActionTip(control) {
         const btn = control && control.closest
@@ -4197,9 +4244,10 @@ window.FB = window.FB || {};
         const details = btn && ((detailsId && $(detailsId)) ||
           btn.querySelector('.event-choice-details'));
         if (!details) return false;
-        return showSideTip(btn, details.innerHTML,
-          btn.hasAttribute('data-action-tooltip')
-            ? { modalLeft:true } : undefined);
+        return showSideTip(btn, details.innerHTML, {
+          contentClass:details.className,
+          modalLeft:btn.hasAttribute('data-action-tooltip')
+        });
       }
       function showSettCardTip(infoBtn) {
         if (eventChoiceUsesDisclosure()) return false;
@@ -4209,7 +4257,9 @@ window.FB = window.FB || {};
         const details = detId && $(detId);
         if (!details) { scheduleHideTip(); return false; }
         const card = (btn && btn.closest('.settcard')) || (infoBtn.closest && infoBtn.closest('.settcard')) || infoBtn;
-        return showSideTip(card, details.innerHTML);
+        return showSideTip(card, details.innerHTML, {
+          contentClass:details.className
+        });
       }
       function showRulerCardTip(control) {
         if (eventChoiceUsesDisclosure() || !UI.councilRulerTooltipHtml ||
@@ -4272,7 +4322,9 @@ window.FB = window.FB || {};
         if (statEl && FB.state && !FB.game.observe) {
           cancelHideTip();
           resetTipSize();
-          tip.innerHTML = SH.statBreakdownHtml(statEl.getAttribute('data-stat'));
+          tip.innerHTML = tooltipContentHtml(
+            SH.statBreakdownHtml(statEl.getAttribute('data-stat')),
+            'tooltip-breakdown');
           tip.classList.remove('hidden');
           const sr = statEl.getBoundingClientRect();
           tip.style.left = Math.max(4, Math.min(window.innerWidth - 250, sr.left)) + 'px';
@@ -4293,43 +4345,46 @@ window.FB = window.FB || {};
           const effects = modifierEffectText(FB.state, id);
           const upkeep = def.upkeep && def.upkeep.gold
             ? assetSeasonalMoneyCost(def.upkeep.gold) : '';
-          tip.innerHTML = '<b>' + def.icon + ' ' +
-            esc(dt(FB.state, 'modifier', id, def, 'name')) + '</b><br>' +
-            esc(dt(FB.state, 'modifier', id, def, 'desc')) +
-            (effects || upkeep ? '<br><i>' +
-              esc([effects, upkeep].filter(function (part) {
+          tip.innerHTML = simpleTooltipHtml(
+            def.icon + ' ' + dt(FB.state, 'modifier', id, def, 'name'),
+            dt(FB.state, 'modifier', id, def, 'desc'), '', [
+              [effects, upkeep].filter(function (part) {
                 return !!part;
-              }).join(' · ')) + '</i>' : '') +
-            '<br><i>' + esc(modifierDurationText(FB.state, record, scope)) + '</i>';
+              }).join(' · '),
+              modifierDurationText(FB.state, record, scope)
+            ]);
         } else if (chip.hasAttribute('data-ailment')) {
           const a = FBDATA.ailments[chip.getAttribute('data-ailment')];
           const aid = chip.getAttribute('data-ailment');
-          tip.innerHTML = a ? '<b>' + a.icon + ' ' + esc(dt(FB.state, 'ailment', aid, a, 'name')) +
-            '</b><br>' + esc(dt(FB.state, 'ailment', aid, a, 'desc')) :
-            '<b>🤒 ' + esc(FB.T('Ill')) + '</b><br>' + esc(FB.T('Sickness has taken hold.'));
+          tip.innerHTML = a
+            ? simpleTooltipHtml(a.icon + ' ' +
+              dt(FB.state, 'ailment', aid, a, 'name'),
+              dt(FB.state, 'ailment', aid, a, 'desc'), '', [])
+            : simpleTooltipHtml('🤒 ' + FB.T('Ill'),
+              FB.T('Sickness has taken hold.'), '', []);
         } else if (chip.hasAttribute('data-trait')) {
           const t = FBDATA.traits[chip.getAttribute('data-trait')];
           if (!t) { scheduleHideTip(); return; }
           const fx = traitFxText(t);
           const tid = chip.getAttribute('data-trait');
-          tip.innerHTML = '<b>' + t.icon + ' ' + esc(dt(FB.state, 'trait', tid, t, 'name')) +
-            '</b><br>' + esc(FB.T('Class: {className}', {
+          tip.innerHTML = simpleTooltipHtml(
+            t.icon + ' ' + dt(FB.state, 'trait', tid, t, 'name'),
+            dt(FB.state, 'trait', tid, t, 'desc'),
+            FB.T('Class: {className}', {
               className:SH.traitClassName(t)
-            })) + '<br>' + esc(dt(FB.state, 'trait', tid, t, 'desc')) +
-            (t.earned ? '<br><i>' + esc(FB.T('Earned: {guidance}', {
+            }), [t.earned ? FB.T('Earned: {guidance}', {
               guidance:dt(FB.state, 'trait', tid, t, 'earned')
-            })) + '</i>' : '') +
-            (fx ? '<br><i>' + esc(fx) + '</i>' : '');
+            }) : '', fx]);
         } else {
           const iid = chip.getAttribute('data-item') || chip.getAttribute('data-itemview');
           const item = FB.state && FB.resolveItem(FB.state, iid);
           if (!item) { scheduleHideTip(); return; }
           const ifx = SH.itemFxText(item);
           const quality = item.ordinary ? FB.itemQualityName(item.quality) : rarityName(item.def.rarity);
-          tip.innerHTML = '<b>' + item.def.icon + ' ' + esc(FB.itemName(FB.state, iid)) + '</b> · ' +
-            esc(quality) + '<br>' + esc(dt(FB.state, 'item', item.defId, item.def, 'desc')) +
-            (ifx ? '<br><i>' + esc(ifx) + '</i>' : '') +
-            '<br><i>' + esc(FB.T('worth ~{money:gold}', { gold: item.value })) + '</i>';
+          tip.innerHTML = simpleTooltipHtml(
+            item.def.icon + ' ' + FB.itemName(FB.state, iid),
+            dt(FB.state, 'item', item.defId, item.def, 'desc'),
+            quality, [ifx, FB.T('worth ~{money:gold}', { gold:item.value })]);
         }
         tip.classList.remove('hidden');
         const r = chip.getBoundingClientRect();

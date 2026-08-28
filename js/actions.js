@@ -4024,10 +4024,10 @@ window.FB = window.FB || {};
     const baselineFields = kind === 'focus'
       ? { id:1, label:1, desc:1, order:1, vocational:1,
           shortcutFamily:1, eligibility:1, handler:1 }
-      : { id:1, label:1, desc:1, order:1, group:1, flow:1,
+      : { id:1, label:1, desc:1, order:1, group:1, flow:1, layoutGroup:1,
           cooldownDays:1, requiresTech:1, eligibility:1, handler:1 };
     const declarativeDeedFields = {
-      id:1, label:1, desc:1, order:1, group:1, flow:1,
+      id:1, label:1, desc:1, order:1, group:1, flow:1, layoutGroup:1,
       cooldownDays:1, requiresTech:1, visibility:1, eligibility:1,
       costs:1, effects:1, queueEvent:1, spendsDay:1, handler:1,
       capability:1, choices:1
@@ -4144,6 +4144,10 @@ window.FB = window.FB || {};
         }
         if (!actionOwn(allowedFlows, def.flow)) {
           errors.push(kind + '.' + def.id + ' has an invalid flow.');
+        }
+        if (def.layoutGroup !== undefined &&
+            ['deeds', 'personal', 'ruler'].indexOf(def.layoutGroup) < 0) {
+          errors.push(kind + '.' + def.id + ' has an invalid layout group.');
         }
         const handlerFlow = declarativeDeed
           ? (def.capability === 'resource_choice' ? 'choices'

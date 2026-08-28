@@ -18,6 +18,11 @@ an immediate deed such as Poach is visibly different from a picker-backed deed s
 into town. A picker opener is not itself a
 completed deed: cancelling leaves the tutorial step unfinished, while confirming the
 eventual day-spending choice completes it.
+The browser-local `uiPrefs.groupDeedsByActionType` option keeps Daily Focus first but
+replaces the five thematic deed sections with direct one-shot/recurring deeds, personal
+decisions, and ruler decisions. Immediate and no-day actions default to the direct section,
+choice-backed actions default to personal decisions, and `layoutGroup` records authored
+exceptions such as raids and realm governance.
 
 The five live-clock intervals remain ordered slowest to fastest. A browser with no valid
 preference starts at the fastest interval; changing speed through Settings or the `−`/`+`
@@ -65,7 +70,7 @@ consumption, deferred cooldowns, compatibility aliases, modal behavior, callback
 remain handler capabilities. `FB.rebuildActionCatalogs` replaces both projections and their
 id indexes atomically, so even a same-length catalogue replacement cannot retain a stale
 focus or deed. Phase 4B accepts partial runtime-mod overrides for baseline ids:
-presentation, order, deed group, fixed cooldown, technology requirements, and bounded
+presentation, order, deed group, alternate-layout group, fixed cooldown, technology requirements, and bounded
 static eligibility. Static rules compose with the private handler guard and therefore
 can only narrow an action's availability. Handler callbacks, UI flow, day consumption,
 dynamic cooldowns, and every baseline id remain protected.

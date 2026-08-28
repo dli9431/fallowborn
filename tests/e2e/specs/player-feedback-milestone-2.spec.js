@@ -201,7 +201,39 @@ test('enterprise catalogue keeps blocked choices explainable and idle warnings a
     await blockedCard.hover();
     await expect(page.locator('#tooltip'))
       .toContainText('Needs county development');
-    await expect(page.locator('#tooltip')).toContainText('Transfer rule');
+    await expect(page.locator('#tooltip'))
+      .toContainText('Passes to heirs as family property');
+    await expect(page.locator('#tooltip')).not.toContainText('Transfer rule');
+    const purchaseTip = page.locator(
+      '#tooltip .tooltip-content.enterprise-purchase-details');
+    await expect(purchaseTip).toHaveCount(1);
+    const purchaseTipType = await purchaseTip.evaluate(function (content) {
+      const desc = content.querySelector('.enterprise-purchase-desc');
+      const reason = content.querySelector('.enterprise-purchase-reason');
+      const root = document.getElementById('tooltip');
+      return {
+        descDisplay:getComputedStyle(desc).display,
+        reasonDisplay:getComputedStyle(reason).display,
+        descSize:getComputedStyle(desc).fontSize,
+        reasonSize:getComputedStyle(reason).fontSize,
+        descColor:getComputedStyle(desc).color,
+        reasonColor:getComputedStyle(reason).color,
+        reasonMargin:getComputedStyle(reason).marginTop,
+        sameFont:getComputedStyle(desc).fontFamily ===
+          getComputedStyle(root).fontFamily &&
+          getComputedStyle(reason).fontFamily === getComputedStyle(root).fontFamily
+      };
+    });
+    expect(purchaseTipType).toEqual({
+      descDisplay:'block',
+      reasonDisplay:'block',
+      descSize:'13px',
+      reasonSize:'13px',
+      descColor:'rgb(201, 185, 145)',
+      reasonColor:'rgb(215, 149, 121)',
+      reasonMargin:'4px',
+      sameFont:true
+    });
     await blockedWorkshop.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('heading', { name:'Workshop requirements' }))

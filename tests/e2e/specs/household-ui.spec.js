@@ -115,16 +115,16 @@ test('adjusts living standards and work outfits inline with tooltip terms',
     await waresIncrease.hover();
     const tooltip = page.locator('#tooltip');
     await expect(tooltip).toBeVisible();
-    await expect(tooltip).toContainText('Owner');
-    await expect(tooltip).toContainText('Household dynasty');
     await expect(tooltip).toContainText(
       'Adds 1 percentage point to yearly education chances.');
-    await expect(tooltip).toContainText('Setup cost');
-    await expect(tooltip).toContainText('Recurring cost');
-    await expect(tooltip).toContainText('Projected seasonal net');
-    await expect(tooltip).toContainText('Projected purse after next season');
-    await expect(tooltip).toContainText(
-      'Passes to the next household head; cannot be sold or pledged');
+    await expect(tooltip).toContainText('Cost');
+    await expect(tooltip).toContainText('Ongoing');
+    await expect(tooltip).toContainText('Next season');
+    await expect(tooltip).not.toContainText('Owner');
+    await expect(tooltip).not.toContainText('Scope');
+    await expect(tooltip).not.toContainText('Transfer rule');
+    await expect(tooltip.locator('.asset-effect-stakes')).toHaveCount(1);
+    await expect(tooltip.locator('.asset-effect-costs')).toHaveCount(1);
 
     await waresIncrease.click();
     await expect(page.locator('#genmodal')).toHaveClass(/household-modal/);
@@ -153,10 +153,9 @@ test('adjusts living standards and work outfits inline with tooltip terms',
     await waresDecrease.hover();
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText(
-      'Its setup cost is not refunded, and restoring it later requires paying that full cost again.');
-    await expect(tooltip).toContainText('New level');
+      'There is no refund, and restoring it later costs full price.');
     await expect(tooltip).toContainText('Baseline');
-    await expect(tooltip).toContainText('Projected seasonal net');
+    await expect(tooltip).toContainText('Next season');
 
     await waresDecrease.click();
     await expect(page.locator('#genmodal')).toHaveClass(/household-modal/);
@@ -232,9 +231,10 @@ test('uses the shared question-mark disclosure for household adjustments on comp
     await expect(details).toContainText('Decrease one level');
     await expect(details).toContainText('Increase one level');
     await expect(details).toContainText(
-      'Its setup cost is not refunded, and restoring it later requires paying that full cost again.');
-    await expect(details).toContainText('Projected seasonal net');
-    await expect(details).toContainText('Projected purse after next season');
+      'There is no refund, and restoring it later costs full price.');
+    await expect(details).toContainText('Next season');
+    await expect(details).not.toContainText('Owner');
+    await expect(details).not.toContainText('Scope');
 
     expect(await page.evaluate(function () {
       return {

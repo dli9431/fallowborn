@@ -68,9 +68,9 @@ test('previews and atomically buys every remaining manor plot in one settlement'
     await batch.hover();
     const tooltip = page.locator('#tooltip');
     await expect(tooltip).toBeVisible();
-    await expect(tooltip).toContainText('Household dynasty');
     await expect(tooltip).toContainText(setup.settlement + ', ' + setup.province);
     await expect(tooltip).toContainText('Passes to heirs as family land');
+    await expect(tooltip).not.toContainText('Owner');
 
     await batch.click();
     await expect(page.locator('#gm-title')).toContainText(
@@ -143,13 +143,12 @@ test('keeps one-plot rows compact and exposes full terms when unaffordable',
     await choice.focus();
     const tooltip = page.locator('#tooltip');
     await expect(tooltip).toBeVisible();
-    await expect(tooltip).toContainText('Owner');
-    await expect(tooltip).toContainText('Household dynasty');
-    await expect(tooltip).toContainText('Setup cost');
+    await expect(tooltip).toContainText('Cost');
     await expect(tooltip).toContainText('not affordable');
     await expect(tooltip).toContainText(
       'Passes to heirs as family land in this settlement');
-    await expect(tooltip).toContainText('No fixed end');
+    await expect(tooltip).not.toContainText('Owner');
+    await expect(tooltip).not.toContainText('No fixed end');
 
     await choice.dispatchEvent('click');
     const unchanged = await page.evaluate(function () {

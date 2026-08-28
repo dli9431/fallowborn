@@ -500,7 +500,7 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
       return page.locator('#tooltip').evaluate(function (tooltip) {
         return getComputedStyle(tooltip).fontSize;
       });
-    }).toBe('15px');
+    }).toBe('14px');
     await expect(page.locator('#network-hire .network-item-keyhint'))
       .toHaveText('W');
     await expect(page.locator('#network-hire .adesc')).toHaveCount(0);

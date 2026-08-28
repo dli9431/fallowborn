@@ -203,6 +203,10 @@ assigned `Shift+Q, Shift+W, Shift+E, Shift+A, Shift+S, Shift+D, Shift+Z, Shift+X
 letters take precedence over panel, time, autoresolve, and configurable semantic shortcuts
 while that Deeds section is active; modal and event digit handling still takes precedence over
 the panel layer. Shift+digit does not extend the Deeds list.
+When **Group Deeds by action type** is enabled in Settings, the same positional layer uses
+`1` for Daily Focus and `2`–`4` for One-shot & recurring deeds, Personal decisions, and
+Ruler decisions. The preference is browser-local and does not alter action eligibility,
+cooldowns, simulation order, or saved campaign state.
 Panel tabs keep their full localized titles on every layout: Self, Kin, Deeds, Land, Network,
 and Chronicle. Desktop navigation uses `T`, `G`, `B`, `Y`, `N`, and `U` respectively, shown
 as separate trailing key badges beside those titles in the same style as the fast-forward
@@ -290,8 +294,13 @@ button stays hidden and hovering or focusing the card opens the shared `#tooltip
 side panel just right of the card (flipping left near the viewport edge); the pointer
 may move onto the tooltip without closing it, so buttons rendered inside it — the
 fort card's `data-fort-tech` technology link and `data-fort-start` construction
-button — stay clickable from the tooltip itself. Shared tooltip copy is 15 px so
-supplemental information remains legible without competing with the card face. On touch and tablet-width or short
+button — stay clickable from the tooltip itself. Every shared tooltip uses Georgia,
+14 px primary copy, and 13 px supporting copy with one line-height, spacing rhythm,
+and semantic palette: gold for headings, green for benefits, rose for danger, and
+the configured helper color for context. Copied disclosure HTML keeps its source
+detail class inside a neutral `.tooltip-content` wrapper, so component-specific
+structure survives without importing modal padding, borders, backgrounds, or type
+sizes. The family-tree title tooltip follows the same typography. On touch and tablet-width or short
 layouts the hover tooltip never opens and the `?` button toggles the same details
 inline instead. `eventChoiceUsesDisclosure` in `ui_misc.js` is the JS half of the
 switch (it also gates the settcard tooltip), and the `.settcard-info` media query in
@@ -331,9 +340,10 @@ and closing are state-free. Compact-layout Back closes the same generic-modal la
 restores the originating deed control; selecting an enabled choice closes the sheet before
 the engine rechecks and commits it. Mods cannot select a modal implementation or inject
 markup, callbacks, footer controls, or nested routes.
-Technology detail sheets use the same convention for the seven-field national-research
-audit (owner, scope, setup and recurring costs, effect, transfer, and expiry), leaving
-historical dates, exposure, progress, prerequisites, and controls on the sheet face.
+Technology detail sheets use the same convention for a concise national-research
+summary: gameplay effect first, then affected realms, research commitment, and the
+lasting allegiance rule. Historical dates, exposure, progress, prerequisites, and
+controls remain on the sheet face.
 Royal Council seat and candidate heraldry use the shared ruler-card tooltip on desktop
 hover. Occupied heraldry also supports keyboard focus and opens that ruler's full sheet
 when activated; candidate heraldry remains part of its assignment action. The preview is
@@ -624,7 +634,7 @@ The enterprise catalogue shows every known enterprise for the selected settlemen
 than hiding geography-, development-, ownership-, technology-, or money-blocked choices.
 Purchasable rows come first. Every row keeps its Ready, Can buy—will be idle, or
 Unavailable state plus setup cost and base seasonal yield on the face; its description,
-primary explanation, and full owner/scope/effect/transfer ledger use the shared tooltip or
+primary explanation, affected place, effect, cost, and inheritance terms use the shared tooltip or
 touch disclosure. An unavailable row remains a native,
 keyboard- and touch-activatable button whose action is to open a compact requirements
 sheet; it never attempts a purchase. That sheet lists every simultaneous blocker with
@@ -642,7 +652,7 @@ occupations, religious-office advancement, business staffing, and local hiring r
 available. Its Group enterprises and Enterprise order selectors use the
 same parchment treatment as the Market basket picker. The owned-enterprise manager keeps
 only section titles, worker states, and action labels on its permanent face. Its description,
-active/idle explanation, owner/scope/effect ledger, upgrade tier and terms, staffing guidance,
+active/idle explanation, affected place and stakes summary, upgrade tier and terms, staffing guidance,
 lock behavior, local-hire wage, and removal consequences use the shared desktop tooltip or
 compact `?` disclosure. Open positions offer both eligible household workers and **Hire a
 local worker**; paid workers have an explicit dismissal control. Each enterprise with assignments
@@ -965,25 +975,19 @@ not merge the underlying roles. Cards retain modal number keys, native keyboard
 activation, focus styling, and a stacked narrow-screen layout.
 
 Asset and persistent-effect surfaces use the render-only
-`UI.assetEffectSummary`. Detailed asset views ordinarily keep the same owner,
-scope, setup cost, recurring cost, effect, transfer rule, and expiry order
-across freehold plots, enterprises, buildings, items, temporary modifiers,
-technology, and purchase confirmations. Household-standard details are the
-deliberate compact exception: they show the current state once, keep invariant
-scope, succession, no-resale, and lapse rules in one note, and limit the
-next-level choice to its changing name, effect, setup cost, and upkeep. Its
-inline minus and plus controls expose the complete reduction or upgrade terms
-beside projected finances through the standard tooltip/disclosure convention,
-without another confirmation sheet. Dense catalogue overviews may likewise summarize
-self-evident fields and keep rule differences inline; Better Household does so
-to keep standards and permanent property scannable. Callers supply live values
-from their own APIs; renderers escape and label them, apply the shared
-not-affordable cue, and point seasonal money to the existing resource ledger.
-Every surface presents the terms as compact single-line label/value rows
-(the same rhythm as the `kv` stat rows), not a boxed cell grid: ordinary
-dialogs use one row per field, wide full sheets flow the same rows into two
-columns, and narrow layouts stack each label above its value. Shared
-presentation does not create a common asset record or mutation path.
+`UI.assetEffectSummary`. Detailed views across freehold plots, enterprises,
+buildings, items, temporary modifiers, technology, and purchase confirmations
+lead with the mechanical consequence. A short unlabeled context line follows
+only when the affected place or population matters; setup and ongoing costs
+share one line, while unusual transfer or ending rules share a final muted
+line. Owner rows, empty costs, generic no-expiry statements, and the former
+seven-field audit wall are omitted. Household-standard adjustments are tighter
+still: the target level and effect lead, cost and upkeep follow, and one
+**Next season** line pairs projected purse with projected net. Invariant
+succession and scope rules do not repeat on every plus/minus tooltip. Callers
+supply live values from their own APIs; the shared renderer escapes them and
+preserves the affordability cue without creating a common asset record or
+mutation path.
 
 The Deeds panel begins with the responsive **Ongoing commitments** ledger
 rendered by `UI.ongoingCommitmentsHtml`. Its title is an accessible
@@ -1075,6 +1079,11 @@ rebuilding the commitments, focus, or other group controls. Every available dail
 appears together in one block above the category accordions; the accordions split and count
 only deeds by category. The stable `1`–`6` section keys do not renumber when a role has no
 actions in one category, preserving muscle memory across promotions and temporary states.
+The optional action-type layout uses the same retained accordion behavior and lazy status
+construction, but presents three stable deed sections after Daily Focus: direct/repeatable
+deeds, personal decisions, and ruler decisions. Direct action flow supplies the default
+classification; authored `layoutGroup` exceptions keep raids with deeds and realm, foreign
+policy, religious-office, and technology choices with ruler decisions.
 During childhood the focus block contains exactly Study and Play. Adult-only deeds that
 otherwise fit the child's station and situation remain in their normal groups as disabled
 rows whose disclosure says they unlock at age 16; they are not removed and do not renumber
@@ -1907,7 +1916,7 @@ province-based. `UI.showSettlement(pid, index)` is universal: it names the count
 holder, localized kind, and development explanation, lists the buildings and ruins of
 the exact slot, and shows matching household plots, manor, and enterprises when
 present. Each building, ruin, or fort renders as a compact card — icon, name, and a
-one-line effect — with the full audit table and description behind a per-card
+one-line effect — with the concise stakes summary and description behind a per-card
 details disclosure (a hover/focus tooltip on desktop, an inline tap toggle
 elsewhere — one or the other per layout, per the tooltip convention above), and demolition rides inside the owned card as an icon button.
 Authorization lives inside the sheet, so foreign and non-demesne settlements

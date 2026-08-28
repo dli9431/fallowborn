@@ -399,7 +399,7 @@ test('siege Chronicle progress keeps ledger precision but displays whole steps',
       FB.invalidateFortIndex();
       p.war = {
         enemy:enemyId, target:target, wins:0, losses:0, seasons:0,
-        defending:false, strength:1, siege:3
+        defending:false, strength:1, siege:0
       };
       const host = {
         id:'decimal-siege-host', realm:'player', men:5000, size:5000,
@@ -409,6 +409,8 @@ test('siege Chronicle progress keeps ledger precision but displays whole steps',
       s.armies = [host];
       const required = FB.fortSiegeStatus(s, target,
         { fortLevel:1, progress:0 }, [host]).required;
+      const initialProgress = Math.max(0, required - 2.5);
+      p.war.siege = initialProgress;
       FB.techBonus = function (state, effect, realmId) {
         if (effect === 'siege' &&
             (realmId === undefined || realmId === 'player')) {
@@ -426,6 +428,7 @@ test('siege Chronicle progress keeps ledger precision but displays whole steps',
         })[0];
         return {
           stored:p.war.siege,
+          initialProgress:initialProgress,
           required:required,
           params:entry && entry.msg.params,
           text:entry ? FB.newsText(entry, s, p.charId) : ''
@@ -438,7 +441,8 @@ test('siege Chronicle progress keeps ledger precision but displays whole steps',
       }
     });
 
-    expect(result.stored).toBeCloseTo(4.575, 6);
+    expect(result.stored).toBeCloseTo(result.initialProgress + 1.575, 6);
+    expect(result.stored).toBeLessThan(result.required);
     expect(result.params.progress).toBe(Math.round(result.stored));
     expect(result.params.required).toBe(Math.round(result.required));
     expect(result.text).toContain('(' + result.params.progress + '/' +

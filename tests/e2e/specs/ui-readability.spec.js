@@ -140,7 +140,7 @@ test('phone modal disclosure controls match their neighboring action family',
     });
   });
 
-test('technology details move the national research audit into responsive help',
+test('technology details keep a concise research summary in responsive help',
   async function ({ page }) {
     await page.evaluate(function () {
       const s = FB.state;
@@ -174,11 +174,45 @@ test('technology details move the national research audit into responsive help',
       'Owner', 'Scope', 'Setup cost', 'Recurring cost', 'Effect',
       'Transfer rule', 'Expiry'
     ]) {
-      await expect(tooltip).toContainText(label);
+      await expect(tooltip).not.toContainText(label);
     }
-    await expect(tooltip).toContainText('Test Sovereignty');
+    await expect(tooltip.locator('.asset-effect-stakes')).toHaveCount(1);
+    await expect(tooltip.locator('.asset-effect-context')).toHaveCount(1);
+    await expect(tooltip.locator('.asset-effect-costs')).toHaveCount(1);
+    await expect(tooltip.locator('.asset-effect-terms')).toHaveCount(1);
+    await expect(tooltip).toContainText('Cost');
+    await expect(tooltip).toContainText('Ongoing');
     await expect(tooltip).toContainText(
       'Occupies one national research slot while active');
+    await expect(tooltip).toHaveAttribute('role', 'tooltip');
+    const tooltipType = await tooltip.evaluate(function (node) {
+      const root = getComputedStyle(node);
+      const content = node.querySelector('.tooltip-content');
+      const stakes = node.querySelector('.asset-effect-stakes');
+      const context = node.querySelector('.asset-effect-context');
+      const costs = node.querySelector('.asset-effect-costs');
+      const terms = node.querySelector('.asset-effect-terms');
+      return {
+        rootSize:root.fontSize,
+        primarySize:getComputedStyle(stakes).fontSize,
+        contextSize:getComputedStyle(context).fontSize,
+        costsSize:getComputedStyle(costs).fontSize,
+        termsSize:getComputedStyle(terms).fontSize,
+        contentPadding:getComputedStyle(content).padding,
+        oneFont:[content, stakes, context, costs, terms].every(function (part) {
+          return getComputedStyle(part).fontFamily === root.fontFamily;
+        })
+      };
+    });
+    expect(tooltipType).toEqual({
+      rootSize:'14px',
+      primarySize:'14px',
+      contextSize:'13px',
+      costsSize:'13px',
+      termsSize:'13px',
+      contentPadding:'0px',
+      oneFont:true
+    });
 
     await page.setViewportSize({ width:900, height:720 });
     const disclosure = facts.locator('.settcard-info');

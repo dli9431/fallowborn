@@ -1087,6 +1087,7 @@ test('milestone-four phase B composes bounded overrides with protected action ha
         deeds:[
           { id:'give_alms', order:27, label:'🕯 Chartered alms',
             desc:'Give alms under the action charter.', group:'work',
+            layoutGroup:'personal',
             cooldownDays:7, requiresTech:[], eligibility:eligibility },
           { id:'begin_plot', order:26 },
           { id:'seek_match', label:'💍 Chartered match',
@@ -1114,6 +1115,7 @@ test('milestone-four phase B composes bounded overrides with protected action ha
         deedLabel:FB.dataText(s, p.charId, 'action', 'give_alms', alms, 'label'),
         deedDesc:alms.desc(s),
         group:alms.group,
+        layoutGroup:alms.layoutGroup,
         cooldown:alms.cd,
         requirements:alms.requiresTech,
         focusVisible:FB.listFocuses(s).some(function (focus) {
@@ -1180,7 +1182,7 @@ test('milestone-four phase B composes bounded overrides with protected action ha
       focusDesc:'Rest under the action charter.',
       deedLabel:'🕯 Chartered alms',
       deedDesc:'Give alms under the action charter.',
-      group:'work', cooldown:7, requirements:[],
+      group:'work', layoutGroup:'personal', cooldown:7, requirements:[],
       focusVisible:true, deedReady:true, sameModTrait:true,
       focusHandlerStable:true, deedHandlerStable:true,
       dynamicPresentationOverridden:true
@@ -1252,6 +1254,8 @@ test('milestone-four phase B rejects unsafe overrides before any catalogue mutat
           'has an invalid group'),
         attempt({ deeds:[{ id:'poach', group:'constructor' }] },
           'has an invalid group'),
+        attempt({ deeds:[{ id:'poach', layoutGroup:'unknown' }] },
+          'has an invalid layout group'),
         attempt({ deeds:[{ id:'poach', requiresTech:'missing_technology' }] },
           'unknown technology missing_technology'),
         attempt({ deeds:[{ id:'poach', requiresTech:['crop_rotation', 'crop_rotation'] }] },

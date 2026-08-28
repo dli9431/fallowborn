@@ -427,6 +427,11 @@ catalogues and their id indexes together. Saves remain format 3: existing focus 
 cooldown keys keep their meanings, and the active-mod fingerprint continues to prevent
 loading a life under the wrong definitions.
 
+Deeds may set `layoutGroup` to `deeds`, `personal`, or `ruler` for the optional
+action-type Deeds layout. Without it, immediate and no-day deeds appear under direct deeds,
+while picker-backed deeds appear under personal decisions. This is presentation metadata
+only and does not change visibility, eligibility, cooldowns, or execution.
+
 ### New declarative deeds
 
 A mod may append manual, immediate deeds by supplying a complete record whose handler is
@@ -450,6 +455,7 @@ built-in deed.
       "desc": "Set coin aside for travelers and pilgrims.",
       "order": 80,
       "group": "faith",
+      "layoutGroup": "personal",
       "cooldownDays": 90,
       "spendsDay": false,
       "requiresTech": "road_surveys",
@@ -479,7 +485,7 @@ built-in deed.
 
 Every new record requires `id`, `handler`, `label`, `desc`, `order`, `group`,
 `cooldownDays`, and boolean `spendsDay`. `requiresTech`, `visibility`, `eligibility`,
-and `costs` are optional. It must then declare exactly one of:
+`layoutGroup`, and `costs` are optional. It must then declare exactly one of:
 
 - `effects`: one or more non-zero `gold`, `prestige`, or `piety` changes; each is a
   finite number from -1,000,000 through 1,000,000.

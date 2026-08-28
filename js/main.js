@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.4';
+  FB.VERSION = '1.165.5';
   FB.CHANGELOG = [
+    { v: '1.165.5', date: '2026-08-27', changes: [
+      'Deeds can now be grouped by action type from Settings, separating direct deeds, personal decisions, and ruler decisions.'
+    ] },
     { v: '1.165.4', date: '2026-08-27', changes: [
       'Phone and tablet map sizing now remains unchanged when opening and closing ruler sheets.',
       'Manual host command now prevents war events from issuing movement orders.',
@@ -3176,6 +3179,7 @@ window.FB = window.FB || {};
     musicOfflineBanks:{},
     musicOfflineFallback:null,
     musicOfflineAll:false,
+    groupDeedsByActionType:false,
     repeatDeedSectionHotkeys:false,
     actionBindings:{ q:'action:livelihoods' }
   };
@@ -3257,6 +3261,8 @@ window.FB = window.FB || {};
         G.uiPrefs.musicOfflineFallback = storedUiPrefs.musicOfflineFallback;
       }
       G.uiPrefs.musicOfflineAll = !!storedUiPrefs.musicOfflineAll;
+      G.uiPrefs.groupDeedsByActionType =
+        !!storedUiPrefs.groupDeedsByActionType;
       G.uiPrefs.repeatDeedSectionHotkeys =
         !!storedUiPrefs.repeatDeedSectionHotkeys;
       if (storedUiPrefs.actionBindings &&

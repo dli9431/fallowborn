@@ -311,11 +311,24 @@ test('automated hosts retreat with a week of supply and refit before resuming',
     const result = await page.evaluate(function () {
       const state = FB.state;
       const p = state.player;
+      const originalWorld = FB.world;
+      const originalProvinceId = p.provinceId;
+      const originalProvs = p.provs;
+      const originalWar = p.war;
+      const originalArmies = state.armies;
+      const originalArmyDown = state.armyDown;
+      const originalArmyDetachmentDown = state.armyDetachmentDown;
+      const originalArmyCohorts = state.armyCohorts;
+      const originalAutoHosts = FB.game.auto.hosts;
+      const originalAutoResupply = FB.game.auto.hostResupply;
       const enemyId = Object.keys(state.realms).filter(function (rid) {
         const realm = state.realms[rid];
         return rid !== 'player' && realm && realm.alive && !realm.liege;
       })[0];
+      const originalEnemyCapital = state.realms[enemyId].capital;
+      const originalRealmWars = {};
       for (const rid in state.realms) {
+        originalRealmWars[rid] = state.realms[rid] && state.realms[rid].war;
         if (state.realms[rid]) state.realms[rid].war = null;
       }
       FB.world = {
@@ -389,12 +402,29 @@ test('automated hosts retreat with a week of supply and refit before resuming',
       delete host.automatedOrder;
       FB.game.auto.hostResupply = false;
       FB.armyTick(state);
-      return {
+      const out = {
         warning:warning,
         retreat:retreat,
         refill:refill,
         disabledGoal:host.goal
       };
+      FB.world = originalWorld;
+      p.provinceId = originalProvinceId;
+      p.provs = originalProvs;
+      p.war = originalWar;
+      state.armies = originalArmies;
+      state.armyDown = originalArmyDown;
+      state.armyDetachmentDown = originalArmyDetachmentDown;
+      state.armyCohorts = originalArmyCohorts;
+      state.realms[enemyId].capital = originalEnemyCapital;
+      for (const rid in originalRealmWars) {
+        if (state.realms[rid]) state.realms[rid].war = originalRealmWars[rid];
+      }
+      FB.game.auto.hosts = originalAutoHosts;
+      FB.game.auto.hostResupply = originalAutoResupply;
+      FB.invalidateRealmCache();
+      FB.invalidateFortIndex();
+      return out;
     });
 
     expect(result.warning.friendly).toBe(false);

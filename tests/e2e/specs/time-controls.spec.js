@@ -95,6 +95,77 @@ test('game speed defaults to fastest and persists as a bounded browser preferenc
     })).toEqual({ speedIdx:4, preference:4, fastest:4 });
   });
 
+test('Settings can group Deeds into direct, personal, and ruler action types',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    const setting = page.getByRole('checkbox', {
+      name:'Group Deeds by action type'
+    });
+    await expect(setting).not.toBeChecked();
+    await setting.check();
+    expect(await page.evaluate(function () {
+      return {
+        preference:FB.game.uiPrefs.groupDeedsByActionType,
+        stored:JSON.parse(localStorage.getItem('fb_ui'))
+          .groupDeedsByActionType
+      };
+    })).toEqual({ preference:true, stored:true });
+
+    await page.evaluate(function () {
+      const ids = [
+        'poach', 'seek_blessing', 'give_alms', 'raid_expedition',
+        'go_to_town', 'declare_war', 'adopt_tech', 'foreign_policy'
+      ];
+      for (const action of FB.instants) {
+        if (ids.indexOf(action.id) < 0) continue;
+        action.show = function () { return true; };
+        action.can = function () { return true; };
+      }
+      FB.ui.closeModal();
+      FB.ui._shared.markActionsDirty();
+      FB.ui.showTab('actions', { history:false });
+    });
+
+    expect(await page.locator('#tab-actions [data-action-section]')
+      .evaluateAll(function (headers) {
+        return headers.map(function (header) {
+          return header.getAttribute('data-action-section');
+        });
+      })).toEqual(['focus', 'deeds', 'personal', 'ruler']);
+
+    const direct = page.locator(
+      '#tab-actions [data-action-group-body="deeds"]');
+    for (const id of [
+      'poach', 'seek_blessing', 'give_alms', 'raid_expedition'
+    ]) {
+      await expect(direct.locator('[data-action-id="' + id + '"]'))
+        .toBeVisible();
+    }
+    await page.locator('#tab-actions [data-action-group="personal"]').click();
+    await expect(page.locator(
+      '#tab-actions [data-action-group-body="personal"] ' +
+      '[data-action-id="go_to_town"]')).toBeVisible();
+    await page.locator('#tab-actions [data-action-group="ruler"]').click();
+    const ruler = page.locator(
+      '#tab-actions [data-action-group-body="ruler"]');
+    for (const id of ['declare_war', 'adopt_tech', 'foreign_policy']) {
+      await expect(ruler.locator('[data-action-id="' + id + '"]'))
+        .toBeVisible();
+    }
+
+    await page.reload({ waitUntil:'domcontentloaded' });
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!(window.FB && FB.game && FB.game.bootReady && FB.ui);
+      });
+    }).toBe(true);
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await expect(page.getByRole('checkbox', {
+      name:'Group Deeds by action type'
+    })).toBeChecked();
+  });
+
 test('event toasts dismiss in place unless Settings enables Chronicle navigation',
   async function ({ page }) {
     await startDeterministicGame(page);
