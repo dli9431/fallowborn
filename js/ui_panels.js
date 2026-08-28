@@ -6422,6 +6422,9 @@ window.FB = window.FB || {};
       /* the keyboard twin of tapping the selected host: halt and hold */
       hostToShow.path = []; hostToShow.goal = null; hostToShow.moveLeft = 0; hostToShow.huntPrey = null;
       hostToShow.manual = 0; hostToShow.holdManual = 1;
+      delete hostToShow.autoResupply;
+      delete hostToShow.automatedOrder;
+      delete hostToShow.eventOrder;
       FB.selectArmy(null);
       if (FB.map) FB.map.request();
       renderProv();

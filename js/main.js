@@ -10,8 +10,13 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.3';
+  FB.VERSION = '1.165.4';
   FB.CHANGELOG = [
+    { v: '1.165.4', date: '2026-08-27', changes: [
+      'Phone and tablet map sizing now remains unchanged when opening and closing ruler sheets.',
+      'Manual host command now prevents war events from issuing movement orders.',
+      'Automated hosts can now return to friendly territory and refit when supplies run low.'
+    ] },
     { v: '1.165.3', date: '2026-08-27', changes: [
       'Household Plan actions now remain visibly button-like on phone and tablet layouts.',
       'Education and schooling sheets opened from Self now return directly to the Self drawer.'
@@ -3683,7 +3688,8 @@ window.FB = window.FB || {};
      themselves (see autoResolve in ui.js); outcomes go to the chronicle. */
   G.auto = {
     minor:false, major:false, war:false, all:false, style:'safe',
-    hosts:'manual', build:false, research:false, researchMode:'cheapest'
+    hosts:'manual', hostResupply:true,
+    build:false, research:false, researchMode:'cheapest'
   };
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
      and each overwrote the other; they now live under their own key. */
@@ -3696,6 +3702,7 @@ window.FB = window.FB || {};
     }
   } catch (e) { /* keep defaults */ }
   if (typeof G.auto.researchMode !== 'string') G.auto.researchMode = 'cheapest';
+  G.auto.hostResupply = G.auto.hostResupply !== false;
   G.saveAuto = function () {
     try { localStorage.setItem('fb_automation', JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
   };

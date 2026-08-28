@@ -248,8 +248,12 @@ heir (`hasHeirPick`) or a title/independence choice (`hasTitleChoice`); under `a
 `pickHeir` effect instead names the first in line
 silently (`UI.autoResolving`). A separate three-way host command (`G.auto.hosts`:
 manual / defensive / offensive) automates the war host's marches — see
-[war.md](war.md). Death is never delegated: the succession screen takes
-no auto-focus, so a stray Space/Enter cannot sign the succession for the first heir.
+[war.md](war.md). `G.auto.hostResupply` independently controls the default-on low-supply
+return for defensive and offensive host command. It sends an automated host toward friendly
+territory at one week of projected supply or when empty, then keeps it refitting through the
+normal low-supply threshold. It never moves a manually controlled host. Death is never
+delegated: the succession screen takes no auto-focus, so a stray Space/Enter cannot sign the
+succession for the first heir.
 The mode can also auto-raise the cheapest building. A sovereign player may separately
 enable automatic research and choose either cheapest-first or a preferred domain;
 `FB.autoResearch` fills every open national slot immediately and after completions

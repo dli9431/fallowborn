@@ -386,6 +386,9 @@ the rest. A 44 px drag target straddles the boundary without consuming its full 
 panel. Dragging it resizes continuously and release snaps to Panel-first, Balanced, or Map-first;
 tapping cycles those states, while Up/Down and Home/End provide the equivalent keyboard path.
 The chosen snap state lasts for the page session and is recalculated when the viewport changes.
+Opening a generic sheet snapshots the divider's exact current height. Closing that sheet, including
+a linked ruler-sheet chain, restores the snapshot so modal focus or mobile browser chrome cannot
+silently shrink the map underneath it.
 Panel-first leaves a small live map strip and hides its dense HUD and overlays until the map is
 expanded again. The map HUD uses two columns while the map is below 324 px so all seven controls
 retain their 44 px touch targets without forcing the old minimum; dragging into a tall Map-first

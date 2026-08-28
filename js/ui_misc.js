@@ -3255,6 +3255,8 @@ window.FB = window.FB || {};
     view.token = genericNavSnapshot && genericNavSnapshot.token;
     view.guide = modalGuideConfig(genericNavSnapshot && genericNavSnapshot.guide);
     view.titleDetails = !!(genericNavSnapshot && genericNavSnapshot.titleDetails);
+    view.mobilePanePosition = genericNavSnapshot &&
+      genericNavSnapshot.mobilePanePosition;
     view.focus = document.activeElement && $('genmodal').contains(document.activeElement)
       ? document.activeElement : null;
     while (body.firstChild) view.body.appendChild(body.firstChild);
@@ -3288,7 +3290,8 @@ window.FB = window.FB || {};
       noFocus:view.noFocus,
       token:view.token,
       guide:modalGuideConfig(view.guide),
-      titleDetails:view.titleDetails
+      titleDetails:view.titleDetails,
+      mobilePanePosition:view.mobilePanePosition
     };
     gm.classList.remove('hidden');
     setTimeout(function () {
@@ -3437,6 +3440,8 @@ window.FB = window.FB || {};
 
   function closeGenericModalRaw() {
     const onDismiss = UI._gmOnDismiss;
+    const mobilePanePosition = genericNavSnapshot &&
+      genericNavSnapshot.mobilePanePosition;
     $('genmodal').classList.add('hidden');
     UI._gmDismiss = true;
     UI._gmOnDismiss = null;
@@ -3449,6 +3454,9 @@ window.FB = window.FB || {};
     UI._gmReturnFocus = null;
     UI._gmReturnAction = null;
     if (onDismiss) onDismiss();
+    if (mobilePanePosition && UI.restoreMobilePanePosition) {
+      UI.restoreMobilePanePosition(mobilePanePosition);
+    }
     if (back && document.documentElement.contains(back)) {
       back.focus();
       return;
@@ -3480,6 +3488,9 @@ window.FB = window.FB || {};
     const replacingView = !wasHidden && opts && opts.replaceView;
     const retainedNavigation = replacingView && genericNavSnapshot
       ? genericNavSnapshot : null;
+    const mobilePanePosition = wasHidden && UI.captureMobilePanePosition
+      ? UI.captureMobilePanePosition()
+      : genericNavSnapshot && genericNavSnapshot.mobilePanePosition;
     let previousView = null;
     if (!wasHidden && !replacingView && opts && opts.historyView &&
       !mobileNavApplying &&
@@ -3555,7 +3566,9 @@ window.FB = window.FB || {};
       noFocus:!!(opts && opts.noFocus),
       token:currentViewToken,
       guide:guide,
-      titleDetails:!!(opts && opts.titleDetailsHtml)
+      titleDetails:!!(opts && opts.titleDetailsHtml),
+      mobilePanePosition:retainedNavigation
+        ? retainedNavigation.mobilePanePosition : mobilePanePosition
     };
     if (previousView) {
       const currentView = {};
@@ -3822,6 +3835,23 @@ window.FB = window.FB || {};
     });
     UI.resizeMobilePanes = function () {
       if (!drag) applySnap(snap);
+    };
+    UI.captureMobilePanePosition = function () {
+      if (!layoutActive() || main.getBoundingClientRect().height < 1) return null;
+      return {
+        height:mapwrap.getBoundingClientRect().height,
+        snap:snap
+      };
+    };
+    UI.restoreMobilePanePosition = function (position) {
+      if (!position || !layoutActive() ||
+          main.getBoundingClientRect().height < 1) return;
+      const sizes = bounds();
+      snap = snapOrder.indexOf(position.snap) >= 0
+        ? position.snap : snap;
+      SH.mobilePaneSnap = snap;
+      setHeight(position.height, snap, sizes);
+      resizeMapAfterLayout();
     };
     applySnap(snap);
   }

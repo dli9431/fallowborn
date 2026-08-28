@@ -384,6 +384,9 @@ window.FB = window.FB || {};
       h += hr('manual', 'Manually — you march the host yourself');
       h += hr('def', 'Defensive — throw back invaders, then refit at home');
       h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
+      h += cb('ar-host-resupply', a.hostResupply !== false,
+        '<b>Return automated hosts to friendly land when supplies run low</b>',
+        'At one week of supply remaining, or after supplies run out, automated hosts retreat to reachable friendly territory and refill before resuming their stance. Manual routes and holds remain yours.');
     }
     if (access.build) {
       h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
@@ -421,13 +424,18 @@ window.FB = window.FB || {};
       if (r) a.style = r.value;
       const hsel = document.querySelector('input[name=ar-hosts]:checked');
       if (hsel) a.hosts = hsel.value;
+      const hostResupply = $('ar-host-resupply');
+      if (hostResupply) a.hostResupply = hostResupply.checked;
+      if (a.hosts === 'manual' && FB.state && FB.enforceManualHostControl) {
+        FB.enforceManualHostControl(FB.state);
+      }
       FB.game.saveAuto();
       if (research && a.research && FB.state && FB.autoResearch) {
         FB.autoResearch(FB.state, a.researchMode);
       }
       if (FB.state) UI.refresh();
     }
-    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-build',
+    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-host-resupply', 'ar-build',
       'ar-research', 'ar-research-mode'].forEach(function (id) {
       const control = $(id);
       if (control) control.addEventListener('change', sync);

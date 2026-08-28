@@ -494,6 +494,14 @@ it — and once standing on the target it stays put, so the season tick's siege 
 proceeds on its own, no council order (manual or automated) required. A hand-tapped route (`manual`) always plays out first and a hand-given halt
 (`holdManual`) parks the host until the next manual march — automation never
 overrides either, and while active it supersedes the council's `huntPrey`.
+Manual host control is also a hard boundary for event outcomes: the War Council's hunt
+order is unavailable in manual mode, and stale event or automated routes are halted before
+the daily march while a hand-tapped route and a forced battlefield retreat remain intact.
+Automated stances have a persistent **Return automated hosts to friendly land when supplies
+run low** setting. When enabled, a host abroad with seven or fewer projected supply days,
+or no supply, seeks reachable friendly territory before its ordinary stance goal. It stays
+there until supply reaches the existing low-supply threshold, then resumes defensive or
+offensive command. A manual route or hold always takes precedence over this retreat.
 While a host is selected, a tap resolved to a different province always issues a
 destination order even when the host marker's hit radius overlaps that province at
 low zoom; only a second tap in the host's current province halts it.
