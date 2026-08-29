@@ -42642,6 +42642,40 @@
         "text": "🎁 You give {item} to {ruler} of {realm}. (Standing {opinion})"
       }
     },
+    "news.realm.vassal_county_granted": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province",
+        "realm",
+        "ruler",
+        "standing"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🎁 {province} is granted to {ruler} of {realm}; Standing rises by {standing}."
+      }
+    },
+    "news.realm.vassal_duchy_land_granted": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "count",
+        "duchy",
+        "realm",
+        "ruler",
+        "standing"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "one": "🎁 The remaining county you hold in {duchy} is granted to {ruler} of {realm}; Standing rises by {standing}.",
+            "other": "🎁 The {count} remaining counties you hold in {duchy} are granted to {ruler} of {realm}; Standing rises by {standing}."
+          },
+          "param": "count",
+          "select": "plural"
+        }
+      }
+    },
     "news.realm.vassal_levy_favor": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -42650,6 +42684,24 @@
       "location": "js/actions.js",
       "source": {
         "text": "🛡 {realm} promises an exceptional levy for one year; Standing falls by 15."
+      }
+    },
+    "news.realm.vassal_promoted_duchy": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "duchy",
+        "ruler"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "f": "👑 {ruler} is raised as Duchess of {duchy}; the realm now bears ducal rank.",
+            "other": "👑 {ruler} is raised as Duke of {duchy}; the realm now bears ducal rank."
+          },
+          "param": "sex",
+          "select": "value"
+        }
       }
     },
     "news.realmpolicy.proclaimed": {
@@ -53750,6 +53802,16 @@
         "text": "Fractured Command"
       }
     },
+    "src.02dcf05f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Rank gained"
+      }
+    },
     "src.02defae5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55598,7 +55660,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "No neighboring court has an available offer."
@@ -56552,6 +56614,16 @@
         "text": "householdStandard:"
       }
     },
+    "src.0865edd8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Add land to this ruler’s existing realm. Their capital, service charter, and tenure do not change; completing a full de jure duchy raises a count to duke."
+      }
+    },
     "src.0866f2ef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56700,6 +56772,16 @@
       ],
       "source": {
         "text": "{realm} — vassal levy"
+      }
+    },
+    "src.08ab3640": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Terms retained"
       }
     },
     "src.08acbaf9": {
@@ -61247,6 +61329,16 @@
       ],
       "source": {
         "text": "Outfits improve matching work and go dormant without an eligible worker."
+      }
+    },
+    "src.1194ebed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This complete duchy raises the ruler to duke tier."
       }
     },
     "src.119825f2": {
@@ -71077,7 +71169,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -76295,6 +76386,16 @@
         "text": "Settlement in {county}"
       }
     },
+    "src.2e9e9f8b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The available land changed before confirmation. Choose again."
+      }
+    },
     "src.2ea08448": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76885,6 +76986,16 @@
       ],
       "source": {
         "text": "Dismiss him without spectacle."
+      }
+    },
+    "src.2fbd96c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/save.js"
+      ],
+      "source": {
+        "text": "ducal recognition"
       }
     },
     "src.2fc85dbd": {
@@ -82054,6 +82165,16 @@
         "text": "No local lord can authorize this manumission."
       }
     },
+    "src.3a4566ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No conquest is currently available. Claims, borders, active wars, alliances, and peace pacts can change this."
+      }
+    },
     "src.3a47ffdd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87216,6 +87337,16 @@
         "text": "{bloc} starting posture"
       }
     },
+    "src.4435a134": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Grant {county} to {ruler} of {realm}."
+      }
+    },
     "src.4436d7a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91030,6 +91161,16 @@
         "text": "Fort garrisons retained"
       }
     },
+    "src.4bbc4862": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Confirm Land Grant"
+      }
+    },
     "src.4bc5ae3b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94822,6 +94963,16 @@
         "text": "A door opens; a name is taken down. Doors remember."
       }
     },
+    "src.535eef7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "👑 {ruler} is raised as Duke of {duchy}; the realm now bears ducal rank."
+      }
+    },
     "src.53680862": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96901,6 +97052,16 @@
         "text": "Enemy Standing"
       }
     },
+    "src.576931b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose one directly held county, or complete a de jure duchy where this ruler already holds land."
+      }
+    },
     "src.577a9737": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98371,6 +98532,16 @@
       ],
       "source": {
         "text": "has development outside 1–10."
+      }
+    },
+    "src.5a107f65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Counties transferred"
       }
     },
     "src.5a13e946": {
@@ -102402,7 +102573,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "No empty land borders your demesne."
@@ -110586,6 +110757,16 @@
         "text": "🍞 The household table is fully supplied again; the season of want has ended."
       }
     },
+    "src.7245b945": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This grant would leave you without a county."
+      }
+    },
     "src.724629c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113210,6 +113391,16 @@
       ],
       "source": {
         "text": "A bargain costs {money:gold}. Success moves the realm publicly into your obedience and creates a patronage promise that costs authority."
+      }
+    },
+    "src.76c1e5c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Grant Land to {realm}"
       }
     },
     "src.76ca12eb": {
@@ -121337,6 +121528,16 @@
         "text": "{target}, ruler of {realm}, asks you to lift a sentence of excommunication. The envoys claim the recorded offense has been remedied and offer submission to your judgment."
       }
     },
+    "src.85d12b76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Grant remaining de jure counties"
+      }
+    },
     "src.85d2ea6a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121425,6 +121626,16 @@
       ],
       "source": {
         "text": "Sell your neighbors’ names and see what coin buys."
+      }
+    },
+    "src.85f230d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{charter} · {tenure} tenure"
       }
     },
     "src.86081927": {
@@ -122521,16 +122732,6 @@
         "text": "Reconsider abdication and residence in the wedding county before this journey ends."
       }
     },
-    "src.881eced7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "No foreign target counties are within reach of your raiders."
-      }
-    },
     "src.88285884": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122969,6 +123170,16 @@
       ],
       "source": {
         "text": "Religious head"
+      }
+    },
+    "src.890a6607": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You must keep at least one county in your own hand."
       }
     },
     "src.890ab028": {
@@ -126370,6 +126581,16 @@
       ],
       "source": {
         "text": "🏛 The protected term of {ruler} ends; the Treasury awaits a new nominee."
+      }
+    },
+    "src.8f1dad2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This completes the duchy and raises the ruler to duke tier."
       }
     },
     "src.8f1dff2d": {
@@ -130056,6 +130277,16 @@
         "text": "Realm capital"
       }
     },
+    "src.96c8891a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🎁 {province} is granted to {ruler} of {realm}; Standing rises by {standing}."
+      }
+    },
     "src.96c95d05": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133518,16 +133749,6 @@
       ],
       "source": {
         "text": "{motion} campaign · {days} days remain."
-      }
-    },
-    "src.9ce885dc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Papal authority, schism, the target list, or the campaign cooldown prevents a new call."
       }
     },
     "src.9cea3698": {
@@ -138118,6 +138339,16 @@
         "text": "Episcopal household"
       }
     },
+    "src.a5caa456": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Every county available to grant is reserved."
+      }
+    },
     "src.a5d6afa7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142294,7 +142525,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "No neighboring sovereign court lies within reach."
@@ -145610,6 +145841,16 @@
         "text": "The herald of {enemy} does not gloat — greatness need not. His master’s offer is plain: kneel, swear the oaths, and this war dies here. Keep every acre, every tower, every man still breathing — held from a new lord. Or refuse, and lose them one by one."
       }
     },
+    "src.b3f87a1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Grant every county still in your hand within {duchy} to {ruler} of {realm}."
+      }
+    },
     "src.b3fd319a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147009,6 +147250,16 @@
         "text": "Possible outcome multipliers on the live arrival value: {returns}."
       }
     },
+    "src.b6bb9aa2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🎁 The {count} remaining counties you hold in {duchy} are granted to {ruler} of {realm}; Standing rises by {standing}."
+      }
+    },
     "src.b6c03d53": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147819,6 +148070,16 @@
       ],
       "source": {
         "text": "They catch you in the thorns and take what they can."
+      }
+    },
+    "src.b840b5d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This completes the de jure duchy."
       }
     },
     "src.b846d613": {
@@ -149137,6 +149398,16 @@
         "text": "Dust may yet yield what memory cannot."
       }
     },
+    "src.bb1d689d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🎁 The remaining county you hold in {duchy} is granted to {ruler} of {realm}; Standing rises by {standing}."
+      }
+    },
     "src.bb229f41": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150404,16 +150675,6 @@
         "text": "📜 Evidence of abuse ends the {profession} monopoly before its term."
       }
     },
-    "src.bdc7f93e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "No plot within your reach."
-      }
-    },
     "src.bdcfda8a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150756,6 +151017,16 @@
         "text": "Niece"
       }
     },
+    "src.be796844": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{charter} · {tenure} tenure · Standing +{standing} when confirmed."
+      }
+    },
     "src.be7c9c6d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150985,16 +151256,6 @@
       ],
       "source": {
         "text": "A hooked blade that pulls shields aside and arguments to a close."
-      }
-    },
-    "src.befa9047": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "An alliance envoy requires {money:25} in gifts."
       }
     },
     "src.bf15130d": {
@@ -151816,16 +152077,6 @@
       ],
       "source": {
         "text": "Rulers of your faith also lose 8 Standing."
-      }
-    },
-    "src.c0cb31d9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown."
       }
     },
     "src.c0cc603d": {
@@ -159853,7 +160104,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "No higher-ranked neighboring sovereign would take your oath."
@@ -162195,6 +162446,16 @@
         "text": "Lethal risk: Health {change}"
       }
     },
+    "src.d46bc630": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No lost kingdom is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call."
+      }
+    },
     "src.d46f3a2e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -163275,6 +163536,16 @@
       ],
       "source": {
         "text": "{amount}×"
+      }
+    },
+    "src.d6b36407": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} counties in your hand · this ruler already holds {held}."
       }
     },
     "src.d6b71fa4": {
@@ -166617,6 +166888,16 @@
         "text": "Battles are won before the charge."
       }
     },
+    "src.dd7baf91": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} counties in your hand · blocked by {reserved} reserved."
+      }
+    },
     "src.dd7d1e43": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -169120,6 +169401,16 @@
       ],
       "source": {
         "text": "Gentry"
+      }
+    },
+    "src.e25b9ec5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Grant land to this ruler…"
       }
     },
     "src.e25cce23": {
@@ -174995,6 +175286,16 @@
         "text": "College"
       }
     },
+    "src.ed5fe42b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Land can be added only to one of your living direct vassals."
+      }
+    },
     "src.ed601f9b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -175367,6 +175668,16 @@
       ],
       "source": {
         "text": "Grievously wounded"
+      }
+    },
+    "src.ee6fcd97": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "👑 {ruler} is raised as Duchess of {duchy}; the realm now bears ducal rank."
       }
     },
     "src.ee704ca7": {
@@ -176186,16 +176497,6 @@
         "text": "Professed Sister"
       }
     },
-    "src.efde39b8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No lost kingdom is currently eligible."
-      }
-    },
     "src.efe524bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -176974,6 +177275,16 @@
       ],
       "source": {
         "text": "Let him go in peace."
+      }
+    },
+    "src.f1378e07": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Existing terms"
       }
     },
     "src.f13bd9d5": {
@@ -178387,6 +178698,16 @@
       ],
       "source": {
         "text": "In {date}, a new community gathered around {founder}; from {parent}, {faith} took shape."
+      }
+    },
+    "src.f42fc84e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No plot is currently within your reach."
       }
     },
     "src.f42ff828": {
@@ -183344,6 +183665,16 @@
       ],
       "source": {
         "text": "Seasonal effects"
+      }
+    },
+    "src.fe027e7d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The ruler’s capital, service charter, and tenure remain unchanged; completing a full duchy raises a count to duke. Standing rises by {standing}."
       }
     },
     "src.fe0765be": {
@@ -192044,6 +192375,14 @@
         "text": "Active war"
       }
     },
+    "ui:Add land to this ruler’s existing realm. Their capital, service charter, and tenure do not change; completing a full de jure duchy raises a count to duke.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Add land to this ruler’s existing realm. Their capital, service charter, and tenure do not change; completing a full de jure duchy raises a count to duke."
+      }
+    },
     "ui:Add relatives to this charter": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -192551,16 +192890,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "An active mod has an invalid currency definition. The default currency is being used."
-      }
-    },
-    "ui:An alliance envoy requires {money:25} in gifts.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:25"
-      ],
-      "location": "js/actions.js",
-      "source": {
-        "text": "An alliance envoy requires {money:25} in gifts."
       }
     },
     "ui:An alliance envoy requires {money:cost}; you have {money:current}.": {
@@ -195674,6 +196003,14 @@
         "text": "Choose long-range diplomatic and research priorities."
       }
     },
+    "ui:Choose one directly held county, or complete a de jure duchy where this ruler already holds land.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose one directly held county, or complete a de jure duchy where this ruler already holds land."
+      }
+    },
     "ui:Choose one of your {count} managed children or grandchildren to propose for this royal match.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -196399,6 +196736,14 @@
         "text": "Confessed by your spouse ({name})"
       }
     },
+    "ui:Confirm Land Grant": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Confirm Land Grant"
+      }
+    },
     "ui:Confirm grant": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -196934,6 +197279,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Counties over the limit: {count}. The multiplier applies to your own demesne tax and levy, not vassal contributions."
+      }
+    },
+    "ui:Counties transferred": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Counties transferred"
       }
     },
     "ui:County": {
@@ -199660,6 +200013,14 @@
         "text": "Events pause the days until you choose an answer."
       }
     },
+    "ui:Every county available to grant is reserved.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Every county available to grant is reserved."
+      }
+    },
     "ui:Every elector’s displayed lean is a read-only projection. A ballot saves the exact vote, score, and relevant opinion and may vary through election uncertainty.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -199800,6 +200161,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Existing male-preference succession continues."
+      }
+    },
+    "ui:Existing terms": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Existing terms"
       }
     },
     "ui:Expand": {
@@ -201068,6 +201437,16 @@
         "text": "Grant Land"
       }
     },
+    "ui:Grant Land to {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Grant Land to {realm}"
+      }
+    },
     "ui:Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -201139,6 +201518,26 @@
         "text": "Grant as a county vassal · development {development}"
       }
     },
+    "ui:Grant every county still in your hand within {duchy} to {ruler} of {realm}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "duchy",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Grant every county still in your hand within {duchy} to {ruler} of {realm}."
+      }
+    },
+    "ui:Grant land to this ruler…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Grant land to this ruler…"
+      }
+    },
     "ui:Grant one local Craft or Trade monopoly for {years} years: receive {money:fee}, gain +{tax}% tax, and change popular opinion by {opinion}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -201158,6 +201557,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Grant preview"
+      }
+    },
+    "ui:Grant remaining de jure counties": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Grant remaining de jure counties"
       }
     },
     "ui:Grant the complete Duchy of {duchy}…": {
@@ -201188,6 +201595,18 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Grant the {profession} monopoly"
+      }
+    },
+    "ui:Grant {county} to {ruler} of {realm}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Grant {county} to {ruler} of {realm}."
       }
     },
     "ui:Grant {land} to a new loyal vassal.": {
@@ -203210,6 +203629,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Known tie"
+      }
+    },
+    "ui:Land can be added only to one of your living direct vassals.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Land can be added only to one of your living direct vassals."
       }
     },
     "ui:Land is taken only by siege:": {
@@ -206068,14 +206495,6 @@
         "text": "No eligible household worker resides in this county."
       }
     },
-    "ui:No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown."
-      }
-    },
     "ui:No eligible personal scheme.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -206090,6 +206509,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No eligible settlement"
+      }
+    },
+    "ui:No empty land borders your demesne.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No empty land borders your demesne."
       }
     },
     "ui:No enterprise assignment": {
@@ -206212,14 +206639,6 @@
         "text": "No foreign target counties are currently within reach."
       }
     },
-    "ui:No foreign target counties are within reach of your raiders.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "No foreign target counties are within reach of your raiders."
-      }
-    },
     "ui:No friend yet. Cultivate a contact, then name them from their sheet.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -206274,6 +206693,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "No guild favor is available."
+      }
+    },
+    "ui:No higher-ranked neighboring sovereign would take your oath.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No higher-ranked neighboring sovereign would take your oath."
       }
     },
     "ui:No household can make this petition.": {
@@ -206454,12 +206881,12 @@
         "text": "No longer eligible."
       }
     },
-    "ui:No lost kingdom is currently eligible.": {
+    "ui:No lost kingdom is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "No lost kingdom is currently eligible."
+        "text": "No lost kingdom is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call."
       }
     },
     "ui:No maintained improvement": {
@@ -206566,6 +206993,14 @@
         "text": "No named connections."
       }
     },
+    "ui:No neighboring court has an available offer.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No neighboring court has an available offer."
+      }
+    },
     "ui:No neighboring hostile realm can be reached from your border.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -206582,6 +207017,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No neighboring lord stands low enough in your liege’s favor ({favor} or less). Time brings disgrace — wait for it."
+      }
+    },
+    "ui:No neighboring sovereign court lies within reach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No neighboring sovereign court lies within reach."
       }
     },
     "ui:No notable traits.": {
@@ -206681,6 +207124,14 @@
       "location": "js/events.js",
       "source": {
         "text": "No personal-attention assignment is available."
+      }
+    },
+    "ui:No plot is currently within your reach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No plot is currently within your reach."
       }
     },
     "ui:No political court applies to the current position.": {
@@ -207139,14 +207590,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No wage; choose one campaign approach before the confirmation vote."
-      }
-    },
-    "ui:No war target matches the current search and filters.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No war target matches the current search and filters."
       }
     },
     "ui:No worker can be assigned yet.": {
@@ -208703,14 +209146,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Papal authority, Curial opinion, investiture law, piety, and international Standing matter."
-      }
-    },
-    "ui:Papal authority, schism, the target list, or the campaign cooldown prevents a new call.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "Papal authority, schism, the target list, or the campaign cooldown prevents a new call."
       }
     },
     "ui:Parent": {
@@ -210728,6 +211163,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Rank changes authority and duties; vocations and offices can sit beside it."
+      }
+    },
+    "ui:Rank gained": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Rank gained"
       }
     },
     "ui:Rank price: {money:cost} for +{amount} {standing} on arrival after {travelDays} courier days; the {cooldown}-day cooldown begins then. (spends the day)": {
@@ -216078,6 +216521,14 @@
         "text": "Terms of freedom"
       }
     },
+    "ui:Terms retained": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Terms retained"
+      }
+    },
     "ui:Territorial rank opens Governance; institutions vary by relationship to the crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -216704,6 +217155,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The auctioneer calls one lot at a time. A hidden rival either counters at once or drops out; no coin leaves your purse unless you win."
+      }
+    },
+    "ui:The available land changed before confirmation. Choose again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The available land changed before confirmation. Choose again."
       }
     },
     "ui:The barber cannot work while the household is traveling.": {
@@ -217956,6 +218415,16 @@
         "text": "The royal match stands two or more stations above your house."
       }
     },
+    "ui:The ruler’s capital, service charter, and tenure remain unchanged; completing a full duchy raises a count to duke. Standing rises by {standing}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "standing"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The ruler’s capital, service charter, and tenure remain unchanged; completing a full duchy raises a count to duke. Standing rises by {standing}."
+      }
+    },
     "ui:The runner-up": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -218586,6 +219055,30 @@
         "text": "This charter cannot be revoked unilaterally through this authority."
       }
     },
+    "ui:This complete duchy raises the ruler to duke tier.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This complete duchy raises the ruler to duke tier."
+      }
+    },
+    "ui:This completes the de jure duchy.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This completes the de jure duchy."
+      }
+    },
+    "ui:This completes the duchy and raises the ruler to duke tier.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This completes the duchy and raises the ruler to duke tier."
+      }
+    },
     "ui:This conditional duty arises only when its saved household circumstances require it.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -218736,6 +219229,14 @@
       "location": "js/travel.js",
       "source": {
         "text": "This frontier attempt can no longer be completed."
+      }
+    },
+    "ui:This grant would leave you without a county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This grant would leave you without a county."
       }
     },
     "ui:This household office is already filled.": {
@@ -221294,6 +221795,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "You must hold Roma personally."
+      }
+    },
+    "ui:You must keep at least one county in your own hand.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You must keep at least one county in your own hand."
       }
     },
     "ui:You must reach a trade venture market first.": {
@@ -225580,6 +226089,29 @@
         "text": "{chance}% yearly · {money:amount} each season"
       }
     },
+    "ui:{charter} · {tenure} tenure": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "charter",
+        "tenure"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{charter} · {tenure} tenure"
+      }
+    },
+    "ui:{charter} · {tenure} tenure · Standing +{standing} when confirmed.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "charter",
+        "standing",
+        "tenure"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{charter} · {tenure} tenure · Standing +{standing} when confirmed."
+      }
+    },
     "ui:{claimant} · as vassal of {realm}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -225746,6 +226278,28 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{count} counties"
+      }
+    },
+    "ui:{count} counties in your hand · blocked by {reserved} reserved.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "reserved"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{count} counties in your hand · blocked by {reserved} reserved."
+      }
+    },
+    "ui:{count} counties in your hand · this ruler already holds {held}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "held"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{count} counties in your hand · this ruler already holds {held}."
       }
     },
     "ui:{count} counties · blocked by {reserved} reserved": {

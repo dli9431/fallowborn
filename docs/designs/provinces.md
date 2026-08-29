@@ -165,8 +165,13 @@ bookmark data). Detailed-zoom settlement names render at 12.5 CSS px for cities
 and 11.5 CSS px for towns and villages, scaled by the device pixel ratio before
 canvas drawing. A second tap on a marker in the chosen county still settles the
 birthplace directly; the compact pick bar instead offers a native settlement select
-defaulted to the county head, then commits that choice with **Continue**. The slot is
-stored as `player.homeSettlement` (0, the county head, is the default and the
+defaulted to the county head, then commits that choice with **Continue**. The map finder
+uses the same pending selection: an exact county result enters the settlement stage, and
+an exact settlement result preselects its stable slot in that native picker. Settlement
+search results on this screen are therefore limited to slots visible at the bookmark's
+starting development. Duchy and kingdom results only navigate the map because neither
+identifies an unambiguous birthplace.
+The slot is stored as `player.homeSettlement` (0, the county head, is the default and the
 only value older saves know), steers the farmer start's plot, and spells the
 optional eighth start-code part ([seeds.md](seeds.md)). The go-into-town deed queues
 `visit_*` events (events_common.js) with the name in `ctx.settlement` (`{settlement}`

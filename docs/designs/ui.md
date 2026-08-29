@@ -560,6 +560,11 @@ shortcut. Its local, cached index covers settlements, counties, duchies, and
 kingdoms in the active bookmark; choosing a result selects its county and
 centers the map at a scale appropriate to the result type. Arrow keys move
 through matches, Enter chooses one, and Escape returns focus to the HUD button.
+On the birthplace screen, choosing an exact county feeds that county into the
+start picker, while choosing a settlement also selects its stable birthplace
+slot. Its settlement matches are limited to the slots visible at the bookmark's
+starting development; broader duchy and kingdom results remain map-navigation
+aids rather than silently choosing an arbitrary county.
 The overlay and Market lens are mutually exclusive so their controls never
 compete for the map corner. Portrait maps reserve enough height to keep the
 seven 44-pixel HUD targets in one rail; shallow landscape maps use a compact
@@ -624,6 +629,8 @@ province on the map; **Random Province** remains available without being adverti
 the instructional sentence. Once a county is chosen, its compact summary emphasizes the
 county name, places realm and terrain beneath it without a dash, and offers one native
 settlement select defaulted to the county seat. **Continue** commits that selection. The
+map's **Find location** control follows the same two stages: an exact county result chooses
+the county, and an exact settlement result preselects that settlement before Continue. The
 province pick bar lists all authored communities, and character creation uses
 native coupled culture-and-faith radio choices in the same authored order when more than one
 community is present. A single-community county omits that redundant picker and selects its

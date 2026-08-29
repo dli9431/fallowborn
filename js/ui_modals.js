@@ -23123,6 +23123,13 @@ window.FB = window.FB || {};
     const results = [];
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
+      /* A campaign may navigate to settlement slots that future development
+         will reveal. The birthplace picker cannot offer those slots yet, so
+         keep its exact settlement results aligned with its native select. */
+      if (FB.game && FB.game.pickMode && entry.type === 'settlement' &&
+          entry.settIndex >= FB.settlementVisibleCount(null, entry.provId)) {
+        continue;
+      }
       const n = entry.name.toLowerCase();
       const s = entry.search;
       let score = 0;
@@ -23215,6 +23222,17 @@ window.FB = window.FB || {};
   UI.selectFindResult = function (entry) {
     if (!entry) return;
     UI.setFindOverlay(false);
+    /* Before a life exists, finder clicks must feed the birthplace workflow
+       rather than the ordinary campaign province panel. Regions still work
+       as map navigation; only exact counties and settlements choose a start. */
+    if (entry.provId && FB.game && FB.game.pickMode &&
+        FB.game.pickFoundLocation && FB.game.pickFoundLocation(
+          entry.provId,
+          entry.type === 'settlement' ? entry.settIndex : null)) {
+      const pickButton = $('btn-find');
+      if (pickButton) pickButton.focus();
+      return;
+    }
     if (FB.map) {
       FB.map.centerOnXY(entry.x, entry.y, entry.zoom, true);
     }

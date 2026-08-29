@@ -7,12 +7,14 @@ dependsOnRuntime(__filename, [
   'js/portrait.js',
   'js/save.js',
   'js/settlement.js',
+  'js/ui_modals.js',
   'js/ui_panels.js',
   'css/style.css',
   'data/bookmarks.js',
   'data/cultures.js',
   'data/starts.js',
-  'data/settlements.js'
+  'data/settlements.js',
+  'data/settlements_real.js'
 ]);
 
 /* Quick Start plus birthplace settlement picking: the one-click curated lives,
@@ -252,6 +254,75 @@ test('a selected settlement becomes the birthplace and lands in state and the st
     expect(after.seedParts).toHaveLength(8);
     expect(after.seedParts[6]).toBe('standard');
     expect(after.seedParts[7]).toBe('1');
+  });
+
+test('find location chooses an exact county or settlement as the pending birthplace',
+  async function ({ page }) {
+    await reachPickScreen(page);
+
+    await page.locator('#btn-find').click();
+    const input = page.locator('#map-finder-input');
+    await input.fill('Winchester');
+    await page.locator('.map-finder-item').filter({
+      has:page.locator('.map-finder-type', { hasText:'County' })
+    }).first().click();
+
+    await expect(page.locator('#map-finder')).toBeHidden();
+    await expect(page.locator('#pick-settlement')).toHaveValue('0');
+    expect(await page.evaluate(function () {
+      return {
+        provinceId:FB.game.pending.provinceId,
+        settlementIdx:FB.game.pending.settlementIdx,
+        stage:FB.game.pickStage
+      };
+    })).toEqual({ provinceId:'winchester', settlementIdx:0, stage:'settlement' });
+
+    await page.locator('#btn-pick-back').click();
+    const candidates = await page.evaluate(function () {
+      const counts = {};
+      FB.world.sites.forEach(function (site) {
+        counts[site.name] = (counts[site.name] || 0) + 1;
+      });
+      function firstSite(visible) {
+        return FB.world.sites.filter(function (site) {
+          const pr = FB.world.byId[site.pid];
+          const isVisible = site.index < FB.settlementVisibleCount(null, site.pid);
+          return site.index > 0 && pr && !pr.wasteland &&
+            isVisible === visible && counts[site.name] === 1;
+        }).map(function (site) {
+          return { name:site.name, pid:site.pid, index:site.index };
+        })[0];
+      }
+      return { visible:firstSite(true), hidden:firstSite(false) };
+    });
+    expect(candidates.visible).toBeTruthy();
+    expect(candidates.hidden).toBeTruthy();
+
+    await page.locator('#btn-find').click();
+    await input.fill(candidates.hidden.name);
+    await expect(page.locator('.map-finder-item').filter({
+      has:page.locator('.map-finder-type', { hasText:'Settlement' })
+    }).filter({ hasText:candidates.hidden.name })).toHaveCount(0);
+
+    const wanted = candidates.visible;
+    await input.fill(wanted.name);
+    await page.locator('.map-finder-item').filter({
+      has:page.locator('.map-finder-type', { hasText:'Settlement' })
+    }).filter({ hasText:wanted.name }).first().click();
+
+    await expect(page.locator('#map-finder')).toBeHidden();
+    await expect(page.locator('#pick-settlement')).toHaveValue(String(wanted.index));
+    expect(await page.evaluate(function () {
+      return {
+        provinceId:FB.game.pending.provinceId,
+        settlementIdx:FB.game.pending.settlementIdx,
+        stage:FB.game.pickStage
+      };
+    })).toEqual({
+      provinceId:wanted.pid,
+      settlementIdx:wanted.index,
+      stage:'settlement'
+    });
   });
 
 test('Back walks the stages and the county seat remains the default start',

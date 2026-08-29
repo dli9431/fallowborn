@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.13';
+  FB.VERSION = '1.165.14';
   FB.CHANGELOG = [
+    { v: '1.165.14', date: '2026-08-29', changes: [
+      'Find location now selects exact counties and settlements as pending birthplaces during custom starts.'
+    ] },
     { v: '1.165.13', date: '2026-08-28', changes: [
       'Deeds now become available on their exact cooldown day, while expensive target catalogues wait to calculate until their picker opens.'
     ] },
@@ -2230,6 +2233,20 @@ window.FB = window.FB || {};
     FB.map.select(pr.id);
     FB.map.centerOn(pr.id, PICK_SETTLEMENT_ZOOM);
     updatePickInfo();
+    return true;
+  };
+
+  /* The shared map finder is also available before a campaign exists. An
+     exact county result enters the ordinary settlement stage; an exact
+     settlement result additionally carries its stable slot into the native
+     birthplace picker so the player's search becomes the pending start. */
+  G.pickFoundLocation = function (provId, settlementIdx) {
+    const pr = FB.world && FB.world.byId ? FB.world.byId[provId] : null;
+    if (!G.pickMode || !G.pickProvince(pr)) return false;
+    if (settlementIdx !== undefined && settlementIdx !== null) {
+      G.pending.settlementIdx = clampSettlementIdx(pr.id, settlementIdx);
+      updatePickInfo();
+    }
     return true;
   };
 
