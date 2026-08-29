@@ -421,8 +421,13 @@ profession, or rank changes. The visible Kin tree likewise patches spouse and ch
 so those changing personal values remain exact without rebuilding sections or listeners.
 An open Deeds panel performs a bounded status-only pass every seven game days
 and once when fast-forward ends, updating its mounted deed buttons and cooldown explanations
-without rebuilding the catalogue; a rare change to which deeds are visible promotes that
-pass to an exact Deeds render. A changing host value
+without rebuilding the catalogue. Any mounted disabled deed with a known standard or
+system-specific readiness turn additionally refreshes on its exact cooldown boundary. These
+deadline patches update only due rows and do not build expensive picker catalogues. Raid,
+conquest, holy-war, intrigue, diplomacy, and land-management targets stay deferred until
+their respective pickers open. A rare change to which deeds are visible promotes that pass
+to an exact Deeds render. A changing
+host value
 otherwise makes Land recompute and replace the host card, county economy, settlements,
 population, people, and all their bindings; Deeds reconstructs every action and eligibility
 description; and the other retained panels repeat household, relationship, tooltip, and
@@ -809,8 +814,11 @@ current live logistics total beside its composition; ordinary war-status text re
 the component breakdown and total. These surfaces read `FB.playerMusterUpkeepParts` and
 `FB.playerHostUpkeepParts`, so great levies, reinforcements, casualties, mercenary
 companies, disbanding, and re-raising stay in agreement with the seasonal gold ledger.
-The conquest picker is a session-state catalogue over unique enemy objectives derived
-from `FB.warCauses(state, true, true)`. The global catalogue keeps blocked targets with
+The Declare War deed checks only cheap active-war locks; it does not derive causes while
+Deeds renders or refreshes. Opening the conquest picker lazily creates its session-state
+catalogue over unique enemy objectives from `FB.warCauses(state, true, true)`. An empty
+catalogue explains that no conquest is currently available. The global catalogue keeps
+blocked targets with
 their pact, alliance, or diplomatic reason; entry from a ruler sheet resets the catalogue
 filters, scopes rows to that ruler's realm, and omits blocked targets. Search covers
 objective, enemy realm, ruler, and enemy territory. Cause, adjacency, relative-rank, and
@@ -1110,7 +1118,9 @@ and expanded details. Any exact or natural state refresh marks that tree stale i
 the next Deeds visit then performs the full exact render before reuse is allowed again.
 While Deeds remains open, natural time updates mounted deed statuses every seven game days
 and at fast-forward completion; collapsed groups still calculate their current status only
-when opened. The playable character crossing age sixteen is an immediate lifecycle boundary:
+when opened. Mounted deeds with known readiness turns also update on the exact day their
+cooldown expires, without calculating picker targets during the panel refresh. The playable
+character crossing age sixteen is an immediate lifecycle boundary:
 the retained tree rebuilds on that live refresh so Study and Play give way to adult focuses
 and every otherwise-eligible adult deed unlocks without waiting for the bounded interval.
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers

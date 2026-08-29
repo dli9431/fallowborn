@@ -1606,6 +1606,23 @@ window.FB = window.FB || {};
      deed rows on a bounded cadence, preserving the panel tree and listeners.
      A visibility change is rare and requires an exact rebuild so actions are
      neither stranded nor exposed after their authored show gate changes. */
+  function patchVisibleDeedStatus(s, btn, id) {
+    /* The mounted row already established visibility. Status patches need
+       eligibility, not presentation previews. */
+    const status = FB.instantStatus(s, id, {
+      shown:true, deferPreview:true
+    });
+    if (!status.action) return false;
+    btn.disabled = !status.can;
+    const details = $('deed-details-' + id);
+    const statusText = details && details.querySelector('.deed-status-text');
+    if (statusText) {
+      statusText.textContent = FB.translateKnown(status.can
+        ? status.action.desc(s) : status.reason);
+    }
+    return true;
+  }
+
   function refreshVisibleDeedStatuses(options) {
     const s = FB.state;
     const box = $('tab-actions');
@@ -1619,8 +1636,30 @@ window.FB = window.FB || {};
       renderActions();
       return;
     }
-    if (!force && deedStatusRefreshedState === s &&
-        s.turn - deedStatusRefreshedTurn < LIVE_DEED_STATUS_DAYS) return;
+    /* Most deed statuses stay on the bounded cadence. Mounted, disabled
+       deeds with a known readiness deadline are the cheap exception: patch
+       only the rows whose cooldown ended between general status passes. */
+    const cadenceDue = force || deedStatusRefreshedState !== s ||
+      s.turn - deedStatusRefreshedTurn >= LIVE_DEED_STATUS_DAYS;
+    if (!cadenceDue) {
+      const disabled = box.querySelectorAll('[data-action-id]:disabled');
+      for (let i = 0; i < disabled.length; i++) {
+        const btn = disabled[i];
+        const id = btn.getAttribute('data-action-id');
+        const readyTurn = FB.instantStatusReadyTurn
+          ? FB.instantStatusReadyTurn(s, id) : null;
+        if (!(readyTurn > deedStatusRefreshedTurn &&
+            readyTurn <= s.turn) || btn._deedReadyTurn === readyTurn) {
+          continue;
+        }
+        btn._deedReadyTurn = readyTurn;
+        if (!patchVisibleDeedStatus(s, btn, id)) {
+          renderActions();
+          return;
+        }
+      }
+      return;
+    }
     deedStatusRefreshedState = s;
     deedStatusRefreshedTurn = s.turn;
 
@@ -1643,21 +1682,9 @@ window.FB = window.FB || {};
         renderActions();
         return;
       }
-      /* listInstants already established visibility above. Status-only live
-         refreshes need eligibility, not presentation previews. */
-      const status = FB.instantStatus(s, id, {
-        shown:true, deferPreview:true
-      });
-      if (!status.action) {
+      if (!patchVisibleDeedStatus(s, btn, id)) {
         renderActions();
         return;
-      }
-      btn.disabled = !status.can;
-      const details = $('deed-details-' + id);
-      const statusText = details && details.querySelector('.deed-status-text');
-      if (statusText) {
-        statusText.textContent = FB.translateKnown(status.can
-          ? status.action.desc(s) : status.reason);
       }
     }
   }

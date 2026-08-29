@@ -3285,7 +3285,9 @@ window.FB = window.FB || {};
       }
     }
     if (!count) h += '<div class="progressnote">' +
-      esc(FB.T('No lost kingdom is currently eligible.')) + '</div>';
+      esc(FB.T(
+        'No lost kingdom is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call.')) +
+      '</div>';
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Not now')) + '</button>';
     openModal(FB.T('Call great holy war'), h);
@@ -4281,7 +4283,9 @@ window.FB = window.FB || {};
         '">' + detailsHtml + '</div></div>';
     }
     h += '</div><div class="hint large-list-no-results" id="war-target-empty" hidden>' +
-      esc(FB.T('No war target matches the current search and filters.')) +
+      esc(FB.T(models.length
+        ? 'No war target matches the current search and filters.'
+        : 'No conquest is currently available. Claims, borders, active wars, alliances, and peace pacts can change this.')) +
       '</div><div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button></div>';
@@ -6532,11 +6536,16 @@ window.FB = window.FB || {};
     let h = '<p class="hint">' + esc(FB.T(
       'Plots use your daily focus. Each day risks discovery.')) +
       '</p><div class="gm-list">';
-    for (const t of FB.plotAvailable(s)) {
+    const available = FB.plotAvailable(s);
+    for (const t of available) {
       h += '<button class="actionbtn" data-plot="' + esc(t.id) + '">' +
         t.def.icon + ' ' + esc(dt(s, 'plot', t.id, t.def, 'name')) +
         '<span class="adesc">' + esc(dt(s, 'plot', t.id, t.def, 'desc')) + ' ' +
         esc(FB.T('({days} days’ weaving, roughly)', { days: t.def.need })) + '</span></button>';
+    }
+    if (!available.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No plot is currently within your reach.')) + '</div>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
     openModal(FB.T('Begin a Plot'), h, {
@@ -7082,6 +7091,10 @@ window.FB = window.FB || {};
             }) : '')) + '</span></button>';
       }
     }
+    if (!targets.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No neighboring court has an available offer.')) + '</div>';
+    }
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Not now')) + '</button>';
     openModal(FB.T('Send an Envoy'), h, {
@@ -7141,6 +7154,10 @@ window.FB = window.FB || {};
             stance: foreignPolicyStanceText(s, rid),
             status: foreignPolicyStatusText(s, rid)
           })) + '</span></button>';
+    }
+    if (!targets.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No neighboring sovereign court lies within reach.')) + '</div>';
     }
     h += '</div><button class="btn gm-footer" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
     openModal(FB.T('Foreign Policy'), h, {
@@ -7385,11 +7402,16 @@ window.FB = window.FB || {};
     let h = '<p class="hint">' + esc(FB.T(
       '{money:gold} and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure duchy.',
       { gold: B.settleGold, prestige: B.settlePrestige })) + '</p><div class="gm-list">';
-    for (const pid of FB.wastelandCandidates(s)) {
+    const candidates = FB.wastelandCandidates(s);
+    for (const pid of candidates) {
       const pr = FB.world.byId[pid];
       h += '<button class="actionbtn" data-pid="' + esc(pid) + '">🌱 ' + esc(pr.name) +
         '<span class="adesc">' + esc(FB.T('empty {terrain}',
           { terrain: terrainName(pr.terrain) })) + '</span></button>';
+    }
+    if (!candidates.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No empty land borders your demesne.')) + '</div>';
     }
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
@@ -7413,13 +7435,19 @@ window.FB = window.FB || {};
   UI.showFealty = function (returnContext) {
     const s = FB.state;
     let h = '<p class="hint">Kneel to a higher-ranked neighboring sovereign: your lands join his realm and he becomes your liege. If you already serve another, he may call it treason.</p><div class="gm-list">';
-    for (const rid of FB.fealtyTargets(s)) {
+    const targets = FB.fealtyTargets(s);
+    for (const rid of targets) {
       const r = s.realms[rid];
       const men = FB.aiBaseHost(s, rid);
       h += '<button class="actionbtn" data-rid="' + esc(rid) + '">🤝 ' + esc(r.name) +
         '<span class="adesc">' + esc(FB.T('{title} {ruler} · fields ~{men}', {
           title: FB.realmRankTitle(s, r), ruler: r.ruler.name, men: menText(s, men)
         })) + '</span></button>';
+    }
+    if (!targets.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No higher-ranked neighboring sovereign would take your oath.')) +
+        '</div>';
     }
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';

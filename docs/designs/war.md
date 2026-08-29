@@ -14,6 +14,11 @@ Active wars, peace pacts, and alliances remain hard declaration blocks.
 record in `player.war.casus`. Old in-progress wars without that field keep their legacy
 capture behavior.
 
+The Declare War deed checks active-war locks without deriving the complete cause list.
+Cause, target, justification, and diplomatic-block discovery stays lazy until the player
+opens the conquest picker, which presents a clear empty state when no conquest is available.
+This keeps unrelated Deeds refreshes from paying the catalogue cost.
+
 `FB.warCausePreview` is the shared read-only declaration projection. The conquest picker
 groups causes into one row per territorial objective. A recognized right avoids the
 political penalties of a War of Aggression; when the player can press several valid
@@ -964,9 +969,12 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
   target/victim ids, strategy, outcome, forces, casualties, spoils, captives, route skirmishes,
   and physical damage. The Chronicle outcome links back to the same lazy result renderer, so
   skipping the immediate summary never loses the report:
-  - *Large-target performance*: Deed availability stops after the first valid county, and immutable
-    coastal/river reach is indexed once per loaded world. One open picker session reuses its target
-    routes, player levy, realm strengths, and per-strategy previews across sorting, preference
-    changes, and list/map navigation. Launching still performs the normal live execution calculation.
+  - *Large-target performance*: Deed availability checks only whether the ruler may command a raid
+    and whether the warband's cooldown has elapsed. Exact reachable-county and route discovery stays
+    lazy until the picker opens, so an unrelated Deeds refresh never pays that cost; the picker shows
+    an empty state if no foreign county is in reach. Immutable coastal/river reach is indexed once per
+    loaded world. One open picker session reuses its target routes, player levy, realm strengths, and
+    per-strategy previews across sorting, preference changes, and list/map navigation. Launching still
+    performs the normal live execution calculation.
   - *Target List*: Each candidate row summarizes the march route (e.g. `Passes 2 counties (1 fort)` or `Direct landing`), destination fort tier (e.g. `🏰 Stone Keep (Tier 2)`), garrison size, and combat risk assessment.
   - *Interactive Map Overlay*: When selecting on the map, reachable unfortified counties are illuminated with clean pips, while fortified counties display distinct square fortress badges with `🏰` emblems. Selecting a target renders the full dotted march path through intermediate counties, highlighting intermediate forts along the march route and displaying live spoils and defender counts in the floating `#raid-picker` card.

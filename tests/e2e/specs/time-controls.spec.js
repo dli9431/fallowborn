@@ -925,6 +925,51 @@ test('status-only deed refresh reuses visibility and skips previews',
     expect(calls).toEqual({ shows:1, previews:0 });
   });
 
+test('Declare War defers cause discovery until its conquest picker opens',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.tier = 4;
+      s.player.war = null;
+      FB.game.uiPrefs.groupDeedsByActionType = true;
+      const originalWarCauses = FB.warCauses;
+      window.__deedWarCauseCalls = 0;
+      FB.warCauses = function () {
+        window.__deedWarCauseCalls++;
+        return originalWarCauses.apply(FB, arguments);
+      };
+      FB.game.setPaused(true);
+      FB.ui.showTab('actions', { history:false });
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+
+    await page.locator(
+      '#tab-actions [data-action-group="ruler"]').click();
+    const declareWar = page.locator(
+      '#tab-actions [data-action-id="declare_war"]');
+    await expect(declareWar).toBeEnabled();
+    expect(await page.evaluate(function () {
+      return window.__deedWarCauseCalls;
+    })).toBe(0);
+
+    await page.evaluate(function () { FB.ui.refresh(); });
+    await waitForUiRefresh(page);
+    await expect(declareWar).toBeEnabled();
+    expect(await page.evaluate(function () {
+      return window.__deedWarCauseCalls;
+    })).toBe(0);
+
+    await declareWar.click();
+    await expect(page.getByRole('heading', {
+      name:'Choose Your Conquest'
+    })).toBeVisible();
+    expect(await page.evaluate(function () {
+      return window.__deedWarCauseCalls;
+    })).toBeGreaterThan(0);
+  });
+
 test('daily maintenance skips vassal discovery for non-landed households',
   async function ({ page }) {
     await startDeterministicGame(page);

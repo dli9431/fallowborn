@@ -25,6 +25,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -134,7 +135,7 @@ test('independent raiding requires a landed ruler with a personal tradition',
     expect(result.realmTradition).toBe(false);
   });
 
-test('raid availability stops after finding the first valid target',
+test('first-only raid target scans stop after finding one valid county',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       var s = FB.state;
@@ -183,6 +184,86 @@ test('raid availability stops after finding the first valid target',
     expect(result.allCount).toBeGreaterThan(1);
     expect(result.firstRouteCalls).toBeLessThan(result.allRouteCalls);
     expect(result.previewsMatch).toBe(true);
+  });
+
+test('standard and raid cooldowns enable on their exact live boundary',
+  async function ({ page }) {
+    const cooldown = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      p.tier = 3;
+      me.culture = 'norse';
+      me.religion = 'norse_pagan';
+      FB.game.uiPrefs.groupDeedsByActionType = true;
+
+      var realmId = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
+      var record = FB.realmTechRecord(s, realmId);
+      if (record.completed.indexOf('longships') < 0) {
+        record.completed.push('longships');
+      }
+
+      p.raidCooldownUntil = s.turn + 8;
+      p.cooldowns = p.cooldowns || {};
+      p.cooldowns.seek_blessing = s.turn - 82;
+      FB.game.setPaused(true);
+      FB.ui.showTab('actions', { history:false });
+      FB.ui.refresh();
+      return p.raidCooldownUntil;
+    });
+    await waitForUiRefresh(page);
+    for (const id of ['raid_expedition', 'seek_blessing']) {
+      await expect(page.locator('[data-action-id="' + id + '"]'))
+        .toBeDisabled();
+    }
+
+    await page.evaluate(function () {
+      var originalTargets = FB.raidTargets;
+      window.__raidCooldownTargetCalls = 0;
+      FB.raidTargets = function () {
+        window.__raidCooldownTargetCalls++;
+        return originalTargets.apply(FB, arguments);
+      };
+      FB.state.turn = FB.state.player.raidCooldownUntil - 1;
+      FB.ui.refresh({ liveTick:true });
+    });
+    await waitForUiRefresh(page);
+    for (const id of ['raid_expedition', 'seek_blessing']) {
+      await expect(page.locator('[data-action-id="' + id + '"]'))
+        .toBeDisabled();
+    }
+
+    await page.evaluate(function () {
+      FB.state.turn++;
+      FB.ui.refresh({ liveTick:true });
+    });
+    await waitForUiRefresh(page);
+    for (const id of ['raid_expedition', 'seek_blessing']) {
+      await expect(page.locator('[data-action-id="' + id + '"]'))
+        .toBeEnabled();
+    }
+    expect(await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        targetCalls:window.__raidCooldownTargetCalls
+      };
+    })).toEqual({ turn:cooldown, targetCalls:0 });
+
+    await page.evaluate(function () { FB.ui.refresh(); });
+    await waitForUiRefresh(page);
+    await expect(page.locator('[data-action-id="raid_expedition"]'))
+      .toBeEnabled();
+    expect(await page.evaluate(function () {
+      return window.__raidCooldownTargetCalls;
+    })).toBe(0);
+
+    await page.locator('[data-action-id="raid_expedition"]').click();
+    await expect(page.getByRole('heading', {
+      name:'Launch a Raiding Expedition'
+    })).toBeVisible();
+    expect(await page.evaluate(function () {
+      return window.__raidCooldownTargetCalls;
+    })).toBe(1);
   });
 
 test('technology tree extends raid reach and unlocks deep overseas raiding',

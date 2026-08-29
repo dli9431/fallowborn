@@ -152,6 +152,11 @@ rows receive one status-only cooldown and eligibility pass; the same pass runs
 at most every seven game days during ordinary flowing time. It does not turn a
 large data-driven Deeds catalogue into a synchronous end-of-skip rebuild, and
 it reuses that pass's visibility result without materializing deed previews.
+Mounted disabled deeds with a known standard or system-specific readiness turn
+are the narrow deadline exception: if a cooldown expires between general passes,
+only the due row is patched on the exact day. Large raid, conquest, holy-war,
+intrigue, diplomacy, and land-management catalogues remain deferred until the
+player opens their picker.
 Only a rare change in deed visibility promotes the pass to an exact render.
 Chronicle entries are still recorded on their exact simulation day; only the last five notices that
 the live toast rail could have retained are rendered afterward. This keeps input

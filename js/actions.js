@@ -1046,6 +1046,23 @@ window.FB = window.FB || {};
       : FB.T('There is no other culture to adopt.');
   }
 
+  function conversionReadyTurn(state, kind) {
+    const deedId = conversionDeedId(kind);
+    const cooldowns = state.player.cooldowns || {};
+    let readyTurn = null;
+    function note(key, scope) {
+      const last = cooldowns[key];
+      if (last === undefined) return;
+      const candidate = last + conversionCooldownDays(kind, scope);
+      if (readyTurn === null || candidate > readyTurn) readyTurn = candidate;
+    }
+    note(deedId, 'self');
+    for (const scope of ['self', 'household', 'realm']) {
+      note(deedId + ':' + scope, scope);
+    }
+    return readyTurn;
+  }
+
   /* ================= INSTANTS (one-shot deeds) ================= */
 
   let validatedFreedomTerms = null;
@@ -2312,9 +2329,20 @@ window.FB = window.FB || {};
         !(s.player.flags && s.player.flags.in_prison);
     },
     can: function (s) {
-      const status = FB.auctionStatus && FB.auctionStatus(s);
-      return status && (status.ready || status.active) ? true :
-        (status && status.reason || FB.T('No auction is available.'));
+      if (FB.auctionOf && FB.auctionOf(s)) return true;
+      const remaining = FB.auctionCooldownRemaining &&
+        FB.auctionCooldownRemaining(s);
+      return remaining ? FB.T('Ready in {days} days.', {
+        days:remaining
+      }) : true;
+    },
+    statusReadyTurn: function (s) {
+      const cooldowns = s.player.cooldowns || {};
+      const last = cooldowns.attend_auction;
+      const configured = FBDATA.balance &&
+        FBDATA.balance.auctionCooldownDays;
+      return last === undefined ? null : last +
+        (configured === undefined ? 360 : configured);
     },
     run: function (s) {
       const status = FB.auctionStatus && FB.auctionStatus(s);
@@ -2322,7 +2350,9 @@ window.FB = window.FB || {};
       if (status.active) {
         if (FB.ui && FB.ui.showAuction) FB.ui.showAuction();
       } else if (FB.ui && FB.ui.showAuctionVenuePicker) {
-        FB.ui.showAuctionVenuePicker(status.venues || []);
+        if (status.ready) FB.ui.showAuctionVenuePicker(status.venues || []);
+        else if (FB.ui.toast) FB.ui.toast(
+          status.reason || FB.T('No auction is available.'));
       } else if (status.venues && status.venues.length && FB.beginAuction(s, status.venues[0])) {
         if (FB.ui && FB.ui.showAuction) FB.ui.showAuction();
       }
@@ -2335,6 +2365,14 @@ window.FB = window.FB || {};
     can: function (s) {
       return FB.travelAnyPurposeEligible
         ? FB.travelAnyPurposeEligible(s) : FB.T('The roads are not ready.');
+    },
+    statusReadyTurn: function (s) {
+      const cooldowns = s.player.cooldowns || {};
+      const last = cooldowns.take_road;
+      const configured = FBDATA.balance &&
+        FBDATA.balance.travelCooldownDays;
+      return last === undefined ? null : last +
+        (configured === undefined ? 360 : configured);
     },
     run: function () {
       if (FB.ui && FB.ui.showTravelPurposes) FB.ui.showTravelPurposes();
@@ -2661,6 +2699,9 @@ window.FB = window.FB || {};
     },
     show: function () { return true; },
     can: function (s) { return conversionProbe(s, 'faith'); },
+    statusReadyTurn: function (s) {
+      return conversionReadyTurn(s, 'faith');
+    },
     run: function () {
       if (FB.ui && FB.ui.showConversionPicker) {
         FB.ui.showConversionPicker('faith');
@@ -2672,6 +2713,9 @@ window.FB = window.FB || {};
     },
     show: function () { return true; },
     can: function (s) { return conversionProbe(s, 'culture'); },
+    statusReadyTurn: function (s) {
+      return conversionReadyTurn(s, 'culture');
+    },
     run: function () {
       if (FB.ui && FB.ui.showConversionPicker) {
         FB.ui.showConversionPicker('culture');
@@ -2695,25 +2739,6 @@ window.FB = window.FB || {};
         if (head && head.id === 'player') return true;
       }
       return false;
-    },
-    can: function (s) {
-      if (FB.playerPope && FB.playerPope(s)) {
-        return FB.canCallGreatHolyWar(s, 'catholic', null, 'player')
-          ? true
-          : FB.T('Papal authority, schism, the target list, or the campaign cooldown prevents a new call.');
-      }
-      const religionIds = FB.religionIds(s, false);
-      for (let i = 0; i < religionIds.length; i++) {
-        const religionId = religionIds[i];
-        const religion = FB.religionOf(religionId, s);
-        const source = FB.faithValue(s, religionId, 'head.greatHolyWar').sourceId;
-        if (source && source !== religionId) continue;
-        const head = religion && religion.head && religion.head.greatHolyWar &&
-          FB.religiousHeadOf(s, religionId);
-        if (!head || head.id !== 'player') continue;
-        if (FB.canCallGreatHolyWar(s, religionId, null, 'player')) return true;
-      }
-      return FB.T('No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown.');
     },
     run: function () {
       if (FB.ui && FB.ui.showGreatHolyWarTargets) FB.ui.showGreatHolyWarTargets();
@@ -2807,7 +2832,6 @@ window.FB = window.FB || {};
     show: function (s) { return !s.player.plot &&
       !s.player.flags.in_prison && !(FB.intrigueCaptivityOf &&
         FB.intrigueCaptivityOf(s, s.player.charId)); },
-    can: function (s) { return FB.plotAvailable(s).length ? true : 'No plot within your reach.'; },
     run: function (s) { if (FB.ui && FB.ui.showPlots) FB.ui.showPlots(); } },
   { id: 'intrigue_assets', opensChoices:true, noConsume: true,
     show: function (s) { return !!(FB.intrigueAssetsAvailable &&
@@ -2853,19 +2877,12 @@ window.FB = window.FB || {};
   { id: 'send_envoy', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4 && FB.isPlayerSovereign(s); },
     can: function (s) {
-      const peace = FB.envoyTargets(s), alliance = FB.allianceOfferTargets(s);
-      if (!peace.length && !alliance.length) return 'No neighboring court has an available offer.';
-      if (peace.length && s.player.gold >= 10) return true;
-      if (alliance.length && s.player.gold >= 25) return true;
-      return alliance.length ? FB.T('An alliance envoy requires {money:25} in gifts.')
-        : FB.T('An envoy without {money:10} in gifts insults his host.');
+      return s.player.gold >= 10 ? true :
+        FB.T('An envoy without {money:10} in gifts insults his host.');
     },
     run: function (s) { if (FB.ui && FB.ui.showEnvoys) FB.ui.showEnvoys(); } },
   { id: 'foreign_policy', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4 && FB.isPlayerSovereign(s); },
-    can: function (s) {
-      return FB.foreignPolicyTargets(s).length ? true : 'No neighboring sovereign court lies within reach.';
-    },
     run: function () { if (FB.ui && FB.ui.showForeignPolicy) FB.ui.showForeignPolicy(); } },
 
   { id: 'better_household', opensChoices:true, noConsume: true,
@@ -2957,6 +2974,11 @@ window.FB = window.FB || {};
     can:function (s) {
       const status = FB.freedomPetitionStatus(s);
       return status.ready ? true : status.reason;
+    },
+    statusReadyTurn:function (s) {
+      const offer = s.player.freedomOffer;
+      const readyTurn = offer && Number(offer.cooldownUntil);
+      return isFinite(readyTurn) ? readyTurn : null;
     },
     run:function () {
       if (FB.ui && FB.ui.showFreedomPetition) FB.ui.showFreedomPetition();
@@ -3058,6 +3080,11 @@ window.FB = window.FB || {};
     can: function (s) {
       const status = FB.localCouncilMotionStatus(s);
       return status.ready ? true : status.reason;
+    },
+    statusReadyTurn: function (s) {
+      const seat = s.player.localCouncil;
+      const readyTurn = seat && Number(seat.nextMotionTurn);
+      return isFinite(readyTurn) ? readyTurn : null;
     },
     run: function () {
       if (FB.ui && FB.ui.showLocalCouncilMotion) {
@@ -3306,11 +3333,6 @@ window.FB = window.FB || {};
         return FB.T('Your liege must at least tolerate you (Standing 20+, now {current}).',
           { current: Math.round(standing) });
       }
-      const c = FB.buyCountyCandidates(s);
-      if (!c.length) return 'No weak neighbor holds land beside yours.';
-      if (s.player.gold < c[0].price) return FB.T(
-        'You need at least {money:needed} (now {money:current}).',
-        { needed: c[0].price, current: Math.floor(s.player.gold) });
       return true;
     },
     run: function (s, options) {
@@ -3322,7 +3344,6 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 4; },
     can: function (s) {
       const B = FBDATA.balance;
-      if (!FB.wastelandCandidates(s).length) return 'No empty land borders your demesne.';
       if (s.player.gold < B.settleGold) return FB.T(
         'You need at least {money:needed} (now {money:current}).',
         { needed: B.settleGold, current: Math.floor(s.player.gold) });
@@ -3372,6 +3393,12 @@ window.FB = window.FB || {};
         });
       }
       return true;
+    },
+    statusReadyTurn: function (s) {
+      const down = (s.armyDown || {})['player'];
+      const configured = FBDATA.balance.armyRearmDays;
+      return down === undefined ? null : down +
+        (configured === undefined ? 60 : configured);
     },
     run: function (s) { if (FB.raisePlayerHost) FB.raisePlayerHost(s); } },
   { id: 'demuster_host',
@@ -3436,7 +3463,16 @@ window.FB = window.FB || {};
         (s.player.tier >= 3 || !!(me && me.restorationRight));
     },
     can: function (s) {
-      return FB.warCauses(s).length ? true : FB.warLockedReason(s);
+      /* Full cause discovery belongs to the conquest picker. Keep only the
+         active-war locks here so panel refreshes do not build every target,
+         justification, and diplomatic block for an unopened sheet. */
+      const playerRealm = FB.playerRealmId(s);
+      if (s.player.war ||
+          (FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, 'player')) ||
+          (playerRealm && FB.isRealmAtWar(s, playerRealm))) {
+        return FB.warLockedReason(s);
+      }
+      return true;
     },
     run: function (s, options) {
       if (FB.ui && FB.ui.showWarTargets) {
@@ -3457,12 +3493,15 @@ window.FB = window.FB || {};
           days: Math.max(1, s.player.raidCooldownUntil - s.turn)
         });
       }
-      const targets = FB.raidTargets
-        ? FB.raidTargets(s, null, { firstOnly:true }) : [];
-      if (!targets.length) {
-        return FB.T('No foreign target counties are within reach of your raiders.');
-      }
+      /* Route discovery belongs to the picker. Running it from Deed status
+         makes every exact panel refresh pay for raid targeting and can leave
+         the retained button stale until that work is requested elsewhere.
+         The picker already presents an exact empty state when nothing is in
+         reach. */
       return true;
+    },
+    statusReadyTurn: function (s) {
+      return Number(s.player.raidCooldownUntil) || null;
     },
     run: function (s, options) {
       if (FB.ui && FB.ui.showRaidTargets) {
@@ -3520,7 +3559,6 @@ window.FB = window.FB || {};
     } },
   { id: 'swear_fealty', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4 && s.player.provs && s.player.provs.length && !s.player.war; },
-    can: function (s) { return FB.fealtyTargets(s).length ? true : 'No higher-ranked neighboring sovereign would take your oath.'; },
     run: function (s, options) {
       if (FB.ui && FB.ui.showFealty) {
         FB.ui.showFealty(options && options.returnContext);
@@ -3585,6 +3623,13 @@ window.FB = window.FB || {};
     can: function (s) {
       return FB.financeCanDebase(s) ? true :
         'The last debasement is still remembered. Five years must pass.';
+    },
+    statusReadyTurn: function (s) {
+      const economy = s.economy;
+      const configured = (FBDATA.balance &&
+        FBDATA.balance.financeDebaseCooldown) || 1800;
+      return !economy || economy.lastDebasementTurn === undefined ? null :
+        economy.lastDebasementTurn + configured;
     },
     run: function (s, options) {
       if (FB.ui && FB.ui.showDebasement) {
@@ -10634,6 +10679,31 @@ window.FB = window.FB || {};
     return out;
   };
 
+  function actionCooldownDays(state, action) {
+    return action.cooldownDays ? action.cooldownDays(state) : action.cd;
+  }
+
+  function instantStatusReadyTurnForAction(state, action) {
+    let readyTurn = null;
+    if (action.cd !== undefined) {
+      const cooldowns = state.player.cooldowns || {};
+      const last = cooldowns[action.id];
+      if (last !== undefined) {
+        readyTurn = last + actionCooldownDays(state, action);
+      }
+    }
+    if (action.statusReadyTurn) {
+      const customValue = action.statusReadyTurn(state);
+      const custom = Number(customValue);
+      if (customValue !== null && customValue !== undefined &&
+          isFinite(custom) &&
+          (readyTurn === null || custom > readyTurn)) {
+        readyTurn = custom;
+      }
+    }
+    return readyTurn;
+  }
+
   function instantStatusForAction(state, action, shown, options) {
     shown = shown === undefined ? !!action.show(state) : !!shown;
     let can = shown, reason = '';
@@ -10642,8 +10712,7 @@ window.FB = window.FB || {};
       reason = adultDeedReason();
     }
     if (can && action.cd !== undefined) {
-      const cooldownDays = action.cooldownDays
-        ? action.cooldownDays(state) : action.cd;
+      const cooldownDays = actionCooldownDays(state, action);
       const cooldowns = state.player.cooldowns || {};
       const last = cooldowns[action.id];
       if (last !== undefined && state.turn - last < cooldownDays) {
@@ -10683,6 +10752,11 @@ window.FB = window.FB || {};
     };
     return instantStatusForAction(state, action,
       options && options.shown, options);
+  };
+
+  FB.instantStatusReadyTurn = function (state, id) {
+    const action = deedById[id] || null;
+    return action ? instantStatusReadyTurnForAction(state, action) : null;
   };
 
   FB.listInstants = function (state, options) {
