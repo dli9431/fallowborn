@@ -774,7 +774,7 @@ test('a completed direct-vassal duchy promotes its existing count',
         rulerSex:realm.ruler.sex,
         contract:realm.feudalContract
       });
-      var newsKeys = s.news.slice(-3).map(function (entry) {
+      var newsKeys = s.log.slice(-3).map(function (entry) {
         return entry.msg && entry.msg.key;
       });
       return {
@@ -871,7 +871,7 @@ test('restore recognizes a pre-existing complete duchy with one bounded count pa
         rulerSex:realm.ruler.sex,
         contract:realm.feudalContract
       });
-      var newsBefore = s.news.filter(function (entry) {
+      var newsBefore = s.log.filter(function (entry) {
         return entry.msg &&
           entry.msg.key === 'news.realm.vassal_promoted_duchy';
       }).length;
@@ -906,7 +906,7 @@ test('restore recognizes a pre-existing complete duchy with one bounded count pa
         rulerSex:realm.ruler.sex,
         contract:realm.feudalContract
       });
-      var newsAfter = s.news.filter(function (entry) {
+      var newsAfter = s.log.filter(function (entry) {
         return entry.msg &&
           entry.msg.key === 'news.realm.vassal_promoted_duchy';
       }).length;
