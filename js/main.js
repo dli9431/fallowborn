@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.165.15';
+FB.VERSION = '1.165.16';
 FB.CHANGELOG = [
+  { v: '1.165.16', date: '2026-08-31', changes: [
+    'Succession and Hand over the house now reach the full recorded family tree, including distant cousins and their descendants.'
+  ] },
   { v: '1.165.15', date: '2026-08-31', changes: [
     'House succession now preserves permanent property and lets you continue as any living family relative, including cousins, at death or through Hand over the house.'
   ] },
@@ -4458,6 +4461,18 @@ FB.CHANGELOG = [
         if (!c || seen[c.id]) continue;
         add(c, false, c.dead ? 'dead' : 'retired', group.name);
       }
+    }
+    /* The named groups above preserve the familiar close-kin priority. Append
+       every remaining blood or adopted branch in nearest-first tree order so
+       great-grandchildren, removed cousins, and still more distant recorded
+       relatives remain valid continuations of the playable family. */
+    const widerFamily = FB.familyTreeMembers ? FB.familyTreeMembers(s) : [];
+    for (const entry of widerFamily) {
+      const c = entry.c;
+      if (!c || seen[c.id]) continue;
+      add(c, !c.dead && !c.retired,
+        c.dead ? 'dead' : (c.retired ? 'retired' : 'extended_family'),
+        'extended_family');
     }
     /* A spouse who is independently a qualifying blood relative was already
        added above. Marriage by itself still grants no succession right. */

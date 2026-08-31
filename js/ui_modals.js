@@ -24304,7 +24304,7 @@ window.FB = window.FB || {};
       FB.T('Living children lead the order, while every living relative in the tracked family remains a valid successor.'),
       guideBody([
         FB.T('A named heir moves an already eligible candidate to the front. It cannot make a spouse without a qualifying family tie, retired former head, dead relative, or step-relative eligible.'),
-        FB.T('Living sons then daughters lead the default order, followed by grandchildren, parents, siblings, grandparents, nieces and nephews, uncles and aunts, then cousins. Every listed living relative remains selectable and joins the playable house when chosen.'),
+        FB.T('Living sons then daughters lead the default order, followed by grandchildren, parents, siblings, grandparents, nieces and nephews, uncles and aunts, cousins, then the rest of the family tree by nearest link. Every listed living blood or adopted relative remains selectable and joins the playable house when chosen.'),
         FB.T('The successor picker shows the current reason beside every reviewed candidate. Territorial, office, debt, item, and household transfers then follow their own succession rules.'),
         FB.T('A head aged {age} or older may instead retire through the Hand over the house deed: an adult successor takes over without death dues, and the retired elder remains visible family at home, no longer under your control.', {
           age: FBDATA.balance.retirementAge !== undefined ?

@@ -1618,6 +1618,7 @@ window.FB = window.FB || {};
         familyIndex.stamp === familyStamp &&
         familyIndex.turn === state.turn) return familyIndex;
     const children = Object.create(null);
+    const familyParents = Object.create(null);
     const spouses = Object.create(null);
     const betrotheds = Object.create(null);
     const stepchildren = Object.create(null);
@@ -1628,8 +1629,17 @@ window.FB = window.FB || {};
     for (const id in state.chars) {
       const c = state.chars[id];
       if (!c) continue;
-      if (c.fatherId) push(children, c.fatherId, c.id);
-      if (c.motherId && c.motherId !== c.fatherId) push(children, c.motherId, c.id);
+      if (c.fatherId) {
+        push(children, c.fatherId, c.id);
+        push(familyParents, c.id, c.fatherId);
+      }
+      if (c.motherId && c.motherId !== c.fatherId) {
+        push(children, c.motherId, c.id);
+        push(familyParents, c.id, c.motherId);
+      }
+      for (const childId of (c.childrenIds || [])) {
+        push(familyParents, childId, c.id);
+      }
       if (!c.dead && c.spouseId) push(spouses, c.spouseId, c.id);
       if (!c.dead && c.betrothedId) push(betrotheds, c.betrothedId, c.id);
       if (Array.isArray(c.stepParentIds)) {
@@ -1638,8 +1648,9 @@ window.FB = window.FB || {};
     }
     familyIndex = {
       state:state, stamp:familyStamp, turn:state.turn,
-      children:children, spouses:spouses, betrotheds:betrotheds,
-      stepchildren:stepchildren, kin:null
+      children:children, familyParents:familyParents,
+      spouses:spouses, betrotheds:betrotheds,
+      stepchildren:stepchildren, kin:null, familyTree:null
     };
     return familyIndex;
   }
@@ -1691,6 +1702,18 @@ window.FB = window.FB || {};
     for (const id of (byParent || [])) {
       const k = state.chars[id];
       if (k && !seen[id]) { seen[id] = 1; out.push(k); }
+    }
+    return out;
+  }
+  function familyParentsOf(state, c) {
+    const out = [], seen = {};
+    const ids = familyIndexOf(state).familyParents[c.id] || [];
+    for (const id of ids) {
+      const parent = state.chars[id];
+      if (parent && !seen[id]) {
+        seen[id] = 1;
+        out.push(parent);
+      }
     }
     return out;
   }
@@ -1806,6 +1829,84 @@ window.FB = window.FB || {};
       cur = parent;
     }
     return depth;
+  };
+
+  /* Every blood or adopted relative in the recorded player family tree.
+     Begin with each recorded ancestor (including the player), then walk only
+     downward through that ancestor's descendants. This reaches distant
+     cousins and arbitrarily deep collateral branches without crossing from a
+     child into their unrelated other parent's family. The distance is the
+     shortest parent/child path and supplies a stable nearest-first order for
+     systems, such as succession, that append the wider tree after named close
+     relationships. */
+  FB.familyTreeMembers = function (state) {
+    if (!state || !state.player || !state.chars) return [];
+    const index = familyIndexOf(state);
+    if (index.familyTree && index.familyTree.playerId === state.player.charId) {
+      return index.familyTree.value;
+    }
+    const me = state.chars[state.player.charId];
+    if (!me) return [];
+    const ancestors = [];
+    const ancestorQueue = [{ c:me, depth:0 }];
+    const ancestorSeen = {};
+    const members = {};
+
+    function remember(c, distance) {
+      if (!c || c.id === me.id) return;
+      const prior = members[c.id];
+      if (!prior || distance < prior.distance) {
+        members[c.id] = { c:c, distance:distance };
+      }
+    }
+    function descend(root, rootDistance) {
+      const queue = [{ c:root, distance:rootDistance }];
+      const seen = {};
+      for (let i = 0; i < queue.length; i++) {
+        const row = queue[i];
+        if (!row.c || (seen[row.c.id] !== undefined &&
+            seen[row.c.id] <= row.distance)) continue;
+        seen[row.c.id] = row.distance;
+        remember(row.c, row.distance);
+        for (const child of childrenOf(state, row.c)) {
+          queue.push({ c:child, distance:row.distance + 1 });
+        }
+      }
+    }
+
+    for (let i = 0; i < ancestorQueue.length; i++) {
+      const row = ancestorQueue[i];
+      if (!row.c || ancestorSeen[row.c.id] !== undefined) continue;
+      ancestorSeen[row.c.id] = row.depth;
+      ancestors.push(row);
+      remember(row.c, row.depth);
+      for (const parent of familyParentsOf(state, row.c)) {
+        ancestorQueue.push({ c:parent, depth:row.depth + 1 });
+      }
+    }
+    for (const ancestor of ancestors) descend(ancestor.c, ancestor.depth);
+
+    /* First-generation saves can identify siblings by role and house without
+       parent records. Keep their complete descendant branches connected to
+       the same legacy family tree. */
+    if (!familyParentsOf(state, me).length) {
+      for (const sibling of siblingsOf(state, me)) descend(sibling, 2);
+    }
+
+    const value = Object.keys(members).map(function (id) {
+      return members[id];
+    }).sort(function (a, b) {
+      if (a.distance !== b.distance) return a.distance - b.distance;
+      const aSex = a.c.sex === 'm' ? 0 : (a.c.sex === 'f' ? 1 : 2);
+      const bSex = b.c.sex === 'm' ? 0 : (b.c.sex === 'f' ? 1 : 2);
+      if (aSex !== bSex) return aSex - bSex;
+      const aBorn = Number(a.c.born) || 0;
+      const bBorn = Number(b.c.born) || 0;
+      if (aBorn !== bBorn) return aBorn - bBorn;
+      return a.c.id < b.c.id ? -1 : (a.c.id > b.c.id ? 1 : 0);
+    });
+    index.familyTree = { playerId:state.player.charId, value:value };
+    return value;
   };
 
   FB.stepchildrenOf = function (state, c) {

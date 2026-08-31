@@ -797,11 +797,16 @@ their checkpoint, so no old lord, witness Standing, or unresolved proposal trans
 `FB.heirReview` is the shared read-only succession explanation. `FB.heirsOf` filters
 that review instead of rebuilding the order. The review preserves the existing named
 heir, children-first, then grandchildren/parents/siblings/grandparents/
-nieces-nephews/uncles-aunts/cousins order and attaches a stable eligibility code for UI
-prose. Priority determines the default and autoresolved successor; it does not block a
-player choice. Every living, non-retired blood or adopted relative in those groups remains
-eligible even while a direct child lives, and the death, named-heir, and retirement
-pickers show the complete eligible list rather than truncating it.
+nieces-nephews/uncles-aunts/cousins order before appending every remaining member of the
+recorded blood or adoptive family tree by nearest parent/child link. This includes deep
+direct descendants and ancestors, great-aunts and great-nephews, cousins of every degree,
+and cousins any number of times removed. The traversal starts from the current head's
+ancestors and walks down their descendant branches; it therefore never crosses through a
+shared child into an unrelated spouse's family. Priority determines the default and
+autoresolved successor; it does not block a player choice. Every living, non-retired
+relative in that complete tree remains eligible even while a direct child lives, and the
+death, named-heir, and retirement pickers show the complete eligible list rather than
+truncating it.
 An eligible direct child is described as a living son or living daughter from the
 candidate's recorded sex rather than by the generic child category.
 The chosen successor joins the playable house even when their prior dynasty differs.
@@ -823,7 +828,7 @@ rules. This is onboarding presentation and continuity, with no technology impact
 **Voluntary retirement is a living handover, not a second succession system.** A
 living head aged `balance.retirementAge` (50) or older may use the Hand over the
 house deed to yield to any adult living relative eligible in the shared
-review, including parents, siblings, grandchildren, and cousins even when a child lives.
+review, including distant or removed cousins even when a child lives.
 `FB.game.retirementBlockers` is the single gate the deed, modal, and
 `FB.game.retireTo` all quote: imprisonment, a personal war or campaign, leading a
 great holy war host, any other wartime duty, an active journey, and the absence

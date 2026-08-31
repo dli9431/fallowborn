@@ -153,7 +153,7 @@ test('retirement hands control to an adult heir without death dues',
     expect(result.retirementNews).toBe(true);
   });
 
-test('retirement may hand the house to a cousin while adult children live',
+test('retirement may hand the house to a first cousin twice removed',
   async function ({ page }) {
     await startDeterministicGame(page);
     const childId = await arrangeFamily(page, 20);
@@ -175,32 +175,49 @@ test('retirement may hand the house to a cousin while adult children live',
         culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
       });
       const cousin = FB.makeCharacter(s, {
-        name:'Dunstan', sex:'m', born:s.date.year - 24,
+        name:'Dunstan', sex:'m', born:s.date.year - 64,
         fatherId:uncle.id,
         culture:me.culture, religion:me.religion, dyn:'Otherhouse', traitsN:0
+      });
+      const cousinChild = FB.makeCharacter(s, {
+        name:'Edgar', sex:'m', born:s.date.year - 43,
+        fatherId:cousin.id,
+        culture:me.culture, religion:me.religion, dyn:cousin.dyn, traitsN:0
+      });
+      const removedCousin = FB.makeCharacter(s, {
+        name:'Frith', sex:'f', born:s.date.year - 22,
+        fatherId:cousinChild.id,
+        culture:me.culture, religion:me.religion, dyn:cousin.dyn, traitsN:0
       });
       grandparent.childrenIds = [parent.id, uncle.id];
       parent.childrenIds = [me.id];
       uncle.childrenIds = [cousin.id];
+      cousin.childrenIds = [cousinChild.id];
+      cousinChild.childrenIds = [removedCousin.id];
       me.fatherId = parent.id;
       FB.touchFamily();
 
       const preview = FB.game.retirePreview();
       const heirIds = preview.heirs.map(function (c) { return c.id; });
+      const removedCousinRow = preview.review.filter(function (row) {
+        return row.character.id === removedCousin.id;
+      })[0];
       FB.ui.showRetirement();
-      const cousinListed = !!document.querySelector(
-        '[data-retire-heir="' + cousin.id + '"]');
+      const removedCousinListed = !!document.querySelector(
+        '[data-retire-heir="' + removedCousin.id + '"]');
       FB.ui.closeModal();
-      const ok = FB.game.retireTo(cousin.id);
+      const ok = FB.game.retireTo(removedCousin.id);
       return {
         eligible:preview.eligible,
         childEligible:heirIds.indexOf(childId) >= 0,
         cousinEligible:heirIds.indexOf(cousin.id) >= 0,
-        cousinListed:cousinListed,
+        removedCousinEligible:heirIds.indexOf(removedCousin.id) >= 0,
+        removedCousinCode:removedCousinRow && removedCousinRow.code,
+        removedCousinListed:removedCousinListed,
         ok:ok,
         protagonistId:s.player.charId,
-        cousinId:cousin.id,
-        cousinJoinedHouse:cousin.dyn === me.dyn,
+        removedCousinId:removedCousin.id,
+        removedCousinJoinedHouse:removedCousin.dyn === me.dyn,
         formerRetired:me.retired === true,
         formerStillEligible:FB.heirsOf(s).some(function (candidate) {
           return candidate.id === me.id;
@@ -212,11 +229,13 @@ test('retirement may hand the house to a cousin while adult children live',
       eligible:true,
       childEligible:true,
       cousinEligible:true,
-      cousinListed:true,
+      removedCousinEligible:true,
+      removedCousinCode:'extended_family',
+      removedCousinListed:true,
       ok:true,
-      protagonistId:result.cousinId,
-      cousinId:result.cousinId,
-      cousinJoinedHouse:true,
+      protagonistId:result.removedCousinId,
+      removedCousinId:result.removedCousinId,
+      removedCousinJoinedHouse:true,
       formerRetired:true,
       formerStillEligible:false
     });
