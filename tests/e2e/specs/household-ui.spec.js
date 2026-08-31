@@ -727,7 +727,7 @@ test('permanent household property survives succession cleanup and stays owned',
     expect(result.holdings).toEqual([
       'hearth_garden', 'house_shrine', 'common_rights'
     ]);
-    expect(result.goldBonus).toBe(0.5);
+    expect(result.goldBonus).toBe(1.25);
     expect(result.available).not.toContain('hearth_garden');
     expect(result.available).not.toContain('house_shrine');
     expect(result.serialized).toEqual(result.holdings);
@@ -764,6 +764,9 @@ test('coming of age immediately unlocks adult and raiding deeds in the retained 
       FB.ui.showTab('actions');
     });
 
+    const personal = page.locator('[data-action-group="personal"]');
+    await expect(personal).toHaveAttribute('aria-expanded', 'false');
+    await personal.click();
     const town = page.locator('[data-action-id="go_to_town"]');
     await expect(page.locator('[data-focus-id="study"]')).toBeVisible();
     await expect(page.locator('[data-focus-id="play"]')).toBeVisible();

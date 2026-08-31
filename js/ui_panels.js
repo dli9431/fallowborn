@@ -6689,9 +6689,14 @@ window.FB = window.FB || {};
     function open() {
       if (FB.state !== state) return;
       const data = FB.save.chronicleData(state);
+      /* Resolving a missing English message rerenders the retained Chronicle
+         before this callback runs, so restore focus to its live replacement. */
+      const returnFocus = document.documentElement.contains(button)
+        ? button : ($('tab-log') &&
+          $('tab-log').querySelector('[data-chronicle-full]'));
       if (!data || !UI.showChronicleViewer(data, {
         back:UI.closeModal,
-        returnFocus:button
+        returnFocus:returnFocus
       })) {
         UI.toast('The full Chronicle could not be opened.');
       }
