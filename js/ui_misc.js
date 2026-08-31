@@ -173,7 +173,8 @@ window.FB = window.FB || {};
         grandparents:FB.T('Eligible: living grandparent of the family.'),
         nieces_nephews:FB.T('Eligible: living niece or nephew of the family.'),
         uncles_aunts:FB.T('Eligible: living uncle or aunt of the family.'),
-        cousins:FB.T('Eligible: living cousin of the family.')
+        cousins:FB.T('Eligible: living cousin of the family.'),
+        extended_family:FB.T('Eligible: living member of the wider family tree.')
       };
       return eligible[row.code] || FB.T('Eligible under the current house succession order.');
     }

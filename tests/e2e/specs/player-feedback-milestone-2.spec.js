@@ -560,7 +560,7 @@ test('succession and child identity explanations use the live family rules',
       .toHaveText('Cancel');
   });
 
-test('successor pickers include every living relative even with children',
+test('successor pickers include removed cousins and the full family tree',
   async function ({ page }) {
     const setup = await page.evaluate(function () {
       const s = FB.state;
@@ -591,13 +591,25 @@ test('successor pickers include every living relative even with children',
         culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
       });
       const cousin = FB.makeCharacter(s, {
-        name:'Dunstan', sex:'m', born:s.date.year - 24,
+        name:'Dunstan', sex:'m', born:s.date.year - 64,
         fatherId:uncle.id,
         culture:me.culture, religion:me.religion, dyn:'Otherhouse', traitsN:0
+      });
+      const cousinChild = FB.makeCharacter(s, {
+        name:'Edgar', sex:'m', born:s.date.year - 43,
+        fatherId:cousin.id,
+        culture:me.culture, religion:me.religion, dyn:cousin.dyn, traitsN:0
+      });
+      const removedCousin = FB.makeCharacter(s, {
+        name:'Frith', sex:'f', born:s.date.year - 22,
+        fatherId:cousinChild.id,
+        culture:me.culture, religion:me.religion, dyn:cousin.dyn, traitsN:0
       });
       grandparent.childrenIds = [parent.id, uncle.id];
       parent.childrenIds = [me.id];
       uncle.childrenIds = [cousin.id];
+      cousin.childrenIds = [cousinChild.id];
+      cousinChild.childrenIds = [removedCousin.id];
       me.fatherId = parent.id;
       FB.touchFamily();
 
@@ -611,26 +623,41 @@ test('successor pickers include every living relative even with children',
       const grandparentRow = review.filter(function (row) {
         return row.character.id === grandparent.id;
       })[0];
+      const removedCousinRow = review.filter(function (row) {
+        return row.character.id === removedCousin.id;
+      })[0];
       const heirs = FB.heirsOf(s);
       FB.ui.showHeirPick();
       return {
         cousinId:cousin.id,
+        removedCousinId:removedCousin.id,
         cousinEligible:cousinRow && cousinRow.eligible,
         cousinCode:cousinRow && cousinRow.code,
+        removedCousinEligible:removedCousinRow && removedCousinRow.eligible,
+        removedCousinCode:removedCousinRow && removedCousinRow.code,
         parentEligible:parentRow && parentRow.eligible,
         grandparentEligible:grandparentRow && grandparentRow.eligible,
         heirCount:heirs.length,
-        cousinIndex:heirs.map(function (c) { return c.id; }).indexOf(cousin.id)
+        cousinIndex:heirs.map(function (c) { return c.id; }).indexOf(cousin.id),
+        removedCousinIndex:heirs.map(function (c) {
+          return c.id;
+        }).indexOf(removedCousin.id)
       };
     });
 
     expect(setup.cousinEligible).toBe(true);
     expect(setup.cousinCode).toBe('cousins');
+    expect(setup.removedCousinEligible).toBe(true);
+    expect(setup.removedCousinCode).toBe('extended_family');
     expect(setup.parentEligible).toBe(true);
     expect(setup.grandparentEligible).toBe(true);
     expect(setup.cousinIndex).toBeGreaterThan(6);
+    expect(setup.removedCousinIndex).toBeGreaterThan(setup.cousinIndex);
     await expect(page.locator(
       '[data-namedheir="' + setup.cousinId + '"]')).toBeVisible();
+    await expect(page.locator(
+      '[data-namedheir="' + setup.removedCousinId + '"]'))
+      .toContainText('wider family tree');
 
     await page.evaluate(function () {
       FB.ui.closeModal();
@@ -639,6 +666,8 @@ test('successor pickers include every living relative even with children',
     await expect(page.locator('[data-heir]')).toHaveCount(setup.heirCount);
     await expect(page.locator(
       '[data-heir="' + setup.cousinId + '"]')).toBeVisible();
+    await expect(page.locator(
+      '[data-heir="' + setup.removedCousinId + '"]')).toBeVisible();
   });
 
 test('settlement growth reports every derived threshold and the bookmark baseline',

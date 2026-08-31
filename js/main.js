@@ -4459,6 +4459,18 @@ FB.CHANGELOG = [
         add(c, false, c.dead ? 'dead' : 'retired', group.name);
       }
     }
+    /* The named groups above preserve the familiar close-kin priority. Append
+       every remaining blood or adopted branch in nearest-first tree order so
+       great-grandchildren, removed cousins, and still more distant recorded
+       relatives remain valid continuations of the playable family. */
+    const widerFamily = FB.familyTreeMembers ? FB.familyTreeMembers(s) : [];
+    for (const entry of widerFamily) {
+      const c = entry.c;
+      if (!c || seen[c.id]) continue;
+      add(c, !c.dead && !c.retired,
+        c.dead ? 'dead' : (c.retired ? 'retired' : 'extended_family'),
+        'extended_family');
+    }
     /* A spouse who is independently a qualifying blood relative was already
        added above. Marriage by itself still grants no succession right. */
     const spouse = FB.spouseOf(s, me);
