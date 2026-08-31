@@ -11,6 +11,11 @@ window.FB = window.FB || {};
   const listeners = [];
   let toastSuppression = 0;
   const HOSTILE_HISTORY_LIMIT = 200;
+  const CHRONICLE_ARCHIVE_SCHEMA = 1;
+  const CHRONICLE_CATEGORIES = [
+    'news', 'choice', 'family', 'rank', 'war', 'property', 'faith',
+    'travel', 'politics'
+  ];
 
   function expireHostileChronicleLinks(state, reports) {
     if (!state || !Array.isArray(state.log) || !reports || !reports.length) return;
@@ -158,6 +163,227 @@ window.FB = window.FB || {};
   };
   FB.newsToastsSuppressed = function () { return toastSuppression > 0; };
 
+  /* The retained state.log is deliberately small and remains the compatibility
+     surface used by the live panel and older builds. The complete Chronicle is
+     an additive compact journal: repeated message keys live once in `strings`,
+     while entries use positional arrays instead of repeating property names.
+     Old version-3 saves acquire an archive from the history they still possess;
+     `partial` tells exports and the viewer that still-older lines were already
+     beyond the former 300-entry window and cannot be reconstructed. */
+  FB.CHRONICLE_ARCHIVE_SCHEMA = CHRONICLE_ARCHIVE_SCHEMA;
+
+  function chronicleArchiveValid(archive) {
+    return !!(archive && archive.v === CHRONICLE_ARCHIVE_SCHEMA &&
+      Array.isArray(archive.strings) && Array.isArray(archive.entries) &&
+      Array.isArray(archive.heads));
+  }
+
+  function chronicleStringIndex(archive, value) {
+    value = String(value || '');
+    const found = archive.strings.indexOf(value);
+    if (found >= 0) return found;
+    archive.strings.push(value);
+    return archive.strings.length - 1;
+  }
+
+  function chroniclePackMessage(archive, message) {
+    if (!message || typeof message.key !== 'string') return null;
+    return [chronicleStringIndex(archive, message.key),
+      message.params === undefined ? {} : message.params];
+  }
+
+  function chronicleUnpackMessage(archive, packed) {
+    if (!Array.isArray(packed) || typeof packed[0] !== 'number') return null;
+    const key = archive.strings[packed[0]];
+    if (typeof key !== 'string') return null;
+    return { key:key, params:packed[1] || {} };
+  }
+
+  function chroniclePackReceipt(archive, receipt) {
+    if (!receipt || typeof receipt !== 'object') return null;
+    return [
+      Number(receipt.schema) || 1,
+      receipt.eventId || '',
+      receipt.optionIndex === undefined ? -1 : receipt.optionIndex,
+      receipt.result || 'none',
+      receipt.automated ? 1 : 0,
+      chroniclePackMessage(archive, receipt.title),
+      chroniclePackMessage(archive, receipt.option),
+      chroniclePackMessage(archive, receipt.outcome),
+      Array.isArray(receipt.impacts) ? receipt.impacts : []
+    ];
+  }
+
+  function chronicleUnpackReceipt(archive, packed) {
+    if (!Array.isArray(packed)) return null;
+    return {
+      schema:Number(packed[0]) || 1,
+      eventId:packed[1] || '',
+      optionIndex:packed[2] === undefined ? -1 : packed[2],
+      result:packed[3] || 'none',
+      automated:!!packed[4],
+      title:chronicleUnpackMessage(archive, packed[5]),
+      option:chronicleUnpackMessage(archive, packed[6]),
+      outcome:chronicleUnpackMessage(archive, packed[7]),
+      impacts:Array.isArray(packed[8]) ? packed[8] : []
+    };
+  }
+
+  function chronicleCategory(entry) {
+    if (entry && entry.kind === 'choice') return 1;
+    const key = entry && entry.msg && String(entry.msg.key || '').toLowerCase() || '';
+    const text = key + ' ' + String(entry && entry.t || '').toLowerCase();
+    if (entry && entry.hostileReportKind ||
+        /(?:war|battle|siege|raid|army|levy|conquest|crusade)/.test(text)) return 4;
+    if (/(?:birth|child|marri|wedding|spouse|death|died|heir|succession|family|dynasty|retirement)/.test(text)) return 2;
+    if (/(?:rank|title|freedom|manumission|promotion|liege|vassal|independence|coronation)/.test(text)) return 3;
+    if (/(?:holding|property|enterprise|market|loan|debt|gold|item|estate|livelihood|career)/.test(text)) return 5;
+    if (/(?:faith|piety|church|papacy|pope|bishop|religion|conversion|holy)/.test(text)) return 6;
+    if (/(?:travel|journey|road|arrival|expedition|destination|pilgrim)/.test(text)) return 7;
+    if (/(?:council|parliament|election|authority|law|policy|office)/.test(text)) return 8;
+    return 0;
+  }
+
+  function chronicleLegacyGeneration(state, year) {
+    const legends = state && Array.isArray(state.legends) ? state.legends : [];
+    let generation = 1;
+    for (let i = 0; i < legends.length; i++) {
+      if (Number(year) > Number(legends[i].died)) generation = i + 2;
+    }
+    return Math.max(1, Math.min(Number(state && state.generation) || 1, generation));
+  }
+
+  function chroniclePackEntry(state, archive, entry, legacy) {
+    const body = entry && entry.msg
+      ? chroniclePackMessage(archive, entry.msg)
+      : String(entry && entry.t || '');
+    return [
+      Number(entry && entry.y) || Number(state.date && state.date.year) || 0,
+      Number(entry && entry.s) || 0,
+      Number(entry && entry.d) || 0,
+      body,
+      entry && entry.kind === 'choice' ? 1 : 0,
+      chroniclePackReceipt(archive, entry && entry.receipt),
+      entry && entry.hostileReportId || '',
+      entry && entry.hostileReportKind || '',
+      chronicleCategory(entry),
+      legacy ? chronicleLegacyGeneration(state, entry && entry.y) :
+        Math.max(1, Number(state.generation) || 1)
+    ];
+  }
+
+  function chronicleHeadSnapshot(state) {
+    if (!state || !state.player || !state.chars) return null;
+    const character = state.chars[state.player.charId];
+    if (!character) return null;
+    let titleData = null;
+    if (FB.titleSnapshot) {
+      try { titleData = FB.titleSnapshot(state); } catch (e) { titleData = null; }
+    }
+    return [
+      Math.max(1, Number(state.generation) || 1),
+      character.id || state.player.charId,
+      FB.fullName ? FB.fullName(character) : character.name || '',
+      Number(character.born) || Number(state.date && state.date.year) || 0,
+      Number(state.date && state.date.year) || 0,
+      Number(state.date && state.date.year) || 0,
+      titleData,
+      character.dyn || ''
+    ];
+  }
+
+  FB.chronicleNoteHead = function (state) {
+    const archive = FB.ensureChronicle(state);
+    const snapshot = chronicleHeadSnapshot(state);
+    if (!archive || !snapshot) return null;
+    let head = null;
+    for (let i = 0; i < archive.heads.length; i++) {
+      if (archive.heads[i] && archive.heads[i][0] === snapshot[0]) {
+        head = archive.heads[i];
+        break;
+      }
+    }
+    if (!head) {
+      if (snapshot[0] === 1 && state.start && state.start.year !== undefined) {
+        snapshot[4] = Number(state.start.year) || snapshot[4];
+      }
+      archive.heads.push(snapshot);
+      return snapshot;
+    }
+    head[1] = snapshot[1];
+    head[2] = snapshot[2];
+    head[3] = snapshot[3];
+    head[5] = Math.max(Number(head[5]) || 0, snapshot[5]);
+    if (snapshot[6]) head[6] = snapshot[6];
+    if (snapshot[7]) head[7] = snapshot[7];
+    return head;
+  };
+
+  FB.ensureChronicle = function (state, options) {
+    if (!state) return null;
+    if (!Array.isArray(state.log)) state.log = [];
+    if (chronicleArchiveValid(state.chronicle)) return state.chronicle;
+    const legacy = !!(options && options.legacy);
+    const archive = {
+      v:CHRONICLE_ARCHIVE_SCHEMA,
+      partial:legacy,
+      strings:[], entries:[], heads:[]
+    };
+    state.chronicle = archive;
+    const legends = Array.isArray(state.legends) ? state.legends : [];
+    for (let i = 0; i < legends.length; i++) {
+      const legend = legends[i] || {};
+      const character = state.chars && state.chars[legend.id];
+      archive.heads.push([
+        i + 1, legend.id || '', legend.name || character && character.name || '',
+        Number(legend.born) || 0,
+        i === 0 && state.start ? Number(state.start.year) || Number(legend.born) || 0
+          : (i && Number(legends[i - 1].died)) || Number(legend.born) || 0,
+        Number(legend.died) || 0,
+        legend.titleData || null,
+        character && character.dyn || ''
+      ]);
+    }
+    for (let i = 0; i < state.log.length; i++) {
+      archive.entries.push(chroniclePackEntry(state, archive, state.log[i], legacy));
+    }
+    const snapshot = chronicleHeadSnapshot(state);
+    if (snapshot) {
+      let represented = false;
+      for (let i = 0; i < archive.heads.length; i++) {
+        if (archive.heads[i][0] === snapshot[0]) represented = true;
+      }
+      if (!represented) archive.heads.push(snapshot);
+    }
+    return archive;
+  };
+
+  FB.chronicleEntry = function (archive, packed) {
+    if (!chronicleArchiveValid(archive) || !Array.isArray(packed)) return null;
+    const entry = { y:packed[0], s:packed[1], d:packed[2] };
+    if (Array.isArray(packed[3])) entry.msg = chronicleUnpackMessage(archive, packed[3]);
+    else entry.t = String(packed[3] || '');
+    if (packed[4] === 1) entry.kind = 'choice';
+    const receipt = chronicleUnpackReceipt(archive, packed[5]);
+    if (receipt) entry.receipt = receipt;
+    if (packed[6]) entry.hostileReportId = packed[6];
+    if (packed[7]) entry.hostileReportKind = packed[7];
+    entry.chronicleCategory = CHRONICLE_CATEGORIES[packed[8]] || 'news';
+    entry.generation = Math.max(1, Number(packed[9]) || 1);
+    return entry;
+  };
+
+  FB.chronicleEntries = function (state) {
+    const archive = FB.ensureChronicle(state);
+    if (!archive) return [];
+    const entries = [];
+    for (let i = 0; i < archive.entries.length; i++) {
+      const entry = FB.chronicleEntry(archive, archive.entries[i]);
+      if (entry) entries.push(entry);
+    }
+    return entries;
+  };
+
   /* Hostile reports are compact saved facts, never rendered prose. They are
      appended only when a raid, battle, or war boundary actually occurs; no
      daily tick reads this ledger. The cap keeps save serialization bounded. */
@@ -245,6 +471,11 @@ window.FB = window.FB || {};
     if (entry.hostileReportId) {
       const report = FB.hostileReport(state, entry.hostileReportId);
       if (report) entry.hostileReportKind = report.kind;
+    }
+    const archive = FB.ensureChronicle(state);
+    if (archive) {
+      FB.chronicleNoteHead(state);
+      archive.entries.push(chroniclePackEntry(state, archive, entry, false));
     }
     state.log.push(entry);
     if (state.log.length > 300) state.log.splice(0, state.log.length - 300);

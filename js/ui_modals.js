@@ -13142,49 +13142,6 @@ window.FB = window.FB || {};
     });
   }
 
-  function landPlotBatchDetails(place, batch) {
-    const before = Math.round(batch.currentYield * 10) / 10;
-    const after = Math.round(batch.resultingYield * 10) / 10;
-    const progress = landPlotBatchProgress(batch);
-    return assetEffectSummary({
-      compact:true,
-      scope:place,
-      setupCost:assetMoneyCost(batch.totalCost, batch.affordable),
-      recurringCost:FB.T('None'),
-      effect:FB.T(
-        '{money:before} → {money:after} seasonal yield here', {
-          before:before, after:after
-        }),
-      transferRule:FB.T('Passes to heirs as family land in this settlement'),
-      expiry:FB.T('No fixed end')
-    }) +
-      kv('Plots in this purchase', esc(FB.T('{count} plots', {
-        count:batch.plots
-      }))) +
-      kv(progress.label, esc(progress.text)) +
-      kv('Money remaining after purchase', '<span class="' +
-        (batch.moneyAfter < 0 ? 'op-bad' : '') + '">' +
-        esc(FB.T('{money:amount}', { amount:batch.moneyAfter })) + '</span>');
-  }
-
-  function landPlotBatchProgress(batch) {
-    if (batch.manorEligible) {
-      return {
-        label:'Resulting cluster and manor progress',
-        text:FB.T(
-          '{count}/{needed} plots — ready to declare a manor once the household has enough standing', {
-            count:batch.resultingCount, needed:batch.manorRequirement
-          })
-      };
-    }
-    return {
-      label:'Resulting holding',
-      text:FB.T('{count}/{maximum} plots — holding complete', {
-        count:batch.resultingCount, maximum:batch.maxPlots
-      })
-    };
-  }
-
   /* ================= freehold land market ================= */
   UI.showLandMarket = function () {
     const s = FB.state;
@@ -13208,7 +13165,6 @@ window.FB = window.FB || {};
       const count = FB.landCountAt(s, p.provinceId, i);
       const full = count >= max;
       const short = p.gold < cost;
-      const batch = FB.manorPlotPurchasePlan(s, i);
       const before = Math.round(FB.landGroupYield(count) * 10) / 10;
       const after = Math.round(FB.landGroupYield(count + 1) * 10) / 10;
       const place = FB.T('{settlement}, {province}', {
@@ -13235,24 +13191,6 @@ window.FB = window.FB || {};
         landPlotChoiceTerms(costText, effectText) + '</button>' +
         '<div class="event-choice-details hidden" id="' + detailsId + '">' +
         landPlotDetails(place, cost, !short, before, after, full) + '</div>';
-      if (batch) {
-        const batchDetailsId = 'land-batch-details-' + i;
-        const batchEffect = FB.T('{money:before} → {money:after}/season', {
-          before:Math.round(batch.currentYield * 10) / 10,
-          after:Math.round(batch.resultingYield * 10) / 10
-        });
-        h += '<button type="button" ' +
-          'class="actionbtn household-standard-choice land-plot-choice" ' +
-          'data-land-batch="' + i + '" data-action-tooltip="' +
-          batchDetailsId + '" aria-describedby="' + batchDetailsId + '">' +
-          '<span class="household-standard-choice-head"><b>' +
-          esc(FB.T('Buy remaining plots here…')) +
-          '</b><span aria-hidden="true">›</span></span>' +
-          landPlotChoiceTerms(assetMoneyCost(batch.totalCost,
-            batch.affordable), batchEffect) + '</button>' +
-          '<div class="event-choice-details hidden" id="' +
-          batchDetailsId + '">' + landPlotBatchDetails(place, batch) + '</div>';
-      }
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
     openModal(FB.T('🌾 Buy Freehold Land'), h);
@@ -13264,67 +13202,7 @@ window.FB = window.FB || {};
         UI.showLandMarket();
       });
     });
-    document.querySelectorAll('[data-land-batch]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        UI.showManorPlotBatchPreview(parseInt(button.dataset.landBatch, 10));
-      });
-    });
     $('gm-cancel').addEventListener('click', UI.closeModal);
-  };
-
-  UI.showManorPlotBatchPreview = function (settlement) {
-    const s = FB.state;
-    const plan = FB.manorPlotPurchasePlan(s, settlement);
-    if (!plan) {
-      UI.showLandMarket();
-      return;
-    }
-    const resultingYield = Math.round(plan.resultingYield * 10) / 10;
-    const progress = landPlotBatchProgress(plan);
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming.', {
-        settlement:plan.settlementName
-      })) + '</p>' +
-      kv('Plots in this purchase', esc(FB.T('{count} plots', {
-        count:plan.plots
-      }))) +
-      kv('Total price', '<span class="' +
-        (plan.affordable ? '' : 'op-bad') + '">' +
-        esc(FB.T('{money:amount}', { amount:plan.totalCost })) + '</span>') +
-      kv('Resulting seasonal yield', esc(FB.T('{money:amount} each season', {
-        amount:resultingYield
-      }))) +
-      kv(progress.label, esc(progress.text)) +
-      kv('Money remaining after purchase', '<span class="' +
-        (plan.moneyAfter < 0 ? 'op-bad' : '') + '">' +
-        esc(FB.T('{money:amount}', { amount:plan.moneyAfter })) + '</span>') +
-      (!plan.affordable ? '<p class="op-bad">' + esc(FB.T(
-        'The household cannot afford the complete batch. No plots will be purchased unless the full price is available.')) +
-        '</p>' : '') + '</div><div class="gm-footer">' +
-      '<button type="button" class="btn" id="manor-plot-batch-confirm"' +
-      (plan.affordable ? '' : ' disabled') + '>' +
-      esc(FB.T('Buy {plots} plots for {money:cost}', {
-        plots:plan.plots, cost:plan.totalCost
-      })) + '</button>' +
-      '<button type="button" class="btn" id="manor-plot-batch-back">' +
-      esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('🌾 Complete the holding at {settlement}?', {
-      settlement:plan.settlementName
-    }), h, {
-      historyView:true,
-      historyBackRender:function () { UI.showLandMarket(); }
-    });
-    $('manor-plot-batch-confirm').addEventListener('click', function () {
-      if (!FB.buyRemainingManorPlots(s, settlement, plan.currentCount)) {
-        UI.showManorPlotBatchPreview(settlement);
-        return;
-      }
-      UI.refresh();
-      UI.showLandMarket();
-    });
-    $('manor-plot-batch-back').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showLandMarket(); });
-    });
   };
 
   /* ================= consolidated household plan ================= */
@@ -22212,9 +22090,10 @@ window.FB = window.FB || {};
   function legendQuipText(legend, state) {
     if (!legend) return '';
     if (legend.quipMsg) {
-      return FB.renderMessage(legend.quipMsg, {
+      const text = FB.renderMessage(legend.quipMsg, {
         state: state, viewer: state.player.charId
       });
+      return text === legend.quipMsg.key ? '' : text;
     }
     return legend.quip || '';
   }
@@ -22342,6 +22221,8 @@ window.FB = window.FB || {};
 
   UI.gameOver = function () {
     const s = FB.state;
+    const completedChronicle = FB.save.rememberChronicle
+      ? FB.save.rememberChronicle(s) : FB.save.chronicleData(s);
     const years = FB.campaignYears(s);
     const summary = FB.renderMessage(FB.msg('fx.gameover.summary', {
       forms: {
@@ -22376,12 +22257,24 @@ window.FB = window.FB || {};
     }
     h += '<h4>' + esc(FB.T('Last lines of the chronicle')) + '</h4>';
     for (let i = Math.max(0, s.log.length - 6); i < s.log.length; i++) {
-      h += '<p>· ' + esc(FB.newsText(s.log[i], s, s.player.charId)) + '</p>';
+      const line = FB.newsText(s.log[i], s, s.player.charId);
+      if (s.log[i].msg && line === s.log[i].msg.key) continue;
+      h += '<p>· ' + esc(line) + '</p>';
     }
-    h += '</div><div class="gm-footer"><button class="btn primary" id="gm-title-btn">' +
+    h += '</div><div class="gm-footer"><button class="btn" id="gm-chronicle-view">' +
+      esc(FB.T('Explore full Chronicle')) + '</button>' +
+      '<button class="btn" id="gm-chronicle-download">' +
+      esc(FB.T('Download Chronicle')) + '</button>' +
+      '<button class="btn primary" id="gm-title-btn">' +
       esc(FB.T('Return to title')) + '</button></div>';
     openModal('The Chronicle Closes', h, { dismissable: false, modalClass: 'fullsheet-modal' });
     FB.paintFaces($('gm-body'), s);
+    $('gm-chronicle-view').addEventListener('click', function () {
+      UI.showChronicleViewer(completedChronicle, { back:UI.gameOver });
+    });
+    $('gm-chronicle-download').addEventListener('click', function () {
+      chronicleDownload(completedChronicle);
+    });
     $('gm-title-btn').addEventListener('click', function () {
       UI.closeModal();
       FB.game.toTitle();
@@ -23761,6 +23654,296 @@ window.FB = window.FB || {};
     });
   };
 
+  const CHRONICLE_PAGE_SIZE = 60;
+  let chronicleViewer = null;
+
+  function chronicleCategoryLabel(category) {
+    const labels = {
+      news:'News', choice:'Choices', family:'Family', rank:'Rank & realm',
+      war:'War', property:'Property & work', faith:'Faith', travel:'Travel',
+      politics:'Politics'
+    };
+    return FB.T(labels[category] || 'News');
+  }
+
+  function chronicleDownload(data) {
+    data = data && data.format === 'fallowborn-chronicle'
+      ? data : FB.save.chronicleData(data || FB.state);
+    if (!data) { UI.toast('There is no Chronicle to download.'); return false; }
+    if (!window.Blob || !window.URL || !URL.createObjectURL) {
+      UI.toast('This browser cannot download Chronicle files.');
+      return false;
+    }
+    try {
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {
+        type:'application/json;charset=utf-8'
+      }));
+      const link = document.createElement('a');
+      const dynasty = String(data.campaign && data.campaign.dynasty || 'house')
+        .toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-|-$/g, '');
+      link.href = url;
+      link.download = 'fallowborn-chronicle-' + (dynasty || 'house') + '.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      UI.toast('📜 Chronicle downloaded.');
+      return true;
+    } catch (e) {
+      UI.toast('This browser could not download the Chronicle.');
+      return false;
+    }
+  }
+  UI.downloadChronicle = chronicleDownload;
+
+  function chronicleSummaryHtml(data) {
+    const campaign = data.campaign || {};
+    const entries = data.entries || [];
+    let choices = 0;
+    for (let i = 0; i < entries.length; i++) {
+      if (entries[i].category === 'choice') choices++;
+    }
+    const years = Math.max(0,
+      Number(campaign.ended && campaign.ended.year) -
+      Number(campaign.started && campaign.started.year));
+    return '<div class="chronicle-viewer-summary">' +
+      '<div><b>' + esc(campaign.dynasty || FB.T('Unknown house')) +
+      '</b><span>' + esc(FB.T('House')) + '</span></div>' +
+      '<div><b>' + years + '</b><span>' + esc(FB.T('Years')) + '</span></div>' +
+      '<div><b>' + (campaign.generations || data.heads.length || 1) +
+      '</b><span>' + esc(FB.T('Generations')) + '</span></div>' +
+      '<div><b>' + entries.length + '</b><span>' + esc(FB.T('Entries')) + '</span></div>' +
+      '<div><b>' + choices + '</b><span>' + esc(FB.T('Choices')) + '</span></div>' +
+      '<div><b>' + esc(campaign.peakTitle || FB.T('Unknown')) +
+      '</b><span>' + esc(FB.T('Highest rank')) + '</span></div></div>';
+  }
+
+  function chronicleHeadsHtml(data) {
+    if (!data.heads || !data.heads.length) return '';
+    let h = '<section class="chronicle-viewer-section"><h4>' +
+      esc(FB.T('Those who carried the house')) + '</h4>' +
+      '<div class="chronicle-heads">';
+    for (let i = 0; i < data.heads.length; i++) {
+      const head = data.heads[i];
+      const active = String(chronicleViewer.generation) === String(head.generation);
+      h += '<button type="button" class="chronicle-head' + (active ? ' active' : '') +
+        '" data-chronicle-generation="' + esc(head.generation) + '">' +
+        '<span class="chronicle-head-generation">' + esc(FB.T('Generation {generation}', {
+          generation:head.generation
+        })) + '</span><b>' + esc(head.name || FB.T('Unknown')) + '</b>' +
+        '<span>' + esc((head.born || '?') + '–' + (head.ended || '?')) + '</span>' +
+        (head.title ? '<span>' + esc(head.title) + '</span>' : '') +
+        (head.quip ? '<i>' + esc(head.quip) + '</i>' : '') + '</button>';
+    }
+    return h + '</div></section>';
+  }
+
+  function chronicleFilteredEntries(data) {
+    const search = chronicleViewer.search.toLocaleLowerCase();
+    return (data.entries || []).filter(function (entry) {
+      if (chronicleViewer.category !== 'all' &&
+          entry.category !== chronicleViewer.category) return false;
+      if (chronicleViewer.generation !== 'all' &&
+          String(entry.generation) !== String(chronicleViewer.generation)) return false;
+      if (search && String(entry.text || '').toLocaleLowerCase().indexOf(search) < 0 &&
+          String(entry.choice && entry.choice.title || '').toLocaleLowerCase().indexOf(search) < 0) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  function chronicleControlsHtml(data) {
+    const categories = ['all', 'news', 'choice', 'family', 'rank', 'war',
+      'property', 'faith', 'travel', 'politics'];
+    let h = '<div class="chronicle-viewer-controls">' +
+      '<label><span>' + esc(FB.T('Search')) + '</span><input id="chronicle-search" type="search" value="' +
+      esc(chronicleViewer.search) + '" placeholder="' + esc(FB.T('Names, places, and events')) + '"></label>' +
+      '<button type="button" class="btn small" id="chronicle-search-go">' +
+      esc(FB.T('Search')) + '</button><label><span>' + esc(FB.T('Category')) +
+      '</span><select id="chronicle-category">';
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      h += '<option value="' + category + '"' +
+        (chronicleViewer.category === category ? ' selected' : '') + '>' +
+        esc(category === 'all' ? FB.T('All') : chronicleCategoryLabel(category)) + '</option>';
+    }
+    h += '</select></label><label><span>' + esc(FB.T('Generation')) +
+      '</span><select id="chronicle-generation"><option value="all">' +
+      esc(FB.T('All generations')) + '</option>';
+    for (let i = 0; i < data.heads.length; i++) {
+      const generation = data.heads[i].generation;
+      h += '<option value="' + generation + '"' +
+        (String(chronicleViewer.generation) === String(generation) ? ' selected' : '') + '>' +
+        esc(FB.T('{generation}. {name}', {
+          generation:generation, name:data.heads[i].name
+        })) + '</option>';
+    }
+    h += '</select></label><label><span>' + esc(FB.T('Order')) +
+      '</span><select id="chronicle-order"><option value="oldest"' +
+      (chronicleViewer.order === 'oldest' ? ' selected' : '') + '>' +
+      esc(FB.T('Oldest first')) + '</option><option value="newest"' +
+      (chronicleViewer.order === 'newest' ? ' selected' : '') + '>' +
+      esc(FB.T('Newest first')) + '</option></select></label></div>';
+    return h;
+  }
+
+  function chronicleEntryHtml(entry) {
+    const date = entry.day
+      ? FB.T('{season} {day}, {year}', {
+        season:FB.seasonName(entry.season), day:entry.day, year:entry.year
+      })
+      : FB.T('{season}, {year}', {
+        season:FB.seasonName(entry.season), year:entry.year
+      });
+    let detail = '';
+    if (entry.choice) {
+      detail = '<div class="chronicle-viewer-choice">' +
+        (entry.choice.title ? '<b>' + esc(entry.choice.title) + '</b>' : '') +
+        (entry.choice.option ? '<span><strong>' + esc(FB.T('Choice')) + ':</strong> ' +
+          esc(entry.choice.option) + '</span>' : '') +
+        (entry.choice.outcome ? '<span>' + esc(entry.choice.outcome) + '</span>' : '') +
+        '</div>';
+    }
+    return '<article class="chronicle-viewer-entry" data-i18n-ignore data-category="' +
+      esc(entry.category || 'news') + '"><div class="chronicle-viewer-entry-meta"><span>' +
+      esc(date) + '</span><span>' + esc(FB.T('Generation {generation}', {
+        generation:entry.generation || 1
+      })) + '</span><span>' + esc(chronicleCategoryLabel(entry.category)) +
+      '</span></div><p>' + esc(entry.text || '') + '</p>' + detail + '</article>';
+  }
+
+  function renderChronicleViewer(replace) {
+    const data = chronicleViewer.data;
+    let filtered = chronicleFilteredEntries(data);
+    if (chronicleViewer.order === 'newest') filtered = filtered.slice().reverse();
+    const pages = Math.max(1, Math.ceil(filtered.length / CHRONICLE_PAGE_SIZE));
+    chronicleViewer.page = Math.max(0, Math.min(pages - 1, chronicleViewer.page));
+    const start = chronicleViewer.page * CHRONICLE_PAGE_SIZE;
+    const shown = filtered.slice(start, start + CHRONICLE_PAGE_SIZE);
+    let h = chronicleSummaryHtml(data);
+    if (!data.complete) {
+      h += '<div class="chronicle-archive-warning">' + esc(FB.T(
+        'This Chronicle was recovered from an older save. It contains every entry that save still held, but lines discarded by earlier versions cannot be restored.')) + '</div>';
+    }
+    h += chronicleHeadsHtml(data) +
+      '<section class="chronicle-viewer-section chronicle-viewer-timeline"><h4>' +
+      esc(FB.T('Complete timeline')) + '</h4>' + chronicleControlsHtml(data) +
+      '<div class="chronicle-viewer-count">' + esc(FB.T('{count} matching entries', {
+        count:filtered.length
+      })) + '</div><div class="chronicle-viewer-entries">';
+    for (let i = 0; i < shown.length; i++) h += chronicleEntryHtml(shown[i]);
+    if (!shown.length) h += '<div class="logentry">' + esc(FB.T('No entries match these filters.')) + '</div>';
+    h += '</div><div class="chronicle-viewer-pages"><button type="button" class="btn" id="chronicle-prev"' +
+      (chronicleViewer.page <= 0 ? ' disabled' : '') + '>' + esc(FB.T('Previous')) +
+      '</button><span>' + esc(FB.T('Page {page} of {pages}', {
+        page:chronicleViewer.page + 1, pages:pages
+      })) + '</span><button type="button" class="btn" id="chronicle-next"' +
+      (chronicleViewer.page >= pages - 1 ? ' disabled' : '') + '>' + esc(FB.T('Next')) +
+      '</button></div></section><div class="gm-footer"><button type="button" class="btn" id="chronicle-back">' +
+      esc(FB.T('Back')) + '</button><button type="button" class="btn primary" id="chronicle-download">' +
+      esc(FB.T('Download Chronicle')) + '</button></div>';
+    openModal(FB.T('Chronicle of {dynasty}', {
+      dynasty:data.campaign.dynasty || FB.T('your line')
+    }), h, {
+      historyView:!replace,
+      replaceView:!!replace,
+      modalClass:'fullsheet-modal chronicle-viewer-modal',
+      historyBack:true,
+      historyBackRender:chronicleViewer.back,
+      returnFocus:chronicleViewer.returnFocus
+    });
+    function applyFilters() {
+      chronicleViewer.search = $('chronicle-search').value;
+      chronicleViewer.category = $('chronicle-category').value;
+      chronicleViewer.generation = $('chronicle-generation').value;
+      chronicleViewer.order = $('chronicle-order').value;
+      chronicleViewer.page = 0;
+      renderChronicleViewer(true);
+    }
+    $('chronicle-search-go').addEventListener('click', applyFilters);
+    $('chronicle-search').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') { event.preventDefault(); applyFilters(); }
+    });
+    $('chronicle-category').addEventListener('change', applyFilters);
+    $('chronicle-generation').addEventListener('change', applyFilters);
+    $('chronicle-order').addEventListener('change', applyFilters);
+    document.querySelectorAll('[data-chronicle-generation]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        chronicleViewer.generation = button.getAttribute('data-chronicle-generation');
+        chronicleViewer.page = 0;
+        renderChronicleViewer(true);
+      });
+    });
+    $('chronicle-prev').addEventListener('click', function () {
+      chronicleViewer.page--;
+      renderChronicleViewer(true);
+    });
+    $('chronicle-next').addEventListener('click', function () {
+      chronicleViewer.page++;
+      renderChronicleViewer(true);
+    });
+    $('chronicle-download').addEventListener('click', function () {
+      chronicleDownload(data);
+    });
+    $('chronicle-back').addEventListener('click', function () {
+      modalHistoryBack(chronicleViewer.back);
+    });
+  }
+
+  UI.showChronicleViewer = function (data, options) {
+    data = FB.save.parseChronicle(data);
+    if (!data) { UI.toast('That file is not a Fallowborn Chronicle.'); return false; }
+    options = options || {};
+    chronicleViewer = {
+      data:data, page:0, category:'all', generation:'all', search:'',
+      order:'oldest', back:options.back || UI.showChronicleLibrary,
+      returnFocus:options.returnFocus || null
+    };
+    renderChronicleViewer(false);
+    return true;
+  };
+
+  UI.showChronicleLibrary = function () {
+    const recent = FB.save.recentChronicle && FB.save.recentChronicle();
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Open a downloaded Chronicle to explore a house across generations. Chronicle files are histories only; they do not resume a saved game.')) + '</p></div><div class="gm-list">';
+    if (recent) {
+      h += '<button class="actionbtn" id="chronicle-open-recent">' +
+        esc(FB.T('Open recent Chronicle')) + '<span class="adesc">' +
+        esc(FB.T('{dynasty} · {start}–{end} · {count} entries', {
+          dynasty:recent.campaign.dynasty || FB.T('Unknown house'),
+          start:recent.campaign.started.year,
+          end:recent.campaign.ended.year,
+          count:recent.entries.length
+        })) + '</span></button>';
+    }
+    h += '</div><p class="chronicle-file-input"><input type="file" id="chronicle-file" ' +
+      'accept=".json,application/json" aria-label="' + esc(FB.T('Fallowborn Chronicle file')) + '"></p>' +
+      '<div class="gm-list"><button class="actionbtn" id="chronicle-file-open">' +
+      esc(FB.T('Open Chronicle file')) + '<span class="adesc">' +
+      esc(FB.T('choose a fallowborn-chronicle JSON file')) + '</span></button></div>' +
+      '<button class="btn" id="gm-back">' + esc(FB.T('Close')) + '</button>';
+    openModal('Chronicle Library', h, { historyView:true });
+    if (recent) $('chronicle-open-recent').addEventListener('click', function () {
+      UI.showChronicleViewer(recent, { back:UI.showChronicleLibrary });
+    });
+    $('chronicle-file-open').addEventListener('click', function () {
+      const file = $('chronicle-file').files[0];
+      if (!file) { UI.toast('Choose a Chronicle file first.'); return; }
+      const reader = new FileReader();
+      reader.onload = function () {
+        const data = FB.save.parseChronicle(reader.result);
+        if (!data) { UI.toast('That file is not a Fallowborn Chronicle.'); return; }
+        FB.save.rememberChronicle(data);
+        UI.showChronicleViewer(data, { back:UI.showChronicleLibrary });
+      };
+      reader.onerror = function () { UI.toast('That Chronicle file could not be read.'); };
+      reader.readAsText(file);
+    });
+    $('gm-back').addEventListener('click', UI.closeModal);
+  };
+
   UI.showSaveLoad = function (saving) {
     let h = '<div class="gm-list">';
     for (let i = 1; i <= 3; i++) {
@@ -23778,7 +23961,9 @@ window.FB = window.FB || {};
     // a downloaded life outlives a browser that forgets its storage
     h += saving ?
       '<button class="actionbtn" id="sl-export">💾 Download save file' +
-      '<span class="adesc">keep a .txt backup if this browser wipes its saves, or move it to another device</span></button>' :
+      '<span class="adesc">keep a .txt backup if this browser wipes its saves, or move it to another device</span></button>' +
+      '<button class="actionbtn" id="sl-chronicle-export">📜 Download Chronicle' +
+      '<span class="adesc">a complete JSON history for the Chronicle viewer</span></button>' :
       '<button class="actionbtn" id="sl-import">📂 Load save file' +
       '<span class="adesc">choose an exported .txt file, or paste older save text</span></button>';
     h += '</div>';
@@ -23798,7 +23983,12 @@ window.FB = window.FB || {};
         }
       });
     });
-    if (saving) $('sl-export').addEventListener('click', UI.showExport);
+    if (saving) {
+      $('sl-export').addEventListener('click', UI.showExport);
+      $('sl-chronicle-export').addEventListener('click', function () {
+        chronicleDownload(FB.state);
+      });
+    }
     else $('sl-import').addEventListener('click', UI.showImport);
     $('gm-back').addEventListener('click', function () {
       modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
@@ -24626,7 +24816,7 @@ window.FB = window.FB || {};
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–5</b> select a section and use the same letter grid for management actions only · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
-      '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback.</p>' +
+      '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback. Download Chronicle creates a complete JSON history that View Chronicle opens from the title screen.</p>' +
       '</div><button class="btn primary" id="gm-ok">' + esc(FB.T('Close')) + '</button>',
       { historyView:true });
     $('gm-ok').addEventListener('click', function () {

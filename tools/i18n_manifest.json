@@ -39023,17 +39023,6 @@
         "text": "The labor grinds you down."
       }
     },
-    "news.action.land_batch_bought": {
-      "context": "Durable message descriptor; English source remains at its callsite.",
-      "glossary": [
-        "plots",
-        "settlement"
-      ],
-      "location": "js/actions.js",
-      "source": {
-        "text": "🌾 The household buys {plots} more plots at {settlement}, completing a manor-sized holding."
-      }
-    },
     "news.action.land_bought": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -53521,6 +53510,16 @@
         "text": "Acquisition order"
       }
     },
+    "src.0243cd23": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "death succession recovery"
+      }
+    },
     "src.02482c5d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53961,16 +53960,6 @@
       ],
       "source": {
         "text": "With my household"
-      }
-    },
-    "src.0337b4f5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Eligible: same-house niece or nephew; closer branches have no living candidate."
       }
     },
     "src.033c10ce": {
@@ -54561,16 +54550,6 @@
       ],
       "source": {
         "text": "Automatic research fills every open national slot now and whenever a project completes. Existing projects are never cancelled."
-      }
-    },
-    "src.0486c4e3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback."
       }
     },
     "src.04871f65": {
@@ -55724,6 +55703,16 @@
       ],
       "source": {
         "text": "🕊 The office of {title} has passed beyond the enemy’s reach — the succession war ends with nothing gained."
+      }
+    },
+    "src.06c5967a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{dynasty} · {start}–{end} · {count} entries"
       }
     },
     "src.06cdd7f8": {
@@ -58180,16 +58169,6 @@
         "text": "Standardized Coinage"
       }
     },
-    "src.0b2f4085": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{count}/{needed} plots — ready to declare a manor once the household has enough standing"
-      }
-    },
     "src.0b393bd4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59038,6 +59017,17 @@
       ],
       "source": {
         "text": "cannot add unknown baseline id"
+      }
+    },
+    "src.0cf8f4a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Explore full Chronicle"
       }
     },
     "src.0cf9812e": {
@@ -60536,6 +60526,16 @@
       ],
       "source": {
         "text": "the target crown"
+      }
+    },
+    "src.0feb3565": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Unknown house"
       }
     },
     "src.0feb4f23": {
@@ -62644,6 +62644,16 @@
         "text": "Learned career path"
       }
     },
+    "src.13b3ef9c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "{name} has died."
+      }
+    },
     "src.13b97d3a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63344,6 +63354,16 @@
       ],
       "source": {
         "text": "🕯 {name} has died, aged {age}."
+      }
+    },
+    "src.14fda5db": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Those who carried the house"
       }
     },
     "src.1500315c": {
@@ -64835,16 +64855,6 @@
         "text": "{counties} objective counties{holy}"
       }
     },
-    "src.17a123dd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "A named heir moves an already eligible candidate to the front. It cannot make a spouse, dead relative, different-house relative, or blocked branch eligible."
-      }
-    },
     "src.17a7de29": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65720,16 +65730,6 @@
       ],
       "source": {
         "text": "Too rich for you."
-      }
-    },
-    "src.19836c09": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Plots in this purchase"
       }
     },
     "src.1985109b": {
@@ -67570,6 +67570,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -69996,6 +69997,16 @@
       ],
       "source": {
         "text": "Choose the one exact trade corridor protected by the charter. Ordinary commodity ventures remain available on every route."
+      }
+    },
+    "src.21f608f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "choose a fallowborn-chronicle JSON file"
       }
     },
     "src.2200426a": {
@@ -73130,6 +73141,16 @@
         "text": "Zoroastrian"
       }
     },
+    "src.27bbdcb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "The full Chronicle could not be opened."
+      }
+    },
     "src.27c3ca0c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75415,6 +75436,16 @@
         "text": "The community elects another candidate."
       }
     },
+    "src.2c7c4a77": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "House or dynasty: characters sharing the house identity. A chosen relative joins the playable house at succession; house membership by itself does not make someone controllable or resident."
+      }
+    },
     "src.2c7e53fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75984,6 +76015,16 @@
       ],
       "source": {
         "text": "Mediterranean vines and olives supply ordinary calories and valued exports."
+      }
+    },
+    "src.2d89f406": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "The family head has died."
       }
     },
     "src.2d8d28a5": {
@@ -77530,6 +77571,16 @@
         "text": "💍 {name} enters your household as your fourth wife."
       }
     },
+    "src.30b92a95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "The saved death decision could not be reconstructed."
+      }
+    },
     "src.30c0572f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78051,6 +78102,16 @@
       ],
       "source": {
         "text": "Apply & reload"
+      }
+    },
+    "src.31becd22": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "heir successor named heir children grandchildren parents grandparents siblings cousins family house death retirement abdication"
       }
     },
     "src.31bf722c": {
@@ -79237,16 +79298,6 @@
         "text": "The labor grinds you down."
       }
     },
-    "src.3438b85f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{count}/{maximum} plots — holding complete"
-      }
-    },
     "src.343c52de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79739,6 +79790,16 @@
       ],
       "source": {
         "text": "Withdraw after fulfilling the term for {piety} piety and {prestige} prestige."
+      }
+    },
+    "src.355e699c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{generation}. {name}"
       }
     },
     "src.3560eb8c": {
@@ -81279,6 +81340,16 @@
       ],
       "source": {
         "text": "\" width=\""
+      }
+    },
+    "src.38acfd9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Rank & realm"
       }
     },
     "src.38b35cc8": {
@@ -83805,6 +83876,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js",
         "index.html"
       ],
@@ -84280,16 +84352,6 @@
       ],
       "source": {
         "text": "Pure to the end, and faintly smug about it."
-      }
-    },
-    "src.3ed264b7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Buy {plots} plots for {money:cost}"
       }
     },
     "src.3eddad30": {
@@ -84795,6 +84857,16 @@
       ],
       "source": {
         "text": "Judge with care and patience."
+      }
+    },
+    "src.3f9b6f94": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/save.js"
+      ],
+      "source": {
+        "text": "Chronicle archive"
       }
     },
     "src.3fa047ca": {
@@ -85376,6 +85448,16 @@
       ],
       "source": {
         "text": "Automatic research"
+      }
+    },
+    "src.40cca1fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Fallowborn Chronicle file"
       }
     },
     "src.40d1e79a": {
@@ -87035,16 +87117,6 @@
         "text": "Your motion asks {liege}’s grace for a chartered market in your home county: stalls by the church door, tolls honestly taken, building timber bought without a week’s bargaining. The guild men smile; the lords who farm their own tolls do not."
       }
     },
-    "src.43a4db1e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Living sons then daughters are eligible first. With no living child, the order continues through same-house grandchildren, siblings, nieces and nephews, uncles and aunts, then cousins."
-      }
-    },
     "src.43a60703": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88421,6 +88493,16 @@
         "text": "You are Sister {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements."
       }
     },
+    "src.45eb00e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "View Chronicle"
+      }
+    },
     "src.45f7c617": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89163,6 +89245,16 @@
         "text": "Exhaustion strips the pride from both of you. Hands are clasped in the smoking street, and the feud ends before witnesses."
       }
     },
+    "src.474e7349": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That file is not a Fallowborn Chronicle."
+      }
+    },
     "src.474fb5b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89422,16 +89514,6 @@
       ],
       "source": {
         "text": "Fight the flames for your stock."
-      }
-    },
-    "src.47cd1b0a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Eligible: same-house cousin; closer branches have no living candidate."
       }
     },
     "src.47d165d6": {
@@ -90165,6 +90247,16 @@
       ],
       "source": {
         "text": "Ten thousand rings, each one riveted, each one a small argument against dying."
+      }
+    },
+    "src.499bce95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This browser could not download the Chronicle."
       }
     },
     "src.49aa252b": {
@@ -91903,16 +91995,6 @@
         "text": "Instruction is managed for the household head and descendants"
       }
     },
-    "src.4d5c823d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The household cannot afford the complete batch. No plots will be purchased unless the full price is available."
-      }
-    },
     "src.4d5e9863": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92284,6 +92366,16 @@
         "text": "Collapse {name}’s branch"
       }
     },
+    "src.4e3c488a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Not eligible: a retired former head cannot take the house back."
+      }
+    },
     "src.4e4310f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92355,6 +92447,16 @@
         "text": "Name what this service is meant to secure. A precise vow strengthens that claim and weakens unrelated claims."
       }
     },
+    "src.4e6304bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Highest rank"
+      }
+    },
     "src.4e66b816": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92423,6 +92525,16 @@
       ],
       "source": {
         "text": "Ruler card…"
+      }
+    },
+    "src.4e933e20": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "📜 Chronicle downloaded."
       }
     },
     "src.4e93c80e": {
@@ -92786,6 +92898,16 @@
       ],
       "source": {
         "text": "Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin."
+      }
+    },
+    "src.4f4703db": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "All generations"
       }
     },
     "src.4f4e38e7": {
@@ -94619,16 +94741,6 @@
         "text": "The storm slides past. Your fields glitter, unharmed."
       }
     },
-    "src.52aa4cd1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Not eligible now: a living child of the playable head takes precedence."
-      }
-    },
     "src.52b0dbdd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95452,16 +95564,6 @@
       ],
       "source": {
         "text": "{title} {ruler}"
-      }
-    },
-    "src.54aa6b83": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Eligible: same-house uncle or aunt; closer branches have no living candidate."
       }
     },
     "src.54ae02f4": {
@@ -97170,6 +97272,16 @@
       ],
       "source": {
         "text": "A penance, a surety, and a face-saving agreement empty the cathedral without blood."
+      }
+    },
+    "src.57a6c7a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living uncle or aunt of the family."
       }
     },
     "src.57aadbc7": {
@@ -99003,6 +99115,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -100870,6 +100983,16 @@
         "text": "🏘 The old quartering quarrel ends with the household’s old customary bond."
       }
     },
+    "src.5eb33ade": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open Chronicle file"
+      }
+    },
     "src.5eb471a2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102397,6 +102520,16 @@
       ],
       "source": {
         "text": "Some insults die faster than feuds."
+      }
+    },
+    "src.61847f98": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A named heir moves an already eligible candidate to the front. It cannot make a spouse without a qualifying family tie, retired former head, dead relative, or step-relative eligible."
       }
     },
     "src.6186899d": {
@@ -104961,6 +105094,16 @@
         "text": "case names unknown settlement kind:"
       }
     },
+    "src.66a7e449": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This Chronicle was recovered from an older save. It contains every entry that save still held, but lines discarded by earlier versions cannot be restored."
+      }
+    },
     "src.66a99ba0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105309,6 +105452,16 @@
       ],
       "source": {
         "text": "Accept the failed vote."
+      }
+    },
+    "src.674ae306": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living member of the wider family tree."
       }
     },
     "src.674f98e1": {
@@ -105719,6 +105872,16 @@
       ],
       "source": {
         "text": "The Banners Rise"
+      }
+    },
+    "src.6827e3dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Living children lead the order, while every living relative in the tracked family remains a valid successor."
       }
     },
     "src.682ea867": {
@@ -108639,6 +108802,16 @@
       ],
       "source": {
         "text": "Thin ranks lower abstract campaign condition; live troop totals do not change."
+      }
+    },
+    "src.6d919cef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "fullsheet-modal chronicle-viewer-modal"
       }
     },
     "src.6d937e72": {
@@ -113930,6 +114103,16 @@
         "text": "Persecuted Minorities"
       }
     },
+    "src.77dfec5d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Loading full Chronicle…"
+      }
+    },
     "src.77e068c0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117996,16 +118179,6 @@
         "text": "A full belly sings no rebel songs."
       }
     },
-    "src.7f8805cd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming."
-      }
-    },
     "src.7f8c2952": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119890,6 +120063,16 @@
       ],
       "source": {
         "text": "Valor may burn the fear out — or burn you with it."
+      }
+    },
+    "src.82ffb45d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Complete timeline"
       }
     },
     "src.831099e2": {
@@ -121890,6 +122073,16 @@
         "text": "Admit the witnesses are uncertain and refer it upward."
       }
     },
+    "src.86783779": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Chronicle Library"
+      }
+    },
     "src.867a85b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123314,16 +123507,6 @@
       ],
       "source": {
         "text": "Realm of"
-      }
-    },
-    "src.893d86df": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Resulting holding"
       }
     },
     "src.893eea29": {
@@ -125387,6 +125570,16 @@
         "text": "The benches join trade and redress in one settlement. The charter passes, and the liege’s aid falls a step."
       }
     },
+    "src.8ce482c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download Chronicle"
+      }
+    },
     "src.8ce6d8e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125887,16 +126080,6 @@
       ],
       "source": {
         "text": "{used} used of approximately {quota} available to this browser."
-      }
-    },
-    "src.8ddda1ba": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Eligible: same-house grandchild; no living child is ahead of this branch."
       }
     },
     "src.8dde18e7": {
@@ -126543,16 +126726,6 @@
         "text": "Standing with your liege"
       }
     },
-    "src.8f188476": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "🌾 The household buys {plots} more plots at {settlement}, completing a manor-sized holding."
-      }
-    },
     "src.8f19b841": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126744,16 +126917,6 @@
         "text": "Home terms: Review your tenure and routes to freedom in Rank & Realm."
       }
     },
-    "src.8f494bfd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Resulting seasonal yield"
-      }
-    },
     "src.8f49c48d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126793,6 +126956,16 @@
       ],
       "source": {
         "text": "Keen Seax"
+      }
+    },
+    "src.8f6319dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a Chronicle file first."
       }
     },
     "src.8f635989": {
@@ -127434,6 +127607,16 @@
       ],
       "source": {
         "text": "Royal family matches become available at age 12."
+      }
+    },
+    "src.90b24b82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback. Download Chronicle creates a complete JSON history that View Chronicle opens from the title screen."
       }
     },
     "src.90c37069": {
@@ -129950,6 +130133,16 @@
       ],
       "source": {
         "text": "Choose a stake and developed market, then dispatch it or travel with it."
+      }
+    },
+    "src.9611da1b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No entries match these filters."
       }
     },
     "src.9612367e": {
@@ -134163,6 +134356,16 @@
         "text": "+{amount} men-at-arms support"
       }
     },
+    "src.9de7d172": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Page {page} of {pages}"
+      }
+    },
     "src.9de87c2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136259,16 +136462,6 @@
       ],
       "source": {
         "text": "This enterprise"
-      }
-    },
-    "src.a1af26e0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Money remaining after purchase"
       }
     },
     "src.a1bf2599": {
@@ -140500,16 +140693,6 @@
         "text": "Dowry cap: none"
       }
     },
-    "src.a9c29050": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{count} plots"
-      }
-    },
     "src.a9d4eac7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142076,6 +142259,16 @@
       ],
       "source": {
         "text": "Fled into sanctuary; the lands were seized behind you."
+      }
+    },
+    "src.ad32d077": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} matching entries"
       }
     },
     "src.ad32ec32": {
@@ -144237,6 +144430,16 @@
       ],
       "source": {
         "text": "The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall."
+      }
+    },
+    "src.b0fd982e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Politics"
       }
     },
     "src.b1003c74": {
@@ -146488,6 +146691,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -146889,6 +147093,16 @@
         "text": "Buy off the waverers. ({money:20})"
       }
     },
+    "src.b5fbfeee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "application/json;charset=utf-8"
+      }
+    },
     "src.b6055f6a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146907,6 +147121,16 @@
       ],
       "source": {
         "text": "Load Save File"
+      }
+    },
+    "src.b60f9f5b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Generation {generation}"
       }
     },
     "src.b6152b42": {
@@ -148823,6 +149047,16 @@
         "text": "Manage…"
       }
     },
+    "src.b9cf1eaf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living grandparent of the family."
+      }
+    },
     "src.b9e030b1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149114,6 +149348,16 @@
       ],
       "source": {
         "text": "Specialized registers and departments organize pay, revenue, and correspondence."
+      }
+    },
+    "src.ba64f919": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "📜 Download Chronicle"
       }
     },
     "src.ba6c1dc2": {
@@ -150122,16 +150366,6 @@
         "text": "{name} dies in {year} AD, aged {age} — before their time."
       }
     },
-    "src.bcc07fe2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "heir successor named heir children grandchildren siblings house death retirement abdication"
-      }
-    },
     "src.bcc2cb53": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150583,6 +150817,16 @@
       ],
       "source": {
         "text": "keep a .txt backup if this browser wipes its saves, or move it to another device"
+      }
+    },
+    "src.bda3025c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That Chronicle file could not be read."
       }
     },
     "src.bda34df7": {
@@ -151121,6 +151365,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -151828,6 +152073,16 @@
         "text": "A fat purse, and a colder look from {lord}."
       }
     },
+    "src.c02001ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Living sons then daughters lead the default order, followed by grandchildren, parents, siblings, grandparents, nieces and nephews, uncles and aunts, cousins, then the rest of the family tree by nearest link. Every listed living blood or adopted relative remains selectable and joins the playable house when chosen."
+      }
+    },
     "src.c038f97c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152247,16 +152502,6 @@
       ],
       "source": {
         "text": "The {holy} speaks well of you to the lord. (35 piety)"
-      }
-    },
-    "src.c10f4d21": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Resulting cluster and manor progress"
       }
     },
     "src.c10fbd02": {
@@ -156111,6 +156356,16 @@
         "text": "The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory."
       }
     },
+    "src.c7dcc890": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This browser cannot download Chronicle files."
+      }
+    },
     "src.c7e38268": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156834,6 +157089,16 @@
         "text": "Stay free and exposed."
       }
     },
+    "src.c92d7d21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Names, places, and events"
+      }
+    },
     "src.c92da9bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -157186,6 +157451,16 @@
         "text": "Master’s Instruments and Patterns"
       }
     },
+    "src.c9feda9c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living sibling of the current head."
+      }
+    },
     "src.ca01cbbd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -157254,16 +157529,6 @@
       ],
       "source": {
         "text": "The Measure of a Market"
-      }
-    },
-    "src.ca2d4e93": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Buy remaining plots here…"
       }
     },
     "src.ca30bec7": {
@@ -157847,6 +158112,16 @@
         "text": "💡 Open Kin and tap the person under Courting. Give them personal attention until your Standing is high enough to propose."
       }
     },
+    "src.cb48c120": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living cousin of the family."
+      }
+    },
     "src.cb491abc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -158130,6 +158405,16 @@
         "text": "Spindle and Distaff"
       }
     },
+    "src.cbc3b733": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Property & work"
+      }
+    },
     "src.cbc8dc89": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -158168,16 +158453,6 @@
       ],
       "source": {
         "text": "Demand a fief back into your own hand. A contented vassal yields; a bitter one answers with spears."
-      }
-    },
-    "src.cbcfcd61": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "You have no eligible living kin to name. A successor must belong to the current playable line or an eligible same-house branch."
       }
     },
     "src.cbd023af": {
@@ -158279,7 +158554,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_panels.js"
+        "js/ui_panels.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "News"
@@ -159269,16 +159545,6 @@
         "text": "Permanent: property lost and station falls to {rank}"
       }
     },
-    "src.cd9e5138": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Not eligible: this relative belongs to a different house."
-      }
-    },
     "src.cd9ebf91": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159737,6 +160003,16 @@
       ],
       "source": {
         "text": "Reserved"
+      }
+    },
+    "src.ce89b1d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living parent of the current head."
       }
     },
     "src.ce91483e": {
@@ -160228,6 +160504,16 @@
       ],
       "source": {
         "text": "Caucasian"
+      }
+    },
+    "src.cf948419": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open a downloaded Chronicle to explore a house across generations. Chronicle files are histories only; they do not resume a saved game."
       }
     },
     "src.cf94b3b7": {
@@ -161615,6 +161901,16 @@
         "text": "Health {change} (lethal)"
       }
     },
+    "src.d2cd4125": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open recent Chronicle"
+      }
+    },
     "src.d2d222bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -161773,16 +162069,6 @@
       ],
       "source": {
         "text": "A larger four-season partnership risks more coin on the same distant roads."
-      }
-    },
-    "src.d3195888": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "House or dynasty: characters sharing the house identity. Same-house membership matters for wider succession, but does not by itself make someone controllable or resident."
       }
     },
     "src.d3199d1f": {
@@ -163807,6 +164093,16 @@
       ],
       "source": {
         "text": "Turn this proven corner of the waste into a real frontier county — your household’s permanent home under the lord of {gateway}, with a starter land plot but no title. Each character may make this permanent move only once in their lifetime."
+      }
+    },
+    "src.d714b9c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Newest first"
       }
     },
     "src.d7174b52": {
@@ -166227,6 +166523,16 @@
         "text": "Cultivated connection"
       }
     },
+    "src.dc03720c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "You have no eligible living kin to name. A successor must be a living blood or adopted relative in the tracked family."
+      }
+    },
     "src.dc09c67c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -166515,6 +166821,16 @@
       ],
       "source": {
         "text": "💍 You yield {realm} to {heir} and settle with {spouse} in {destination} as landless gentry."
+      }
+    },
+    "src.dcaca293": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Entries"
       }
     },
     "src.dcb23e72": {
@@ -168504,6 +168820,16 @@
         "text": "Dismiss {name} as {position}? Enterprise work, tutoring, and household equipment assignments will end."
       }
     },
+    "src.e09503a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "a complete JSON history for the Chronicle viewer"
+      }
+    },
     "src.e0969d50": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -168632,6 +168958,16 @@
       ],
       "source": {
         "text": "(or the Play/Pause button) to set time flowing — days pass on their own — and press it again to pause."
+      }
+    },
+    "src.e0c9aa0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living niece or nephew of the family."
       }
     },
     "src.e0cf2b65": {
@@ -169945,6 +170281,16 @@
         "text": "This standard is already at its highest level."
       }
     },
+    "src.e332302c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Generations"
+      }
+    },
     "src.e332c17b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -170229,6 +170575,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -171428,6 +171775,16 @@
         "text": "Astronomers have written of stranger things."
       }
     },
+    "src.e606cbf0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Oldest first"
+      }
+    },
     "src.e60a4dc4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -172356,6 +172713,16 @@
       ],
       "source": {
         "text": "Your sibling"
+      }
+    },
+    "src.e7ba22ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Eligible: living grandchild of the family."
       }
     },
     "src.e7c01f80": {
@@ -174506,16 +174873,6 @@
         "text": "an unknown field"
       }
     },
-    "src.ec122070": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Eligible: same-house sibling; no living child or grandchild is ahead."
-      }
-    },
     "src.ec260eb7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -175928,16 +176285,6 @@
       ],
       "source": {
         "text": "Accept the commission."
-      }
-    },
-    "src.eeee2a16": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Living children lead; without them the succession walks outward through same-house branches."
       }
     },
     "src.eeee4a89": {
@@ -178288,6 +178635,16 @@
         "text": "Buy freedom outright"
       }
     },
+    "src.f361685d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Years"
+      }
+    },
     "src.f3617947": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -178769,6 +179126,16 @@
       ],
       "source": {
         "text": "Ask without a supporter"
+      }
+    },
+    "src.f46786d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "There is no Chronicle to download."
       }
     },
     "src.f4698571": {
@@ -184477,16 +184844,6 @@
       ],
       "source": {
         "text": "War of Aggression"
-      }
-    },
-    "src.ffe13b49": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "🌾 Complete the holding at {settlement}?"
       }
     },
     "src.ffe228c9": {
@@ -191625,12 +191982,12 @@
         "text": "A motion is already being campaigned before the Estates."
       }
     },
-    "ui:A named heir moves an already eligible candidate to the front. It cannot make a spouse, dead relative, different-house relative, or blocked branch eligible.": {
+    "ui:A named heir moves an already eligible candidate to the front. It cannot make a spouse without a qualifying family tie, retired former head, dead relative, or step-relative eligible.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "A named heir moves an already eligible candidate to the front. It cannot make a spouse, dead relative, different-house relative, or blocked branch eligible."
+        "text": "A named heir moves an already eligible candidate to the front. It cannot make a spouse without a qualifying family tie, retired former head, dead relative, or step-relative eligible."
       }
     },
     "ui:A new named character enters the chronicle in this office.": {
@@ -192672,6 +193029,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "All family enterprises are staffed."
+      }
+    },
+    "ui:All generations": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "All generations"
       }
     },
     "ui:All market baskets": {
@@ -194925,14 +195290,6 @@
         "text": "Buy it ({money:gold})"
       }
     },
-    "ui:Buy remaining plots here…": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Buy remaining plots here…"
-      }
-    },
     "ui:Buy return cargo…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -194955,17 +195312,6 @@
       "location": "js/main.js",
       "source": {
         "text": "Buy your first land plot"
-      }
-    },
-    "ui:Buy {plots} plots for {money:cost}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:cost",
-        "plots"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Buy {plots} plots for {money:cost}"
       }
     },
     "ui:Caliphate (Caliph in Baghdad) · Sacred leadership": {
@@ -196698,6 +197044,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Complete soundtrack"
+      }
+    },
+    "ui:Complete timeline": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Complete timeline"
       }
     },
     "ui:Completed": {
@@ -198919,6 +199273,14 @@
         "text": "Dormant — no current benefit"
       }
     },
+    "ui:Download Chronicle": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Download Chronicle"
+      }
+    },
     "ui:Download a bank or the complete soundtrack before going offline.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -199424,12 +199786,68 @@
         "text": "Eligible workers produce more total yield in the assignments shown elsewhere."
       }
     },
+    "ui:Eligible: living cousin of the family.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Eligible: living cousin of the family."
+      }
+    },
     "ui:Eligible: living daughter of the current playable head.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_misc.js",
       "source": {
         "text": "Eligible: living daughter of the current playable head."
+      }
+    },
+    "ui:Eligible: living grandchild of the family.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Eligible: living grandchild of the family."
+      }
+    },
+    "ui:Eligible: living grandparent of the family.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Eligible: living grandparent of the family."
+      }
+    },
+    "ui:Eligible: living member of the wider family tree.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Eligible: living member of the wider family tree."
+      }
+    },
+    "ui:Eligible: living niece or nephew of the family.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Eligible: living niece or nephew of the family."
+      }
+    },
+    "ui:Eligible: living parent of the current head.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Eligible: living parent of the current head."
+      }
+    },
+    "ui:Eligible: living sibling of the current head.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Eligible: living sibling of the current head."
       }
     },
     "ui:Eligible: living son of the current playable head.": {
@@ -199440,44 +199858,12 @@
         "text": "Eligible: living son of the current playable head."
       }
     },
-    "ui:Eligible: same-house cousin; closer branches have no living candidate.": {
+    "ui:Eligible: living uncle or aunt of the family.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "Eligible: same-house cousin; closer branches have no living candidate."
-      }
-    },
-    "ui:Eligible: same-house grandchild; no living child is ahead of this branch.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Eligible: same-house grandchild; no living child is ahead of this branch."
-      }
-    },
-    "ui:Eligible: same-house niece or nephew; closer branches have no living candidate.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Eligible: same-house niece or nephew; closer branches have no living candidate."
-      }
-    },
-    "ui:Eligible: same-house sibling; no living child or grandchild is ahead.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Eligible: same-house sibling; no living child or grandchild is ahead."
-      }
-    },
-    "ui:Eligible: same-house uncle or aunt; closer branches have no living candidate.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Eligible: same-house uncle or aunt; closer branches have no living candidate."
+        "text": "Eligible: living uncle or aunt of the family."
       }
     },
     "ui:Emperor": {
@@ -199815,6 +200201,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Enterprise: {enterprise}"
+      }
+    },
+    "ui:Entries": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Entries"
       }
     },
     "ui:Episcopal household": {
@@ -200223,6 +200617,14 @@
         "text": "Expiry or a material change to the named tenure invalidates this offer."
       }
     },
+    "ui:Explore full Chronicle": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Explore full Chronicle"
+      }
+    },
     "ui:Expose political foothold": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -200349,6 +200751,14 @@
       "location": "js/events.js",
       "source": {
         "text": "Faith relations change"
+      }
+    },
+    "ui:Fallowborn Chronicle file": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Fallowborn Chronicle file"
       }
     },
     "ui:Families willing to hear an offer for {name}’s hand:": {
@@ -201254,6 +201664,32 @@
         "text": "Generate a new ruler and dynasty for this land."
       }
     },
+    "ui:Generation": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Generation"
+      }
+    },
+    "ui:Generation {generation}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "generation"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Generation {generation}"
+      }
+    },
+    "ui:Generations": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Generations"
+      }
+    },
     "ui:Gentry": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -202112,6 +202548,14 @@
         "text": "Highest level reached"
       }
     },
+    "ui:Highest rank": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Highest rank"
+      }
+    },
     "ui:Highest title achieved": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -202429,12 +202873,12 @@
         "text": "House name"
       }
     },
-    "ui:House or dynasty: characters sharing the house identity. Same-house membership matters for wider succession, but does not by itself make someone controllable or resident.": {
+    "ui:House or dynasty: characters sharing the house identity. A chosen relative joins the playable house at succession; house membership by itself does not make someone controllable or resident.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "House or dynasty: characters sharing the house identity. Same-house membership matters for wider succession, but does not by itself make someone controllable or resident."
+        "text": "House or dynasty: characters sharing the house identity. A chosen relative joins the playable house at succession; house membership by itself does not make someone controllable or resident."
       }
     },
     "ui:Household": {
@@ -204167,20 +204611,20 @@
         "text": "Lives with the household — can be put to work"
       }
     },
-    "ui:Living children lead; without them the succession walks outward through same-house branches.": {
+    "ui:Living children lead the order, while every living relative in the tracked family remains a valid successor.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Living children lead; without them the succession walks outward through same-house branches."
+        "text": "Living children lead the order, while every living relative in the tracked family remains a valid successor."
       }
     },
-    "ui:Living sons then daughters are eligible first. With no living child, the order continues through same-house grandchildren, siblings, nieces and nephews, uncles and aunts, then cousins.": {
+    "ui:Living sons then daughters lead the default order, followed by grandchildren, parents, siblings, grandparents, nieces and nephews, uncles and aunts, cousins, then the rest of the family tree by nearest link. Every listed living blood or adopted relative remains selectable and joins the playable house when chosen.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Living sons then daughters are eligible first. With no living child, the order continues through same-house grandchildren, siblings, nieces and nephews, uncles and aunts, then cousins."
+        "text": "Living sons then daughters lead the default order, followed by grandchildren, parents, siblings, grandparents, nieces and nephews, uncles and aunts, cousins, then the rest of the family tree by nearest link. Every listed living blood or adopted relative remains selectable and joins the playable house when chosen."
       }
     },
     "ui:Load boldly": {
@@ -204225,6 +204669,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Loading Chronicle…"
+      }
+    },
+    "ui:Loading full Chronicle…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Loading full Chronicle…"
       }
     },
     "ui:Loan against revenues": {
@@ -205813,6 +206265,14 @@
         "text": "Named friend"
       }
     },
+    "ui:Names, places, and events": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Names, places, and events"
+      }
+    },
     "ui:National military technology": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -205994,6 +206454,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "New to the household"
+      }
+    },
+    "ui:Newest first": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Newest first"
       }
     },
     "ui:News": {
@@ -206549,6 +207017,14 @@
       "location": "js/ui_misc.js",
       "source": {
         "text": "No entries match the current search and filter."
+      }
+    },
+    "ui:No entries match these filters.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No entries match these filters."
       }
     },
     "ui:No equipment bonuses.": {
@@ -207720,14 +208196,6 @@
         "text": "Not eligible now"
       }
     },
-    "ui:Not eligible now: a living child of the playable head takes precedence.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Not eligible now: a living child of the playable head takes precedence."
-      }
-    },
     "ui:Not eligible under the current house succession order.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -207736,20 +208204,20 @@
         "text": "Not eligible under the current house succession order."
       }
     },
+    "ui:Not eligible: a retired former head cannot take the house back.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Not eligible: a retired former head cannot take the house back."
+      }
+    },
     "ui:Not eligible: marriage joins the household but does not make a spouse a blood successor.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_misc.js",
       "source": {
         "text": "Not eligible: marriage joins the household but does not make a spouse a blood successor."
-      }
-    },
-    "ui:Not eligible: this relative belongs to a different house.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Not eligible: this relative belongs to a different house."
       }
     },
     "ui:Not eligible: this relative has died.": {
@@ -208144,6 +208612,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Old Custom case: witness {witness}, officer {officer}"
+      }
+    },
+    "ui:Oldest first": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Oldest first"
       }
     },
     "ui:On completion: {prestige} prestige, {percent}% defense in this county, {garrison} men retained as garrison, {upkeep} seasonal upkeep, and {steps} added siege steps.": {
@@ -208582,6 +209058,14 @@
         "text": "Only {count} may stand in one county."
       }
     },
+    "ui:Open Chronicle file": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Open Chronicle file"
+      }
+    },
     "ui:Open Estates management…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -208620,6 +209104,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Open Royal Council management…"
+      }
+    },
+    "ui:Open a downloaded Chronicle to explore a house across generations. Chronicle files are histories only; they do not resume a saved game.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Open a downloaded Chronicle to explore a house across generations. Chronicle files are histories only; they do not resume a saved game."
       }
     },
     "ui:Open an enterprise in {settlement}…": {
@@ -208674,6 +209166,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Open political blocs in Governance…"
+      }
+    },
+    "ui:Open recent Chronicle": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Open recent Chronicle"
       }
     },
     "ui:Open ruler card for {ruler}": {
@@ -208950,6 +209450,14 @@
         "text": "Or paste mod JSON here, e.g. {example}"
       }
     },
+    "ui:Order": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Order"
+      }
+    },
     "ui:Ordinary Work": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -209096,6 +209604,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Pagan Traditions"
+      }
+    },
+    "ui:Page {page} of {pages}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "page",
+        "pages"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Page {page} of {pages}"
       }
     },
     "ui:Paid retainer · {office}": {
@@ -217592,6 +218111,14 @@
         "text": "The family armory holds no item to offer."
       }
     },
+    "ui:The family head has died.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "The family head has died."
+      }
+    },
     "ui:The fatal event unfolded at {province}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -217764,14 +218291,6 @@
       "location": "js/economy.js",
       "source": {
         "text": "The household already holds an incoming guild monopoly."
-      }
-    },
-    "ui:The household cannot afford the complete batch. No plots will be purchased unless the full price is available.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The household cannot afford the complete batch. No plots will be purchased unless the full price is available."
       }
     },
     "ui:The household currently leaves each child’s focus for manual choice.": {
@@ -218975,6 +219494,14 @@
         "text": "Third cousin"
       }
     },
+    "ui:This Chronicle was recovered from an older save. It contains every entry that save still held, but lines discarded by earlier versions cannot be restored.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This Chronicle was recovered from an older save. It contains every entry that save still held, but lines discarded by earlier versions cannot be restored."
+      }
+    },
     "ui:This action is not available in your current role or situation.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -219483,16 +220010,6 @@
         "text": "This pledge cannot be changed now."
       }
     },
-    "ui:This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "settlement"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming."
-      }
-    },
     "ui:This realm": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -219653,6 +220170,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "This war has no recognized right."
+      }
+    },
+    "ui:Those who carried the house": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Those who carried the house"
       }
     },
     "ui:Those who carried the name": {
@@ -220240,6 +220765,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Unknown field"
+      }
+    },
+    "ui:Unknown house": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Unknown house"
       }
     },
     "ui:Unknown lot": {
@@ -221462,6 +221995,14 @@
         "text": "Written custom is no longer confirmed under {current}."
       }
     },
+    "ui:Years": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Years"
+      }
+    },
     "ui:Yes": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -221686,12 +222227,12 @@
         "text": "You have no direct vassals, so no vassal Standing will change."
       }
     },
-    "ui:You have no eligible living kin to name. A successor must belong to the current playable line or an eligible same-house branch.": {
+    "ui:You have no eligible living kin to name. A successor must be a living blood or adopted relative in the tracked family.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "You have no eligible living kin to name. A successor must belong to the current playable line or an eligible same-house branch."
+        "text": "You have no eligible living kin to name. A successor must be a living blood or adopted relative in the tracked family."
       }
     },
     "ui:You have only {money:gold}.": {
@@ -223374,6 +223915,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "cheap"
+      }
+    },
+    "ui:choose a fallowborn-chronicle JSON file": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "choose a fallowborn-chronicle JSON file"
       }
     },
     "ui:coastal": {
@@ -226424,6 +226973,16 @@
         "text": "{count} household service slots are open. Service is paid each season."
       }
     },
+    "ui:{count} matching entries": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{count} matching entries"
+      }
+    },
     "ui:{count} member houses": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -226496,16 +227055,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "{count} owned"
-      }
-    },
-    "ui:{count} plots": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "count"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "{count} plots"
       }
     },
     "ui:{count} possible": {
@@ -226619,28 +227168,6 @@
       "location": "js/armies.js",
       "source": {
         "text": "{count} {unit}"
-      }
-    },
-    "ui:{count}/{maximum} plots — holding complete": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "count",
-        "maximum"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "{count}/{maximum} plots — holding complete"
-      }
-    },
-    "ui:{count}/{needed} plots — ready to declare a manor once the household has enough standing": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "count",
-        "needed"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "{count}/{needed} plots — ready to declare a manor once the household has enough standing"
       }
     },
     "ui:{count}× great-aunt": {
@@ -227094,6 +227621,19 @@
         "text": "{duty} (commuted)"
       }
     },
+    "ui:{dynasty} · {start}–{end} · {count} entries": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "dynasty",
+        "end",
+        "start"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{dynasty} · {start}–{end} · {count} entries"
+      }
+    },
     "ui:{effect}: {value}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -227314,6 +227854,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{from}–{to}"
+      }
+    },
+    "ui:{generation}. {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "generation",
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{generation}. {name}"
       }
     },
     "ui:{good} market disruption in {county} for {seasons} seasons": {
@@ -228536,6 +229087,54 @@
         "text": "{name} can remain playable only if a living lawful heir can receive the realm."
       }
     },
+    "ui:{name} dies in {year} AD, aged {age} — before their time.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "name",
+        "year"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "{name} dies in {year} AD, aged {age} — before their time."
+      }
+    },
+    "ui:{name} dies in {year} AD, aged {age} — full of years.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "name",
+        "year"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "{name} dies in {year} AD, aged {age} — full of years."
+      }
+    },
+    "ui:{name} dies in {year} AD, aged {age} — taken by sickness.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "name",
+        "year"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "{name} dies in {year} AD, aged {age} — taken by sickness."
+      }
+    },
+    "ui:{name} dies in {year} AD, aged {age}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "name",
+        "year"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "{name} dies in {year} AD, aged {age}."
+      }
+    },
     "ui:{name} has already made the one permanent move allowed in this lifetime.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -228544,6 +229143,16 @@
       "location": "js/travel.js",
       "source": {
         "text": "{name} has already made the one permanent move allowed in this lifetime."
+      }
+    },
+    "ui:{name} has died.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "{name} has died."
       }
     },
     "ui:{name} is already at the +{threshold} Standing threshold.": {
@@ -231264,16 +231873,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "🌾 Buy Freehold Land"
-      }
-    },
-    "ui:🌾 Complete the holding at {settlement}?": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "settlement"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "🌾 Complete the holding at {settlement}?"
       }
     },
     "ui:🌾 Your household farms {count} plots here.": {

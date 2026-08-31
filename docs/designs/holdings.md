@@ -142,10 +142,9 @@ one plot lazily, and legacy tier-2 saves built around the old assumed manor rece
 complete holding unless their station came from the abbot/qadi path.
 
 Declaring the first manor does not close the family land market. Gentry may continue
-buying plots in the home county up to each settlement's ordinary cap, including the
-same atomic complete-the-holding purchase available to freeholders. Manor declaration
-remains a one-time Freeholder promotion; titled ranks use county domains and buildings
-instead of buying commoner freehold plots. The technology impact is **none**
+buying plots one at a time in the home county up to each settlement's ordinary cap.
+Manor declaration remains a one-time Freeholder promotion; titled ranks use county domains
+and buildings instead of buying commoner freehold plots. The technology impact is **none**
 (`gentry_freehold_expansion`): ordinary local land purchases need no credible research
 gate.
 
@@ -156,14 +155,9 @@ permanence terms move to the shared desktop hover/focus tooltip. Unaffordable an
 complete single-plot actions remain focusable for that disclosure but expose
 `aria-disabled` and revalidate without purchasing when activated. Permanent holdings
 and enterprises retain their separate pledge and staffing rules.
-When two or more plots remain before the relevant target — the manor threshold for a
-Freeholder or the settlement cap for Gentry — the settlement also offers an explicit
-batch purchase with the same compact cost/yield face and full tooltip. Its confirmation
-previews the plot count, total price, resulting seasonal yield, completed holding/manor
-progress, and remaining purse.
-`FB.manorPlotPurchasePlan` is read-only; `FB.buyRemainingManorPlots` revalidates the
-reviewed starting count and full affordability, then buys the batch atomically and
-writes one Chronicle entry. It never substitutes for the existing one-plot purchase.
+Each activation buys exactly one plot and refreshes the same market immediately. The
+market has no batch-purchase action or intermediate confirmation sheet, keeping every
+permanent land acquisition explicit and consistent.
 
 Land clearing and tangible holding purchases use their authored `marketBasket` at the
 home county's live commodity quote and round upward to whole gold. The manor threshold,

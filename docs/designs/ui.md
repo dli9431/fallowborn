@@ -1793,11 +1793,15 @@ Settings option **Open Chronicle when dismissing event toasts** restores the for
 to the Chronicle's Choices filter. Exceptional choices that automation intentionally
 shows remain protected.
 
-The Chronicle has session-local **All / Choices / News** filters. Choices are typed event
-receipts with rich exact-change chips; News includes legacy untyped entries and ordinary
-notices. Each filter renders its newest 80 matches while saved history retains the existing
-300-entry cap. Recorded-choice cards use a generous inner inset to separate their date, title,
-selected option, outcome, and impact chips from the card border. The incremental prepend cache
+The in-game Chronicle has session-local **All / Choices / News** filters. Choices are typed
+event receipts with rich exact-change chips; News includes legacy untyped entries and ordinary
+notices. Each filter renders its newest 80 matches from the 300-entry live compatibility
+window, while the compact complete journal described in [state-and-saves.md](state-and-saves.md)
+continues across the entire campaign. **Explore full Chronicle** opens that complete paginated
+viewer directly from this panel; Back, Escape, and mobile browser Back close it onto the same
+live Chronicle panel with campaign state and the prior play/pause setting intact.
+Recorded-choice cards use a generous inner inset to separate their date, title, selected option,
+outcome, and impact chips from the card border. The incremental prepend cache
 includes the active filter, so switching views cannot reuse markup from another category.
 Recent player raids, player-involved battles, and ordinary player wars carry a lightweight
 saved hostile-report id and presentation-kind tag. Their Chronicle face remains readable prose plus a clear **View raid
@@ -1811,6 +1815,31 @@ An English session normally stays on authored source records. If a reloaded Chro
 an opaque durable message whose originating code path has not run in that page session, opening
 the panel lazily loads the generated English source manifest, shows a bounded loading row, and
 rebuilds the same filtered window; raw `news.*` keys never stand in for prose.
+
+**Chronicle Library.** Save Game offers **Download Chronicle**, and the no-heir end screen
+offers **Explore full Chronicle**, **Download Chronicle**, and **Return to title** as separate
+terminal actions. Returning to title retains the latest expanded archive in page memory; the
+title menu's **View Chronicle** opens that recent history or imports a downloaded
+`fallowborn-chronicle-*.json` file with the native file picker. Chronicle JSON cannot resume a
+campaign and does not activate a bookmark, mutate game state, consume RNG, or occupy save-slot
+storage.
+
+The ordinary game save may be captured while the death screen is waiting for a successor.
+Continue rebuilds that screen after load from the final legend and current eligible-family review,
+before any resume guidance or marriage prompt can replace it. A living successor keeps the
+campaign open; no successor rebuilds the line-ended screen instead. If that page session has not
+yet registered the saved death message's English source, the screen derives a localized plain
+cause from its semantic name/year/age parameters and omits an unresolved quip instead of exposing
+an internal message key.
+
+The viewer is a full-sheet, bounded rendering surface. Its summary shows house, span,
+generations, entry count, choices, and peak title; horizontally scrollable protagonist cards
+show the succession of household heads. The complete timeline supports search,
+category, generation, and order controls, but mounts at most 60 records per page. Generation
+cards are also filter controls. A partial archive adopted from an old save carries a prominent
+explanation that older already-discarded lines cannot be restored. The viewer uses resolved
+fallback text from the artifact, escapes every imported field, and remains useful when the
+originating mod or message source is absent.
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 

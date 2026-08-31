@@ -355,7 +355,8 @@ ordinary rules block them.
 **The save must fit the localStorage quota beside its siblings** (~5 MB per origin on
 WebKit/iOS, ~10 MB elsewhere — shared by the autosave and all three slots; a serialized
 character record is ~400 bytes). Court records are map-bound by the eager-court
-compaction; the complete serialized-life budget is 1.6 MB. The player's wider family
+compaction; the bounded simulation-state budget before complete Chronicle growth is
+about 1.6 MB. The player's wider family
 is bounded at creation instead, because dead kin are never pruned (the family tree is
 the product). Two balance knobs do the bounding
 (see [../MODDING.md](../MODDING.md)): `kinConceiveCap` keeps stacked fertility
@@ -363,7 +364,7 @@ multipliers a probability rather than a certainty, and `familyMaxChars` caps tot
 tracked family records — past it, unscripted kin weddings and kin births pause, so an
 over-cap save stops growing instead of failing. On top of that bounding, manual slots
 are stored LZ-compressed (`FBC1.` prefix packing the bit stream into storage-safe
-UTF-16; an lz-string port private to `js/save.js`), which shrinks each ~1.6 MB
+UTF-16; an lz-string port private to `js/save.js`), which shrinks each established
 serialized life several-fold. The frequently replaced autosave is normally stored as
 ready plain JSON, keeping its worst-case footprint plus three compressed manual slots
 within the WebKit budget. This deliberately removes the full compression-and-
@@ -541,8 +542,40 @@ older build renders the entry as normal news and ignores the extra fields. `rece
 only JSON-safe semantic data: schema number, stable event id and authored option index,
 success/failure marker, automation marker, title/option/outcome descriptors, and the exact
 resolved impact records. Entries without `kind` — including every old-save entry — count
-as News. Chronicle filter selection and unread state are not saved. The saved log still
-caps at 300 entries; each UI filter independently shows its newest 80 matches.
+as News. Chronicle filter selection and unread state are not saved.
+
+The live `state.log` remains a 300-entry compatibility and presentation window. Alongside
+it, additive `state.chronicle` schema 1 is the complete compact journal: `strings` interns
+repeated message keys once, `entries` uses positional arrays for dates, message parameters,
+receipt metadata, category, and saga generation, and `heads` snapshots each protagonist's
+identity, years, dynasty, and title. `FB.news` appends to both records before trimming only
+`state.log`; therefore a multi-century campaign keeps its whole journal without making the
+live Chronicle renderer or older code traverse it. The journal remains ordinary JSON inside
+save format 3 and consumes no RNG.
+
+Restoring a save without `state.chronicle` creates it from that save's surviving `state.log`
+without rejecting, renumbering, or rewriting any legacy entries. The new archive is marked
+`partial:true`, because entries already discarded by an earlier build cannot be recovered;
+the viewer discloses that boundary. All subsequent entries are retained normally. A malformed
+unknown archive likewise falls back to this safe adoption path rather than blocking the life.
+
+A dead protagonist is not itself a completed campaign. While `FB.heirsOf` still finds a living
+eligible relative, the saved `player.dead` flag, matching final legend, and ordinary family graph
+form a pending succession boundary. Continue reconstructs the nondismissable death decision from
+those records after the game interface wakes; it does not need serialized modal state or a new
+save-format field. This also repairs older version-3 saves captured at that boundary. Only a dead
+protagonist with no eligible successor is exported as `campaign.finished:true` and resumes at the
+line-ended decision.
+
+`FB.save.chronicleData` expands the compact journal into portable
+`fallowborn-chronicle` JSON schema 1. The artifact includes campaign and protagonist summaries,
+the complete dated entry list, semantic message descriptors where available, resolved fallback
+prose, choice outcomes, and impact records. The fallback makes a downloaded history readable
+after a later game or mod revision no longer knows one of its message keys. Chronicle JSON is
+history only and is never accepted as a resumable save. It is parsed with its own validator,
+opened in memory by the title-screen viewer, and does not occupy a fourth localStorage slot.
+The most recently left or completed campaign remains viewable for the current page session;
+the downloaded file is the durable cross-session artifact.
 
 The selected locale (`fb_lang`) and live-clock speed (`fb_ui.speedIdx`) are browser-local
 display preferences in `localStorage`, not part of `FB.state`, a save slot, a start seed,

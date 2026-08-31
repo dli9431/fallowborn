@@ -90,6 +90,12 @@ wartime quartering to a neighbor creates one bounded 90-day consequence involvin
 same neighbor; it clears on resolution or when its serf-life context ends. Flight similarly
 freezes an optional canonical friend or rival and uses the disclosed 65%, 35%, or 50%
 named chance without generating a helper.
+The final **What Is Remembered** chapter applies a `0.20` random-trigger gate after the
+case resolves. This is one fifth of its former always-eligible frequency; its high selection
+weight remains so a successful gate still brings the pending conclusion forward.
+The similarly powerful **The Lord’s Eye** freedom offer and **Raised Up** battlefield
+promotion also use `0.20` gates, keeping exceptional rises from dominating the random
+event pool once their prerequisites are satisfied.
 
 Exact recurring local participants have technology impact **none**. Remembering who
 testified, enforced a duty, or shared a village quarrel is baseline social continuity, not

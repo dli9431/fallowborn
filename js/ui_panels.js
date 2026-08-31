@@ -6669,7 +6669,48 @@ window.FB = window.FB || {};
         '" aria-pressed="' + (active ? 'true' : 'false') + '"' +
         (active ? ' class="active"' : '') + '>' + esc(filters[i].label) + '</button>';
     }
-    return h + '</div>';
+    return h + '</div><button type="button" class="btn chronicle-full-link" ' +
+      'data-chronicle-full>' + esc(FB.T('Explore full Chronicle')) + '</button>';
+  }
+  function fullChronicleNeedsEnglish(state) {
+    const archive = state && state.chronicle;
+    if (!archive || !Array.isArray(archive.strings)) return false;
+    const generated = FBDATA.lang.en && FBDATA.lang.en.entries;
+    for (let i = 0; i < archive.strings.length; i++) {
+      const key = archive.strings[i];
+      if (!FB.englishMessage(key) && !(generated && generated[key])) return true;
+    }
+    return false;
+  }
+  function openFullChronicle(button) {
+    const state = FB.state;
+    if (!state || !FB.save || !FB.save.chronicleData ||
+        !UI.showChronicleViewer) return;
+    function open() {
+      if (FB.state !== state) return;
+      const data = FB.save.chronicleData(state);
+      if (!data || !UI.showChronicleViewer(data, {
+        back:UI.closeModal,
+        returnFocus:button
+      })) {
+        UI.toast('The full Chronicle could not be opened.');
+      }
+    }
+    if (fullChronicleNeedsEnglish(state) && FB.ensureEnglishCatalog) {
+      const wasPaused = !!(FB.game && FB.game.paused);
+      if (!wasPaused && FB.game) FB.game.paused = true;
+      button.disabled = true;
+      button.textContent = FB.T('Loading full Chronicle…');
+      FB.ensureEnglishCatalog(function () {
+        if (FB.state !== state) return;
+        if (!wasPaused && FB.game) FB.game.paused = false;
+        button.disabled = false;
+        button.textContent = FB.T('Explore full Chronicle');
+        open();
+      });
+      return;
+    }
+    open();
   }
   function wireLogControls(box) {
     box.querySelectorAll('[data-chronicle-filter]').forEach(function (button) {
@@ -6688,6 +6729,13 @@ window.FB = window.FB || {};
         }
       });
     });
+    const full = box.querySelector('[data-chronicle-full]');
+    if (full && !full.getAttribute('data-chronicle-full-wired')) {
+      full.setAttribute('data-chronicle-full-wired', 'true');
+      full.addEventListener('click', function () {
+        openFullChronicle(full);
+      });
+    }
   }
   function renderLog() {
     const s = FB.state;

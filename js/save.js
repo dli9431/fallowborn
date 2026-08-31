@@ -751,6 +751,169 @@ window.FB = window.FB || {};
     } catch (e) { return null; }
   };
 
+  /* A Chronicle archive is a portable, human-readable companion to a save,
+     not a resumable world. The compact journal remains inside state; export
+     expands it once into stable dated records with rendered fallback prose so
+     a future build can still display an old or mod-authored story. */
+  function chronicleMessageText(message, state) {
+    if (!message) return '';
+    try {
+      return FB.renderMessage(message, {
+        state:state,
+        viewer:state && state.player && state.player.charId
+      });
+    } catch (e) {
+      return message.key || '';
+    }
+  }
+
+  function chronicleHeadData(state, archive, head) {
+    const legend = (state.legends || []).filter(function (record) {
+      return record && record.id === head[1];
+    })[0];
+    let title = '';
+    try { title = head[6] && FB.renderTitleSnapshot ? FB.renderTitleSnapshot(head[6]) : ''; }
+    catch (e) { title = ''; }
+    let cause = '';
+    let quip = '';
+    if (legend) {
+      cause = legend.causeMsg ? chronicleMessageText(legend.causeMsg, state) : legend.cause || '';
+      quip = legend.quipMsg ? chronicleMessageText(legend.quipMsg, state) : legend.quip || '';
+    }
+    return {
+      generation:Math.max(1, Number(head[0]) || 1),
+      characterId:head[1] || '',
+      name:head[2] || '',
+      born:Number(head[3]) || 0,
+      began:Number(head[4]) || 0,
+      ended:Number(head[5]) || 0,
+      dynasty:head[7] || '',
+      title:title,
+      titleData:head[6] || null,
+      cause:cause,
+      quip:quip
+    };
+  }
+
+  S.chronicleData = function (state) {
+    state = state || FB.state;
+    if (!state || !state.player || !state.date || !Array.isArray(state.log) ||
+        !FB.ensureChronicle) return null;
+    const archive = FB.ensureChronicle(state);
+    if (!archive) return null;
+    if (FB.chronicleNoteHead) FB.chronicleNoteHead(state);
+    const current = state.chars && state.chars[state.player.charId];
+    const heads = archive.heads.slice().sort(function (a, b) {
+      return (Number(a[0]) || 0) - (Number(b[0]) || 0);
+    }).map(function (head) {
+      return chronicleHeadData(state, archive, head);
+    });
+    const entries = [];
+    for (let i = 0; i < archive.entries.length; i++) {
+      const entry = FB.chronicleEntry(archive, archive.entries[i]);
+      if (!entry) continue;
+      const exported = {
+        id:i + 1,
+        year:Number(entry.y) || 0,
+        season:Number(entry.s) || 0,
+        day:Number(entry.d) || 0,
+        generation:Math.max(1, Number(entry.generation) || 1),
+        category:entry.chronicleCategory || 'news',
+        text:FB.newsText(entry, state, state.player.charId)
+      };
+      if (entry.msg) exported.message = entry.msg;
+      if (entry.hostileReportId) {
+        exported.hostileReport = {
+          id:entry.hostileReportId,
+          kind:entry.hostileReportKind || 'war'
+        };
+      }
+      if (entry.receipt) {
+        exported.choice = {
+          eventId:entry.receipt.eventId || '',
+          optionIndex:entry.receipt.optionIndex,
+          result:entry.receipt.result || 'none',
+          automated:!!entry.receipt.automated,
+          title:chronicleMessageText(entry.receipt.title, state),
+          option:chronicleMessageText(entry.receipt.option, state),
+          outcome:chronicleMessageText(entry.receipt.outcome, state),
+          impacts:Array.isArray(entry.receipt.impacts) ? entry.receipt.impacts : []
+        };
+      }
+      entries.push(exported);
+    }
+    let peakTitle = '';
+    try {
+      peakTitle = state.peakTitleData && FB.renderTitleSnapshot
+        ? FB.renderTitleSnapshot(state.peakTitleData)
+        : (FB.stationName ? FB.stationName(state.peakTier || 0) : '');
+    } catch (e) { peakTitle = ''; }
+    const start = state.start || { year:entries.length ? entries[0].year : state.date.year };
+    return {
+      format:'fallowborn-chronicle',
+      version:1,
+      gameVersion:FB.VERSION || '',
+      complete:!archive.partial,
+      campaign:{
+        dynasty:current && current.dyn || heads.length && heads[0].dynasty || '',
+        seed:state.seed || '',
+        bookmark:start.id || '',
+        started:{
+          year:Number(start.year) || 0,
+          season:Number(start.season) || 0,
+          day:Number(start.day) || 1
+        },
+        ended:{
+          year:Number(state.date.year) || 0,
+          season:Number(state.date.season) || 0,
+          day:Number(state.date.day) || 1
+        },
+        finished:FB.game && FB.game.campaignFinished
+          ? FB.game.campaignFinished(state) : !!state.player.dead,
+        generations:Math.max(Number(state.generation) || 1, heads.length),
+        peakTier:Number(state.peakTier) || Number(state.player.tier) || 0,
+        peakTitle:peakTitle,
+        finalWealth:Number(state.player.gold) || 0,
+        prestige:Number(state.player.prestige) || 0,
+        piety:Number(state.player.piety) || 0
+      },
+      heads:heads,
+      entries:entries
+    };
+  };
+
+  S.exportChronicle = function (state) {
+    const data = S.chronicleData(state);
+    return data ? JSON.stringify(data, null, 2) : '';
+  };
+
+  S.parseChronicle = function (text) {
+    try {
+      const data = typeof text === 'string' ? JSON.parse(text) : text;
+      if (!data || data.format !== 'fallowborn-chronicle' || data.version !== 1 ||
+          !data.campaign || !data.campaign.started || !data.campaign.ended ||
+          !isFinite(Number(data.campaign.started.year)) ||
+          !isFinite(Number(data.campaign.ended.year)) ||
+          !Array.isArray(data.heads) ||
+          !Array.isArray(data.entries) || data.entries.length > 100000) return null;
+      for (let i = 0; i < data.entries.length; i++) {
+        const entry = data.entries[i];
+        if (!entry || !isFinite(Number(entry.year)) ||
+            typeof entry.text !== 'string') return null;
+      }
+      return data;
+    } catch (e) { return null; }
+  };
+
+  let recentChronicle = null;
+  S.rememberChronicle = function (source) {
+    const data = source && source.format === 'fallowborn-chronicle'
+      ? source : S.chronicleData(source || FB.state);
+    recentChronicle = data || recentChronicle;
+    return recentChronicle;
+  };
+  S.recentChronicle = function () { return recentChronicle; };
+
   S.read = function (slot) {
     try {
       const raw = decodeStored(localStorage.getItem(key(slot)));
@@ -862,6 +1025,9 @@ window.FB = window.FB || {};
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }
+    if (FB.ensureChronicle) restoreRepair('Chronicle archive', function () {
+      FB.ensureChronicle(FB.state, { legacy:true });
+    });
     restoreRepair('starting-rank progression', function () {
       SP.creditEarnedState(FB.state);
     });

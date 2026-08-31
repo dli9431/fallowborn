@@ -682,7 +682,7 @@ FBDATA.events.push(
       failure:{ text:'“Custom is what the lord says it is.” The tally stands — and there is a fine for arguing.', effects:{ gold:-4, health:-1, standingCharacter:[{participant:'lord', amt:-5},{participant:'witness', amt:-3}] } } }
   ]},
 { id:'lords_notice', title:'The Lord’s Eye', tenureAware:true,
-  trigger:{ tierMax:0, roleOpinionAbove:{role:'lord', value:25}, chance:0.4 }, weight:10, once:true,
+  trigger:{ tierMax:0, roleOpinionAbove:{role:'lord', value:25}, chance:0.2 }, weight:10, once:true,
   text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
     pastoral_steppe:'{lord} reins in beside the household herds. “You. You’re the one who works like two people. What is it you want in this life?”',
     woodland_dependence:'{lord} stops beside the household clearing. “You. You’re the one who works like two people. What is it you want in this life?”',
@@ -908,7 +908,7 @@ FBDATA.events.push(
   ]},
 
 { id:'old_custom_end', title:'What Is Remembered',
-  trigger:{ flags:['old_custom_resolve'], custom:'serf_old_custom_ready' }, weight:80, once:true,
+  trigger:{ flags:['old_custom_resolve'], custom:'serf_old_custom_ready', chance:0.2 }, weight:80, once:true,
   participants:[
     {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
     {slot:'officer', source:'story', storyId:'old_custom', required:true, authorityRole:'steward', sameHome:true},

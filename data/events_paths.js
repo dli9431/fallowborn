@@ -123,7 +123,7 @@ FBDATA.events.push(
     { label:'A dead lord pays no wages. Keep formation.', desc:'Cold sense — and men will see that it was cold.', effects:{ prestige:-2 } }
   ]},
 { id:'knighted', title:'Raised Up',
-  trigger:{ professions:['soldier'], flags:['lords_favor'], tierMax:1, realmAtWar:true, chance:0.5 }, wartime:true, weight:20,
+  trigger:{ professions:['soldier'], flags:['lords_favor'], tierMax:1, realmAtWar:true, chance:0.2 }, wartime:true, weight:20,
   text:'Before the assembled retinue, {lord} bids you kneel. A sword touches your shoulder. When you rise, you are no longer common.',
   options:[
     { label:'Rise, and serve with honor.', desc:'The first step out of the mud. Take it.', effects:{ tierSet:2, profession:'noble', prestige:40, log:'Raised to the gentry for valor!' } }

@@ -2,6 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/messages.js',
+  'js/model.js',
   'js/save.js',
   'js/economy.js',
   'js/i18n.js',
@@ -182,6 +184,118 @@ test('a noncritical post-restore repair failure still opens the game',
       fatal:null,
       warning:'synthetic career repair failure'
     });
+  });
+
+test('continue reconstructs a saved death decision and permits succession',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const prepared = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const heir = FB.makeCharacter(s, {
+        name:'Emer', sex:'f', culture:me.culture, religion:me.religion,
+        born:s.date.year - 7, fatherId:me.id, dyn:me.dyn, traitsN:0
+      });
+      me.childrenIds = (me.childrenIds || []).concat([heir.id]);
+      me.dead = true;
+      me.died = s.date.year;
+      s.player.dead = true;
+      s.legends.push({
+        id:me.id,
+        name:FB.fullName(me),
+        born:me.born,
+        died:s.date.year,
+        titleData:FB.titleSnapshot(s),
+        causeMsg:FB.msg('legend.death.age', '{name} died at age {age}.', {
+          cause:'old', name:me.name, year:s.date.year,
+          age:FB.ageOf(me, s.date.year)
+        }),
+        quipMsg:FB.msg('legend.condition.old',
+          'Died full of years and of opinions about the young.', {}),
+        loadout:{}
+      });
+      FB.news(s, FB.msg('news.life.death', '☠ {cause}', {
+        cause:FB.messageParam(s.legends[s.legends.length - 1].causeMsg)
+      }), { toast:false });
+      const data = JSON.parse(FB.save.serialize());
+      const pendingChronicle = FB.save.chronicleData(s);
+      delete FB.englishMessages()['legend.death.age'];
+      delete FB.englishMessages()['legend.condition.old'];
+      delete FB.englishMessages()['news.life.death'];
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(data, function () {
+          resolve({
+            heirId:heir.id,
+            pendingFinished:pendingChronicle.campaign.finished,
+            dead:FB.state.player.dead,
+            paused:FB.game.paused
+          });
+        })) reject(new Error('Synthetic pending succession save was rejected'));
+      });
+    });
+
+    expect(prepared).toMatchObject({
+      pendingFinished:false,
+      dead:true,
+      paused:true
+    });
+    await expect(page.getByRole('heading', { name:/is Dead$/ })).toBeVisible();
+    await expect(page.locator('#gm-body')).not.toContainText('legend.death.age');
+    await expect(page.locator('#gm-body')).not.toContainText('legend.condition.old');
+    await expect(page.locator('#gm-body')).toContainText('full of years');
+    const heirButton = page.locator('[data-heir="' + prepared.heirId + '"]');
+    await expect(heirButton).toBeVisible();
+    await heirButton.click();
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return {
+          dead:FB.state.player.dead,
+          charId:FB.state.player.charId
+        };
+      });
+    }).toEqual({ dead:false, charId:prepared.heirId });
+  });
+
+test('continue reconstructs the line-ended decision when no successor lives',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const finished = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const relatives = FB.heirsOf(s);
+      for (let i = 0; i < relatives.length; i++) relatives[i].dead = true;
+      me.dead = true;
+      me.died = s.date.year;
+      s.player.dead = true;
+      s.legends.push({
+        id:me.id,
+        name:FB.fullName(me),
+        born:me.born,
+        died:s.date.year,
+        titleData:FB.titleSnapshot(s),
+        cause:'The family head died.',
+        quipMsg:FB.msg('legend.condition.default',
+          'Lived. Died. The chronicle splits the difference.', {}),
+        loadout:{}
+      });
+      const data = JSON.parse(FB.save.serialize());
+      const artifact = FB.save.chronicleData(s);
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(data, function () {
+          resolve(artifact.campaign.finished);
+        })) reject(new Error('Synthetic finished save was rejected'));
+      });
+    });
+
+    expect(finished).toBe(true);
+    await expect(page.getByRole('heading', { name:/The Line is Ended$/ }))
+      .toBeVisible();
+    await expect(page.getByRole('button', { name:'See the chronicle', exact:true }))
+      .toBeVisible();
   });
 
 test('continue repairs malformed enterprise records and reaches the game screen',

@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/events_paths.js',
   'js/main.js',
   'js/model.js',
   'js/world.js',
@@ -241,6 +242,7 @@ test('a serf marked for battlefield knighting can rise only during a live war',
       const eligibleAtWar = FB.checkTrigger(s, event.trigger);
       FB.applyEffects(s, event.options[0].effects, {}, event);
       return {
+        chance:event.trigger.chance,
         explicitWarGate:event.trigger.realmAtWar === true,
         eligibleAtPeace:eligibleAtPeace,
         eligibleAtWar:eligibleAtWar,
@@ -250,6 +252,7 @@ test('a serf marked for battlefield knighting can rise only during a live war',
     });
 
     expect(result).toEqual({
+      chance:0.2,
       explicitWarGate:true,
       eligibleAtPeace:false,
       eligibleAtWar:true,

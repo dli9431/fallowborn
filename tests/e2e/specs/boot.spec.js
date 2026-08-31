@@ -297,6 +297,7 @@ test('title menu gives every action a decorative icon and a clean accessible nam
       ['btn-continue', 'Continue'],
       ['btn-newgame', 'New Game'],
       ['btn-load', 'Load Game'],
+      ['btn-chronicle', 'View Chronicle'],
       ['btn-mods', 'Mods'],
       ['btn-settings', 'Settings'],
       ['btn-help', 'How to Play'],

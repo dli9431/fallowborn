@@ -2242,6 +2242,7 @@ test('Old Custom keeps one cast, bridges an officer change explicitly, and clear
       const s = FB.state;
       const p = s.player;
       const opener = FB.eventById('old_custom_stakes');
+      const ending = FB.eventById('old_custom_end');
       const openerCtx = FB.eventContextFor(s, opener, {});
       p.flags.old_custom_1 = 1;
       FB.syncSerfStoryAfterEvent(s, opener, openerCtx);
@@ -2286,6 +2287,8 @@ test('Old Custom keeps one cast, bridges an officer change explicitly, and clear
         openerChance:opener.trigger.chance,
         openerWeight:opener.weight,
         openerOnce:opener.once,
+        endingChance:ending.trigger.chance,
+        endingWeight:ending.weight,
         sameCast:sameCast,
         tenureCast:tenureCast,
         originalOfficerId:original.participants.officer,
@@ -2314,6 +2317,8 @@ test('Old Custom keeps one cast, bridges an officer change explicitly, and clear
     expect(result.openerChance).toBe(0.04);
     expect(result.openerWeight).toBe(15);
     expect(result.openerOnce).toBe(true);
+    expect(result.endingChance).toBe(0.2);
+    expect(result.endingWeight).toBe(80);
     expect(result.sameCast).toBe(true);
     expect(result.tenureCast).toMatchObject({
       witnessId:result.originalWitnessId,

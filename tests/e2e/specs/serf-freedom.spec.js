@@ -784,6 +784,7 @@ test('lords notice queues one exact non-random manumission offer and expiry hono
       s.turn = expiring.cooldownUntil;
       const atCooldown = FB.createFreedomOffer(s, 'petition');
       return {
+        noticeChance:notice.trigger.chance,
         offered:offered,
         queueFirst:queueAfterFirst.length,
         queueReused:queueAfterReuse.length,
@@ -802,6 +803,7 @@ test('lords notice queues one exact non-random manumission offer and expiry hono
       };
     });
 
+    expect(result.noticeChance).toBe(0.2);
     expect(result.offered.source).toBe('lords_notice');
     expect(result.offered.termId).toBe('cash_favored');
     expect(result.queueFirst).toBe(1);

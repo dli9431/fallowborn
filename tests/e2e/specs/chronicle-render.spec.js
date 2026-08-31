@@ -2,8 +2,15 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/lang_en.js',
+  'index.html',
+  'css/style.css',
   'js/i18n.js',
   'js/messages.js',
+  'js/model.js',
+  'js/save.js',
+  'js/main.js',
+  'js/ui_misc.js',
+  'js/ui_modals.js',
   'js/ui_panels.js'
 ]);
 
@@ -146,4 +153,212 @@ test('reloaded Chronicle descriptors lazily recover their English source',
     });
     expect(result).not.toBe(key);
     expect(result).not.toMatch(/^news\./);
+  });
+
+test('the complete Chronicle archive survives recent-log trimming and adopts old saves',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const archive = FB.ensureChronicle(s);
+      const before = archive.entries.length;
+      for (let i = 0; i < 450; i++) {
+        FB.news(s, FB.msg('news.e2e.complete_chronicle',
+          'Archive entry {n}', { n:i }), { toast:false });
+      }
+      const firstAdded = FB.chronicleEntry(archive, archive.entries[before]);
+      const lastAdded = FB.chronicleEntry(archive,
+        archive.entries[archive.entries.length - 1]);
+      const payload = JSON.parse(FB.save.serialize());
+      const artifact = FB.save.chronicleData(s);
+      const parsed = FB.save.parseChronicle(JSON.stringify(artifact));
+
+      const legacyPayload = JSON.parse(JSON.stringify(payload));
+      delete legacyPayload.state.chronicle;
+      FB.save.restore(legacyPayload);
+      const legacy = FB.state;
+      const recovered = legacy.chronicle;
+      FB.news(legacy, FB.msg('news.e2e.old_save_continues',
+        'The old save continues.', {}), { toast:false });
+      return {
+        recent:s.log.length,
+        added:archive.entries.length - before,
+        first:FB.newsText(firstAdded, s, s.player.charId),
+        last:FB.newsText(lastAdded, s, s.player.charId),
+        compact:Array.isArray(archive.entries[before]) &&
+          archive.strings.indexOf('news.e2e.complete_chronicle') >= 0,
+        serialized:payload.state.chronicle.entries.length,
+        artifactCount:artifact.entries.length,
+        artifactComplete:artifact.complete,
+        parsed:!!parsed,
+        legacyPartial:recovered.partial,
+        legacyAdopted:recovered.entries.length === 301,
+        legacyContinues:FB.newsText(legacy.log[legacy.log.length - 1],
+          legacy, legacy.player.charId)
+      };
+    });
+
+    expect(result).toMatchObject({
+      recent:300,
+      added:450,
+      first:'Archive entry 0',
+      last:'Archive entry 449',
+      compact:true,
+      artifactComplete:true,
+      parsed:true,
+      legacyPartial:true,
+      legacyAdopted:true,
+      legacyContinues:'The old save continues.'
+    });
+    expect(result.serialized).toBe(result.artifactCount);
+  });
+
+test('the in-game Chronicle opens the full viewer and returns to the live panel',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const opened = await page.evaluate(function () {
+      const s = FB.state;
+      for (let i = 0; i < 130; i++) {
+        FB.news(s, FB.msg('news.e2e.ingame_chronicle',
+          'In-game Chronicle entry {n}', { n:i }), { toast:false });
+      }
+      delete FBDATA.lang.en;
+      delete FB.englishMessages()['news.army.disbands'];
+      FB.news(s, FB.message('news.army.disbands', {}), { toast:false });
+      FB.ui.showTab('log');
+      FB.ui.refresh();
+      FB.game.paused = false;
+      window.__chronicleLiveState = s;
+      window.__chronicleLiveTurn = s.turn;
+      window.__chronicleLiveRng = FB.getRngState();
+      document.querySelector('[data-chronicle-full]').click();
+      return {
+        pausedWhileLoading:FB.game.paused,
+        stateSame:FB.state === window.__chronicleLiveState,
+        turnSame:FB.state.turn === window.__chronicleLiveTurn,
+        rngSame:FB.getRngState() === window.__chronicleLiveRng
+      };
+    });
+
+    expect(opened).toEqual({
+      pausedWhileLoading:true,
+      stateSame:true,
+      turnSame:true,
+      rngSame:true
+    });
+    await expect(page.getByRole('heading', { name:/^Chronicle of / })).toBeVisible();
+    await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
+    await expect(page.locator('.chronicle-viewer-pages')).toContainText('Page 1 of');
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(false);
+
+    const returned = await page.evaluate(function () {
+      document.getElementById('chronicle-back').click();
+      return {
+        modalHidden:document.getElementById('genmodal').classList.contains('hidden'),
+        gameVisible:!document.getElementById('game').classList.contains('hidden'),
+        chronicleVisible:document.getElementById('tab-log').offsetParent !== null,
+        activeTab:FB.ui._shared.activeTab,
+        paused:FB.game.paused,
+        stateSame:FB.state === window.__chronicleLiveState,
+        turnSame:FB.state.turn === window.__chronicleLiveTurn,
+        rngSame:FB.getRngState() === window.__chronicleLiveRng,
+        focusReturned:document.activeElement &&
+          document.activeElement.hasAttribute('data-chronicle-full')
+      };
+    });
+
+    expect(returned).toEqual({
+      modalHidden:true,
+      gameVisible:true,
+      chronicleVisible:true,
+      activeTab:'log',
+      paused:false,
+      stateSame:true,
+      turnSame:true,
+      rngSame:true,
+      focusReturned:true
+    });
+  });
+
+test('the title Chronicle viewer pages, filters, and reopens recent history',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    await page.evaluate(function () {
+      const s = FB.state;
+      for (let i = 0; i < 130; i++) {
+        FB.news(s, FB.msg('news.e2e.viewer_entry',
+          'Viewer entry {n}', { n:i }), { toast:false });
+      }
+      FB.save.rememberChronicle(s);
+      FB.game.toTitle();
+    });
+
+    await page.getByRole('button', { name:'View Chronicle', exact:true }).click();
+    await expect(page.getByRole('heading', { name:'Chronicle Library', exact:true }))
+      .toBeVisible();
+    await page.getByRole('button', { name:/Open recent Chronicle/ }).click();
+    await expect(page.locator('.chronicle-viewer-summary')).toContainText('Entries');
+    await expect(page.locator('.chronicle-head')).toHaveCount(1);
+    await expect(page.getByRole('heading', {
+      name:'The shape of the saga', exact:true
+    })).toHaveCount(0);
+    await expect(page.locator('.chronicle-history-chart')).toHaveCount(0);
+    await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
+    await expect(page.locator('.chronicle-viewer-pages')).toContainText('Page 1 of');
+
+    await page.locator('#chronicle-search').fill('Viewer entry 129');
+    await page.locator('#chronicle-search-go').click();
+    await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(1);
+    await expect(page.locator('.chronicle-viewer-entry')).toContainText('Viewer entry 129');
+    await page.getByRole('button', { name:'Back', exact:true }).click();
+    await expect(page.getByRole('heading', { name:'Chronicle Library', exact:true }))
+      .toBeVisible();
+    const archiveText = await page.evaluate(function () {
+      return JSON.stringify(FB.save.recentChronicle());
+    });
+    await page.locator('#chronicle-file').setInputFiles({
+      name:'fallowborn-chronicle-test.json',
+      mimeType:'application/json',
+      buffer:Buffer.from(archiveText)
+    });
+    await page.getByRole('button', { name:/Open Chronicle file/ }).click();
+    await expect(page.locator('.chronicle-viewer-summary')).toContainText('Entries');
+    await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
+  });
+
+test('a finished campaign can explore or download its full Chronicle',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const finished = await page.evaluate(function () {
+      for (let i = 0; i < 75; i++) {
+        FB.news(FB.state, FB.msg('news.e2e.finished_chronicle',
+          'Finished entry {n}', { n:i }), { toast:false });
+      }
+      const me = FB.state.chars[FB.state.player.charId];
+      const relatives = FB.heirsOf(FB.state);
+      for (let i = 0; i < relatives.length; i++) relatives[i].dead = true;
+      me.dead = true;
+      FB.state.player.dead = true;
+      const artifact = FB.save.chronicleData(FB.state);
+      FB.ui.gameOver();
+      return artifact.campaign.finished;
+    });
+
+    expect(finished).toBe(true);
+    await expect(page.getByRole('heading', { name:'The Chronicle Closes', exact:true }))
+      .toBeVisible();
+    await expect(page.getByRole('button', { name:'Download Chronicle', exact:true }))
+      .toBeVisible();
+    await page.getByRole('button', { name:'Explore full Chronicle', exact:true }).click();
+    await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
+    await expect(page.locator('.chronicle-viewer-entries'))
+      .toContainText('Finished entry 0');
   });

@@ -29,98 +29,59 @@ async function openLandMarket(page, plotCount, gold) {
     for (let i = 0; i < setup.plotCount; i++) {
       p.landPlots.push({ provinceId:p.provinceId, settlement:0 });
     }
-    const settlement = FB.settlementsOf(s, p.provinceId)[0].name;
     const requirement = FBDATA.balance.manorPlotRequirement;
-    const remaining = requirement - setup.plotCount;
-    const totalCost = FB.landPlotCost(s, remaining);
+    const onePlotCost = FB.landPlotCost(s);
     p.roleOrientationsSeen = p.roleOrientationsSeen || {};
     p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
     FB.ui.refresh();
     FB.ui.showLandMarket();
     return {
-      settlement:settlement,
       requirement:requirement,
-      remaining:remaining,
-      totalCost:totalCost,
-      totalPrice:FB.money(totalCost),
-      onePlotPrice:FB.money(FB.landPlotCost(s)),
+      onePlotCost:onePlotCost,
+      onePlotPrice:FB.money(onePlotCost),
       currentYield:FB.money(FB.landGroupYield(setup.plotCount)),
       nextYield:FB.money(FB.landGroupYield(setup.plotCount + 1)),
-      resultingYield:FB.money(FB.landGroupYield(requirement)),
-      province:FB.world.byId[p.provinceId].name,
-      moneyAfter:FB.money(setup.gold - totalCost),
       logLength:s.log.length
     };
   }, { plotCount:plotCount, gold:gold });
 }
 
-test('previews and atomically buys every remaining manor plot in one settlement',
+test('offers only one-plot purchases without a batch purchase dialog',
   async function ({ page }) {
     const setup = await openLandMarket(page, 1, 1000);
-    const batch = page.locator('[data-land-batch="0"]');
-    await expect(batch).toContainText('Buy remaining plots here');
-    await expect(batch).toContainText('Cost');
-    await expect(batch).toContainText(setup.totalPrice);
-    await expect(batch).toContainText('Effect');
-    await expect(batch).toContainText(
-      setup.currentYield + ' → ' + setup.resultingYield + '/season');
+    await expect(page.locator('[data-land-batch]')).toHaveCount(0);
+    await expect(page.locator('[id^="manor-plot-batch"]')).toHaveCount(0);
+    const removed = await page.evaluate(function () {
+      return {
+        plan:typeof FB.manorPlotPurchasePlan,
+        purchase:typeof FB.buyRemainingManorPlots,
+        preview:typeof FB.ui.showManorPlotBatchPreview
+      };
+    });
+    expect(removed).toEqual({
+      plan:'undefined', purchase:'undefined', preview:'undefined'
+    });
 
-    await batch.hover();
-    const tooltip = page.locator('#tooltip');
-    await expect(tooltip).toBeVisible();
-    await expect(tooltip).toContainText(setup.settlement + ', ' + setup.province);
-    await expect(tooltip).toContainText('Passes to heirs as family land');
-    await expect(tooltip).not.toContainText('Owner');
-
-    await batch.click();
-    await expect(page.locator('#gm-title')).toContainText(
-      'Complete the holding at ' + setup.settlement);
-    await expect(page.locator('#gm-body .kv').filter({
-      hasText:'Plots in this purchase'
-    })).toContainText(setup.remaining + ' plots');
-    await expect(page.locator('#gm-body .kv').filter({
-      hasText:'Total price'
-    })).toContainText(setup.totalPrice);
-    await expect(page.locator('#gm-body .kv').filter({
-      hasText:'Resulting seasonal yield'
-    })).toContainText(setup.resultingYield + ' each season');
-    await expect(page.locator('#gm-body .kv').filter({
-      hasText:'Resulting cluster and manor progress'
-    })).toContainText(setup.requirement + '/' + setup.requirement +
-      ' plots — ready to declare a manor');
-    await expect(page.locator('#gm-body .kv').filter({
-      hasText:'Money remaining after purchase'
-    })).toContainText(setup.moneyAfter);
-
-    const confirm = page.locator('#manor-plot-batch-confirm');
-    await expect(confirm).toBeEnabled();
-    await confirm.click();
+    const choice = page.locator('[data-land-settlement="0"]');
+    await expect(choice).toContainText(
+      setup.currentYield + ' → ' + setup.nextYield + '/season');
+    await choice.click();
 
     const result = await page.evaluate(function () {
       const s = FB.state;
       return {
         count:FB.landCountAt(s, s.player.provinceId, 0),
         gold:s.player.gold,
-        yield:FB.landGroupYield(
-          FB.landCountAt(s, s.player.provinceId, 0)),
-        manorReady:!!FB.manorSite(s),
         logLength:s.log.length,
         lastMessageKey:s.log.length && s.log[s.log.length - 1].msg
           ? s.log[s.log.length - 1].msg.key : null
       };
     });
-    expect(result.count).toBe(setup.requirement);
-    expect(result.gold).toBe(1000 - setup.totalCost);
-    expect(result.yield).toBeCloseTo(
-      await page.evaluate(function (count) {
-        return FB.landGroupYield(count);
-      }, setup.requirement));
-    expect(result.manorReady).toBe(true);
+    expect(result.count).toBe(2);
+    expect(result.gold).toBe(1000 - setup.onePlotCost);
     expect(result.logLength).toBe(setup.logLength + 1);
-    expect(result.lastMessageKey).toBe('news.action.land_batch_bought');
-    await expect(page.locator('[data-land-batch="0"]')).toHaveCount(0);
-    await expect(page.locator('[data-land-settlement="0"]'))
-      .toHaveAttribute('aria-disabled', 'true');
+    expect(result.lastMessageKey).toBe('news.action.land_bought');
+    await expect(page.locator('#gm-title')).toContainText('Buy Freehold Land');
   });
 
 test('keeps one-plot rows compact and exposes full terms when unaffordable',
@@ -159,35 +120,6 @@ test('keeps one-plot rows compact and exposes full terms when unaffordable',
       };
     });
     expect(unchanged).toEqual({ count:1, gold:0 });
-  });
-
-test('shows an unaffordable batch without making a partial purchase',
-  async function ({ page }) {
-    const cost = await page.evaluate(function () {
-      return FB.landPlotCost();
-    });
-    const startingGold = cost * 2;
-    const setup = await openLandMarket(page, 1, startingGold);
-
-    await page.locator('[data-land-batch="0"]').click();
-    await expect(page.locator('#manor-plot-batch-confirm')).toBeDisabled();
-    await expect(page.getByText(
-      'The household cannot afford the complete batch. No plots will be purchased ' +
-      'unless the full price is available.',
-      { exact:true }
-    )).toBeVisible();
-    await expect(page.locator('#gm-body .kv').filter({
-      hasText:'Money remaining after purchase'
-    })).toContainText(setup.moneyAfter);
-
-    const unchanged = await page.evaluate(function () {
-      const s = FB.state;
-      return {
-        count:FB.landCountAt(s, s.player.provinceId, 0),
-        gold:s.player.gold
-      };
-    });
-    expect(unchanged).toEqual({ count:1, gold:startingGold });
   });
 
 test('keeps the manual one-plot purchase when only one manor plot remains',
@@ -256,11 +188,7 @@ test('gentry can continue buying available freehold plots after declaring a mano
     expect(setup.available).toBe(true);
     await expect(page.getByText(
       /each settlement can hold up to .* family plots/)).toBeVisible();
-    const batch = page.locator('[data-land-batch="' + setup.target + '"]');
-    await expect(batch).toBeVisible();
-    await batch.focus();
-    await expect(page.locator('#tooltip')).toContainText('Resulting holding');
-    await expect(page.locator('#tooltip')).toContainText('holding complete');
+    await expect(page.locator('[data-land-batch]')).toHaveCount(0);
     const choice = page.locator(
       '[data-land-settlement="' + setup.target + '"]');
     await expect(choice).not.toHaveAttribute('aria-disabled', 'true');

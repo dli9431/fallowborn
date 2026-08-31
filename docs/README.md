@@ -76,6 +76,11 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   **Download save file** / **Load save file** for keeping a `.txt` backup if a browser wipes
   local storage (some iPhones), or moving a life between devices. Copy and paste remains
   available as a fallback.
+- **Explore full Chronicle** in the in-game Chronicle opens the complete family history in a
+  paginated timeline; Back returns to the live game. **Save Game → Download Chronicle** exports
+  that history as readable JSON, and **View Chronicle** on the title screen opens downloaded
+  files with generation cards, search, and filters. A finished campaign
+  offers the same viewer and download before returning to the title screen.
 - **☰ → 🐞 Report a bug** builds a ready-made report: your description (bug or suggestion)
   bundled with the game version, start seed, and your current life as save text — copy it and
   paste on [Discord](https://discord.gg/G8E67hY2pj), by email to hello@fallowborn.com, or as a

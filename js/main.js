@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.165.16';
+FB.VERSION = '1.166.0';
 FB.CHANGELOG = [
+  { v: '1.166.0', date: '2026-08-31', changes: [
+    'Chronicle archives now preserve the complete family history, with in-game and title-screen browsing plus JSON downloads.',
+    'Land purchasing and Chronicle presentation are streamlined, and exceptional promotions out of serfdom occur less often.'
+  ] },
   { v: '1.165.16', date: '2026-08-31', changes: [
     'Succession and Hand over the house now reach the full recorded family tree, including distant cousins and their descendants.'
   ] },
@@ -1826,6 +1830,7 @@ FB.CHANGELOG = [
     $('btn-newgame').addEventListener('click', function () { showNewGame(); });
     $('btn-continue').addEventListener('click', function () { G.loadSlot('auto'); });
     $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
+    $('btn-chronicle').addEventListener('click', function () { FB.ui.showChronicleLibrary(); });
     $('btn-mods').addEventListener('click', function () { FB.ui.showMods(); });
     $('btn-settings').addEventListener('click', function () { FB.ui.showSettings(); });
     $('btn-help').addEventListener('click', function () { FB.ui.showHelp(); });
@@ -4678,6 +4683,78 @@ FB.CHANGELOG = [
     return FB.pick(pool);
   }
 
+  /* Death is a resumable decision boundary, not a finished campaign while a
+     living relative can still take up the house. The modal itself is
+     transient DOM, so Continue reconstructs it from the dead protagonist,
+     the saved legend, and the live heir review. No extra save marker is
+     needed, and old version-3 saves stranded at this boundary recover too. */
+  G.deathContinuation = function (state) {
+    if (!state || !state.player || !state.player.dead || !state.chars) {
+      return null;
+    }
+    const me = state.chars[state.player.charId];
+    if (!me) return null;
+    let legend = null;
+    const legends = Array.isArray(state.legends) ? state.legends : [];
+    for (let i = legends.length - 1; i >= 0; i--) {
+      if (legends[i] && legends[i].id === me.id) {
+        legend = legends[i];
+        break;
+      }
+    }
+    let causeText = '';
+    if (legend && legend.causeMsg) {
+      try {
+        causeText = FB.renderMessage(legend.causeMsg, {
+          state:state, viewer:state.player.charId
+        });
+      } catch (e) { causeText = ''; }
+      if (!causeText || causeText === legend.causeMsg.key) {
+        const params = legend.causeMsg.params || {};
+        if (params.name && params.year !== undefined &&
+            params.age !== undefined) {
+          if (params.cause === 'old') {
+            causeText = FB.T(
+              '{name} dies in {year} AD, aged {age} — full of years.', params);
+          } else if (params.cause === 'sickness') {
+            causeText = FB.T(
+              '{name} dies in {year} AD, aged {age} — taken by sickness.', params);
+          } else if (params.cause === 'early') {
+            causeText = FB.T(
+              '{name} dies in {year} AD, aged {age} — before their time.', params);
+          } else {
+            causeText = FB.T('{name} dies in {year} AD, aged {age}.', params);
+          }
+        } else if (params.name) {
+          causeText = FB.T('{name} has died.', { name:params.name });
+        } else {
+          causeText = '';
+        }
+      }
+    }
+    if (!causeText && legend && legend.cause) causeText = String(legend.cause);
+    if (!causeText) causeText = FB.T('The family head has died.');
+    return {
+      character:me,
+      legend:legend,
+      causeText:causeText,
+      heirs:FB.heirsOf(state)
+    };
+  };
+
+  G.campaignFinished = function (state) {
+    if (!state || !state.player || !state.player.dead) return false;
+    return FB.heirsOf(state).length === 0;
+  };
+
+  G.resumePendingDeath = function () {
+    const continuation = G.deathContinuation(FB.state);
+    if (!continuation || !FB.ui || !FB.ui.showDeath) return false;
+    G.paused = true;
+    FB.ui.showDeath(continuation.heirs, continuation.causeText);
+    return true;
+  };
+
   G.succeedTo = function (heirId, opts) {
     opts = opts || {};
     const livingAbdication = !!opts.livingAbdication;
@@ -4729,6 +4806,7 @@ FB.CHANGELOG = [
       if (FB.breakAlliance) FB.breakAlliance(s, 'player');
     }
 
+    if (FB.chronicleNoteHead) FB.chronicleNoteHead(s);
     s.generation++;
     /* The saga counter advances on every succession, but the house's line
        depth only advances when the heir is a genuinely later generation.
@@ -4771,6 +4849,7 @@ FB.CHANGELOG = [
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
+    if (FB.chronicleNoteHead) FB.chronicleNoteHead(s);
     if (successionTier !== p.tier) {
       FB.setPlayerTier(s, successionTier, {
         skipOutgoingStatus:true,
@@ -5160,12 +5239,14 @@ FB.CHANGELOG = [
           FB.map.select(null);
         });
         resumeRepair('interface refresh', function () { FB.ui.refresh(); });
-        resumeRepair('resume notice', function () {
-          FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
-            season: FB.seasonName(FB.state.date.season),
-            year: FB.state.date.year
+        if (!FB.state.player.dead) {
+          resumeRepair('resume notice', function () {
+            FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
+              season: FB.seasonName(FB.state.date.season),
+              year: FB.state.date.year
+            });
           });
-        });
+        }
         resumeRepair('storage warning', function () { FB.save.warnIfBlocked(); });
         resumeRepair('resume telemetry', function () {
           beginTelemetrySession('resumed-campaign');
@@ -5176,13 +5257,21 @@ FB.CHANGELOG = [
             });
           }
         });
-        if (FB.ui.resumeFirstPlayerTip) resumeRepair('resume guidance', function () {
-          FB.ui.resumeFirstPlayerTip();
-        });
-        if (FB.ui.showPendingMarriageResidence) {
+        if (!FB.state.player.dead && FB.ui.resumeFirstPlayerTip) {
+          resumeRepair('resume guidance', function () {
+            FB.ui.resumeFirstPlayerTip();
+          });
+        }
+        if (!FB.state.player.dead && FB.ui.showPendingMarriageResidence) {
           resumeRepair('marriage residence prompt', function () {
             FB.ui.showPendingMarriageResidence();
           });
+        }
+        if (FB.state.player.dead) {
+          loadStage = 'death succession recovery';
+          if (!G.resumePendingDeath()) {
+            throw new Error('The saved death decision could not be reconstructed.');
+          }
         }
         if (afterLoad) afterLoad();
       } catch (loadError) {
@@ -5208,6 +5297,9 @@ FB.CHANGELOG = [
   G.toTitle = function () {
     // an observe session is never saved — it must not bury a real life
     if (FB.state && !FB.state.player.dead && !G.observe) FB.save.autosave();
+    if (FB.state && !G.observe && FB.save.rememberChronicle) {
+      FB.save.rememberChronicle(FB.state);
+    }
     const telemetrySummary = endTelemetrySession();
     if (telemetrySummary) {
       trackTelemetry('returned-to-title', telemetrySummary);
