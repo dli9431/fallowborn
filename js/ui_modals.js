@@ -21970,11 +21970,11 @@ window.FB = window.FB || {};
     const review = FB.heirReview(s);
     const eligibleRows = review.filter(function (row) {
       return row.eligible;
-    }).slice(0, 6);
+    });
     const heirs = eligibleRows.map(function (row) { return row.character; });
     if (!heirs.length) {
       let empty = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'You have no eligible living kin to name. A successor must belong to the current playable line or an eligible same-house branch.')) +
+        'You have no eligible living kin to name. A successor must be a living blood or adopted relative in the tracked family.')) +
         '</p></div>';
       for (const row of review.slice(0, 8)) {
         empty += '<div class="succession-review-row"><b>' +
@@ -24295,22 +24295,22 @@ window.FB = window.FB || {};
       FB.T('Visible kin, a dynasty, the managed household, and the playable line are different sets.'),
       guideBody([], [
         FB.T('Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Common Voice are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life.'),
-        FB.T('House or dynasty: characters sharing the house identity. Same-house membership matters for wider succession, but does not by itself make someone controllable or resident.'),
+        FB.T('House or dynasty: characters sharing the house identity. A chosen relative joins the playable house at succession; house membership by itself does not make someone controllable or resident.'),
         FB.T('Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow. Unwed, unlanded, unvowed siblings living at the household home can also be put to work, though they never join the household itself; marriage, land, vows, or moving away ends that.'),
         FB.T('Visible family: the broader family tree, including dead kin and relatives living elsewhere. Visibility is not control.'),
         FB.T('Royal branch: the designated crown successor’s branch. A marriage tie alone does not redirect a crown into the playable line.')
       ]), 'dynasty house kin relatives resident controllable assignable work royal branch');
     add('inheritance', 'family', FB.T('Succession and inheritance'),
-      FB.T('Living children lead; without them the succession walks outward through same-house branches.'),
+      FB.T('Living children lead the order, while every living relative in the tracked family remains a valid successor.'),
       guideBody([
-        FB.T('A named heir moves an already eligible candidate to the front. It cannot make a spouse, dead relative, different-house relative, or blocked branch eligible.'),
-        FB.T('Living sons then daughters are eligible first. With no living child, the order continues through same-house grandchildren, siblings, nieces and nephews, uncles and aunts, then cousins.'),
+        FB.T('A named heir moves an already eligible candidate to the front. It cannot make a spouse without a qualifying family tie, retired former head, dead relative, or step-relative eligible.'),
+        FB.T('Living sons then daughters lead the default order, followed by grandchildren, parents, siblings, grandparents, nieces and nephews, uncles and aunts, then cousins. Every listed living relative remains selectable and joins the playable house when chosen.'),
         FB.T('The successor picker shows the current reason beside every reviewed candidate. Territorial, office, debt, item, and household transfers then follow their own succession rules.'),
         FB.T('A head aged {age} or older may instead retire through the Hand over the house deed: an adult successor takes over without death dues, and the retired elder remains visible family at home, no longer under your control.', {
           age: FBDATA.balance.retirementAge !== undefined ?
             FBDATA.balance.retirementAge : 50
         })
-      ]), 'heir successor named heir children grandchildren siblings house death retirement abdication');
+      ]), 'heir successor named heir children grandchildren parents grandparents siblings cousins family house death retirement abdication');
     add('child-identity', 'family', FB.T('Child culture, faith, and house'),
       FB.T('Marriage previews show which parent supplies each identity.'),
       guideBody([

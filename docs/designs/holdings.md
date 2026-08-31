@@ -9,6 +9,9 @@ health). Events gate on `holdings`/`notHoldings` and use `holding`/`loseHolding`
 Definitions marked `eventOnly` are excluded from the purchase picker. Rights of Common
 are such a holding: the Old Custom landmark chain can secure the family's heritable
 pasture, fuel, and water rights, and those rights then pass to later generations.
+Succession snapshots the family's holding ids before personal and office cleanup and
+restores them after those hooks, so ordinary death, retirement, and papal custody cannot
+turn an owned holding back into a purchase.
 
 **Customary Serf Tenure is distinct from owned property.** Tier 0 serf households do not
 own their land; they hold customary strips and dwelling use under an active tenure archetype

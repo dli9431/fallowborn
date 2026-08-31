@@ -91,6 +91,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Remembering how a household first became free is family history and presentation, not a technology-gated capability.'
       },
+      broad_family_succession:{
+        mode:'none',
+        rationale:'Choosing a living relative to continue the playable household and house is a baseline family and social decision, not a capability unlocked by sovereign research.'
+      },
       individual_family_manumission:{
         mode:'none',
         rationale:'Redeeming a named bound relative from an existing lord is a baseline personal and legal recovery action, not a capability unlocked by sovereign research.'

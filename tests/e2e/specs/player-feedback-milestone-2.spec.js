@@ -4,6 +4,8 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/economy.js',
+  'js/main.js',
+  'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -556,6 +558,87 @@ test('succession and child identity explanations use the live family rules',
       'marriage joins the household');
     await expect(page.locator('#gm-body > .gm-footer > #hp-cancel'))
       .toHaveText('Cancel');
+  });
+
+test('successor pickers include every living relative even with children',
+  async function ({ page }) {
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      me.childrenIds = [];
+      for (let i = 0; i < 7; i++) {
+        const child = FB.makeCharacter(s, {
+          name:'Child ' + (i + 1), sex:i % 2 ? 'f' : 'm',
+          born:s.date.year - 20 - i,
+          fatherId:me.sex === 'm' ? me.id : null,
+          motherId:me.sex === 'f' ? me.id : null,
+          culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+        });
+        me.childrenIds.push(child.id);
+      }
+      const grandparent = FB.makeCharacter(s, {
+        name:'Aldred', sex:'m', born:me.born - 55,
+        culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+      });
+      const parent = FB.makeCharacter(s, {
+        name:'Baldwin', sex:'m', born:me.born - 28,
+        fatherId:grandparent.id,
+        culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+      });
+      const uncle = FB.makeCharacter(s, {
+        name:'Cuthbert', sex:'m', born:me.born - 25,
+        fatherId:grandparent.id,
+        culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+      });
+      const cousin = FB.makeCharacter(s, {
+        name:'Dunstan', sex:'m', born:s.date.year - 24,
+        fatherId:uncle.id,
+        culture:me.culture, religion:me.religion, dyn:'Otherhouse', traitsN:0
+      });
+      grandparent.childrenIds = [parent.id, uncle.id];
+      parent.childrenIds = [me.id];
+      uncle.childrenIds = [cousin.id];
+      me.fatherId = parent.id;
+      FB.touchFamily();
+
+      const review = FB.heirReview(s);
+      const cousinRow = review.filter(function (row) {
+        return row.character.id === cousin.id;
+      })[0];
+      const parentRow = review.filter(function (row) {
+        return row.character.id === parent.id;
+      })[0];
+      const grandparentRow = review.filter(function (row) {
+        return row.character.id === grandparent.id;
+      })[0];
+      const heirs = FB.heirsOf(s);
+      FB.ui.showHeirPick();
+      return {
+        cousinId:cousin.id,
+        cousinEligible:cousinRow && cousinRow.eligible,
+        cousinCode:cousinRow && cousinRow.code,
+        parentEligible:parentRow && parentRow.eligible,
+        grandparentEligible:grandparentRow && grandparentRow.eligible,
+        heirCount:heirs.length,
+        cousinIndex:heirs.map(function (c) { return c.id; }).indexOf(cousin.id)
+      };
+    });
+
+    expect(setup.cousinEligible).toBe(true);
+    expect(setup.cousinCode).toBe('cousins');
+    expect(setup.parentEligible).toBe(true);
+    expect(setup.grandparentEligible).toBe(true);
+    expect(setup.cousinIndex).toBeGreaterThan(6);
+    await expect(page.locator(
+      '[data-namedheir="' + setup.cousinId + '"]')).toBeVisible();
+
+    await page.evaluate(function () {
+      FB.ui.closeModal();
+      FB.game.die('Died testing the breadth of the family line.');
+    });
+    await expect(page.locator('[data-heir]')).toHaveCount(setup.heirCount);
+    await expect(page.locator(
+      '[data-heir="' + setup.cousinId + '"]')).toBeVisible();
   });
 
 test('settlement growth reports every derived threshold and the bookmark baseline',

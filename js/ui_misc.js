@@ -167,19 +167,20 @@ window.FB = window.FB || {};
         child:row.character && row.character.sex === 'f'
           ? FB.T('Eligible: living daughter of the current playable head.')
           : FB.T('Eligible: living son of the current playable head.'),
-        grandchildren:FB.T('Eligible: same-house grandchild; no living child is ahead of this branch.'),
-        siblings:FB.T('Eligible: same-house sibling; no living child or grandchild is ahead.'),
-        nieces_nephews:FB.T('Eligible: same-house niece or nephew; closer branches have no living candidate.'),
-        uncles_aunts:FB.T('Eligible: same-house uncle or aunt; closer branches have no living candidate.'),
-        cousins:FB.T('Eligible: same-house cousin; closer branches have no living candidate.')
+        grandchildren:FB.T('Eligible: living grandchild of the family.'),
+        parents:FB.T('Eligible: living parent of the current head.'),
+        siblings:FB.T('Eligible: living sibling of the current head.'),
+        grandparents:FB.T('Eligible: living grandparent of the family.'),
+        nieces_nephews:FB.T('Eligible: living niece or nephew of the family.'),
+        uncles_aunts:FB.T('Eligible: living uncle or aunt of the family.'),
+        cousins:FB.T('Eligible: living cousin of the family.')
       };
       return eligible[row.code] || FB.T('Eligible under the current house succession order.');
     }
     const blocked = {
       dead:FB.T('Not eligible: this relative has died.'),
-      spouse:FB.T('Not eligible: marriage joins the household but does not make a spouse a blood successor.'),
-      different_house:FB.T('Not eligible: this relative belongs to a different house.'),
-      closer_children:FB.T('Not eligible now: a living child of the playable head takes precedence.')
+      retired:FB.T('Not eligible: a retired former head cannot take the house back.'),
+      spouse:FB.T('Not eligible: marriage joins the household but does not make a spouse a blood successor.')
     };
     return blocked[row.code] || FB.T('Not eligible under the current house succession order.');
   }

@@ -153,13 +153,86 @@ test('retirement hands control to an adult heir without death dues',
     expect(result.retirementNews).toBe(true);
   });
 
-test('refuses retirement when no adult successor exists',
+test('retirement may hand the house to a cousin while adult children live',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const childId = await arrangeFamily(page, 20);
+    const result = await page.evaluate(function (childId) {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const grandparent = FB.makeCharacter(s, {
+        name:'Aldred', sex:'m', born:me.born - 55,
+        culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+      });
+      const parent = FB.makeCharacter(s, {
+        name:'Baldwin', sex:'m', born:me.born - 28,
+        fatherId:grandparent.id,
+        culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+      });
+      const uncle = FB.makeCharacter(s, {
+        name:'Cuthbert', sex:'m', born:me.born - 25,
+        fatherId:grandparent.id,
+        culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+      });
+      const cousin = FB.makeCharacter(s, {
+        name:'Dunstan', sex:'m', born:s.date.year - 24,
+        fatherId:uncle.id,
+        culture:me.culture, religion:me.religion, dyn:'Otherhouse', traitsN:0
+      });
+      grandparent.childrenIds = [parent.id, uncle.id];
+      parent.childrenIds = [me.id];
+      uncle.childrenIds = [cousin.id];
+      me.fatherId = parent.id;
+      FB.touchFamily();
+
+      const preview = FB.game.retirePreview();
+      const heirIds = preview.heirs.map(function (c) { return c.id; });
+      FB.ui.showRetirement();
+      const cousinListed = !!document.querySelector(
+        '[data-retire-heir="' + cousin.id + '"]');
+      FB.ui.closeModal();
+      const ok = FB.game.retireTo(cousin.id);
+      return {
+        eligible:preview.eligible,
+        childEligible:heirIds.indexOf(childId) >= 0,
+        cousinEligible:heirIds.indexOf(cousin.id) >= 0,
+        cousinListed:cousinListed,
+        ok:ok,
+        protagonistId:s.player.charId,
+        cousinId:cousin.id,
+        cousinJoinedHouse:cousin.dyn === me.dyn,
+        formerRetired:me.retired === true,
+        formerStillEligible:FB.heirsOf(s).some(function (candidate) {
+          return candidate.id === me.id;
+        })
+      };
+    }, childId);
+
+    expect(result).toEqual({
+      eligible:true,
+      childEligible:true,
+      cousinEligible:true,
+      cousinListed:true,
+      ok:true,
+      protagonistId:result.cousinId,
+      cousinId:result.cousinId,
+      cousinJoinedHouse:true,
+      formerRetired:true,
+      formerStillEligible:false
+    });
+  });
+
+test('refuses retirement when every family successor is a minor or dead',
   async function ({ page }) {
     await startDeterministicGame(page);
     const childId = await arrangeFamily(page, 10);
     const result = await page.evaluate(function (childId) {
       const s = FB.state;
       const me = s.chars[s.player.charId];
+      for (const candidate of FB.heirsOf(s)) {
+        if (candidate.id !== childId) candidate.dead = true;
+      }
+      FB.touchFamily();
       const preview = FB.game.retirePreview();
       const ok = FB.game.retireTo(childId);
       return {

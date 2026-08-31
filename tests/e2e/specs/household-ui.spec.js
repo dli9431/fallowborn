@@ -676,6 +676,69 @@ test('minor succession keeps adult deeds visible, limits focuses to Study and Pl
     });
   });
 
+test('permanent household property survives succession cleanup and stays owned',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const former = s.chars[p.charId];
+      p.tier = 1;
+      p.holdings = ['hearth_garden', 'house_shrine', 'common_rights'];
+      const child = FB.makeCharacter(s, {
+        name:'Alden', sex:'m', born:s.date.year - 18,
+        fatherId:former.sex === 'm' ? former.id : null,
+        motherId:former.sex === 'f' ? former.id : null,
+        culture:former.culture, religion:former.religion,
+        dyn:former.dyn, traitsN:0
+      });
+      former.childrenIds = former.childrenIds || [];
+      former.childrenIds.push(child.id);
+
+      /* Personal cleanup hooks have no authority over dynastic property.
+         Replacing the collection here exercises the succession boundary that
+         protects holdings from hook-owned state teardown. */
+      const originalRetainerSuccession = FB.retainerSuccession;
+      FB.retainerSuccession = function (state) {
+        state.player.holdings = [];
+        if (originalRetainerSuccession) originalRetainerSuccession(state);
+      };
+      let succeeded;
+      try {
+        succeeded = FB.game.succeedTo(child.id);
+      } finally {
+        FB.retainerSuccession = originalRetainerSuccession;
+      }
+      FB.ui.showHousehold();
+      return {
+        succeeded:succeeded,
+        protagonistId:p.charId,
+        childId:child.id,
+        holdings:FB.holdingList(s).slice(),
+        goldBonus:FB.holdingBonus(s, 'gold'),
+        available:FB.holdingAvailable(s).map(function (item) {
+          return item.id;
+        }),
+        serialized:JSON.parse(FB.save.serialize()).state.player.holdings
+      };
+    });
+
+    expect(result.succeeded).toBe(true);
+    expect(result.protagonistId).toBe(result.childId);
+    expect(result.holdings).toEqual([
+      'hearth_garden', 'house_shrine', 'common_rights'
+    ]);
+    expect(result.goldBonus).toBe(0.5);
+    expect(result.available).not.toContain('hearth_garden');
+    expect(result.available).not.toContain('house_shrine');
+    expect(result.serialized).toEqual(result.holdings);
+    await expect(page.locator(
+      '#household-property .household-entry-owned')).toHaveCount(3);
+    await expect(page.locator(
+      '#household-property [data-holding="hearth_garden"]')).toHaveCount(0);
+    await expect(page.locator(
+      '#household-property [data-holding="house_shrine"]')).toHaveCount(0);
+  });
+
 test('coming of age immediately unlocks adult and raiding deeds in the retained panel',
   async function ({ page }) {
     await page.evaluate(function () {

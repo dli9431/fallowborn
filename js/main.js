@@ -10,9 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.165.14';
-  FB.CHANGELOG = [
-    { v: '1.165.14', date: '2026-08-29', changes: [
+FB.VERSION = '1.165.15';
+FB.CHANGELOG = [
+  { v: '1.165.15', date: '2026-08-31', changes: [
+    'House succession now preserves permanent property and lets you continue as any living family relative, including cousins, at death or through Hand over the house.'
+  ] },
+  { v: '1.165.14', date: '2026-08-29', changes: [
       'Find location now selects exact counties and settlements as pending birthplaces during custom starts.'
     ] },
     { v: '1.165.13', date: '2026-08-28', changes: [
@@ -4413,7 +4416,9 @@ window.FB = window.FB || {};
       });
     }
     function ordered(list) {
-      const live = list.filter(function (c) { return c && !c.dead; });
+      const live = list.filter(function (c) {
+        return c && !c.dead && !c.retired;
+      });
       return live.filter(function (c) { return c.sex === 'm'; })
         .sort(function (a, b) { return a.born - b.born; })
         .concat(live.filter(function (c) { return c.sex === 'f'; })
@@ -4424,46 +4429,40 @@ window.FB = window.FB || {};
     const livingKids = ordered(kids);
     for (const child of livingKids) add(child, true, 'child', 'children');
     for (const child of kids) {
-      if (child && child.dead) add(child, false, 'dead', 'children');
+      if (child && !seen[child.id]) {
+        add(child, false, child.dead ? 'dead' : 'retired', 'children');
+      }
     }
+
+    /* Children retain first priority, but priority is not eligibility. Every
+       living, non-retired blood or adopted relative in the tracked family
+       review remains a valid choice for death succession or living handover;
+       succession brings the chosen relative into the playable house. */
+    const kin = FB.kinOf(s);
+    const groups = [
+      { list:kin.grandchildren, name:'grandchildren' },
+      { list:kin.parents, name:'parents' },
+      { list:kin.siblings, name:'siblings' },
+      { list:kin.grandparents, name:'grandparents' },
+      { list:kin.niecesNephews, name:'nieces_nephews' },
+      { list:kin.unclesAunts, name:'uncles_aunts' },
+      { list:kin.cousins, name:'cousins' }
+    ];
+    for (const group of groups) {
+      const eligible = ordered(group.list.map(function (entry) {
+        return entry.c;
+      }));
+      for (const c of eligible) add(c, true, group.name, group.name);
+      for (const entry of group.list) {
+        const c = entry.c;
+        if (!c || seen[c.id]) continue;
+        add(c, false, c.dead ? 'dead' : 'retired', group.name);
+      }
+    }
+    /* A spouse who is independently a qualifying blood relative was already
+       added above. Marriage by itself still grants no succession right. */
     const spouse = FB.spouseOf(s, me);
     if (spouse) add(spouse, false, 'spouse', 'household');
-
-    if (livingKids.length) {
-      // Wider relatives stay visible for explanation, but living children
-      // keep every more distant branch out of the current successor list.
-      const kin = FB.kinOf(s);
-      const groups = [kin.grandchildren, kin.siblings, kin.niecesNephews, kin.unclesAunts, kin.cousins];
-      for (const group of groups) {
-        for (const entry of group) {
-          const c = entry.c;
-          add(c, false, c.dead ? 'dead' :
-            (c.dyn !== me.dyn ? 'different_house' : 'closer_children'),
-          entry.rel);
-        }
-      }
-    } else {
-      const kin = FB.kinOf(s);
-      const groups = [
-        { list:kin.grandchildren, name:'grandchildren' },
-        { list:kin.siblings, name:'siblings' },
-        { list:kin.niecesNephews, name:'nieces_nephews' },
-        { list:kin.unclesAunts, name:'uncles_aunts' },
-        { list:kin.cousins, name:'cousins' }
-      ];
-      for (const group of groups) {
-        const eligible = ordered(group.list.map(function (entry) {
-          const c = entry.c;
-          return c && c.dyn === me.dyn ? c : null;
-        }));
-        for (const c of eligible) add(c, true, group.name, group.name);
-        for (const entry of group.list) {
-          const c = entry.c;
-          if (!c || seen[c.id]) continue;
-          add(c, false, c.dead ? 'dead' : 'different_house', group.name);
-        }
-      }
-    }
     const nid = s.player.namedHeirId;
     if (nid) {
       for (let i = 0; i < rows.length; i++) {
@@ -4477,8 +4476,8 @@ window.FB = window.FB || {};
     return rows;
   };
 
-  /* Eligible heirs in order: named heir first, then sons, daughters, and the
-     wider same-house branches when no living child survives. */
+  /* Eligible heirs in order: named heir first, then children and every wider
+     living family branch in the stable review order. */
   FB.heirsOf = function (s) {
     return FB.heirReview(s).filter(function (row) {
       return row.eligible;
@@ -4523,7 +4522,7 @@ window.FB = window.FB || {};
       /* Compatibility for mods that still pass rendered death prose. */
       FB.news(s, '☠ ' + causeText);
     }
-    const heirs = FB.heirsOf(s).slice(0, 4);
+    const heirs = FB.heirsOf(s);
     const deathTelemetry = {
       entry_type:telemetryEntryType,
       active_seconds:activeSeconds,
@@ -4675,9 +4674,23 @@ window.FB = window.FB || {};
       if (!livingAbdication) FB.ui.gameOver();
       return false;
     }
+    /* Complete the old-save property migration before taking the inheritance
+       snapshot, so former business holdings remain enterprises rather than
+       being restored in both catalogues after the transition. */
+    if (FB.enterpriseList) FB.enterpriseList(s);
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     const successorIsChild = (old.childrenIds || []).indexOf(heir.id) >= 0;
     const outgoingTier = p.tier;
+    /* Permanent holdings belong to the dynasty, not the outgoing
+       protagonist. Most succession work mutates the existing player record,
+       but personal and office cleanup hooks may replace collections while
+       handing authority over. Snapshot the canonical family property before
+       any of those hooks run, including property held in papal custody. */
+    const papalCustody = s.papacy && s.papacy.custody &&
+      s.papacy.custody[old.id];
+    let inheritedHoldings = (papalCustody &&
+      Array.isArray(papalCustody.holdings)
+      ? papalCustody.holdings : FB.holdingList(s)).slice();
     const successionTier = outgoingTier <= 1
       ? (FB.isUnfreeCharacter(s, heir)
         ? 0 : FB.clamp(FB.stationOf(heir), 0, 1)) : outgoingTier;
@@ -4719,8 +4732,8 @@ window.FB = window.FB || {};
       } else {
         heirDepth = FB.lineDepthOf ? FB.lineDepthOf(s, heir) : oldDepth;
       }
-      p.lineDepth = p.lineDepth === undefined ?
-        heirDepth : p.lineDepth + (heirDepth - oldDepth);
+      p.lineDepth = Math.max(1, p.lineDepth === undefined ?
+        heirDepth : p.lineDepth + (heirDepth - oldDepth));
     }
     heir.dyn = old.dyn;
     heir.role = null;
@@ -4766,7 +4779,13 @@ window.FB = window.FB || {};
     /* Death dues take liquid coin; they do not forgive an inherited
        household shortfall. */
     if (!livingAbdication && p.gold > 0) p.gold = Math.round(p.gold * 0.9);
+    /* Personal cleanup cannot dispose of family property. Restore its input
+       before inherited contracts settle, then retain any legitimate
+       collateral loss made by financeSuccession itself. A pope's property
+       remains in custody until the office hook below returns it. */
+    if (!papalCustody) p.holdings = inheritedHoldings.slice();
     FB.financeSuccession(s); // household contracts survive; mature ones settle at transition
+    if (!papalCustody) inheritedHoldings = FB.holdingList(s).slice();
     p.courtingId = null;
     p.courtshipTerms = null;
     p.suitorIds = null; // the predecessor's prospects do not follow the heir
@@ -4896,6 +4915,7 @@ window.FB = window.FB || {};
     }
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     if (FB.papacyPlayerSuccession) FB.papacyPlayerSuccession(s, old.id);
+    p.holdings = inheritedHoldings.slice();
     if (FB.enterpriseList) FB.enterpriseList(s);
     if (FB.repairAlliances) FB.repairAlliances(s);
 
