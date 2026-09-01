@@ -795,13 +795,19 @@ window.FB = window.FB || {};
     };
   }
 
-  S.chronicleData = function (state) {
+  S.chronicleData = function (state, options) {
     state = state || FB.state;
+    options = options || {};
     if (!state || !state.player || !state.date || !Array.isArray(state.log) ||
         !FB.ensureChronicle) return null;
     const archive = FB.ensureChronicle(state);
     if (!archive) return null;
-    if (FB.chronicleNoteHead) FB.chronicleNoteHead(state);
+    /* A detached save may be inspected before its bookmark world is active.
+       Keep its already-saved head snapshot instead of replacing that title
+       with a less specific one derived without the county map. */
+    if (options.noteHead !== false && FB.chronicleNoteHead) {
+      FB.chronicleNoteHead(state);
+    }
     const current = state.chars && state.chars[state.player.charId];
     const heads = archive.heads.slice().sort(function (a, b) {
       return (Number(a[0]) || 0) - (Number(b[0]) || 0);
@@ -902,6 +908,26 @@ window.FB = window.FB || {};
             typeof entry.text !== 'string') return null;
       }
       return data;
+    } catch (e) { return null; }
+  };
+
+  /* Build the same portable, non-resumable Chronicle artifact from a parsed
+     save without restoring that life. Slot reads and exported-save parses
+     already return detached objects, so inflating and adopting a legacy
+     Chronicle here can only touch that snapshot; FB.state, RNG, uid, and the
+     active bookmark remain unchanged. */
+  S.chronicleFromSave = function (data) {
+    try {
+      if (!data || data.v !== 3 || !data.state ||
+          typeof data.state !== 'object') return null;
+      const state = inflateState(data.state);
+      if (!state.player || !state.chars || !state.date ||
+          !Array.isArray(state.log)) return null;
+      /* A version-3 save from before complete archives carries only its
+         bounded compatibility log. Adopt it as partial just as restore does,
+         so the viewer never claims those discarded earlier lines survived. */
+      if (FB.ensureChronicle) FB.ensureChronicle(state, { legacy:true });
+      return S.chronicleData(state, { noteHead:false });
     } catch (e) { return null; }
   };
 

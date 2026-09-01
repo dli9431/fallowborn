@@ -342,6 +342,12 @@ player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mo
 and the current life as `FBS2.` text, so a reported moment can be reopened exactly through
 Load save file's paste fallback.
 
+The title-screen Chronicle Library can inspect the autosave, any manual slot, or an exported
+`.txt` save without restoring it. `S.chronicleFromSave` inflates only the detached object returned
+by a slot read or export parse, adopts a legacy compact journal there when needed, and expands it
+through the ordinary Chronicle artifact path. It never assigns `FB.state`, restores RNG or uid
+state, activates the save's bookmark, writes storage, or otherwise resumes the campaign.
+
 Management protections are additive player state at save format 3:
 `player.protections[scope]` is an array of stable string ids. The built-in scopes are
 `grantCounty` and `autoBuildCounty` (province ids), `equipmentItem` (exact item references),

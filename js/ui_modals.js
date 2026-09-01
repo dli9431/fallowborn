@@ -23939,8 +23939,10 @@ window.FB = window.FB || {};
 
   UI.showChronicleLibrary = function () {
     const recent = FB.save.recentChronicle && FB.save.recentChronicle();
+    const savedLives = {};
+    const saveSlots = ['auto', 1, 2, 3];
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Open a downloaded Chronicle to explore a house across generations. Chronicle files are histories only; they do not resume a saved game.')) + '</p></div><div class="gm-list">';
+      'Explore a Chronicle from this browser’s saved games, a downloaded save file, or a Chronicle file. Viewing a history never resumes or changes its saved game.')) + '</p></div><div class="gm-list">';
     if (recent) {
       h += '<button class="actionbtn" id="chronicle-open-recent">' +
         esc(FB.T('Open recent Chronicle')) + '<span class="adesc">' +
@@ -23951,27 +23953,63 @@ window.FB = window.FB || {};
           count:recent.entries.length
         })) + '</span></button>';
     }
-    h += '</div><p class="chronicle-file-input"><input type="file" id="chronicle-file" ' +
-      'accept=".json,application/json" aria-label="' + esc(FB.T('Fallowborn Chronicle file')) + '"></p>' +
+    h += '</div><div class="gm-body-text"><h4>' + esc(FB.T('Saved games')) +
+      '</h4></div><div class="gm-list">';
+    for (let i = 0; i < saveSlots.length; i++) {
+      const slot = saveSlots[i];
+      const data = FB.save.read(slot);
+      const slotKey = String(slot);
+      const label = slot === 'auto'
+        ? FB.T('Open autosave Chronicle')
+        : FB.T('Open slot {slot} Chronicle', { slot:slot });
+      savedLives[slotKey] = data;
+      h += '<button class="actionbtn" data-chronicle-save-slot="' + slotKey + '"' +
+        (data ? '' : ' disabled') + '>' + esc(label) + '<span class="adesc">' +
+        esc(data ? FB.save.metaOf(data) || FB.T('Saved game') : FB.T('Empty')) +
+        '</span></button>';
+    }
+    h += '</div><div class="gm-body-text"><h4>' + esc(FB.T('Open a file')) +
+      '</h4></div><p class="chronicle-file-input"><input type="file" id="chronicle-file" ' +
+      'accept=".json,.txt,application/json,text/plain" aria-label="' +
+      esc(FB.T('Fallowborn Chronicle or save file')) + '"></p>' +
       '<div class="gm-list"><button class="actionbtn" id="chronicle-file-open">' +
-      esc(FB.T('Open Chronicle file')) + '<span class="adesc">' +
-      esc(FB.T('choose a fallowborn-chronicle JSON file')) + '</span></button></div>' +
+      esc(FB.T('Open Chronicle or save file')) + '<span class="adesc">' +
+      esc(FB.T('choose a Chronicle .json file or an exported save .txt file')) +
+      '</span></button></div>' +
       '<button class="btn" id="gm-back">' + esc(FB.T('Close')) + '</button>';
     openModal('Chronicle Library', h, { historyView:true });
     if (recent) $('chronicle-open-recent').addEventListener('click', function () {
       UI.showChronicleViewer(recent, { back:UI.showChronicleLibrary });
     });
+    document.querySelectorAll('[data-chronicle-save-slot]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const data = savedLives[button.getAttribute('data-chronicle-save-slot')];
+        const chronicle = FB.save.chronicleFromSave(data);
+        if (!chronicle) {
+          UI.toast('That saved game does not contain a readable Chronicle.');
+          return;
+        }
+        FB.save.rememberChronicle(chronicle);
+        UI.showChronicleViewer(chronicle, { back:UI.showChronicleLibrary });
+      });
+    });
     $('chronicle-file-open').addEventListener('click', function () {
       const file = $('chronicle-file').files[0];
-      if (!file) { UI.toast('Choose a Chronicle file first.'); return; }
+      if (!file) { UI.toast('Choose a Chronicle or save file first.'); return; }
       const reader = new FileReader();
       reader.onload = function () {
-        const data = FB.save.parseChronicle(reader.result);
-        if (!data) { UI.toast('That file is not a Fallowborn Chronicle.'); return; }
+        let data = FB.save.parseChronicle(reader.result);
+        if (!data) {
+          data = FB.save.chronicleFromSave(FB.save.parseExport(reader.result));
+        }
+        if (!data) {
+          UI.toast('That file is not a Fallowborn Chronicle or save file.');
+          return;
+        }
         FB.save.rememberChronicle(data);
         UI.showChronicleViewer(data, { back:UI.showChronicleLibrary });
       };
-      reader.onerror = function () { UI.toast('That Chronicle file could not be read.'); };
+      reader.onerror = function () { UI.toast('That Chronicle or save file could not be read.'); };
       reader.readAsText(file);
     });
     $('gm-back').addEventListener('click', UI.closeModal);
@@ -24849,7 +24887,7 @@ window.FB = window.FB || {};
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–5</b> select a section and use the same letter grid for management actions only · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
-      '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback. Download Chronicle creates a complete JSON history that View Chronicle opens from the title screen.</p>' +
+      '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback. View Chronicle on the title screen reads the autosave, manual slots, exported .txt saves, and complete Chronicle JSON downloads without resuming a life.</p>' +
       '</div><button class="btn primary" id="gm-ok">' + esc(FB.T('Close')) + '</button>',
       { historyView:true });
     $('gm-ok').addEventListener('click', function () {

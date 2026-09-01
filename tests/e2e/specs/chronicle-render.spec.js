@@ -177,6 +177,11 @@ test('the complete Chronicle archive survives recent-log trimming and adopts old
 
       const legacyPayload = JSON.parse(JSON.stringify(payload));
       delete legacyPayload.state.chronicle;
+      const beforeDetachedRng = FB.getRngState();
+      const legacyViewer = FB.save.chronicleFromSave(
+        JSON.parse(JSON.stringify(legacyPayload)));
+      const detachedRead = FB.state === s &&
+        FB.getRngState() === beforeDetachedRng;
       FB.save.restore(legacyPayload);
       const legacy = FB.state;
       const recovered = legacy.chronicle;
@@ -193,6 +198,9 @@ test('the complete Chronicle archive survives recent-log trimming and adopts old
         artifactCount:artifact.entries.length,
         artifactComplete:artifact.complete,
         parsed:!!parsed,
+        legacyViewerPartial:legacyViewer && !legacyViewer.complete,
+        legacyViewerCount:legacyViewer && legacyViewer.entries.length,
+        detachedRead:detachedRead,
         legacyPartial:recovered.partial,
         legacyAdopted:recovered.entries.length === 301,
         legacyContinues:FB.newsText(legacy.log[legacy.log.length - 1],
@@ -208,6 +216,9 @@ test('the complete Chronicle archive survives recent-log trimming and adopts old
       compact:true,
       artifactComplete:true,
       parsed:true,
+      legacyViewerPartial:true,
+      legacyViewerCount:300,
+      detachedRead:true,
       legacyPartial:true,
       legacyAdopted:true,
       legacyContinues:'The old save continues.'
@@ -284,24 +295,29 @@ test('the in-game Chronicle opens the full viewer and returns to the live panel'
     });
   });
 
-test('the title Chronicle viewer pages, filters, and reopens recent history',
+test('the title Chronicle viewer opens recent, slot, Chronicle-file, and save-file history',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
 
-    await page.evaluate(function () {
+    const saveText = await page.evaluate(function () {
       const s = FB.state;
       for (let i = 0; i < 130; i++) {
         FB.news(s, FB.msg('news.e2e.viewer_entry',
           'Viewer entry {n}', { n:i }), { toast:false });
       }
+      FB.save.toSlot(1);
+      const exported = FB.save.exportState();
       FB.save.rememberChronicle(s);
       FB.game.toTitle();
+      return exported;
     });
 
     await page.getByRole('button', { name:'View Chronicle', exact:true }).click();
     await expect(page.getByRole('heading', { name:'Chronicle Library', exact:true }))
       .toBeVisible();
+    await expect(page.getByRole('button', { name:/Open slot 1 Chronicle/ }))
+      .toContainText('867');
     await page.getByRole('button', { name:/Open recent Chronicle/ }).click();
     await expect(page.locator('.chronicle-viewer-summary')).toContainText('Entries');
     await expect(page.locator('.chronicle-head')).toHaveCount(1);
@@ -319,6 +335,38 @@ test('the title Chronicle viewer pages, filters, and reopens recent history',
     await page.getByRole('button', { name:'Back', exact:true }).click();
     await expect(page.getByRole('heading', { name:'Chronicle Library', exact:true }))
       .toBeVisible();
+    const beforeSlotRuntime = await page.evaluate(function () {
+      window.__chronicleSlotBytes = localStorage.getItem('fb_slot1');
+      return { rng:FB.getRngState(), uid:FB.getUidCounter() };
+    });
+    await page.getByRole('button', { name:/Open slot 1 Chronicle/ }).click();
+    await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
+    expect(await page.evaluate(function () {
+      return {
+        stateNull:FB.state === null,
+        rng:FB.getRngState(),
+        uid:FB.getUidCounter(),
+        slotUnchanged:localStorage.getItem('fb_slot1') === window.__chronicleSlotBytes
+      };
+    })).toEqual({
+      stateNull:true,
+      rng:beforeSlotRuntime.rng,
+      uid:beforeSlotRuntime.uid,
+      slotUnchanged:true
+    });
+    await page.getByRole('button', { name:'Back', exact:true }).click();
+
+    await page.locator('#chronicle-file').setInputFiles({
+      name:'fallowborn-save-test.txt',
+      mimeType:'text/plain',
+      buffer:Buffer.from(saveText)
+    });
+    await page.getByRole('button', { name:/Open Chronicle or save file/ }).click();
+    await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
+    await expect(page.locator('.chronicle-viewer-entries')).toContainText('Viewer entry');
+    expect(await page.evaluate(function () { return FB.state; })).toBeNull();
+    await page.getByRole('button', { name:'Back', exact:true }).click();
+
     const archiveText = await page.evaluate(function () {
       return JSON.stringify(FB.save.recentChronicle());
     });
@@ -327,7 +375,7 @@ test('the title Chronicle viewer pages, filters, and reopens recent history',
       mimeType:'application/json',
       buffer:Buffer.from(archiveText)
     });
-    await page.getByRole('button', { name:/Open Chronicle file/ }).click();
+    await page.getByRole('button', { name:/Open Chronicle or save file/ }).click();
     await expect(page.locator('.chronicle-viewer-summary')).toContainText('Entries');
     await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
   });

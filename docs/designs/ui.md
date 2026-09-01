@@ -1828,10 +1828,11 @@ rebuilds the same filtered window; raw `news.*` keys never stand in for prose.
 **Chronicle Library.** Save Game offers **Download Chronicle**, and the no-heir end screen
 offers **Explore full Chronicle**, **Download Chronicle**, and **Return to title** as separate
 terminal actions. Returning to title retains the latest expanded archive in page memory; the
-title menu's **View Chronicle** opens that recent history or imports a downloaded
-`fallowborn-chronicle-*.json` file with the native file picker. Chronicle JSON cannot resume a
-campaign and does not activate a bookmark, mutate game state, consume RNG, or occupy save-slot
-storage.
+title menu's **View Chronicle** opens that recent history, reads the autosave or any of the three
+manual save slots, or imports either a downloaded `fallowborn-chronicle-*.json` artifact or an
+exported `.txt` save with the native file picker. Reading a saved game's Chronicle derives a
+detached history artifact without restoring the life. It does not activate a bookmark, mutate
+live game state, consume RNG, overwrite the source save, or occupy save-slot storage.
 
 The ordinary game save may be captured while the death screen is waiting for a successor.
 Continue rebuilds that screen after load from the final legend and current eligible-family review,

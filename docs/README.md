@@ -78,8 +78,9 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   available as a fallback.
 - **Explore full Chronicle** in the in-game Chronicle opens the complete family history in a
   paginated timeline; Back returns to the live game. **Save Game → Download Chronicle** exports
-  that history as readable JSON, and **View Chronicle** on the title screen opens downloaded
-  files with generation cards, search, and filters. A finished campaign
+  that history as readable JSON, and **View Chronicle** on the title screen opens the browser's
+  autosave or manual slots as well as downloaded Chronicle JSON and exported `.txt` saves, with
+  generation cards, search, and filters. A finished campaign
   offers the same viewer and download before returning to the title screen.
 - **☰ → 🐞 Report a bug** builds a ready-made report: your description (bug or suggestion)
   bundled with the game version, start seed, and your current life as save text — copy it and
