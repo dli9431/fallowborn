@@ -332,6 +332,41 @@ test('the title Chronicle viewer pages, filters, and reopens recent history',
     await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
   });
 
+test('the mobile Chronicle can collapse filters and keeps download within the history',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:844 });
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    await page.evaluate(function () {
+      FB.ui.showTab('log');
+      FB.ui.refresh();
+      document.querySelector('[data-chronicle-full]').click();
+    });
+
+    const toggle = page.locator('#chronicle-filter-toggle');
+    const fields = page.locator('#chronicle-filter-fields');
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(fields).toBeVisible();
+    await expect(page.locator(
+      '#gm-body > .chronicle-viewer-actions #chronicle-download')).toBeVisible();
+    await expect(page.locator('.gm-footer #chronicle-download')).toHaveCount(0);
+    await page.locator('#chronicle-category').selectOption('news');
+    await expect(page.locator('#chronicle-category')).toHaveValue('news');
+
+    await toggle.click();
+    await expect(toggle).toHaveText('Show filters');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(fields).toBeHidden();
+
+    await toggle.click();
+    await expect(toggle).toHaveText('Hide filters');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(fields).toBeVisible();
+    await expect(page.locator('#chronicle-category')).toHaveValue('news');
+  });
+
 test('a finished campaign can explore or download its full Chronicle',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);

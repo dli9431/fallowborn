@@ -325,3 +325,49 @@ test('phone and tablet Self drawers pause running time and restore it on close',
     await page.locator('#btn-closeself').click();
     expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
   });
+
+test('mobile Play and fast-forward close the Self drawer before controlling time',
+  async function ({ page }) {
+    await page.setViewportSize({ width:390, height:844 });
+    await page.evaluate(function () {
+      FB.game.setPaused(false);
+      document.getElementById('tb-portrait').click();
+    });
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+
+    await page.locator('#btn-endturn').click();
+    await expect(page.locator('body')).not.toHaveClass(/showself/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(false);
+
+    await page.evaluate(function () {
+      FB.game.setPaused(true);
+      document.getElementById('tb-portrait').click();
+    });
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+    await page.locator('#btn-endturn').click();
+    await expect(page.locator('body')).not.toHaveClass(/showself/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(false);
+
+    await page.evaluate(function () {
+      window.__drawerFastForward = { calls:0, pausedAtCall:null };
+      FB.game.skipAhead = function () {
+        window.__drawerFastForward.calls++;
+        window.__drawerFastForward.pausedAtCall = FB.game.paused;
+      };
+      document.getElementById('tb-portrait').click();
+    });
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+
+    await page.locator('#btn-skip').click();
+    await expect(page.locator('body')).not.toHaveClass(/showself/);
+    expect(await page.evaluate(function () {
+      return {
+        paused:FB.game.paused,
+        calls:window.__drawerFastForward.calls,
+        pausedAtCall:window.__drawerFastForward.pausedAtCall
+      };
+    })).toEqual({ paused:true, calls:1, pausedAtCall:true });
+  });

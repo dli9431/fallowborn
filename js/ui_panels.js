@@ -6883,6 +6883,16 @@ window.FB = window.FB || {};
     mobileNavClosed('self-drawer', false);
   }
 
+  function closeSelfDrawerForTimeControl() {
+    if (!selfDrawerUsesOverlay() || !selfDrawerOpen()) return false;
+    /* Play and fast-forward own the next clock state themselves. Do not let
+       the drawer's ordinary close path briefly restore its prior running
+       state before the selected time control is applied. */
+    selfDrawerResumePlay = false;
+    closeSelfDrawer();
+    return true;
+  }
+
   function setTab(name, opts) {
     if (FB.game && FB.game.observe && (name === 'actions' || name === 'network')) return;
     const isLeft = LEFT_TABS.indexOf(name) >= 0;
@@ -6952,6 +6962,7 @@ window.FB = window.FB || {};
   SH.ACTION_SHORTCUT_KEYS = ACTION_SHORTCUT_KEYS;
   SH.actionShortcutStatus = actionShortcutStatus;
   SH.closeSelfDrawer = closeSelfDrawer;
+  SH.closeSelfDrawerForTimeControl = closeSelfDrawerForTimeControl;
   SH.equipmentBlockedText = equipmentBlockedText;
   SH.equipmentSheetHtml = equipmentSheetHtml;
   SH.focusShortcutTarget = focusShortcutTarget;

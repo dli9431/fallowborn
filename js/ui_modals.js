@@ -23666,6 +23666,10 @@ window.FB = window.FB || {};
     return FB.T(labels[category] || 'News');
   }
 
+  function chronicleFilterToggleLabel(collapsed) {
+    return collapsed ? FB.T('Show filters') : FB.T('Hide filters');
+  }
+
   function chronicleDownload(data) {
     data = data && data.format === 'fallowborn-chronicle'
       ? data : FB.save.chronicleData(data || FB.state);
@@ -23756,7 +23760,14 @@ window.FB = window.FB || {};
   function chronicleControlsHtml(data) {
     const categories = ['all', 'news', 'choice', 'family', 'rank', 'war',
       'property', 'faith', 'travel', 'politics'];
-    let h = '<div class="chronicle-viewer-controls">' +
+    const collapsed = !!chronicleViewer.filtersCollapsed;
+    let h = '<div class="chronicle-viewer-controls' +
+      (collapsed ? ' is-collapsed' : '') + '">' +
+      '<button type="button" class="btn small chronicle-viewer-filter-toggle" ' +
+      'id="chronicle-filter-toggle" aria-expanded="' + (!collapsed) +
+      '" aria-controls="chronicle-filter-fields">' +
+      esc(chronicleFilterToggleLabel(collapsed)) + '</button>' +
+      '<div class="chronicle-viewer-filter-fields" id="chronicle-filter-fields">' +
       '<label><span>' + esc(FB.T('Search')) + '</span><input id="chronicle-search" type="search" value="' +
       esc(chronicleViewer.search) + '" placeholder="' + esc(FB.T('Names, places, and events')) + '"></label>' +
       '<button type="button" class="btn small" id="chronicle-search-go">' +
@@ -23784,7 +23795,7 @@ window.FB = window.FB || {};
       (chronicleViewer.order === 'oldest' ? ' selected' : '') + '>' +
       esc(FB.T('Oldest first')) + '</option><option value="newest"' +
       (chronicleViewer.order === 'newest' ? ' selected' : '') + '>' +
-      esc(FB.T('Newest first')) + '</option></select></label></div>';
+      esc(FB.T('Newest first')) + '</option></select></label></div></div>';
     return h;
   }
 
@@ -23821,7 +23832,10 @@ window.FB = window.FB || {};
     chronicleViewer.page = Math.max(0, Math.min(pages - 1, chronicleViewer.page));
     const start = chronicleViewer.page * CHRONICLE_PAGE_SIZE;
     const shown = filtered.slice(start, start + CHRONICLE_PAGE_SIZE);
-    let h = chronicleSummaryHtml(data);
+    let h = chronicleSummaryHtml(data) +
+      '<div class="chronicle-viewer-actions"><button type="button" ' +
+      'class="btn primary" id="chronicle-download">' +
+      esc(FB.T('Download Chronicle')) + '</button></div>';
     if (!data.complete) {
       h += '<div class="chronicle-archive-warning">' + esc(FB.T(
         'This Chronicle was recovered from an older save. It contains every entry that save still held, but lines discarded by earlier versions cannot be restored.')) + '</div>';
@@ -23841,8 +23855,7 @@ window.FB = window.FB || {};
       })) + '</span><button type="button" class="btn" id="chronicle-next"' +
       (chronicleViewer.page >= pages - 1 ? ' disabled' : '') + '>' + esc(FB.T('Next')) +
       '</button></div></section><div class="gm-footer"><button type="button" class="btn" id="chronicle-back">' +
-      esc(FB.T('Back')) + '</button><button type="button" class="btn primary" id="chronicle-download">' +
-      esc(FB.T('Download Chronicle')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Chronicle of {dynasty}', {
       dynasty:data.campaign.dynasty || FB.T('your line')
     }), h, {
@@ -23868,6 +23881,15 @@ window.FB = window.FB || {};
     $('chronicle-category').addEventListener('change', applyFilters);
     $('chronicle-generation').addEventListener('change', applyFilters);
     $('chronicle-order').addEventListener('change', applyFilters);
+    $('chronicle-filter-toggle').addEventListener('click', function () {
+      chronicleViewer.filtersCollapsed = !chronicleViewer.filtersCollapsed;
+      const controls = document.querySelector('.chronicle-viewer-controls');
+      controls.classList.toggle('is-collapsed', chronicleViewer.filtersCollapsed);
+      $('chronicle-filter-toggle').setAttribute('aria-expanded',
+        String(!chronicleViewer.filtersCollapsed));
+      $('chronicle-filter-toggle').textContent = chronicleFilterToggleLabel(
+        chronicleViewer.filtersCollapsed);
+    });
     document.querySelectorAll('[data-chronicle-generation]').forEach(function (button) {
       button.addEventListener('click', function () {
         chronicleViewer.generation = button.getAttribute('data-chronicle-generation');
@@ -23897,7 +23919,8 @@ window.FB = window.FB || {};
     options = options || {};
     chronicleViewer = {
       data:data, page:0, category:'all', generation:'all', search:'',
-      order:'oldest', back:options.back || UI.showChronicleLibrary,
+      order:'oldest', filtersCollapsed:false,
+      back:options.back || UI.showChronicleLibrary,
       returnFocus:options.returnFocus || null
     };
     renderChronicleViewer(false);

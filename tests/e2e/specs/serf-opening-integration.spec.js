@@ -206,14 +206,20 @@ test('first visible duty teaches its cadence and advances the cached schedule on
     await page.setViewportSize({ width:390, height:844 });
     const dutyInfo = teaching.locator('.settcard-info');
     await expect(dutyInfo).toBeVisible();
-    expect(await teaching.evaluate(function (card) {
-      return [
-        Math.round(card.querySelector('.event-duty-help-anchor')
-          .getBoundingClientRect().height),
-        Math.round(card.querySelector('.settcard-info')
-          .getBoundingClientRect().height)
-      ];
-    })).toEqual([48, 48]);
+    const mobileDuty = await teaching.evaluate(function (card) {
+      const anchor = card.querySelector('.event-duty-help-anchor');
+      const info = card.querySelector('.settcard-info');
+      return {
+        anchorHeight:Math.round(anchor.getBoundingClientRect().height),
+        infoHeight:Math.round(info.getBoundingClientRect().height),
+        clientHeight:anchor.clientHeight,
+        scrollHeight:anchor.scrollHeight
+      };
+    });
+    expect(mobileDuty.anchorHeight).toBeGreaterThan(48);
+    expect(mobileDuty.infoHeight).toBe(48);
+    expect(mobileDuty.scrollHeight).toBeLessThanOrEqual(
+      mobileDuty.clientHeight + 1);
     await teachingAnchor.click();
     await expect(teachingDetails).not.toHaveClass(/hidden/);
     await dutyInfo.click();

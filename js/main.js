@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.0';
+FB.VERSION = '1.166.1';
 FB.CHANGELOG = [
+  { v: '1.166.1', date: '2026-08-31', changes: [
+    'Mobile Chronicle filters can collapse, Chronicle downloads stay with the history, long duty descriptions wrap, and time controls close the Self/Kin drawer.',
+    'Serf flight becomes harder for each spouse or descendant escaping with the household.'
+  ] },
   { v: '1.166.0', date: '2026-08-31', changes: [
     'Chronicle archives now preserve the complete family history, with in-game and title-screen browsing plus JSON downloads.',
     'Land purchasing and Chronicle presentation are streamlined, and exceptional promotions out of serfdom occur less often.'

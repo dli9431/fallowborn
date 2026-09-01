@@ -795,7 +795,7 @@ FBDATA.events.push(
     other:'They say a serf who reaches a town and lives there a year and a day is free. The road is long, the law is against you — but the door stands open tonight.'
   }}},
   options:[
-    { label:'Run.', desc:{forms:{select:'value', param:'confidantKind', cases:{friend:'{confidant} makes the road look likely.', rival:'{confidant} makes the road risky.', other:'Freedom at the end of the road — or a halter.'}}}, chance:'serf_flight',
+    { label:'Run.', desc:{forms:{select:'value', param:'confidantKind', cases:{friend:'{confidant} makes the road look likely, though every family member slows the flight.', rival:'{confidant} makes the road risky, and a larger family is harder to hide.', other:'Freedom at the end of the road — or a halter. Every family member makes the flight harder.'}}}, chance:'serf_flight',
       success:{ text:{forms:{select:'value', param:'confidantKind', cases:{
         friend:'Weeks of hedgerows and hunger lead to the hiding place {confidant} named. You make it: a new province, a new name, a free life.',
         rival:'You abandon the road {confidant} watched and make it by another path: a new province, a new name, a free life.',

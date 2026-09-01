@@ -4003,9 +4003,19 @@ window.FB = window.FB || {};
         const kind = FB.eventParticipantKind &&
           FB.eventParticipantKind(ctx, 'confidant');
         const balance = FBDATA.balance;
-        return kind === 'friend' ? balance.serfFlightFriendChance
+        const base = kind === 'friend' ? balance.serfFlightFriendChance
           : (kind === 'rival' ? balance.serfFlightRivalChance
             : balance.serfFlightUnaccompaniedChance);
+        const covered = FB.freedomCoveredCharacterIds
+          ? FB.freedomCoveredCharacterIds(state, []) : [me.id];
+        const familyMembers = Math.max(0, covered.length - 1);
+        const configuredPenalty = Number(balance.serfFlightFamilyMemberPenalty);
+        const penalty = isFinite(configuredPenalty) && configuredPenalty >= 0
+          ? configuredPenalty : 0.05;
+        const configuredMinimum = Number(balance.serfFlightMinimumChance);
+        const minimum = isFinite(configuredMinimum)
+          ? FB.clamp(configuredMinimum, 0, 0.95) : 0.10;
+        return FB.clamp(base - familyMembers * penalty, minimum, 0.95);
       }
       case 'harvest': {
         let c = 0.55 + FB.skillOf(me, 'ste') * 0.018;

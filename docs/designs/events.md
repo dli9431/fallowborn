@@ -88,8 +88,10 @@ bridge names the former and new officer before continuity is updated. Other auth
 tenure, home, rank, witness, or succession changes close the chain explicitly. Shifting
 wartime quartering to a neighbor creates one bounded 90-day consequence involving that
 same neighbor; it clears on resolution or when its serf-life context ends. Flight similarly
-freezes an optional canonical friend or rival and uses the disclosed 65%, 35%, or 50%
-named chance without generating a helper.
+freezes an optional canonical friend or rival and starts from the disclosed 65%, 35%, or
+50% named chance without generating a helper. Each additional living spouse or descendant
+who receives freedom in the flight subtracts five percentage points, to a 10% floor. Dead
+relatives and collateral parents or siblings who do not join that flight add no penalty.
 The final **What Is Remembered** chapter applies a `0.20` random-trigger gate after the
 case resolves. This is one fifth of its former always-eligible frequency; its high selection
 weight remains so a successful gate still brings the pending conclusion forward.

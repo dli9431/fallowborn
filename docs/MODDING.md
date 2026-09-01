@@ -1217,7 +1217,9 @@ choice mutates state. `kindParam` copies the bound kind into a direct context se
 Core tuning lives in the existing balance catalogue:
 `serfAdvocacyStanding`, `serfAdvocacyBonus`, `serfNeighborConsequenceDays`,
 `serfFlightFriendChance`, `serfFlightRivalChance`, and
-`serfFlightUnaccompaniedChance`.
+`serfFlightUnaccompaniedChance`. Each additional living spouse or descendant covered by
+the flight subtracts `serfFlightFamilyMemberPenalty`, down to
+`serfFlightMinimumChance`.
 
 Random events may declare `contextSelector` beside `trigger`. The selector must be
 registered by engine code as `FB.eventContextOptions(state, id)` and return an array of

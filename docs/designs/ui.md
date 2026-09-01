@@ -39,7 +39,10 @@ A fresh serf introduction points to Rank & Realm without replacing scenario pros
 optional hint toggle. First steps retains exactly its three universal requirements and adds only a
 linked home-terms note. After that track, one per-save tenure coachmark precedes optional poaching
 and family lessons; opening the sheet acknowledges it. Visible first duties and favorable offers
-teach their live saved terms, while Automation does not mark unseen teaching as seen. Routine date
+teach their live saved terms, while Automation does not mark unseen teaching as seen. Every
+scheduled-duty event uses the same description disclosure: desktop hover/focus and the compact
+`?` control expose its terms, while the complete description wraps beside that control instead of
+being height-clipped on mobile. Routine date
 changes use a transient semantic signature and never announce a daily countdown.
 
 The authority-review event uses the same generic modal, participant cards, realm card,
@@ -380,7 +383,9 @@ The drawer Close uses the same footer control at the bottom middle, immediately 
 fixed time bar. On compact phone and tablet layouts, opening that drawer pauses a running
 game and records that it owns the pause; closing it, including through browser Back, resumes
 only when the drawer paused previously running time. A game opened while already paused
-stays paused. Education-focus and schooling sheets opened from Self carry an explicit Self
+stays paused. Pressing Play or fast-forward in the fixed mobile time bar closes the drawer
+first; Play begins ordinary time and fast-forward hands the paused clock directly to its skip.
+Education-focus and schooling sheets opened from Self carry an explicit Self
 return context, so their visible or browser Back closes the sheet directly onto the open
 drawer instead of inserting the protagonist's character sheet. The map toast rail is hidden
 behind the full-screen drawer and returns with
@@ -1800,6 +1805,10 @@ window, while the compact complete journal described in [state-and-saves.md](sta
 continues across the entire campaign. **Explore full Chronicle** opens that complete paginated
 viewer directly from this panel; Back, Escape, and mobile browser Back close it onto the same
 live Chronicle panel with campaign state and the prior play/pause setting intact.
+The full viewer keeps **Download Chronicle** with the Chronicle summary rather than grouping it
+with Back in the navigation footer. On mobile, its sticky filter tray has a 44-pixel toggle that
+can collapse the search, category, generation, and order controls to leave more room for history;
+the same toggle restores them without changing the active filters.
 Recorded-choice cards use a generous inner inset to separate their date, title, selected option,
 outcome, and impact chips from the card border. The incremental prepend cache
 includes the active filter, so switching views cannot reuse markup from another category.

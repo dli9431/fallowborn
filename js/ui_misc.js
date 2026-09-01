@@ -3941,9 +3941,16 @@ window.FB = window.FB || {};
         });
     }
     $('btn-endturn').addEventListener('click', function () {
-      if (!UI.eventsBusy()) FB.game.togglePause();
+      const closedDrawer = SH.closeSelfDrawerForTimeControl &&
+        SH.closeSelfDrawerForTimeControl();
+      if (!UI.eventsBusy() && (!closedDrawer || FB.game.paused)) {
+        FB.game.togglePause();
+      }
     });
     $('btn-skip').addEventListener('click', function () {
+      if (SH.closeSelfDrawerForTimeControl) {
+        SH.closeSelfDrawerForTimeControl();
+      }
       if (!UI.eventsBusy() && !FB.game.fastForwarding) {
         FB.game.setPaused(true);
         FB.game.skipAhead();

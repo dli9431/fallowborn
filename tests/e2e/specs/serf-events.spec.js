@@ -2575,6 +2575,65 @@ test('flight freezes the canonical local confidant, discloses the named chance, 
     expect(result.friendOutcome).toContain(result.expectedFriendName);
   });
 
+test('serf flight chance falls for every living family member who escapes',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const flee = FB.eventById('flee_serfdom');
+      const ctx = { participants:{}, participantKinds:{} };
+      const loneChance = FB.namedChance(s, 'serf_flight', ctx);
+
+      const spouse = FB.makeCharacter(s, {
+        name:'Flight Spouse', sex:me.sex === 'm' ? 'f' : 'm',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 27, station:0, traitsN:0, dyn:me.dyn
+      });
+      me.spouseId = spouse.id;
+      spouse.spouseId = me.id;
+      const spouseChance = FB.namedChance(s, 'serf_flight', ctx);
+      function addChild(name, age) {
+        const child = FB.makeCharacter(s, {
+          name:name, sex:'f', culture:me.culture, religion:me.religion,
+          born:s.date.year - age, station:0, traitsN:0, dyn:me.dyn,
+          fatherId:me.sex === 'm' ? me.id : spouse.id,
+          motherId:me.sex === 'f' ? me.id : spouse.id
+        });
+        me.childrenIds.push(child.id);
+        spouse.childrenIds.push(child.id);
+        return child;
+      }
+      addChild('Older Flight Child', 9);
+      const younger = addChild('Younger Flight Child', 4);
+      if (FB.touchFamily) FB.touchFamily();
+      const covered = FB.freedomCoveredCharacterIds(s, []);
+      const familyChance = FB.namedChance(s, 'serf_flight', ctx);
+      const preview = FB.previewEventOption(s, flee, flee.options[0], ctx);
+      younger.dead = true;
+      const afterDeathChance = FB.namedChance(s, 'serf_flight', ctx);
+      return {
+        loneChance:loneChance,
+        spouseChance:spouseChance,
+        coveredCount:covered.length,
+        familyChance:familyChance,
+        previewBand:preview.chance.band,
+        afterDeathChance:afterDeathChance,
+        penalty:FBDATA.balance.serfFlightFamilyMemberPenalty,
+        minimum:FBDATA.balance.serfFlightMinimumChance
+      };
+    });
+
+    expect(result.loneChance).toBeCloseTo(0.5);
+    expect(result.spouseChance).toBeCloseTo(0.45);
+    expect(result.coveredCount).toBe(4);
+    expect(result.familyChance).toBeCloseTo(0.35);
+    expect(result.previewBand).toBe('risky');
+    expect(result.afterDeathChance).toBeCloseTo(0.4);
+    expect(result.penalty).toBe(0.05);
+    expect(result.minimum).toBe(0.1);
+  });
+
 test('exact participant effects and receipts match between manual and autoresolve and fail atomically when stale',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);

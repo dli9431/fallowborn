@@ -1269,6 +1269,7 @@ FBDATA.balance = {
   serfTenureTransitionCooldown:360, serfCommutedDutyGold:3,
   serfFlightFriendChance:0.65, serfFlightRivalChance:0.35,
   serfFlightUnaccompaniedChance:0.50,
+  serfFlightFamilyMemberPenalty:0.05, serfFlightMinimumChance:0.10,
   landConsolidationBonus: 0.10, landPlotMaxSettlement: 5,
   manorPlotRequirement: 5, manorPrestige: 150,
   baronyGold: 2500, baronyPrestige: 400, baronyOpinion: 60,
