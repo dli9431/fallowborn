@@ -174,3 +174,70 @@ test('a death-heavy realm rollover reuses one family snapshot',
       };
     })).toEqual({ manyDeaths:true, snapshots:1, kinReads:1 });
   });
+
+test('home pestilence mortality does not follow extended kin to another county',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-file',
+      'The yearly family-mortality check runs against the primary file target.');
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      FB.game.setPaused(true);
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const home = s.player.provinceId;
+      const away = FB.world.provs.find(function (province) {
+        return !province.wasteland && province.id !== home;
+      }).id;
+      const sibling = FB.makeCharacter(s, {
+        sex:'f', culture:me.culture, religion:me.religion,
+        born:s.date.year - 40, traits:[], traitsN:0, dyn:me.dyn,
+        fatherId:me.fatherId, motherId:me.motherId
+      });
+      const localNiece = FB.makeCharacter(s, {
+        sex:'f', culture:me.culture, religion:me.religion,
+        born:s.date.year - 30, traits:[], traitsN:0, dyn:me.dyn,
+        motherId:sibling.id
+      });
+      const remoteNiece = FB.makeCharacter(s, {
+        sex:'f', culture:me.culture, religion:me.religion,
+        born:s.date.year - 30, traits:[], traitsN:0, dyn:me.dyn,
+        motherId:sibling.id
+      });
+      localNiece.homeProvinceId = home;
+      remoteNiece.homeProvinceId = away;
+      sibling.childrenIds.push(localNiece.id, remoteNiece.id);
+      FB.touchFamily();
+
+      const originalChance = FB.chance;
+      s.player.flags.plague_here = 1;
+      s.date.season = 3;
+      s.date.day = 90;
+      FB.chance = function (chance) {
+        /* Age 30 has 0.8% base mortality. Only a resident receives the
+           pestilence's additional five percentage points. */
+        return Math.abs(chance - 0.058) < 0.0000001;
+      };
+      try {
+        FB.game.passDay();
+      } finally {
+        FB.chance = originalChance;
+      }
+      return {
+        localDead:localNiece.dead,
+        remoteDead:remoteNiece.dead,
+        localAtHome:FB.characterResidence(s, localNiece) === home,
+        remoteAtAway:FB.characterResidence(s, remoteNiece) === away,
+        localRelation:FB.kinOf(s).byId[localNiece.id],
+        remoteRelation:FB.kinOf(s).byId[remoteNiece.id]
+      };
+    })).toEqual({
+      localDead:true,
+      remoteDead:false,
+      localAtHome:true,
+      remoteAtAway:true,
+      localRelation:'Niece',
+      remoteRelation:'Niece'
+    });
+  });

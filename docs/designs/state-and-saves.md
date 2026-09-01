@@ -82,7 +82,10 @@ replacement. `player.serfNeighborConsequence` stores one shifted-quartering neig
 officer with creation/due turns and a queued bit. Malformed records fail closed. Promotion,
 relocation, tenure replacement, authority loss, or succession clears the applicable
 records; succession does not copy their Standing or identities to the heir. No save-wrapper
-version or migration is required.
+version or migration is required. Succession retains only the existing
+`player.fired.old_custom_stakes` marker from the otherwise life-local fired ledger, making
+the Old Custom a once-per-household landmark. Old saves already carrying that current-life
+marker gain the same protection without changing their serialized shape.
 
 `player.familyFreedom` is a bounded locale-neutral landmark: `first` records the first
 serf-to-free transition, and `firstLawful` is permitted only when `first` was flight.

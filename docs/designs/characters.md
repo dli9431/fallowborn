@@ -348,6 +348,14 @@ Paid care in the `child_fever` event follows the schooling ladder: the wise
 woman (3 gold, 60%), a physician (10, 75%), a renowned physician (30, 90%),
 beside free prayer (55%).
 
+**Local mortality conditions follow residence.** The `plague_here` flag describes
+pestilence in the protagonist's permanent home county. Its extra yearly mortality
+applies to another character only when `FB.characterResidence` places that person in
+the same county. Genuinely remote relatives and retained foreign courtiers therefore
+keep their ordinary mortality curve, while wider kin whose records resolve to the home
+county remain exposed. Residence is derived from existing character and world state, so
+older saves require no migration.
+
 **Standing earns its keep.** Every eligible counterpart has one player-facing Standing
 toward the current protagonist (−100…100). Ordinary characters retain the compatibility
 field `character.opinion`; new code reads and writes it through

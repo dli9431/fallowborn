@@ -605,7 +605,7 @@ test('authority confirmation preserves regional terms and one amendment changes 
     expect(result.cached).toBe(true);
   });
 
-test('succession preserves tenure and acknowledged coaching for the next household head',
+test('succession preserves tenure, coaching, and the household Old Custom marker',
   async function ({ page }, testInfo) {
     await startSerfFixture(page, testInfo, true);
     const result = await page.evaluate(function () {
@@ -620,6 +620,8 @@ test('succession preserves tenure and acknowledged coaching for the next househo
       s.player.flags.hint_serf_tenure = 1;
       s.player.flags.hint_serf_freedom_routes = 1;
       s.player.flags.hint_serf_first_duty = 1;
+      s.player.fired.old_custom_stakes = 1;
+      s.player.fired.old_custom_memory = 1;
       const child = FB.makeCharacter(s, {
         name:'Phase Six Heir', sex:'f', born:s.date.year - 18,
         fatherId:me.sex === 'm' ? me.id : null,
@@ -641,6 +643,8 @@ test('succession preserves tenure and acknowledged coaching for the next househo
         rankSeen:onboarding.rankRealmSeen,
         routesSeen:onboarding.freedomRoutesSeen,
         dutySeen:onboarding.firstDutySeen,
+        oldCustomRemembered:!!s.player.fired.old_custom_stakes,
+        firedAfterSuccession:Object.keys(s.player.fired).sort(),
         coachRepeated:FB.ui.maybeSerfTenureTip()
       };
     });
@@ -651,6 +655,8 @@ test('succession preserves tenure and acknowledged coaching for the next househo
       rankSeen:true,
       routesSeen:true,
       dutySeen:true,
+      oldCustomRemembered:true,
+      firedAfterSuccession:['old_custom_stakes'],
       coachRepeated:false
     });
   });

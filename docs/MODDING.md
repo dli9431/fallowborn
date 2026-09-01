@@ -1173,8 +1173,11 @@ distinction matters. `roleOpinionAbove/Below` is a compatibility key name; it te
 named character's player-facing Standing.
 
 `weight` (default 5) sets relative frequency; `once: true` fires once per life; `cooldown` is in
-seasons (a season lasts 90 in-game days — the engine converts). Random events land on 1–2
-random days per season (one extra in wartime); queued events (`queue`) fire the next day.
+seasons (a season lasts 90 in-game days — the engine converts). The shipped
+`old_custom_stakes` event is a deliberate campaign exception: succession retains that one
+fired marker so the household landmark cannot restart for every serf heir. This exception
+does not extend to mod events. Random events land on 1–2 random days per season (one extra in
+wartime); queued events (`queue`) fire the next day.
 Core code queues through `FB.queueEvent`, which snapshots `societalRole`, `profession`,
 `formerProfession`, and `locationId` into the JSON-safe event context for exact-value
 localization selectors and county targeting. Mods should use the effect-level `queue`

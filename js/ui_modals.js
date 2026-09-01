@@ -477,6 +477,7 @@ window.FB = window.FB || {};
       showEvent(ev, item.ctx || {});
       return true;
     }
+    const dismissedEventModal = eventOpen;
     eventOpen = false;
     $('eventmodal').classList.add('hidden');
     const openAuction = auctionOpenAfterEvents;
@@ -488,6 +489,14 @@ window.FB = window.FB || {};
       syncRulers:true,
       forcePromotionCheck:true
     });
+    /* A visible event is the interruption, not a new persistent pause state.
+       Resume after its final answer even when it was reached by fast-forward
+       or while the player had paused manually. Do this after mortal outcome
+       handling so an event that ends the current life remains paused on the
+       succession screen. Autoresolve-only batches never opened a modal and
+       therefore leave the caller's pause state alone. */
+    if (dismissedEventModal && FB.game && FB.game.setPaused && s && s.player &&
+        !s.player.dead) FB.game.setPaused(false);
     if (openAuction && FB.auctionOf && FB.auctionOf(s) &&
         s.player && !s.player.dead) {
       UI.showAuction();
@@ -845,7 +854,7 @@ window.FB = window.FB || {};
     }
     if (UI.hintDue && UI.hintDue('event-pauses')) {
       bodyHtml = '<p class="hint">' + esc(FB.T(
-        'Events pause the days until you choose an answer.')) + '</p>' + bodyHtml;
+        'Events pause the days until you choose an answer, then time resumes automatically.')) + '</p>' + bodyHtml;
     }
     $('ev-text').innerHTML = bodyHtml;
     FB.paintFaces($('ev-text'), s);
@@ -987,8 +996,9 @@ window.FB = window.FB || {};
     if (!receipt) return false;
     if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
     /* A daily pick normally contains one event, but callers and restored UI
-       state can still supply a batch. Once the player pauses, put the unread
-       tail back on the authoritative queue instead of opening it immediately. */
+       state can still supply a batch. If the event was reached while paused,
+       put the unread tail back on the authoritative queue. Closing this modal
+       then resumes time, and the tail remains available on later days. */
     if (FB.game && FB.game.paused && pendingEvents.length) {
       s.eventQueue = pendingEvents.concat(s.eventQueue || []);
       pendingEvents = [];
@@ -24424,7 +24434,7 @@ window.FB = window.FB || {};
     add('day-to-day', 'basics', FB.T('Day by day'),
       FB.T('Focuses continue; deeds happen once; time stops for choices.'),
       guideBody([
-        FB.T('A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose.'),
+        FB.T('A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose, then time resumes automatically.'),
         FB.T('In Deeds, border colors distinguish immediate actions from actions that open choices. Hover or focus an action for its details; on touch screens, use ?. Opening a choice does not commit the deed; confirm the final action to complete it.'),
         FB.T('Space plays or pauses time; F skips to the next happening. On touch screens the same controls are in the top bar.')
       ]), 'focus deed actions pause skip time keyboard mobile');

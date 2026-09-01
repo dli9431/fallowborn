@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.1';
+FB.VERSION = '1.166.2';
 FB.CHANGELOG = [
+  { v: '1.166.2', date: '2026-09-01', changes: [
+    'Events now resume time after their final choice, and the Old Custom remains a once-per-household landmark across succession.',
+    'Pestilence mortality now follows character residence, sparing relatives outside the affected county.'
+  ] },
   { v: '1.166.1', date: '2026-08-31', changes: [
     'Mobile Chronicle filters can collapse, Chronicle downloads stay with the history, long duty descriptions wrap, and time controls close the Self/Kin drawer.',
     'Serf flight becomes harder for each spouse or descendant escaping with the household.'
@@ -3971,14 +3975,25 @@ FB.CHANGELOG = [
         cq *= 1 - station * (FBDATA.balance.richChildMortalityBonus || 0);
         if (c.health < 8 && FB.chance(station * (FBDATA.balance.richChildHealthChance || 0))) c.health++;
       }
-      if (p.flags.plague_here) cq += 0.05;
+      /* plague_here describes the player's home county, not a family-wide
+         condition. Independent kin and retained courtiers use their
+         authoritative residence so a pestilence cannot follow them across
+         the map merely because their character record remains reachable. */
+      let residentHere;
+      if (p.flags.plague_here) {
+        residentHere = !FB.characterResidence ||
+          FB.characterResidence(s, c) === p.provinceId;
+        if (residentHere) cq += 0.05;
+      }
       cq -= FB.traitAgg(c).health + FB.itemBonus(s, 'health', c.id);
       if (maintainedHousehold[c.id]) cq -= standardMortality;
       if (medicalProtection && FB.isHouseholdCharacter(s, c.id)) {
         cq -= medicalProtection;
       }
       if (FB.marketMortalityPressure && FB.isHouseholdCharacter(s, c.id) &&
-          (!FB.characterResidence || FB.characterResidence(s, c) === p.provinceId)) {
+          (residentHere !== undefined ? residentHere :
+            (!FB.characterResidence ||
+              FB.characterResidence(s, c) === p.provinceId))) {
         cq += FB.marketMortalityPressure(s);
       }
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
@@ -4935,7 +4950,14 @@ FB.CHANGELOG = [
     if (FB.activateBishopricForPlayer) {
       FB.activateBishopricForPlayer(s, heir);
     }
-    p.fired = {}; p.cooldowns = {};
+    /* Most once-only events belong to one protagonist. The Old Custom is a
+       household landmark: once any head has faced it, succession must not
+       offer the same case to every later serf heir. Retaining this one fired
+       marker also upgrades compatible old saves whose current head has
+       already seen the opener, without adding a save migration. */
+    const householdFired = p.fired && p.fired.old_custom_stakes
+      ? { old_custom_stakes:1 } : {};
+    p.fired = householdFired; p.cooldowns = {};
     p.prestige = Math.round(p.prestige * 0.6);
     p.piety = Math.round(p.piety * 0.5);
     p.foreignPolicy = {};

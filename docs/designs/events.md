@@ -636,8 +636,10 @@ when they require a canonical friendship.
 
 **Lower-station stories have two paces.** The Old Custom landmark chain has a 4% opener
 roll per eligible random-event slot for an adult serf, then advances through high-weight
-stage flags so its five chapters unfold across later event slots. Its hearing uses four
-stat-specific formulas, with accumulated evidence and the player's situation modifying the case. The Mill's Due,
+stage flags so its five chapters unfold across later event slots. Its opener's fired marker
+is the one household-level exception to the per-life fired ledger and survives succession,
+so an interrupted or completed case is not offered afresh to every serf heir. Its hearing
+uses four stat-specific formulas, with accumulated evidence and the player's situation modifying the case. The Mill's Due,
 Master's Empty Bench, and Words Before Dawn are two-part stories whose second decision is
 queued immediately; they are once per life. Short lower-station incidents remain ordinary
 cooldown events. Chain flags are life-local and disappear at succession with the rest of

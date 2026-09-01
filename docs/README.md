@@ -180,8 +180,8 @@ Time passes **day by day** (90-day seasons, 360-day years).
    satisfaction by duel. Your heir chooses whether an old ruler's quarrel belongs to the house.
 3. Press **Space** (or the Play/Pause button) to set time flowing — days pass on their own
    (~3 per second) — and press it again to pause. **F** / the ▶▶ button skips straight to the
-   next happening. Events pause the days while they await your choice; they land on their own
-   schedule, and your choices in them shape your life.
+   next happening. Events pause the days while they await your choice, then time resumes
+   automatically; they land on their own schedule, and your choices in them shape your life.
 4. Marry and raise children — but mind your **station**: matches are weighed by rank, and the
    great houses bar their doors to suitors from far beneath them. Marrying up takes long
    courtship, renown, and luck (and pays a dowry to match); marrying down is easy, and noted.

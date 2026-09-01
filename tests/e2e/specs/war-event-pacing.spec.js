@@ -450,7 +450,7 @@ test('siege Chronicle progress keeps ledger precision but displays whole steps',
     expect(result.text).not.toMatch(/\d+\.\d+/);
   });
 
-test('pausing an open event defers an unread batch instead of opening it',
+test('dismissing a paused event resumes time and defers an unread batch',
   async function ({ page }) {
     await page.evaluate(function () {
       const s = FB.state;
@@ -474,7 +474,7 @@ test('pausing an open event defers an unread batch instead of opening it',
         queued:FB.state.eventQueue.map(function (item) { return item.id; })
       };
     });
-    expect(result.paused).toBe(true);
+    expect(result.paused).toBe(false);
     expect(result.queued).toEqual(['field_battle_lost']);
   });
 

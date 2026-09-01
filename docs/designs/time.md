@@ -123,7 +123,10 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 `FB.worldTick` + mortality. Days auto-advance on an adjustable interval (`G.SPEEDS` /
 `G.setSpeed`, +/- keys or menu → Settings) while unpaused (`G.paused` / `G.togglePause`); death, succession,
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
-modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
+modals/dialogs. A visible event is a temporary interruption: resolving its final modal
+automatically resumes time regardless of whether normal flow, fast-forward, or a manual pause
+reached it. An autoresolved batch opens no modal and preserves its caller's pause state.
+`G.skipAhead` fast-forwards until an event/season/death.
 Starting a fast-forward counts as letting the days flow for first-life guidance, even when
 the player has not previously used Play.
 It still executes the authoritative daily tick for every date, but invariant
