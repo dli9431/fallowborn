@@ -186,9 +186,7 @@ test('Daily Focus stays separate and desperate measures commits only after a cho
     const town = page.locator('[data-action-id="go_to_town"]');
     const poachRow = poach.locator('..');
     const townRow = town.locator('..');
-    const immediate = page.locator(
-      '[data-action-id][data-deed-flow="now"]:not([disabled])').first();
-    await expect(immediate).toBeVisible();
+    const immediate = page.locator('[data-action-id="seek_blessing"]');
     await expect(poach).toHaveAttribute('data-deed-flow', 'choices');
     await expect(poach).not.toContainText('Opens choices…');
     await expect(poachRow.locator('.deed-details'))
@@ -199,10 +197,12 @@ test('Daily Focus stays separate and desperate measures commits only after a cho
     await expect(town).toHaveAttribute('data-deed-flow', 'choices');
     await expect(town).not.toContainText('Opens choices…');
     await expect(townRow.locator('.deed-details')).toContainText('Opens choices…');
+    await page.locator('[data-action-group="faith"]').click();
+    await expect(immediate).toBeVisible();
     const borders = await page.evaluate(function () {
       return {
         immediate:getComputedStyle(document.querySelector(
-          '[data-action-id][data-deed-flow="now"]:not([disabled])')).borderColor,
+          '[data-action-id="seek_blessing"]')).borderColor,
         choices:getComputedStyle(document.querySelector(
           '[data-action-id="poach"]')).borderColor
       };
@@ -884,7 +884,7 @@ test('unfinished work guidance identifies an adult collateral successor',
     expect(result.steps.map(function (step) { return step.label; })).toEqual([
       'Continue or take up a livelihood',
       'Start or continue a household enterprise',
-      'Buy your first land plot'
+      'Petition or buy freedom, then acquire your first land plot'
     ]);
     await expect(page.locator('.coachmark')).toContainText(
       'chronicle continues through a relative');
@@ -948,14 +948,11 @@ test('tab nudges point at the next unfinished lesson',
     await expect(deedsTab).toHaveClass(/nudge/);
     await expect(kinTab).not.toHaveClass(/nudge/);
 
-    // a real deed clears the Deeds nudge
+    // The shared deed-completion boundary clears the Deeds nudge. Full deed
+    // flows are covered above; keep this nudge test free of event modals.
     await page.evaluate(function () {
       const s = FB.state;
-      const runnable = FB.listInstants(s).filter(function (item) {
-        const st = FB.instantStatus(s, item.a.id);
-        return st.shown && st.can && !item.a.noConsume;
-      })[0];
-      FB.runInstant(s, runnable.a.id);
+      FB.noteDeedCompleted(s, 'go_to_town');
       FB.ui.refresh();
     });
     await waitForUiRefresh(page);

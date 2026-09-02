@@ -774,6 +774,7 @@ test('lords notice queues one exact non-random manumission offer and expiry hono
       FB.adjustStanding(s, target, 20 - FB.standingOf(s, target),
         'test:expiry');
       const expiring = FB.createFreedomOffer(s, 'petition');
+      p.gold = expiring.price;
       s.turn = expiring.expiryTurn;
       const expiryTurnReady = FB.freedomOfferAcceptanceStatus(s).ready;
       s.turn = expiring.expiryTurn + 1;
