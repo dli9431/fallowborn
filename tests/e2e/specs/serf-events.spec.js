@@ -2314,10 +2314,10 @@ test('Old Custom keeps one cast, bridges an officer change explicitly, and clear
       };
     });
 
-    expect(result.openerChance).toBe(0.04);
+    expect(result.openerChance).toBe(0.001);
     expect(result.openerWeight).toBe(15);
     expect(result.openerOnce).toBe(true);
-    expect(result.endingChance).toBe(0.2);
+    expect(result.endingChance).toBeUndefined();
     expect(result.endingWeight).toBe(80);
     expect(result.sameCast).toBe(true);
     expect(result.tenureCast).toMatchObject({

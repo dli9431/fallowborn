@@ -2258,8 +2258,10 @@ Each `player.landPlots` entry is `{provinceId, settlement}`. Its economy is tune
 `balance.landPlotCost`, `landPlotYield`, `landConsolidationBonus`, and
 `landPlotMaxSettlement`; `manorPlotRequirement` plots in one settlement plus
 `manorPrestige` standing allow the household to declare that holding a manor. Land income
-is inherited and appears in the seasonal ledger, but plots are not generic loan
-collateral.
+is inherited and appears in the seasonal ledger. Every plot at one settlement is offered
+as a single pledged-loan collateral group; the contract freezes that group's count and
+default removes up to that many matching plots. If fewer than `manorPlotRequirement`
+remain beneath the declared manor, the manor and gentry station are lost.
 
 ## Maintained household standards
 
@@ -2835,8 +2837,8 @@ player-originated loan families, passive trade partnerships, and self-founded ve
 ```json
 { "finance": {
   "pledge": {
-    "maxPrincipal": 40, "markup": 0.25, "termSeasons": 4,
-    "collateralRatio": 0.60, "lender": "moneychanger",
+    "maxPrincipal": 400, "markup": 0.25, "termSeasons": 4,
+    "collateralRatio": 0.70, "lender": "moneychanger",
     "defaultKind": "collateral"
   },
   "tradePartnership": {
@@ -2878,6 +2880,9 @@ player-originated loan families, passive trade partnerships, and self-founded ve
 - `defaultKind` is `collateral` (take the named pledge) or `revenue` (assign the
   configured share of regular revenue until paid).
 - `collateralRatio` caps a pledged principal against the asset's base value.
+- Core pledged collateral comprises unassigned positive-value items, positive-cost
+  non-event holdings without `pledge:false`, and each complete settlement group in
+  `player.landPlots`. Maintained household standards and enterprises are excluded.
 - A trade partnership consumes `risk` once at maturity; `profitShare` sizes the
   profitable return. The resolved roll and payout are stored in the save.
 - `tradeVenture.stakes`, `activeLimit`, and `minDevelopment` control formation.

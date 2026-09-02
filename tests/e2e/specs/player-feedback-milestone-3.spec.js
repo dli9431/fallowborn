@@ -99,6 +99,46 @@ test('a new founder tree includes generated kin with bound-status flavor',
     }
   });
 
+test('family tree retains the founder\'s starting family after succession',
+  async function ({ page }) {
+    const family = await page.evaluate(function () {
+      const s = FB.state;
+      const founder = s.chars[s.player.charId];
+      const parentIds = FB.parentsOf(s, founder).map(function (c) {
+        return c.id;
+      });
+      const siblingIds = FB.siblingsOf(s, founder).map(function (c) {
+        return c.id;
+      });
+      const childOptions = {
+        name:'Second Head', sex:'f', born:s.date.year - 20,
+        culture:founder.culture, religion:founder.religion,
+        dyn:founder.dyn, traitsN:0
+      };
+      childOptions[founder.sex === 'f' ? 'motherId' : 'fatherId'] = founder.id;
+      const child = FB.makeCharacter(s, childOptions);
+      founder.childrenIds.push(child.id);
+      FB.touchFamily();
+      const succeeded = FB.game.succeedTo(child.id, { livingAbdication:true });
+      FB.ui.showFamilyTree();
+      return {
+        succeeded:succeeded, childId:child.id,
+        parentIds:parentIds, siblingIds:siblingIds
+      };
+    });
+
+    expect(family.succeeded).toBe(true);
+    expect(family.parentIds.length).toBeGreaterThan(0);
+    expect(family.siblingIds.length).toBeGreaterThan(0);
+    const primary = page.locator('.family-tree-primary');
+    await expect(primary.locator(
+      '.ftchip[data-cid="' + family.childId + '"]')).toHaveCount(1);
+    for (const id of family.parentIds.concat(family.siblingIds)) {
+      await expect(primary.locator(
+        '.ftchip[data-cid="' + id + '"]')).toHaveCount(1);
+    }
+  });
+
 test('semantic shortcuts reject conflicts, explain blocks, persist, and follow promotion',
   async function ({ page }) {
     await page.evaluate(function () { FB.ui.showShortcutSettings(); });

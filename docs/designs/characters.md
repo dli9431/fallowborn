@@ -750,9 +750,10 @@ the existing remote-ownership idle behavior.
 **The family tree is a bounded navigator, not an unbounded genealogy dump.** New
 campaigns record `player.houseFounderId` as the first playable head; old saves derive a
 jump target from the earliest protagonist legend or current head without a format
-migration. During the founder's own life, the primary tree begins from up to two recorded
-ancestor steps so a generated starting family includes the founder's parents and siblings
-instead of beginning at the downward-only founder node. The modal still renders at most
+migration. The primary tree begins from up to two recorded ancestor steps above the
+founder/current-head connection so a generated starting family includes the founder's
+parents and siblings and retains those branches after succession instead of beginning at
+the downward-only founder node. The modal still renders at most
 four descendant steps from its nearby root,
 plus bounded maternal and stepfamily branches. Search indexes that rendered scope,
 branch controls hide or reveal biological descendant subtrees without rewriting

@@ -300,12 +300,16 @@ Enterprises remain distinct from tier-3+ buildings. An enterprise belongs to the
 even if it moves or rises in station; a building belongs to its county and follows
 political conquest.
 
-Eligible purchased holdings and carried items may secure a pledged loan. Event-only
-property such as Rights of Common is never offered as collateral. A pledge is reserved
-until repayment or default; a pledged treasure cannot be sold or gifted. Default removes
-the named asset in settlement, while every future obligation and pledge passes to an heir.
-Productive enterprises are not seized by the generic pledge contract. Trading Houses
-instead open larger active trade-partnership stakes in the Finance sheet.
+Eligible purchased holdings, unassigned carried items, and a complete group of family
+land plots at one settlement may secure a pledged loan. Event-only property such as
+Rights of Common is never offered as collateral. A pledge is reserved until repayment
+or default; a pledged treasure cannot be sold or gifted, and a pledged land group cannot
+secure a second loan. Default removes the named asset or the signed number of plots in
+settlement. If the remaining land can no longer support its manor, the manor and gentry
+station are lost. Every future obligation and pledge passes to an heir. Productive
+enterprises and maintained household standards are not seized by the generic pledge
+contract. Trading Houses instead open larger active trade-partnership stakes in the
+Finance sheet.
 
 Holdings and land plots are not indestructible. A defaulted loan left past
 `balance.distraintGraceDays` exposes them to the lord's writ of distraint (see

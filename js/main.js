@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.2';
+FB.VERSION = '1.166.3';
 FB.CHANGELOG = [
+  { v: '1.166.3', date: '2026-09-02', changes: [
+    'Pledged loans now accept family land and more valuable property, with land defaults able to cost a supporting manor and gentry station.',
+    'Serf freedom is rarer and costlier; family trees retain founder kin after succession, soldier work choices reflect professional training, and frontier settlement requires bordering empty land.'
+  ] },
   { v: '1.166.2', date: '2026-09-01', changes: [
     'Events now resume time after their final choice, and the Old Custom remains a once-per-household landmark across succession.',
     'Pestilence mortality now follows character residence, sparing relatives outside the affected county.'

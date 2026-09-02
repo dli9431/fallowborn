@@ -12221,6 +12221,26 @@ window.FB = window.FB || {};
 
   function financeAssetName(s, collateral) {
     if (!collateral) return FB.T('None');
+    if (collateral.kind === 'land') {
+      const settlements = FB.settlementsOf
+        ? FB.settlementsOf(s, collateral.provinceId) : [];
+      const site = settlements[collateral.settlement];
+      const province = FB.world && FB.world.byId
+        ? FB.world.byId[collateral.provinceId] : null;
+      const settlement = site ? site.name :
+        (province ? province.name : collateral.provinceId);
+      const count = Math.max(1, Math.floor(Number(collateral.count) || 1));
+      return FB.renderMessage(FB.msg('fx.ui.pledged_family_land', {
+        forms:{
+          select:'plural', param:'count', cases:{
+            one:'One land plot at {settlement}',
+            other:'{count} land plots at {settlement}'
+          }
+        }
+      }, { count:count, settlement:settlement }), {
+        state:s, viewer:s.player.charId
+      });
+    }
     if (collateral.kind === 'item' && FB.resolveItem) {
       const item = FB.resolveItem(s, collateral.id);
       return item ? item.def.icon + ' ' + FB.itemName(s, collateral.id) : collateral.id;
@@ -12233,6 +12253,12 @@ window.FB = window.FB || {};
   }
 
   function financeDefaultText(s, contract) {
+    if (contract.defaultKind === 'collateral' && contract.collateral &&
+        contract.collateral.kind === 'land') {
+      return FB.T('{asset} is taken. If that land supports the family manor, the manor and gentry station may also be lost. Prestige falls, and lenders refuse the household for four seasons.', {
+        asset:financeAssetName(s, contract.collateral)
+      });
+    }
     if (contract.defaultKind === 'collateral' && contract.collateral) {
       return FB.T('{asset} is taken, prestige falls, and lenders refuse the household for four seasons.', {
         asset:financeAssetName(s, contract.collateral)
@@ -12380,7 +12406,7 @@ window.FB = window.FB || {};
       }))) +
       kv('Defaults remembered', esc(e.defaults)) +
       '<p class="hint">' + esc(FB.T(
-        'Credit uses reliable income, eligible collateral, standing allowance, and current debt.')) +
+        'Credit uses reliable income, eligible collateral, standing allowance, and current debt. Pledged credit can use unassigned treasures, eligible permanent holdings, or a complete group of family land plots. Maintained household standards are expenses and cannot be pledged.')) +
       '</p></div>';
 
     h += panelh('Loans');

@@ -80,6 +80,16 @@ fees of current schooling arrangements. The same components are itemized by
 costs, so the gold sheet, Finance net, credit capacity, and prudent building automation
 share one result.
 
+A pledged loan may be secured by one unassigned treasure, one eligible permanent
+holding, or every family land plot at one settlement. Land is valued as a group at
+the base plot price, so an established freehold or manor can support materially more
+credit than a small household object. The pledged principal is capped at 70% of that
+asset value and 400 gold, while capacity counts 60% of collateral value alongside
+reliable income, standing, and existing debt. The exact plot count is frozen when the
+contract is signed: later purchases are not silently added to the pledge. Maintained
+household standards remain recurring expenses rather than saleable property and cannot
+be pledged; productive enterprises retain their separate contract and staffing rules.
+
 Landed income keeps one calculation order in `FB.playerTax` and its displayed mirror.
 Each county's tax base (`countyTaxBase`) combines its base development (`dev * taxPerDev`),
 its active settlements from `FB.settlementsOf` (Villages 0.75g, Towns 2.0g, Cities 4.5g,
@@ -95,8 +105,10 @@ reputation.
 Loans mature as lump sums at season boundaries. An affordable maturity repays
 automatically. The first miss adds the signed 10% face penalty and grants two
 seasons; the second enforces the disclosed default. Pledged property is taken
-in settlement. Merchant and landed defaults assign one quarter of regular
-revenue until the remaining obligation is cleared. At most two loans may be
+in settlement. If pledged land no longer leaves enough plots beneath the family manor,
+the manor is forfeited and a gentry household falls to freeholder. Merchant and landed
+defaults assign one quarter of regular revenue until the remaining obligation is cleared.
+At most two loans may be
 open, no loan may begin during a revenue default, every default closes the
 credit market to the household for four seasons, and pledged treasures cannot
 be sold or gifted. Death dues are assessed first; mature debt then settles if
@@ -110,6 +122,11 @@ sovereign debasement and recoinage. These gates are checked when offers/actions 
 enumerated; an already signed contract remains enforceable if sovereignty later changes.
 Self-founded trade ventures are a household action for adult freeholders and gentry and
 do not require sea-loans technology.
+
+Technology impact: `expanded_pledged_collateral` is `none`. Land and durable household
+property broaden the security accepted by the already-gated pledged-loan form rather
+than creating a separately gateable capability; the contract still requires
+Standardized Coinage.
 Finance and trade scalar technology bonuses are capped by `FBDATA.techCaps`. The finance
 bonus multiplies computed credit capacity before outstanding debt is subtracted; the
 trade bonus multiplies staffed merchant and craft enterprise yield.

@@ -1127,7 +1127,7 @@ FBDATA.auctionLotTypes = {
    appropriate complete phrases can be selected without putting grammar here. */
 FBDATA.finance = {
   pledge: {
-    maxPrincipal:40, markup:0.25, termSeasons:4, collateralRatio:0.60,
+    maxPrincipal:400, markup:0.25, termSeasons:4, collateralRatio:0.70,
     lender:'moneychanger', defaultKind:'collateral', requiresTech:'standardized_coinage'
   },
   merchant: {

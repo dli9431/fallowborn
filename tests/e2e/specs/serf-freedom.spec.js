@@ -301,37 +301,37 @@ test('freedom prices the living family and freezes that family in negotiated ter
       price:230
     });
     expect(result.initial).toEqual({
-      headCost:100,
+      headCost:250,
       spouseCount:1,
-      spouseUnitCost:50,
+      spouseUnitCost:125,
       descendantCount:3,
-      descendantUnitCost:25,
+      descendantUnitCost:63,
       familySize:5,
-      price:225
+      price:564
     });
     expect(result.saved).toEqual({
-      baseCost:225,
-      price:169,
-      headCost:100,
+      baseCost:564,
+      price:423,
+      headCost:250,
       spouseCount:1,
       descendantCount:3,
       familySize:5
     });
     expect(result.current).toEqual({
-      headCost:100,
+      headCost:250,
       spouseCount:1,
-      spouseUnitCost:50,
+      spouseUnitCost:125,
       descendantCount:4,
-      descendantUnitCost:25,
+      descendantUnitCost:63,
       familySize:6,
-      price:250
+      price:627
     });
     expect(result.viewPricing).toEqual(result.initial);
     expect(result.malformedValid).toBe(false);
-    expect(result.blocked).toBe('Requires 250 gold; you have 249 gold.');
+    expect(result.blocked).toBe('Requires 627 gold; you have 626 gold.');
     expect(result.resolved).toBe(true);
-    expect(result.charged).toBe(250);
-    expect(result.recordedPrice).toBe(250);
+    expect(result.charged).toBe(627);
+    expect(result.recordedPrice).toBe(627);
   });
 
 test('freedom is personal and an unmanumitted collateral heir returns to serfdom',
@@ -411,7 +411,7 @@ test('freedom is personal and an unmanumitted collateral heir returns to serfdom
     expect(result.afterFreedom.selectedUnfree).toBe(false);
     expect(result.afterFreedom.unselectedUnfree).toBe(true);
     expect(result.afterFreedom.relativeCount).toBe(1);
-    expect(result.afterFreedom.relativeCost).toBe(50);
+    expect(result.afterFreedom.relativeCost).toBe(125);
     expect(result.afterFreedom.coversHead).toBe(true);
     expect(result.afterFreedom.coversSelected).toBe(true);
     expect(result.afterFreedom.coversParent).toBe(false);
@@ -545,14 +545,14 @@ test('purchase uses the shared resolver once while a generic rank change creates
     expect(result.resolved).toBe(true);
     expect(result.replay).toBe(false);
     expect(result.tier).toBe(1);
-    expect(result.goldDelta).toBe(-100);
+    expect(result.goldDelta).toBe(-250);
     expect(result.prestigeDelta).toBe(15);
     expect(result.pietyDelta).toBe(5);
     expect(result.rngStable).toBe(true);
     expect(result.tenureStatus).toBe('closed');
     expect(result.tenureReason).toBe('purchase');
     expect(result.history.first.route).toBe('purchase');
-    expect(result.history.first.price).toBe(100);
+    expect(result.history.first.price).toBe(250);
     expect(result.chronicle).toEqual(['news.freedom.purchase']);
   });
 
@@ -618,11 +618,11 @@ test('paid final service survives succession and completes on its exact turn wit
 
     expect(result.serviceStarted).toBe(true);
     expect(result.quoteFamily).toEqual({
-      baseCost:125,
+      baseCost:313,
       descendantCount:1,
       familySize:2
     });
-    expect(result.quotedPrice).toBe(63);
+    expect(result.quotedPrice).toBe(157);
     expect(result.paid).toBe(result.quotedPrice);
     expect(result.acceptanceRngStable).toBe(true);
     expect(result.inherited.status).toBe('service');
@@ -648,7 +648,7 @@ test('offer acceptance revalidates every saved authority before mutation and spe
       const target = { kind:'character', id:lord.id };
       FB.adjustStanding(s, target, 20 - FB.standingOf(s, target),
         'test:acceptance_validation');
-      p.gold = 200;
+      p.gold = 500;
       const offer = FB.createFreedomOffer(s, 'petition');
       const originalTurn = s.turn;
       function snapshot() {
@@ -693,7 +693,7 @@ test('offer acceptance revalidates every saved authority before mutation and spe
             'test:standing_restore');
         }),
         gold:blocked(function () { p.gold = offer.price - 1; },
-          function () { p.gold = 200; }),
+          function () { p.gold = 500; }),
         term:blocked(function () { offer.serviceDays++; },
           function () { offer.serviceDays--; }),
         expiry:blocked(function () { s.turn = offer.expiryTurn + 1; },
@@ -718,7 +718,7 @@ test('offer acceptance revalidates every saved authority before mutation and spe
     expect(result.accepted).toBe(true);
     expect(result.turnDelta).toBe(1);
     expect(result.tier).toBe(1);
-    expect(result.recordedPrice).toBe(100);
+    expect(result.recordedPrice).toBe(250);
   });
 
 test('lords notice queues one exact non-random manumission offer and expiry honors cooldown boundaries',
@@ -803,7 +803,7 @@ test('lords notice queues one exact non-random manumission offer and expiry hono
       };
     });
 
-    expect(result.noticeChance).toBe(0.2);
+    expect(result.noticeChance).toBe(0.001);
     expect(result.offered.source).toBe('lords_notice');
     expect(result.offered.termId).toBe('cash_favored');
     expect(result.queueFirst).toBe(1);
@@ -815,12 +815,48 @@ test('lords notice queues one exact non-random manumission offer and expiry hono
     expect(result.stale.ready).toBe(false);
     expect(result.stale.reason).toContain('no longer holds authority');
     expect(result.accepted).toBe(true);
-    expect(result.acceptedCharge).toBe(75);
+    expect(result.acceptedCharge).toBe(188);
     expect(result.firstRoute).toBe('manumission');
     expect(result.expiryTurnReady).toBe(true);
     expect(result.expiredStatus).toBe('expired');
     expect(result.beforeCooldown).toBe(false);
     expect(result.atCooldown.status).toBe('offered');
+  });
+
+test('random freedom openings provide about one combined annual candidate opportunity',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const notice = FB.eventById('lords_notice');
+      const flight = FB.eventById('flee_serfdom');
+      const oldCustom = FB.eventById('old_custom_stakes');
+      const conclusion = FB.eventById('old_custom_end');
+      function annualOpportunity(routeChance) {
+        const noOpportunityPerSlot =
+          (1 - oldCustom.trigger.chance) * (1 - routeChance);
+        const noOpportunityPerSeason = noOpportunityPerSlot *
+          (0.7 + 0.3 * noOpportunityPerSlot);
+        return 1 - Math.pow(noOpportunityPerSeason, 4);
+      }
+      return {
+        notice:notice.trigger.chance,
+        flight:flight.trigger.chance,
+        oldCustom:oldCustom.trigger.chance,
+        conclusion:conclusion.trigger.chance,
+        positiveStandingAnnual:annualOpportunity(notice.trigger.chance),
+        negativeStandingAnnual:annualOpportunity(flight.trigger.chance),
+        noticeThreshold:notice.trigger.roleOpinionAbove.value,
+        flightThreshold:flight.trigger.roleOpinionBelow.value
+      };
+    });
+
+    expect(result.notice).toBe(0.001);
+    expect(result.flight).toBe(0.001);
+    expect(result.oldCustom).toBe(0.001);
+    expect(result.conclusion).toBeUndefined();
+    expect(result.noticeThreshold).toBe(25);
+    expect(result.flightThreshold).toBe(-20);
+    expect(result.positiveStandingAnnual).toBeCloseTo(0.01035, 5);
+    expect(result.negativeStandingAnnual).toBeCloseTo(0.01035, 5);
   });
 
 test('story routes preflight atomically, record flight origin, and leave no bare freedom tier effects',
@@ -922,7 +958,7 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
       const target = { kind:'character', id:lord.id };
       FB.adjustStanding(s, target, 40 - FB.standingOf(s, target),
         'test:ui');
-      p.gold = 200;
+      p.gold = 1000;
       const offer = FB.createFreedomOffer(s, 'petition');
       const serialized = FB.save.serialize();
       const parsed = JSON.parse(serialized);
@@ -940,11 +976,11 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     expect(record.restored).toEqual(record.offer);
     await expect(page.locator('[data-freedom-routes]')).toBeVisible();
     await expect(page.locator('[data-freedom-family-price]'))
-      .toContainText('spouse shares 1 × 50');
+      .toContainText('spouse shares 1 × 125');
     await expect(page.locator('[data-freedom-offer-price]'))
-      .toContainText('113');
+      .toContainText('282');
     await expect(page.locator('[data-freedom-offer-family-price]'))
-      .toContainText('head 100');
+      .toContainText('head 250');
     await expect(page.locator('[data-freedom-offer-service]'))
       .toContainText('none');
     await expect(page.locator('[data-freedom-offer-expiry]')).toBeVisible();
@@ -953,7 +989,7 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     await expect(page.getByRole('heading', { name:'Terms of freedom' }))
       .toBeVisible();
     await expect(page.locator('[data-freedom-offer-family-price]'))
-      .toContainText('spouse shares 1 × 50');
+      .toContainText('spouse shares 1 × 125');
     await expect(page.locator('#freedom-offer-accept')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('heading', { name:'Station & home' }))

@@ -529,6 +529,54 @@ test('noble settle_waste keeps its costs and political result via the helper',
     expect(result.chronicle).toBe(true);
   });
 
+test('settle_waste is unavailable without bordering wasteland',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      state.player.tier = 4;
+      state.player.gold = 1000;
+      state.player.prestige = 200;
+      let gateway = null;
+      for (const waste of FB.world.provs) {
+        if (!waste.wasteland) continue;
+        const neighbors = Object.keys(FB.world.adj[waste.id] || {});
+        for (const pid of neighbors) {
+          const province = FB.world.byId[pid];
+          if (province && !province.wasteland) {
+            gateway = pid;
+            break;
+          }
+        }
+        if (gateway) break;
+      }
+      if (!gateway) return { setup:false };
+      state.player.provs = [gateway];
+      const ready = FB.instantStatus(state, 'settle_waste');
+      const candidates = FB.wastelandCandidates(state);
+      for (const pid of candidates) FB.world.byId[pid].wasteland = false;
+      const blocked = FB.instantStatus(state, 'settle_waste');
+      return {
+        setup:true,
+        candidateCount:candidates.length,
+        ready:{ shown:ready.shown, can:ready.can },
+        blocked:{
+          shown:blocked.shown,
+          can:blocked.can,
+          reason:blocked.reason
+        }
+      };
+    });
+
+    expect(result.setup).toBe(true);
+    expect(result.candidateCount).toBeGreaterThan(0);
+    expect(result.ready).toEqual({ shown:true, can:true });
+    expect(result.blocked).toEqual({
+      shown:true,
+      can:false,
+      reason:'No empty land borders your demesne.'
+    });
+  });
+
 test('the frontier technology impact review passes the validator',
   async function ({ page }) {
     const result = await page.evaluate(function () {

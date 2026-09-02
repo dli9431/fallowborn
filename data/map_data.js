@@ -1261,7 +1261,7 @@ FBDATA.currency = {
 /* Game balance knobs — modders welcome */
 FBDATA.balance = {
   startYear: 867, startSeason: 0, startAge: 16,
-  freedomCost: 100, freedomSpouseFactor: 0.50,
+  freedomCost: 250, freedomSpouseFactor: 0.50,
   freedomDescendantFactor: 0.25, freedomRelativeFactor: 0.50,
   landPlotCost: 120, landPlotYield: 0.6,
   serfAdvocacyStanding:40, serfAdvocacyBonus:10,
@@ -1596,7 +1596,7 @@ FBDATA.balance = {
   priceMin: 0.5, priceMax: 3,
   financeMaxLoans: 2, financeMaxInvestments: 3,
   financeUnsecuredSeasons: 2, financeSecuredSeasons: 4,
-  financeCollateralRatio: 0.35, financePrestigeMax: 25,
+  financeCollateralRatio: 0.60, financePrestigeMax: 25,
   financeArrearsSeasons: 2, financeArrearsPenalty: 0.10,
   financeDefaultPrestige: 15, financeDefaultBanSeasons: 4, financeRevenueShare: 0.25,
   financeDebaseYears: 4, financeDebasePressure: 0.06,

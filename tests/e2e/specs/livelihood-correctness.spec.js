@@ -101,6 +101,72 @@ test('archives and restores complete career progress without another fee',
     });
   });
 
+test('levy service and professional Soldiering offer distinct arms work',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const me = state.chars[state.player.charId];
+      const shown = function () {
+        return {
+          militia:FB.focusStatus(state, 'militia').shown,
+          drill:FB.focusStatus(state, 'drill').shown,
+          guard:FB.focusStatus(state, 'stand_guard').shown,
+          train:FB.focusStatus(state, 'train_arms').shown
+        };
+      };
+      me.sex = 'm';
+      me.born = state.date.year - 25;
+      state.player.tier = 1;
+      me.career = {
+        profession:'farmer', rank:'journeyman', experience:4,
+        startedYear:state.date.year - 4, guildRank:'none', guildStanding:0,
+        chosen:true
+      };
+      state.player.professionBack = 'farmer';
+      state.player.profession = 'soldier';
+      state.player.flags.on_campaign = 1;
+      const temporaryLevy = shown();
+      temporaryLevy.defaultFocus = FB.defaultFocus(state);
+
+      delete state.player.professionBack;
+      delete state.player.flags.on_campaign;
+      me.career = {
+        profession:'soldier', rank:'journeyman', experience:4,
+        startedYear:state.date.year - 4, guildRank:'none', guildStanding:0,
+        chosen:true
+      };
+      state.player.profession = 'soldier';
+      const professional = shown();
+      professional.defaultFocus = FB.defaultFocus(state);
+
+      state.player.tier = 2;
+      const professionalGentry = shown();
+      state.player.tier = 3;
+      const landedFormerSoldier = shown();
+      return {
+        temporaryLevy:temporaryLevy,
+        professional:professional,
+        professionalGentry:professionalGentry,
+        landedFormerSoldier:landedFormerSoldier
+      };
+    });
+
+    expect(result.temporaryLevy).toEqual({
+      militia:true, drill:false, guard:false, train:false,
+      defaultFocus:'militia'
+    });
+    expect(result.professional).toEqual({
+      militia:false, drill:true, guard:true, train:false,
+      defaultFocus:'drill'
+    });
+    expect(result.professionalGentry).toEqual({
+      militia:false, drill:true, guard:true, train:false
+    });
+    expect(result.landedFormerSoldier).toEqual({
+      militia:false, drill:false, guard:false, train:true
+    });
+  });
+
 test('renews Guild Standing only for active vocational work and caps it',
   async function ({ page }) {
     const result = await page.evaluate(function () {

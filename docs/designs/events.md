@@ -92,12 +92,14 @@ freezes an optional canonical friend or rival and starts from the disclosed 65%,
 50% named chance without generating a helper. Each additional living spouse or descendant
 who receives freedom in the flight subtracts five percentage points, to a 10% floor. Dead
 relatives and collateral parents or siblings who do not join that flight add no penalty.
-The final **What Is Remembered** chapter applies a `0.20` random-trigger gate after the
-case resolves. This is one fifth of its former always-eligible frequency; its high selection
-weight remains so a successful gate still brings the pending conclusion forward.
-The similarly powerful **The Lord’s Eye** freedom offer and **Raised Up** battlefield
-promotion also use `0.20` gates, keeping exceptional rises from dominating the random
-event pool once their prerequisites are satisfied.
+The random freedom openings **Stakes in the Common**, **The Lord’s Eye**, and **The Open
+Road** each use a `0.001` per-slot gate. Old Custom can be eligible alongside exactly one
+of the mutually exclusive positive- or negative-Standing routes; across the ordinary four
+seasonal slots and 30% chance of a second slot each season, those two gates provide about
+a 1.03% combined annual candidate opportunity before weighted competition. Once the Old
+Custom case has resolved, **What Is Remembered** has no second random gate: it concludes
+the case promptly rather than pretending that delayed presentation makes the underlying
+opportunity rarer. **Raised Up** retains its separate wartime promotion pacing.
 
 Exact recurring local participants have technology impact **none**. Remembering who
 testified, enforced a duty, or shared a village quarrel is baseline social continuity, not
@@ -131,6 +133,13 @@ direct purchase uses the selected living family at confirmation. The same exact 
 receive personal Freeholder station when the shared resolver closes the household tenure.
 An omitted relative can later receive a separately priced personal manumission from their
 character sheet.
+
+The core `freedomCost` is 250 gold. Against the ordinary serf-toil midpoint of two gold
+per season, the head share alone represents just over 31 years of gross work before living
+costs and customary burdens. A spouse and two living descendants raise the undiscounted
+family price to 501 gold. Negotiated Standing terms still reduce the snapshotted family
+total, so patient relationship-building remains a meaningful alternative to buying the
+household out immediately.
 
 This is a broad playable abstraction, not a claim of one European tariff. Girona's
 recorded custom usually valued redemption against the person's goods, and its account
@@ -634,7 +643,7 @@ readiness trigger and formalizes that exact person in both visible and autoresol
 it does not add a second lump of Standing. Other events remain gated by `hasRole:'friend'`
 when they require a canonical friendship.
 
-**Lower-station stories have two paces.** The Old Custom landmark chain has a 4% opener
+**Lower-station stories have two paces.** The Old Custom landmark chain has a 0.1% opener
 roll per eligible random-event slot for an adult serf, then advances through high-weight
 stage flags so its five chapters unfold across later event slots. Its opener's fired marker
 is the one household-level exception to the per-life fired ledger and survives succession,

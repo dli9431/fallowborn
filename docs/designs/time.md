@@ -113,7 +113,10 @@ Focus-based skill training applies the shared
 focus outcomes and non-focus skill gains are unaffected. Martial *training* foci (`militia`, `drill`,
 `stand_guard`, `train_arms`) are male-only; women instead get `keep_house` (tier ≤ 2,
 household thrift into coin) and `courtly_graces` (tier ≥ 2, Standing with the liege and courtly polish), and
-`FB.defaultFocus` maps female characters to them. The one exception: while a woman is *afield*
+`FB.defaultFocus` maps female characters to them. Generic and vocational arms work are
+mutually exclusive: temporary levy service retains `militia`; an active Soldiering career
+at tiers 1–2 substitutes `drill` and `stand_guard`; and at landed tier 3+ the former career
+becomes biography and `train_arms` returns. The one exception: while a woman is *afield*
 in the *Sweet Polly Oliver* disguise chain (`afield()` in actions.js — any `polly_*` flag set),
 `listFocuses`/`defaultFocus` pare her whole menu down to a soldier's day — `drill`, `rest`,
 `pray` — so `drill` trains her martial like any recruit; see [events.md](events.md). War *leadership* foci and deeds

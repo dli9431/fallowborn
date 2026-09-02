@@ -5813,21 +5813,42 @@ window.FB = window.FB || {};
   FB.financeCollateral = function (state, economy) {
     const e = economy || FB.ensureEconomy(state);
     const out = [];
-    if (!FB.itemList || !FB.holdingList) return out;
-    for (const id of FB.itemList(state)) {
-      const item = FB.resolveItem ? FB.resolveItem(state, id) : null;
-      const collateral = { kind:'item', id:id };
-      if (item && item.value > 0 && !collateralPledged(state, collateral, e) &&
-        (!FB.itemAssignment || !FB.itemAssignment(state, id))) {
-        out.push({ collateral:collateral, value:item.value });
+    if (FB.itemList) {
+      for (const id of FB.itemList(state)) {
+        const item = FB.resolveItem ? FB.resolveItem(state, id) : null;
+        const collateral = { kind:'item', id:id };
+        if (item && item.value > 0 && !collateralPledged(state, collateral, e) &&
+          (!FB.itemAssignment || !FB.itemAssignment(state, id))) {
+          out.push({ collateral:collateral, value:item.value });
+        }
       }
     }
-    for (const id of FB.holdingList(state)) {
-      const def = FBDATA.holdings[id];
-      const collateral = { kind:'holding', id:id };
-      if (def && def.cost > 0 && !def.eventOnly && def.pledge !== false &&
-          !collateralPledged(state, collateral, e)) {
-        out.push({ collateral:collateral, value:def.cost });
+    if (FB.holdingList) {
+      for (const id of FB.holdingList(state)) {
+        const def = FBDATA.holdings[id];
+        const collateral = { kind:'holding', id:id };
+        if (def && def.cost > 0 && !def.eventOnly && def.pledge !== false &&
+            !collateralPledged(state, collateral, e)) {
+          out.push({ collateral:collateral, value:def.cost });
+        }
+      }
+    }
+    if (FB.landBreakdown) {
+      /* Treat one settlement's plots as one mortgage-like pledge. The signed
+         count is copied into the loan so later purchases are not exposed. */
+      for (const group of FB.landBreakdown(state)) {
+        const id = group.provinceId + ':' + group.settlement;
+        const collateral = {
+          kind:'land', id:id, provinceId:group.provinceId,
+          settlement:group.settlement, count:group.count
+        };
+        if (group.count > 0 && !collateralPledged(state, collateral, e)) {
+          out.push({
+            collateral:collateral,
+            value:FB.landPlotCost
+              ? FB.landPlotCost(null, group.count) : 120 * group.count
+          });
+        }
       }
     }
     out.sort(function (a, b) {
@@ -6048,6 +6069,27 @@ window.FB = window.FB || {};
     if (collateral.kind === 'item' && FB.destroyItem) {
       return FB.destroyItem(state, collateral.id, { force:true });
     }
+    if (collateral.kind === 'land' && FB.landPlots) {
+      const plots = FB.landPlots(state);
+      const count = Math.max(1, Math.floor(Number(collateral.count) || 1));
+      let removed = 0;
+      for (let i = plots.length - 1; i >= 0 && removed < count; i--) {
+        if (plots[i].provinceId === collateral.provinceId &&
+            plots[i].settlement === collateral.settlement) {
+          plots.splice(i, 1);
+          removed++;
+        }
+      }
+      const manor = state.player.manor;
+      if (removed && manor && manor.provinceId === collateral.provinceId &&
+          manor.settlement === collateral.settlement &&
+          FB.landCountAt(state, manor.provinceId, manor.settlement) <
+            (FBDATA.balance.manorPlotRequirement || 5)) {
+        state.player.manor = null;
+        if (state.player.tier === 2 && FB.setPlayerTier) FB.setPlayerTier(state, 1);
+      }
+      return removed > 0;
+    }
     let list = null;
     if (collateral.kind === 'holding' && FB.holdingList) list = FB.holdingList(state);
     if (!list) return false;
@@ -6055,6 +6097,34 @@ window.FB = window.FB || {};
     if (at < 0) return false;
     list.splice(at, 1);
     return true;
+  }
+
+  function financeLandSettlementName(state, collateral) {
+    const settlements = FB.settlementsOf
+      ? FB.settlementsOf(state, collateral.provinceId) : [];
+    const site = settlements[collateral.settlement];
+    const province = FB.world && FB.world.byId
+      ? FB.world.byId[collateral.provinceId] : null;
+    return site ? site.name : (province ? province.name : collateral.provinceId);
+  }
+
+  function financeCollateralParam(state, collateral) {
+    if (collateral && collateral.kind === 'land' && FB.messageParam) {
+      return FB.messageParam(FB.msg('fx.param.pledged_family_land', {
+        forms:{
+          select:'plural', param:'count', cases:{
+            one:'one family land plot at {settlement}',
+            other:'{count} family land plots at {settlement}'
+          }
+        }
+      }, {
+        count:Math.max(1, Math.floor(Number(collateral.count) || 1)),
+        settlement:financeLandSettlementName(state, collateral)
+      }));
+    }
+    return collateral && collateral.kind === 'item' && FB.itemParam
+      ? FB.itemParam(state, collateral.id)
+      : FB.dataParam(collateral.kind, collateral.id);
   }
 
   function defaultLoan(state, loan, economy) {
@@ -6078,9 +6148,7 @@ window.FB = window.FB || {};
       }, -5, 'finance:default');
     }
     if (loan.defaultKind === 'collateral') {
-      const asset = loan.collateral && loan.collateral.kind === 'item' && FB.itemParam
-        ? FB.itemParam(state, loan.collateral.id)
-        : FB.dataParam(loan.collateral.kind, loan.collateral.id);
+      const asset = financeCollateralParam(state, loan.collateral);
       const lost = loseCollateral(state, loan.collateral);
       loan.status = 'defaulted';
       loan.defaultTurn = state.turn;

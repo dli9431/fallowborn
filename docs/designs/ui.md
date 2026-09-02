@@ -251,10 +251,12 @@ standard character summary in the shared side tooltip. Opening a character from 
 creates a modal-history entry: **Back** restores the same tree view, including branch,
 focus and internal scroll state, while **Close** dismisses the complete stack.
 
-The primary canvas roots itself at the nearest recorded common ancestor of the house founder
-and current player, then follows every recorded descendant generation without an arbitrary
-depth cutoff. This keeps a collateral succession connected by its real bloodline rather than
-falsely drawing the founder as the heir's parent. A genuinely disconnected founder from an
+The primary canvas finds the nearest recorded common ancestor of the house founder and current
+player, then begins up to two recorded ancestor steps above that connection and follows every
+recorded descendant generation without an arbitrary depth cutoff. Retaining this nearby ancestry
+keeps the founder's parents and sibling branches visible after succession. It also keeps a
+collateral succession connected by its real bloodline rather than falsely drawing the founder as
+the heir's parent. A genuinely disconnected founder from an
 old or modified save shares that canvas with the current recorded lineage instead of creating
 a separate founder scroll area. Direct ancestors beyond grandparents remain identified as
 Great-grandfather or Great-grandmother, then 2× great-grandparent and onward. The same

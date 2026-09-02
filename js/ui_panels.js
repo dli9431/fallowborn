@@ -5151,12 +5151,14 @@ window.FB = window.FB || {};
       esc(FB.T('Spouse')) + '</button>' +
       '<button type="button" class="btn small" data-ft-jump="' + esc(founder.id) + '">' +
       esc(FB.T('House founder')) + '</button></div></div>';
-    /* During the founder's own life, rooting at the founder would make the
-       downward-only renderer omit their already-recorded parents and
-       siblings. Include the nearby starting ancestry; later generations
-       still use the founder/current-head connecting root. */
-    const root = founder.id === me.id
-      ? topOf(me, 2) : connectingRoot(founder, me);
+    /* A downward-only renderer must begin above the founder/current-head
+       connection to retain the nearby starting ancestry. Keep those two
+       recorded ancestor steps after succession as well as during the
+       founder's own life, or the founder's parents and sibling branches
+       disappear as soon as their child takes over. */
+    const connection = founder.id === me.id
+      ? me : connectingRoot(founder, me);
+    const root = topOf(connection, 2);
     h += '<div class="ftwrap family-tree-canvas family-tree-primary"><div class="fttree">';
     if (root.id === me.id && !FB.parentsOf(s, me).length && FB.siblingsOf(s, me).length) {
       // safety net: save.js backfills parents on load; a tree can still lack

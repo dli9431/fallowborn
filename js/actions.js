@@ -149,7 +149,11 @@ window.FB = window.FB || {};
       return { gold: (FBDATA.balance.serfWage[0] + FBDATA.balance.serfWage[1]) / 2 };
     } },
   { id: 'militia',
-    show: function (s) { return s.player.tier <= 1 && adult(s) && s.player.profession !== 'monk' && !female(s); },
+    show: function (s) {
+      return s.player.tier <= 1 && adult(s) &&
+        s.player.profession !== 'monk' && !female(s) &&
+        !qualifiedCareer(s, 'soldier');
+    },
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
 
   { id: 'work_land',
@@ -256,7 +260,7 @@ window.FB = window.FB || {};
   { id: 'drill',
     show: function (s) {
       return afield(s) ||
-        (s.player.tier <= 2 && s.player.profession === 'soldier' && !female(s));
+        (s.player.tier <= 2 && qualifiedCareer(s, 'soldier') && !female(s));
     },
     tick: function (s) {
       s.player.gold += 1 / D;
@@ -265,7 +269,7 @@ window.FB = window.FB || {};
     gain: function () { return { gold: 1 }; } },
   { id: 'stand_guard',
     show: function (s) {
-      return s.player.tier <= 2 && s.player.profession === 'soldier' && !female(s);
+      return s.player.tier <= 2 && qualifiedCareer(s, 'soldier') && !female(s);
     },
     tick: function (s) {
       s.player.gold += 2 / D;
@@ -337,7 +341,10 @@ window.FB = window.FB || {};
     },
     gain: function () { return { prestige: 2 }; } },
   { id: 'train_arms',
-    show: function (s) { return s.player.tier >= 2 && adult(s) && !female(s); },
+    show: function (s) {
+      return s.player.tier >= 2 && adult(s) && !female(s) &&
+        !(s.player.tier <= 2 && qualifiedCareer(s, 'soldier'));
+    },
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
   { id: 'lead_host',
     desc: function (s) {
@@ -3344,6 +3351,8 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 4; },
     can: function (s) {
       const B = FBDATA.balance;
+      if (!FB.wastelandCandidates(s).length) return FB.T(
+        'No empty land borders your demesne.');
       if (s.player.gold < B.settleGold) return FB.T(
         'You need at least {money:needed} (now {money:current}).',
         { needed: B.settleGold, current: Math.floor(s.player.gold) });
@@ -10751,6 +10760,7 @@ window.FB = window.FB || {};
     else if (p.tier === 2) want = 'manage_manor';
     else if (p.profession === 'monk') want = 'copy_books';
     else if (p.profession === 'priest') want = 'serve_church';
+    else if (p.profession === 'soldier' && p.professionBack) want = 'militia';
     else {
       want = ({ farmer: p.tier === 0 ? 'toil' : 'work_land', craftsman: 'craft_work',
         merchant: 'trade_run', administration:'keep_records',

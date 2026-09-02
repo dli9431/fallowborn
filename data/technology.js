@@ -103,6 +103,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Household cash shortfalls are a baseline consequence of losses, commitments, and incurred obligations, not an optional capability or a financial technique unlocked by sovereign research.'
       },
+      expanded_pledged_collateral:{
+        mode:'none',
+        rationale:'Family land and higher-value durable household property expand what can secure the existing pledged-loan contract; this is not a separately gateable capability, while the contract retains its Standardized Coinage requirement.'
+      },
       persistent_serf_tenure:{
         mode:'none',
         rationale:'Household tenure, customary service, and awareness of local obligations are baseline social conditions, not capabilities unlocked by sovereign research.'
