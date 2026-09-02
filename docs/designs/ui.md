@@ -31,8 +31,9 @@ coarse-pointer controls retain the shared 44-pixel minimum.
 
 A fresh serf introduction points to station and freedom in Rank & Realm without replacing scenario prose or obeying the
 optional hint toggle. First steps retains exactly its three universal requirements and adds only a
-linked station-and-freedom note. After that track, one per-save tenure coachmark precedes optional poaching
-and family lessons; opening the sheet acknowledges it. Visible first duties and favorable offers
+linked station-and-freedom note. After that track, a serf life gets one per-save tenure coachmark
+before the optional **Desperate measures…** picker and family lessons; opening the sheet acknowledges it.
+Visible first duties and favorable offers
 teach their live saved terms, while Automation does not mark unseen teaching as seen. Every
 scheduled-duty event uses the same description disclosure: desktop hover/focus and the compact
 `?` control expose its terms, while the complete description wraps beside that control instead of
@@ -1161,7 +1162,7 @@ Step state comes from `FB.tutorialStatus` (live state plus one-time flags
 written at each action's single choke point: `G.setPaused`, direct
 `FB.runInstant` resolution or `G.passDay({skipFocus:true})`, the event-option handler,
 `setTab`). Direct deeds stamp completion as soon as their action resolves, with the
-opening poaching lesson retaining its own `tut_poach` evidence; picker-backed
+opening Desperate measures lesson retaining the legacy `tut_poach` evidence key; picker-backed
 deeds stamp only when a confirmed choice actually spends the day. Opening and cancelling a
 picker therefore never completes the lesson. Tutorial
 lives saved before that shared stamp also accept a retained authored deed cooldown as
@@ -1252,10 +1253,12 @@ begin with the map before any other coachmark: map controls hand off in order to
 button (recenter on the current home county) and **Map filters** (cycle realm, personal,
 liege, de jure, and war views); Continue resumes at the first unread lesson in this map
 sequence. The opening then follows the playable loop: do a one-time deed, let time pass,
-answer the queued welcome event, read its result toast, and try **Poach the lord’s game**.
-When that deed resolves, the coachmark returns to Deeds and highlights the newly active
-**Family & legacy** checklist before continuing to **Self**. A prior opening poach is
-recognized from its tutorial flag or retained cooldown and skips directly to that checklist.
+answer the queued welcome event, read its result toast, and, for a serf, try **Desperate measures…**.
+The player must select one of its four hostile acts before the lesson completes. When that deed
+resolves, the coachmark returns to Deeds and highlights the newly active **Family & legacy**
+checklist before continuing to **Self**. A prior opening hostile deed is
+recognized from its tutorial flag or retained cooldown and skips directly to that checklist;
+a higher-station start skips this serf-only lesson as well.
 On mobile and tablet
 layouts the Self lesson targets the always-visible portrait because the Self/Kin drawer tabs
 are hidden. Afterward, ranks 0–2 finish **Family & legacy** before unfinished

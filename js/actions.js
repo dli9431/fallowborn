@@ -2204,13 +2204,35 @@ window.FB = window.FB || {};
       !!FB.acceptFreedomOffer(state, { spendDay:false, context:ctx });
   };
 
+  /* The historical hostile acts remain ordinary event data, while this
+     boundary owns deed eligibility and its shared cooldown. Merely opening
+     the picker therefore cannot spend time, consume RNG, or start cooldown. */
+  FB.resolveSerfHostileDeed = function (state, optionIndex) {
+    const status = FB.instantStatus(state, 'poach');
+    const ev = FB.eventById && FB.eventById('serf_desperate_measures');
+    const option = ev && ev.options && ev.options[optionIndex];
+    const ctx = {};
+    if (!status.shown || !status.can || !option ||
+        (FB.eventOptionStatus &&
+          !FB.eventOptionStatus(state, ev, option, ctx).ready)) return false;
+    const receipt = FB.resolveEventOption(state, ev, option, ctx, {
+      automated:false
+    });
+    if (!receipt) return false;
+    state.player.cooldowns = state.player.cooldowns || {};
+    state.player.cooldowns.poach = state.turn;
+    return receipt;
+  };
+
   const DEED_HANDLERS = [
 
-  { id: 'poach', requiresAdult:true,
-    show: function (s) { return s.player.tier <= 1; },
-    run: function (s) {
-      if (FB.chance(0.65)) FB.applyEffects(s, { gold: FB.ri(2, 5), skills: { int: FB.chance(0.4) ? 1 : 0 } });
-      else FB.queueEvent(s, 'caught_poaching', {});
+  { id: 'poach', opensChoices:true, noConsume:true, deferCooldown:true,
+    requiresAdult:true,
+    show: function (s) { return s.player.tier === 0; },
+    run: function () {
+      if (FB.ui && FB.ui.showSerfHostileDeeds) {
+        FB.ui.showSerfHostileDeeds();
+      }
     } },
   { id: 'scheme_rival', requiresAdult:true,
     desc: function (s) {

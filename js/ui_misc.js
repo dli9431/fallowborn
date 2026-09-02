@@ -2724,7 +2724,7 @@ window.FB = window.FB || {};
 
   /* ================= first-time player tips =================
      A fresh browser profile learns the map, Home, and filters before any
-     other coachmark, then the playable deed/time/event/poaching loop, the new
+     other coachmark, then the playable deed/time/event/hostile-deed loop, the new
      Family & legacy checklist, and Self. Other areas
      teach themselves only when the player deliberately opens them. A tip is
      recorded in browser-local uiPrefs.tipsSeen only after its coachmark is
@@ -2811,10 +2811,11 @@ window.FB = window.FB || {};
       '#toasts', { noNext:true });
   };
 
+  /* `poach` remains the stable internal id for the Desperate measures deed. */
   function openingPoachDone(s) {
     const flags = (s && s.player && s.player.flags) || {};
     const cooldowns = (s && s.player && s.player.cooldowns) || {};
-    return !!flags.tut_poach ||
+    return !!(s && s.player && s.player.tier !== 0) || !!flags.tut_poach ||
       Object.prototype.hasOwnProperty.call(cooldowns, 'poach');
   }
 
@@ -2825,7 +2826,7 @@ window.FB = window.FB || {};
     if (!status || !status.shown || !status.can) return false;
     const exposed = UI.revealDeedAction && UI.revealDeedAction('poach');
     return UI.maybeTip('first-poach',
-      '💡 Now try Poach the lord’s game in Work & Wealth. It is risky, but it shows how a deed can bring an immediate result—or another choice.',
+      '💡 Now try Desperate measures in Work & Wealth. Choose one illegal act, then weigh its possible gain against the risk of being caught.',
       exposed ? '#tab-actions [data-action-id="poach"]' :
         '#sidetabs .tab[data-tab="actions"]', { noNext:true });
   };

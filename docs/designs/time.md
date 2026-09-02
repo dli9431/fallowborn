@@ -14,8 +14,8 @@ two-kind contract: **Daily Focus** repeats automatically whenever a day passes, 
 border accents; their supplementary **Resolves now** / **Opens choices…** timing and action
 description follow the shared card-details convention (hover/focus side tooltip on desktop,
 `?` disclosure on touch/tablet), keeping the button face to one prominent action line. Thus
-an immediate deed such as Poach is visibly different from a picker-backed deed such as Go
-into town. A picker opener is not itself a
+an immediate deed is visibly different from picker-backed deeds such as Go into town and the
+serf-only Desperate measures. A picker opener is not itself a
 completed deed: cancelling leaves the tutorial step unfinished, while confirming the
 eventual day-spending choice completes it.
 The browser-local `uiPrefs.groupDeedsByActionType` option keeps Daily Focus first but

@@ -62,8 +62,8 @@ FBDATA.focuses = [
 ];
 
 FBDATA.deeds = [
-  { id:'poach', label:'🏹 Poach the lord’s game', order:0,
-    desc:'Meat and coin — if the forester is elsewhere.', group:'work', flow:'immediate', cooldownDays:30, handler:'poach' },
+  { id:'poach', label:'🗡 Desperate measures…', order:0,
+    desc:'Choose an illegal way to take food, goods, or coin from the lord.', group:'work', flow:'choices', cooldownDays:30, handler:'poach' },
   { id:'scheme_rival', label:'🗡 Scheme against {rival}', order:1,
     group:'life', flow:'immediate', cooldownDays:60, handler:'scheme_rival' },
   { id:'seek_match', label:'💍 Seek a match', order:2,

@@ -63,6 +63,29 @@ always offers a non-gold work response. Reviews have technology impact **none**:
 to a change of local or political authority is baseline customary life, not a researched
 capability.
 
+## Serf-only desperate measures
+
+The baseline action id `poach` remains stable for saves, mods, shortcuts, and tutorial evidence,
+but its player-facing **Desperate measures…** deed is now exclusive to tier 0. It opens a manual
+choice among cutting reserved wood, poaching protected game, stealing from the lord's grain store,
+and waylaying a dues cart. All four choices share the deed's 30-day cooldown, spend one day only
+after confirmation, and use the ordinary event option resolver for one seeded chance roll, authored
+success/failure effects, a consequence preview, and a durable receipt. Opening or cancelling the
+picker consumes neither RNG nor time and starts no cooldown. Promotion to Freeholder removes the
+deed rather than carrying serf resistance into an independent household's action list.
+
+The choices are a cross-regional playable synthesis, not a claim that every lordship used identical
+law. Medieval records document peasant deer-taking despite severe forest penalties, while agrarian
+law codes punish theft from granaries, folds, and herds; English manorial records also repeatedly
+record illegal fishing, breaking and entering, petty larceny, turf cutting, and reed mowing. See
+Jean Birrell, [“Peasant deer poachers in the medieval forest”](https://doi.org/10.1017/CBO9781139170956.005),
+the [Byzantine Farmer's Law](https://sourcebooks.web.fordham.edu/source/farmerslaw.asp), and
+J. Williamson, [“Dispute Settlement in the Manorial Court”](https://www.reading.ac.uk/gcms/-/media/project/functions/research/graduate-centre-for-medieval-studies/documents/rms198507-j-williamson-dispute-settlement-in-the-manorial-court.pdf).
+
+Serf desperate measures have technology impact **none**. Petty trespass, theft, and violent robbery
+are baseline survival or resistance choices for a bound household, not advanced capabilities that
+credible sovereign research would unlock.
+
 ## Exact local event participants
 
 An event may declare up to four ordered `participants`. `FB.eventContextFor` binds each

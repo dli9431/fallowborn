@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.5';
+FB.VERSION = '1.166.6';
 FB.CHANGELOG = [
+  { v: '1.166.6', date: '2026-09-02', changes: [
+    'Serf poaching is now Desperate measures, offering several escalating illicit acts with greater rewards and harsher consequences.'
+  ] },
   { v: '1.166.5', date: '2026-09-02', changes: [
     'Station & Home now focuses on a commoner’s home, local authority, and actionable freedom options, leaving customary work and obligations to the events where they matter.'
   ] },

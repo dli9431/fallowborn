@@ -119,6 +119,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'A household responding when its existing local or political authority changes is a baseline social and customary consequence, not a capability unlocked by sovereign research.'
       },
+      serf_desperate_measures:{
+        mode:'none',
+        rationale:'Trespass, poaching, theft, and robbery are baseline survival and resistance choices for a bound household, not capabilities unlocked by sovereign research.'
+      },
       minor_household_standard_reduction:{
         mode:'none',
         rationale:'A child household head or landed ruler giving up an inherited household standard within the floor allowed by their station is a baseline recovery control; no innovation credibly unlocks abandoning an expense.'

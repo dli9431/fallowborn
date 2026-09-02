@@ -10,6 +10,7 @@ dependsOnRuntime(__filename, [
   'js/save.js',
   'data/map_data.js',
   'data/actions.js',
+  'data/events_peasant.js',
   'js/actions.js',
   'css/style.css'
 ]);
@@ -138,7 +139,7 @@ test('the Deeds lesson hands the player to the flow of days',
     })).toBe(false);
   });
 
-test('the first result leads through poaching and back to Family & legacy',
+test('the first result leads through desperate measures and back to Family & legacy',
   async function ({ page }) {
     await startFirstCampaign(page);
     await finishOpeningMapTour(page);
@@ -147,11 +148,15 @@ test('the first result leads through poaching and back to Family & legacy',
       .getByRole('button', { name:'Got it', exact:true }).click();
 
     await page.evaluate(function () {
-      const flags = FB.state.player.flags;
+      const state = FB.state;
+      FB.setPlayerTier(state, 0, { tenureFormationReason:'rank_change' });
+      const flags = state.player.flags;
       flags.tut_deed = 1;
       flags.tut_unpause = 1;
       flags.tut_event = 1;
-      FB.tutorialCheck(FB.state);
+      flags.hint_serf_tenure = 1;
+      FB.tutorialCheck(state);
+      FB.ui.refresh();
     });
 
     const result = page.locator('.coachmark', {
@@ -161,7 +166,7 @@ test('the first result leads through poaching and back to Family & legacy',
     await result.getByRole('button', { name:'Got it', exact:true }).click();
 
     const poach = page.locator('.coachmark', {
-      hasText:'try Poach the lord’s game'
+      hasText:'try Desperate measures'
     });
     await expect(poach).toBeVisible();
     await expect(page.locator('[data-action-group="work"]'))
@@ -169,15 +174,13 @@ test('the first result leads through poaching and back to Family & legacy',
     const poachButton = page.locator('[data-action-id="poach"]');
     await expect(poachButton).toHaveClass(/coachmark-lit/);
     await poachButton.click();
+    await expect(page.locator('[data-serf-hostile-deed]')).toHaveCount(4);
+    await page.locator('[data-serf-hostile-deed]').first().click();
     await expect.poll(function () {
       return page.evaluate(function () {
         return !!FB.state.player.flags.tut_poach;
       });
     }).toBe(true);
-
-    if (await page.locator('#eventmodal:not(.hidden)').count()) {
-      await page.locator('#ev-options .evopt').first().click({ delay:400 });
-    }
 
     const family = page.locator('.coachmark', {
       hasText:'guidance at the top now has Family & legacy tasks'

@@ -1109,6 +1109,104 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* ================= serf hostile deeds =================
+     The legacy `poach` action id remains the stable save/mod/tutorial key,
+     but its player-facing picker resolves one authored event-data option. */
+  UI.showSerfHostileDeeds = function () {
+    const s = FB.state;
+    const actionId = 'poach';
+    const actionStatus = s && FB.instantStatus
+      ? FB.instantStatus(s, actionId) : null;
+    const action = actionStatus && actionStatus.action;
+    const ev = FB.eventById && FB.eventById('serf_desperate_measures');
+    if (!actionStatus || !actionStatus.shown || !actionStatus.can || !action ||
+        !ev || !ev.options || !ev.options.length) return false;
+    const ctx = {};
+    const usesDetailsButton = eventChoiceUsesDisclosure();
+    let h = '<div class="gm-body-text"><p>' +
+      esc(FB.eventText(s, s.player.charId, ev, 'text', ctx)) +
+      '</p><p class="hint">' + esc(FB.T(
+        'Choose one act. Only your choice spends the day and starts the shared {days}-day cooldown.', {
+          days:action.cd
+        })) +
+      '</p></div><div class="gm-list serf-hostile-deed-list">';
+    for (let i = 0; i < ev.options.length; i++) {
+      const option = ev.options[i];
+      const optionStatus = FB.eventOptionStatus
+        ? FB.eventOptionStatus(s, ev, option, ctx) : { visible:true, ready:true };
+      if (!optionStatus.visible) continue;
+      const detailsId = 'serf-hostile-deed-details-' + i;
+      const label = FB.eventText(s, s.player.charId, ev,
+        'options.' + i + '.label', ctx);
+      const desc = option.desc === undefined ? '' : FB.eventText(
+        s, s.player.charId, ev, 'options.' + i + '.desc', ctx);
+      h += '<div class="event-choice' +
+        (usesDetailsButton ? ' has-details' : '') + '">' +
+        '<button type="button" class="actionbtn evopt" ' +
+        'data-serf-hostile-deed="' + i + '" aria-describedby="' +
+        detailsId + '"' + (optionStatus.ready ? '' : ' disabled') + '>' +
+        esc(label) + (desc ? '<span class="odesc">' + esc(desc) + '</span>' : '') +
+        '</button>';
+      if (usesDetailsButton) {
+        h += '<button type="button" class="btn small event-details-button" ' +
+          'data-serf-hostile-details="' + detailsId + '" aria-expanded="false" ' +
+          'aria-controls="' + detailsId + '" title="' + esc(FB.T('Details')) +
+          '" aria-label="' + esc(FB.T('Details')) + '">?</button>';
+      }
+      h += '<div class="event-choice-details hidden" id="' + detailsId + '">' +
+        consequenceDetailsHtml(s, FB.previewEventOption(s, ev, option, ctx)) +
+        '</div></div>';
+    }
+    h += '</div><button type="button" class="btn gm-footer" ' +
+      'id="serf-hostile-deed-cancel">' + esc(FB.T('Not today')) + '</button>';
+    openModal(actionLabel(s, actionId, action), h, {
+      noFocus:true,
+      modalAction:actionId,
+      modalTarget:'action:' + actionId
+    });
+    const cancel = $('serf-hostile-deed-cancel');
+    if (cancel) cancel.addEventListener('click', UI.closeModal);
+    const detailButtons = $('gm-body').querySelectorAll(
+      '[data-serf-hostile-details]');
+    for (const detailButton of detailButtons) {
+      detailButton.addEventListener('click', function () {
+        const detailsId = detailButton.getAttribute('data-serf-hostile-details');
+        const details = document.getElementById(detailsId);
+        if (!details) return;
+        const opening = details.classList.contains('hidden');
+        details.classList.toggle('hidden', !opening);
+        detailButton.setAttribute('aria-expanded', opening ? 'true' : 'false');
+        const detailLabel = opening ? FB.T('Hide details') : FB.T('Details');
+        detailButton.title = detailLabel;
+        detailButton.setAttribute('aria-label', detailLabel);
+      });
+    }
+    const buttons = $('gm-body').querySelectorAll('[data-serf-hostile-deed]');
+    for (const button of buttons) {
+      button.addEventListener('click', function () {
+        const optionIndex = parseInt(
+          button.getAttribute('data-serf-hostile-deed'), 10);
+        const currentState = FB.state;
+        const receipt = FB.resolveSerfHostileDeed
+          ? FB.resolveSerfHostileDeed(currentState, optionIndex) : false;
+        if (!receipt) {
+          UI.closeModal();
+          UI.toast('That deed is no longer available.');
+          return;
+        }
+        if (FB.noteDeedCompleted) FB.noteDeedCompleted(currentState, actionId);
+        UI.closeModal();
+        if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
+        if (FB.game && FB.game.passDay) {
+          FB.game.passDay({ skipFocus:true });
+        }
+        if (UI.maybeFirstTimeFlowTip) UI.maybeFirstTimeFlowTip();
+        if (UI.resumePostFirstStepsTips) UI.resumePostFirstStepsTips();
+      });
+    }
+    return true;
+  };
+
   /* ================= overland travel picker ================= */
   SH.travelPicker = null;
   let travelMapSelectionSerial = 0;

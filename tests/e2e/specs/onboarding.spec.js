@@ -164,7 +164,7 @@ test('a saved guide-hints setting suppresses first-life onboarding surfaces',
     await expect(page.locator('.tutorial-card')).toHaveCount(0);
   });
 
-test('Daily Focus stays separate and an immediate deed completes First steps',
+test('Daily Focus stays separate and desperate measures commits only after a choice',
   async function ({ page }) {
     await page.setViewportSize({ width:1280, height:800 });
     await startDeterministicGame(page, { keepFirstTimeTips:true });
@@ -172,6 +172,10 @@ test('Daily Focus stays separate and an immediate deed completes First steps',
     await page.getByRole('button', { name:'Got it', exact:true }).click();
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
+    await page.evaluate(function () {
+      FB.setPlayerTier(FB.state, 0, { tenureFormationReason:'rank_change' });
+      FB.ui.refresh();
+    });
 
     await expect(page.locator('#daily-focus-list'))
       .toContainText('repeats automatically whenever a day passes');
@@ -182,11 +186,15 @@ test('Daily Focus stays separate and an immediate deed completes First steps',
     const town = page.locator('[data-action-id="go_to_town"]');
     const poachRow = poach.locator('..');
     const townRow = town.locator('..');
-    await expect(poach).toHaveAttribute('data-deed-flow', 'now');
-    await expect(poach).not.toContainText('Resolves now');
-    await expect(poach).not.toContainText('Meat and coin');
+    const immediate = page.locator(
+      '[data-action-id][data-deed-flow="now"]:not([disabled])').first();
+    await expect(immediate).toBeVisible();
+    await expect(poach).toHaveAttribute('data-deed-flow', 'choices');
+    await expect(poach).not.toContainText('Opens choices…');
     await expect(poachRow.locator('.deed-details'))
-      .toContainText('Resolves now · spends one day');
+      .toContainText('Opens choices…');
+    await expect(poachRow.locator('.deed-details'))
+      .toContainText('Choose an illegal way');
     await expect(poachRow.locator('.deed-details')).toBeHidden();
     await expect(town).toHaveAttribute('data-deed-flow', 'choices');
     await expect(town).not.toContainText('Opens choices…');
@@ -194,29 +202,28 @@ test('Daily Focus stays separate and an immediate deed completes First steps',
     const borders = await page.evaluate(function () {
       return {
         immediate:getComputedStyle(document.querySelector(
-          '[data-action-id="poach"]')).borderColor,
+          '[data-action-id][data-deed-flow="now"]:not([disabled])')).borderColor,
         choices:getComputedStyle(document.querySelector(
-          '[data-action-id="go_to_town"]')).borderColor
+          '[data-action-id="poach"]')).borderColor
       };
     });
     expect(borders.immediate).not.toBe(borders.choices);
 
     await poach.hover();
-    await expect(page.locator('#tooltip')).toContainText(
-      'Resolves now · spends one day');
-    await expect(page.locator('#tooltip')).toContainText('Meat and coin');
+    await expect(page.locator('#tooltip')).toContainText('Opens choices…');
+    await expect(page.locator('#tooltip')).toContainText('Choose an illegal way');
     await town.hover();
     await expect(page.locator('#tooltip')).toContainText('Opens choices…');
     await expect(page.locator('#tooltip')).toContainText('Spend a day at one');
 
     // Compact/tablet layouts swap the hover surface for the shared ? disclosure.
     await page.setViewportSize({ width:900, height:700 });
-    await town.hover();
+    await poach.hover();
     await expect(page.locator('#tooltip')).toBeHidden();
-    const townInfo = townRow.locator('.deed-info');
-    await expect(townInfo).toBeVisible();
-    await townInfo.click();
-    await expect(townRow.locator('.deed-details')).toBeVisible();
+    const poachInfo = poachRow.locator('.deed-info');
+    await expect(poachInfo).toBeVisible();
+    await poachInfo.click();
+    await expect(poachRow.locator('.deed-details')).toBeVisible();
 
     // Choosing an ongoing focus is not completing a one-time deed.
     await page.locator('[data-focus-id]:not(.focused)').first().click();
@@ -224,12 +231,54 @@ test('Daily Focus stays separate and an immediate deed completes First steps',
       return !!FB.state.player.flags.tut_deed;
     })).toBe(false);
 
+    const before = await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        rng:FB.getRngState(),
+        cooldown:Object.prototype.hasOwnProperty.call(
+          FB.state.player.cooldowns || {}, 'poach')
+      };
+    });
     await poach.click();
+    await expect(page.getByRole('heading', { name:/Desperate measures/i }))
+      .toBeVisible();
+    await expect(page.locator('[data-serf-hostile-deed]')).toHaveCount(4);
+    await expect(page.locator('#gm-body')).toContainText('Cut and sell forbidden wood');
+    await expect(page.locator('#gm-body')).toContainText('Waylay a dues cart');
+    expect(await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        rng:FB.getRngState(),
+        cooldown:Object.prototype.hasOwnProperty.call(
+          FB.state.player.cooldowns || {}, 'poach'),
+        tutorial:!!FB.state.player.flags.tut_deed
+      };
+    })).toEqual(Object.assign({}, before, { tutorial:false }));
+    await page.getByRole('button', { name:'Not today', exact:true }).click();
+    expect(await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        rng:FB.getRngState(),
+        cooldown:Object.prototype.hasOwnProperty.call(
+          FB.state.player.cooldowns || {}, 'poach')
+      };
+    })).toEqual(before);
+
+    await poach.click();
+    await page.locator('[data-serf-hostile-deed]').first().click();
     await expect.poll(function () {
       return page.evaluate(function () {
         return !!FB.state.player.flags.tut_deed;
       });
     }).toBe(true);
+    expect(await page.evaluate(function (turnBefore) {
+      return {
+        poach:!!FB.state.player.flags.tut_poach,
+        cooldown:Object.prototype.hasOwnProperty.call(
+          FB.state.player.cooldowns || {}, 'poach'),
+        advanced:FB.state.turn === turnBefore + 1
+      };
+    }, before.turn)).toEqual({ poach:true, cooldown:true, advanced:true });
   });
 
 test('a choice-backed deed completes only after its confirmed day',

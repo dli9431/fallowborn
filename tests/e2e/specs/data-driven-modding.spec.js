@@ -968,7 +968,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       focusHandlerStable:true,
       deedHandlerStable:true
     });
-    expect(result.restored).toEqual(['🛌 Rest and mend', '🏹 Poach the lord’s game']);
+    expect(result.restored).toEqual(['🛌 Rest and mend', '🗡 Desperate measures…']);
   });
 
 test('milestone-four phase A rejects malformed internal action data without mutation',
@@ -988,7 +988,7 @@ test('milestone-four phase A rejects malformed internal action data without muta
         validatePatch('focus', 0, { order:99 }),
         validatePatch('focus', 0, { handler:'rest' }),
         validatePatch('focus', 0, { extra:true }),
-        validatePatch('deed', 0, { flow:'choices' }),
+        validatePatch('deed', 0, { flow:'immediate' }),
         validatePatch('deed', 0, { requiresTech:'missing_technology' }),
         validatePatch('deed', 0, { cooldownDays:-1 }),
         validatePatch('focus', 0, { order:1 }),

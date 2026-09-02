@@ -127,7 +127,7 @@ Time passes **day by day** (90-day seasons, 360-day years).
    national research policy, active travel, and financial contracts together; compact layouts
    also show the daily focus and link it to the top of the focus list. Select a row to reach
    its existing control, or select the ledger title to collapse it.
-2. Act on **deeds** when the moment is right — one-shot acts like poaching, scheming, proposing
+2. Act on **deeds** when the moment is right — one-shot acts like desperate measures, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
    Households can open **🏠 Better the household…** without spending a day. Five living
    standards and profession-specific work outfits rise through purchased levels with

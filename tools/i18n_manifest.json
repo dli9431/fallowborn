@@ -549,7 +549,7 @@
       "glossary": [],
       "location": "data/actions.js",
       "source": {
-        "text": "Meat and coin — if the forester is elsewhere."
+        "text": "Choose an illegal way to take food, goods, or coin from the lord."
       }
     },
     "action.poach.label.default": {
@@ -557,7 +557,7 @@
       "glossary": [],
       "location": "data/actions.js",
       "source": {
-        "text": "🏹 Poach the lord’s game"
+        "text": "🗡 Desperate measures…"
       }
     },
     "action.propose.desc.default": {
@@ -629,7 +629,7 @@
       "glossary": [],
       "location": "data/actions.js",
       "source": {
-        "text": "📜 Review tenure & freedom"
+        "text": "📜 Review station & freedom"
       }
     },
     "action.revoke_county.desc.default": {
@@ -25362,6 +25362,150 @@
         "text": "The Commuted Labor Due"
       }
     },
+    "event.serf_desperate_measures.options.0.desc.default": {
+      "context": "Event serf_desperate_measures, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A quiet trespass with a small return and a light fine if caught."
+      }
+    },
+    "event.serf_desperate_measures.options.0.failure.text.default": {
+      "context": "Event serf_desperate_measures, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The lord’s men catch you cutting and impose a fine."
+      }
+    },
+    "event.serf_desperate_measures.options.0.label.default": {
+      "context": "Event serf_desperate_measures, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Cut and sell forbidden wood."
+      }
+    },
+    "event.serf_desperate_measures.options.0.success.text.default": {
+      "context": "Event serf_desperate_measures, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The wood is sold before anyone traces it to your door."
+      }
+    },
+    "event.serf_desperate_measures.options.1.desc.default": {
+      "context": "Event serf_desperate_measures, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A better return, but capture puts you directly before the lord."
+      }
+    },
+    "event.serf_desperate_measures.options.1.failure.text.default": {
+      "context": "Event serf_desperate_measures, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The forester catches you over the kill."
+      }
+    },
+    "event.serf_desperate_measures.options.1.label.default": {
+      "context": "Event serf_desperate_measures, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Poach protected game."
+      }
+    },
+    "event.serf_desperate_measures.options.1.success.text.default": {
+      "context": "Event serf_desperate_measures, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Game reaches the pot and the surplus finds a quiet buyer."
+      }
+    },
+    "event.serf_desperate_measures.options.2.desc.default": {
+      "context": "Event serf_desperate_measures, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A bold theft with enough grain to sell — if the servants do not corner you."
+      }
+    },
+    "event.serf_desperate_measures.options.2.failure.text.default": {
+      "context": "Event serf_desperate_measures, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The household servants corner you in the store and raise the alarm."
+      }
+    },
+    "event.serf_desperate_measures.options.2.label.default": {
+      "context": "Event serf_desperate_measures, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Break into the lord’s grain store."
+      }
+    },
+    "event.serf_desperate_measures.options.2.success.text.default": {
+      "context": "Event serf_desperate_measures, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "You slip the grain away and find a buyer who asks no questions."
+      }
+    },
+    "event.serf_desperate_measures.options.3.desc.default": {
+      "context": "Event serf_desperate_measures, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A violent gamble for a season-changing haul, with a crippling beating if it fails."
+      }
+    },
+    "event.serf_desperate_measures.options.3.failure.text.default": {
+      "context": "Event serf_desperate_measures, authored option 3, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The escort beats you down and reports the attempted robbery."
+      }
+    },
+    "event.serf_desperate_measures.options.3.label.default": {
+      "context": "Event serf_desperate_measures, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Waylay a dues cart."
+      }
+    },
+    "event.serf_desperate_measures.options.3.success.text.default": {
+      "context": "Event serf_desperate_measures, authored option 3, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "You scatter the escort, hide the coin, and leave no witness willing to name you."
+      }
+    },
+    "event.serf_desperate_measures.text.default": {
+      "context": "Event serf_desperate_measures, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Your household’s bonds leave little lawful room to climb. Choose what to take from the lord’s land, stores, or dues — and how much danger to accept."
+      }
+    },
+    "event.serf_desperate_measures.title.default": {
+      "context": "Event serf_desperate_measures, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Desperate Measures"
+      }
+    },
     "event.serf_extraordinary_tallage.options.0.desc.default": {
       "context": "Event serf_extraordinary_tallage, authored option 0, desc, branch default.",
       "glossary": [],
@@ -34707,6 +34851,24 @@
         "text": "rabbi"
       }
     },
+    "fx.param.pledged_family_land": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "count",
+        "settlement"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "one": "one family land plot at {settlement}",
+            "other": "{count} family land plots at {settlement}"
+          },
+          "param": "count",
+          "select": "plural"
+        }
+      }
+    },
     "fx.param.someone": {
       "context": "Structured war-status display message.",
       "glossary": [],
@@ -34963,6 +35125,24 @@
             "other": "{have} of {total} kingdoms"
           },
           "param": "total",
+          "select": "plural"
+        }
+      }
+    },
+    "fx.ui.pledged_family_land": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "count",
+        "settlement"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "one": "One land plot at {settlement}",
+            "other": "{count} land plots at {settlement}"
+          },
+          "param": "count",
           "select": "plural"
         }
       }
@@ -56623,16 +56803,6 @@
         "text": "The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty."
       }
     },
-    "src.0868d875": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Your household's terms and routes to freedom are in Rank & Realm. First steps remain in Deeds."
-      }
-    },
     "src.086d79a6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59420,6 +59590,16 @@
         "text": "Aunt"
       }
     },
+    "src.0d802392": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/actions.js"
+      ],
+      "source": {
+        "text": "Choose an illegal way to take food, goods, or coin from the lord."
+      }
+    },
     "src.0d821b5f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61159,16 +61339,6 @@
       ],
       "source": {
         "text": "Good material becomes expensive scrap. The widow says nothing."
-      }
-    },
-    "src.11355e1c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Customary Duties"
       }
     },
     "src.113639f7": {
@@ -62936,16 +63106,6 @@
         "text": "💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
       }
     },
-    "src.144980c6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Your gentle household resides in {settlement}, a {kind} in the county of {county}, holding local estate and standing under {ruler}."
-      }
-    },
     "src.144d910f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63446,6 +63606,16 @@
         "text": "Watch the Deeds tab: your First steps are listed there."
       }
     },
+    "src.1536e76c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/actions.js"
+      ],
+      "source": {
+        "text": "📜 Review station & freedom"
+      }
+    },
     "src.15373b1d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63480,8 +63650,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Expiry or a material change to the named tenure invalidates this offer."
@@ -64129,16 +64298,6 @@
       ],
       "source": {
         "text": "🕸 A refused accomplice exposes the proposed {plot}."
-      }
-    },
-    "src.166aa047": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Petition"
       }
     },
     "src.166e4adc": {
@@ -65530,6 +65689,16 @@
       ],
       "source": {
         "text": "Accepting makes you sovereign of the new kingdom and unites it with your existing lands."
+      }
+    },
+    "src.19163453": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose one act. Only your choice spends the day and starts the shared {days}-day cooldown."
       }
     },
     "src.192dbd18": {
@@ -68218,6 +68387,16 @@
         "text": "Enough for tonight; the waste keeps score."
       }
     },
+    "src.1ec603dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open autosave Chronicle"
+      }
+    },
     "src.1ec8d55c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69972,8 +70151,7 @@
       "glossary": [],
       "location": [
         "data/economy.js",
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Steward"
@@ -69997,16 +70175,6 @@
       ],
       "source": {
         "text": "Choose the one exact trade corridor protected by the charter. Ordinary commodity ventures remain available on every route."
-      }
-    },
-    "src.21f608f5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "choose a fallowborn-chronicle JSON file"
       }
     },
     "src.2200426a": {
@@ -71644,16 +71812,6 @@
       ],
       "source": {
         "text": "Election law"
-      }
-    },
-    "src.2519d6d9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Saved price"
       }
     },
     "src.2524a423": {
@@ -73893,6 +74051,16 @@
         "text": "Demand this season"
       }
     },
+    "src.2991733a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Game reaches the pot and the surplus finds a quiet buyer."
+      }
+    },
     "src.29984523": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74731,16 +74899,6 @@
       ],
       "source": {
         "text": "Keep coin and strength; let defiance become the next debt."
-      }
-    },
-    "src.2b53ac4c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Current gold"
       }
     },
     "src.2b55067e": {
@@ -76797,16 +76955,6 @@
         "text": "Good servants should know they are seen."
       }
     },
-    "src.2f525593": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/actions.js"
-      ],
-      "source": {
-        "text": "📜 Review tenure & freedom"
-      }
-    },
     "src.2f537290": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77847,8 +77995,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js",
-        "js/ui_panels.js"
+        "js/actions.js"
       ],
       "source": {
         "text": "Available now."
@@ -78731,8 +78878,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Issued terms"
@@ -79562,6 +79708,16 @@
         "text": "Encourage this goal, leave it alone, or steer them toward another road."
       }
     },
+    "src.34d7b45e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The escort beats you down and reports the attempted robbery."
+      }
+    },
     "src.34d8ff8d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79580,16 +79736,6 @@
       ],
       "source": {
         "text": "{name} asks your realm to sponsor a rival obedience. This will divide the Church and cancel any gathering Catholic great holy war."
-      }
-    },
-    "src.34df3530": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Your household lives in {settlement}, a {kind} in the county of {county}. As serfs, you are bound to the soil under {ruler} and owe customary dues and labor."
       }
     },
     "src.34f00e0f": {
@@ -80073,6 +80219,16 @@
       ],
       "source": {
         "text": "Fight on."
+      }
+    },
+    "src.3602baad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That deed is no longer available."
       }
     },
     "src.361486cb": {
@@ -84124,6 +84280,16 @@
         "text": "PageUp"
       }
     },
+    "src.3e4a1fca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a Chronicle or save file first."
+      }
+    },
     "src.3e4df00c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84272,16 +84438,6 @@
       ],
       "source": {
         "text": "Charter of Liberties"
-      }
-    },
-    "src.3eb94260": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/actions.js"
-      ],
-      "source": {
-        "text": "Meat and coin — if the forester is elsewhere."
       }
     },
     "src.3ebb16c9": {
@@ -85450,16 +85606,6 @@
         "text": "Automatic research"
       }
     },
-    "src.40cca1fa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Fallowborn Chronicle file"
-      }
-    },
     "src.40d1e79a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86510,16 +86656,6 @@
         "text": "Replaced"
       }
     },
-    "src.42cef43b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Tenure & Custom"
-      }
-    },
     "src.42d35709": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86544,8 +86680,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "{lord}, tenure revision {revision}"
@@ -87339,6 +87474,16 @@
         "text": "A permanent home can be considered after {days} more days here."
       }
     },
+    "src.4420d346": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Review freedom terms…"
+      }
+    },
     "src.4425e0b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87467,6 +87612,16 @@
       ],
       "source": {
         "text": "Next setup"
+      }
+    },
+    "src.444b9259": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds."
       }
     },
     "src.444d7db1": {
@@ -89178,7 +89333,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_panels.js",
         "js/events.js"
       ],
       "source": {
@@ -90259,6 +90413,16 @@
         "text": "This browser could not download the Chronicle."
       }
     },
+    "src.49a39d46": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose, then time resumes automatically."
+      }
+    },
     "src.49aa252b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91051,6 +91215,16 @@
       ],
       "source": {
         "text": "-{n} men"
+      }
+    },
+    "src.4b58ff31": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Home & freedom: Review your station and routes to freedom in Rank & Realm."
       }
     },
     "src.4b60abe3": {
@@ -92818,6 +92992,16 @@
       ],
       "source": {
         "text": "All topics"
+      }
+    },
+    "src.4f107a82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback. View Chronicle on the title screen reads the autosave, manual slots, exported .txt saves, and complete Chronicle JSON downloads without resuming a life."
       }
     },
     "src.4f1aecbb": {
@@ -94916,10 +95100,10 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_panels.js",
         "js/keys.js",
         "js/ui_misc.js",
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Home"
@@ -95063,6 +95247,16 @@
       ],
       "source": {
         "text": "Stand for election as {rank} ({money:gold})"
+      }
+    },
+    "src.535e7d13": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "{count} family land plots at {settlement}"
       }
     },
     "src.535eb087": {
@@ -95244,6 +95438,16 @@
       ],
       "source": {
         "text": "No soundtrack song is playing."
+      }
+    },
+    "src.53c0467c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open a file"
       }
     },
     "src.53cc6e55": {
@@ -98214,6 +98418,16 @@
         "text": "College of Household Scholars"
       }
     },
+    "src.59490b0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "choose a Chronicle .json file or an exported save .txt file"
+      }
+    },
     "src.595789fc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98382,6 +98596,16 @@
       ],
       "source": {
         "text": "{money:before} → {money:after}/season"
+      }
+    },
+    "src.599a0288": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A violent gamble for a season-changing haul, with a crippling beating if it fails."
       }
     },
     "src.59a106f4": {
@@ -99240,16 +99464,6 @@
       ],
       "source": {
         "text": "An Ally Counts the Cost"
-      }
-    },
-    "src.5b522a6b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose."
       }
     },
     "src.5b5419ff": {
@@ -100702,6 +100916,16 @@
         "text": "A kind word here, a promised favor there — court craft in miniature."
       }
     },
+    "src.5e436dd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The household servants corner you in the store and raise the alarm."
+      }
+    },
     "src.5e4475bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100981,16 +101205,6 @@
       ],
       "source": {
         "text": "🏘 The old quartering quarrel ends with the household’s old customary bond."
-      }
-    },
-    "src.5eb33ade": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Open Chronicle file"
       }
     },
     "src.5eb471a2": {
@@ -101363,14 +101577,14 @@
         "text": "Stay a spearman; let others carry the worry."
       }
     },
-    "src.5f6c633d": {
+    "src.5f6be81b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
         "js/ui_panels.js"
       ],
       "source": {
-        "text": "Standing with current lord"
+        "text": "Your household lives here as free commoners."
       }
     },
     "src.5f7546b6": {
@@ -102072,6 +102286,16 @@
         "text": "Water-Powered Stone Sawing"
       }
     },
+    "src.60a53cf1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Freedom"
+      }
+    },
     "src.60ba76ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102682,16 +102906,6 @@
         "text": "Source"
       }
     },
-    "src.61e6be1a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No"
-      }
-    },
     "src.61e6da22": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102706,6 +102920,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -103553,6 +103768,16 @@
       ],
       "source": {
         "text": "Let the offense repay the demesne."
+      }
+    },
+    "src.6380660e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Your household’s bonds leave little lawful room to climb. Choose what to take from the lord’s land, stores, or dues — and how much danger to accept."
       }
     },
     "src.63854a25": {
@@ -106205,16 +106430,6 @@
         "text": "Banbishn"
       }
     },
-    "src.68e5670f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Affordable now"
-      }
-    },
     "src.68e6575c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106525,16 +106740,6 @@
       ],
       "source": {
         "text": "Not eligible: marriage joins the household but does not make a spouse a blood successor."
-      }
-    },
-    "src.6963e3a5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "{settlement} ({kind})"
       }
     },
     "src.6965b734": {
@@ -107932,16 +108137,6 @@
         "text": "has a liege cycle."
       }
     },
-    "src.6c0f13b4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Offer expiry"
-      }
-    },
     "src.6c1090f3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108381,6 +108576,16 @@
       ],
       "source": {
         "text": "That proposal was refused. You can seek an additional spouse in {days} days."
+      }
+    },
+    "src.6caf6c95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The forester catches you over the kill."
       }
     },
     "src.6cb7a8de": {
@@ -110890,6 +111095,16 @@
         "text": "Purpose-made probes, knives, forceps, and cauteries support manual treatment."
       }
     },
+    "src.72218404": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 Now try Desperate measures in Work & Wealth. Choose one illegal act, then weigh its possible gain against the risk of being caught."
+      }
+    },
     "src.723289b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112905,6 +113120,16 @@
         "text": "⚙ Enterprise staffing preview"
       }
     },
+    "src.756d5b17": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/actions.js"
+      ],
+      "source": {
+        "text": "🗡 Desperate measures…"
+      }
+    },
     "src.757305ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113544,6 +113769,16 @@
       ],
       "source": {
         "text": "No focus in this binding is available in your current role or situation."
+      }
+    },
+    "src.76bd4ec6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Cut and sell forbidden wood."
       }
     },
     "src.76bdb6d5": {
@@ -118740,6 +118975,16 @@
         "text": "A Hauberk That Fits"
       }
     },
+    "src.8090390b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "one family land plot at {settlement}"
+      }
+    },
     "src.8093b5af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123782,16 +124027,6 @@
         "text": "🗣 The house of {name} does not forgive the slight."
       }
     },
-    "src.89b2bd2d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Rank & Realm contains your household terms, next duty, and routes to freedom."
-      }
-    },
     "src.89b48984": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125845,8 +126080,7 @@
       "glossary": [],
       "location": [
         "js/institutions.js",
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "settlement"
@@ -126907,16 +127141,6 @@
         "text": "Grant a directly held county…"
       }
     },
-    "src.8f4847c7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Home terms: Review your tenure and routes to freedom in Rank & Realm."
-      }
-    },
     "src.8f49c48d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126956,16 +127180,6 @@
       ],
       "source": {
         "text": "Keen Seax"
-      }
-    },
-    "src.8f6319dc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Choose a Chronicle file first."
       }
     },
     "src.8f635989": {
@@ -127609,16 +127823,6 @@
         "text": "Royal family matches become available at age 12."
       }
     },
-    "src.90b24b82": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback. Download Chronicle creates a complete JSON history that View Chronicle opens from the title screen."
-      }
-    },
     "src.90c37069": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127737,8 +127941,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Standing terms were applied to this saved family base. {breakdown}"
@@ -128132,16 +128335,6 @@
       ],
       "source": {
         "text": "{good} · {mode}"
-      }
-    },
-    "src.91d64e54": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Pending obligation"
       }
     },
     "src.91dac4d2": {
@@ -128816,6 +129009,16 @@
         "text": "The crown gives; it is not taken from."
       }
     },
+    "src.93472e77": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Desperate Measures"
+      }
+    },
     "src.934a38f8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129204,16 +129407,6 @@
       ],
       "source": {
         "text": "By dawn, three vital words have three possible meanings."
-      }
-    },
-    "src.942bb613": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Events pause the days until you choose an answer."
       }
     },
     "src.9453a449": {
@@ -132228,6 +132421,16 @@
         "text": "btn small coachmark-stop"
       }
     },
+    "src.9a0c50b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The wood is sold before anyone traces it to your door."
+      }
+    },
     "src.9a0fc21d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133071,6 +133274,16 @@
       ],
       "source": {
         "text": "A keen reply could shame him — or you."
+      }
+    },
+    "src.9b926a3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Events pause the days until you choose an answer, then time resumes automatically."
       }
     },
     "src.9b95e7ed": {
@@ -136242,16 +136455,6 @@
         "text": "The lord’s protection, at a small reminder of its price."
       }
     },
-    "src.a15e8ea1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Controller"
-      }
-    },
     "src.a15fb5a3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137488,26 +137691,6 @@
         "text": "You need {needed} piety (now {current})."
       }
     },
-    "src.a3ac4b24": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Ordinary Work"
-      }
-    },
-    "src.a3ac4e23": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Old Custom case: witness {witness}, officer {officer}"
-      }
-    },
     "src.a3afc173": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138126,6 +138309,16 @@
       ],
       "source": {
         "text": "Final service is already underway."
+      }
+    },
+    "src.a4f3a1ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Freedom agreement"
       }
     },
     "src.a4f4fe23": {
@@ -139039,8 +139232,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Settlement"
@@ -139526,6 +139718,16 @@
         "text": "Unlocks granary choices during famine"
       }
     },
+    "src.a7b28b2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Review your station, home, current lord, and lawful routes to freedom."
+      }
+    },
     "src.a7b59930": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139615,6 +139817,16 @@
       ],
       "source": {
         "text": "Tolerated Minorities"
+      }
+    },
+    "src.a7dd736a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "You scatter the escort, hide the coin, and leave no witness willing to name you."
       }
     },
     "src.a7deb469": {
@@ -142483,16 +142695,6 @@
         "text": "Silk Sash"
       }
     },
-    "src.ada7afdb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "none"
-      }
-    },
     "src.adb48efc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142672,6 +142874,16 @@
       ],
       "source": {
         "text": "Development {development}"
+      }
+    },
+    "src.ae04ecd1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Credit uses reliable income, eligible collateral, standing allowance, and current debt. Pledged credit can use unassigned treasures, eligible permanent holdings, or a complete group of family land plots. Maintained household standards are expenses and cannot be pledged."
       }
     },
     "src.ae061392": {
@@ -144502,6 +144714,16 @@
         "text": "Demand payment"
       }
     },
+    "src.b111f828": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Current offer"
+      }
+    },
     "src.b116e272": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -144640,6 +144862,16 @@
       ],
       "source": {
         "text": "Already occupying {settlement}:"
+      }
+    },
+    "src.b16fbcb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open slot {slot} Chronicle"
       }
     },
     "src.b179982b": {
@@ -145352,6 +145584,16 @@
         "text": "🕯 Your nephew {name} has died, aged {age}."
       }
     },
+    "src.b2c3e813": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A better return, but capture puts you directly before the lord."
+      }
+    },
     "src.b2c4d077": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145860,16 +146102,6 @@
       ],
       "source": {
         "text": "Ravenna"
-      }
-    },
-    "src.b3a43630": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Yes"
       }
     },
     "src.b3a4f6d0": {
@@ -147273,6 +147505,16 @@
         "text": "🏗 {building} rises in {settlement}, {province}."
       }
     },
+    "src.b643c704": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Service"
+      }
+    },
     "src.b644e751": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147311,6 +147553,16 @@
       ],
       "source": {
         "text": "Not yet; keep these terms until their stated expiry."
+      }
+    },
+    "src.b65ee2e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{asset} is taken. If that land supports the family manor, the manor and gentry station may also be lost. Prestige falls, and lenders refuse the household for four seasons."
       }
     },
     "src.b65f9bd3": {
@@ -147572,6 +147824,16 @@
       ],
       "source": {
         "text": "🕯 Your cousin {name} has died, aged {age}."
+      }
+    },
+    "src.b6e148c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} land plots at {settlement}"
       }
     },
     "src.b6e5b15c": {
@@ -150819,16 +151081,6 @@
         "text": "keep a .txt backup if this browser wipes its saves, or move it to another device"
       }
     },
-    "src.bda3025c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "That Chronicle file could not be read."
-      }
-    },
     "src.bda34df7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152912,16 +153164,6 @@
         "text": "Sell it ({money:gold})"
       }
     },
-    "src.c1a559f6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Review your household tenure, next duty, customary rights, and lawful routes to freedom."
-      }
-    },
     "src.c1ab3478": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -154232,6 +154474,16 @@
         "text": "Heavy Plough"
       }
     },
+    "src.c419005c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Waylay a dues cart."
+      }
+    },
     "src.c42b1db2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -154330,6 +154582,16 @@
       ],
       "source": {
         "text": "Western Karakhanids"
+      }
+    },
+    "src.c44a7873": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Build Standing with your current lord before petitioning."
       }
     },
     "src.c44b1d64": {
@@ -154823,16 +155085,6 @@
         "text": "scutage in force"
       }
     },
-    "src.c52ada70": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Holding"
-      }
-    },
     "src.c53a2cfe": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -155035,16 +155287,6 @@
         "text": "Coin and prices this year"
       }
     },
-    "src.c594edce": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Routes to Freedom"
-      }
-    },
     "src.c595796a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -155143,16 +155385,6 @@
       ],
       "source": {
         "text": "No currently eligible child has an empty choice affected by this policy. The policy will still apply when another child becomes eligible."
-      }
-    },
-    "src.c5dbad37": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Customary Rights"
       }
     },
     "src.c5e24bd9": {
@@ -156280,7 +156512,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Expires"
@@ -156455,6 +156688,16 @@
       ],
       "source": {
         "text": "Burgos"
+      }
+    },
+    "src.c8048878": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Rank & Realm contains your station, home, lord, and routes to freedom."
       }
     },
     "src.c80631f3": {
@@ -157089,6 +157332,16 @@
         "text": "Stay free and exposed."
       }
     },
+    "src.c926013c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Local ruler"
+      }
+    },
     "src.c92d7d21": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -157267,6 +157520,16 @@
       ],
       "source": {
         "text": "Audit every holding."
+      }
+    },
+    "src.c98ac365": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "One land plot at {settlement}"
       }
     },
     "src.c99ab7f8": {
@@ -158521,8 +158784,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Final service"
@@ -158620,16 +158882,6 @@
       ],
       "source": {
         "text": "Croatia"
-      }
-    },
-    "src.cc175fef": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "{standing} (petition at +{threshold})"
       }
     },
     "src.cc1cdf20": {
@@ -158765,16 +159017,6 @@
       ],
       "source": {
         "text": "Present the charter."
-      }
-    },
-    "src.cc4e3243": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "County ruler"
       }
     },
     "src.cc501424": {
@@ -159107,16 +159349,6 @@
       ],
       "source": {
         "text": "Vacancy"
-      }
-    },
-    "src.ccd2d9c6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}."
       }
     },
     "src.ccdae04c": {
@@ -160025,16 +160257,6 @@
         "text": "Seal follows witness follows payment. {rulername} cannot explain the chain, and the chair is emptied in disgrace."
       }
     },
-    "src.ce927792": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "A review of the household custom is pending under the current authority."
-      }
-    },
     "src.ce947392": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -160504,16 +160726,6 @@
       ],
       "source": {
         "text": "Caucasian"
-      }
-    },
-    "src.cf948419": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Open a downloaded Chronicle to explore a house across generations. Chronicle files are histories only; they do not resume a saved game."
       }
     },
     "src.cf94b3b7": {
@@ -161811,16 +162023,6 @@
         "text": "Changes the offered term band from +{fromMin}–{fromMax} to +{toMin}–{toMax}."
       }
     },
-    "src.d29a17d5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/actions.js"
-      ],
-      "source": {
-        "text": "🏹 Poach the lord’s game"
-      }
-    },
     "src.d29c272c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -162920,6 +163122,16 @@
       ],
       "source": {
         "text": "Unspoken words can never be traced."
+      }
+    },
+    "src.d4f9bf26": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Hide filters"
       }
     },
     "src.d4fc1433": {
@@ -165127,6 +165339,16 @@
         "text": "Tap a child to set their education focus and schooling."
       }
     },
+    "src.d90aca4f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Saved games"
+      }
+    },
     "src.d90ba24d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -165728,16 +165950,6 @@
       ],
       "source": {
         "text": "Brought a rival low by intrigue."
-      }
-    },
-    "src.da2b91d4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 Now try Poach the lord’s game in Work & Wealth. It is risky, but it shows how a deed can bring an immediate result—or another choice."
       }
     },
     "src.da306fa7": {
@@ -166603,16 +166815,6 @@
         "text": "Linger in the bath-houses."
       }
     },
-    "src.dc2cf6e2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Next due obligation"
-      }
-    },
     "src.dc34c11a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -166733,16 +166935,6 @@
         "text": "You are made to do public penance, barefoot in the snow."
       }
     },
-    "src.dc7c9916": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "The purchase route is unavailable."
-      }
-    },
     "src.dc81153d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -166801,6 +166993,16 @@
       ],
       "source": {
         "text": "Caught in the moonlight, shovel in hand. The moot fines you."
+      }
+    },
+    "src.dc9e569f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Show filters"
       }
     },
     "src.dca4085e": {
@@ -167078,7 +167280,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Price"
@@ -168579,6 +168782,16 @@
         "text": "Already at baseline."
       }
     },
+    "src.e0119e9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That Chronicle or save file could not be read."
+      }
+    },
     "src.e014943d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -168968,6 +169181,16 @@
       ],
       "source": {
         "text": "Eligible: living niece or nephew of the family."
+      }
+    },
+    "src.e0ccdec2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "You slip the grain away and find a buyer who asks no questions."
       }
     },
     "src.e0cf2b65": {
@@ -170311,16 +170534,6 @@
         "text": "Every debt in one place — most of them owed to you."
       }
     },
-    "src.e336cf5b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Recent authority review: {outcome}."
-      }
-    },
     "src.e34038d8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -171635,6 +171848,16 @@
         "text": "Recover from {ailment}"
       }
     },
+    "src.e5ce3bdc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Fallowborn Chronicle or save file"
+      }
+    },
     "src.e5cf0644": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -172443,16 +172666,6 @@
       ],
       "source": {
         "text": "⛓ {pope} refuses absolution to {target}; the sentence remains."
-      }
-    },
-    "src.e7313018": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Credit uses reliable income, eligible collateral, standing allowance, and current debt."
       }
     },
     "src.e7374c90": {
@@ -174161,6 +174374,16 @@
         "text": "Music for offline play"
       }
     },
+    "src.ea6979a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Saved game"
+      }
+    },
     "src.ea73fab8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -174731,16 +174954,6 @@
       ],
       "source": {
         "text": "Bark liquors turn hides into durable leather."
-      }
-    },
-    "src.ebb68fa4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Liege lord"
       }
     },
     "src.ebbb50ee": {
@@ -175673,6 +175886,16 @@
       ],
       "source": {
         "text": "{money:amount} each season"
+      }
+    },
+    "src.ed6583cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The lord’s men catch you cutting and impose a fine."
       }
     },
     "src.ed6bc0b2": {
@@ -176691,6 +176914,16 @@
         "text": "Receive the civic delegation."
       }
     },
+    "src.ef9e75b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your gentle household holds its local estate here."
+      }
+    },
     "src.efa77a48": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -177122,6 +177355,16 @@
       ],
       "source": {
         "text": "Order wins respect in Rome and unease at home."
+      }
+    },
+    "src.f06801f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That file is not a Fallowborn Chronicle or save file."
       }
     },
     "src.f0699034": {
@@ -177864,6 +178107,16 @@
         "text": "A career record keeps rank and experience even while inactive."
       }
     },
+    "src.f1b8db97": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That saved game does not contain a readable Chronicle."
+      }
+    },
     "src.f1bace39": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -178044,6 +178297,16 @@
         "text": "⚔ The {campaign} begins. {leader} takes command of the gathered host."
       }
     },
+    "src.f220dc20": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A bold theft with enough grain to sell — if the servants do not corner you."
+      }
+    },
     "src.f22151a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -178062,6 +178325,16 @@
       ],
       "source": {
         "text": "Würzburg"
+      }
+    },
+    "src.f223ec82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your household terms are under review."
       }
     },
     "src.f22587bf": {
@@ -178184,6 +178457,16 @@
         "text": "Province levy"
       }
     },
+    "src.f27422b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Break into the lord’s grain store."
+      }
+    },
     "src.f275d3c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -178192,6 +178475,16 @@
       ],
       "source": {
         "text": "{protagonist} won lawful freedom from {lord} at {home} under the Old Custom in {year}."
+      }
+    },
+    "src.f28b467f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Explore a Chronicle from this browser’s saved games, a downloaded save file, or a Chronicle file. Viewing a history never resumes or changes its saved game."
       }
     },
     "src.f28f4f67": {
@@ -179047,6 +179340,16 @@
         "text": "A cart, a dark road, a new parish where no one knows your name — or your debts. Both follow you anyway."
       }
     },
+    "src.f422f2e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open Chronicle or save file"
+      }
+    },
     "src.f42f0263": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -179096,6 +179399,16 @@
       ],
       "source": {
         "text": "lord"
+      }
+    },
+    "src.f4395bea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Poach protected game."
       }
     },
     "src.f43e8468": {
@@ -179543,6 +179856,16 @@
       ],
       "source": {
         "text": "A short visit keeps rents and obligations honest."
+      }
+    },
+    "src.f5240e27": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Paid"
       }
     },
     "src.f525a04f": {
@@ -180768,16 +181091,6 @@
       ],
       "source": {
         "text": "🎓 You will be schooled in intrigue."
-      }
-    },
-    "src.f77868ae": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Petition eligibility"
       }
     },
     "src.f7799e64": {
@@ -182705,6 +183018,16 @@
         "text": "Bratislava"
       }
     },
+    "src.fb1ec3ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A quiet trespass with a small return and a light fine if caught."
+      }
+    },
     "src.fb24a2d8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -183121,8 +183444,7 @@
       "glossary": [],
       "location": [
         "js/economy.js",
-        "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "{money:gold}"
@@ -184072,6 +184394,16 @@
       ],
       "source": {
         "text": "A new god, an old ambition — the font may open doors."
+      }
+    },
+    "src.fe15f7a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your household is bound to this home; customary service appears as events when it needs your decision."
       }
     },
     "src.fe1617a8": {
@@ -191784,12 +192116,12 @@
         "text": "A diplomatic relationship changes"
       }
     },
-    "ui:A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose.": {
+    "ui:A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose, then time resumes automatically.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose."
+        "text": "A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose, then time resumes automatically."
       }
     },
     "ui:A free merit petition weighs Learning, permanent lay standing, investiture policy, and the appointing authority’s support.": {
@@ -192213,14 +192545,6 @@
       "location": "js/economy.js",
       "source": {
         "text": "A resident {profession} must hold {rank} rank."
-      }
-    },
-    "ui:A review of the household custom is pending under the current authority.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "A review of the household custom is pending under the current authority."
       }
     },
     "ui:A sacred office forbids this marriage.": {
@@ -194368,7 +194692,7 @@
     "ui:Available now.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_panels.js",
+      "location": "js/actions.js",
       "source": {
         "text": "Available now."
       }
@@ -195148,6 +195472,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Broad {profession}"
+      }
+    },
+    "ui:Build Standing with your current lord before petitioning.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Build Standing with your current lord before petitioning."
       }
     },
     "ui:Build a complete proposal that skips reserved counties and keeps your capital and home county.": {
@@ -196347,6 +196679,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose long-range diplomatic and research priorities."
+      }
+    },
+    "ui:Choose one act. Only your choice spends the day and starts the shared {days}-day cooldown.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose one act. Only your choice spends the day and starts the shared {days}-day cooldown."
       }
     },
     "ui:Choose one directly held county, or complete a de jure duchy where this ruler already holds land.": {
@@ -197874,12 +198216,12 @@
         "text": "Creates this vassal’s existing one-year levy promise."
       }
     },
-    "ui:Credit uses reliable income, eligible collateral, standing allowance, and current debt.": {
+    "ui:Credit uses reliable income, eligible collateral, standing allowance, and current debt. Pledged credit can use unassigned treasures, eligible permanent holdings, or a complete group of family land plots. Maintained household standards are expenses and cannot be pledged.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Credit uses reliable income, eligible collateral, standing allowance, and current debt."
+        "text": "Credit uses reliable income, eligible collateral, standing allowance, and current debt. Pledged credit can use unassigned treasures, eligible permanent holdings, or a complete group of family land plots. Maintained household standards are expenses and cannot be pledged."
       }
     },
     "ui:Cross border or sea to plunder foreign wealth, livestock, goods, and thralls without a formal war.": {
@@ -198091,6 +198433,14 @@
         "text": "Current lean"
       }
     },
+    "ui:Current offer": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Current offer"
+      }
+    },
     "ui:Current officer": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -198165,22 +198515,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Custom & Reformed Faiths"
-      }
-    },
-    "ui:Customary Duties": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Customary Duties"
-      }
-    },
-    "ui:Customary Rights": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Customary Rights"
       }
     },
     "ui:Customary obligation": {
@@ -200399,12 +200733,12 @@
         "text": "Events and oaths will use this exact person."
       }
     },
-    "ui:Events pause the days until you choose an answer.": {
+    "ui:Events pause the days until you choose an answer, then time resumes automatically.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Events pause the days until you choose an answer."
+        "text": "Events pause the days until you choose an answer, then time resumes automatically."
       }
     },
     "ui:Every county available to grant is reserved.": {
@@ -200612,9 +200946,17 @@
     "ui:Expiry or a material change to the named tenure invalidates this offer.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_panels.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Expiry or a material change to the named tenure invalidates this offer."
+      }
+    },
+    "ui:Explore a Chronicle from this browser’s saved games, a downloaded save file, or a Chronicle file. Viewing a history never resumes or changes its saved game.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Explore a Chronicle from this browser’s saved games, a downloaded save file, or a Chronicle file. Viewing a history never resumes or changes its saved game."
       }
     },
     "ui:Explore full Chronicle": {
@@ -200753,12 +201095,12 @@
         "text": "Faith relations change"
       }
     },
-    "ui:Fallowborn Chronicle file": {
+    "ui:Fallowborn Chronicle or save file": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Fallowborn Chronicle file"
+        "text": "Fallowborn Chronicle or save file"
       }
     },
     "ui:Families willing to hear an offer for {name}’s hand:": {
@@ -201439,6 +201781,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Free"
+      }
+    },
+    "ui:Freedom": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Freedom"
+      }
+    },
+    "ui:Freedom agreement": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Freedom agreement"
       }
     },
     "ui:Freeholder": {
@@ -202500,6 +202858,14 @@
         "text": "Hide details"
       }
     },
+    "ui:Hide filters": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Hide filters"
+      }
+    },
     "ui:High garrison risk": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -202725,12 +203091,12 @@
         "text": "Holy War"
       }
     },
-    "ui:Home": {
+    "ui:Home & freedom: Review your station and routes to freedom in Rank & Realm.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_panels.js",
+      "location": "js/main.js",
       "source": {
-        "text": "Home"
+        "text": "Home & freedom: Review your station and routes to freedom in Rank & Realm."
       }
     },
     "ui:Home instruction": {
@@ -202747,14 +203113,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Home instruction (free)"
-      }
-    },
-    "ui:Home terms: Review your tenure and routes to freedom in Rank & Realm.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "Home terms: Review your tenure and routes to freedom in Rank & Realm."
       }
     },
     "ui:Home: {province}": {
@@ -206565,14 +206923,6 @@
         "text": "Next: {fort}"
       }
     },
-    "ui:No": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "No"
-      }
-    },
     "ui:No Council office": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -208603,17 +208953,6 @@
         "text": "Offline copy"
       }
     },
-    "ui:Old Custom case: witness {witness}, officer {officer}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "officer",
-        "witness"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Old Custom case: witness {witness}, officer {officer}"
-      }
-    },
     "ui:Oldest first": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -209058,12 +209397,12 @@
         "text": "Only {count} may stand in one county."
       }
     },
-    "ui:Open Chronicle file": {
+    "ui:Open Chronicle or save file": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Open Chronicle file"
+        "text": "Open Chronicle or save file"
       }
     },
     "ui:Open Estates management…": {
@@ -209106,12 +209445,12 @@
         "text": "Open Royal Council management…"
       }
     },
-    "ui:Open a downloaded Chronicle to explore a house across generations. Chronicle files are histories only; they do not resume a saved game.": {
+    "ui:Open a file": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Open a downloaded Chronicle to explore a house across generations. Chronicle files are histories only; they do not resume a saved game."
+        "text": "Open a file"
       }
     },
     "ui:Open an enterprise in {settlement}…": {
@@ -209122,6 +209461,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Open an enterprise in {settlement}…"
+      }
+    },
+    "ui:Open autosave Chronicle": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Open autosave Chronicle"
       }
     },
     "ui:Open character sheet for {name}": {
@@ -209192,6 +209539,16 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Open slot"
+      }
+    },
+    "ui:Open slot {slot} Chronicle": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "slot"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Open slot {slot} Chronicle"
       }
     },
     "ui:Open slots are filled immediately and whenever a project completes.": {
@@ -209456,14 +209813,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Order"
-      }
-    },
-    "ui:Ordinary Work": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Ordinary Work"
       }
     },
     "ui:Ordinary courtship, arranged matches, AI marriages, and royal offers still forbid siblings and every closer lineal or avuncular relation. Only the current player may approach an adult opposite-sex full or half sibling who is free to marry, in the same county, at +40 Standing, and only while no other courtship is active.": {
@@ -211658,12 +212007,12 @@
         "text": "Rank"
       }
     },
-    "ui:Rank & Realm contains your household terms, next duty, and routes to freedom.": {
+    "ui:Rank & Realm contains your station, home, lord, and routes to freedom.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "Rank & Realm contains your household terms, next duty, and routes to freedom."
+        "text": "Rank & Realm contains your station, home, lord, and routes to freedom."
       }
     },
     "ui:Rank becomes {rank}": {
@@ -211916,16 +212265,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Recent aggressive declarations by the same ruler multiply those political costs and increase breakaway pressure. A conquered county receives Conquered Without Right, reducing tax and levy while increasing unrest for its listed duration."
-      }
-    },
-    "ui:Recent authority review: {outcome}.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "outcome"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Recent authority review: {outcome}."
       }
     },
     "ui:Recipient cooldown: {days} days remain.": {
@@ -214044,6 +214383,14 @@
         "text": "Review every holder, scope, effect, protected duration, revocation rule, and organized opposition."
       }
     },
+    "ui:Review freedom terms…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Review freedom terms…"
+      }
+    },
     "ui:Review investiture and episcopal powers.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -214241,20 +214588,20 @@
         "text": "Review venture"
       }
     },
-    "ui:Review your household tenure, next duty, customary rights, and lawful routes to freedom.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "Review your household tenure, next duty, customary rights, and lawful routes to freedom."
-      }
-    },
     "ui:Review your own domain, obligations, institution, and political position.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Review your own domain, obligations, institution, and political position."
+      }
+    },
+    "ui:Review your station, home, current lord, and lawful routes to freedom.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Review your station, home, current lord, and lawful routes to freedom."
       }
     },
     "ui:Review your venture": {
@@ -214401,14 +214748,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Root tradition"
-      }
-    },
-    "ui:Routes to Freedom": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Routes to Freedom"
       }
     },
     "ui:Routine": {
@@ -214681,6 +215020,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Save shortcuts"
+      }
+    },
+    "ui:Saved game": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Saved game"
+      }
+    },
+    "ui:Saved games": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Saved games"
       }
     },
     "ui:Saved offer": {
@@ -215539,6 +215894,14 @@
         "text": "Show all {count}"
       }
     },
+    "ui:Show filters": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Show filters"
+      }
+    },
     "ui:Sibling": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -216098,7 +216461,7 @@
       "glossary": [
         "breakdown"
       ],
-      "location": "js/ui_panels.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Standing terms were applied to this saved family base. {breakdown}"
       }
@@ -217012,14 +217375,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Tenure"
-      }
-    },
-    "ui:Tenure & Custom": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Tenure & Custom"
       }
     },
     "ui:Terms for {target}": {
@@ -218807,14 +219162,6 @@
       "location": "js/actions.js",
       "source": {
         "text": "The purchase price is unavailable."
-      }
-    },
-    "ui:The purchase route is unavailable.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "The purchase route is unavailable."
       }
     },
     "ui:The purse cannot cover this stake and any reachable route.": {
@@ -222003,14 +222350,6 @@
         "text": "Years"
       }
     },
-    "ui:Yes": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Yes"
-      }
-    },
     "ui:Yield, highest first": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -222826,17 +223165,12 @@
         "text": "Your friend"
       }
     },
-    "ui:Your gentle household resides in {settlement}, a {kind} in the county of {county}, holding local estate and standing under {ruler}.": {
+    "ui:Your gentle household holds its local estate here.": {
       "context": "Explicit UI localization call.",
-      "glossary": [
-        "county",
-        "kind",
-        "ruler",
-        "settlement"
-      ],
+      "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "Your gentle household resides in {settlement}, a {kind} in the county of {county}, holding local estate and standing under {ruler}."
+        "text": "Your gentle household holds its local estate here."
       }
     },
     "ui:Your home county already holds a market charter.": {
@@ -222995,6 +223329,14 @@
         "text": "Your household"
       }
     },
+    "ui:Your household is bound to this home; customary service appears as events when it needs your decision.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Your household is bound to this home; customary service appears as events when it needs your decision."
+      }
+    },
     "ui:Your household is personally free and can accumulate durable property and local influence.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -223003,30 +223345,12 @@
         "text": "Your household is personally free and can accumulate durable property and local influence."
       }
     },
-    "ui:Your household lives in {settlement}, a {kind} in the county of {county}. As serfs, you are bound to the soil under {ruler} and owe customary dues and labor.": {
+    "ui:Your household lives here as free commoners.": {
       "context": "Explicit UI localization call.",
-      "glossary": [
-        "county",
-        "kind",
-        "ruler",
-        "settlement"
-      ],
+      "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "Your household lives in {settlement}, a {kind} in the county of {county}. As serfs, you are bound to the soil under {ruler} and owe customary dues and labor."
-      }
-    },
-    "ui:Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "county",
-        "kind",
-        "ruler",
-        "settlement"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}."
+        "text": "Your household lives here as free commoners."
       }
     },
     "ui:Your household survives under another lord’s authority.": {
@@ -223037,12 +223361,12 @@
         "text": "Your household survives under another lord’s authority."
       }
     },
-    "ui:Your household's terms and routes to freedom are in Rank & Realm. First steps remain in Deeds.": {
+    "ui:Your household terms are under review.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js",
+      "location": "js/ui_panels.js",
       "source": {
-        "text": "Your household's terms and routes to freedom are in Rank & Realm. First steps remain in Deeds."
+        "text": "Your household terms are under review."
       }
     },
     "ui:Your incoming {profession} monopoly is tied to {province} and will end immediately when the household leaves.": {
@@ -223374,6 +223698,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Your spouse"
+      }
+    },
+    "ui:Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds."
       }
     },
     "ui:Your tax +{tax}%": {
@@ -223917,12 +224249,12 @@
         "text": "cheap"
       }
     },
-    "ui:choose a fallowborn-chronicle JSON file": {
+    "ui:choose a Chronicle .json file or an exported save .txt file": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "choose a fallowborn-chronicle JSON file"
+        "text": "choose a Chronicle .json file or an exported save .txt file"
       }
     },
     "ui:coastal": {
@@ -224619,14 +224951,6 @@
         "text": "no territorial claim"
       }
     },
-    "ui:none": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "none"
-      }
-    },
     "ui:none chosen": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -225083,7 +225407,7 @@
     "ui:settlement": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_panels.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "settlement"
       }
@@ -225618,14 +225942,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "venture settled: {money:payout} returned"
-      }
-    },
-    "ui:village": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "village"
       }
     },
     "ui:war": {
@@ -226274,6 +226590,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{asset} is taken, prestige falls, and lenders refuse the household for four seasons."
+      }
+    },
+    "ui:{asset} is taken. If that land supports the family manor, the manor and gentry station may also be lost. Prestige falls, and lenders refuse the household for four seasons.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "asset"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{asset} is taken. If that land supports the family manor, the manor and gentry station may also be lost. Prestige falls, and lenders refuse the household for four seasons."
       }
     },
     "ui:{assigned} of {required} staffing positions are filled.": {
@@ -228416,7 +228742,7 @@
         "lord",
         "revision"
       ],
-      "location": "js/ui_panels.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "{lord}, tenure revision {revision}"
       }
@@ -228726,7 +229052,7 @@
       "glossary": [
         "money:gold"
       ],
-      "location": "js/ui_panels.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "{money:gold}"
       }
@@ -230625,17 +230951,6 @@
         "text": "{served}/{seasons} seasons · not yet mustered"
       }
     },
-    "ui:{settlement} ({kind})": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "kind",
-        "settlement"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "{settlement} ({kind})"
-      }
-    },
     "ui:{settlement} — {count}/{max} plots": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -230859,17 +231174,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{standard} is already at its highest level"
-      }
-    },
-    "ui:{standing} (petition at +{threshold})": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "standing",
-        "threshold"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "{standing} (petition at +{threshold})"
       }
     },
     "ui:{standing} standing · next in {settlement}.": {

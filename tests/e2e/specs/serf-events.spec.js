@@ -35,6 +35,136 @@ async function startGame(page, testInfo) {
   });
 }
 
+test('desperate measures offers four serf-only crimes and commits only a chosen act',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const contract = await page.evaluate(function () {
+      const state = FB.state;
+      const event = FB.eventById('serf_desperate_measures');
+      const tier0 = FB.instantStatus(state, 'poach');
+      const oldTier = state.player.tier;
+      state.player.tier = 1;
+      const tier1Shown = FB.instantStatus(state, 'poach').shown;
+      state.player.tier = 2;
+      const tier2Shown = FB.instantStatus(state, 'poach').shown;
+      state.player.tier = oldTier;
+      return {
+        label:tier0.action.label,
+        flow:tier0.action.flow,
+        tier0Shown:tier0.shown,
+        tier1Shown:tier1Shown,
+        tier2Shown:tier2Shown,
+        never:event.trigger.never,
+        labels:event.options.map(function (option) { return option.label; }),
+        chances:event.options.map(function (option) { return option.chance; }),
+        rewards:event.options.map(function (option) {
+          return option.success.effects.gold;
+        }),
+        poachFailure:event.options[1].failure.effects.queue,
+        severeFailure:event.options[3].failure.effects,
+        technologyImpact:FBDATA.techImpactReviews.features
+          .serf_desperate_measures.mode,
+        validation:FB.validateActionData()
+      };
+    });
+
+    expect(contract).toEqual(expect.objectContaining({
+      label:'🗡 Desperate measures…',
+      flow:'choices',
+      tier0Shown:true,
+      tier1Shown:false,
+      tier2Shown:false,
+      never:true,
+      chances:[0.8, 0.65, 0.5, 0.3],
+      rewards:[2, 5, 10, 30],
+      poachFailure:'caught_poaching',
+      technologyImpact:'none',
+      validation:[]
+    }));
+    expect(contract.labels).toEqual([
+      'Cut and sell forbidden wood.',
+      'Poach protected game.',
+      'Break into the lord’s grain store.',
+      'Waylay a dues cart.'
+    ]);
+    expect(contract.severeFailure).toEqual(expect.objectContaining({
+      gold:-6,
+      health:-5,
+      prestige:-8
+    }));
+
+    const before = await page.evaluate(function () {
+      const state = FB.state;
+      state.slotDays = [];
+      state.eventQueue = [];
+      state.player.cooldowns = state.player.cooldowns || {};
+      delete state.player.cooldowns.poach;
+      FB.ui.refresh();
+      return {
+        turn:state.turn,
+        rng:FB.getRngState(),
+        log:state.log.length
+      };
+    });
+    await page.evaluate(function () {
+      FB.ui.revealDeedAction('poach');
+    });
+    await page.locator('[data-action-id="poach"]').click();
+    await expect(page.locator('[data-serf-hostile-deed]')).toHaveCount(4);
+    expect(await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        rng:FB.getRngState(),
+        log:FB.state.log.length,
+        cooldown:Object.prototype.hasOwnProperty.call(
+          FB.state.player.cooldowns || {}, 'poach')
+      };
+    })).toEqual({
+      turn:before.turn,
+      rng:before.rng,
+      log:before.log,
+      cooldown:false
+    });
+    await page.getByRole('button', { name:'Not today', exact:true }).click();
+    expect(await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        rng:FB.getRngState(),
+        log:FB.state.log.length,
+        cooldown:Object.prototype.hasOwnProperty.call(
+          FB.state.player.cooldowns || {}, 'poach')
+      };
+    })).toEqual({
+      turn:before.turn,
+      rng:before.rng,
+      log:before.log,
+      cooldown:false
+    });
+
+    await page.locator('[data-action-id="poach"]').click();
+    await page.locator('[data-serf-hostile-deed]').first().click();
+    const after = await page.evaluate(function () {
+      const state = FB.state;
+      const receipt = state.log.filter(function (entry) {
+        return entry.receipt &&
+          entry.receipt.eventId === 'serf_desperate_measures';
+      }).pop();
+      return {
+        turn:state.turn,
+        cooldown:state.player.cooldowns.poach,
+        receipt:receipt && receipt.receipt,
+        pickerOpen:!document.getElementById('genmodal').classList.contains('hidden')
+      };
+    });
+    expect(after.turn).toBe(before.turn + 1);
+    expect(after.cooldown).toBe(before.turn);
+    expect(after.receipt).toEqual(expect.objectContaining({
+      eventId:'serf_desperate_measures',
+      optionIndex:0
+    }));
+    expect(after.pickerOpen).toBe(false);
+  });
+
 test('the serf burden pool contains ten scheduled and two extraordinary stories',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
