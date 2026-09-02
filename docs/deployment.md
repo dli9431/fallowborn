@@ -58,10 +58,12 @@ player action or campaign transition directly:
 | --- | --- |
 | `new-game-{starting-date,seed-dialog,beginning,birthplace,character}-viewed` | A New Game attempt reached that setup screen. Each screen emits at most once per attempt, so Back navigation does not inflate the funnel; the seed dialog is an optional branch. |
 | `campaign-started` | A new campaign was created. Carries the committed starting county, culture, and religion plus `quick_start`: one stable curated-start ID, or `custom` for the ordinary setup path. |
-| `campaign-resumed` | A saved campaign was loaded; emitted at most once per page visit. |
+| `campaign-resumed` | A saved campaign began an uninterrupted foreground play entry. Loading another save during that same entry neither restarts its active clock nor emits another resume; returning to the title ends the entry. |
 | `observer-mode-started` | A new observer-mode world was started. |
-| `active-play-reached-{1,5,15,30}-minute(s)` | The current gameplay session reached that much visible, active play. |
-| `active-play-checkpoint` | Active time was recorded because the page was hidden or unloading; this is not a unique visit or session count. Carries the current in-game year as `game_year`. |
+| `first-day-advanced` | A fresh campaign advanced its first simulated day. Emitted once per campaign. |
+| `first-event-resolved` | A fresh campaign resolved its first event choice, manually or through automation. Emitted once per campaign with `resolution_mode`. |
+| `active-play-reached-{1,5,15,30,60}-minute(s)` | The current gameplay session reached that much visible, active play. |
+| `active-play-checkpoint` | Active time was recorded because the page was hidden or unloading; this is not a unique visit or session count. The first positive checkpoint is retained, later visibility checkpoints require 60 additional active seconds, and final page-hide checkpoints retain the latest value. Carries the current in-game year as `game_year`. |
 | `returned-to-title` | The player deliberately returned from a running campaign or observer world to the title screen. |
 | `player-life-ended` | The current player character died with at least one playable heir. |
 | `succession-completed` | An heir took over after a death. |
@@ -69,7 +71,7 @@ player action or campaign transition directly:
 | `campaign-ended-no-heir` | The campaign ended because no playable heir remained. |
 
 Every event carries `telemetry_schema`, `game_version`, and `locale`. When available, the shared
-campaign properties are `start_bookmark`, `player_tier`, and `dynasty_generation`; lifecycle
+campaign properties are `start_bookmark`, `quick_start`, `player_tier`, and `dynasty_generation`; lifecycle
 events add only bounded context such as `entry_type`, `scenario`, `family_preset`,
 `quick_start`, `starting_location`, `starting_culture`, `starting_religion`, `active_seconds`, `game_year`, or
 checkpoint reason. The three `starting_*` properties appear only on `campaign-started`, use
@@ -77,6 +79,10 @@ stable internal IDs, and describe the character's committed start. Player and dy
 world seeds, later locations, rendered death text, and save contents must never be sent. Do Not
 Track remains respected by the Umami loader. Older event names remain only as historical schema-1
 rows in Umami.
+Fresh campaigns save the bounded `quick_start` origin so engagement, resume, and lifecycle
+events can be compared between `custom` and each curated start. Saves created before that field
+existed report `unknown` after load and are grandfathered past the two campaign-once activation
+events rather than producing false first-day or first-event records.
 Once campaign state exists, every event carrying `start_bookmark` also carries the current
 `game_year`. The pre-campaign New Game screen events are the deliberate exception: they may name
 the selected bookmark before any campaign date exists.

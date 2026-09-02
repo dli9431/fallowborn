@@ -2,12 +2,14 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html',
+  'js/events.js',
   'js/main.js',
   'js/portrait.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'data/bookmarks.js',
   'data/cultures.js',
+  'data/events_tutorial.js',
   'data/starts.js'
 ]);
 
@@ -186,9 +188,24 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     expect(['name', 'dynasty', 'seed', 'province', 'save'].filter(function (key) {
       return Object.prototype.hasOwnProperty.call(campaignStarted.data, key);
     })).toEqual([]);
+    expect(await page.evaluate(function () {
+      return FB.state.telemetry;
+    })).toEqual({
+      version:1,
+      quickStart:'custom',
+      firstDayAdvanced:0,
+      firstEventResolved:0
+    });
 
     await page.evaluate(function () {
-      for (let i = 0; i < 120; i++) {
+      FB.game.passDay({ deferUi:true });
+      const ev = FB.eventById('tut_welcome');
+      FB.resolveEventOption(FB.state, ev, ev.options[0],
+        FB.eventContext(FB.state, {}), { automated:false });
+    });
+
+    await page.evaluate(function () {
+      for (let i = 0; i < 240; i++) {
         window.__telemetryNow += 15000;
         document.dispatchEvent(new Event('visibilitychange'));
       }
@@ -206,17 +223,27 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
       'new-game-character-viewed',
       'campaign-started',
       'hint-shown',
+      'first-day-advanced',
+      'first-event-resolved',
       'active-play-reached-1-minute',
       'active-play-reached-5-minutes',
       'active-play-reached-15-minutes',
       'active-play-reached-30-minutes',
+      'active-play-reached-60-minutes',
       'active-play-checkpoint'
     ]);
     expect(events[events.length - 1].data).toEqual(expect.objectContaining({
       entry_type:'new-campaign',
-      active_seconds:1800,
+      active_seconds:3600,
       checkpoint_reason:'page-hide',
-      game_year:867
+      game_year:867,
+      quick_start:'custom'
+    }));
+    expect(events.filter(function (event) {
+      return event.name === 'first-event-resolved';
+    })[0].data).toEqual(expect.objectContaining({
+      resolution_mode:'manual',
+      quick_start:'custom'
     }));
     expect(events.filter(function (event) {
       return event.name.indexOf('new-game-') !== 0 &&
@@ -229,6 +256,9 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
       return JSON.parse(FB.save.serialize());
     });
     await page.evaluate(function (data) {
+      window.__telemetryResumeRealNow = Date.now;
+      window.__telemetryResumeNow = Date.now();
+      Date.now = function () { return window.__telemetryResumeNow; };
       return new Promise(function (resolve, reject) {
         if (!FB.game.loadData(data, resolve)) {
           reject(new Error('Synthetic save was rejected'));
@@ -245,8 +275,16 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
         game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
         start_bookmark:'867',
         game_year:867,
-        entry_type:'resumed-campaign'
+        entry_type:'resumed-campaign',
+        quick_start:'custom'
       })
+    });
+
+    await page.evaluate(function () {
+      for (let i = 0; i < 4; i++) {
+        window.__telemetryResumeNow += 15000;
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
     });
 
     await page.evaluate(function (data) {
@@ -257,10 +295,37 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
       });
     }, saved);
     expect(await page.evaluate(function () {
-      return window.__telemetryEvents.filter(function (event) {
+      for (let i = 0; i < 16; i++) {
+        window.__telemetryResumeNow += 15000;
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
+      Date.now = window.__telemetryResumeRealNow;
+      delete window.__telemetryResumeRealNow;
+      delete window.__telemetryResumeNow;
+      const resumeEvents = window.__telemetryEvents.filter(function (event) {
         return event.name === 'campaign-resumed';
-      }).length;
-    })).toBe(1);
+      });
+      const resumedMilestones = window.__telemetryEvents.filter(function (event) {
+        return event.data.entry_type === 'resumed-campaign' &&
+          event.name.indexOf('active-play-reached-') === 0;
+      });
+      return {
+        resumes:resumeEvents.length,
+        milestones:resumedMilestones.map(function (event) {
+          return event.name;
+        }),
+        origins:resumedMilestones.map(function (event) {
+          return event.data.quick_start;
+        })
+      };
+    })).toEqual({
+      resumes:1,
+      milestones:[
+        'active-play-reached-1-minute',
+        'active-play-reached-5-minutes'
+      ],
+      origins:['custom', 'custom']
+    });
 
     await page.evaluate(function () {
       FB.game.toTitle();
@@ -316,10 +381,156 @@ test('campaign telemetry identifies the selected quick start',
       starting_culture:'sami',
       starting_religion:'norse_pagan'
     }));
+    expect(await page.evaluate(function () {
+      return FB.state.telemetry;
+    })).toEqual({
+      version:1,
+      quickStart:'biera_1066',
+      firstDayAdvanced:0,
+      firstEventResolved:0
+    });
     expect(events.filter(function (event) {
       return event.name.indexOf('new-game-') === 0;
     }).map(function (event) { return event.name; })).toEqual([
       'new-game-starting-date-viewed'
+    ]);
+
+    const resumed = await page.evaluate(function () {
+      const saved = JSON.parse(FB.save.serialize());
+      FB.game.passDay({ deferUi:true });
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(saved, function () {
+          resolve({
+            record:FB.state.telemetry,
+            resumeEvent:window.__telemetryEvents.filter(function (event) {
+              return event.name === 'campaign-resumed';
+            })[0],
+            firstDayEvent:window.__telemetryEvents.filter(function (event) {
+              return event.name === 'first-day-advanced';
+            })[0]
+          });
+        })) reject(new Error('Synthetic quick-start save was rejected'));
+      });
+    });
+    expect(resumed.record).toEqual({
+      version:1,
+      quickStart:'biera_1066',
+      firstDayAdvanced:0,
+      firstEventResolved:0
+    });
+    expect(resumed.resumeEvent.data).toEqual(expect.objectContaining({
+      entry_type:'resumed-campaign',
+      quick_start:'biera_1066'
+    }));
+    expect(resumed.firstDayEvent.data).toEqual(expect.objectContaining({
+      entry_type:'new-campaign',
+      quick_start:'biera_1066'
+    }));
+  });
+
+test('legacy saves do not invent campaign activation telemetry',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      window.__telemetryEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          window.__telemetryEvents.push({ name:name, data:data });
+          return true;
+        }
+      };
+    });
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const saved = JSON.parse(FB.save.serialize());
+      delete saved.state.telemetry;
+      window.__telemetryEvents = [];
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(saved, function () {
+          FB.game.passDay({ deferUi:true });
+          const ev = FB.eventById('tut_welcome');
+          FB.resolveEventOption(FB.state, ev, ev.options[0],
+            FB.eventContext(FB.state, {}), { automated:false });
+          resolve({
+            record:FB.state.telemetry,
+            events:window.__telemetryEvents
+          });
+        })) reject(new Error('Synthetic legacy save was rejected'));
+      });
+    });
+    expect(result.record).toEqual({
+      version:1,
+      quickStart:'unknown',
+      firstDayAdvanced:1,
+      firstEventResolved:1
+    });
+    expect(result.events.map(function (event) { return event.name; }))
+      .toEqual(['campaign-resumed']);
+    expect(result.events[0].data).toEqual(expect.objectContaining({
+      quick_start:'unknown'
+    }));
+  });
+
+test('visibility checkpoints require meaningful new active time',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      window.__telemetryEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          window.__telemetryEvents.push({ name:name, data:data });
+          return true;
+        }
+      };
+    });
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      window.__telemetryEvents = [];
+      const realNow = Date.now;
+      let now = Date.now();
+      let hidden = false;
+      Date.now = function () { return now; };
+      Object.defineProperty(document, 'hidden', {
+        configurable:true,
+        get:function () { return hidden; }
+      });
+      function addVisibleSeconds(seconds) {
+        hidden = false;
+        now += seconds * 1000;
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
+      function hidePage() {
+        hidden = true;
+        document.dispatchEvent(new Event('visibilitychange'));
+        hidden = false;
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
+      addVisibleSeconds(10);
+      hidePage();
+      addVisibleSeconds(30);
+      hidePage();
+      addVisibleSeconds(30);
+      hidePage();
+      addVisibleSeconds(15);
+      window.dispatchEvent(new Event('pagehide'));
+      Date.now = realNow;
+      delete document.hidden;
+      return window.__telemetryEvents.filter(function (event) {
+        return event.name === 'active-play-checkpoint';
+      }).map(function (event) {
+        return {
+          seconds:event.data.active_seconds,
+          reason:event.data.checkpoint_reason
+        };
+      });
+    })).toEqual([
+      { seconds:10, reason:'page-hidden' },
+      { seconds:70, reason:'page-hidden' },
+      { seconds:85, reason:'page-hide' }
     ]);
   });
 
@@ -473,6 +684,7 @@ test('death telemetry distinguishes succession from a completed saga',
           start_bookmark:'867',
           game_year:867,
           entry_type:'new-campaign',
+          quick_start:'custom',
           peak_player_tier:1
         })
       }
@@ -514,6 +726,7 @@ test('living succession reports a completed retirement explicitly',
           start_bookmark:'867',
           game_year:867,
           entry_type:'new-campaign',
+          quick_start:'custom',
           dynasty_generation:2
         })
       }

@@ -10418,6 +10418,9 @@ window.FB = window.FB || {};
       outcome:outcomeMessage ? FB.messageParam(outcomeMessage) : ''
     });
     FB.news(state, fallback, { kind:'choice', receipt:receipt, toast:false });
+    if (FB.game && FB.game.noteFirstEventResolved) {
+      FB.game.noteFirstEventResolved(!!meta.automated);
+    }
     return receipt;
   };
 

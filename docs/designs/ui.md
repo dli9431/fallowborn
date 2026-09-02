@@ -652,7 +652,8 @@ commits the campaign, `campaign-started` records stable internal IDs for the sta
 the character's selected culture and religion. Its bounded `quick_start` property records the
 selected curated ID, or `custom` for the ordinary setup path, so each card's popularity can be
 compared without sending names or the world seed. Quick Start emits no false viewed events for
-the setup screens it bypasses.
+the setup screens it bypasses. That origin is retained in the save and accompanies later
+engagement, resume, and lifecycle events, allowing Quick Start and custom cohorts to be compared.
 
 Hover-only affordances need a tap path (item chips toast their description).
 The enterprise catalogue shows every known enterprise for the selected settlement rather
@@ -1310,6 +1311,9 @@ above is unchanged: those are lessons a life may need again, while tips are less
 only the very first player needs. Hosted telemetry emits low-cardinality
 `hint-shown`, `hint-interacted`, `hint-dismissed`, and `tips-disabled` events keyed
 by authored hint ID and kind; no hint text or save content is sent.
+The first successfully advanced day and first resolved event choice also emit campaign-once
+activation events. Their saved completion markers prevent resumes from replaying the funnel, and
+older saves are grandfathered because their original first actions cannot be reconstructed.
 The Self sheet's faith block names the live religious head, the number of days its office
 has been vacant, or the branch's lack of a centralized office, and states excommunication
 separately from the trait chip. Faith names on Self and Land are focusable links to a

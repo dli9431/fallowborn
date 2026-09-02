@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.3';
+FB.VERSION = '1.166.4';
 FB.CHANGELOG = [
+  { v: '1.166.4', date: '2026-09-02', changes: [
+    'Campaign analytics now preserve Quick Start origins across saves and record first actions, hour-long sessions, and quieter checkpoints.'
+  ] },
   { v: '1.166.3', date: '2026-09-02', changes: [
     'Pledged loans now accept family land and more valuable property, with land defaults able to cost a supporting manor and gentry station.',
     'Serf freedom is rarer and costlier; family trees retain founder kin after succession, soldier work choices reflect professional training, and frontier settlement requires bordering empty land.'
@@ -1274,8 +1277,10 @@ FB.CHANGELOG = [
     { seconds:60, name:'active-play-reached-1-minute' },
     { seconds:300, name:'active-play-reached-5-minutes' },
     { seconds:900, name:'active-play-reached-15-minutes' },
-    { seconds:1800, name:'active-play-reached-30-minutes' }
+    { seconds:1800, name:'active-play-reached-30-minutes' },
+    { seconds:3600, name:'active-play-reached-60-minutes' }
   ];
+  const TELEMETRY_CHECKPOINT_MIN_SECONDS = 60;
   let telemetrySession = null;
   let telemetryTimer = null;
   let telemetryResumeReported = false;
@@ -1295,6 +1300,45 @@ FB.CHANGELOG = [
       FB.telemetry.enabled());
   }
 
+  function normalizedQuickStartTelemetry(value) {
+    if (value === 'custom' || value === 'unknown') return value;
+    const definitions = FBDATA.quickStarts || [];
+    for (let i = 0; i < definitions.length; i++) {
+      if (definitions[i] && definitions[i].id === value) return value;
+    }
+    return 'unknown';
+  }
+
+  /* This compact saved record keeps campaign-origin comparisons valid after
+     a reload. Old saves cannot prove how they began, and their first day and
+     first event have already happened, so grandfather them without inventing
+     activation events. */
+  function ensureCampaignTelemetry(s, freshQuickStart) {
+    if (!s || !s.player) return null;
+    const fresh = typeof freshQuickStart === 'string';
+    let record = s.telemetry;
+    if (!record || typeof record !== 'object' || Array.isArray(record)) {
+      record = {
+        version:1,
+        quickStart:normalizedQuickStartTelemetry(
+          fresh ? freshQuickStart : 'unknown'),
+        firstDayAdvanced:fresh ? 0 : 1,
+        firstEventResolved:fresh ? 0 : 1
+      };
+      s.telemetry = record;
+      return record;
+    }
+    record.version = 1;
+    record.quickStart = normalizedQuickStartTelemetry(record.quickStart);
+    if (record.firstDayAdvanced !== 0 && record.firstDayAdvanced !== 1) {
+      record.firstDayAdvanced = 1;
+    }
+    if (record.firstEventResolved !== 0 && record.firstEventResolved !== 1) {
+      record.firstEventResolved = 1;
+    }
+    return record;
+  }
+
   function telemetryData(extra) {
     const s = FB.state;
     const data = {
@@ -1305,6 +1349,10 @@ FB.CHANGELOG = [
     if (s && s.player) {
       data.player_tier = Number(s.player.tier) || 0;
       data.dynasty_generation = Number(s.generation) || 1;
+      if (s.telemetry && typeof s.telemetry === 'object') {
+        data.quick_start = normalizedQuickStartTelemetry(
+          s.telemetry.quickStart);
+      }
     }
     if (extra) {
       for (const key in extra) {
@@ -1369,9 +1417,17 @@ FB.CHANGELOG = [
   }
 
   function beginTelemetrySession(entryType) {
+    /* Re-reading a save inside one uninterrupted resumed session is still
+       the same foreground play entry. Preserve its active clock so the one
+       campaign-resumed denominator continues to match its milestones. */
+    if (entryType === 'resumed-campaign' && telemetryResumeReported &&
+        telemetrySession && telemetrySession.entryType === entryType) {
+      telemetrySession.lastAt = Date.now();
+      return false;
+    }
     clearTelemetryTimer();
     telemetrySession = null;
-    if (!telemetryEnabled()) return;
+    if (!telemetryEnabled()) return false;
     telemetrySession = {
       entryType:entryType,
       activeMs:0,
@@ -1379,15 +1435,20 @@ FB.CHANGELOG = [
       nextMilestone:0,
       lastCheckpointSeconds:0
     };
+    telemetryResumeReported = entryType === 'resumed-campaign';
     telemetryTimer = setInterval(function () {
       telemetryPulse();
     }, 15000);
+    return true;
   }
 
   function telemetryCheckpoint(reason) {
     if (!telemetrySession) return;
     const activeSeconds = telemetryPulse();
     if (activeSeconds <= telemetrySession.lastCheckpointSeconds) return;
+    if (reason !== 'page-hide' && telemetrySession.lastCheckpointSeconds > 0 &&
+        activeSeconds - telemetrySession.lastCheckpointSeconds <
+          TELEMETRY_CHECKPOINT_MIN_SECONDS) return;
     telemetrySession.lastCheckpointSeconds = activeSeconds;
     const extra = {
       entry_type:telemetrySession.entryType,
@@ -1408,6 +1469,34 @@ FB.CHANGELOG = [
     telemetrySession = null;
     return summary;
   }
+
+  function noteCampaignActivation(field, eventName, extra) {
+    const s = FB.state;
+    if (!s || !s.player || G.observe) return false;
+    const record = ensureCampaignTelemetry(s);
+    if (!record || record[field]) return false;
+    record[field] = 1;
+    const data = {
+      entry_type:telemetrySession ? telemetrySession.entryType : 'unknown',
+      active_seconds:telemetryPulse()
+    };
+    if (extra) {
+      for (const key in extra) {
+        if (Object.prototype.hasOwnProperty.call(extra, key)) {
+          data[key] = extra[key];
+        }
+      }
+    }
+    trackTelemetry(eventName, data);
+    return true;
+  }
+
+  G.noteFirstEventResolved = function (automated) {
+    return noteCampaignActivation(
+      'firstEventResolved', 'first-event-resolved', {
+        resolution_mode:automated ? 'automated' : 'manual'
+      });
+  };
 
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) telemetryCheckpoint('page-hidden');
@@ -2546,6 +2635,7 @@ FB.CHANGELOG = [
     // re-seed before politics and characters draw on the RNG, so anyone holding
     // the same seed and making the same picks gets this exact start
     const seedStr = (G.pending && G.pending.seed) || freshSeed();
+    const quickStartId = G.pending && G.pending.quickStartId || 'custom';
     FB.seedRng(FB.hashSeed(seedStr));
     const bookmark = FB.activeBookmark;
     const start = {
@@ -2569,6 +2659,10 @@ FB.CHANGELOG = [
       v: 2,
       seed: seedCode(seedStr, bookmark.id, sc.id, provId, sex, name, preset.id,
         settIdx, cultureId, religionId, pr),
+      telemetry: {
+        version:1, quickStart:normalizedQuickStartTelemetry(quickStartId),
+        firstDayAdvanced:0, firstEventResolved:0
+      },
       start: start,
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
@@ -2823,7 +2917,6 @@ FB.CHANGELOG = [
     beginTelemetrySession('new-campaign');
     trackTelemetry('campaign-started', {
       entry_type:'new-campaign',
-      quick_start:G.pending && G.pending.quickStartId || 'custom',
       scenario:sc.id,
       family_preset:preset.id,
       starting_location:provId,
@@ -2998,6 +3091,9 @@ FB.CHANGELOG = [
       s.date.season++;
       seasonBoundary = true;
       if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
+    }
+    if (!G.observe) {
+      noteCampaignActivation('firstDayAdvanced', 'first-day-advanced');
     }
     if (FB.localGovernmentDay) FB.localGovernmentDay(s);
     FB.scriptedTick(s);
@@ -5279,9 +5375,8 @@ FB.CHANGELOG = [
         }
         resumeRepair('storage warning', function () { FB.save.warnIfBlocked(); });
         resumeRepair('resume telemetry', function () {
-          beginTelemetrySession('resumed-campaign');
-          if (!telemetryResumeReported) {
-            telemetryResumeReported = true;
+          ensureCampaignTelemetry(FB.state);
+          if (beginTelemetrySession('resumed-campaign')) {
             trackTelemetry('campaign-resumed', {
               entry_type:'resumed-campaign'
             });
@@ -5331,6 +5426,7 @@ FB.CHANGELOG = [
       FB.save.rememberChronicle(FB.state);
     }
     const telemetrySummary = endTelemetrySession();
+    telemetryResumeReported = false;
     if (telemetrySummary) {
       trackTelemetry('returned-to-title', telemetrySummary);
     }

@@ -1,5 +1,13 @@
 # Game state & saves
 
+Campaign telemetry provenance is additive save-format-3 state. Fresh playable campaigns carry
+`state.telemetry:{version:1,quickStart,firstDayAdvanced,firstEventResolved}`. `quickStart` is the
+stable curated-start id or `custom`; the two numeric booleans prevent campaign-once activation
+events from repeating after save and resume. Older or malformed records repair without RNG to
+`quickStart:'unknown'` with both activation markers already complete, so an established life is
+never misreported as newly activated. The record contains no player name, dynasty, seed, or
+rendered text and survives succession with the campaign.
+
 Restore treats the serialized world and player records as the critical save core. Additive
 format-3 subsystem repairs run as isolated stages: if one legacy record cannot be repaired, its
 failure is retained in `FB.save.lastRestoreWarnings` and later repairs still run. Continue also
