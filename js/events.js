@@ -9778,6 +9778,9 @@ window.FB = window.FB || {};
           g = Math.round(g * 1.6);
         }
       }
+      if (fx.clearHarvestFlags && p.tier === 0 && FB.serfHarvestQuote) {
+        g = FB.serfHarvestQuote(state, g).gold;
+      }
       p.gold += g;
     }
     if (fx.pricePressure && FB.addPricePressure) {

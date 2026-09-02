@@ -106,6 +106,70 @@ window.FB = window.FB || {};
     return lord ? { kind:'character', id:lord.id } : null;
   }
 
+  function serfHarvestConflict(state, pid) {
+    if (FB.countyOccupiedOrBesieged &&
+        FB.countyOccupiedOrBesieged(state, pid)) return 'siege';
+    const armies = [];
+    const records = state && Array.isArray(state.armies) ? state.armies : [];
+    for (const army of records) {
+      if (army && army.at === pid && Number(army.men) > 0) armies.push(army);
+    }
+    if (FB.armiesHostile) {
+      for (let i = 0; i < armies.length; i++) {
+        for (let j = i + 1; j < armies.length; j++) {
+          if (FB.armiesHostile(state, armies[i], armies[j])) return 'battle';
+        }
+      }
+    }
+    if (FB.hostileHostAtHome && state && state.player &&
+        state.player.provinceId === pid && FB.hostileHostAtHome(state)) {
+      return 'hostile';
+    }
+    return armies.length ? 'army' : 'peace';
+  }
+
+  function serfHarvestConflictFactor(kind) {
+    const factors = {
+      army:['serfHarvestArmyFactor', 0.90],
+      hostile:['serfHarvestHostileFactor', 0.65],
+      battle:['serfHarvestBattleFactor', 0.50],
+      siege:['serfHarvestSiegeFactor', 0.40]
+    };
+    const record = factors[kind];
+    if (!record) return 1;
+    const authored = Number(FBDATA.balance[record[0]]);
+    return FB.clamp(isFinite(authored) ? authored : record[1], 0, 1);
+  }
+
+  /* A serf's Toil return is partly the household's saleable harvest, not a
+     fixed hired wage. The provisions quote carries seasonal scarcity while
+     the strongest immediate local conflict condition reduces usable yield. */
+  FB.serfHarvestQuote = function (state, base) {
+    const wages = FBDATA.balance.serfWage || [1, 3];
+    let value = base === undefined
+      ? (Number(wages[0]) + Number(wages[1])) / 2 : Number(base);
+    if (!isFinite(value)) value = 0;
+    value = Math.max(0, value);
+    const pid = state && state.player ? state.player.provinceId : null;
+    const price = pid && FB.marketPrice
+      ? FB.marketPrice(state, pid, 'provisions') : 1;
+    const authoredExposure = Number(FBDATA.balance.serfHarvestMarketExposure);
+    const exposure = FB.clamp(isFinite(authoredExposure)
+      ? authoredExposure : 0.75, 0, 1);
+    const marketFactor = Math.max(0, 1 + (price - 1) * exposure);
+    const conflict = pid ? serfHarvestConflict(state, pid) : 'peace';
+    const conflictFactor = serfHarvestConflictFactor(conflict);
+    return {
+      provinceId:pid,
+      base:value,
+      provisionsPrice:price,
+      marketFactor:marketFactor,
+      conflict:conflict,
+      conflictFactor:conflictFactor,
+      gold:value * marketFactor * conflictFactor
+    };
+  };
+
   /* ================= FOCUSES (daily) =================
      gain (optional): the focus's expected per-season gold/prestige/piety,
      shown in the topbar stat breakdown. It mirrors tick's trickle (random
@@ -139,14 +203,15 @@ window.FB = window.FB || {};
   { id: 'toil',
     show: function (s) { return s.player.tier === 0 && adult(s); },
     tick: function (s) {
-      s.player.gold += FB.rf(FBDATA.balance.serfWage[0], FBDATA.balance.serfWage[1]) / D;
+      const base = FB.rf(FBDATA.balance.serfWage[0], FBDATA.balance.serfWage[1]);
+      s.player.gold += FB.serfHarvestQuote(s, base).gold / D;
       if (dch(0.1)) {
         me(s).health = Math.max(0, me(s).health - 1);
         FB.news(s, FB.msg('news.action.labor_hurts', 'The labor grinds you down.', {}));
       }
     },
-    gain: function () {
-      return { gold: (FBDATA.balance.serfWage[0] + FBDATA.balance.serfWage[1]) / 2 };
+    gain: function (s) {
+      return { gold: FB.serfHarvestQuote(s).gold };
     } },
   { id: 'militia',
     show: function (s) {
@@ -8795,6 +8860,7 @@ window.FB = window.FB || {};
   };
 
   FB.demolishBuilding = function (state, pid, idx, id) {
+    if (!state || !state.player || state.player.tier < 3) return false;
     if (id === 'walls' && FB.demolishFort) {
       return FB.demolishFort(state, pid, idx);
     }

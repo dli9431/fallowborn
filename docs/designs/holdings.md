@@ -29,6 +29,20 @@ archetype-authored service, commute an eligible labor duty to a saved coin due, 
 one current right, or restore one historically challenged right. Amendments are recorded
 as semantic tenure history rather than property, modifiers, or hidden ownership changes.
 
+Tier-0 Toil is harvest and customary household return rather than a fixed hired wage. Its
+daily credit and expected seasonal income, plus both outcomes of the farming-year Harvest
+event, use the home county's live provisions price at 75% exposure
+(`1 + (price - 1) * 0.75`). The strongest immediate local disruption then applies: any
+army quartered there leaves 90% yield, a hostile host 65%, opposing hosts joined for battle
+50%, and an active siege or occupation 40%. The market price already carries seasonal army
+demand and saved war shocks; the direct factor represents trampled fields, lost work,
+seizure, and danger now, so scarcity does not erase the damage. These values are balance
+knobs rather than save state.
+
+Technology impact: `serf_harvest_conditions` is `none`. Local prices and damage to an
+ordinary dependent household's work are baseline economic conditions, not an optional
+capability unlocked by sovereign research.
+
 Freedom does not convert customary strips into owned plots. Purchase, negotiated
 manumission, or an Old Custom victory closes the personal tenure and raises the household
 to freeholder; flight closes it without a lawful charter. In every case, ordinary

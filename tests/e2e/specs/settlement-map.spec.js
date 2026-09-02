@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/actions.js',
   'js/mapview.js',
   'js/travel.js',
   'js/ui_modals.js',
@@ -402,7 +403,7 @@ test('bookmark switching restores exact compiled sites and clears stale markers'
 
 /* ---------- save and property compatibility ---------- */
 
-test('numeric property at pre-feature indices resolves in the settlement sheet',
+test('numeric property at pre-feature indices resolves read-only for a serf',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
     await page.evaluate(function () { FB.game.setPaused(true); });
@@ -410,9 +411,14 @@ test('numeric property at pre-feature indices resolves in the settlement sheet',
     const setup = await page.evaluate(function () {
       const s = FB.state;
       const pid = s.player.provinceId; // the CADENCE start is london, authored
-      /* pre-feature numeric property records: a building, plots, a manor, and
+      s.player.tier = 0;
+      s.player.provs = [];
+      /* pre-feature numeric property records: buildings, plots, a manor, and
          an enterprise, all keyed by province id + numeric settlement index */
-      s.buildings[pid] = [{ s:1, id:'mill' }];
+      s.buildings[pid] = [
+        { s:1, id:'mill' },
+        { s:1, id:'walls', level:3 }
+      ];
       s.player.landPlots = [{ provinceId:pid, settlement:1 }];
       s.player.manor = { provinceId:pid, settlement:1 };
       const enterpriseType = Object.keys(FBDATA.enterprises)[0];
@@ -421,9 +427,13 @@ test('numeric property at pre-feature indices resolves in the settlement sheet',
         workerId:null
       }];
       const slots = FB.settlementsOf(s, pid);
+      const demolished = FB.demolishBuilding(s, pid, 1, 'mill');
       FB.ui.showSettlement(pid, 1);
       return {
         pid:pid,
+        tier:s.player.tier,
+        demolished:demolished,
+        buildingStanding:!s.buildings[pid][0].ruined,
         slotCount:slots.length,
         slot1:slots[1],
         enterpriseType:enterpriseType,
@@ -432,15 +442,19 @@ test('numeric property at pre-feature indices resolves in the settlement sheet',
     });
 
     expect(setup.slotCount).toBeGreaterThanOrEqual(2);
+    expect(setup.tier).toBe(0);
+    expect(setup.demolished).toBe(false);
+    expect(setup.buildingStanding).toBe(true);
     const body = page.locator('#gm-body');
     await expect(body).toContainText('County development:');
     await expect(body).toContainText('farms 1 plots');
     await expect(body).toContainText('manor stands here');
     await expect(body).toContainText('operates here');
     await expect(body).toContainText('Watermill');
-    /* the CADENCE farmer's home county is in their demesne, so demolishing
-       their own building is offered; the tier gate keeps construction away */
-    await expect(page.locator('#gm-body [data-demolish]')).toHaveCount(1);
+    await expect(body).toContainText('Stone Castle');
+    /* The home-county fallback in FB.demesne keeps commoner property visible,
+       but it does not grant authority over the county's buildings. */
+    await expect(page.locator('#gm-body [data-demolish]')).toHaveCount(0);
     await expect(page.locator('#gm-raise')).toHaveCount(0);
 
     /* neighboring slot shows none of the slot-1 property */

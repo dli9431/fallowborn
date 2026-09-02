@@ -6,12 +6,16 @@ dependsOnRuntime(__filename, [
   'data/cultures.js',
   'data/economy.js',
   'data/events_peasant.js',
+  'data/markets.js',
   'data/technology.js',
+  'js/armies.js',
   'js/main.js',
   'js/i18n.js',
+  'js/market.js',
   'js/messages.js',
   'js/model.js',
   'js/modifiers.js',
+  'js/population.js',
   'js/events.js',
   'js/actions.js',
   'js/save.js',
@@ -778,6 +782,121 @@ test('identical seeded Toil ticks produce identical economy, health, skill, and 
       expect(entry.after).toEqual(result[0].after);
       expect(entry.rng).toEqual(result[0].rng);
     });
+  });
+
+test('serf Toil and Harvest follow provisions prices and lose yield to local warfare',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const player = state.player;
+      const pid = player.provinceId;
+      const market = FB.ensureMarket(state);
+      const provisions = market.goods.indexOf('provisions');
+      const toil = FB.focuses.filter(function (focus) {
+        return focus.id === 'toil';
+      })[0];
+      const originalWage = FBDATA.balance.serfWage.slice();
+      state.occupations = {};
+      state.wars = {};
+      state.greatHolyWar = null;
+      player.war = null;
+      state.realms.harvest_defenders = { war:{ enemy:'harvest_raiders' } };
+      state.realms.harvest_raiders = { war:{ enemy:'harvest_defenders' } };
+      state.owner[pid] = 'harvest_defenders';
+
+      function setPrice(price) {
+        market.counties[pid][1][provisions] = price;
+      }
+      function quote(price, armies, siege) {
+        setPrice(price);
+        state.armies = armies;
+        state.occupations = {};
+        if (siege) state.occupations[pid] = { progress:0.5, occupied:false };
+        return FB.serfHarvestQuote(state, 2);
+      }
+      function host(id, realm) {
+        return { id:id, realm:realm, at:pid, men:120 };
+      }
+
+      const defender = host('harvest_defender_host', 'harvest_defenders');
+      const raider = host('harvest_raider_host', 'harvest_raiders');
+      const steady = quote(1, [], false);
+      const cheap = quote(0.5, [], false);
+      const dear = quote(2, [], false);
+      const army = quote(1, [defender], false);
+      const hostile = quote(1, [raider], false);
+      const battle = quote(1, [defender, raider], false);
+      const siege = quote(1, [], true);
+
+      player.gold = 0;
+      setPrice(1);
+      state.armies = [];
+      state.occupations = {};
+      FB.setRngState(97531);
+      FB.applyEffects(state, { gold:'harvest_good', clearHarvestFlags:true }, {});
+      const steadyEventGold = player.gold;
+      player.gold = 0;
+      setPrice(2);
+      state.armies = [defender, raider];
+      FB.setRngState(97531);
+      FB.applyEffects(state, { gold:'harvest_good', clearHarvestFlags:true }, {});
+      const battleEventGold = player.gold;
+      player.gold = 0;
+      setPrice(2);
+      state.armies = [];
+      state.occupations[pid] = { progress:0.5, occupied:false };
+      FB.applyEffects(state, { gold:1, clearHarvestFlags:true }, {});
+      const siegeThinEventGold = player.gold;
+
+      setPrice(2);
+      state.armies = [defender, raider];
+      state.occupations = {};
+      const gainSeasonalGold = toil.gain(state).gold;
+      FBDATA.balance.serfWage = [2, 2];
+      const beforeGold = player.gold;
+      const expectedTick = FB.serfHarvestQuote(state, 2).gold;
+      toil.tick(state);
+      const tickSeasonalGold = (player.gold - beforeGold) * 90;
+      FBDATA.balance.serfWage = originalWage;
+
+      return {
+        steady:steady,
+        cheap:cheap,
+        dear:dear,
+        army:army,
+        hostile:hostile,
+        battle:battle,
+        siege:siege,
+        steadyEventGold:steadyEventGold,
+        battleEventGold:battleEventGold,
+        siegeThinEventGold:siegeThinEventGold,
+        gainSeasonalGold:gainSeasonalGold,
+        expectedTick:expectedTick,
+        tickSeasonalGold:tickSeasonalGold
+      };
+    });
+
+    expect(result.steady).toMatchObject({
+      provisionsPrice:1, marketFactor:1, conflict:'peace', conflictFactor:1
+    });
+    expect(result.steady.gold).toBeCloseTo(2, 8);
+    expect(result.cheap.marketFactor).toBeCloseTo(0.625, 8);
+    expect(result.cheap.gold).toBeCloseTo(1.25, 8);
+    expect(result.dear.marketFactor).toBeCloseTo(1.75, 8);
+    expect(result.dear.gold).toBeCloseTo(3.5, 8);
+    expect(result.army).toMatchObject({ conflict:'army', conflictFactor:0.9 });
+    expect(result.army.gold).toBeCloseTo(1.8, 8);
+    expect(result.hostile).toMatchObject({ conflict:'hostile', conflictFactor:0.65 });
+    expect(result.hostile.gold).toBeCloseTo(1.3, 8);
+    expect(result.battle).toMatchObject({ conflict:'battle', conflictFactor:0.5 });
+    expect(result.battle.gold).toBeCloseTo(1, 8);
+    expect(result.siege).toMatchObject({ conflict:'siege', conflictFactor:0.4 });
+    expect(result.siege.gold).toBeCloseTo(0.8, 8);
+    expect(result.battleEventGold).toBeCloseTo(result.steadyEventGold * 0.875, 8);
+    expect(result.siegeThinEventGold).toBeCloseTo(0.7, 8);
+    expect(result.gainSeasonalGold).toBeCloseTo(result.expectedTick, 8);
+    expect(result.tickSeasonalGold).toBeCloseTo(result.expectedTick, 8);
   });
 
 test('regional tenure events localize every changed surface while retaining one event definition and mechanics',

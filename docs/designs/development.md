@@ -76,7 +76,9 @@ construction or demolition in that county. Tapping a settlement in your own deme
 only the buildings standing in THAT settlement, with what each provides, plus any
 household plots, manor, or enterprises in the same slot. Authorization lives inside the
 sheet — a foreign or non-demesne settlement is read-only, and the raise button keeps
-the demesne/tier/buildable gates. Because the commodity market belongs to the county,
+the demesne/tier/buildable gates. Construction and demolition both require tier 3 or
+higher; the commoner home-county fallback used for display and household scope grants
+no authority over county buildings. Because the commodity market belongs to the county,
 only the county-head sheet (`s: 0`) carries its Market shortcut; the Land panel presents
 the same county-wide destination as a card inside Development.
 
@@ -201,9 +203,10 @@ capacity and prestige remain household effects. An authored `dev` grant is appli
 on the first fully staffed seasonal boundary after that level is built, and is remembered
 by the enterprise instance rather than recalculated from the definition.
 
-A settlement building can be demolished without a refund. Demolition is permanent: the
-entry gains `ruined:true`, loses every ongoing bonus and upkeep charge, and continues to
-occupy that settlement slot. New construction records the exact applied `dev` amount as
+A tier-3+ ruler can demolish a settlement building in the demesne without a refund.
+Demolition is permanent: the entry gains `ruined:true`, loses every ongoing bonus and
+upkeep charge, and continues to occupy that settlement slot. New construction records the
+exact applied `dev` amount as
 `devGranted`, including zero when the county was already at its ceiling. Demolition reverses
 only that recorded development. After the bounded legacy repair below, any building record
 still missing the additive field is grandfathered at zero rather than inventing a loss.

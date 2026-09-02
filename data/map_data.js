@@ -1276,7 +1276,11 @@ FBDATA.balance = {
   militaryBaronyMartial: 12, militaryBaronyPrestige: 120, // founder's exceptional field-command gate
   taxPerDev: 1.5, levyPerDev: 90,
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial
-  serfWage: [1,3], freeWage: [2,5], manorIncome: [5,9],
+  serfWage: [1,3],
+  serfHarvestMarketExposure:0.75,
+  serfHarvestArmyFactor:0.90, serfHarvestHostileFactor:0.65,
+  serfHarvestBattleFactor:0.50, serfHarvestSiegeFactor:0.40,
+  freeWage: [2,5], manorIncome: [5,9],
   childChance: 0.13,
   /* A first-profile tutorial should demonstrate succession without making a
      player wait through years of ordinary conception variance. While its

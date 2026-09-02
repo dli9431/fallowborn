@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.6';
+FB.VERSION = '1.166.7';
 FB.CHANGELOG = [
+  { v: '1.166.7', date: '2026-09-02', changes: [
+    'Serf Toil and Harvest earnings now follow local provisions prices and fall when armies, battles, sieges, or occupations disrupt the home county.',
+    'Settlement sheets no longer let commoners demolish county buildings.'
+  ] },
   { v: '1.166.6', date: '2026-09-02', changes: [
     'Serf poaching is now Desperate measures, offering several escalating illicit acts with greater rewards and harsher consequences.'
   ] },

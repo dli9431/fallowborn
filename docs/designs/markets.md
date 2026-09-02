@@ -8,7 +8,8 @@ season-sized abstract share, not a bushel, bolt, log, horse, or individual
 luxury. The baskets make scarcity legible without turning the game into an
 inventory ledger or adding merchant agents.
 
-Every county participates and every rank pays local prices. Direct production,
+Every county participates and every rank pays local prices. A serf household's Toil and
+farming-year Harvest returns partly follow the local provisions quote, while direct production,
 venture choice, and guild agency remain concentrated in the Freeholder/Gentry
 Craft and Trade careers. Serfs can inspect supply and feel household hardship,
 but cannot use guild charters or self-founded long-distance ventures.
@@ -200,10 +201,13 @@ and fortifications, travel supplies, and non-contract host logistics. One-time
 purchases round upward to whole gold; seasonal upkeep retains fractional
 precision.
 
-Wages, taxes, rents, titles, gifts, dowries, ransoms, fines, political and
+Hired wages, taxes, rents, titles, gifts, dowries, ransoms, fines, political and
 service fees, credit, retainer pay, schooling, mercenary contracts, and other
-signed obligations remain fixed real-gold agreements. `state.economy.price`
-remains the distinct nominal coinage/debasement layer.
+signed obligations remain fixed real-gold agreements. Serf Toil and farming-year Harvest
+returns are the exception: they use the live provisions price with partial exposure,
+then apply the strongest immediate local army, hostile-host, battle, or siege loss.
+This baseline interaction has technology impact `none` (`serf_harvest_conditions`).
+`state.economy.price` remains the distinct nominal coinage/debasement layer.
 
 Ordinary seasonal income is credited before household necessities settle. An
 unpaid share becomes `player.marketHardship`. Each consecutive provision-short

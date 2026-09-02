@@ -6251,8 +6251,8 @@ window.FB = window.FB || {};
      any household property in the exact slot — plots, a manor, enterprises —
      is listed with it. Authorization lives INSIDE the sheet, so a foreign or
      non-demesne settlement is read-only: demolition buttons render only for
-     a county the player holds, and the raise button keeps the existing
-     demesne/tier/buildable gates. */
+     a tier-3+ player in a county they hold, and the raise button keeps the
+     existing demesne/tier/buildable gates. */
   function fortDateText(s, turn) {
     const date = FB.dateAtTurn(s, turn);
     return FB.T('{season} {day}, {year}', {
@@ -6302,7 +6302,7 @@ window.FB = window.FB || {};
   }
 
   /* Settlement sheet card: the shared compact asset card plus the demolish
-     icon button for owned buildings. */
+     icon button for buildings a landed player may control. */
   function demolishCardButton(id, name) {
     const label = FB.T('Demolish {building}', { building:name });
     return '<button type="button" class="btn small sett-demolish"' +
@@ -6336,7 +6336,7 @@ window.FB = window.FB || {};
       '<button type="button" class="btn small settcard-info"' +
       ' aria-expanded="false" aria-controls="' + detId + '"' +
       ' aria-label="' + esc(FB.T('Details')) + '">?</button>' +
-      (own ? demolishCardButton('walls',
+      (own && s.player.tier >= 3 ? demolishCardButton('walls',
         dt(s, 'building', 'walls', FBDATA.buildings.walls, 'name')) : '') +
       '</span></div>' +
       '<div class="adesc settcard-fx">' + esc(fxLine) + '</div>';
@@ -6441,6 +6441,7 @@ window.FB = window.FB || {};
     const st = FB.settlementsOf(s, pid)[idx];
     if (!st) return;
     const own = FB.demesne(s).indexOf(pid) >= 0;
+    const canDemolish = own && s.player.tier >= 3;
     const holdId = (s.holder && s.holder[pid]) || s.owner[pid];
     const holderText = holdId === 'player'
       ? FB.T('your household')
@@ -6542,7 +6543,7 @@ window.FB = window.FB || {};
               expiry:buildingExpiryRule()
             }) + '<div class="hint settdesc">' +
               esc(dt(s, 'building', id, d, 'desc')) + '</div>',
-            own ? id : null);
+            canDemolish ? id : null);
         }
       }
     } else {

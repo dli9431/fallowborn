@@ -173,6 +173,7 @@ window.FB = window.FB || {};
     }
     return false;
   }
+  FB.countyOccupiedOrBesieged = countyOccupiedOrBesieged;
 
   function realmIsAtWar(state, rid) {
     if (!state || !rid) return false;

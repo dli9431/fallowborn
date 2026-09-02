@@ -1965,9 +1965,9 @@ settlement emblem; construction adds a crossed corner. Neither meaning depends o
 and the badge does not change cached site art. The settlement sheet shows current and
 target tier, project dates, upfront/no-refund terms, upkeep, local defense, garrison and
 field burden, movement control, siege minimum/attrition, and the next sequential tier.
-Owned sheets provide keyboard-numbered, mobile-size project and demolition controls;
-foreign sheets remain read-only. A locked tier stays visible and its action opens the
-exact technology detail.
+Owned sheets provide keyboard-numbered, mobile-size project and demolition controls for
+tier-3+ rulers; commoner and foreign sheets remain read-only. A locked tier stays visible
+and its action opens the exact technology detail.
 
 Labels reject
 deterministically on rectangle overlap in priority order (kind, head status,
@@ -1989,9 +1989,11 @@ the exact slot, and shows matching household plots, manor, and enterprises when
 present. Each building, ruin, or fort renders as a compact card — icon, name, and a
 one-line effect — with the concise stakes summary and description behind a per-card
 details disclosure (a hover/focus tooltip on desktop, an inline tap toggle
-elsewhere — one or the other per layout, per the tooltip convention above), and demolition rides inside the owned card as an icon button.
+elsewhere — one or the other per layout, per the tooltip convention above), and demolition
+rides inside the owned card as an icon button for a tier-3+ ruler.
 Authorization lives inside the sheet, so foreign and non-demesne settlements
-are read-only while a valid demesne settlement keeps construction and demolition.
+are read-only; a commoner's home-county display fallback is read-only too, while a valid
+tier-3+ demesne settlement keeps construction and demolition.
 
 ## Localization
 

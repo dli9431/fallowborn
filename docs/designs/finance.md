@@ -4,7 +4,7 @@
 nominal coin needed to buy one gold of obligations and is distinct from the
 county commodity prices in [markets.md](markets.md). Once each spring
 `FB.financeYear` evolves a slow, bounded, mean-reverting price index and revalues
-only positive liquid coin by `oldPrice / newPrice`. Contracts, wages, rewards, and
+only positive liquid coin by `oldPrice / newPrice`. Contracts, hired wages, rewards, and
 other real-gold obligations keep their authored values; tangible local purchases
 apply their county market quote independently. The annual
 revaluation runs after the completed winter ledger, so it appears immediately
@@ -39,6 +39,9 @@ prevent reloads from applying or rolling an outcome twice.
 There is no fixed wartime-necessities surcharge. Raised and hostile armies create
 food demand, while occupation creates saved production and flow disruption. Their
 effects emerge through the local provisions price and fade when the shocks expire.
+Serf Toil and farming-year Harvest earnings are harvest returns rather than hired wages:
+they partly follow that live provisions quote and also lose yield to immediate local army,
+battle, and siege damage.
 
 **A negative purse is a cash shortfall, not an implicit loan.** Mandatory losses,
 imposed compensation, already-incurred focus or military costs, and narrative choices

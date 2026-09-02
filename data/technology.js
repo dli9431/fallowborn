@@ -123,6 +123,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Trespass, poaching, theft, and robbery are baseline survival and resistance choices for a bound household, not capabilities unlocked by sovereign research.'
       },
+      serf_harvest_conditions:{
+        mode:'none',
+        rationale:'The value and damage of a serf household’s ordinary harvest respond to local prices and warfare as baseline economic conditions, not as a capability unlocked by sovereign research.'
+      },
       minor_household_standard_reduction:{
         mode:'none',
         rationale:'A child household head or landed ruler giving up an inherited household standard within the floor allowed by their station is a baseline recovery control; no innovation credibly unlocks abandoning an expense.'
