@@ -621,9 +621,16 @@ test('serfs see neither the commitments ledger nor deeds they cannot use',
     await expect(page.locator('[data-action-id="buy_freedom"]')).toBeVisible();
     await expect(page.locator('[data-action-id="adopt_tech"]')).toHaveCount(0);
 
-    // Self keeps the livelihood summary without duplicating its management route.
+    // Self offers the livelihood summary as a direct management route.
     await page.locator('#lefttabs [data-tab="char"]').click();
-    await expect(page.locator('#self-work')).toHaveCount(0);
+    const selfWork = page.locator('#self-work');
+    await expect(selfWork).toBeVisible();
+    await selfWork.click();
+    const livelihoodModal = page.locator('#genmodal');
+    await expect(livelihoodModal).not.toHaveClass(/hidden/);
+    await expect(page.locator('#gm-title')).toContainText('Work & Enterprises');
+    await livelihoodModal.getByRole('button', { name:'Close', exact:true }).click();
+    await expect(livelihoodModal).toHaveClass(/hidden/);
 
     // Network remains the persistent management route and drops Finance on the same rule.
     await page.locator('#sidetabs [data-tab="network"]').click();

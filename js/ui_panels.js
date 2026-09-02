@@ -1947,16 +1947,19 @@ window.FB = window.FB || {};
     return h;
   }
 
-  function livelihoodNote(s, c) {
+  function livelihoodNote(s, c, interactive) {
     const career = FB.careerOf(s, c);
     const def = career && FBDATA.careers[career.profession];
     if (!def) return '';
     let detail = FB.careerTitle(s, c);
     if (def.guild) detail += ' · ' + FB.guildTitle(career);
     const former = c.id === s.player.charId && s.player.tier >= 3;
-    let h = '<div class="progressnote">' + esc(former
+    const workLabel = esc(former
       ? FB.T('🧰 Former calling — {career}', { career:detail })
-      : FB.T('🧰 Work — {career}', { career:detail })) + '</div>';
+      : FB.T('🧰 Work — {career}', { career:detail }));
+    let h = interactive
+      ? '<button type="button" class="actionbtn" id="self-work">' + workLabel + '</button>'
+      : '<div class="progressnote">' + workLabel + '</div>';
     const standings = FB.religiousStandings ? FB.religiousStandings(s, c) : [];
     for (let i = 0; i < standings.length; i++) {
       const standing = standings[i];
@@ -1975,6 +1978,15 @@ window.FB = window.FB || {};
         })) + '</div>';
     }
     return h;
+  }
+
+  function bindSelfWorkButton() {
+    const work = $('self-work');
+    if (!work || work._selfWorkBound) return;
+    work._selfWorkBound = true;
+    work.addEventListener('click', function () {
+      if (UI.showLivelihoods) UI.showLivelihoods();
+    });
   }
 
   function itemSlotLabel(slot) {
@@ -2758,7 +2770,7 @@ window.FB = window.FB || {};
       panelh('Dynasty') +
       houseRow +
       kv('Generation', (s.generation || 1));
-    h += panelh('Livelihood') + livelihoodNote(s, me);
+    h += panelh('Livelihood') + livelihoodNote(s, me, true);
     if (FB.hasBishopric && FB.hasBishopric(s, me)) {
       h += '<button class="actionbtn" id="self-bishopric">⛪ ' +
         esc(FB.T('Open the Bishopric')) +
@@ -2779,11 +2791,13 @@ window.FB = window.FB || {};
     const box = $('tab-char');
     if (!replacePanelMarkup('self', box, h)) {
       FB.paintFaces(box, s);
+      bindSelfWorkButton();
       return;
     }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
     bindFaithDetails(box);
+    bindSelfWorkButton();
     const rankDetails = $('self-rank-details');
     if (rankDetails) rankDetails.addEventListener('click', UI.showRankDetails);
     const equipmentTriggers = box.querySelectorAll(

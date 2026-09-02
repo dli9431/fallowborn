@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.9';
+FB.VERSION = '1.166.10';
 FB.CHANGELOG = [
+  { v: '1.166.10', date: '2026-09-02', changes: [
+    'The Self panel’s work summary now opens Work & Enterprises directly.'
+  ] },
   { v: '1.166.9', date: '2026-09-02', changes: [
     'The in-game menu now links to the Discord community and itch.io ratings, and completed campaigns can copy and share a saga summary.'
   ] },

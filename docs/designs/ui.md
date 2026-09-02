@@ -878,9 +878,9 @@ preventing large territorial rosters from squishing dignity labels. Title styles
 names are interactive links that navigate directly to the target county (or duchy/kingdom/empire
 capital) on the map and Land panel. Active maintained standards appear in the livelihood summary
 as compact icons with numeric levels; dormant purchased levels stay off that active row.
-The Self panel keeps this livelihood summary informational; Work & Enterprises management
-opens from its persistent Network action or the contextual Deeds action instead of a duplicate
-Self-panel button.
+The Self panel's work summary is an action that opens Work & Enterprises directly; the persistent
+Network action and contextual Deeds action remain alternate routes. Religious standing and office
+rows remain informational because there is no separate character-standing sheet.
 The full-name heading leads the mobile/short-screen drawer,
 where that drawer covers the topbar, and is hidden in the desktop panel because the
 persistent topbar already names the character. On desktop, a subtle divider separates
