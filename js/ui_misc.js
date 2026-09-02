@@ -2712,7 +2712,7 @@ window.FB = window.FB || {};
     const exposed = UI.revealDeedAction &&
       UI.revealDeedAction('review_serf_tenure');
     UI.coachmark(FB.T(
-      'Rank & Realm contains your household terms, next duty, and routes to freedom.'),
+      'Rank & Realm contains your station, home, lord, and routes to freedom.'),
       exposed
         ? '#tab-actions [data-action-id="review_serf_tenure"]'
         : '#sidetabs .tab[data-tab="actions"]', {

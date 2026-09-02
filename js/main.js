@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.4';
+FB.VERSION = '1.166.5';
 FB.CHANGELOG = [
+  { v: '1.166.5', date: '2026-09-02', changes: [
+    'Station & Home now focuses on a commoner’s home, local authority, and actionable freedom options, leaving customary work and obligations to the events where they matter.'
+  ] },
   { v: '1.166.4', date: '2026-09-02', changes: [
     'Campaign analytics now preserve Quick Start origins across saves and record first actions, hour-long sessions, and quieter checkpoints.'
   ] },
@@ -2898,7 +2901,7 @@ FB.CHANGELOG = [
     const serfIntroPointer = FB.activeSerfTenure &&
       FB.activeSerfTenure(state)
       ? '<p class="hint" data-serf-start-pointer>' + FB.esc(FB.T(
-        "Your household's terms and routes to freedom are in Rank & Realm. First steps remain in Deeds.")) + '</p>'
+        "Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds.")) + '</p>'
       : '';
     FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
       FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
@@ -3511,7 +3514,7 @@ FB.CHANGELOG = [
       title:function () { return FB.T('First steps'); },
       note:function (s) {
         return FB.activeSerfTenure && FB.activeSerfTenure(s)
-          ? FB.T('Home terms: Review your tenure and routes to freedom in Rank & Realm.')
+          ? FB.T('Home & freedom: Review your station and routes to freedom in Rank & Realm.')
           : '';
       },
       link:function (s) {

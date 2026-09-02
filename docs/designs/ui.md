@@ -10,34 +10,28 @@ compact, and alliance, plus child health-risk bands. The Guide's Family
 category preserves the complete rule summary and searchable trait list.
 
 For unlanded tier 0 players, `UI.showRankDetails` presents the household's active
-customary tenure (`FB.tenureView`) within the **Station & home** modal. It displays the
-localized archetype name, summary, holding controller, linked current lord and steward, recognized rights,
-ordinary duties with full calendar dates and days remaining, and any pending conditional obligations,
-using stable `data-tenure-*` selectors and responsive mobile layout.
-An **Ordinary Work** block uses the same `FB.focusLabel` / `FB.focusDescription`
-adapter as the Deeds action card, active-focus display, picker, shortcuts, receipts, and
-event interpolation. For an active tier-0 tenure it describes the saved regional
-archetype; non-Toil focuses, tier 1+ farmers, and missing, closed, or unknown tenure use
-the generic authored focus text. Reading either helper never creates, repairs, or mutates
-tenure and consumes no RNG. The work, duty, and right text wraps at the 390-pixel layout
-without adding a modal or color-only meaning.
-An active Old Custom case adds one compact linked witness/officer line. Each native link
-opens the standard character sheet; visible or browser Back restores the same Station &
-home sheet and keyboard focus.
+customary tenure (`FB.tenureView`) within the **Station & home** modal. Every culture and
+faith uses the same compact hierarchy: station, linked permanent home, current lord, and
+one sentence explaining that customary service arrives through relevant events. The sheet
+deliberately omits the internal tenure archetype, controller and steward, work description,
+duty calendar, conditional burdens, customary-right ledger, and Old Custom cast. Those
+details remain authoritative in saved state and appear only when a focus or event makes
+them relevant to a player decision.
 
-Rank & Realm also exposes one read-only **Review tenure & freedom** action. The sheet orders
-home/tenure identity, nearest duty, all duties and rights, direct purchase and Standing petition,
-the current valid offer, and any pending or recent authority review. Semantic containers are
-`data-serf-tenure`, `data-serf-next-duty`, `data-serf-freedom-routes`, and `data-serf-offer`;
-Family landmarks retains `data-family-freedom`. Price breakdown, current gold, affordability,
-Standing threshold, disabled reason, service, expiry, issuer, and tenure revision are complete
-text rather than icon or color meaning. Home and character controls use normal modal history,
-focus, Escape, and Back behavior. At 320 CSS pixels rows wrap and coarse-pointer controls retain
-the shared 44-pixel minimum.
+Rank & Realm exposes this sheet through the read-only **Review station & freedom** action.
+The Freedom section shows the current household purchase price without its calculation,
+plus one petition/review control. A disabled petition gets a short actionable reason rather
+than a numeric Standing threshold. A current offer retains only its price, service, expiry,
+acceptance blocker, or active-service completion date; current gold, affordability rows,
+family-share arithmetic, issuer metadata, and tenure revision are omitted. The stable
+containers are `data-serf-tenure`, `data-serf-freedom-routes`, and `data-serf-offer`;
+Family landmarks retains `data-family-freedom`. Linked home and lord controls use normal
+modal history, focus, Escape, and Back behavior. At 320 CSS pixels rows wrap and
+coarse-pointer controls retain the shared 44-pixel minimum.
 
-A fresh serf introduction points to Rank & Realm without replacing scenario prose or obeying the
+A fresh serf introduction points to station and freedom in Rank & Realm without replacing scenario prose or obeying the
 optional hint toggle. First steps retains exactly its three universal requirements and adds only a
-linked home-terms note. After that track, one per-save tenure coachmark precedes optional poaching
+linked station-and-freedom note. After that track, one per-save tenure coachmark precedes optional poaching
 and family lessons; opening the sheet acknowledges it. Visible first duties and favorable offers
 teach their live saved terms, while Automation does not mark unseen teaching as seen. Every
 scheduled-duty event uses the same description disclosure: desktop hover/focus and the compact
@@ -50,12 +44,12 @@ number-key choices, nested Back route, and Escape dismissal. It identifies the p
 home, exact retained former/current local people and political authority, consolidated
 causes, and one affected duty or right from saved semantic context. At 390 CSS pixels the cards and proposal text
 wrap within the scroll sheet; no color-only meaning or new political roster is introduced.
-After acceptance, **Station & home** labels a commuted duty and its saved per-due coin
-amount rather than continuing to describe it as labor only.
+Accepted amendments remain visible when their scheduled event next requires a decision;
+**Station & home** does not duplicate the resulting duty ledger.
 
-The same modal contains a **Routes to Freedom** section. It shows the direct price,
-current-lord Standing and petition threshold, exact saved offer price/service/expiry and
-acceptance lock, or paid final-service completion. Its stable selectors are
+The same modal contains a concise **Freedom** section. It shows the direct price,
+exact saved offer price/service/expiry and acceptance lock, or paid final-service
+completion. Its stable selectors are
 `data-freedom-routes`, `data-freedom-offer`, `data-freedom-offer-price`,
 `data-freedom-offer-service`, `data-freedom-offer-expiry`, and
 `data-freedom-service-progress`. The petition button opens a standard scrollable modal:

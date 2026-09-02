@@ -137,7 +137,7 @@ test('fresh serf intro points to Rank & Realm even when guide hints are hidden',
       .click();
 
     await expect(page.locator('[data-serf-start-pointer]')).toContainText(
-      "Your household's terms and routes to freedom are in Rank & Realm. First steps remain in Deeds.");
+      'Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds.');
     await expect(page.locator('.coachmark')).toHaveCount(0);
   });
 
@@ -988,7 +988,7 @@ test('a mid-checklist save from the single-track version keeps its progress',
     expect(status.done).toBe(1);
   });
 
-test('unlanded rank details modal shows settlement, county ruler, customary tenure, and obligations at 390px viewport with keyboard focus, scrolling, and Escape dismissal',
+test('unlanded rank details keeps station, home, lord, and freedom concise at 390px with keyboard dismissal',
   async function ({ page }) {
     await page.setViewportSize({ width: 390, height: 844 });
     await startDeterministicGame(page);
@@ -1009,31 +1009,34 @@ test('unlanded rank details modal shows settlement, county ruler, customary tenu
     await expect(closeBtn).toBeVisible();
     await expect(closeBtn).toBeFocused();
 
-    // 2. 390px mobile layout and structural selectors
-    await expect(page.locator('#gm-body .kv:has(span:text-is("Settlement")) b'))
+    // 2. The shared mobile surface keeps only decision-relevant identity.
+    await expect(page.locator('#gm-body .kv:has(span:text-is("Station")) b'))
       .toBeVisible();
-    await expect(page.locator('#gm-body .kv:has(span:text-is("County ruler")) b'))
+    await expect(page.locator('#gm-body .kv:has(span:text-is("Home")) b'))
+      .toBeVisible();
+    await expect(page.locator('#gm-body .kv:has(span:text-is("Current lord")) b'))
       .toBeVisible();
     await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
-    await expect(page.locator('#gm-body [data-tenure-duty]').first()).toBeVisible();
-    await expect(page.locator('#gm-body [data-tenure-next-due]')).toBeVisible();
-    await expect(page.locator('#gm-body .panelh').first()).toContainText('Home');
+    await expect(page.locator('#gm-body [data-freedom-routes]')).toBeVisible();
+    await expect(page.locator('#gm-body [data-tenure-duty]')).toHaveCount(0);
+    await expect(page.locator('#gm-body [data-tenure-next-due]')).toHaveCount(0);
+    await expect(page.locator('#gm-body [data-tenure-work]')).toHaveCount(0);
+    await expect(page.locator('#gm-body [data-tenure-right]')).toHaveCount(0);
+    await expect(page.locator('#gm-body [data-tenure-conditional]')).toHaveCount(0);
     await expect(page.locator('#gm-body')).not.toContainText('Held directly');
     await expect(page.locator('#gm-body')).not.toContainText('Direct demesne');
     await expect(page.locator('#gm-body')).not.toContainText('Path:');
+    await expect(page.locator('#gm-body')).not.toContainText('Family shares:');
+    await expect(page.locator('#gm-body')).not.toContainText('Current gold');
+    await expect(page.locator('#gm-body')).not.toContainText('Affordable now');
+    await expect(page.locator('#gm-body')).not.toContainText('petition at');
 
-    // 3. Scrolling container verification — verify panel actually has scrollable content
-    const isScrollable = await page.locator('#gm-body').evaluate(function (el) {
-      return el.scrollHeight > el.clientHeight;
-    });
-    expect(isScrollable).toBe(true);
-
-    // 4. Dismiss modal via Escape key and verify hidden state
+    // 3. Dismiss modal via Escape key and verify hidden state.
     await page.keyboard.press('Escape');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
-test('Station & home modal renders all seven archetypes with contextual work, exact duty counts, and rights',
+test('Station & home uses the same concise surface for all seven tenure archetypes',
   async function ({ page }) {
     await page.setViewportSize({ width:390, height:844 });
     await startDeterministicGame(page);
@@ -1111,27 +1114,64 @@ test('Station & home modal renders all seven archetypes with contextual work, ex
         FB.ui.showRankDetails();
       }, arch);
 
-      await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
-      await expect(page.locator('#gm-body .tenure-archetype-name')).toContainText(arch.title);
-      await expect(page.locator('#gm-body [data-tenure-work]')).toBeVisible();
-      await expect(page.locator('#gm-body .tenure-work-name')).toContainText(arch.work);
-      await expect(page.locator('#gm-body [data-tenure-work-description]')).not.toBeEmpty();
-      await expect(page.locator('#gm-body [data-tenure-duty]')).toHaveCount(arch.dutyCount);
-      await expect(page.locator('#gm-body [data-tenure-next-due]')).toContainText(arch.nearest);
-      if (arch.rights.length) {
-        await expect(page.locator('#gm-body [data-tenure-right]')).toHaveCount(arch.rights.length);
-        for (const rightId of arch.rights) {
-          await expect(page.locator('#gm-body [data-tenure-right="' + rightId + '"]')).toBeVisible();
-        }
-      } else {
-        await expect(page.locator('#gm-body [data-tenure-right="none"]')).toBeVisible();
-      }
-      await expect(page.locator('#gm-body [data-tenure-conditional]'))
-        .toHaveCount(arch.pending ? 1 : 0);
+      const body = page.locator('#gm-body');
+      await expect(body.locator('[data-tenure-summary]')).toBeVisible();
+      await expect(body.locator('[data-freedom-routes]')).toBeVisible();
+      await expect(body.locator('[data-tenure-home]')).toBeVisible();
+      await expect(body.locator('.kv:has(span:text-is("Current lord")) b'))
+        .toBeVisible();
+      await expect(body.locator('.tenure-archetype-name')).toHaveCount(0);
+      await expect(body.locator('[data-tenure-work]')).toHaveCount(0);
+      await expect(body.locator('[data-tenure-duty]')).toHaveCount(0);
+      await expect(body.locator('[data-tenure-next-due]')).toHaveCount(0);
+      await expect(body.locator('[data-tenure-right]')).toHaveCount(0);
+      await expect(body.locator('[data-tenure-conditional]')).toHaveCount(0);
+      await expect(body).not.toContainText(arch.title);
+      await expect(body).not.toContainText(arch.work);
+      await expect(body).not.toContainText(arch.nearest);
+      await expect(body).not.toContainText('Family shares:');
+      const textLength = await body.evaluate(function (element) {
+        return element.innerText.length;
+      });
+      expect(textLength).toBeLessThan(900);
       const hasHorizontalOverflow = await page.locator('#gm-body').evaluate(function (element) {
         return element.scrollWidth > element.clientWidth + 1;
       });
       expect(hasHorizontalOverflow).toBe(false);
+      await page.locator('#rank-details-close').click();
+    }
+  });
+
+test('Station & home keeps freeholder and gentry views to home and local ruler',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+
+    for (const tier of [1, 2]) {
+      await page.evaluate(function (nextTier) {
+        FB.setPlayerTier(FB.state, nextTier);
+        FB.ui.showRankDetails();
+      }, tier);
+
+      const body = page.locator('#gm-body');
+      await expect(page.getByRole('heading', {
+        name:'Station & home', exact:true
+      })).toBeVisible();
+      await expect(body.locator('.kv:has(span:text-is("Station")) b'))
+        .toBeVisible();
+      await expect(body.locator('.kv:has(span:text-is("Home")) b'))
+        .toBeVisible();
+      await expect(body.locator('.kv:has(span:text-is("Local ruler")) b'))
+        .toBeVisible();
+      await expect(body.locator('[data-serf-tenure]')).toHaveCount(0);
+      await expect(body.locator('[data-freedom-routes]')).toHaveCount(0);
+      await expect(body.locator('.kv:has(span:text-is("Settlement"))'))
+        .toHaveCount(0);
+      await expect(body.locator('.kv:has(span:text-is("County"))'))
+        .toHaveCount(0);
+      const textLength = await body.evaluate(function (element) {
+        return element.innerText.length;
+      });
+      expect(textLength).toBeLessThan(500);
       await page.locator('#rank-details-close').click();
     }
   });
@@ -1157,8 +1197,8 @@ test('Station & home modal renders English and an injected test locale without u
     expect(englishText.hasRawIds).toBe(false);
     await page.locator('#rank-details-close').click();
 
-    // 2. Load the real Preview-locale path, inject exact records before
-    // activation, and prove archetype, work, duty, and right keys are consumed.
+    // 2. Load the real Preview-locale path and prove the concise shared chrome
+    // localizes without reintroducing culture-specific tenure internals.
     var localized = await page.evaluate(function () {
       return new Promise(function (resolve) {
         localStorage.setItem('fb_lang', 'fr');
@@ -1168,99 +1208,45 @@ test('Station & home modal renders English and an injected test locale without u
             text:'Statut et foyer',
             hash:FB.i18nHash({ text:'Station & home' })
           };
-          Object.keys(FBDATA.tenureArchetypes).forEach(function (archetypeId) {
-            var definition = FBDATA.tenureArchetypes[archetypeId];
-            catalog.entries[definition.nameKey] = {
-              text:'Tenure ' + archetypeId,
-              hash:FB.i18nHash({ text:definition.name })
-            };
-            catalog.entries[definition.summaryKey] = {
-              text:'Résumé ' + archetypeId,
-              hash:FB.i18nHash({ text:definition.desc })
-            };
-            catalog.entries[definition.workLabelKey] = {
-              text:'Travail ' + archetypeId,
-              hash:FB.i18nHash({ text:definition.workLabel })
-            };
-            catalog.entries[definition.workDescriptionKey] = {
-              text:'Description ' + archetypeId,
-              hash:FB.i18nHash({ text:definition.workDescription })
-            };
-          });
-          catalog.entries['tenureDuty.herd_service.name.default'] = {
-            text:'Service des troupeaux',
-            hash:FB.i18nHash({ text:FBDATA.tenureDuties.herd_service.name })
+          catalog.entries['ui:Home'] = {
+            text:'Foyer',
+            hash:FB.i18nHash({ text:'Home' })
           };
-          catalog.entries['tenureRight.customary_grazing_turn.name.default'] = {
-            text:'Tour de pâturage attribué',
-            hash:FB.i18nHash({ text:FBDATA.tenureRights.customary_grazing_turn.name })
+          catalog.entries['ui:Freedom'] = {
+            text:'Liberté',
+            hash:FB.i18nHash({ text:'Freedom' })
           };
-          var regionalEvent = FB.eventById('serf_weekwork_tally');
-          function translateForm(value, key) {
-            if (typeof value === 'string') {
-              return key === 'select' || key === 'param' ? value : 'Essai ' + value;
-            }
-            var translated = {};
-            Object.keys(value || {}).forEach(function (childKey) {
-              translated[childKey] = translateForm(value[childKey], childKey);
-            });
-            return translated;
-          }
-          catalog.entries['event.serf_weekwork_tally.title.default'] = {
-            forms:translateForm(regionalEvent.title.forms, 'forms'),
-            hash:FB.i18nHash(regionalEvent.title)
+          var customSummary =
+            'Your household is bound to this home; customary service appears as events when it needs your decision.';
+          catalog.entries['ui:' + customSummary] = {
+            text:'Les coutumes locales apparaissent seulement lors d’un événement utile.',
+            hash:FB.i18nHash({ text:customSummary })
           };
           FB.finalizeLocale(loaded);
           FB.ui.showRankDetails();
           var body = document.getElementById('gm-body');
           var heading = document.getElementById('gm-title');
-          var workTranslations = Object.keys(FBDATA.tenureArchetypes).map(function (archetypeId) {
-            var definition = FBDATA.tenureArchetypes[archetypeId];
-            return {
-              id:archetypeId,
-              name:FB.renderKey(definition.nameKey, definition.name),
-              summary:FB.renderKey(definition.summaryKey, definition.desc),
-              work:FB.renderKey(definition.workLabelKey, definition.workLabel),
-              description:FB.renderKey(definition.workDescriptionKey, definition.workDescription)
-            };
-          });
           localStorage.setItem('fb_lang', 'en');
           resolve({
             locale:FB.locale,
             heading:heading ? heading.textContent : '',
-            text:body ? body.innerText : '',
-            workTranslations:workTranslations,
-            regionalEvent:FB.eventText(FB.state, FB.state.player.charId,
-              regionalEvent, 'title', {
-                dutyId:'herd_service', archetypeId:'pastoral_steppe',
-                tenureArchetypeId:'pastoral_steppe'
-              }),
-            duty:FB.dataText(FB.state, FB.state.player.charId, 'tenureDuty',
-              'herd_service', FBDATA.tenureDuties.herd_service, 'name'),
-            right:FB.dataText(FB.state, FB.state.player.charId, 'tenureRight',
-              'customary_grazing_turn', FBDATA.tenureRights.customary_grazing_turn, 'name')
+            text:body ? body.innerText : ''
           });
         });
       });
     });
     expect(localized.locale).toBe('fr');
     expect(localized.heading).toContain('Statut et foyer');
-    expect(localized.text).toContain('Tenure latin_manorial');
-    expect(localized.text).toContain('Travail latin_manorial');
-    expect(localized.workTranslations).toHaveLength(7);
-    localized.workTranslations.forEach(function (entry) {
-      expect(entry.name).toBe('Tenure ' + entry.id);
-      expect(entry.summary).toBe('Résumé ' + entry.id);
-      expect(entry.work).toBe('Travail ' + entry.id);
-      expect(entry.description).toBe('Description ' + entry.id);
-    });
-    expect(localized.duty).toBe('Service des troupeaux');
-    expect(localized.right).toBe('Tour de pâturage attribué');
-    expect(localized.regionalEvent).toContain('Essai Another Turn with the Herds');
+    expect(localized.text).toContain('Foyer');
+    expect(localized.text).toContain('Liberté');
+    expect(localized.text).toContain(
+      'Les coutumes locales apparaissent seulement lors d’un événement utile.');
+    expect(localized.text).not.toContain('latin_manorial');
+    expect(localized.text).not.toContain('week_work');
     await page.locator('#rank-details-close').click();
   });
 
-test('Station & home modal renders live controller updates, zero-right variants, and preserves state neutrality',
+test('Station & home keeps the live lord while hiding right variants and preserving state neutrality',
   async function ({ page }) {
     await startDeterministicGame(page);
     await page.evaluate(function () {
@@ -1300,10 +1286,10 @@ test('Station & home modal renders live controller updates, zero-right variants,
       const viewWithLocalHolder = FB.tenureView(state);
       results.derivedLocalLord = viewWithLocalHolder && viewWithLocalHolder.lordName;
 
-      // 3. Zero-right / empty right variant
+      // 3. A zero-right internal variant remains valid but has no UI ledger.
       state.player.tenure.rights = [];
       const viewZeroRights = FB.tenureView(state);
-      results.zeroRightsRendered = !!viewZeroRights;
+      results.zeroRightsHandled = !!viewZeroRights;
 
       FB.ui.showRankDetails();
 
@@ -1313,8 +1299,10 @@ test('Station & home modal renders live controller updates, zero-right variants,
     expect(testResults.rngNeutral).toBe(true);
     expect(testResults.stateNeutral).toBe(true);
     expect(testResults.derivedLocalLord).toContain('Wulfric');
-    expect(testResults.zeroRightsRendered).toBe(true);
+    expect(testResults.zeroRightsHandled).toBe(true);
     await expect(page.locator('#gm-body')).toContainText('Wulfric');
-    await expect(page.locator('#gm-body [data-tenure-right="none"]')).toBeVisible();
+    await expect(page.locator('#gm-body [data-tenure-right]')).toHaveCount(0);
+    await expect(page.locator('#gm-body')).not.toContainText(
+      'No recognized customary rights recorded.');
     await page.locator('#rank-details-close').click();
   });

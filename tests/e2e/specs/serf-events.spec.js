@@ -2023,12 +2023,12 @@ test('Phase 5 effective custom confirmation restores and later challenges only t
     ]);
   });
 
-test('serf tenure details render across archetypes in Station & home with stable data attributes and Escape dismissal',
+test('Station & home links the current lord without exposing tenure ledgers and supports Escape dismissal',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:844 });
     await startGame(page, testInfo);
-    const steward = await page.evaluate(function () {
-      const c = FB.getRole(FB.state, 'steward', true);
+    const lord = await page.evaluate(function () {
+      const c = FB.getRole(FB.state, 'lord', true);
       FB.ui.refresh();
       FB.ui.showTab('char');
       return { id:c.id, name:FB.fullName(c) };
@@ -2038,21 +2038,23 @@ test('serf tenure details render across archetypes in Station & home with stable
     await rank.click();
 
     await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
-    await expect(page.locator('#gm-body [data-tenure-duty]').first()).toBeVisible();
-    await expect(page.locator('#gm-body [data-tenure-next-due]')).toBeVisible();
-    const stewardLink = page.locator(
-      '[data-tenure-character="' + steward.id + '"]').first();
-    await expect(stewardLink).toBeVisible();
-    await stewardLink.click();
-    await expect(page.getByRole('heading', { name:steward.name })).toBeVisible();
+    await expect(page.locator('#gm-body [data-tenure-duty]')).toHaveCount(0);
+    await expect(page.locator('#gm-body [data-tenure-next-due]')).toHaveCount(0);
+    await expect(page.locator('#gm-body [data-tenure-work]')).toHaveCount(0);
+    await expect(page.locator('#gm-body [data-tenure-right]')).toHaveCount(0);
+    const lordLink = page.locator(
+      '[data-tenure-character="' + lord.id + '"]').first();
+    await expect(lordLink).toBeVisible();
+    await lordLink.click();
+    await expect(page.getByRole('heading', { name:lord.name })).toBeVisible();
     await expect(page.locator('#cm-close')).toContainText('Back');
     await page.locator('#cm-close').click();
     await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
-    await expect(stewardLink).toBeFocused();
-    await stewardLink.click();
+    await expect(lordLink).toBeFocused();
+    await lordLink.click();
     await page.evaluate(function () { history.back(); });
     await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
-    await expect(stewardLink).toBeFocused();
+    await expect(lordLink).toBeFocused();
 
     // Verify keyboard dismissal with Escape
     await page.keyboard.press('Escape');

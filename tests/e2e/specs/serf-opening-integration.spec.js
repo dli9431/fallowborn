@@ -62,7 +62,7 @@ test('tier 0 onboarding keeps three First steps and links one integrated tenure 
     await page.getByRole('button', { name:'Begin Your Story', exact:true })
       .click();
     await expect(page.locator('[data-serf-start-pointer]')).toContainText(
-      "Your household's terms and routes to freedom are in Rank & Realm");
+      'Your station and routes to freedom are in Rank & Realm');
     await page.getByRole('button', { name:'Begin', exact:true }).click();
     await page.evaluate(function () {
       FB.ui.showTab('actions');
@@ -74,18 +74,22 @@ test('tier 0 onboarding keeps three First steps and links one integrated tenure 
     await expect(card).toHaveAttribute('data-tutorial-track', 'first_steps');
     await expect(card.locator('li')).toHaveCount(3);
     await expect(page.locator('#tutorial-serf-tenure')).toContainText(
-      'Review your tenure and routes to freedom in Rank & Realm');
+      'Review your station and routes to freedom in Rank & Realm');
     await page.locator('#tutorial-serf-tenure').click();
 
     await expect(page.locator('[data-serf-tenure]')).toBeVisible();
-    await expect(page.locator('[data-serf-next-duty]')).toBeVisible();
     await expect(page.locator('[data-serf-freedom-routes]')).toBeVisible();
     await expect(page.locator('[data-serf-freedom-routes]'))
-      .toContainText('Current gold');
+      .toContainText('Buy freedom outright');
+    await expect(page.locator('[data-serf-next-duty]')).toHaveCount(0);
     await expect(page.locator('[data-serf-freedom-routes]'))
-      .toContainText('Standing with current lord');
+      .not.toContainText('Current gold');
     await expect(page.locator('[data-serf-freedom-routes]'))
-      .toContainText('Petition eligibility');
+      .not.toContainText('Standing with current lord');
+    await expect(page.locator('[data-serf-freedom-routes]'))
+      .not.toContainText('Petition eligibility');
+    await expect(page.locator('[data-serf-freedom-routes]'))
+      .not.toContainText('Family shares:');
     expect(await page.evaluate(function () {
       const state = FB.serfOnboardingState(FB.state);
       return state.rankRealmSeen && state.freedomRoutesSeen;
@@ -147,11 +151,13 @@ test('the tenure coach follows First steps, precedes optional deeds, and acknowl
     });
     expect(shown).toBe(true);
     const coach = page.locator('.coachmark', {
-      hasText:'Rank & Realm contains your household terms'
+      hasText:'Rank & Realm contains your station, home, lord'
     });
     await expect(coach).toBeVisible();
-    await expect(page.locator(
-      '[data-action-id="review_serf_tenure"]')).toBeVisible();
+    const reviewStation = page.locator(
+      '[data-action-id="review_serf_tenure"]');
+    await expect(reviewStation).toBeVisible();
+    await expect(reviewStation).toContainText('Review station & freedom');
     await coach.getByRole('button', { name:'Got it', exact:true }).click();
     expect(await page.evaluate(function () {
       return {
@@ -369,7 +375,7 @@ test('offer terms, narrow layout, and lawful freedom share semantic hooks and hi
     await expect(offer).toBeVisible();
     await expect(offer).toContainText(String(terms.price));
     await expect(offer).toContainText(String(terms.serviceDays));
-    await expect(offer).toContainText('tenure revision ' + terms.revision);
+    await expect(offer).not.toContainText('tenure revision ' + terms.revision);
     const geometry = await page.locator('[data-serf-tenure]').evaluate(
       function (node) {
         const rect = node.getBoundingClientRect();

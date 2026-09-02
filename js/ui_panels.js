@@ -2495,8 +2495,6 @@ window.FB = window.FB || {};
       const settlements = FB.settlementsOf(s, s.player.provinceId);
       const homeSett = settlements[settIdx] || settlements[0];
       const settName = homeSett ? homeSett.name : FB.T('Unknown');
-      const kindName = SH.settlementKindName && homeSett && homeSett.kind
-        ? SH.settlementKindName(homeSett.kind) : '';
       const province = FB.world.byId[s.player.provinceId];
       const provinceName = province ? FB.L(province.name) : s.player.provinceId;
       const countyOwnerId = s.owner[s.player.provinceId];
@@ -2505,145 +2503,43 @@ window.FB = window.FB || {};
       const rulerDesc = countyRuler
         ? FB.fullName(countyRuler) + (countyRealm ? ' (' + countyRealm.name + ')' : '')
         : (countyRealm ? countyRealm.name : FB.T('None'));
-
-      h += kv('Station', esc(FB.styledTitle(s))) +
-        kv('Settlement', esc(kindName
-          ? FB.T('{settlement} ({kind})', { settlement:settName, kind:kindName })
-          : settName)) +
-        kv('County', esc(provinceName)) +
-        kv('County ruler', esc(rulerDesc));
-      if (s.player.liege && s.player.liege !== countyOwnerId) {
-        const liegeRealm = s.realms[s.player.liege];
-        const liegeRuler = liegeRealm ? s.chars[liegeRealm.ruler] : null;
-        const liegeDesc = liegeRuler
-          ? FB.fullName(liegeRuler) + (liegeRealm ? ' (' + liegeRealm.name + ')' : '')
-          : (liegeRealm ? liegeRealm.name : s.player.liege);
-        h += kv('Liege lord', esc(liegeDesc));
-      }
-
-      h += '<div class="panelh">' + esc(FB.T('Home')) + '</div>';
-      let homeInfo = '';
-      if (s.player.tier === 0) {
-        homeInfo = FB.T('Your household lives in {settlement}, a {kind} in the county of {county}. As serfs, you are bound to the soil under {ruler} and owe customary dues and labor.', {
-          settlement:settName,
-          kind:kindName ? kindName.toLowerCase() : FB.T('village'),
-          county:provinceName,
-          ruler:rulerDesc
-        });
-      } else if (s.player.tier === 1) {
-        homeInfo = FB.T('Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}.', {
-          settlement:settName,
-          kind:kindName ? kindName.toLowerCase() : FB.T('settlement'),
-          county:provinceName,
-          ruler:rulerDesc
-        });
-      } else {
-        homeInfo = FB.T('Your gentle household resides in {settlement}, a {kind} in the county of {county}, holding local estate and standing under {ruler}.', {
-          settlement:settName,
-          kind:kindName ? kindName.toLowerCase() : FB.T('settlement'),
-          county:provinceName,
-          ruler:rulerDesc
-        });
-      }
-      h += '<p class="adesc">' + esc(homeInfo) + '</p>';
+      let view = null;
       if (s.player.tier === 0) {
         if (FB.ensureSerfTenure) FB.ensureSerfTenure(s, 'legacy_repair');
-        const view = FB.tenureView && FB.tenureView(s);
+        view = FB.tenureView && FB.tenureView(s);
+      }
+      const homeLink = '<button type="button" class="panel-inline-link" ' +
+        'data-tenure-home="' + esc(s.player.provinceId) + '" ' +
+        'data-tenure-settlement="' + esc(String(settIdx)) + '">' +
+        esc(settName + ', ' + provinceName) + '</button>';
+
+      h += kv('Station', esc(FB.styledTitle(s))) +
+        kv('Home', homeLink);
+      if (view) {
+        h += kv('Current lord', view.lordId
+          ? '<button type="button" class="panel-inline-link tenure-character-link" ' +
+            'data-tenure-character="' + esc(view.lordId) + '">' +
+            esc(view.lordName) + '</button>'
+          : esc(view.lordName));
+      } else {
+        h += kv('Local ruler', esc(rulerDesc));
+      }
+
+      let homeInfo = '';
+      if (s.player.tier === 0) {
+        homeInfo = FB.T(
+          'Your household is bound to this home; customary service appears as events when it needs your decision.');
+      } else if (s.player.tier === 1) {
+        homeInfo = FB.T('Your household lives here as free commoners.');
+      } else {
+        homeInfo = FB.T('Your gentle household holds its local estate here.');
+      }
+      if (s.player.tier === 0) {
         if (view) {
           h += '<section class="serf-tenure" data-serf-tenure>';
           acknowledgeTenure = true;
           acknowledgeFreedomRoutes = true;
-        }
-        if (view) {
-          h += '<div class="panelh" data-tenure-header>' + esc(FB.T('Tenure & Custom')) + '</div>';
-          h += '<div class="tenure-summary-block" data-tenure-summary>' +
-            '<div class="tenure-archetype-name"><strong>' + esc(view.archetypeName) + '</strong></div>' +
-            '<p class="adesc">' + esc(view.archetypeSummary) + '</p>' +
-            kv('Holding', '<button type="button" class="panel-inline-link" ' +
-              'data-tenure-home="' + esc(view.provinceId) + '" ' +
-              'data-tenure-settlement="' + esc(String(view.settlement)) + '">' +
-              esc(view.settlementName + ', ' + view.countyName) + '</button>') +
-            kv('Controller', esc(view.controllerName)) +
-            kv('Current lord', view.lordId
-              ? '<button type="button" class="panel-inline-link tenure-character-link" ' +
-                'data-tenure-character="' + esc(view.lordId) + '">' +
-                esc(view.lordName) + '</button>'
-              : esc(view.lordName)) +
-            kv('Steward', view.stewardId
-              ? '<button type="button" class="panel-inline-link tenure-character-link" ' +
-                'data-tenure-character="' + esc(view.stewardId) + '">' +
-                esc(view.stewardName) + '</button>'
-              : esc(view.stewardName)) +
-            '</div>';
-
-          if (view.nearestDue) {
-            h += '<div class="tenure-next-due-block" data-tenure-next-due ' +
-              'data-serf-next-duty>' +
-              kv('Next due obligation', esc(view.nearestDue.name + ' — ' + view.nearestDue.dateFull)) +
-              '</div>';
-          }
-
-          h += '<div class="tenure-work-block" data-tenure-work>' +
-            '<div class="panelh">' + esc(FB.T('Ordinary Work')) + '</div>' +
-            '<div class="tenure-work-name"><strong>' +
-              esc(view.workLabel) + '</strong></div>' +
-            '<p class="adesc" data-tenure-work-description>' +
-              esc(view.workDescription) + '</p></div>';
-
-          if (view.oldCustom) {
-            const witnessButton =
-              '<button type="button" class="panel-inline-link tenure-character-link" ' +
-                'data-tenure-character="' + esc(view.oldCustom.witnessId) + '">' +
-                esc(view.oldCustom.witnessName) + '</button>';
-            const officerButton =
-              '<button type="button" class="panel-inline-link tenure-character-link" ' +
-                'data-tenure-character="' + esc(view.oldCustom.officerId) + '">' +
-                esc(view.oldCustom.officerName) + '</button>';
-            const storyLine = esc(FB.T(
-              'Old Custom case: witness {witness}, officer {officer}', {
-                witness:'__OLD_CUSTOM_WITNESS__',
-                officer:'__OLD_CUSTOM_OFFICER__'
-              })).replace('__OLD_CUSTOM_WITNESS__', witnessButton)
-              .replace('__OLD_CUSTOM_OFFICER__', officerButton);
-            h += '<p class="adesc tenure-old-custom" data-tenure-old-custom>' +
-              storyLine + '</p>';
-          }
-
-          if (view.pendingConditional) {
-            h += '<div class="tenure-conditional-block" data-tenure-conditional>' +
-              kv('Pending obligation', esc(view.pendingConditional.name + ' (' + view.pendingConditional.dateLabel + ')')) +
-              '<p class="adesc">' + esc(view.pendingConditional.desc) + '</p>' +
-              '</div>';
-          }
-
-          h += '<div class="tenure-duties-section"><div class="panelh">' + esc(FB.T('Customary Duties')) + '</div>';
-          for (let i = 0; i < view.duties.length; i++) {
-            const d = view.duties[i];
-            h += '<div class="tenure-duty-item" data-tenure-duty="' + esc(d.id) + '">' +
-              '<div class="tenure-duty-header"><strong>' + esc(d.name) + '</strong> (' + esc(d.dateFull) + ')</div>' +
-              '<p class="adesc">' + esc(d.desc) + '</p>' +
-              '</div>';
-          }
-          h += '</div>';
-
-          h += '<div class="tenure-rights-section"><div class="panelh">' + esc(FB.T('Customary Rights')) + '</div>';
-          if (view.hasRights) {
-            for (let r = 0; r < view.rights.length; r++) {
-              const rt = view.rights[r];
-              h += '<div class="tenure-right-item" data-tenure-right="' + esc(rt.id) + '">' +
-                '<div class="tenure-right-name"><strong>' + esc(rt.name) + '</strong></div>' +
-                '<p class="adesc">' + esc(rt.desc) + '</p>' +
-                '</div>';
-            }
-          } else {
-            h += '<p class="adesc" data-tenure-right="none">' + esc(view.emptyRightsText) + '</p>';
-          }
-          h += '</div>';
-
-          h += '<div class="tenure-notes">' +
-            '<p class="adesc">' + esc(view.customaryUseStatement) + '</p>' +
-            '<p class="adesc">' + esc(view.lawfulFreedomStatement) + '</p>' +
-            '</div>';
+          h += '<p class="adesc" data-tenure-summary>' + esc(homeInfo) + '</p>';
         }
         const petition = view && view.freedom
           ? view.freedom.petition : null;
@@ -2652,61 +2548,39 @@ window.FB = window.FB || {};
           ? view.freedom.purchase : null;
         const freedomQuote = purchase
           ? purchase.quote : FB.freedomPurchaseQuote(s);
-        const purchaseBlocked = purchase
-          ? purchase.reason : FB.T('The purchase route is unavailable.');
+        let petitionReason = petition ? petition.reason
+          : FB.T('No current lord can receive the petition.');
+        if (petition && petition.lord &&
+            petition.standing < petition.threshold && !petition.invitation) {
+          petitionReason = FB.T(
+            'Build Standing with your current lord before petitioning.');
+        }
         h += '<div class="freedom-routes" data-freedom-routes ' +
           'data-serf-freedom-routes>' +
-          '<div class="panelh">' + esc(FB.T('Routes to Freedom')) + '</div>' +
+          '<div class="panelh">' + esc(FB.T('Freedom')) + '</div>' +
           kv('Buy freedom outright', esc(FB.T('{money:price}', {
             price:freedomQuote.price
-          }))) +
-          '<p class="adesc" data-freedom-family-price>' +
-            esc(FB.freedomPurchaseBreakdown(s, freedomQuote)) + '</p>' +
-          kv('Current gold', esc(FB.T('{money:gold}', {
-            gold:purchase ? purchase.gold : Math.floor(s.player.gold)
-          }))) +
-          kv('Affordable now', esc(purchase && purchase.affordable
-            ? FB.T('Yes') : FB.T('No'))) +
-          '<p class="adesc" data-freedom-purchase-reason>' +
-            esc(purchaseBlocked) + '</p>' +
-          (petition && petition.lord
-            ? kv('Standing with current lord', esc(FB.T('{standing} (petition at +{threshold})', {
-              standing:petition.standing, threshold:petition.threshold
-            })))
-            : kv('Petition', esc(petition ? petition.reason
-              : FB.T('No current lord can receive the petition.')))) +
-          kv('Petition eligibility', esc(petition && petition.ready
-            ? FB.T('Available now.')
-            : (petition ? petition.reason
-              : FB.T('No current lord can receive the petition.'))));
+          })));
         if (offer) {
           if (offer.status === 'offered') acknowledgeOfferTerms = true;
           const offerService = offer.serviceDays
             ? FB.T('{days} days', { days:offer.serviceDays })
-            : FB.T('none');
+            : FB.T('None');
+          const offerPrice = esc(FB.T('{money:price}', {
+            price:offer.price
+          }));
           h += '<div data-freedom-offer data-serf-offer>' +
+            '<div class="panelh">' + esc(offer.status === 'service'
+              ? FB.T('Freedom agreement') : FB.T('Current offer')) + '</div>' +
             '<div data-freedom-offer-price>' +
-              kv('Saved price', esc(FB.T('{money:price}', {
-                price:offer.price
-              }))) + '</div>' +
-            (offer.familyPricing
-              ? '<p class="adesc" data-freedom-offer-family-price>' +
-                esc(FB.T(
-                  'Standing terms were applied to this saved family base. {breakdown}', {
-                    breakdown:FB.freedomPurchaseBreakdown(
-                      s, offer.familyPricing)
-                  })) +
-                '</p>' : '') +
+              (offer.status === 'service'
+                ? kv('Paid', offerPrice) : kv('Price', offerPrice)) + '</div>' +
             '<div data-freedom-offer-service>' +
-              kv('Final service', esc(offerService)) + '</div>' +
-            '<div data-freedom-offer-expiry>' +
-              kv('Offer expiry', esc(offer.expiryLabel)) + '</div>' +
-            kv('Issued terms', esc(FB.T('{lord}, tenure revision {revision}', {
-              lord:offer.lordName, revision:offer.tenureRevision
-            }))) +
-            '<p class="adesc">' + esc(FB.T(
-              'Expiry or a material change to the named tenure invalidates this offer.')) +
-              '</p>' +
+              kv('Service', esc(offerService)) + '</div>' +
+            (offer.status === 'offered'
+              ? '<div data-freedom-offer-expiry>' +
+                kv('Expires', esc(offer.expiryLabel)) + '</div>'
+              : '') +
             (!offer.acceptanceReady && offer.status === 'offered'
               ? '<p class="warnote">' + esc(offer.acceptanceReason) + '</p>'
               : '') + '</div>';
@@ -2715,24 +2589,25 @@ window.FB = window.FB || {};
               esc(FB.T('Final service ends {date}; {days} days remain.', {
                 date:offer.serviceEndLabel,
                 days:offer.serviceDaysRemaining
-              })) + '</div>';
+            })) + '</div>';
           }
         }
         h += '<button type="button" class="btn" id="rank-petition-freedom"' +
           (petition && petition.ready ? '' : ' disabled') + '>' +
-          esc(FB.T('Petition for terms of freedom…')) + '</button></div>';
+          esc(offer ? FB.T('Review freedom terms…') :
+            FB.T('Petition for terms of freedom…')) + '</button>' +
+          (petition && !petition.ready
+            ? '<p class="adesc" data-freedom-petition-reason>' +
+              esc(petitionReason) + '</p>' : '') + '</div>';
         if (view && view.pendingTransition) {
           h += '<div class="progressnote" data-serf-authority-review>' +
             esc(FB.T(
-              'A review of the household custom is pending under the current authority.')) +
+              'Your household terms are under review.')) +
             '</div>';
-        } else if (view && view.recentTransition) {
-          h += '<div class="hint" data-serf-recent-review>' + esc(FB.T(
-            'Recent authority review: {outcome}.', {
-              outcome:view.recentTransition.outcome.replace(/_/g, ' ')
-            })) + '</div>';
         }
         if (view) h += '</section>';
+      } else {
+        h += '<p class="adesc">' + esc(homeInfo) + '</p>';
       }
     }
     h += '</div><div class="gm-footer"><button class="btn" id="rank-details-close">' +

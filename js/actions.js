@@ -2951,7 +2951,8 @@ window.FB = window.FB || {};
 
   { id:'review_serf_tenure', opensChoices:true, noConsume:true,
     desc:function () {
-      return FB.T('Review your household tenure, next duty, customary rights, and lawful routes to freedom.');
+      return FB.T(
+        'Review your station, home, current lord, and lawful routes to freedom.');
     },
     show:function (s) {
       return s.player.tier === 0 && !!(FB.activeSerfTenure &&

@@ -975,15 +975,17 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     expect(record.wrapper).toBe(3);
     expect(record.restored).toEqual(record.offer);
     await expect(page.locator('[data-freedom-routes]')).toBeVisible();
-    await expect(page.locator('[data-freedom-family-price]'))
-      .toContainText('spouse shares 1 × 125');
+    await expect(page.locator('[data-freedom-routes]'))
+      .toContainText('Buy freedom outright');
+    await expect(page.locator('[data-freedom-family-price]')).toHaveCount(0);
     await expect(page.locator('[data-freedom-offer-price]'))
       .toContainText('282');
     await expect(page.locator('[data-freedom-offer-family-price]'))
-      .toContainText('head 250');
+      .toHaveCount(0);
     await expect(page.locator('[data-freedom-offer-service]'))
-      .toContainText('none');
+      .toContainText('None');
     await expect(page.locator('[data-freedom-offer-expiry]')).toBeVisible();
+    await expect(page.locator('#gm-body')).not.toContainText('tenure revision');
 
     await page.locator('#rank-petition-freedom').click();
     await expect(page.getByRole('heading', { name:'Terms of freedom' }))

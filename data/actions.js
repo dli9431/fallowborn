@@ -134,7 +134,7 @@ FBDATA.deeds = [
     group:'work', flow:'choices', handler:'livelihoods' },
   { id:'petition_monopoly', label:'📜 Petition for a guild monopoly', order:35,
     group:'work', flow:'no_day', cooldownDays:360, requiresTech:'guild_charters', handler:'petition_monopoly' },
-  { id:'review_serf_tenure', label:'📜 Review tenure & freedom', order:36,
+  { id:'review_serf_tenure', label:'📜 Review station & freedom', order:36,
     group:'realm', flow:'choices', handler:'review_serf_tenure' },
   { id:'petition_freedom', label:'📜 Petition for terms of freedom…', order:37,
     group:'realm', flow:'choices', handler:'petition_freedom' },
