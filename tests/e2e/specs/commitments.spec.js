@@ -604,17 +604,17 @@ test('serfs see neither the commitments ledger nor deeds they cannot use',
     // the whole commitments ledger stays out of a serf's way
     await expect(page.locator('#ongoing-commitments')).toHaveCount(0);
 
-    // unusable deeds are hidden, but work and training stays: serfs can
-    // hold the farming career, apprentice children, and run field enterprises
+    // Unusable deeds are hidden, but work, training, and secured credit stay:
+    // serfs can work family enterprises and pledge eligible household property.
     const deedIds = await page.evaluate(function () {
       return FB.listInstants(FB.state).map(function (item) { return item.a.id; });
     });
     expect(deedIds).toContain('livelihoods');
     expect(deedIds).toContain('petition_freedom');
     expect(deedIds).toContain('buy_freedom');
-    expect(deedIds).not.toContain('coin_credit');
+    expect(deedIds).toContain('coin_credit');
     expect(deedIds).not.toContain('adopt_tech');
-    await expect(page.locator('[data-action-id="coin_credit"]')).toHaveCount(0);
+    await expect(page.locator('[data-action-id="coin_credit"]')).toBeVisible();
     await expect(page.locator('[data-action-id="livelihoods"]')).toBeVisible();
     await page.locator('[data-action-group="realm"]').click();
     await expect(page.locator('[data-action-id="petition_freedom"]')).toBeVisible();
@@ -632,32 +632,14 @@ test('serfs see neither the commitments ledger nor deeds they cannot use',
     await livelihoodModal.getByRole('button', { name:'Close', exact:true }).click();
     await expect(livelihoodModal).toHaveClass(/hidden/);
 
-    // Network remains the persistent management route and drops Finance on the same rule.
+    // Network remains the persistent management route for both systems.
     await page.locator('#sidetabs [data-tab="network"]').click();
     await expect(page.locator('#network-work')).toBeVisible();
-    await expect(page.locator('#network-finance')).toHaveCount(0);
-
-    // obligations on the book make Coin & Credit worth surfacing again
-    await page.evaluate(function () {
-      const s = FB.state;
-      const economy = FB.ensureEconomy(s);
-      economy.loans.push({
-        id:economy.nextId++,
-        kind:'household',
-        face:5,
-        denomination:'nominal',
-        dueTurn:s.turn + 180,
-        dueSeason:(s.date.season + 2) % 4,
-        dueYear:s.date.year,
-        status:'active',
-        defaultKind:'revenue'
-      });
-      FB.ui.refresh();
-    });
-    await waitForUiRefresh(page);
-    await expect(page.locator('#network-finance')).toBeVisible();
-    await page.locator('#sidetabs [data-tab="actions"]').click();
-    await expect(page.locator('[data-action-id="coin_credit"]')).toBeVisible();
+    const networkFinance = page.locator('#network-finance');
+    await expect(networkFinance).toBeVisible();
+    await networkFinance.click();
+    await expect(page.locator('#finance-borrow')).toBeEnabled();
+    await page.locator('#finance-close').click();
   });
 
 test('ruler deed section extending past nine items exposes Shift+letter shortcuts',
