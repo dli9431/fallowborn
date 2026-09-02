@@ -1845,6 +1845,16 @@ yet registered the saved death message's English source, the screen derives a lo
 cause from its semantic name/year/age parameters and omits an unresolved quip instead of exposing
 an internal message key.
 
+The live in-game menu exposes **Community** and **Rate on itch.io** as ordinary outbound links.
+Community uses the same permanent Discord invite as the report flow, while rating opens the
+game's direct itch.io `/rate` page. Both open in a new tab and leave the current campaign and menu
+intact. The completed-campaign screen adds **Share your saga** beside its Chronicle actions. That
+action opens a non-dismissible full-sheet view with a copyable localized summary containing the
+house, duration, generation count, highest rank, shareable start seed, and itch.io play link.
+The same view offers Community and Rate on itch.io links; Back restores the completed-campaign
+screen through normal modal history. The summary reads the already-created Chronicle artifact,
+does not alter the campaign, and consumes no RNG.
+
 The viewer is a full-sheet, bounded rendering surface. Its summary shows house, span,
 generations, entry count, choices, and peak title; horizontally scrollable protagonist cards
 show the succession of household heads. The complete timeline supports search,

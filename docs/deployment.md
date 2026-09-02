@@ -69,12 +69,15 @@ player action or campaign transition directly:
 | `succession-completed` | An heir took over after a death. |
 | `retirement-completed` | A living player character handed the dynasty to a successor. |
 | `campaign-ended-no-heir` | The campaign ended because no playable heir remained. |
+| `community-cta-clicked` | A Discord community link was activated. Carries only the bounded `cta_surface`: `menu`, `saga`, or `report`. |
+| `rating-cta-clicked` | The direct itch.io rating link was activated. Carries only the bounded `cta_surface`: `menu` or `saga`. |
 
 Every event carries `telemetry_schema`, `game_version`, and `locale`. When available, the shared
 campaign properties are `start_bookmark`, `quick_start`, `player_tier`, and `dynasty_generation`; lifecycle
 events add only bounded context such as `entry_type`, `scenario`, `family_preset`,
 `quick_start`, `starting_location`, `starting_culture`, `starting_religion`, `active_seconds`, `game_year`, or
-checkpoint reason. The three `starting_*` properties appear only on `campaign-started`, use
+checkpoint reason. Engagement calls to action add only the fixed `cta_surface` values documented
+above. The three `starting_*` properties appear only on `campaign-started`, use
 stable internal IDs, and describe the character's committed start. Player and dynasty names,
 world seeds, later locations, rendered death text, and save contents must never be sent. Do Not
 Track remains respected by the Umami loader. Older event names remain only as historical schema-1

@@ -440,6 +440,38 @@ test('a finished campaign can explore or download its full Chronicle',
       .toBeVisible();
     await expect(page.getByRole('button', { name:'Download Chronicle', exact:true }))
       .toBeVisible();
+    await page.getByRole('button', { name:'Share your saga', exact:true }).click();
+    await expect(page.getByRole('heading', { name:'Share your saga', exact:true }))
+      .toBeVisible();
+    await expect(page.getByRole('button', { name:/Copy saga summary/ })).toBeVisible();
+    const shareText = await page.locator('#saga-share-text').inputValue();
+    expect(shareText).toContain('House ');
+    expect(shareText).toMatch(/across (?:one generation|\d+ generations), reaching /);
+    expect(shareText).toContain('Start seed: ');
+    expect(shareText).toContain('Play Fallowborn: https://dli9431.itch.io/fallowborn');
+    await expect(page.locator('#saga-community'))
+      .toHaveAttribute('href', 'https://discord.gg/G8E67hY2pj');
+    await expect(page.locator('#saga-rate'))
+      .toHaveAttribute('href', 'https://dli9431.itch.io/fallowborn/rate');
+    await page.evaluate(function () {
+      window.__copiedSaga = '';
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable:true,
+        value:{
+          writeText:function (text) {
+            window.__copiedSaga = text;
+            return Promise.resolve();
+          }
+        }
+      });
+    });
+    await page.getByRole('button', { name:/Copy saga summary/ }).click();
+    await expect.poll(async function () {
+      return page.evaluate(function () { return window.__copiedSaga; });
+    }).toBe(shareText);
+    await page.getByRole('button', { name:'Back', exact:true }).click();
+    await expect(page.getByRole('heading', { name:'The Chronicle Closes', exact:true }))
+      .toBeVisible();
     await page.getByRole('button', { name:'Explore full Chronicle', exact:true }).click();
     await expect(page.locator('.chronicle-viewer-entry')).toHaveCount(60);
     await expect(page.locator('.chronicle-viewer-entries'))

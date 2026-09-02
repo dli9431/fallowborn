@@ -9,6 +9,18 @@ window.FB = window.FB || {};
   const UI = FB.ui;
   const SH = UI._shared;
   const $ = SH.$;
+  const COMMUNITY_URL = 'https://discord.gg/G8E67hY2pj';
+  const ITCH_GAME_URL = 'https://dli9431.itch.io/fallowborn';
+  const ITCH_RATE_URL = ITCH_GAME_URL + '/rate';
+  const ENGAGEMENT_CTA_EVENTS = {
+    community:'community-cta-clicked',
+    rating:'rating-cta-clicked'
+  };
+  const ENGAGEMENT_CTA_SURFACES = {
+    menu:'menu',
+    report:'report',
+    saga:'saga'
+  };
   const ACTION_SHORTCUT_KEYS = SH.ACTION_SHORTCUT_KEYS;
   const actionLabel = SH.actionLabel;
   const actionShortcutStatus = SH.actionShortcutStatus;
@@ -108,6 +120,18 @@ window.FB = window.FB || {};
   const traitClassName = SH.traitClassName;
   const traitGroupedEffects = SH.traitGroupedEffects;
   const wireEquipmentButtons = SH.wireEquipmentButtons;
+
+  function bindEngagementCta(id, kind, surface) {
+    const link = $(id);
+    const eventName = ENGAGEMENT_CTA_EVENTS[kind];
+    const boundedSurface = ENGAGEMENT_CTA_SURFACES[surface];
+    if (!link || !eventName || !boundedSurface) return;
+    link.addEventListener('click', function () {
+      if (FB.trackTelemetry) {
+        FB.trackTelemetry(eventName, { cta_surface:boundedSurface });
+      }
+    });
+  }
   const wireInteractionCard = SH.wireInteractionCard;
 
   function guideModalOption(id, entry, label) {
@@ -22418,6 +22442,8 @@ window.FB = window.FB || {};
       esc(FB.T('Explore full Chronicle')) + '</button>' +
       '<button class="btn" id="gm-chronicle-download">' +
       esc(FB.T('Download Chronicle')) + '</button>' +
+      '<button class="btn" id="gm-saga-share">' +
+      esc(FB.T('Share your saga')) + '</button>' +
       '<button class="btn primary" id="gm-title-btn">' +
       esc(FB.T('Return to title')) + '</button></div>';
     openModal('The Chronicle Closes', h, { dismissable: false, modalClass: 'fullsheet-modal' });
@@ -22428,10 +22454,99 @@ window.FB = window.FB || {};
     $('gm-chronicle-download').addEventListener('click', function () {
       chronicleDownload(completedChronicle);
     });
+    $('gm-saga-share').addEventListener('click', function () {
+      UI.showSagaShare(completedChronicle);
+    });
     $('gm-title-btn').addEventListener('click', function () {
       UI.closeModal();
       FB.game.toTitle();
     });
+  };
+
+  function sagaShareText(s, completedChronicle) {
+    const campaign = completedChronicle && completedChronicle.campaign || {};
+    const dynasty = campaign.dynasty || FB.T('My house');
+    const rank = campaign.peakTitle || FB.stationName(campaign.peakTier || 0);
+    const years = FB.campaignYears(s);
+    const generations = Math.max(1, Number(campaign.generations) ||
+      Number(s.generation) || 1);
+    let text = generations === 1
+      ? FB.T('House {dynasty} endured for {years} years across one generation, reaching {rank} in Fallowborn.', {
+        dynasty:dynasty, years:years, rank:rank
+      })
+      : FB.T('House {dynasty} endured for {years} years across {generations} generations, reaching {rank} in Fallowborn.', {
+        dynasty:dynasty, years:years, generations:generations, rank:rank
+      });
+    if (campaign.seed) {
+      text += '\n' + FB.T('Start seed: {seed}', { seed:campaign.seed });
+    }
+    return text + '\n' + FB.T('Play Fallowborn: {url}', { url:ITCH_GAME_URL });
+  }
+
+  function copySagaText(text, done) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {
+        copySagaTextFallback(text); done();
+      });
+    } else {
+      copySagaTextFallback(text); done();
+    }
+  }
+
+  function copySagaTextFallback(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, 99999999);
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+
+  UI.showSagaShare = function (completedChronicle) {
+    const s = FB.state;
+    if (!s || !FB.game.campaignFinished(s)) return false;
+    completedChronicle = FB.save.parseChronicle(completedChronicle) ||
+      FB.save.chronicleData(s);
+    if (!completedChronicle) return false;
+    const shareText = sagaShareText(s, completedChronicle);
+    const h = '<div class="gm-body-text"><p>' +
+      esc(FB.T('Copy this summary or share it with other players.')) +
+      '</p></div><textarea id="saga-share-text" class="savetext" rows="6" readonly data-i18n-ignore>' +
+      esc(shareText) + '</textarea><div class="gm-list" style="margin-top:8px">' +
+      '<button class="actionbtn" id="saga-copy">&#128203; ' +
+      esc(FB.T('Copy saga summary')) + '<span class="adesc">' +
+      esc(FB.T('Copy the house, duration, highest rank, start seed, and play link.')) +
+      '</span></button><a class="actionbtn" id="saga-community" href="' +
+      COMMUNITY_URL + '" target="_blank" rel="noopener">&#128172; ' +
+      esc(FB.T('Community')) + '<span class="adesc">' +
+      esc(FB.T('Share your saga with other Fallowborn players on Discord.')) +
+      '</span></a><a class="actionbtn" id="saga-rate" href="' +
+      ITCH_RATE_URL + '" target="_blank" rel="noopener">&#11088; ' +
+      esc(FB.T('Rate on itch.io')) + '<span class="adesc">' +
+      esc(FB.T('Your rating helps more players find Fallowborn.')) +
+      '</span></a></div><div class="gm-footer"><button class="btn" id="saga-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Share your saga'), h, {
+      dismissable:false,
+      historyView:true,
+      historyBack:true,
+      historyBackRender:UI.gameOver,
+      modalClass:'fullsheet-modal'
+    });
+    $('saga-copy').addEventListener('click', function () {
+      copySagaText(shareText, function () {
+        UI.toast(FB.T('Saga copied. Share it wherever your fellow players gather.'));
+      });
+    });
+    bindEngagementCta('saga-community', 'community', 'saga');
+    bindEngagementCta('saga-rate', 'rating', 'saga');
+    $('saga-back').addEventListener('click', function () {
+      modalHistoryBack(UI.gameOver);
+    });
+    return true;
   };
 
   /* ================= menu ================= */
@@ -22445,6 +22560,16 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="m-help">❓ How to play</button>' +
       (obs ? '' : '<button class="actionbtn" id="m-mods">🧩 Mods</button>') +
       '<button class="actionbtn" id="m-changes">📜 Changelog</button>' +
+      '<a class="actionbtn" id="m-community" href="' + COMMUNITY_URL +
+      '" target="_blank" rel="noopener">💬 ' + esc(FB.T('Community')) +
+      '<span class="adesc">' +
+      esc(FB.T('Share dynasties, ask questions, suggest features, and get help on Discord.')) +
+      '</span></a>' +
+      '<a class="actionbtn" id="m-rate" href="' + ITCH_RATE_URL +
+      '" target="_blank" rel="noopener">⭐ ' + esc(FB.T('Rate on itch.io')) +
+      '<span class="adesc">' +
+      esc(FB.T('Your rating helps more players find Fallowborn.')) +
+      '</span></a>' +
       '<button class="actionbtn" id="m-report">🐞 Report a bug</button>' +
       '<button class="actionbtn" id="m-quit">' +
       esc(FB.T(obs ? '🏳 Stop observing' : '🏳 Abandon to title')) + '</button>' +
@@ -22478,6 +22603,8 @@ window.FB = window.FB || {};
     $('m-settings').addEventListener('click', function () { UI.showSettings(); });
     $('m-help').addEventListener('click', function () { UI.showHelp(); });
     $('m-changes').addEventListener('click', function () { UI.showChangelog(); });
+    bindEngagementCta('m-community', 'community', 'menu');
+    bindEngagementCta('m-rate', 'rating', 'menu');
     $('m-report').addEventListener('click', function () { UI.showReport(); });
     $('m-quit').addEventListener('click', function () {
       UI.closeModal(); FB.game.toTitle();
@@ -24328,7 +24455,8 @@ window.FB = window.FB || {};
       '</div>' +
       '<div class="gm-body-text"><p>Then paste it in any of these places:</p></div>' +
       '<div class="gm-list">' +
-      '<a class="actionbtn" href="https://discord.gg/G8E67hY2pj" target="_blank" rel="noopener">💬 Discord' +
+      '<a class="actionbtn" id="rp-community" href="' + COMMUNITY_URL +
+      '" target="_blank" rel="noopener">💬 Discord' +
       '<span class="adesc">discord.gg/G8E67hY2pj — the quickest answer</span></a>' +
       '<a class="actionbtn" href="mailto:hello@fallowborn.com">✉ Email' +
       '<span class="adesc">hello@fallowborn.com</span></a>' +
@@ -24337,6 +24465,7 @@ window.FB = window.FB || {};
       '</div>' +
       '<button class="btn" id="gm-back">Back</button>';
     openModal('Report a Bug', h, { historyView:true });
+    bindEngagementCta('rp-community', 'community', 'report');
     $('rp-copy').addEventListener('click', function () {
       const msg = $('rp-text').value.trim();
       if (!msg) { UI.toast('Write a line about the bug or idea first.'); $('rp-text').focus(); return; }

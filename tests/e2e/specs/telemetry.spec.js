@@ -534,6 +534,109 @@ test('visibility checkpoints require meaningful new active time',
     ]);
   });
 
+test('engagement links emit only bounded community and rating click telemetry',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      window.__telemetryEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          window.__telemetryEvents.push({ name:name, data:data });
+          return true;
+        }
+      };
+    });
+    await startDeterministicGame(page);
+
+    const menuLinks = await page.evaluate(function () {
+      FB.ui.showMenu();
+      const community = document.getElementById('m-community');
+      const rating = document.getElementById('m-rate');
+      [community, rating].forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+        }, { once:true });
+        link.click();
+      });
+      FB.ui.showReport();
+      const report = document.getElementById('rp-community');
+      report.addEventListener('click', function (event) {
+        event.preventDefault();
+      }, { once:true });
+      report.click();
+      return {
+        community:community.href,
+        rating:rating.href,
+        report:report.href,
+        targets:[community.target, rating.target, report.target],
+        rels:[community.rel, rating.rel, report.rel]
+      };
+    });
+    expect(menuLinks).toEqual({
+      community:'https://discord.gg/G8E67hY2pj',
+      rating:'https://dli9431.itch.io/fallowborn/rate',
+      report:'https://discord.gg/G8E67hY2pj',
+      targets:['_blank', '_blank', '_blank'],
+      rels:['noopener', 'noopener', 'noopener']
+    });
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const heirs = FB.heirsOf(s);
+      for (let i = 0; i < heirs.length; i++) heirs[i].dead = true;
+      me.dead = true;
+      s.player.dead = true;
+      FB.ui.gameOver();
+      document.getElementById('gm-saga-share').click();
+      const community = document.getElementById('saga-community');
+      const rating = document.getElementById('saga-rate');
+      [community, rating].forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+        }, { once:true });
+        link.click();
+      });
+      const ctaEvents = window.__telemetryEvents.filter(function (event) {
+        return event.name === 'community-cta-clicked' ||
+          event.name === 'rating-cta-clicked';
+      });
+      return {
+        sagaCommunity:community.href,
+        sagaRating:rating.href,
+        events:ctaEvents.map(function (event) {
+          return {
+            name:event.name,
+            surface:event.data.cta_surface,
+            schema:event.data.telemetry_schema,
+            bookmark:event.data.start_bookmark,
+            year:event.data.game_year,
+            hasUrl:Object.prototype.hasOwnProperty.call(event.data, 'url'),
+            hasLabel:Object.prototype.hasOwnProperty.call(event.data, 'label'),
+            hasText:Object.prototype.hasOwnProperty.call(event.data, 'text')
+          };
+        })
+      };
+    });
+    expect(result).toEqual({
+      sagaCommunity:'https://discord.gg/G8E67hY2pj',
+      sagaRating:'https://dli9431.itch.io/fallowborn/rate',
+      events:[
+        { name:'community-cta-clicked', surface:'menu', schema:2,
+          bookmark:'867', year:867, hasUrl:false, hasLabel:false, hasText:false },
+        { name:'rating-cta-clicked', surface:'menu', schema:2,
+          bookmark:'867', year:867, hasUrl:false, hasLabel:false, hasText:false },
+        { name:'community-cta-clicked', surface:'report', schema:2,
+          bookmark:'867', year:867, hasUrl:false, hasLabel:false, hasText:false },
+        { name:'community-cta-clicked', surface:'saga', schema:2,
+          bookmark:'867', year:867, hasUrl:false, hasLabel:false, hasText:false },
+        { name:'rating-cta-clicked', surface:'saga', schema:2,
+          bookmark:'867', year:867, hasUrl:false, hasLabel:false, hasText:false }
+      ]
+    });
+  });
+
 test('first-time hints report shown, interaction, dismissal, and opt-out actions',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);

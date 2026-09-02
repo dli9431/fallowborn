@@ -81,7 +81,11 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   that history as readable JSON, and **View Chronicle** on the title screen opens the browser's
   autosave or manual slots as well as downloaded Chronicle JSON and exported `.txt` saves, with
   generation cards, search, and filters. A finished campaign
-  offers the same viewer and download before returning to the title screen.
+  offers the same viewer and download before returning to the title screen. **Share your saga**
+  builds a copyable summary with the house, duration, generations, highest rank, start seed, and
+  play link, followed by direct Community and itch.io rating links.
+- **☰ → Community** opens the Fallowborn Discord for dynasty stories, questions, suggestions,
+  and help. **☰ → Rate on itch.io** opens the game's direct rating page.
 - **☰ → 🐞 Report a bug** builds a ready-made report: your description (bug or suggestion)
   bundled with the game version, start seed, and your current life as save text — copy it and
   paste on [Discord](https://discord.gg/G8E67hY2pj), by email to hello@fallowborn.com, or as a
