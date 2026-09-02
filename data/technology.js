@@ -150,6 +150,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'A child already old enough for their chosen apprenticeship may contribute half an adult staffing position to a family enterprise. This is ordinary household labor rather than an advanced capability controlled by national research; enterprise and upgrade requirements keep their authored technology gates.'
       },
+      formative_education_stories:{
+        mode:'none',
+        rationale:'Household teaching decisions are baseline family activity; the existing technology requirements on optional schools and masters remain unchanged.'
+      },
       enterprise_hired_labor:{
         mode:'none',
         rationale:'Hiring a qualified local worker for an owned household enterprise is a baseline labor contract with recurring pay, not an advanced capability unlocked by national research. Work & Enterprises therefore remains available at every adult station, while individual enterprise requirements keep their authored technology gates.'

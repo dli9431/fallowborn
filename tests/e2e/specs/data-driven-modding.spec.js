@@ -313,6 +313,78 @@ test('milestone-zero mod validation rejects unknown data before mutation',
     expect(result.unchanged).toBe(true);
   });
 
+test('education story metadata and student effects validate atomically',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      function event(patch) {
+        return Object.assign({
+          id:'e2e_education_story', title:'A lesson',
+          text:'{student} faces a lesson.', trigger:{ never:true },
+          educationStory:true, educationFocuses:['lea'],
+          options:[{ label:'Guide them.', chance:0.65,
+            success:{ effects:{ student:{
+              skills:{lea:1}, addTrait:'e2e_studious'
+            } } },
+            failure:{ effects:{ student:{ skills:{lea:-1} } } }
+          }]
+        }, patch || {});
+      }
+      FB.mods.apply({
+        traits:{ e2e_studious:{ name:'Studious', 'class':'disposition' } },
+        events:[event()]
+      });
+      const valid = FB.eventById('e2e_education_story');
+      function attempt(def, text) {
+        const before = JSON.stringify(FBDATA.events);
+        let message = '';
+        try { FB.mods.apply({ events:[def] }); }
+        catch (error) { message = error.message; }
+        return message.indexOf(text) >= 0 &&
+          before === JSON.stringify(FBDATA.events);
+      }
+      const base = event({ id:'e2e_bad_education' });
+      return {
+        valid:valid.educationStory === true &&
+          valid.educationFocuses[0] === 'lea' &&
+          valid.options[0].success.effects.student.addTrait === 'e2e_studious',
+        malformed:[
+          attempt(Object.assign({}, base, { educationStory:false }),
+            'educationStory must be true'),
+          attempt(Object.assign({}, base, { educationFocuses:'lea' }),
+            'educationFocuses must be a non-empty array'),
+          attempt(Object.assign({}, base, { educationFocuses:['lea','lea'] }),
+            'unique recognized skills'),
+          attempt(Object.assign({}, base, { educationFocuses:['wis'] }),
+            'unique recognized skills'),
+          attempt(Object.assign({}, base, {
+            educationStory:undefined, educationFocuses:['lea']
+          }), 'educationFocuses requires educationStory:true'),
+          attempt(event({ id:'e2e_bad_education', options:[{
+            label:'Bad.', effects:{ student:null }
+          }] }), 'student must be an object'),
+          attempt(event({ id:'e2e_bad_education', options:[{
+            label:'Bad.', effects:{ student:{ health:1 } }
+          }] }), 'student contains unknown field health'),
+          attempt(event({ id:'e2e_bad_education', options:[{
+            label:'Bad.', effects:{ student:{ skills:{wis:1} } }
+          }] }), 'student.skills contains unknown skill wis'),
+          attempt(event({ id:'e2e_bad_education', options:[{
+            label:'Bad.', effects:{ student:{ skills:{lea:0} } }
+          }] }), 'must be a non-zero integer'),
+          attempt(event({ id:'e2e_bad_education', options:[{
+            label:'Bad.', effects:{ student:{ addTrait:'missing_trait' } }
+          }] }), 'student.addTrait references an unknown trait')
+        ]
+      };
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.malformed).toEqual([
+      true, true, true, true, true, true, true, true, true, true
+    ]);
+  });
+
 test('milestone-one mod starts materialize bounded scenario and family data',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);

@@ -1571,6 +1571,7 @@ FBDATA.balance = {
   vassalLevyFavorRate: 0.05, vassalLevyFavorDays: 360,
   educationBaseChance: 0.18, educationTutorBase: 0.3,
   educationTutorSkillChance: 0.04, educationChanceCap: 0.9,
+  educationStoryTermChance: 0.15, educationStoryChanceCap: 0.8,
   /* the royal council (tier 6+, js/council.js) */
   councilConsentBelow: 35, // below this crown authority the council blocks extraordinary taxes & revocations
   councilCharterAbove: 70, // authority above this with a sour council invites the charter of liberties

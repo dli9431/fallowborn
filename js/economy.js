@@ -2619,10 +2619,11 @@ window.FB = window.FB || {};
     return out;
   };
 
-  /* Four paid seasonal terms build one year's instruction bonus. A missed
-     fee pauses only that term; earlier lessons remain useful and the school
-     retries next season. Institutions also keep a per-school term ledger for
-     annual risks and stories; switching arrangements never erases it. */
+  /* Four paid seasonal terms build one year's instruction bonus. Every valid
+     directed term also builds focus-specific story exposure, including home
+     teaching. A missed fee or missing tutor pauses that term; earlier lessons
+     remain useful and the school retries next season. Institutions keep their
+     separate per-school term ledger for annual risks and stories. */
   FB.educationSeason = function (state) {
     const B = FBDATA.balance;
     const base = B.educationBaseChance === undefined ? 0.18 : B.educationBaseChance;
@@ -2653,6 +2654,10 @@ window.FB = window.FB || {};
       if (chance > base) {
         c.edu.lessonBoost = (c.edu.lessonBoost || 0) + (chance - base) / 4;
       }
+      if (!c.edu.storyTerms || typeof c.edu.storyTerms !== 'object' ||
+          Array.isArray(c.edu.storyTerms)) c.edu.storyTerms = {};
+      c.edu.storyTerms[c.edu.focus] = Math.min(4, Math.max(0,
+        Math.floor(Number(c.edu.storyTerms[c.edu.focus]) || 0)) + 1);
       if (activeSchool) {
         if (!c.edu.schoolTerms || typeof c.edu.schoolTerms !== 'object' ||
             Array.isArray(c.edu.schoolTerms)) c.edu.schoolTerms = {};
@@ -2680,27 +2685,104 @@ window.FB = window.FB || {};
     return entries[entries.length - 1] || null;
   }
 
-  /* Consume completed institutional terms before ordinary yearly education
-     and coming-of-age rewards. annualMortality is the full four-term risk;
-     annualEvents supplies queued event ids. Missing ledgers in old saves are
-     empty, and consumed ledgers reset without a migration. */
+  function educationStoryEventList(focus) {
+    return (FBDATA.events || []).filter(function (ev) {
+      if (!ev || ev.educationStory !== true) return false;
+      return !ev.educationFocuses || ev.educationFocuses.indexOf(focus) >= 0;
+    });
+  }
+
+  function educationStoryHistory(c) {
+    c.edu = c.edu || {};
+    if (!Array.isArray(c.edu.storiesSeen)) c.edu.storiesSeen = [];
+    return c.edu.storiesSeen;
+  }
+
+  function chooseEducationStory(c, events) {
+    if (!c || !events.length) return null;
+    const seen = educationStoryHistory(c);
+    let choices = events.filter(function (id) {
+      const eventId = typeof id === 'string' ? id : id.id;
+      return seen.indexOf(eventId) < 0;
+    });
+    let recycling = false;
+    if (!choices.length) {
+      recycling = true;
+      choices = events.filter(function (id) {
+        const eventId = typeof id === 'string' ? id : id.id;
+        return eventId !== c.edu.lastStory;
+      });
+      if (!choices.length) choices = events.slice();
+    }
+    const selected = choices.length ? FB.pick(choices) : null;
+    if (!selected) return null;
+    return {
+      id:typeof selected === 'string' ? selected : selected.id,
+      recycling:recycling
+    };
+  }
+
+  function noteEducationStory(c, selected) {
+    if (!c || !selected) return;
+    if (selected.recycling) c.edu.storiesSeen = [];
+    const seen = educationStoryHistory(c);
+    if (seen.indexOf(selected.id) < 0) seen.push(selected.id);
+    c.edu.lastStory = selected.id;
+  }
+
+  function queueEducationStory(state, annual, entry, eventId, selected) {
+    const item = FB.queueEvent(state, eventId, {
+      studentId:entry.c.id,
+      studentFocus:entry.focus || entry.c.edu && entry.c.edu.focus,
+      schoolId:entry.schoolId || null
+    });
+    if (!item) return false;
+    const last = state.eventQueue.length - 1;
+    const at = Math.max(0, Math.min(last, Number(annual.queueIndex) || 0));
+    if (at < last) {
+      state.eventQueue.pop();
+      state.eventQueue.splice(at, 0, item);
+    }
+    noteEducationStory(entry.c, selected || { id:eventId, recycling:false });
+    return true;
+  }
+
+  /* Snapshot and consume completed institution and directed-study terms
+     before ordinary yearly education and coming-of-age rewards. Mortality is
+     the full four-term risk; annualEvents supplies school-specific event ids.
+     Missing ledgers in old saves are empty and need no migration. */
   FB.schoolingYear = function (state) {
     const snapshots = [];
     const playerId = state.player.charId;
     for (const id in state.chars) {
       const c = state.chars[id];
-      if (!c || !c.edu || !c.edu.schoolTerms ||
-          typeof c.edu.schoolTerms !== 'object' || Array.isArray(c.edu.schoolTerms)) continue;
+      if (!c || !c.edu) continue;
       const schools = [];
-      for (const schoolId in c.edu.schoolTerms) {
+      const schoolTerms = c.edu.schoolTerms &&
+        typeof c.edu.schoolTerms === 'object' && !Array.isArray(c.edu.schoolTerms)
+        ? c.edu.schoolTerms : {};
+      for (const schoolId in schoolTerms) {
         const terms = Math.min(4, Math.max(0,
-          Math.floor(Number(c.edu.schoolTerms[schoolId]) || 0)));
+          Math.floor(Number(schoolTerms[schoolId]) || 0)));
         if (terms && FBDATA.schooling[schoolId]) {
           schools.push({ id:schoolId, terms:terms, def:FBDATA.schooling[schoolId] });
         }
       }
       c.edu.schoolTerms = {};
-      if (schools.length && !c.dead) snapshots.push({ c:c, schools:schools });
+      const focuses = [];
+      const storyTerms = c.edu.storyTerms &&
+        typeof c.edu.storyTerms === 'object' && !Array.isArray(c.edu.storyTerms)
+        ? c.edu.storyTerms : {};
+      for (const focus in storyTerms) {
+        if (FB.SKILLS.indexOf(focus) < 0) continue;
+        const terms = Math.min(4, Math.max(0,
+          Math.floor(Number(storyTerms[focus]) || 0)));
+        if (terms) focuses.push({ focus:focus, terms:terms });
+      }
+      c.edu.storyTerms = {};
+      if ((schools.length || focuses.length) && !c.dead) {
+        snapshots.push({ c:c, schools:schools, focuses:focuses });
+      }
     }
     snapshots.sort(function (a, b) {
       if (a.c.id === playerId) return -1;
@@ -2749,7 +2831,10 @@ window.FB = window.FB || {};
       }
     }
 
-    return { entries:storyEntries, queueIndex:(state.eventQueue || []).length };
+    return {
+      entries:storyEntries, snapshots:snapshots,
+      queueIndex:(state.eventQueue || []).length
+    };
   };
 
   /* Queue the story only after the rest of yearly mortality has run, so an
@@ -2764,29 +2849,45 @@ window.FB = window.FB || {};
     if (storyTerms && FB.chance(Math.min(1, storyTerms / 4))) {
       const selected = weightedSchoolStory(survivors, storyTerms);
       if (selected) {
-        const events = selected.events.filter(function (id) {
-          return id && id !== state.schoolingLastEvent;
-        });
-        if (events.length) {
-          const eventId = FB.pick(events);
-          const item = FB.queueEvent(state, eventId, {
-            studentId:selected.c.id,
-            studentFocus:selected.c.edu && selected.c.edu.focus,
-            schoolId:selected.schoolId
-          });
-          /* Preserve events already waiting before New Year, but put this
-             term-ending story before coming-of-age notices queued later in
-             the same annual pass. */
-          const last = state.eventQueue.length - 1;
-          const at = Math.max(0, Math.min(last, Number(annual.queueIndex) || 0));
-          if (at < last) {
-            state.eventQueue.pop();
-            state.eventQueue.splice(at, 0, item);
-          }
-          state.schoolingLastEvent = eventId;
-          return true;
-        }
+        const choice = chooseEducationStory(selected.c, selected.events);
+        if (choice && queueEducationStory(state, annual, {
+          c:selected.c, focus:selected.c.edu && selected.c.edu.focus,
+          schoolId:selected.schoolId
+        }, choice.id, choice)) return true;
       }
+    }
+
+    const household = {};
+    for (const member of FB.householdMembers(state)) household[member.id] = 1;
+    const focusEntries = [];
+    for (let i = 0; i < (annual.snapshots || []).length; i++) {
+      const snapshot = annual.snapshots[i];
+      if (!snapshot.c || snapshot.c.dead || snapshot.c.id === state.player.charId ||
+          !household[snapshot.c.id] ||
+          !FB.playerDescendantKind(state, snapshot.c.id) ||
+          FB.spousesOf(state, snapshot.c).length) continue;
+      for (let j = 0; j < snapshot.focuses.length; j++) {
+        const focused = snapshot.focuses[j];
+        const events = educationStoryEventList(focused.focus);
+        if (events.length) focusEntries.push({
+          c:snapshot.c, focus:focused.focus, terms:focused.terms, events:events
+        });
+      }
+    }
+    let completedTerms = 0;
+    for (let i = 0; i < focusEntries.length; i++) {
+      completedTerms += focusEntries[i].terms;
+    }
+    const termChance = FBDATA.balance.educationStoryTermChance === undefined
+      ? 0.15 : FBDATA.balance.educationStoryTermChance;
+    const chanceCap = FBDATA.balance.educationStoryChanceCap === undefined
+      ? 0.8 : FBDATA.balance.educationStoryChanceCap;
+    if (completedTerms && FB.chance(Math.min(chanceCap,
+        completedTerms * termChance))) {
+      const selected = weightedSchoolStory(focusEntries, completedTerms);
+      const choice = selected && chooseEducationStory(selected.c, selected.events);
+      if (choice && queueEducationStory(state, annual, selected,
+          choice.id, choice)) return true;
     }
     return false;
   };

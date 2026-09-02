@@ -1062,6 +1062,21 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  function validateEducationEvents(mod) {
+    if (!own(mod, 'events') || !Array.isArray(mod.events)) return;
+    const traits = combinedTable(FBDATA.traits, mod.traits, 'traits');
+    for (let eventIndex = 0; eventIndex < mod.events.length; eventIndex++) {
+      try {
+        if (FB.validateEducationEvent) {
+          FB.validateEducationEvent(mod.events[eventIndex], traits);
+        }
+      } catch (error) {
+        fail('events[' + eventIndex + ']',
+          error.message || 'has invalid education event data.');
+      }
+    }
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1086,6 +1101,7 @@ window.FBMODS = window.FBMODS || [];
     }
     validateSerfFreedomEventEffects(mod);
     validateEventParticipants(mod);
+    validateEducationEvents(mod);
     return { actions:prepareActionCatalogs(mod) };
   }
 

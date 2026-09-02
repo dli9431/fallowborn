@@ -3967,7 +3967,7 @@ FB.CHANGELOG = [
     const me = s.chars[p.charId];
     const year = s.date.year;
 
-    // paid-term risks resolve now; surviving story candidates wait through mortality
+    // completed-term risks resolve now; surviving story candidates wait through mortality
     const schoolingAnnual = FB.schoolingYear ? FB.schoolingYear(s) : null;
     if (schoolingAnnual === false) return;
 

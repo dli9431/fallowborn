@@ -954,12 +954,13 @@ Childhood instruction is additive too. `character.edu.school` optionally names a
 `FBDATA.schooling` arrangement, `lessonBoost` stores the fractional yearly chance earned by
 completed seasonal terms, `schoolTerms` maps schooling ids to completed terms awaiting the
 next New Year, and `schoolUnpaid` suppresses repeated notices while fees cannot be met.
-Switching arrangements leaves `schoolTerms` intact; the annual schooling pass consumes and
-resets the map after resolving moddable mortality and story fields. `state.schoolingLastEvent`
-stores the last annual schooling event id solely to prevent an immediate story repeat across
-years and protagonist succession. Missing fields mean home instruction, no exposure, and no
-previous story. A legacy generated hired tutor is recognized by its character role and
-lazily gains `school:'master'`; no save-version migration is required.
+`storyTerms` separately maps study focuses to completed directed terms, including home study;
+the annual schooling pass snapshots and clears both term maps. Per-student `storiesSeen` and
+`lastStory` fields prefer unseen education stories and prevent an immediate repeat when the
+pool recycles. Switching arrangements leaves term history intact until New Year. Missing
+fields mean home instruction, no exposure, and no previous story, so older saves acquire all
+three ledgers lazily without a save-version migration. A legacy generated hired tutor is
+recognized by its character role and lazily gains `school:'master'`.
 
 Household education automation is additive at the same save version.
 `player.educationPolicy:{focus,instructionMode,feeCap}` belongs to the household and

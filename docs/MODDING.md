@@ -1390,6 +1390,10 @@ lifetime tally of service in the liege's wars and feeds any core trait progress 
 to that service) ·
 `skills: {dip|mar|ste|int|lea: n}` (positive gains
 go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
+`student: {skills:{dip|mar|ste|int|lea:n}, addTrait:"trait_id"}` (apply either or
+both fields to the exact living `ctx.studentId`; skill values are non-zero integers from
+−20 to 20, positive gains use `FB.gainSkill`, negative changes clamp raw skill at zero,
+and `FB.addTrait` replaces an existing opposite) ·
 `addTrait / addTraitOnce / removeTrait` (`addTraitOnce` is the explicit idempotent spelling;
 trait grants already do nothing when the character has that trait) ·
 `traitProgress: {id, amount?}` (default amount 1; progress is
@@ -2551,9 +2555,8 @@ instruction arrangements:
   Risk scales linearly with completed terms (`annualMortality × terms / 4`) and resolves
   before education and coming-of-age.
 - `annualEvents` optionally lists queued event ids. Surviving terms across the household
-  produce at most one annual story with probability `min(1, terms / 4)`; the student is
-  selected in proportion to completed terms, and the immediately previous schooling story
-  is excluded.
+  get first claim on the household’s one annual education story with probability
+  `min(1, terms / 4)`; the student is selected in proportion to completed terms.
 - `name`/`desc` accept the same localization tokens and faith-variant objects as
   other structured data.
 - The built-in `master` id is special: its chance comes from the attached tutor
@@ -2563,6 +2566,18 @@ instruction arrangements:
   terms also accumulate by schooling id in `character.edu.schoolTerms`; missed fees do not
   add exposure, switching schools does not erase it, and the New Year pass resets consumed
   entries. Missing maps in old saves are treated as empty.
+
+General formative events declare `educationStory:true` and may add a non-empty, unique
+`educationFocuses` array drawn from `dip mar ste int lea`; omitting it makes the event eligible
+for every focus. The mod loader rejects other `educationStory` values, malformed focus lists,
+unknown student skills or traits, and empty or extra fields in `effects.student`. After
+school-specific selection has passed, completed terms across eligible
+resident children and grandchildren roll `min(balance.educationStoryChanceCap,
+terms × balance.educationStoryTermChance)`. The child and focus are term-weighted, and unseen
+eligible events are preferred per student before the pool recycles without an immediate repeat.
+Completed focus terms live in `character.edu.storyTerms`; history lives in
+`character.edu.storiesSeen` plus `character.edu.lastStory`. Old saves need no migration because
+all three records are created lazily. The default pacing values are `0.80` and `0.15`.
 
 ## Family enterprises
 
