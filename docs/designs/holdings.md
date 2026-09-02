@@ -198,6 +198,10 @@ landed rulers cannot resume a personal calling, but they can still manage family
 owned businesses, and qualified local hires. Local hiring is a baseline labor contract;
 individual enterprise acquisition and upgrade requirements retain their authored technology
 gates.
+The `enterprise_child_labor` technology-impact decision is `none`: a child who
+has reached the matching calling's apprenticeship age may perform ordinary
+family labor without national research, while the enterprise and its upgrades
+retain their own authored technology requirements.
 `workerLocked:true` preserves all current worker-enterprise pairings from batch
 staffing; a missing field means unlocked, so the addition remains compatible with
 save format 3. One copy of a type may stand in each derived settlement, so a family may
@@ -208,6 +212,12 @@ position required by its current level is filled.
 or a manageable resident unwed sibling (`FB.manageableKinKind`; see
 [characters.md](characters.md)) in the matching career (and, where required,
 guild rank) whose `FB.characterResidence` is the enterprise's province. A
+worker under sixteen must have a chosen matching apprenticeship and supplies
+half a staffing position, so two child workers replace one adult worker. A
+single child may remain assigned to an otherwise empty position, but the
+enterprise stays inactive until its adult-equivalent staffing requirement is
+met. Once that child turns sixteen, lazy normalization counts them as one adult
+and releases any now-excess assignment without changing the save shape. A
 manageable sibling contributes labor only — never household membership, upkeep,
 or wages — and a sibling who weds, takes vows, gains land or a crown, or moves
 away drops out of the pool; the shared wedding paths strip their enterprise
@@ -256,7 +266,8 @@ The opt-in staffing assistant is a no-day, preview-first batch operation.
 `FB.enterpriseStaffingPlan` fixes every valid locked pairing and paid enterprise-labor
 contract, then considers all
 remaining enterprises and eligible household workers, including workers on unlocked
-enterprises. It maximizes the sum of `FB.enterpriseYield` rounded per staffing position to
+enterprises. It assigns adults first, then uses two available child apprentices for
+each missing adult position, and maximizes `FB.enterpriseYield` rounded to
 thousandths of seasonal currency. Equal totals preserve the most current assignments,
 then resolve by stable enterprise UID and character ID; no RNG is consumed. Locale-neutral
 rows record the current/proposed ids and yields, lock/status state, and one of
@@ -278,7 +289,8 @@ guild rank affects the next calculation without migrating property state.
 
 Every core enterprise has two authored upgrades. Construction is deliberately expensive
 and never raises the enterprise's seasonal gold yield. Instead, a completed tier increases
-the number of required workers and supplies ancillary power only while fully staffed:
+the number of required adult-equivalent staffing positions and supplies ancillary power
+only while fully staffed:
 county population capacity, famine or population-crisis protection, migration attraction,
 levy or men-at-arms support, retainer capacity, seasonal prestige, and a one-time county
 development gain. `FB.enterpriseUpgradeStatus` keeps a locked tier visible with its exact

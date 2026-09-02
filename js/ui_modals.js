@@ -14597,9 +14597,11 @@ window.FB = window.FB || {};
     const workers = ids.map(function (id) { return s.chars[id]; }).filter(Boolean);
     const required = FB.enterpriseStaffRequired
       ? FB.enterpriseStaffRequired(enterprise) : 1;
-    if (workers.length < required) {
+    const assigned = FB.enterpriseStaffAssigned
+      ? FB.enterpriseStaffAssigned(s, enterprise) : workers.length;
+    if (assigned + 0.0001 < required) {
       return FB.T('Idle: {assigned} of {required} staffing positions filled.', {
-        assigned:workers.length, required:required
+        assigned:assigned, required:required
       });
     }
     return FB.T(
@@ -15330,6 +15332,7 @@ window.FB = window.FB || {};
       const worker = staffing.currentWorker;
       const workers = staffing.currentWorkers || (worker ? [worker] : []);
       const required = staffing.requiredCount || FB.enterpriseStaffRequired(e);
+      const assigned = staffing.assignedCount || 0;
       const unresolved = !staffing.staffed;
       const blocked = staffing.blocked;
       const attention = unresolved;
@@ -15366,8 +15369,8 @@ window.FB = window.FB || {};
       const detailsId = 'work-enterprise-details-' + e.uid;
       const faceText = FB.T('{worker} · {place} · about {money:amount}/season', {
         worker:workers.length
-          ? FB.T('{count} of {required} workers', {
-            count:workers.length, required:required
+          ? FB.T('{assigned} of {required} staffing positions filled', {
+            assigned:assigned, required:required
           }) : stateLabel,
         place:enterprisePlace(s, e),
         amount:Math.round(liveYield * 10) / 10
@@ -17324,6 +17327,7 @@ window.FB = window.FB || {};
     const eligibleWorkers = staffing.eligibleWorkers;
     const assignedIds = FB.enterpriseWorkerIds(e);
     const required = FB.enterpriseStaffRequired(e);
+    const assignedStaff = staffing.assignedCount || 0;
     const level = FB.enterpriseUpgradeLevel(e);
     const upgradeStatus = FB.enterpriseUpgradeStatus(s, e);
     const hiredIds = {};
@@ -17355,8 +17359,11 @@ window.FB = window.FB || {};
           : FB.T('Removing this worker may leave the enterprise inactive.');
       }
       const parts = [];
-      if (assignedIds.length >= required) {
-        return FB.T('Remove a current worker before filling this position.');
+      if (assignedStaff + FB.enterpriseWorkerStaff(s, worker) >
+          required + 0.0001) {
+        return assignedStaff + 0.0001 < required
+          ? FB.T('Only another child worker can fill the remaining half position.')
+          : FB.T('Remove a current worker before filling this position.');
       }
       if (current && current.uid !== e.uid) {
         parts.push(FB.T('{name} moves here from {enterprise}.', {
@@ -17367,9 +17374,11 @@ window.FB = window.FB || {};
           parts.push(FB.T('That enterprise\'s staffing lock will be cleared.'));
         }
       }
-      parts.push(FB.T('Fills one of {required} staffing positions.', {
-        required:required
-      }));
+      parts.push(FB.enterpriseWorkerStaff(s, worker) < 1
+        ? FB.T('Provides half of one staffing position; two child workers equal one adult worker.')
+        : FB.T('Fills one of {required} staffing positions.', {
+          required:required
+        }));
       return parts.join(' ');
     }
     function managementCard(id, title, details, body, classes) {
@@ -17415,7 +17424,7 @@ window.FB = window.FB || {};
         benefit:enterpriseUpgradeBenefitText(e, level)
       })) + '</span>' : '') +
       '<span>' + esc(FB.T('{assigned} of {required} staffing positions filled', {
-        assigned:assignedIds.length, required:required
+        assigned:assignedStaff, required:required
       })) + '</span>';
     let upgradeAction = '';
     if (upgradeStatus.next) {
@@ -17423,7 +17432,7 @@ window.FB = window.FB || {};
       upgradeDetails += '<div class="enterprise-upgrade-next-details"><b>' +
         esc(FB.T('Upgrade to {upgrade}', { upgrade:nextName })) + '</b><span>' +
         esc(enterpriseUpgradeDesc(s, e, level + 1)) + '</span><span>' +
-        esc(FB.T('Costs {money:cost}; requires {staff} workers when complete.', {
+        esc(FB.T('Costs {money:cost}; requires {staff} staffing positions when complete.', {
           cost:upgradeStatus.cost,
           staff:Math.max(1, Math.floor(Number(upgradeStatus.next.staff) || required))
         })) + '</span>' + (!upgradeStatus.ready
@@ -17486,8 +17495,10 @@ window.FB = window.FB || {};
     for (const c of eligibleWorkers) {
       const current = workerAssignment(c.id);
       const selected = assignedIds.indexOf(c.id) >= 0;
+      const workerStaff = FB.enterpriseWorkerStaff(s, c);
+      const canAdd = assignedStaff + workerStaff <= required + 0.0001;
       const previewIds = assignedIds.slice();
-      if (!selected && previewIds.length < required) previewIds.push(c.id);
+      if (!selected && canAdd) previewIds.push(c.id);
       const preview = {
         type:e.type, provinceId:e.provinceId, settlement:e.settlement,
         level:level, workerId:previewIds[0] || null, workerIds:previewIds
@@ -17495,7 +17506,7 @@ window.FB = window.FB || {};
       h += personAssignmentCard({
         person:c,
         selected:selected,
-        disabled:!!hiredIds[c.id] || (!selected && assignedIds.length >= required),
+        disabled:!!hiredIds[c.id] || (!selected && !canAdd),
         eligibility:selected
           ? (hiredIds[c.id]
             ? FB.T('Hired worker; paid each season')
@@ -17504,9 +17515,13 @@ window.FB = window.FB || {};
             : FB.T('Currently assigned'))
           : (FB.isProtected(s, 'staffingWorker', c.id)
             ? FB.T('Reserved from the staffing assistant; manual choice remains available')
-            : (assignedIds.length >= required
-              ? FB.T('All staffing positions are filled; remove a worker first')
-              : FB.T('Eligible worker'))),
+            : (!canAdd
+              ? (assignedStaff + 0.0001 < required
+                ? FB.T('Only another child worker can fill the remaining half position.')
+                : FB.T('All staffing positions are filled; remove a worker first'))
+              : (workerStaff < 1
+                ? FB.T('Eligible child worker · half a staffing position')
+                : FB.T('Eligible worker')))),
         data:{ enterpriseWorker:c.id },
         rows:[
           { label:'Expected yield', value:FB.T('About {money:amount} each season', {
@@ -17516,6 +17531,9 @@ window.FB = window.FB || {};
             ? FB.T('{money:pay} each season', { pay:hiredIds[c.id].pay || 0 })
             : FB.T('No assignment fee') },
           { label:'Occupation', value:FB.careerTitle(s, c) },
+          { label:'Staffing', value:workerStaff < 1
+            ? FB.T('Half of one staffing position')
+            : FB.T('One staffing position') },
           { label:'Standing', value:standingText(FB.standingOf(s, {
             kind:'character', id:c.id
           })) },
@@ -17704,7 +17722,7 @@ window.FB = window.FB || {};
     });
     return enterpriseStaffingReason(s, row) || FB.T(
       '{count} of {required} staffing positions can be filled.', {
-        count:proposedIds.length, required:row.requiredCount || 1
+        count:row.proposedStaff || 0, required:row.requiredCount || 1
       });
   }
 
@@ -17740,19 +17758,19 @@ window.FB = window.FB || {};
       }
       const current = workerList(row.currentWorkerIds, FB.T('Idle'));
       const proposed = workerList(row.proposedWorkerIds, FB.T('Unresolved'));
-      const currentCount = FB.T('{count} of {required} workers', {
-        count:(row.currentWorkerIds || []).length,
+      const currentCount = FB.T('{assigned} of {required} staffing positions filled', {
+        assigned:row.currentStaff || 0,
         required:row.requiredCount || 1
       });
-      const proposedCount = FB.T('{count} of {required} workers', {
-        count:(row.proposedWorkerIds || []).length,
+      const proposedCount = FB.T('{assigned} of {required} staffing positions filled', {
+        assigned:row.proposedStaff || 0,
         required:row.requiredCount || 1
       });
       const reason = row.status === 'unresolved'
         ? enterpriseStaffingReason(s, row) : '';
       const change = enterpriseStaffingChange(s, row, rowByUid);
       const detailsId = 'enterprise-staffing-details-' + row.uid;
-      const idle = (row.currentWorkerIds || []).length <
+      const idle = (row.currentStaff || 0) + 0.0001 <
         (row.requiredCount || 1);
       const hireStatus = idle
         ? (FBDATA.enterprises[row.type]

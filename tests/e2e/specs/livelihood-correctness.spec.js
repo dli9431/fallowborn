@@ -341,10 +341,10 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
     const row = page.locator('[data-enterprise="' + fixture.uid + '"]');
     await expect(row).toContainText('Idle');
     await expect(row).not.toContainText(
-      'No adult resident household member is eligible for Craft work');
+      'No trained resident household member is eligible for Craft work');
     await row.hover();
     await expect(page.locator('#tooltip')).toContainText(
-      'No adult resident household member is eligible for Craft work');
+      'No trained resident household member is eligible for Craft work');
     await row.click();
     const overview = page.locator('.enterprise-management-status.idle');
     await expect(overview.locator('.settcard-head > b'))
@@ -735,6 +735,122 @@ test('enterprise upgrades spend gold, require larger staffs, and add only ancill
     expect(result.fullHireStatus).toContain('already filled');
   });
 
+test('child apprentices provide half enterprise staffing and the assistant pairs them',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const home = s.player.provinceId;
+      s.player.tier = 0;
+      s.player.enterpriseMigration = 1;
+      s.player.loadouts = {};
+      me.skills = { mar:0, ste:6, dip:0, int:0, lea:0 };
+      me.traits = [];
+      me.career = {
+        profession:'farmer', rank:'journeyman', experience:0,
+        startedYear:s.date.year, guildRank:'none', guildStanding:0,
+        chosen:true
+      };
+      function child(name, age) {
+        const c = FB.makeCharacter(s, {
+          name:name, sex:'m', born:s.date.year - age,
+          fatherId:me.sex === 'm' ? me.id : null,
+          motherId:me.sex === 'f' ? me.id : null,
+          culture:me.culture, religion:me.religion, dyn:me.dyn,
+          traits:[]
+        });
+        c.skills = { mar:0, ste:6, dip:0, int:0, lea:0 };
+        c.career = {
+          profession:'farmer', rank:'apprentice', experience:0,
+          startedYear:s.date.year, guildRank:'none', guildStanding:0,
+          chosen:true
+        };
+        me.childrenIds = me.childrenIds || [];
+        me.childrenIds.push(c.id);
+        return c;
+      }
+      const first = child('First Apprentice', 12);
+      const second = child('Second Apprentice', 12);
+      const tooYoung = child('Young Helper', 9);
+      const enterprise = {
+        uid:'child_staffing_fixture', type:'field_strip',
+        provinceId:home, settlement:0, workerId:null
+      };
+      s.player.enterprises = [enterprise];
+      const eligible = FB.enterpriseWorkersFor(s, enterprise).map(function (c) {
+        return c.id;
+      });
+
+      const firstAssigned = FB.setEnterpriseWorker(s, enterprise.uid,
+        first.id, true);
+      const halfStaff = FB.enterpriseStaffAssigned(s, enterprise);
+      const oneChildYield = FB.enterpriseYield(s, enterprise);
+      const halfHireBlock = FB.canHireEnterpriseWorker(s, enterprise.uid);
+      const secondAssigned = FB.setEnterpriseWorker(s, enterprise.uid,
+        second.id, true);
+      const childYield = FB.enterpriseYield(s, enterprise);
+      const childStaff = FB.enterpriseStaffAssigned(s, enterprise);
+
+      FB.setEnterpriseWorker(s, enterprise.uid, first.id, false);
+      FB.setEnterpriseWorker(s, enterprise.uid, second.id, false);
+      FB.setEnterpriseWorker(s, enterprise.uid, me.id, true);
+      const adultYield = FB.enterpriseYield(s, enterprise);
+      FB.setEnterpriseWorker(s, enterprise.uid, me.id, false);
+      me.career = {
+        profession:'soldier', rank:'journeyman', experience:0,
+        startedYear:s.date.year, guildRank:'none', guildStanding:0,
+        chosen:true
+      };
+      const plan = FB.enterpriseStaffingPlan(s);
+      const applied = FB.applyEnterpriseStaffingPlan(s, plan);
+      const row = plan.rows[0];
+      FB.ui.showEnterpriseManage(enterprise.uid);
+      return {
+        firstId:first.id,
+        secondId:second.id,
+        tooYoungId:tooYoung.id,
+        eligible:eligible,
+        firstAssigned:firstAssigned,
+        secondAssigned:secondAssigned,
+        halfStaff:halfStaff,
+        childStaff:childStaff,
+        oneChildYield:oneChildYield,
+        childYield:childYield,
+        adultYield:adultYield,
+        halfHireBlock:halfHireBlock,
+        proposedIds:row.proposedWorkerIds,
+        proposedStaff:row.proposedStaff,
+        proposedYield:row.proposedYield,
+        applied:applied.ok,
+        finalIds:FB.enterpriseWorkerIds(enterprise)
+      };
+    });
+
+    expect(result.eligible).toContain(result.firstId);
+    expect(result.eligible).toContain(result.secondId);
+    expect(result.eligible).not.toContain(result.tooYoungId);
+    expect(result.firstAssigned).toBe(true);
+    expect(result.secondAssigned).toBe(true);
+    expect(result.halfStaff).toBe(0.5);
+    expect(result.oneChildYield).toBe(0);
+    expect(result.halfHireBlock).toContain('remaining half position');
+    expect(result.childStaff).toBe(1);
+    expect(result.childYield).toBeCloseTo(result.adultYield, 5);
+    expect(result.proposedIds.sort()).toEqual(
+      [result.firstId, result.secondId].sort());
+    expect(result.proposedStaff).toBe(1);
+    expect(result.proposedYield).toBeGreaterThan(0);
+    expect(result.applied).toBe(true);
+    expect(result.finalIds.sort()).toEqual(
+      [result.firstId, result.secondId].sort());
+    await expect(page.locator(
+      '[data-enterprise-worker="' + result.firstId + '"]')).toBeVisible();
+    await expect(page.locator(
+      '[data-enterprise-worker="' + result.secondId + '"]')).toBeVisible();
+    await expect(page.locator('.enterprise-management-modal'))
+      .toContainText('Half of one staffing position');
+  });
+
 test('enterprise loading repairs malformed legacy collections before staffing',
   async function ({ page }) {
     const result = await page.evaluate(function () {
@@ -905,7 +1021,7 @@ test('staffing preview discloses details and staffs each idle enterprise directl
     await expect(row.locator('.enterprise-staffing-details')).toContainText(
       'Hire a local worker');
     await expect(row.locator('.enterprise-staffing-details')).toContainText(
-      'of 1 workers');
+      'of 1 staffing positions filled');
     await expect(row.locator('.enterprise-staffing-details')).toContainText(
       'Pay');
     await expect(row.locator('[data-enterprise-staffing-manage]'))

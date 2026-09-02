@@ -2811,6 +2811,22 @@ window.FB = window.FB || {};
     return Math.max(1, Math.floor(Number(current && current.staff) || 1));
   };
 
+  /* A trained child can help in the family business once they reach their
+     calling's apprenticeship age, but supplies only half an adult position. */
+  FB.enterpriseWorkerStaff = function (state, worker) {
+    if (worker && typeof worker !== 'object') worker = state.chars[worker];
+    if (!worker || worker.dead) return 0;
+    return FB.ageOf(worker, state.date.year) < 16 ? 0.5 : 1;
+  };
+
+  function enterpriseStaffFromIds(state, ids) {
+    let total = 0;
+    for (const id of (ids || [])) {
+      total += FB.enterpriseWorkerStaff(state, id);
+    }
+    return total;
+  }
+
   FB.enterpriseOperationalWorkerIds = function (state, enterprise) {
     const eligible = {};
     for (const c of FB.enterpriseWorkersFor(state, enterprise)) eligible[c.id] = 1;
@@ -2823,9 +2839,14 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.enterpriseStaffAssigned = function (state, enterprise) {
+    return enterpriseStaffFromIds(state,
+      FB.enterpriseOperationalWorkerIds(state, enterprise));
+  };
+
   FB.enterpriseFullyStaffed = function (state, enterprise) {
     if (!enterprise) return false;
-    return FB.enterpriseOperationalWorkerIds(state, enterprise).length >=
+    return FB.enterpriseStaffAssigned(state, enterprise) + 0.0001 >=
       FB.enterpriseStaffRequired(enterprise);
   };
 
@@ -2947,10 +2968,14 @@ window.FB = window.FB || {};
       }
       for (let i = firstMigrated; i < p.enterprises.length; i++) {
         const workers = FB.enterpriseWorkersFor(state, p.enterprises[i]);
+        workers.sort(function (a, b) {
+          return FB.enterpriseWorkerStaff(state, b) -
+            FB.enterpriseWorkerStaff(state, a);
+        });
         for (const worker of workers) {
           if (!workerBusy(state, worker.id)) {
             FB.assignEnterprise(state, p.enterprises[i].uid, worker.id);
-            break;
+            if (FB.enterpriseFullyStaffed(state, p.enterprises[i])) break;
           }
         }
       }
@@ -2962,25 +2987,34 @@ window.FB = window.FB || {};
       for (const worker of FB.enterpriseWorkersFor(state, enterprise)) {
         eligible[worker.id] = 1;
       }
-      const valid = [], contracted = [], contractedIds = {};
+      const assigned = enterpriseAssignedIds(enterprise);
+      const valid = [], contracted = [], selected = {};
+      let remaining = required;
       for (const record of p.enterpriseLabor) {
         if (record.enterpriseUid !== enterprise.uid || !eligible[record.charId]) continue;
         contracted.push(record.charId);
-        contractedIds[record.charId] = 1;
       }
-      for (const id of enterpriseAssignedIds(enterprise)) {
-        if (eligible[id] && valid.indexOf(id) < 0 && valid.length < required) valid.push(id);
-      }
+      /* Reserve capacity for paid contracts, then fill the remainder with
+         household workers in their existing order. The final ordering also
+         follows the saved assignment, so hiring extra staff does not replace
+         the established lead worker used for yield. */
       for (const id of contracted) {
-        if (valid.indexOf(id) >= 0) continue;
-        if (valid.length >= required) {
-          for (let i = valid.length - 1; i >= 0; i--) {
-            if (contractedIds[valid[i]]) continue;
-            valid.splice(i, 1);
-            break;
-          }
-        }
-        if (valid.length < required) valid.push(id);
+        if (selected[id]) continue;
+        const staff = FB.enterpriseWorkerStaff(state, id);
+        if (staff > remaining + 0.0001) continue;
+        selected[id] = 1;
+        remaining -= staff;
+      }
+      for (const id of assigned) {
+        if (!eligible[id] || selected[id]) continue;
+        const staff = FB.enterpriseWorkerStaff(state, id);
+        if (staff > remaining + 0.0001) continue;
+        selected[id] = 1;
+        remaining -= staff;
+      }
+      for (const id of assigned) if (selected[id]) valid.push(id);
+      for (const id of contracted) {
+        if (selected[id] && valid.indexOf(id) < 0) valid.push(id);
       }
       syncEnterpriseAssignedIds(enterprise, valid);
       if (!valid.length) {
@@ -3104,7 +3138,7 @@ window.FB = window.FB || {};
     state.player.gold -= status.cost;
     enterprise.level = FB.enterpriseUpgradeLevel(enterprise) + 1;
     FB.news(state, FB.msg('news.enterprise.upgraded',
-      '🏗 {enterprise} expands to {upgrade}; it now requires {staff} workers.', {
+      '🏗 {enterprise} expands to {upgrade}; it now requires {staff} staffing positions.', {
         enterprise:FB.dataParam('enterprise', enterprise.type),
         upgrade:FB.dataParam('enterprise', enterprise.type,
           'upgrades.' + (enterprise.level - 1) + '.name'),
@@ -3149,9 +3183,14 @@ window.FB = window.FB || {};
     if (!FB.world.byId[enterprise.provinceId]) {
       return FB.T('This enterprise no longer has a valid local labor market.');
     }
-    if (enterpriseAssignedIds(enterprise).length >=
-        FB.enterpriseStaffRequired(enterprise)) {
+    const remaining = FB.enterpriseStaffRequired(enterprise) -
+      FB.enterpriseStaffAssigned(state, enterprise);
+    if (remaining < 0.0001) {
       return FB.T('Every staffing position is already filled.');
+    }
+    if (remaining < 1) {
+      return FB.T(
+        'The remaining half position must be filled by another child worker.');
     }
     const pay = FB.enterpriseLaborPay(state, enterprise);
     if (state.player.gold + 0.0001 < pay) {
@@ -3253,6 +3292,18 @@ window.FB = window.FB || {};
     return { prestige:prestige };
   };
 
+  function enterpriseCareerWorkerEligible(state, c, def) {
+    const career = FB.careerOf(state, c);
+    if (!career || career.profession !== def.profession) return false;
+    const age = FB.ageOf(c, state.date.year);
+    const careerDef = FBDATA.careers[career.profession];
+    if (age < 16) {
+      if (!career.chosen || career.rank === 'unassigned' ||
+          age < (careerDef && careerDef.apprenticeAge || 10)) return false;
+    }
+    return true;
+  }
+
   FB.enterpriseWorkers = function (state, type) {
     const def = FBDATA.enterprises[type];
     const out = [], seen = {};
@@ -3264,9 +3315,8 @@ window.FB = window.FB || {};
       seen[c.id] = 1;
       if (c.id === state.player.charId && state.player.tier >= 3) continue;
       if (FB.familyOfficeRecord && FB.familyOfficeRecord(state, c.id)) continue;
-      const age = FB.ageOf(c, state.date.year);
       const career = FB.careerOf(state, c);
-      if (age < 16 || !career || career.profession !== def.profession) continue;
+      if (!enterpriseCareerWorkerEligible(state, c, def)) continue;
       if (def.guildRank && (GUILD_ORDER[career.guildRank] || 0) <
         (GUILD_ORDER[def.guildRank] || 0)) continue;
       out.push(c);
@@ -3315,10 +3365,9 @@ window.FB = window.FB || {};
     for (const c of FB.householdWorkers(state)) {
       if (c.id === state.player.charId && state.player.tier >= 3) continue;
       if (FB.familyOfficeRecord && FB.familyOfficeRecord(state, c.id)) continue;
-      if (FB.ageOf(c, state.date.year) < 16 ||
-          FB.characterResidence(state, c) !== enterprise.provinceId) continue;
-      const career = FB.careerOf(state, c);
-      if (career && career.profession === def.profession) residents.push(c);
+      if (FB.characterResidence(state, c) !== enterprise.provinceId ||
+          !enterpriseCareerWorkerEligible(state, c, def)) continue;
+      residents.push(c);
     }
     const profession = enterpriseCareerName(state, def.profession);
     if (def.guildRank && residents.length) {
@@ -3336,7 +3385,7 @@ window.FB = window.FB || {};
       return {
         code:'profession',
         reason:FB.T(
-          'No adult resident household member is eligible for {profession} work.', {
+          'No trained resident household member is eligible for {profession} work.', {
           profession:profession
         }),
         guidance:FB.T(
@@ -3347,7 +3396,7 @@ window.FB = window.FB || {};
       code:'no_resident_worker',
       reason:FB.T('No eligible household worker resides in this county.'),
       guidance:FB.T(
-        'Only an adult resident with the required occupation and guild rank can operate this enterprise.')
+        'Only a trained resident with the required occupation and guild rank can operate this enterprise.')
     };
   }
 
@@ -3373,13 +3422,15 @@ window.FB = window.FB || {};
       if (c && !c.dead && eligibleIds[id]) currentWorkers.push(c);
     }
     const required = FB.enterpriseStaffRequired(enterprise);
-    if (currentWorkers.length >= required) {
+    const assigned = enterpriseStaffFromIds(state,
+      currentWorkers.map(function (c) { return c.id; }));
+    if (assigned + 0.0001 >= required) {
       return {
         state:'staffed', staffed:true, blocked:false,
         eligibleWorkers:eligible, currentWorker:currentWorkers[0] || null,
-        currentWorkers:currentWorkers, assignedCount:currentWorkers.length,
+        currentWorkers:currentWorkers, assignedCount:assigned,
         requiredCount:required, code:'staffed',
-        reason:required === 1
+        reason:required === 1 && currentWorkers.length === 1
           ? FB.T('Worked by {name}.', { name:currentWorkers[0].name })
           : FB.T('Fully staffed by {count} workers.', { count:currentWorkers.length }),
         guidance:''
@@ -3389,13 +3440,16 @@ window.FB = window.FB || {};
       return {
         state:'idle', staffed:false, blocked:false,
         eligibleWorkers:eligible, currentWorker:currentWorkers[0] || null,
-        currentWorkers:currentWorkers, assignedCount:currentWorkers.length,
+        currentWorkers:currentWorkers, assignedCount:assigned,
         requiredCount:required, code:'partial_staffing',
         reason:FB.T('{assigned} of {required} staffing positions are filled.', {
-          assigned:currentWorkers.length, required:required
+          assigned:assigned, required:required
         }),
-        guidance:FB.T(
-          'Assign or hire enough qualified workers to activate this enterprise and its upgrades.')
+        guidance:assigned % 1
+          ? FB.T(
+            'Assign another qualified child, or remove the child worker before hiring an adult.')
+          : FB.T(
+            'Assign or hire enough qualified workers to activate this enterprise and its upgrades.')
       };
     }
     if (eligible.length) {
@@ -3530,17 +3584,24 @@ window.FB = window.FB || {};
     const workers = def && p && pr && site ? FB.enterpriseWorkersFor(state, {
       type:type, provinceId:provinceId, settlement:settlement
     }) : [];
-    if (def && pr && site && !workers.length) {
+    const availableStaff = enterpriseStaffFromIds(state,
+      workers.map(function (worker) { return worker.id; }));
+    if (def && pr && site && availableStaff + 0.0001 < 1) {
       const staffing = FB.enterpriseStaffingStatus(state, {
         type:type, provinceId:provinceId, settlement:settlement,
         workerId:null
       });
       warnings.push({
-        code:'no_worker',
-        reason:FB.T(
-          '{reason} You can still buy it, but it will stand idle.', {
-            reason:staffing.reason
-          }),
+        code:workers.length ? 'insufficient_staff' : 'no_worker',
+        reason:workers.length
+          ? FB.T(
+            'Only {assigned} of 1 staffing positions can be filled. You can still buy it, but it will stand idle until another child or an adult worker is available.', {
+              assigned:availableStaff
+            })
+          : FB.T(
+            '{reason} You can still buy it, but it will stand idle.', {
+              reason:staffing.reason
+            }),
         guidance:staffing.guidance
       });
     }
@@ -4124,10 +4185,12 @@ window.FB = window.FB || {};
     const ids = enterpriseAssignedIds(target);
     if (ids.indexOf(cid) >= 0) return true;
     const required = FB.enterpriseStaffRequired(target);
-    if (ids.length >= required) {
-      if (required !== 1) return false;
-      const displaced = ids[0];
-      if (FB.enterpriseLaborRecord(state, displaced)) return false;
+    const assignedStaff = enterpriseStaffFromIds(state, ids);
+    const candidateStaff = FB.enterpriseWorkerStaff(state, cid);
+    if (!candidateStaff || assignedStaff + candidateStaff > required + 0.0001) {
+      if (required !== 1 || candidateStaff !== 1 || ids.some(function (id) {
+        return !!FB.enterpriseLaborRecord(state, id);
+      })) return false;
       ids.length = 0;
     }
     ids.push(cid);
@@ -4162,13 +4225,9 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.enterpriseYield = function (state, e, chainSeen) {
+  function enterpriseWorkerYield(state, e, worker, chainSeen) {
     const def = FBDATA.enterprises[e.type];
-    if (!def) return 0;
-    const operational = FB.enterpriseOperationalWorkerIds(state, e);
-    if (operational.length < FB.enterpriseStaffRequired(e)) return 0;
-    const worker = state.chars[operational[0]];
-    if (!worker || worker.dead) return 0;
+    if (!def || !worker || worker.dead) return 0;
     const career = FB.careerOf(state, worker);
     if (!career || career.profession !== def.profession) return 0;
     const careerDef = FBDATA.careers[career.profession];
@@ -4197,6 +4256,14 @@ window.FB = window.FB || {};
     }
     amount *= 1 + enterpriseChainFactor(state, e, chainSeen || {});
     return amount;
+  }
+
+  FB.enterpriseYield = function (state, e, chainSeen) {
+    const operational = FB.enterpriseOperationalWorkerIds(state, e);
+    if (enterpriseStaffFromIds(state, operational) + 0.0001 <
+        FB.enterpriseStaffRequired(e)) return 0;
+    return enterpriseWorkerYield(state, e, state.chars[operational[0]],
+      chainSeen);
   };
 
   /* A chain consumer (def.chainFrom) earns balance.enterpriseChainBonus more
@@ -4354,15 +4421,12 @@ window.FB = window.FB || {};
 
   function staffingCandidateYield(state, enterprise, workerId) {
     if (!workerId) return 0;
-    return Math.round(FB.enterpriseYield(state, {
+    return Math.round(enterpriseWorkerYield(state, {
       type:enterprise.type,
       provinceId:enterprise.provinceId,
       settlement:enterprise.settlement,
-      /* Upgrades never raise gold yield. Score the candidate as the lead
-         worker on the one-position base enterprise. */
-      level:0,
-      workerId:workerId
-    }) * 1000);
+      level:0
+    }, state.chars[workerId]) * 1000);
   }
 
   function staffingYield(state, enterprise, workerIds) {
@@ -4382,6 +4446,29 @@ window.FB = window.FB || {};
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
     return true;
+  }
+
+  function staffingCompletionIds(state, enterprise, candidateIds, needed,
+      currentEnterprise) {
+    const adults = [], children = [];
+    function compare(a, b) {
+      const ay = staffingCandidateYield(state, enterprise, a);
+      const by = staffingCandidateYield(state, enterprise, b);
+      const ac = currentEnterprise[a] === enterprise.uid ? 1 : 0;
+      const bc = currentEnterprise[b] === enterprise.uid ? 1 : 0;
+      return by - ay || bc - ac || staffingIdCompare(a, b);
+    }
+    for (const id of candidateIds) {
+      if (FB.enterpriseWorkerStaff(state, id) === 1) adults.push(id);
+      else children.push(id);
+    }
+    adults.sort(compare);
+    children.sort(compare);
+    const halfUnits = Math.max(0, Math.round(needed * 2));
+    const adultCount = Math.min(adults.length, Math.floor(halfUnits / 2));
+    const childCount = halfUnits - adultCount * 2;
+    if (children.length < childCount) return null;
+    return adults.slice(0, adultCount).concat(children.slice(0, childCount));
   }
 
   FB.enterpriseStaffingPlan = function (state) {
@@ -4437,9 +4524,11 @@ window.FB = window.FB || {};
         fixed.slice(), signatureEligible
       ]);
       const movableCurrent = currentIds.filter(function (id) {
-        return fixed.indexOf(id) < 0;
+        return fixed.indexOf(id) < 0 &&
+          FB.enterpriseWorkerStaff(state, id) === 1;
       });
-      const openSlots = Math.max(0, required - fixed.length);
+      const openSlots = Math.max(0, Math.floor(required -
+        enterpriseStaffFromIds(state, fixed) + 0.0001));
       for (let slot = 0; slot < openSlots; slot++) {
         const row = {
           uid:enterprise.uid + '#' + slot,
@@ -4450,7 +4539,8 @@ window.FB = window.FB || {};
         };
         for (const candidate of signatureEligible) {
           if (lockedWorkers[candidate[0]] ||
-              FB.isProtected(state, 'staffingWorker', candidate[0])) continue;
+              FB.isProtected(state, 'staffingWorker', candidate[0]) ||
+              FB.enterpriseWorkerStaff(state, candidate[0]) !== 1) continue;
           row.eligible.push({ id:candidate[0], yield:candidate[1] });
         }
         matchingRows.push(row);
@@ -4470,14 +4560,14 @@ window.FB = window.FB || {};
       if (matched) proposedByUid[row.enterpriseUid].push(matched);
     }
 
-    /* Slot matching preserves the exact one-worker optimizer for baseline
-       enterprises. For expanded enterprises, a scattered partial staff has
-       no yield or upgrade effect. Release movable workers from partial crews,
-       then deterministically complete the strongest fillable crews. */
+    /* Adult slot matching preserves the established optimizer. A second pass
+       may replace any missing adult with two trained children, while still
+       completing whole crews instead of scattering workers across idle rows. */
     const allocated = {};
     for (const enterprise of enterprises) {
       const proposed = proposedByUid[enterprise.uid] || [];
-      if (proposed.length >= FB.enterpriseStaffRequired(enterprise)) {
+      if (enterpriseStaffFromIds(state, proposed) + 0.0001 >=
+          FB.enterpriseStaffRequired(enterprise)) {
         for (const id of proposed) allocated[id] = 1;
       } else {
         proposedByUid[enterprise.uid] = (fixedByUid[enterprise.uid] || []).slice();
@@ -4490,20 +4580,14 @@ window.FB = window.FB || {};
       for (const enterprise of enterprises) {
         const proposed = proposedByUid[enterprise.uid] || [];
         const required = FB.enterpriseStaffRequired(enterprise);
-        const deficit = required - proposed.length;
-        if (deficit <= 0) continue;
+        const deficit = required - enterpriseStaffFromIds(state, proposed);
+        if (deficit < 0.0001) continue;
         const candidates = (eligibility[enterprise.uid] || []).filter(function (id) {
           return !!availableWorkers[id];
         });
-        candidates.sort(function (a, b) {
-          const ay = staffingCandidateYield(state, enterprise, a);
-          const by = staffingCandidateYield(state, enterprise, b);
-          const ac = currentEnterprise[a] === enterprise.uid ? 1 : 0;
-          const bc = currentEnterprise[b] === enterprise.uid ? 1 : 0;
-          return by - ay || bc - ac || staffingIdCompare(a, b);
-        });
-        if (candidates.length < deficit) continue;
-        const chosen = candidates.slice(0, deficit);
+        const chosen = staffingCompletionIds(state, enterprise, candidates,
+          deficit, currentEnterprise);
+        if (!chosen) continue;
         const completed = proposed.concat(chosen);
         const score = staffingYield(state, enterprise, completed);
         let kept = 0;
@@ -4537,6 +4621,8 @@ window.FB = window.FB || {};
       const currentIds = enterpriseAssignedIds(enterprise);
       const proposedIds = proposedByUid[enterprise.uid] || [];
       const required = FB.enterpriseStaffRequired(enterprise);
+      const currentStaff = enterpriseStaffFromIds(state, currentIds);
+      const proposedStaff = enterpriseStaffFromIds(state, proposedIds);
       const protectedIds = currentIds.filter(function (id) {
         return !!protectedWorkers[id];
       });
@@ -4551,7 +4637,7 @@ window.FB = window.FB || {};
       }
       let status = 'unchanged';
       let unresolvedReason = null;
-      if (proposedIds.length < required) {
+      if (proposedStaff + 0.0001 < required) {
         status = 'unresolved';
         unresolvedCount++;
         const eligibleIds = eligibility[enterprise.uid] || [];
@@ -4577,7 +4663,7 @@ window.FB = window.FB || {};
         status = 'reserved';
         lockedCount++;
       }
-      if (currentIds.length < required) idleCount++;
+      if (currentStaff + 0.0001 < required) idleCount++;
       if (!staffingIdsEqual(currentIds, proposedIds)) changedCount++;
       currentTotal += currentYield;
       proposedTotal += proposedYield;
@@ -4588,6 +4674,8 @@ window.FB = window.FB || {};
         settlement:enterprise.settlement,
         level:FB.enterpriseUpgradeLevel(enterprise),
         requiredCount:required,
+        currentStaff:currentStaff,
+        proposedStaff:proposedStaff,
         currentWorkerIds:currentIds,
         proposedWorkerIds:proposedIds,
         currentWorkerId:currentIds[0] || null,

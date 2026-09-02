@@ -859,7 +859,9 @@ career's entry fee, adds vocational experience and the career skill during the y
 tick, and ordinary trades become journeyman work at sixteen. Learned trainees instead gain
 Lettered after their authored vocational threshold and remain trainees until a passed
 license examination. The ordinary education focus and instruction
-continue in parallel. Family wage contributions remain limited to the player, spouses, and
+continue in parallel. An apprentice may staff a matching family enterprise at half an
+adult position, so two children are needed to replace one adult worker; residence, guild,
+and household-management eligibility still apply. Family wage contributions remain limited to the player, spouses, and
 unmarried dependent children and grandchildren; other kin and paid retainers do not send
 invisible wages home.
 
