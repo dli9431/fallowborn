@@ -4154,6 +4154,8 @@ textarea.modjson, textarea.savetext {
 .ftkids > .ftnode:first-child::after { left: 50%; }
 .ftkids > .ftnode:last-child::after { right: 50%; }
 .ftkids > .ftnode:only-child::after { display: none; }
+.family-tree-branches > .ftnode:only-child { padding-top: 0; }
+.family-tree-branches > .ftnode:only-child::before { display: none; }
 .ftchip {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   width: 104px; padding: 7px 3px 6px; background: none; border: 1px solid transparent;

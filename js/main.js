@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.0';
+FB.VERSION = '1.168.1';
 FB.CHANGELOG = [
+  { v: '1.168.1', date: '2026-09-03', changes: [
+    'The Family Tree now joins maternal, paternal, collateral, and stepfamily branches beneath one visible root.'
+  ] },
   { v: '1.168.0', date: '2026-09-03', changes: [
     'Settlements now host persistent local households you can meet through shared work, worship, hospitality, and everyday life, with familiar residents carried into Network.',
     'Succession now preserves real family links in one tree, serf elevation frees spouses and descendants, direct rulers can build in empty settlements, and settlement sheets no longer repeat county Market access.'

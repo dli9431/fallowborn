@@ -5125,17 +5125,18 @@ window.FB = window.FB || {};
       ? me : connectingRoot(founder, me);
     const root = topOf(connection, 2);
     h += '<div class="ftwrap family-tree-canvas family-tree-primary"><div class="fttree">';
+    let tree = '';
     if (root.id === me.id && !FB.parentsOf(s, me).length && FB.siblingsOf(s, me).length) {
       // safety net: save.js backfills parents on load; a tree can still lack
       // them if a mod stripped the chars — show the brood under a ghost
       let brood = unit(me);
       for (const sb of FB.siblingsOf(s, me)) brood += unit(sb);
-      h += '<div class="ftnode"><div class="ftcouple"><div class="ftchip ghost">' +
+      tree += '<div class="ftnode"><div class="ftcouple"><div class="ftchip ghost">' +
         '<span class="fname">' + esc(FB.T('Unrecorded')) + '</span><span class="frel">' +
         esc(FB.T('your parents')) + '</span></div></div>' +
         '<div class="ftstem"></div><div class="ftkids">' + brood + '</div></div>';
     } else {
-      h += unit(root);
+      tree += unit(root);
     }
     /* Corrupt mods and old migrated saves can preserve the founder record
        after severing its parent links. Keep that record and the current
@@ -5143,7 +5144,7 @@ window.FB = window.FB || {};
        founder viewport. */
     if (!drawn[me.id]) {
       const currentRoot = topOf(me);
-      h += drawn[currentRoot.id] ? unit(me) : unit(currentRoot);
+      tree += drawn[currentRoot.id] ? unit(me) : unit(currentRoot);
     }
     /* A downward renderer reaches spouses but cannot climb through them.
        Add every still-undrawn ancestor of the player and house founder, most
@@ -5169,7 +5170,7 @@ window.FB = window.FB || {};
       return a < b ? -1 : (a > b ? 1 : 0);
     });
     for (const id of ancestorIds) {
-      if (!drawn[id]) h += unit(s.chars[id]);
+      if (!drawn[id]) tree += unit(s.chars[id]);
     }
     const stepchildren = FB.stepchildrenOf ? FB.stepchildrenOf(s, me) : [];
     if (stepchildren.length) {
@@ -5208,10 +5209,17 @@ window.FB = window.FB || {};
               drawn[child.id] ? ' dup' : '') + '</div></div>';
           drawn[child.id] = 1;
         }
-        h += branch + '</div></div>';
+        tree += branch + '</div></div>';
       }
     }
-    h += '</div></div>';
+    /* Maternal, paternal, collateral, and stepfamily roots may be separate
+       genealogical components at their oldest recorded generation. They
+       still belong to one displayed family tree: a single neutral root rail
+       joins those components without inventing a biological parent. */
+    h += '<div class="ftnode family-tree-root" data-family-tree-root ' +
+      'role="group" aria-label="' + esc(FB.T('Whole family')) + '">' +
+      '<div class="ftkids family-tree-branches">' + tree +
+      '</div></div></div></div>';
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">' + esc(FB.T('Close')) + '</button>';
     openModal('The Family Tree', h, { modalClass:'family-tree-modal' });
     $('gm-cancel').addEventListener('click', UI.closeModal);

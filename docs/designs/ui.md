@@ -277,7 +277,9 @@ the heir's parent. A genuinely disconnected founder from an
 old or modified save shares that canvas with the current recorded lineage instead of creating
 a separate scroll area. Maternal and paternal ancestor lines, their collateral descendants,
 and stepfamily branches all share this same pannable canvas; the view never creates separate
-mother-side, father-side, or stepfamily trees. A relative already used to connect an earlier
+mother-side, father-side, or stepfamily trees. Their oldest recorded components sit beneath one
+neutral whole-family root rail, so a complete pedigree remains one visible tree without
+inventing a biological ancestor shared by unrelated parental lines. A relative already used to connect an earlier
 branch appears as a dim reference rather than a second authoritative relationship. Direct
 ancestors beyond grandparents remain identified as
 Great-grandfather or Great-grandmother, then 2× great-grandparent and onward. The same

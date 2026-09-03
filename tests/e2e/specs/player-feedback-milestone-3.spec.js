@@ -139,7 +139,7 @@ test('family tree retains the founder\'s starting family after succession',
     }
   });
 
-test('family tree keeps both parental families in one canvas',
+test('family tree joins both parental families beneath one root',
   async function ({ page }) {
     const family = await page.evaluate(function () {
       const s = FB.state;
@@ -195,6 +195,12 @@ test('family tree keeps both parental families in one canvas',
     const canvas = page.locator('.family-tree-primary');
     await expect(page.locator('#gm-body .ftwrap')).toHaveCount(1);
     await expect(page.locator('#gm-body .fttree')).toHaveCount(1);
+    await expect(canvas.locator(
+      ':scope > .fttree > [data-family-tree-root]')).toHaveCount(1);
+    await expect(canvas.locator(
+      ':scope > .fttree > .ftnode:not([data-family-tree-root])')).toHaveCount(0);
+    await expect(canvas.locator(
+      '[data-family-tree-root] > .family-tree-branches > .ftnode')).toHaveCount(2);
     await expect(page.locator('#gm-body')).not.toContainText('Your mother’s kin');
     const ids = [family.meId, family.fatherId, family.motherId,
       family.paternal.grandfatherId, family.paternal.grandmotherId,
@@ -481,8 +487,11 @@ test('family tree highlights and connects founders, opens on you, pans, previews
       return rect.left >= wrap.left && rect.right <= wrap.right &&
         rect.top >= wrap.top && rect.bottom <= wrap.bottom;
     })).toBe(true);
-    const founderTreeRoot = primaryTree.locator(
-      ':scope > .fttree > .ftnode').first();
+    const wholeTreeRoot = primaryTree.locator(
+      ':scope > .fttree > [data-family-tree-root]');
+    await expect(wholeTreeRoot).toHaveCount(1);
+    const founderTreeRoot = wholeTreeRoot.locator(
+      ':scope > .family-tree-branches > .ftnode').first();
     const founderChip = founderTreeRoot.locator(
       '.ftchip[data-cid="' + family.founderId + '"]');
     await expect(founderChip).toHaveCount(1);
