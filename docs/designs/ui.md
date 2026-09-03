@@ -75,6 +75,28 @@ after the family-tree button. `data-family-freedom`, `data-family-freedom-first`
 `data-family-freedom-lawful` distinguish the first route and optional later lawful route.
 The presentation adapter resolves historical ids with neutral fallbacks and never exposes
 raw ids or saved prose.
+Kin is reserved for the dynasty and wider family tree; it does not repeat local lords,
+stewards, priests, friends, or rivals. Political notables remain in Land, while personal
+and local ties remain in Network. Relationship labels follow the current protagonist's
+resolved kin graph; a founder's compatibility `role:'sibling'` tag cannot relabel that
+person as a sibling after succession to the next generation. The dedicated Children
+section uses that same resolved graph rather than only the protagonist's saved backlink,
+so it agrees with the family tree and succession review after a collateral succession.
+
+Network appends **Local folk** as section six, leaving shortcuts 1–5 unchanged. It shows
+the player’s physical home or arrived destination roster grouped by settlement and
+household; while on the road it shows an explicit empty state. Adults open their normal
+character sheet, where an unmet resident offers only four daily-life meeting settings.
+The first resolved meeting records a **Known contact** and unlocks the ordinary cultivate,
+gift, friendship, courtship, hostility, intrigue, and retainer actions. Assigning personal
+attention changes the Connections label to **Cultivated connection**. Children remain
+profile-only household context.
+
+Settlement sheets show **People here** from the same character ids. A current settlement
+offers its residents; a remote settlement shows only already-known residents or a travel
+hint and never generates a cast. Local character sheets include their exact settlement
+and a household strip, use the existing full-sheet history/Back behavior, and require no
+new art or custom input controls.
 
 **Where the UI code lives.** The former `js/ui.js` is split into four files that augment one
 `FB.ui` namespace. The first three load consecutively; the modal sheet is deferred until
@@ -246,14 +268,18 @@ standard character summary in the shared side tooltip. Opening a character from 
 creates a modal-history entry: **Back** restores the same tree view, including branch,
 focus and internal scroll state, while **Close** dismisses the complete stack.
 
-The primary canvas finds the nearest recorded common ancestor of the house founder and current
+The single family canvas finds the nearest recorded common ancestor of the house founder and current
 player, then begins up to two recorded ancestor steps above that connection and follows every
 recorded descendant generation without an arbitrary depth cutoff. Retaining this nearby ancestry
 keeps the founder's parents and sibling branches visible after succession. It also keeps a
 collateral succession connected by its real bloodline rather than falsely drawing the founder as
 the heir's parent. A genuinely disconnected founder from an
 old or modified save shares that canvas with the current recorded lineage instead of creating
-a separate founder scroll area. Direct ancestors beyond grandparents remain identified as
+a separate scroll area. Maternal and paternal ancestor lines, their collateral descendants,
+and stepfamily branches all share this same pannable canvas; the view never creates separate
+mother-side, father-side, or stepfamily trees. A relative already used to connect an earlier
+branch appears as a dim reference rather than a second authoritative relationship. Direct
+ancestors beyond grandparents remain identified as
 Great-grandfather or Great-grandmother, then 2× great-grandparent and onward. The same
 recorded-parent paths identify deep descendants, great-aunts and great-uncles,
 great-nieces and great-nephews, and cousins by degree and generational removal. A house
@@ -917,8 +943,9 @@ A centered, high-contrast teal/gold/coral legend matches the colored
 `▼`/`●`/`▲` map symbols and stronger county price bands, so scarcity remains legible
 without relying on color alone. Only the player's active ventures and corridor charters
 draw patterned routes, bounded to four; the simulated adjacency-flow graph is never
-rendered. The lens, the Land panel's Development Market card, the county-head settlement
-sheet, venture review, and Network → Trade & Guild all open the same county Market sheet.
+rendered. The lens, the Land panel's Development Market card, venture review, and
+Network → Trade & Guild all open the same county Market sheet. Settlement sheets do
+not repeat the county-wide shortcut.
 Its selector, textual trend, stock and seasonal report, named endowments, disruptions,
 ventures, charters, and hardship duplicate every canvas meaning for keyboard, touch,
 screen-reader, and color-vision access. See [markets.md](markets.md).
@@ -1602,12 +1629,12 @@ generic-modal history, and all choices are native buttons, retaining number-key 
 Tab/Enter/Space, and mobile bottom-sheet navigation.
 
 The contextual **Network** panel (`N`) answers who is tied to the current household and
-what that relationship does. Its five sections are Household (resident family,
+what that relationship does. Its six sections are Household (resident family,
 capacity-limited retainers, office, pay, work assignment, and maintained-standard
 summary/upkeep), Connections (canonical
 friend, cultivated contacts, rival, suitor, priest, steward, encountered neighbor, and lord), Trade & Guild (career,
 rank, standing, exact income modifier, enterprises, partnerships, positions, bounded
-guild commissions, and the shared privilege roll), Political Blocs, and Realm. For a qualified territorial ruler,
+guild commissions, and the shared privilege roll), Political Blocs, Realm, and Local folk. For a qualified territorial ruler,
 Political Blocs is the compact shared-court summary and Realm contains one
 Governance route, foreign ties, and the computed levy ledger rather than duplicating
 liege, vassal, Estates, or Council prose. Other protagonists retain the compact legacy
@@ -1633,7 +1660,7 @@ initially shows every needs-attention row plus **5 routine rows**. **Show all {c
 reveals the remaining routine rows in that section. Work also exposes an explicitly labeled
 literal local search and All, Needs attention, Assigned, Staffed, Idle, and Unavailable
 filters; search and non-All filters show every match rather than applying the routine
-budget. Network omits this toolbar so its five sections remain the navigation. Work
+budget. Network omits this toolbar so its six sections remain the navigation. Work
 distinguishes no records from a filter/search with no matches; Network simply explains an
 empty section. Hidden rows use the native `hidden` state, receive no positional shortcut,
 and leave the accessibility tree.
@@ -1655,7 +1682,7 @@ lock, settlement, and live yield. The summary reports owned, staffed, idle, bloc
 approximate seasonal yield totals, while **Staff all idle enterprises…** remains the
 explicit bounded bulk review.
 
-Network keeps Household, Connections, Trade & Guild, Political Blocs, and Realm
+Network keeps Household, Connections, Trade & Guild, Political Blocs, Realm, and Local folk
 distinct. A person or realm
 appears once within a section with combined role labels, but may still appear in another
 section for a genuinely different context. Character and ruler rows open the consolidated
@@ -1664,7 +1691,7 @@ other focused management routes remain separate. Row states such as open slots, 
 commitments, opportunities, and vacancies use the same desktop tooltip or touch/tablet
 disclosure instead of face chips. Section attention still covers active commitments,
 warnings, opportunities, missed retainer pay, and vacancies even when routine context is
-collapsed. On desktop, `1`-`5` select those sections in order, opening a closed
+collapsed. On desktop, `1`-`6` select those sections in order, opening a closed
 section, scrolling its heading to the top, and focusing and highlighting it. Pressing the
 active section's number again collapses it; its next press reopens it. The active
 section assigns `Q W E / A S D / Z X C`, then their Shift variants, to its first 18 visible

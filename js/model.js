@@ -1726,6 +1726,16 @@ window.FB = window.FB || {};
     return out;
   }
 
+  function legacyRoleSibling(state, me, other) {
+    const player = state && state.player || {};
+    return !!(me && other && me.id === player.charId &&
+      player.familyParentMigration !== 1 &&
+      (Number(state.generation) || 1) <= 1 &&
+      (!player.houseFounderId || player.houseFounderId === me.id) &&
+      !parentsOf(state, me).length && other.role === 'sibling' &&
+      me.dyn && other.dyn === me.dyn);
+  }
+
   /* One non-mutating vocabulary for marriage blood gates. Full characters
      use their recorded parents; compact royal courts may supply the same
      answer through world.js. Cousins are named because ordinary marriage
@@ -1784,7 +1794,7 @@ window.FB = window.FB || {};
     /* First-generation saves predate parent ids for generated siblings. */
     const me = state.player && state.chars[state.player.charId];
     const other = me && (a.id === me.id ? b : (b.id === me.id ? a : null));
-    if (other && other.role === 'sibling' && me.dyn && other.dyn === me.dyn) {
+    if (legacyRoleSibling(state, me, other)) {
       return 'full_sibling';
     }
     return 'unrelated';
@@ -1803,11 +1813,13 @@ window.FB = window.FB || {};
         if (k.id !== c.id && !seen[k.id]) { seen[k.id] = 1; out.push(k); }
       }
     }
-    if (!ps.length && c.id === state.player.charId) {
+    const player = state.player || {};
+    if (!ps.length && c.id === player.charId) {
       // first-generation kin of old saves: no recorded parents, only role + house
       for (const id in state.chars) {
         const k = state.chars[id];
-        if (k.id !== c.id && !seen[k.id] && k.role === 'sibling' && k.dyn && k.dyn === c.dyn) {
+        if (k.id !== c.id && !seen[k.id] &&
+            legacyRoleSibling(state, c, k)) {
           seen[k.id] = 1; out.push(k);
         }
       }
@@ -2026,7 +2038,7 @@ window.FB = window.FB || {};
       }
       return false;
     }
-    return !!(c.role === 'sibling' && c.dyn && c.dyn === me.dyn);
+    return legacyRoleSibling(state, me, c);
   }
 
   /* The explicit manageable-kin rule. A relative the player may put to work

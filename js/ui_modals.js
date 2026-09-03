@@ -362,7 +362,10 @@ window.FB = window.FB || {};
     });
     if (!opts.length) opts = [{ label: 'So it goes.', effects: {} }];
     let pick = opts[0];
-    const style = FB.game.auto.style;
+    /* The player already chose the local setting; automation takes its first
+       available approach instead of making a second risk-style decision. */
+    const style = ev.id && ev.id.indexOf('local_folk_') === 0
+      ? 'first' : FB.game.auto.style;
     if (style !== 'first') {
       let best = -1e9;
       for (const o of opts) {
@@ -563,7 +566,8 @@ window.FB = window.FB || {};
         lord:'Local lord', officer:'Steward', neighbor:'Neighbor',
         witness:'Witness', confidant:'Confidant', priest:'Priest',
         formerLord:'Former lord', currentLord:'Current lord',
-        formerOfficer:'Former steward', newOfficer:'Current steward'
+        formerOfficer:'Former steward', newOfficer:'Current steward',
+        resident:'Local resident'
       };
       return FB.T(labels[slot] || 'Named participant');
     }
@@ -6603,9 +6607,37 @@ window.FB = window.FB || {};
           '</span></button>';
       }
     }
+    const localLocationId = FB.localFolkCurrentLocationId
+      ? FB.localFolkCurrentLocationId(s) : null;
+    const physicallyHere = localLocationId === pid;
+    const settlementFolk = FB.localFolkAt
+      ? FB.localFolkAt(s, pid, idx).filter(function (c) {
+        return physicallyHere || FB.localFolkKnown(s, c.id);
+      }) : [];
+    h += '<div class="panelh">' + esc(FB.T('People here')) + '</div>';
+    if (settlementFolk.length) {
+      h += '<div class="gm-list settlement-folk-list">';
+      for (let folkIndex = 0; folkIndex < settlementFolk.length; folkIndex++) {
+        const folk = settlementFolk[folkIndex];
+        const folkAge = FB.ageOf(folk, s.date.year);
+        const folkRole = folkAge < 16 ? FB.T('Household child')
+          : FB.localFolkKnown(s, folk.id) ? FB.T('Known contact') : FB.T('Unmet');
+        h += '<button type="button" class="charrow actionbtn" ' +
+          'data-settlement-folk="' + esc(folk.id) + '">' +
+          FB.faceTag(folk, 44, 50) + '<span><b>' +
+          esc(FB.fullName(folk)) + '</b><span class="cmeta">' +
+          esc(folkRole + ' · ' + (folkAge < 16
+            ? FB.T('age {age}', { age:folkAge }) : FB.careerTitle(s, folk))) +
+          '</span></span></button>';
+      }
+      h += '</div>';
+    } else {
+      h += '<p class="hint">' + esc(physicallyHere
+        ? FB.T('No local household lives at this settlement.')
+        : FB.T('Travel here to meet the people who live around this settlement.')) +
+        '</p>';
+    }
     h += '<div class="gm-footer">' +
-      (idx === 0 ? '<button class="btn" id="settlement-market">' +
-        esc(FB.T('County market')) + '</button>' : '') +
       '<button class="btn" id="gm-cancel">' +
       esc(FB.T(options.historyBack ? 'Back' : 'Close')) + '</button></div>';
     openModal(SETT_ICON[st.kind] + ' ' + st.name, h, {
@@ -6615,13 +6647,20 @@ window.FB = window.FB || {};
       guide:guideModalOption('settlement-guide', 'settlements-development',
         'Guide: settlements and development')
     });
+    const folkButtons = $('gm-body').querySelectorAll('[data-settlement-folk]');
+    for (let folkButtonIndex = 0; folkButtonIndex < folkButtons.length;
+         folkButtonIndex++) {
+      folkButtons[folkButtonIndex].addEventListener('click', function (event) {
+        event.stopPropagation();
+        UI.showCharModal(folkButtons[folkButtonIndex].getAttribute(
+          'data-settlement-folk'), {
+          view:'settlement', provinceId:pid, settlement:idx
+        });
+      });
+    }
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
-    const settlementMarket = $('settlement-market');
-    if (settlementMarket) settlementMarket.addEventListener('click', function () {
-      UI.showMarket(pid, FB.map.marketGood || 'provisions');
-    });
     document.querySelectorAll('[data-fort-start]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showFortProject(pid, idx, Number(button.dataset.fortStart));
@@ -8570,6 +8609,9 @@ window.FB = window.FB || {};
         false, returnContext.realmId || null);
     } else if (returnContext.view === 'family-tree') {
       UI.showFamilyTree(returnContext.familyTreeState);
+    } else if (returnContext.view === 'settlement') {
+      UI.showSettlement(returnContext.provinceId,
+        Number(returnContext.settlement) || 0);
     } else if (returnContext.view === 'retainer') {
       UI.showRetainerManage(returnContext.characterId,
         returnContext.returnContext);
@@ -19198,12 +19240,15 @@ window.FB = window.FB || {};
       ? interactionRetainerRecord(s, c.id) : null;
     const agencyFamily = !c.dead && FB.isAgencyFamilyMember &&
       FB.isAgencyFamilyMember(s, c.id);
+    const localFolk = FB.localFolkRecord
+      ? FB.localFolkRecord(s, c.id) : null;
     const familyOffice = agencyFamily && FB.familyOfficeRecord
       ? FB.familyOfficeRecord(s, c.id) : null;
     const ambition = agencyFamily && FB.familyAmbitionSnapshot
       ? FB.familyAmbitionSnapshot(s, c.id) : null;
     const relation = relationText(s, c) || (household
-      ? FB.T('Your household') : FB.T('Known character'));
+      ? FB.T('Your household') : localFolk
+        ? FB.T('Local resident') : FB.T('Known character'));
     const model = {
       target:{ kind:'character', id:c.id },
       showContext:false,
@@ -19227,6 +19272,15 @@ window.FB = window.FB || {};
       model.context.push({ label:FB.T('Access'), value:access.description });
     }
     if (c.dead || c.id === me.id) return model;
+    if (localFolk) {
+      const settlements = FB.settlementsOf(s, localFolk.provinceId);
+      const localSettlement = settlements[localFolk.settlement];
+      model.context.splice(2, 0, {
+        label:FB.T('Settlement'),
+        value:localSettlement ? localSettlement.name : localFolk.provinceId
+      });
+      if (!FB.localFolkKnown(s, c.id)) return model;
+    }
 
     const attentionTarget = interactionAttentionTarget(s);
     const attention = FB.socialAttentionStatus(s, c);
@@ -19681,8 +19735,9 @@ window.FB = window.FB || {};
       });
     }
 
+    const kinRelation = FB.kinOf(s).byId[c.id];
     const family = isSpouse || !!descendantKind ||
-      (c.role === 'sibling' && c.dyn === me.dyn);
+      (kinRelation === 'Brother' || kinRelation === 'Sister');
     if (!family && !retainer) {
       addInteractionAction(model, {
         id:'relationship.hostility.insult',
@@ -20140,6 +20195,55 @@ window.FB = window.FB || {};
     }
   }
 
+  function localFolkSheetHtml(s, c) {
+    const local = FB.localFolkRecord && FB.localFolkRecord(s, c.id);
+    if (!local) return '';
+    const household = FB.localFolkHouseholdOf(s, c.id);
+    const settlements = FB.settlementsOf(s, local.provinceId);
+    const settlement = settlements[local.settlement];
+    let h = '<div class="interaction-card local-folk-household-card">' +
+      '<h3>' + esc(FB.T('Local household')) + '</h3><p class="adesc">' +
+      esc(FB.T('Residents of {settlement}. Their household remains together while one of them has a lasting tie to you.', {
+        settlement:settlement ? settlement.name : local.provinceId
+      })) + '</p><div class="gm-list local-folk-family">';
+    const members = household ? household.members : [];
+    for (let i = 0; i < members.length; i++) {
+      const member = members[i];
+      const age = FB.ageOf(member, s.date.year);
+      const role = member.localFolk && member.localFolk.role === 'child'
+        ? FB.T('Child') : member.localFolk && member.localFolk.role === 'sibling'
+          ? FB.T('Household sibling') : FB.T('Adult resident');
+      h += '<button type="button" class="actionbtn interaction-character-link" ' +
+        'data-interaction-character="' + esc(member.id) + '"' +
+        (member.id === c.id ? ' disabled' : '') + '>' +
+        esc(FB.fullName(member)) + '<span class="adesc">' +
+        esc(FB.T('{role} · age {age}', { role:role, age:age })) +
+        '</span></button>';
+    }
+    h += '</div></div>';
+    if (c.dead || FB.ageOf(c, s.date.year) < 16) return h;
+    h += '<div class="interaction-card local-folk-activities"><h3>' +
+      esc(FB.localFolkKnown(s, c.id)
+        ? FB.T('Spend time together') : FB.T('Meet this person')) +
+      '</h3><p class="adesc">' + esc(FB.T(
+        'Choose one setting. The meeting spends the day, and this person will be available again after 30 days.')) +
+      '</p><div class="gm-list">';
+    const venues = ['commons', 'work', 'worship', 'hospitality'];
+    for (let venueIndex = 0; venueIndex < venues.length; venueIndex++) {
+      const status = FB.localFolkActivityStatus(s, c.id, venues[venueIndex]);
+      const label = FB.localFolkKnown(s, c.id)
+        ? FB.T('Spend time at {venue}', { venue:status.venue.label })
+        : FB.T('Meet at {venue}', { venue:status.venue.label });
+      h += '<button type="button" class="actionbtn" data-local-folk-venue="' +
+        esc(venues[venueIndex]) + '"' + (status.ready ? '' : ' disabled') + '>' +
+        esc(label) + '<span class="adesc">' +
+        esc(status.ready ? FB.T('Choose an approach in a short scene. (spends the day)')
+          : status.reason) + '</span></button>';
+    }
+    h += '</div></div>';
+    return h;
+  }
+
   function showCharacterInteractionSheet(cid, returnContext, replaceView,
       realmIdHint) {
     const s = FB.state;
@@ -20188,6 +20292,7 @@ window.FB = window.FB || {};
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
     if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
+    h += localFolkSheetHtml(s, c);
     if (!c.dead) h += interactionCardHtml(model);
     /* Back walks the sheet-to-sheet return chain, which can loop between two
        linked rulers; always offer a plain Close that dismisses the modal
@@ -20215,6 +20320,21 @@ window.FB = window.FB || {};
     FB.paintFaces($('gm-body'), s);
     bindCharacterSkillsGuides($('gm-body'));
     bindCharacterCommitmentNavigation($('gm-body'), c.id, returnContext);
+    const localActivityButtons = $('gm-body').querySelectorAll(
+      '[data-local-folk-venue]');
+    for (let localButtonIndex = 0; localButtonIndex < localActivityButtons.length;
+         localButtonIndex++) {
+      localActivityButtons[localButtonIndex].addEventListener('click', function () {
+        const venue = localActivityButtons[localButtonIndex].getAttribute(
+          'data-local-folk-venue');
+        if (!FB.beginLocalFolkActivity(s, c.id, venue)) {
+          UI.showCharModal(c.id, returnContext, true);
+          return;
+        }
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+      });
+    }
     if (familyContext) bindRealmFamilyNavigation($('gm-body'), familyContext);
     if (displayRealmId) {
       bindWarRealmLinks($('gm-body'), s, displayRealmId, c.id, returnContext);

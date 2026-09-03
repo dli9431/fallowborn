@@ -2,9 +2,12 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/actions.js',
   'js/messages.js',
   'js/model.js',
   'js/save.js',
+  'js/technology.js',
+  'js/world.js',
   'js/economy.js',
   'js/i18n.js',
   'js/events.js',
@@ -20,6 +23,41 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { START_CODE, startDeterministicGame } = require('../support/game/start');
 const COMPLETE_SAVE_BUDGET = 1.6 * 1024 * 1024;
+
+test('restore repairs an empty technology record for a landed player realm',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId;
+      s.player.tier = 4;
+      s.player.liege = null;
+      s.player.provs = [pid];
+      delete s.realms.player;
+      delete s.realmTech.player;
+      FB.foundPlayerRealm(s);
+
+      const payload = JSON.parse(FB.save.serialize());
+      payload.state.realmTech.player = {
+        completed:[], exposed:[], active:[], progress:{}, reserve:0,
+        priorities:{}
+      };
+      FB.save.restore(payload);
+      return {
+        historicalSeeded:FB.state.realmTech.player.historicalSeeded,
+        templeKnown:FB.techRequirementMet(FB.state, 'lime_mortar'),
+        buildable:FB.buildable(FB.state, pid, 0).map(function (entry) {
+          return entry.id;
+        })
+      };
+    });
+
+    expect(result.historicalSeeded).toBe(1);
+    expect(result.templeKnown).toBe(true);
+    expect(result.buildable).toContain('temple');
+  });
 
 test('served origin provides persistent storage for save slots',
   async function ({ page }, testInfo) {

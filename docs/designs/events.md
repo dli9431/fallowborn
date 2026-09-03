@@ -135,6 +135,13 @@ at acceptance unless the lord independently supports the saved term.
 
 Every actual tier-0-to-tier-1 freedom route uses `FB.resolveSerfFreedom`; a generic
 `tierSet:1` or `FB.setPlayerTier(state, 1)` deliberately creates no freedom history.
+Any promotion that takes the playable head above tier 0 still releases every living
+spouse and descendant to at least Freeholder personal station. This includes exceptional
+event and office elevations that jump directly to Gentry or higher; only the protagonist
+receives the elevated station, and parents or collateral siblings remain bound unless a
+freedom route explicitly includes them. The centralized `FB.setPlayerTier` boundary owns
+this invariant so **Raised Up**, religious appointments, and custom event promotions
+cannot leave older children behind as serfs.
 The bounded `serfFreedom:{route:'old_custom'|'flight'}` event effect preflights its
 route before any sibling effect, rejects combinations with `tierSet` or `tierUp`, and
 resolves before movement. Direct purchase and saved negotiated offers call the same
@@ -775,3 +782,16 @@ Suspicion never queues a hearing. Testimony, material proof, and red-handed capt
 Challenge, compensation, penance, sentence, flight, and resistance are ordinary options
 backed by custom validators/effects. Ransom demands likewise queue an exact captive and
 captor-generation context. No queued intrigue event stores rendered prose.
+
+## Settlement-folk activities
+
+`data/events_settlements.js` owns four deliberate, never-random daily-life scenes:
+commons, shared work, worship, and market or household hospitality. Starting one queues
+the exact resident, county, settlement, venue, and protagonist through the ordinary event
+context. Each scene offers three approaches using existing resource, named-skill-chance,
+exact Standing, and rival-contact effects. The private
+`local_folk_activity_resolve` adapter only records the known contact and shared 30-day
+resident cooldown; it does not add a public interpreter effect or saved prose. Resolving
+the event spends the day through the same queued-action path as other deliberate events.
+Autoresolve always takes the first available approach for these scenes instead of
+applying the campaign's risk-style scoring to a deliberately chosen social meeting.

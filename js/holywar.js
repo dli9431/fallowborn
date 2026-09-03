@@ -2173,6 +2173,7 @@ window.FB = window.FB || {};
     if (!wasSovereign || award.rank >= 3) {
       state.realms.player.capital = settlement.capital;
     }
+    if (FB.localFolkArrive) FB.localFolkArrive(state, player.provinceId);
     for (var a = 0; a < settlement.allocations.length; a++) {
       var allocation = settlement.allocations[a];
       if (allocation.sponsor === 'player') continue;
@@ -2232,6 +2233,7 @@ window.FB = window.FB || {};
     if (!sovereign && award.counties.length) player.provinceId = award.counties[0];
     FB.foundPlayerRealm(state);
     state.realms.player.religion = campaign.callingReligion;
+    if (FB.localFolkArrive) FB.localFolkArrive(state, player.provinceId);
     FB.invalidateRealmCache();
   }
 
@@ -2335,6 +2337,7 @@ window.FB = window.FB || {};
     if (!wasSovereign || asset.rank >= 3) {
       state.realms.player.capital = asset.seat || asset.awardIds[0];
     }
+    if (FB.localFolkArrive) FB.localFolkArrive(state, player.provinceId);
     return 'player';
   }
 
@@ -2369,6 +2372,7 @@ window.FB = window.FB || {};
     FB.foundPlayerRealm(state);
     state.realms.player.rank = Math.max(state.realms.player.rank || 1, asset.rank);
     state.realms.player.religion = campaign.callingReligion;
+    if (FB.localFolkArrive) FB.localFolkArrive(state, player.provinceId);
     return 'player';
   }
 

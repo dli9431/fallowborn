@@ -343,6 +343,21 @@ window.FB = window.FB || {};
     return state.realmTech;
   };
 
+  /* Player realms are created during play, after the bookmark-wide seed has
+     already finished. Give that realm its own dormant regional baseline once,
+     even while it is a vassal; fealty still makes ordinary lookups use the
+     sovereign record until the player becomes independent. The per-record
+     marker also repairs affected saves without repeatedly granting later
+     historical adoption whenever the realm is restyled. */
+  FB.seedRealmTechnology = function (state, rid) {
+    if (!state || !rid) return null;
+    var record = rawTechRecord(state, rid);
+    if (record.historicalSeeded === 1) return record;
+    applySeedToRecord(state, rid, record);
+    record.historicalSeeded = 1;
+    return record;
+  };
+
   function unionRecord(target, source, keepTargetReserve) {
     var i, id;
     for (i = 0; i < source.completed.length; i++) addUnique(target.completed, source.completed[i]);
@@ -413,6 +428,9 @@ window.FB = window.FB || {};
     }
     delete state.tech;
     if (state.player) delete state.player.research;
+    if (state.realms && state.realms.player && state.realms.player.alive) {
+      FB.seedRealmTechnology(state, 'player');
+    }
     state.realmTechMigration = 2;
     state.techSeeded = 1;
     return state.realmTech;

@@ -139,6 +139,73 @@ test('family tree retains the founder\'s starting family after succession',
     }
   });
 
+test('family tree keeps both parental families in one canvas',
+  async function ({ page }) {
+    const family = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const father = s.chars[me.fatherId];
+      const mother = s.chars[me.motherId];
+
+      function addGrandparents(parent, stem) {
+        const grandfather = FB.makeCharacter(s, {
+          name:stem + ' Grandfather', sex:'m', born:parent.born - 27,
+          culture:parent.culture, religion:parent.religion,
+          dyn:parent.dyn, traitsN:0
+        });
+        const grandmother = FB.makeCharacter(s, {
+          name:stem + ' Grandmother', sex:'f', born:parent.born - 25,
+          culture:parent.culture, religion:parent.religion,
+          dyn:parent.dyn, traitsN:0
+        });
+        grandfather.spouseId = grandmother.id;
+        grandmother.spouseId = grandfather.id;
+        parent.fatherId = grandfather.id;
+        parent.motherId = grandmother.id;
+        grandfather.childrenIds.push(parent.id);
+        grandmother.childrenIds.push(parent.id);
+        const collateral = FB.makeCharacter(s, {
+          name:stem + ' Collateral', sex:'f', born:parent.born + 2,
+          culture:parent.culture, religion:parent.religion,
+          dyn:parent.dyn, fatherId:grandfather.id,
+          motherId:grandmother.id, traitsN:0
+        });
+        grandfather.childrenIds.push(collateral.id);
+        grandmother.childrenIds.push(collateral.id);
+        return {
+          grandfatherId:grandfather.id,
+          grandmotherId:grandmother.id,
+          collateralId:collateral.id
+        };
+      }
+
+      const paternal = addGrandparents(father, 'Paternal');
+      const maternal = addGrandparents(mother, 'Maternal');
+      FB.touchFamily();
+      FB.ui.showFamilyTree();
+      return {
+        meId:me.id,
+        fatherId:father.id,
+        motherId:mother.id,
+        paternal:paternal,
+        maternal:maternal
+      };
+    });
+
+    const canvas = page.locator('.family-tree-primary');
+    await expect(page.locator('#gm-body .ftwrap')).toHaveCount(1);
+    await expect(page.locator('#gm-body .fttree')).toHaveCount(1);
+    await expect(page.locator('#gm-body')).not.toContainText('Your mother’s kin');
+    const ids = [family.meId, family.fatherId, family.motherId,
+      family.paternal.grandfatherId, family.paternal.grandmotherId,
+      family.paternal.collateralId, family.maternal.grandfatherId,
+      family.maternal.grandmotherId, family.maternal.collateralId];
+    for (const id of ids) {
+      await expect(canvas.locator('.ftchip[data-cid="' + id + '"]'))
+        .toHaveCount(id === family.motherId ? 2 : 1);
+    }
+  });
+
 test('semantic shortcuts reject conflicts, explain blocks, persist, and follow promotion',
   async function ({ page }) {
     await page.evaluate(function () { FB.ui.showShortcutSettings(); });

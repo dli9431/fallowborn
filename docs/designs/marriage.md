@@ -379,7 +379,8 @@ every existing child of either spouse retains their biological parent ids,
 dynasty, residence, and any royal succession membership. Royal compact children
 of the spouse are materialized and reconciled with the same ordinary
 parent-child links used by the family tree. The child records the additive
-`stepParentIds` relationship; this powers a separate Stepfamily branch, kin
+`stepParentIds` relationship; this places the biological branch in the single family-tree
+canvas and powers kin
 links, gift access, and the marriage-affinity gate. It does not make the child a
 managed descendant, household worker, or heir. The relationship remains family
 history after divorce or death, and restore repairs missing current-spouse

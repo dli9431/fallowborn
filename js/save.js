@@ -1026,6 +1026,85 @@ window.FB = window.FB || {};
     }
   }
 
+  /* The former unguarded repair could mistake an adopted successor for an
+     old founder after restore. Its generated pair is recognizable without
+     guessing from names: both dead parent records were created consecutively
+     after the current head, while the adopter's original child backlink was
+     left intact. Restore that parentless adoption and any founder siblings
+     whose real parents still retain their backlinks. */
+  function repairSuccessorParentBackfill(s) {
+    const player = s && s.player;
+    const chars = s && s.chars;
+    const me = player && chars && chars[player.charId];
+    const founder = player && player.houseFounderId &&
+      chars[player.houseFounderId];
+    if (!me || !founder || me.id === founder.id) return false;
+    const dad = me.fatherId && chars[me.fatherId];
+    const mom = me.motherId && chars[me.motherId];
+    if (!dad || !mom || dad.sex !== 'm' || mom.sex !== 'f' ||
+        dad.role !== 'parent' || mom.role !== 'parent' ||
+        !dad.dead || !mom.dead || dad.spouseId !== mom.id ||
+        mom.spouseId !== dad.id) return false;
+    function serial(id) {
+      const match = /^c(\d+)$/.exec(String(id || ''));
+      return match ? Number(match[1]) : 0;
+    }
+    const meSerial = serial(me.id);
+    const dadSerial = serial(dad.id);
+    const momSerial = serial(mom.id);
+    if (!meSerial || dadSerial <= meSerial || momSerial !== dadSerial + 1) {
+      return false;
+    }
+    const dadKids = Array.isArray(dad.childrenIds) ? dad.childrenIds : [];
+    const momKids = Array.isArray(mom.childrenIds) ? mom.childrenIds : [];
+    if (dadKids.indexOf(me.id) < 0 || dadKids.length !== momKids.length ||
+        dadKids.some(function (id) { return momKids.indexOf(id) < 0; })) {
+      return false;
+    }
+    let adopterFound = false;
+    for (const id in chars) {
+      if (id === dad.id || id === mom.id) continue;
+      const c = chars[id];
+      if (c && Array.isArray(c.childrenIds) &&
+          c.childrenIds.indexOf(me.id) >= 0) {
+        adopterFound = true;
+        break;
+      }
+    }
+    if (!adopterFound) return false;
+
+    const repairs = {};
+    for (let i = 0; i < dadKids.length; i++) {
+      const child = chars[dadKids[i]];
+      if (!child) return false;
+      if (child.id === me.id) {
+        repairs[child.id] = { fatherId:null, motherId:null };
+        continue;
+      }
+      if (child.role !== 'sibling' || child.dyn !== founder.dyn) return false;
+      let fatherId = null;
+      let motherId = null;
+      for (const id in chars) {
+        if (id === dad.id || id === mom.id) continue;
+        const parent = chars[id];
+        if (!parent || !Array.isArray(parent.childrenIds) ||
+            parent.childrenIds.indexOf(child.id) < 0) continue;
+        if (parent.sex === 'm' && !fatherId) fatherId = parent.id;
+        if (parent.sex === 'f' && !motherId) motherId = parent.id;
+      }
+      if (!fatherId || !motherId) return false;
+      repairs[child.id] = { fatherId:fatherId, motherId:motherId };
+    }
+    for (const id in repairs) {
+      chars[id].fatherId = repairs[id].fatherId;
+      chars[id].motherId = repairs[id].motherId;
+    }
+    delete chars[dad.id];
+    delete chars[mom.id];
+    if (FB.touchFamily) FB.touchFamily();
+    return true;
+  }
+
   function restoreRepair(stage, callback) {
     try {
       callback();
@@ -1074,7 +1153,18 @@ window.FB = window.FB || {};
     if (FB.ensureReligiousHeads) restoreRepair('religious offices', function () {
       FB.ensureReligiousHeads(FB.state);
     });
-    restoreRepair('legacy parents', function () { backfillParents(FB.state); });
+    restoreRepair('legacy parents', function () {
+      const player = FB.state.player;
+      if (player.familyParentMigration === 1) return;
+      /* houseFounderId was introduced after new campaigns already recorded
+         their parents. A later parentless head may therefore be adopted; it
+         is not evidence that the whole save predates recorded genealogy. */
+      if (player.houseFounderId) repairSuccessorParentBackfill(FB.state);
+      else if ((Number(FB.state.generation) || 1) <= 1) {
+        backfillParents(FB.state);
+      }
+      player.familyParentMigration = 1;
+    });
     restoreRepair('player personal station', function () {
       const player = FB.state.player;
       const current = player && FB.state.chars &&
@@ -1120,6 +1210,10 @@ window.FB = window.FB || {};
        the effective sovereign nation's first technology record. */
     if (FB.ensureRealmTech) restoreRepair('realm technology', function () {
       FB.ensureRealmTech(FB.state);
+      if (FB.seedRealmTechnology && FB.state.realms.player &&
+          FB.state.realms.player.alive) {
+        FB.seedRealmTechnology(FB.state, 'player');
+      }
     });
     if (FB.migratePlayerDevelopment) restoreRepair('player development', function () {
       FB.migratePlayerDevelopment(FB.state);

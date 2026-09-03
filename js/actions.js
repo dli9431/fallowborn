@@ -8523,6 +8523,11 @@ window.FB = window.FB || {};
     visibleFloor:0
   };
 
+  function buildingSettlementIndex(value) {
+    const numeric = Number(value);
+    return isFinite(numeric) && numeric >= 0 ? Math.floor(numeric) : 0;
+  }
+
   function resetBuildingIndex() {
     buildingIndexState = null;
     buildingIndexStore = null;
@@ -8575,11 +8580,22 @@ window.FB = window.FB || {};
 
     let legacy = false;
     for (let i = 0; i < raw.length; i++) {
-      if (typeof raw[i] === 'string') { legacy = true; break; }
+      const entry = raw[i];
+      if (typeof entry === 'string' || (entry && typeof entry === 'object' &&
+          entry.s !== buildingSettlementIndex(entry.s))) {
+        legacy = true;
+        break;
+      }
     }
     if (legacy) {
       index.list = raw.map(function (entry) {
-        return typeof entry === 'string' ? { s:0, id:entry } : entry;
+        if (typeof entry === 'string') return { s:0, id:entry };
+        if (!entry || typeof entry !== 'object' ||
+            entry.s === buildingSettlementIndex(entry.s)) return entry;
+        const copy = {};
+        for (const key in entry) copy[key] = entry[key];
+        copy.s = buildingSettlementIndex(entry.s);
+        return copy;
       });
     }
 
@@ -8589,9 +8605,10 @@ window.FB = window.FB || {};
       const id = entry.id;
       if (!id) continue;
       index.all[id] = (index.all[id] || 0) + 1;
-      index.occupied[(entry.s | 0) + ':' + id] = 1;
+      const settlement = buildingSettlementIndex(entry.s);
+      index.occupied[settlement + ':' + id] = 1;
       if (entry.ruined) continue;
-      index.visibleFloor = Math.max(index.visibleFloor, (entry.s | 0) + 1);
+      index.visibleFloor = Math.max(index.visibleFloor, settlement + 1);
       index.standingTotal++;
       index.standing[id] = (index.standing[id] || 0) + 1;
       if (id !== 'walls' || (Number(entry.level) || 0) > 0) {
@@ -8619,9 +8636,7 @@ window.FB = window.FB || {};
     const index = buildingIndexFor(state, pid);
     if (!index.raw) return [];
     if (index.list === index.raw) return index.raw;
-    return index.raw.map(function (entry) {
-      return typeof entry === 'string' ? { s:0, id:entry } : entry;
-    });
+    return index.list.slice();
   };
 
   function builtInForWrite(state, pid) {
@@ -8629,6 +8644,9 @@ window.FB = window.FB || {};
     const list = state.buildings[pid] = state.buildings[pid] || [];
     for (let i = 0; i < list.length; i++) {
       if (typeof list[i] === 'string') list[i] = { s: 0, id: list[i] };
+      else if (list[i] && typeof list[i] === 'object') {
+        list[i].s = buildingSettlementIndex(list[i].s);
+      }
     }
     return list;
   }

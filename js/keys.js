@@ -268,7 +268,7 @@ window.FB = window.FB || {};
       }
     }
 
-    /* Network mirrors Deeds: digits select its five sections and the local
+    /* Network mirrors Deeds: digits select its six sections and the local
        letter grid activates visible controls in the selected section. */
     const networkActive = FB.state &&
       $('tab-network').classList.contains('active');

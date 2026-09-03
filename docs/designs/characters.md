@@ -7,8 +7,16 @@ founding dynasty follow that culture. The county's ordered static community mode
 principal fallback are defined in [provinces.md](provinces.md); later family identity
 continues to live on ordinary character records, with no additional save field.
 
-Children always keep their ordinary recorded father and mother. After a
-biological birth, `FB.applyCloseKinBirthRisk` classifies those parents through
+Children always keep their ordinary recorded father and mother. An adopted
+child instead remains linked through the adopter's `childrenIds` without
+inventing biological parents, including after succession and save restore.
+`FB.childrenOf` reconciles both directions without mutating saved records; the
+Kin child list and succession review consume that same projection, so a
+surviving `fatherId` or `motherId` cannot leave a later parent-protagonist with
+an empty family or demote their child to a distant-heir category.
+Sibling presentation follows the current kin graph; the founder's legacy
+`role:'sibling'` tags never relabel a later protagonist's aunts or uncles.
+After a biological birth, `FB.applyCloseKinBirthRisk` classifies those parents through
 the marriage kinship snapshot. Full siblings give the child a 20% risk roll;
 half siblings give 10%, and close-kin parentage on either parent adds five
 percentage points to a 35% ceiling. A hit uses seeded game RNG to add Frail,
@@ -768,19 +776,19 @@ has left the labor pool. A resident sibling has no saved residence of their own,
 the household on a permanent move and keep working, while enterprises left behind keep
 the existing remote-ownership idle behavior.
 
-**The family tree is a bounded navigator, not an unbounded genealogy dump.** New
+**The family tree is a recorded-family navigator, not a second simulation.** New
 campaigns record `player.houseFounderId` as the first playable head; old saves derive a
 jump target from the earliest protagonist legend or current head without a format
-migration. The primary tree begins from up to two recorded ancestor steps above the
+migration. Its single canvas begins from up to two recorded ancestor steps above the
 founder/current-head connection so a generated starting family includes the founder's
 parents and siblings and retains those branches after succession instead of beginning at
-the downward-only founder node. The modal still renders at most
-four descendant steps from its nearby root,
-plus bounded maternal and stepfamily branches. Search indexes that rendered scope,
+the downward-only founder node. Every other recorded maternal and paternal ancestor line,
+its collateral descendants, and stepfamily branches join that canvas instead of opening
+as separate family trees. Repeated connector cards are dimmed rather than rewriting
+parentage. Search indexes that rendered scope,
 branch controls hide or reveal biological descendant subtrees without rewriting
 parentage, and jump controls target the protagonist, first eligible successor, spouse,
-and house founder. When the founder has moved beyond the nearby generation window, one
-standalone founder card keeps the jump reachable.
+and house founder.
 
 The compact tree cards keep names and relationships scannable; their portrait tooltip
 adds a separate current **Status** line. The current protagonist and reigning foreign
@@ -987,3 +995,26 @@ Captives cannot travel, marry, hold or join plots, accept new household/Council 
 or receive relationship visits. A captive sovereign cannot begin wars or schemes and
 fields 20% less base host strength. These gates augment the existing protagonist prison
 flag rather than introducing a second general prison simulation.
+
+## Persistent settlement folk
+
+Ordinary county residents use full character records without becoming rulers or player
+kin. An active county has three deterministically generated households: two couples with
+children and one household of unmarried adults. Their culture and faith come from the
+county, their station stays between serf and gentry, and their occupation is drawn from
+existing livelihoods appropriate to the settlement kind. Spouses and children have
+ordinary reciprocal family links; all members record one exact county, settlement slot,
+and local-household id.
+
+Arrival creates the current destination cast. Permanent household moves—including
+forced relocation, capital relocation, holy-war land awards, papal relocation, and
+settlement after travel—immediately establish the new home roster.
+
+These people participate in the ordinary annual mortality pass. Children who reach 16
+become adult residents in their existing livelihood. There are no autonomous local
+marriages or births. New Year cleanup removes unreferenced deaths and replenishes
+missing households, while a relationship, courtship, rivalry, retainer place, captivity,
+or queued event preserves the connected household. Unconnected casts are retained only
+for the home and current destination counties. This bounded cast is a social foreground,
+not a demographic simulation. The technology impact is **none**: everyday community life
+is baseline social play.

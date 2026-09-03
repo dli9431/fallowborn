@@ -1333,6 +1333,7 @@ window.FB = window.FB || {};
     p.flags.cardinal = 1;
     p.flags.pope = 1;
     state.papacy.custody[me.id] = custody;
+    if (FB.localFolkArrive) FB.localFolkArrive(state, p.provinceId);
     if (FB.invalidateRealmCache) FB.invalidateRealmCache();
   }
 

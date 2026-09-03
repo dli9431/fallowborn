@@ -4,6 +4,8 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
   'js/model.js',
+  'js/ui_modals.js',
+  'js/ui_panels.js',
   'js/world.js',
   'js/events.js',
   'js/actions.js',
@@ -94,6 +96,334 @@ test('uses sex-aware novice address and recorded Norse patronyms',
     expect(new Set(result.before.house).size).toBe(1);
     expect(result.restoredName).toBe(result.before.me);
     expect(result.restoredByname).toBe(result.before.meByname);
+  });
+
+test('a widow succeeding after her son retains her children in Kin and succession',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const founder = s.chars[s.player.charId];
+      const wife = FB.makeCharacter(s, {
+        name:'Bebinn', sex:'f', born:s.date.year - 32,
+        culture:founder.culture, religion:founder.religion,
+        dyn:'Wife House', role:'spouse', traitsN:0
+      });
+      founder.spouseId = wife.id;
+      wife.spouseId = founder.id;
+      s.roles.spouse = wife.id;
+      const son = FB.makeCharacter(s, {
+        name:'Domnall', sex:'m', born:s.date.year - 18,
+        culture:founder.culture, religion:founder.religion,
+        dyn:founder.dyn, fatherId:founder.id, motherId:wife.id,
+        traitsN:0
+      });
+      const daughter = FB.makeCharacter(s, {
+        name:'Ornat', sex:'f', born:s.date.year - 16,
+        culture:founder.culture, religion:founder.religion,
+        dyn:founder.dyn, fatherId:founder.id, motherId:wife.id,
+        traitsN:0
+      });
+      founder.childrenIds.push(son.id, daughter.id);
+      /* Reproduce the one-sided record shown by the regression: the tree can
+         follow each child's motherId, but the widow has no saved backlinks. */
+      wife.childrenIds = [];
+      FB.touchFamily();
+
+      FB.game.die('Synthetic founder death');
+      FB.ui.closeModal();
+      const sonSucceeded = FB.game.succeedTo(son.id);
+      FB.game.die('Synthetic son death');
+      FB.ui.closeModal();
+      const wifeWasEligible = FB.heirReview(s).some(function (row) {
+        return row.character.id === wife.id && row.eligible;
+      });
+      const wifeSucceeded = FB.game.succeedTo(wife.id);
+      const kin = FB.kinOf(s);
+      const daughterReview = FB.heirReview(s).filter(function (row) {
+        return row.character.id === daughter.id;
+      })[0];
+      FB.ui.refresh();
+      return {
+        sonSucceeded:sonSucceeded,
+        wifeWasEligible:wifeWasEligible,
+        wifeSucceeded:wifeSucceeded,
+        protagonistId:s.player.charId,
+        wifeId:wife.id,
+        rawBacklinks:wife.childrenIds.slice(),
+        kinChildren:kin.children.map(function (entry) {
+          return entry.c.id;
+        }),
+        daughterId:daughter.id,
+        daughterName:daughter.name,
+        daughterReview:daughterReview && {
+          eligible:daughterReview.eligible,
+          code:daughterReview.code,
+          group:daughterReview.group
+        }
+      };
+    });
+
+    expect(result.sonSucceeded).toBe(true);
+    expect(result.wifeWasEligible).toBe(true);
+    expect(result.wifeSucceeded).toBe(true);
+    expect(result.protagonistId).toBe(result.wifeId);
+    expect(result.rawBacklinks).toEqual([]);
+    expect(result.kinChildren).toContain(result.daughterId);
+    expect(result.daughterReview).toEqual({
+      eligible:true,
+      code:'child',
+      group:'children'
+    });
+    await page.locator('#lefttabs .tab[data-tab="family"]').click();
+    await expect(page.locator('#tab-family')).toContainText(result.daughterName);
+    await expect(page.locator('#tab-family')).not.toContainText(
+      'No living children');
+  });
+
+test('an adopted successor stays parentless and does not absorb founder siblings on restore',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const founder = s.chars[s.player.charId];
+      const founderSibling = FB.siblingsOf(s, founder)[0];
+      const siblingParents = [founderSibling.fatherId, founderSibling.motherId];
+      FB.applyEffects(s, { adoptChild:true }, {}, { id:'e2e_adoption' });
+      const adoptedId = founder.childrenIds[founder.childrenIds.length - 1];
+      const adopted = s.chars[adoptedId];
+
+      FB.game.die('Synthetic succession test');
+      FB.ui.closeModal();
+      const succeeded = FB.game.succeedTo(adopted.id);
+      const siblingsBefore = FB.siblingsOf(s, adopted).map(function (c) {
+        return c.id;
+      });
+      const kinshipBefore = FB.kinshipDegreeSnapshot(
+        s, adopted, founderSibling);
+      const manageableBefore = FB.manageableKinKind(s, founderSibling.id);
+      const payload = JSON.parse(FB.save.serialize());
+      /* Model a campaign saved by the preceding release: it has the recorded
+         house founder but predates the explicit migration marker. */
+      delete payload.state.player.familyParentMigration;
+      const parentRoleIds = Object.keys(s.chars).filter(function (id) {
+        return s.chars[id].role === 'parent';
+      }).sort();
+      const savedRng = JSON.stringify(payload.rng);
+
+      FB.save.restore(payload);
+      const restored = FB.state;
+      const restoredAdopted = restored.chars[restored.player.charId];
+      const restoredSibling = restored.chars[founderSibling.id];
+      return {
+        succeeded:succeeded,
+        sameHead:restoredAdopted.id === adopted.id,
+        parents:[restoredAdopted.fatherId, restoredAdopted.motherId],
+        siblingsBefore:siblingsBefore,
+        siblingsAfter:FB.siblingsOf(restored, restoredAdopted).map(function (c) {
+          return c.id;
+        }),
+        kinshipBefore:kinshipBefore,
+        kinshipAfter:FB.kinshipDegreeSnapshot(
+          restored, restoredAdopted, restoredSibling),
+        manageableBefore:manageableBefore,
+        manageableAfter:FB.manageableKinKind(restored, restoredSibling.id),
+        siblingParents:[restoredSibling.fatherId, restoredSibling.motherId],
+        expectedSiblingParents:siblingParents,
+        parentRoleIds:Object.keys(restored.chars).filter(function (id) {
+          return restored.chars[id].role === 'parent';
+        }).sort(),
+        expectedParentRoleIds:parentRoleIds,
+        migration:restored.player.familyParentMigration,
+        rngStable:JSON.stringify(FB.getRngState()) === savedRng
+      };
+    });
+
+    expect(result.succeeded).toBe(true);
+    expect(result.sameHead).toBe(true);
+    expect(result.parents).toEqual([null, null]);
+    expect(result.siblingsBefore).toEqual([]);
+    expect(result.siblingsAfter).toEqual([]);
+    expect(result.kinshipBefore).toBe('unrelated');
+    expect(result.kinshipAfter).toBe('unrelated');
+    expect(result.manageableBefore).toBeNull();
+    expect(result.manageableAfter).toBeNull();
+    expect(result.siblingParents).toEqual(result.expectedSiblingParents);
+    expect(result.parentRoleIds).toEqual(result.expectedParentRoleIds);
+    expect(result.migration).toBe(1);
+    expect(result.rngStable).toBe(true);
+  });
+
+test('restore removes parents fabricated for an adopted successor by the old repair',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const founder = s.chars[s.player.charId];
+      const founderSiblings = FB.siblingsOf(s, founder).slice();
+      const originalParents = {};
+      for (let i = 0; i < founderSiblings.length; i++) {
+        originalParents[founderSiblings[i].id] = [
+          founderSiblings[i].fatherId, founderSiblings[i].motherId
+        ];
+      }
+      FB.applyEffects(s, { adoptChild:true }, {}, { id:'e2e_adoption' });
+      const adopted = s.chars[founder.childrenIds[
+        founder.childrenIds.length - 1]];
+      FB.game.die('Synthetic succession test');
+      FB.ui.closeModal();
+      FB.game.succeedTo(adopted.id);
+
+      /* Recreate the exact bad state written by the former unguarded restore
+         repair: a consecutive dead pair replaces the adopted head's absent
+         parents and overwrites the founder siblings' true links. */
+      const dad = FB.makeCharacter(s, {
+        sex:'m', culture:adopted.culture, religion:adopted.religion,
+        born:adopted.born - 25, role:'parent', quality:1
+      });
+      const mom = FB.makeCharacter(s, {
+        sex:'f', culture:adopted.culture, religion:adopted.religion,
+        born:adopted.born - 23, role:'parent'
+      });
+      dad.dyn = adopted.dyn;
+      dad.dead = true;
+      mom.dead = true;
+      dad.died = s.date.year;
+      mom.died = s.date.year;
+      dad.spouseId = mom.id;
+      mom.spouseId = dad.id;
+      const rewired = [adopted].concat(founderSiblings);
+      for (let i = 0; i < rewired.length; i++) {
+        rewired[i].fatherId = dad.id;
+        rewired[i].motherId = mom.id;
+        dad.childrenIds.push(rewired[i].id);
+        mom.childrenIds.push(rewired[i].id);
+      }
+      FB.touchFamily();
+      const payload = JSON.parse(FB.save.serialize());
+      delete payload.state.player.familyParentMigration;
+      const corruptCount = Object.keys(payload.state.chars).length;
+      const savedRng = JSON.stringify(payload.rng);
+
+      FB.save.restore(payload);
+      const restored = FB.state;
+      const restoredAdopted = restored.chars[restored.player.charId];
+      return {
+        fakeParentsRemain:!!restored.chars[dad.id] || !!restored.chars[mom.id],
+        adoptedParents:[restoredAdopted.fatherId, restoredAdopted.motherId],
+        siblingParents:founderSiblings.map(function (sibling) {
+          const c = restored.chars[sibling.id];
+          return [c.fatherId, c.motherId];
+        }),
+        expectedSiblingParents:founderSiblings.map(function (sibling) {
+          return originalParents[sibling.id];
+        }),
+        removedCount:corruptCount - Object.keys(restored.chars).length,
+        migration:restored.player.familyParentMigration,
+        rngStable:JSON.stringify(FB.getRngState()) === savedRng
+      };
+    });
+
+    expect(result.fakeParentsRemain).toBe(false);
+    expect(result.adoptedParents).toEqual([null, null]);
+    expect(result.siblingParents).toEqual(result.expectedSiblingParents);
+    expect(result.removedCount).toBe(2);
+    expect(result.migration).toBe(1);
+    expect(result.rngStable).toBe(true);
+  });
+
+test('founder siblings become a child successor\'s aunts or uncles, not siblings',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const founder = s.chars[s.player.charId];
+      const founderSibling = FB.siblingsOf(s, founder)[0];
+      const childOptions = {
+        name:'Later Head', sex:'f', born:s.date.year - 18,
+        culture:founder.culture, religion:founder.religion,
+        dyn:founder.dyn, traitsN:0
+      };
+      childOptions[founder.sex === 'f' ? 'motherId' : 'fatherId'] = founder.id;
+      const child = FB.makeCharacter(s, childOptions);
+      founder.childrenIds.push(child.id);
+      FB.touchFamily();
+
+      FB.game.die('Synthetic succession test');
+      FB.ui.closeModal();
+      FB.game.succeedTo(child.id);
+      const relation = FB.kinOf(s).byId[founderSibling.id];
+      const card = FB.ui.charCardHtml(s, founderSibling, false, true);
+      const interactions = FB.ui.characterInteractionCard(
+        s, founderSibling.id);
+      return {
+        relation:relation,
+        expected:founderSibling.sex === 'f' ? 'Aunt' : 'Uncle',
+        inSiblingList:FB.siblingsOf(s, child).some(function (c) {
+          return c.id === founderSibling.id;
+        }),
+        mislabeled:card.indexOf(FB.T('Your sibling')) >= 0,
+        hostilityAvailable:interactions.actions.some(function (action) {
+          return action.id === 'relationship.hostility.insult';
+        })
+      };
+    });
+
+    expect(result.relation).toBe(result.expected);
+    expect(result.inSiblingList).toBe(false);
+    expect(result.mislabeled).toBe(false);
+    expect(result.hostilityAvailable).toBe(true);
+  });
+
+test('legacy parent synthesis runs once for a genuinely old founder save',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const payload = JSON.parse(FB.save.serialize());
+      const player = payload.state.player;
+      const founder = payload.state.chars[player.charId];
+      const oldParentIds = [founder.fatherId, founder.motherId];
+      delete player.familyParentMigration;
+      delete player.houseFounderId;
+      founder.fatherId = null;
+      founder.motherId = null;
+      for (const id in payload.state.chars) {
+        const c = payload.state.chars[id];
+        if (c.role === 'sibling' && c.dyn === founder.dyn) {
+          c.fatherId = null;
+          c.motherId = null;
+        }
+      }
+      for (let i = 0; i < oldParentIds.length; i++) {
+        delete payload.state.chars[oldParentIds[i]];
+      }
+
+      FB.save.restore(payload);
+      const first = FB.state;
+      const firstHead = first.chars[first.player.charId];
+      const firstParents = [firstHead.fatherId, firstHead.motherId];
+      const firstCount = Object.keys(first.chars).length;
+      const secondPayload = JSON.parse(FB.save.serialize());
+      const firstRng = JSON.stringify(secondPayload.rng);
+      FB.save.restore(secondPayload);
+      const second = FB.state;
+      const secondHead = second.chars[second.player.charId];
+      return {
+        firstParents:firstParents,
+        secondParents:[secondHead.fatherId, secondHead.motherId],
+        firstCount:firstCount,
+        secondCount:Object.keys(second.chars).length,
+        migration:second.player.familyParentMigration,
+        secondRestoreRngStable:JSON.stringify(FB.getRngState()) === firstRng
+      };
+    });
+
+    expect(result.firstParents[0]).toBeTruthy();
+    expect(result.firstParents[1]).toBeTruthy();
+    expect(result.secondParents).toEqual(result.firstParents);
+    expect(result.secondCount).toBe(result.firstCount);
+    expect(result.migration).toBe(1);
+    expect(result.secondRestoreRngStable).toBe(true);
   });
 
 test('previews and settles protagonist dowries in the bride-pays direction',
@@ -263,8 +593,12 @@ test('records ordinary and royal stepchildren without changing inheritance',
       name:'The Family Tree',
       exact:true
     })).toBeVisible();
-    await expect(page.locator('#gm-body')).toContainText('Stepfamily');
-    await expect(page.locator('#gm-body')).toContainText(ordinary.childName);
+    await expect(page.locator('#gm-body .ftwrap')).toHaveCount(1);
+    await expect(page.locator('#gm-body .fttree')).toHaveCount(1);
+    await expect(page.locator('#gm-body')).not.toContainText('Stepfamily');
+    await expect(page.locator(
+      '.family-tree-primary .ftchip[data-cid="' + ordinary.childId + '"]'))
+      .toHaveCount(1);
     await page.getByRole('button', { name:'Close', exact:true }).click();
 
     await page.reload({ waitUntil:'domcontentloaded' });

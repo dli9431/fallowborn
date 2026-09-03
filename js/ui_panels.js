@@ -121,7 +121,7 @@ window.FB = window.FB || {};
     return deedGroupingStyle() === 'action-type' ? 'personal' : 'realm';
   }
   const NETWORK_SECTIONS = [
-    'household', 'connections', 'trade', 'politics', 'realm'
+    'household', 'connections', 'trade', 'politics', 'realm', 'local-folk'
   ];
   let activeNetworkSection = null;
   let activeNetworkState = null;
@@ -2985,9 +2985,10 @@ window.FB = window.FB || {};
     if (descendantKind === 'grandchild') {
       return FB.T(c.sex === 'f' ? 'Your granddaughter' : 'Your grandson');
     }
-    if ((c.role === 'sibling' && c.dyn === me.dyn) ||
-      (me.fatherId && me.fatherId === c.fatherId) ||
-      (me.motherId && me.motherId === c.motherId)) return FB.T('Your sibling');
+    const kinRelation = FB.kinOf(s).byId[c.id];
+    if (kinRelation === 'Brother' || kinRelation === 'Sister') {
+      return FB.T('Your sibling');
+    }
     if (s.player.courtingId === c.id) return FB.T('Courting');
     if (s.roles.lord === c.id) return FB.T('Your lord');
     if (s.roles.steward === c.id) return FB.T('The lord’s steward');
@@ -3258,7 +3259,10 @@ window.FB = window.FB || {};
       h += '<div class="hint" style="margin:2px 0 0">Tap them to court, propose, or break it off.</div>';
     }
     h += panelh('Children');
-    const kids = me.childrenIds.map(function (id) { return s.chars[id]; })
+    /* Use the same reconciled relationship projection as the tree and
+       succession. Some older or interrupted records retain the child's
+       fatherId/motherId while missing this parent's childrenIds backlink. */
+    const kids = kin.children.map(function (entry) { return entry.c; })
       .filter(function (c) { return c && !c.dead; });
     if (kids.length) {
       for (const k of kids) {
@@ -3317,14 +3321,6 @@ window.FB = window.FB || {};
     kinSection('Nieces & nephews', kin.niecesNephews);
     kinSection('Uncles & aunts', kin.unclesAunts);
     kinSection('Cousins', kin.cousins);
-    h += panelh('Notable folk');
-    for (const role of ['lord', 'steward', 'priest', 'friend', 'rival']) {
-      const c = FB.getRole(s, role, false);
-      if (c && !c.dead) {
-        h += charRow(s, c, roleName(role) +
-          ' · ' + FB.T('age {age}', { age: FB.ageOf(c, s.date.year) }), true);
-      }
-    }
     const box = $('tab-family');
     const replaced = replacePanelMarkup('kin', box, h);
     kinRenderedState = s;
@@ -3789,7 +3785,9 @@ window.FB = window.FB || {};
       return String(a.id).localeCompare(String(b.id));
     });
     for (const c of cultivated) {
-      addConnection(c, FB.T('Cultivated connection'), 1,
+      const contact = s.player.friendContacts && s.player.friendContacts[c.id];
+      addConnection(c, contact && contact.cultivated === false
+        ? FB.T('Known contact') : FB.T('Cultivated connection'), 1,
         attentionTarget && attentionTarget.id === c.id);
     }
     const connectionRoles = [
@@ -3834,6 +3832,59 @@ window.FB = window.FB || {};
         'No friend yet. Cultivate a contact, then name them from their sheet.')) +
         '</div>';
     }
+
+    const localRows = [];
+    const localLocationId = FB.localFolkCurrentLocationId
+      ? FB.localFolkCurrentLocationId(s) : null;
+    const localProvince = localLocationId && FB.world.byId[localLocationId];
+    const localPeople = FB.localFolkCurrent ? FB.localFolkCurrent(s) : [];
+    for (let localIndex = 0; localIndex < localPeople.length; localIndex++) {
+      const c = localPeople[localIndex];
+      const local = FB.localFolkRecord(s, c.id);
+      if (!local) continue;
+      const settlements = FB.settlementsOf(s, local.provinceId);
+      const settlement = settlements[local.settlement];
+      const age = FB.ageOf(c, s.date.year);
+      const adult = age >= 16;
+      const known = FB.localFolkKnown(s, c.id);
+      const activity = adult
+        ? FB.localFolkActivityStatus(s, c.id, 'commons') : null;
+      const statusLabel = !adult ? FB.T('Household child')
+        : !known ? FB.T('Unmet')
+          : activity && activity.remaining
+            ? FB.T('Available in {days} days', { days:activity.remaining })
+            : FB.T('Available');
+      const role = local.role === 'child' ? FB.T('Child')
+        : local.role === 'sibling' ? FB.T('Household sibling')
+          : FB.T('Adult resident');
+      const meta = [
+        settlement ? settlement.name : local.provinceId,
+        role,
+        adult ? FB.careerTitle(s, c) : FB.T('age {age}', { age:age })
+      ];
+      const record = {
+        character:c,
+        meta:meta,
+        attention:false,
+        state:!adult ? 'routine' : !known ? 'new' :
+          activity && activity.remaining ? 'commitment' : 'opportunity',
+        stateLabel:statusLabel,
+        priority:local.settlement,
+        index:(local.household.generation || 0) * 10 +
+          (adult ? 0 : 5) + localIndex,
+        identity:c.id
+      };
+      record.stateDetails = networkCharacterStateDetails(s, record);
+      record.html = networkReadablePersonRow(s, 'local-folk', record);
+      localRows.push(record);
+    }
+    sortReadableRows(localRows);
+    const localSummary = '<div class="progressnote">' + esc(localProvince
+      ? FB.T('People living around {province}. Meet an adult through a local activity, then cultivate the relationship from their sheet.', {
+        province:localProvince.name
+      })
+      : FB.T('You are on the road. Reach home or a destination to meet its local people.')) +
+      '</div>';
 
     function monopolyTierName(tier) {
       if (tier === 4) return FB.T('Count');
@@ -4602,6 +4653,16 @@ window.FB = window.FB || {};
         summary:realmSummary,
         rows:realmRows,
         empty:FB.T('No realm ties.')
+      },
+      {
+        id:'local-folk',
+        hotkey:6,
+        title:FB.T('Local folk'),
+        summary:localSummary,
+        rows:localRows,
+        empty:localLocationId
+          ? FB.T('No local households are present.')
+          : FB.T('No one is nearby while you are on the road.')
       }
     ], [], { searchable:false });
     if (!replacePanelMarkup('network', box, markup)) {
@@ -4686,11 +4747,11 @@ window.FB = window.FB || {};
      The Kin tab names each relation; this modal draws the blood lines so it
      is plain who hangs from whom. Each couple shares a box (current spouses
      first, then dead or former partners their children point back to), and
-     each brood hangs beneath its parents. The main tree grows from the nearest
+     each brood hangs beneath its parents. One canvas grows from the nearest
      recorded common ancestor of the house founder and current player through
-     every descendant generation. Other maternal ancestors and stepfamily can
-     still sit in supplementary trees; anyone already drawn above shows dimmed
-     there instead of doubling the line. */
+     every descendant generation, then adds every other recorded parental line
+     and stepfamily branch. Anyone already drawn earlier shows dimmed instead
+     of doubling the line. */
   SH.captureFamilyTreeView = function () {
     const gm = $('genmodal');
     const body = $('gm-body');
@@ -4933,7 +4994,8 @@ window.FB = window.FB || {};
         (label ? ' — ' + esc(label) : '') + '">' + FB.faceTag(c, 50, 57) +
         '<span class="fname">' + esc(c.name) + '</span>' +
         '<span class="frel">' + esc(label ? label + ' · ' + meta : meta) + '</span>' +
-        (again ? '<span class="frel">' + esc(FB.T('also above')) + '</span>' : '') + '</button>';
+        (again ? '<span class="frel">' +
+          esc(FB.T('also elsewhere in this tree')) + '</span>' : '') + '</button>';
     }
 
     /* everyone who parented a child with c, current spouses first — dead
@@ -4983,9 +5045,9 @@ window.FB = window.FB || {};
       return h + '</div>';
     }
 
-    /* The deepest recorded ancestor, father’s line preferred. A bounded
-       lookup still serves the supplementary maternal tree; the disconnected
-       save fallback walks the complete recorded line. */
+    /* The deepest recorded ancestor, father’s line preferred. The nearby
+       founder/player branch uses a bounded lookup so it stays recognizable;
+       the remaining recorded parent lines join the same canvas below. */
     function topOf(c, maxUp) {
       let cur = c;
       const seen = {};
@@ -5083,15 +5145,31 @@ window.FB = window.FB || {};
       const currentRoot = topOf(me);
       h += drawn[currentRoot.id] ? unit(me) : unit(currentRoot);
     }
-    h += '</div></div>';
-    // maternal ancestors above the founder-descendant tree retain a compact supplement
-    const mo = me.motherId ? s.chars[me.motherId] : null;
-    if (mo && (mo.fatherId || mo.motherId)) {
-      const mroot = topOf(mo, 1);
-      if (mroot.id !== mo.id && !drawn[mroot.id]) {
-        h += panelh('Your mother’s kin') +
-          '<div class="ftwrap"><div class="fttree">' + unit(mroot) + '</div></div>';
+    /* A downward renderer reaches spouses but cannot climb through them.
+       Add every still-undrawn ancestor of the player and house founder, most
+       distant first. Their collateral descendants then remain in this same
+       canvas, while a repeated connector is a dim pointer to its first card. */
+    const ancestorBranches = {};
+    function collectAncestorBranches(c) {
+      const distances = ancestorDistances(c);
+      for (const id in distances) {
+        if (distances[id] <= 0 || !s.chars[id]) continue;
+        if (ancestorBranches[id] === undefined ||
+            distances[id] > ancestorBranches[id]) {
+          ancestorBranches[id] = distances[id];
+        }
       }
+    }
+    collectAncestorBranches(me);
+    collectAncestorBranches(founder);
+    const ancestorIds = Object.keys(ancestorBranches).sort(function (a, b) {
+      if (ancestorBranches[a] !== ancestorBranches[b]) {
+        return ancestorBranches[b] - ancestorBranches[a];
+      }
+      return a < b ? -1 : (a > b ? 1 : 0);
+    });
+    for (const id of ancestorIds) {
+      if (!drawn[id]) h += unit(s.chars[id]);
     }
     const stepchildren = FB.stepchildrenOf ? FB.stepchildrenOf(s, me) : [];
     if (stepchildren.length) {
@@ -5106,10 +5184,6 @@ window.FB = window.FB || {};
         }
         stepGroups[key].children.push(child);
       }
-      h += panelh('Stepfamily') +
-        '<div class="cmeta" style="font-size:13px">' +
-        esc(FB.T('These are your spouse’s children by earlier unions. Their biological parentage and succession remain unchanged.')) +
-        '</div>';
       for (const key in stepGroups) {
         const group = stepGroups[key];
         let couple = '';
@@ -5134,10 +5208,10 @@ window.FB = window.FB || {};
               drawn[child.id] ? ' dup' : '') + '</div></div>';
           drawn[child.id] = 1;
         }
-        h += '<div class="ftwrap"><div class="fttree">' + branch +
-          '</div></div></div></div>';
+        h += branch + '</div></div>';
       }
     }
+    h += '</div></div>';
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">' + esc(FB.T('Close')) + '</button>';
     openModal('The Family Tree', h, { modalClass:'family-tree-modal' });
     $('gm-cancel').addEventListener('click', UI.closeModal);

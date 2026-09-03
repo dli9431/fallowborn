@@ -268,10 +268,10 @@ label, action row, and legend structure, caps itself to the map column minus the
 right HUD lane, and never overlays the Land tabs or panel.
 
 The county Market sheet is reachable from the lens, the Market card inside the
-Land panel's Development section, the county-head settlement sheet, venture
-review, and Network → Trade & Guild. Secondary settlement sheets do not repeat
-the county-wide shortcut. The sheet's selector uses the same dark parchment
-field and dropdown styling as the lens, stacking below its label on mobile.
+Land panel's Development section, venture review, and Network → Trade & Guild.
+Settlement sheets do not repeat the county-wide shortcut. The sheet's selector uses
+the same dark parchment field and dropdown styling as the lens, stacking below its
+label on mobile.
 The sheet shows endowments and their effects, stock, price/trend, last-season
 production/demand/import/export,
 player household/enterprise contributions, shocks, ventures, charters, and

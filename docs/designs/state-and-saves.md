@@ -197,6 +197,9 @@ true, health-8, and empty-array/object defaults are restored explicitly. A build
 an omitted settlement index belongs to the head settlement (`s:0`), matching the legacy
 projection. National `exposed` contains only technologies not already in `completed`,
 because completion implies exposure, and empty technology work containers are recreated.
+Restore also gives an existing landed player realm its one-time regional historical
+technology seed when the record predates that realm-formation repair, preventing an
+independent ruler from loading with an empty construction catalogue.
 The succession `heirId` is omitted when it exactly matches the first id in canonical
 `order`, then restored from that order at the load boundary.
 `S.restore` expands the full live shape before the ordinary ensure chain, so uncompressed
@@ -1060,9 +1063,18 @@ settlement do not preserve field hosts. Contribution belongs to the campaign rat
 than the current character, so it persists across protagonist succession.
 
 Saves from before parents were recorded (first-generation siblings known only
-by role) have a father and mother synthesized on load — long dead, ages
+by role) have a father and mother synthesized once on load — long dead, ages
 fitted to the oldest child — so the family tree shows them instead of an
-"Unrecorded" ghost (`backfillParents` in `js/save.js`).
+"Unrecorded" ghost (`backfillParents` in `js/save.js`). The additive
+`player.familyParentMigration:1` marker makes that repair one-shot, and the
+absence of `houseFounderId` plus a first-generation campaign confines it to
+saves old enough to need it. A parentless adopted successor therefore remains
+parentless across restore and never absorbs the founder's role-tagged siblings
+into a fabricated family.
+The same one-time repair recognizes the exact consecutive dead-parent pair
+created by the former unguarded migration after an adopted successor, removes
+it, and restores displaced founder-sibling links from their surviving parent
+backlinks. It does not infer ancestry from names or dynasty alone.
 
 Temporary modifiers are another additive version-3 extension. County records live at
 `state.modifiers.county[provinceId] = [{id,endTurn?}]`; player-participation campaign
@@ -1094,3 +1106,14 @@ agency so downstream readers receive the same shape. The internal
 `player.flags.intrigue_captive` and `intrigue_legal_custody` markers only identify which
 intrigue record owns the shared `in_prison` blocker, so repair never clears imprisonment
 created by another system.
+
+Settlement folk are an additive save-format-3 extension. `state.localFolk[provinceId]`
+stores a monotonically increasing generation counter and three bounded household records,
+each containing a stable id, settlement index, and member ids. Full people remain in
+`state.chars` and carry `localFolk:{provinceId,householdId,settlement,role}` plus the usual
+family, residence, career, skill, trait, health, culture, and faith fields.
+`player.localActivityTurns[characterId]` stores the most recent resolved activity turn.
+Generation uses a private seed scope derived from world seed, bookmark, county, and
+generation, so loading an old save or arriving in a different order neither changes the
+cast nor advances the shared RNG. Missing containers are created at load without raising
+the save version.

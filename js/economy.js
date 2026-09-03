@@ -1870,8 +1870,11 @@ window.FB = window.FB || {};
         quality:def.quality || 2
       });
       FB.setCareer(state, c, def.profession, (def.quality || 0) >= 3 ? 'master' : 'journeyman');
-    } else if (c.role !== 'friend' && c.role !== 'priest' && c.role !== 'notable') {
-      c.role = 'retainer';
+    } else {
+      if (FB.detachLocalFolk) FB.detachLocalFolk(state, c.id);
+      if (c.role !== 'friend' && c.role !== 'priest' && c.role !== 'notable') {
+        c.role = 'retainer';
+      }
     }
     state.player.gold -= def.pay || 0; // the first season is paid on entry
     FB.retainerRecords(state).push({

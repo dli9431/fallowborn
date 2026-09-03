@@ -83,6 +83,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Remembering the exact local people involved in customary burdens, village disputes, and testimony is baseline social continuity, not a capability unlocked by sovereign research.'
       },
+      persistent_settlement_folk_activities:{
+        mode:'none',
+        rationale:'Meeting ordinary resident households through daily work, worship, hospitality, and common life is baseline social play, not a capability unlocked by sovereign research.'
+      },
       serf_freedom_advocacy:{
         mode:'none',
         rationale:'A known local officer or priest supporting a serf’s petition is a baseline personal and legal relationship, not an advanced capability unlocked by sovereign research.'

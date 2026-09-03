@@ -305,3 +305,13 @@ Each inhabited county tracks an integer civilian population record in `state.pop
 - **Economic & military factor**: $\text{clamp}(\sqrt{P / P_0}, 0.50, 1.50)$ scales county tax base, direct & vassal levies, and market household demand.
 - **War & siege mitigation**: Hostile captures cause $-2\%$ population loss, mitigated by fortification strongpoints ($0\%, 10\%, 20\%, 35\%, 50\%$ for fort tiers 0–4).
 - **Settlement allocation**: On-demand display projection weights sites (village 1, town 3, city 7 + 1 per economic building), summing exactly to total county population.
+
+## Named settlement households
+
+The demographic totals remain anonymous, but the player’s home and arrived destination
+may expose three named local households. Household records point at the existing derived
+settlement slots; they do not create physical sites or change county population.
+`FB.localFolkAt` is the read-only projection used by Network and settlement sheets.
+Remote map browsing never calls the mutating ensure path, consumes no RNG, and shows only
+residents already remembered through a relationship. A county roster is created at game
+initialization, save restoration, or destination arrival.

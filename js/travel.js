@@ -1439,6 +1439,7 @@ window.FB = window.FB || {};
     if (!t) return;
     t.phase = 'arrived';
     t.legDaysLeft = 0;
+    if (FB.localFolkArrive) FB.localFolkArrive(state, t.destinationId);
     const pr = FB.world.byId[t.destinationId];
     const c = me(state);
     /* A genuinely foreign destination guarantees one mismatch story when the
@@ -1492,6 +1493,7 @@ window.FB = window.FB || {};
       FB.resolveReturnTradeVenture(state, t);
     }
     p.travel = null;
+    if (FB.localFolkArrive) FB.localFolkArrive(state, p.provinceId);
     FB.news(state, FB.msg('news.travel.returned',
       '🧭 Returned home to {home}.', {home:FB.world.byId[t.homeId].name}));
     if (FB.validateFocus) FB.validateFocus(state);
@@ -1794,6 +1796,7 @@ window.FB = window.FB || {};
     }
     p.travelSettlement = { turn:state.turn, destinationId:destination };
     p.travel = null;
+    if (FB.localFolkArrive) FB.localFolkArrive(state, destination);
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);
     if (FB.enterpriseList) FB.enterpriseList(state);

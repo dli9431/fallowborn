@@ -71,8 +71,10 @@ each building. `state.buildings[pid]` holds
 `FB.builtIn` is a read-only projection: it neither creates empty county arrays nor
 rewrites old saves while a UI or derived calculation reads them. Bare ids from old saves
 project into the head settlement (`s: 0`) and are persisted in canonical form on the next
-construction or demolition in that county. Tapping a settlement in your own demesne
-(Land tab) or any settlement marker on the detailed map opens `UI.showSettlement`:
+construction or demolition in that county. Numeric-like legacy settlement indices receive
+the same read-only integer projection and are canonicalized on the next write, keeping the
+sheet's visible contents and construction occupancy in agreement. Tapping a settlement in
+your own demesne (Land tab) or any settlement marker on the detailed map opens `UI.showSettlement`:
 only the buildings standing in THAT settlement, with what each provides, plus any
 household plots, manor, or enterprises in the same slot. Authorization lives inside the
 sheet — a foreign or non-demesne settlement is read-only, and the raise button keeps
@@ -270,3 +272,9 @@ County modifiers are applied at their local boundaries. `levy` adjusts the count
 levy before technology, Martial, and domain changes and appears as a named composition
 ledger row. `buildingCost` multiplies the final construction quote in the selected county.
 The catalog and stacking rules are in [modifiers.md](modifiers.md).
+
+Settlement sheets also expose **People here**, a projection of the county’s bounded named
+households at that exact site. It is not a building benefit and does not scale with
+development. Worship and hospitality venue labels may acknowledge the settlement kind
+or an existing religious building, but buildings and technology do not gate ordinary
+local meetings.

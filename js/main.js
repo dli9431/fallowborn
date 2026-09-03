@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.167.3';
+FB.VERSION = '1.168.0';
 FB.CHANGELOG = [
+  { v: '1.168.0', date: '2026-09-03', changes: [
+    'Settlements now host persistent local households you can meet through shared work, worship, hospitality, and everyday life, with familiar residents carried into Network.',
+    'Succession now preserves real family links in one tree, serf elevation frees spouses and descendants, direct rulers can build in empty settlements, and settlement sheets no longer repeat county Market access.'
+  ] },
   { v: '1.167.3', date: '2026-09-02', changes: [
     'Every educated child now receives a formative story each year, with sibling stories spaced across the calendar.'
   ] },
@@ -2699,6 +2703,7 @@ FB.CHANGELOG = [
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
+      localFolk: {},
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
@@ -2717,6 +2722,7 @@ FB.CHANGELOG = [
         tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, homeSettlement: settIdx, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        familyParentMigration:1,
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: startEffects.warService || 0,
@@ -2728,6 +2734,7 @@ FB.CHANGELOG = [
         flags: startFlags(startEffects), cooldowns: {}, fired: {}, courtingId: null,
         courtshipTerms: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
+        localActivityTurns: {},
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, plot: null,
@@ -2875,6 +2882,7 @@ FB.CHANGELOG = [
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
+    if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
     if (sc.tier === 0) {
       /* The integrated tenure sheet and lawful-freedom routes name the exact
          home authority from the first playable frame. Establish the bounded
@@ -4219,6 +4227,7 @@ FB.CHANGELOG = [
       }
     }
 
+    if (FB.localFolkYear) FB.localFolkYear(s);
     if (FB.schoolingYearEvents) FB.schoolingYearEvents(s, schoolingAnnual);
 
     // popular opinion drifts toward 0
@@ -4585,7 +4594,10 @@ FB.CHANGELOG = [
           .sort(function (a, b) { return a.born - b.born; }));
     }
 
-    const kids = me.childrenIds.map(function (id) { return s.chars[id]; });
+    /* childrenOf reconciles adoption-aware backlinks with the child's
+       recorded fatherId/motherId, matching the Kin panel and family tree. */
+    const kids = FB.childrenOf ? FB.childrenOf(s, me) :
+      me.childrenIds.map(function (id) { return s.chars[id]; });
     const livingKids = ordered(kids);
     for (const child of livingKids) add(child, true, 'child', 'children');
     for (const child of kids) {
@@ -4923,7 +4935,9 @@ FB.CHANGELOG = [
        being restored in both catalogues after the transition. */
     if (FB.enterpriseList) FB.enterpriseList(s);
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
-    const successorIsChild = (old.childrenIds || []).indexOf(heir.id) >= 0;
+    const successorIsChild = (FB.childrenOf ? FB.childrenOf(s, old) :
+      (old.childrenIds || []).map(function (id) { return s.chars[id]; }))
+      .some(function (child) { return child && child.id === heir.id; });
     const outgoingTier = p.tier;
     /* Permanent holdings belong to the dynasty, not the outgoing
        protagonist. Most succession work mutates the existing player record,
@@ -5378,6 +5392,11 @@ FB.CHANGELOG = [
         });
         if (FB.travelValidate) resumeRepair('travel validation', function () {
           FB.travelValidate(FB.state);
+        });
+        if (FB.localFolkArrive) resumeRepair('local settlement folk', function () {
+          const location = FB.localFolkCurrentLocationId(FB.state) ||
+            FB.state.player.provinceId;
+          FB.localFolkArrive(FB.state, location);
         });
         if (FB.validateFocus) resumeRepair('current focus', function () {
           FB.validateFocus(FB.state);

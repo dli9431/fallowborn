@@ -38,7 +38,7 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   `1–6` select Daily Focus and the five deed sections, then `Q W E` / `A S D` / `Z X C`
   activate the first nine entries in that section (and `Shift+Q W E` / `A S D` / `Z X C` for
   items 10–18); section keys leave their section open unless repeat-key toggling is enabled in
-  Settings · Network uses `1–5` and the same letter grid for management actions only ·
+  Settings · Network uses `1–6` and the same letter grid for management actions only ·
   in events and dialogs, `1–9` choose an
   item and `Shift+1–9` reaches items 10–18 (the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
@@ -240,9 +240,11 @@ Time passes **day by day** (90-day seasons, 360-day years).
    also be Lettered and meet Learning requirements, so literacy supports the wider career
    ladder rather than acting only as a small skill bonus.
    The **Network** tab gathers household, personal, guild, trade, vassal, and foreign ties.
-   Its Household, Connections, Trade & Guild, Political Blocs, and Realm sections show total
+   Its Household, Connections, Trade & Guild, Political Blocs, Realm, and Local folk sections show total
    and needs-attention counts and collapse independently. Large sections add a **Show all**
    route after the first five routine rows; warnings and active commitments stay visible first.
+   Local folk are persistent resident households at your current county or arrived destination;
+   their character sheets offer meetings through common life, work, worship, or hospitality.
    Its household block also shows active standard icons/levels and their seasonal upkeep.
    Open **Household Plan…** there to scan every living managed family member and retainer
    in one place: education, instruction and fees, work and standing, enterprise or office

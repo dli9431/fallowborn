@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/settlement.js',
+  'js/technology.js',
   'js/world.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -21,6 +22,89 @@ test.use({
   viewport:{ width:390, height:844 },
   hasTouch:true
 });
+
+test('forming an independent count seeds building technology for empty settlements',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId;
+      s.player.tier = 4;
+      s.player.liege = null;
+      s.player.provs = [pid];
+      s.player.gold = 1000;
+      s.buildings[pid] = [];
+      delete s.realms.player;
+      delete s.realmTech.player;
+      s.techSeeded = 1;
+
+      FB.foundPlayerRealm(s);
+      const settlements = FB.settlementsOf(s, pid);
+      const options = settlements.map(function (settlement, index) {
+        return FB.buildable(s, pid, index).map(function (entry) {
+          return entry.id;
+        });
+      });
+      FB.ui.showSettlement(pid, settlements.length - 1);
+      return {
+        effectiveRealm:FB.techRealmId(s),
+        historicalSeeded:s.realmTech.player.historicalSeeded,
+        templeKnown:FB.techRequirementMet(s, 'lime_mortar'),
+        options:options
+      };
+    });
+
+    expect(result.effectiveRealm).toBe('player');
+    expect(result.historicalSeeded).toBe(1);
+    expect(result.templeKnown).toBe(true);
+    expect(result.options.length).toBeGreaterThan(1);
+    for (const options of result.options) expect(options).toContain('temple');
+    await expect(page.locator('#gm-raise')).toBeVisible();
+  });
+
+test('legacy numeric settlement indices stay visible and canonicalize on write',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId;
+      s.player.tier = 4;
+      s.player.liege = null;
+      s.player.provs = [pid];
+      s.player.gold = 1000;
+      delete s.realms.player;
+      delete s.realmTech.player;
+      FB.foundPlayerRealm(s);
+      s.buildings[pid] = [{ s:'1', id:'mill' }];
+      if (FB.invalidateBuildingIndex) FB.invalidateBuildingIndex(s, pid);
+
+      const projected = FB.builtIn(s, pid);
+      const duplicateBlocked = !FB.canBuildAt(s, pid, 1, 'mill');
+      const raised = FB.build(s, pid, 0, 'temple');
+      FB.ui.showSettlement(pid, 1);
+      return {
+        projectedSettlement:projected[0].s,
+        duplicateBlocked:duplicateBlocked,
+        raised:raised,
+        storedSettlement:s.buildings[pid][0].s,
+        storedType:typeof s.buildings[pid][0].s
+      };
+    });
+
+    expect(result).toEqual({
+      projectedSettlement:1,
+      duplicateBlocked:true,
+      raised:true,
+      storedSettlement:1,
+      storedType:'number'
+    });
+    await expect(page.locator('#gm-body')).toContainText('Watermill');
+    await expect(page.locator('#gm-body')).not.toContainText('No buildings yet');
+  });
 
 test('raises buildings in two held counties from the narrow county ledger',
   async function ({ page }, testInfo) {

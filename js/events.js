@@ -284,13 +284,19 @@ window.FB = window.FB || {};
   }
   FB.friendContactEligible = friendEligible;
 
-  FB.noteFriendContact = function (state, c) {
+  FB.noteFriendContact = function (state, c, opts) {
     if (!friendEligible(state, c)) return false;
+    opts = opts || {};
     const contacts = FB.friendContacts(state);
     const old = contacts[c.id];
     const record = old && typeof old === 'object'
       ? old : { startedTurn:state.turn };
     record.lastTurn = state.turn;
+    if (opts.cultivated === true) record.cultivated = true;
+    else if (!Object.prototype.hasOwnProperty.call(record, 'cultivated')) {
+      record.cultivated = opts.cultivated === false ? false : true;
+    }
+    if (opts.source && (!record.source || !old)) record.source = opts.source;
     contacts[c.id] = record;
     return true;
   };
@@ -432,14 +438,14 @@ window.FB = window.FB || {};
     if (p.courtingId && p.courtingId !== c.id && !opts.courtship) return false;
     if (attention[c.id]) {
       attention[c.id].lastTurn = state.turn;
-      FB.noteFriendContact(state, c);
+      FB.noteFriendContact(state, c, { cultivated:true });
       return true;
     }
     /* The shipped capacity is one: choosing a new person redirects the
        assignment immediately and costs no day. */
     for (const id in attention) delete attention[id];
     attention[c.id] = { startedTurn:state.turn, lastTurn:state.turn };
-    FB.noteFriendContact(state, c);
+    FB.noteFriendContact(state, c, { cultivated:true });
     return true;
   };
 
@@ -1276,6 +1282,18 @@ window.FB = window.FB || {};
       });
       for (let k = 0; k < kin.length; k++) {
         pushParticipantCandidate(out, seen, state, kin[k], source, homeId);
+      }
+    }
+    if ((source === 'local_neighbor' || source === 'local_witness') &&
+        FB.localFolkAt) {
+      const local = FB.localFolkAt(state, homeId).filter(function (c) {
+        return FB.ageOf(c, state.date.year) >= 16;
+      }).sort(function (a, b) {
+        return String(a.id).localeCompare(String(b.id));
+      });
+      for (let localIndex = 0; localIndex < local.length; localIndex++) {
+        pushParticipantCandidate(out, seen, state, local[localIndex],
+          source, homeId);
       }
     }
     pushParticipantCandidate(out, seen, state,
@@ -4784,6 +4802,35 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* Exceptional elevation can take a serf straight into the gentry or an
+     office without passing through a priced freedom route. The household's
+     living spouses and descendants still leave bondage with its head, but
+     only the elevated protagonist receives the higher personal station. */
+  function releaseSerfFamilyOnPromotion(state, protagonist) {
+    if (!state || !state.chars || !protagonist) return;
+    const seen = {}, queue = [protagonist];
+    seen[protagonist.id] = 1;
+    function release(c) {
+      if (!c || c.dead) return;
+      if (FB.stationOf(c) < 1) c.station = 1;
+      delete c.unfree;
+    }
+    release(protagonist);
+    const spouses = FB.spousesSnapshot
+      ? FB.spousesSnapshot(state, protagonist) : [];
+    for (let i = 0; i < spouses.length; i++) release(spouses[i]);
+    for (let i = 0; i < queue.length; i++) {
+      const children = FB.childrenOf ? FB.childrenOf(state, queue[i]) : [];
+      for (let j = 0; j < children.length; j++) {
+        const child = children[j];
+        if (!child || seen[child.id]) continue;
+        seen[child.id] = 1;
+        queue.push(child);
+        release(child);
+      }
+    }
+  }
+
   /* All runtime title changes pass here so role-gated work and travel cannot
      linger for a day after promotion or demotion. Callers still own realm
      transfers, announcements, and title-specific rewards. */
@@ -4823,6 +4870,9 @@ window.FB = window.FB || {};
           if (!seen[children[j].id]) queue.push(children[j]);
         }
       }
+    }
+    if (oldTier === 0 && tier > 0) {
+      releaseSerfFamilyOnPromotion(state, current);
     }
     if (tier === oldTier) return false;
     const oldRole = FB.societalRole(oldTier);
@@ -8352,7 +8402,7 @@ window.FB = window.FB || {};
     if (/^(?:plot_|fabricate_claim)/.test(id)) return 'plot';
     if (/^(?:council_|parliament_|collective_demand|realm_policy_)/.test(id)) return 'politics';
     if (/^(?:finance_|guild_|distraint_|bondage_|prison_|raid_)/.test(id)) return 'property';
-    if (/^(?:agency_|sibling_|begin_courtship|formalize_attention|dower_|claim_)/.test(id)) {
+    if (/^(?:agency_|sibling_|local_folk_|begin_courtship|formalize_attention|dower_|claim_)/.test(id)) {
       return 'relationship';
     }
     if (/^(?:academy_|travel_|frontier_)/.test(id)) return 'development';
@@ -8377,7 +8427,7 @@ window.FB = window.FB || {};
     'annul_granted appeal_lose appeal_win artifact_grant artifact_offering artifact_rumor_pursue artifact_seize attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +
     'collective_demand_accept collective_demand_compromise collective_demand_negotiation_failed collective_demand_refuse council_charter_seal council_defy_fail council_defy_hold council_domain_custom council_domain_prepare council_domain_refuse council_feud_fail council_feud_peace council_feud_side council_flatter_cold council_flatter_kind council_gift_take council_gift_wave council_muster_concede council_muster_impose council_muster_supply council_pet_deny council_pet_grant council_scheme_fest council_scheme_mercy council_scheme_punish council_scheme_rooted council_seat_demand_no council_seat_demand_yes council_toll_refusal council_war_chest ' +
     'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success feudal_renewal_accept feudal_renewal_decline feudal_renewal_valid finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend freedom_accept_offer freedom_lords_notice freedom_offer_accept_ready frontier_go_home frontier_milestone ' +
-    'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected ' +
+    'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected local_folk_activity_resolve local_folk_activity_valid ' +
     'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item open_item_shop papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
     'raid_enslave raid_plunder realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome serf_commuted_pay serf_flight_failure serf_neighbor_clear serf_neighbor_context_valid serf_neighbor_officer_current serf_neighbor_shifted serf_old_custom_ready serf_old_custom_replace_officer serf_old_custom_replacement_valid serf_old_custom_sync serf_transition_accept serf_transition_decline_restore serf_transition_pay serf_transition_primary serf_transition_witness_failure serf_transition_witness_success sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
@@ -10668,6 +10718,7 @@ window.FB = window.FB || {};
     if (FB.retainerRecord && FB.retainerRecord(state, s.id) && FB.removeRetainer) {
       FB.removeRetainer(state, s.id, 'marriage');
     }
+    if (FB.detachLocalFolk) FB.detachLocalFolk(state, s.id);
     const others = FB.spousesOf(state, me); // wives already in the household
     // wedding another sets aside any pledge made for the player in childhood
     if (me.betrothedId) {
@@ -10829,6 +10880,14 @@ window.FB = window.FB || {};
      The wed_* pair only fires for spouses that carry an explicit station —
      spouses from older saves stay silent rather than guessing. */
   FB.fns = FB.fns || {};
+  FB.fns.local_folk_activity_valid = function (state, ctx) {
+    return !!(FB.localFolkActivityContextValid &&
+      FB.localFolkActivityContextValid(state, ctx));
+  };
+  FB.fns.local_folk_activity_resolve = function (state, ctx) {
+    return !!(FB.resolveLocalFolkActivity &&
+      FB.resolveLocalFolkActivity(state, ctx));
+  };
   FB.fns.sibling_courtship_approach_valid = function (state, ctx) {
     const target = ctx && ctx.siblingTargetId &&
       state.chars[ctx.siblingTargetId];
@@ -11386,6 +11445,7 @@ window.FB = window.FB || {};
     if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);
     if (FB.enterpriseList) FB.enterpriseList(state);
     if (FB.validateFocus) FB.validateFocus(state);
+    if (FB.localFolkArrive) FB.localFolkArrive(state, destination);
     FB.news(state, FB.msg('news.event.raid_enslaved',
       'Carried to {county}, the household is stripped of property and bound to the land.', {
         county:FB.world.byId[destination].name
@@ -11423,6 +11483,7 @@ window.FB = window.FB || {};
         'travel:permanent_move');
       if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
       if (FB.enterpriseList) FB.enterpriseList(state);
+      if (FB.localFolkArrive) FB.localFolkArrive(state, dest);
       FB.news(state, FB.msg('news.event.moved',
         '🧭 You now dwell in {province}.', { province: FB.world.byId[dest].name }));
       if (FB.map) { FB.map.playerProv = dest; FB.map.request(); }

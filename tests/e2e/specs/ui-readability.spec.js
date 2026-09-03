@@ -20,6 +20,16 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('Kin omits notable folk already available from Land and Network',
+  async function ({ page }) {
+    await page.locator('#lefttabs .tab[data-tab="family"]').click();
+
+    await expect(page.locator('#tab-family')).toBeVisible();
+    await expect(page.locator('#tab-family .panelh', {
+      hasText:'Notable folk'
+    })).toHaveCount(0);
+  });
+
 test('phone UI keeps body, action, helper, and modal-help text readable',
   async function ({ page }) {
     await page.setViewportSize({ width:390, height:844 });

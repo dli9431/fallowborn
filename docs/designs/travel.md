@@ -336,3 +336,10 @@ duration, one-way days, cost, minimum stay, daily Standing rate, active days to
 the relationship threshold, and estimated days from departure. Passing
 `{courtship:true}` to `FB.socialVisitStart` begins a geographically valid suit
 as part of the same departure.
+
+Settlement-folk presence follows physical travel state. Home residents are available
+when no journey exists; destination residents become available only after the journey
+enters `phase:'arrived'`. Intermediate road counties expose no roster and cannot host a
+local activity. Arrival creates the destination’s deterministic bounded cast and prunes
+unconnected casts outside home and the new location; return performs the same cleanup at
+home. This does not add a new travel purpose in the first release.

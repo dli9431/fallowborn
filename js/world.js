@@ -4281,6 +4281,7 @@ window.FB = window.FB || {};
       FB.getRole(state, 'steward', true);
       FB.getRole(state, 'priest', true);
     }
+    if (FB.localFolkArrive) FB.localFolkArrive(state, destinationId);
 
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);
@@ -7509,6 +7510,7 @@ window.FB = window.FB || {};
     r.succession.rulerGeneration = generation;
     r.succession.heirCharId = playerHeirs.length ? playerHeirs[0].id : null;
     state.realms.player = r;
+    if (FB.seedRealmTechnology) FB.seedRealmTechnology(state, 'player');
     const sovereign = r.liege ? FB.topRealm(state, r.liege) : 'player';
     for (const pid of (p.provs || [])) {
       state.owner[pid] = sovereign;

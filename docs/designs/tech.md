@@ -50,7 +50,11 @@ Every realm may retain a dormant record in `state.realmTech[realmId]`:
 All lookups resolve through `FB.techRealmId`/`FB.topRealm`, so vassals use their
 sovereign's knowledge and contribute research to that national pool. Changing fealty
 changes the knowledge currently available to a vassal without erasing either sovereign
-record. A restored or newly independent realm resumes its dormant record.
+record. When the player's landed realm is first formed, its dormant record receives one
+regional historical seed and records `historicalSeeded:1`; this happens even while the
+realm is a vassal, so later independence resumes a valid baseline rather than an empty
+technology record. Restore applies the same one-time repair to affected saves. A restored
+or newly independent realm then resumes its dormant record.
 
 Absorption and secession merge completed and exposed sets by union, partial progress and
 reserve by maximum, and compatible active projects up to the surviving realm's slot

@@ -605,7 +605,7 @@ test('typed charters validate scope while legacy contracts and exact ids remain 
     expect(result.petitionDialogText).toContain('One corridor');
   });
 
-test('Land and settlement market entry points keep county-wide access in county places',
+test('Land keeps county-wide market access while settlement sheets omit it',
   async function ({ page }) {
     await page.evaluate(function () {
       const s = FB.state;
@@ -643,14 +643,17 @@ test('Land and settlement market entry points keep county-wide access in county 
     });
     expect(settlements[0]).toBe('London');
     expect(settlements.length).toBeGreaterThan(1);
-    await expect(page.locator('#settlement-market')).toBeVisible();
-    await page.locator('#settlement-market').click();
-    await expect(page.getByRole('heading', { name:/London market$/i })).toBeVisible();
-    await page.getByRole('button', { name:'Close', exact:true }).click();
+    await expect(page.locator('#settlement-market')).toHaveCount(0);
+    await expect(page.locator('#gm-body').getByRole('button', {
+      name:'County market', exact:true
+    })).toHaveCount(0);
 
     await page.evaluate(function () { FB.ui.showSettlement('london', 1); });
     await expect(page.locator('#gm-title')).toContainText(settlements[1]);
     await expect(page.locator('#settlement-market')).toHaveCount(0);
+    await expect(page.locator('#gm-body').getByRole('button', {
+      name:'County market', exact:true
+    })).toHaveCount(0);
   });
 
 test('the Market lens stays contained on compact desktops and tablets',
