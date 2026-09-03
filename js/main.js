@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.167.1';
+FB.VERSION = '1.167.2';
 FB.CHANGELOG = [
+  { v: '1.167.2', date: '2026-09-02', changes: [
+    'Compact Estates controls now stay clear of side tooltips and the sticky Back footer.'
+  ] },
   { v: '1.167.1', date: '2026-09-02', changes: [
     'The Estates now show a responsive hemicycle forecast, clearer bloc positions, and ruler age and territorial economic interests.',
     'Family rosters update during play, frontier settlement stays hidden away from wasteland, and formative education stories appear reliably with a safer third response.'

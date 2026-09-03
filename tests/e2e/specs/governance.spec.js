@@ -2034,7 +2034,8 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
         })
       };
     });
-    expect(compactGovernanceLayout.selectedLeft).toBeGreaterThanOrEqual(0);
+    /* Centered scroll positions may land on a fractional CSS pixel. */
+    expect(compactGovernanceLayout.selectedLeft).toBeGreaterThanOrEqual(-1);
     expect(compactGovernanceLayout.selectedLeft).toBeLessThanOrEqual(4);
     expect(compactGovernanceLayout.rowDisplays.every(function (display) {
       return display === 'grid';

@@ -3784,8 +3784,8 @@ textarea.modjson, textarea.savetext {
 .parliament-detail-members ul,
 .parliament-detail-reasons ul { margin: 4px 0 0; padding-left: 18px; }
 .parliament-house-details { font-size: 12px; line-height: 1.4; }
-.estates-action-card { margin-bottom: 7px; }
-.estates-action-card > .actionbtn { margin: 0; }
+.estates-action-card { margin-bottom: 7px; scroll-margin-block: 76px; }
+.estates-action-card > .actionbtn { margin: 0; scroll-margin-block: 76px; }
 .estates-action-details {
   margin: 6px 0 0; padding: 8px 9px; border: 1px solid #4d4029;
   border-radius: 6px; background: #211a13;

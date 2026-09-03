@@ -459,7 +459,9 @@ test('direct-court scope, affiliation interests, and influence are authoritative
       expect(item.reasonIds).toContain('average_ruler_age');
       expect(item.reasonIds).toContain('economic_power');
     });
-    expect(result.redressPostures.mercantile.posture).toBe('support');
+    /* This court's relatively weak commercial house now offsets part of its
+       favorable archetype prior without changing the derived score. */
+    expect(result.redressPostures.mercantile.posture).toBe('undecided');
     /* Shared-faith ruler regard now contributes the historical relationship
        prior to this mixed magnate bloc's motion score. */
     expect(result.redressPostures['magnate:' + ids.alphaId].score)
@@ -1007,7 +1009,7 @@ test('the focused Estates chamber mirrors exact bloc influence and navigation',
       '.estates-modal .hint, .estates-modal .adesc, ' +
       '.estates-modal .progressnote, .estates-modal .political-motion-row'))
       .toHaveCount(0);
-    await expect(page.locator('.parliament-chamber-details')).toBeHidden();
+    await expect(page.locator('#parliament-chamber-details')).toBeHidden();
     await page.locator('.parliament-chamber-heading').hover();
     await expect(page.locator('#tooltip')).toContainText('vote by bloc');
     await expect(page.locator('#estates-call-vote-details')).toBeHidden();
@@ -1191,8 +1193,10 @@ test('a motion spends once, lobbies once, and tallies one roll per undecided blo
       s = FB.state;
       var savedCrown = FBDATA.politicalBlocs.crown.motions.redress;
       var savedMagnate = FBDATA.politicalBlocs.magnate.motions.redress;
+      var savedMercantile = FBDATA.politicalBlocs.mercantile.motions.redress;
       FBDATA.politicalBlocs.crown.motions.redress = 100;
       FBDATA.politicalBlocs.magnate.motions.redress = 100;
+      FBDATA.politicalBlocs.mercantile.motions.redress = 100;
       FB.parliamentBeginMotion(s, 'redress');
       var lockedBefore = FB.politicalMotionForecast(s, 'redress');
       var lockedRolls = 0;
@@ -1205,6 +1209,7 @@ test('a motion spends once, lobbies once, and tallies one roll per undecided blo
       FB.rng = originalRng;
       FBDATA.politicalBlocs.crown.motions.redress = savedCrown;
       FBDATA.politicalBlocs.magnate.motions.redress = savedMagnate;
+      FBDATA.politicalBlocs.mercantile.motions.redress = savedMercantile;
       first.lockedUncertain = lockedBefore.uncertainInfluence;
       first.lockedRolls = lockedRolls;
       first.lockedSupport = lockedResult.supportInfluence;
@@ -1575,11 +1580,11 @@ test('political bloc and lobbying controls remain usable on a narrow touch layou
       '.parliament-chamber-heading .settcard-info');
     await expect(chamberInfo).toBeVisible();
     await chamberInfo.click();
-    await expect(page.locator('.parliament-chamber-details')).toBeVisible();
-    await expect(page.locator('.parliament-chamber-details'))
+    await expect(page.locator('#parliament-chamber-details')).toBeVisible();
+    await expect(page.locator('#parliament-chamber-details'))
       .toContainText('vote by bloc');
     await chamberInfo.click();
-    await expect(page.locator('.parliament-chamber-details')).toBeHidden();
+    await expect(page.locator('#parliament-chamber-details')).toBeHidden();
     var estatesBloc = page.locator('.parliament-legend-bloc').first();
     var estatesBlocInfo = estatesBloc.locator(
       '.parliament-legend-head .settcard-info');

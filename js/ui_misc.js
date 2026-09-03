@@ -4246,7 +4246,10 @@ window.FB = window.FB || {};
         return true;
       }
       function showEventChoiceTip(control) {
-        if (eventChoiceUsesDisclosure()) return false;
+        if (eventChoiceUsesDisclosure()) {
+          hideTipImmediately();
+          return false;
+        }
         const row = control && control.closest
           ? control.closest('.event-choice') : null;
         const details = row && row.querySelector('.event-choice-details');
@@ -4258,9 +4261,8 @@ window.FB = window.FB || {};
       function showActionTip(control) {
         const btn = control && control.closest
           ? control.closest('[data-action-tooltip], .actionbtn') : null;
-        if (btn && eventChoiceUsesDisclosure() &&
-            (btn.classList.contains('household-standard-step-control') ||
-             btn.classList.contains('equip-slot'))) {
+        if (btn && eventChoiceUsesDisclosure()) {
+          hideTipImmediately();
           return false;
         }
         const detailsId = btn && btn.getAttribute('aria-describedby');
@@ -4273,7 +4275,10 @@ window.FB = window.FB || {};
         });
       }
       function showSettCardTip(infoBtn) {
-        if (eventChoiceUsesDisclosure()) return false;
+        if (eventChoiceUsesDisclosure()) {
+          hideTipImmediately();
+          return false;
+        }
         const btn = infoBtn.classList && infoBtn.classList.contains('settcard-info')
           ? infoBtn : (infoBtn.querySelector ? infoBtn.querySelector('.settcard-info') : null);
         const detId = btn ? btn.getAttribute('aria-controls') : infoBtn.getAttribute('aria-controls');

@@ -308,7 +308,9 @@ layouts the hover tooltip never opens and the `?` button toggles the same detail
 inline instead. `eventChoiceUsesDisclosure` in `ui_misc.js` is the JS half of the
 switch (it also gates the settcard tooltip), and the `.settcard-info` media query in
 `css/style.css` is the CSS half; event-choice stakes follow the same rule with their
-`.event-details-button`. On phone and short-screen modal layouts, each disclosure
+`.event-details-button`. Interacting with a disclosure-layout card immediately clears any
+open side tooltip so it cannot cover or intercept compact controls. On phone and short-screen
+modal layouts, each disclosure
 control matches the height of the neighboring action family: ordinary card actions,
 participant rows, event choices, and fixed equipment slots remain aligned rather than
 mixing 40–52 px controls. Better Household standard steppers use that same switch:
