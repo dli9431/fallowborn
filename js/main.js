@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.166.10';
+FB.VERSION = '1.167.0';
 FB.CHANGELOG = [
+  { v: '1.167.0', date: '2026-09-02', changes: [
+    'Children’s completed education terms now inspire formative household stories shaped by their studies.'
+  ] },
   { v: '1.166.10', date: '2026-09-02', changes: [
     'The Self panel’s work summary now opens Work & Enterprises directly.'
   ] },
@@ -3967,7 +3970,7 @@ FB.CHANGELOG = [
     const me = s.chars[p.charId];
     const year = s.date.year;
 
-    // paid-term risks resolve now; surviving story candidates wait through mortality
+    // completed-term risks resolve now; surviving story candidates wait through mortality
     const schoolingAnnual = FB.schoolingYear ? FB.schoolingYear(s) : null;
     if (schoolingAnnual === false) return;
 

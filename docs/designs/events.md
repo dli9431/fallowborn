@@ -632,12 +632,20 @@ keeps the generated name.
 
 Annual schooling stories are also ordinary queued event data. A schooling definition's
 `annualEvents` ids are considered at New Year after its `schoolTerms` mortality rolls.
-Across the household, surviving terms produce at most one story; `ctx.studentId`,
-`ctx.studentFocus`, and `ctx.schoolId` freeze the selected student and arrangement. The
+Across the household, surviving terms produce at most one story. School-specific events have
+priority; otherwise events marked `educationStory:true` enter the general formative pool, and
+an optional `educationFocuses:["dip", ...]` restricts them to terms completed in those focuses.
+`ctx.studentId`, `ctx.studentFocus`, and `ctx.schoolId` freeze the selected student and
+arrangement. The
 `{student}` token resolves that exact character and automatically adds their character card
-to the modal. Noble Academy effects in `js/events.js` train that student rather than the
-protagonist, can withdraw their current academy arrangement, and can introduce a generated
-or existing noble through the current protagonist's normal Network contact API.
+to the modal. `effects.student:{skills:{...},addTrait:"trait_id"}` changes that exact student:
+positive skill changes use the ordinary soft-cap roll, negative changes clamp the raw skill at
+zero, and trait grants use `FB.addTrait`, including replacement of an existing opposite.
+Core formative choices use a fixed 65% success chance. Previews and receipts name the student
+and disclose the skill risk and prospective trait without mutating state or consuming RNG.
+Noble Academy effects in `js/events.js` train that student rather than the protagonist, can
+withdraw their current academy arrangement, and can introduce a generated or existing noble
+through the current protagonist's normal Network contact API.
 
 **Rival events require a real rival.** `FB.prepareEvent` and `FB.applyEffects` never create
 the `rival` role from a `{rival}` token or `opinion:{role:'rival'}`. The random picker must

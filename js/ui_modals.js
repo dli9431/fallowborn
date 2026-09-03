@@ -318,6 +318,9 @@ window.FB = window.FB || {};
     if (fx.standingRealm) v += fx.standingRealm * 0.1;
     if (fx.opinion && fx.opinion.amt) v += fx.opinion.amt * 0.1;
     if (fx.skills) for (const k in fx.skills) v += fx.skills[k] * 1.5;
+    if (fx.student && fx.student.skills) {
+      for (const k in fx.student.skills) v += fx.student.skills[k] * 1.5;
+    }
     if (fx.tierSet !== undefined || fx.tierUp || fx.serfFreedom ||
         fx.custom === 'freedom_accept_offer') v += 25;
     if (fx.marry) v += 10;

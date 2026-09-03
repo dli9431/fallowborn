@@ -1079,6 +1079,82 @@ window.FB = window.FB || {};
     return true;
   };
 
+  function educationStudentEffectError(value, traits) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return 'student must be an object.';
+    }
+    const allowed = { skills:1, addTrait:1 };
+    let count = 0;
+    for (const key in value) {
+      if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+      if (!allowed[key]) return 'student contains unknown field ' + key + '.';
+      count++;
+    }
+    if (!count) return 'student must contain skills or addTrait.';
+    if (value.skills !== undefined) {
+      if (!value.skills || typeof value.skills !== 'object' ||
+          Array.isArray(value.skills)) return 'student.skills must be an object.';
+      let skillCount = 0;
+      for (const skill in value.skills) {
+        if (!Object.prototype.hasOwnProperty.call(value.skills, skill)) continue;
+        if (FB.SKILLS.indexOf(skill) < 0) {
+          return 'student.skills contains unknown skill ' + skill + '.';
+        }
+        const amount = value.skills[skill];
+        if (typeof amount !== 'number' || !isFinite(amount) || !amount ||
+            Math.floor(amount) !== amount || amount < -20 || amount > 20) {
+          return 'student.skills.' + skill +
+            ' must be a non-zero integer from -20 to 20.';
+        }
+        skillCount++;
+      }
+      if (!skillCount) return 'student.skills must not be empty.';
+    }
+    if (value.addTrait !== undefined &&
+        (typeof value.addTrait !== 'string' || !traits ||
+          !Object.prototype.hasOwnProperty.call(traits, value.addTrait))) {
+      return 'student.addTrait references an unknown trait.';
+    }
+    return '';
+  }
+
+  FB.validateEducationEvent = function (ev, traits) {
+    if (!ev) return true;
+    if (ev.educationStory !== undefined && ev.educationStory !== true) {
+      throw new Error('educationStory must be true when present.');
+    }
+    if (ev.educationFocuses !== undefined) {
+      if (ev.educationStory !== true) {
+        throw new Error('educationFocuses requires educationStory:true.');
+      }
+      if (!Array.isArray(ev.educationFocuses) || !ev.educationFocuses.length) {
+        throw new Error('educationFocuses must be a non-empty array.');
+      }
+      const seen = {};
+      for (let i = 0; i < ev.educationFocuses.length; i++) {
+        const focus = ev.educationFocuses[i];
+        if (FB.SKILLS.indexOf(focus) < 0 || seen[focus]) {
+          throw new Error('educationFocuses must contain unique recognized skills.');
+        }
+        seen[focus] = 1;
+      }
+    }
+    for (let i = 0; i < (ev.options || []).length; i++) {
+      const option = ev.options[i] || {};
+      const branches = [option.effects,
+        option.success && option.success.effects,
+        option.failure && option.failure.effects];
+      for (let j = 0; j < branches.length; j++) {
+        const effects = branches[j];
+        if (!effects || effects.student === undefined) continue;
+        const error = educationStudentEffectError(
+          effects.student, traits || FBDATA.traits);
+        if (error) throw new Error('options[' + i + '] ' + error);
+      }
+    }
+    return true;
+  };
+
   function participantHome(state, ctx) {
     const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
     return tenure ? tenure.provinceId :
@@ -4659,6 +4735,11 @@ window.FB = window.FB || {};
     if (!ev) return false;
     if (!FB.eventParticipantsStillValid(state, ev, ctx || {})) return false;
     if (!tenureAwareContextStillValid(state, ev, ctx || {})) return false;
+    if (ev.educationStory) {
+      const educationValidator = FB.fns &&
+        FB.fns.education_story_context_valid;
+      if (!educationValidator || !educationValidator(state, ctx || {})) return false;
+    }
     if (ev.contextValidator) {
       const validator = FB.fns && FB.fns[ev.contextValidator];
       if (!validator || !validator(state, ctx || {})) return false;
@@ -4831,6 +4912,7 @@ window.FB = window.FB || {};
       for (const ev of FBDATA.events) {
         validateEventSerfFreedomEffects(ev);
         FB.validateEventParticipants(ev);
+        FB.validateEducationEvent(ev);
         if (!ev.trigger || ev.trigger.never) continue;
         randomEventPools.ordinary.push(ev);
         if (ev.wartime) randomEventPools.wartime.push(ev);
@@ -4965,6 +5047,7 @@ window.FB = window.FB || {};
       for (const ev of FBDATA.events) {
         validateEventSerfFreedomEffects(ev);
         FB.validateEventParticipants(ev);
+        FB.validateEducationEvent(ev);
         eventIndex[ev.id] = ev;
       }
     }
@@ -8246,7 +8329,7 @@ window.FB = window.FB || {};
     'educateChild','moveRandom','travelReturn','travelSettle','foundFaith',
     'faithRelation','convertToProvince','declareIndependence','pickHeir','queue',
     'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate','tenureEnd',
-    'serfFreedom'
+    'serfFreedom','student'
   ];
   FB.eventPreviewEffectKeys = {};
   for (let effectKeyIndex = 0; effectKeyIndex < EVENT_EFFECT_KEYS.length;
@@ -8668,6 +8751,26 @@ window.FB = window.FB || {};
     if (fx.skills) for (const skill in fx.skills) {
       previewNumeric(out, 'skill', fx.skills[skill], { id:skill });
     }
+    if (fx.student && ctx.studentId) {
+      const student = state.chars[ctx.studentId];
+      if (student && fx.student.skills) {
+        for (const studentSkill in fx.student.skills) {
+          previewNumeric(out, 'skill', fx.student.skills[studentSkill], {
+            id:studentSkill, targetKind:'student', targetId:student.id
+          });
+        }
+      }
+      if (student && fx.student.addTrait) {
+        const traitDef = FBDATA.traits[fx.student.addTrait];
+        const opposite = traitDef && traitDef.opposite &&
+          (student.traits || []).indexOf(traitDef.opposite) >= 0
+          ? traitDef.opposite : null;
+        out.push(impact('trait', {
+          action:'add', id:fx.student.addTrait, reward:true,
+          targetKind:'student', targetId:student.id, replaces:opposite
+        }));
+      }
+    }
     if (fx.pricePressure) out.push(impact('price', {
       amount:fx.pricePressure, years:fx.pricePressureYears || 1,
       reward:fx.pricePressure < 0
@@ -8971,6 +9074,11 @@ window.FB = window.FB || {};
       rivalHeat:p.rivalry ? Number(p.rivalry.heat) || 0 : null,
       skills:copyNumberMap(me.skills),
       traits:(me.traits || []).slice(),
+      student:ctx.studentId && state.chars[ctx.studentId] ? {
+        id:ctx.studentId,
+        skills:copyNumberMap(state.chars[ctx.studentId].skills),
+        traits:(state.chars[ctx.studentId].traits || []).slice()
+      } : null,
       ailments:(me.ails || []).slice(),
       traitProgress:copyNumberMap(p.traitProgress),
       holdings:(p.holdings || []).slice(),
@@ -9021,6 +9129,9 @@ window.FB = window.FB || {};
 
   function diffImpactSnapshots(state, before, after) {
     const out = [];
+    const protagonistStudentId = before.student && after.student &&
+      before.student.id === after.student.id &&
+      before.student.id === state.player.charId ? before.student.id : null;
     diffNumeric(out, 'gold', before.gold, after.gold);
     diffNumeric(out, 'prestige', before.prestige, after.prestige);
     diffNumeric(out, 'piety', before.piety, after.piety);
@@ -9032,17 +9143,70 @@ window.FB = window.FB || {};
     const skillIds = {};
     for (const beforeSkill in before.skills) skillIds[beforeSkill] = true;
     for (const afterSkill in after.skills) skillIds[afterSkill] = true;
-    for (const skillId in skillIds) diffNumeric(out, 'skill',
-      Number(before.skills[skillId]) || 0, Number(after.skills[skillId]) || 0,
-      { id:skillId });
+    for (const skillId in skillIds) {
+      const skillFields = { id:skillId };
+      if (protagonistStudentId) {
+        skillFields.targetKind = 'student';
+        skillFields.targetId = protagonistStudentId;
+      }
+      diffNumeric(out, 'skill', Number(before.skills[skillId]) || 0,
+        Number(after.skills[skillId]) || 0, skillFields);
+    }
     const addedTraits = listDifference(after.traits, before.traits);
     const removedTraits = listDifference(before.traits, after.traits);
     for (let traitIndex = 0; traitIndex < addedTraits.length; traitIndex++) {
-      out.push(impact('trait', { action:'add', id:addedTraits[traitIndex] }));
+      const addedFields = { action:'add', id:addedTraits[traitIndex] };
+      if (protagonistStudentId) {
+        addedFields.targetKind = 'student';
+        addedFields.targetId = protagonistStudentId;
+      }
+      out.push(impact('trait', addedFields));
     }
     for (let removedTraitIndex = 0; removedTraitIndex < removedTraits.length;
          removedTraitIndex++) {
-      out.push(impact('trait', { action:'remove', id:removedTraits[removedTraitIndex] }));
+      const removedFields = {
+        action:'remove', id:removedTraits[removedTraitIndex]
+      };
+      if (protagonistStudentId) {
+        removedFields.targetKind = 'student';
+        removedFields.targetId = protagonistStudentId;
+      }
+      out.push(impact('trait', removedFields));
+    }
+    if (before.student && after.student &&
+        before.student.id === after.student.id &&
+        !protagonistStudentId) {
+      const studentSkillIds = {};
+      for (const beforeStudentSkill in before.student.skills) {
+        studentSkillIds[beforeStudentSkill] = true;
+      }
+      for (const afterStudentSkill in after.student.skills) {
+        studentSkillIds[afterStudentSkill] = true;
+      }
+      for (const studentSkillId in studentSkillIds) {
+        diffNumeric(out, 'skill',
+          Number(before.student.skills[studentSkillId]) || 0,
+          Number(after.student.skills[studentSkillId]) || 0, {
+            id:studentSkillId, targetKind:'student',
+            targetId:before.student.id
+          });
+      }
+      const studentAddedTraits = listDifference(
+        after.student.traits, before.student.traits);
+      const studentRemovedTraits = listDifference(
+        before.student.traits, after.student.traits);
+      for (let i = 0; i < studentAddedTraits.length; i++) {
+        out.push(impact('trait', {
+          action:'add', id:studentAddedTraits[i],
+          targetKind:'student', targetId:before.student.id
+        }));
+      }
+      for (let i = 0; i < studentRemovedTraits.length; i++) {
+        out.push(impact('trait', {
+          action:'remove', id:studentRemovedTraits[i],
+          targetKind:'student', targetId:before.student.id
+        }));
+      }
     }
     const progressTraits = {};
     for (const beforeProgressTrait in before.traitProgress) {
@@ -9415,6 +9579,15 @@ window.FB = window.FB || {};
     }
     if (record.type === 'skill') {
       const skill = FB.skillName(record.id);
+      if (record.targetKind === 'student') {
+        const student = impactTargetName(state, record);
+        if (concealedGain) return FB.T('{student}: {skill} may improve', {
+          student:student, skill:skill
+        });
+        return FB.T('{student}: {skill} {change}', {
+          student:student, skill:skill, change:numberText(amount)
+        });
+      }
       if (record.targetKind === 'child' && !resolved) {
         return FB.T('A child may improve {skill}', { skill:skill });
       }
@@ -9423,6 +9596,27 @@ window.FB = window.FB || {};
     }
     if (record.type === 'trait') {
       const trait = dataName(state, 'trait', record.id, FBDATA.traits);
+      if (record.targetKind === 'student') {
+        const student = impactTargetName(state, record);
+        if (!resolved && record.action === 'add' && record.replaces) {
+          return FB.T('{student} may gain {trait}, replacing {opposite}', {
+            student:student, trait:trait,
+            opposite:dataName(state, 'trait', record.replaces, FBDATA.traits)
+          });
+        }
+        if (!resolved && record.action === 'add') {
+          return FB.T('{student} may gain trait: {trait}', {
+            student:student, trait:trait
+          });
+        }
+        return record.action === 'remove'
+          ? FB.T('{student} loses trait: {trait}', {
+            student:student, trait:trait
+          })
+          : FB.T('{student} gains trait: {trait}', {
+            student:student, trait:trait
+          });
+      }
       if (!resolved && record.action === 'add' && record.reward) return FB.T('May gain a trait');
       return record.action === 'remove'
         ? FB.T('Lose trait: {trait}', { trait:trait })
@@ -9836,6 +10030,21 @@ window.FB = window.FB || {};
       for (const k in fx.skills) {
         if (fx.skills[k] > 0) FB.gainSkill(me, k, fx.skills[k]);
         else me.skills[k] = Math.max(0, (me.skills[k] || 0) + fx.skills[k]);
+      }
+    }
+    if (fx.student && ctx.studentId) {
+      const student = state.chars[ctx.studentId];
+      if (student && !student.dead) {
+        student.skills = student.skills || {};
+        if (fx.student.skills) for (const k in fx.student.skills) {
+          if (fx.student.skills[k] > 0) {
+            FB.gainSkill(student, k, fx.student.skills[k]);
+          } else {
+            student.skills[k] = Math.max(0,
+              (student.skills[k] || 0) + fx.student.skills[k]);
+          }
+        }
+        if (fx.student.addTrait) FB.addTrait(student, fx.student.addTrait);
       }
     }
     if (fx.addTrait) FB.addTrait(me, fx.addTrait);
@@ -10782,6 +10991,12 @@ window.FB = window.FB || {};
   FB.fns.wed_below_station = function (state) {
     const sp = FB.spouseOf(state, state.chars[state.player.charId]);
     return !!sp && sp.station != null && sp.station < FB.playerStation(state);
+  };
+
+  /* ---------- student education decisions (events_common.js) ---------- */
+  FB.fns.education_story_context_valid = function (state, ctx) {
+    const c = ctx && ctx.studentId ? state.chars[ctx.studentId] : null;
+    return !!(c && !c.dead && ctx.protagonistId === state.player.charId);
   };
 
   /* ---------- Noble Academy decisions (events_common.js) ---------- */
