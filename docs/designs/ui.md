@@ -621,15 +621,16 @@ writes the current playable life synchronously before reloading. First worker in
 `file://`, localhost, mirrors, and itch never reveal the banner.
 
 New Game opens with six one-click **Quick Start** lives above the ordinary setup path. Every
-quick life is a Serf with an authored name, sex, county, county-seat birthplace, standard young
-family, and exact county community. The first three cover Christian, pagan, and Muslim lives in
-867; the next three do the same in 1066. Each native-button card shows a procedural portrait
-followed by name, one `Serf | location` line, culture and faith, and date. **OR** and a ruled divider
+quick life is a Serf with an authored name, sex, county, exact settlement-site birthplace,
+standard young family, and exact county community. The first three cover Christian, pagan, and
+Muslim lives in 867; the next three do the same in 1066. Each native-button card shows a
+procedural portrait followed by name, one `Serf | county` line, an explicit `Home: settlement`
+line, culture and faith, and date. **OR** and a ruled divider
 keep these shortcuts visually and semantically separate from **Choose a Starting Date**.
 Selecting a card activates its bookmark, feeds those choices through the ordinary campaign
 constructor, and reaches the normal story introduction without exposing the intervening setup
-screens. A missing bookmark, county, or exact community under an active mod removes only the
-invalid shortcut; the ordinary path remains available. This is a setup presentation shortcut
+screens. A missing bookmark, county, exact settlement site, or exact community under an active
+mod removes only the invalid shortcut; the ordinary path remains available. This is a setup presentation shortcut
 over existing Serf eligibility, not a new gameplay capability, so it needs no technology-impact
 ledger entry.
 

@@ -55,22 +55,30 @@ window.FBDATA = window.FBDATA || {};
       intro:'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' }
   ];
 
-  /* Curated one-click Serf lives. Names are generated-person proper names;
-     every other label resolves from the selected bookmark's live data. The
-     first three belong to 867 and the next three to 1066 so their visual order
-     also makes the date split legible without another control. */
+  /* Curated one-click Serf lives. Each one names an exact physical settlement
+     site, which the start screen resolves to that bookmark's stable slot and
+     proper name. Names are generated-person proper names; every other label
+     resolves from the selected bookmark's live data. The first three belong
+     to 867 and the next three to 1066 so their visual order also makes the
+     date split legible without another control. */
   FBDATA.quickStarts = [
     { id:'aed_867', bookmarkId:'867', provinceId:'galway',
+      settlementSite:'rathcroghan',
       culture:'gaelic', religion:'catholic', sex:'m', characterName:'Aed' },
     { id:'freydis_867', bookmarkId:'867', provinceId:'uppsala',
+      settlementSite:'uppsala',
       culture:'norse', religion:'norse_pagan', sex:'f', characterName:'Freydis' },
     { id:'kahina_867', bookmarkId:'867', provinceId:'tunis',
+      settlementSite:'tunis',
       culture:'berber', religion:'sunni', sex:'f', characterName:'Kahina' },
     { id:'gormlaith_1066', bookmarkId:'1066', provinceId:'ulaid',
+      settlementSite:'downpatrick',
       culture:'gaelic', religion:'catholic', sex:'f', characterName:'Gormlaith' },
     { id:'biera_1066', bookmarkId:'1066', provinceId:'norrland',
+      settlementSite:'norrland_head',
       culture:'sami', religion:'norse_pagan', sex:'m', characterName:'Biera' },
     { id:'ahmad_1066', bookmarkId:'1066', provinceId:'fustat',
+      settlementSite:'fustat',
       culture:'arabic', religion:'shia', sex:'m', characterName:'Ahmad' }
   ];
 

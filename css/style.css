@@ -330,6 +330,7 @@ html.music-choice-resolved #music-choice { display: none !important; }
   color: var(--main-text-color); font-size: 12px; line-height: 1.3;
   overflow-wrap: break-word;
 }
+.quickstart-home { color: #d0ad54; margin-top: 3px; }
 .quickstart-identity { color: var(--helper-text-color); margin-top: 3px; }
 .quickstart-date { color: #c9a24a; margin-top: 4px; }
 .quickstart-divider {

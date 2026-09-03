@@ -54,6 +54,13 @@ test('New Game offers six quick starts above the dated custom-start path',
         'Serf | Galway', 'Serf | Uppsala', 'Serf | Tunis',
         'Serf | Ulaid', 'Serf | Norrland', 'Serf | Fustat'
       ]);
+    expect(await quickStarts.locator('.quickstart-home').allTextContents())
+      .toEqual([
+        'Home: Rathcroghan', 'Home: Uppsala', 'Home: Tunis',
+        'Home: Downpatrick', 'Home: Norrland', 'Home: Fustat'
+      ]);
+    await expect(quickStarts.nth(0)).toHaveAccessibleName(
+      /Serf in Rathcroghan, Galway/);
     for (let i = 0; i < 3; i++) {
       await expect(quickStarts.nth(i).locator('.quickstart-date')).toContainText('867');
       await expect(quickStarts.nth(i + 3).locator('.quickstart-date')).toContainText('1066');
@@ -102,6 +109,8 @@ test('a quick start creates its authored Serf life in one selection',
         tier:s.player.tier,
         province:s.player.provinceId,
         homeSettlement:s.player.homeSettlement,
+        homeName:FB.settlementsOf(s, s.player.provinceId)[
+          s.player.homeSettlement].name,
         name:me.name,
         culture:me.culture,
         religion:me.religion,
@@ -114,6 +123,7 @@ test('a quick start creates its authored Serf life in one selection',
     });
     expect(result).toMatchObject({
       bookmark:'867', tier:0, province:'galway', homeSettlement:0,
+      homeName:'Rathcroghan',
       name:'Aed', culture:'gaelic', religion:'catholic',
       seed:expect.stringMatching(
         /^[A-Z0-9]+-867-serf-galway-m-Aed-standard-0-gaelic\.catholic$/)

@@ -15,8 +15,9 @@ identical start, every time, and a second run in the same browser session reprod
 first.
 
 The starting-date screen's six **Quick Start** cards use the fresh world seed already rolled
-for that New Game attempt, then supply an authored Serf scenario, bookmark, county-seat
-birthplace, culture/faith community, sex, name, and `standard` family preset. They still run
+for that New Game attempt, then supply an authored Serf scenario, bookmark, exact settlement-site
+birthplace, culture/faith community, sex, name, and `standard` family preset. The cards name both
+the home settlement and its county. They still run
 through `G.start()` and store its ordinary full start code. A quick life can therefore be shared
 and replayed like any manually assembled life; Quick Start fixes the choices, not the world seed.
 

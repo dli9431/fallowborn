@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.2';
+FB.VERSION = '1.168.3';
 FB.CHANGELOG = [
+  { v: '1.168.3', date: '2026-09-03', changes: [
+    'Quick Start cards now name their exact home settlement, and each curated life carries that birthplace into the campaign.'
+  ] },
   { v: '1.168.2', date: '2026-09-03', changes: [
     'Settlement sheets now tuck development guidance into details and show county buildings and fortifications only to the county\'s landed holder.'
   ] },
@@ -2137,7 +2140,8 @@ FB.CHANGELOG = [
 
   function quickStartDetails(definition) {
     if (!definition || !definition.id || !definition.bookmarkId ||
-        !definition.provinceId || !definition.characterName ||
+        !definition.provinceId || !definition.settlementSite ||
+        !definition.characterName ||
         (definition.sex !== 'm' && definition.sex !== 'f')) return null;
     if (FB.mods && FB.mods.bookmarkAvailable &&
         !FB.mods.bookmarkAvailable(definition.bookmarkId)) return null;
@@ -2152,8 +2156,22 @@ FB.CHANGELOG = [
       return candidate.culture === definition.culture &&
         candidate.religion === definition.religion;
     })[0];
-    if (!community) return null;
-    return { bookmark:bookmark, province:province, community:community };
+    const settlements = province.settlements || [];
+    let settlementIdx = -1;
+    for (let i = 0; i < settlements.length; i++) {
+      if (settlements[i].site === definition.settlementSite) {
+        settlementIdx = i;
+        break;
+      }
+    }
+    if (!community || settlementIdx < 0) return null;
+    return {
+      bookmark:bookmark,
+      province:province,
+      community:community,
+      settlement:settlements[settlementIdx],
+      settlementIdx:settlementIdx
+    };
   }
 
   function paintQuickStartPortrait(canvas, definition, details) {
@@ -2190,14 +2208,15 @@ FB.CHANGELOG = [
       sex:definition.sex,
       name:definition.characterName,
       familyPreset:'standard',
-      settlementIdx:0,
+      settlementIdx:details.settlementIdx,
       culture:details.community.culture,
       religion:details.community.religion,
       communityProvinceId:definition.provinceId,
       quickStartId:definition.id
     };
     activatePendingBookmark(definition.bookmarkId, function () {
-      G.pending.settlementIdx = clampSettlementIdx(definition.provinceId, 0);
+      G.pending.settlementIdx = clampSettlementIdx(
+        definition.provinceId, details.settlementIdx);
       /* Build the existing character controls off-screen, then consume them
          immediately. Quick Start remains the ordinary campaign constructor
          and produces the same shareable code as a manually chosen life. */
@@ -2217,6 +2236,10 @@ FB.CHANGELOG = [
       if (!details) continue;
       const culture = FB.cultureOf(details.community.culture);
       const religion = FB.religionOf(details.community.religion);
+      const location = FB.T('{settlement}, {province}', {
+        settlement:details.settlement.name,
+        province:FB.L(details.province.name)
+      });
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'quickstart-card';
@@ -2224,7 +2247,7 @@ FB.CHANGELOG = [
       button.setAttribute('aria-label', FB.T(
         'Quick Start as {name}, Serf in {location}, {culture} and {religion}, {season} {year} AD', {
           name:definition.characterName,
-          location:FB.L(details.province.name),
+          location:location,
           culture:FB.renderKey(
             'culture.' + details.community.culture + '.name.default',
             { text:culture.name }, {}),
@@ -2248,6 +2271,9 @@ FB.CHANGELOG = [
       meta('quickstart-meta quickstart-title-location', FB.T('{title} | {location}', {
         title:FB.T('Serf'),
         location:FB.L(details.province.name)
+      }));
+      meta('quickstart-meta quickstart-home', FB.T('Home: {settlement}', {
+        settlement:details.settlement.name
       }));
       meta('quickstart-meta quickstart-identity',
         FB.renderKey('culture.' + details.community.culture + '.name.default',
