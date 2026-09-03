@@ -152,7 +152,7 @@ window.FBDATA = window.FBDATA || {};
       },
       formative_education_stories:{
         mode:'none',
-        rationale:'Household teaching decisions are baseline family activity; the existing technology requirements on optional schools and masters remain unchanged.'
+        rationale:'Each educated childâ€™s paced formative household decision is baseline family activity; the existing technology requirements on optional schools and masters remain unchanged.'
       },
       enterprise_hired_labor:{
         mode:'none',

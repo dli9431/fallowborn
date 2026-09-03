@@ -2569,10 +2569,10 @@ instruction arrangements:
 - `annualMortality` optionally adds a full four-term mortality probability at New Year.
   Risk scales linearly with completed terms (`annualMortality × terms / 4`) and resolves
   before education and coming-of-age.
-- `annualEvents` optionally lists queued event ids. When the general formative roll does
-  not produce the household’s annual education story, surviving institutional terms supply
-  a fallback with probability `min(1, terms / 4)`; the student is selected in proportion
-  to completed terms.
+- `annualEvents` optionally lists queued event ids. When a student’s general formative roll
+  misses, their surviving institutional terms may substitute one of these stories with
+  probability `min(1, terms / 4)`. If that roll also misses, the general story remains their
+  annual fallback.
 - `name`/`desc` accept the same localization tokens and faith-variant objects as
   other structured data.
 - The built-in `master` id is special: its chance comes from the attached tutor
@@ -2586,12 +2586,14 @@ instruction arrangements:
 General formative events declare `educationStory:true` and may add a non-empty, unique
 `educationFocuses` array drawn from `dip mar ste int lea`; omitting it makes the event eligible
 for every focus. The mod loader rejects other `educationStory` values, malformed focus lists,
-unknown student skills or traits, and empty or extra fields in `effects.student`. Completed
-terms across eligible resident children and grandchildren roll first for
+unknown student skills or traits, and empty or extra fields in `effects.student`. Each eligible
+resident child or grandchild with completed terms reserves one annual story. That student’s
+terms roll first for
 `min(balance.educationStoryChanceCap,
-terms × balance.educationStoryTermChance)`. The child and focus are term-weighted, and unseen
+terms × balance.educationStoryTermChance)`. Their focus is term-weighted, and unseen
 eligible events are preferred per student before the pool recycles without an immediate repeat.
-Only when that roll misses may `annualEvents` provide the one education story for the year.
+Only when that roll misses may `annualEvents` replace the general story. The reserved records
+are spread through the following 360-day year and release at most one event per day.
 Completed focus terms live in `character.edu.storyTerms`; history lives in
 `character.edu.storiesSeen` plus `character.edu.lastStory`. Old saves need no migration because
 all three records are created lazily. The default pacing values are `0.80` and `0.15`.

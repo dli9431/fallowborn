@@ -630,11 +630,14 @@ A queued event with `nameChild: true` (births, `ctx.childId`) adds a rename fiel
 modal — prefilled with the generated name, applied when any option is chosen; autoresolve
 keeps the generated name.
 
-Annual schooling stories are also ordinary queued event data. A schooling definition's
-`annualEvents` ids are considered at New Year after its `schoolTerms` mortality rolls.
-Across the household, surviving terms produce at most one story. School-specific events have
-priority; otherwise events marked `educationStory:true` enter the general formative pool, and
-an optional `educationFocuses:["dip", ...]` restricts them to terms completed in those focuses.
+Annual schooling stories become ordinary queued event data when their reserved date arrives.
+A schooling definition's `annualEvents` ids are considered at New Year after its `schoolTerms`
+mortality rolls. Each eligible educated child or grandchild reserves one story; the records
+are spread evenly through the following year and only one due record enters the ordinary event
+queue per day. Events marked `educationStory:true` enter the general formative pool, and an
+optional `educationFocuses:["dip", ...]` restricts them to terms completed in those focuses.
+School-specific events may replace that student’s general story after the general roll misses;
+if neither probabilistic choice succeeds, the general story is still reserved.
 `ctx.studentId`, `ctx.studentFocus`, and `ctx.schoolId` freeze the selected student and
 arrangement. The
 `{student}` token resolves that exact character and automatically adds their character card

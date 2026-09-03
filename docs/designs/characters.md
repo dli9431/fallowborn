@@ -267,13 +267,14 @@ identify it as the recurring personal-master arrangement.
 before directed learning and coming-of-age rewards. A dependent student's death uses the
 ordinary character cleanup; a minor protagonist's death ends yearly processing and records
 an academy-specific legend. Eligible resident children and grandchildren with completed
-directed terms get first claim on the household’s one annual education decision through a
-general formative-story roll of `min(0.80, total terms × 0.15)`. Student and focus are
-selected in proportion to those completed terms. If that roll misses, surviving academy
-terms provide the fallback with probability `min(1, total terms / 4)` and the named student
-selected in proportion to their academy terms. This ordering prevents a full Academy year
-from permanently starving its student and the rest of the household of formative stories
-while retaining at most one annual education decision. Each student keeps `c.edu.storiesSeen` and
+directed terms each reserve one annual education decision. A student’s focus is selected in
+proportion to their own completed terms. A general formative story has first claim through a
+per-student roll of `min(0.80, total terms × 0.15)`; if that roll misses, the student’s
+surviving academy terms may substitute an Academy story with probability
+`min(1, total terms / 4)`. If both rolls miss, the general formative story remains the
+fallback, so siblings never compete for a single household slot. Reserved stories are spaced
+evenly through the following 360-day year and at most one is released per day, avoiding a
+stack of sibling decisions at New Year. Each student keeps `c.edu.storiesSeen` and
 `c.edu.lastStory`; unseen eligible stories are preferred, then the pool recycles without an
 immediate repeat. A queued story expires if its student dies or the protagonist changes. Patron
 introductions create or warm a life-local noble Network contact for the current protagonist,

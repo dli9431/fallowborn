@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.167.2';
+FB.VERSION = '1.167.3';
 FB.CHANGELOG = [
+  { v: '1.167.3', date: '2026-09-02', changes: [
+    'Every educated child now receives a formative story each year, with sibling stories spaced across the calendar.'
+  ] },
   { v: '1.167.2', date: '2026-09-02', changes: [
     'Compact Estates controls now stay clear of side tooltips and the sticky Back footer.'
   ] },
@@ -3243,6 +3246,7 @@ FB.CHANGELOG = [
     if (FB.reconcileSerfNeighborConsequence) {
       FB.reconcileSerfNeighborConsequence(s);
     }
+    if (FB.educationStoryDay) FB.educationStoryDay(s);
     const events = FB.pickDailyEvents(s);
     if (!(opts && opts.deferUi)) {
       FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);

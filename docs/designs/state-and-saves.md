@@ -957,9 +957,12 @@ next New Year, and `schoolUnpaid` suppresses repeated notices while fees cannot 
 `storyTerms` separately maps study focuses to completed directed terms, including home study;
 the annual schooling pass snapshots and clears both term maps. Per-student `storiesSeen` and
 `lastStory` fields prefer unseen education stories and prevent an immediate repeat when the
-pool recycles. Switching arrangements leaves term history intact until New Year. Missing
-fields mean home instruction, no exposure, and no previous story, so older saves acquire all
-three ledgers lazily without a save-version migration. A legacy generated hired tutor is
+pool recycles. `player.educationStories` is an additive list of reserved annual stories as
+plain `{id,ctx,dueTurn}` records. It survives saves and spaces each educated descendant’s one
+story across the following year; the daily release path moves at most one due valid record into
+the ordinary event queue. Switching arrangements leaves term history intact until New Year.
+Missing fields mean home instruction, no exposure, and no previous story, so older saves
+acquire these records lazily without a save-version migration. A legacy generated hired tutor is
 recognized by its character role and lazily gains `school:'master'`.
 
 Household education automation is additive at the same save version.

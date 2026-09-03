@@ -2730,22 +2730,55 @@ window.FB = window.FB || {};
     c.edu.lastStory = selected.id;
   }
 
-  function queueEducationStory(state, annual, entry, eventId, selected) {
-    const item = FB.queueEvent(state, eventId, {
+  function educationStorySchedule(state) {
+    const p = state.player;
+    if (!Array.isArray(p.educationStories)) p.educationStories = [];
+    return p.educationStories;
+  }
+
+  function scheduleEducationStory(state, entry, eventId, selected, dueTurn) {
+    const ev = FB.eventById(eventId);
+    const ctx = FB.eventContextFor(state, ev, {
       studentId:entry.c.id,
       studentFocus:entry.focus || entry.c.edu && entry.c.edu.focus,
       schoolId:entry.schoolId || null
     });
-    if (!item) return false;
-    const last = state.eventQueue.length - 1;
-    const at = Math.max(0, Math.min(last, Number(annual.queueIndex) || 0));
-    if (at < last) {
-      state.eventQueue.pop();
-      state.eventQueue.splice(at, 0, item);
-    }
+    if (!ctx) return false;
+    educationStorySchedule(state).push({
+      id:eventId,
+      ctx:ctx,
+      dueTurn:dueTurn
+    });
     noteEducationStory(entry.c, selected || { id:eventId, recycling:false });
     return true;
   }
+
+  /* Release at most one due lesson story on a day. Normally the annual
+     planner gives every student a distinct date, but the one-at-a-time rule
+     also keeps edited saves and very large modded households from opening a
+     wall of decisions together. Invalid records expire without blocking the
+     next valid story. */
+  FB.educationStoryDay = function (state) {
+    const schedule = educationStorySchedule(state);
+    schedule.sort(function (a, b) {
+      return (Number(a && a.dueTurn) || 0) -
+        (Number(b && b.dueTurn) || 0);
+    });
+    while (schedule.length) {
+      const record = schedule[0];
+      if (!record || !Number.isFinite(record.dueTurn) ||
+          typeof record.id !== 'string' || !record.ctx) {
+        schedule.shift();
+        continue;
+      }
+      if (record.dueTurn > state.turn) return false;
+      schedule.shift();
+      const ev = FB.eventById(record.id);
+      if (!FB.eventContextStillValid(state, ev, record.ctx)) continue;
+      return !!FB.queueEvent(state, record.id, record.ctx);
+    }
+    return false;
+  };
 
   /* Snapshot and consume completed institution and directed-study terms
      before ordinary yearly education and coming-of-age rewards. Mortality is
@@ -2831,69 +2864,115 @@ window.FB = window.FB || {};
       }
     }
 
-    return {
-      entries:storyEntries, snapshots:snapshots,
-      queueIndex:(state.eventQueue || []).length
-    };
+    return { entries:storyEntries, snapshots:snapshots };
   };
 
-  /* Queue the story only after the rest of yearly mortality has run, so an
-     ordinary death cannot leave a decision pointing at a dead student. */
-  FB.schoolingYearEvents = function (state, annual) {
-    if (!annual || !annual.entries) return false;
+  function educationStoryStudentEntries(state, annual) {
     const household = {};
     for (const member of FB.householdMembers(state)) household[member.id] = 1;
-    const focusEntries = [];
+    const byId = {};
+    const out = [];
+    function studentEntry(c) {
+      let entry = byId[c.id];
+      if (!entry) {
+        entry = { c:c, focuses:[], schools:[] };
+        byId[c.id] = entry;
+        out.push(entry);
+      }
+      return entry;
+    }
     for (let i = 0; i < (annual.snapshots || []).length; i++) {
       const snapshot = annual.snapshots[i];
       if (!snapshot.c || snapshot.c.dead || snapshot.c.id === state.player.charId ||
           !household[snapshot.c.id] ||
           !FB.playerDescendantKind(state, snapshot.c.id) ||
           FB.spousesOf(state, snapshot.c).length) continue;
+      const student = studentEntry(snapshot.c);
       for (let j = 0; j < snapshot.focuses.length; j++) {
         const focused = snapshot.focuses[j];
         const events = educationStoryEventList(focused.focus);
-        if (events.length) focusEntries.push({
+        if (events.length) student.focuses.push({
           c:snapshot.c, focus:focused.focus, terms:focused.terms, events:events
         });
       }
     }
-    let completedTerms = 0;
-    for (let i = 0; i < focusEntries.length; i++) {
-      completedTerms += focusEntries[i].terms;
+    for (let i = 0; i < (annual.entries || []).length; i++) {
+      const school = annual.entries[i];
+      if (!school.c || school.c.dead || !byId[school.c.id]) continue;
+      studentEntry(school.c).schools.push(school);
     }
+    return out;
+  }
+
+  function educationStoryPlanForStudent(student) {
+    let focusTerms = 0;
+    for (let i = 0; i < student.focuses.length; i++) {
+      focusTerms += student.focuses[i].terms;
+    }
+    const focused = focusTerms ?
+      weightedSchoolStory(student.focuses, focusTerms) : null;
+    let formative = null;
+    if (focused) {
+      const selected = chooseEducationStory(focused.c, focused.events);
+      if (selected) formative = {
+        entry:focused, id:selected.id, selected:selected
+      };
+    }
+
+    let schoolTerms = 0;
+    for (let i = 0; i < student.schools.length; i++) {
+      schoolTerms += student.schools[i].terms;
+    }
+    let institutional = null;
+    const school = schoolTerms ?
+      weightedSchoolStory(student.schools, schoolTerms) : null;
+    if (school) {
+      const selected = chooseEducationStory(school.c, school.events);
+      if (selected) institutional = {
+        entry:{
+          c:school.c,
+          focus:school.c.edu && school.c.edu.focus,
+          schoolId:school.schoolId
+        },
+        id:selected.id,
+        selected:selected
+      };
+    }
+
     const termChance = FBDATA.balance.educationStoryTermChance === undefined
       ? 0.15 : FBDATA.balance.educationStoryTermChance;
     const chanceCap = FBDATA.balance.educationStoryChanceCap === undefined
       ? 0.8 : FBDATA.balance.educationStoryChanceCap;
-    if (completedTerms && FB.chance(Math.min(chanceCap,
-        completedTerms * termChance))) {
-      const selected = weightedSchoolStory(focusEntries, completedTerms);
-      const choice = selected && chooseEducationStory(selected.c, selected.events);
-      if (choice && queueEducationStory(state, annual, selected,
-          choice.id, choice)) return true;
+    if (formative && FB.chance(Math.min(chanceCap,
+        focusTerms * termChance))) return formative;
+    if (institutional && FB.chance(Math.min(1, schoolTerms / 4))) {
+      return institutional;
     }
+    return formative || institutional;
+  }
 
-    /* School-specific opportunities remain the fallback for a year whose
-       formative roll misses. Checking them first made four Academy terms a
-       guaranteed early return, permanently starving Academy students and
-       their household of the general education-story pool. */
-    const survivors = annual.entries.filter(function (entry) {
-      return entry.c && !entry.c.dead;
-    });
-    let storyTerms = 0;
-    for (let i = 0; i < survivors.length; i++) storyTerms += survivors[i].terms;
-    if (storyTerms && FB.chance(Math.min(1, storyTerms / 4))) {
-      const selected = weightedSchoolStory(survivors, storyTerms);
-      if (selected) {
-        const choice = chooseEducationStory(selected.c, selected.events);
-        if (choice && queueEducationStory(state, annual, {
-          c:selected.c, focus:selected.c.edu && selected.c.edu.focus,
-          schoolId:selected.schoolId
-        }, choice.id, choice)) return true;
-      }
+  /* After yearly mortality, reserve one story for every surviving student
+     who completed a directed term. Dates are spread evenly through the next
+     360-day year, and the daily releaser keeps even colliding modded records
+     to one blocking decision per day. Academy stories may replace a general
+     formative story, but a missed roll can no longer leave a child without
+     any annual education story. */
+  FB.schoolingYearEvents = function (state, annual) {
+    if (!annual || !annual.entries) return false;
+    const students = educationStoryStudentEntries(state, annual);
+    const plans = [];
+    for (let i = 0; i < students.length; i++) {
+      const plan = educationStoryPlanForStudent(students[i]);
+      if (plan) plans.push(plan);
     }
-    return false;
+    let scheduled = 0;
+    for (let i = 0; i < plans.length; i++) {
+      const dueTurn = state.turn + Math.max(1,
+        Math.floor((i + 1) * 360 / (plans.length + 1)));
+      if (scheduleEducationStory(state, plans[i].entry, plans[i].id,
+          plans[i].selected, dueTurn)) scheduled++;
+    }
+    return scheduled > 0;
   };
 
   FB.enterpriseWorkerIds = function (enterprise) {

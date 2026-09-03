@@ -218,12 +218,12 @@ test('completed terms accrue by focus while missed and ineligible study does not
     expect(result.students).toHaveLength(5);
   });
 
-test('New Year selection is formative-first, term-weighted, capped, and limited to one story',
+test('New Year reserves one staggered story for every educated descendant',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
       const me = s.chars[s.player.charId];
-      me.born = s.date.year - 10;
+      me.born = s.date.year - 30;
       function make(name, age, focus) {
         const c = FB.makeCharacter(s, {
           name:name, sex:'f', culture:me.culture, religion:me.religion,
@@ -246,30 +246,42 @@ test('New Year selection is formative-first, term-weighted, capped, and limited 
       grandchild.edu = { focus:'mar', storyTerms:{mar:3} };
       parent.childrenIds.push(grandchild.id);
       child.edu.storyTerms = { dip:1 };
+      const extraIds = [];
+      for (let i = 0; i < 6; i++) {
+        const extra = make('Staggered Child ' + i, 7 + i, 'lea');
+        extra.edu.storyTerms = { lea:1 };
+        extraIds.push(extra.id);
+      }
       me.edu = { focus:'lea', storyTerms:{lea:4} };
       FB.queueEvent(s, 'birth', {});
       const annual = FB.schoolingYear(s);
       FB.queueEvent(s, 'child_comes_of_age', { childId:child.id });
+      const oldChance = FB.chance;
       const oldRng = FB.rng;
-      const rolls = [0, 0.30, 0];
-      FB.rng = function () { return rolls.shift() || 0; };
+      FB.chance = function () { return false; };
+      FB.rng = function () { return 0; };
       const queued = FB.schoolingYearEvents(s, annual);
+      FB.chance = oldChance;
       FB.rng = oldRng;
       const order = s.eventQueue.map(function (item) { return item.id; });
-      const selected = s.eventQueue[1];
-
-      const capChildren = [];
-      for (let i = 0; i < 6; i++) {
-        const c = make('Cap Child ' + i, 10, 'lea');
-        c.edu.storyTerms = { lea:4 };
-        capChildren.push(c);
-      }
-      const capAnnual = FB.schoolingYear(s);
-      const chances = [];
-      const oldChance = FB.chance;
-      FB.chance = function (p) { chances.push(p); return false; };
-      FB.schoolingYearEvents(s, capAnnual);
-      FB.chance = oldChance;
+      const scheduled = s.player.educationStories.map(function (record) {
+        return {
+          id:record.id,
+          studentId:record.ctx.studentId,
+          focus:record.ctx.studentFocus,
+          dueTurn:record.dueTurn
+        };
+      });
+      const firstDue = scheduled[0].dueTurn;
+      const secondDue = scheduled[1].dueTurn;
+      s.turn = firstDue;
+      const firstReleased = FB.educationStoryDay(s);
+      const firstItem = s.eventQueue[s.eventQueue.length - 1];
+      const sameDayReleased = FB.educationStoryDay(s);
+      s.eventQueue = [];
+      s.turn = secondDue;
+      const secondReleased = FB.educationStoryDay(s);
+      const secondItem = s.eventQueue[0];
 
       const academy = make('Academy Child', 11, 'ste');
       academy.edu.storyTerms = { ste:4 };
@@ -277,11 +289,11 @@ test('New Year selection is formative-first, term-weighted, capped, and limited 
       const oldMortality = FBDATA.schooling.noble_academy.annualMortality;
       FBDATA.schooling.noble_academy.annualMortality = 0;
       const academyAnnual = FB.schoolingYear(s);
-      s.eventQueue = [];
-      let academyRolls = [0, 0, 0];
-      FB.rng = function () { return academyRolls.shift() || 0; };
+      s.player.educationStories = [];
+      FB.chance = function () { return true; };
+      FB.rng = function () { return 0; };
       FB.schoolingYearEvents(s, academyAnnual);
-      const academyFormativeIds = s.eventQueue.map(function (item) {
+      const academyFormativeIds = s.player.educationStories.map(function (item) {
         return item.id;
       });
 
@@ -289,44 +301,72 @@ test('New Year selection is formative-first, term-weighted, capped, and limited 
       academy.edu.schoolTerms = { noble_academy:4 };
       const academyFallbackAnnual = FB.schoolingYear(s);
       FBDATA.schooling.noble_academy.annualMortality = oldMortality;
-      s.eventQueue = [];
-      academyRolls = [0.99, 0, 0, 0];
-      FB.rng = function () { return academyRolls.shift() || 0; };
+      s.player.educationStories = [];
+      const academyChances = [false, true];
+      FB.chance = function () { return academyChances.shift(); };
       FB.schoolingYearEvents(s, academyFallbackAnnual);
+      FB.chance = oldChance;
       FB.rng = oldRng;
       return {
         queued:queued,
         order:order,
-        studentId:selected.ctx.studentId,
+        scheduled:scheduled,
         playerId:me.id,
+        childId:child.id,
         grandchildId:grandchild.id,
-        focus:selected.ctx.studentFocus,
+        allStudentIds:[child.id, grandchild.id].concat(extraIds),
         cleared:child.edu.storyTerms.dip === undefined &&
-          grandchild.edu.storyTerms.mar === undefined,
-        cap:chances[chances.length - 1],
+          grandchild.edu.storyTerms.mar === undefined &&
+          extraIds.every(function (id) {
+            return s.chars[id].edu.storyTerms.lea === undefined;
+          }),
+        firstReleased:firstReleased,
+        sameDayReleased:sameDayReleased,
+        secondReleased:secondReleased,
+        releasedStudentIds:[firstItem.ctx.studentId, secondItem.ctx.studentId],
         academyFormativeIds:academyFormativeIds,
-        academyFallbackIds:s.eventQueue.map(function (item) { return item.id; }),
-        academyFallbackStudent:s.eventQueue[0] && s.eventQueue[0].ctx.studentId
+        academyFallbackIds:s.player.educationStories.map(function (item) {
+          return item.id;
+        })
       };
     });
 
     expect(result.queued).toBe(true);
     expect(result.order[0]).toBe('birth');
-    expect(result.order[1]).toBe('education_martial_yard');
-    expect(result.order[2]).toBe('child_comes_of_age');
-    expect(result.studentId).toBe(result.grandchildId);
-    expect(result.studentId).not.toBe(result.playerId);
-    expect(result.focus).toBe('mar');
+    expect(result.order[1]).toBe('child_comes_of_age');
+    expect(result.scheduled).toHaveLength(8);
+    expect(result.scheduled.map(function (record) { return record.studentId; }).sort())
+      .toEqual(result.allStudentIds.sort());
+    expect(result.scheduled.filter(function (record) {
+      return record.focus === 'dip';
+    })).toHaveLength(1);
+    expect(result.scheduled.filter(function (record) {
+      return record.focus === 'mar';
+    })).toHaveLength(1);
+    expect(result.scheduled.filter(function (record) {
+      return record.focus === 'lea';
+    })).toHaveLength(6);
+    expect(new Set(result.scheduled.map(function (record) {
+      return record.dueTurn;
+    })).size).toBe(8);
+    expect(result.scheduled[1].dueTurn - result.scheduled[0].dueTurn)
+      .toBeGreaterThan(1);
+    expect(result.scheduled.every(function (record) {
+      return record.studentId !== result.playerId;
+    })).toBe(true);
     expect(result.cleared).toBe(true);
-    expect(result.cap).toBe(0.8);
+    expect(result.firstReleased).toBe(true);
+    expect(result.sameDayReleased).toBe(false);
+    expect(result.secondReleased).toBe(true);
+    expect(result.releasedStudentIds)
+      .toEqual([result.scheduled[0].studentId, result.scheduled[1].studentId]);
     expect(result.academyFormativeIds).toHaveLength(1);
     expect(result.academyFormativeIds[0]).toMatch(/^education_/);
     expect(result.academyFallbackIds).toHaveLength(1);
     expect(result.academyFallbackIds[0]).toMatch(/^academy_/);
-    expect(result.academyFallbackStudent).toBeTruthy();
   });
 
-test('a real New Year tick presents a formative education event',
+test('a real New Year tick staggers its formative education event',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
@@ -368,23 +408,27 @@ test('a real New Year tick presents a formative education event',
         FBDATA.balance.educationStoryChanceCap = oldChanceCap;
         FB.chance = oldChance;
       }
+      const scheduled = s.player.educationStories[0];
       return {
         outcome:outcome,
         season:s.date.season,
         day:s.date.day,
         storyId:child.edu.lastStory || '',
         remainingTerms:Object.keys(child.edu.storyTerms || {}).length,
-        eventOpen:FB.ui.eventsBusy()
+        eventOpen:FB.ui.eventsBusy(),
+        scheduledStudent:scheduled && scheduled.ctx.studentId,
+        delay:scheduled && scheduled.dueTurn - s.turn
       };
     });
 
     expect(result).toMatchObject({
-      outcome:'event', season:0, day:1,
-      remainingTerms:0, eventOpen:true
+      outcome:'season', season:0, day:1,
+      remainingTerms:0, eventOpen:false
     });
     expect(result.storyId).toMatch(/^education_/);
-    await expect(page.locator('#eventmodal')).toBeVisible();
-    await expect(page.locator('#ev-text')).toContainText('Rollover Student');
+    expect(result.scheduledStudent).toBeTruthy();
+    expect(result.delay).toBeGreaterThan(1);
+    expect(result.delay).toBeLessThan(360);
   });
 
 test('student history prefers unseen stories and deterministically avoids immediate repeats',
@@ -414,9 +458,9 @@ test('student history prefers unseen stories and deterministically avoids immedi
       FB.rng = function () { return rolls.shift() || 0; };
       FB.schoolingYearEvents(s, annual);
       FB.rng = oldRng;
-      const unseen = s.eventQueue[0].id;
+      const unseen = s.player.educationStories[0].id;
 
-      s.eventQueue = [];
+      s.player.educationStories = [];
       child.edu.storiesSeen = eligible.slice();
       child.edu.lastStory = 'education_public_praise';
       child.edu.storyTerms = { dip:4 };
@@ -426,18 +470,18 @@ test('student history prefers unseen stories and deterministically avoids immedi
       FB.setRngState(246813579);
       const savedRng = FB.getRngState();
       FB.schoolingYearEvents(s, annual);
-      const first = s.eventQueue[0].id;
+      const first = s.player.educationStories[0].id;
       const firstSeen = child.edu.storiesSeen.slice();
       const firstRng = FB.getRngState();
 
-      s.eventQueue = [];
+      s.player.educationStories = [];
       child.edu.storiesSeen = eligible.slice();
       child.edu.lastStory = 'education_public_praise';
       child.edu.storyTerms = { dip:4 };
       annual = FB.schoolingYear(s);
       FB.setRngState(savedRng);
       FB.schoolingYearEvents(s, annual);
-      const second = s.eventQueue[0].id;
+      const second = s.player.educationStories[0].id;
       const secondRng = FB.getRngState();
       FB.chance = oldChance;
       return {
@@ -455,7 +499,7 @@ test('student history prefers unseen stories and deterministically avoids immedi
     expect(result.recycled).toEqual([result.repeat]);
   });
 
-test('legacy saves acquire education story ledgers lazily', async function ({ page }) {
+test('legacy saves acquire story ledgers and preserve staggered records', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state;
     const me = s.chars[s.player.charId];
@@ -491,6 +535,12 @@ test('legacy saves acquire education story ledgers lazily', async function ({ pa
     FB.schoolingYearEvents(FB.state, annual);
     FB.chance = oldChance;
     FB.rng = oldRng;
+    const scheduled = FB.state.player.educationStories[0];
+    const scheduledSnapshot = JSON.stringify(scheduled);
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    const resumed = FB.state.player.educationStories[0];
+    FB.state.turn = resumed.dueTurn;
+    const released = FB.educationStoryDay(FB.state);
     return {
       version:payload.v,
       missing:missing,
@@ -498,6 +548,9 @@ test('legacy saves acquire education story ledgers lazily', async function ({ pa
       cleared:cleared,
       seen:restored.edu.storiesSeen.slice(),
       last:restored.edu.lastStory,
+      scheduled:scheduled && scheduled.id,
+      preserved:scheduledSnapshot === JSON.stringify(resumed),
+      released:released,
       queued:FB.state.eventQueue[0] && FB.state.eventQueue[0].id
     };
   });
@@ -507,6 +560,9 @@ test('legacy saves acquire education story ledgers lazily', async function ({ pa
   expect(result.accrued).toEqual({ lea:1 });
   expect(result.cleared).toBe(true);
   expect(result.seen).toEqual([result.last]);
+  expect(result.scheduled).toBe(result.last);
+  expect(result.preserved).toBe(true);
+  expect(result.released).toBe(true);
   expect(result.queued).toBe(result.last);
 });
 
