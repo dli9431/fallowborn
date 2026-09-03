@@ -261,7 +261,7 @@ FBDATA.events.push(
 { id:'education_diplomacy_audience', title:'A Difficult Audience',
   trigger:{ never:true },
   educationStory:true, educationFocuses:['dip'],
-  text:'During a lesson before the household, {student} is pressed to answer a needling question without preparation. You can teach them to wait for the room, or to trust their own importance.',
+  text:'During a lesson before the household, {student} is pressed to answer a needling question without preparation. The lesson can be patience, command, or a quieter confidence.',
   options:[
     { label:'Teach patience before speaking.', chance:0.65,
       desc:'Success may make {student} Patient and improve Diplomacy; failure costs 1 Diplomacy.',
@@ -270,7 +270,11 @@ FBDATA.events.push(
     { label:'Teach them to command the room.', chance:0.65,
       desc:'Success may make {student} Proud and improve Diplomacy; failure costs 1 Diplomacy.',
       success:{ text:'{student} answers as though every listener had been waiting for precisely those words.', effects:{ student:{ skills:{dip:1}, addTrait:'proud' } } },
-      failure:{ text:'Confidence outruns judgment, and the answer draws quiet smiles.', effects:{ student:{ skills:{dip:-1} } } } }
+      failure:{ text:'Confidence outruns judgment, and the answer draws quiet smiles.', effects:{ student:{ skills:{dip:-1} } } } },
+    { label:'Let them find their own answer.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Diplomacy; failure has no effect.',
+      success:{ text:'Without forcing a pose, {student} finds an answer that holds the room.', effects:{ student:{ skills:{dip:1} } } },
+      failure:{ text:'No polished answer comes, but no false lesson is forced upon them.', effects:{} } }
   ]},
 
 { id:'education_martial_yard', title:'The Blunted Blade',
@@ -285,7 +289,11 @@ FBDATA.events.push(
     { label:'Turn the sting into fury.', chance:0.65,
       desc:'Success may make {student} Wrathful and improve Martial; failure costs 1 Martial.',
       success:{ text:'Anger lends {student} speed and force enough to seize the yard.', effects:{ student:{ skills:{mar:1}, addTrait:'wrathful' } } },
-      failure:{ text:'The anger breaks their form and leaves them open.', effects:{ student:{ skills:{mar:-1} } } } }
+      failure:{ text:'The anger breaks their form and leaves them open.', effects:{ student:{ skills:{mar:-1} } } } },
+    { label:'Study the opponent before returning.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Martial; failure has no effect.',
+      success:{ text:'{student} notices the opening that strength alone had missed.', effects:{ student:{ skills:{mar:1} } } },
+      failure:{ text:'The bout yields no new insight, but neither does it deepen the defeat.', effects:{} } }
   ]},
 
 { id:'education_stewardship_tally', title:'The Crooked Tally',
@@ -300,7 +308,11 @@ FBDATA.events.push(
     { label:'Teach them to keep every advantage.', chance:0.65,
       desc:'Success may make {student} Greedy and improve Stewardship; failure costs 1 Stewardship.',
       success:{ text:'{student} learns exactly where a quiet advantage can hide in a ledger.', effects:{ student:{ skills:{ste:1}, addTrait:'greedy' } } },
-      failure:{ text:'The false balance is discovered before the lesson is done.', effects:{ student:{ skills:{ste:-1} } } } }
+      failure:{ text:'The false balance is discovered before the lesson is done.', effects:{ student:{ skills:{ste:-1} } } } },
+    { label:'Recount the figures in private.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Stewardship; failure has no effect.',
+      success:{ text:'A quiet second reckoning shows {student} exactly where the tally bent.', effects:{ student:{ skills:{ste:1} } } },
+      failure:{ text:'The figures remain uncertain, and the account is left untouched.', effects:{} } }
   ]},
 
 { id:'education_intrigue_secret', title:'A Secret in the Passage',
@@ -315,13 +327,17 @@ FBDATA.events.push(
     { label:'Question why any confidence deserves faith.', chance:0.65,
       desc:'Success may make {student} Cynical and improve Intrigue; failure costs 1 Intrigue.',
       success:{ text:'{student} learns to look for the purpose behind every trusted word.', effects:{ student:{ skills:{int:1}, addTrait:'cynical' } } },
-      failure:{ text:'Suspicion without judgment leaves every motive equally obscure.', effects:{ student:{ skills:{int:-1} } } } }
+      failure:{ text:'Suspicion without judgment leaves every motive equally obscure.', effects:{ student:{ skills:{int:-1} } } } },
+    { label:'Keep silent and remember.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Intrigue; failure has no effect.',
+      success:{ text:'{student} gives nothing away and remembers precisely what others forgot.', effects:{ student:{ skills:{int:1} } } },
+      failure:{ text:'The secret passes without advantage, safely unspoken.', effects:{} } }
   ]},
 
 { id:'education_learning_gloss', title:'The Troubling Gloss',
   trigger:{ never:true },
   educationStory:true, educationFocuses:['lea'],
-  text:'A disputed gloss in {student}’s lesson can be defended as sacred wisdom or studied slowly beside rival authorities.',
+  text:'A disputed gloss in {student}’s lesson can be defended as sacred wisdom, compared with rival authorities, or left for quieter study.',
   options:[
     { label:'Defend the received teaching.', chance:0.65,
       desc:'Success may make {student} Zealous and improve Learning; failure costs 1 Learning.',
@@ -330,7 +346,11 @@ FBDATA.events.push(
     { label:'Compare every authority with patience.', chance:0.65,
       desc:'Success may make {student} Patient and improve Learning; failure costs 1 Learning.',
       success:{ text:'{student} works through each contradiction until a careful answer emerges.', effects:{ student:{ skills:{lea:1}, addTrait:'patient' } } },
-      failure:{ text:'The competing authorities leave the lesson more tangled than before.', effects:{ student:{ skills:{lea:-1} } } } }
+      failure:{ text:'The competing authorities leave the lesson more tangled than before.', effects:{ student:{ skills:{lea:-1} } } } },
+    { label:'Return to the question in private.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Learning; failure has no effect.',
+      success:{ text:'Away from the argument, {student} finds one useful thread in the disputed words.', effects:{ student:{ skills:{lea:1} } } },
+      failure:{ text:'The gloss remains unresolved, awaiting another lesson.', effects:{} } }
   ]},
 
 { id:'education_found_purse', title:'The Found Purse',
@@ -346,10 +366,10 @@ FBDATA.events.push(
       desc:'Success may make {student} Deceitful and improve Intrigue; failure costs 1 Intrigue.',
       success:{ text:'{student} keeps both purse and secret beyond suspicion.', effects:{ student:{ skills:{int:1}, addTrait:'deceitful' } } },
       failure:{ text:'A clumsy denial makes the truth plain to everyone.', effects:{ student:{ skills:{int:-1} } } } },
-    { label:'Give the coins where they are needed.', chance:0.65,
-      desc:'Success may make {student} Generous and improve Diplomacy; failure costs 1 Diplomacy.',
-      success:{ text:'{student} turns a stranger’s loss into several remembered kindnesses.', effects:{ student:{ skills:{dip:1}, addTrait:'generous' } } },
-      failure:{ text:'Good intent cannot mend the quarrel over money given away.', effects:{ student:{ skills:{dip:-1} } } } }
+    { label:'Leave the purse with a trusted elder.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Diplomacy; failure has no effect.',
+      success:{ text:'{student} chooses the right keeper and helps the purse find its owner.', effects:{ student:{ skills:{dip:1} } } },
+      failure:{ text:'The elder takes charge, leaving {student} no wiser but blameless.', effects:{} } }
   ]},
 
 { id:'education_younger_pupil', title:'The Younger Pupil',
@@ -364,7 +384,11 @@ FBDATA.events.push(
     { label:'Make an example of weakness.', chance:0.65,
       desc:'Success may make {student} Cruel and improve Intrigue; failure costs 1 Intrigue.',
       success:{ text:'{student} learns how quickly fear can command a room.', effects:{ student:{ skills:{int:1}, addTrait:'cruel' } } },
-      failure:{ text:'The mockery turns the other pupils against its author.', effects:{ student:{ skills:{int:-1} } } } }
+      failure:{ text:'The mockery turns the other pupils against its author.', effects:{ student:{ skills:{int:-1} } } } },
+    { label:'Let them solve it together.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Learning; failure has no effect.',
+      success:{ text:'Working beside the younger pupil reveals a clearer way through the lesson.', effects:{ student:{ skills:{lea:1} } } },
+      failure:{ text:'Neither pupil finds the answer, but no one is made smaller for it.', effects:{} } }
   ]},
 
 { id:'education_public_praise', title:'Praise Before the Household',
@@ -379,13 +403,17 @@ FBDATA.events.push(
     { label:'Teach them to own the achievement.', chance:0.65,
       desc:'Success may make {student} Proud and improve Diplomacy; failure costs 1 Diplomacy.',
       success:{ text:'{student} accepts the praise with the confidence of one who expects more.', effects:{ student:{ skills:{dip:1}, addTrait:'proud' } } },
-      failure:{ text:'Boasting turns admiration into resentment.', effects:{ student:{ skills:{dip:-1} } } } }
+      failure:{ text:'Boasting turns admiration into resentment.', effects:{ student:{ skills:{dip:-1} } } } },
+    { label:'Answer with a simple bow.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Diplomacy; failure has no effect.',
+      success:{ text:'{student} receives the praise gracefully and leaves the room wanting to see more.', effects:{ student:{ skills:{dip:1} } } },
+      failure:{ text:'The brief acknowledgment passes without changing anyone’s judgment.', effects:{} } }
   ]},
 
 { id:'education_lesson_feast', title:'The Lesson-Day Feast',
   trigger:{ never:true },
   educationStory:true,
-  text:'A feast marks the end of a hard lesson day. {student} can keep a measured place at the table or discover just how much pleasure appetite can hold.',
+  text:'A feast marks the end of a hard lesson day. {student} can practice restraint, indulge every appetite, or try to balance pleasure with duty.',
   options:[
     { label:'Practice restraint at the table.', chance:0.65,
       desc:'Success may make {student} Temperate and improve Stewardship; failure costs 1 Stewardship.',
@@ -394,13 +422,17 @@ FBDATA.events.push(
     { label:'Let appetite have its holiday.', chance:0.65,
       desc:'Success may make {student} Gluttonous and improve Stewardship; failure costs 1 Stewardship.',
       success:{ text:'{student} learns every trick for claiming the richest share.', effects:{ student:{ skills:{ste:1}, addTrait:'gluttonous' } } },
-      failure:{ text:'Excess ends in sickness and a lesson poorly remembered.', effects:{ student:{ skills:{ste:-1} } } } }
+      failure:{ text:'Excess ends in sickness and a lesson poorly remembered.', effects:{ student:{ skills:{ste:-1} } } } },
+    { label:'Enjoy a little, then return to duty.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Stewardship; failure has no effect.',
+      success:{ text:'{student} finds room for both celebration and the small duties around it.', effects:{ student:{ skills:{ste:1} } } },
+      failure:{ text:'The feast passes pleasantly without becoming much of a lesson.', effects:{} } }
   ]},
 
 { id:'education_future_ambitions', title:'A Future Imagined',
   trigger:{ never:true },
   educationStory:true,
-  text:'Asked what adulthood should bring, {student} describes a future either larger than the household can yet promise or comfortably rooted in what it already holds.',
+  text:'Asked what adulthood should bring, {student} imagines a future of high ambition, comfortable roots, or one practical step at a time.',
   options:[
     { label:'Encourage the highest ambition.', chance:0.65,
       desc:'Success may make {student} Ambitious and improve Diplomacy; failure costs 1 Diplomacy.',
@@ -409,7 +441,11 @@ FBDATA.events.push(
     { label:'Teach contentment with a sound life.', chance:0.65,
       desc:'Success may make {student} Content and improve Stewardship; failure costs 1 Stewardship.',
       success:{ text:'{student} learns to see security and sufficiency as achievements of their own.', effects:{ student:{ skills:{ste:1}, addTrait:'content' } } },
-      failure:{ text:'Contentment is mistaken for indifference, and the lesson loses purpose.', effects:{ student:{ skills:{ste:-1} } } } }
+      failure:{ text:'Contentment is mistaken for indifference, and the lesson loses purpose.', effects:{ student:{ skills:{ste:-1} } } } },
+    { label:'Ask for one practical first step.', chance:0.35,
+      desc:'A 35% chance for {student} to improve Stewardship; failure has no effect.',
+      success:{ text:'{student} turns a distant future into the first piece of a workable plan.', effects:{ student:{ skills:{ste:1} } } },
+      failure:{ text:'No plan takes shape yet, but the future remains open.', effects:{} } }
   ]},
 
 /* ---------- leaving a former station ---------- */

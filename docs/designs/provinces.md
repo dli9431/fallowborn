@@ -217,7 +217,9 @@ per-world path caches.
 The noble caller is the `settle_waste` deed (`FB.settleWaste`), which passes
 the player as holder, adds the county to `player.provs`, and pays
 `balance.settleGold`/`settlePrestige` — costs and political result unchanged
-by the refactor. The commoner caller is the frontier-homestead journey (see
+by the refactor. The deed is visible only while at least one wasteland province
+borders the player's current demesne; its execution still rechecks that live
+adjacency. The commoner caller is the frontier-homestead journey (see
 [travel.md](travel.md)), which passes the gateway county's live political
 holder and sovereign and grants the household only starter land plots.
 

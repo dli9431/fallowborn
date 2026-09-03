@@ -421,6 +421,9 @@ Common Voice on every live tick. Its retained protagonist portrait also checks t
 live visual key and repaints synchronously when age, health, ailments, appearance, equipment,
 profession, or rank changes. The visible Kin tree likewise patches spouse and child ages,
 so those changing personal values remain exact without rebuilding sections or listeners.
+Its retained roster also records the derived family revision. A birth, death, marriage,
+succession, or other relationship change promotes the next live refresh to one complete Kin
+render, while days with no family change keep the mounted tree intact.
 An open Deeds panel performs a bounded status-only pass every seven game days
 and once when fast-forward ends, updating its mounted deed buttons and cooldown explanations
 without rebuilding the catalogue. Any mounted disabled deed with a known standard or
@@ -1348,8 +1351,11 @@ summary with an explicit **Open in Land** route; its visible and browser Back ac
 the exact originating section. Realm buttons, political actions, gifts, levy favors, and
 focused Estates/Council views likewise preserve their Governance section after cancellation
 or completion. The section strip is a keyboard-navigable tab list that exposes one consistent
-content surface at a time; its content viewport and exit footer remain fixed while only
-the active section scrolls. Direct vassals use a compact aligned ledger on desktop and
+content surface at a time; on narrow layouts it scrolls horizontally, aligns the selected
+tab to a clean leading edge, and never leaves a clipped label at that edge. Mobile fact rows
+reserve stable label and value columns, use the full sheet width, and wrap each side within
+its own column. The content viewport and exit footer remain fixed while only the active
+section scrolls. Direct vassals use a compact aligned ledger on desktop and
 two-column stat cards on narrow screens. Controls are native buttons, ordinary number
 hints and shortcuts apply only to actions in the active section, and no layout hides
 blocked reasons. The legacy Estates and Royal Council
@@ -1405,12 +1411,30 @@ cards as decision-critical sheet context. Network consumes that same summary
 in compact rows and routes the row or section action back to Governance's
 Political Blocs tab; it does not keep a second faction projection.
 The Estates sheet replaces "Vote chance" with bloc totals and "Lobbying
-strength." During a 90-day campaign it exposes one eligible lobbying button
-per undecided bloc, then Call Vote and Withdraw controls. Campaign re-renders
-replace the current modal view while preserving its existing history token,
-so visible Back and browser Back return directly to Governance rather than to
-a stale pre-campaign sheet. Political cards and motion rows stack on narrow
-layouts, and lobbying controls retain the 44-pixel minimum touch target.
+strength." Its focused view adds a responsive semicircular chamber while
+Governance and Network keep their detailed card/list presentations. One circular
+seat represents each exact influence vote. Its DOM order remains deterministically
+bloc then member house, while an active forecast assigns the plotted positions to
+three unmistakable spatial camps: green checked support on the left, gold questioned
+undecided votes in the center, and red crossed opposition on the right. Labelled camp
+totals and the majority threshold repeat the meaning without relying on color.
+An idle chamber shows neutral composition. The compact adjacent legend retains bloc
+name, posture, influence, eligible Lobby control, and native focusable member links.
+Exact natural-support probability, member age and territorial economic power, the
+factor calculation, assembly instructions, campaign result, and action explanations
+all use the shared desktop hover/focus tooltip or compact-layout `?` disclosure rather
+than visible helper paragraphs. Seat taps remain shortcuts to the same ruler/realm
+sheet and the dots stay out of repetitive keyboard traversal. A ruler opened from a
+seat or legend link adds its own modal-history layer, so Back restores Estates first;
+Estates then returns to Governance's Institution section. Campaign re-renders replace
+only the current Estates layer and preserve that route. Chamber content stacks without
+horizontal overflow on narrow layouts. At phone width the three camp totals stack into
+full-width labelled rows so their names cannot collide. The legend stops being a nested
+scroll container and explicitly permits vertical panning, allowing a drag begun over a
+bloc card or member link to continue scrolling the Estates sheet. Each action's compact
+details button occupies the full right edge of that action row, matching its top and
+bottom even when the action label wraps. Lobbying, disclosure, action, and legend-member
+controls retain the 44-pixel minimum touch target.
 Technology-locked motions remain visible with the exact missing innovation and open its
 detail sheet instead of beginning a campaign. Other unavailable motions keep their ordinary
 disabled reason and selector behavior.

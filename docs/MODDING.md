@@ -1661,6 +1661,7 @@ replace a complete archetype definition by the same top-level
     "mercantile": {
       "name": "Commercial Interest",
       "icon": "⚖",
+      "color": "#4f9c8b",
       "desc": "Guild, charter, enterprise, and trade interests acting together.",
       "order": 1,
       "affiliationThreshold": 30,
@@ -1670,8 +1671,10 @@ replace a complete archetype definition by the same top-level
 }
 ```
 
-`name` and `desc` are structured display fields; `icon` and `order` control
-presentation. `affiliationThreshold` is the minimum interest score for a new
+`name` and `desc` are structured display fields; `icon`, optional six-digit-hex
+`color`, and `order` control presentation. `color` outlines seats in the focused
+Estates chamber and safely falls back to the core archetype color when omitted or
+invalid. `affiliationThreshold` is the minimum interest score for a new
 ordinary affiliation. `motions.redress` and `motions.scutage` are the
 archetype's reason-coded starting scores. Core assignment recognizes the
 `crown`, `mercantile`, `magnate`, and `independent` archetypes. Later mods may
@@ -1687,14 +1690,18 @@ house when sworn there. House influence is:
 
 Use the public projections rather than rebuilding this rule:
 
-- `FB.politicalCourt(state)` returns the locale-neutral court and house facts.
+- `FB.politicalCourt(state)` returns the locale-neutral court and house facts,
+  including derived `rulerAge` and `economicPower` (directly held county
+  development plus half the development of vassal-held territory).
 - `FB.politicalSummary(state)` returns aggregated blocs, leaders, members,
   interests, influence, strict-majority threshold, a `forecasts` map keyed by
-  policy id for every catalog policy that applies, and an optional
-  pending-motion forecast.
+  policy id for every catalog policy that applies, the influence-weighted
+  `courtEconomicPowerAverage`, and an optional pending-motion forecast.
 - `FB.politicalMotionForecast(state,policyId)` returns bloc scores, reason
   ids, locked/pledged/undecided postures, natural support chances, and
-  influence totals for any id in the policy catalog.
+  influence totals plus `courtEconomicPowerAverage` for any id in the policy
+  catalog. Bloc records include influence-weighted `averageRulerAge` and
+  `averageEconomicPower`.
 
 Those three functions are read-only and RNG-neutral. Do not call the mutating
 repair functions from rendering code. `FB.ensurePolitics` and
@@ -1746,7 +1753,10 @@ definitions are replaced atomically rather than deep-merged:
       "order": 4,
       "requiresTech": ["urban_markets", "authenticated_seals"],
       "gate": "parliament_gate_market_charter",
-      "posture": { "traits": { "greedy": 6, "generous": -4 } }
+      "posture": {
+        "economicPowerSlope": 6,
+        "traits": { "greedy": 6, "generous": -4 }
+      }
     }
   }
 }
@@ -1776,7 +1786,12 @@ Fields:
 - `posture` tunes bloc scoring beyond the archetype's `politicalBlocs.motions`
   base weight: `aidSlope` multiplies the current aid's deviation from custom,
   `traits` maps member-ruler trait ids to score adjustments, and
-  `martialSlope` scales average member Martial (clamped ±12).
+  `martialSlope` scales average member Martial (clamped ±12). Optional
+  `ageSlope` multiplies `(influence-weighted average ruler age - 40) / 10`,
+  rounded and clamped ±8. Optional `economicPowerSlope` multiplies the bloc's
+  relative difference from the influence-weighted court economic-power average,
+  rounded and clamped ±8. These are read-only forecast factors and are never
+  serialized.
 - `resultEvent` names the queued result event; it defaults to
   `parliament_<policyId>`. The event follows the predetermined-result pattern:
   `contextValidator:'parliament_motion_context_valid'` with pass/fail options
@@ -2554,9 +2569,10 @@ instruction arrangements:
 - `annualMortality` optionally adds a full four-term mortality probability at New Year.
   Risk scales linearly with completed terms (`annualMortality × terms / 4`) and resolves
   before education and coming-of-age.
-- `annualEvents` optionally lists queued event ids. Surviving terms across the household
-  get first claim on the household’s one annual education story with probability
-  `min(1, terms / 4)`; the student is selected in proportion to completed terms.
+- `annualEvents` optionally lists queued event ids. When the general formative roll does
+  not produce the household’s annual education story, surviving institutional terms supply
+  a fallback with probability `min(1, terms / 4)`; the student is selected in proportion
+  to completed terms.
 - `name`/`desc` accept the same localization tokens and faith-variant objects as
   other structured data.
 - The built-in `master` id is special: its chance comes from the attached tutor
@@ -2570,14 +2586,18 @@ instruction arrangements:
 General formative events declare `educationStory:true` and may add a non-empty, unique
 `educationFocuses` array drawn from `dip mar ste int lea`; omitting it makes the event eligible
 for every focus. The mod loader rejects other `educationStory` values, malformed focus lists,
-unknown student skills or traits, and empty or extra fields in `effects.student`. After
-school-specific selection has passed, completed terms across eligible
-resident children and grandchildren roll `min(balance.educationStoryChanceCap,
+unknown student skills or traits, and empty or extra fields in `effects.student`. Completed
+terms across eligible resident children and grandchildren roll first for
+`min(balance.educationStoryChanceCap,
 terms × balance.educationStoryTermChance)`. The child and focus are term-weighted, and unseen
 eligible events are preferred per student before the pool recycles without an immediate repeat.
+Only when that roll misses may `annualEvents` provide the one education story for the year.
 Completed focus terms live in `character.edu.storyTerms`; history lives in
 `character.edu.storiesSeen` plus `character.edu.lastStory`. Old saves need no migration because
 all three records are created lazily. The default pacing values are `0.80` and `0.15`.
+Core formative stories use three options: two 65% trait-shaping attempts with a skill-loss risk,
+then a 35% option whose only possible mechanical result is a single skill gain. That three-option
+balance is authored event content rather than an additional schema requirement for mods.
 
 ## Family enterprises
 

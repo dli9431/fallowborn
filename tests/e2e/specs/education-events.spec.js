@@ -29,7 +29,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('the formative catalog exposes every focus and upbringing choice',
+test('the formative catalog exposes three choices with a modest safe gamble',
   async function ({ page }) {
     const stories = await page.evaluate(function () {
       return FBDATA.events.filter(function (ev) {
@@ -40,39 +40,116 @@ test('the formative catalog exposes every focus and upbringing choice',
           focuses:ev.educationFocuses || null,
           chances:ev.options.map(function (option) { return option.chance; }),
           traits:ev.options.map(function (option) {
-            return option.success.effects.student.addTrait;
+            return option.success.effects.student.addTrait || null;
           }),
           skills:ev.options.map(function (option) {
             return Object.keys(option.success.effects.student.skills)[0];
-          })
+          }),
+          safe:(function () {
+            const option = ev.options[2];
+            const student = option && option.success &&
+              option.success.effects && option.success.effects.student;
+            const skill = student && Object.keys(student.skills || {})[0];
+            const failure = option && option.failure && option.failure.effects;
+            return !!option && option.chance === 0.35 && !!skill &&
+              Object.keys(student.skills).length === 1 &&
+              student.skills[skill] === 1 && student.addTrait === undefined &&
+              !!failure && Object.keys(failure).length === 0;
+          }())
         };
       });
     });
 
     expect(stories).toEqual([
       { id:'education_diplomacy_audience', focuses:['dip'],
-        chances:[0.65,0.65], traits:['patient','proud'], skills:['dip','dip'] },
+        chances:[0.65,0.65,0.35], traits:['patient','proud',null],
+        skills:['dip','dip','dip'], safe:true },
       { id:'education_martial_yard', focuses:['mar'],
-        chances:[0.65,0.65], traits:['brave','wrathful'], skills:['mar','mar'] },
+        chances:[0.65,0.65,0.35], traits:['brave','wrathful',null],
+        skills:['mar','mar','mar'], safe:true },
       { id:'education_stewardship_tally', focuses:['ste'],
-        chances:[0.65,0.65], traits:['honest','greedy'], skills:['ste','ste'] },
+        chances:[0.65,0.65,0.35], traits:['honest','greedy',null],
+        skills:['ste','ste','ste'], safe:true },
       { id:'education_intrigue_secret', focuses:['int'],
-        chances:[0.65,0.65], traits:['deceitful','cynical'], skills:['int','int'] },
+        chances:[0.65,0.65,0.35], traits:['deceitful','cynical',null],
+        skills:['int','int','int'], safe:true },
       { id:'education_learning_gloss', focuses:['lea'],
-        chances:[0.65,0.65], traits:['zealous','patient'], skills:['lea','lea'] },
+        chances:[0.65,0.65,0.35], traits:['zealous','patient',null],
+        skills:['lea','lea','lea'], safe:true },
       { id:'education_found_purse', focuses:null,
-        chances:[0.65,0.65,0.65], traits:['honest','deceitful','generous'],
-        skills:['ste','int','dip'] },
+        chances:[0.65,0.65,0.35], traits:['honest','deceitful',null],
+        skills:['ste','int','dip'], safe:true },
       { id:'education_younger_pupil', focuses:null,
-        chances:[0.65,0.65], traits:['kind','cruel'], skills:['dip','int'] },
+        chances:[0.65,0.65,0.35], traits:['kind','cruel',null],
+        skills:['dip','int','lea'], safe:true },
       { id:'education_public_praise', focuses:null,
-        chances:[0.65,0.65], traits:['humble','proud'], skills:['dip','dip'] },
+        chances:[0.65,0.65,0.35], traits:['humble','proud',null],
+        skills:['dip','dip','dip'], safe:true },
       { id:'education_lesson_feast', focuses:null,
-        chances:[0.65,0.65], traits:['temperate','gluttonous'],
-        skills:['ste','ste'] },
+        chances:[0.65,0.65,0.35], traits:['temperate','gluttonous',null],
+        skills:['ste','ste','ste'], safe:true },
       { id:'education_future_ambitions', focuses:null,
-        chances:[0.65,0.65], traits:['ambitious','content'], skills:['dip','ste'] }
+        chances:[0.65,0.65,0.35], traits:['ambitious','content',null],
+        skills:['dip','ste','ste'], safe:true }
     ]);
+  });
+
+test('the third formative choice grants a smaller upside without a failure penalty',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      function make(name) {
+        const c = FB.makeCharacter(s, {
+          name:name, sex:'f', culture:me.culture, religion:me.religion,
+          born:s.date.year - 11, station:FB.stationOf(me), traitsN:0,
+          fatherId:me.id, dyn:me.dyn
+        });
+        c.skills = { dip:2, mar:2, ste:2, int:2, lea:2 };
+        c.traits = [];
+        c.edu = { focus:'dip' };
+        me.childrenIds.push(c.id);
+        return c;
+      }
+      const ev = FB.eventById('education_diplomacy_audience');
+      const option = ev.options[2];
+      const oldChance = FB.chance;
+      const successStudent = make('Quiet Success');
+      FB.chance = function () { return true; };
+      const success = FB.resolveEventOption(s, ev, option,
+        FB.eventContext(s, {
+          studentId:successStudent.id, studentFocus:'dip'
+        }), { automated:false });
+      const failureStudent = make('Quiet Failure');
+      const failureBefore = JSON.stringify({
+        skills:failureStudent.skills, traits:failureStudent.traits
+      });
+      FB.chance = function () { return false; };
+      const failure = FB.resolveEventOption(s, ev, option,
+        FB.eventContext(s, {
+          studentId:failureStudent.id, studentFocus:'dip'
+        }), { automated:false });
+      FB.chance = oldChance;
+      return {
+        chance:option.chance,
+        successResult:success.result,
+        successSkill:successStudent.skills.dip,
+        successTraits:successStudent.traits,
+        failureResult:failure.result,
+        failureUnchanged:failureBefore === JSON.stringify({
+          skills:failureStudent.skills, traits:failureStudent.traits
+        })
+      };
+    });
+
+    expect(result).toEqual({
+      chance:0.35,
+      successResult:'success',
+      successSkill:3,
+      successTraits:[],
+      failureResult:'failure',
+      failureUnchanged:true
+    });
   });
 
 test('completed terms accrue by focus while missed and ineligible study does not',
@@ -141,7 +218,7 @@ test('completed terms accrue by focus while missed and ineligible study does not
     expect(result.students).toHaveLength(5);
   });
 
-test('New Year selection is term-weighted, capped, ordered, and limited to one story',
+test('New Year selection is formative-first, term-weighted, capped, and limited to one story',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
@@ -200,11 +277,22 @@ test('New Year selection is term-weighted, capped, ordered, and limited to one s
       const oldMortality = FBDATA.schooling.noble_academy.annualMortality;
       FBDATA.schooling.noble_academy.annualMortality = 0;
       const academyAnnual = FB.schoolingYear(s);
-      FBDATA.schooling.noble_academy.annualMortality = oldMortality;
       s.eventQueue = [];
-      const academyRolls = [0, 0, 0];
+      let academyRolls = [0, 0, 0];
       FB.rng = function () { return academyRolls.shift() || 0; };
       FB.schoolingYearEvents(s, academyAnnual);
+      const academyFormativeIds = s.eventQueue.map(function (item) {
+        return item.id;
+      });
+
+      academy.edu.storyTerms = { ste:4 };
+      academy.edu.schoolTerms = { noble_academy:4 };
+      const academyFallbackAnnual = FB.schoolingYear(s);
+      FBDATA.schooling.noble_academy.annualMortality = oldMortality;
+      s.eventQueue = [];
+      academyRolls = [0.99, 0, 0, 0];
+      FB.rng = function () { return academyRolls.shift() || 0; };
+      FB.schoolingYearEvents(s, academyFallbackAnnual);
       FB.rng = oldRng;
       return {
         queued:queued,
@@ -216,8 +304,9 @@ test('New Year selection is term-weighted, capped, ordered, and limited to one s
         cleared:child.edu.storyTerms.dip === undefined &&
           grandchild.edu.storyTerms.mar === undefined,
         cap:chances[chances.length - 1],
-        academyIds:s.eventQueue.map(function (item) { return item.id; }),
-        academyStudent:s.eventQueue[0] && s.eventQueue[0].ctx.studentId
+        academyFormativeIds:academyFormativeIds,
+        academyFallbackIds:s.eventQueue.map(function (item) { return item.id; }),
+        academyFallbackStudent:s.eventQueue[0] && s.eventQueue[0].ctx.studentId
       };
     });
 
@@ -230,9 +319,72 @@ test('New Year selection is term-weighted, capped, ordered, and limited to one s
     expect(result.focus).toBe('mar');
     expect(result.cleared).toBe(true);
     expect(result.cap).toBe(0.8);
-    expect(result.academyIds).toHaveLength(1);
-    expect(result.academyIds[0]).toMatch(/^academy_/);
-    expect(result.academyStudent).toBeTruthy();
+    expect(result.academyFormativeIds).toHaveLength(1);
+    expect(result.academyFormativeIds[0]).toMatch(/^education_/);
+    expect(result.academyFallbackIds).toHaveLength(1);
+    expect(result.academyFallbackIds[0]).toMatch(/^academy_/);
+    expect(result.academyFallbackStudent).toBeTruthy();
+  });
+
+test('a real New Year tick presents a formative education event',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const child = FB.makeCharacter(s, {
+        name:'Rollover Student', sex:'f', culture:me.culture,
+        religion:me.religion, born:s.date.year - 10,
+        station:FB.stationOf(me), traitsN:0,
+        fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null,
+        dyn:me.dyn
+      });
+      child.traits = [];
+      child.edu = {
+        focus:'ste',
+        storyTerms:{ ste:3 },
+        policy:{
+          focus:'manual', instruction:'manual', instructionChoice:'home'
+        }
+      };
+      me.childrenIds.push(child.id);
+      FB.touchFamily();
+      s.date.season = 3;
+      s.date.day = 90;
+      s.eventQueue = [];
+      s.slotDays = [];
+
+      const oldTermChance = FBDATA.balance.educationStoryTermChance;
+      const oldChanceCap = FBDATA.balance.educationStoryChanceCap;
+      const oldChance = FB.chance;
+      let outcome;
+      try {
+        FBDATA.balance.educationStoryTermChance = 1;
+        FBDATA.balance.educationStoryChanceCap = 1;
+        FB.chance = function (chance) { return chance >= 1; };
+        outcome = FB.game.passDay({ liveTick:true });
+      } finally {
+        FBDATA.balance.educationStoryTermChance = oldTermChance;
+        FBDATA.balance.educationStoryChanceCap = oldChanceCap;
+        FB.chance = oldChance;
+      }
+      return {
+        outcome:outcome,
+        season:s.date.season,
+        day:s.date.day,
+        storyId:child.edu.lastStory || '',
+        remainingTerms:Object.keys(child.edu.storyTerms || {}).length,
+        eventOpen:FB.ui.eventsBusy()
+      };
+    });
+
+    expect(result).toMatchObject({
+      outcome:'event', season:0, day:1,
+      remainingTerms:0, eventOpen:true
+    });
+    expect(result.storyId).toMatch(/^education_/);
+    await expect(page.locator('#eventmodal')).toBeVisible();
+    await expect(page.locator('#ev-text')).toContainText('Rollover Student');
   });
 
 test('student history prefers unseen stories and deterministically avoids immediate repeats',

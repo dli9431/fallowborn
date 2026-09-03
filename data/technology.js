@@ -195,6 +195,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'hard', tech:['scutage'], fallback:'customary_service',
         rationale:'Advanced cash substitution for customary military service.'
       },
+      estates_demographic_material_interests:{
+        mode:'none',
+        rationale:'Ruler age and territorial economic power refine baseline bloc interests; individual Estates motions retain their existing technology gates.'
+      },
       formal_market_charters:{
         mode:'hard', tech:['urban_markets','authenticated_seals'],
         fallback:'ordinary_markets_and_toll_disputes',

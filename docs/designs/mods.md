@@ -103,7 +103,9 @@ Political-bloc archetype definitions replace atomically by id under the
 top-level `politicalBlocs` key. Core behavior currently consumes the `crown`,
 `mercantile`, `magnate`, and `independent` ids; a replacement supplies the
 complete localized name/description, icon, order, affiliation threshold, and
-redress/scutage posture. Runtime state keeps generated magnate/independent
+per-policy posture. The optional six-digit-hex `color` outlines the focused
+Estates chamber seats; omissions and invalid values use the built-in presentation
+fallback. Runtime state keeps generated magnate/independent
 bloc ids and allegiances, not a frozen copy of the definition. The active mod
 fingerprint therefore remains the compatibility boundary for saves whose
 forecast is affected by a replacement.

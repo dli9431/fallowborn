@@ -284,6 +284,13 @@ house's vassal subtree beyond its own demesne, and the Council bonus applies
 only to a real great office in the player's crown. Bloc influence is the sum
 of member-house influence; a vote requires `floor(total/2) + 1`.
 
+Each projected house also exposes `rulerAge` and `economicPower`. Age reads the
+current ruler character and falls back deterministically to the realm's ruler
+snapshot (or 40 when a legacy record has neither). Economic power is the sum of
+development in directly held counties plus half the development in vassal-held
+territory. Bloc averages and the court economic average are influence-weighted,
+derived on demand, and never saved.
+
 `FBDATA.politicalBlocs` defines the localized Crown, Mercantile, Magnate, and
 Independent archetype presentation and their per-policy starting postures
 (`motions.<policyId>` for each `FBDATA.policies` entry). `js/politics.js`
@@ -311,8 +318,9 @@ For an Estates-eligible vassal, `FB.politicalSummary` includes a forecast for
 every policy in the catalog plus the active pending-motion forecast.
 Crown-side blocs remain visible without implying those vassal motions apply
 to crown policy. The summary and `FB.politicalMotionForecast` derive all
-membership details, reasons, influence, postures, and probabilities without
-consuming RNG or mutating game state.
+membership details, reasons, influence, postures, probabilities, the court
+economic average, and reason-coded age/economic adjustments without consuming
+RNG or mutating game state.
 
 When a materialized rightful ruler or appointed family grantee becomes the protagonist,
 `FB.absorbRealm` joins the realm they actually rule to the player's: its ruler's demesne
@@ -587,7 +595,8 @@ neighbor* (`buy_county`, a vassal-only gold sink for adjacent rank-1 counts with
 vassals of their own); and *Settle the wasteland* (`settle_waste` → `FB.settleWaste`,
 which turns a bordering wasteland province into a true county of the player's demesne —
 settler culture and faith, belonging to no de jure duchy). The deed is unavailable when
-no wasteland borders the player's demesne. Both that deed and the commoner
+no wasteland borders the player's demesne: it is omitted from Deeds entirely rather
+than shown as a disabled action. Both that deed and the commoner
 frontier-homestead journey (see [travel.md](travel.md)) perform the physical conversion
 through the one shared `FB.materializeWasteland` helper — culture, faith,
 development 1, holder, owner, de jure exclusion, generated settlement slots, cache

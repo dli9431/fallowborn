@@ -5,7 +5,8 @@
    text and effects stay in the policy’s result event (data/events_parliament.js),
    so visible and autoresolved votes remain equivalent. Bloc-interest weights
    per policy live in the `motions` maps of data/political_blocs.js; the
-   aid-response and per-trait posture adjustments live in each def’s `posture`.
+   aid, ruler-age, territorial economic-power, Martial, and per-trait posture
+   adjustments live in each def’s `posture`.
    A `gate` names an FB.fns fn that returns true when the policy may be
    proposed, or a localized reason string when it may not. Runtime mods may
    replace complete definitions through the top-level `policies` key.
@@ -39,7 +40,7 @@ FBDATA.policies = {
     emergency:false,
     order:0,
     gate:'parliament_gate_redress',
-    posture:{ aidSlope:100, traits:{
+    posture:{ aidSlope:100, ageSlope:2, economicPowerSlope:6, traits:{
       ambitious:5, greedy:8, proud:5, content:-5, generous:-5 } },
     redressEvidence:true
   },
@@ -57,7 +58,8 @@ FBDATA.policies = {
     emergency:true,
     order:1,
     gate:'parliament_gate_emergency_subsidy',
-    posture:{ traits:{ generous:8, greedy:-8, brave:4 } }
+    posture:{ economicPowerSlope:6,
+      traits:{ generous:8, greedy:-8, brave:4 } }
   },
   scutage: {
     name:'Scutage',
@@ -74,7 +76,8 @@ FBDATA.policies = {
     order:2,
     requiresTech:'scutage',
     gate:'parliament_gate_scutage',
-    posture:{ aidSlope:-60, martialSlope:2, traits:{
+    posture:{ aidSlope:-60, martialSlope:2, ageSlope:4,
+      economicPowerSlope:6, traits:{
       brave:-10, craven:12, greedy:5, patient:4, wrathful:-6 } }
   },
   levy_relief: {
@@ -91,7 +94,7 @@ FBDATA.policies = {
     emergency:false,
     order:3,
     gate:'parliament_gate_levy_relief',
-    posture:{ traits:{ brave:-4, craven:6 } }
+    posture:{ ageSlope:2, traits:{ brave:-4, craven:6 } }
   },
   market_charter: {
     name:'Market Charter',
@@ -109,7 +112,7 @@ FBDATA.policies = {
     requiresTech:['urban_markets','authenticated_seals'],
     gate:'parliament_gate_market_charter',
     resultEvent:'parliament_market_charter_grant',
-    posture:{ traits:{ greedy:6, generous:-4 } }
+    posture:{ economicPowerSlope:6, traits:{ greedy:6, generous:-4 } }
   },
   local_custom: {
     name:'Confirmation of Custom',
@@ -126,7 +129,7 @@ FBDATA.policies = {
     order:5,
     requiresTech:'customary_law',
     gate:'parliament_gate_local_custom',
-    posture:{ traits:{ content:6, ambitious:-6, proud:4 } }
+    posture:{ ageSlope:2, traits:{ content:6, ambitious:-6, proud:4 } }
   },
   revocation_consent: {
     name:'Consent of the Estates',
@@ -159,7 +162,8 @@ FBDATA.policies = {
     emergency:false,
     order:7,
     gate:'parliament_gate_war_authorization',
-    posture:{ traits:{ brave:8, craven:-8, zealous:4, wrathful:6 } }
+    posture:{ ageSlope:-4, economicPowerSlope:4,
+      traits:{ brave:8, craven:-8, zealous:4, wrathful:6 } }
   },
   war_condemnation: {
     name:'War Condemnation',
@@ -175,7 +179,8 @@ FBDATA.policies = {
     emergency:false,
     order:8,
     gate:'parliament_gate_war_condemnation',
-    posture:{ traits:{ brave:-8, craven:8, patient:4, kind:4 } }
+    posture:{ ageSlope:4, economicPowerSlope:-4,
+      traits:{ brave:-8, craven:8, patient:4, kind:4 } }
   },
   religious_tolerance: {
     name:'Religious Tolerance',

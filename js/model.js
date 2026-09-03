@@ -1613,6 +1613,14 @@ window.FB = window.FB || {};
     familyIndex = null;
   };
 
+  /* Retained UI can compare this derived revision without rebuilding the
+     family walk on every live day. Relationship writers already invalidate
+     the index through touchFamily; the revision is process-local and is
+     never serialized. */
+  FB.familyRevision = function () {
+    return familyStamp;
+  };
+
   function familyIndexOf(state) {
     if (familyIndex && familyIndex.state === state &&
         familyIndex.stamp === familyStamp &&

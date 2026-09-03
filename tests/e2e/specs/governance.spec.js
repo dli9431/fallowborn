@@ -2009,7 +2009,46 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
     await expect(page.getByRole('heading', {
       name:'🏛 Governance', exact:true
     })).toBeVisible();
+    await page.locator('[data-governance-section="obligations"]').click();
+    const compactGovernanceLayout = await page.evaluate(function () {
+      var nav = document.querySelector('.governance-nav');
+      var selected = nav.querySelector('[aria-selected="true"]');
+      var panel = document.querySelector('.governance-card:not([hidden])');
+      var rows = Array.prototype.slice.call(panel.children).filter(
+        function (child) { return child.classList.contains('kv'); });
+      var panelRect = panel.getBoundingClientRect();
+      var selectedRect = selected.getBoundingClientRect();
+      return {
+        selectedLeft:selectedRect.left - nav.getBoundingClientRect().left,
+        rowDisplays:rows.map(function (row) {
+          return getComputedStyle(row).display;
+        }),
+        rowColumns:rows.map(function (row) {
+          return getComputedStyle(row).gridTemplateColumns.split(' ').length;
+        }),
+        rowsContained:rows.every(function (row) {
+          var rect = row.getBoundingClientRect();
+          return rect.left >= panelRect.left - 1 &&
+            rect.right <= panelRect.right + 1 &&
+            row.scrollWidth <= row.clientWidth + 1;
+        })
+      };
+    });
+    expect(compactGovernanceLayout.selectedLeft).toBeGreaterThanOrEqual(0);
+    expect(compactGovernanceLayout.selectedLeft).toBeLessThanOrEqual(4);
+    expect(compactGovernanceLayout.rowDisplays.every(function (display) {
+      return display === 'grid';
+    })).toBe(true);
+    expect(compactGovernanceLayout.rowColumns.every(function (columns) {
+      return columns === 2;
+    })).toBe(true);
+    expect(compactGovernanceLayout.rowsContained).toBe(true);
     await page.locator('[data-governance-section="actions"]').click();
+    expect(await page.locator(
+      '[data-governance-section="actions"]').evaluate(function (tab) {
+        return tab.getBoundingClientRect().left -
+          tab.parentNode.getBoundingClientRect().left;
+      })).toBeLessThanOrEqual(4);
     await expect(page.locator(
       '#governance-actions .actionbtn .keyhint').first()).toBeVisible();
     await expect(page.locator(

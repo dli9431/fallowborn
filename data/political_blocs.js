@@ -8,6 +8,7 @@ FBDATA.politicalBlocs = {
   crown: {
     name:'Crown',
     icon:'♛',
+    color:'#b88a3b',
     desc:'Houses bound to the ruler by office, faith, favor, or temperament.',
     order:0,
     affiliationThreshold:35,
@@ -18,6 +19,7 @@ FBDATA.politicalBlocs = {
   mercantile: {
     name:'Mercantile',
     icon:'⚖',
+    color:'#4f9c8b',
     desc:'Guild, charter, enterprise, and trade interests acting together.',
     order:1,
     affiliationThreshold:30,
@@ -28,6 +30,7 @@ FBDATA.politicalBlocs = {
   magnate: {
     name:'Magnates',
     icon:'🏰',
+    color:'#9a6fb0',
     desc:'A landed affinity gathered around an influential house.',
     order:2,
     affiliationThreshold:30,
@@ -38,6 +41,7 @@ FBDATA.politicalBlocs = {
   independent: {
     name:'Independent',
     icon:'◇',
+    color:'#89929b',
     desc:'A house with no durable allegiance strong enough to bind it.',
     order:3,
     affiliationThreshold:0,

@@ -529,7 +529,7 @@ test('noble settle_waste keeps its costs and political result via the helper',
     expect(result.chronicle).toBe(true);
   });
 
-test('settle_waste is unavailable without bordering wasteland',
+test('settle_waste is hidden without bordering wasteland',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const state = FB.state;
@@ -555,6 +555,9 @@ test('settle_waste is unavailable without bordering wasteland',
       const candidates = FB.wastelandCandidates(state);
       for (const pid of candidates) FB.world.byId[pid].wasteland = false;
       const blocked = FB.instantStatus(state, 'settle_waste');
+      const listed = FB.listInstants(state).some(function (entry) {
+        return entry.a.id === 'settle_waste';
+      });
       return {
         setup:true,
         candidateCount:candidates.length,
@@ -563,7 +566,8 @@ test('settle_waste is unavailable without bordering wasteland',
           shown:blocked.shown,
           can:blocked.can,
           reason:blocked.reason
-        }
+        },
+        listed:listed
       };
     });
 
@@ -571,10 +575,11 @@ test('settle_waste is unavailable without bordering wasteland',
     expect(result.candidateCount).toBeGreaterThan(0);
     expect(result.ready).toEqual({ shown:true, can:true });
     expect(result.blocked).toEqual({
-      shown:true,
+      shown:false,
       can:false,
-      reason:'No empty land borders your demesne.'
+      reason:''
     });
+    expect(result.listed).toBe(false);
   });
 
 test('the frontier technology impact review passes the validator',

@@ -1,22 +1,32 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/agency.js',
   'js/modifiers.js',
+  'js/model.js',
+  'js/parliament.js',
   'js/politics.js',
+  'js/save.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
+  'js/world.js',
   'css/style.css',
   'data/political_blocs.js',
   'data/political_institutions.js',
-  'data/policies.js'
+  'data/policies.js',
+  'data/technology.js',
+  'fallowborn-parliament-demo-save.txt'
 ]);
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const parliamentDemoSavePath = path.resolve(
+  __dirname, '..', '..', '..', 'fallowborn-parliament-demo-save.txt');
 
 async function startPoliticsGame(page, testInfo) {
   await openGame(page, testInfo);
@@ -259,7 +269,12 @@ test('direct-court scope, affiliation interests, and influence are authoritative
         redressPostures[redress.blocs[r].id] = {
           score:redress.blocs[r].score,
           posture:redress.blocs[r].posture,
-          chance:redress.blocs[r].naturalSupportChance
+          chance:redress.blocs[r].naturalSupportChance,
+          reasonIds:redress.blocs[r].motionReasons.map(function (reason) {
+            return reason.id;
+          }),
+          reasonTotal:redress.blocs[r].motionReasons.reduce(
+            function (sum, reason) { return sum + reason.value; }, 0)
         };
       }
       var after = JSON.stringify(s);
@@ -436,26 +451,215 @@ test('direct-court scope, affiliation interests, and influence are authoritative
     expect(result.majority).toBe(18);
     expect(result.redressTotal).toBe(result.total);
     expect(result.redressMajority).toBe(result.majority);
-    expect(result.redressPostures.crown).toEqual({
-      score:-15,
-      posture:'undecided',
-      chance:0.35
+    Object.keys(result.redressPostures).forEach(function (id) {
+      var item = result.redressPostures[id];
+      expect(item.score).toBe(item.reasonTotal);
+      expect(item.chance).toBe(Math.max(0.15,
+        Math.min(0.85, (50 + item.score) / 100)));
+      expect(item.reasonIds).toContain('average_ruler_age');
+      expect(item.reasonIds).toContain('economic_power');
     });
-    expect(result.redressPostures.mercantile).toEqual({
-      score:30,
-      posture:'support',
-      chance:0.8
-    });
+    expect(result.redressPostures.mercantile.posture).toBe('support');
     /* Shared-faith ruler regard now contributes the historical relationship
        prior to this mixed magnate bloc's motion score. */
     expect(result.redressPostures['magnate:' + ids.alphaId].score)
-      .toBe(23);
+      .toBeGreaterThan(0);
     expect(result.independentAffiliation).toBe(
       'independent:' + ids.gammaId);
     expect(result.commercialAffiliation).toBe('mercantile');
     expect(result.crownOffice).toBe('treasurer');
     expect(result.crownInfluence).toBe(9);
     expect(result.crownAffiliation).toBe('crown');
+  });
+
+test('age and economic posture factors use exact weighted formulas and caps',
+  async function ({ page }, testInfo) {
+    await startPoliticsGame(page, testInfo);
+    var ids = await configurePolitics(page);
+    var result = await page.evaluate(function (setup) {
+      var s = FB.state;
+      function reason(bloc, id) {
+        return bloc.motionReasons.filter(function (item) {
+          return item.id === id;
+        })[0];
+      }
+      function expectedDevelopment(pid) {
+        return Number(s.dev[pid]) || Number(FB.world.byId[pid].dev0) || 1;
+      }
+      var before = FB.save.serialize();
+      var rngBefore = FB.getRngState();
+      var court = FB.politicalCourt(s);
+      var summary = FB.politicalSummary(s);
+      var forecast = FB.politicalMotionForecast(s, 'redress');
+      var projectionReadOnly = before === FB.save.serialize();
+      var projectionRngNeutral = rngBefore === FB.getRngState();
+      var houseFacts = court.houses.map(function (house) {
+        var held = {};
+        var expectedEconomicPower = 0;
+        house.directlyHeldCountyIds.forEach(function (pid) {
+          held[pid] = true;
+          expectedEconomicPower += expectedDevelopment(pid);
+        });
+        house.territoryCountyIds.forEach(function (pid) {
+          if (!held[pid]) expectedEconomicPower += expectedDevelopment(pid) / 2;
+        });
+        var character = house.isPlayer
+          ? s.chars[s.player.charId]
+          : FB.realmRulerCharacterSnapshot(s, house.id);
+        var realmRuler = s.realms[house.id] && s.realms[house.id].ruler;
+        var expectedAge = character && isFinite(Number(character.born))
+          ? Math.max(0, s.date.year - Number(character.born))
+          : (realmRuler && realmRuler.born !== undefined &&
+              isFinite(Number(realmRuler.born))
+            ? Math.max(0, s.date.year - Number(realmRuler.born))
+            : Math.max(0, Number(realmRuler && realmRuler.age) || 40));
+        return {
+          id:house.id,
+          rulerAge:house.rulerAge,
+          expectedAge:expectedAge,
+          economicPower:house.economicPower,
+          expectedEconomicPower:Math.round(expectedEconomicPower * 10) / 10,
+          influence:house.influence
+        };
+      });
+      var expectedCourtAverage = houseFacts.reduce(
+        function (sum, house) {
+          return sum + house.economicPower * house.influence;
+        }, 0) / summary.totalInfluence;
+      var exact = forecast.blocs.map(function (bloc) {
+        var age = reason(bloc, 'average_ruler_age');
+        var economic = reason(bloc, 'economic_power');
+        return {
+          id:bloc.id,
+          averageAge:bloc.averageRulerAge,
+          averageEconomicPower:bloc.averageEconomicPower,
+          ageValue:age.value,
+          reasonAverageAge:age.averageAge,
+          expectedAge:Math.max(-8, Math.min(8, Math.round(
+            ((bloc.averageRulerAge - 40) / 10) * 2))),
+          economicValue:economic.value,
+          reasonAverageEconomicPower:economic.averageEconomicPower,
+          reasonCourtAverage:economic.courtEconomicPowerAverage,
+          relativeDifference:economic.relativeDifference,
+          expectedEconomic:Math.max(-8, Math.min(8, Math.round(
+            ((bloc.averageEconomicPower - summary.courtEconomicPowerAverage) /
+              summary.courtEconomicPowerAverage) * 6)))
+        };
+      });
+
+      var baselineScores = {};
+      forecast.blocs.forEach(function (bloc) {
+        baselineScores[bloc.id] = {
+          score:bloc.score,
+          demographic:reason(bloc, 'average_ruler_age').value +
+            reason(bloc, 'economic_power').value
+        };
+      });
+      var posture = FBDATA.policies.redress.posture;
+      var savedAgeSlope = posture.ageSlope;
+      var savedEconomicSlope = posture.economicPowerSlope;
+      posture.ageSlope = 0;
+      posture.economicPowerSlope = 0;
+      var neutralScores = {};
+      FB.politicalMotionForecast(s, 'redress').blocs.forEach(function (bloc) {
+        neutralScores[bloc.id] = bloc.score;
+      });
+      posture.ageSlope = 100;
+      posture.economicPowerSlope = 100;
+      s.realms[setup.polityId].ruler.age = 20;
+      s.realms[setup.alphaId].ruler.age = 80;
+      s.realms[setup.betaId].ruler.age = 20;
+      s.realms[setup.gammaId].ruler.age = 80;
+      s.chars[s.player.charId].born = s.date.year - 80;
+      var capped = FB.politicalMotionForecast(s, 'redress').blocs.map(
+        function (bloc) {
+          return {
+            age:reason(bloc, 'average_ruler_age').value,
+            economic:reason(bloc, 'economic_power').value
+          };
+        });
+      posture.ageSlope = savedAgeSlope;
+      posture.economicPowerSlope = savedEconomicSlope;
+
+      var tuning = {};
+      [
+        'redress','emergency_subsidy','scutage','levy_relief',
+        'market_charter','local_custom','revocation_consent',
+        'war_authorization','war_condemnation'
+      ].forEach(function (id) {
+        var item = FBDATA.policies[id].posture || {};
+        tuning[id] = {
+          age:Number(item.ageSlope) || 0,
+          economic:Number(item.economicPowerSlope) || 0
+        };
+      });
+      return {
+        readOnly:projectionReadOnly,
+        rngNeutral:projectionRngNeutral,
+        houseFacts:houseFacts,
+        courtAverage:summary.courtEconomicPowerAverage,
+        forecastCourtAverage:forecast.courtEconomicPowerAverage,
+        expectedCourtAverage:expectedCourtAverage,
+        exact:exact,
+        baselineScores:baselineScores,
+        neutralScores:neutralScores,
+        capped:capped,
+        tuning:tuning,
+        techReview:FBDATA.techImpactReviews.features
+          .estates_demographic_material_interests.mode
+      };
+    }, ids);
+
+    expect(result.readOnly).toBe(true);
+    expect(result.rngNeutral).toBe(true);
+    result.houseFacts.forEach(function (house) {
+      expect(house.rulerAge).toBe(house.expectedAge);
+      expect(house.economicPower).toBe(house.expectedEconomicPower);
+    });
+    expect(result.courtAverage).toBe(result.expectedCourtAverage);
+    expect(result.forecastCourtAverage).toBe(result.expectedCourtAverage);
+    result.exact.forEach(function (bloc) {
+      expect(bloc.reasonAverageAge).toBe(bloc.averageAge);
+      expect(bloc.reasonAverageEconomicPower).toBe(
+        bloc.averageEconomicPower);
+      expect(bloc.reasonCourtAverage).toBe(result.expectedCourtAverage);
+      expect(bloc.relativeDifference).toBe(
+        (bloc.averageEconomicPower - result.expectedCourtAverage) /
+          result.expectedCourtAverage);
+      expect(bloc.ageValue).toBe(bloc.expectedAge);
+      expect(bloc.economicValue).toBe(bloc.expectedEconomic);
+      expect(result.baselineScores[bloc.id].score -
+        result.neutralScores[bloc.id]).toBe(
+        result.baselineScores[bloc.id].demographic);
+    });
+    result.capped.forEach(function (bloc) {
+      expect(Math.abs(bloc.age)).toBeLessThanOrEqual(8);
+      expect(Math.abs(bloc.economic)).toBeLessThanOrEqual(8);
+    });
+    expect(result.capped.some(function (bloc) {
+      return bloc.age === 8;
+    })).toBe(true);
+    expect(result.capped.some(function (bloc) {
+      return bloc.age === -8;
+    })).toBe(true);
+    expect(result.capped.some(function (bloc) {
+      return bloc.economic === 8;
+    })).toBe(true);
+    expect(result.capped.some(function (bloc) {
+      return bloc.economic === -8;
+    })).toBe(true);
+    expect(result.tuning).toEqual({
+      redress:{ age:2, economic:6 },
+      emergency_subsidy:{ age:0, economic:6 },
+      scutage:{ age:4, economic:6 },
+      levy_relief:{ age:2, economic:0 },
+      market_charter:{ age:0, economic:6 },
+      local_custom:{ age:2, economic:0 },
+      revocation_consent:{ age:0, economic:0 },
+      war_authorization:{ age:-4, economic:4 },
+      war_condemnation:{ age:4, economic:-4 }
+    });
+    expect(result.techReview).toBe('none');
   });
 
 test('institutional allegiance thresholds outrank stronger magnate affinity',
@@ -693,6 +897,19 @@ test('Network, Governance, and Estates share blocs without state or RNG drift',
       .toBeVisible();
     await expect(page.getByText('Vote chance', { exact:true }))
       .toHaveCount(0);
+    await expect(page.locator('.parliament-hemicycle')).toBeVisible();
+    await expect(page.locator('.parliament-seat')).toHaveCount(
+      await page.evaluate(function () {
+        return FB.politicalSummary(FB.state).totalInfluence;
+      }));
+    await expect(page.locator('.parliament-seat').first()).toHaveAttribute(
+      'data-seat-posture', 'neutral');
+    await expect(page.locator('.parliament-seat').first())
+      .toHaveAttribute('tabindex', '-1');
+    var idleMember = page.locator('.parliament-member-row').first();
+    await expect(idleMember.locator('.parliament-house-details')).toBeHidden();
+    await idleMember.locator('.parliament-member-link').hover();
+    await expect(page.locator('#tooltip')).toContainText('Economic power');
     await page.locator('#gm-cancel').click();
     var after = await page.evaluate(function () {
       return {
@@ -705,6 +922,192 @@ test('Network, Governance, and Estates share blocs without state or RNG drift',
     expect(governance.realmLinks.length).toBeGreaterThan(0);
     expect(governance.playerLinks).toBeGreaterThan(0);
     expect(after).toEqual(before);
+  });
+
+test('the focused Estates chamber mirrors exact bloc influence and navigation',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:1200, height:800 });
+    await startPoliticsGame(page, testInfo);
+    await configurePolitics(page);
+    var expected = await page.evaluate(function () {
+      var s = FB.state;
+      FB.parliamentBeginMotion(s, 'redress');
+      var forecast = FB.politicalMotionForecast(s, 'redress');
+      var order = [];
+      forecast.blocs.forEach(function (bloc) {
+        bloc.members.forEach(function (house) {
+          for (var i = 0; i < house.influence; i++) {
+            order.push(bloc.id + '|' + house.id);
+          }
+        });
+      });
+      var snapshot = {
+        save:FB.save.serialize(),
+        rng:FB.getRngState()
+      };
+      var seatHouse = forecast.blocs.reduce(function (found, bloc) {
+        if (found) return found;
+        return bloc.members.filter(function (house) {
+          return !house.isPlayer;
+        })[0] || null;
+      }, null);
+      var crownColor = FBDATA.politicalBlocs.crown.color;
+      FBDATA.politicalBlocs.crown.color = 'not-a-color';
+      FB.ui.showGovernance('institution');
+      return {
+        order:order,
+        total:forecast.totalInfluence,
+        majority:forecast.majority,
+        support:forecast.supportInfluence,
+        opposition:forecast.oppositionInfluence,
+        uncertain:forecast.uncertainInfluence,
+        seatHouseId:seatHouse && seatHouse.id,
+        crownColor:crownColor,
+        snapshot:snapshot
+      };
+    });
+
+    await page.locator(
+      '#governance-institution [data-governance-institution="estates"]').click();
+
+    await expect(page.locator('.parliament-seat')).toHaveCount(expected.total);
+    expect(await page.locator('.parliament-hemicycle').evaluate(
+      function (chamber) {
+        return chamber.getBoundingClientRect().height;
+      })).toBeGreaterThanOrEqual(300);
+    await expect(page.locator('.parliament-legend-bloc')).toHaveCount(
+      await page.evaluate(function () {
+        return FB.politicalMotionForecast(FB.state, 'redress').blocs.length;
+      }));
+    var renderedOrder = await page.locator('.parliament-seat').evaluateAll(
+      function (seats) {
+        return seats.map(function (seat, index) {
+          return seat.dataset.seatBloc + '|' + seat.dataset.estatesHouse +
+            '|' + seat.dataset.seatIndex + '|' + index;
+        });
+      });
+    expect(renderedOrder).toEqual(expected.order.map(function (item, index) {
+      return item + '|' + index + '|' + index;
+    }));
+    await expect(page.locator('.parliament-camp-support')).toContainText(
+      'Support');
+    await expect(page.locator('.parliament-camp-support')).toContainText(
+      String(expected.support));
+    await expect(page.locator('.parliament-camp-oppose')).toContainText(
+      'Opposition');
+    await expect(page.locator('.parliament-camp-oppose')).toContainText(
+      String(expected.opposition));
+    await expect(page.locator('.parliament-camp-undecided')).toContainText(
+      'Undecided');
+    await expect(page.locator('.parliament-camp-undecided')).toContainText(
+      String(expected.uncertain));
+    await expect(page.locator('.parliament-chamber-heading')).toContainText(
+      expected.majority + ' needed');
+    await expect(page.locator(
+      '.estates-modal .hint, .estates-modal .adesc, ' +
+      '.estates-modal .progressnote, .estates-modal .political-motion-row'))
+      .toHaveCount(0);
+    await expect(page.locator('.parliament-chamber-details')).toBeHidden();
+    await page.locator('.parliament-chamber-heading').hover();
+    await expect(page.locator('#tooltip')).toContainText('vote by bloc');
+    await expect(page.locator('#estates-call-vote-details')).toBeHidden();
+    await page.locator('#estates-call-vote').hover();
+    await expect(page.locator('#tooltip'))
+      .toContainText('Every undecided bloc resolves once');
+    var forecastBloc = page.locator('.parliament-legend-bloc').first();
+    await expect(forecastBloc.locator('.parliament-bloc-details')).toBeHidden();
+    await forecastBloc.hover();
+    await expect(page.locator('#tooltip')).toContainText('natural support');
+    await expect(page.locator('#tooltip')).toContainText('Average ruler age');
+    await expect(page.locator('#tooltip'))
+      .toContainText('Economic power relative to court');
+    var forecastMember = forecastBloc.locator('.parliament-member-link').first();
+    await forecastMember.hover();
+    await expect(page.locator('#tooltip')).toContainText('Economic power');
+    var campGeometry = await page.locator('.parliament-seat').evaluateAll(
+      function (seats) {
+        function centers(posture) {
+          return seats.filter(function (seat) {
+            return seat.dataset.seatPosture === posture;
+          }).map(function (seat) {
+            var rect = seat.getBoundingClientRect();
+            return rect.left + rect.width / 2;
+          });
+        }
+        return {
+          support:centers('support'),
+          opposition:centers('oppose'),
+          supportMarks:seats.filter(function (seat) {
+            return seat.dataset.seatPosture === 'support' &&
+              seat.textContent.trim() === '✓';
+          }).length,
+          oppositionMarks:seats.filter(function (seat) {
+            return seat.dataset.seatPosture === 'oppose' &&
+              seat.textContent.trim() === '✕';
+          }).length
+        };
+      });
+    expect(campGeometry.support.length).toBe(expected.support);
+    expect(campGeometry.opposition.length).toBe(expected.opposition);
+    expect(Math.max.apply(null, campGeometry.support)).toBeLessThanOrEqual(
+      Math.min.apply(null, campGeometry.opposition));
+    expect(campGeometry.supportMarks).toBe(expected.support);
+    expect(campGeometry.oppositionMarks).toBe(expected.opposition);
+    expect(await page.locator(
+      '.parliament-seat[data-seat-bloc="crown"]').first().evaluate(
+        function (seat) {
+          return seat.style.getPropertyValue('--parliament-bloc-color');
+        })).toBe('#b88a3b');
+    await page.evaluate(function (color) {
+      FBDATA.politicalBlocs.crown.color = color;
+    }, expected.crownColor);
+    expect(await page.evaluate(function (snapshot) {
+      return snapshot.save === FB.save.serialize() &&
+        snapshot.rng === FB.getRngState();
+    }, expected.snapshot)).toBe(true);
+
+    await page.locator('.parliament-seat[data-estates-house="' +
+      expected.seatHouseId + '"]').first().click();
+    await expect(page.locator('.character-interaction-modal')).toBeVisible();
+    await page.locator('#cm-close').click();
+    await expect(page.getByRole('heading', {
+      name:'The Estates', exact:true
+    })).toBeVisible();
+
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#governance-institution')).toBeVisible();
+    await page.locator(
+      '#governance-institution [data-governance-institution="estates"]').click();
+
+    var playerLink = page.locator(
+      '.parliament-member-link[data-estates-house="player"]').first();
+    await expect(playerLink).toBeVisible();
+    await playerLink.click();
+    await expect(page.locator('.character-interaction-modal')).toBeVisible();
+    await page.locator('#cm-close').click();
+    await expect(page.getByRole('heading', {
+      name:'The Estates', exact:true
+    })).toBeVisible();
+
+    var lobbied = await page.evaluate(function () {
+      var forecast = FB.politicalMotionForecast(FB.state, 'redress');
+      var target = forecast.blocs.filter(function (bloc) {
+        return bloc.posture === 'undecided';
+      })[0];
+      var original = FB.rng;
+      FB.rng = function () { return 0; };
+      var result = FB.parliamentLobbyMotion(FB.state, target.id);
+      FB.rng = original;
+      FB.ui.showParliament(null, true);
+      return { id:target.id, success:result.success };
+    });
+    expect(lobbied.success).toBe(true);
+    await expect(page.locator(
+      '.parliament-seat[data-seat-bloc="' + lobbied.id + '"]').first()).toHaveAttribute(
+        'data-seat-posture', 'support');
+    await expect(page.locator(
+      '.parliament-legend-bloc[data-chamber-bloc="' + lobbied.id + '"]'))
+      .toContainText('Support');
   });
 
 test('a motion spends once, lobbies once, and tallies one roll per undecided bloc',
@@ -788,8 +1191,8 @@ test('a motion spends once, lobbies once, and tallies one roll per undecided blo
       s = FB.state;
       var savedCrown = FBDATA.politicalBlocs.crown.motions.redress;
       var savedMagnate = FBDATA.politicalBlocs.magnate.motions.redress;
-      FBDATA.politicalBlocs.crown.motions.redress = 25;
-      FBDATA.politicalBlocs.magnate.motions.redress = 25;
+      FBDATA.politicalBlocs.crown.motions.redress = 100;
+      FBDATA.politicalBlocs.magnate.motions.redress = 100;
       FB.parliamentBeginMotion(s, 'redress');
       var lockedBefore = FB.politicalMotionForecast(s, 'redress');
       var lockedRolls = 0;
@@ -1040,6 +1443,94 @@ test('campaign repair, withdrawal, expiry, liege changes, and save round trips a
     });
 });
 
+test('the committed Parliament demo save loads an active mixed chamber',
+  async function ({ page }, testInfo) {
+    const exported = fs.readFileSync(parliamentDemoSavePath, 'utf8').trim();
+    expect(exported.startsWith('FBS2.')).toBe(true);
+    await openGame(page, testInfo);
+    const loaded = await page.evaluate(function (text) {
+      return new Promise(function (resolve) {
+        const data = FB.save.parseExport(text);
+        if (!data) {
+          resolve({ parsed:false });
+          return;
+        }
+        const accepted = FB.game.loadData(data, function () {
+          const summary = FB.politicalSummary(FB.state);
+          const forecast = summary && summary.motion;
+          const houses = FB.politicalCourt(FB.state).houses;
+          const postures = {};
+          const archetypes = [];
+          if (forecast) {
+            forecast.blocs.forEach(function (bloc) {
+              postures[bloc.posture] = true;
+              archetypes.push(bloc.archetypeId);
+            });
+          }
+          const technologyReady = FB.policyList().filter(function (policy) {
+            return !policy.def.institution ||
+              policy.def.institution === 'estates';
+          }).every(function (policy) {
+            return !FB.parliamentMotionStatus(FB.state, policy.id).techLocked;
+          });
+          if (!document.getElementById('genmodal').classList.contains('hidden')) {
+            FB.ui.closeModal();
+          }
+          FB.ui.showParliament();
+          resolve({
+            parsed:true,
+            version:data.v,
+            tier:FB.state.player.tier,
+            gold:FB.state.player.gold,
+            pendingMotion:summary && summary.pendingMotion &&
+              summary.pendingMotion.motionId,
+            lobbyUsed:!!(summary && summary.pendingMotion &&
+              summary.pendingMotion.lobby && summary.pendingMotion.lobby.used),
+            archetypes:archetypes.sort(),
+            postures:Object.keys(postures).sort(),
+            influence:forecast && forecast.totalInfluence,
+            variedAges:Object.keys(houses.reduce(function (seen, house) {
+              seen[house.rulerAge] = true;
+              return seen;
+            }, {})).length > 1,
+            variedEconomicPower:Object.keys(houses.reduce(
+              function (seen, house) {
+                seen[house.economicPower] = true;
+                return seen;
+              }, {})).length > 1,
+            technologyReady:technologyReady,
+            loadError:FB.game.lastLoadError && FB.game.lastLoadError.message
+          });
+        });
+        if (!accepted) resolve({ parsed:true, accepted:false });
+      });
+    }, exported);
+
+    expect(loaded.parsed).toBe(true);
+    expect(loaded.accepted).not.toBe(false);
+    expect(loaded.loadError).toBeFalsy();
+    expect(loaded.version).toBe(3);
+    expect(loaded.tier).toBe(4);
+    expect(loaded.gold).toBeGreaterThanOrEqual(500);
+    expect(loaded.pendingMotion).toBe('redress');
+    expect(loaded.lobbyUsed).toBe(false);
+    expect(loaded.archetypes).toEqual([
+      'crown', 'independent', 'magnate', 'mercantile'
+    ]);
+    expect(loaded.postures).toEqual(['oppose', 'support', 'undecided']);
+    expect(loaded.variedAges).toBe(true);
+    expect(loaded.variedEconomicPower).toBe(true);
+    expect(loaded.technologyReady).toBe(true);
+    await expect(page.getByRole('heading', {
+      name:'The Estates', exact:true
+    })).toBeVisible();
+    await expect(page.locator('.parliament-seat')).toHaveCount(loaded.influence);
+    await expect(page.locator('.parliament-seat-support')).not.toHaveCount(0);
+    await expect(page.locator('.parliament-seat-oppose')).not.toHaveCount(0);
+    await expect(page.locator('.parliament-seat-undecided')).not.toHaveCount(0);
+    await expect(page.locator('[data-lobby-bloc]').first()).toBeVisible();
+  });
+
 test('political bloc and lobbying controls remain usable on a narrow touch layout',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:740 });
@@ -1076,12 +1567,131 @@ test('political bloc and lobbying controls remain usable on a narrow touch layou
     await page.locator(
       '#governance-institution [data-governance-institution="estates"]').click();
     await page.locator('[data-motion="redress"]').click();
+    await expect(page.locator(
+      '.estates-modal .hint, .estates-modal .adesc, ' +
+      '.estates-modal .progressnote, .estates-modal .political-motion-row'))
+      .toHaveCount(0);
+    var chamberInfo = page.locator(
+      '.parliament-chamber-heading .settcard-info');
+    await expect(chamberInfo).toBeVisible();
+    await chamberInfo.click();
+    await expect(page.locator('.parliament-chamber-details')).toBeVisible();
+    await expect(page.locator('.parliament-chamber-details'))
+      .toContainText('vote by bloc');
+    await chamberInfo.click();
+    await expect(page.locator('.parliament-chamber-details')).toBeHidden();
+    var estatesBloc = page.locator('.parliament-legend-bloc').first();
+    var estatesBlocInfo = estatesBloc.locator(
+      '.parliament-legend-head .settcard-info');
+    await expect(estatesBlocInfo).toBeVisible();
+    await estatesBlocInfo.click();
+    await expect(estatesBloc.locator('.parliament-bloc-details')).toBeVisible();
+    await expect(estatesBloc.locator('.parliament-bloc-details'))
+      .toContainText('Support calculation');
+    await expect(estatesBloc.locator('.parliament-bloc-details'))
+      .toContainText('Economic power relative to court');
+    await estatesBlocInfo.click();
+    var voteInfo = page.locator(
+      '.estates-action-card:has(#estates-call-vote) .settcard-info');
+    await expect(voteInfo).toBeVisible();
+    await voteInfo.click();
+    await expect(page.locator('#estates-call-vote-details')).toBeVisible();
+    await expect(page.locator('#estates-call-vote-details'))
+      .toContainText('Every undecided bloc resolves once');
+    await voteInfo.click();
+    var actionTooltipAlignment = await page.locator(
+      '.estates-action-card').evaluateAll(function (cards) {
+        return cards.every(function (card) {
+          var action = card.querySelector(':scope > .actionbtn');
+          var info = card.querySelector(':scope > .declarative-choice-actions ' +
+            '.settcard-info');
+          if (!action || !info) return false;
+          var actionRect = action.getBoundingClientRect();
+          var infoRect = info.getBoundingClientRect();
+          return Math.abs(actionRect.top - infoRect.top) <= 1 &&
+            Math.abs(actionRect.bottom - infoRect.bottom) <= 1 &&
+            Math.abs(actionRect.right - infoRect.right) <= 1;
+        });
+      });
+    expect(actionTooltipAlignment).toBe(true);
+    var chamberGeometry = await page.locator('.parliament-chamber').evaluate(
+      function (chamber) {
+        var rect = chamber.getBoundingClientRect();
+        var body = document.getElementById('gm-body');
+        var links = Array.prototype.slice.call(chamber.querySelectorAll(
+          '.parliament-member-link'));
+        return {
+          left:rect.left,
+          right:rect.right,
+          viewport:window.innerWidth,
+          bodyScrollWidth:body.scrollWidth,
+          bodyClientWidth:body.clientWidth,
+          linksAreButtons:links.every(function (link) {
+            return link.tagName === 'BUTTON';
+          }),
+          shortestLink:Math.min.apply(null, links.map(function (link) {
+            return link.getBoundingClientRect().height;
+          })),
+          hemicycleHeight:chamber.querySelector('.parliament-hemicycle')
+            .getBoundingClientRect().height,
+          seatsOutOfTabOrder:Array.prototype.slice.call(
+            chamber.querySelectorAll('.parliament-seat')).every(
+              function (seat) { return seat.tabIndex === -1; })
+        };
+      });
+    expect(chamberGeometry.left).toBeGreaterThanOrEqual(0);
+    expect(chamberGeometry.right).toBeLessThanOrEqual(
+      chamberGeometry.viewport + 1);
+    expect(chamberGeometry.bodyScrollWidth).toBeLessThanOrEqual(
+      chamberGeometry.bodyClientWidth + 1);
+    expect(chamberGeometry.linksAreButtons).toBe(true);
+    expect(chamberGeometry.shortestLink).toBeGreaterThanOrEqual(44);
+    expect(chamberGeometry.hemicycleHeight).toBeGreaterThanOrEqual(220);
+    expect(chamberGeometry.seatsOutOfTabOrder).toBe(true);
+    var mobileChamberLayout = await page.evaluate(function () {
+      var camps = document.querySelector('.parliament-camp-summary');
+      var legend = document.querySelector('.parliament-legend');
+      var campRows = Array.prototype.slice.call(
+        camps.querySelectorAll('.parliament-camp'));
+      return {
+        campColumns:getComputedStyle(camps).gridTemplateColumns.split(' ').length,
+        campsContained:campRows.every(function (camp) {
+          return camp.scrollWidth <= camp.clientWidth + 1;
+        }),
+        legendOverflow:getComputedStyle(legend).overflowY,
+        legendTouchAction:getComputedStyle(legend).touchAction
+      };
+    });
+    expect(mobileChamberLayout.campColumns).toBe(1);
+    expect(mobileChamberLayout.campsContained).toBe(true);
+    expect(mobileChamberLayout.legendOverflow).toBe('visible');
+    expect(mobileChamberLayout.legendTouchAction).toBe('pan-y');
+    var shortestInfo = await page.locator(
+      '.estates-modal .settcard-info').evaluateAll(function (buttons) {
+        return Math.min.apply(null, buttons.map(function (button) {
+          return button.getBoundingClientRect().height;
+        }));
+      });
+    expect(shortestInfo).toBeGreaterThanOrEqual(44);
     var lobby = page.locator('[data-lobby-bloc]').first();
     await expect(lobby).toBeVisible();
     var height = await lobby.evaluate(function (button) {
       return button.getBoundingClientRect().height;
     });
     expect(height).toBeGreaterThanOrEqual(44);
+    var firstMobileBloc = page.locator('.parliament-legend-bloc').first();
+    var scrollBefore = await firstMobileBloc.evaluate(
+      function (bloc) {
+        bloc.scrollIntoView({ block:'center' });
+        return document.getElementById('gm-body').scrollTop;
+      });
+    await firstMobileBloc.hover();
+    await page.mouse.wheel(0, 320);
+    await expect.poll(function () {
+      return page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollTop;
+      });
+    }).toBeGreaterThan(scrollBefore);
     await page.evaluate(function () {
       history.back();
     });

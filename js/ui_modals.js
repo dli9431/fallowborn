@@ -9973,6 +9973,23 @@ window.FB = window.FB || {};
     return (value > 0 ? '+' : '') + value;
   }
 
+  function politicalNumber(value) {
+    return String(Math.round((Number(value) || 0) * 10) / 10);
+  }
+
+  function politicalBlocColor(bloc) {
+    const defaults = {
+      crown:'#b88a3b', mercantile:'#4f9c8b',
+      magnate:'#9a6fb0', independent:'#89929b'
+    };
+    const def = FBDATA.politicalBlocs &&
+      FBDATA.politicalBlocs[bloc.archetypeId];
+    const color = def && typeof def.color === 'string'
+      ? def.color.trim() : '';
+    return /^#[0-9a-f]{6}$/i.test(color)
+      ? color : (defaults[bloc.archetypeId] || '#a8863a');
+  }
+
   function politicalInterestReason(s, politics, item) {
     const house = politicalHouseById(politics, item.houseId);
     const leader = politicalHouseById(
@@ -10083,9 +10100,30 @@ window.FB = window.FB || {};
       return FB.T('Members’ current ambitions') +
         ' (' + politicalSigned(item.value) + ')';
     }
+    if (item.id === 'average_ruler_age') {
+      return FB.T('Average ruler age: {age}', {
+        age:politicalNumber(item.averageAge)
+      }) + ' (' + politicalSigned(item.value) + ')';
+    }
+    if (item.id === 'economic_power') {
+      return FB.T(
+        'Economic power relative to court: {power} vs {court}', {
+          power:politicalNumber(item.averageEconomicPower),
+          court:politicalNumber(item.courtEconomicPowerAverage)
+        }) + ' (' + politicalSigned(item.value) + ')';
+    }
     return FB.T('Martial inclination: {martial}', {
       martial:item.martial
     }) + ' (' + politicalSigned(item.value) + ')';
+  }
+
+  function politicalHouseFacts(house) {
+    return FB.T(
+      'Age {age} · Economic power {power} · {influence} influence', {
+        age:politicalNumber(house.rulerAge),
+        power:politicalNumber(house.economicPower),
+        influence:house.influence
+      });
   }
 
   function politicalHouseLink(s, house, section) {
@@ -10201,7 +10239,8 @@ window.FB = window.FB || {};
         esc(FB.T('Member houses')) + '</b><div>';
       for (const member of bloc.members) {
         details += politicalHouseLink(s, member, 'blocs') +
-          ' <span class="cmeta">(' + member.influence + ')</span> ';
+          ' <span class="cmeta">(' + esc(politicalHouseFacts(member)) +
+          ')</span> ';
       }
       details += '</div></div><div class="political-reasons"><b>' +
         esc(FB.T('Interests')) + '</b><ul>';
@@ -10242,6 +10281,228 @@ window.FB = window.FB || {};
         'id="' + esc(detailsId) + '">' + details + '</div></article>';
     }
     return h;
+  }
+
+  function parliamentSeatPositions(total) {
+    const capacities = [];
+    let capacity = 0;
+    while (capacity < total) {
+      const next = 5 + capacities.length * 3;
+      capacities.push(next);
+      capacity += next;
+    }
+    const positions = [];
+    let remaining = total;
+    for (let row = 0; row < capacities.length && remaining > 0; row++) {
+      const count = Math.min(capacities[row], remaining);
+      const denominator = Math.max(1, capacities.length - 1);
+      const radiusX = 22 + row * 24 / denominator;
+      const radiusY = 20 + row * 55 / denominator;
+      for (let column = 0; column < count; column++) {
+        const angle = count === 1 ? 270 :
+          190 + column * 160 / (count - 1);
+        const radians = angle * Math.PI / 180;
+        positions.push({
+          row:row,
+          column:column,
+          left:Math.round((50 + Math.cos(radians) * radiusX) * 100) / 100,
+          top:Math.round((92 + Math.sin(radians) * radiusY) * 100) / 100
+        });
+      }
+      remaining -= count;
+    }
+    return positions;
+  }
+
+  function parliamentPostureIcon(posture) {
+    if (posture === 'support') return '&#10003;';
+    if (posture === 'oppose') return '&#10005;';
+    if (posture === 'undecided') return '?';
+    return '';
+  }
+
+  function parliamentHouseLink(house, detailsId) {
+    return '<button type="button" class="linklike parliament-member-link" ' +
+      'data-estates-house="' + esc(house.id) + '" data-action-tooltip="' +
+      esc(detailsId) + '" aria-describedby="' + esc(detailsId) + '">' +
+      esc(house.rulerName || house.name) + '</button>';
+  }
+
+  function parliamentCampPositions(positions, forecast) {
+    if (!forecast) return { neutral:positions };
+    const ordered = positions.slice().sort(function (a, b) {
+      if (a.left !== b.left) return a.left - b.left;
+      if (a.top !== b.top) return b.top - a.top;
+      if (a.row !== b.row) return a.row - b.row;
+      return a.column - b.column;
+    });
+    const supportEnd = forecast.supportInfluence;
+    const undecidedEnd = supportEnd + forecast.uncertainInfluence;
+    return {
+      support:ordered.slice(0, supportEnd),
+      undecided:ordered.slice(supportEnd, undecidedEnd),
+      oppose:ordered.slice(undecidedEnd)
+    };
+  }
+
+  function parliamentCampSummary(forecast) {
+    if (!forecast) return '';
+    const camps = [
+      ['support', FB.T('Support'), forecast.supportInfluence],
+      ['undecided', FB.T('Undecided'), forecast.uncertainInfluence],
+      ['oppose', FB.T('Opposition'), forecast.oppositionInfluence]
+    ];
+    let h = '<div class="parliament-camp-summary" aria-label="' +
+      esc(FB.T('Vote totals')) + '">';
+    for (const camp of camps) {
+      h += '<div class="parliament-camp parliament-camp-' + camp[0] + '">' +
+        '<span class="parliament-camp-icon" aria-hidden="true">' +
+        parliamentPostureIcon(camp[0]) + '</span><span>' + esc(camp[1]) +
+        '</span><strong>' + camp[2] + '</strong></div>';
+    }
+    return h + '</div>';
+  }
+
+  function parliamentHemicycleHtml(s, politics, forecast, overviewHtml) {
+    if (!politics || !politics.blocs.length) return '';
+    const blocs = forecast ? forecast.blocs : politics.blocs;
+    const positions = parliamentSeatPositions(politics.totalInfluence);
+    const campPositions = parliamentCampPositions(positions, forecast);
+    const campIndexes = {
+      support:0, oppose:0, undecided:0, neutral:0
+    };
+    let seatIndex = 0;
+    let seats = '';
+    let legend = '';
+    for (let blocIndex = 0; blocIndex < blocs.length; blocIndex++) {
+      const bloc = blocs[blocIndex];
+      const color = politicalBlocColor(bloc);
+      const posture = forecast ? bloc.posture : 'neutral';
+      const postureText = posture === 'neutral'
+        ? FB.T('Neutral') : politicalPostureText(posture);
+      const blocName = politicalBlocName(s, politics, bloc);
+      let members = '';
+      let memberDetails = '<div class="parliament-detail-members"><b>' +
+        esc(FB.T('Member houses')) + '</b><ul>';
+      let factors = '';
+      if (forecast && bloc.motionReasons && bloc.motionReasons.length) {
+        factors = '<div class="parliament-detail-reasons"><b>' +
+          esc(FB.T('Support calculation')) + '</b><ul>';
+        for (const item of bloc.motionReasons) {
+          factors += '<li>' + esc(politicalMotionReason(s, item)) + '</li>';
+        }
+        factors += '</ul></div>';
+      }
+      for (let memberIndex = 0; memberIndex < bloc.members.length;
+          memberIndex++) {
+        const house = bloc.members[memberIndex];
+        const houseDetailsId = 'parliament-house-details-' + blocIndex + '-' +
+          memberIndex;
+        const houseDetails = '<b>' + esc(house.rulerName || house.name) +
+          '</b><div>' + esc(blocName) + ' · ' +
+          esc(postureText) + '</div><div>' +
+          esc(politicalHouseFacts(house)) + '</div>' + factors;
+        members += '<div class="parliament-member-row">' +
+          parliamentHouseLink(house, houseDetailsId) +
+          '<div class="settcard-details parliament-house-details hidden" id="' +
+          houseDetailsId + '">' + houseDetails + '</div></div>';
+        memberDetails += '<li><b>' + esc(house.rulerName || house.name) +
+          '</b> · ' + esc(politicalHouseFacts(house)) + '</li>';
+        for (let vote = 0; vote < house.influence; vote++) {
+          const position = campPositions[posture][campIndexes[posture]++];
+          if (!position) break;
+          seats += '<button type="button" tabindex="-1" ' +
+            'class="parliament-seat parliament-seat-' + esc(posture) + '" ' +
+            'data-estates-house="' + esc(house.id) + '" ' +
+            'data-action-tooltip="' + houseDetailsId + '" aria-describedby="' +
+            houseDetailsId + '" ' +
+            'data-seat-index="' + seatIndex + '" data-seat-row="' +
+            position.row + '" data-seat-bloc="' + esc(bloc.id) + '" ' +
+            'data-seat-posture="' + esc(posture) + '" style="left:' +
+            position.left + '%;top:' + position.top +
+            '%;--parliament-bloc-color:' + color + '" aria-label="' +
+            esc(FB.T('{ruler}, {bloc}, {posture}, influence vote {vote} of {total}', {
+              ruler:house.rulerName || house.name,
+              bloc:blocName,
+              posture:postureText,
+              vote:vote + 1,
+              total:house.influence
+            })) + '"><span aria-hidden="true">' +
+            parliamentPostureIcon(posture) + '</span></button>';
+          seatIndex++;
+        }
+      }
+      memberDetails += '</ul></div>';
+      const forecastMeta = forecast
+        ? FB.T('{posture} · {chance}% natural support · {influence} influence', {
+          posture:politicalPostureText(bloc.posture),
+          chance:Math.round(bloc.naturalSupportChance * 100),
+          influence:bloc.influence
+        })
+        : FB.T('{influence} influence · {count} member houses', {
+          influence:bloc.influence, count:bloc.members.length
+        });
+      const detailsId = 'parliament-bloc-details-' + blocIndex;
+      let lobby = '';
+      if (forecast) {
+        const lobbyStatus = FB.parliamentLobbyStatus(s, bloc.id);
+        if (lobbyStatus.ready) {
+          lobby = '<button type="button" class="btn small parliament-lobby" ' +
+            'data-lobby-bloc="' + esc(bloc.id) + '">' +
+            esc(FB.T('Lobby ({chance}%)', {
+              chance:Math.round(lobbyStatus.chance * 100)
+            })) + '</button>';
+        }
+      }
+      legend += '<article class="parliament-legend-bloc settcard" ' +
+        'role="listitem" tabindex="0" aria-describedby="' + detailsId + '" ' +
+        'data-chamber-bloc="' + esc(bloc.id) + '" data-estates-bloc="' +
+        esc(bloc.id) + '" style="--parliament-bloc-color:' + color + '">' +
+        '<div class="parliament-legend-head">' +
+        '<span class="parliament-bloc-swatch" style="--parliament-bloc-color:' +
+        color + '"></span><b>' + esc(blocName) + '</b>' +
+        '<span class="parliament-posture-badge parliament-posture-' +
+        esc(posture) + '"><span aria-hidden="true">' +
+        parliamentPostureIcon(posture) + '</span> ' +
+        esc(postureText) + ' · ' + bloc.influence +
+        '</span><span class="settcard-actions parliament-legend-actions">' +
+        lobby + '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + detailsId + '" title="' +
+        esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+        '">?</button></span></div><div class="parliament-members">' +
+        members + '</div><div class="settcard-details parliament-bloc-details hidden" ' +
+        'id="' + detailsId + '"><div class="parliament-detail-summary">' +
+        esc(forecastMeta) + '</div>' + memberDetails + factors +
+        '</div></article>';
+    }
+    const headingMeta = forecast
+      ? FB.T('{days} days remain · {majority} needed', {
+        days:Math.max(0, s.politics.pendingMotion.expiresTurn - s.turn),
+        majority:forecast.majority
+      })
+      : FB.T('{total} total influence · {majority} needed', {
+        total:politics.totalInfluence, majority:politics.majority
+      });
+    const overviewId = 'parliament-chamber-details';
+    return '<section class="parliament-chamber settcard" ' +
+      'aria-labelledby="parliament-chamber-title">' +
+      '<div class="parliament-chamber-heading"><h4 id="parliament-chamber-title">' +
+      esc(forecast ? FB.T('Vote forecast: {motion}', {
+        motion:politicalMotionName(forecast.motionId)
+      }) : FB.T('Chamber composition')) +
+      '</h4><span class="parliament-heading-meta">' + esc(headingMeta) +
+      '</span><span class="settcard-actions parliament-chamber-actions">' +
+      '<button type="button" class="btn small settcard-info" ' +
+      'aria-expanded="false" aria-controls="' + overviewId + '" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+      '">?</button></span></div>' + parliamentCampSummary(forecast) +
+      '<div class="settcard-details parliament-chamber-details hidden" id="' +
+      overviewId + '">' + overviewHtml + '</div>' +
+      '<div class="parliament-hemicycle" data-seat-total="' + seatIndex +
+      '" aria-label="' + esc(FB.T(
+        'Semicircular Estates chamber; each seat is one influence vote.')) +
+      '">' + seats + '</div><div class="parliament-legend" role="list">' +
+      legend + '</div></section>';
   }
 
   function governancePromotionName(progress) {
@@ -10895,6 +11156,15 @@ window.FB = window.FB || {};
         visibleButtons[i].insertAdjacentHTML('afterbegin', hintFor(i));
       }
     }
+    function alignGovernanceTab(tab) {
+      if (!tab || !mobileLayoutNow()) return;
+      const nav = tab.parentNode;
+      if (!nav) return;
+      const navRect = nav.getBoundingClientRect();
+      const tabRect = tab.getBoundingClientRect();
+      nav.scrollLeft = Math.max(0,
+        nav.scrollLeft + tabRect.left - navRect.left);
+    }
     function selectGovernanceSection(nextId, focusPanel) {
       if (sectionIds.indexOf(nextId) < 0) return;
       for (let i = 0; i < sectionButtons.length; i++) {
@@ -10908,6 +11178,8 @@ window.FB = window.FB || {};
       const scroller = document.querySelector('.governance-sections');
       if (scroller) scroller.scrollTop = 0;
       refreshGovernanceActionHints(nextId);
+      alignGovernanceTab(document.querySelector(
+        '[data-governance-section="' + nextId + '"]'));
       if (focusPanel) {
         const panel = $('governance-' + nextId);
         if (panel) panel.focus({ preventScroll:true });
@@ -12094,6 +12366,23 @@ window.FB = window.FB || {};
   /* the estates of the realm (vassal tiers 3-5): the terms of the player's
      service, and the motions they can buy between sittings — see
      js/parliament.js for the machinery and FB.parliamentYearly for sessions */
+  function estatesActionCard(detailsId, labelHtml, detailText, attrs,
+      extraClass, disabled) {
+    return '<div class="declarative-choice-card settcard estates-action-card"' +
+      (disabled ? ' tabindex="0" aria-describedby="' + detailsId + '"' : '') +
+      '><button type="button" class="actionbtn' +
+      (extraClass ? ' ' + extraClass : '') + '" ' + attrs +
+      ' data-action-tooltip="' + detailsId + '" aria-describedby="' +
+      detailsId + '"' + (disabled ? ' disabled' : '') + '>' + labelHtml +
+      '</button><span class="settcard-actions declarative-choice-actions">' +
+      '<button type="button" class="btn small settcard-info" ' +
+      'aria-expanded="false" aria-controls="' + detailsId + '" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+      '">?</button></span><div class="settcard-details ' +
+      'declarative-choice-details estates-action-details hidden" id="' +
+      detailsId + '">' + esc(detailText) + '</div></div>';
+  }
+
   UI.showParliament = function (returnView, replaceView) {
     if (returnView !== 'governance') returnView = null;
     const s = FB.state;
@@ -12106,10 +12395,25 @@ window.FB = window.FB || {};
     const politics = FB.politicalSummary(s);
     const policies = FB.policyList ? FB.policyList() : [];
     const forecasts = politics && politics.forecasts ? politics.forecasts : {};
-    let h = '<p class="hint">' + esc(FB.T(
+    let overviewHtml = '<p>' + esc(FB.T(
       '{liege}’s Estates vote by bloc. Influence sets the tally; uncertain blocs follow their interests.',
-      { liege: liege.name })) + '</p>';
-    h += kv('The liege’s aid', esc(FB.T(
+      { liege: liege.name })) + '</p><p>' + esc(FB.T(
+      'Beginning a motion costs {money:cost} in gifts and promises, spends the year’s hearing for its family of business, and opens a 90-day campaign. One targeted lobbying attempt is included.',
+      { cost: cost })) + '</p>';
+    if (pending && activeForecast) {
+      overviewHtml += '<p>' + esc(FB.T(
+        '{motion} campaign · {days} days remain.', {
+          motion:politicalMotionName(pending.motionId),
+          days:Math.max(0, pending.expiresTurn - s.turn)
+        })) + ' ' + esc(politicalTotalsText(activeForecast)) + '</p>';
+      if (pending.lobby && pending.lobby.used) {
+        overviewHtml += '<p>' + esc(pending.lobby.success
+          ? FB.T('Lobbying succeeded; the targeted bloc pledged support.')
+          : FB.T('Lobbying failed; the targeted bloc remains undecided.')) +
+          '</p>';
+      }
+    }
+    let h = kv('The liege’s aid', esc(FB.T(
       '{pct}% of your noble revenue', {
         pct:Math.round(projection.aid * 100)
       }))) +
@@ -12135,16 +12439,14 @@ window.FB = window.FB || {};
         }
       }
     }
-    h += '<p class="hint">' + esc(FB.T(
-      'Beginning a motion costs {money:cost} in gifts and promises, spends the year’s hearing for its family of business, and opens a 90-day campaign. One targeted lobbying attempt is included.',
-      { cost: cost })) + '</p>';
+    h += parliamentHemicycleHtml(s, politics, activeForecast, overviewHtml);
     h += '<div class="gm-list">';
-    h += '<button class="actionbtn" id="estates-liege-card">' +
+    h += estatesActionCard('estates-liege-card-details',
       esc(FB.T('Open {liege}’s ruler card…', {
         liege:liege.ruler.name
-      })) + '<span class="adesc">' + esc(FB.T(
-        'Review Standing, gifts, cultivation, feudal actions, and the realm relationship.')) +
-      '</span></button>';
+      })), FB.T(
+        'Review Standing, gifts, cultivation, feudal actions, and the realm relationship.'),
+      'id="estates-liege-card"', '', false);
     if (!pending) {
       for (const policy of policies) {
         if (policy.def.institution && policy.def.institution !== 'estates') {
@@ -12154,72 +12456,32 @@ window.FB = window.FB || {};
         const forecast = forecasts[policy.id] || null;
         const technologyLink = status.techLocked &&
           status.missingTech && status.missingTech.length && FB.techUiRelevant(s);
-        h += '<button class="actionbtn' +
-          (status.techLocked ? ' tech-locked-link' : '') + '"' +
-          (status.techLocked
-            ? (technologyLink ? ' data-motion-tech="' +
-              esc(status.missingTech[0]) + '"' : ' disabled')
-            : ' data-motion="' + esc(policy.id) + '"' +
-              (status.ready ? '' : ' disabled')) + '>' +
+        const actionAttrs = status.techLocked
+          ? (technologyLink ? 'data-motion-tech="' +
+            esc(status.missingTech[0]) + '"' : '')
+          : 'data-motion="' + esc(policy.id) + '"';
+        const detail = (status.reason || (politicalTotalsText(forecast) +
+          '. ' + politicalPolicyDesc(policy.id))) +
+          (technologyLink ? ' ' + FB.T('Open the technology entry.') : '');
+        h += estatesActionCard('estates-motion-details-' + esc(policy.id),
           (policy.def.icon ? esc(policy.def.icon) + ' ' : '') +
           esc(FB.T('Propose: {policy} ({money:cost})', {
             policy:politicalMotionName(policy.id),
             cost:politicalPolicyCost(policy.def)
-          })) + '<span class="adesc">' +
-          esc(status.reason || (politicalTotalsText(forecast) +
-            '. ' + politicalPolicyDesc(policy.id))) +
-          (technologyLink ? ' ' + esc(FB.T('Open the technology entry.')) : '') +
-          '</span></button>';
+          })), detail, actionAttrs,
+          status.techLocked ? 'tech-locked-link' : '',
+          status.techLocked ? !technologyLink : !status.ready);
       }
     } else if (activeForecast) {
-      h += '<div class="progressnote">' + esc(FB.T(
-        '{motion} campaign · {days} days remain.', {
-          motion:politicalMotionName(pending.motionId),
-          days:Math.max(0, pending.expiresTurn - s.turn)
-        })) + '<br>' + esc(politicalTotalsText(activeForecast)) +
-        '</div>';
-      if (pending.lobby && pending.lobby.used) {
-        h += '<div class="progressnote">' + esc(
-          pending.lobby.success
-            ? FB.T('Lobbying succeeded; the targeted bloc pledged support.')
-            : FB.T('Lobbying failed; the targeted bloc remains undecided.')) +
-          '</div>';
-      }
-      for (const bloc of activeForecast.blocs) {
-        const status = FB.parliamentLobbyStatus(s, bloc.id);
-        h += '<div class="political-motion-row" data-estates-bloc="' +
-          esc(bloc.id) + '"><div><b>' +
-          esc(politicalBlocName(
-            s, politics, bloc)) + '</b>' +
-          '<span class="cmeta">' + esc(FB.T(
-            '{influence} influence · {posture}', {
-              influence:bloc.influence,
-              posture:politicalPostureText(bloc.posture)
-            })) +
-          (bloc.posture === 'undecided'
-            ? ' · ' + esc(FB.T('{chance}% natural support', {
-              chance:Math.round(bloc.naturalSupportChance * 100)
-            }))
-            : '') + '</span></div>';
-        if (status.ready) {
-          h += '<button type="button" class="btn small" data-lobby-bloc="' +
-            esc(bloc.id) + '">' + esc(FB.T('Lobby ({chance}%)', {
-              chance:Math.round(status.chance * 100)
-            })) + '</button>';
-        }
-        h += '</div>';
-      }
       if (!pending.result) {
-        h += '<button class="actionbtn" id="estates-call-vote">🗳 ' +
-          esc(FB.T('Call the vote')) + '<span class="adesc">' +
-          esc(FB.T(
-            'Every undecided bloc resolves once, in stable order. There is no final global roll.')) +
-          '</span></button>' +
-          '<button class="actionbtn" id="estates-withdraw">↩ ' +
-          esc(FB.T('Withdraw the motion')) + '<span class="adesc">' +
-          esc(FB.T(
-            'The gold and yearly motion remain spent; unused redress evidence is preserved.')) +
-          '</span></button>';
+        h += estatesActionCard('estates-call-vote-details',
+          '🗳 ' + esc(FB.T('Call the vote')), FB.T(
+            'Every undecided bloc resolves once, in stable order. There is no final global roll.'),
+          'id="estates-call-vote"', '', false) +
+          estatesActionCard('estates-withdraw-details',
+            '↩ ' + esc(FB.T('Withdraw the motion')), FB.T(
+              'The gold and yearly motion remain spent; unused redress evidence is preserved.'),
+            'id="estates-withdraw"', '', false);
       }
     }
     h += '</div>';
@@ -12231,6 +12493,7 @@ window.FB = window.FB || {};
       historyBackRender:function () { UI.showGovernance('institution'); }
     } : {};
     if (replaceView) modalOptions.replaceView = true;
+    modalOptions.modalClass = 'estates-modal';
     modalOptions.guide = guideModalOption('estates-guide', 'government',
       'Guide: government');
     openModal(FB.T('The Estates'), h, modalOptions);
@@ -12238,6 +12501,19 @@ window.FB = window.FB || {};
       UI.showLiegeModal(s.player.liege, {
         view:'estates',
         returnView:returnView
+      });
+    });
+    document.querySelectorAll('[data-estates-house]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const house = politicalHouseById(
+          politics, button.dataset.estatesHouse);
+        if (!house) return;
+        const returnContext = { view:'estates', returnView:returnView };
+        if (house.isPlayer && house.rulerCharacterId) {
+          UI.showCharModal(house.rulerCharacterId, returnContext);
+        } else if (!house.isPlayer) {
+          UI.showLiegeModal(house.id, returnContext);
+        }
       });
     });
     document.querySelectorAll('[data-motion]').forEach(function (btn) {

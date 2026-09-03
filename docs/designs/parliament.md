@@ -65,15 +65,58 @@ therefore remains mechanically authoritative without mutating state when opened.
 visible and browser Back actions return to Governance's Institution section when it was
 opened there. The former `the_estates` deed id remains a direct-call compatibility alias.
 
+The focused Estates sheet includes a responsive semicircular chamber. It draws one
+seat per influence vote in deterministic concentric rows. DOM and accessible order
+remain bloc then member house, while an active forecast spatially divides the plotted
+seats into support on the left, undecided in the center, and opposition on the right.
+The three camps use labelled totals and distinct check, question, and cross marks as
+well as stronger fills; bloc color remains the seat outline. With no motion the same
+chamber shows neutral composition, and lobbying immediately reflows the forecast.
+The visible legend keeps bloc name, posture, influence, eligible lobbying, and native
+focusable ruler links compact. Exact natural-support probability, ruler age, economic
+power, influence, and every reason-coded factor use the shared desktop hover/focus
+tooltip or compact-layout `?` disclosure instead of permanent explanatory rows. The
+chamber heading likewise owns the assembly rules, campaign status, and lobbying result
+as on-demand detail. Seats are pointer/touch shortcuts to the existing ruler sheet and
+stay out of keyboard tab order; closing that ruler sheet restores this exact Estates
+view before Estates itself returns to Governance. Governance and Network retain their
+existing card/list presentations.
+The chamber is a non-shrinking item inside the sheet's scrollable column, so a
+long campaign action list scrolls beneath it instead of collapsing its plotted area.
+At phone width its camp totals become three full-width rows. The legend has no nested
+vertical scroller in compact layouts and permits vertical panning across its cards and
+member links, so the sheet continues moving when a swipe starts inside the legend.
+
+`fallowborn-parliament-demo-save.txt` at the game root is an ordinary unmodded
+FBS2 export for inspecting this surface. It resumes a tier-4 vassal during an active
+Redress campaign with all four core archetypes, mixed postures, unused lobbying,
+motion-relevant technology, and spare gold. It has no runtime hooks or special-case
+loading behavior.
+
 **Player policy motions are decided by political blocs.** The
 shared court, allegiances, influence, and forecast are described in
 [realms.md](realms.md). A bloc begins from its archetype's per-policy weight
 (`politicalBlocs.motions.<policyId>`), then the policy's own `posture` adds
 visible reason-coded adjustments: the current aid (`aidSlope`), member-ruler
 traits (`traits`), and average member Martial (`martialSlope`, scutage uses
-this). Scores at +25 or above lock support;
+this). Optional `ageSlope` applies
+`clamp(round(((influence-weighted average age - 40) / 10) × slope), -8, 8)`.
+Optional `economicPowerSlope` compares the bloc's influence-weighted average
+territorial economic power with the influence-weighted court average, multiplies
+that relative difference by the slope, rounds it, and clamps it to ±8. A house's
+economic power is the development of its directly held counties plus half the
+development held by its vassal subtree. Both factors are derived, reason-coded,
+and RNG-neutral. They add no saved fields, so save format 3 and existing
+bloc-keyed outcomes remain unchanged. Scores at +25 or above lock support;
 scores at −25 or below lock opposition. An undecided bloc's support chance is
 `clamp(50% + score, 15%, 85%)`.
+
+The initial demographic/material posture is deliberately conservative. Redress
+uses age `+2` and economic power `+6`; Emergency Subsidy uses economic power `+6`;
+Scutage uses age `+4` and economic power `+6`; Levy Relief uses age `+2`; Market
+Charter uses economic power `+6`; Confirmation of Custom uses age `+2`; War
+Authorization uses age `−4` and economic power `+4`; War Condemnation uses age
+`+4` and economic power `−4`. Consent of the Estates is unchanged.
 
 The same forecast includes two bounded agency factors. Magnate affiliation uses
 sparse ruler regard toward the proposed leader, while a motion's posture uses
@@ -146,6 +189,10 @@ technologies. Mixed local-redress choices for a market charter or written custom
 visible and locked until their own requirements are met, while leaving the petition
 outstanding remains available. Existing scutage, consent, privileges, and modifiers never
 lapse merely because technology or allegiance later changes.
+
+Technology-impact review: `estates_demographic_material_interests` is `none`.
+Age and territorial economic power describe baseline political interests rather than
+a new capability; each motion keeps its existing technology gate.
 
 Related: [council.md](council.md) for the king-side mirror,
 [realms.md](realms.md) for the liege chain and Standing, [events.md](events.md)

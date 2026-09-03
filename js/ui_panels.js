@@ -51,6 +51,8 @@ window.FB = window.FB || {};
 
   SH.activeTab = 'actions';    // right panel: actions | prov | network | log
   let activeLeftTab = 'char';   // left panel: char | family (Self open by default)
+  let kinRenderedState = null;
+  let kinRenderedFamilyRevision = -1;
   const LEFT_TABS = ['char', 'family'];
   const actionGroupsOpen = {
     work:true, life:false, faith:false, realm:false, war:false,
@@ -2952,6 +2954,15 @@ window.FB = window.FB || {};
     const s = FB.state;
     const panel = $('tab-family');
     if (!s || !panel || panel.offsetParent === null) return;
+    const familyRevision = FB.familyRevision ? FB.familyRevision() : 0;
+    /* Births, deaths, marriages, succession, and other relationship changes
+       alter the rows themselves. Promote only those live ticks to a complete
+       Kin render; unchanged days retain the mounted tree and listeners. */
+    if (kinRenderedState !== s ||
+        kinRenderedFamilyRevision !== familyRevision) {
+      renderFamily();
+      return;
+    }
     const ages = panel.querySelectorAll('[data-live-kin-age][data-live-age-cid]');
     for (let i = 0; i < ages.length; i++) {
       const character = s.chars[ages[i].getAttribute('data-live-age-cid')];
@@ -3315,7 +3326,10 @@ window.FB = window.FB || {};
       }
     }
     const box = $('tab-family');
-    if (!replacePanelMarkup('kin', box, h)) {
+    const replaced = replacePanelMarkup('kin', box, h);
+    kinRenderedState = s;
+    kinRenderedFamilyRevision = FB.familyRevision ? FB.familyRevision() : 0;
+    if (!replaced) {
       FB.paintFaces(box, s);
       return;
     }

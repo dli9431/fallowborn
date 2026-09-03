@@ -3436,7 +3436,9 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'settle_waste', opensChoices:true, noConsume: true,
-    show: function (s) { return s.player.tier >= 4; },
+    show: function (s) {
+      return s.player.tier >= 4 && FB.wastelandCandidates(s).length > 0;
+    },
     can: function (s) {
       const B = FBDATA.balance;
       if (!FB.wastelandCandidates(s).length) return FB.T(

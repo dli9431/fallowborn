@@ -27,6 +27,45 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('live Kin refreshes its family roster after births and deaths',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      FB.ui.showTab('family', { history:false });
+    });
+
+    const childId = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const child = FB.makeCharacter(s, {
+        name:'Live Kin Child',
+        sex:'f',
+        culture:me.culture,
+        religion:me.religion,
+        born:s.date.year,
+        fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null,
+        dyn:me.dyn,
+        traitsN:0
+      });
+      me.childrenIds.push(child.id);
+      FB.touchFamily();
+      FB.ui.refresh({ liveTick:true });
+      return child.id;
+    });
+
+    const childRow = page.locator(
+      '#tab-family .charrow[data-cid="' + childId + '"]');
+    await expect(childRow).toHaveCount(1);
+    await expect(childRow).toContainText('Live Kin Child');
+
+    await page.evaluate(function (id) {
+      FB.killChar(FB.state, FB.state.chars[id]);
+      FB.ui.refresh({ liveTick:true });
+    }, childId);
+
+    await expect(childRow).toHaveCount(0);
+  });
+
 test('Self keeps each active household standard summary item intact while wrapping',
   async function ({ page }) {
     await page.setViewportSize({ width:390, height:844 });

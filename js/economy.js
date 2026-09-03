@@ -2841,22 +2841,6 @@ window.FB = window.FB || {};
      ordinary death cannot leave a decision pointing at a dead student. */
   FB.schoolingYearEvents = function (state, annual) {
     if (!annual || !annual.entries) return false;
-    const survivors = annual.entries.filter(function (entry) {
-      return entry.c && !entry.c.dead;
-    });
-    let storyTerms = 0;
-    for (let i = 0; i < survivors.length; i++) storyTerms += survivors[i].terms;
-    if (storyTerms && FB.chance(Math.min(1, storyTerms / 4))) {
-      const selected = weightedSchoolStory(survivors, storyTerms);
-      if (selected) {
-        const choice = chooseEducationStory(selected.c, selected.events);
-        if (choice && queueEducationStory(state, annual, {
-          c:selected.c, focus:selected.c.edu && selected.c.edu.focus,
-          schoolId:selected.schoolId
-        }, choice.id, choice)) return true;
-      }
-    }
-
     const household = {};
     for (const member of FB.householdMembers(state)) household[member.id] = 1;
     const focusEntries = [];
@@ -2888,6 +2872,26 @@ window.FB = window.FB || {};
       const choice = selected && chooseEducationStory(selected.c, selected.events);
       if (choice && queueEducationStory(state, annual, selected,
           choice.id, choice)) return true;
+    }
+
+    /* School-specific opportunities remain the fallback for a year whose
+       formative roll misses. Checking them first made four Academy terms a
+       guaranteed early return, permanently starving Academy students and
+       their household of the general education-story pool. */
+    const survivors = annual.entries.filter(function (entry) {
+      return entry.c && !entry.c.dead;
+    });
+    let storyTerms = 0;
+    for (let i = 0; i < survivors.length; i++) storyTerms += survivors[i].terms;
+    if (storyTerms && FB.chance(Math.min(1, storyTerms / 4))) {
+      const selected = weightedSchoolStory(survivors, storyTerms);
+      if (selected) {
+        const choice = chooseEducationStory(selected.c, selected.events);
+        if (choice && queueEducationStory(state, annual, {
+          c:selected.c, focus:selected.c.edu && selected.c.edu.focus,
+          schoolId:selected.schoolId
+        }, choice.id, choice)) return true;
+      }
     }
     return false;
   };

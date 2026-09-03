@@ -146,6 +146,54 @@ window.FB = window.FB || {};
       ? Number(realm.ruler.mar) : 0;
   }
 
+  function countyDevelopment(state, provinceId) {
+    var value = state.dev && Number(state.dev[provinceId]);
+    if (isFinite(value) && value > 0) return value;
+    var province = FB.world && FB.world.byId && FB.world.byId[provinceId];
+    value = Number(province && province.dev0);
+    return isFinite(value) && value > 0 ? value : 1;
+  }
+
+  function houseRulerAge(state, player, realm, rulerCharacter) {
+    var born = rulerCharacter && rulerCharacter.born;
+    if (born !== undefined && born !== null && born !== '' &&
+        isFinite(Number(born))) {
+      return Math.max(0, state.date.year - Number(born));
+    }
+    if (player) {
+      var current = state.chars[state.player.charId];
+      var playerBorn = current && current.born;
+      if (playerBorn !== undefined && playerBorn !== null && playerBorn !== '' &&
+          isFinite(Number(playerBorn))) {
+        return Math.max(0, state.date.year - Number(playerBorn));
+      }
+    }
+    var rulerBorn = realm && realm.ruler && realm.ruler.born;
+    if (rulerBorn !== undefined && rulerBorn !== null && rulerBorn !== '' &&
+        isFinite(Number(rulerBorn))) {
+      return Math.max(0, state.date.year - Number(rulerBorn));
+    }
+    var fallback = realm && realm.ruler && realm.ruler.age;
+    return fallback !== undefined && fallback !== null && fallback !== '' &&
+      isFinite(Number(fallback)) ? Math.max(0, Number(fallback)) : 40;
+  }
+
+  function houseEconomicPower(state, held, territory) {
+    var heldSet = {};
+    var total = 0;
+    var i;
+    for (i = 0; i < held.length; i++) {
+      heldSet[held[i]] = 1;
+      total += countyDevelopment(state, held[i]);
+    }
+    for (i = 0; i < territory.length; i++) {
+      if (!heldSet[territory[i]]) {
+        total += countyDevelopment(state, territory[i]) / 2;
+      }
+    }
+    return Math.round(total * 10) / 10;
+  }
+
   function makeHouse(state, polityId, rulerHouseId, houseId) {
     var player = houseId === 'player';
     var realm = player ? state.realms.player : state.realms[houseId];
@@ -191,6 +239,9 @@ window.FB = window.FB || {};
       religion:religion,
       traitId:houseTrait(state, houseId),
       martial:houseMartial(state, houseId),
+      rulerAge:houseRulerAge(state, player, realm,
+        player ? me : rulerCharacter),
+      economicPower:houseEconomicPower(state, held, territory),
       standing:houseStanding(state, polityId, houseId, rulerHouseId),
       councilSeatId:seatId,
       directlyHeldCountyIds:held.sort(compareId),
@@ -922,6 +973,10 @@ window.FB = window.FB || {};
       group.members.sort(function (a, b) {
         return b.influence - a.influence || compareId(a.id, b.id);
       });
+      group.averageRulerAge = weightedMemberAverage(
+        group, function (house) { return house.rulerAge; });
+      group.averageEconomicPower = weightedMemberAverage(
+        group, function (house) { return house.economicPower; });
       blocs.push(group);
     }
     blocs.sort(function (a, b) {
@@ -935,6 +990,10 @@ window.FB = window.FB || {};
       state.politics.polityId === court.polityId &&
       pendingValid(state, court, state.politics.pendingMotion)
       ? state.politics.pendingMotion : null;
+    var courtEconomicPowerAverage = total ?
+      court.houses.reduce(function (sum, house) {
+        return sum + house.economicPower * house.influence;
+      }, 0) / total : 0;
     return {
       polityId:court.polityId,
       rulerHouseId:court.rulerHouseId,
@@ -942,6 +1001,7 @@ window.FB = window.FB || {};
       blocs:blocs,
       totalInfluence:total,
       majority:Math.floor(total / 2) + 1,
+      courtEconomicPowerAverage:courtEconomicPowerAverage,
       pendingMotion:pending
     };
   }
@@ -950,9 +1010,10 @@ window.FB = window.FB || {};
      catalog (data/policies.js) carries these same values in each def's
      `posture`, so behavior is identical whether read from data or fallback. */
   var FALLBACK_POSTURES = {
-    redress:{ aidSlope:100, traits:{
+    redress:{ aidSlope:100, ageSlope:2, economicPowerSlope:6, traits:{
       ambitious:5, greedy:8, proud:5, content:-5, generous:-5 } },
-    scutage:{ aidSlope:-60, martialSlope:2, traits:{
+    scutage:{ aidSlope:-60, martialSlope:2, ageSlope:4,
+      economicPowerSlope:6, traits:{
       brave:-10, craven:12, greedy:5, patient:4, wrathful:-6 } }
   };
 
@@ -974,7 +1035,7 @@ window.FB = window.FB || {};
     return weight ? total / weight : 0;
   }
 
-  function motionScore(state, bloc, motionId) {
+  function motionScore(state, bloc, motionId, courtEconomicPowerAverage) {
     var def = blocDef(bloc.archetypeId) || {};
     var motions = def.motions || {};
     var base = isFinite(Number(motions[motionId]))
@@ -1012,6 +1073,35 @@ window.FB = window.FB || {};
         martial:Math.round(averageMartial * 10) / 10
       }));
     }
+    var age = 0;
+    var ageSlope = isFinite(Number(posture.ageSlope))
+      ? Number(posture.ageSlope) : 0;
+    if (ageSlope) {
+      var averageAge = bloc.averageRulerAge;
+      age = FB.clamp(Math.round(
+        ((averageAge - 40) / 10) * ageSlope), -8, 8);
+      reasons.push(reason('average_ruler_age', age, {
+        averageAge:averageAge,
+        slope:ageSlope
+      }));
+    }
+    var economicPower = 0;
+    var economicPowerSlope = isFinite(Number(posture.economicPowerSlope))
+      ? Number(posture.economicPowerSlope) : 0;
+    if (economicPowerSlope) {
+      var averageEconomicPower = bloc.averageEconomicPower;
+      var relativeEconomicPower = courtEconomicPowerAverage > 0
+        ? (averageEconomicPower - courtEconomicPowerAverage) /
+          courtEconomicPowerAverage : 0;
+      economicPower = FB.clamp(Math.round(
+        relativeEconomicPower * economicPowerSlope), -8, 8);
+      reasons.push(reason('economic_power', economicPower, {
+        averageEconomicPower:averageEconomicPower,
+        courtEconomicPowerAverage:courtEconomicPowerAverage,
+        relativeDifference:relativeEconomicPower,
+        slope:economicPowerSlope
+      }));
+    }
     var relationships = 0;
     if (FB.rulerRegard) {
       relationships = Math.round(weightedMemberAverage(bloc, function (house) {
@@ -1032,7 +1122,8 @@ window.FB = window.FB || {};
       if (ambitions) reasons.push(reason('ruler_ambitions', ambitions));
     }
     return {
-      score:base + aidValue + traits + martial + relationships + ambitions,
+      score:base + aidValue + traits + martial + age + economicPower +
+        relationships + ambitions,
       reasons:reasons
     };
   }
@@ -1068,7 +1159,8 @@ window.FB = window.FB || {};
     var uncertain = 0;
     for (var i = 0; i < summary.blocs.length; i++) {
       var bloc = summary.blocs[i];
-      var scored = motionScore(state, bloc, motionId);
+      var scored = motionScore(state, bloc, motionId,
+        summary.courtEconomicPowerAverage);
       var probability = FB.clamp((50 + scored.score) / 100, 0.15, 0.85);
       var pledge = resultPledge(pending, bloc.id) ||
         pendingPledge(pending, bloc.id);
@@ -1096,6 +1188,7 @@ window.FB = window.FB || {};
       blocs:blocs,
       totalInfluence:summary.totalInfluence,
       majority:summary.majority,
+      courtEconomicPowerAverage:summary.courtEconomicPowerAverage,
       supportInfluence:support,
       oppositionInfluence:opposition,
       uncertainInfluence:uncertain,

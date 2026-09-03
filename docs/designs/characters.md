@@ -266,16 +266,24 @@ identify it as the recurring personal-master arrangement.
 0.5% extra mortality at the next New Year, up to 2% after four terms. This roll happens
 before directed learning and coming-of-age rewards. A dependent student's death uses the
 ordinary character cleanup; a minor protagonist's death ends yearly processing and records
-an academy-specific legend. Surviving academy terms get first claim on the household’s one
-annual education decision, with probability `min(1, total terms / 4)` and the named student
-selected in proportion to their terms. If no institutional story is chosen, eligible
-resident children and grandchildren with completed directed terms receive a general
-formative-story roll of `min(0.80, total terms × 0.15)`. Student and focus are selected in
-proportion to those completed terms. Each student keeps `c.edu.storiesSeen` and
+an academy-specific legend. Eligible resident children and grandchildren with completed
+directed terms get first claim on the household’s one annual education decision through a
+general formative-story roll of `min(0.80, total terms × 0.15)`. Student and focus are
+selected in proportion to those completed terms. If that roll misses, surviving academy
+terms provide the fallback with probability `min(1, total terms / 4)` and the named student
+selected in proportion to their academy terms. This ordering prevents a full Academy year
+from permanently starving its student and the rest of the household of formative stories
+while retaining at most one annual education decision. Each student keeps `c.edu.storiesSeen` and
 `c.edu.lastStory`; unseen eligible stories are preferred, then the pool recycles without an
 immediate repeat. A queued story expires if its student dies or the protagonist changes. Patron
 introductions create or warm a life-local noble Network contact for the current protagonist,
 not a permanent relationship owned by the student.
+
+Each built-in formative story presents three responses. The first two are 65% attempts that
+pair a skill gain and shaping trait on success with a one-point skill loss on failure. The
+third is a quieter 35% attempt: success grants only one fitting skill point, while failure
+changes neither skills nor traits. This offers a lower-upside, no-penalty alternative without
+making the child's progress certain.
 
 **Childhood pacing.** A child's total skill income (Study focus, education tick,
 childhood events) is tuned to land only modestly above an adult's (~5/yr vs ~3–4/yr):
