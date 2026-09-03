@@ -76,11 +76,11 @@ the same read-only integer projection and are canonicalized on the next write, k
 sheet's visible contents and construction occupancy in agreement. Tapping a settlement in
 your own demesne (Land tab) or any settlement marker on the detailed map opens `UI.showSettlement`:
 only the buildings standing in THAT settlement, with what each provides, plus any
-household plots, manor, or enterprises in the same slot. Authorization lives inside the
-sheet — a foreign or non-demesne settlement is read-only, and the raise button keeps
-the demesne/tier/buildable gates. Construction and demolition both require tier 3 or
-higher; the commoner home-county fallback used for display and household scope grants
-no authority over county buildings. Because the commodity market belongs to the county,
+household plots, manor, or enterprises in the same slot. County building and fortification
+information appears only when the player is the tier-3+ landed holder of that county;
+commoner and foreign sheets omit it entirely. Construction and demolition use that same
+authority gate, so the commoner home-county fallback used for display and household scope
+grants no view or control over county works. Because the commodity market belongs to the county,
 only the county-head sheet (`s: 0`) carries its Market shortcut; the Land panel presents
 the same county-wide destination as a card inside Development.
 

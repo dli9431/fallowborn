@@ -628,7 +628,8 @@ test('fort badges and settlement sheets expose tier, works, locks, and touch con
       };
     }, setup);
     expect(foreign).toBeTruthy();
-    await expect(page.locator('#gm-body')).toContainText(foreign.name);
+    await expect(page.locator('#gm-body')).not.toContainText(foreign.name);
+    await expect(page.locator('#gm-body')).not.toContainText('Fortify this county');
     await expect(page.locator('[data-fort-start]')).toHaveCount(0);
     await expect(page.locator('.sett-demolish')).toHaveCount(0);
 

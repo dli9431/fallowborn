@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.1';
+FB.VERSION = '1.168.2';
 FB.CHANGELOG = [
+  { v: '1.168.2', date: '2026-09-03', changes: [
+    'Settlement sheets now tuck development guidance into details and show county buildings and fortifications only to the county\'s landed holder.'
+  ] },
   { v: '1.168.1', date: '2026-09-03', changes: [
     'The Family Tree now joins maternal, paternal, collateral, and stepfamily branches beneath one visible root.'
   ] },

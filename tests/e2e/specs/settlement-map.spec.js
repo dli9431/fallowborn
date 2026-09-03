@@ -450,10 +450,11 @@ test('numeric property at pre-feature indices resolves read-only for a serf',
     await expect(body).toContainText('farms 1 plots');
     await expect(body).toContainText('manor stands here');
     await expect(body).toContainText('operates here');
-    await expect(body).toContainText('Watermill');
-    await expect(body).toContainText('Stone Castle');
-    /* The home-county fallback in FB.demesne keeps commoner property visible,
-       but it does not grant authority over the county's buildings. */
+    await expect(body).not.toContainText('Watermill');
+    await expect(body).not.toContainText('Stone Castle');
+    await expect(body).not.toContainText('Fortify this county');
+    /* The home-county fallback keeps commoner property visible, but county
+       works and their controls are relevant only to the landed holder. */
     await expect(page.locator('#gm-body [data-demolish]')).toHaveCount(0);
     await expect(page.locator('#gm-raise')).toHaveCount(0);
 
@@ -464,7 +465,7 @@ test('numeric property at pre-feature indices resolves read-only for a serf',
     await expect(body).not.toContainText('farms 1 plots');
     await expect(body).not.toContainText('manor stands here');
     await expect(body).not.toContainText('operates here');
-    await expect(body).toContainText('No buildings');
+    await expect(body).not.toContainText('No buildings');
 
     /* Escape and keyboard Back behavior stay consistent */
     await page.keyboard.press('Escape');
@@ -493,8 +494,8 @@ test('a valid demesne sheet retains construction and demolition controls',
     if (setup.buildable) {
       await expect(page.locator('#gm-raise')).toHaveCount(1);
     }
-    /* a foreign county sheet shows structures but no mutating control */
-    await page.evaluate(function () {
+    /* A foreign county sheet omits county works as irrelevant to this ruler. */
+    const foreignBuilding = await page.evaluate(function () {
       const s = FB.state;
       let foreign = null;
       for (const pr of FB.world.provs) {
@@ -502,8 +503,13 @@ test('a valid demesne sheet retains construction and demolition controls',
         const holder = (s.holder && s.holder[pr.id]) || s.owner[pr.id];
         if (holder && holder !== 'player') { foreign = pr.id; break; }
       }
+      s.buildings[foreign] = [{ s:0, id:'mill' }];
+      if (FB.invalidateBuildingIndex) FB.invalidateBuildingIndex(s, foreign);
       FB.ui.showSettlement(foreign, 0);
+      return FBDATA.buildings.mill.name;
     });
+    await expect(page.locator('#gm-body')).not.toContainText(foreignBuilding);
+    await expect(page.locator('#gm-body')).not.toContainText('Fortify this county');
     await expect(page.locator('#gm-body [data-demolish]')).toHaveCount(0);
     await expect(page.locator('#gm-raise')).toHaveCount(0);
     await page.keyboard.press('Escape');

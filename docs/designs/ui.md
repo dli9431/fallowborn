@@ -2027,12 +2027,13 @@ strength graduation, so the close-up reads crisp rather than blocky or blurred.
 
 A fort adds a shape-coded shield badge with one to four internal marks over its existing
 settlement emblem; construction adds a crossed corner. Neither meaning depends on color,
-and the badge does not change cached site art. The settlement sheet shows current and
-target tier, project dates, upfront/no-refund terms, upkeep, local defense, garrison and
-field burden, movement control, siege minimum/attrition, and the next sequential tier.
-Owned sheets provide keyboard-numbered, mobile-size project and demolition controls for
-tier-3+ rulers; commoner and foreign sheets remain read-only. A locked tier stays visible
-and its action opens the exact technology detail.
+and the badge does not change cached site art. For a county's tier-3+ player holder, the
+settlement sheet shows current and target fort tier, project dates, upfront/no-refund terms,
+upkeep, local defense, garrison and field burden, movement control, siege minimum/attrition,
+and the next sequential tier. Those owned sheets provide keyboard-numbered, mobile-size
+project and demolition controls; commoner and foreign sheets omit county building and
+fortification information. A locked tier stays visible to the holder and its action opens
+the exact technology detail.
 
 Labels reject
 deterministically on rectangle overlap in priority order (kind, head status,
@@ -2049,16 +2050,17 @@ the exact slot. Every explicit county-targeting mode — new-game province picki
 travel picker, army selection and march orders — keeps receiving the parent county, so
 a marker never blocks the county beneath it; keyboard province navigation stays
 province-based. `UI.showSettlement(pid, index)` is universal: it names the county,
-holder, localized kind, and development explanation, lists the buildings and ruins of
-the exact slot, and shows matching household plots, manor, and enterprises when
-present. Each building, ruin, or fort renders as a compact card — icon, name, and a
-one-line effect — with the concise stakes summary and description behind a per-card
-details disclosure (a hover/focus tooltip on desktop, an inline tap toggle
-elsewhere — one or the other per layout, per the tooltip convention above), and demolition
-rides inside the owned card as an icon button for a tier-3+ ruler.
-Authorization lives inside the sheet, so foreign and non-demesne settlements
-are read-only; a commoner's home-county display fallback is read-only too, while a valid
-tier-3+ demesne settlement keeps construction and demolition.
+holder, localized kind, and a compact development summary. Growth thresholds and
+development history move behind its hover/focus tooltip on desktop and inline details
+disclosure on touch/tablet layouts. The sheet shows matching household plots, manor, and
+enterprises when present. For the county's tier-3+ player holder, it also lists the
+buildings and ruins of the exact slot. Each building, ruin, or fort renders as a compact
+card with an icon, name, and one-line effect. Its concise stakes summary and description
+sit behind a per-card details disclosure (a hover/focus tooltip on desktop, an inline tap
+toggle elsewhere, one or the other per layout), and demolition rides inside the owned
+card as an icon button. Authorization lives inside the sheet, so foreign, non-demesne,
+and commoner sheets omit county works entirely, while a valid tier-3+ held settlement
+keeps their information plus construction and demolition.
 
 ## Localization
 

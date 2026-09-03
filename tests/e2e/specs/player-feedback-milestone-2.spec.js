@@ -705,8 +705,11 @@ test('settlement growth reports every derived threshold and the bookmark baselin
     });
     await expect(page.locator('.settlement-development-summary'))
       .toContainText('County development');
-    await expect(page.locator('.settlement-development-summary'))
-      .toContainText('chronicle began');
+    const developmentDetails = page.locator('#settlement-development-details');
+    await expect(developmentDetails).toBeHidden();
+    await page.locator('.settlement-development-summary').hover();
+    await expect(page.locator('#tooltip')).toContainText('chronicle began');
+    await expect(page.locator('#tooltip')).toContainText('Next at');
     await expect(page.getByRole('button', {
       name:'Guide: settlements and development', exact:true
     })).toBeVisible();

@@ -301,9 +301,17 @@ test('deeds tab shows demesne buildings as a county grid that opens settlements'
     await expect(page.locator('#gm-title')).toContainText(names.homeSettlement);
     await expect(page.locator('#gm-body')).toContainText('County development:');
 
-    // the header no longer narrates growth history
-    await expect(page.locator('#gm-body'))
-      .not.toContainText('Started at development');
+    // development guidance uses the same mobile details disclosure as cards
+    const developmentSummary = page.locator('.settlement-development-summary');
+    const developmentDetails = page.locator('#settlement-development-details');
+    const developmentInfo = developmentSummary.locator('.settcard-info');
+    await expect(developmentDetails).toBeHidden();
+    await expect(developmentInfo).toBeVisible();
+    await developmentInfo.click();
+    await expect(developmentDetails).toBeVisible();
+    await expect(developmentDetails).toContainText('chronicle began');
+    await developmentInfo.click();
+    await expect(developmentDetails).toBeHidden();
 
     // each building card shows just a name and a one-line effect; the audit
     // table and description stay hidden behind the card's ? button
@@ -350,6 +358,9 @@ test('settlement modal encapsulates fort siege details and upgrade actions insid
       const state = FB.state;
       const pid = state.player.provinceId;
       state.player.tier = 4;
+      state.player.liege = null;
+      state.player.provs = [pid];
+      FB.foundPlayerRealm(state);
       /* the fort record IS the walls building entry; its level lives on the
          record itself, so reindex after the direct data write */
       state.buildings = state.buildings || {};

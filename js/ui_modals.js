@@ -6471,9 +6471,11 @@ window.FB = window.FB || {};
     if (!s || !pr) return;
     const st = FB.settlementsOf(s, pid)[idx];
     if (!st) return;
-    const own = FB.demesne(s).indexOf(pid) >= 0;
-    const canDemolish = own && s.player.tier >= 3;
     const holdId = (s.holder && s.holder[pid]) || s.owner[pid];
+    /* A commoner's home county is a display fallback in FB.demesne, not
+       authority over county works. Building and fortification information is
+       relevant only while the player is the county's landed holder. */
+    const managesCounty = holdId === 'player' && s.player.tier >= 3;
     const holderText = holdId === 'player'
       ? FB.T('your household')
       : (s.realms[holdId] ? s.realms[holdId].name : FB.T('no one'));
@@ -6481,27 +6483,37 @@ window.FB = window.FB || {};
       esc(FB.T('{kind} in {county} county · held by {holder}', {
         kind:settlementKindName(st.kind), county:FB.L(pr.name), holder:holderText
       })) + '</p></div>';
-    const done = [];
-    for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
     const settPop = FB.settlementPopulation ? FB.settlementPopulation(s, pid, idx) : 0;
     const B = FBDATA.balance || {};
     const kindTax = st.kind === 'city' ? (B.settlementCityTax || 4.5) : (st.kind === 'town' ? (B.settlementTownTax || 2.0) : (B.settlementVillageTax || 0.75));
-    h += '<div class="gm-body-text settlement-development-summary">' +
-      '<p><b>' + esc(FB.T('County development: {current} / {cap}', {
+    const developmentDetailsId = 'settlement-development-details';
+    const developmentStatus = FB.settlementDevelopment
+      ? FB.settlementDevelopment(s, pid) : null;
+    let developmentDetails = developmentStatus && developmentStatus.next !== null
+      ? '<p class="hint">' + esc(FB.T('Next at {threshold}: {change}.', {
+          threshold:developmentStatus.next,
+          change:settlementChangeName(developmentStatus.change)
+        })) + '</p>'
+      : '';
+    developmentDetails += '<p class="hint">' +
+      esc(bookmarkDevelopmentText(s, pid)) + '</p>';
+    h += '<div class="gm-body-text settlement-development-summary"' +
+      ' data-action-tooltip="' + developmentDetailsId + '"' +
+      (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+      ' aria-describedby="' + developmentDetailsId + '">' +
+      '<div class="settcard-head"><b>' +
+      esc(FB.T('County development: {current} / {cap}', {
         current:(s.dev[pid] || 1), cap:FB.devCap(s, pid)
       })) + ' · ' + esc(FB.T('Population: ~{pop}', { pop:settPop.toLocaleString() })) +
-      ' · ' + esc(FB.T('Dues: +{tax}g/season', { tax:(Math.round(kindTax * 100) / 100) })) + '</b></p>' +
-      (function () {
-        const status = FB.settlementDevelopment
-          ? FB.settlementDevelopment(s, pid) : null;
-        return status && status.next !== null
-          ? '<p class="hint">' + esc(FB.T('Next at {threshold}: {change}.', {
-              threshold:status.next,
-              change:settlementChangeName(status.change)
-            })) + '</p>'
-          : '';
-      })() + '<p class="hint">' + esc(bookmarkDevelopmentText(s, pid)) +
-      '</p></div>';
+      ' · ' + esc(FB.T('Dues: +{tax}g/season', {
+        tax:(Math.round(kindTax * 100) / 100)
+      })) + '</b><span class="settcard-actions">' +
+      '<button type="button" class="btn small settcard-info"' +
+      ' aria-expanded="false" aria-controls="' + developmentDetailsId + '"' +
+      ' title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span></div>' +
+      '<div class="settcard-details hidden" id="' + developmentDetailsId +
+      '">' + developmentDetails + '</div></div>';
     /* household property in the exact slot — read directly so opening a
        sheet never migrates or rewrites saved property */
     const property = [];
@@ -6532,13 +6544,17 @@ window.FB = window.FB || {};
       h += '<div class="gm-body-text settlement-property"><p>' +
         property.join('<br>') + '</p></div>';
     }
-    const canRaise = own && s.player.tier >= 3 &&
+    const canRaise = managesCounty &&
       FB.buildable(s, pid, idx).length > 0;
     if (canRaise) {
       h += '<div class="gm-list" style="margin-bottom:8px;"><button class="actionbtn" id="gm-raise">' +
         esc(FB.T('🏗 Raise a building…')) + '</button></div>';
     }
-    if (done.length) {
+    const done = [];
+    if (managesCounty) {
+      for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
+    }
+    if (managesCounty && done.length) {
       let cardSeq = 0;
       for (const e of done) {
         const id = e.id;
@@ -6547,7 +6563,7 @@ window.FB = window.FB || {};
         const detId = 'settcard-details-' + (++cardSeq);
         const name = dt(s, 'building', id, d, 'name');
         if (id === 'walls' && !e.ruined) {
-          h += fortAssetHtml(s, pid, idx, e, own, detId);
+          h += fortAssetHtml(s, pid, idx, e, true, detId);
           continue;
         }
         if (e.ruined) {
@@ -6574,14 +6590,14 @@ window.FB = window.FB || {};
               expiry:buildingExpiryRule()
             }) + '<div class="hint settdesc">' +
               esc(dt(s, 'building', id, d, 'desc')) + '</div>',
-            canDemolish ? id : null);
+            id);
         }
       }
-    } else {
+    } else if (managesCounty) {
       h += '<p class="hint">' + esc(FB.T('No buildings yet in {settlement}.',
         { settlement: st.name })) + '</p>';
     }
-    if (!FB.fortAt(s, pid) && own) {
+    if (managesCounty && !FB.fortAt(s, pid)) {
       const fortStatus = FB.fortProjectStatus(s, pid, idx, 1);
       const firstFort = FB.fortLevelDef(1);
       h += '<div class="fort-next-tier"><b>' + esc(FB.T('Fortify this county: {fort}', {
