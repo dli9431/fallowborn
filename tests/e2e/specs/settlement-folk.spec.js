@@ -151,8 +151,12 @@ test('activities introduce exact adults and unlock the standard relationship car
       const initiallyCultivated = contact.cultivated;
       const cooldown = FB.localFolkActivityStatus(s, adult.id, 'work');
       const cultivated = FB.socialAttentionAssign(s, adult);
+      const household = FB.localFolkHouseholdOf(s, adult.id);
       return {
         id:adult.id,
+        familyIds:household.members.filter(function (member) {
+          return !member.dead && member.id !== adult.id;
+        }).map(function (member) { return member.id; }),
         beforeActions:before.actions.length,
         queued:queued,
         eventId:event.id,
@@ -181,6 +185,29 @@ test('activities introduce exact adults and unlock the standard relationship car
     expect(result.cultivatedAfter).toBe(true);
     await page.evaluate(function (id) { FB.ui.showCharModal(id); }, result.id);
     await expect(page.locator('.local-folk-household-card')).toBeVisible();
+    const family = page.locator('.local-folk-family');
+    await expect(family).toHaveClass(/court-strip/);
+    const familyIds = await family.locator('.ftchip').evaluateAll(
+      function (chips) {
+        return chips.map(function (chip) {
+          return chip.getAttribute('data-interaction-character');
+        });
+      });
+    expect(familyIds).toEqual(result.familyIds);
+    await expect(family.locator('canvas.pface')).toHaveCount(
+      result.familyIds.length);
+    await expect.poll(function () {
+      return family.locator('canvas.pface').evaluateAll(function (canvases) {
+        return canvases.length > 0 && canvases.every(function (canvas) {
+          const pixels = canvas.getContext('2d').getImageData(
+            0, 0, canvas.width, canvas.height).data;
+          for (let i = 3; i < pixels.length; i += 4) {
+            if (pixels[i]) return true;
+          }
+          return false;
+        });
+      });
+    }).toBe(true);
     await expect(page.locator('[data-local-folk-venue]')).toHaveCount(4);
   });
 

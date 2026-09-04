@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.5';
+FB.VERSION = '1.168.6';
 FB.CHANGELOG = [
+  { v: '1.168.6', date: '2026-09-03', changes: [
+    'Local residents\' character sheets now show their household as a navigable portrait strip.'
+  ] },
   { v: '1.168.5', date: '2026-09-03', changes: [
     'Character portraits and text now line up correctly in settlement sheets and Network on compact screens.'
   ] },

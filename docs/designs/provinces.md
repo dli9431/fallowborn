@@ -196,6 +196,9 @@ compact tier/construction mark in ordinary DOM text.
 
 The settlement sheet paints each local person's compact portrait after opening and keeps
 their name and local role on separate, left-aligned lines beside it at narrow widths.
+Opening one of those residents uses the same bounded portrait-chip family strip as a
+ruler's character sheet. It omits the currently open person and links each living household
+member to their own character sheet.
 
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.

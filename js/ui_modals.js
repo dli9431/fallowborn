@@ -20223,22 +20223,38 @@ window.FB = window.FB || {};
       '<h3>' + esc(FB.T('Local household')) + '</h3><p class="adesc">' +
       esc(FB.T('Residents of {settlement}. Their household remains together while one of them has a lasting tie to you.', {
         settlement:settlement ? settlement.name : local.provinceId
-      })) + '</p><div class="gm-list local-folk-family">';
+      })) + '</p>';
     const members = household ? household.members : [];
+    const family = [];
     for (let i = 0; i < members.length; i++) {
       const member = members[i];
+      if (member.dead || member.id === c.id) continue;
       const age = FB.ageOf(member, s.date.year);
       const role = member.localFolk && member.localFolk.role === 'child'
         ? FB.T('Child') : member.localFolk && member.localFolk.role === 'sibling'
           ? FB.T('Household sibling') : FB.T('Adult resident');
-      h += '<button type="button" class="actionbtn interaction-character-link" ' +
-        'data-interaction-character="' + esc(member.id) + '"' +
-        (member.id === c.id ? ' disabled' : '') + '>' +
-        esc(FB.fullName(member)) + '<span class="adesc">' +
-        esc(FB.T('{role} · age {age}', { role:role, age:age })) +
-        '</span></button>';
+      family.push({ member:member, role:role, age:age });
     }
-    h += '</div></div>';
+    if (family.length) {
+      h += '<div class="court-strip local-folk-family" role="list" aria-label="' +
+        esc(FB.T('Local household')) + '">';
+      for (let familyIndex = 0; familyIndex < family.length; familyIndex++) {
+        const row = family[familyIndex];
+        const fullName = FB.fullName(row.member);
+        h += '<button type="button" class="ftchip" role="listitem" ' +
+          'data-interaction-character="' + esc(row.member.id) + '" ' +
+          'aria-label="' + esc(FB.T('Open {name}’s character sheet', {
+            name:fullName
+          })) + '" title="' + esc(fullName) + '">' +
+          FB.faceTag(row.member, 50, 57) +
+          '<span class="fname">' + esc(fullName) + '</span>' +
+          '<span class="frel">' + esc(FB.T('{role} · age {age}', {
+            role:row.role, age:row.age
+          })) + '</span></button>';
+      }
+      h += '</div>';
+    }
+    h += '</div>';
     if (c.dead || FB.ageOf(c, s.date.year) < 16) return h;
     h += '<div class="interaction-card local-folk-activities"><h3>' +
       esc(FB.localFolkKnown(s, c.id)
