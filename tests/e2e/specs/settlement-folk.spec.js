@@ -280,7 +280,7 @@ test('Network and settlement sheets share the same nearby people without remote 
     const home = await page.evaluate(function () {
       return FB.state.player.provinceId;
     });
-    await page.locator('#lefttabs .tab[data-tab="network"]').click();
+    await page.locator('#sidetabs .tab[data-tab="network"]').click();
     await page.keyboard.press('Digit6');
     await expect(page.locator('[data-list-section="local-folk"]')).toBeVisible();
     await expect(page.locator(
@@ -303,6 +303,23 @@ test('Network and settlement sheets share the same nearby people without remote 
         });
       });
     expect(shownIds.sort()).toEqual(expectedHeadIds.sort());
+    const expectedMeta = await page.evaluate(function (pid) {
+      const s = FB.state;
+      return FB.localFolkAt(s, pid, 0).map(function (folk) {
+        const age = FB.ageOf(folk, s.date.year);
+        const relationship = age < 16 ? FB.T('Household child')
+          : FB.localFolkKnown(s, folk.id) ? FB.T('Known contact') : FB.T('Unmet');
+        return FB.T(
+          '{gender} · Age {age} · {occupation} · {relationship}', {
+            gender:FB.T(folk.sex === 'f' ? 'Woman' : 'Man'),
+            age:age,
+            occupation:FB.careerTitle(s, folk),
+            relationship:relationship
+          });
+      });
+    }, home);
+    await expect(page.locator('[data-settlement-folk] .cmeta'))
+      .toHaveText(expectedMeta);
     await expect.poll(function () {
       return page.locator('[data-settlement-folk] canvas.pface').evaluateAll(
         function (canvases) {

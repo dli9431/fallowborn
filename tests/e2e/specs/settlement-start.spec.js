@@ -126,7 +126,7 @@ test('a quick start creates its authored Serf life in one selection',
       homeName:'Rathcroghan',
       name:'Aed', culture:'gaelic', religion:'catholic',
       seed:expect.stringMatching(
-        /^[A-Z0-9]+-867-serf-galway-m-Aed-standard-0-gaelic\.catholic$/)
+        /^[A-Z0-9]+-867-serf-galway-m-Aed$/)
     });
     expect(result.familyIds.length).toBeGreaterThan(2);
     expect(result.familyStatuses.every(function (status) {

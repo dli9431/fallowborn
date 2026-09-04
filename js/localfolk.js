@@ -170,6 +170,7 @@ window.FB = window.FB || {};
       guildStanding:0,
       chosen:!!adult
     };
+    c.careerHistory = {};
   }
 
   function newPerson(state, spec, household, role, index) {
@@ -310,6 +311,13 @@ window.FB = window.FB || {};
     });
     for (let householdIndex = 0;
          householdIndex < county.households.length; householdIndex++) {
+      const members = householdMembers(state, county.households[householdIndex]);
+      for (let memberIndex = 0; memberIndex < members.length; memberIndex++) {
+        const member = members[memberIndex];
+        if (!member.careerHistory ||
+            typeof member.careerHistory !== 'object' ||
+            Array.isArray(member.careerHistory)) member.careerHistory = {};
+      }
       const generation = Math.floor(Number(
         county.households[householdIndex].generation));
       if (isFinite(generation) && generation >= county.nextGeneration) {

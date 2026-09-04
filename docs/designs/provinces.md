@@ -331,4 +331,7 @@ settlement slots; they do not create physical sites or change county population.
 `FB.localFolkAt` is the read-only projection used by Network and settlement sheets.
 Remote map browsing never calls the mutating ensure path, consumes no RNG, and shows only
 residents already remembered through a relationship. A county roster is created at game
-initialization, save restoration, or destination arrival.
+initialization, save restoration, or destination arrival. That lifecycle also initializes
+each resident's empty career-history container, so merely formatting an occupation in either
+view cannot mutate the campaign. Settlement person cards order their compact facts as gender,
+age, occupation, then the player's relationship status with that resident.

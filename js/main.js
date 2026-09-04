@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.7';
+FB.VERSION = '1.168.8';
 FB.CHANGELOG = [
+  { v: '1.168.8', date: '2026-09-04', changes: [
+    'Opening Network or settlement people lists no longer changes local residents\' saved career records.',
+    'Settlement people cards now show gender, age, occupation, and relationship status.'
+  ] },
   { v: '1.168.7', date: '2026-09-03', changes: [
     'Local residents\' character sheets now label family relationships and present settlement meetings as standard actions with details.'
   ] },

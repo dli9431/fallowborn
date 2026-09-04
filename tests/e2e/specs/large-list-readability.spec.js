@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/keys.js',
+  'js/localfolk.js',
   'js/main.js',
   'js/market.js',
   'js/ui_misc.js',
@@ -443,12 +444,12 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
 
     await expect(page.locator('#network-list-search')).toHaveCount(0);
     await expect(page.locator('#tab-network [data-list-filter]')).toHaveCount(0);
-    await expect(page.locator('[data-list-section]')).toHaveCount(5);
+    await expect(page.locator('#tab-network [data-list-section]')).toHaveCount(6);
     const householdToggle = page.locator('[data-list-toggle="household"]');
     const connectionsToggle = page.locator('[data-list-toggle="connections"]');
     const tradeToggle = page.locator('[data-list-toggle="trade"]');
     expect(await page.locator('.large-list-section-keyhint').allTextContents())
-      .toEqual(['1', '2', '3', '4', '5']);
+      .toEqual(['1', '2', '3', '4', '5', '6']);
     await expect(householdToggle).toHaveAttribute('aria-current', 'true');
     await expect(page.locator(
       '#tab-network .large-list-section-count')).toHaveCount(0);

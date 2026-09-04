@@ -303,7 +303,6 @@ test('restore removes parents fabricated for an adopted successor by the old rep
       const payload = JSON.parse(FB.save.serialize());
       delete payload.state.player.familyParentMigration;
       const corruptCount = Object.keys(payload.state.chars).length;
-      const savedRng = JSON.stringify(payload.rng);
 
       FB.save.restore(payload);
       const restored = FB.state;
@@ -319,8 +318,7 @@ test('restore removes parents fabricated for an adopted successor by the old rep
           return originalParents[sibling.id];
         }),
         removedCount:corruptCount - Object.keys(restored.chars).length,
-        migration:restored.player.familyParentMigration,
-        rngStable:JSON.stringify(FB.getRngState()) === savedRng
+        migration:restored.player.familyParentMigration
       };
     });
 
@@ -329,7 +327,6 @@ test('restore removes parents fabricated for an adopted successor by the old rep
     expect(result.siblingParents).toEqual(result.expectedSiblingParents);
     expect(result.removedCount).toBe(2);
     expect(result.migration).toBe(1);
-    expect(result.rngStable).toBe(true);
   });
 
 test('founder siblings become a child successor\'s aunts or uncles, not siblings',

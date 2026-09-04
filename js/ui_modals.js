@@ -6638,13 +6638,18 @@ window.FB = window.FB || {};
         const folkAge = FB.ageOf(folk, s.date.year);
         const folkRole = folkAge < 16 ? FB.T('Household child')
           : FB.localFolkKnown(s, folk.id) ? FB.T('Known contact') : FB.T('Unmet');
+        const folkMeta = FB.T(
+          '{gender} · Age {age} · {occupation} · {relationship}', {
+            gender:FB.T(folk.sex === 'f' ? 'Woman' : 'Man'),
+            age:folkAge,
+            occupation:FB.careerTitle(s, folk),
+            relationship:folkRole
+          });
         h += '<button type="button" class="charrow actionbtn" ' +
           'data-settlement-folk="' + esc(folk.id) + '">' +
           FB.faceTag(folk, 44, 50) + '<span class="large-list-row-copy">' +
           '<span class="cname">' + esc(FB.fullName(folk)) + '</span>' +
-          '<span class="cmeta">' +
-          esc(folkRole + ' · ' + (folkAge < 16
-            ? FB.T('age {age}', { age:folkAge }) : FB.careerTitle(s, folk))) +
+          '<span class="cmeta">' + esc(folkMeta) +
           '</span></span></button>';
       }
       h += '</div>';
