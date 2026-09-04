@@ -198,7 +198,13 @@ The settlement sheet paints each local person's compact portrait after opening a
 their name and local role on separate, left-aligned lines beside it at narrow widths.
 Opening one of those residents uses the same bounded portrait-chip family strip as a
 ruler's character sheet. It omits the currently open person and links each living household
-member to their own character sheet.
+member to their own character sheet. The strip stands on its own without a repeated heading
+or helper paragraph, and labels members relative to the open character as spouse, parent,
+child, or sibling rather than as generic residents.
+The four local meeting venues appear in the character sheet's standard Relationship &
+attention action group below Standing. Their visible rows carry only the action label;
+venue-specific choices, the day cost, cooldown, and any blocking reason use the shared
+desktop tooltip or compact-layout disclosure instead of a generic helper paragraph.
 
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.

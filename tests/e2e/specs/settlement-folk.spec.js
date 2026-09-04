@@ -154,6 +154,7 @@ test('activities introduce exact adults and unlock the standard relationship car
       const household = FB.localFolkHouseholdOf(s, adult.id);
       return {
         id:adult.id,
+        spouseId:adult.spouseId,
         familyIds:household.members.filter(function (member) {
           return !member.dead && member.id !== adult.id;
         }).map(function (member) { return member.id; }),
@@ -171,7 +172,7 @@ test('activities introduce exact adults and unlock the standard relationship car
       };
     });
 
-    expect(result.beforeActions).toBe(0);
+    expect(result.beforeActions).toBe(4);
     expect(result.queued).toBe(true);
     expect(result.eventId).toBe('local_folk_commons');
     expect(result.exactParticipant).toBe(result.id);
@@ -184,9 +185,10 @@ test('activities introduce exact adults and unlock the standard relationship car
     expect(result.cultivated).toBe(true);
     expect(result.cultivatedAfter).toBe(true);
     await page.evaluate(function (id) { FB.ui.showCharModal(id); }, result.id);
-    await expect(page.locator('.local-folk-household-card')).toBeVisible();
-    const family = page.locator('.local-folk-family');
+    const family = page.locator('.local-folk-household-card');
+    await expect(family).toBeVisible();
     await expect(family).toHaveClass(/court-strip/);
+    await expect(family.locator(':scope > h3, :scope > p')).toHaveCount(0);
     const familyIds = await family.locator('.ftchip').evaluateAll(
       function (chips) {
         return chips.map(function (chip) {
@@ -208,7 +210,69 @@ test('activities introduce exact adults and unlock the standard relationship car
         });
       });
     }).toBe(true);
-    await expect(page.locator('[data-local-folk-venue]')).toHaveCount(4);
+    const subjectRelations = await family.locator('.frel').allTextContents();
+    expect(subjectRelations).toEqual(expect.arrayContaining([
+      expect.stringMatching(/^Wife · age /),
+      expect.stringMatching(/^(Son|Daughter) · age /)
+    ]));
+    await family.locator('[data-interaction-character="' +
+      result.spouseId + '"]').click();
+    await expect(family.locator('.frel').filter({ hasText:'Husband · age ' }))
+      .toHaveCount(1);
+    await expect(page.locator(
+      '[data-interaction-action^="local-folk.activity."]')).toHaveCount(4);
+  });
+
+test('local meeting venues use standard actions below Standing with specific details',
+  async function ({ page }) {
+    const id = await page.evaluate(function () {
+      return FB.localFolkCurrent(FB.state).filter(function (c) {
+        return FB.ageOf(c, FB.state.date.year) >= 16;
+      })[0].id;
+    });
+    await page.evaluate(function (cid) { FB.ui.showCharModal(cid); }, id);
+
+    const card = page.locator('[data-interaction-kind="character"]');
+    const actions = card.locator(
+      '[data-interaction-action^="local-folk.activity."]');
+    await expect(actions).toHaveCount(4);
+    await expect(page.locator('.local-folk-activities')).toHaveCount(0);
+    await expect(page.locator('.character-interaction-modal')).not.toContainText(
+      'Choose one setting. The meeting spends the day');
+    expect(await card.evaluate(function (root) {
+      const standing = root.querySelector('.interaction-standing');
+      const firstAction = root.querySelector(
+        '[data-interaction-action^="local-folk.activity."]');
+      return !!(standing && firstAction &&
+        (standing.compareDocumentPosition(firstAction) &
+          Node.DOCUMENT_POSITION_FOLLOWING));
+    })).toBe(true);
+
+    const rows = actions.locator('..');
+    await expect(rows).toHaveCount(4);
+    expect(await rows.evaluateAll(function (entries) {
+      return entries.every(function (entry) {
+        return entry.classList.contains('interaction-action-entry') &&
+          !!entry.querySelector('.settcard-info');
+      });
+    })).toBe(true);
+    const details = await card.locator(
+      '[id^="interaction-action-details-local-folk-activity-"]')
+      .allTextContents();
+    expect(details).toEqual(expect.arrayContaining([
+      expect.stringContaining('listen, tell a story, or debate'),
+      expect.stringContaining('labor, improve the work, or hire help'),
+      expect.stringContaining('worship, give alms, or discuss belief'),
+      expect.stringContaining('offer food, bargain, or trade rumors')
+    ]));
+    expect(details.every(function (detail) {
+      return detail.indexOf('30-day cooldown') >= 0;
+    })).toBe(true);
+
+    await actions.first().hover();
+    await expect(page.locator('#tooltip')).toContainText(
+      'listen, tell a story, or debate');
+    await expect(page.locator('#tooltip')).toContainText('30-day cooldown');
   });
 
 test('Network and settlement sheets share the same nearby people without remote generation',
