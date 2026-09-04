@@ -194,6 +194,9 @@ and a crossed corner encodes active construction. `FB.fortBadgeDescriptor` is th
 accessible/testable projection behind that drawing. County settlement links repeat a
 compact tier/construction mark in ordinary DOM text.
 
+The settlement sheet paints each local person's compact portrait after opening and keeps
+their name and local role on separate, left-aligned lines beside it at narrow widths.
+
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.
 

@@ -1702,6 +1702,9 @@ section assigns `Q W E / A S D / Z X C`, then their Shift variants, to its first
 management actions, matching Deeds. Character, ruler, and political-bloc rows that only
 open an information sheet never receive a letter shortcut. Household is active by default
 for a newly opened life; touch layouts show no keyboard selection or badges.
+Character rows keep the portrait, left-aligned name and context, and Standing value in one
+non-wrapping row shell on compact layouts. The text itself may wrap within its column, but
+Standing does not fall onto an unrelated line beneath it.
 
 Network → Household also opens the responsive **Household Plan**. Its desktop modal uses a
 wide seven-column table ordered as household head, resident family, then paid retainers.

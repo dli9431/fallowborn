@@ -2581,7 +2581,11 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   width: 100%; min-width: 0; margin: 0; font-family: inherit;
 }
 .large-list-entry .charrow.large-list-target-button {
+  flex-wrap: nowrap;
   color: var(--main-text-color); background: transparent; border: 0;
+}
+.large-list-entry .charrow.large-list-target-button .cop {
+  flex: 0 0 auto;
 }
 .large-list-entry .actionbtn.large-list-target-button {
   background: transparent; border-color: transparent;
@@ -3152,6 +3156,10 @@ textarea.modjson, textarea.savetext {
 
 /* portraits & character cards */
 .pface { border: 1px solid #55452a; border-radius: 5px; background: #241d15; flex: 0 0 auto; }
+.settlement-folk-list .charrow { align-items: flex-start; gap: 10px; }
+.settlement-folk-list .large-list-row-copy { align-self: flex-start; }
+.settlement-folk-list .cname { font-weight: bold; line-height: 1.3; }
+.settlement-folk-list .cmeta { line-height: 1.35; }
 .charcard {
   display: flex; gap: 10px; align-items: flex-start; margin-top: 10px;
   background: #241d15; border: 1px solid #55452a; border-radius: 8px; padding: 9px; font-size: 13px;

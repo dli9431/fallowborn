@@ -6640,8 +6640,9 @@ window.FB = window.FB || {};
           : FB.localFolkKnown(s, folk.id) ? FB.T('Known contact') : FB.T('Unmet');
         h += '<button type="button" class="charrow actionbtn" ' +
           'data-settlement-folk="' + esc(folk.id) + '">' +
-          FB.faceTag(folk, 44, 50) + '<span><b>' +
-          esc(FB.fullName(folk)) + '</b><span class="cmeta">' +
+          FB.faceTag(folk, 44, 50) + '<span class="large-list-row-copy">' +
+          '<span class="cname">' + esc(FB.fullName(folk)) + '</span>' +
+          '<span class="cmeta">' +
           esc(folkRole + ' · ' + (folkAge < 16
             ? FB.T('age {age}', { age:folkAge }) : FB.careerTitle(s, folk))) +
           '</span></span></button>';
@@ -6663,6 +6664,7 @@ window.FB = window.FB || {};
       guide:guideModalOption('settlement-guide', 'settlements-development',
         'Guide: settlements and development')
     });
+    FB.paintFaces($('gm-body'), s);
     const folkButtons = $('gm-body').querySelectorAll('[data-settlement-folk]');
     for (let folkButtonIndex = 0; folkButtonIndex < folkButtons.length;
          folkButtonIndex++) {

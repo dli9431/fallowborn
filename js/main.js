@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.4';
+FB.VERSION = '1.168.5';
 FB.CHANGELOG = [
+  { v: '1.168.5', date: '2026-09-03', changes: [
+    'Character portraits and text now line up correctly in settlement sheets and Network on compact screens.'
+  ] },
   { v: '1.168.4', date: '2026-09-03', changes: [
     'The map\'s Home control now returns characters below Count rank to their exact home settlement at a visible zoom.'
   ] },

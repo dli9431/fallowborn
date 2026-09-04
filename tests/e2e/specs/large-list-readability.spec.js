@@ -726,6 +726,35 @@ test('Work filters and Network navigation do not mutate play state',
     });
     await expect(page.locator('#network-list-search')).toHaveCount(0);
     await expect(page.locator('#sidebody [data-list-filter]')).toHaveCount(0);
+    const householdPerson = page.locator(
+      '[data-list-section="household"] [data-list-identity="' +
+      fixture.headId + '"]');
+    const networkLayout = await householdPerson.evaluate(function (entry) {
+      const button = entry.querySelector('.charrow.large-list-target-button');
+      const face = button.querySelector('.pface').getBoundingClientRect();
+      const copy = button.querySelector('.large-list-row-copy')
+        .getBoundingClientRect();
+      const name = button.querySelector('.cname').getBoundingClientRect();
+      const meta = button.querySelector('.cmeta').getBoundingClientRect();
+      const standing = button.querySelector('.cop').getBoundingClientRect();
+      const info = entry.querySelector('.settcard-info').getBoundingClientRect();
+      return {
+        flexWrap:getComputedStyle(button).flexWrap,
+        alignItems:getComputedStyle(button).alignItems,
+        faceCopyTop:Math.abs(face.top - copy.top),
+        lineLeft:Math.abs(name.left - meta.left),
+        standingAboveMeta:standing.top < meta.top,
+        standingClearOfInfo:standing.right <= info.left + 1,
+        overflow:button.scrollWidth - button.clientWidth
+      };
+    });
+    expect(networkLayout.flexWrap).toBe('nowrap');
+    expect(networkLayout.alignItems).toBe('flex-start');
+    expect(networkLayout.faceCopyTop).toBeLessThanOrEqual(1);
+    expect(networkLayout.lineLeft).toBeLessThanOrEqual(1);
+    expect(networkLayout.standingAboveMeta).toBe(true);
+    expect(networkLayout.standingClearOfInfo).toBe(true);
+    expect(networkLayout.overflow).toBeLessThanOrEqual(1);
     await page.locator('[data-list-toggle="trade"]').click();
     var networkTarget = page.locator(
       '[data-list-section="connections"] button[data-cid="' +

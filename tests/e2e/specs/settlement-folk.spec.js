@@ -212,6 +212,46 @@ test('Network and settlement sheets share the same nearby people without remote 
         });
       });
     expect(shownIds.sort()).toEqual(expectedHeadIds.sort());
+    await expect.poll(function () {
+      return page.locator('[data-settlement-folk] canvas.pface').evaluateAll(
+        function (canvases) {
+          return canvases.length > 0 && canvases.every(function (canvas) {
+            const pixels = canvas.getContext('2d').getImageData(
+              0, 0, canvas.width, canvas.height).data;
+            for (let i = 3; i < pixels.length; i += 4) {
+              if (pixels[i]) return true;
+            }
+            return false;
+          });
+        });
+    }).toBe(true);
+
+    await page.setViewportSize({ width:390, height:740 });
+    const folkLayout = await page.locator('[data-settlement-folk]').first()
+      .evaluate(function (button) {
+        const face = button.querySelector('.pface').getBoundingClientRect();
+        const copyElement = button.querySelector('.large-list-row-copy');
+        const copy = copyElement.getBoundingClientRect();
+        const name = button.querySelector('.cname').getBoundingClientRect();
+        const meta = button.querySelector('.cmeta').getBoundingClientRect();
+        const style = getComputedStyle(copyElement);
+        return {
+          display:style.display,
+          direction:style.flexDirection,
+          textAlign:style.textAlign,
+          faceCopyTop:Math.abs(face.top - copy.top),
+          copyGap:copy.left - face.right,
+          lineLeft:Math.abs(name.left - meta.left),
+          overflow:button.scrollWidth - button.clientWidth
+        };
+      });
+    expect(folkLayout.display).toBe('flex');
+    expect(folkLayout.direction).toBe('column');
+    expect(folkLayout.textAlign).toBe('left');
+    expect(folkLayout.faceCopyTop).toBeLessThanOrEqual(1);
+    expect(folkLayout.copyGap).toBeGreaterThanOrEqual(8);
+    expect(folkLayout.lineLeft).toBeLessThanOrEqual(1);
+    expect(folkLayout.overflow).toBeLessThanOrEqual(1);
 
     const remote = await page.evaluate(function () {
       return FB.world.provs.filter(function (province) {
