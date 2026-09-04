@@ -163,6 +163,29 @@ window.FB = window.FB || {};
     M.request();
   };
 
+  M.centerHome = function () {
+    const s = FB.state;
+    if (!s) return;
+    if (FB.game && FB.game.observe) {
+      M.fitView();
+      M.request();
+      return;
+    }
+    const player = s.player;
+    const pid = player.provinceId;
+    if (player.tier < 4) {
+      const slot = typeof player.homeSettlement === 'number'
+        ? player.homeSettlement : 0;
+      const county = FB.world.sitesByProv && FB.world.sitesByProv[pid];
+      const site = county && county.list && county.list[slot];
+      if (site) {
+        M.centerOnXY(site.x, site.y, SITE_Z_DETAIL);
+        return;
+      }
+    }
+    M.centerOn(pid, 2.2);
+  };
+
   /* ---------- base image ---------- */
   M.setOwnerFns = function (ownerOf, colorOf, capitals, holderOf, colorOpacityOf) {
     M.ownerOf = ownerOf; M.colorOf = colorOf; M.capitals = capitals || [];

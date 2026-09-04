@@ -1285,7 +1285,8 @@ over-map placement instead of falling back to the bottom-left toast corner.
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
 brand-new player once ever per install rather than once per save. The opening tips
 begin with the map before any other coachmark: map controls hand off in order to the **Home**
-button (recenter on the current home county) and **Map filters** (cycle realm, personal,
+button (recenter on the exact home settlement below Count rank, or the home county for
+Counts and above) and **Map filters** (cycle realm, personal,
 liege, de jure, and war views); Continue resumes at the first unread lesson in this map
 sequence. The opening then follows the playable loop: do a one-time deed, let time pass,
 answer the queued welcome event, read its result toast, and, for a serf, try **Desperate measures…**.

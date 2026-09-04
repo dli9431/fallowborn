@@ -176,6 +176,11 @@ only value older saves know), steers the farmer start's plot, and spells the
 optional eighth start-code part ([seeds.md](seeds.md)). The go-into-town deed queues
 `visit_*` events (events_common.js) with the name in `ctx.settlement` (`{settlement}`
 token); options are require-gated by station.
+The map's Home control uses that exact settlement for characters below Count rank and
+raises the map to the detailed-settlement zoom threshold if necessary, so its marker is
+visible in the detailed settlement layer. Counts and higher ranks continue to recenter on
+the home county as a whole. The H and Home keyboard shortcut and the Land panel's Center
+on home button use the same rule.
 
 A fort keeps its exact settlement visible even when later development loss would hide
 that slot under the normal reveal thresholds. The same landmark rule protects the

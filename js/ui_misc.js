@@ -2861,7 +2861,7 @@ window.FB = window.FB || {};
 
   UI.maybeMapHomeTip = function () {
     return UI.maybeTip('map-home',
-      '💡 Lost your place? Use Home to recenter the map on your current home county.',
+      '💡 Lost your place? Use Home to recenter the map on your home settlement or county.',
       '#btn-home', { noNext:true });
   };
 
@@ -3969,9 +3969,7 @@ window.FB = window.FB || {};
     $('btn-zoomin').addEventListener('click', function () { FB.map.zoomIn(); });
     $('btn-zoomout').addEventListener('click', function () { FB.map.zoomOut(); });
     $('btn-home').addEventListener('click', function () {
-      if (!FB.state) return;
-      if (FB.game.observe) FB.map.fitView(); // no home — show the whole board
-      else FB.map.centerOn(FB.state.player.provinceId, 2.2);
+      FB.map.centerHome();
     });
     $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
     const btnMusic = $('btn-music');

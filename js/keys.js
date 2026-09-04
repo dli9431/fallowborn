@@ -337,8 +337,7 @@ window.FB = window.FB || {};
         if (FB.state && !FB.ui.eventsBusy()) FB.ui.showAutoResolve();
         return;
       case 'h': case 'H': case 'Home':
-        if (FB.state && FB.game.observe) M.fitView(); // no home — the whole board
-        else if (FB.state) M.centerOn(FB.state.player.provinceId, 2.2);
+        M.centerHome();
         return;
       case 'r': case 'R':
         if (FB.state) FB.ui.cycleMapMode();

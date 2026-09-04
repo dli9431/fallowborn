@@ -6531,7 +6531,7 @@ window.FB = window.FB || {};
     bindFaithDetails(box);
     if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
     const b = $('btn-center-home');
-    if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
+    if (b) b.addEventListener('click', function () { FB.map.centerHome(); });
     const countyMarket = $('county-market');
     if (countyMarket) countyMarket.addEventListener('click', function () {
       UI.showMarket(pid, FB.map.marketGood || 'provisions');

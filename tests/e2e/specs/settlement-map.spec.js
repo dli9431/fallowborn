@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/mapview.js',
   'js/travel.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
   'js/settlement.js',
   'js/siteart.js',
@@ -774,6 +775,73 @@ test('building development reverses on demolition without inventing legacy loss'
   });
 
 /* ---------- map markers and input ---------- */
+
+test('Home centers lower ranks on their visible settlement and counts on their county',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const detailZoom = 12;
+      const countyZoom = 2.2;
+      const siteHalfW = FB.map.canvas.width / detailZoom / 2;
+      const siteHalfH = FB.map.canvas.height / detailZoom / 2;
+      const countyHalfW = FB.map.canvas.width / countyZoom / 2;
+      const countyHalfH = FB.map.canvas.height / countyZoom / 2;
+      let target = null;
+      for (const pr of FB.world.provs) {
+        const county = FB.world.sitesByProv[pr.id];
+        const site = county && county.list && county.list[1];
+        if (!pr.wasteland && site && FB.settlementVisibleCount(s, pr.id) > 1 &&
+            Math.hypot(site.x - pr.cx, site.y - pr.cy) > 1 &&
+            site.x > siteHalfW && site.x < FB.world.W - siteHalfW &&
+            site.y > siteHalfH && site.y < FB.world.H - siteHalfH &&
+            pr.cx > countyHalfW && pr.cx < FB.world.W - countyHalfW &&
+            pr.cy > countyHalfH && pr.cy < FB.world.H - countyHalfH) {
+          target = { province:pr, site:site };
+          break;
+        }
+      }
+
+      s.player.provinceId = target.province.id;
+      s.player.homeSettlement = target.site.index;
+      s.player.tier = 3;
+      FB.map.zoom = Math.max(FB.map.minZoom, 1);
+      document.getElementById('btn-home').click();
+      const lowerCenterX = FB.map.viewX + FB.map.canvas.width / FB.map.zoom / 2;
+      const lowerCenterY = FB.map.viewY + FB.map.canvas.height / FB.map.zoom / 2;
+      const lower = {
+        zoom:FB.map.zoom,
+        siteDx:Math.abs(lowerCenterX - target.site.x),
+        siteDy:Math.abs(lowerCenterY - target.site.y),
+        countyDistance:Math.hypot(lowerCenterX - target.province.cx,
+          lowerCenterY - target.province.cy)
+      };
+
+      s.player.tier = 4;
+      FB.map.zoom = Math.max(FB.map.minZoom, 1);
+      document.getElementById('btn-home').click();
+      const countCenterX = FB.map.viewX + FB.map.canvas.width / FB.map.zoom / 2;
+      const countCenterY = FB.map.viewY + FB.map.canvas.height / FB.map.zoom / 2;
+      return {
+        lower:lower,
+        count:{
+          zoom:FB.map.zoom,
+          countyDx:Math.abs(countCenterX - target.province.cx),
+          countyDy:Math.abs(countCenterY - target.province.cy)
+        }
+      };
+    });
+
+    expect(result.lower.zoom).toBeGreaterThanOrEqual(12);
+    expect(result.lower.siteDx).toBeLessThan(0.01);
+    expect(result.lower.siteDy).toBeLessThan(0.01);
+    expect(result.lower.countyDistance).toBeGreaterThan(0.01);
+    expect(result.count.zoom).toBeGreaterThanOrEqual(2.2);
+    expect(result.count.zoom).toBeLessThan(12);
+    expect(result.count.countyDx).toBeLessThan(0.01);
+    expect(result.count.countyDy).toBeLessThan(0.01);
+  });
 
 test('zoom tiers control settlement hit targets and visibility',
   async function ({ page }, testInfo) {
