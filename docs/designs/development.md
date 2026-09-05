@@ -113,6 +113,13 @@ price. County gates (`devMin`, `coastal`, `terrains`) are joined by data-driven 
 ordinary buildings remain limited by their own definitions. Fortifications use the
 separate county rule below.
 
+Standing economic buildings also contribute to the existing settlement-population
+weights. Player and AI construction, demolition, raid ruin, fort anchoring, and every
+development change call `FB.reconcileSettlementCommunities` after invalidating their
+derived building or settlement view. Counties without a materialized community matrix
+keep the partition absent. Materialized counties preserve exact community columns and
+exact settlement rows, so changing infrastructure cannot create or erase people.
+
 The repeat-copy curve produces a stable real-gold base quote. Construction then applies
 the definition's `marketBasket` against the target county's live market and rounds upward;
 fortification tiers use a materials-heavy construction basket in the same way. Seasonal

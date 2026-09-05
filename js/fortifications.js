@@ -315,6 +315,9 @@ window.FB = window.FB || {};
     fort.completeTurn = status.completeTurn;
     delete fort.ruined;
     syncIndexedRecord(state, pid, fort, newRecord, true);
+    if (FB.reconcileSettlementCommunities) {
+      FB.reconcileSettlementCommunities(state, pid);
+    }
     if (realmId === 'player') {
       var site = FB.world.sitesByProv[pid].list[settlement | 0];
       FB.news(state, FB.msg('news.fort.project_started',
@@ -338,6 +341,9 @@ window.FB = window.FB || {};
     delete fort.completeTurn;
     delete fort.maintenanceGraceUntil;
     syncIndexedRecord(state, pid, fort);
+    if (FB.reconcileSettlementCommunities) {
+      FB.reconcileSettlementCommunities(state, pid);
+    }
     if (FB.map) FB.map.request();
     return true;
   };
@@ -359,6 +365,9 @@ window.FB = window.FB || {};
       delete fort.maintenanceGraceUntil;
       if (FB.invalidateBuildingIndex) {
         FB.invalidateBuildingIndex(state, item.pid);
+      }
+      if (FB.reconcileSettlementCommunities) {
+        FB.reconcileSettlementCommunities(state, item.pid);
       }
       completed++;
       if (playerHolds(state, item.pid) && def) {

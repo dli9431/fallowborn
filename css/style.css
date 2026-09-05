@@ -1759,6 +1759,8 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   display: block; margin-top: 4px; color: #c9aa72; font-size: 12px; line-height: 1.4;
 }
 .county-project-confirm p { line-height: 1.45; }
+.settlement-community-section { margin: 10px 0 12px; }
+.settlement-community-section > .panelh { margin-top: 0; }
 .war-card {
   border-color: #5c4623;
   background: linear-gradient(135deg, #241d14, #1a1610);

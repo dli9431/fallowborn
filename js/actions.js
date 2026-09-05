@@ -1179,6 +1179,91 @@ window.FB = window.FB || {};
     return FB.stopCountyCommunityProject(state, pid, kind);
   };
 
+  FB.playerControlsSettlementCommunity = function (state, pid, settlement) {
+    const p = state && state.player;
+    if (!p || p.tier < 3) return false;
+    if (p.tier >= 4 && FB.playerDirectlyHoldsCounty &&
+        FB.playerDirectlyHoldsCounty(state, pid)) return true;
+    const home = p.homeSettlement !== undefined
+      ? p.homeSettlement : (p.settlement !== undefined ? p.settlement : 0);
+    return p.tier === 3 && p.provinceId === pid &&
+      (Number(home) || 0) === Number(settlement);
+  };
+
+  FB.settlementCommunityProjectOrderStatus = function (state, pid,
+    settlement, kind, targetId, policyId) {
+    const out = {
+      ready:false, pid:pid, settlement:settlement, kind:kind,
+      target:targetId, policy:policyId,
+      active:FB.settlementCommunityProject
+        ? FB.settlementCommunityProject(state, pid, settlement, kind) : null,
+      reason:''
+    };
+    const p = state && state.player;
+    const c = p && state.chars && state.chars[p.charId];
+    const sites = state && FB.settlementsOf
+      ? FB.settlementsOf(state, pid) : [];
+    if (!p || !c || c.dead || p.dead) {
+      out.reason = FB.T('Only a living ruler may direct settlement conversion.');
+      return out;
+    }
+    if (!sites[settlement] || !FB.playerControlsSettlementCommunity ||
+        !FB.playerControlsSettlementCommunity(state, pid, settlement)) {
+      out.reason = FB.T('You must hold authority over this exact settlement.');
+      return out;
+    }
+    const targetValid = kind === 'faith'
+      ? FB.faithExists(targetId, state) && FB.faithAssignable(targetId, state)
+      : kind === 'culture' && !!FBDATA.cultures[targetId];
+    if (!targetValid || !FBDATA.countyCommunityPolicies ||
+        !FBDATA.countyCommunityPolicies[policyId]) {
+      out.reason = FB.T('That settlement project is not possible.');
+      return out;
+    }
+    const communities = FB.settlementCommunities
+      ? FB.settlementCommunities(state, pid, settlement) : [];
+    const field = kind === 'faith' ? 'religion' : 'culture';
+    let total = 0, matching = 0;
+    for (let i = 0; i < communities.length; i++) {
+      total += communities[i].count;
+      if (communities[i][field] === targetId) matching += communities[i].count;
+    }
+    if (total && matching === total) {
+      out.reason = FB.T('Everyone in this settlement already follows that identity.');
+      return out;
+    }
+    if (FB.conversionTargetEncountered &&
+        !FB.conversionTargetEncountered(state, kind, targetId)) {
+      out.reason = FB.T('Your dynasty has not encountered that identity.');
+      return out;
+    }
+    if (out.active && out.active.target === targetId &&
+        out.active.policy === policyId && out.active.sponsor === 'player') {
+      out.reason = FB.T('That settlement project is already underway.');
+      return out;
+    }
+    out.ready = true;
+    return out;
+  };
+
+  FB.orderSettlementCommunityProject = function (state, pid, settlement,
+    kind, targetId, policyId) {
+    const status = FB.settlementCommunityProjectOrderStatus(
+      state, pid, settlement, kind, targetId, policyId);
+    if (!status.ready || !FB.startSettlementCommunityProject) return false;
+    return !!FB.startSettlementCommunityProject(state, pid, settlement, {
+      kind:kind, target:targetId, policy:policyId, sponsor:'player'
+    });
+  };
+
+  FB.cancelSettlementCommunityProject = function (state, pid, settlement,
+    kind) {
+    if (!FB.playerControlsSettlementCommunity ||
+        !FB.playerControlsSettlementCommunity(state, pid, settlement) ||
+        !FB.stopSettlementCommunityProject) return false;
+    return FB.stopSettlementCommunityProject(state, pid, settlement, kind);
+  };
+
   /* Deed-row probe: the cheapest self-scope target decides whether the row
      is enabled, and its reason explains why not. */
   function conversionProbe(state, kind) {
@@ -9337,6 +9422,9 @@ window.FB = window.FB || {};
       record.devGranted = FB.changeCountyDevelopment(state, pid, def.dev,
         'building');
     }
+    if (FB.reconcileSettlementCommunities) {
+      FB.reconcileSettlementCommunities(state, pid);
+    }
     const fx = {};
     if (def.pop) fx.popularOpinion = def.pop;
     if (def.prestige) fx.prestige = def.prestige;
@@ -9365,6 +9453,9 @@ window.FB = window.FB || {};
         const granted = Number(record.devGranted);
         if (isFinite(granted) && granted) {
           FB.changeCountyDevelopment(state, pid, -granted, 'demolition');
+        }
+        if (FB.reconcileSettlementCommunities) {
+          FB.reconcileSettlementCommunities(state, pid);
         }
         return true;
       }
@@ -10696,10 +10787,16 @@ window.FB = window.FB || {};
         if (buildingsChanged && FB.invalidateBuildingIndex) {
           FB.invalidateBuildingIndex(state, targetPid);
         }
+        if (buildingsChanged && FB.reconcileSettlementCommunities) {
+          FB.reconcileSettlementCommunities(state, targetPid);
+        }
       }
 
       if (spoils.devLoss && state.dev && state.dev[targetPid] > 1) {
         state.dev[targetPid] = Math.max(1, state.dev[targetPid] - 1);
+        if (FB.reconcileSettlementCommunities) {
+          FB.reconcileSettlementCommunities(state, targetPid);
+        }
       }
 
       if (FB.addMarketShock) {

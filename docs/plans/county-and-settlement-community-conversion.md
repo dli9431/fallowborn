@@ -1,6 +1,6 @@
 # Plan: live county and settlement community conversion
 
-Status: in progress — Milestones 1–5 implemented; Milestones 6–7 remain
+Status: in progress — Milestones 1–6 implemented; Milestone 7 remains
 Baseline: Fallowborn v1.168.12, 2026-09-05
 
 ## Purpose

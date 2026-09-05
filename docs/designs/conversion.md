@@ -23,7 +23,7 @@ headed faiths). Costs and penalties therefore escalate steeply with scope.
   demographic identities, but a realm conversion deliberately does not transfer any
   county community population.
 
-## County community projects
+## County and settlement community projects
 
 County conversion is a territorial demographic process, separate from every character
 scope above. `FB.convertCountyCommunity(state, pid, request)` is the atomic boundary: a
@@ -32,6 +32,13 @@ preserves its faith. The request names `kind`, `target`, an integer `amount` or 
 `rate`, and optionally one source identity. Without a source, all eligible non-target
 cohorts contribute proportionally through deterministic largest-remainder allocation.
 The county and world population totals never change.
+
+`FB.convertSettlementCommunity(state, pid, settlementIndex, request)` uses the
+same request contract but transfers only inside the named settlement row. The exact
+change rolls up into the county's combined community counts and dominant identity while
+the settlement population and every other settlement row remain unchanged. The first
+local write materializes the county's optional community-by-settlement matrix; read-only
+settlement identity and share helpers never do.
 
 Each county may save at most one faith and one culture project under
 `communityProjects`. A project records only semantic inputs and numeric outcomes:
@@ -72,6 +79,14 @@ actual Common Voice, unrest, economic, and migration consequences of its policy.
 Faith sheet remains about personal, household, and realm conversion. It links separately
 to that picker and to explicitly named Land counties, but never owns or silently targets a
 territorial project.
+
+Settlement projects reuse the same saved project fields, annual pressure/resistance
+model, and policy consequences under `settlementCommunityProjects[settlementIndex]`.
+Their eligible population, target share, and potential transfer come only from that
+slot. The selected settlement sheet owns start, change, and stop controls and retains
+both the settlement and county name at every step. A count can direct any settlement in
+a directly held county; a baron can direct only the saved home settlement. County Land
+controls remain county-wide, and Self/Faith never chooses a settlement implicitly.
 
 ## Costs
 
@@ -180,6 +195,6 @@ so engine and UI grouping cannot drift apart.
 - Technology impact review: `faith_conversion`, `culture_adoption`, and
   `county_community_conversion` are recorded in
   `FBDATA.techImpactReviews` as `mode:'none'` — personal and social acts with no
-  credible technology dependency; rulers and communities converted long before (and
-  regardless of) literacy or law innovations. A later independently gateable
+  credible technology dependency; rulers and county or settlement communities converted
+  long before (and regardless of) literacy or law innovations. A later independently gateable
   administrative improvement must receive its own review instead of gating the baseline.

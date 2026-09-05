@@ -133,7 +133,7 @@ test('local households are bounded, linked, deterministic, and RNG-isolated',
     expect(result.childCount).toBeLessThanOrEqual(4);
   });
 
-test('new local households use live culture-faith pairs without rewriting existing residents',
+test('new local households use their settlement mix without rewriting existing residents',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
@@ -146,12 +146,33 @@ test('new local households use live culture-faith pairs without rewriting existi
       });
 
       const rec = s.population.counties[pid];
-      rec.communities = [{
-        culture:'gaelic', religion:'norse_pagan', count:rec.count
-      }];
+      s.dev[pid] = Math.max(5, s.dev[pid] || 1);
+      const rows = FB.settlementPopulations(s, pid);
+      const identities = [
+        { culture:'gaelic', religion:'norse_pagan' },
+        { culture:'norse', religion:'catholic' },
+        { culture:'english', religion:'orthodox' }
+      ];
+      const grouped = {};
+      for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        const identity = identities[rowIndex % identities.length];
+        const key = identity.culture + '.' + identity.religion;
+        if (!grouped[key]) grouped[key] = {
+          culture:identity.culture, religion:identity.religion,
+          count:0, bySettlement:rows.map(function () { return 0; })
+        };
+        grouped[key].count += rows[rowIndex];
+        grouped[key].bySettlement[rowIndex] = rows[rowIndex];
+      }
+      rec.communities = Object.keys(grouped).map(function (key) {
+        return grouped[key];
+      });
       FB.reconcileCountyCommunities(s, pid);
-      const livePairs = FB.countyCommunities(s, pid).map(function (community) {
-        return community.culture + '.' + community.religion;
+      const livePairs = rows.map(function (_, settlement) {
+        return FB.settlementCommunities(s, pid, settlement).map(
+          function (community) {
+            return community.culture + '.' + community.religion;
+          });
       });
 
       const oldIds = existing.map(function (person) { return person.id; });
@@ -163,6 +184,10 @@ test('new local households use live culture-faith pairs without rewriting existi
       const generated = FB.localFolkAt(s, pid);
       const generatedIdentities = generated.map(function (person) {
         return person.culture + '.' + person.religion;
+      });
+      const generatedLocal = generated.every(function (person) {
+        return livePairs[person.localFolk.settlement].indexOf(
+          person.culture + '.' + person.religion) >= 0;
       });
 
       rec.communities = [{
@@ -176,20 +201,19 @@ test('new local households use live culture-faith pairs without rewriting existi
         existingIdentities:existingIdentities,
         livePairs:livePairs,
         generatedIdentities:generatedIdentities,
+        generatedLocal:generatedLocal,
         generatedStable:generated.every(function (person) {
-          return person.culture === 'gaelic' &&
-            person.religion === 'norse_pagan';
+          return person.culture + '.' + person.religion ===
+            generatedIdentities[generated.indexOf(person)];
         }),
         rngUnchanged:beforeRng === afterRng
       };
     });
 
     expect(result.authoredAfter).toBe(result.authored);
-    expect(result.livePairs).toEqual(['gaelic.norse_pagan']);
+    expect(result.livePairs.length).toBeGreaterThanOrEqual(3);
     expect(result.generatedIdentities.length).toBeGreaterThan(0);
-    expect(result.generatedIdentities.every(function (identity) {
-      return result.livePairs.indexOf(identity) >= 0;
-    })).toBe(true);
+    expect(result.generatedLocal).toBe(true);
     expect(result.generatedStable).toBe(true);
     expect(result.rngUnchanged).toBe(true);
     expect(result.existingIdentities.length).toBeGreaterThan(0);

@@ -1,7 +1,11 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/map_data.js',
+  'js/actions.js',
+  'js/population.js',
   'js/settlement.js',
+  'js/world.js',
   'data/settlements.js'
 ]);
 
@@ -531,4 +535,232 @@ test('invalid moves are exact no-ops and repair is compatible and idempotent',
     expect(result.resolved).toEqual({ step:1, status:'resolved' });
     expect(result.malformedIsFresh).toBe(true);
     expect(result.missingIsFresh).toBe(true);
+  });
+
+test('settlement communities materialize lazily and convert one exact row',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId;
+      s.dev[pid] = Math.max(5, s.dev[pid] || 1);
+      const year = s.date.year;
+      s.population.counties[pid] = {
+        count:1000, natural:0, migration:0, losses:0,
+        communities:[
+          { culture:'gaelic', religion:'catholic', count:700 },
+          { culture:'norse', religion:'norse_pagan', count:300 }
+        ],
+        identity:{ culture:'gaelic', religion:'catholic',
+          cultureSince:year, religionSince:year },
+        communityChange:{ faithConverted:0, cultureAssimilated:0 }
+      };
+      const beforeRead = JSON.stringify(s.population.counties[pid]);
+      const rngBefore = FB.getRngState();
+      const projected = FB.settlementCommunities(s, pid, 0);
+      const readOnly = beforeRead === JSON.stringify(s.population.counties[pid]);
+      const rngNeutral = rngBefore === FB.getRngState();
+      const beforeBytes = JSON.stringify(s).length;
+      const materialized = FB.materializeSettlementCommunities(s, pid);
+      const afterBytes = JSON.stringify(s).length;
+      FB.reconcileSettlementCommunities(s, pid);
+      const compacted = s.population.counties[pid].communities.every(
+        function (community) {
+          return !Array.isArray(community.bySettlement);
+        });
+      const rows = FB.settlementPopulations(s, pid);
+      const beforeSlots = rows.map(function (_, index) {
+        return FB.settlementCommunities(s, pid, index);
+      });
+      const conversion = FB.convertSettlementCommunity(s, pid, 0, {
+        kind:'faith', target:'orthodox', amount:100
+      });
+      const afterSlots = rows.map(function (_, index) {
+        return FB.settlementCommunities(s, pid, index);
+      });
+      const county = FB.countyCommunities(s, pid);
+      const materializedCounties = Object.keys(s.population.counties).filter(
+        function (countyId) {
+          return s.population.counties[countyId].communities.some(
+            function (community) {
+              return Array.isArray(community.bySettlement);
+            });
+        });
+      return {
+        readOnly:readOnly,
+        rngNeutral:rngNeutral,
+        projected:projected.reduce(function (sum, community) {
+          return sum + community.count;
+        }, 0),
+        rowTargets:rows,
+        materialized:materialized,
+        growth:afterBytes - beforeBytes,
+        compacted:compacted,
+        materializedCounties:materializedCounties,
+        conversion:conversion,
+        otherRowsStable:beforeSlots.slice(1).every(function (row, index) {
+          return JSON.stringify(row) === JSON.stringify(afterSlots[index + 1]);
+        }),
+        rowSums:afterSlots.map(function (slot) {
+          return slot.reduce(function (sum, community) {
+            return sum + community.count;
+          }, 0);
+        }),
+        countyTotal:county.reduce(function (sum, community) {
+          return sum + community.count;
+        }, 0),
+        orthodox:county.filter(function (community) {
+          return community.religion === 'orthodox';
+        }).reduce(function (sum, community) { return sum + community.count; }, 0),
+        faults:FB.validatePopulationCommunities(s)
+      };
+    });
+
+    expect(result.readOnly).toBe(true);
+    expect(result.rngNeutral).toBe(true);
+    expect(result.projected).toBe(result.rowTargets[0]);
+    expect(result.materialized.every(function (community) {
+      return community.bySettlement.reduce(function (sum, count) {
+        return sum + count;
+      }, 0) === community.count;
+    })).toBe(true);
+    expect(result.growth).toBeGreaterThan(0);
+    expect(result.growth).toBeLessThan(2000);
+    expect(result.compacted).toBe(true);
+    expect(result.materializedCounties).toHaveLength(1);
+    expect(result.conversion.count).toBe(100);
+    expect(result.otherRowsStable).toBe(true);
+    expect(result.rowSums).toEqual(result.rowTargets);
+    expect(result.countyTotal).toBe(1000);
+    expect(result.orthodox).toBe(100);
+    expect(result.faults).toEqual([]);
+  });
+
+test('building weight changes and migration reconcile exact matrix axes',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const source = s.player.provinceId;
+      const destination = FB.world.provs.filter(function (province) {
+        return !province.wasteland && province.id !== source;
+      })[0].id;
+      s.dev[source] = Math.max(5, s.dev[source] || 1);
+      s.dev[destination] = Math.max(5, s.dev[destination] || 1);
+      s.player.tier = 4;
+      s.player.provs = [source];
+      s.owner[source] = 'player';
+      s.holder[source] = 'player';
+      s.player.gold = 1000000;
+      s.buildings[source] = [];
+      FB.invalidateBuildingIndex(s, source);
+      const sourceRecord = s.population.counties[source];
+      const destinationRecord = s.population.counties[destination];
+      sourceRecord.communities = [
+        { culture:'gaelic', religion:'catholic',
+          count:sourceRecord.count - 60 },
+        { culture:'english', religion:'orthodox', count:60 }
+      ];
+      destinationRecord.communities = [
+        { culture:'gaelic', religion:'catholic',
+          count:destinationRecord.count }
+      ];
+      FB.reconcileCountyCommunities(s, source);
+      FB.reconcileCountyCommunities(s, destination);
+      FB.materializeSettlementCommunities(s, source);
+      FB.materializeSettlementCommunities(s, destination);
+      FB.convertSettlementCommunity(s, destination, 0, {
+        kind:'faith', target:'orthodox', amount:100
+      });
+      const implicit = FB.moveCommunityPopulation(s, source, destination, [
+        { culture:'english', religion:'orthodox', count:40 }
+      ], 'e2e weighted settlement arrival');
+      const implicitRows = FB.settlementPopulations(s, destination);
+      const immigrant = s.population.counties[destination].communities.filter(
+        function (community) {
+          return community.culture === 'english' &&
+            community.religion === 'orthodox';
+        })[0];
+      function weightedAllocation(total, weights) {
+        const sum = weights.reduce(function (value, weight) {
+          return value + weight;
+        }, 0);
+        let used = 0;
+        const ranked = [];
+        const out = weights.map(function (weight, index) {
+          const exact = total * weight / sum;
+          const amount = Math.floor(exact);
+          used += amount;
+          ranked.push({ index:index, remainder:exact - amount });
+          return amount;
+        });
+        ranked.sort(function (a, b) {
+          return (b.remainder - a.remainder) || (a.index - b.index);
+        });
+        for (let i = 0; i < total - used; i++) out[ranked[i].index]++;
+        return out;
+      }
+      const implicitExpected = weightedAllocation(40, implicitRows);
+      const implicitSlots = immigrant.bySettlement.slice();
+      FB.convertSettlementCommunity(s, source, 0, {
+        kind:'faith', target:'orthodox', amount:100
+      });
+      const combinedBefore = FB.countyPopulation(s, source) +
+        FB.countyPopulation(s, destination);
+      const moved = FB.moveCommunityPopulation(
+        s, source, destination, 40, 'e2e settlement migration', {
+          fromSettlement:0, toSettlement:0
+        });
+      const originalRequirement = FB.techRequirementMet;
+      FB.techRequirementMet = function () { return true; };
+      const built = FB.build(s, source, 0, 'mill');
+      FB.techRequirementMet = originalRequirement;
+      const afterBuildRows = FB.settlementPopulations(s, source);
+      const afterBuildCommunities = afterBuildRows.map(function (_, index) {
+        return FB.settlementCommunities(s, source, index);
+      });
+      const demolished = FB.demolishBuilding(s, source, 0, 'mill');
+      const afterDemolitionRows = FB.settlementPopulations(s, source);
+      const afterDemolitionCommunities = afterDemolitionRows.map(
+        function (_, index) {
+          return FB.settlementCommunities(s, source, index);
+        });
+      function rowSums(rows) {
+        return rows.map(function (row) {
+          return row.reduce(function (sum, community) {
+            return sum + community.count;
+          }, 0);
+        });
+      }
+      return {
+        implicit:implicit.count,
+        implicitSlots:implicitSlots,
+        implicitExpected:implicitExpected,
+        moved:moved.count,
+        built:built,
+        demolished:demolished,
+        combinedBefore:combinedBefore,
+        combinedAfter:FB.countyPopulation(s, source) +
+          FB.countyPopulation(s, destination),
+        buildRows:afterBuildRows,
+        buildSums:rowSums(afterBuildCommunities),
+        demolitionRows:afterDemolitionRows,
+        demolitionSums:rowSums(afterDemolitionCommunities),
+        sourceTotal:FB.countyCommunities(s, source).reduce(
+          function (sum, community) { return sum + community.count; }, 0),
+        destinationTotal:FB.countyCommunities(s, destination).reduce(
+          function (sum, community) { return sum + community.count; }, 0),
+        faults:FB.validatePopulationCommunities(s)
+      };
+    });
+
+    expect(result.implicit).toBe(40);
+    expect(result.implicitSlots).toEqual(result.implicitExpected);
+    expect(result.moved).toBe(40);
+    expect(result.built).toBe(true);
+    expect(result.demolished).toBe(true);
+    expect(result.combinedAfter).toBe(result.combinedBefore);
+    expect(result.buildSums).toEqual(result.buildRows);
+    expect(result.demolitionSums).toEqual(result.demolitionRows);
+    expect(result.sourceTotal + result.destinationTotal)
+      .toBe(result.combinedBefore);
+    expect(result.faults).toEqual([]);
   });

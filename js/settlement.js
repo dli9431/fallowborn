@@ -20,6 +20,101 @@ window.FB = window.FB || {};
     return out;
   }
 
+  /* Deterministic integer apportionment used by settlement community
+     partitions. The optional prior weights let a materialized county retain
+     its local differences while row totals change; final row balancing moves
+     people only within a community column, so both axes remain exact. */
+  function apportioned(total, weights) {
+    total = Math.max(0, Math.round(number(total, 0)));
+    var clean = [], sum = 0;
+    for (var i = 0; i < weights.length; i++) {
+      var weight = Math.max(0, number(weights[i], 0));
+      clean.push(weight);
+      sum += weight;
+    }
+    if (!clean.length) return [];
+    if (!sum) {
+      for (var zi = 0; zi < clean.length; zi++) clean[zi] = 1;
+      sum = clean.length;
+    }
+    var out = [], remainder = [], used = 0;
+    for (var wi = 0; wi < clean.length; wi++) {
+      var exact = total * clean[wi] / sum;
+      var floor = Math.floor(exact);
+      out.push(floor);
+      used += floor;
+      remainder.push({ index:wi, value:exact - floor });
+    }
+    remainder.sort(function (a, b) {
+      return (b.value - a.value) || (a.index - b.index);
+    });
+    for (var extra = 0; extra < total - used; extra++) {
+      out[remainder[extra % remainder.length].index]++;
+    }
+    return out;
+  }
+
+  function integerMatrix(columnTotals, rowTotals, previous) {
+    var columns = [], rows = [], columnSum = 0, rowSum = 0;
+    for (var ci = 0; ci < columnTotals.length; ci++) {
+      var columnTotal = Math.max(0, Math.round(number(columnTotals[ci], 0)));
+      columns.push(columnTotal);
+      columnSum += columnTotal;
+    }
+    for (var ri = 0; ri < rowTotals.length; ri++) {
+      var rowTotal = Math.max(0, Math.round(number(rowTotals[ri], 0)));
+      rows.push(rowTotal);
+      rowSum += rowTotal;
+    }
+    if (!columns.length || !rows.length || columnSum !== rowSum) return [];
+
+    var matrix = [];
+    for (var c = 0; c < columns.length; c++) {
+      var prior = previous && Array.isArray(previous[c])
+        ? previous[c].slice(0, rows.length) : null;
+      while (prior && prior.length < rows.length) prior.push(0);
+      matrix.push(apportioned(columns[c], prior || rows));
+    }
+
+    var currentRows = [];
+    for (var r = 0; r < rows.length; r++) {
+      var current = 0;
+      for (var mc = 0; mc < matrix.length; mc++) current += matrix[mc][r];
+      currentRows.push(current);
+    }
+    for (var source = 0; source < rows.length; source++) {
+      var surplus = currentRows[source] - rows[source];
+      while (surplus > 0) {
+        var destination = -1;
+        for (var target = 0; target < rows.length; target++) {
+          if (currentRows[target] < rows[target]) {
+            destination = target;
+            break;
+          }
+        }
+        if (destination < 0) break;
+        var needed = rows[destination] - currentRows[destination];
+        var movedAny = false;
+        for (var moveColumn = 0;
+             moveColumn < matrix.length && surplus > 0 && needed > 0;
+             moveColumn++) {
+          var available = matrix[moveColumn][source];
+          if (!available) continue;
+          var moved = Math.min(available, surplus, needed);
+          matrix[moveColumn][source] -= moved;
+          matrix[moveColumn][destination] += moved;
+          currentRows[source] -= moved;
+          currentRows[destination] += moved;
+          surplus -= moved;
+          needed -= moved;
+          movedAny = true;
+        }
+        if (!movedAny) break;
+      }
+    }
+    return matrix;
+  }
+
   function basisWeight(basis) {
     basis = basis || {};
     var balance = FBDATA.balance || {};
@@ -340,6 +435,7 @@ window.FB = window.FB || {};
     create:create,
     current:current,
     act:act,
-    repair:repair
+    repair:repair,
+    integerMatrix:integerMatrix
   };
 })();

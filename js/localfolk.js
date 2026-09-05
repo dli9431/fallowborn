@@ -219,8 +219,10 @@ window.FB = window.FB || {};
     };
     const scope = 'local-folk|' + worldKey(state) + '|' + pid + '|' + generation;
     return FB.withSeed(scope, function () {
-      const identity = FB.pickCountyCommunity
-        ? FB.pickCountyCommunity(state, pid) : null;
+      const identity = FB.pickSettlementCommunity
+        ? FB.pickSettlementCommunity(state, pid, settlementIndex)
+        : FB.pickCountyCommunity
+          ? FB.pickCountyCommunity(state, pid) : null;
       const culture = identity && identity.culture || pr && pr.culture ||
         me && me.culture;
       const religion = identity && identity.religion || pr && pr.religion ||

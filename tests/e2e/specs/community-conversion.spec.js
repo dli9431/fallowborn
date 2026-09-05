@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/modifiers.js',
   'js/population.js',
+  'js/settlement.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -212,6 +213,141 @@ test('county controls retain context, preview consequences, and start change and
     expect(await page.evaluate(function (pid) {
       return FB.countyCommunityProject(FB.state, pid, 'faith');
     }, setup.pid)).toBeNull();
+  });
+
+test('settlement sheets retain local context and never mutate remote browsing',
+  async function ({ page }) {
+    const setup = await configureCountyProjectUi(page);
+    const settlement = await page.evaluate(function (pid) {
+      const s = FB.state;
+      s.dev[pid] = Math.max(5, s.dev[pid] || 1);
+      const site = FB.settlementsOf(s, pid)[0];
+      const before = JSON.stringify(s.population.counties[pid]);
+      const rng = FB.getRngState();
+      FB.ui.showSettlement(pid, 0);
+      return {
+        name:site.name,
+        unchanged:before === JSON.stringify(s.population.counties[pid]),
+        rngUnchanged:rng === FB.getRngState()
+      };
+    }, setup.pid);
+    expect(settlement.unchanged).toBe(true);
+    expect(settlement.rngUnchanged).toBe(true);
+    await expect(page.locator('[data-settlement-community-axis="culture"]'))
+      .toBeVisible();
+    await expect(page.locator('[data-settlement-community-axis="faith"]'))
+      .toBeVisible();
+    await expect(page.locator(
+      '[data-settlement-community-project="culture"]')).toContainText(
+      'No local project is active here.');
+
+    await page.locator(
+      '[data-settlement-community-project="culture"] ' +
+      '.settlement-community-project-control').click();
+    await expect(page.locator('#gm-title')).toContainText(settlement.name);
+    await expect(page.locator('#gm-title')).toContainText(setup.county);
+    await expect(page.locator('#gm-body')).toContainText(
+      'not a personal or county-wide conversion');
+    await page.locator('[data-county-project-target="norse"]').click();
+    await page.locator('[data-county-project-policy="voluntary"]').click();
+    await expect(page.locator('#county-project-confirm'))
+      .toContainText(settlement.name);
+    await expect(page.locator('#county-project-confirm'))
+      .toContainText(setup.county);
+    await page.locator('#county-project-confirm').click();
+    await expect(page.locator(
+      '[data-settlement-community-project="culture"]')).toContainText(
+      'Norse');
+    const saved = await page.evaluate(function (pid) {
+      const rec = FB.state.population.counties[pid];
+      return {
+        target:rec.settlementCommunityProjects[0].culture.target,
+        materialized:rec.communities.every(function (community) {
+          return Array.isArray(community.bySettlement);
+        }),
+        countyTotal:rec.communities.reduce(function (sum, community) {
+          return sum + community.count;
+        }, 0)
+      };
+    }, setup.pid);
+    expect(saved).toEqual({
+      target:'norse', materialized:true, countyTotal:1000
+    });
+    const annual = await page.evaluate(function (pid) {
+      const s = FB.state;
+      const rec = s.population.counties[pid];
+      const project = rec.settlementCommunityProjects[0].culture;
+      const otherBefore = JSON.stringify(FB.settlementCommunities(s, pid, 1));
+      project.progress = 100;
+      project.lastYear = s.date.year - 1;
+      const result = FB.resolveSettlementCommunityProjects(
+        s, pid, s.date.year);
+      return {
+        moved:result[0] && result[0].count,
+        otherStable:otherBefore === JSON.stringify(
+          FB.settlementCommunities(s, pid, 1)),
+        countyTotal:FB.countyCommunities(s, pid).reduce(
+          function (sum, community) { return sum + community.count; }, 0)
+      };
+    }, setup.pid);
+    expect(annual.moved).toBeGreaterThan(0);
+    expect(annual.otherStable).toBe(true);
+    expect(annual.countyTotal).toBe(1000);
+
+    const remote = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = FB.world.provs.filter(function (province) {
+        return !province.wasteland && province.id !== s.player.provinceId;
+      })[0].id;
+      const before = JSON.stringify(s.population.counties[pid]);
+      const rng = FB.getRngState();
+      FB.ui.showSettlement(pid, 0);
+      return {
+        unchanged:before === JSON.stringify(s.population.counties[pid]),
+        rngUnchanged:rng === FB.getRngState()
+      };
+    });
+    expect(remote).toEqual({ unchanged:true, rngUnchanged:true });
+    await expect(page.locator('.settlement-community-project-control, ' +
+      '.settlement-community-project-stop')).toHaveCount(0);
+  });
+
+test('barons can direct only their saved home settlement',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId;
+      s.dev[pid] = Math.max(5, s.dev[pid] || 1);
+      s.player.tier = 3;
+      s.player.provs = [];
+      s.player.homeSettlement = 1;
+      const rec = s.population.counties[pid];
+      const first = Math.floor(rec.count / 2);
+      rec.communities = [
+        { culture:'gaelic', religion:'catholic', count:first },
+        { culture:'norse', religion:'catholic', count:rec.count - first }
+      ];
+      FB.reconcileCountyCommunities(s, pid);
+      return {
+        head:FB.playerControlsSettlementCommunity(s, pid, 0),
+        home:FB.playerControlsSettlementCommunity(s, pid, 1),
+        otherCounty:FB.playerControlsSettlementCommunity(
+          s, FB.world.provs.filter(function (province) {
+            return !province.wasteland && province.id !== pid;
+          })[0].id, 1),
+        countyReady:FB.countyCommunityProjectOrderStatus(
+          s, pid, 'culture', 'norse', 'voluntary').ready,
+        localReady:FB.settlementCommunityProjectOrderStatus(
+          s, pid, 1, 'culture', 'norse', 'voluntary').ready
+      };
+    });
+    expect(result).toEqual({
+      head:false,
+      home:true,
+      otherCounty:false,
+      countyReady:false,
+      localReady:true
+    });
   });
 
 test('Faith details links to personal conversion and an explicit Land county',

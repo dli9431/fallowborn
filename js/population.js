@@ -577,6 +577,163 @@ window.FB = window.FB || {};
     return out;
   }
 
+  function settlementPopulationAllocation(state, pid, total) {
+    total = Math.max(0, Math.round(Number(total) || 0));
+    var setts = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
+    if (!setts.length) return [total];
+    var built = FB.builtIn ? FB.builtIn(state, pid) : [];
+    var weights = [];
+    var sumWeights = 0;
+    for (var i = 0; i < setts.length; i++) {
+      var st = setts[i];
+      var weight = st.kind === 'city' ? 7 : (st.kind === 'town' ? 3 : 1);
+      for (var bi = 0; bi < built.length; bi++) {
+        var entry = built[bi];
+        if (entry && entry.s === i && !entry.ruined &&
+            (entry.id === 'mill' || entry.id === 'bridge' ||
+             entry.id === 'market' || entry.id === 'harbor')) weight++;
+      }
+      weights.push(weight);
+      sumWeights += weight;
+    }
+    var allocations = [];
+    var allocated = 0;
+    for (var wi = 0; wi < weights.length; wi++) {
+      if (wi === weights.length - 1) {
+        allocations.push(total - allocated);
+      } else {
+        var amount = Math.round(total * weights[wi] / sumWeights);
+        allocations.push(amount);
+        allocated += amount;
+      }
+    }
+    return allocations;
+  }
+
+  function hasSettlementPartition(communities) {
+    if (!Array.isArray(communities)) return false;
+    for (var i = 0; i < communities.length; i++) {
+      if (communities[i] && Array.isArray(communities[i].bySettlement)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function settlementPreviousColumns(communities, targetCommunities) {
+    var byKey = {};
+    for (var i = 0; i < (communities || []).length; i++) {
+      var source = communities[i];
+      if (!source || !Array.isArray(source.bySettlement)) continue;
+      byKey[communityKey(source.culture, source.religion)] =
+        source.bySettlement.slice();
+    }
+    return targetCommunities.map(function (community) {
+      return byKey[communityKey(community.culture, community.religion)] || [];
+    });
+  }
+
+  function applySettlementMatrix(communities, matrix) {
+    for (var i = 0; i < communities.length; i++) {
+      communities[i].bySettlement = (matrix[i] || []).slice();
+    }
+  }
+
+  function settlementPartitionMatchesProjection(rec, rows, matrix) {
+    if (rec.settlementCommunityProjects || !FB.settlement ||
+        !FB.settlement.integerMatrix) return false;
+    var projection = FB.settlement.integerMatrix(
+      rec.communities.map(function (community) { return community.count; }),
+      rows, null);
+    if (projection.length !== matrix.length) return false;
+    for (var ci = 0; ci < matrix.length; ci++) {
+      for (var ri = 0; ri < rows.length; ri++) {
+        if (projection[ci][ri] !== matrix[ci][ri]) return false;
+      }
+    }
+    return true;
+  }
+
+  function reconcileSettlementRecord(state, pid, rec, previous,
+    allowCompact) {
+    if (!rec || !Array.isArray(rec.communities) || !rec.communities.length ||
+        !FB.settlement || !FB.settlement.integerMatrix) return false;
+    var rows = settlementPopulationAllocation(state, pid, rec.count);
+    var columns = rec.communities.map(function (community) {
+      return community.count;
+    });
+    var actualPrevious = previous ||
+      settlementPreviousColumns(rec.communities, rec.communities);
+    if (actualPrevious) {
+      actualPrevious = actualPrevious.map(function (column) {
+        var sum = 0;
+        for (var i = 0; i < column.length; i++) {
+          sum += Math.max(0, Number(column[i]) || 0);
+        }
+        return sum > 0 ? column : rows;
+      });
+    }
+    var matrix = FB.settlement.integerMatrix(columns, rows,
+      actualPrevious);
+    if (!matrix.length) return false;
+    applySettlementMatrix(rec.communities, matrix);
+    if (allowCompact && settlementPartitionMatchesProjection(rec, rows, matrix)) {
+      for (var ci = 0; ci < rec.communities.length; ci++) {
+        delete rec.communities[ci].bySettlement;
+      }
+    }
+    return true;
+  }
+
+  function carrySettlementPartition(before, after) {
+    if (!hasSettlementPartition(before)) return after;
+    var previous = settlementPreviousColumns(before, after);
+    for (var i = 0; i < after.length; i++) {
+      after[i].bySettlement = previous[i];
+    }
+    return after;
+  }
+
+  function placeSettlementArrivals(state, pid, rec, cohorts, total,
+    settlementIndex) {
+    if (!rec || !hasSettlementPartition(rec.communities) ||
+        !Array.isArray(cohorts) || !cohorts.length) return;
+    var rows = settlementPopulationAllocation(state, pid, total);
+    var explicit = typeof settlementIndex === 'number' &&
+      isFinite(settlementIndex) &&
+      Math.floor(settlementIndex) === settlementIndex &&
+      settlementIndex >= 0 && settlementIndex < rows.length;
+    for (var ci = 0; ci < cohorts.length; ci++) {
+      var cohort = cohorts[ci];
+      var destination = null;
+      for (var ri = 0; ri < rec.communities.length; ri++) {
+        var community = rec.communities[ri];
+        if (community.culture === cohort.culture &&
+            community.religion === cohort.religion) {
+          destination = community;
+          break;
+        }
+      }
+      if (!destination) continue;
+      if (!Array.isArray(destination.bySettlement)) {
+        destination.bySettlement = [];
+      }
+      while (destination.bySettlement.length < rows.length) {
+        destination.bySettlement.push(0);
+      }
+      var additions = explicit
+        ? rows.map(function (_, index) {
+          return index === settlementIndex ? cohort.count : 0;
+        })
+        : apportionWeights(cohort.count, rows, function (count) {
+          return count;
+        });
+      for (var ai = 0; ai < additions.length; ai++) {
+        destination.bySettlement[ai] += additions[ai];
+      }
+    }
+  }
+
   function axisTotals(communities, field) {
     var totals = {};
     var order = [];
@@ -646,11 +803,9 @@ window.FB = window.FB || {};
     return isFinite(value) ? Math.max(0, Math.round(value)) : 0;
   }
 
-  function repairCountyProjects(state, rec) {
-    var source = rec.communityProjects;
+  function repairedProjectMap(state, source) {
     if (!source || typeof source !== 'object' || Array.isArray(source)) {
-      delete rec.communityProjects;
-      return;
+      return null;
     }
     var repaired = {};
     for (var ki = 0; ki < 2; ki++) {
@@ -675,17 +830,54 @@ window.FB = window.FB || {};
       }
       repaired[kind] = next;
     }
-    if (repaired.faith || repaired.culture) rec.communityProjects = repaired;
+    return repaired.faith || repaired.culture ? repaired : null;
+  }
+
+  function repairCountyProjects(state, pid, rec) {
+    var repaired = repairedProjectMap(state, rec.communityProjects);
+    if (repaired) rec.communityProjects = repaired;
     else delete rec.communityProjects;
+
+    var local = rec.settlementCommunityProjects;
+    var repairedLocal = {};
+    if (local && typeof local === 'object' && !Array.isArray(local)) {
+      var rowCount = settlementPopulationAllocation(
+        state, pid, rec.count).length;
+      var keys = Object.keys(local).sort(function (a, b) {
+        return Number(a) - Number(b);
+      });
+      for (var i = 0; i < keys.length; i++) {
+        var idx = Number(keys[i]);
+        if (!isFinite(idx) || Math.floor(idx) !== idx || idx < 0 ||
+            idx >= rowCount) continue;
+        var projectMap = repairedProjectMap(state, local[keys[i]]);
+        if (projectMap) repairedLocal[idx] = projectMap;
+      }
+    }
+    if (Object.keys(repairedLocal).length) {
+      rec.settlementCommunityProjects = repairedLocal;
+      if (!hasSettlementPartition(rec.communities)) {
+        reconcileSettlementRecord(state, pid, rec, null);
+      }
+    } else {
+      delete rec.settlementCommunityProjects;
+    }
   }
 
   function repairCountyRecord(state, pr, rec, year) {
+    var savedCommunities = Array.isArray(rec.communities)
+      ? rec.communities : [];
+    var hadSettlementPartition = hasSettlementPartition(savedCommunities);
     var total = Math.max(populationFloor(), Math.round(Number(rec.count) || populationFloor()));
     rec.count = total;
     rec.natural = Math.round(Number(rec.natural) || 0);
     rec.migration = Math.round(Number(rec.migration) || 0);
     rec.losses = Math.round(Number(rec.losses) || 0);
     rec.communities = normalizedCountyCommunities(state, pr, rec, total);
+    if (hadSettlementPartition) {
+      reconcileSettlementRecord(state, pr.id, rec,
+        settlementPreviousColumns(savedCommunities, rec.communities), true);
+    }
 
     var identity = rec.identity && typeof rec.identity === 'object'
       ? rec.identity : {};
@@ -708,7 +900,7 @@ window.FB = window.FB || {};
       faithConverted:Math.round(Number(change.faithConverted) || 0),
       cultureAssimilated:Math.round(Number(change.cultureAssimilated) || 0)
     };
-    repairCountyProjects(state, rec);
+    repairCountyProjects(state, pr.id, rec);
     return rec;
   }
 
@@ -759,6 +951,37 @@ window.FB = window.FB || {};
       }
       if (sum !== rec.count) {
         faults.push(pid + ': community total ' + sum + ' does not equal ' + rec.count);
+      }
+      var partitioned = hasSettlementPartition(rec.communities);
+      if (partitioned) {
+        var rowTargets = settlementPopulationAllocation(state, pid, rec.count);
+        var rowSums = rowTargets.map(function () { return 0; });
+        for (var pci = 0; pci < rec.communities.length; pci++) {
+          var partition = rec.communities[pci].bySettlement;
+          if (!Array.isArray(partition) || partition.length !== rowTargets.length) {
+            faults.push(pid + ': incomplete settlement community partition');
+            continue;
+          }
+          var columnSum = 0;
+          for (var psi = 0; psi < partition.length; psi++) {
+            var cell = partition[psi];
+            if (!isFinite(Number(cell)) || Math.round(Number(cell)) !== cell ||
+                cell < 0) {
+              faults.push(pid + ': invalid settlement community cell');
+              continue;
+            }
+            columnSum += cell;
+            rowSums[psi] += cell;
+          }
+          if (columnSum !== rec.communities[pci].count) {
+            faults.push(pid + ': settlement community column does not match county community');
+          }
+        }
+        for (var pri = 0; pri < rowTargets.length; pri++) {
+          if (rowSums[pri] !== rowTargets[pri]) {
+            faults.push(pid + ': settlement population row does not match allocation');
+          }
+        }
       }
     }
     return faults;
@@ -861,6 +1084,46 @@ window.FB = window.FB || {};
     });
   };
 
+  FB.materializeSettlementCommunities = function (state, pid) {
+    if (!state) return [];
+    var pr = provinceDef(pid);
+    if (!pr || pr.wasteland) return [];
+    FB.ensurePopulationState(state);
+    var rec = state.population.counties[pid];
+    if (!rec) return [];
+    if (!hasSettlementPartition(rec.communities)) {
+      reconcileSettlementRecord(state, pid, rec, null);
+    }
+    assertPopulationCommunities(state, [pid], 'settlement materialization');
+    return rec.communities.map(function (community) {
+      return {
+        culture:community.culture,
+        religion:community.religion,
+        count:community.count,
+        bySettlement:community.bySettlement.slice()
+      };
+    });
+  };
+
+  FB.reconcileSettlementCommunities = function (state, pid) {
+    if (!state || !state.population || !state.population.counties) return [];
+    var rec = state.population.counties[pid];
+    if (!rec || !hasSettlementPartition(rec.communities)) return [];
+    reconcileSettlementRecord(state, pid, rec, null, true);
+    assertPopulationCommunities(state, [pid], 'settlement reconciliation');
+    return rec.communities.map(function (community) {
+      var copy = {
+        culture:community.culture,
+        religion:community.religion,
+        count:community.count
+      };
+      if (Array.isArray(community.bySettlement)) {
+        copy.bySettlement = community.bySettlement.slice();
+      }
+      return copy;
+    });
+  };
+
   FB.countyCommunities = function (state, pid) {
     var pr = provinceDef(pid);
     if (!state || !pr || pr.wasteland) return [];
@@ -885,6 +1148,65 @@ window.FB = window.FB || {};
       });
     }
     return out;
+  };
+
+  FB.settlementCommunities = function (state, pid, settlementIndex) {
+    var pr = provinceDef(pid);
+    var idx = Number(settlementIndex);
+    if (!state || !pr || pr.wasteland || !isFinite(idx) ||
+        Math.floor(idx) !== idx || idx < 0) return [];
+    var rec = state.population && state.population.counties &&
+      state.population.counties[pid];
+    var total = rec && isFinite(Number(rec.count))
+      ? Math.max(populationFloor(), Math.round(Number(rec.count)))
+      : FB.countyPopulationBaseline(state, pid);
+    var rows = settlementPopulationAllocation(state, pid, total);
+    if (idx >= rows.length) return [];
+    var communities = FB.countyCommunities(state, pid);
+    var previous = null;
+    if (rec && hasSettlementPartition(rec.communities)) {
+      previous = settlementPreviousColumns(rec.communities, communities);
+    }
+    var matrix = FB.settlement && FB.settlement.integerMatrix
+      ? FB.settlement.integerMatrix(communities.map(function (community) {
+        return community.count;
+      }), rows, previous) : [];
+    var out = [];
+    for (var i = 0; i < communities.length; i++) {
+      var count = matrix[i] && matrix[i][idx] || 0;
+      if (count > 0) out.push({
+        culture:communities[i].culture,
+        religion:communities[i].religion,
+        count:count
+      });
+    }
+    return out;
+  };
+
+  FB.settlementCulture = function (state, pid, settlementIndex) {
+    return dominantAxis(FB.settlementCommunities(
+      state, pid, settlementIndex), 'culture', null);
+  };
+
+  FB.settlementReligion = function (state, pid, settlementIndex) {
+    return dominantAxis(FB.settlementCommunities(
+      state, pid, settlementIndex), 'religion', null);
+  };
+
+  FB.pickSettlementCommunity = function (state, pid, settlementIndex) {
+    var communities = FB.settlementCommunities(state, pid, settlementIndex);
+    var total = communityTotal(communities);
+    if (!total) return null;
+    var roll = Math.floor(FB.rng() * total);
+    for (var i = 0; i < communities.length; i++) {
+      if (roll < communities[i].count) return {
+        culture:communities[i].culture,
+        religion:communities[i].religion,
+        count:communities[i].count
+      };
+      roll -= communities[i].count;
+    }
+    return communities[communities.length - 1];
   };
 
   /* The largest live combined pair, with saved community order breaking ties.
@@ -1077,16 +1399,25 @@ window.FB = window.FB || {};
   /* Pure, numeric explanation of one active or proposed project. Every
      factor is either supplied by the project/county or derived from current
      political, conflict, institution, and demographic state. */
-  function countyCommunityProjectStatus(state, pid, kind, project) {
+  function countyCommunityProjectStatus(state, pid, kind, project,
+    settlementIndex) {
     var rec = state && state.population && state.population.counties &&
       state.population.counties[pid];
     var policy = project && projectPolicyMechanics(project.policy);
     if (!project || !rec || !policy) return null;
-    var communities = FB.countyCommunities(state, pid);
+    var local = typeof settlementIndex === 'number';
+    var communities = local
+      ? FB.settlementCommunities(state, pid, settlementIndex)
+      : FB.countyCommunities(state, pid);
+    var population = communityTotal(communities);
+    if (!population) return null;
     var eligible = projectEligiblePopulation(
       communities, kind, project.target);
-    var targetShare = rec.count > 0 ? (rec.count - eligible) / rec.count : 0;
-    var control = projectSponsorControls(state, pid, project.sponsor);
+    var targetShare = (population - eligible) / population;
+    var control = local && project.sponsor === 'player' &&
+      FB.playerControlsSettlementCommunity
+      ? FB.playerControlsSettlementCommunity(state, pid, settlementIndex)
+      : projectSponsorControls(state, pid, project.sponsor);
     var sponsor = sponsorIdentity(state, project.sponsor);
     var rulerMatches = kind === 'faith'
       ? sponsor.religion === project.target : sponsor.culture === project.target;
@@ -1104,8 +1435,11 @@ window.FB = window.FB || {};
     var resistance = relationResistance(
       state, communities, kind, project.target);
     var identity = rec.identity || {};
-    var currentIdentity = kind === 'faith'
-      ? identity.religion : identity.culture;
+    var currentIdentity = local
+      ? (kind === 'faith'
+        ? FB.settlementReligion(state, pid, settlementIndex)
+        : FB.settlementCulture(state, pid, settlementIndex))
+      : (kind === 'faith' ? identity.religion : identity.culture);
     var since = kind === 'faith' ? identity.religionSince : identity.cultureSince;
     var yearsEntrenched = currentIdentity !== project.target &&
       isFinite(Number(since))
@@ -1127,7 +1461,7 @@ window.FB = window.FB || {};
 
     var reference = Math.max(1, balance(
       'countyCommunityProjectPopulationReference', 24000));
-    var populationScale = Math.sqrt(reference / Math.max(1, rec.count));
+    var populationScale = Math.sqrt(reference / Math.max(1, population));
     populationScale = FB.clamp(populationScale,
       balance('countyCommunityProjectPopulationScaleMin', 0.65),
       balance('countyCommunityProjectPopulationScaleMax', 1.35));
@@ -1153,7 +1487,8 @@ window.FB = window.FB || {};
       policy:project.policy,
       control:control,
       rulerMatches:rulerMatches,
-      population:rec.count,
+      population:population,
+      settlement:local ? settlementIndex : null,
       eligible:eligible,
       targetShare:targetShare,
       pressure:pressure,
@@ -1185,6 +1520,35 @@ window.FB = window.FB || {};
         ? request.sponsor : 'player',
       policy:request.policy
     });
+  };
+
+  FB.settlementCommunityProject = function (state, pid, settlementIndex, kind) {
+    if (!validProjectKind(kind)) return null;
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    var projects = rec && rec.settlementCommunityProjects &&
+      rec.settlementCommunityProjects[settlementIndex];
+    return copyProject(projects && projects[kind]);
+  };
+
+  FB.settlementCommunityProjectStatus = function (state, pid,
+    settlementIndex, kind) {
+    return countyCommunityProjectStatus(state, pid, kind,
+      FB.settlementCommunityProject(state, pid, settlementIndex, kind),
+      settlementIndex);
+  };
+
+  FB.settlementCommunityProjectPreview = function (state, pid,
+    settlementIndex, request) {
+    if (!state || !request || !validProjectKind(request.kind) ||
+        !projectTargetValid(state, request.kind, request.target) ||
+        !projectPolicyDefinition(request.policy)) return null;
+    return countyCommunityProjectStatus(state, pid, request.kind, {
+      target:request.target,
+      sponsor:typeof request.sponsor === 'string' && request.sponsor
+        ? request.sponsor : 'player',
+      policy:request.policy
+    }, settlementIndex);
   };
 
   function convertedCohorts(communities, kind, targetId, sourceId, amount) {
@@ -1240,12 +1604,14 @@ window.FB = window.FB || {};
     amount = Math.min(available, Math.max(0, Math.round(amount)));
     if (!amount) return empty;
     var before = rec.count;
+    var beforeCommunities = rec.communities;
     var cohorts = convertedCohorts(rec.communities, request.kind,
       request.target, request.source || null, amount);
     var applied = communityTotal(cohorts.outgoing);
     if (!applied) return empty;
     rec.communities = mergeCohorts(rec.communities, cohorts.outgoing, -1);
     rec.communities = mergeCohorts(rec.communities, cohorts.incoming, 1);
+    carrySettlementPartition(beforeCommunities, rec.communities);
     var change = rec.communityChange || {
       faithConverted:0, cultureAssimilated:0
     };
@@ -1263,6 +1629,97 @@ window.FB = window.FB || {};
 
   FB.convertCountyCommunity = function (state, pid, request) {
     return convertCountyCommunity(state, pid, request, false);
+  };
+
+  function convertSettlementCommunity(state, pid, settlementIndex,
+    request, skipEnsure) {
+    var empty = { count:0, cohorts:[] };
+    var idx = Number(settlementIndex);
+    if (!state || !request || !validProjectKind(request.kind) ||
+        !projectTargetValid(state, request.kind, request.target) ||
+        !isFinite(idx) || Math.floor(idx) !== idx || idx < 0) return empty;
+    var pr = provinceDef(pid);
+    if (!pr || pr.wasteland) return empty;
+    if (!skipEnsure) FB.ensurePopulationState(state);
+    var rec = state.population.counties[pid];
+    var rows = settlementPopulationAllocation(state, pid, rec.count);
+    if (idx >= rows.length) return empty;
+    if (!hasSettlementPartition(rec.communities)) {
+      reconcileSettlementRecord(state, pid, rec, null);
+    }
+    var local = FB.settlementCommunities(state, pid, idx);
+    var field = request.kind === 'faith' ? 'religion' : 'culture';
+    var eligible = local.filter(function (community) {
+      return community[field] !== request.target &&
+        (!request.source || community[field] === request.source);
+    });
+    var available = communityTotal(eligible);
+    var amount = request.amount;
+    if (amount === undefined && request.rate !== undefined) {
+      amount = Math.round(available * FB.clamp(
+        Number(request.rate) || 0, 0, 1));
+    }
+    amount = Number(amount);
+    if (!isFinite(amount)) return empty;
+    amount = Math.min(available, Math.max(0, Math.round(amount)));
+    if (!amount) return empty;
+    var cohorts = convertedCohorts(local, request.kind, request.target,
+      request.source || null, amount);
+    var applied = communityTotal(cohorts.outgoing);
+    if (!applied) return empty;
+
+    function recordFor(cultureId, religionId, create) {
+      for (var i = 0; i < rec.communities.length; i++) {
+        var existing = rec.communities[i];
+        if (existing.culture === cultureId &&
+            existing.religion === religionId) return existing;
+      }
+      if (!create) return null;
+      var added = {
+        culture:cultureId, religion:religionId, count:0,
+        bySettlement:rows.map(function () { return 0; })
+      };
+      rec.communities.push(added);
+      return added;
+    }
+
+    for (var ci = 0; ci < cohorts.detail.length; ci++) {
+      var move = cohorts.detail[ci];
+      var source = recordFor(move.fromCulture, move.fromReligion, false);
+      var target = recordFor(move.toCulture, move.toReligion, true);
+      if (!source || !source.bySettlement ||
+          source.bySettlement[idx] < move.count) {
+        throw new Error('Settlement conversion exceeded its source community');
+      }
+      source.count -= move.count;
+      source.bySettlement[idx] -= move.count;
+      target.count += move.count;
+      target.bySettlement[idx] += move.count;
+    }
+    rec.communities = rec.communities.filter(function (community) {
+      return community.count > 0;
+    });
+    var change = rec.communityChange || {
+      faithConverted:0, cultureAssimilated:0
+    };
+    if (request.kind === 'faith') change.faithConverted += applied;
+    else change.cultureAssimilated += applied;
+    rec.communityChange = change;
+    var before = rec.count;
+    repairCountyRecord(state, pr, rec, stateYear(state));
+    if (rec.count !== before || communityTotal(rec.communities) !== before ||
+        communityTotal(FB.settlementCommunities(state, pid, idx)) !== rows[idx]) {
+      throw new Error('Population total invariant after settlement community conversion');
+    }
+    assertPopulationCommunities(state, [pid],
+      request.cause || 'settlement community conversion');
+    return { count:applied, cohorts:cohorts.detail };
+  }
+
+  FB.convertSettlementCommunity = function (state, pid, settlementIndex,
+    request) {
+    return convertSettlementCommunity(
+      state, pid, settlementIndex, request, false);
   };
 
   FB.startCountyCommunityProject = function (state, pid, request) {
@@ -1310,6 +1767,65 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.startSettlementCommunityProject = function (state, pid,
+    settlementIndex, request) {
+    var idx = Number(settlementIndex);
+    if (!state || !request || !validProjectKind(request.kind) ||
+        !projectTargetValid(state, request.kind, request.target) ||
+        !projectPolicyDefinition(request.policy) || !isFinite(idx) ||
+        Math.floor(idx) !== idx || idx < 0) return null;
+    var pr = provinceDef(pid);
+    if (!pr || pr.wasteland) return null;
+    FB.ensurePopulationState(state);
+    var rec = state.population.counties[pid];
+    var communities = FB.settlementCommunities(state, pid, idx);
+    if (!communities.length) return null;
+    if (projectEligiblePopulation(communities, request.kind,
+        request.target) <= 0) return null;
+    var sponsor = typeof request.sponsor === 'string' && request.sponsor
+      ? request.sponsor : provinceOwner(state, pid);
+    if (!sponsor) return null;
+    if (!hasSettlementPartition(rec.communities)) {
+      reconcileSettlementRecord(state, pid, rec, null);
+    }
+    rec.settlementCommunityProjects = rec.settlementCommunityProjects || {};
+    var projects = rec.settlementCommunityProjects[idx] || {};
+    projects[request.kind] = {
+      target:request.target,
+      sponsor:sponsor,
+      startTurn:projectNonnegativeInteger(state.turn),
+      policy:request.policy,
+      progress:0,
+      converted:0,
+      resistance:0,
+      lastTransfer:0,
+      lastYear:stateYear(state)
+    };
+    rec.settlementCommunityProjects[idx] = projects;
+    var definition = projectPolicyDefinition(request.policy);
+    if (definition.modifier && FB.addModifier &&
+        ((sponsor === 'player' && FB.playerControlsSettlementCommunity &&
+          FB.playerControlsSettlementCommunity(state, pid, idx)) ||
+         projectSponsorControls(state, pid, sponsor))) {
+      FB.addModifier(state, definition.modifier, pid, { silent:true });
+    }
+    return copyProject(projects[request.kind]);
+  };
+
+  FB.stopSettlementCommunityProject = function (state, pid,
+    settlementIndex, kind) {
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    var all = rec && rec.settlementCommunityProjects;
+    var projects = all && all[settlementIndex];
+    if (!validProjectKind(kind) || !projects || !projects[kind]) return false;
+    delete projects[kind];
+    if (!projects.faith && !projects.culture) delete all[settlementIndex];
+    if (!Object.keys(all).length) delete rec.settlementCommunityProjects;
+    reconcileSettlementRecord(state, pid, rec, null, true);
+    return true;
+  };
+
   FB.countyCommunityProjectMigrationPressure = function (state, pid) {
     var rec = state && state.population && state.population.counties &&
       state.population.counties[pid];
@@ -1325,6 +1841,37 @@ window.FB = window.FB || {};
       var share = countyAxisShare(state, pid,
         kind === 'faith' ? 'religion' : 'culture', project.target);
       total += (Number(policy.migration) || 0) * (1 - share);
+    }
+    var localProjects = rec && rec.settlementCommunityProjects;
+    if (localProjects) {
+      var settlementKeys = Object.keys(localProjects).sort(function (a, b) {
+        return Number(a) - Number(b);
+      });
+      for (var si = 0; si < settlementKeys.length; si++) {
+        var settlementIndex = Number(settlementKeys[si]);
+        var settlementCommunities = FB.settlementCommunities(
+          state, pid, settlementIndex);
+        var settlementTotal = communityTotal(settlementCommunities);
+        var localMap = localProjects[settlementKeys[si]];
+        for (var lki = 0; lki < 2; lki++) {
+          var localKind = lki ? 'culture' : 'faith';
+          var localProject = localMap && localMap[localKind];
+          var localPolicy = localProject &&
+            projectPolicyMechanics(localProject.policy);
+          var localControl = localProject && localProject.sponsor === 'player' &&
+            FB.playerControlsSettlementCommunity
+            ? FB.playerControlsSettlementCommunity(
+              state, pid, settlementIndex)
+            : localProject && projectSponsorControls(
+              state, pid, localProject.sponsor);
+          if (!localProject || !localPolicy || !settlementTotal ||
+              !localControl) continue;
+          var localEligible = projectEligiblePopulation(settlementCommunities,
+            localKind, localProject.target);
+          total += (Number(localPolicy.migration) || 0) *
+            (localEligible / Math.max(1, rec.count));
+        }
+      }
     }
     return Math.max(-3, Math.min(0, total));
   };
@@ -1358,7 +1905,8 @@ window.FB = window.FB || {};
     var applied = result.applied;
     if (applied === 0) return 0;
 
-    rec.communities = result.communities;
+    rec.communities = carrySettlementPartition(
+      rec.communities, result.communities);
     rec.count = before + applied;
     repairCountyRecord(state, pr, rec, stateYear(state));
     if (applied < 0) {
@@ -1403,8 +1951,10 @@ window.FB = window.FB || {};
 
   /* Move exact people between counties without changing their culture-faith
      pair. A numeric cohorts argument requests that many proportional cohorts
-     from the source; an array requests explicit pairs and counts. */
-  FB.moveCommunityPopulation = function (state, fromPid, toPid, cohorts, cause) {
+     from the source; an array requests explicit pairs and counts. Optional
+     fromSettlement/toSettlement slots retain a named local route. */
+  FB.moveCommunityPopulation = function (state, fromPid, toPid, cohorts, cause,
+    options) {
     var empty = { count:0, cohorts:[] };
     if (!state || fromPid === toPid) return empty;
     var fromPr = provinceDef(fromPid);
@@ -1414,11 +1964,33 @@ window.FB = window.FB || {};
     var fromRec = state.population.counties[fromPid];
     var toRec = state.population.counties[toPid];
     if (!fromRec || !toRec) return empty;
+    options = options && typeof options === 'object' ? options : {};
+    var fromSettlement = Number(options.fromSettlement);
+    var toSettlement = Number(options.toSettlement);
+    var explicitFrom = options.fromSettlement !== undefined &&
+      options.fromSettlement !== null && isFinite(fromSettlement) &&
+      Math.floor(fromSettlement) === fromSettlement && fromSettlement >= 0;
+    var explicitTo = options.toSettlement !== undefined &&
+      options.toSettlement !== null && isFinite(toSettlement) &&
+      Math.floor(toSettlement) === toSettlement && toSettlement >= 0;
+    if (explicitFrom && !FB.settlementCommunities(
+        state, fromPid, fromSettlement).length) return empty;
+    if (explicitTo && !FB.settlementCommunities(
+        state, toPid, toSettlement).length) return empty;
+    if (explicitFrom && !hasSettlementPartition(fromRec.communities)) {
+      reconcileSettlementRecord(state, fromPid, fromRec, null);
+    }
+    if (explicitTo && !hasSettlementPartition(toRec.communities)) {
+      reconcileSettlementRecord(state, toPid, toRec, null);
+    }
     var combinedBefore = fromRec.count + toRec.count;
+    var availableCommunities = explicitFrom
+      ? FB.settlementCommunities(state, fromPid, fromSettlement)
+      : fromRec.communities;
 
     var requested;
     if (isFinite(Number(cohorts)) && !Array.isArray(cohorts)) {
-      requested = allocatedCommunityCohorts(fromRec.communities,
+      requested = allocatedCommunityCohorts(availableCommunities,
         Math.max(0, Math.round(Number(cohorts))));
     } else if (Array.isArray(cohorts)) {
       var requestedByKey = {};
@@ -1439,8 +2011,8 @@ window.FB = window.FB || {};
         requestedByKey[requestedKey].count += requestedCount;
       }
       var availableByKey = {};
-      for (var ai = 0; ai < fromRec.communities.length; ai++) {
-        var available = fromRec.communities[ai];
+      for (var ai = 0; ai < availableCommunities.length; ai++) {
+        var available = availableCommunities[ai];
         availableByKey[communityKey(available.culture, available.religion)] =
           available.count;
       }
@@ -1463,8 +2035,27 @@ window.FB = window.FB || {};
     var moved = communityTotal(requested);
     if (!moved) return empty;
 
+    var beforeFromCommunities = fromRec.communities;
+    var beforeToCommunities = toRec.communities;
     fromRec.communities = mergeCohorts(fromRec.communities, requested, -1);
     toRec.communities = mergeCohorts(toRec.communities, requested, 1);
+    carrySettlementPartition(beforeFromCommunities, fromRec.communities);
+    carrySettlementPartition(beforeToCommunities, toRec.communities);
+    if (explicitFrom) {
+      for (var sfi = 0; sfi < requested.length; sfi++) {
+        var leaving = requested[sfi];
+        for (var sfj = 0; sfj < fromRec.communities.length; sfj++) {
+          var sourceCommunity = fromRec.communities[sfj];
+          if (sourceCommunity.culture === leaving.culture &&
+              sourceCommunity.religion === leaving.religion) {
+            sourceCommunity.bySettlement[fromSettlement] -= leaving.count;
+            break;
+          }
+        }
+      }
+    }
+    placeSettlementArrivals(state, toPid, toRec, requested,
+      toRec.count + moved, explicitTo ? toSettlement : null);
     fromRec.count -= moved;
     toRec.count += moved;
     fromRec.migration = (fromRec.migration || 0) - moved;
@@ -1542,6 +2133,80 @@ window.FB = window.FB || {};
     var targetYear = isFinite(Number(year))
       ? Math.round(Number(year)) : stateYear(state);
     return resolveCountyCommunityProjects(state, pid, targetYear);
+  };
+
+  function resolveSettlementCommunityProjects(state, pid, year) {
+    var rec = state.population && state.population.counties[pid];
+    var all = rec && rec.settlementCommunityProjects;
+    if (!all) return [];
+    var results = [];
+    var slots = Object.keys(all).sort(function (a, b) {
+      return Number(a) - Number(b);
+    });
+    for (var si = 0; si < slots.length; si++) {
+      var idx = Number(slots[si]);
+      for (var ki = 0; ki < 2; ki++) {
+        var kind = ki ? 'culture' : 'faith';
+        var project = rec.settlementCommunityProjects &&
+          rec.settlementCommunityProjects[idx] &&
+          rec.settlementCommunityProjects[idx][kind];
+        if (!project || project.lastYear === year) continue;
+        var status = FB.settlementCommunityProjectStatus(
+          state, pid, idx, kind);
+        if (!status) continue;
+        project.lastYear = year;
+        project.resistance = roundedProjectNumber(status.resistance);
+        project.lastTransfer = 0;
+        if (status.eligible <= 0) {
+          FB.stopSettlementCommunityProject(state, pid, idx, kind);
+          results.push({ settlement:idx, kind:kind,
+            target:status.target, count:0, completed:true });
+          continue;
+        }
+        project.progress = roundedProjectNumber(
+          project.progress + status.potential);
+        var desired = Math.min(status.eligible, Math.floor(project.progress));
+        if (desired < status.minimum && desired < status.eligible) desired = 0;
+        var result = desired > 0 ? convertSettlementCommunity(
+          state, pid, idx, {
+            kind:kind, target:project.target, amount:desired,
+            cause:'settlement community project'
+          }, true) : { count:0, cohorts:[] };
+        project = rec.settlementCommunityProjects &&
+          rec.settlementCommunityProjects[idx] &&
+          rec.settlementCommunityProjects[idx][kind];
+        if (!project) continue;
+        project.progress = roundedProjectNumber(
+          Math.max(0, project.progress - result.count));
+        project.converted += result.count;
+        project.lastTransfer = result.count;
+        project.lastYear = year;
+        project.resistance = roundedProjectNumber(status.resistance);
+        var definition = projectPolicyDefinition(project.policy);
+        if (status.control && definition && definition.modifier &&
+            FB.addModifier) {
+          FB.addModifier(state, definition.modifier, pid, { silent:true });
+        }
+        var remaining = projectEligiblePopulation(
+          FB.settlementCommunities(state, pid, idx), kind, project.target);
+        var completed = remaining <= 0;
+        results.push({
+          settlement:idx, kind:kind, target:project.target,
+          count:result.count, cohorts:result.cohorts, completed:completed
+        });
+        if (completed) FB.stopSettlementCommunityProject(
+          state, pid, idx, kind);
+      }
+    }
+    return results;
+  }
+
+  FB.resolveSettlementCommunityProjects = function (state, pid, year) {
+    if (!state) return [];
+    FB.ensurePopulationState(state);
+    var targetYear = isFinite(Number(year))
+      ? Math.round(Number(year)) : stateYear(state);
+    return resolveSettlementCommunityProjects(state, pid, targetYear);
   };
 
   /* Annual population tick */
@@ -1720,8 +2385,12 @@ window.FB = window.FB || {};
         outgoingCohorts[cId] || [], -1);
       finalCommunities = mergeCohorts(finalCommunities,
         incomingCohorts[cId] || [], 1);
-      rec.communities = finalCommunities;
-      rec.count = communityTotal(finalCommunities);
+      rec.communities = carrySettlementPartition(
+        rec.communities, finalCommunities);
+      var finalCount = communityTotal(finalCommunities);
+      placeSettlementArrivals(state, cId, rec,
+        incomingCohorts[cId] || [], finalCount, null);
+      rec.count = finalCount;
       var expectedCount = initialP[cId] + natDelta + migDelta;
       if (rec.count !== expectedCount) {
         throw new Error('Population total invariant after annual pass in ' + cId);
@@ -1739,6 +2408,8 @@ window.FB = window.FB || {};
     for (var projectIndex = 0; projectIndex < provs.length; projectIndex++) {
       resolveCountyCommunityProjects(
         state, provs[projectIndex].id, currentYear);
+      resolveSettlementCommunityProjects(
+        state, provs[projectIndex].id, currentYear);
     }
 
     state.population.lastYear = currentYear;
@@ -1752,44 +2423,18 @@ window.FB = window.FB || {};
     assertPopulationCommunities(state, null, 'annual pass');
   };
 
-  /* Display-only on-demand settlement allocation */
+  /* Display-only on-demand settlement allocation. It deliberately reads the
+     current record without invoking population repair, so opening a remote
+     settlement sheet cannot mutate a save. */
   FB.settlementPopulations = function (state, pid) {
-    var total = FB.countyPopulation(state, pid);
-    var setts = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
-    if (!setts.length) return [total];
-
-    var built = FB.builtIn ? FB.builtIn(state, pid) : [];
-    var weights = [];
-    var sumWeights = 0;
-
-    for (var i = 0; i < setts.length; i++) {
-      var st = setts[i];
-      var w = st.kind === 'city' ? 7 : (st.kind === 'town' ? 3 : 1);
-      for (var b = 0; b < built.length; b++) {
-        var entry = built[b];
-        if (entry && entry.s === i && !entry.ruined) {
-          if (entry.id === 'mill' || entry.id === 'bridge' ||
-              entry.id === 'market' || entry.id === 'harbor') {
-            w += 1;
-          }
-        }
-      }
-      weights.push(w);
-      sumWeights += w;
-    }
-
-    var allocations = [];
-    var allocatedSoFar = 0;
-    for (var j = 0; j < weights.length; j++) {
-      if (j === weights.length - 1) {
-        allocations.push(total - allocatedSoFar);
-      } else {
-        var alloc = Math.round(total * (weights[j] / sumWeights));
-        allocations.push(alloc);
-        allocatedSoFar += alloc;
-      }
-    }
-    return allocations;
+    var pr = provinceDef(pid);
+    if (!state || !pr || pr.wasteland) return [];
+    var rec = state.population && state.population.counties &&
+      state.population.counties[pid];
+    var total = rec && isFinite(Number(rec.count))
+      ? Math.max(populationFloor(), Math.round(Number(rec.count)))
+      : FB.countyPopulationBaseline(state, pid);
+    return settlementPopulationAllocation(state, pid, total);
   };
 
   FB.settlementPopulation = function (state, pid, settlementIndex) {

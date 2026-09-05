@@ -142,6 +142,25 @@ data-defined hysteresis margin, while an absolute majority changes the saved ide
 immediately. Ownership and character or realm conversion do not rewrite communities or
 start projects. The full policy boundary is documented in [conversion.md](conversion.md).
 
+A county community may carry an optional `bySettlement` integer array. The array is
+absent while every visible site follows the county-wide proportional projection. The
+first settlement-specific conversion or project materializes every community column at
+once through deterministic integer apportionment. Community columns still sum to their
+county counts, settlement rows still equal `FB.settlementPopulation`, and both axes are
+checked by the population conservation validator. `FB.settlementCommunities`,
+`FB.settlementCulture`, and `FB.settlementReligion` are detached, read-only projections;
+opening a sheet does not materialize or repair the matrix. Reconciliation retains the
+prior local distribution when population, development, or economic-building weights
+change, then may discard a matrix that has returned exactly to the proportional
+projection and has no active local project.
+
+Ordinary incoming cohorts use the current settlement allocation weights. Departures are
+removed proportionally from their source community's occupied slots; a transfer may
+explicitly name source and destination slots for port-, town-, or county-head-specific
+movement. Newly generated settlement households draw a combined culture-faith pair from
+their own slot. Existing characters, relationships, settlement names, and physical sites
+remain unchanged.
+
 Technology impact: `county_community_identity` and `county_community_conversion` are
 `none`. Selecting an existing local identity, preserving communities through ordinary
 growth, loss, and movement, and pursuing communal conversion or assimilation are baseline
@@ -241,8 +260,8 @@ on home button use the same rule.
 
 A fort keeps its exact settlement visible even when later development loss would hide
 that slot under the normal reveal thresholds. The same landmark rule protects the
-player's stake in a county: any standing building, any family enterprise, and the
-player's home settlement each floor the visible count at their slot
+player's stake in a county: any standing building, any family enterprise, any active
+local community project, and the player's home settlement each floor the visible count at their slot
 (`FB.settlementVisibleCount`), so development decline can never make an invested or
 home settlement vanish; ruins and sold enterprises release the anchor. `mapview.js` draws one additional badge
 over the existing settlement emblem rather than a second marker or altered site-art
@@ -262,6 +281,14 @@ The four local meeting venues appear in the character sheet's standard Relations
 attention action group below Standing. Their visible rows carry only the action label;
 venue-specific choices, the day cost, cooldown, and any blocking reason use the shared
 desktop tooltip or compact-layout disclosure instead of a generic helper paragraph.
+
+The same sheet shows the selected slot's culture and faith counts and percentages, plus
+its saved local faith and culture projects. It is the sole entry point for local project
+controls and carries both settlement and county names through target, policy,
+confirmation, and stop views. A count may direct any settlement in a directly held
+county; a baron may direct only the saved home settlement. Foreign and other remote
+sheets remain read-only. County-wide controls stay in Land and never infer a settlement;
+Self/Faith remains character-facing navigation only.
 
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.

@@ -4277,8 +4277,9 @@ window.FB = window.FB || {};
       const fort = FB.fortAt(state, pid);
       if (fort && !fort.ruined) visible = Math.max(visible, (fort.s | 0) + 1);
     }
-    /* Investments anchor their settlement the same way: any standing
-       building, family enterprise, and the player's own home settlement.
+    /* Investments and active local policy anchor their settlement the same
+       way: any standing building, family enterprise, local community project,
+       and the player's own home settlement.
        Building-heavy callers pass their already-indexed floor; direct map
        reads retain the allocation-free raw county scan. */
     if (state) {
@@ -4297,6 +4298,20 @@ window.FB = window.FB || {};
       }
       const anchors = enterpriseAnchors(state);
       if (anchors && anchors[pid]) visible = Math.max(visible, anchors[pid]);
+      const populationRecord = state.population && state.population.counties &&
+        state.population.counties[pid];
+      const localProjects = populationRecord &&
+        populationRecord.settlementCommunityProjects;
+      if (localProjects) {
+        const projectSlots = Object.keys(localProjects);
+        for (let projectIndex = 0; projectIndex < projectSlots.length;
+             projectIndex++) {
+          const projectSlot = Number(projectSlots[projectIndex]);
+          if (isFinite(projectSlot) && projectSlot >= 0) {
+            visible = Math.max(visible, Math.floor(projectSlot) + 1);
+          }
+        }
+      }
       const p = state.player;
       if (p && pid === p.provinceId && typeof p.homeSettlement === 'number') {
         visible = Math.max(visible, (p.homeSettlement | 0) + 1);
@@ -5533,6 +5548,9 @@ window.FB = window.FB || {};
       }
       if (state.dev[pid] !== target) {
         state.dev[pid] = target;
+        if (FB.reconcileSettlementCommunities) {
+          FB.reconcileSettlementCommunities(state, pid);
+        }
         changed = true;
       }
     }
@@ -5561,6 +5579,9 @@ window.FB = window.FB || {};
     state.dev[pid] = after;
     FB.invalidateRealmCache();
     if (FB.map && FB.map.request) FB.map.request();
+    if (FB.reconcileSettlementCommunities) {
+      FB.reconcileSettlementCommunities(state, pid);
+    }
     if (after >= before) return after - before;
     if (!FB.playerDirectlyHoldsCounty(state, pid) &&
         (!state.player || state.player.provinceId !== pid)) return after - before;
@@ -5722,6 +5743,9 @@ window.FB = window.FB || {};
           if (chosen.def.dev) {
             record.devGranted = FB.changeCountyDevelopment(state, chosen.pid,
               chosen.def.dev, 'ai_construction');
+          }
+          if (FB.reconcileSettlementCommunities) {
+            FB.reconcileSettlementCommunities(state, chosen.pid);
           }
           builtThisYear++;
         }

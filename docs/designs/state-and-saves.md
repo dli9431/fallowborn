@@ -130,9 +130,11 @@ seed behind `state.fortMigration`. No rendered fort, project, or siege prose is 
 
 County population is additive save-format-3 data. Its subsystem schema is 2:
 `state.population = { schema: 2, lastYear, counties: { [pid]: { count, natural,
-migration, losses, communities, identity, communityChange, communityProjects? } } }`.
+migration, losses, communities, identity, communityChange, communityProjects?,
+settlementCommunityProjects? } } }`.
 `communities` holds
-positive integer `{culture,religion,count}` cohorts whose counts sum exactly to `count`;
+positive integer `{culture,religion,count,bySettlement?}` cohorts whose counts sum
+exactly to `count`;
 `identity` caches the independently dominant culture and faith plus `cultureSince` and
 `religionSince`; `communityChange` stores only the last annual faith-conversion and
 culture-assimilation totals. `communityProjects`, when present, contains at most a
@@ -140,6 +142,17 @@ culture-assimilation totals. `communityProjects`, when present, contains at most
 resistance,lastTransfer,lastYear}`. Projects store ids and bounded numbers, never
 percentages or rendered demographic prose; malformed projects are dropped by ordinary
 population repair without advancing the subsystem schema.
+
+`bySettlement`, when present on any community, is present on every community and uses
+the county's stable visible settlement-slot order. Each array sums to its community
+count, and each slot across all arrays sums exactly to the existing weighted settlement
+population. The complete matrix remains absent while it would be identical to the
+county-wide proportional projection. Settlement-specific conversion or a local project
+materializes it; deterministic repair and building/development reconciliation preserve
+both axes, and a project-free matrix that returns exactly to the projection is compacted
+away. `settlementCommunityProjects` is keyed by settlement index and holds the same
+optional `faith` and `culture` project records as the county-wide map. No names,
+percentages, rendered prose, or derived identity cache is added per settlement.
 
 `FB.ensurePopulationState` lazily backfills older saves or fresh game states without a save-wrapper version bump:
 - Baseline populations scale proportionally with current development and standing building capacity bonuses.
@@ -164,10 +177,11 @@ population repair without advancing the subsystem schema.
   side effect. No transient calculations, edge allocations, or prose strings enter
   serialized state.
 
-Focused storage coverage measures fresh 867, fresh 1066, and enlarged long-running
-population records against the schema-1 projection. The milestone keeps the added
+Focused storage coverage measures fresh 867, fresh 1066, enlarged long-running, and
+one-county materialized population records against the schema-1 projection. The milestone keeps the added
 community state below 200 KB for a fresh bookmark and below 220 KB for the enlarged
-case; no additional county or settlement cache is serialized.
+case. A materialized county adds only its community-by-slot integer cells and optional
+project records; unmaterialized counties serialize no settlement cache.
 
 Fort lookup caches (`byCounty`, `bySite`, active projects) are module-private derived
 state. Repair or an external data merge rebuilds them; construction, demolition, and

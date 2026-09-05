@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.169.0';
+FB.VERSION = '1.170.0';
 FB.CHANGELOG = [
+  { v: '1.170.0', date: '2026-09-05', changes: [
+    'Settlements now preserve their own live culture and faith shares, support local conversion projects, and show those communities on each settlement sheet.'
+  ] },
   { v: '1.169.0', date: '2026-09-05', changes: [
     'Land now shows live county culture and faith shares, explains gradual community change, and gives Counts direct control of county conversion projects.'
   ] },
