@@ -2105,6 +2105,44 @@ window.FB = window.FB || {};
     return { count:moved, cohorts:copyCommunities(requested) };
   };
 
+  /* Declarative events name an amount or share plus an optional culture-faith
+     filter; they never assemble mutable cohort rows themselves. Keep that
+     selection at the population boundary so migration, resettlement, and
+     expulsion all inherit the same floor, settlement, and conservation rules. */
+  FB.moveCommunityPopulationByPolicy = function (state, fromPid, toPid,
+    request) {
+    var empty = { count:0, cohorts:[] };
+    if (!state || !request || typeof request !== 'object') return empty;
+    var options = {};
+    if (request.fromSettlement !== undefined) {
+      options.fromSettlement = request.fromSettlement;
+    }
+    if (request.toSettlement !== undefined) {
+      options.toSettlement = request.toSettlement;
+    }
+    var source = options.fromSettlement !== undefined
+      ? FB.settlementCommunities(state, fromPid, options.fromSettlement)
+      : FB.countyCommunities(state, fromPid);
+    var filter = request.community || {};
+    source = source.filter(function (community) {
+      return (!filter.culture || community.culture === filter.culture) &&
+        (!filter.religion || community.religion === filter.religion);
+    });
+    var available = communityTotal(source);
+    if (!available) return empty;
+    var amount = request.amount;
+    if (amount === undefined && request.rate !== undefined) {
+      amount = Math.round(available * FB.clamp(
+        Number(request.rate) || 0, 0, 1));
+    }
+    amount = Math.max(0, Math.round(Number(amount) || 0));
+    if (!amount) return empty;
+    var selected = allocatedCommunityCohorts(source,
+      Math.min(available, amount));
+    return FB.moveCommunityPopulation(state, fromPid, toPid, selected,
+      request.cause || 'event community movement', options);
+  };
+
   function resolveCountyCommunityProjects(state, pid, year) {
     var rec = state.population && state.population.counties[pid];
     if (!rec || !rec.communityProjects) return [];
@@ -2237,6 +2275,108 @@ window.FB = window.FB || {};
     var targetYear = isFinite(Number(year))
       ? Math.round(Number(year)) : stateYear(state);
     return resolveSettlementCommunityProjects(state, pid, targetYear);
+  };
+
+  /* Developer-facing, read-only calibration. It clones the serializable
+     campaign, then resolves only the named project so 25/50/100-year rate
+     reviews use the real changing shares, resistance, and minimum-transfer
+     carry without advancing wars, births, RNG, or the source campaign. */
+  FB.observeCommunityProject = function (state, pid, request, horizons,
+    settlementIndex) {
+    if (!state || !request) return null;
+    var years = Array.isArray(horizons) && horizons.length
+      ? horizons.slice() : [25, 50, 100];
+    years = years.map(function (year) {
+      return Math.max(0, Math.round(Number(year) || 0));
+    }).sort(function (a, b) { return a - b; });
+    var clone = JSON.parse(JSON.stringify(state));
+    FB.ensurePopulationState(clone);
+    var local = typeof settlementIndex === 'number';
+    var project = local
+      ? FB.startSettlementCommunityProject(
+        clone, pid, settlementIndex, request)
+      : FB.startCountyCommunityProject(clone, pid, request);
+    if (!project) return null;
+    function share() {
+      var communities = local
+        ? FB.settlementCommunities(clone, pid, settlementIndex)
+        : FB.countyCommunities(clone, pid);
+      var field = request.kind === 'faith' ? 'religion' : 'culture';
+      var total = communityTotal(communities);
+      var matching = 0;
+      for (var i = 0; i < communities.length; i++) {
+        if (communities[i][field] === request.target) {
+          matching += communities[i].count;
+        }
+      }
+      return total ? matching / total : 0;
+    }
+    var result = {
+      pid:pid, settlement:local ? settlementIndex : null,
+      kind:request.kind, target:request.target, policy:request.policy,
+      initialShare:share(), observations:[]
+    };
+    var next = 0;
+    while (next < years.length && years[next] === 0) {
+      result.observations.push({ years:0, share:share() });
+      next++;
+    }
+    var maximum = years.length ? years[years.length - 1] : 0;
+    for (var elapsed = 1; elapsed <= maximum; elapsed++) {
+      clone.date.year++;
+      if (local) {
+        resolveSettlementCommunityProjects(clone, pid, clone.date.year);
+      } else {
+        resolveCountyCommunityProjects(clone, pid, clone.date.year);
+      }
+      while (next < years.length && years[next] === elapsed) {
+        result.observations.push({ years:elapsed, share:share() });
+        next++;
+      }
+    }
+    while (next < years.length) {
+      result.observations.push({ years:years[next], share:share() });
+      next++;
+    }
+    return result;
+  };
+
+  FB.populationSaveDiagnostics = function (state) {
+    if (!state || !state.population) return {
+      bytes:0, counties:0, materializedCounties:0,
+      materializedCohorts:0, projectCount:0
+    };
+    var result = {
+      bytes:JSON.stringify(state.population).length,
+      counties:0, materializedCounties:0,
+      materializedCohorts:0, projectCount:0
+    };
+    var counties = state.population.counties || {};
+    for (var pid in counties) {
+      var rec = counties[pid];
+      if (!rec) continue;
+      result.counties++;
+      var materialized = false;
+      for (var i = 0; i < (rec.communities || []).length; i++) {
+        if (Array.isArray(rec.communities[i].bySettlement)) {
+          materialized = true;
+          result.materializedCohorts++;
+        }
+      }
+      if (materialized) result.materializedCounties++;
+      for (var kind of ['faith','culture']) {
+        if (rec.communityProjects && rec.communityProjects[kind]) {
+          result.projectCount++;
+        }
+      }
+      var local = rec.settlementCommunityProjects || {};
+      for (var slot in local) {
+        for (var localKind of ['faith','culture']) {
+          if (local[slot] && local[slot][localKind]) result.projectCount++;
+        }
+      }
+    }
+    return result;
   };
 
   /* Annual population tick */

@@ -3,10 +3,14 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html',
   'data/actions.js',
+  'data/bookmarks.js',
+  'data/events_communities.js',
   'data/cultures.js',
   'data/map_data.js',
   'data/modifiers.js',
   'js/actions.js',
+  'js/agency.js',
+  'js/events.js',
   'js/modifiers.js',
   'js/population.js',
   'js/settlement.js',
@@ -507,4 +511,294 @@ test('Faith details links to personal conversion and an explicit Land county',
         modalClosed:document.getElementById('genmodal').classList.contains('hidden')
       };
     })).toEqual({ selected:setup.pid, tab:'prov', modalClosed:true });
+  });
+
+test('community triggers and effects retain exact county and settlement context',
+  async function ({ page }) {
+    const setup = await configureCountyProjectUi(page);
+    const result = await page.evaluate(function (pid) {
+      const s = FB.state;
+      const other = Object.keys(FB.world.adj[pid]).filter(function (id) {
+        return FB.world.byId[id] && !FB.world.byId[id].wasteland;
+      })[0];
+      s.population.counties[other] = {
+        count:1200, natural:0, migration:0, losses:0,
+        communities:[
+          { culture:'gaelic', religion:'catholic', count:840 },
+          { culture:'norse', religion:'norse_pagan', count:360 }
+        ],
+        identity:{ culture:'gaelic', religion:'catholic',
+          cultureSince:s.date.year, religionSince:s.date.year },
+        communityChange:{ faithConverted:0, cultureAssimilated:0 }
+      };
+      FB.reconcileCountyCommunities(s, pid);
+      FB.reconcileCountyCommunities(s, other);
+      const ctx = { locationId:pid, settlementIndex:0 };
+      const trigger = FB.checkTrigger(s, {
+        countyCulture:'gaelic', countyFaith:'catholic',
+        settlementCulture:{ target:'gaelic', settlement:'$context' },
+        settlementFaith:{ target:'catholic', settlement:'$context' },
+        countyCommunityShare:{ kind:'culture', target:'norse',
+          min:0.20, max:0.30 },
+        countyCommunityMixed:{ kind:'faith', minCommunities:2,
+          minorityShareMin:0.30 },
+        settlementCommunityMixed:{ kind:'culture', minCommunities:2,
+          settlement:'$context' },
+        countyCommunityProject:{ kind:'culture', active:false },
+        settlementCommunityProject:{ kind:'faith', active:false,
+          settlement:'$context' }
+      }, ctx);
+      const beforeCombined = s.population.counties[pid].count +
+        s.population.counties[other].count;
+      const beforeLocal = FB.settlementPopulation(s, pid, 0);
+      let receipts = FB.applyEffects(s, {
+        settlementCommunityTransfer:{ kind:'faith', target:'catholic',
+          source:'orthodox', amount:10, settlement:'$context' },
+        communityResettlement:{ fromProvinceId:other,
+          toProvinceId:'$context', toSettlement:'$context',
+          community:{ culture:'norse' }, amount:20 },
+        settlementCommunityProject:{ kind:'culture', target:'norse',
+          policy:'voluntary', sponsor:'$player', settlement:'$context' }
+      }, ctx, { id:'e2e_community_effects' });
+      receipts = receipts.concat(FB.applyEffects(s, {
+        communityMigration:{ fromProvinceId:'$context', toProvinceId:other,
+          fromSettlement:'$context', community:{ culture:'norse' }, amount:5 }
+      }, ctx, { id:'e2e_community_migration' }));
+      receipts = receipts.concat(FB.applyEffects(s, {
+        communityExpulsion:{ fromProvinceId:other, toProvinceId:'$context',
+          toSettlement:'$context', community:{ religion:'norse_pagan' },
+          amount:5 }
+      }, ctx, { id:'e2e_community_expulsion' }));
+      return {
+        trigger:trigger,
+        combined:s.population.counties[pid].count +
+          s.population.counties[other].count,
+        beforeCombined:beforeCombined,
+        localStable:FB.settlementPopulation(s, pid, 0) === beforeLocal + 20,
+        project:FB.settlementCommunityProject(s, pid, 0, 'culture'),
+        receiptActions:receipts.filter(function (entry) {
+          return entry.type === 'population';
+        }).map(function (entry) { return entry.action; })
+      };
+    }, setup.pid);
+    expect(result.trigger).toBe(true);
+    expect(result.combined).toBe(result.beforeCombined);
+    expect(result.localStable).toBe(true);
+    expect(result.project.target).toBe('norse');
+    expect(result.receiptActions).toEqual(expect.arrayContaining([
+      'settlement_community_transfer', 'resettlement',
+      'migration', 'expulsion',
+      'settlement_community_project_start'
+    ]));
+  });
+
+test('AI sponsorship requires authority, community support, stability, and motive',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId;
+      const rid = 'e2e_community_ruler';
+      s.realms[rid] = {
+        id:rid, name:'March Court', alive:true, capital:pid,
+        religion:'norse_pagan', rank:1,
+        ruler:{ culture:'norse', religion:'norse_pagan', age:38,
+          generation:1, traits:['zealous'] }
+      };
+      s.owner[pid] = rid;
+      s.holder = s.holder || {};
+      s.holder[pid] = rid;
+      s.population.counties[pid] = {
+        count:1000, natural:0, migration:0, losses:0,
+        communities:[
+          { culture:'gaelic', religion:'catholic', count:700 },
+          { culture:'norse', religion:'norse_pagan', count:300 }
+        ],
+        identity:{ culture:'gaelic', religion:'catholic',
+          cultureSince:s.date.year, religionSince:s.date.year },
+        communityChange:{ faithConverted:0, cultureAssimilated:0 }
+      };
+      s.agency = s.agency || {};
+      s.agency.rulerAims = s.agency.rulerAims || {};
+      s.agency.rulerAims[rid] = {
+        id:'defend_faith', generation:1, sinceYear:s.date.year
+      };
+      const candidate = FB.communityProjectAICandidates(s).filter(
+        function (entry) { return entry.rid === rid && entry.kind === 'faith'; }
+      )[0];
+      s.realms[rid].capital = 'missing';
+      s.agency.rulerAims[rid].id = 'keep_peace';
+      s.population.counties[pid].communities = [
+        { culture:'gaelic', religion:'catholic', count:850 },
+        { culture:'norse', religion:'norse_pagan', count:150 }
+      ];
+      FB.reconcileCountyCommunities(s, pid);
+      const noMotive = !FB.communityProjectAICandidates(s).some(
+        function (entry) { return entry.rid === rid; });
+      s.holder[pid] = 'player';
+      const noAuthority = !FB.communityProjectAICandidates(s).some(
+        function (entry) { return entry.rid === rid; });
+      s.holder[pid] = rid;
+      s.realms[rid].capital = pid;
+      s.agency.rulerAims[rid].id = 'defend_faith';
+      s.population.counties[pid].communities = [
+        { culture:'gaelic', religion:'catholic', count:700 },
+        { culture:'norse', religion:'norse_pagan', count:300 }
+      ];
+      FB.reconcileCountyCommunities(s, pid);
+      const oldCandidates = FB.communityProjectAICandidates;
+      const oldChance = FBDATA.balance.countyCommunityAIAnnualChance;
+      const oldLimit = FBDATA.balance.countyCommunityAIMaxStartsPerYear;
+      FB.communityProjectAICandidates = function () {
+        return candidate ? [candidate, candidate] : [];
+      };
+      FBDATA.balance.countyCommunityAIAnnualChance = 1;
+      FBDATA.balance.countyCommunityAIMaxStartsPerYear = 1;
+      const started = FB.communityProjectAIYearly(s);
+      FB.communityProjectAICandidates = oldCandidates;
+      FBDATA.balance.countyCommunityAIAnnualChance = oldChance;
+      FBDATA.balance.countyCommunityAIMaxStartsPerYear = oldLimit;
+      const project = FB.countyCommunityProject(s, pid, 'faith');
+      return {
+        candidate:!!candidate,
+        noMotive:noMotive,
+        noAuthority:noAuthority,
+        share:candidate && candidate.share,
+        motive:candidate && candidate.aim,
+        policy:candidate && candidate.policy,
+        started:started.length,
+        sponsor:project && project.sponsor
+      };
+    });
+    expect(result.candidate).toBe(true);
+    expect(result.noMotive).toBe(true);
+    expect(result.noAuthority).toBe(true);
+    expect(result.share).toBeCloseTo(0.3, 8);
+    expect(result.motive).toBe('defend_faith');
+    expect(['voluntary','integrative','coercive']).toContain(result.policy);
+    expect(result.started).toBe(1);
+    expect(result.sponsor).toBe('e2e_community_ruler');
+  });
+
+test('historical situations, long-horizon observations, and save diagnostics are bounded',
+  async function ({ page }) {
+    const setup = await configureCountyProjectUi(page);
+    const result = await page.evaluate(function (pid) {
+      const s = FB.state;
+      const before = JSON.stringify(s);
+      const observation = FB.observeCommunityProject(s, pid, {
+        kind:'culture', target:'norse', policy:'voluntary', sponsor:'player'
+      }, [25, 50, 100]);
+      const diagnostics = FB.populationSaveDiagnostics(s);
+      const ids = [
+        'community_peaceful_adoption',
+        'community_elite_led_conversion',
+        'community_frontier_settlement',
+        'community_urban_minority',
+        'community_coercive_backlash'
+      ];
+      return {
+        unchanged:before === JSON.stringify(s),
+        years:observation.observations.map(function (entry) {
+          return entry.years;
+        }),
+        shares:observation.observations.map(function (entry) {
+          return entry.share;
+        }),
+        diagnostics:diagnostics,
+        situations:ids.map(function (id) {
+          const event = FB.eventById(id);
+          return !!event && FB.validateCommunityEvent(event);
+        })
+      };
+    }, setup.pid);
+    expect(result.unchanged).toBe(true);
+    expect(result.years).toEqual([25, 50, 100]);
+    expect(result.shares[0]).toBeGreaterThan(0.25);
+    expect(result.shares[0]).toBeLessThan(0.9);
+    expect(result.shares[1]).toBeGreaterThanOrEqual(result.shares[0]);
+    expect(result.shares[2]).toBeGreaterThanOrEqual(result.shares[1]);
+    expect(result.diagnostics.bytes).toBeGreaterThan(0);
+    expect(result.diagnostics.counties).toBeGreaterThan(400);
+    expect(result.situations).toEqual([true, true, true, true, true]);
+  });
+
+test('both bookmarks retain mixed communities across 25, 50, and 100 year observations',
+  async function ({ page }) {
+    const result = await page.evaluate(async function () {
+      function activate(bookmarkId) {
+        return new Promise(function (resolve, reject) {
+          FB.activateBookmark(bookmarkId, function () {}, function (error) {
+            if (error) reject(error);
+            else resolve();
+          });
+        });
+      }
+      function observeBookmark() {
+        const year = FB.activeBookmark.date.year;
+        const state = {
+          start:{ id:FB.activeBookmarkId, year:year },
+          date:{ year:year }, turn:0,
+          player:{ charId:'calibrator', provinceId:'', tier:4 },
+          chars:{ calibrator:{ id:'calibrator', culture:'', religion:'',
+            traits:[] } },
+          owner:{}, holder:{}, buildings:{}, dev:{}, realms:{},
+          realmTechMigration:2, realmTech:{}
+        };
+        FB.ensurePopulationState(state);
+        for (const pid in state.population.counties) {
+          const communities = state.population.counties[pid].communities || [];
+          if (communities.length < 2) continue;
+          const principal = communities[0];
+          let target = null;
+          let kind = null;
+          for (let i = 1; i < communities.length; i++) {
+            if (communities[i].culture !== principal.culture) {
+              target = communities[i];
+              kind = 'culture';
+              break;
+            }
+            if (communities[i].religion !== principal.religion) {
+              target = communities[i];
+              kind = 'faith';
+              break;
+            }
+          }
+          if (!target) continue;
+          state.player.provinceId = pid;
+          state.owner[pid] = 'player';
+          state.holder[pid] = 'player';
+          state.chars.calibrator.culture = target.culture;
+          state.chars.calibrator.religion = target.religion;
+          state.realms.player = {
+            id:'player', alive:true, capital:pid, ruler:'calibrator',
+            religion:target.religion
+          };
+          const observation = FB.observeCommunityProject(state, pid, {
+            kind:kind,
+            target:kind === 'culture' ? target.culture : target.religion,
+            policy:'voluntary', sponsor:'player'
+          }, [25, 50, 100]);
+          if (observation) return observation;
+        }
+        return null;
+      }
+      await activate('867');
+      const bookmark867 = observeBookmark();
+      await activate('1066');
+      const bookmark1066 = observeBookmark();
+      return { bookmark867:bookmark867, bookmark1066:bookmark1066 };
+    });
+    for (const observation of [result.bookmark867, result.bookmark1066]) {
+      expect(observation).not.toBeNull();
+      expect(observation.observations.map(function (entry) {
+        return entry.years;
+      })).toEqual([25, 50, 100]);
+      expect(observation.observations[0].share)
+        .toBeGreaterThan(observation.initialShare);
+      expect(observation.observations[0].share).toBeLessThan(0.9);
+      expect(observation.observations[1].share)
+        .toBeGreaterThanOrEqual(observation.observations[0].share);
+      expect(observation.observations[2].share)
+        .toBeGreaterThanOrEqual(observation.observations[1].share);
+    }
   });

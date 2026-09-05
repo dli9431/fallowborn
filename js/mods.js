@@ -160,7 +160,7 @@ window.FBMODS = window.FBMODS || [];
   const PUBLIC_KEYS = {
     name:true, bookmarks:true, defaultBookmark:true,
     startScenarios:true, familyPresets:true,
-    focuses:true, deeds:true,
+    focuses:true, deeds:true, countyCommunityPolicies:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
     events:true, straits:true, crossingClasses:true, scripted:true,
     cultureTraditions:true, cultures:true, religions:true, religiousPaths:true,
@@ -1077,6 +1077,82 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  function communityEventReferenceTables(mod) {
+    const provinces = {};
+    const combinedProvinces = own(mod, 'provinces')
+      ? combinedList(FBDATA.provinces, mod.provinces, 'provinces')
+      : (FBDATA.provinces || []);
+    for (let i = 0; i < combinedProvinces.length; i++) {
+      const province = combinedProvinces[i];
+      if (province && province.id) provinces[province.id] = province;
+    }
+    return {
+      cultures:combinedTable(FBDATA.cultures, mod.cultures, 'cultures'),
+      religions:combinedTable(FBDATA.religions, mod.religions, 'religions'),
+      provinces:provinces,
+      policies:combinedTable(FBDATA.countyCommunityPolicies,
+        mod.countyCommunityPolicies, 'countyCommunityPolicies')
+    };
+  }
+
+  function validateCommunityPolicies(mod) {
+    if (!own(mod, 'countyCommunityPolicies')) return;
+    const policies = communityEventReferenceTables(mod).policies;
+    const modifiers = combinedTable(
+      FBDATA.modifiers, mod.modifiers, 'modifiers');
+    const mechanics = {};
+    const baseMechanics = FBDATA.balance.countyCommunityProjectPolicies || {};
+    for (const id in baseMechanics) mechanics[id] = baseMechanics[id];
+    const modMechanics = mod.balance &&
+      mod.balance.countyCommunityProjectPolicies;
+    if (modMechanics !== undefined && !plainObject(modMechanics)) {
+      fail('balance.countyCommunityProjectPolicies', 'must be an object.');
+    }
+    for (const id in (modMechanics || {})) mechanics[id] = modMechanics[id];
+    for (const id in mod.countyCommunityPolicies) {
+      const policy = policies[id];
+      const path = 'countyCommunityPolicies.' + id;
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !plainObject(policy)) {
+        fail(path, 'must be an object under a lowercase id.');
+      }
+      if (policy.id !== undefined && policy.id !== id) {
+        fail(path + '.id', 'must match its table key.');
+      }
+      if (typeof policy.label !== 'string' || !policy.label ||
+          typeof policy.desc !== 'string' || !policy.desc) {
+        fail(path, 'must contain non-empty label and desc strings.');
+      }
+      if (policy.modifier !== undefined && !modifiers[policy.modifier]) {
+        fail(path + '.modifier', 'references an unknown modifier.');
+      }
+      const profile = mechanics[id];
+      if (!plainObject(profile)) {
+        fail('balance.countyCommunityProjectPolicies.' + id,
+          'must define mechanics for this policy.');
+      }
+      for (const key of ['pressure','resistance','maxRate','holdout','migration']) {
+        if (!finiteNumber(profile[key])) {
+          fail('balance.countyCommunityProjectPolicies.' + id + '.' + key,
+            'must be a finite number.');
+        }
+      }
+    }
+  }
+
+  function validateCommunityEvents(mod) {
+    if (!own(mod, 'events') || !Array.isArray(mod.events) ||
+        !FB.validateCommunityEvent) return;
+    const refs = communityEventReferenceTables(mod);
+    for (let i = 0; i < mod.events.length; i++) {
+      try {
+        FB.validateCommunityEvent(mod.events[i], refs);
+      } catch (error) {
+        fail('events[' + i + ']',
+          error.message || 'has invalid community event data.');
+      }
+    }
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1099,6 +1175,8 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'councilSeats') || own(mod, 'councilRules')) {
       validateCouncilDefinitions(mod);
     }
+    validateCommunityPolicies(mod);
+    validateCommunityEvents(mod);
     validateSerfFreedomEventEffects(mod);
     validateEventParticipants(mod);
     validateEducationEvents(mod);
@@ -1219,6 +1297,10 @@ window.FBMODS = window.FBMODS || [];
     if (mod.events) {
       mergeById(FBDATA.events, mod.events, 'id');
       if (FB.invalidateEventIndex) FB.invalidateEventIndex();
+    }
+    if (mod.countyCommunityPolicies) {
+      mergeTable(FBDATA.countyCommunityPolicies,
+        mod.countyCommunityPolicies);
     }
     if (mod.provinces) {
       retainLegacySettlementPresentation(mod.provinces);
@@ -1414,7 +1496,15 @@ window.FBMODS = window.FBMODS || [];
       FBDATA.currency = mod.currency;
       currencySupplied = true;
     }
-    if (mod.balance) for (const k in mod.balance) FBDATA.balance[k] = mod.balance[k];
+    if (mod.balance) for (const k in mod.balance) {
+      if (k === 'countyCommunityProjectPolicies' &&
+          plainObject(mod.balance[k])) {
+        mergeTable(FBDATA.balance.countyCommunityProjectPolicies,
+          mod.balance[k]);
+      } else {
+        FBDATA.balance[k] = mod.balance[k];
+      }
+    }
     if (mod.bounds) FBDATA.bounds = mod.bounds;
     if (mod.land) FBDATA.land = mod.land;
     if (mod.seas) FBDATA.seas = mod.seas;

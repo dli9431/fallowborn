@@ -279,7 +279,7 @@ window.FBDATA = window.FBDATA || {};
       },
       county_community_conversion:{
         mode:'none',
-        rationale:'County-wide and settlement-specific communal conversion and assimilation are baseline territorial and social processes throughout the period, not capabilities unlocked by sovereign research.'
+        rationale:'County-wide and settlement-specific communal conversion, assimilation, migration, event outcomes, and ruler sponsorship are baseline territorial and social processes throughout the period, not capabilities unlocked by sovereign research.'
       },
       local_marriage_prospect_identity:{
         mode:'none',

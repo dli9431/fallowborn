@@ -220,3 +220,43 @@ so engine and UI grouping cannot drift apart.
   credible technology dependency; rulers and county or settlement communities converted
   long before (and regardless of) literacy or law innovations. A later independently gateable
   administrative improvement must receive its own review instead of gating the baseline.
+
+## Declarative events and ruler policy
+
+Community-aware events test the live saved population rather than bookmark labels. County
+and settlement triggers cover dominant culture or faith, an identity’s minimum/maximum
+share, mixed-population thresholds, and active/inactive project state. Settlement checks
+must retain a numeric slot, `$context`, or `$home`; county checks resolve an explicit
+province, the snapshotted event location, then the player’s home.
+
+Event transfers accept exactly one positive integer `amount` or fractional `rate` and call
+`FB.convertCountyCommunity` or `FB.convertSettlementCommunity`. `communityMigration`,
+`communityExpulsion`, and `communityResettlement` preserve the selected culture-faith
+cohorts through `FB.moveCommunityPopulationByPolicy`; expulsion must name the affected
+community. County and settlement project start/stop effects call the same project boundaries
+as Land. None of these outcomes changes a realm, named character, or political faith.
+
+AI rulers consider county-wide projects once per year after demographic resolution. A
+ruler must directly hold the county; the ruler’s identity must already represent at least
+12% of a stable local population; and a capital, a 25% local base, or a durable
+`defend_faith`/`strengthen_crown` aim must supply a motive. War, occupation, high unrest,
+and an existing project exclude a candidate. Related communities tend toward integrative
+policy, unrelated communities toward voluntary policy, and coercion is reserved for a
+zealous defender confronting a hostile faith under unusually stable conditions. A saved-RNG
+16% annual choice and a four-project world cap keep intervention sparse. These values are
+data-driven under the `countyCommunityAI*` balance keys.
+
+`FB.observeCommunityProject` is a read-only 25/50/100-year calibration helper. It clones the
+serializable campaign and runs the real project resolver without world simulation or RNG;
+`FB.populationSaveDiagnostics` reports serialized population bytes, materialized settlement
+matrices, cohorts, and projects. Calibration covers both bookmarks and deliberately expects
+mixed communities to persist for generations. The reusable situations in
+`data/events_communities.js` are informed by Nora Berend’s *Christianization and the Rise of
+Christian Monarchy* ([Cambridge excerpt](https://assets.cambridge.org/97805218/76162/excerpt/9780521876162_excerpt.pdf)),
+Miri Rubin’s [*Cities of Strangers*](https://www.cambridge.org/core/books/cities-of-strangers/DF614DA2B1B257B2F771EE9C412550E3),
+and the Cambridge Economic History chapter
+[“Settlement and Colonization of Europe”](https://www.cambridge.org/core/books/abs/cambridge-economic-history-of-europe-from-the-decline-of-the-roman-empire/settlement-and-colonization-of-europe/82F19CC44B726D691C367968AACCFB2F): gradual adoption, elite sponsorship,
+frontier resettlement, durable urban minorities, and coercive flight remain choices rather
+than scripted geographic outcomes. The annual agency pass may queue at most one currently
+valid player-relevant situation, with a 10% roll and an eight-year saved cooldown; opening or
+ignoring a different county never retargets the queued context.

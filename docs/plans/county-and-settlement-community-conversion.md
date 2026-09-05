@@ -1,6 +1,6 @@
 # Plan: live county and settlement community conversion
 
-Status: in progress — Milestones 1–6 implemented; Milestone 7 remains
+Status: implemented — Milestones 1–7 complete
 Baseline: Fallowborn v1.168.12, 2026-09-05
 
 ## Purpose
@@ -489,7 +489,7 @@ Exit criteria:
 - remote settlement browsing remains read-only and consumes no RNG;
 - settlement names and existing local characters remain stable.
 
-### Milestone 7: events, AI, historical calibration, and release
+### Milestone 7: events, AI, historical calibration, and release — implemented
 
 Primary files:
 

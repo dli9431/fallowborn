@@ -1095,6 +1095,303 @@ window.FB = window.FB || {};
     return true;
   };
 
+  function communityEventReferences(refs) {
+    if (refs) return refs;
+    const provinces = {};
+    for (let i = 0; i < (FBDATA.provinces || []).length; i++) {
+      const province = FBDATA.provinces[i];
+      if (province && province.id) provinces[province.id] = province;
+    }
+    return {
+      cultures:FBDATA.cultures || {},
+      religions:FBDATA.religions || {},
+      provinces:provinces,
+      policies:FBDATA.countyCommunityPolicies || {}
+    };
+  }
+
+  function communityEventProvinceError(value, refs, field) {
+    if (value === undefined || value === '$context' || value === '$home' ||
+        value === '$destination' || value === 'context' || value === 'home' ||
+        value === 'destination') return '';
+    return typeof value === 'string' && refs.provinces[value] ? '' :
+      field + ' must name a known province, $context, $home, or $destination.';
+  }
+
+  function communityEventSettlementError(value, field) {
+    if (value === undefined || value === '$context' || value === '$home' ||
+        value === 'context' || value === 'home') return '';
+    return typeof value === 'number' && isFinite(value) && value >= 0 &&
+      Math.floor(value) === value ? '' :
+      field + ' must be a non-negative integer, $context, or $home.';
+  }
+
+  function communityEventIdentityError(kind, target, refs, field) {
+    if (kind !== 'culture' && kind !== 'faith') {
+      return field + '.kind must be culture or faith.';
+    }
+    const table = kind === 'faith' ? refs.religions : refs.cultures;
+    return typeof target === 'string' && table[target] ? '' :
+      field + '.target must name a known ' + kind + '.';
+  }
+
+  function communityEventBoundError(spec, field) {
+    const hasAmount = spec.amount !== undefined;
+    const hasRate = spec.rate !== undefined;
+    if (hasAmount === hasRate) {
+      return field + ' must declare exactly one of amount or rate.';
+    }
+    if (hasAmount && (typeof spec.amount !== 'number' ||
+        !isFinite(spec.amount) || spec.amount <= 0 ||
+        Math.floor(spec.amount) !== spec.amount)) {
+      return field + '.amount must be a positive integer.';
+    }
+    if (hasRate && (typeof spec.rate !== 'number' ||
+        !isFinite(spec.rate) || spec.rate <= 0 || spec.rate > 1)) {
+      return field + '.rate must be greater than 0 and at most 1.';
+    }
+    return '';
+  }
+
+  function communityEventTriggerError(trigger, refs, field) {
+    if (!trigger) return '';
+    for (const dominant of ['countyCulture','countyFaith']) {
+      if (trigger[dominant] === undefined) continue;
+      const kind = dominant === 'countyFaith' ? 'faith' : 'culture';
+      const error = communityEventIdentityError(
+        kind, trigger[dominant], refs, field + '.' + dominant);
+      if (error) return error;
+    }
+    for (const dominant of ['settlementCulture','settlementFaith']) {
+      if (trigger[dominant] === undefined) continue;
+      const value = trigger[dominant];
+      const spec = typeof value === 'string' ? { target:value } : value;
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
+        return field + '.' + dominant + ' must be a target id or object.';
+      }
+      const kind = dominant === 'settlementFaith' ? 'faith' : 'culture';
+      let error = communityEventIdentityError(
+        kind, spec.target, refs, field + '.' + dominant);
+      if (!error) error = communityEventProvinceError(
+        spec.provinceId, refs, field + '.' + dominant + '.provinceId');
+      if (!error) error = communityEventSettlementError(
+        spec.settlement, field + '.' + dominant + '.settlement');
+      if (error) return error;
+    }
+    for (const key of ['countyCommunityShare','settlementCommunityShare']) {
+      const spec = trigger[key];
+      if (spec === undefined) continue;
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
+        return field + '.' + key + ' must be an object.';
+      }
+      let error = communityEventIdentityError(
+        spec.kind, spec.target, refs, field + '.' + key);
+      if (!error && spec.min === undefined && spec.max === undefined) {
+        error = field + '.' + key + ' must declare min or max.';
+      }
+      for (const bound of ['min','max']) {
+        if (!error && spec[bound] !== undefined &&
+            (typeof spec[bound] !== 'number' || !isFinite(spec[bound]) ||
+            spec[bound] < 0 || spec[bound] > 1)) {
+          error = field + '.' + key + '.' + bound +
+            ' must be from 0 to 1.';
+        }
+      }
+      if (!error && spec.min !== undefined && spec.max !== undefined &&
+          spec.min > spec.max) {
+        error = field + '.' + key + '.min must not exceed max.';
+      }
+      if (!error) error = communityEventProvinceError(
+        spec.provinceId, refs, field + '.' + key + '.provinceId');
+      if (!error && key === 'settlementCommunityShare') {
+        error = communityEventSettlementError(
+          spec.settlement, field + '.' + key + '.settlement');
+      }
+      if (error) return error;
+    }
+    for (const key of ['countyCommunityMixed','settlementCommunityMixed']) {
+      const spec = trigger[key];
+      if (spec === undefined) continue;
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec) ||
+          (spec.kind !== 'culture' && spec.kind !== 'faith')) {
+        return field + '.' + key + '.kind must be culture or faith.';
+      }
+      if (spec.minCommunities !== undefined &&
+          (typeof spec.minCommunities !== 'number' ||
+          Math.floor(spec.minCommunities) !== spec.minCommunities ||
+          spec.minCommunities < 2)) {
+        return field + '.' + key +
+          '.minCommunities must be an integer of at least 2.';
+      }
+      if (spec.minorityShareMin !== undefined &&
+          (typeof spec.minorityShareMin !== 'number' ||
+          !isFinite(spec.minorityShareMin) ||
+          spec.minorityShareMin < 0 || spec.minorityShareMin > 1)) {
+        return field + '.' + key +
+          '.minorityShareMin must be from 0 to 1.';
+      }
+      let error = communityEventProvinceError(
+        spec.provinceId, refs, field + '.' + key + '.provinceId');
+      if (!error && key === 'settlementCommunityMixed') {
+        error = communityEventSettlementError(
+          spec.settlement, field + '.' + key + '.settlement');
+      }
+      if (error) return error;
+    }
+    for (const key of ['countyCommunityProject','settlementCommunityProject']) {
+      const spec = trigger[key];
+      if (spec === undefined) continue;
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec) ||
+          (spec.kind !== 'culture' && spec.kind !== 'faith')) {
+        return field + '.' + key + '.kind must be culture or faith.';
+      }
+      if (spec.active !== undefined && typeof spec.active !== 'boolean') {
+        return field + '.' + key + '.active must be boolean.';
+      }
+      if (spec.target !== undefined) {
+        const error = communityEventIdentityError(
+          spec.kind, spec.target, refs, field + '.' + key);
+        if (error) return error;
+      }
+      if (spec.policy !== undefined && !refs.policies[spec.policy]) {
+        return field + '.' + key + '.policy must name a known policy.';
+      }
+      let error = communityEventProvinceError(
+        spec.provinceId, refs, field + '.' + key + '.provinceId');
+      if (!error && key === 'settlementCommunityProject') {
+        error = communityEventSettlementError(
+          spec.settlement, field + '.' + key + '.settlement');
+      }
+      if (error) return error;
+    }
+    return '';
+  }
+
+  function communityEventEffectsError(effects, refs, field) {
+    if (!effects) return '';
+    for (const key of ['countyCommunityTransfer',
+        'settlementCommunityTransfer']) {
+      const spec = effects[key];
+      if (spec === undefined) continue;
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
+        return field + '.' + key + ' must be an object.';
+      }
+      let error = communityEventIdentityError(
+        spec.kind, spec.target, refs, field + '.' + key);
+      if (!error && spec.source !== undefined) {
+        error = communityEventIdentityError(
+          spec.kind, spec.source, refs, field + '.' + key + '.source');
+      }
+      if (!error) error = communityEventBoundError(spec, field + '.' + key);
+      if (!error) error = communityEventProvinceError(
+        spec.provinceId, refs, field + '.' + key + '.provinceId');
+      if (!error && key === 'settlementCommunityTransfer') {
+        error = communityEventSettlementError(
+          spec.settlement, field + '.' + key + '.settlement');
+      }
+      if (error) return error;
+    }
+    for (const key of ['communityMigration','communityExpulsion',
+        'communityResettlement']) {
+      const spec = effects[key];
+      if (spec === undefined) continue;
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
+        return field + '.' + key + ' must be an object.';
+      }
+      let error = communityEventBoundError(spec, field + '.' + key);
+      if (!error) error = communityEventProvinceError(
+        spec.fromProvinceId, refs, field + '.' + key + '.fromProvinceId');
+      if (!error) error = communityEventProvinceError(
+        spec.toProvinceId, refs, field + '.' + key + '.toProvinceId');
+      if (!error) error = communityEventSettlementError(
+        spec.fromSettlement, field + '.' + key + '.fromSettlement');
+      if (!error) error = communityEventSettlementError(
+        spec.toSettlement, field + '.' + key + '.toSettlement');
+      if (!error && spec.community !== undefined) {
+        const community = spec.community;
+        if (!community || typeof community !== 'object' ||
+            Array.isArray(community) ||
+            (!community.culture && !community.religion)) {
+          error = field + '.' + key +
+            '.community must name a culture, a religion, or both.';
+        } else if (community.culture && !refs.cultures[community.culture]) {
+          error = field + '.' + key +
+            '.community.culture must name a known culture.';
+        } else if (community.religion &&
+            !refs.religions[community.religion]) {
+          error = field + '.' + key +
+            '.community.religion must name a known faith.';
+        }
+      }
+      if (!error && key === 'communityExpulsion' && !spec.community) {
+        error = field + '.' + key +
+          ' must identify the community being expelled.';
+      }
+      if (error) return error;
+    }
+    for (const key of ['countyCommunityProject','settlementCommunityProject']) {
+      const spec = effects[key];
+      if (spec === undefined) continue;
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
+        return field + '.' + key + ' must be an object.';
+      }
+      let error = communityEventIdentityError(
+        spec.kind, spec.target, refs, field + '.' + key);
+      if (!error && !refs.policies[spec.policy]) {
+        error = field + '.' + key + '.policy must name a known policy.';
+      }
+      if (!error) error = communityEventProvinceError(
+        spec.provinceId, refs, field + '.' + key + '.provinceId');
+      if (!error && key === 'settlementCommunityProject') {
+        error = communityEventSettlementError(
+          spec.settlement, field + '.' + key + '.settlement');
+      }
+      if (error) return error;
+    }
+    for (const key of ['stopCountyCommunityProject',
+        'stopSettlementCommunityProject']) {
+      let spec = effects[key];
+      if (spec === undefined) continue;
+      if (typeof spec === 'string' && key === 'stopCountyCommunityProject') {
+        spec = { kind:spec };
+      }
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec) ||
+          (spec.kind !== 'culture' && spec.kind !== 'faith')) {
+        return field + '.' + key + '.kind must be culture or faith.';
+      }
+      let error = communityEventProvinceError(
+        spec.provinceId, refs, field + '.' + key + '.provinceId');
+      if (!error && key === 'stopSettlementCommunityProject') {
+        error = communityEventSettlementError(
+          spec.settlement, field + '.' + key + '.settlement');
+      }
+      if (error) return error;
+    }
+    return '';
+  }
+
+  FB.validateCommunityEvent = function (ev, referenceTables) {
+    if (!ev) return true;
+    const refs = communityEventReferences(referenceTables);
+    let error = communityEventTriggerError(ev.trigger, refs, 'trigger');
+    if (error) throw new Error(error);
+    for (let i = 0; i < (ev.options || []).length; i++) {
+      const option = ev.options[i] || {};
+      error = communityEventTriggerError(
+        option.require, refs, 'options[' + i + '].require');
+      if (error) throw new Error(error);
+      const branches = [option.effects,
+        option.success && option.success.effects,
+        option.failure && option.failure.effects];
+      for (let j = 0; j < branches.length; j++) {
+        error = communityEventEffectsError(
+          branches[j], refs, 'options[' + i + '].effects');
+        if (error) throw new Error(error);
+      }
+    }
+    return true;
+  };
+
   function educationStudentEffectError(value, traits) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       return 'student must be an object.';
@@ -4399,6 +4696,117 @@ window.FB = window.FB || {};
     return values[key];
   }
 
+  function communityEventProvinceId(state, ctx, value) {
+    if (!state || !state.player) return null;
+    if (!value || value === '$context' || value === 'context') {
+      return ctx && (ctx.locationId || ctx.provinceId || ctx.pid) ||
+        state.player.provinceId;
+    }
+    if (value === '$home' || value === 'home') {
+      return state.player.provinceId;
+    }
+    if (value === '$destination' || value === 'destination') {
+      return ctx && ctx.destinationId || null;
+    }
+    return value;
+  }
+
+  function communityEventSettlementIndex(state, ctx, spec) {
+    let value = spec && typeof spec === 'object'
+      ? spec.settlement : undefined;
+    if (value === undefined || value === '$context' || value === 'context') {
+      value = ctx && ctx.settlementIndex;
+    } else if (value === '$home' || value === 'home') {
+      value = state && state.player && state.player.homeSettlement;
+      if (value === undefined && state && state.player) {
+        value = state.player.settlement;
+      }
+      if (value === undefined) value = 0;
+    }
+    value = Number(value);
+    return isFinite(value) && Math.floor(value) === value && value >= 0
+      ? value : null;
+  }
+
+  function communityEventAxisStats(communities, kind, target) {
+    const field = kind === 'faith' ? 'religion' : 'culture';
+    let total = 0;
+    let matching = 0;
+    const shares = {};
+    for (let i = 0; i < communities.length; i++) {
+      const community = communities[i];
+      const count = Math.max(0, Math.round(Number(community.count) || 0));
+      total += count;
+      shares[community[field]] = (shares[community[field]] || 0) + count;
+      if (community[field] === target) matching += count;
+    }
+    let largest = 0;
+    let identities = 0;
+    for (const id in shares) {
+      if (!shares[id]) continue;
+      identities++;
+      largest = Math.max(largest, shares[id]);
+    }
+    return {
+      total:total,
+      share:total ? matching / total : 0,
+      identities:identities,
+      minorityShare:total ? 1 - largest / total : 0
+    };
+  }
+
+  function communityShareTriggerPasses(state, ctx, spec, settlement) {
+    if (!spec || (spec.kind !== 'culture' && spec.kind !== 'faith') ||
+        typeof spec.target !== 'string') return false;
+    const pid = communityEventProvinceId(state, ctx, spec.provinceId);
+    const idx = settlement
+      ? communityEventSettlementIndex(state, ctx, spec) : null;
+    if (!pid || (settlement && idx === null)) return false;
+    const communities = settlement
+      ? FB.settlementCommunities(state, pid, idx)
+      : FB.countyCommunities(state, pid);
+    const stats = communityEventAxisStats(
+      communities, spec.kind, spec.target);
+    if (!stats.total) return false;
+    if (spec.min !== undefined && stats.share < Number(spec.min)) return false;
+    if (spec.max !== undefined && stats.share > Number(spec.max)) return false;
+    return true;
+  }
+
+  function communityMixedTriggerPasses(state, ctx, spec, settlement) {
+    if (!spec || (spec.kind !== 'culture' && spec.kind !== 'faith')) return false;
+    const pid = communityEventProvinceId(state, ctx, spec.provinceId);
+    const idx = settlement
+      ? communityEventSettlementIndex(state, ctx, spec) : null;
+    if (!pid || (settlement && idx === null)) return false;
+    const communities = settlement
+      ? FB.settlementCommunities(state, pid, idx)
+      : FB.countyCommunities(state, pid);
+    const stats = communityEventAxisStats(communities, spec.kind, null);
+    const minimum = spec.minCommunities === undefined
+      ? 2 : Math.max(2, Math.round(Number(spec.minCommunities) || 2));
+    const minority = spec.minorityShareMin === undefined
+      ? 0 : Number(spec.minorityShareMin);
+    return stats.identities >= minimum && stats.minorityShare >= minority;
+  }
+
+  function communityProjectTriggerPasses(state, ctx, spec, settlement) {
+    if (!spec || (spec.kind !== 'culture' && spec.kind !== 'faith')) return false;
+    const pid = communityEventProvinceId(state, ctx, spec.provinceId);
+    const idx = settlement
+      ? communityEventSettlementIndex(state, ctx, spec) : null;
+    if (!pid || (settlement && idx === null)) return false;
+    const project = settlement
+      ? FB.settlementCommunityProject(state, pid, idx, spec.kind)
+      : FB.countyCommunityProject(state, pid, spec.kind);
+    const expectedActive = spec.active === undefined ? true : !!spec.active;
+    if (!!project !== expectedActive) return false;
+    if (!project) return true;
+    if (spec.target && project.target !== spec.target) return false;
+    if (spec.policy && project.policy !== spec.policy) return false;
+    return true;
+  }
+
   /* Random-event selection evaluates hundreds of immutable definitions in
      one synchronous pass. The optional snapshot retains shared, pure reads
      for that pass only; standalone trigger checks keep their old behavior. */
@@ -4549,6 +4957,42 @@ window.FB = window.FB || {};
       if (!provinceCulture ||
           tg.provinceCultures.indexOf(provinceCulture) < 0) return false;
     }
+    if (tg.countyCulture && (!FB.countyCulture ||
+        FB.countyCulture(state, provinceId) !== tg.countyCulture)) return false;
+    if (tg.countyFaith && (!FB.countyReligion ||
+        FB.countyReligion(state, provinceId) !== tg.countyFaith)) return false;
+    if (tg.settlementCulture) {
+      const spec = typeof tg.settlementCulture === 'string'
+        ? { target:tg.settlementCulture } : tg.settlementCulture;
+      const settlementPid = communityEventProvinceId(
+        state, ctx, spec && spec.provinceId);
+      const settlementIndex = communityEventSettlementIndex(state, ctx, spec);
+      if (settlementIndex === null || !FB.settlementCulture ||
+          FB.settlementCulture(state, settlementPid, settlementIndex) !==
+            spec.target) return false;
+    }
+    if (tg.settlementFaith) {
+      const spec = typeof tg.settlementFaith === 'string'
+        ? { target:tg.settlementFaith } : tg.settlementFaith;
+      const settlementPid = communityEventProvinceId(
+        state, ctx, spec && spec.provinceId);
+      const settlementIndex = communityEventSettlementIndex(state, ctx, spec);
+      if (settlementIndex === null || !FB.settlementReligion ||
+          FB.settlementReligion(state, settlementPid, settlementIndex) !==
+            spec.target) return false;
+    }
+    if (tg.countyCommunityShare && !communityShareTriggerPasses(
+        state, ctx, tg.countyCommunityShare, false)) return false;
+    if (tg.settlementCommunityShare && !communityShareTriggerPasses(
+        state, ctx, tg.settlementCommunityShare, true)) return false;
+    if (tg.countyCommunityMixed && !communityMixedTriggerPasses(
+        state, ctx, tg.countyCommunityMixed, false)) return false;
+    if (tg.settlementCommunityMixed && !communityMixedTriggerPasses(
+        state, ctx, tg.settlementCommunityMixed, true)) return false;
+    if (tg.countyCommunityProject && !communityProjectTriggerPasses(
+        state, ctx, tg.countyCommunityProject, false)) return false;
+    if (tg.settlementCommunityProject && !communityProjectTriggerPasses(
+        state, ctx, tg.settlementCommunityProject, true)) return false;
     if (tg.terrains && (!pr || tg.terrains.indexOf(pr.terrain) < 0)) return false;
     if (tg.coastal && (!pr || !pr.coastal)) return false;
     if (tg.atWar !== undefined && (!!p.war) !== tg.atWar) return false;
@@ -4978,6 +5422,7 @@ window.FB = window.FB || {};
         validateEventSerfFreedomEffects(ev);
         FB.validateEventParticipants(ev);
         FB.validateEducationEvent(ev);
+        FB.validateCommunityEvent(ev);
         if (!ev.trigger || ev.trigger.never) continue;
         randomEventPools.ordinary.push(ev);
         if (ev.wartime) randomEventPools.wartime.push(ev);
@@ -5113,6 +5558,7 @@ window.FB = window.FB || {};
         validateEventSerfFreedomEffects(ev);
         FB.validateEventParticipants(ev);
         FB.validateEducationEvent(ev);
+        FB.validateCommunityEvent(ev);
         eventIndex[ev.id] = ev;
       }
     }
@@ -8394,8 +8840,10 @@ window.FB = window.FB || {};
     'educateChild','moveRandom','travelReturn','travelSettle','foundFaith',
     'faithRelation','convertToProvince','declareIndependence','pickHeir','queue',
     'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate',
-    'populationCommunity','countyCommunityTransfer','countyCommunityProject',
-    'stopCountyCommunityProject','tenureEnd',
+    'populationCommunity','countyCommunityTransfer','settlementCommunityTransfer',
+    'communityMigration','communityExpulsion','communityResettlement',
+    'countyCommunityProject','settlementCommunityProject',
+    'stopCountyCommunityProject','stopSettlementCommunityProject','tenureEnd',
     'serfFreedom','student'
   ];
   FB.eventPreviewEffectKeys = {};
@@ -8945,12 +9393,48 @@ window.FB = window.FB || {};
         variable:fx.countyCommunityTransfer.rate !== undefined
       }));
     }
+    if (fx.settlementCommunityTransfer) {
+      out.push(impact('population', {
+        action:'settlement_community_transfer',
+        kind:fx.settlementCommunityTransfer.kind,
+        target:fx.settlementCommunityTransfer.target,
+        amount:fx.settlementCommunityTransfer.amount,
+        rate:fx.settlementCommunityTransfer.rate,
+        settlement:fx.settlementCommunityTransfer.settlement,
+        permanent:true,
+        variable:fx.settlementCommunityTransfer.rate !== undefined
+      }));
+    }
+    for (const movementKey of ['communityMigration','communityExpulsion',
+        'communityResettlement']) {
+      if (!fx[movementKey]) continue;
+      const movement = fx[movementKey];
+      out.push(impact('population', {
+        action:movementKey === 'communityMigration' ? 'migration' :
+          (movementKey === 'communityExpulsion' ? 'expulsion' : 'resettlement'),
+        amount:movement.amount,
+        rate:movement.rate,
+        community:movement.community,
+        permanent:true,
+        variable:movement.rate !== undefined
+      }));
+    }
     if (fx.countyCommunityProject) {
       out.push(impact('population', {
         action:'community_project_start',
         kind:fx.countyCommunityProject.kind,
         target:fx.countyCommunityProject.target,
         policy:fx.countyCommunityProject.policy,
+        permanent:true
+      }));
+    }
+    if (fx.settlementCommunityProject) {
+      out.push(impact('population', {
+        action:'settlement_community_project_start',
+        kind:fx.settlementCommunityProject.kind,
+        target:fx.settlementCommunityProject.target,
+        policy:fx.settlementCommunityProject.policy,
+        settlement:fx.settlementCommunityProject.settlement,
         permanent:true
       }));
     }
@@ -8961,6 +9445,13 @@ window.FB = window.FB || {};
       if (stopped) out.push(impact('population', {
           action:'community_project_stop', kind:stopped, permanent:true
         }));
+    }
+    if (fx.stopSettlementCommunityProject) {
+      const stopped = fx.stopSettlementCommunityProject;
+      if (stopped.kind) out.push(impact('population', {
+        action:'settlement_community_project_stop', kind:stopped.kind,
+        settlement:stopped.settlement, permanent:true
+      }));
     }
     if (fx.addModifier) {
       const addSpec = modifierSpec(fx.addModifier);
@@ -9875,6 +10366,41 @@ window.FB = window.FB || {};
         return record.kind === 'culture'
           ? FB.T('County culture shifts') : FB.T('County faith shifts');
       }
+      if (record.action === 'settlement_community_project_start') {
+        return record.kind === 'culture'
+          ? FB.T('Begin a local assimilation project')
+          : FB.T('Begin a local faith-conversion project');
+      }
+      if (record.action === 'settlement_community_project_stop') {
+        return record.kind === 'culture'
+          ? FB.T('Stop the local assimilation project')
+          : FB.T('Stop the local faith-conversion project');
+      }
+      if (record.action === 'settlement_community_transfer') {
+        return record.kind === 'culture'
+          ? FB.T('Settlement culture shifts')
+          : FB.T('Settlement faith shifts');
+      }
+      if (record.action === 'migration' || record.action === 'expulsion' ||
+          record.action === 'resettlement') {
+        const labels = {
+          migration:'Migration between counties',
+          expulsion:'Community expelled to another county',
+          resettlement:'Community resettled in another county'
+        };
+        if (record.rate !== undefined && !resolved) {
+          return FB.T('{movement} ({rate}% of the named community)', {
+            movement:FB.T(labels[record.action]),
+            rate:Math.round(Math.abs(Number(record.rate) || 0) * 100)
+          });
+        }
+        const moved = record.amount;
+        return moved !== undefined
+          ? FB.T('{movement} ({amount} people)', {
+            movement:FB.T(labels[record.action]), amount:Math.abs(moved)
+          })
+          : FB.T(labels[record.action]);
+      }
       if (record.rate !== undefined) {
         return FB.T('Population loss ({rate}%)', {
           rate: Math.round(Math.abs(Number(record.rate) || 0) * 100)
@@ -10069,6 +10595,7 @@ window.FB = window.FB || {};
     let appliedPricePressure = false;
     let appliedMarketShock = false;
     let appliedCommunityTransfer = null;
+    const appliedCommunityMovements = [];
     let appliedCommunityProject = null;
     let stoppedCommunityProject = null;
     const p = state.player;
@@ -10352,8 +10879,8 @@ window.FB = window.FB || {};
     }
     if (fx.countyCommunityTransfer && FB.convertCountyCommunity) {
       const spec = fx.countyCommunityTransfer;
-      const targetPid = spec.provinceId || fx.provinceId ||
-        ctx.locationId || ctx.provinceId || p.provinceId;
+      const targetPid = communityEventProvinceId(state, ctx,
+        spec.provinceId || fx.provinceId);
       const result = FB.convertCountyCommunity(state, targetPid, {
         kind:spec.kind,
         target:spec.target,
@@ -10369,10 +10896,71 @@ window.FB = window.FB || {};
         };
       }
     }
+    if (fx.settlementCommunityTransfer && FB.convertSettlementCommunity) {
+      const spec = fx.settlementCommunityTransfer;
+      const targetPid = communityEventProvinceId(state, ctx,
+        spec.provinceId || fx.provinceId);
+      const settlementIndex = communityEventSettlementIndex(state, ctx, spec);
+      const result = settlementIndex === null ? null :
+        FB.convertSettlementCommunity(state, targetPid, settlementIndex, {
+          kind:spec.kind,
+          target:spec.target,
+          source:spec.source,
+          amount:spec.amount,
+          rate:spec.rate,
+          cause:spec.cause || 'event settlement community transfer'
+        });
+      if (result && result.count) {
+        appliedCommunityTransfer = {
+          pid:targetPid, settlement:settlementIndex, kind:spec.kind,
+          target:spec.target, count:result.count
+        };
+      }
+    }
+    const movementEffects = [
+      ['communityMigration','migration'],
+      ['communityExpulsion','expulsion'],
+      ['communityResettlement','resettlement']
+    ];
+    for (let movementIndex = 0; movementIndex < movementEffects.length;
+         movementIndex++) {
+      const movementKey = movementEffects[movementIndex][0];
+      const movementAction = movementEffects[movementIndex][1];
+      const spec = fx[movementKey];
+      if (!spec || !FB.moveCommunityPopulationByPolicy) continue;
+      const fromPid = communityEventProvinceId(state, ctx,
+        spec.fromProvinceId || '$context');
+      const toPid = communityEventProvinceId(state, ctx,
+        spec.toProvinceId || '$home');
+      const fromSettlement = spec.fromSettlement === undefined ? undefined :
+        communityEventSettlementIndex(state, ctx,
+          { settlement:spec.fromSettlement });
+      const toSettlement = spec.toSettlement === undefined ? undefined :
+        communityEventSettlementIndex(state, ctx,
+          { settlement:spec.toSettlement });
+      if ((spec.fromSettlement !== undefined && fromSettlement === null) ||
+          (spec.toSettlement !== undefined && toSettlement === null)) continue;
+      const result = FB.moveCommunityPopulationByPolicy(
+        state, fromPid, toPid, {
+          community:spec.community,
+          amount:spec.amount,
+          rate:spec.rate,
+          fromSettlement:fromSettlement,
+          toSettlement:toSettlement,
+          cause:spec.cause || 'event community ' + movementAction
+        });
+      if (result && result.count) appliedCommunityMovements.push({
+        action:movementAction,
+        fromPid:fromPid,
+        toPid:toPid,
+        count:result.count,
+        cohorts:result.cohorts
+      });
+    }
     if (fx.countyCommunityProject && FB.startCountyCommunityProject) {
       const spec = fx.countyCommunityProject;
-      const targetPid = spec.provinceId || fx.provinceId ||
-        ctx.locationId || ctx.provinceId || p.provinceId;
+      const targetPid = communityEventProvinceId(state, ctx,
+        spec.provinceId || fx.provinceId);
       let sponsor = spec.sponsor;
       if (!sponsor || sponsor === '$owner') {
         sponsor = state.owner && state.owner[targetPid];
@@ -10390,14 +10978,47 @@ window.FB = window.FB || {};
         };
       }
     }
+    if (fx.settlementCommunityProject && FB.startSettlementCommunityProject) {
+      const spec = fx.settlementCommunityProject;
+      const targetPid = communityEventProvinceId(state, ctx,
+        spec.provinceId || fx.provinceId);
+      const settlementIndex = communityEventSettlementIndex(state, ctx, spec);
+      let sponsor = spec.sponsor;
+      if (!sponsor || sponsor === '$owner') {
+        sponsor = state.owner && state.owner[targetPid];
+      } else if (sponsor === '$player') sponsor = 'player';
+      const project = settlementIndex === null ? null :
+        FB.startSettlementCommunityProject(state, targetPid,
+          settlementIndex, {
+            kind:spec.kind, target:spec.target,
+            policy:spec.policy, sponsor:sponsor
+          });
+      if (project) appliedCommunityProject = {
+        pid:targetPid, settlement:settlementIndex, kind:spec.kind,
+        target:spec.target, policy:spec.policy
+      };
+    }
     if (fx.stopCountyCommunityProject && FB.stopCountyCommunityProject) {
       const spec = typeof fx.stopCountyCommunityProject === 'string'
         ? { kind:fx.stopCountyCommunityProject }
         : fx.stopCountyCommunityProject;
-      const targetPid = spec.provinceId || fx.provinceId ||
-        ctx.locationId || ctx.provinceId || p.provinceId;
+      const targetPid = communityEventProvinceId(state, ctx,
+        spec.provinceId || fx.provinceId);
       if (FB.stopCountyCommunityProject(state, targetPid, spec.kind)) {
         stoppedCommunityProject = { pid:targetPid, kind:spec.kind };
+      }
+    }
+    if (fx.stopSettlementCommunityProject &&
+        FB.stopSettlementCommunityProject) {
+      const spec = fx.stopSettlementCommunityProject;
+      const targetPid = communityEventProvinceId(state, ctx,
+        spec.provinceId || fx.provinceId);
+      const settlementIndex = communityEventSettlementIndex(state, ctx, spec);
+      if (settlementIndex !== null && FB.stopSettlementCommunityProject(
+          state, targetPid, settlementIndex, spec.kind)) {
+        stoppedCommunityProject = {
+          pid:targetPid, settlement:settlementIndex, kind:spec.kind
+        };
       }
     }
     if (fx.research) appliedResearch = FB.addResearch(state, fx.research) || 0;
@@ -10584,17 +11205,34 @@ window.FB = window.FB || {};
       resolved:true
     }));
     if (appliedCommunityTransfer) ledger.push(impact('population', {
-      action:'community_transfer',
+      action:appliedCommunityTransfer.settlement === undefined
+        ? 'community_transfer' : 'settlement_community_transfer',
       pid:appliedCommunityTransfer.pid,
+      settlement:appliedCommunityTransfer.settlement,
       kind:appliedCommunityTransfer.kind,
       target:appliedCommunityTransfer.target,
       amount:appliedCommunityTransfer.count,
       permanent:true,
       resolved:true
     }));
+    for (let movementIndex = 0; movementIndex < appliedCommunityMovements.length;
+         movementIndex++) {
+      const movement = appliedCommunityMovements[movementIndex];
+      ledger.push(impact('population', {
+        action:movement.action,
+        fromPid:movement.fromPid,
+        toPid:movement.toPid,
+        amount:movement.count,
+        cohorts:movement.cohorts,
+        permanent:true,
+        resolved:true
+      }));
+    }
     if (appliedCommunityProject) ledger.push(impact('population', {
-      action:'community_project_start',
+      action:appliedCommunityProject.settlement === undefined
+        ? 'community_project_start' : 'settlement_community_project_start',
       pid:appliedCommunityProject.pid,
+      settlement:appliedCommunityProject.settlement,
       kind:appliedCommunityProject.kind,
       target:appliedCommunityProject.target,
       policy:appliedCommunityProject.policy,
@@ -10602,8 +11240,10 @@ window.FB = window.FB || {};
       resolved:true
     }));
     if (stoppedCommunityProject) ledger.push(impact('population', {
-      action:'community_project_stop',
+      action:stoppedCommunityProject.settlement === undefined
+        ? 'community_project_stop' : 'settlement_community_project_stop',
       pid:stoppedCommunityProject.pid,
+      settlement:stoppedCommunityProject.settlement,
       kind:stoppedCommunityProject.kind,
       permanent:true,
       resolved:true

@@ -157,6 +157,14 @@ window.FB = window.FB || {};
         Array.isArray(agency.relations)) agency.relations = {};
     if (!agency.rebelSupport || typeof agency.rebelSupport !== 'object' ||
         Array.isArray(agency.rebelSupport)) agency.rebelSupport = {};
+    if (agency.lastCommunitySituationYear !== undefined) {
+      var situationYear = Number(agency.lastCommunitySituationYear);
+      if (!isFinite(situationYear)) delete agency.lastCommunitySituationYear;
+      else agency.lastCommunitySituationYear = FB.clamp(
+        Math.round(situationYear),
+        state.start && Number(state.start.year) || state.date.year,
+        state.date.year);
+    }
 
     var liveRulers = {};
     for (var rid in state.realms) {
@@ -1056,6 +1064,249 @@ window.FB = window.FB || {};
     return Math.max(1, Number(support.multiplier) || 1);
   };
 
+  function communityAxisShare(communities, kind, target) {
+    var field = kind === 'faith' ? 'religion' : 'culture';
+    var total = 0;
+    var matching = 0;
+    for (var i = 0; i < communities.length; i++) {
+      total += communities[i].count;
+      if (communities[i][field] === target) matching += communities[i].count;
+    }
+    return total ? matching / total : 0;
+  }
+
+  function communityAIRulerIdentity(state, rid) {
+    var realm = state.realms[rid];
+    var character = rulerCharacter(state, rid);
+    return {
+      culture:character && character.culture ||
+        realm && realm.ruler && realm.ruler.culture || null,
+      faith:realmReligion(state, rid),
+      traits:Array.isArray(character && character.traits)
+        ? character.traits : (Array.isArray(
+          realm && realm.ruler && realm.ruler.traits)
+          ? realm.ruler.traits : [])
+    };
+  }
+
+  /* Pure candidate projection for diagnostics and tests. Difference from a
+     ruler is deliberately insufficient: the ruler must directly hold the
+     county, the target community must already be substantial, the county
+     must be stable, and a capital, strong local base, or durable ruler aim
+     must provide a political reason to intervene. */
+  FB.communityProjectAICandidates = function (state) {
+    var out = [];
+    if (!state || !state.realms || !FB.countyCommunities ||
+        !FB.countyCommunityProjectPreview) return out;
+    var B = FBDATA.balance || {};
+    var configuredPopulation = Number(B.countyCommunityAIMinPopulation);
+    var configuredShare = Number(B.countyCommunityAIMinTargetShare);
+    var configuredStrongShare = Number(B.countyCommunityAIStrongTargetShare);
+    var configuredUnrest = Number(B.countyCommunityAIMaxUnrest);
+    var minimumPopulation = Math.max(1, isFinite(configuredPopulation)
+      ? configuredPopulation : 500);
+    var minimumShare = FB.clamp(isFinite(configuredShare)
+      ? configuredShare : 0.12, 0, 1);
+    var strongShare = FB.clamp(isFinite(configuredStrongShare)
+      ? configuredStrongShare : 0.25, 0, 1);
+    var maximumUnrest = Math.max(0, isFinite(configuredUnrest)
+      ? configuredUnrest : 0.20);
+    var provinces = (FB.world.provs || []).filter(function (province) {
+      return province && !province.wasteland;
+    }).slice().sort(function (a, b) {
+      return String(a.id).localeCompare(String(b.id));
+    });
+    for (var pi = 0; pi < provinces.length; pi++) {
+      var province = provinces[pi];
+      var pid = province.id;
+      var rid = state.holder && state.holder[pid] ||
+        state.owner && state.owner[pid];
+      var realm = rid && state.realms[rid];
+      if (!rid || rid === 'player' || !realm || !realm.alive ||
+          (FB.isRealmAtWar && FB.isRealmAtWar(state, rid)) ||
+          (FB.countyOccupiedOrBesieged &&
+            FB.countyOccupiedOrBesieged(state, pid))) continue;
+      var unrest = FB.modBonus
+        ? Math.max(0, Number(FB.modBonus(state, 'unrest', pid)) || 0) : 0;
+      if (unrest > maximumUnrest) continue;
+      var communities = FB.countyCommunities(state, pid);
+      var population = 0;
+      for (var ci = 0; ci < communities.length; ci++) {
+        population += communities[ci].count;
+      }
+      if (population < minimumPopulation) continue;
+      var identity = communityAIRulerIdentity(state, rid);
+      var aim = FB.rulerAimSnapshot(state, rid);
+      var isCapital = realm.capital === pid;
+      for (var ki = 0; ki < 2; ki++) {
+        var kind = ki ? 'culture' : 'faith';
+        var target = kind === 'faith' ? identity.faith : identity.culture;
+        if (!target || FB.countyCommunityProject(state, pid, kind)) continue;
+        var dominant = kind === 'faith'
+          ? FB.countyReligion(state, pid) : FB.countyCulture(state, pid);
+        if (dominant === target) continue;
+        var share = communityAxisShare(communities, kind, target);
+        if (share < minimumShare || share >= 1) continue;
+        var motivated = isCapital || share >= strongShare ||
+          aim && (aim.id === 'strengthen_crown' ||
+            (kind === 'faith' && aim.id === 'defend_faith'));
+        if (!motivated) continue;
+        var relation = kind === 'faith' && FB.faithRelation
+          ? FB.faithRelation(state, dominant, target) : null;
+        var sameGroup = kind === 'culture' && FB.cultureGroup &&
+          FB.cultureGroup(dominant) === FB.cultureGroup(target);
+        var zealous = identity.traits.indexOf('zealous') >= 0;
+        var policy = relation === 'hostile' && zealous &&
+          aim && aim.id === 'defend_faith' && share >= strongShare &&
+          unrest <= maximumUnrest / 2 ? 'coercive' :
+          ((kind === 'faith' && (relation === 'same' ||
+            relation === 'in_fold' || relation === 'schismatic')) ||
+            sameGroup || isCapital ? 'integrative' : 'voluntary');
+        var preview = FB.countyCommunityProjectPreview(state, pid, {
+          kind:kind, target:target, policy:policy, sponsor:rid
+        });
+        if (!preview || !preview.control || preview.rate <= 0) continue;
+        out.push({
+          rid:rid, pid:pid, kind:kind, target:target, policy:policy,
+          share:share, population:population, unrest:unrest,
+          relation:relation, aim:aim && aim.id || null,
+          capital:isCapital,
+          score:(isCapital ? 30 : 0) + Math.round(share * 100) +
+            (aim && aim.id === 'defend_faith' && kind === 'faith' ? 20 : 0) +
+            (aim && aim.id === 'strengthen_crown' ? 10 : 0)
+        });
+      }
+    }
+    out.sort(function (a, b) {
+      return b.score - a.score || String(a.pid).localeCompare(String(b.pid)) ||
+        String(a.kind).localeCompare(String(b.kind));
+    });
+    return out;
+  };
+
+  FB.communityProjectAIYearly = function (state) {
+    var candidates = FB.communityProjectAICandidates(state);
+    var configuredChance = Number(
+      FBDATA.balance.countyCommunityAIAnnualChance);
+    var configuredLimit = Number(
+      FBDATA.balance.countyCommunityAIMaxStartsPerYear);
+    var chance = FB.clamp(isFinite(configuredChance)
+      ? configuredChance : 0.16, 0, 1);
+    var limit = Math.max(0, Math.floor(isFinite(configuredLimit)
+      ? configuredLimit : 4));
+    var started = [];
+    for (var i = 0; i < candidates.length && started.length < limit; i++) {
+      var candidate = candidates[i];
+      if (!FB.chance(chance)) continue;
+      var project = FB.startCountyCommunityProject(
+        state, candidate.pid, {
+          kind:candidate.kind, target:candidate.target,
+          policy:candidate.policy, sponsor:candidate.rid
+        });
+      if (project) started.push(candidate);
+    }
+    return started;
+  };
+
+  function communitySituationTrigger(state, id, ctx) {
+    var event = FB.eventById && FB.eventById(id);
+    if (!event || !event.trigger) return false;
+    var trigger = {};
+    for (var key in event.trigger) {
+      if (key !== 'never' && key !== 'chance') {
+        trigger[key] = event.trigger[key];
+      }
+    }
+    return FB.checkTrigger(state, trigger, ctx);
+  }
+
+  FB.fns = FB.fns || {};
+  FB.fns.community_historical_context_valid = function (state, ctx) {
+    var id = ctx && ctx.communitySituationId;
+    var pid = ctx && ctx.locationId;
+    if (!id || id.indexOf('community_') !== 0 || !pid) return false;
+    if (id === 'community_frontier_settlement') {
+      if (pid === state.player.provinceId || !FB.world.adj[pid] ||
+          !FB.world.adj[pid][state.player.provinceId]) return false;
+    } else if (id === 'community_coercive_backlash') {
+      if (!ctx.destinationId || !FB.world.adj[pid] ||
+          !FB.world.adj[pid][ctx.destinationId] ||
+          !FB.world.byId[ctx.destinationId] ||
+          FB.world.byId[ctx.destinationId].wasteland ||
+          !FB.playerDirectlyHoldsCounty ||
+          !FB.playerDirectlyHoldsCounty(state, pid)) return false;
+    } else if (id === 'community_urban_minority') {
+      if (!FB.playerControlsSettlementCommunity ||
+          !FB.playerControlsSettlementCommunity(
+            state, pid, Number(ctx.settlementIndex))) return false;
+    } else if (!FB.playerDirectlyHoldsCounty ||
+        !FB.playerDirectlyHoldsCounty(state, pid)) return false;
+    return communitySituationTrigger(state, id, ctx);
+  };
+
+  function communitySituationCandidates(state) {
+    var out = [];
+    var p = state.player;
+    if (!p || p.tier < 3 || p.war) return out;
+    var held = FB.demesne ? FB.demesne(state).slice() : [];
+    if (p.tier === 3 && !held.length) held.push(p.provinceId);
+    held.sort();
+    function add(id, ctx) {
+      ctx.communitySituationId = id;
+      if (FB.fns.community_historical_context_valid(state, ctx)) {
+        out.push({ id:id, ctx:ctx });
+      }
+    }
+    for (var hi = 0; hi < held.length; hi++) {
+      var pid = held[hi];
+      add('community_peaceful_adoption', { locationId:pid });
+      add('community_elite_led_conversion', { locationId:pid });
+      var refuge = Object.keys(FB.world.adj[pid] || {}).filter(
+        function (neighborId) {
+          return FB.world.byId[neighborId] &&
+            !FB.world.byId[neighborId].wasteland;
+        }).sort()[0];
+      if (refuge) add('community_coercive_backlash', {
+        locationId:pid, destinationId:refuge
+      });
+      var sites = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
+      for (var si = 0; si < sites.length; si++) {
+        add('community_urban_minority', {
+          locationId:pid, settlementIndex:si
+        });
+      }
+    }
+    var home = p.provinceId;
+    var adjacent = Object.keys(FB.world.adj[home] || {}).sort();
+    for (var ai = 0; ai < adjacent.length; ai++) {
+      add('community_frontier_settlement', {
+        locationId:adjacent[ai]
+      });
+    }
+    return out;
+  }
+
+  function maybeQueueCommunitySituation(state) {
+    if (FB.game && FB.game.observe || state.eventQueue &&
+        state.eventQueue.length) return;
+    var agency = state.agency || FB.ensureAgency(state);
+    if (!agency) return;
+    var cooldown = Math.max(1, Math.round(Number(
+      FBDATA.balance.communityHistoricalSituationCooldownYears) || 8));
+    if (isFinite(Number(agency.lastCommunitySituationYear)) &&
+        state.date.year - Number(agency.lastCommunitySituationYear) <
+          cooldown) return;
+    var chance = Number(
+      FBDATA.balance.communityHistoricalSituationAnnualChance);
+    chance = FB.clamp(isFinite(chance) ? chance : 0.10, 0, 1);
+    var candidates = communitySituationCandidates(state);
+    if (!candidates.length || !FB.chance(chance)) return;
+    var selected = FB.pick(candidates);
+    if (FB.queueEvent(state, selected.id, selected.ctx)) {
+      agency.lastCommunitySituationYear = state.date.year;
+    }
+  }
+
   FB.rulerAgencyYearly = function (state, familyLinks) {
     var family = FB.agencyFamilyMembers(state,
       familyLinks && familyLinks.kin);
@@ -1065,11 +1316,11 @@ window.FB = window.FB || {};
     maintainFamilyAmbitions(state, family);
     maybeSponsorRebels(state, neighbors);
     if (FB.intrigueAgencyYearly) FB.intrigueAgencyYearly(state, neighbors);
+    if (FB.communityProjectAIYearly) FB.communityProjectAIYearly(state);
     maybeApproachPlayer(state, family);
     maybeQueueFamilyRequest(state, family);
+    maybeQueueCommunitySituation(state);
   };
-
-  FB.fns = FB.fns || {};
 
   FB.fns.agency_ruler_context_valid = function (state, ctx) {
     var realm = ctx && state.realms[ctx.realmId];

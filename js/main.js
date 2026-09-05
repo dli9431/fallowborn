@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.170.3';
+FB.VERSION = '1.171.0';
 FB.CHANGELOG = [
+  { v: '1.171.0', date: '2026-09-05', changes: [
+    'Community events and sparse ruler policy can now shape local conversion, migration, resettlement, and resistance over generations.'
+  ] },
   { v: '1.170.3', date: '2026-09-05', changes: [
     'Settlement sheets now keep conversion-project summaries concise and place supporting detail behind accessible help.'
   ] },

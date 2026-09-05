@@ -136,6 +136,7 @@ A JSON mod is one object with any of these keys:
   "familyPresets": [ { "id": "my_household", ... } ],
   "focuses": [ { "id": "rest", "label": "Rest by the fire", ... } ],
   "deeds": [ { "id": "give_alms", "cooldownDays": 14, ... } ],
+  "countyCommunityPolicies": { "id": { "label": "...", "desc": "..." } },
   "provinces": [ ... ],
   "realms":    [ ... ],
   "empires":   { "id": { ... } },
@@ -1155,6 +1156,11 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `religionGroups` | array form: any listed faith or ancestor matches |
 | `cultures` | array of culture ids — any matches the player's culture |
 | `provinceReligionGroup`, `provinceCultures` | event-location county's live dominant faith lineage or culture; queued/travel events use their saved `locationId`, otherwise the player's home county |
+| `countyCulture`, `countyFaith` | exact live dominant culture or faith id in the event-location county |
+| `settlementCulture`, `settlementFaith` | exact live dominant id in a settlement; either an id string using `ctx.settlementIndex`, or `{target,provinceId?,settlement?}` where settlement is a non-negative slot, `$context`, or `$home` |
+| `countyCommunityShare`, `settlementCommunityShare` | `{kind:"culture|faith",target:"id",min?,max?,provinceId?,settlement?}`; at least one inclusive 0–1 bound is required |
+| `countyCommunityMixed`, `settlementCommunityMixed` | `{kind:"culture|faith",minCommunities?:2,minorityShareMin?:0..1,provinceId?,settlement?}`; minority share is one minus the largest identity share |
+| `countyCommunityProject`, `settlementCommunityProject` | `{kind:"culture|faith",active?:boolean,target?,policy?,provinceId?,settlement?}`; omitted `active` means active |
 | `terrains`, `coastal` | immutable physical checks on that same event-location county |
 | `atWar`, `realmAtWar`, `liegeAtWar`, `isVassal`, `isLiege` | war/politics (`isLiege`: the player has vassals of their own) |
 | `hasRole` / `noRole`, `roleOpinionAbove/Below` | `{role, value}`; roles: `lord priest friend rival spouse suitor` |
@@ -1478,6 +1484,17 @@ amount?:n,rate?:0..1,provinceId?:"county_id"}` converts an exact amount or bound
 fraction of eligible live cohorts. Faith transfers preserve culture and culture
 transfers preserve faith; omitting `source` draws proportionally from every non-target
 identity. This changes no population total. ·
+`settlementCommunityTransfer` accepts the same fields plus
+`settlement:"$context|$home"|non-negative-slot` and converts only that settlement while
+rolling the exact result into county totals. `communityMigration`,
+`communityExpulsion`, and `communityResettlement` each accept
+`{fromProvinceId,toProvinceId,community?:{culture?,religion?},amount?|rate?,
+fromSettlement?,toSettlement?,cause?}`. Province ids may be literal ids, `$context`,
+`$home`, or `$destination` (the saved `ctx.destinationId`); settlement values use the
+context/home tokens or a non-negative slot. Exactly one positive
+integer `amount` or 0–1 `rate` is required. Movement preserves culture-faith pairs and the
+combined population of both counties. Expulsion must identify a community; migration and
+resettlement may omit it for a proportional move. ·
 `countyCommunityProject:{kind:"faith|culture",target:"id",
 policy:"voluntary|integrative|coercive",sponsor?:"$owner|$player|realm_id",
 provinceId?:"county_id"}` begins or replaces that county's one saved project on the
@@ -1485,6 +1502,9 @@ chosen axis. Omitted sponsor and `$owner` resolve to the county's current owner 
 resolution. `stopCountyCommunityProject:"faith|culture"` stops that axis in the event
 county; an object may add `provinceId`. Projects never begin implicitly on conquest or
 character/realm conversion. ·
+`settlementCommunityProject` accepts the same fields plus `settlement`;
+`stopSettlementCommunityProject:{kind,provinceId?,settlement}` stops only that local
+axis. ·
 `pickHeir: true` (opens the eligible-heir picker; automation names the first heir in line;
 either result grants 8 prestige and records the choice) · `research: n` (points added to
 the effective sovereign nation's shared research pool; divided among active projects or
@@ -3137,6 +3157,15 @@ on a saved county. `FB.countyCommunityProject`, `FB.countyCommunityProjectStatus
 `FB.resolveCountyCommunityProjects` are the public read/write boundaries. Status is a
 pure numeric explanation; annual resolution carries fractional work until a meaningful
 integer transfer can be made.
+
+Runtime mods may add or replace `countyCommunityPolicies`. Each lowercase table id needs
+non-empty `label` and `desc`, an optional matching `id`, and an optional known county
+modifier. Every mod-added policy must also have a same-id mechanics record under
+`balance.countyCommunityProjectPolicies` with finite `pressure`, `resistance`, `maxRate`,
+`holdout`, and `migration` numbers. This nested mechanics table merges by policy id so a
+mod can add one profile without erasing the three core profiles. Community event triggers
+and effects validate against the combined core-plus-mod culture, faith, province, and
+policy tables before any mod data is applied; errors identify the exact event field.
 
 ## Items
 

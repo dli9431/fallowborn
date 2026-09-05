@@ -801,6 +801,26 @@ then the player's home. `$owner` and `$player` are the only semantic sponsor sho
 save state receives the resolved realm id. These effects call the population subsystem's
 ordinary conservation and project boundaries and emit semantic preview/receipt records.
 
+The full live-demography trigger surface is `countyCulture`, `countyFaith`,
+`settlementCulture`, `settlementFaith`, `countyCommunityShare`,
+`settlementCommunityShare`, `countyCommunityMixed`, `settlementCommunityMixed`,
+`countyCommunityProject`, and `settlementCommunityProject`. Share bounds are inclusive
+fractions. Mixed checks may require `minCommunities` and `minorityShareMin`; project checks
+may require `active`, `target`, and `policy`.
+
+Settlement outcomes add `settlementCommunityTransfer`,
+`settlementCommunityProject`, and `stopSettlementCommunityProject`. Conserved movement uses
+`communityMigration`, `communityExpulsion`, or `communityResettlement`, with explicit
+source/destination county tokens, optional settlement slots, an optional culture-faith
+filter, and exactly one `amount` or `rate`. All population event definitions are validated
+against the combined core-plus-mod culture, faith, province, and community-policy tables.
+
+`data/events_communities.js` holds five `never:true` historical situations. The annual
+agency pass supplies and revalidates an exact county or settlement context before queueing
+one; `agency.lastCommunitySituationYear` enforces the global cooldown. The data therefore
+remain reusable by scripted history while ordinary campaigns see only locally applicable,
+rare choices rather than deterministic regional outcomes.
+
 This event surface does not imply political conversion. `convertToProvince`, founded
 faith options, and personal/household/realm conversion continue to change characters or
 realm identity only. Conversely, a county transfer changes no named character, realm,

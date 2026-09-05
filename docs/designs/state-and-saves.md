@@ -143,6 +143,16 @@ resistance,lastTransfer,lastYear}`. Projects store ids and bounded numbers, neve
 percentages or rendered demographic prose; malformed projects are dropped by ordinary
 population repair without advancing the subsystem schema.
 
+`FB.populationSaveDiagnostics(state)` is a read-only development aid that reports the
+serialized population byte count and counts of counties, materialized settlement cohorts,
+and active projects. It stores nothing in the save. Settlement matrices remain lazy and are
+compacted when they again equal the proportional county projection.
+
+The existing `state.agency` object may also hold the numeric
+`lastCommunitySituationYear`. It is a global pacing stamp for rare community situations,
+not population history or rendered prose, and missing legacy values simply mean no prior
+situation cooldown.
+
 `bySettlement`, when present on any community, is present on every community and uses
 the county's stable visible settlement-slot order. Each array sums to its community
 count, and each slot across all arrays sums exactly to the existing weighted settlement

@@ -1,11 +1,14 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/actions.js',
   'data/cultures.js',
   'data/events_peasant.js',
+  'data/map_data.js',
   'js/events.js',
   'js/model.js',
   'js/mods.js',
+  'js/population.js',
   'js/save.js',
   'js/ui_modals.js'
 ]);
@@ -13,6 +16,58 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+
+test('community policies and event fields validate against the combined mod catalogue',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const event = {
+        id:'mod_community_charter', title:'A Local Charter',
+        trigger:{ countyCommunityShare:{ kind:'culture', target:'norse',
+          min:0.1 } },
+        text:'A charter offers local terms.',
+        options:[{ label:'Use the charter.', desc:'Begin gradual work.',
+          effects:{ countyCommunityProject:{ kind:'culture', target:'norse',
+            policy:'chartered_exchange' } } }]
+      };
+      FB.mods.apply({
+        countyCommunityPolicies:{
+          chartered_exchange:{
+            id:'chartered_exchange', label:'Chartered exchange',
+            desc:'Protected markets and offices encourage gradual exchange.'
+          }
+        },
+        balance:{ countyCommunityProjectPolicies:{
+          chartered_exchange:{ pressure:0.8, resistance:0.7,
+            maxRate:0.007, holdout:0.08, migration:0 }
+        } },
+        events:[event]
+      });
+      let invalid = '';
+      try {
+        FB.mods.apply({ events:[{
+          id:'mod_bad_community', title:'Bad', text:'Bad.',
+          trigger:{ countyCommunityShare:{ kind:'faith',
+            target:'missing_faith', min:0.1 } },
+          options:[{ label:'Bad.', desc:'Bad.', effects:{ prestige:1 } }]
+        }] });
+      } catch (error) {
+        invalid = error.message;
+      }
+      return {
+        policy:FBDATA.countyCommunityPolicies.chartered_exchange.label,
+        mechanics:FBDATA.balance.countyCommunityProjectPolicies
+          .chartered_exchange.maxRate,
+        event:FB.eventById('mod_community_charter').id,
+        invalid:invalid
+      };
+    });
+    expect(result.policy).toBe('Chartered exchange');
+    expect(result.mechanics).toBe(0.007);
+    expect(result.event).toBe('mod_community_charter');
+    expect(result.invalid).toContain(
+      'events[0] trigger.countyCommunityShare.target must name a known faith');
+  });
 
 test('runtime mods add culture traditions and retain a replaced core culture affinity',
   async function ({ page }, testInfo) {

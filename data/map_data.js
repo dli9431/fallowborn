@@ -1558,6 +1558,17 @@ FBDATA.balance = {
     coercive:{ pressure:1.35, resistance:1.65, maxRate:0.009,
       holdout:0.55, migration:-2 }
   },
+  /* AI rulers consider only established local communities, stable counties,
+     and a political or devotional motive. A global cap keeps sponsorship a
+     sparse historical pressure rather than a map-wide cleanup pass. */
+  countyCommunityAIAnnualChance:0.16,
+  countyCommunityAIMaxStartsPerYear:4,
+  countyCommunityAIMinPopulation:500,
+  countyCommunityAIMinTargetShare:0.12,
+  countyCommunityAIStrongTargetShare:0.25,
+  countyCommunityAIMaxUnrest:0.20,
+  communityHistoricalSituationAnnualChance:0.10,
+  communityHistoricalSituationCooldownYears:8,
   faithConversionHouseholdRealmStanding: -10,
   faithConversionRealmRealmStanding: -25,
   faithConversionVassalStanding: -35,
