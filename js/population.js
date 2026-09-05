@@ -1319,6 +1319,15 @@ window.FB = window.FB || {};
       (holder && FB.topRealm(state, holder) === sponsor));
   }
 
+  function settlementProjectSponsorControls(state, pid, settlementIndex,
+    sponsor) {
+    if (sponsor === 'player' && FB.playerControlsSettlementCommunity) {
+      return FB.playerControlsSettlementCommunity(
+        state, pid, settlementIndex);
+    }
+    return projectSponsorControls(state, pid, sponsor);
+  }
+
   function sponsorIdentity(state, sponsor) {
     var realm = state && state.realms && state.realms[sponsor];
     var character = sponsor === 'player' && state && state.player &&
@@ -1414,9 +1423,9 @@ window.FB = window.FB || {};
     var eligible = projectEligiblePopulation(
       communities, kind, project.target);
     var targetShare = (population - eligible) / population;
-    var control = local && project.sponsor === 'player' &&
-      FB.playerControlsSettlementCommunity
-      ? FB.playerControlsSettlementCommunity(state, pid, settlementIndex)
+    var control = local
+      ? settlementProjectSponsorControls(
+        state, pid, settlementIndex, project.sponsor)
       : projectSponsorControls(state, pid, project.sponsor);
     var sponsor = sponsorIdentity(state, project.sponsor);
     var rulerMatches = kind === 'faith'
@@ -1802,13 +1811,6 @@ window.FB = window.FB || {};
       lastYear:stateYear(state)
     };
     rec.settlementCommunityProjects[idx] = projects;
-    var definition = projectPolicyDefinition(request.policy);
-    if (definition.modifier && FB.addModifier &&
-        ((sponsor === 'player' && FB.playerControlsSettlementCommunity &&
-          FB.playerControlsSettlementCommunity(state, pid, idx)) ||
-         projectSponsorControls(state, pid, sponsor))) {
-      FB.addModifier(state, definition.modifier, pid, { silent:true });
-    }
     return copyProject(projects[request.kind]);
   };
 
@@ -1858,12 +1860,9 @@ window.FB = window.FB || {};
           var localProject = localMap && localMap[localKind];
           var localPolicy = localProject &&
             projectPolicyMechanics(localProject.policy);
-          var localControl = localProject && localProject.sponsor === 'player' &&
-            FB.playerControlsSettlementCommunity
-            ? FB.playerControlsSettlementCommunity(
-              state, pid, settlementIndex)
-            : localProject && projectSponsorControls(
-              state, pid, localProject.sponsor);
+          var localControl = localProject &&
+            settlementProjectSponsorControls(
+              state, pid, settlementIndex, localProject.sponsor);
           if (!localProject || !localPolicy || !settlementTotal ||
               !localControl) continue;
           var localEligible = projectEligiblePopulation(settlementCommunities,
@@ -1874,6 +1873,42 @@ window.FB = window.FB || {};
       }
     }
     return Math.max(-3, Math.min(0, total));
+  };
+
+  /* County systems have no separate settlement tax, levy, unrest, or market
+     ledgers. A local policy therefore contributes to those county aggregates
+     only in proportion to its settlement's population share. The same
+     modifier is counted once per slot even when both identity axes use it. */
+  FB.settlementCommunityProjectModifierBonus = function (state, pid, key) {
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    var all = rec && rec.settlementCommunityProjects;
+    if (!all || !rec.count || !FBDATA.modifiers) return 0;
+    var total = 0;
+    var slots = Object.keys(all).sort(function (a, b) {
+      return Number(a) - Number(b);
+    });
+    for (var si = 0; si < slots.length; si++) {
+      var idx = Number(slots[si]);
+      var projects = all[slots[si]];
+      var seen = {};
+      for (var ki = 0; ki < 2; ki++) {
+        var kind = ki ? 'culture' : 'faith';
+        var project = projects && projects[kind];
+        var policy = project && projectPolicyDefinition(project.policy);
+        var modifierId = policy && policy.modifier;
+        var modifier = modifierId && FBDATA.modifiers[modifierId];
+        if (!modifier || seen[modifierId] ||
+            !settlementProjectSponsorControls(
+              state, pid, idx, project.sponsor)) continue;
+        seen[modifierId] = 1;
+        if (modifier.fx && typeof modifier.fx[key] === 'number') {
+          total += modifier.fx[key] *
+            (FB.settlementPopulation(state, pid, idx) / rec.count);
+        }
+      }
+    }
+    return total;
   };
 
   FB.countyPopulation = function (state, pid) {
@@ -2182,11 +2217,6 @@ window.FB = window.FB || {};
         project.lastTransfer = result.count;
         project.lastYear = year;
         project.resistance = roundedProjectNumber(status.resistance);
-        var definition = projectPolicyDefinition(project.policy);
-        if (status.control && definition && definition.modifier &&
-            FB.addModifier) {
-          FB.addModifier(state, definition.modifier, pid, { silent:true });
-        }
         var remaining = projectEligiblePopulation(
           FB.settlementCommunities(state, pid, idx), kind, project.target);
         var completed = remaining <= 0;

@@ -290,6 +290,12 @@ county; a baron may direct only the saved home settlement. Foreign and other rem
 sheets remain read-only. County-wide controls stay in Land and never infer a settlement;
 Self/Faith remains character-facing navigation only.
 
+Where a settlement policy affects county-level tax, levy, Common Voice, unrest, or
+market flow, its contribution is weighted by that settlement's share of the county
+population. It is shown on the settlement sheet and never appears as the full-strength
+county modifier. Community breakdown cards use an auto-fitting grid so narrow Land
+panels stack Culture and Faith instead of crushing their labels.
+
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.
 

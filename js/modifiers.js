@@ -330,6 +330,9 @@ window.FB = window.FB || {};
       const def = definition(list[i].id, 'county');
       if (def && def.fx && typeof def.fx[key] === 'number') sum += def.fx[key];
     }
+    if (FB.settlementCommunityProjectModifierBonus) {
+      sum += FB.settlementCommunityProjectModifierBonus(state, pid, key);
+    }
     return sum;
   };
 

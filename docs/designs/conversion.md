@@ -88,6 +88,14 @@ both the settlement and county name at every step. A count can direct any settle
 a directly held county; a baron can direct only the saved home settlement. County Land
 controls remain county-wide, and Self/Faith never chooses a settlement implicitly.
 
+Tax, levy, Common Voice, unrest, and market flow are county aggregates rather than
+separate settlement ledgers. A local coercive project therefore contributes its policy
+effects dynamically in proportion to that settlement's share of county population; it
+does not create the full `community_coercion` county modifier. The settlement picker and
+active-project card show the scaled county contribution, and stopping the local project
+ends it immediately. County-wide coercion retains the ordinary temporary modifier and
+expiry behavior.
+
 ## Costs
 
 Piety pays for religion, prestige for culture, scaled by scope; larger scopes charge

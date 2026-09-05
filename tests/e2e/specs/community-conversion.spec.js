@@ -97,6 +97,14 @@ test('Land aggregates culture and faith independently and explains projects',
       .toHaveText('150 people · 15%');
     await expect(panel.locator('.community-change-note'))
       .toContainText('35 changed faith · 12 assimilated · -7 net migration');
+    const narrowestBreakdown = await panel.locator('.community-breakdowns')
+      .evaluate(function (element) {
+        return Math.min.apply(null, Array.prototype.map.call(
+          element.children, function (card) {
+            return card.getBoundingClientRect().width;
+          }));
+      });
+    expect(narrowestBreakdown).toBeGreaterThanOrEqual(179);
 
     const project = panel.locator('[data-community-project="faith"]');
     await expect(project).toContainText('Norse Paganism');
@@ -348,6 +356,77 @@ test('barons can direct only their saved home settlement',
       countyReady:false,
       localReady:true
     });
+  });
+
+test('settlement policy penalties are weighted instead of county modifiers',
+  async function ({ page }) {
+    const setup = await configureCountyProjectUi(page);
+    await page.evaluate(function (pid) {
+      FB.state.dev[pid] = Math.max(5, FB.state.dev[pid] || 1);
+      FB.ui.showSettlement(pid, 0);
+    }, setup.pid);
+    await page.locator(
+      '[data-settlement-community-project="culture"] ' +
+      '.settlement-community-project-control').click();
+    await page.locator('[data-county-project-target="norse"]').click();
+    const coercive = page.locator(
+      '[data-county-project-policy="coercive"]');
+    await expect(coercive).toContainText('This settlement is');
+    await expect(coercive).toContainText('county-wide share');
+    await expect(coercive).not.toContainText('for 720 days');
+
+    const result = await page.evaluate(function (pid) {
+      const s = FB.state;
+      const keys = ['tax', 'levy', 'commonVoice', 'unrest', 'marketFlow'];
+      const before = {};
+      keys.forEach(function (key) { before[key] = FB.modBonus(s, key, pid); });
+      const startedCulture = FB.orderSettlementCommunityProject(
+        s, pid, 0, 'culture', 'norse', 'coercive');
+      const share = FB.settlementPopulation(s, pid, 0) /
+        s.population.counties[pid].count;
+      const afterCulture = {};
+      keys.forEach(function (key) {
+        afterCulture[key] = FB.modBonus(s, key, pid);
+      });
+      const startedFaith = FB.orderSettlementCommunityProject(
+        s, pid, 0, 'faith', 'norse_pagan', 'coercive');
+      const afterBoth = {};
+      keys.forEach(function (key) { afterBoth[key] = FB.modBonus(s, key, pid); });
+      const hasCountyModifier = FB.countyModifierRecords(s, pid).some(
+        function (record) { return record.id === 'community_coercion'; });
+      FB.cancelSettlementCommunityProject(s, pid, 0, 'culture');
+      const afterOneStop = FB.modBonus(s, 'tax', pid);
+      FB.cancelSettlementCommunityProject(s, pid, 0, 'faith');
+      const afterBothStop = FB.modBonus(s, 'tax', pid);
+      return {
+        startedCulture:startedCulture,
+        startedFaith:startedFaith,
+        share:share,
+        before:before,
+        afterCulture:afterCulture,
+        afterBoth:afterBoth,
+        hasCountyModifier:hasCountyModifier,
+        afterOneStop:afterOneStop,
+        afterBothStop:afterBothStop
+      };
+    }, setup.pid);
+
+    expect(result.startedCulture).toBe(true);
+    expect(result.startedFaith).toBe(true);
+    expect(result.hasCountyModifier).toBe(false);
+    expect(result.afterCulture.tax - result.before.tax)
+      .toBeCloseTo(-0.05 * result.share, 8);
+    expect(result.afterCulture.levy - result.before.levy)
+      .toBeCloseTo(-0.08 * result.share, 8);
+    expect(result.afterCulture.commonVoice - result.before.commonVoice)
+      .toBeCloseTo(-8 * result.share, 8);
+    expect(result.afterCulture.unrest - result.before.unrest)
+      .toBeCloseTo(0.40 * result.share, 8);
+    expect(result.afterCulture.marketFlow - result.before.marketFlow)
+      .toBeCloseTo(-0.10 * result.share, 8);
+    expect(result.afterBoth).toEqual(result.afterCulture);
+    expect(result.afterOneStop).toBeCloseTo(result.afterCulture.tax, 8);
+    expect(result.afterBothStop).toBeCloseTo(result.before.tax, 8);
   });
 
 test('Faith details links to personal conversion and an explicit Land county',

@@ -3554,6 +3554,20 @@ window.FB = window.FB || {};
           ? FB.countyCommunityProjectPreview(s, pid, request) : null;
     }
 
+    function policyEffectText(policy, preview) {
+      if (!local || !preview) {
+        return countyProjectPolicyEffectText(s, policy);
+      }
+      const rec = s.population && s.population.counties &&
+        s.population.counties[pid];
+      const countyPopulation = rec && Number(rec.count) || preview.population;
+      return countyProjectPolicyEffectText(s, policy, {
+        local:true,
+        effectScale:preview.population / Math.max(1, countyPopulation),
+        migrationScale:preview.eligible / Math.max(1, countyPopulation)
+      });
+    }
+
     function closePicker() {
       if (local) UI.showSettlement(pid, settlementIndex);
       else UI.closeModal();
@@ -3656,7 +3670,7 @@ window.FB = window.FB || {};
               count:Math.round(preview.potential),
               percent:Math.round(preview.resistance * 100)
             }) : order.reason) + '</span><span class="county-project-preview">' +
-          esc(countyProjectPolicyEffectText(s, policyId)) + '</span></button>';
+          esc(policyEffectText(policyId, preview)) + '</span></button>';
       }
       h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
         'id="county-project-target-back">' + esc(FB.T('Back')) +
@@ -3711,15 +3725,16 @@ window.FB = window.FB || {};
           esc(FB.T('Prestige:')) + '</b> 0</p>' +
         '<p><b>' + esc(FB.T('Standing and relationships:')) + '</b> ' +
           esc(FB.T('No immediate change.')) + '</p>' +
-        '<p><b>' + esc(FB.T('County Common Voice and unrest:')) + '</b> ' +
-          esc(countyProjectPolicyEffectText(s, policyId)) + '</p>' +
+        '<p><b>' + esc(local ? FB.T('Scaled county effects from this settlement:')
+          : FB.T('County Common Voice and unrest:')) + '</b> ' +
+          esc(policyEffectText(policyId, preview)) + '</p>' +
         (active ? '<p>' + esc(local ? FB.T(
           'This replaces this settlement’s current {kind} project.', {
             kind:kind === 'faith' ? FB.T('faith') : FB.T('culture')
           }) : FB.T('This replaces the county’s current {kind} project.', {
             kind:kind === 'faith' ? FB.T('faith') : FB.T('culture')
           })) + '</p>' +
-          (active.policy !== policyId &&
+          (!local && active.policy !== policyId &&
               FBDATA.countyCommunityPolicies[active.policy] &&
               FBDATA.countyCommunityPolicies[active.policy].modifier
             ? '<p>' + esc(FB.T(
@@ -3803,9 +3818,11 @@ window.FB = window.FB || {};
         kind:kind === 'faith' ? FB.T('faith') : FB.T('culture'),
         target:target, county:province.name
       });
+    const continuation = local
+      ? FB.T('Its settlement-weighted county effects end when enforcement stops.')
+      : FB.T('Any existing county modifier continues until its displayed expiry.');
     const h = '<div class="gm-body-text"><p>' + esc(stopText) +
-      '</p><p>' + esc(FB.T(
-        'Any existing county modifier continues until its displayed expiry.')) +
+      '</p><p>' + esc(continuation) +
       '</p></div><div class="gm-list"><button type="button" ' +
       'class="actionbtn" id="county-project-stop-confirm">' +
       esc(local ? FB.T('Stop project in {settlement}, {county}', {
@@ -7247,6 +7264,16 @@ window.FB = window.FB || {};
       'data-settlement-community-project="' + kind + '"><h4>' +
       esc(title) + '</h4>';
     if (project) {
+      const rec = s.population && s.population.counties &&
+        s.population.counties[pid];
+      const countyPopulation = rec && Number(rec.count) ||
+        (status && status.population) || 1;
+      const effects = status ? countyProjectPolicyEffectText(
+        s, project.policy, {
+          local:true,
+          effectScale:status.population / Math.max(1, countyPopulation),
+          migrationScale:status.eligible / Math.max(1, countyPopulation)
+        }) : '';
       h += '<div class="community-project-target"><b>' +
         esc(countyProjectTargetName(s, kind, project.target)) +
         '</b><span>' + esc(countyProjectPolicyName(s, project.policy)) +
@@ -7261,7 +7288,9 @@ window.FB = window.FB || {};
           })) + '</span><span>' + esc(FB.T('Resistance: {percent}%', {
             percent:Math.round((status ? status.resistance :
               project.resistance || 0) * 100)
-          })) + '</span></div>';
+          })) + '</span></div>' + (effects
+          ? '<p class="community-project-consequence">' + esc(effects) + '</p>'
+          : '');
     } else {
       h += '<p>' + esc(FB.T('No local project is active here.')) + '</p>';
     }

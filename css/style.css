@@ -1712,7 +1712,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .land-kv-detail > span { color: var(--helper-text-color); font-size: 12px; }
 .land-section .progressnote { margin: 6px 0 0; }
 .community-breakdowns {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 7px; margin-top: 9px;
 }
 .community-axis-card {

@@ -189,52 +189,59 @@ window.FB = window.FB || {};
     const percent = Math.round((Number(value) || 0) * 100);
     return (percent > 0 ? '+' : '') + percent;
   }
-  function modifierEffectText(s, id) {
+  function signedEffectNumber(value) {
+    let rounded = Math.round((Number(value) || 0) * 10) / 10;
+    if (Math.abs(rounded) < 0.05) rounded = 0;
+    return (rounded > 0 ? '+' : '') + rounded;
+  }
+  function modifierEffectText(s, id, scale) {
     const def = FBDATA.modifiers && FBDATA.modifiers[id];
     if (!def) return '';
+    scale = scale === undefined ? 1 : Math.max(0, Number(scale) || 0);
     const fx = def.fx || {}, parts = [];
     if (fx.tax) parts.push(FB.T('{amount}% county tax', {
-      amount:signedPercent(fx.tax)
+      amount:signedPercent(fx.tax * scale)
     }));
     if (fx.levy) parts.push(FB.T('{amount}% county levy', {
-      amount:signedPercent(fx.levy)
+      amount:signedPercent(fx.levy * scale)
     }));
     if (fx.buildingCost) parts.push(FB.T('{amount}% construction cost', {
-      amount:signedPercent(fx.buildingCost)
+      amount:signedPercent(fx.buildingCost * scale)
     }));
     if (fx.commonVoice) parts.push(FB.T('{amount} Common Voice', {
-      amount:(fx.commonVoice > 0 ? '+' : '') + fx.commonVoice
+      amount:signedEffectNumber(fx.commonVoice * scale)
     }));
     if (fx.famine) parts.push(FB.T('{amount}% famine harm', {
-      amount:signedPercent(fx.famine)
+      amount:signedPercent(fx.famine * scale)
     }));
     if (fx.unrest) parts.push(FB.T('{amount}% unrest harm', {
-      amount:signedPercent(fx.unrest)
+      amount:signedPercent(fx.unrest * scale)
     }));
     if (fx.marketFlow) parts.push(FB.T('{amount}% trade through local markets', {
-      amount:signedPercent(fx.marketFlow)
+      amount:signedPercent(fx.marketFlow * scale)
     }));
     if (fx.supplyUse) parts.push(FB.T('{amount}% campaign supply use', {
-      amount:signedPercent(fx.supplyUse)
+      amount:signedPercent(fx.supplyUse * scale)
     }));
     if (fx.contribution) parts.push(FB.T('{amount}% campaign contribution', {
-      amount:signedPercent(fx.contribution)
+      amount:signedPercent(fx.contribution * scale)
     }));
     if (fx.withdrawalPenalty) parts.push(FB.T('{amount}% withdrawal penalties', {
-      amount:signedPercent(fx.withdrawalPenalty)
+      amount:signedPercent(fx.withdrawalPenalty * scale)
     }));
     if (fx.marchSpeed) parts.push(FB.T('{amount}% march speed', {
-      amount:signedPercent(fx.marchSpeed)
+      amount:signedPercent(fx.marchSpeed * scale)
     }));
     if (fx.battleOdds) parts.push(FB.T('{amount}% battle power', {
-      amount:signedPercent(fx.battleOdds)
+      amount:signedPercent(fx.battleOdds * scale)
     }));
     if (fx.desertion) parts.push(FB.T('{amount}% desertion per season', {
-      amount:Math.round(fx.desertion * 100)
+      amount:Math.round(fx.desertion * scale * 100)
     }));
     return parts.join(' · ');
   }
-  function countyProjectPolicyEffectText(s, policyId) {
+  function countyProjectPolicyEffectText(s, policyId, options) {
+    options = options || {};
     const policy = FBDATA.countyCommunityPolicies &&
       FBDATA.countyCommunityPolicies[policyId];
     if (!policy || !policy.modifier) {
@@ -244,15 +251,26 @@ window.FB = window.FB || {};
     const mechanics = FBDATA.balance &&
       FBDATA.balance.countyCommunityProjectPolicies &&
       FBDATA.balance.countyCommunityProjectPolicies[policyId];
-    const migration = mechanics && Number(mechanics.migration) || 0;
-    let text = modifierEffectText(s, policy.modifier);
-    if (modifier && modifier.days) {
+    const effectScale = options.effectScale === undefined
+      ? 1 : Math.max(0, Number(options.effectScale) || 0);
+    const migrationScale = options.migrationScale === undefined
+      ? effectScale : Math.max(0, Number(options.migrationScale) || 0);
+    const migration = (mechanics && Number(mechanics.migration) || 0) *
+      migrationScale;
+    let text = modifierEffectText(s, policy.modifier, effectScale);
+    if (options.local) {
+      text = FB.T('This settlement is {percent}% of the county; while enforced its county-wide share is: {effects}', {
+        percent:Math.round(effectScale * 100), effects:text
+      });
+    } else if (modifier && modifier.days) {
       text = FB.T('{effects} for {days} days, renewed by annual enforcement', {
         effects:text, days:modifier.days
       });
     }
     return text + (migration ? ' · ' + FB.T(
-      '{amount} migration pressure while enforced', { amount:migration }) : '');
+      '{amount} migration pressure while enforced', {
+        amount:signedEffectNumber(migration)
+      }) : '');
   }
   function modifierDurationText(s, record, scope) {
     const days = FB.modifierRemainingDays
