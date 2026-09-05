@@ -71,22 +71,20 @@ province. `paired:true` marks a culture-faith identity whose two components shou
 be split apart by systems that synthesize local identities; it is neither a demographic
 property nor a conversion restriction.
 
-New Game presents each pair as one coupled community choice. Changing counties resets
+New Game presents each authored pair as one coupled community choice. Changing counties resets
 the choice to that county's principal entry, while returning to the same county keeps
 the previous selection. The selected pair supplies names and the culture and faith of
 the protagonist, parents, patronymic grandparents, siblings, and any starting spouse
 and children. It is preserved in a non-principal start code rather than in a new save
 field; the generated character records remain authoritative after play begins. County
-selection and the Land panel show every authored pair in order.
+selection remains on the immutable authored list, while the in-campaign Land panel uses
+the saved live communities.
 
-**Seek a match** also reads this county-specific projection. Its prospect pool offers
-the authored pairs first, then may recombine the distinct local cultures and faiths to
-represent mixed households. A `paired:true` community remains an indivisible authored
-identity and contributes neither half to that recombination, preventing combinations
-such as Ashkenazi/Catholic or German/Jewish from being invented. Generated combinations
-are character identities, not new authored communities or changes to the county's
-principal identity. The search county is stamped on each persistent prospect so
-reopening the same pool keeps its geographic source.
+**Seek a match** reads the live county communities once play begins. Each new prospect is
+weighted by community population and uses only a combined culture-faith pair with saved
+population there; it never forms a candidate by independently recombining the two axes. The search county is stamped on
+each persistent prospect so reopening the same pool keeps its geographic source and
+already-generated candidates retain their identities when local shares later change.
 
 At campaign initialization, `state.population.schema:2` turns those opening shares into
 integer community counts by deterministic largest-remainder apportionment, using
@@ -98,6 +96,13 @@ the combined pairs independently. The saved `identity` cache retains each axis a
 last-change year; an absolute majority overrides the prior identity, while a non-majority
 plurality does not cause a repair-time flip.
 
+`FB.countyDominantCommunity` returns the largest live combined pair with stable saved
+order as its tie-break. `FB.pickCountyCommunity` performs one explicit saved-RNG draw
+weighted by live counts. Newly generated anonymous locals, workers, retainers, tutors,
+and local households use the weighted pair; generated local lords, clergy, their noble
+kin, and realm rulers use the dominant combined pair. Existing named people never change
+with county demographics.
+
 `FB.ensurePopulationState` migrates schema-1 saves at their current county counts and
 date, without replaying historical population movement. It merges valid duplicates,
 drops invalid or non-positive groups, and gives the authored principal pair the exact
@@ -106,11 +111,15 @@ county population changes now apportion their exact integer delta among the curr
 communities by stable largest-remainder rounding. An explicit `communityPolicy` may
 instead select a culture, faith, or exact pair for persecution, expulsion, colonization,
 famine, or scripted effects; a positive exact-pair policy can establish a new community.
-Read helpers return projections and never repair state or mutate
-bookmark data. Existing county, realm, title, intrigue, advancement, matchmaking, and
-war mechanics intentionally continue to read the static principal province identity
-until live-identity integration. The 182 core bookmark-county records, reviewed opening
-shares, evidence, and uncertainty are listed in
+Read helpers return projections and never repair state or mutate bookmark data. Runtime
+county presentation, event province triggers, travel culture encounters, conversion
+presence, local institutional context, matchmaking, raid context, and demographic
+support for claimants read the live layer. Bookmark validation and activation, New Game,
+start-family creation, authored settlement naming, de jure history, and the historical
+heartland used to authorize great-holy-war restoration remain on immutable authored
+data. Controller and realm faith remain political saved identities: a capital county's
+plurality cannot rewrite its realm or ruler. The 182 core bookmark-county records,
+reviewed opening shares, evidence, and uncertainty are listed in
 [county-communities.md](../research/county-communities.md).
 
 Annual migration remains conserved across the world, but now moves culture-faith cohorts

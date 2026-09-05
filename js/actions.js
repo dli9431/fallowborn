@@ -686,6 +686,19 @@ window.FB = window.FB || {};
   /* Soft-gating: conversion options are accessible only for traditions the
      player dynasty has encountered through family, court, realm, neighboring
      borders, diplomacy, trade, travel, or shared cultural/faith heritage. */
+  function countyContainsConversionIdentity(state, pid, kind, targetId) {
+    if (!pid) return false;
+    if (kind === 'faith' && FB.countyReligionShare) {
+      return FB.countyReligionShare(state, pid, targetId) > 0;
+    }
+    if (kind === 'culture' && FB.countyCultureShare) {
+      return FB.countyCultureShare(state, pid, targetId) > 0;
+    }
+    const province = FB.world && FB.world.byId && FB.world.byId[pid];
+    return !!(province && (kind === 'faith'
+      ? province.religion === targetId : province.culture === targetId));
+  }
+
   FB.conversionTargetPresence = function (state, kind, targetId) {
     if (!state || !targetId) return null;
     const p = state.player;
@@ -704,15 +717,13 @@ window.FB = window.FB || {};
     }
     const capPid = state.realms && state.realms.player && state.realms.player.capital
       ? state.realms.player.capital : p.provinceId;
-    const capProv = FB.world && FB.world.byId && FB.world.byId[capPid];
-    if (capProv && (kind === 'faith' ? capProv.religion === targetId : capProv.culture === targetId)) {
+    if (countyContainsConversionIdentity(state, capPid, kind, targetId)) {
       return { kind:'capital', label:FB.T('Capital') };
     }
     const rProvs = FB.realmProvinces ? FB.realmProvinces(state, 'player') : (p.provs || [p.provinceId]);
     for (let i = 0; i < rProvs.length; i++) {
       const pid = rProvs[i];
-      const prov = FB.world && FB.world.byId && FB.world.byId[pid];
-      if (prov && (kind === 'faith' ? prov.religion === targetId : prov.culture === targetId)) {
+      if (countyContainsConversionIdentity(state, pid, kind, targetId)) {
         return { kind:'realm', label:FB.T('Realm') };
       }
     }
@@ -731,8 +742,8 @@ window.FB = window.FB || {};
       if (prov && prov.adj) {
         for (let j = 0; j < prov.adj.length; j++) {
           const npid = prov.adj[j];
-          const nprov = FB.world && FB.world.byId && FB.world.byId[npid];
-          if (nprov && (kind === 'faith' ? nprov.religion === targetId : nprov.culture === targetId)) {
+          if (countyContainsConversionIdentity(
+            state, npid, kind, targetId)) {
             return { kind:'neighbor', label:FB.T('Neighbor') };
           }
         }
@@ -820,8 +831,8 @@ window.FB = window.FB || {};
     }
     if (p.visitedProvinces && p.visitedProvinces.length) {
       for (let i = 0; i < p.visitedProvinces.length; i++) {
-        const vprov = FB.world && FB.world.byId && FB.world.byId[p.visitedProvinces[i]];
-        if (vprov && (kind === 'faith' ? vprov.religion === targetId : vprov.culture === targetId)) {
+        if (countyContainsConversionIdentity(
+          state, p.visitedProvinces[i], kind, targetId)) {
           return { kind:'travel', label:FB.T('Travel') };
         }
       }
@@ -1023,8 +1034,9 @@ window.FB = window.FB || {};
         : (p.provs && p.provs.length ? p.provs : [p.provinceId]);
       for (let i = 0; i < pids.length; i++) {
         if (pids[i]) {
-          const prov = FB.world && FB.world.byId && FB.world.byId[pids[i]];
-          if (kind === 'faith' || !prov || prov.culture !== targetId) {
+          const culture = FB.countyCulture
+            ? FB.countyCulture(state, pids[i]) : null;
+          if (kind === 'faith' || !culture || culture !== targetId) {
             FB.addModifier(state, modId, pids[i], { silent:true });
           }
         }
@@ -7394,7 +7406,14 @@ window.FB = window.FB || {};
       state.realms[vid].liege = 'player';
       revivedCourt = true;
     } else {
-      FB.makeVassalRealm(state, { id: vid, name: 'County of ' + pr.name, capital: pid, rank: 1, liege: 'player', culture: pr.culture });
+      const identity = FB.countyDominantCommunity
+        ? FB.countyDominantCommunity(state, pid) : null;
+      FB.makeVassalRealm(state, {
+        id:vid, name:'County of ' + pr.name, capital:pid, rank:1,
+        liege:'player',
+        culture:identity && identity.culture || pr.culture,
+        religion:identity && identity.religion || pr.religion
+      });
     }
     state.holder[pid] = vid;
     state.owner[pid] = FB.playerRealmId(state) || 'player';
@@ -7471,7 +7490,15 @@ window.FB = window.FB || {};
       state.realms[vid].capital = seat;
       revivedCourt = true;
     } else {
-      FB.makeVassalRealm(state, { id: vid, name: 'Duchy of ' + dname, capital: seat, rank: 2, liege: 'player', culture: (FB.world.byId[seat] || {}).culture });
+      const seatProvince = FB.world.byId[seat] || {};
+      const identity = FB.countyDominantCommunity
+        ? FB.countyDominantCommunity(state, seat) : null;
+      FB.makeVassalRealm(state, {
+        id:vid, name:'Duchy of ' + dname, capital:seat, rank:2,
+        liege:'player',
+        culture:identity && identity.culture || seatProvince.culture,
+        religion:identity && identity.religion || seatProvince.religion
+      });
     }
     for (const pid of cs) {
       p.provs.splice(p.provs.indexOf(pid), 1);
@@ -7820,21 +7847,25 @@ window.FB = window.FB || {};
     if (!pr || pr.wasteland || pr.id === player.provinceId) return false;
     const holder = (state.holder && state.holder[pr.id]) || state.owner[pr.id];
     if (holder === 'player') return false;
-    if (profile === 'northmen') return pr.culture === 'norse' ||
-      FB.faithIsA(pr.religion, 'norse_pagan', state);
+    const culture = FB.countyCulture
+      ? FB.countyCulture(state, pr.id) : pr.culture;
+    const religion = FB.countyReligion
+      ? FB.countyReligion(state, pr.id) : pr.religion;
+    if (profile === 'northmen') return culture === 'norse' ||
+      FB.faithIsA(religion, 'norse_pagan', state);
     if (profile === 'cross_banners') return FB.faithIsA(
-      pr.religion, 'christian', state);
-    if (profile === 'saxon_host') return pr.culture === 'german' ||
-      pr.culture === 'frankish' || pr.culture === 'english' ||
-      FB.faithIsA(pr.religion, 'christian', state);
-    if (profile === 'steppe_riders') return pr.culture === 'turkic' ||
-      pr.culture === 'magyar' || pr.culture === 'khazar' ||
-      FB.faithIsA(pr.religion, 'tengri', state);
-    if (profile === 'rus_raiders') return pr.culture === 'slavic' ||
-      pr.culture === 'norse' ||
-      FB.faithIsA(pr.religion, 'slavic_pagan', state) ||
-      FB.faithIsA(pr.religion, 'orthodox', state);
-    return pr.culture !== player.culture || pr.religion !== player.religion;
+      religion, 'christian', state);
+    if (profile === 'saxon_host') return culture === 'german' ||
+      culture === 'frankish' || culture === 'english' ||
+      FB.faithIsA(religion, 'christian', state);
+    if (profile === 'steppe_riders') return culture === 'turkic' ||
+      culture === 'magyar' || culture === 'khazar' ||
+      FB.faithIsA(religion, 'tengri', state);
+    if (profile === 'rus_raiders') return culture === 'slavic' ||
+      culture === 'norse' ||
+      FB.faithIsA(religion, 'slavic_pagan', state) ||
+      FB.faithIsA(religion, 'orthodox', state);
+    return culture !== player.culture || religion !== player.religion;
   }
 
   function historicRaidContexts(state) {

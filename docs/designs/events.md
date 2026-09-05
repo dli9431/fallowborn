@@ -306,6 +306,14 @@ vassal status are retained, and each named context selector is evaluated at most
 These caches are discarded after the pass: they neither enter saves nor change trigger,
 chance-roll, weighting, or authored-order semantics.
 
+Province triggers resolve against the event context's snapshotted `locationId` (falling
+back to the player's home only when no context location exists). `provinceCultures` and
+`provinceReligionGroup` read that county's live dominant demographic identity; terrain
+and coastal checks remain immutable physical facts. `convertToProvince` uses the same
+location and live dominant faith for the protagonist and an existing player realm, but
+never edits county communities. This keeps travel stories local while leaving bookmark
+activation and validation on authored province identity.
+
 **Guild-path stories stay declarative.** An event may use
 `trigger.career:{profession,specialization,guildRankMin,guildStandingMin}` to require
 the protagonist's current working career. This is distinct from broad `professions`:

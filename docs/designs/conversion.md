@@ -19,8 +19,9 @@ headed faiths). Costs and penalties therefore escalate steeply with scope.
 - `realm` — **religion only**: sets `state.realms.player.religion` in addition to
   converting the household. Requires a living landed ruler (`tier >= 3` with an alive
   player realm). Culture has no realm scope: realms carry no `culture` field (realm
-  culture is derived from ruler and capital), and county culture/faith remains authored
-  world data — a realm conversion deliberately does not convert provinces.
+  culture is derived from ruler and capital). County culture and faith are live saved
+  demographic identities, but a realm conversion deliberately does not transfer any
+  county community population.
 
 ## Costs
 
@@ -94,7 +95,8 @@ encountered through organic gameplay interactions:
 
 - **Shared tradition / fold**: branches of your own religious tradition or culture group.
 - **Kin & Court**: spouse, betrothed, household members, personal network contacts, or captives.
-- **Geography & Lands**: home county, realm provinces, capital, or bordering neighbor counties.
+- **Geography & Lands**: any live community in the home county, realm provinces, capital,
+  or bordering neighbor counties.
 - **Diplomacy & Trade**: liege, vassals, trade partner realms, treaties, or active wars.
 - **Travel & Pilgrimage**: visited destinations, campaign chronicles, and founded faiths.
 
@@ -113,6 +115,8 @@ so engine and UI grouping cannot drift apart.
   gate/preview function; `FB.applyConversion(state, kind, targetId, scope)` revalidates
   and then performs the writes. `FB.conversionTargetPresence(state, kind, targetId)` and
   `FB.conversionTargetEncountered(state, kind, targetId)` determine soft-gated availability.
+  County and neighbor presence uses positive live culture/faith share rather than the
+  immutable bookmark principal, so migration can introduce an encountered tradition.
   Apostasy previews read the normalized saved Roman obedience without running the full
   Papacy repair for every candidate card; applying the conversion still enters the
   ordinary mutating Papacy path before recording the sentence.

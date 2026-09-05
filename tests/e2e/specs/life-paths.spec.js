@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/events.js',
   'js/items.js',
+  'js/population.js',
   'js/save.js',
   'js/ui_modals.js',
   'data/events_lifepaths.js',
@@ -249,13 +250,42 @@ test('expeditions reach foreign cultures and journal the first one only',
       state.player.tier = 1;
       state.player.gold = 100;
       const eligible = FB.travelEligible(state, 'expedition');
+      const provinces = FB.world.provs.filter(function (province) {
+        return province && !province.wasteland &&
+          province.id !== state.player.provinceId &&
+          state.population.counties[province.id];
+      });
+      const authoredSame = provinces.filter(function (province) {
+        return province.culture === me.culture;
+      })[0];
+      const authoredForeign = provinces.filter(function (province) {
+        return province.culture !== me.culture;
+      })[0];
+      const sameRecord = state.population.counties[authoredSame.id];
+      sameRecord.communities = [{
+        culture:'armenian', religion:'tengri', count:sameRecord.count
+      }];
+      FB.reconcileCountyCommunities(state, authoredSame.id);
+      const foreignRecord = state.population.counties[authoredForeign.id];
+      foreignRecord.communities = [{
+        culture:me.culture, religion:me.religion, count:foreignRecord.count
+      }];
+      FB.reconcileCountyCommunities(state, authoredForeign.id);
       const destinations = FB.travelDestinations(state, 'expedition');
       const allForeign = destinations.every(function (d) {
-        const pr = FB.world.byId[d.destinationId];
-        return pr && pr.culture && pr.culture !== me.culture &&
+        const culture = FB.countyCulture(state, d.destinationId);
+        return culture && culture !== me.culture &&
           d.destinationId !== state.player.provinceId && d.route.length > 0;
       });
-      const destination = destinations[0];
+      const liveForeignIncluded = destinations.some(function (destination) {
+        return destination.destinationId === authoredSame.id;
+      });
+      const liveHomeExcluded = !destinations.some(function (destination) {
+        return destination.destinationId === authoredForeign.id;
+      });
+      const destination = destinations.filter(function (candidate) {
+        return candidate.destinationId === authoredSame.id;
+      })[0];
       if (!destination) return { eligible:eligible, count:0 };
       const started = FB.travelStart(state, 'expedition',
         destination.destinationId, null);
@@ -263,6 +293,7 @@ test('expeditions reach foreign cultures and journal the first one only',
       state.player.travel.remainingRoute = [];
       state.player.travel.legDaysLeft = 0;
       FB.travelTick(state);
+      const cultureEncounter = state.player.travel.encounters.culture;
       const capstoneItem = state.eventQueue.filter(function (item) {
         return item.id === 'travel_capstone_expedition';
       })[0];
@@ -299,7 +330,10 @@ test('expeditions reach foreign cultures and journal the first one only',
         eligible:eligible,
         count:destinations.length,
         allForeign:allForeign,
+        liveForeignIncluded:liveForeignIncluded,
+        liveHomeExcluded:liveHomeExcluded,
         started:started,
+        cultureEncounter:cultureEncounter,
         capstoneQueued:!!capstoneItem,
         restoredPurpose:restoredPurpose,
         journalsAfterRecord:journalsAfterRecord,
@@ -314,7 +348,10 @@ test('expeditions reach foreign cultures and journal the first one only',
     expect(result.eligible).toBe(true);
     expect(result.count).toBeGreaterThan(0);
     expect(result.allForeign).toBe(true);
+    expect(result.liveForeignIncluded).toBe(true);
+    expect(result.liveHomeExcluded).toBe(true);
     expect(result.started).toBe(true);
+    expect(result.cultureEncounter).toBe(1);
     expect(result.capstoneQueued).toBe(true);
     expect(result.restoredPurpose).toBe('expedition');
     expect(result.journalsAfterRecord).toBe(1);

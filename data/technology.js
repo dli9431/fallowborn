@@ -279,7 +279,7 @@ window.FBDATA = window.FBDATA || {};
       },
       local_marriage_prospect_identity:{
         mode:'none',
-        rationale:'Local courtship networks and mixed household identities are baseline social behavior with no credible technology dependency.'
+        rationale:'Drawing courtship prospects from live local culture-faith communities is baseline social behavior with no credible technology dependency.'
       },
       descendant_betrothal_replacement:{
         mode:'none',

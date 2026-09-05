@@ -194,11 +194,12 @@ older, a step up — fatter dowry, harder suit, fewer childbearing years), a pee
 years, and a young match eight to eighteen years younger and a step down. None has an artificial
 upper-age cap, so every profile stays relative to the protagonist instead of every later-life
 search collapsing to the same 45/40/30 ages. The ordinary age-fertility curve still makes younger
-options more useful for extending the line. Each profile receives an identity from the county
-where **Seek a match** is used (`FB.marriageProspectIdentities`): authored county community
-pairs are offered first, followed by the cartesian combinations of their cultures and faiths.
-Thus 867 Dublin can produce Norse Pagan and Gaelic Catholic prospects as well as Norse
-Catholic or Gaelic Norse Pagan households, while a single-community county stays homogeneous.
+options more useful for extending the line. Each profile receives a population-weighted
+identity from the live county where **Seek a match** is used
+(`FB.marriageProspectIdentities` and `FB.pickCountyCommunity`). Only combined pairs with
+people currently present may be drawn: 867 Dublin begins with Norse Pagan and Gaelic
+Catholic prospects, but matchmaking never invents Norse Catholic or Gaelic Norse Pagan
+residents by recombining those axes. A single-community county stays homogeneous.
 The picker keeps each prospect's culture, faith, station, age, exact Standing
 requirement, and dowry direction visible at a glance. Fertility, station-gap
 interpretation, and the prospective child's identity move into the shared card
@@ -216,8 +217,8 @@ event flow follows after a choice. Outliving a spouse of higher station queues `
 payout fns `dower_*`/`claim_*` in events.js — a won claim can lift a commoner to tier 2).
 
 Technology impact review: `local_marriage_prospect_identity` is `mode:'none'` in
-`FBDATA.techImpactReviews`. Local courtship networks and mixed household identities are
-baseline social behavior with no credible research dependency.
+`FBDATA.techImpactReviews`. Drawing courtship prospects from live local culture-faith
+communities is baseline social behavior with no credible research dependency.
 
 Household-arranged first pledges and exact replacements are recorded as
 `descendant_betrothal_replacement` with `mode:'none'`: both are baseline family and social

@@ -10,6 +10,7 @@ dependsOnRuntime(__filename, [
   'js/world.js',
   'js/holywar.js',
   'js/papacy.js',
+  'js/population.js',
   'js/settlement.js',
   'js/travel.js',
   'js/localfolk.js',
@@ -130,6 +131,68 @@ test('local households are bounded, linked, deterministic, and RNG-isolated',
     expect(result.adultCount).toBeLessThanOrEqual(6);
     expect(result.childCount).toBeGreaterThanOrEqual(2);
     expect(result.childCount).toBeLessThanOrEqual(4);
+  });
+
+test('new local households use live culture-faith pairs without rewriting existing residents',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId;
+      const authored = FB.world.byId[pid].culture + '.' +
+        FB.world.byId[pid].religion;
+      const existing = FB.localFolkAt(s, pid);
+      const existingIdentities = existing.map(function (person) {
+        return person.culture + '.' + person.religion;
+      });
+
+      const rec = s.population.counties[pid];
+      rec.communities = [{
+        culture:'gaelic', religion:'norse_pagan', count:rec.count
+      }];
+      FB.reconcileCountyCommunities(s, pid);
+      const livePairs = FB.countyCommunities(s, pid).map(function (community) {
+        return community.culture + '.' + community.religion;
+      });
+
+      const oldIds = existing.map(function (person) { return person.id; });
+      oldIds.forEach(function (id) { delete s.chars[id]; });
+      delete s.localFolk[pid];
+      const beforeRng = FB.getRngState();
+      FB.localFolkEnsure(s, pid);
+      const afterRng = FB.getRngState();
+      const generated = FB.localFolkAt(s, pid);
+      const generatedIdentities = generated.map(function (person) {
+        return person.culture + '.' + person.religion;
+      });
+
+      rec.communities = [{
+        culture:'english', religion:'catholic', count:rec.count
+      }];
+      FB.reconcileCountyCommunities(s, pid);
+      return {
+        authored:authored,
+        authoredAfter:FB.world.byId[pid].culture + '.' +
+          FB.world.byId[pid].religion,
+        existingIdentities:existingIdentities,
+        livePairs:livePairs,
+        generatedIdentities:generatedIdentities,
+        generatedStable:generated.every(function (person) {
+          return person.culture === 'gaelic' &&
+            person.religion === 'norse_pagan';
+        }),
+        rngUnchanged:beforeRng === afterRng
+      };
+    });
+
+    expect(result.authoredAfter).toBe(result.authored);
+    expect(result.livePairs).toEqual(['gaelic.norse_pagan']);
+    expect(result.generatedIdentities.length).toBeGreaterThan(0);
+    expect(result.generatedIdentities.every(function (identity) {
+      return result.livePairs.indexOf(identity) >= 0;
+    })).toBe(true);
+    expect(result.generatedStable).toBe(true);
+    expect(result.rngUnchanged).toBe(true);
+    expect(result.existingIdentities.length).toBeGreaterThan(0);
   });
 
 test('activities introduce exact adults and unlock the standard relationship card',

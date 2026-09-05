@@ -210,8 +210,6 @@ window.FB = window.FB || {};
       Math.min(3, settlements.length));
     const settlement = settlements[settlementIndex] || settlements[0];
     const me = state.chars[state.player.charId];
-    const culture = pr && pr.culture || me && me.culture;
-    const religion = pr && pr.religion || me && me.religion;
     const household = {
       id:'lfh_' + safeId(pid) + '_' + generation,
       provinceId:pid,
@@ -221,6 +219,12 @@ window.FB = window.FB || {};
     };
     const scope = 'local-folk|' + worldKey(state) + '|' + pid + '|' + generation;
     return FB.withSeed(scope, function () {
+      const identity = FB.pickCountyCommunity
+        ? FB.pickCountyCommunity(state, pid) : null;
+      const culture = identity && identity.culture || pr && pr.culture ||
+        me && me.culture;
+      const religion = identity && identity.religion || pr && pr.religion ||
+        me && me.religion;
       const kind = settlement && settlement.kind || 'village';
       if (householdIndex < 2) {
         const fatherAge = FB.ri(24, 50);

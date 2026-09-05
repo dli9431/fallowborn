@@ -153,9 +153,17 @@ the complete lineage, directional parent relation,
 central office (or explicit independence), spouse and clergy rules, and the ancestor that
 supplies inherited doctrine. The same sheet opens from Faith entries on Self and Land.
 
-County faith remains authored world data rather than mutable campaign state. Founding a
-faith can convert characters and a player realm, but a future county-conversion system
-must first add an explicit saved county-faith overlay instead of mutating `FBDATA`.
+County faith has two deliberate sources. Immutable bookmark fields define activation,
+New Game, validation, and historical heartlands. During a campaign,
+`FB.countyReligion` projects the saved live demographic plurality and community-share
+helpers expose every locally practiced faith without mutating `FBDATA`. Event province
+triggers, county presentation, conversion presence, and local institutional context use
+that live source. Controller and realm faith remain political saved identities and do
+not follow a capital county's demographic change.
+
+Founding a faith can convert characters and the player realm, but it does not add county
+followers. County population changes only through the population-owned community
+transactions and the later explicit county-conversion project system.
 
 ## Player conversion
 

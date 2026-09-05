@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'data/cultures.js',
   'data/technology.js',
   'data/units.js',
+  'js/actions.js',
   'js/events.js',
   'js/main.js',
   'js/model.js',
@@ -17,8 +18,8 @@ dependsOnRuntime(__filename, [
   'js/ui_modals.js'
 ]);
 
-/* Authored county communities: both bookmark manifests, opening shares,
-   schema validation, character creation, county/Land display, and start-code compatibility.
+/* Authored and live county communities: bookmark manifests, opening shares,
+   schema validation, character creation, runtime routing, and start-code compatibility.
    Authored per docs/designs/provinces.md; NOT run by the authoring agent
    (owner runs the harness). */
 
@@ -666,6 +667,121 @@ test('1066 Iona creates a Gaelic Catholic household beneath its Norse ruler and 
     await expect(page.locator('#tab-prov')).toContainText('Norse');
     const landText = await page.locator('#tab-prov').innerText();
     expect(landText.lastIndexOf('Gaelic')).toBeLessThan(landText.lastIndexOf('Norse'));
+  });
+
+test('live county identity drives local runtime consumers without rewriting setup or realms',
+  async function ({ page }) {
+    await useStartCode(page,
+      'COMMUNITY-867-farmer-london-f-Ada-standard-0-english.catholic');
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const pid = 'york';
+      const province = FB.world.byId[pid];
+      const ownerId = state.owner[pid];
+      const owner = state.realms[ownerId];
+      const authoredBefore = {
+        identity:province.culture + '.' + province.religion,
+        communities:JSON.stringify(FB.provinceCommunities(province))
+      };
+      const realmBefore = owner && {
+        religion:owner.religion,
+        rulerCulture:owner.ruler && owner.ruler.culture,
+        rulerReligion:owner.ruler && owner.ruler.religion
+      };
+      const settlementsBefore = JSON.stringify(FB.settlementsOf(state, pid));
+
+      const rec = state.population.counties[pid];
+      rec.communities = [{
+        culture:'armenian', religion:'tengri', count:rec.count
+      }];
+      FB.reconcileCountyCommunities(state, pid);
+      state.player.visitedProvinces = [pid];
+      state.provChars = state.provChars || {};
+      delete state.provChars[pid];
+
+      const notables = FB.provNotables(state, pid);
+      const prospects = FB.marriageProspectIdentities(state, pid);
+      const eventMatches = FB.checkTrigger(state, {
+        provinceCultures:['armenian'], provinceReligionGroup:'tengri'
+      }, { locationId:pid });
+      const homeDoesNotMatch = FB.checkTrigger(state, {
+        provinceCultures:['armenian'], provinceReligionGroup:'tengri'
+      });
+      const culturePresence = FB.conversionTargetPresence(
+        state, 'culture', 'armenian');
+      const faithPresence = FB.conversionTargetPresence(
+        state, 'faith', 'tengri');
+      const realmAfterPopulation = owner && {
+        religion:owner.religion,
+        rulerCulture:owner.ruler && owner.ruler.culture,
+        rulerReligion:owner.ruler && owner.ruler.religion
+      };
+      const generatedRealm = FB.makeVassalRealm(state, {
+        id:'test_live_county_realm', name:'Test County', capital:pid,
+        rank:1, liege:ownerId
+      });
+      const me = state.chars[state.player.charId];
+      FB.applyEffects(state, { convertToProvince:true },
+        { locationId:pid }, { id:'test_live_county_conversion' });
+      FB.ui.selectProvince(pid);
+
+      return {
+        authoredBefore:authoredBefore,
+        authoredAfter:{
+          identity:province.culture + '.' + province.religion,
+          communities:JSON.stringify(FB.provinceCommunities(province))
+        },
+        liveIdentity:FB.countyCulture(state, pid) + '.' +
+          FB.countyReligion(state, pid),
+        livePairs:FB.countyCommunities(state, pid).map(function (community) {
+          return community.culture + '.' + community.religion;
+        }),
+        notablePairs:notables.map(function (person) {
+          return person.culture + '.' + person.religion;
+        }),
+        prospectPairs:prospects.map(function (identity) {
+          return identity.culture + '.' + identity.religion;
+        }),
+        eventMatches:eventMatches,
+        homeDoesNotMatch:homeDoesNotMatch,
+        culturePresence:culturePresence && culturePresence.kind,
+        faithPresence:faithPresence && faithPresence.kind,
+        convertedFaith:me.religion,
+        realmBefore:realmBefore,
+        realmAfterPopulation:realmAfterPopulation,
+        generatedRealm:{
+          culture:generatedRealm.ruler.culture,
+          religion:generatedRealm.religion
+        },
+        settlementsStable:JSON.stringify(FB.settlementsOf(state, pid)) ===
+          settlementsBefore
+      };
+    });
+
+    expect(result.authoredAfter).toEqual(result.authoredBefore);
+    expect(result.liveIdentity).toBe('armenian.tengri');
+    expect(result.livePairs).toEqual(['armenian.tengri']);
+    expect(result.notablePairs.length).toBeGreaterThan(0);
+    expect(result.notablePairs.every(function (identity) {
+      return identity === 'armenian.tengri';
+    })).toBe(true);
+    expect(result.prospectPairs).toEqual(['armenian.tengri']);
+    expect(result.eventMatches).toBe(true);
+    expect(result.homeDoesNotMatch).toBe(false);
+    expect(result.culturePresence).toBe('travel');
+    expect(result.faithPresence).toBe('travel');
+    expect(result.convertedFaith).toBe('tengri');
+    expect(result.realmAfterPopulation).toEqual(result.realmBefore);
+    expect(result.generatedRealm).toEqual({
+      culture:'armenian', religion:'tengri'
+    });
+    expect(result.settlementsStable).toBe(true);
+    await expect(page.locator('#tab-prov')).toContainText('Armenian');
+    await expect(page.locator('#tab-prov')).toContainText('Tengri');
   });
 
 test('community choices use culture-sensitive names and survive Back to the same county',

@@ -79,7 +79,13 @@ async function configureCrown(page) {
     p.travel = null;
     const home = countyIds[0];
     const minority = countyIds[1];
-    FB.world.byId[minority].religion = otherReligion;
+    const minorityRecord = s.population.counties[minority];
+    minorityRecord.communities = [{
+      culture:FB.countyCulture(s, minority),
+      religion:otherReligion,
+      count:minorityRecord.count
+    }];
+    FB.reconcileCountyCommunities(s, minority);
     p.provs = [home, minority];
     p.provinceId = home;
     s.owner[home] = 'player';
@@ -103,7 +109,8 @@ async function configureCrown(page) {
       home:home,
       minority:minority,
       religion:religion,
-      otherReligion:otherReligion
+      otherReligion:otherReligion,
+      authoredMinorityReligion:FB.world.byId[minority].religion
     };
   });
   // Settle onboarding writes caused by the synthetic rank change before
@@ -166,6 +173,7 @@ test('persecution applies through existing ledgers and feeds mistreatment',
       const pietyBefore = p.piety;
       const researchBefore = FB.techResearchRate(s, 'player');
       const faithBefore = FB.world.byId[ids.minority].religion;
+      const liveFaithBefore = FB.countyReligion(s, ids.minority);
       /* standings carry faith-relation priors; measure the policy's deltas */
       const foreignBefore = FB.standingOf(s, {
         kind:'realm', id:'policy_foreign' });
@@ -220,6 +228,8 @@ test('persecution applies through existing ledgers and feeds mistreatment',
         persecutedOnMinority:persecutedOnMinority,
         persecutedOnHome:persecutedOnHome,
         faithUnchanged:FB.world.byId[ids.minority].religion === faithBefore,
+        liveFaithUnchanged:FB.countyReligion(s, ids.minority) ===
+          liveFaithBefore,
         foreignStanding:foreignAfterProclaim - foreignBefore,
         allyStanding:allyAfterProclaim - allyBefore,
         vassalStanding:vassalAfterProclaim - vassalBefore,
@@ -245,6 +255,7 @@ test('persecution applies through existing ledgers and feeds mistreatment',
     expect(result.persecutedOnMinority).toBe(true);
     expect(result.persecutedOnHome).toBe(false);
     expect(result.faithUnchanged).toBe(true);
+    expect(result.liveFaithUnchanged).toBe(true);
     expect(result.foreignStanding).toBe(-8);
     expect(result.allyStanding).toBe(3);
     expect(result.vassalStanding).toBe(-15);
@@ -318,7 +329,8 @@ test('protected worship records faith privileges and early repeal is unlawful',
     expect(result.privilege).toMatchObject({
       defId:'protected_worship', holderType:'faith', scopeType:'county',
       scopeId:setup.minority, effectKind:'modifier',
-      effectId:'protected_worship', revocationRule:'policy_change'
+      effectId:'protected_worship', revocationRule:'policy_change',
+      holderId:setup.otherReligion
     });
     expect(result.warnedDays).toBeGreaterThan(0);
     expect(result.repealed).toBe(true);

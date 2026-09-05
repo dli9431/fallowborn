@@ -810,6 +810,43 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* The largest live combined pair, with saved community order breaking ties.
+     Character generation must use a real pair rather than independently joining
+     the county's dominant culture and dominant faith, which may not coexist. */
+  FB.countyDominantCommunity = function (state, pid) {
+    var communities = FB.countyCommunities(state, pid);
+    var best = null;
+    for (var i = 0; i < communities.length; i++) {
+      if (!best || communities[i].count > best.count) best = communities[i];
+    }
+    return best ? {
+      culture:best.culture,
+      religion:best.religion,
+      count:best.count
+    } : null;
+  };
+
+  /* Explicitly random live-community selection for newly generated locals.
+     This is not a read projection: callers choose when its one saved-RNG draw
+     belongs in their generation flow (or inside FB.withSeed). */
+  FB.pickCountyCommunity = function (state, pid) {
+    var communities = FB.countyCommunities(state, pid);
+    var total = communityTotal(communities);
+    if (!total) return null;
+    var roll = Math.floor(FB.rng() * total);
+    for (var i = 0; i < communities.length; i++) {
+      if (roll < communities[i].count) {
+        return {
+          culture:communities[i].culture,
+          religion:communities[i].religion,
+          count:communities[i].count
+        };
+      }
+      roll -= communities[i].count;
+    }
+    return communities[communities.length - 1];
+  };
+
   FB.countyCulture = function (state, pid) {
     var rec = state && state.population && state.population.counties &&
       state.population.counties[pid];

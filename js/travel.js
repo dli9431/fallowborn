@@ -13,6 +13,11 @@ window.FB = window.FB || {};
     const pr = FB.world && FB.world.byId[pid];
     return !!(pr && !pr.wasteland && pr.culture && pr.religion);
   }
+  function countyCulture(state, pid) {
+    const pr = FB.world && FB.world.byId[pid];
+    return pr && FB.countyCulture
+      ? FB.countyCulture(state, pid) : pr && pr.culture;
+  }
   function mercContractSeasonsTotal() {
     return Math.max(1, Math.floor(balance('mercContractSeasons', 4)));
   }
@@ -982,7 +987,8 @@ window.FB = window.FB || {};
       const provs = FB.world.provs || [];
       for (let i = 0; i < provs.length; i++) {
         const pr = provs[i];
-        if (!pr.culture || pr.culture === homeCulture) continue;
+        const culture = countyCulture(state, pr.id);
+        if (!culture || culture === homeCulture) continue;
         addDestination(state, out, seen, purposeId, pr.id, null, null, search);
       }
       sortDestinations(out);
@@ -1442,10 +1448,11 @@ window.FB = window.FB || {};
     if (FB.localFolkArrive) FB.localFolkArrive(state, t.destinationId);
     const pr = FB.world.byId[t.destinationId];
     const c = me(state);
+    const culture = pr && countyCulture(state, pr.id);
     /* A genuinely foreign destination guarantees one mismatch story when the
        road has not already supplied one. A wasteland has no culture, so the
        frontier's final leg never produces one. */
-    if (pr && pr.culture && pr.culture !== c.culture && !t.encounters.culture) {
+    if (culture && culture !== c.culture && !t.encounters.culture) {
       queueEncounter(state, 'culture');
     }
     if (t.purpose === 'service' && !servicePatronAlive(state, t)) {
@@ -1467,12 +1474,13 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[t.currentId];
     const c = me(state);
     const destination = t.currentId === t.destinationId && t.phase === 'outbound';
-    if (pr && pr.culture && pr.culture !== c.culture && !t.seenCultures[pr.culture] &&
+    const culture = pr && countyCulture(state, pr.id);
+    if (culture && culture !== c.culture && !t.seenCultures[culture] &&
       t.encounters.culture < balance('travelCultureEventCap', 3) &&
       (destination || FB.chance(0.65))) {
       queueEncounter(state, 'culture');
     }
-    if (pr && pr.culture) t.seenCultures[pr.culture] = 1;
+    if (culture) t.seenCultures[culture] = 1;
     const roadChance = 0.38 * (1 + (FB.traitBonus
       ? FB.traitBonus(c, 'travel', 'roadIncident') : 0));
     if (!destination && t.encounters.road < balance('travelRoadEventCap', 4) &&
@@ -2280,7 +2288,8 @@ window.FB = window.FB || {};
     if (!t || t.purpose !== 'expedition' || t.phase !== 'arrived') return false;
     const p = state.player;
     const pr = FB.world.byId[t.destinationId];
-    const foreign = !!(pr && pr.culture && pr.culture !== me(state).culture);
+    const culture = pr && countyCulture(state, pr.id);
+    const foreign = !!(culture && culture !== me(state).culture);
     if (foreign && !p.flags.expedition_journal && FB.grantItem) {
       const ref = FB.grantItem(state, 'travel_journal');
       if (ref) {

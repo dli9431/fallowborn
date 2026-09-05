@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/holywar.js',
+  'js/population.js',
   'js/world.js',
   'data/events_world.js'
 ]);
@@ -181,6 +182,14 @@ test('claim bases include service, vow, occupation, right, support, office, and 
       };
       character.traits = ['test_vow_claim'];
       character.culture = 'arabic';
+      character.religion = 'catholic';
+      var acrePopulation = FB.state.population.counties.acre;
+      acrePopulation.count = 10000;
+      acrePopulation.communities = [
+        { culture:'arabic', religion:'catholic', count:2500 },
+        { culture:'greek', religion:'orthodox', count:7500 }
+      ];
+      FB.reconcileCountyCommunities(FB.state, 'acre');
       FB.state.player.piety = 500;
       FB.state.player.fabricatedClaim = 'acre';
       var resolved = FBTEST.resolveGreatHolyWar({
@@ -209,7 +218,7 @@ test('claim bases include service, vow, occupation, right, support, office, and 
       vow:0.9375,
       occupation:1,
       right:1,
-      support:0.5,
+      support:0.25,
       office:1
     });
   });

@@ -193,6 +193,9 @@ window.FB = window.FB || {};
       var pid = counties[i], province = FB.world.byId[pid];
       if (!province || province.wasteland) continue;
       total++;
+      /* This is the authored historical heartland used to decide whether a
+         head may call for restoration, not a claim that today's population or
+         controller still follows it. */
       if (FB.faithInFold(state, religionId, province.religion)) originalFaith++;
       var dev = state.dev[pid] || 1;
       totalDev += dev;
@@ -1743,9 +1746,31 @@ window.FB = window.FB || {};
       var pid = asset.ids[i], province = FB.world.byId[pid];
       var dev = state.dev[pid] || 1;
       total += dev;
-      if (province && FB.faithInFold(state, province.religion,
-          identity.religion)) matched += dev * 0.5;
-      if (province && province.culture === identity.culture) matched += dev * 0.5;
+      if (!province) continue;
+      var communities = FB.countyCommunities
+        ? FB.countyCommunities(state, pid) : [];
+      if (!communities.length) {
+        communities = [{
+          culture:province.culture, religion:province.religion, count:1
+        }];
+      }
+      var people = 0, faithPeople = 0, culturePeople = 0;
+      for (var communityIndex = 0;
+           communityIndex < communities.length; communityIndex++) {
+        var community = communities[communityIndex];
+        people += community.count;
+        if (identity.religion && FB.faithInFold(
+          state, community.religion, identity.religion)) {
+          faithPeople += community.count;
+        }
+        if (community.culture === identity.culture) {
+          culturePeople += community.count;
+        }
+      }
+      if (people > 0) {
+        matched += dev * 0.5 * faithPeople / people;
+        matched += dev * 0.5 * culturePeople / people;
+      }
     }
     return total ? matched / total : 0;
   }

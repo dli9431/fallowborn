@@ -1504,13 +1504,20 @@ window.FB = window.FB || {};
   /* spawn a sub-realm (generated duke/count, or a player-granted county) */
   FB.makeVassalRealm = function (state, opts) {
     const top = FB.topRealm(state, opts.liege);
+    const capitalProvince = FB.world.byId[opts.capital] || {};
+    const localIdentity = FB.countyDominantCommunity
+      ? FB.countyDominantCommunity(state, opts.capital) : null;
+    const culture = opts.culture ||
+      (localIdentity && localIdentity.culture) || capitalProvince.culture ||
+      'frankish';
     const r = {
       id: opts.id, name: opts.name,
       color: shade(state.realms[top] ? state.realms[top].color : '#888888', opts.id),
       capital: opts.capital, aggression: 0, rank: opts.rank || 1, liege: opts.liege,
-      religion: opts.religion ||
-        ((FB.world.byId[opts.capital] || {}).religion || null),
-      alive: true, ruler: makeRuler(opts.culture || 'frankish', null,
+      religion:opts.religion ||
+        (localIdentity && localIdentity.religion) ||
+        capitalProvince.religion || null,
+      alive: true, ruler: makeRuler(culture, null,
         state.date && state.date.year), war: null,
       op: 0, generated: true, favor: FB.ri(-15, 15) // the house's standing at its liege's court
     };
@@ -1707,6 +1714,8 @@ window.FB = window.FB || {};
     }
     const r = state.realms[rid];
     if (r && r.religion) return r.religion;
+    /* Legacy fallback only. Realm faith is political saved state and must not
+       begin following later demographic changes at its capital. */
     const pr = r && FB.world.byId[r.capital];
     return pr ? pr.religion : null;
   };
@@ -1904,7 +1913,9 @@ window.FB = window.FB || {};
       techSeed:definition.techSeed || null,
       religion:religionId,
       alive:true,
-      ruler:makeRuler(seat.culture, null, state.date.year),
+      ruler:makeRuler(FB.countyCulture
+        ? FB.countyCulture(state, meta.seat) : seat.culture,
+        null, state.date.year),
       war:null,
       op:0
     };
@@ -2451,7 +2462,10 @@ window.FB = window.FB || {};
     if (r.succession && r.succession.papalElective) return r.succession;
     if (!r.ruler) {
       const cap = FB.world.byId[r.capital];
-      r.ruler = makeRuler(cap ? cap.culture : 'frankish', null, state.date && state.date.year);
+      const culture = cap && FB.countyCulture
+        ? FB.countyCulture(state, r.capital) : cap && cap.culture;
+      r.ruler = makeRuler(culture || 'frankish', null,
+        state.date && state.date.year);
     }
     if (r.ruler.generation === undefined) r.ruler.generation = 1;
     if (!r.succession || !r.succession.members) {
@@ -2496,7 +2510,9 @@ window.FB = window.FB || {};
     if (!r || r.succession) return false;
     if (!r.ruler) {
       const cap = FB.world.byId[r.capital];
-      r.ruler = makeRuler(cap ? cap.culture : 'frankish', null,
+      const culture = cap && FB.countyCulture
+        ? FB.countyCulture(state, r.capital) : cap && cap.culture;
+      r.ruler = makeRuler(culture || 'frankish', null,
         state.date && state.date.year);
     }
     if (r.ruler.generation === undefined) r.ruler.generation = 1;
@@ -5075,6 +5091,9 @@ window.FB = window.FB || {};
     state.dev[pid] = 1;
     state.holder[pid] = holderId;
     state.owner[pid] = ownerId;
+    /* Population state was initialized while this province was empty. Add its
+       settler community now so every live identity reader sees saved state. */
+    if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     FB.worldCompileSettlements(pid);
     FB.invalidateRealmCache();
     if (FB.marketWorldDirty) FB.marketWorldDirty();
@@ -5287,6 +5306,8 @@ window.FB = window.FB || {};
       if (ev.newRealm) {
         rid = ev.newRealm.id;
         var cap = FB.world.byId[ev.newRealm.capital];
+        var localIdentity = cap && FB.countyDominantCommunity
+          ? FB.countyDominantCommunity(state, cap.id) : null;
         var formerSovereign = state.owner[ev.newRealm.capital];
         state.realms[rid] = {
           id: rid, name: ev.newRealm.name, color: ev.newRealm.color,
@@ -5296,8 +5317,12 @@ window.FB = window.FB || {};
           techTraditions:Array.isArray(ev.newRealm.techTraditions)
             ? ev.newRealm.techTraditions.slice() : null,
           techSeed:ev.newRealm.techSeed || null,
-          religion: ev.newRealm.religion || (cap ? cap.religion : null),
-          alive: true, ruler: makeRuler(cap ? cap.culture : 'arabic',
+          religion:ev.newRealm.religion ||
+            (localIdentity && localIdentity.religion) ||
+            (cap ? cap.religion : null),
+          alive: true, ruler: makeRuler(
+            (localIdentity && localIdentity.culture) ||
+              (cap ? cap.culture : 'arabic'),
             ev.newRealm.ruler, state.date.year), war: null, op: 0
         };
         FB.ensureRealmSuccession(state, rid);
@@ -7060,11 +7085,16 @@ window.FB = window.FB || {};
         const old = FB.isPlayerSovereign(state) ? state.realms.player : null;
         const cap = (old && old.capital) || p.provs[0];
         const pr = FB.world.byId[cap];
+        const identity = pr && FB.countyDominantCommunity
+          ? FB.countyDominantCommunity(state, cap) : null;
         const uid = 'usurper_' + state.turn;
         const u = FB.makeVassalRealm(state, {
           id: uid, name: old ? old.name : 'Realm of ' + (pr ? pr.name : 'the Usurper'),
           capital: cap, rank: old ? old.rank : Math.max(1, p.tier - 3), liege: null,
-          culture: pr ? pr.culture : 'frankish'
+          culture:identity && identity.culture ||
+            (pr ? pr.culture : 'frankish'),
+          religion:identity && identity.religion ||
+            (pr ? pr.religion : null)
         });
         u.color = old ? old.color : '#f0c840'; // the map barely ripples
         if (old) {

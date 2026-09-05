@@ -76,6 +76,11 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
         }
         const york = FB.countyCommunities(state, 'york');
         york[0].count = 1;
+        const dominant = FB.countyDominantCommunity(state, 'york');
+        const originalRng = FB.rng;
+        FB.rng = function () { return 0.99; };
+        const picked = FB.pickCountyCommunity(state, 'york');
+        FB.rng = originalRng;
         const authoredAfter = JSON.stringify(FB.bookmark(state.start.id).provinces);
         return {
           schema:state.population.schema,
@@ -88,6 +93,8 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
           authoredStable:authoredBefore === authoredAfter,
           yorkCulture:FB.countyCulture(state, 'york'),
           yorkReligion:FB.countyReligion(state, 'york'),
+          dominant:dominant.culture + '.' + dominant.religion,
+          weightedPick:picked.culture + '.' + picked.religion,
           englishShare:FB.countyCultureShare(state, 'york', 'english'),
           catholicShare:FB.countyReligionShare(state, 'york', 'catholic')
         };
@@ -100,6 +107,8 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
       expect(result.authoredStable).toBe(true);
       expect(result.yorkCulture).toBe('english');
       expect(result.yorkReligion).toBe('catholic');
+      expect(result.dominant).toBe('english.catholic');
+      expect(result.weightedPick).toBe('norse.norse_pagan');
       expect(result.englishShare).toBeCloseTo(0.75, 4);
       expect(result.catholicShare).toBeCloseTo(0.75, 4);
     });

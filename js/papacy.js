@@ -371,8 +371,10 @@ window.FB = window.FB || {};
   function starterCardinalCharacter(state, index) {
     var pope = FB.romanPope(state);
     var seat = FB.world && FB.world.byId && FB.world.byId.roma;
+    var seatCulture = seat && FB.countyCulture
+      ? FB.countyCulture(state, seat.id) : seat && seat.culture;
     var culture = index % 3 === 0 ? 'italian' :
-      pope && pope.culture || seat && seat.culture || 'italian';
+      pope && pope.culture || seatCulture || 'italian';
     if (!FBDATA.cultures[culture]) culture = pope && pope.culture || 'frankish';
     var c = FB.makeCharacter(state, {
       sex:'m',

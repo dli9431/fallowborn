@@ -1883,8 +1883,11 @@ window.FB = window.FB || {};
     let c = cid ? state.chars[cid] : null;
     if (!c) {
       const pr = FB.world.byId[state.player.provinceId];
+      const identity = FB.pickCountyCommunity
+        ? FB.pickCountyCommunity(state, pr.id) : null;
       c = FB.makeCharacter(state, {
-        culture:pr.culture, religion:pr.religion,
+        culture:identity && identity.culture || pr.culture,
+        religion:identity && identity.religion || pr.religion,
         born:state.date.year - FB.ri(22, 48),
         sex:def.maleOnly ? 'm' : undefined,
         role:'retainer', station:Math.min(2, state.player.tier),
@@ -3415,8 +3418,11 @@ window.FB = window.FB || {};
     if (!enterprise) return false;
     const def = FBDATA.enterprises[enterprise.type];
     const province = FB.world.byId[enterprise.provinceId];
+    const identity = FB.pickCountyCommunity
+      ? FB.pickCountyCommunity(state, enterprise.provinceId) : null;
     const c = FB.makeCharacter(state, {
-      culture:province.culture, religion:province.religion,
+      culture:identity && identity.culture || province.culture,
+      religion:identity && identity.religion || province.religion,
       born:state.date.year - FB.ri(20, 44), role:'laborer',
       station:Math.min(2, state.player.tier), quality:1,
       homeProvinceId:enterprise.provinceId

@@ -1154,7 +1154,8 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `religionGroup` | any faith id in the player's inheritance lineage |
 | `religionGroups` | array form: any listed faith or ancestor matches |
 | `cultures` | array of culture ids — any matches the player's culture |
-| `provinceReligionGroup`, `provinceCultures`, `terrains`, `coastal` | home province checks |
+| `provinceReligionGroup`, `provinceCultures` | event-location county's live dominant faith lineage or culture; queued/travel events use their saved `locationId`, otherwise the player's home county |
+| `terrains`, `coastal` | immutable physical checks on that same event-location county |
 | `atWar`, `realmAtWar`, `liegeAtWar`, `isVassal`, `isLiege` | war/politics (`isLiege`: the player has vassals of their own) |
 | `hasRole` / `noRole`, `roleOpinionAbove/Below` | `{role, value}`; roles: `lord priest friend rival spouse suitor` |
 | `participantStandingAbove` / `participantStandingBelow` | option-only `{participant, value}` check against the exact bound participant; random top-level triggers may not depend on participants |
@@ -1454,7 +1455,8 @@ any of its data is applied.) ·
 `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,
 `killRole` (optionally accompanied by `kinslayer:true`; this grants Kinslayer only when
 the killed role is the protagonist's spouse or blood relative), `educateChild` · `moveRandom` ·
-`convertToProvince` ·
+`convertToProvince` (changes the protagonist and an existing player realm to the current
+event-location county's live dominant faith; it does not change county communities) ·
 `foundFaith:{definition:{...},convertFounder?,convertHousehold?,convertRealm?}` (validate
 and save a new faith definition, defaulting an omitted `group` or `"$current"` group to
 the protagonist's current faith; the founder converts unless explicitly false, optional

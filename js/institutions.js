@@ -1095,7 +1095,9 @@ window.FB = window.FB || {};
       ? 'faith' : 'county';
     var province = FB.world.byId[pid];
     var holderId = holderType === 'faith'
-      ? (province && province.religion) || (playerChar(state) || {}).religion
+      ? (province && FB.countyReligion
+        ? FB.countyReligion(state, pid) : province && province.religion) ||
+        (playerChar(state) || {}).religion
       : pid;
     var next = {
       id:privilegeRecordId('modifier', modifierId, pid),
@@ -1705,7 +1707,9 @@ window.FB = window.FB || {};
     }
     if (pending.privilegeId === 'sanctuary') {
       var province = FB.world.byId[pending.scopeId];
-      return { type:'faith', id:(province && province.religion) ||
+      return { type:'faith', id:(province && FB.countyReligion
+        ? FB.countyReligion(state, pending.scopeId)
+        : province && province.religion) ||
         (playerChar(state) || {}).religion };
     }
     return { type:'county', id:pending.scopeId };
@@ -1887,6 +1891,8 @@ window.FB = window.FB || {};
   /* Directly held counties whose faith lies outside the realm's fold —
      anything short of 'same' or 'in_fold' counts as a minority community.
      Read-only; policy never rewrites a county's faith. */
+  /* The policy follows the live dominant county faith; controller and realm
+     faith remain separate political identities. */
   FB.realmPolicyMinorityCounties = function (state) {
     var out = [];
     if (!state || !state.player || !FB.realmReligionId ||
@@ -1896,8 +1902,11 @@ window.FB = window.FB || {};
     var provs = Array.isArray(state.player.provs) ? state.player.provs : [];
     for (var i = 0; i < provs.length; i++) {
       var province = FB.world.byId[provs[i]];
-      if (!province || !province.religion) continue;
-      var relation = FB.faithRelation(state, religion, province.religion);
+      var countyReligion = province && FB.countyReligion
+        ? FB.countyReligion(state, provs[i])
+        : province && province.religion;
+      if (!countyReligion) continue;
+      var relation = FB.faithRelation(state, religion, countyReligion);
       if (relation !== 'same' && relation !== 'in_fold') out.push(provs[i]);
     }
     out.sort(compareId);
@@ -2354,7 +2363,9 @@ window.FB = window.FB || {};
     for (var provinceIndex = 0; provinceIndex < provs.length; provinceIndex++) {
       var province = FB.world && FB.world.byId && FB.world.byId[provs[provinceIndex]];
       countyFaiths.push(provs[provinceIndex] + ':' +
-        (province && province.religion || ''));
+        (province && FB.countyReligion
+          ? FB.countyReligion(state, provs[provinceIndex])
+          : province && province.religion || ''));
     }
     var liege = p.liege && state.realms[p.liege];
     return [

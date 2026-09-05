@@ -826,7 +826,17 @@ window.FB = window.FB || {};
       ? FB.serfHomeAuthority(state) : null;
     const pr = FB.world.byId[state.player.provinceId];
     const me = state.chars[state.player.charId];
-    let opts = { culture: pr.culture, religion: pr.religion, born: state.date.year - FB.ri(25, 55), role: role };
+    const institutional = role === 'lord' || role === 'steward' ||
+      role === 'priest';
+    const identity = institutional && FB.countyDominantCommunity
+      ? FB.countyDominantCommunity(state, pr.id)
+      : (FB.pickCountyCommunity
+        ? FB.pickCountyCommunity(state, pr.id) : null);
+    let opts = {
+      culture:identity && identity.culture || pr.culture,
+      religion:identity && identity.religion || pr.religion,
+      born:state.date.year - FB.ri(25, 55), role:role
+    };
     if (role === 'lord') { opts.quality = 4; opts.sex = 'm'; opts.dyn = 'of ' + pr.name; opts.station = 3; }
     else if (role === 'steward') { opts.quality = 3; opts.born = state.date.year - FB.ri(30, 60); opts.station = 2; }
     else if (role === 'priest') { opts.quality = 2; opts.sex = 'm'; opts.born = state.date.year - FB.ri(30, 60); opts.station = 1; }
@@ -2408,8 +2418,8 @@ window.FB = window.FB || {};
 
   /* Notable folk of a province — the local cast for the player's home,
      lazily-generated worthies elsewhere (persisted in state.provChars). */
-  function lordWord(state, pr) {
-    return FB.faithValue(state, pr.religion, 'words.landed').value || 'Lord';
+  function lordWord(state, religionId) {
+    return FB.faithValue(state, religionId, 'words.landed').value || 'Lord';
   }
 
   /* Reusable explanation adapter over the authoritative FB.canCourt gate.
@@ -2545,14 +2555,18 @@ window.FB = window.FB || {};
     if (!alive.length) {
       const y = state.date.year;
       const ids = [];
+      const identity = FB.countyDominantCommunity
+        ? FB.countyDominantCommunity(state, pid) : null;
+      const localCulture = identity && identity.culture || pr.culture;
+      const localReligion = identity && identity.religion || pr.religion;
       function mk(opts, epithetMsg) {
         const c = FB.makeCharacter(state, opts);
         c.epithetMsg = epithetMsg;
         ids.push(c.id);
         return c;
       }
-      const lw = lordWord(state, pr);
-      const lord = mk({ culture: pr.culture, religion: pr.religion, sex: 'm', born: y - FB.ri(28, 55), quality: 4, role: 'notable', station: 3 },
+      const lw = lordWord(state, localReligion);
+      const lord = mk({ culture:localCulture, religion:localReligion, sex:'m', born:y - FB.ri(28, 55), quality:4, role:'notable', station:3 },
         FB.msg('fx.epithet.province_lord', {
           forms: {
             select: 'value', param: 'kind', cases: {
@@ -2565,11 +2579,11 @@ window.FB = window.FB || {};
         }, {
           kind: lw === 'Emir' ? 'emir' : (lw === 'Chief' ? 'chief' :
             (lw === 'Lord' ? 'other' : 'custom')),
-          landed:FB.dataParam('religion', pr.religion, 'words.landed'),
+          landed:FB.dataParam('religion', localReligion, 'words.landed'),
           province: pr.name
         }));
       lord.dyn = 'of ' + pr.name;
-      mk({ culture: pr.culture, religion: pr.religion, sex: 'm', born: y - FB.ri(30, 60), quality: 2, role: 'notable', station: 1 },
+      mk({ culture:localCulture, religion:localReligion, sex:'m', born:y - FB.ri(30, 60), quality:2, role:'notable', station:1 },
         FB.msg('fx.epithet.cleric', {
           forms: {
             select: 'value', param: 'faith', cases: {
@@ -2583,19 +2597,26 @@ window.FB = window.FB || {};
         }, {
           faith:(function () {
             const word = String(FB.faithValue(
-              state, pr.religion, 'words.cleric').value || '').toLowerCase();
+              state, localReligion, 'words.cleric').value || '').toLowerCase();
             return word === 'imam' ? 'muslim' : (word === 'godi' ? 'pagan' :
               (word === 'rabbi' ? 'jewish' : (word === 'priest' ? 'other' : 'custom')));
           })(),
-          cleric:FB.dataParam('religion', pr.religion, 'words.cleric')
+          cleric:FB.dataParam('religion', localReligion, 'words.cleric')
         }));
       const mkt = (state.dev[pid] || 1) >= 5;
-      mk({ culture: pr.culture, religion: pr.religion, born: y - FB.ri(38, 62), quality: 2, role: 'notable', station: mkt ? 2 : 1 },
+      const elderIdentity = FB.pickCountyCommunity
+        ? FB.pickCountyCommunity(state, pid) : identity;
+      mk({
+        culture:elderIdentity && elderIdentity.culture || localCulture,
+        religion:elderIdentity && elderIdentity.religion || localReligion,
+        born:y - FB.ri(38, 62), quality:2, role:'notable',
+        station:mkt ? 2 : 1
+      },
         mkt
           ? FB.msg('fx.epithet.market_master', 'Master of the market', {})
           : FB.msg('fx.epithet.village_elder', 'Village elder', {}));
       for (let i = 0; i < 2; i++) {
-        const kin = mk({ culture: pr.culture, religion: pr.religion, born: y - FB.ri(16, 26), quality: FB.ri(0, 2), role: 'notable', station: 3 }, null);
+        const kin = mk({ culture:localCulture, religion:localReligion, born:y - FB.ri(16, 26), quality:FB.ri(0, 2), role:'notable', station:3 }, null);
         kin.dyn = lord.dyn;
         kin.epithetMsg = FB.msg('fx.epithet.lord_child', {
           forms: {
@@ -2694,37 +2715,26 @@ window.FB = window.FB || {};
     } }
   ];
 
-  /* Matchmakers draw from the county where the search is made. Authored
-     community pairs come first so every represented people is heard from;
-     then their distinct culture and faith dimensions recombine into plausible
-     mixed local identities. A paired community remains one indivisible identity
-     and does not contribute either half to recombination. Single-community
-     counties naturally retain their one identity. */
+  /* Matchmakers draw only real live community pairs from the county where the
+     search is made, weighted by population. They never invent a culture-faith
+     combination absent from the saved population. */
   FB.marriageProspectIdentities = function (state, pid) {
     const provinceId = pid || state && state.player && state.player.provinceId;
     const pr = FB.world && FB.world.byId && FB.world.byId[provinceId];
     const me = state && state.player && state.chars[state.player.charId];
-    const source = pr && FB.provinceCommunities
-      ? FB.provinceCommunities(pr)
+    const source = pr && FB.countyCommunities
+      ? FB.countyCommunities(state, provinceId)
       : (pr ? [{ culture:pr.culture, religion:pr.religion }] :
         (me ? [{ culture:me.culture, religion:me.religion }] : []));
-    const out = [], cultures = [], religions = [], seen = {};
-    function add(culture, religion, paired) {
+    const out = [], seen = {};
+    function add(culture, religion) {
       const key = culture + '|' + religion;
       if (!culture || !religion || seen[key]) return;
       seen[key] = 1;
       out.push({ culture:culture, religion:religion });
-      if (paired) return;
-      if (cultures.indexOf(culture) < 0) cultures.push(culture);
-      if (religions.indexOf(religion) < 0) religions.push(religion);
     }
     for (let i = 0; i < source.length; i++) {
-      add(source[i].culture, source[i].religion, source[i].paired);
-    }
-    for (let ci = 0; ci < cultures.length; ci++) {
-      for (let ri = 0; ri < religions.length; ri++) {
-        add(cultures[ci], religions[ri]);
-      }
+      add(source[i].culture, source[i].religion);
     }
     return out;
   };
@@ -2748,8 +2758,8 @@ window.FB = window.FB || {};
     const y = state.date.year;
     const out = [];
     const identities = FB.marriageProspectIdentities(state, pr && pr.id);
-    const authoredIdentityCount = FB.provinceCommunities
-      ? FB.provinceCommunities(pr).length : 1;
+    const dominantIdentity = FB.countyDominantCommunity
+      ? FB.countyDominantCommunity(state, searchPid) : null;
     if (state.player.suitorIds) {
       for (const id of state.player.suitorIds) {
         const m = state.chars[id];
@@ -2771,22 +2781,12 @@ window.FB = window.FB || {};
       if (prof.minPlayerAge !== undefined && myAge < prof.minPlayerAge) continue;
       if (out.some(function (m) { return m.suitorProfile === i; })) continue;
       const st = FB.clamp(ps + prof.dSt, 0, 3);
-      let identity = identities[i];
-      if (i >= authoredIdentityCount) {
-        const mixed = identities.slice(authoredIdentityCount);
-        const unused = mixed.filter(function (candidateIdentity) {
-          return !out.some(function (candidate) {
-            return candidate.culture === candidateIdentity.culture &&
-              candidate.religion === candidateIdentity.religion;
-          });
+      const weightedIdentity = FB.pickCountyCommunity
+        ? FB.pickCountyCommunity(state, searchPid) : null;
+      const identity = weightedIdentity || dominantIdentity ||
+        (identities.length ? identities[0] : {
+          culture:pr.culture, religion:pr.religion
         });
-        if (unused.length) identity = FB.pick(unused);
-      }
-      if (!identity) {
-        identity = identities.length
-          ? identities[i % identities.length]
-          : { culture:pr.culture, religion:pr.religion };
-      }
       const c = FB.makeCharacter(state, {
         sex: me.sex === 'm' ? 'f' : 'm',
         culture: identity.culture, religion: identity.religion,
@@ -4410,7 +4410,8 @@ window.FB = window.FB || {};
     const age = triggerSnapshotValue(snapshot, 'age', function () {
       return FB.ageOf(me, state.date.year);
     });
-    const pr = FB.world.byId[p.provinceId];
+    const provinceId = ctx && ctx.locationId || p.provinceId;
+    const pr = FB.world.byId[provinceId];
 
     if (tg.tierMin !== undefined && p.tier < tg.tierMin) return false;
     if (tg.tierMax !== undefined && p.tier > tg.tierMax) return false;
@@ -4529,10 +4530,25 @@ window.FB = window.FB || {};
     if (tg.religionGroups && !tg.religionGroups.some(function (id) {
       return FB.faithIsA(me.religion, id, state);
     })) return false;
-    if (tg.provinceReligionGroup &&
-        (!pr || !FB.faithIsA(pr.religion, tg.provinceReligionGroup, state))) return false;
+    if (tg.provinceReligionGroup) {
+      const provinceReligion = triggerSnapshotLookup(
+        snapshot, 'provinceReligions', provinceId, function () {
+          return pr && FB.countyReligion
+            ? FB.countyReligion(state, pr.id) : pr && pr.religion;
+        });
+      if (!provinceReligion || !FB.faithIsA(
+        provinceReligion, tg.provinceReligionGroup, state)) return false;
+    }
     if (tg.cultures && tg.cultures.indexOf(me.culture) < 0) return false;
-    if (tg.provinceCultures && (!pr || tg.provinceCultures.indexOf(pr.culture) < 0)) return false;
+    if (tg.provinceCultures) {
+      const provinceCulture = triggerSnapshotLookup(
+        snapshot, 'provinceCultures', provinceId, function () {
+          return pr && FB.countyCulture
+            ? FB.countyCulture(state, pr.id) : pr && pr.culture;
+        });
+      if (!provinceCulture ||
+          tg.provinceCultures.indexOf(provinceCulture) < 0) return false;
+    }
     if (tg.terrains && (!pr || tg.terrains.indexOf(pr.terrain) < 0)) return false;
     if (tg.coastal && (!pr || !pr.coastal)) return false;
     if (tg.atWar !== undefined && (!!p.war) !== tg.atWar) return false;
@@ -10407,11 +10423,13 @@ window.FB = window.FB || {};
       }
     }
     if (fx.convertToProvince) {
-      const pr = FB.world.byId[p.provinceId];
+      const pr = FB.world.byId[ctx.locationId || p.provinceId];
       if (pr) {
-        me.religion = pr.religion;
+        const religion = FB.countyReligion
+          ? FB.countyReligion(state, pr.id) : pr.religion;
+        me.religion = religion;
         if (state.realms.player && state.realms.player.alive) {
-          state.realms.player.religion = pr.religion;
+          state.realms.player.religion = religion;
         }
       }
     }
@@ -11267,8 +11285,12 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[p.provinceId];
     const y = state.date.year;
     const st = FB.clamp(FB.playerStation(state), 0, 3); // a peer — a common soldier
+    const identity = FB.pickCountyCommunity
+      ? FB.pickCountyCommunity(state, pr.id) : null;
     const c = FB.makeCharacter(state, {
-      sex: 'm', culture: pr.culture, religion: me.religion,
+      sex:'m',
+      culture:identity && identity.culture || pr.culture,
+      religion:identity && identity.religion || pr.religion,
       born: y - FB.clamp(FB.ageOf(me, y) + FB.ri(-2, 5), 16, 40),
       role: 'suitor', opinion: FB.ri(10, 30), station: st, quality: st + FB.ri(0, 1)
     });

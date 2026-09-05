@@ -3080,7 +3080,10 @@ window.FB = window.FB || {};
     for (let i = 0; i < realmProvs.length; i++) {
       const pid = realmProvs[i];
       const prov = FB.world && FB.world.byId && FB.world.byId[pid];
-      if (prov && prov.religion === fid) {
+      const present = prov && FB.countyReligionShare
+        ? FB.countyReligionShare(s, pid, fid) > 0
+        : prov && prov.religion === fid;
+      if (present) {
         countInRealm++;
         if (pid === capitalPid) inCapital = true;
       }
@@ -3144,7 +3147,9 @@ window.FB = window.FB || {};
     for (let i = 0; i < realmProvs.length; i++) {
       const pid = realmProvs[i];
       const prov = FB.world && FB.world.byId && FB.world.byId[pid];
-      if (prov && prov.culture === cid) countInRealm++;
+      if (prov && (FB.countyCultureShare
+        ? FB.countyCultureShare(s, pid, cid) > 0
+        : prov.culture === cid)) countInRealm++;
     }
     if (countInRealm > 0) {
       lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Culture of {count} realm counties', { count:countInRealm })) + '</i>');
@@ -21733,7 +21738,7 @@ window.FB = window.FB || {};
       'Kin and gossips name {count} people who would hear your suit:', {
         count:cands.length
       })) + '</p><p>' + esc(FB.T(
-        'These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household.', {
+        'These prospects reflect the communities currently living in {county}.', {
           county:province ? province.name : FB.T('this county')
         })) +
       '</p></div><div class="gm-list suitor-list">';
@@ -22774,8 +22779,11 @@ window.FB = window.FB || {};
         } else if (v === '~hire') {
           if (!masterAvailable || s.player.gold < masterFee) return;
           const pr = FB.world.byId[s.player.provinceId];
+          const identity = FB.pickCountyCommunity
+            ? FB.pickCountyCommunity(s, pr.id) : null;
           const master = FB.makeCharacter(s, {
-            culture: pr.culture, religion: pr.religion,
+            culture:identity && identity.culture || pr.culture,
+            religion:identity && identity.religion || pr.religion,
             born: s.date.year - FB.ri(35, 60), quality: 3, role: 'tutor'
           });
           master.epithetMsg = FB.msg('fx.epithet.hired_master', 'Hired master', {});

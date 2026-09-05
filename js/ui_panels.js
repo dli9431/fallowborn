@@ -6252,7 +6252,12 @@ window.FB = window.FB || {};
     } else {
       const rid = s.owner[pid];
       const realm = s.realms[rid];
-      const communities = FB.provinceCommunities(pr);
+      const communities = FB.countyCommunities
+        ? FB.countyCommunities(s, pid) : FB.provinceCommunities(pr);
+      const countyCulture = FB.countyCulture
+        ? FB.countyCulture(s, pid) : pr.culture;
+      const countyReligion = FB.countyReligion
+        ? FB.countyReligion(s, pid) : pr.religion;
       const B = FBDATA.balance || {};
       const myRealm = rid === 'player';
       let curRealmMen;
@@ -6362,8 +6367,8 @@ window.FB = window.FB || {};
         (capitalOfRealm ? landKv('Realm capital', esc(FB.T('★ {realm}', {
           realm: capitalOfRealm.name
         })), true) : '') +
-        landKv('Culture', esc(cultureName(s, pr.culture))) +
-        landKv('Faith', faithDetailsLink(s, pr.religion)) +
+        landKv('Culture', esc(cultureName(s, countyCulture))) +
+        landKv('Faith', faithDetailsLink(s, countyReligion)) +
         (communities.length > 1 ? landKv('Communities',
           communities.map(function (community) {
             const faith = FB.religionOf(community.religion, s);

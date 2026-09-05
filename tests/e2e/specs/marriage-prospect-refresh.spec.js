@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/events.js',
   'js/model.js',
+  'js/population.js',
   'js/travel.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -155,7 +156,7 @@ test('Seek a match replaces all three prospects only after its cooldown',
     })).toBe(false);
   });
 
-test('Seek a match draws culture-faith identities from the current county and raises mixed proposal thresholds',
+test('Seek a match draws only live culture-faith pairs and raises mixed proposal thresholds',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const state = FB.state;
@@ -165,10 +166,22 @@ test('Seek a match draws culture-faith identities from the current county and ra
       protagonist.religion = 'norse_pagan';
       const pool = FB.marriageProspectIdentities(state, 'dublin');
       const candidates = FB.refreshSuitors(state);
+      const generatedPairs = candidates.map(function (candidate) {
+        return candidate.culture + '.' + candidate.religion;
+      });
+      /* Keep the standing part of this regression deterministic regardless of
+         which valid weighted pairs the saved RNG drew. */
+      candidates[0].culture = 'norse';
+      candidates[0].religion = 'norse_pagan';
+      candidates[1].culture = 'gaelic';
+      candidates[1].religion = 'catholic';
+      candidates[2].culture = 'norse';
+      candidates[2].religion = 'norse_pagan';
       return {
         pool:pool.map(function (identity) {
           return identity.culture + '.' + identity.religion;
         }),
+        generatedPairs:generatedPairs,
         candidates:candidates.map(function (candidate) {
           const premium = FB.courtshipIdentityStandingPremium(state, candidate);
           return {
@@ -194,10 +207,11 @@ test('Seek a match draws culture-faith identities from the current county and ra
 
     expect(result.pool).toEqual([
       'norse.norse_pagan',
-      'gaelic.catholic',
-      'norse.catholic',
-      'gaelic.norse_pagan'
+      'gaelic.catholic'
     ]);
+    expect(result.generatedPairs.every(function (identity) {
+      return result.pool.indexOf(identity) >= 0;
+    })).toBe(true);
     expect(result.searchProvinces).toEqual(['dublin', 'dublin', 'dublin']);
     expect(result.culturePremium).toBe(20);
     expect(result.faithPremium).toBe(30);
@@ -218,13 +232,13 @@ test('Seek a match draws culture-faith identities from the current county and ra
       faithPremium:result.faithPremium,
       threshold:result.base + result.culturePremium + result.faithPremium
     });
-    expect([
-      'norse.catholic', 'gaelic.norse_pagan'
-    ]).toContain(result.candidates[2].identity);
-    expect(result.candidates[2].profile).toBe(2);
-    expect(result.candidates[2].threshold).toBe(
-      result.base + result.candidates[2].culturePremium +
-      result.candidates[2].faithPremium);
+    expect(result.candidates[2]).toEqual({
+      profile:2,
+      identity:'norse.norse_pagan',
+      culturePremium:0,
+      faithPremium:0,
+      threshold:result.base
+    });
 
     const reopened = await page.evaluate(function () {
       const ids = FB.state.player.suitorIds.slice();
@@ -261,7 +275,7 @@ test('Seek a match draws culture-faith identities from the current county and ra
     expect(reopened.courtshipVisit.daysToThreshold).toBeGreaterThan(
       reopened.friendVisit.daysToThreshold);
     await expect(page.getByText(
-      'These prospects reflect the cultures and faiths of Dublin; local traditions may mix within one household.',
+      'These prospects reflect the communities currently living in Dublin.',
       { exact:true }
     )).toBeVisible();
     await expect(page.locator('[data-suitor-card]').nth(0)
@@ -272,9 +286,7 @@ test('Seek a match draws culture-faith identities from the current county and ra
       'Gaelic · Latin Christianity');
     await expect(page.locator('[data-suitor-card]').nth(2)
       .locator('.settcard-meta')).toContainText(
-      result.candidates[2].identity === 'norse.catholic'
-        ? 'Norse · Latin Christianity'
-        : 'Gaelic · Norse Paganism');
+      'Norse · Norse Paganism');
     const peerCard = page.locator('[data-suitor-card]').nth(1);
     await expect(peerCard.locator('.settcard-head > b')).toHaveText(
       '💍 the Resolute - ' + reopened.peerName);
