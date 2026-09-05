@@ -213,9 +213,11 @@ window.FB = window.FB || {};
      category automation may handle the surrounding story, but only the
      explicit "everything" setting may make this irreversible choice. */
   function hasTitleChoice(ev) {
+    if (ev && ev.id === 'rank_elevation_result') return true;
     function has(fx) {
       return !!(fx && (fx.tierSet >= 3 || fx.tierUp || fx.serfFreedom ||
-        fx.custom === 'freedom_accept_offer' || fx.declareIndependence ||
+        fx.custom === 'freedom_accept_offer' ||
+        fx.custom === 'rank_elevation_claim' || fx.declareIndependence ||
         fx.travelSettle));
     }
     for (const o of (ev.options || [])) {
@@ -322,7 +324,8 @@ window.FB = window.FB || {};
       for (const k in fx.student.skills) v += fx.student.skills[k] * 1.5;
     }
     if (fx.tierSet !== undefined || fx.tierUp || fx.serfFreedom ||
-        fx.custom === 'freedom_accept_offer') v += 25;
+        fx.custom === 'freedom_accept_offer' ||
+        fx.custom === 'rank_elevation_claim') v += 25;
     if (fx.marry) v += 10;
     if (fx.killChild || fx.killRole) v -= 10;
     if (fx.setFlag === 'ill') v -= 4;
@@ -2114,6 +2117,7 @@ window.FB = window.FB || {};
       const price = root.querySelector('[data-freedom-live-price]');
       const breakdown = root.querySelector('[data-freedom-family-price]');
       const purchase = root.querySelector('#freedom-purchase-confirm');
+      const statusNote = root.querySelector('[data-freedom-purchase-status]');
       if (price) price.textContent = FB.T('{money:price}', {
         price:quote.price
       });
@@ -2123,7 +2127,11 @@ window.FB = window.FB || {};
         const status = FB.freedomPurchaseStatus(
           s, selectedFreedomRelatives(root));
         purchase.disabled = !status.ready;
-        purchase.title = status.ready ? '' : status.reason;
+        if (statusNote) {
+          statusNote.textContent = status.ready
+            ? FB.T('Ready to purchase.') : status.reason;
+          statusNote.classList.toggle('warnote', !status.ready);
+        }
       }
     }
     for (let i = 0; i < boxes.length; i++) {
@@ -2132,19 +2140,39 @@ window.FB = window.FB || {};
     refreshQuote();
   }
 
+  function rankTransitionHtml(currentTitle, newTitle) {
+    return '<div class="rank-elevation-path" data-rank-transition ' +
+      'aria-label="' + esc(FB.T(
+        'Current status {current}; new status {next}.', {
+          current:currentTitle, next:newTitle
+        })) + '"><span><small>' + esc(FB.T('Current')) + '</small><b>' +
+      esc(currentTitle) + '</b></span><span class="rank-elevation-arrow" ' +
+      'aria-hidden="true">→</span><span><small>' + esc(FB.T('New')) +
+      '</small><b>' + esc(newTitle) + '</b></span></div>';
+  }
+
+  function freedomBenefitHtml() {
+    return kv('Benefits', esc(FB.T(
+      'Personal freedom, freehold land, travel, and durable property.')));
+  }
+
   UI.showFreedomPurchase = function () {
     const s = FB.state;
     if (!s || !s.player || s.player.tier !== 0) return;
     const quote = FB.freedomPurchaseQuote(s);
     const h = '<div class="gm-body-text" data-freedom-purchase-sheet>' +
+      rankTransitionHtml(FB.T('Serf'), FB.T('Freeholder')) +
       '<p>' + esc(FB.T(
         'Buy a lawful charter for the household head, every living spouse, and every living descendant.')) + '</p>' +
       '<div class="kv"><span>' + esc(FB.T('Total price')) +
       '</span><b data-freedom-live-price>' +
       esc(FB.T('{money:price}', { price:quote.price })) + '</b></div>' +
+      freedomBenefitHtml() +
       '<p class="adesc" data-freedom-family-price>' +
       esc(FB.freedomPurchaseBreakdown(s, quote)) + '</p>' +
-      freedomRelativeChoicesHtml(s) + '</div><div class="gm-list">' +
+      freedomRelativeChoicesHtml(s) +
+      '<p class="progressnote" data-freedom-purchase-status></p>' +
+      '</div><div class="gm-list">' +
       '<button type="button" class="actionbtn" id="freedom-purchase-confirm">' +
       esc(FB.T('Buy the selected charter')) + '</button>' +
       '<button type="button" class="actionbtn" id="freedom-purchase-close">' +
@@ -2188,6 +2216,7 @@ window.FB = window.FB || {};
       ? FB.freedomAdvocates(s) : [];
     const purchaseQuote = FB.freedomPurchaseQuote(s);
     let h = '<div class="gm-body-text" data-freedom-routes>' +
+      rankTransitionHtml(FB.T('Serf'), FB.T('Freeholder')) +
       '<p>' + esc(FB.T(
         'A petition asks the current lord for one exact, saved offer. It spends no day and uses no chance roll.')) + '</p>' +
       kv('Current lord', esc(lordName)) +
@@ -2197,6 +2226,7 @@ window.FB = window.FB || {};
       }))) +
       kv('Buy freedom outright', '<span data-freedom-live-price>' +
         esc(FB.T('{money:price}', { price:purchaseQuote.price })) + '</span>') +
+      freedomBenefitHtml() +
       '<p class="adesc" data-freedom-family-price>' +
         esc(FB.freedomPurchaseBreakdown(s, purchaseQuote)) + '</p>';
 
@@ -2391,6 +2421,138 @@ window.FB = window.FB || {};
       });
     });
     $('freedom-offer-close').addEventListener('click', UI.closeModal);
+  };
+
+  function rankElevationActionId(route) {
+    if (route === 'manor') return 'declare_manor';
+    if (route === 'barony') return 'petition_barony';
+    if (route === 'county') return 'petition_liege';
+    return route === 'higher' ? 'claim_higher_title' : '';
+  }
+
+  function rankElevationBenefit(targetTier) {
+    const benefits = {
+      2:FB.T('Gentry standing and the right to manage a manor.'),
+      3:FB.T('A baronial title, Governance, seasonal tax, and levy.'),
+      4:FB.T('Your home county in your name and a count’s domain.'),
+      5:FB.T('Ducal rank over the qualifying duchy.'),
+      6:FB.T('Royal rank and access to the Royal Council.'),
+      7:FB.T('Imperial rank at the highest station.')
+    };
+    return benefits[targetTier] || FB.T('Recognition at the next station.');
+  }
+
+  function rankElevationCostValue(cost) {
+    const parts = [
+      FB.T('{money:gold}', { gold:cost.gold }),
+      FB.T('{prestige} prestige', { prestige:cost.prestige })
+    ];
+    if (cost.piety) {
+      parts.push(FB.T('{piety} piety', { piety:cost.piety }));
+    }
+    return parts.join(' · ');
+  }
+
+  function rankElevationChance(s, status) {
+    if (!status.eligible) return null;
+    if (status.route === 'barony' && status.grantorId) {
+      return FB.liegeGrantChance(s,
+        0.15 + FB.standingOf(s, {
+          kind:'character', id:status.grantorId
+        }) / 400 + s.player.prestige / 1200);
+    }
+    if (status.route === 'county' && status.liegeId && FB.namedChance) {
+      return FB.namedChance(s, 'liege_grant', {});
+    }
+    return null;
+  }
+
+  function rankElevationConfirmLabel(route) {
+    if (route === 'manor') return FB.T('Declare the manor');
+    if (route === 'higher') return FB.T('Claim the dignity');
+    return FB.T('Present the petition');
+  }
+
+  function rankElevationDetails(status) {
+    let detail = '<p>' + esc(FB.T(
+      'Eligibility is calculated when this sheet opens and rechecked on confirmation. Opening or closing it spends no day or resources.')) + '</p>';
+    if (status.route === 'barony') {
+      detail += '<p>' + esc(FB.T(
+        'A confirmed petition spends one day. Refusal costs 5 Standing with the lord; investiture resources are charged only if the title is granted.')) + '</p>';
+    } else if (status.route === 'county') {
+      detail += '<p>' + esc(FB.T(
+        'A confirmed petition spends one day. Refusal costs 5 prestige and 8 Standing with the liege; investiture resources are charged only if the title is granted.')) + '</p>';
+    } else {
+      detail += '<p>' + esc(FB.T(
+        'Confirmation spends one day. The full investiture cost is charged atomically with recognition.')) + '</p>';
+    }
+    return detail;
+  }
+
+  UI.showRankElevation = function (route) {
+    const s = FB.state;
+    const status = s && FB.rankElevationStatus
+      ? FB.rankElevationStatus(s, null, { route:route }) : null;
+    if (!status || !status.visible) return false;
+    const actionId = rankElevationActionId(route);
+    const currentTitle = FB.styledTitle(s);
+    const nextTitle = status.titleData
+      ? FB.renderTitleSnapshot(status.titleData)
+      : FB.T('Higher dignity');
+    const chance = rankElevationChance(s, status);
+    const reason = status.ready
+      ? FB.T('Ready to confirm.')
+      : (status.reason || FB.T('This elevation is not currently available.'));
+    const detailsId = 'rank-elevation-confirm-details';
+    let h = '<div class="gm-body-text" data-rank-elevation-sheet="' +
+      esc(route) + '">' + rankTransitionHtml(currentTitle, nextTitle) +
+      kv('Cost', esc(rankElevationCostValue(status.cost))) +
+      kv('Benefits', esc(rankElevationBenefit(status.targetTier)));
+    if (chance !== null) {
+      h += kv('Approval chance', esc(FB.T('{chance}%', {
+        chance:Math.round(chance * 100)
+      })));
+    }
+    h += '<div class="progressnote' + (status.ready ? '' : ' warnote') +
+      '" data-rank-elevation-status>' + esc(reason) + '</div></div>' +
+      '<div class="event-choice-details hidden" id="' + detailsId + '">' +
+      '<p>' + esc(status.ready ? FB.T(
+        'Confirm this elevation under the terms shown above.') : reason) +
+      '</p></div><div class="gm-footer">' +
+      '<button type="button" class="btn" id="rank-elevation-cancel">' +
+      esc(FB.T('Cancel')) + '</button>' +
+      '<button type="button" class="btn primary rank-elevation-confirm" ' +
+      'id="rank-elevation-confirm" aria-describedby="' + detailsId + '"' +
+      (status.ready ? '' : ' aria-disabled="true"') + '>' +
+      esc(rankElevationConfirmLabel(route)) + '</button></div>';
+    openModal(FB.T('Rank elevation'), h, {
+      modalClass:'rank-elevation-modal',
+      noFocus:true,
+      modalAction:actionId,
+      modalTarget:'action:' + actionId,
+      titleDetailsHtml:rankElevationDetails(status),
+      guide:guideModalOption('rank-elevation-guide', 'roles',
+        'Guide: ranks and roles')
+    });
+    const confirm = $('rank-elevation-confirm');
+    if (confirm) confirm.addEventListener('click', function () {
+      if (confirm.getAttribute('aria-disabled') === 'true') {
+        UI.showRankElevation(route);
+        return;
+      }
+      const result = FB.attemptRankElevation(FB.state, route);
+      if (!result || !result.attempted) {
+        UI.showRankElevation(route);
+        return;
+      }
+      UI.closeModal();
+      if (FB.game && FB.game.passDay) {
+        FB.game.passDay({ skipFocus:true });
+      }
+      if (UI.maybeFirstTimeFlowTip) UI.maybeFirstTimeFlowTip();
+    });
+    $('rank-elevation-cancel').addEventListener('click', UI.closeModal);
+    return true;
   };
 
   function closeTravelPicker(restorePause) {
@@ -4299,13 +4461,20 @@ window.FB = window.FB || {};
     const playerRank = s.realms.player && s.realms.player.alive
       ? s.realms.player.rank : s.player.tier;
     const models = [];
+    const mapTargets = [];
     const titleDetails = '<p>' + esc(FB.T(
       'Compare available territorial targets before choosing. The final review selects the exact justification. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.')) +
       '</p><p>' + esc(FB.T(
         'Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill.', {
           amount:financeAmount(musterUpkeep.total)
         })) + '</p>';
-    let h = warTargetToolbarHtml() + '<div class="gm-list war-target-list" ' +
+    let h = '<div class="war-target-primary-action">' +
+      '<button type="button" class="btn secondary" id="war-pick-map">🗺 ' +
+      esc(FB.T('Select on Map')) +
+      '</button></div><details class="war-target-filters" ' +
+      'id="war-target-filters"><summary>' + esc(FB.T('Filters & sorting')) +
+      '</summary>' + warTargetToolbarHtml() + '</details>' +
+      '<div class="gm-list war-target-list" ' +
       'id="war-target-list">';
     for (let ci = 0; ci < targets.length; ci++) {
       const justifications = targets[ci];
@@ -4349,6 +4518,20 @@ window.FB = window.FB || {};
         aggressionOnly:bases.length === 1 && bases[0] === 'aggression',
         adjacent:adjacent, blocked:!!cause.blocked, search:search
       });
+      const availableJustifications = justifications.filter(function (item) {
+        return !item.blocked;
+      });
+      if (availableJustifications.length) {
+        mapTargets.push({
+          pid:pid,
+          realmId:rid,
+          realmName:realm ? realm.name : '',
+          enemyMen:enMen,
+          warType:warCauseName(s, availableJustifications[0]),
+          optionCount:availableJustifications.length,
+          justifications:availableJustifications
+        });
+      }
       const detailsId = 'war-target-details-' + ci;
       const supportText = support.men && s.realms[support.ally]
         ? FB.T(' Defensive support includes ~{men} from {ally}.', {
@@ -4429,6 +4612,7 @@ window.FB = window.FB || {};
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button></div>';
     openModal(FB.T('Choose Your Conquest'), h, {
+      modalClass:'war-target-modal',
       titleDetailsHtml:titleDetails,
       historyView:!!returnContext,
       guide:guideModalOption('war-guide', 'war', 'Guide: war'),
@@ -4505,6 +4689,13 @@ window.FB = window.FB || {};
         });
       });
     });
+    const pickMapBtn = $('war-pick-map');
+    if (pickMapBtn) {
+      pickMapBtn.disabled = !mapTargets.length;
+      pickMapBtn.addEventListener('click', function () {
+        UI.openWarMapPicker(focusRealmId, returnContext, mapTargets);
+      });
+    }
     $('gm-cancel').addEventListener('click', function () {
       if (returnContext) {
         modalHistoryBack(function () {
@@ -4513,6 +4704,165 @@ window.FB = window.FB || {};
       } else {
         UI.closeModal();
       }
+    });
+  };
+
+  let warMapPickerContext = null;
+  let warMapTargets = null;
+
+  UI.warPickerOpen = function () {
+    const el = $('war-picker');
+    return !!el && !el.classList.contains('hidden');
+  };
+
+  UI.closeWarMapPicker = function (discard) {
+    const el = $('war-picker');
+    if (el) el.classList.add('hidden');
+    document.body.classList.remove('war-picking');
+    if (FB.map) {
+      FB.map.warTargets = null;
+      FB.map.warSelected = null;
+      FB.map.warTargetMap = null;
+      FB.map.select(null);
+      FB.map.request();
+    }
+    if (discard) {
+      warMapTargets = null;
+      warMapPickerContext = null;
+    }
+    mobileNavClosed('war-picker', !!discard);
+  };
+
+  UI.openWarMapPicker = function (focusRealmId, returnContext, targets) {
+    const s = FB.state;
+    if (!s || !s.player) return;
+    const available = targets || warMapTargets || [];
+    if (!available.length) {
+      UI.toast(FB.T('No war target can currently be declared.'));
+      return;
+    }
+
+    warMapPickerContext = {
+      focusRealmId:focusRealmId || null,
+      returnContext:returnContext || null
+    };
+    warMapTargets = available;
+    UI.closeModal();
+
+    const homePid = s.player.provinceId ||
+      (s.player.provs && s.player.provs[0]);
+    const targetMap = {};
+    const targetSet = {};
+    const targetPids = [];
+    for (let i = 0; i < available.length; i++) {
+      const item = available[i];
+      if (!item || !item.pid || targetMap[item.pid]) continue;
+      targetMap[item.pid] = item;
+      targetSet[item.pid] = true;
+      targetPids.push(item.pid);
+    }
+
+    if (FB.map) {
+      FB.map.warTargets = targetPids;
+      FB.map.warTargetMap = targetMap;
+      FB.map.warSelected = null;
+      FB.map.select(homePid, function (pid) {
+        return targetSet[pid] || pid === homePid ? 'war_target' : null;
+      }, '#ef9b55');
+      const focusRealm = focusRealmId && s.realms[focusRealmId];
+      const centerPid = focusRealm && focusRealm.capital
+        ? focusRealm.capital : homePid;
+      if (centerPid) FB.map.centerOn(centerPid, FB.map.zoom);
+      FB.map.request();
+    }
+
+    document.body.classList.add('war-picking');
+    const el = $('war-picker');
+    if (el) el.classList.remove('hidden');
+    const summary = $('war-picker-summary');
+    if (summary) {
+      summary.textContent = FB.T(
+        'Tap any highlighted county on the map to choose a war target ({count} available).', {
+          count:targetPids.length
+        });
+    }
+    const review = $('war-picker-review');
+    if (review) review.disabled = true;
+
+    mobileNavPush('war-picker',
+      function () { UI.closeWarMapPicker(true); },
+      function () {
+        UI.openWarMapPicker(focusRealmId, returnContext, available);
+      },
+      function () { return UI.warPickerOpen(); },
+      function () { return true; });
+  };
+
+  UI.warPickProvince = function (pid, center) {
+    if (!UI.warPickerOpen()) return false;
+    const item = FB.map && FB.map.warTargetMap
+      ? FB.map.warTargetMap[pid] : null;
+    if (!item) {
+      UI.toast(FB.T('That county is not an available war target.'));
+      return false;
+    }
+
+    const s = FB.state;
+    const homePid = s.player.provinceId ||
+      (s.player.provs && s.player.provs[0]);
+    if (FB.map) {
+      FB.map.warSelected = pid;
+      const targetSet = {};
+      for (let i = 0; i < (FB.map.warTargets || []).length; i++) {
+        targetSet[FB.map.warTargets[i]] = true;
+      }
+      FB.map.select(pid, function (id) {
+        return targetSet[id] || id === homePid ? 'war_target' : null;
+      }, '#ef9b55');
+      if (center) FB.map.centerOn(pid, FB.map.zoom);
+      FB.map.request();
+    }
+
+    const province = FB.world.byId[pid];
+    const type = item.optionCount > 1
+      ? FB.T('{type} ({count} options)', {
+        type:item.warType,
+        count:item.optionCount
+      }) : item.warType;
+    const summary = $('war-picker-summary');
+    if (summary) {
+      summary.innerHTML = '<strong>' + esc(province ? province.name : pid) +
+        (item.realmName ? ' (' + esc(item.realmName) + ')' : '') +
+        '</strong> &middot; ' + esc(FB.T('Enemy army: ~{men}', {
+          men:menText(s, item.enemyMen)
+        })) + ' &middot; ' + esc(FB.T('War type: {type}', { type:type }));
+    }
+    const review = $('war-picker-review');
+    if (review) review.disabled = false;
+    return true;
+  };
+
+  UI.returnToWarList = function () {
+    const context = warMapPickerContext;
+    UI.closeWarMapPicker(false);
+    warMapTargets = null;
+    warMapPickerContext = null;
+    UI.showWarTargets(context && context.focusRealmId,
+      context && context.returnContext);
+  };
+
+  UI.reviewWarFromMap = function () {
+    if (!FB.map || !FB.map.warSelected || !warMapPickerContext) return;
+    const item = FB.map.warTargetMap &&
+      FB.map.warTargetMap[FB.map.warSelected];
+    if (!item) return;
+    const context = warMapPickerContext;
+    UI.closeWarMapPicker(false);
+    warMapTargets = null;
+    warMapPickerContext = null;
+    UI.showWarJustification(item.justifications, {
+      focusRealmId:context.focusRealmId,
+      returnContext:context.returnContext
     });
   };
 
@@ -10585,7 +10935,7 @@ window.FB = window.FB || {};
     const groups = [
       {
         title:FB.T('Relationship & legitimacy'),
-        ids:['petition_liege', 'petition_county', 'pay_homage',
+        ids:['petition_liege', 'claim_higher_title', 'petition_county', 'pay_homage',
           'appeal_lord', 'swear_fealty']
       },
       {
@@ -10608,9 +10958,9 @@ window.FB = window.FB || {};
         const status = FB.instantStatus(s, id);
         if (!status.shown || !status.action) continue;
         const action = status.action;
-        const detail = status.can
-          ? FB.translateKnown(action.desc(s))
-          : FB.translateKnown(status.reason);
+        const detail = FB.translateKnown(status.can
+          ? action.desc(s)
+          : status.reason);
         rows += '<button type="button" class="actionbtn" ' +
           'data-governance-action="' + esc(id) + '"' +
           (status.can ? '' : ' disabled') + '>' +
@@ -10809,13 +11159,20 @@ window.FB = window.FB || {};
         : (progress.kind === 'kingdom'
           ? FB.T('royal title') : FB.T('imperial title'));
       h += '<div class="progressnote">' + esc(FB.T(
-        'Best current progress toward a {kind}: {name}, {have} of {total}; {need} required.', {
+        'Best current progress toward a {kind}: {name}, {have} of {total}; {need} required to qualify for a claim.', {
           kind:kind,
           name:governancePromotionName(progress),
           have:progress.have,
           total:progress.total,
           need:progress.need
         })) + '</div>';
+    }
+    if (s.player.tier >= 4 && s.player.tier <= 6) {
+      h += '<button type="button" class="actionbtn" ' +
+        'data-governance-action="claim_higher_title">👑 ' +
+        esc(FB.T('Review higher dignity…')) + '<span class="adesc">' +
+        esc(FB.T('Open the rank review for eligibility, cost, and benefits.')) +
+        '</span></button>';
     }
     return h;
   }

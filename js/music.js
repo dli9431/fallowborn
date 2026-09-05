@@ -155,12 +155,13 @@ window.FB = window.FB || {};
     }
     if (typeof window.MediaMetadata === 'function') {
       try {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title:track.title,
-          artwork:[{
+        const metadata = { title:track.title };
+        if (!FB.platform.isFile) {
+          metadata.artwork = [{
             src:absoluteUrl('static/icon-512.png'), sizes:'512x512', type:'image/png'
-          }]
-        });
+          }];
+        }
+        navigator.mediaSession.metadata = new MediaMetadata(metadata);
       } catch (error) {}
     }
   }

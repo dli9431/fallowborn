@@ -26,6 +26,9 @@ window.FB = window.FB || {};
   function raidOpen() {
     return FB.ui && FB.ui.raidPickerOpen && FB.ui.raidPickerOpen();
   }
+  function warOpen() {
+    return FB.ui && FB.ui.warPickerOpen && FB.ui.warPickerOpen();
+  }
 
   function clickNth(sel, n) {
     const nodes = document.querySelectorAll(sel);
@@ -247,12 +250,24 @@ window.FB = window.FB || {};
       }
     }
 
+    if (warOpen()) {
+      if (k === 'Escape') {
+        e.preventDefault();
+        FB.ui.closeWarMapPicker(false);
+        return;
+      }
+      if (k === ' ' || k === 'e' || k === 'E' || k === 'f' || k === 'F') {
+        e.preventDefault();
+        return;
+      }
+    }
+
     if (FB.game && FB.game.pickMode && k === 'Escape') { $('btn-pick-back').click(); return; }
 
     /* Deeds uses stable number keys for its sections, then a compact letter
        grid for the active section. Dialogs above retain positional digits. */
     const deedsActive = FB.state && $('tab-actions').classList.contains('active');
-    if (!travelOpen() && !raidOpen() &&
+    if (!travelOpen() && !raidOpen() && !warOpen() &&
         !(FB.game && FB.game.pickMode) && deedsActive) {
       if (digit) {
         e.preventDefault();
@@ -272,7 +287,7 @@ window.FB = window.FB || {};
        letter grid activates visible controls in the selected section. */
     const networkActive = FB.state &&
       $('tab-network').classList.contains('active');
-    if (!travelOpen() && !raidOpen() &&
+    if (!travelOpen() && !raidOpen() && !warOpen() &&
         !(FB.game && FB.game.pickMode) && networkActive) {
       if (digit) {
         e.preventDefault();
@@ -290,7 +305,8 @@ window.FB = window.FB || {};
 
     /* User bindings are semantic deed/focus targets. Digits never enter this
        path, so positional modal navigation keeps its independent meaning. */
-    if (!travelOpen() && !raidOpen() && !(FB.game && FB.game.pickMode) &&
+    if (!travelOpen() && !raidOpen() && !warOpen() &&
+        !(FB.game && FB.game.pickMode) &&
         !e.shiftKey && !e.repeat && FB.ui && FB.ui.runActionShortcut &&
         FB.ui.runActionShortcut(k)) {
       e.preventDefault();

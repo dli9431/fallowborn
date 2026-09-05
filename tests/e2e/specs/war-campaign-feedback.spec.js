@@ -183,6 +183,7 @@ test('filtered declarations initialize campaign feedback and preserve the catalo
       return { target:target };
     });
 
+    await page.locator('#war-target-filters summary').click();
     await page.locator('#war-target-basis').selectOption('claim');
     var targetRow = page.locator('[data-war-cause-target="' +
       setup.target + '"]');

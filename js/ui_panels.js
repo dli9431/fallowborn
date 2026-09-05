@@ -1727,17 +1727,18 @@ window.FB = window.FB || {};
     if (s.player.tier === 1) {
       const cluster = FB.largestLandCluster(s);
       return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
-        'Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and declare a manor. Soldiering and the church offer other roads.',
+        'Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and fund recognition of the manor. Soldiering and the church offer other roads.',
         {
           cluster:cluster ? cluster.count : 0,
           needed:FBDATA.balance.manorPlotRequirement,
           prestige:FBDATA.balance.manorPrestige
-        })) + '</div>';
+        })) + ' ' + esc(FB.rankElevationCostText(
+          FB.rankElevationCost(s, 1, 2))) + '</div>';
     }
     if (s.player.tier === 2) {
       const command = FB.militaryCommandStatus && FB.militaryCommandStatus(s);
       const text = FB.gentryEstablished(s)
-        ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for a barony.',
+        ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for investiture as baron.',
           {
             prestige:FBDATA.balance.baronyPrestige,
             standing:FBDATA.balance.baronyOpinion
@@ -1746,17 +1747,23 @@ window.FB = window.FB || {};
           martial:command ? command.martialNeeded : 12,
           prestige:command ? command.prestigeNeeded : 120
         });
-      return '<div class="progressnote path-hint">🧭 ' + esc(text) + '</div>';
+      return '<div class="progressnote path-hint">🧭 ' + esc(text) +
+        (FB.gentryEstablished(s) ? ' ' + esc(FB.rankElevationCostText(
+          FB.rankElevationCost(s, 2, 3))) : '') + '</div>';
     }
     const tips = {
-      3: 'Path: petition your liege for a county — or declare independence and take one.',
-      4: 'Path: hold the majority of a de jure duchy (petition, inherit, or conquer) to be styled duke.',
-      5: 'Path: hold the majority of a de jure kingdom and win independence to be crowned king.',
-      6: 'Path: hold the majority of two kingdoms of one empire to be crowned emperor.',
+      3: 'Path: petition your liege for a county and fund its investiture — or declare independence and take one.',
+      4: 'Path: hold the majority of a de jure duchy (petition, inherit, or conquer), then claim recognition as duke.',
+      5: 'Path: hold the majority of a de jure kingdom, win independence, then claim its crown.',
+      6: 'Path: hold the majority of two kingdoms of one empire, then claim imperial recognition.',
       7: 'You stand at the summit of the world.'
     };
+    const nextCost = s.player.tier >= 3 && s.player.tier <= 6
+      ? FB.rankElevationCostText(FB.rankElevationCost(
+        s, s.player.tier, s.player.tier + 1)) : '';
     return '<div class="progressnote path-hint">🧭 ' +
-      esc(FB.T(tips[s.player.tier] || '')) + '</div>';
+      esc(FB.T(tips[s.player.tier] || '')) +
+      (nextCost ? ' ' + esc(nextCost) : '') + '</div>';
   }
 
   function skillBars(c) {
@@ -5677,7 +5684,7 @@ window.FB = window.FB || {};
   }
 
   /* what the tapped county feeds: have/need toward its duke, king, emperor —
-     the same rules checkTierPromotions promotes by. Shown only to landed
+     the same rules rankElevationStatus uses for claims. Shown only to landed
      players with an active stake in that title (have > 0); a landless dreamer or
      uninvolved foreigner has no claim to weigh */
   function dejureNotes(s, dj) {
@@ -5693,7 +5700,7 @@ window.FB = window.FB || {};
         out += note(FB.T('⚜ {name}: you hold the majority, {held}.',
           { name: dname, held: ofCountiesText(s, dp.have, dp.total) }));
       } else {
-        out += note(FB.T('⚜ {name}: you hold {held} — {need} make the duke.',
+        out += note(FB.T('⚜ {name}: you hold {held} — {need} qualify you to claim the duchy.',
           { name: dname, held: ofCountiesText(s, dp.have, dp.total), need: dp.need }));
       }
     }
@@ -5704,10 +5711,10 @@ window.FB = window.FB || {};
           out += note(indep
             ? FB.T('👑 {name}: you hold the majority, {held}.',
               { name: kname, held: ofCountiesText(s, kp.have, kp.total) })
-            : FB.T('👑 {name}: you hold the majority, {held} — independence would make you its king.',
+            : FB.T('👑 {name}: you hold the majority, {held} — independence would let you claim its crown.',
               { name: kname, held: ofCountiesText(s, kp.have, kp.total) }));
         } else {
-          out += note(FB.T('👑 {name}: you hold {held} — {need} and independence make the king.',
+          out += note(FB.T('👑 {name}: you hold {held} — {need} and independence qualify you to claim the crown.',
             { name: kname, held: ofCountiesText(s, kp.have, kp.total), need: kp.need }));
         }
       }
@@ -5719,10 +5726,10 @@ window.FB = window.FB || {};
           out += note(indep
             ? FB.T('🦅 {name}: you rule {share} — the imperial majority.',
               { name: ename, share: ofKingdomsText(s, ep.have, ep.total) })
-            : FB.T('🦅 {name}: you rule {share} — independence would make you its emperor.',
+            : FB.T('🦅 {name}: you rule {share} — independence would let you claim imperial recognition.',
               { name: ename, share: ofKingdomsText(s, ep.have, ep.total) }));
         } else {
-          out += note(FB.T('🦅 {name}: you rule {share} — {need} and independence make the emperor.',
+          out += note(FB.T('🦅 {name}: you rule {share} — {need} and independence qualify you to claim the empire.',
             { name: ename, share: ofKingdomsText(s, ep.have, ep.total), need: ep.need }));
         }
       }

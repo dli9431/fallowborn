@@ -295,8 +295,8 @@ agreed when it was made; a direct purchase uses the family alive now. Married de
 are included because the family's freedom also ends their inherited servile status.
 The Kin panel remembers how the family first became free, including flight without a
 lawful charter. Freeholders then buy inherited plots settlement by settlement. Land held together grows more
-productive, and five plots in one settlement can be declared a manor once the family has
-the standing to join the gentry. Standing with a lord then earns an established gentle house a
+productive, and five plots in one settlement plus 150 prestige qualify the family to fund
+its 200-gold/100-prestige recognition as gentry. Standing with a lord then earns an established gentle house a
 banner, normally after the manor has passed to an heir; battlefield glory during an active
 war and the church can still raise an exceptional life more quickly. A founder who rose into the gentry
 from below and has already fought and saved the lord may, with Martial 12 and 120 prestige, take command
@@ -350,11 +350,17 @@ Your own redress or scutage motion costs 15 gold, opens a 90-day campaign, and i
 attempt to lobby an undecided bloc before you call the influence-weighted vote; Governance
 and Network show the same leaders, members, interests, and forecast. As a **liege**
 you can grant counties to sworn men, squeeze them for extraordinary taxes, revoke the fiefs
-of the disloyal, and weather their petitions, feuds, and revolts. Titles follow the land —
-and the promotion is automatic the day you hold it: the majority of a duchy's counties makes
-you its duke (a duchy must span at least two counties and always demands at least two), the
-majority of a kingdom's counties makes you its king, and the majority in two kingdoms of one
-empire makes you its emperor. A king or emperor must also stand **independent**. Empty
+of the disloyal, and weather their petitions, feuds, and revolts. Land qualifies you for a
+title, but ordinary elevation is a claim you must choose and fund. The per-rank prices are:
+Gentry 200 gold/100 prestige; Baron 500/250; Count 800/400; Duke 1,500/600; King
+3,000/1,000/300 piety; Emperor 6,000/1,500/600 piety. A jump pays every crossed rung,
+and a lost title pays again when reclaimed. The majority of a duchy's counties qualifies
+you to claim Duke (a duchy must span at least two counties and always demands at least
+two), the majority of a kingdom qualifies King, and majorities in two kingdoms of one
+empire qualify Emperor. A King or Emperor must also stand **independent**. Deeds and
+Governance show the exact cumulative price before a confirmation event; withdrawing costs
+nothing. Exceptional grants, offices, inheritance, and save repair do not charge this
+ordinary-claim price. Empty
 wastelands — and any colony you settle on them — belong to no de jure title and count toward
 nothing, and a duchy of a single county carries no duke's title. The de jure map filters
 (`R`, or the 🗺 button) paint every duchy and kingdom on the map and name your strongest

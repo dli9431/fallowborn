@@ -370,7 +370,8 @@ test('a battle-proven founder can manually march and win by real field command',
         s.armyDown[id] = s.turn;
       });
 
-      const ordinary = FB.instantStatus(s, 'petition_barony');
+      const ordinary = FB.rankElevationStatus(
+        s, null, { route:'barony' });
       const savedRank = patron.rank;
       patron.rank = 0;
       const belowCount = FB.militaryCommandStatus(s);
@@ -434,7 +435,8 @@ test('a battle-proven founder can manually march and win by real field command',
       const event = FB.eventById('military_barony_victory');
       FB.applyEffects(s, event.options[0].effects, queued.ctx, event);
       return {
-        ordinaryLocked:!ordinary.can && ordinary.reason.indexOf('newly gentle') >= 0,
+        ordinaryLocked:!ordinary.ready &&
+          ordinary.reason.indexOf('newly gentle') >= 0,
         countGate:!belowCount.ready &&
           belowCount.reason.indexOf('count or greater') >= 0,
         ready:ready.ready,

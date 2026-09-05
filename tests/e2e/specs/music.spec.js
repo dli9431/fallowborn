@@ -67,6 +67,42 @@ const catalog = {
   totalDuration:1440
 };
 
+test('file soundtrack metadata omits unsupported local artwork',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-file',
+      'Local Media Session metadata is specific to file-origin playback.');
+    await page.addInitScript(function () {
+      localStorage.setItem('fb_ui', JSON.stringify({
+        musicChoice:'on', musicVolume:0.55, musicPreferred:{},
+        musicRatings:{}, musicOfflineBanks:{}
+      }));
+      HTMLMediaElement.prototype.canPlayType = function () { return 'probably'; };
+      window.__fileMusicMediaSession = {
+        playbackState:'none', metadata:null, handlers:{},
+        setActionHandler:function (name, callback) { this.handlers[name] = callback; }
+      };
+      Object.defineProperty(navigator, 'mediaSession', {
+        configurable:true, value:window.__fileMusicMediaSession
+      });
+      window.MediaMetadata = function (data) {
+        for (const key in data) this[key] = data[key];
+      };
+    });
+
+    await openGame(page, testInfo);
+
+    expect(await page.evaluate(function () {
+      const metadata = window.__fileMusicMediaSession.metadata;
+      return {
+        protocol:location.protocol,
+        title:metadata && metadata.title,
+        hasArtwork:!!(metadata && metadata.artwork)
+      };
+    })).toEqual({
+      protocol:'file:', title:expect.any(String), hasArtwork:false
+    });
+  });
+
 async function routeSyntheticSoundtrack(page) {
   await page.route('**/data/music_catalog.js', function (route) {
     return route.fulfill({

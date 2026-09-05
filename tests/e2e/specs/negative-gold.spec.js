@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html',
   'css/style.css',
+  'data/actions.js',
   'data/cultures.js',
   'data/economy.js',
   'data/events_peasant.js',
@@ -138,8 +139,15 @@ test('cash-gated choices stay blocked while zero-cost choices remain available',
       const me = s.chars[p.charId];
       p.gold = -5;
       p.tier = 0;
+      me.born = s.date.year - 30;
       FB.ensureSerfTenure(s, 'negative_gold_test');
-      const freedom = FB.instantStatus(s, 'buy_freedom');
+      const lord = FB.getRole(s, 'lord', true);
+      FB.adjustStanding(s, { kind:'character', id:lord.id },
+        -FB.standingOf(s, { kind:'character', id:lord.id }),
+        'test:negative_gold_freedom');
+      const freedomLauncher = FB.instantStatus(s, 'buy_freedom');
+      const freedom = FB.freedomPurchaseStatus(s);
+      FB.ui.showFreedomPurchase();
 
       const economy = FB.ensureEconomy(s);
       const loan = {
@@ -164,7 +172,8 @@ test('cash-gated choices stay blocked while zero-cost choices remain available',
       const ending = FB.marriageEndStatus(s, spouse);
 
       return {
-        freedomBlocked:freedom.shown && !freedom.can,
+        freedomLauncherAvailable:freedomLauncher.shown && freedomLauncher.can,
+        freedomBlocked:!freedom.ready,
         loanPaid:loanPaid,
         gold:p.gold,
         zeroCostEnding:ending.cost === 0 && ending.ready,
@@ -173,12 +182,16 @@ test('cash-gated choices stay blocked while zero-cost choices remain available',
     });
 
     expect(result).toEqual({
+      freedomLauncherAvailable:true,
       freedomBlocked:true,
       loanPaid:false,
       gold:-5,
       zeroCostEnding:true,
       techReview:'none'
     });
+    await expect(page.locator('#freedom-purchase-confirm')).toBeDisabled();
+    await expect(page.locator('[data-freedom-purchase-status]'))
+      .toContainText('requires');
   });
 
 test('the topbar and Coin & Credit explain a negative balance',

@@ -4038,6 +4038,24 @@ window.FB = window.FB || {};
         if (UI.executeRaidFromMap) UI.executeRaidFromMap();
       });
     }
+    const warCancel = $('war-picker-cancel');
+    if (warCancel) {
+      warCancel.addEventListener('click', function () {
+        if (UI.closeWarMapPicker) UI.closeWarMapPicker(false);
+      });
+    }
+    const warList = $('war-picker-list');
+    if (warList) {
+      warList.addEventListener('click', function () {
+        if (UI.returnToWarList) UI.returnToWarList();
+      });
+    }
+    const warReview = $('war-picker-review');
+    if (warReview) {
+      warReview.addEventListener('click', function () {
+        if (UI.reviewWarFromMap) UI.reviewWarFromMap();
+      });
+    }
 
     /* Map tap precedence. A settlement marker hit carries its parent county
        into every targeting mode, so a marker never blocks the county beneath
@@ -4063,6 +4081,10 @@ window.FB = window.FB || {};
       }
       if (UI.raidPickerOpen && UI.raidPickerOpen()) {
         if (pr) UI.raidPickProvince(pr.id, false);
+        return;
+      }
+      if (UI.warPickerOpen && UI.warPickerOpen()) {
+        if (pr) UI.warPickProvince(pr.id, false);
         return;
       }
       const s = FB.state;

@@ -1272,7 +1272,10 @@ FBDATA.balance = {
   serfFlightFamilyMemberPenalty:0.05, serfFlightMinimumChance:0.10,
   landConsolidationBonus: 0.10, landPlotMaxSettlement: 5,
   manorPlotRequirement: 5, manorPrestige: 150,
-  baronyGold: 2500, baronyPrestige: 400, baronyOpinion: 60,
+  rankElevationGoldByTier: [0,0,200,500,800,1500,3000,6000],
+  rankElevationPrestigeByTier: [0,0,100,250,400,600,1000,1500],
+  rankElevationPietyByTier: [0,0,0,0,0,0,300,600],
+  baronyPrestige: 400, baronyOpinion: 60,
   militaryBaronyMartial: 12, militaryBaronyPrestige: 120, // founder's exceptional field-command gate
   taxPerDev: 1.5, levyPerDev: 90,
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial

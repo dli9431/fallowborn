@@ -505,6 +505,7 @@ body.travel-picking #timebtns { visibility: hidden; }
   box-shadow: 0 8px 28px rgba(0,0,0,.55);
 }
 .raid-picker.hidden { display: none; }
+.war-picker.hidden { display: none; }
 .raid-picker-header {
   display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
 }
@@ -522,6 +523,7 @@ body.travel-picking #timebtns { visibility: hidden; }
 }
 .raid-picker-actions .btn.primary { font-weight: bold; }
 body.raid-picking #timebtns { visibility: hidden; }
+body.war-picking #timebtns { visibility: hidden; }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 #maphud { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 6px; z-index: 4; }
 .hudbtn { width: 40px; height: 40px; font-size: 19px; padding: 0; opacity: .9; flex: 0 0 auto; }
@@ -2392,6 +2394,28 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .gm-body-text h4 { color: #d8b24a; margin: 12px 0 4px; }
 .gm-body-text p, .gm-body-text li { margin-bottom: 6px; }
 .gm-body-text ul { padding-left: 18px; }
+.rank-elevation-path {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch; gap: 9px; margin: 0 0 12px;
+}
+.rank-elevation-path > span:not(.rank-elevation-arrow) {
+  min-width: 0; padding: 9px 10px; border: 1px solid #55452a;
+  border-radius: 8px; background: #241d15;
+}
+.rank-elevation-path small {
+  display: block; margin-bottom: 2px; color: var(--helper-text-color);
+  font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+}
+.rank-elevation-path b {
+  display: block; color: var(--main-text-color); overflow-wrap: anywhere;
+}
+.rank-elevation-arrow {
+  align-self: center; color: #c9a24a; font-size: 20px;
+}
+.rank-elevation-confirm[aria-disabled="true"] {
+  opacity: .48; filter: saturate(.5); cursor: not-allowed;
+}
+.rank-elevation-confirm[aria-disabled="true"]:active { filter: saturate(.5); }
 .building-county-picker {
   position: sticky; top: 0; z-index: 2;
   flex: 0 0 auto;
@@ -2411,6 +2435,45 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
     flex-basis: 44px; width: 44px; min-height: 44px; height: 44px; font-size: 22px;
   }
   .gm-heading.has-modal-guide h3 { width: calc(100% - 52px); min-height: 44px; }
+  #genmodal.war-target-modal .gm-heading.has-modal-guide.has-modal-title-details {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: start; gap: 6px;
+  }
+  #genmodal.war-target-modal .gm-heading.has-modal-guide.has-modal-title-details::after {
+    display: none;
+  }
+  #genmodal.war-target-modal .gm-heading.has-modal-guide.has-modal-title-details h3 {
+    float: none; width: auto; min-height: 48px;
+  }
+  #genmodal.war-target-modal .gm-heading.has-modal-guide .modal-guide-button,
+  #genmodal.war-target-modal .gm-heading.has-modal-title-details .modal-title-actions {
+    margin: 0; transform: none;
+  }
+  #genmodal.war-target-modal .gm-heading .modal-title-actions .modal-title-info {
+    flex-basis: 44px; width: 44px; min-width: 44px;
+    height: 44px; min-height: 44px;
+  }
+}
+@media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
+  #genmodal.rank-elevation-modal .gm-heading.has-modal-guide.has-modal-title-details {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: start; gap: 6px;
+  }
+  #genmodal.rank-elevation-modal .gm-heading.has-modal-guide.has-modal-title-details::after {
+    display: none;
+  }
+  #genmodal.rank-elevation-modal .gm-heading.has-modal-guide.has-modal-title-details h3 {
+    float: none; width: auto; min-height: 44px;
+  }
+  #genmodal.rank-elevation-modal .gm-heading.has-modal-guide .modal-guide-button,
+  #genmodal.rank-elevation-modal .gm-heading.has-modal-title-details .modal-title-actions {
+    margin: 0; transform: none;
+  }
+  #genmodal.rank-elevation-modal .gm-heading .modal-guide-button,
+  #genmodal.rank-elevation-modal .gm-heading .modal-title-info {
+    box-sizing: border-box; flex-basis: 44px; width: 44px; min-width: 44px;
+    height: 44px; min-height: 44px;
+  }
 }
 
 .dynasty-house-row { align-items: center; gap: 8px; }
@@ -2655,6 +2718,25 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   background: #1b1711; border: 1px solid #4a3b27; border-radius: 8px;
 }
 .war-target-search { grid-column: span 2; }
+.war-target-primary-action { flex: 0 0 auto; margin-bottom: 8px; }
+.war-target-primary-action > .btn {
+  width: 100%; min-height: 44px; margin: 0; font-weight: bold;
+}
+.war-target-filters {
+  flex: 0 0 auto; min-height: 44px; margin-bottom: 8px; overflow: hidden;
+  background: #1b1711; border: 1px solid #4a3b27; border-radius: 8px;
+}
+.war-target-filters > summary {
+  padding: 10px 12px; color: #d8bd7b; cursor: pointer; font-weight: bold;
+}
+.war-target-filters > summary:hover { color: #f0cf73; }
+.war-target-filters > summary:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: -2px;
+}
+.war-target-filters[open] > summary { border-bottom: 1px solid #4a3b27; }
+.war-target-filters > .war-target-toolbar {
+  position: static; margin: 0; border: 0; border-radius: 0;
+}
 .war-target-toolbar label { display: grid; gap: 4px; min-width: 0; }
 .war-target-toolbar label > span { color: var(--helper-text-color); font-size: 11px; }
 .war-target-toolbar input {
@@ -2702,7 +2784,13 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   border: 0; border-radius: 0; background: transparent;
 }
 @media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
-  .war-target-card .war-target-row { padding-right: 60px; }
+  .war-target-card .war-target-row { padding-right: 12px; }
+  .war-target-card .war-target-row-head {
+    min-height: 48px; padding-right: 56px; align-items: flex-start;
+  }
+  #genmodal.war-target-modal .war-target-actions .btn.small.settcard-info {
+    width: 44px; min-width: 44px; height: 44px; min-height: 44px;
+  }
 }
 .war-target-card.blocked .war-target-row { opacity: 0.72; cursor: not-allowed; }
 .war-target-row-head {
@@ -2712,6 +2800,8 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .war-target-fort { color: #d8bd7b !important; }
 .war-target-actions { position: absolute; z-index: 2; top: 8px; right: 8px; }
 .war-target-actions .settcard-info { margin: 0; }
+.war-target-modal .war-target-list { position: relative; z-index: 0; }
+.war-target-modal #gm-body > .gm-footer { z-index: 4; flex: 0 0 auto; }
 .war-target-details {
   margin: 0; padding: 9px 11px; border-top: 1px solid #40331f;
   color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
@@ -4765,7 +4855,7 @@ textarea.modjson, textarea.savetext {
     border-radius: 14px; border-width: 2px;
     padding: 14px;
   }
-  .raid-picker {
+  .raid-picker, .war-picker {
     position: fixed; z-index: 41;
     left: max(8px, env(safe-area-inset-left));
     right: max(8px, env(safe-area-inset-right));

@@ -802,6 +802,7 @@ test('war catalogue searches and filters semantic available and blocked causes',
     await expect(blocked).toBeDisabled();
     await expect(blocked).toContainText('peace pact');
 
+    await page.locator('#war-target-filters summary').click();
     const basisSelect = page.locator('#war-target-basis');
     await expect(basisSelect.locator('..')).toHaveClass(/war-target-select-wrap/);
     const dropdownStyle = await basisSelect.evaluate(function (select) {

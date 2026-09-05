@@ -980,8 +980,9 @@ Counties → duchies → kingdoms → empires, all plain reference data:
   "duchies":  { "d_ile": { "name": "Île-de-France", "kingdom": "k_west_francia" } } }
 ```
 
-The engine uses it for the player's tier promotions (majority of a duchy/kingdom/empire),
-realm naming, and the Land panel's hierarchy display. Mods may add to all three maps.
+The engine uses it for the player's rank-claim eligibility (majority of a
+duchy/kingdom/empire), realm naming, and the Land panel's hierarchy display. Mods may add
+to all three maps.
 
 ### Adding a realm
 
@@ -1497,9 +1498,14 @@ class, `men`, and reinforcement ceiling `size`, so nothing survives dispersal or
 remuster; the
 liege-chain and vassalage handlers `appeal_win appeal_lose vassal_release vassal_crush
 vassal_reclaim vassal_refuse vassal_favor vassal_snub vassal_insist county_petition_grant
-record_liege_grant` and the
+record_liege_grant` live in `js/events.js`; the
+ordinary rank-investiture handlers `rank_elevation_offer rank_elevation_claim
+liege_land_grant` (plus the `rank_elevation_context_valid` validator) live in
+`js/actions.js`; `FB.attemptRankElevation` is the built-in on-demand Deeds boundary that
+rechecks the current rank, territorial/social gates, cooldown, and complete crossed-rank
+cost only after the player confirms the rank review; the
 disguise-at-war story fns `polly_court` (spawns the followed soldier into the `{suitor}` role) /
-`polly_rout` (the small mortal-wound roll on a lost shield-wall) live in `js/events.js`;
+`polly_rout` (the small mortal-wound roll on a lost shield-wall) also live in `js/events.js`;
 the Noble Academy handlers `academy_introduction academy_student_focus
 academy_student_dip academy_student_ste academy_student_int academy_student_lea
 academy_withdraw` target the queued `ctx.studentId` and also live in `js/events.js`;
@@ -1574,7 +1580,7 @@ key is `ailments`.
 
 ### Text tokens
 
-`{name} {dyn} {title} {spouse} {suitor} {partner} {late} {lord} {priest} {friend} {rival} {childname} {student} {ambition}
+`{name} {dyn} {title} {newtitle} {spouse} {suitor} {partner} {late} {lord} {priest} {friend} {rival} {childname} {student} {ambition}
 {province} {location} {destination} {realm} {enemy} {settlement} {god} {holy} {temple} {year}` work in titles,
 texts, labels, and `log`. `{enemy}` is the realm the player is at war with (or "the
 enemy"); `{target}` is the province an attacking war aims at; `{settlement}` reads
@@ -1582,7 +1588,9 @@ enemy"); `{target}` is the province an attacking war aims at; `{settlement}` rea
 describe the currently offered item (`player.itemOffer`); `{liege}` is the player's direct
 liege realm; `{rname}` / `{rulername}` are the realm and ruler named by
 `ctx.realmId` (legacy `ctx.rid` remains accepted); `{cname}` is the county named by
-`ctx.provinceId` (legacy `ctx.pid` remains accepted).
+`ctx.provinceId` (legacy `ctx.pid` remains accepted). `{newtitle}` renders the semantic
+title snapshot supplied as `ctx.titleData`; core rank-investiture events use it so the
+offered dignity remains grammatically localizable and stable across the transaction.
 Any declared participant slot is also a token: `{officer}`, `{witness}`, `{neighbor}`,
 or another valid slot resolves the exact id in `ctx.participants` before a same-named
 legacy role could be considered. Mentioning a living participant adds one event character
@@ -2276,7 +2284,9 @@ Freehold land is repeatable saved property rather than an authored holding defin
 Each `player.landPlots` entry is `{provinceId, settlement}`. Its economy is tuned through
 `balance.landPlotCost`, `landPlotYield`, `landConsolidationBonus`, and
 `landPlotMaxSettlement`; `manorPlotRequirement` plots in one settlement plus
-`manorPrestige` standing allow the household to declare that holding a manor. Land income
+`manorPrestige` standing qualify the household to claim that holding as a manor. The
+Gentry rung in the rank-elevation arrays is charged only when the confirmation is
+accepted. Land income
 is inherited and appears in the seasonal ledger. Every plot at one settlement is offered
 as a single pledged-loan collateral group; the contract freezes that group's count and
 default removes up to that many matching plots. If fewer than `manorPlotRequirement`
@@ -4065,9 +4075,21 @@ Rivalry tuning uses `rivalOpinionThreshold`, `rivalClaimChance`,
 `rivalHeatLegacyStart`, `rivalHeatOldSave`, `rivalContactHeat`, `rivalHeatDecayDelay`,
 `rivalHeatDecay`, and `rivalPeaceDays`; time values are game days.
 `itemSellRatio` is the fraction of an item's `value` a buyer pays when the player sells it.
-Ordinary elevation from gentry to baron uses `baronyPrestige` and `baronyOpinion`;
-both the petition deed and unsolicited offer require those thresholds, as well as a
-gentle house established by an earlier generation of the line.
+Ordinary rank claims read per-rung costs from `rankElevationGoldByTier`,
+`rankElevationPrestigeByTier`, and `rankElevationPietyByTier`; indexes are player tiers
+0–7, and indexes 0–1 are unused because Serf freedom has its own pricing. Core values for
+new tiers 2–7 are respectively 200/100/0, 500/250/0, 800/400/0, 1500/600/0,
+3000/1000/300, and 6000/1500/600. `FB.rankElevationCost(state,fromTier,toTier)` sums
+every crossed rung. `FB.rankElevationStatus` exposes current eligibility and the exact
+quote; `FB.queueRankElevationOffer` and `FB.claimRankElevation` are the opt-in ordinary
+transaction. Do not place this price in `FB.setPlayerTier`: generic authored/mod
+`tierSet`, inheritance, offices, exceptional grants, and save repair deliberately remain
+free. A fall does not discount a later ordinary claim.
+
+Ordinary elevation from Gentry to Baron additionally uses `baronyPrestige` and
+`baronyOpinion`; the petition deed requires those thresholds, as well as a gentle house
+established by an earlier generation of the line. The unsolicited offer keeps those
+eligibility gates but is an exceptional free grant and retains its authored reward.
 The exceptional founder-life military route uses `militaryBaronyMartial` and
 `militaryBaronyPrestige`; these gate taking command, while the barony itself still
 requires that exact patron's sovereign host to win a live field battle.

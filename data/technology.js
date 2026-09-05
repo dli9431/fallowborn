@@ -75,6 +75,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      rank_elevation_investiture:{
+        mode:'none',
+        rationale:'Recognition, investiture, and sacred legitimacy are core political progression rather than optional capabilities unlocked by sovereign research.'
+      },
       serf_freedom_petition:{
         mode:'none',
         rationale:'A serf asking an existing lord for terms is a baseline social and legal action, not a capability unlocked by sovereign research.'

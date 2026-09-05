@@ -10,8 +10,13 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.8';
+FB.VERSION = '1.168.9';
 FB.CHANGELOG = [
+  { v: '1.168.9', date: '2026-09-04', changes: [
+    'Rank advancement now opens an on-demand investiture review with live requirements, costs, and benefits.',
+    'War targets can now be selected directly on the map before reviewing the declaration.',
+    'Local-file playback and split UI helpers now avoid browser-origin errors during play.'
+  ] },
   { v: '1.168.8', date: '2026-09-04', changes: [
     'Opening Network or settlement people lists no longer changes local residents\' saved career records.',
     'Settlement people cards now show gender, age, occupation, and relationship status.'
@@ -3991,11 +3996,21 @@ FB.CHANGELOG = [
       (p.provs || []).join('|')].join(':');
   }
 
+  function titleLapseDeadlineDue(s) {
+    const lapse = s.player.titleLapse;
+    if (!lapse) return false;
+    if (!isFinite(Number(lapse.since))) return true;
+    const B = FBDATA.balance;
+    const days = s.turn - lapse.since;
+    if (days >= (B.titleLapseDemoteDays || 540)) return true;
+    return !lapse.warned && days >= (B.titleLapseWarnDays || 180);
+  }
+
   function checkPromotionsWhenChanged(s, force) {
     const revision = FB.realmStateRevision
       ? FB.realmStateRevision() : s.turn;
     const signature = promotionSignature(s);
-    if (!force && !s.player.titleLapse && promotionCheckState === s &&
+    if (!force && !titleLapseDeadlineDue(s) && promotionCheckState === s &&
         promotionCheckRealmRevision === revision &&
         promotionCheckSignature === signature) return;
     FB.checkTierPromotions(s);

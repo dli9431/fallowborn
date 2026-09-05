@@ -9,7 +9,9 @@ escalation, a paid or skill escape at every stage, and the fall arriving
 fully bidirectional and revalidates career, travel, focus, and monopolies on
 the way down, exactly as on the way up. `state.peakTier` is never lowered,
 restoration rights and re-promotion keep working: a fall is a chapter, not
-an ending. All knobs live in `FBDATA.balance`; all ruinous custom handlers
+an ending. Returning through an ordinary rank claim pays that rung's full recognition
+cost again; the old title is remembered, but investiture is not permanently prepaid.
+All knobs live in `FBDATA.balance`; all ruinous custom handlers
 carry deep-negative entries in `CUSTOM_FX_SCORE` (`js/ui_modals.js`) so
 automation endures, pays, or resists — it never sells the family down.
 The extraordinary captive-raid chain is the deliberate exception to the

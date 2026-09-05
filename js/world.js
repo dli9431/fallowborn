@@ -7755,8 +7755,9 @@ window.FB = window.FB || {};
     return n;
   }
   /* progress toward a de jure dignity: how many of its counties the player
-     holds vs. what the title demands. One home for the promotion rules —
-     checkTierPromotions and the map/panel readouts both speak these.
+     holds vs. what the title demands. One home for the recognition rules —
+     rankElevationStatus, checkTierPromotions, and the map/panel readouts all
+     speak these.
      A duchy must span 2+ counties and always demands at least 2 held; a
      kingdom the bare majority; an empire the majority of two of its kingdoms.
      Wastelands and colonies settled on them have no duchy, so they never
@@ -7936,30 +7937,23 @@ window.FB = window.FB || {};
       state.realms.player.liege = p.liege || null;
     }
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
-    if (!n) return; // landless: playerShare is 0 everywhere, nothing can promote
-    /* Only the crown can make a duke: a sworn vassal whose living liege is
+    if (!n) return; // landless: playerShare is 0 everywhere, no title substance
+    /* A landed record below Count can only come from an old or malformed save:
+       every live acquisition path now assigns Count explicitly. Repair the
+       impossible combination without charging or announcing an investiture. */
+    if (p.tier < 4) {
+      FB.setPlayerTier(state, 4, { attachLiege:false });
+      FB.foundPlayerRealm(state);
+    }
+    /* Only the crown can recognize a duke: a sworn vassal whose living liege is
        not at least a king keeps the land but waits for the style — the duchy
        stays a claim until he answers to a king, an emperor, or no one. */
     const duchyBlocked = !!(p.liege && state.realms[p.liege] &&
       state.realms[p.liege].alive && state.realms[p.liege].rank < 3);
-    let newTier = p.tier;
-    if (p.tier < 4) newTier = 4;
-    if (FB.playerDuchy(state) && p.tier < 5 && !duchyBlocked) newTier = 5;
-    if (indep && FB.playerKingdom(state) && p.tier < 6) newTier = 6;
-    if (indep && FB.playerEmpire(state) && p.tier < 7) newTier = 7;
-    if (newTier > p.tier) {
-      FB.setPlayerTier(state, newTier, { attachLiege:false });
-      const titleData = FB.titleSnapshot(state);
-      FB.news(state, FB.msg('news.world.promoted',
-        '👑 You are raised to {title}!', { title: { $title: titleData } }));
-      if (state.peakTier === undefined || newTier > state.peakTier) {
-        state.peakTier = newTier;
-        state.peakTitleData = titleData;
-      }
-      p.prestige += 30 * newTier;
-      FB.foundPlayerRealm(state); // restyle the landed realm at its new dignity
-      if (newTier >= 6 && FB.councilEnsure) FB.councilEnsure(state); // the great officers gather
-    }
+    /* De jure substance no longer grants style by itself. Ordinary Duke,
+       King, and Emperor elevations are deliberate paid claims handled by
+       rankElevationStatus/claimRankElevation; this pass remains responsible
+       for hierarchy repair, claim hints, and title lapse. */
     /* the claim, spoken aloud once per generation: the substance of a duchy
        without the style, while a mere duke sits above him */
     if (duchyBlocked && p.tier === 4 && !(p.flags && p.flags.duchy_claim_hint)) {

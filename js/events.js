@@ -3521,6 +3521,13 @@ window.FB = window.FB || {};
         case 'title':
           out[k] = semantic ? { $title: FB.titleSnapshot(state) } : FB.titleFor(state);
           break;
+        case 'newtitle':
+          out[k] = ctx && ctx.titleData
+            ? (semantic ? { $title:ctx.titleData } :
+              FB.renderTitleSnapshot(ctx.titleData))
+            : (semantic ? { $title:FB.titleSnapshot(state) } :
+              FB.titleFor(state));
+          break;
         case 'province':
           out[k] = pr ? pr.name :
             (semantic ? neutralParam('fx.param.this_land') : FB.T('this land'));
@@ -8398,6 +8405,7 @@ window.FB = window.FB || {};
 
   function customSystem(id) {
     if (/^(?:war_|ghw_)/.test(id)) return 'war';
+    if (/^(?:rank_elevation|liege_land_grant)/.test(id)) return 'politics';
     if (/^(?:diplomacy_|vassal_|appeal_|county_petition)/.test(id)) return 'diplomacy';
     if (/^(?:plot_|fabricate_claim)/.test(id)) return 'plot';
     if (/^(?:council_|parliament_|collective_demand|realm_policy_)/.test(id)) return 'politics';
@@ -8414,7 +8422,7 @@ window.FB = window.FB || {};
   }
 
   function customPermanent(id) {
-    return /^(?:df_fall|df_fall_flee|bondage_submit|bondage_flee|raid_plunder|raid_enslave|county_petition_grant|vassal_release|vassal_crush|intrigue_hearing_flee|sibling_marriage_success|sibling_proposal_refused|annul_granted|serf_transition_accept|serf_transition_decline_restore|serf_transition_pay|serf_transition_primary|serf_transition_witness_failure|serf_transition_witness_success)$/.test(id);
+    return /^(?:df_fall|df_fall_flee|bondage_submit|bondage_flee|raid_plunder|raid_enslave|county_petition_grant|rank_elevation_claim|vassal_release|vassal_crush|intrigue_hearing_flee|sibling_marriage_success|sibling_proposal_refused|annul_granted|serf_transition_accept|serf_transition_decline_restore|serf_transition_pay|serf_transition_primary|serf_transition_witness_failure|serf_transition_witness_success)$/.test(id);
   }
 
   /* Core ids are explicit so a newly authored custom option cannot silently
@@ -8430,15 +8438,43 @@ window.FB = window.FB || {};
     'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected local_folk_activity_resolve local_folk_activity_valid ' +
     'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item open_item_shop papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
-    'raid_enslave raid_plunder realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome serf_commuted_pay serf_flight_failure serf_neighbor_clear serf_neighbor_context_valid serf_neighbor_officer_current serf_neighbor_shifted serf_old_custom_ready serf_old_custom_replace_officer serf_old_custom_replacement_valid serf_old_custom_sync serf_transition_accept serf_transition_decline_restore serf_transition_pay serf_transition_primary serf_transition_witness_failure serf_transition_witness_success sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
+    'raid_enslave raid_plunder rank_elevation_claim rank_elevation_offer realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome serf_commuted_pay serf_flight_failure serf_neighbor_clear serf_neighbor_context_valid serf_neighbor_officer_current serf_neighbor_shifted serf_old_custom_ready serf_old_custom_replace_officer serf_old_custom_replacement_valid serf_old_custom_sync serf_transition_accept serf_transition_decline_restore serf_transition_pay serf_transition_primary serf_transition_witness_failure serf_transition_witness_success sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
     'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
-    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay serf_commuted_pay_ready serf_transition_adverse serf_transition_pay_ready serf_transition_restore serf_transition_witness suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
+    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist liege_land_grant lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay rank_elevation_context_valid serf_commuted_pay_ready serf_transition_adverse serf_transition_pay_ready serf_transition_restore serf_transition_witness suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
   ).split(' ');
   FB.coreEventImpactCustomIds = CORE_CUSTOM_EFFECT_IDS.slice();
   FB.eventImpactAdapters = FB.eventImpactAdapters || {};
 
   function coreCustomPreview(id, state, ctx) {
     const p = state.player;
+    if (id === 'rank_elevation_claim') {
+      const status = FB.rankElevationContextStatus &&
+        FB.rankElevationContextStatus(state, ctx);
+      const cost = status ? status.cost : {
+        gold:Math.max(0, Number(ctx && ctx.goldCost) || 0),
+        prestige:Math.max(0, Number(ctx && ctx.prestigeCost) || 0),
+        piety:Math.max(0, Number(ctx && ctx.pietyCost) || 0)
+      };
+      const out = [impact('gold', { amount:-cost.gold }),
+        impact('prestige', { amount:-cost.prestige }),
+        impact('rank', {
+          action:'claim', tier:ctx && ctx.targetTier,
+          reward:true, permanent:true
+        })];
+      if (cost.piety) out.splice(2, 0,
+        impact('piety', { amount:-cost.piety }));
+      return out;
+    }
+    if (id === 'rank_elevation_offer') {
+      return [impact('queue', { eventId:'rank_elevation_offer' }),
+        impact('rank', { action:'offer', reward:true })];
+    }
+    if (id === 'liege_land_grant') {
+      return [impact('system', {
+        system:'politics', action:'liege_land_grant', reward:true,
+        permanent:true
+      })];
+    }
     if (id === 'serf_commuted_pay') {
       return [impact('gold', {
         amount:-Math.max(0, Number(ctx && ctx.commutationGold) || 0)
@@ -10466,6 +10502,18 @@ window.FB = window.FB || {};
     if (!option) {
       return { visible:false, ready:false, techLocked:false, missingTech:[] };
     }
+    if (option.effects && option.effects.custom === 'rank_elevation_claim') {
+      const status = FB.rankElevationContextStatus &&
+        FB.rankElevationContextStatus(state, ctx);
+      return {
+        visible:true,
+        ready:!!(status && status.ready),
+        techLocked:false,
+        requiredTech:[], missingTech:[],
+        reason:status ? status.reason :
+          FB.T('The basis for this elevation has changed.')
+      };
+    }
     if (option.effects && option.effects.custom === 'freedom_accept_offer') {
       const contextReady = FB.fns && FB.fns.freedom_offer_context_valid &&
         FB.fns.freedom_offer_context_valid(state, ctx);
@@ -10547,7 +10595,9 @@ window.FB = window.FB || {};
     if (FB.eventOptionStatus) {
       const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);
       if (optionStatus.techLocked ||
-          (option.effects && option.effects.custom === 'freedom_accept_offer' &&
+          (option.effects &&
+            (option.effects.custom === 'freedom_accept_offer' ||
+             option.effects.custom === 'rank_elevation_claim') &&
             !optionStatus.ready)) return false;
     }
 

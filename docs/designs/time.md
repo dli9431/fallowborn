@@ -158,6 +158,12 @@ rows receive one status-only cooldown and eligibility pass; the same pass runs
 at most every seven game days during ordinary flowing time. It does not turn a
 large data-driven Deeds catalogue into a synchronous end-of-skip rebuild, and
 it reuses that pass's visibility result without materializing deed previews.
+Rank-up launchers contribute only a rung check and static description to this pass;
+freedom, manor, barony, county, and higher-dignity status is derived only when the
+player requests the corresponding review sheet and is rechecked on confirmation.
+An active title lapse likewise reuses its last territorial check between mutations and
+wakes only on its exact warning or demotion day, rather than rescanning de jure substance
+on every skipped day.
 Mounted disabled deeds with a known standard or system-specific readiness turn
 are the narrow deadline exception: if a cooldown expires between general passes,
 only the due row is patched on the exact day. Large raid, conquest, holy-war,

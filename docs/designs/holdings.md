@@ -148,19 +148,26 @@ settlement receive `balance.landConsolidationBonus` for each additional plot in 
 holding. A settlement is capped by `balance.landPlotMaxSettlement`.
 
 `FB.manorSite` requires `balance.manorPlotRequirement` plots in one settlement. Once the
-family also has `balance.manorPrestige`, Declare a Manor records that site on
-`player.manor` and raises the player from Freeholder to Gentry. This replaces the former
-one-step manor purchase while preserving its total baseline cost: five plots at 120 gold
-each. The Free Farmer start owns its promised first plot. Legacy `has_farm` saves become
-one plot lazily, and legacy tier-2 saves built around the old assumed manor receive a
-complete holding unless their station came from the abbot/qadi path.
+family also has `balance.manorPrestige`, Declare a Manor's always-enabled Freeholder
+launcher opens the ordinary on-demand rank review. Its confirmation is greyed until the
+land, age, prestige, and 200-gold/100-prestige recognition terms are met. A successful
+confirmation records that site on `player.manor` and raises the player from Freeholder to
+Gentry; opening, cancelling, or losing eligibility spends nothing. The five plots still
+cost 120 gold each, so the direct
+property-and-recognition route now asks 800 gold in total rather than ending at the land
+purchase alone. The Free Farmer start owns its promised first plot. Legacy `has_farm`
+saves become one plot lazily, and legacy tier-2 saves built around the old assumed manor
+receive a complete holding unless their station came from the abbot/qadi path.
 
 Declaring the first manor does not close the family land market. Gentry may continue
 buying plots one at a time in the home county up to each settlement's ordinary cap.
-Manor declaration remains a one-time Freeholder promotion; titled ranks use county domains
-and buildings instead of buying commoner freehold plots. The technology impact is **none**
-(`gentry_freehold_expansion`): ordinary local land purchases need no credible research
-gate.
+Manor declaration remains a one-time Freeholder claim; titled ranks use county domains and
+buildings instead of buying commoner freehold plots. Its recognition cost represents the
+estate consolidation, gifts, hospitality, and public standing by which a prosperous family
+could be treated as gentle; it is a playable synthesis, not a universal legal tariff. The
+technology impact is **none** (`gentry_freehold_expansion` and
+`rank_elevation_investiture`): ordinary local land purchases and social recognition need
+no credible research gate.
 
 The land market keeps each settlement purchase compact: its action face shows the
 settlement and plot progress plus only the live cost and before/after seasonal yield.

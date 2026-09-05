@@ -91,7 +91,9 @@ never changes the saved **Play music** choice or overrides a manual pause.
 The title theme and a player-repeated gameplay track use the audio element's native loop mode. This
 keeps Android browsers from seeing a seek-and-restart gap at the loop boundary. The player also
 publishes each track and its intended playing or paused state through the Media Session API, with
-notification actions for play, pause, previous, and next. While background playback is enabled, an
+notification actions for play, pause, previous, and next. Hosted playback includes the game icon;
+`file://` playback omits artwork because Chromium rejects local Media Session image URLs while
+still accepting the track metadata and controls. While background playback is enabled, an
 unexpected pause on a hidden page receives one guarded resume attempt. Focus, page-resume, and user
 interaction reconcile playback again after a browser freezes and restores the page. A bounded
 in-memory diagnostic trail records media errors and lifecycle recovery events without sending them

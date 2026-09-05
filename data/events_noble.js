@@ -159,8 +159,36 @@ FBDATA.events.push(
   text:'You stand before your liege’s seat and ask, with every courtesy, for greater lands and title.',
   options:[
     { label:'Make your case.', desc:'The liege’s ear is open; his hand is another matter.', chance:'liege_grant',
-      success:{ text:'The liege nods slowly. “It is earned.” New lands are added to your charge — and a rich gift to the liege’s chest seals the investiture.', effects:{ tierUp:1, prestige:25, opinionLiege:-15, gold:-50, log:'Won new lands from the liege.' } },
+      success:{ text:'The liege nods slowly. “It is earned.” New lands are added to your charge — and a rich gift to the liege’s chest seals the grant.', effects:{ custom:'liege_land_grant', prestige:25, opinionLiege:-15, gold:-50, log:'Won new lands from the liege.' } },
       failure:{ text:'“In time,” says the liege, meaning never. Courtiers hide their smiles.', effects:{ prestige:-5, opinionLiege:-8 } } }
+  ]},
+{ id:'rank_elevation_offer', title:'A Higher Dignity',
+  trigger:{ never:true }, contextValidator:'rank_elevation_context_valid',
+  text:{ forms:{ select:'value', param:'usesPiety', cases:{
+    yes:'Your lands support the style of {newtitle}. The treasury must sustain its ceremony and administration, your renown must persuade the great households, and your faith must recognize its sacred legitimacy.',
+    other:'Your lands and service support the style of {newtitle}. Establishing the household at that dignity requires gifts, ceremony, administration, and recognized renown.'
+  } } },
+  options:[
+    { label:'Accept the investiture.', desc:{ forms:{ select:'value', param:'usesPiety', cases:{
+      yes:'Spend {money:goldCost}, {prestigeCost} prestige, and {pietyCost} piety. Every crossed rank is included.',
+      other:'Spend {money:goldCost} and {prestigeCost} prestige. Every crossed rank is included.'
+    } } }, effects:{ custom:'rank_elevation_claim' } },
+    { label:'Not yet.', desc:'Keep your resources and claim the dignity another day.', effects:{} }
+  ]},
+{ id:'rank_elevation_result', title:'Investiture Complete',
+  trigger:{ never:true },
+  text:{ forms:{ select:'value', param:'usesPiety', cases:{
+    yes:'The gifts are given, the oaths heard, and the sacred rites completed. Your house is now recognized as {newtitle}.',
+    other:'The gifts are given, the seals set, and the oaths heard. Your house is now recognized as {newtitle}.'
+  } } },
+  options:[
+    { label:'Let the new style be known.', desc:'The household begins life at its new dignity.', effects:{} }
+  ]},
+{ id:'rank_elevation_refused', title:'Petition Refused',
+  trigger:{ never:true },
+  text:'The petition is heard and refused. The quoted investiture cost is not charged, but the disclosed refusal penalty still applies.',
+  options:[
+    { label:'Withdraw for now.', desc:'The household remains at its current station.', effects:{} }
   ]},
 { id:'county_petition', title:'A Suit Against a Neighbor',
   trigger:{ never:true }, /* fired from action */

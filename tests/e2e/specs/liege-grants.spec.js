@@ -2,6 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
+  'data/events_noble.js',
+  'data/map_data.js',
   'js/actions.js',
   'js/events.js',
   'js/politics.js',
@@ -11,7 +13,7 @@ dependsOnRuntime(__filename, [
 
 /* Feudal patronage from the liege (docs/designs/realms.md): the petition for
    title grants land inside the realm — never the liege's seat, never his last
-   directly held county — and only the crown can raise a man to duke. A duke's
+   directly held county — and only the crown can recognize a ducal claim. A duke's
    man who gains a duchy majority keeps the land as a claim without the style,
    and a duke kneeling to a mere duke lapses back a rung. Exercised at the
    engine level in a fresh deterministic context. */
@@ -59,6 +61,7 @@ async function startGame(page, testInfo) {
         p.greatHolyWar = null;
         p.gold = 100;
         p.prestige = 500;
+        p.piety = 0;
         p.pop = 30;
         p.flags = {};
         delete p.titleLapse;
@@ -179,7 +182,7 @@ test('a duke’s man who gains a duchy majority keeps the land but not the style
     });
   });
 
-test('the crown can make a duke: a king’s vassal rises and stays in the realm',
+test('a king’s vassal qualifies for Duke but must fund the explicit claim',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
     var result = await page.evaluate(function () {
@@ -198,28 +201,48 @@ test('the crown can make a duke: a king’s vassal rises and stays in the realm'
       FB.invalidateRealmCache();
 
       FB.checkTierPromotions(s);
-      out.tier = p.tier;
+      out.tierBeforeClaim = p.tier;
       out.liege = p.liege;
       out.realmLiege = s.realms.player.liege;
-      out.rank = s.realms.player.rank;
+      out.rankBeforeClaim = s.realms.player.rank;
       out.claimHint = !!(p.flags && p.flags.duchy_claim_hint);
       out.ownerKept = cs.length > 0 &&
         cs.every(function (pid) { return s.owner[pid] === 'lg_king'; });
+      var status = FB.rankElevationStatus(s);
+      out.eligible = status.eligible;
+      out.targetTier = status.targetTier;
+      out.cost = status.cost;
+      p.gold = status.cost.gold;
+      p.prestige = status.cost.prestige;
+      var queued = FB.queueRankElevationOffer(s, 'higher');
+      out.claimed = !!queued && FB.claimRankElevation(s, queued.ctx);
+      out.tierAfterClaim = p.tier;
+      out.rankAfterClaim = s.realms.player.rank;
+      out.resourcesAfterClaim = {
+        gold:p.gold, prestige:p.prestige, piety:p.piety
+      };
       return out;
     });
 
     expect(result).toEqual({
       duchyFound: true,
-      tier: 5,
+      tierBeforeClaim: 4,
       liege: 'lg_king',
       realmLiege: 'lg_king',
-      rank: 2,
+      rankBeforeClaim: 1,
       claimHint: false,
-      ownerKept: true
+      ownerKept: true,
+      eligible:true,
+      targetTier:5,
+      cost:{ gold:1500, prestige:600, piety:0 },
+      claimed:true,
+      tierAfterClaim:5,
+      rankAfterClaim:2,
+      resourcesAfterClaim:{ gold:0, prestige:0, piety:0 }
     });
   });
 
-test('an independent count with a duchy majority still promotes as before',
+test('an independent count with a duchy majority waits for a claim',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
     var result = await page.evaluate(function () {
@@ -237,14 +260,19 @@ test('an independent count with a duchy majority still promotes as before',
       out.tier = p.tier;
       out.liege = p.liege;
       out.claimHint = !!(p.flags && p.flags.duchy_claim_hint);
+      var status = FB.rankElevationStatus(s);
+      out.eligible = status.eligible;
+      out.targetTier = status.targetTier;
       return out;
     });
 
     expect(result).toEqual({
       duchyFound: true,
-      tier: 5,
+      tier: 4,
       liege: null,
-      claimHint: false
+      claimHint: false,
+      eligible:true,
+      targetTier:5
     });
   });
 
@@ -430,8 +458,6 @@ test('a generated local lord cannot grant a county title',
       var p = s.player;
       var me = s.chars[p.charId];
       var homeId = LG.resetCount(s);
-      var deed = LG.deed('petition_liege');
-
       p.tier = 3;
       p.provs = [];
       s.realms.player.rank = 0;
@@ -445,7 +471,8 @@ test('a generated local lord cannot grant a county title',
       s.holder[homeId] = 'lg_story_lord';
       FB.invalidateRealmCache();
 
-      var blocked = deed.can(s);
+      var blocked = FB.rankElevationStatus(
+        s, null, { route:'county' }).reason;
       var rejected = FB.grantByLiege(s);
       var afterStoryLord = {
         rejected:rejected === false,
@@ -464,9 +491,13 @@ test('a generated local lord cannot grant a county title',
       s.owner[homeId] = 'lg_duke';
       s.holder[homeId] = 'lg_count';
       FB.setRealmRulerStanding(s, 'lg_count', 100);
+      p.gold = 800;
+      p.prestige = 400;
       FB.invalidateRealmCache();
-      var titledCanGrant = deed.can(s) === true;
-      var granted = FB.grantByLiege(s);
+      var titledCanGrant = FB.rankElevationStatus(
+        s, null, { route:'county' }).ready;
+      var offer = FB.queueRankElevationOffer(s, 'county');
+      var granted = !!offer && FB.claimRankElevation(s, offer.ctx);
 
       return {
         blocked:afterStoryLord,
@@ -474,7 +505,9 @@ test('a generated local lord cannot grant a county title',
         granted:granted,
         tier:p.tier,
         holder:s.holder[homeId],
-        liege:p.liege
+        liege:p.liege,
+        gold:p.gold,
+        prestige:p.prestige
       };
     });
 
@@ -490,7 +523,9 @@ test('a generated local lord cannot grant a county title',
       granted:true,
       tier:4,
       holder:'player',
-      liege:'lg_duke'
+      liege:'lg_duke',
+      gold:0,
+      prestige:0
     });
   });
 

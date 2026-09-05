@@ -151,6 +151,14 @@ history. Autoresolve scores `serfFreedom` and the exact-offer acceptance handler
 positive rank transitions, but can select acceptance only while the saved context and
 price remain valid.
 
+The Petition for Freedom and Buy Freedom Deeds are always-enabled, tier-0 launchers with
+static descriptions. They do not calculate a lord, Standing, family quote, or affordability
+during a retained Deeds refresh. Opening their existing sheets derives those live terms on
+request, shows Serf → Freeholder, price, and benefits, and rechecks before any offer or
+purchase mutates state. The direct-purchase sheet keeps its exact ready or blocked reason
+visible beside the greyed or available confirmation instead of relying on a pointer-only
+browser title.
+
 Purchase prices cover the living family that receives the rank change, rather than
 charging the same amount to a lone serf and a large family. The household head costs
 100% of `freedomCost`, each living spouse adds 50%, and every living descendant adds
@@ -257,6 +265,17 @@ remain small custom handlers because their owning APIs are authoritative.
 docs/MODDING.md). New effect/trigger keys must be added there *and* documented in
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
+
+Ordinary rank investiture starts in the on-demand rank sheet. Its enabled Deeds launcher
+does not calculate eligibility; opening the sheet derives the live route, old and new tier,
+semantic title snapshot, cumulative gold/prestige/piety quote, and any petition chance.
+Confirmation rechecks that context. Direct recognition deducts resources and changes title
+atomically; barony and county petitions first resolve their disclosed chance, charging the
+investiture only on success and applying their stated penalty and cooldown on refusal. A
+confirmed attempt spends one day and queues the appropriate result event. Opening,
+cancelling, or activating a blocked confirmation spends nothing. The older
+`rank_elevation_offer` plus `rank_elevation_context_valid` and `rank_elevation_claim`
+transaction remains for authored-event and saved compatibility paths.
 
 Phase 4C declarative mod deeds may name one effective event to queue instead of applying
 their small scalar effect map. The deed validates that reference, including a same-mod

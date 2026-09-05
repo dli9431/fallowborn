@@ -460,7 +460,10 @@ without rebuilding the catalogue. Any mounted disabled deed with a known standar
 system-specific readiness turn additionally refreshes on its exact cooldown boundary. These
 deadline patches update only due rows and do not build expensive picker catalogues. Raid,
 conquest, holy-war, intrigue, diplomacy, and land-management targets stay deferred until
-their respective pickers open. A rare change to which deeds are visible promotes that pass
+their respective pickers open. Rank-up launchers are a stricter exception: their visibility,
+enabled state, and short description depend only on the current rung, so freedom, manor,
+barony, county, and higher-dignity eligibility is calculated only after the player opens the
+relevant sheet. A rare change to which deeds are visible promotes that pass
 to an exact Deeds render. A changing
 host value
 otherwise makes Land recompute and replace the host card, county economy, settlements,
@@ -870,6 +873,17 @@ diplomatic filters compose; a cause filter matches any valid justification attac
 the target. Deterministic sorts offer the recommended available-rights-first order plus
 realm, territory, rank, and defensive strength.
 
+The conquest catalogue places the raid-style 🗺 **Select on Map** action first, a native
+collapsed-by-default **Filters & sorting** disclosure second, and the target list last. Map selection
+switches to an overlay containing only immediately declarable objectives. Candidate counties
+receive visible map pips; tapping one gives the floating card a deliberately minimal summary
+of county and realm, enemy army size, and war type. The card can return to the list or continue
+to the ordinary **War Justification** review, which remains the only declaration boundary.
+Closing or backing out clears the targeting overlay without writing state or consuming RNG.
+On narrow and touch layouts, the title's guide and details controls share one aligned action
+row, target details buttons reserve only the card heading instead of narrowing every fact line,
+and the sticky footer paints above all scrolling target controls.
+
 Every target opens the compact **War Justification** confirmation before declaration.
 One reason is summarized directly; overlapping valid reasons use the same styled select
 control as the conquest filters and update the visible consequence summary. The final
@@ -1165,7 +1179,9 @@ While Deeds remains open, natural time updates mounted deed statuses every seven
 and at fast-forward completion; collapsed groups still calculate their current status only
 when opened. Mounted deeds with known readiness turns also update on the exact day their
 cooldown expires, without calculating picker targets during the panel refresh. The playable
-character crossing age sixteen is an immediate lifecycle boundary:
+rank-up launchers do not participate in either eligibility path: they remain actionable for
+their current rung and defer the full check to their modal. The playable character crossing
+age sixteen is an immediate lifecycle boundary:
 the retained tree rebuilds on that live refresh so Study and Play give way to adult focuses
 and every otherwise-eligible adult deed unlocks without waiting for the bounded interval.
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers
@@ -1394,6 +1410,18 @@ hints and shortcuts apply only to actions in the active section, and no layout h
 blocked reasons. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
+Duke, King, and Emperor claim launchers appear in both the Deeds action group and the
+Governance Domain section whenever the current rung can seek a higher dignity. These outer
+buttons stay enabled and use short review copy; neither surface calculates the territorial
+scan or cumulative price while rendering. The shared **Rank elevation** sheet performs that
+work on request. Its permanent face shows current → new status, cumulative
+gold/prestige/piety cost, benefit, approval chance for a liege petition, and the first exact
+blocker. Its confirmation remains focusable with `aria-disabled` when blocked, while the
+shared heading tooltip/compact `?` disclosure explains revalidation, timing, and refusal
+consequences and the adjacent Guide control opens ranks and roles. Opening, cancelling, or
+activating a blocked confirmation changes nothing; a confirmed attempt alone spends the day.
+Territorial progress still says that its threshold qualifies the household to claim rather
+than promising an automatic promotion.
 The Domain section groups held count, realm territory, and the direct tax/levy multiplier
 as three summary facts, then gives every directly held county one bounded row. County name,
 development, capital/home markers, and the **Reserve from grants** and **No autobuild**

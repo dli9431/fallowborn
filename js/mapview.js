@@ -28,6 +28,7 @@ window.FB = window.FB || {};
     highlightColor: null,
     onTap: null, dirty: true,
     marketGood: null,
+    warTargets: null, warSelected: null, warTargetMap: null,
     visibleSites: [], _sitePool: [], _labelRects: [], _rectCount: 0,
     pointers: {}, pinchD: 0, downX: 0, downY: 0, moved: false, dpr: 1,
     wheelActive: false, wheelTimer: null
@@ -109,6 +110,9 @@ window.FB = window.FB || {};
     M.groupOutlineSmooth = null;
     M.selectedOutlineSmooth = null;
     M.highlightColor = null;
+    M.warTargets = null;
+    M.warSelected = null;
+    M.warTargetMap = null;
     M.visibleSites.length = 0; // no stale settlement hit targets from the old world
     M._sitePool.length = 0;
     M._rectCount = 0;
@@ -381,6 +385,41 @@ window.FB = window.FB || {};
       FB.renderMarketOverlay(ctx, M.marketGood, sx, sy, z);
     }
   }
+
+  FB.renderWarTargetOverlay = M.renderWarTargetOverlay = function (ctx, toScreen, z, dpr) {
+    const map = FB.map;
+    if (!map || !FB.world) return;
+    const targets = map.warTargets || [];
+    if (!targets.length) return;
+
+    for (let i = 0; i < targets.length; i++) {
+      const pid = targets[i];
+      const pr = FB.world.byId[pid];
+      if (!pr) continue;
+      const point = toScreen(pr.cx, pr.cy);
+      const selected = pid === map.warSelected;
+      const radius = (selected ? 12 : 5) * dpr;
+      ctx.beginPath();
+      ctx.arc(point[0], point[1], radius, 0, Math.PI * 2);
+      ctx.fillStyle = selected
+        ? 'rgba(239, 155, 85, 0.34)'
+        : 'rgba(218, 77, 62, 0.88)';
+      ctx.fill();
+      ctx.strokeStyle = selected
+        ? 'rgba(255, 220, 125, 0.98)'
+        : 'rgba(255, 190, 105, 0.96)';
+      ctx.lineWidth = (selected ? 2.6 : 1.5) * dpr;
+      ctx.stroke();
+
+      if (selected && z >= 0.95) {
+        ctx.font = Math.round(11 * dpr) + 'px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffe08a';
+        ctx.fillText('\u2694', point[0], point[1]);
+      }
+    }
+  };
 
   FB.renderRaidOverlay = M.renderRaidOverlay = function (ctx, toScreen, z, dpr) {
     const map = FB.map;
@@ -1099,6 +1138,10 @@ window.FB = window.FB || {};
     if (FB.state && FB.renderTravel) FB.renderTravel(ctx, toScreen, z, M.dpr);
     // raiding expedition map overlay: reachable targets and selected target route
     if (FB.state && FB.renderRaidOverlay) FB.renderRaidOverlay(ctx, toScreen, z, M.dpr);
+    // war declaration map overlay: available objectives and selected conquest
+    if (FB.state && FB.renderWarTargetOverlay) {
+      FB.renderWarTargetOverlay(ctx, toScreen, z, M.dpr);
+    }
     if (M.marketGood && FB.state && FB.renderMarketRoutes) {
       FB.renderMarketRoutes(ctx, M.marketGood, toScreen, z, M.dpr);
     }

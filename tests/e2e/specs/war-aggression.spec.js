@@ -7,13 +7,16 @@ dependsOnRuntime(__filename, [
   'js/armies.js',
   'js/holywar.js',
   'js/model.js',
+  'js/mapview.js',
+  'js/keys.js',
   'js/politics.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/world.js',
   'data/events_war.js',
   'data/map_data.js',
-  'data/technology.js'
+  'data/technology.js',
+  'index.html'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -732,6 +735,129 @@ test('ruler war action scopes targets and records a selected de jure basis',
     })).toEqual({
       type:'dejure', titleKind:'kingdom', titleId:setup.kingdom
     });
+  });
+
+test('war targets can be selected on the map and reviewed with compact campaign facts',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:740 });
+    await startWarGame(page, testInfo);
+    var ids = await configureAggressionWar(page);
+    await page.evaluate(function (enemyId) {
+      FB.ui.showWarTargets(enemyId);
+    }, ids.enemyId);
+
+    const mapButton = page.locator('#war-pick-map');
+    await expect(mapButton).toBeVisible();
+    await expect(mapButton).toBeEnabled();
+    await expect(mapButton).toContainText('🗺');
+    const filters = page.locator('#war-target-filters');
+    expect(await mapButton.evaluate(function (button) {
+      var filterSection = document.getElementById('war-target-filters');
+      var list = document.getElementById('war-target-list');
+      return {
+        mapBeforeFilters:!!(button.compareDocumentPosition(filterSection) &
+          Node.DOCUMENT_POSITION_FOLLOWING),
+        filtersBeforeList:!!(filterSection.compareDocumentPosition(list) &
+          Node.DOCUMENT_POSITION_FOLLOWING)
+      };
+    })).toEqual({ mapBeforeFilters:true, filtersBeforeList:true });
+    await expect(filters).not.toHaveAttribute('open', '');
+    await expect(filters.locator('summary')).toBeVisible();
+    await expect(page.locator('#war-target-toolbar')).toBeHidden();
+    const mobileLayout = await page.locator('#genmodal').evaluate(
+      function (modal) {
+        var heading = modal.querySelector('.gm-heading');
+        var guide = heading.querySelector('.modal-guide-button');
+        var titleInfo = heading.querySelector('.modal-title-info');
+        var card = modal.querySelector('.war-target-card');
+        var cardInfo = card.querySelector('.settcard-info');
+        var firstFact = card.querySelector('.adesc');
+        var footer = modal.querySelector('#gm-body > .gm-footer');
+        var headingRect = heading.getBoundingClientRect();
+        var guideRect = guide.getBoundingClientRect();
+        var titleInfoRect = titleInfo.getBoundingClientRect();
+        var cardRect = card.getBoundingClientRect();
+        var cardInfoRect = cardInfo.getBoundingClientRect();
+        var factRect = firstFact.getBoundingClientRect();
+        return {
+          headingActionTopGap:Math.abs(guideRect.top - titleInfoRect.top),
+          headingActionWidthGap:Math.abs(guideRect.width - titleInfoRect.width),
+          headingActionHeightGap:Math.abs(guideRect.height - titleInfoRect.height),
+          headingActionGap:titleInfoRect.left - guideRect.right,
+          headingOverflow:titleInfoRect.right - headingRect.right,
+          cardInfoOverflow:cardInfoRect.right - cardRect.right,
+          cardInfoFactGap:factRect.top - cardInfoRect.bottom,
+          footerZ:Number(getComputedStyle(footer).zIndex),
+          cardActionZ:Number(getComputedStyle(
+            card.querySelector('.war-target-actions')).zIndex)
+        };
+      });
+    expect(mobileLayout.headingActionTopGap).toBeLessThanOrEqual(1);
+    expect(mobileLayout.headingActionWidthGap).toBeLessThanOrEqual(1);
+    expect(mobileLayout.headingActionHeightGap).toBeLessThanOrEqual(1);
+    expect(mobileLayout.headingActionGap).toBeGreaterThanOrEqual(5);
+    expect(mobileLayout.headingOverflow).toBeLessThanOrEqual(1);
+    expect(mobileLayout.cardInfoOverflow).toBeLessThanOrEqual(-7);
+    expect(mobileLayout.cardInfoFactGap).toBeGreaterThanOrEqual(0);
+    expect(mobileLayout.footerZ).toBeGreaterThan(mobileLayout.cardActionZ);
+    await filters.locator('summary').click();
+    await expect(filters).toHaveAttribute('open', '');
+    await expect(page.locator('#war-target-toolbar')).toBeVisible();
+    await filters.locator('summary').click();
+    await expect(page.locator('#war-target-toolbar')).toBeHidden();
+    await mapButton.click();
+
+    const picker = page.locator('#war-picker');
+    await expect(picker).toBeVisible();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    expect(await page.evaluate(function (targetId) {
+      return {
+        open:FB.ui.warPickerOpen(),
+        target:FB.map.warTargets.indexOf(targetId) >= 0,
+        selected:FB.map.warSelected,
+        focused:FB.map.focusGroupActive,
+        reviewDisabled:document.getElementById('war-picker-review').disabled
+      };
+    }, ids.targetId)).toEqual({
+      open:true,
+      target:true,
+      selected:null,
+      focused:true,
+      reviewDisabled:true
+    });
+
+    await page.evaluate(function (targetId) {
+      var province = FB.world.byId[targetId];
+      FB.map.onTap(province, province.cx, province.cy, null);
+    }, ids.targetId);
+
+    await expect(page.locator('#war-picker-summary')).toContainText(ids.targetName);
+    await expect(page.locator('#war-picker-summary')).toContainText(ids.enemyName);
+    await expect(page.locator('#war-picker-summary')).toContainText('Enemy army: ~');
+    await expect(page.locator('#war-picker-summary')).toContainText(
+      'War type: War of Aggression');
+    await expect(page.locator('#war-picker-review')).toBeEnabled();
+    expect(await page.evaluate(function () {
+      return {
+        selected:FB.map.warSelected,
+        war:FB.state.player.war
+      };
+    })).toEqual({ selected:ids.targetId, war:null });
+
+    await page.locator('#war-picker-review').click();
+    await expect(picker).toHaveClass(/hidden/);
+    await expect(page.getByRole('heading', {
+      name:'War Justification', exact:true
+    })).toBeVisible();
+    await expect(page.locator('.war-justification-critical:not([hidden])'))
+      .toContainText(ids.targetName);
+    expect(await page.evaluate(function () {
+      return {
+        targets:FB.map.warTargets,
+        selected:FB.map.warSelected,
+        war:FB.state.player.war
+      };
+    })).toEqual({ targets:null, selected:null, war:null });
   });
 
 test('war picker routes aggression through the universal justification sheet',

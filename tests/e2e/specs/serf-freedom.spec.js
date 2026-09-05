@@ -117,10 +117,7 @@ test('freedom terms validate and Standing deterministically freezes exact offers
       const missingLordRngBefore = JSON.stringify(FB.getRngState());
       const noLordPetition = FB.freedomPetitionStatus(s);
       s.player.gold = FBDATA.balance.freedomCost;
-      const buyFreedom = FB.instants.filter(function (deed) {
-        return deed.id === 'buy_freedom';
-      })[0];
-      const noLordPurchase = buyFreedom.can(s);
+      const noLordPurchase = FB.freedomPurchaseStatus(s).reason;
       const missingLordRngStable = missingLordRngBefore ===
         JSON.stringify(FB.getRngState());
       s.roles.lord = savedLordRole;
@@ -269,11 +266,8 @@ test('freedom prices the living family and freezes that family in negotiated ter
       const malformed = JSON.parse(JSON.stringify(offer));
       malformed.descendantCount++;
       const malformedValid = FB.freedomOfferSemanticsValid(malformed);
-      const buyFreedom = FB.instants.filter(function (deed) {
-        return deed.id === 'buy_freedom';
-      })[0];
       p.gold = current.price - 1;
-      const blocked = buyFreedom.can(s);
+      const blocked = FB.freedomPurchaseStatus(s).reason;
       p.gold = current.price;
       const goldBefore = p.gold;
       const resolved = FB.resolveSerfFreedom(s, { route:'purchase' }, {});
@@ -464,6 +458,11 @@ test('purchase selection and a character sheet can manumit exact relatives',
     });
 
     await expect(page.getByRole('heading', { name:'Buy freedom' })).toBeVisible();
+    await expect(page.locator('[data-rank-transition]')).toContainText('Serf');
+    await expect(page.locator('[data-rank-transition]'))
+      .toContainText('Freeholder');
+    await expect(page.locator('[data-freedom-purchase-sheet]'))
+      .toContainText('Benefits');
     await page.locator('[data-freedom-relative="' + ids.parent + '"]').check();
     await expect(page.locator('[data-freedom-family-price]'))
       .toContainText('Selected parent or sibling shares 1 x');
@@ -1144,6 +1143,10 @@ test('the petition sheet discloses optional advocacy before creation and preserv
       return { stewardId:steward.id, stewardName:FB.fullName(steward) };
     });
 
+    await expect(page.locator('[data-rank-transition]')).toContainText('Serf');
+    await expect(page.locator('[data-rank-transition]'))
+      .toContainText('Freeholder');
+    await expect(page.locator('[data-freedom-routes]')).toContainText('Benefits');
     const preview = page.locator(
       '[data-freedom-advocate-preview="' + expected.stewardId + '"]');
     await expect(preview).toBeVisible();

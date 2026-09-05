@@ -444,9 +444,9 @@ See [war.md](war.md).
 war target); `state.holder[pid]` is the county's direct holder. Authored realms are
 kings/emperors/independent dukes plus a few authored vassal kingdoms; the dukes and
 counts inside them are generated at `FB.initPolitics` (`FB.makeVassalRealm`). De jure
-data (`FBDATA.empires/kingdoms/duchies` + each county's `duchy` field) drives tier
-promotions (`FB.checkTierPromotions` = majority of a duchy/kingdom/empire), realm
-naming, and the Land panel's hierarchy block. Helpers: `FB.topRealm`, `FB.liegeChain`,
+data (`FBDATA.empires/kingdoms/duchies` + each county's `duchy` field) drives eligibility
+for rank claims (majority of a duchy/kingdom/empire), realm naming, and the Land panel's
+hierarchy block. Helpers: `FB.topRealm`, `FB.liegeChain`,
 `FB.realmTerritory`, `FB.realmHeldCounties`, `FB.dejureOf`; owner/holder-derived lists
 persist across turns until `FB.invalidateRealmCache` runs on a transfer or hierarchy
 change, while development-sensitive strength totals cache only for the current turn.
@@ -517,18 +517,20 @@ profile verbatim into the realm's initial lightweight ruler, deriving only start
 and ordinary succession bookkeeping. Generated counts, dukes, children, heirs,
 successors, and later houses continue through the saved RNG, so authored start rulers
 do not turn the whole family tree into fixed history.
-Petitioning up from a barony (`title_request` → `FB.grantByLiege`) invests the player
-with his home county only when the petitioned liege is a living territorial realm of count
-rank or greater that directly holds that county. A generated local lord is a story character,
+Petitioning up from a barony (`FB.attemptRankElevation` → `FB.grantByLiege`)
+invests the player with his home county only when the petitioned liege
+is a living territorial realm of count rank or greater that directly holds that county.
+A confirmed petition uses the disclosed liege-grant chance. Success spends 800 gold and
+400 prestige atomically with the grant; refusal keeps that investiture but applies the
+disclosed prestige, Standing, and cooldown penalties. A generated local lord is a story character,
 not a title holder, and has no county to convey. The granting count yields the county
 (dissolving if left landless) and the player answers to the granter's own liege — a liege
-must outrank his man, and
-`FB.checkTierPromotions` walks broken chains back up. For a count or higher the same
-petition instead grants a county out of the liege's own hand
+must outrank his man, and `FB.checkTierPromotions` walks broken chains back up. For a count
+or higher the older `title_request` instead grants a county out of the liege's own hand
 (`FB.liegeGrantCandidates`): adjacent to the player's lands, never the liege's seat,
 and never his last directly held county — a lord rewards service, but he does not
 give his power base away. The grant changes no liege and no sovereign: the player
-stays inside the realm. And only the crown can make a duke — if the player's living
+stays inside the realm. And only the crown can recognize a duke — if the player's living
 liege is not at least a king, a completed duchy majority stays a *claim* without the
 style (announced once per generation) until he answers to a king, an emperor, or no
 one. Independence comes two ways:
@@ -544,7 +546,7 @@ petition, neighboring-fief petition, or court-awarded escheat increments
 `balance.liegeGrantRepeatMult` (0.2 by default). The multiplier is applied after each
 path's normal chance clamp, so its minimum chance cannot erase the penalty. Failed
 petitions do not count. Buying or conquering land, settling wasteland, inheritance,
-independence, and automatic de jure promotions do not count as patronage. Succession
+independence, and de jure rank claims do not count as patronage. Succession
 resets both `liegeGrants` and the lifetime `warService` tally.
 
 **Appointed castellany is office, not land.** A landless tier-2 player may petition a
@@ -709,18 +711,58 @@ barony as `grant_of_barony`; declining it leaves the player gentry. The househol
 religious ladder in `js/economy.js` raises abbot/qadi to tier 2 and chief qadi to tier 3.
 A Catholic Bishop's personal see supplies tier-3 compatibility without being a barony;
 dependent officeholders instead receive the corresponding marriage/social `station`
-without becoming the landed player. The unsolicited
-`grant_of_barony` event lets eligible gentry accept, decline for a purse, or decline
-graciously. Short of "Autoresolve everything", automation leaves every
-title-changing or independence decision to the player. Promotions above count happen
-in `FB.checkTierPromotions` from de jure majorities:
-a duchy for tier 5, a kingdom (independent) for 6, two kingdoms of one empire for 7 —
-with one vassal exception: the duchy promotion fires only when the player's living
-liege (if any) is a king or greater, since a mere duke cannot raise a peer of his own.
-The exact rules live in `FB.duchyProgress`/`FB.kingdomProgress`/`FB.empireProgress`
-(`js/world.js`), shared by the tier check and the UI readouts: a duchy must span ≥2 de
-jure counties and demands ≥ max(2, ⌈n/2⌉) held, a kingdom ⌈n/2⌉, an empire two kingdom
-majorities. Every empire therefore has at least two de jure kingdoms; Italia is divided
+without becoming the landed player. The unsolicited `grant_of_barony` event lets
+eligible gentry accept, decline for a purse, or decline graciously. It remains a free
+exceptional patronage grant with its existing prestige reward, as do battlefield
+baronies and religious offices. Short of "Autoresolve everything", automation leaves
+every title-changing or independence decision to the player.
+
+**Ordinary rank elevation is an explicit investiture claim.** Meeting the social or
+territorial gate qualifies the household; it does not silently grant the style. Every
+rank-appropriate Deeds launcher remains visible and enabled without calculating land,
+liege, house, cooldown, or resource eligibility during the retained-panel status pass.
+Opening it performs that calculation on request and presents one compact review with the
+current and new status, cumulative price, benefit, approval chance for a petition, and a
+focusable available or greyed confirmation. Longer timing and refusal terms use the shared
+heading tooltip/compact disclosure, with the rank Guide alongside it. Opening, cancelling,
+or activating a blocked confirmation spends no day, starts no cooldown, and charges nothing.
+Confirmation revalidates the same live context before spending one day. Successful
+recognition charges and promotes atomically; a petition may instead be refused under its
+existing chance and penalty. There is no partial investiture payment and no former
+`30 × tier` prestige award.
+
+| New rank | Gold | Prestige | Piety |
+| --- | ---: | ---: | ---: |
+| Gentry | 200 | 100 | 0 |
+| Baron | 500 | 250 | 0 |
+| Count | 800 | 400 | 0 |
+| Duke | 1,500 | 600 | 0 |
+| King | 3,000 | 1,000 | 300 |
+| Emperor | 6,000 | 1,500 | 600 |
+
+The arrays `balance.rankElevationGoldByTier`,
+`rankElevationPrestigeByTier`, and `rankElevationPietyByTier` hold those per-rung values.
+`FB.rankElevationCost` sums every crossed rung, so a Count who already meets the royal
+conditions claims King for 4,500 gold, 1,600 prestige, and 300 piety. A lapsed title pays
+in full to be recognized again. Serf freedom remains its own system and cost.
+
+This fee belongs only to player-initiated ordinary claims: manor recognition, a successful
+petitioned barony, a successful Count investiture, and de jure claims to Duke, King, or
+Emperor. Unsolicited and military baronies, religious offices, inheritance or realm
+absorption, generic authored/mod `tierSet`, and save repair stay free. Centralizing the
+price in `FB.setPlayerTier` would incorrectly charge those exceptional paths, so callers
+use `FB.attemptRankElevation` and `FB.claimRankElevation` instead. The older
+`FB.queueRankElevationOffer` event boundary remains available for authored event paths and
+saved compatibility; the ordinary Deeds UI no longer queues an intermediate offer event.
+
+For higher titles, a duchy requires its de jure majority; a kingdom requires its majority
+plus independence; an empire requires two kingdom majorities plus independence. A duchy
+remains blocked when the player's living liege is below king rank, since a mere duke
+cannot raise a peer of his own. The exact rules live in
+`FB.duchyProgress`/`FB.kingdomProgress`/`FB.empireProgress` (`js/world.js`), shared by
+`FB.rankElevationStatus`, the daily hierarchy repair, and the UI readouts: a duchy must
+span ≥2 de jure counties and demands ≥ max(2, ⌈n/2⌉) held, a kingdom ⌈n/2⌉, an empire two
+kingdom majorities. Every empire therefore has at least two de jure kingdoms; Italia is divided
 between Italy and Sicily, with Benevento, Apulia, Calabria, and Sicily belonging to the
 latter. Wastelands and colonies settled on them have no de jure duchy, so they count
 toward no title. The province panel displays the de jure hierarchy under a row
@@ -728,6 +770,21 @@ labeled "De jure (rightful liege)" (and flags lands that feed no title), and spe
 have/need progress notes for any title level where the player holds a stake (`have > 0`)
 — How to Play glosses the term in plain language — and the 🗺/R map filter has de jure duchy
 and kingdom modes that name the player's strongest claim.
+The daily call site memoizes hierarchy repair by player and realm revision. During an active
+title lapse it wakes additionally on the exact warning and demotion deadlines, not on every
+intervening day; a territory or liege mutation still invalidates it immediately.
+
+The fiction is deliberately a cross-period synthesis. Medieval entry into the gentry was
+not one purchase: land, office, service, marriage, reputation, household display, and
+recognition by other elites all mattered. Higher styles likewise depended on material
+lordship and political recognition, while royal and imperial claims carried an additional
+sacral dimension represented by piety. See Peter Coss,
+[The Origins of the English Gentry](https://assets.cambridge.org/97805210/21005/excerpt/9780521021005_excerpt.pdf),
+the Oxford History of the British Isles discussion of
+[lordship](https://academic.oup.com/book/59791/chapter/511075090), and Janet Nelson on
+[the origins of royal anointing](https://www.cambridge.org/core/journals/studies-in-church-history/article/origins-of-royal-anointing/C070A88A22A870E86202BC8AF0F35C90).
+The technology impact is **none** (`rank_elevation_investiture`): investiture and social
+recognition are core political progression, not an optional advanced capability.
 
 **A lord holds only so much in his own hand.** Tier dignity counts every county the
 player's *realm* controls — held directly or by a vassal beneath him in the chain

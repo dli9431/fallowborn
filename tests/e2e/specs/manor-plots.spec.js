@@ -2,8 +2,12 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
+  'data/events_noble.js',
+  'data/map_data.js',
   'js/actions.js',
   'js/economy.js',
+  'js/events.js',
+  'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'css/style.css'
@@ -139,6 +143,67 @@ test('keeps the manual one-plot purchase when only one manor plot remains',
       };
     });
     expect(result).toEqual({ count:setup.requirement, gold:0 });
+  });
+
+test('manor recognition is a confirmed 200 gold and 100 prestige claim',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const requirement = FBDATA.balance.manorPlotRequirement;
+      p.tier = 1;
+      p.gold = 250;
+      p.prestige = FBDATA.balance.manorPrestige;
+      p.piety = 0;
+      p.manor = null;
+      p.landPlots = [];
+      p.landPlotMigration = 1;
+      for (let i = 0; i < requirement; i++) {
+        p.landPlots.push({ provinceId:p.provinceId, settlement:0 });
+      }
+      s.eventQueue = [];
+      const status = FB.rankElevationStatus(s, null, { route:'manor' });
+      const launcher = FB.instantStatus(s, 'declare_manor');
+      const before = {
+        tier:p.tier, gold:p.gold, prestige:p.prestige, manor:p.manor
+      };
+      const attempt = FB.attemptRankElevation(s, 'manor');
+      return {
+        launcherReady:launcher.shown && launcher.can,
+        ready:status.ready,
+        quote:{
+          gold:status.cost.gold,
+          prestige:status.cost.prestige,
+          piety:status.cost.piety
+        },
+        before:before,
+        attempted:attempt.attempted,
+        claimed:attempt.claimed,
+        after:{
+          tier:p.tier,
+          gold:p.gold,
+          prestige:p.prestige,
+          manor:p.manor,
+          queue:(s.eventQueue || []).map(function (item) { return item.id; })
+        }
+      };
+    });
+
+    expect(result).toEqual({
+      launcherReady:true,
+      ready:true,
+      quote:{ gold:200, prestige:100, piety:0 },
+      before:{ tier:1, gold:250, prestige:150, manor:null },
+      attempted:true,
+      claimed:true,
+      after:{
+        tier:2,
+        gold:50,
+        prestige:50,
+        manor:{ provinceId:expect.any(String), settlement:0 },
+        queue:['rank_elevation_result']
+      }
+    });
   });
 
 test('gentry can continue buying available freehold plots after declaring a manor',

@@ -29,6 +29,17 @@ That final sheet chooses the exact basis, keeps only the critical target, siege,
 or political-cost facts on screen, and places the longer consequences in its header
 tooltip. Aggression and sacrilege use this same final declaration boundary.
 
+The conquest catalogue leads with the same 🗺 **Select on Map** action used by raiding,
+followed by collapsed-by-default filters and sorting, then the target list. Map selection
+closes the list into a dedicated targeting mode, highlights only objectives that can currently be
+declared, and keeps a small floating card over the map. Tapping an objective shows only
+its county and realm, the enemy's projected army size, and the recommended war type (plus
+the number of other valid justifications when they overlap). **Review War** then opens the
+same War Justification sheet used by the list, so map selection never bypasses live cause
+and diplomatic revalidation. This is a presentation path for the existing
+`war_justification_selection` capability and does not change its **none** technology-impact
+decision or any gameplay eligibility.
+
 A ruler sheet contributes one **Declare war…** action rather than one button per cause.
 It opens the conquest picker scoped to that ruler's realm and includes only targets that
 can be declared immediately. The global Deeds catalogue continues to include blocked
