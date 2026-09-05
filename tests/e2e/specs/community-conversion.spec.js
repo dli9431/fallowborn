@@ -254,15 +254,17 @@ test('settlement sheets retain local context and never mutate remote browsing',
       '.settlement-community-project-control').click();
     await expect(page.locator('#gm-title')).toContainText(settlement.name);
     await expect(page.locator('#gm-title')).toContainText(setup.county);
-    await expect(page.locator('#gm-body')).toContainText(
-      'not a personal or county-wide conversion');
+    await expect(page.locator('#gm-body')).not.toContainText(
+      'personal or county-wide conversion');
     await page.locator('[data-county-project-target="norse"]').click();
+    await expect(page.locator('.county-project-target-context'))
+      .toContainText('Target');
+    await expect(page.locator('.county-project-target-context'))
+      .toContainText('Norse');
+    await expect(page.locator('[data-county-project-policy="voluntary"]'))
+      .toContainText('Start Voluntary outreach');
     await page.locator('[data-county-project-policy="voluntary"]').click();
-    await expect(page.locator('#county-project-confirm'))
-      .toContainText(settlement.name);
-    await expect(page.locator('#county-project-confirm'))
-      .toContainText(setup.county);
-    await page.locator('#county-project-confirm').click();
+    await expect(page.locator('#county-project-confirm')).toHaveCount(0);
     await expect(page.locator(
       '[data-settlement-community-project="culture"]')).toContainText(
       'Norse');
@@ -301,6 +303,16 @@ test('settlement sheets retain local context and never mutate remote browsing',
     expect(annual.moved).toBeGreaterThan(0);
     expect(annual.otherStable).toBe(true);
     expect(annual.countyTotal).toBe(1000);
+
+    await page.locator(
+      '[data-settlement-community-project="faith"] ' +
+      '.settlement-community-project-control').click();
+    await page.locator('[data-county-project-target="orthodox"]').click();
+    await page.locator('[data-county-project-policy="integrative"]').click();
+    await expect(page.locator('#county-project-confirm')).toHaveCount(0);
+    await expect(page.locator(
+      '[data-settlement-community-project="faith"]')).toContainText(
+      'Orthodox Christianity');
 
     const remote = await page.evaluate(function () {
       const s = FB.state;
@@ -371,9 +383,27 @@ test('settlement policy penalties are weighted instead of county modifiers',
     await page.locator('[data-county-project-target="norse"]').click();
     const coercive = page.locator(
       '[data-county-project-policy="coercive"]');
-    await expect(coercive).toContainText('This settlement is');
-    await expect(coercive).toContainText('county-wide share');
-    await expect(coercive).not.toContainText('for 720 days');
+    const coerciveCard = page.locator(
+      '[data-county-project-policy-card="coercive"]');
+    const coerciveDetails = coerciveCard.locator('.settcard-details');
+    await expect(coercive).toContainText('Start Coercive enforcement');
+    await expect(coercive).toContainText('people/year');
+    await expect(coercive).toContainText('resistance');
+    await expect(coercive).not.toContainText('Officials compel conformity');
+    await expect(coerciveDetails).toContainText('Officials compel conformity');
+    await expect(coerciveDetails).toContainText('This settlement is');
+    await expect(coerciveDetails).toContainText('county-wide share');
+    await expect(coerciveDetails).not.toContainText('for 720 days');
+    await coercive.focus();
+    await expect(page.locator('#tooltip')).toContainText(
+      'Officials compel conformity');
+
+    await page.setViewportSize({ width:390, height:740 });
+    const disclosure = coerciveCard.locator('.settcard-info');
+    await expect(disclosure).toBeVisible();
+    await disclosure.click();
+    await expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+    await expect(coerciveDetails).toBeVisible();
 
     const result = await page.evaluate(function (pid) {
       const s = FB.state;

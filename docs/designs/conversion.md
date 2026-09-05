@@ -84,9 +84,15 @@ Settlement projects reuse the same saved project fields, annual pressure/resista
 model, and policy consequences under `settlementCommunityProjects[settlementIndex]`.
 Their eligible population, target share, and potential transfer come only from that
 slot. The selected settlement sheet owns start, change, and stop controls and retains
-both the settlement and county name at every step. A count can direct any settlement in
-a directly held county; a baron can direct only the saved home settlement. County Land
-controls remain county-wide, and Self/Faith never chooses a settlement implicitly.
+both the settlement and county name at every step. Its target and policy picker is a
+two-step local flow: target rows keep only identity and current share visible, while
+policy rows keep the immediate action, estimated annual pace, and resistance visible.
+Descriptions, scaled county consequences, replacement terms, and annual timing use the
+shared desktop tooltip or compact-layout `?` disclosure. Selecting a policy starts or
+replaces the local project immediately; settlement policy has no separate confirmation
+sheet. A count can direct any settlement in a directly held county; a baron can direct
+only the saved home settlement. County Land controls remain county-wide and retain their
+review/confirmation step, and Self/Faith never chooses a settlement implicitly.
 
 Tax, levy, Common Voice, unrest, and market flow are county aggregates rather than
 separate settlement ledgers. A local coercive project therefore contributes its policy

@@ -354,6 +354,14 @@ and urgent warning state on the face; put the supporting explanation in the shar
 desktop hover/focus tooltip and compact `?` disclosure. This applies to modal sections
 and standalone actions as well as list cards.
 
+Settlement culture-assimilation and faith-conversion pickers apply this rule without a
+third review screen. The target step shows identity and current local share. The policy
+step shows the selected target plus each policy's immediate Start/Switch action, annual
+pace, and resistance; its description, scaled county effects, replacement behavior, and
+annual timing live in the standard hover/focus tooltip or compact `?` disclosure. Choosing
+an enabled policy starts or replaces the local project immediately. County-wide projects
+retain their separate consequence review and confirmation because their scope is broader.
+
 One-time deed rows use this convention too: the card face keeps only the enlarged action
 name, with gold, green, or blue-green border accents distinguishing day-spending immediate,
 choice-backed, and no-day immediate actions. Timing and descriptive copy live together in

@@ -3573,6 +3573,38 @@ window.FB = window.FB || {};
       else UI.closeModal();
     }
 
+    function orderProject(policyId) {
+      const ordered = local
+        ? FB.orderSettlementCommunityProject(
+          FB.state, pid, settlementIndex, kind, targetId, policyId)
+        : FB.orderCountyCommunityProject(
+          FB.state, pid, kind, targetId, policyId);
+      if (!ordered) {
+        const live = orderStatus(targetId, policyId);
+        UI.toast(live.reason || (local
+          ? FB.T('That settlement project is no longer possible.')
+          : FB.T('That county project is no longer possible.')));
+        closePicker();
+        UI.refresh();
+        return false;
+      }
+      closePicker();
+      UI.refresh();
+      UI.toast(kind === 'faith'
+        ? (local ? FB.T('Faith conversion begins in {settlement}, {county}.', {
+          settlement:settlement.name, county:province.name
+        }) : FB.T('Faith conversion begins in {county}.', {
+          county:province.name
+        }))
+        : (local ? FB.T(
+          'Cultural assimilation begins in {settlement}, {county}.', {
+            settlement:settlement.name, county:province.name
+          }) : FB.T('Cultural assimilation begins in {county}.', {
+            county:province.name
+          })));
+      return true;
+    }
+
     function title(label) {
       return local
         ? FB.T('{label} · {settlement}, {county}', {
@@ -3587,15 +3619,13 @@ window.FB = window.FB || {};
       const active = currentProject();
       const ids = countyProjectTargetIds(
         s, pid, kind, local ? settlementIndex : undefined);
-      const introduction = local ? FB.T(
-        'Choose the identity toward which {settlement} in {county} should change. This is settlement policy, not a personal or county-wide conversion.', {
-          settlement:settlement.name, county:province.name
-        }) : FB.T(
+      const introduction = local ? '' : FB.T(
         'Choose the identity toward which {county} should change. This is county policy, not a personal conversion.', {
           county:province.name
         });
-      let h = '<div class="gm-body-text"><p>' + esc(introduction) +
-        '</p></div><div class="gm-list county-project-target-list">';
+      let h = (introduction
+        ? '<div class="gm-body-text"><p>' + esc(introduction) + '</p></div>'
+        : '') + '<div class="gm-list county-project-target-list">';
       if (!ids.length) {
         h += '<div class="conversion-empty">' + esc(local
           ? FB.T('No encountered identity can be advanced in this settlement.')
@@ -3647,30 +3677,78 @@ window.FB = window.FB || {};
       if (!targetId) { renderTargets(); return; }
       const target = countyProjectTargetName(s, kind, targetId);
       const policies = FBDATA.countyCommunityPolicies || {};
-      const introduction = local ? FB.T(
-        'Choose how {settlement} in {county} will move toward {target}. Annual results change with local conditions.', {
-          settlement:settlement.name, county:province.name, target:target
-        }) : FB.T(
+      const introduction = local ? '' : FB.T(
         'Choose how {county} will move toward {target}. Annual results change with local conditions.', {
           county:province.name, target:target
         });
-      let h = '<div class="gm-body-text"><p>' + esc(introduction) +
-        '</p></div><div class="gm-list county-project-policy-list">';
+      let h = (local
+        ? '<div class="county-project-target-context"><span>' +
+          esc(FB.T('Target')) + '</span><b>' + esc(target) + '</b></div>'
+        : '<div class="gm-body-text"><p>' + esc(introduction) + '</p></div>') +
+        '<div class="gm-list county-project-policy-list">';
       for (const policyId in policies) {
         const policy = policies[policyId];
         const order = orderStatus(targetId, policyId);
         const preview = projectPreview(targetId, policyId);
-        h += '<button type="button" class="actionbtn county-project-policy" ' +
-          'data-county-project-policy="' + esc(policyId) + '"' +
-          (order.ready ? '' : ' disabled') + '><b>' +
-          esc(countyProjectPolicyName(s, policyId)) + '</b><span class="adesc">' +
-          esc(dt(s, 'countyCommunityPolicy', policyId, policy, 'desc')) +
-          '</span><span class="county-project-preview">' + esc(preview
-            ? FB.T('About {count} people/year · {percent}% resistance', {
+        const policyName = countyProjectPolicyName(s, policyId);
+        if (local) {
+          const detailsId = 'settlement-project-policy-' + kind + '-' +
+            settlementIndex + '-' + policyId;
+          const current = order.active && order.active.target === targetId &&
+            order.active.policy === policyId && order.active.sponsor === 'player';
+          const buttonLabel = current
+            ? FB.T('Current: {policy}', { policy:policyName })
+            : order.active
+              ? FB.T('Switch to {policy}', { policy:policyName })
+              : FB.T('Start {policy}', { policy:policyName });
+          const pace = preview
+            ? FB.T('~{count} people/year · {percent}% resistance', {
               count:Math.round(preview.potential),
               percent:Math.round(preview.resistance * 100)
-            }) : order.reason) + '</span><span class="county-project-preview">' +
-          esc(policyEffectText(policyId, preview)) + '</span></button>';
+            }) : FB.T('Unavailable');
+          const terms = order.ready
+            ? (order.active ? FB.T(
+              'Starts immediately and replaces this settlement’s current {kind} project. No upfront personal cost. Progress resolves annually; no fixed completion date.', {
+                kind:kind === 'faith' ? FB.T('faith') : FB.T('culture')
+              }) : FB.T(
+              'Starts immediately. No upfront personal cost. Progress resolves annually; no fixed completion date.'))
+            : order.reason;
+          h += '<div class="settcard declarative-choice-card ' +
+            'county-project-policy-card" data-county-project-policy-card="' +
+            esc(policyId) + '"' + (order.ready ? '' :
+              ' tabindex="0" aria-describedby="' + esc(detailsId) + '"') +
+            '><button type="button" class="actionbtn county-project-policy" ' +
+            'data-county-project-policy="' + esc(policyId) + '" ' +
+            'aria-describedby="' + esc(detailsId) + '"' +
+            (order.ready ? '' : ' disabled') + '><b>' + esc(buttonLabel) +
+            '</b><span class="county-project-preview">' + esc(pace) +
+            '</span></button><span class="settcard-actions ' +
+            'declarative-choice-actions"><button type="button" ' +
+            'class="btn small settcard-info" aria-expanded="false" ' +
+            'aria-controls="' + esc(detailsId) + '" title="' +
+            esc(FB.T('Details')) + '" aria-label="' +
+            esc(FB.T('Details for {policy}', { policy:policyName })) +
+            '">?</button></span><div class="settcard-details ' +
+            'declarative-choice-details county-project-policy-details hidden" id="' +
+            esc(detailsId) + '"><div class="settdesc">' +
+            esc(dt(s, 'countyCommunityPolicy', policyId, policy, 'desc')) +
+            '</div>' + (preview ? '<div class="county-project-preview">' +
+              esc(policyEffectText(policyId, preview)) + '</div>' : '') +
+            '<div class="adesc">' +
+            esc(terms) + '</div></div></div>';
+        } else {
+          h += '<button type="button" class="actionbtn county-project-policy" ' +
+            'data-county-project-policy="' + esc(policyId) + '"' +
+            (order.ready ? '' : ' disabled') + '><b>' + esc(policyName) +
+            '</b><span class="adesc">' +
+            esc(dt(s, 'countyCommunityPolicy', policyId, policy, 'desc')) +
+            '</span><span class="county-project-preview">' + esc(preview
+              ? FB.T('About {count} people/year · {percent}% resistance', {
+                count:Math.round(preview.potential),
+                percent:Math.round(preview.resistance * 100)
+              }) : order.reason) + '</span><span class="county-project-preview">' +
+            esc(policyEffectText(policyId, preview)) + '</span></button>';
+        }
       }
       h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
         'id="county-project-target-back">' + esc(FB.T('Back')) +
@@ -3688,8 +3766,9 @@ window.FB = window.FB || {};
         function (button) {
           button.addEventListener('click', function () {
             if (button.disabled) return;
-            renderConfirmation(
-              button.getAttribute('data-county-project-policy'));
+            const policyId = button.getAttribute('data-county-project-policy');
+            if (local) orderProject(policyId);
+            else renderConfirmation(policyId);
           });
         });
     }
@@ -3700,20 +3779,14 @@ window.FB = window.FB || {};
       const order = orderStatus(targetId, policyId);
       const preview = projectPreview(targetId, policyId);
       if (!order.ready || !preview) {
-        UI.toast(order.reason || (local
-          ? FB.T('That settlement project is not possible.')
-          : FB.T('That county project is not possible.')));
+        UI.toast(order.reason || FB.T('That county project is not possible.'));
         renderPolicies();
         return;
       }
       const active = order.active;
-      const summary = local ? FB.T(
-        '{settlement} in {county} will pursue {target} through {policy}.', {
-          settlement:settlement.name, county:province.name,
-          target:target, policy:policy
-        }) : FB.T('{county} will pursue {target} through {policy}.', {
-          county:province.name, target:target, policy:policy
-        });
+      const summary = FB.T('{county} will pursue {target} through {policy}.', {
+        county:province.name, target:target, policy:policy
+      });
       let h = '<div class="gm-body-text county-project-confirm"><p>' +
         esc(summary) + '</p>' +
         '<p><b>' + esc(FB.T('Estimated direction:')) + '</b> ' + esc(FB.T(
@@ -3725,16 +3798,12 @@ window.FB = window.FB || {};
           esc(FB.T('Prestige:')) + '</b> 0</p>' +
         '<p><b>' + esc(FB.T('Standing and relationships:')) + '</b> ' +
           esc(FB.T('No immediate change.')) + '</p>' +
-        '<p><b>' + esc(local ? FB.T('Scaled county effects from this settlement:')
-          : FB.T('County Common Voice and unrest:')) + '</b> ' +
+        '<p><b>' + esc(FB.T('County Common Voice and unrest:')) + '</b> ' +
           esc(policyEffectText(policyId, preview)) + '</p>' +
-        (active ? '<p>' + esc(local ? FB.T(
-          'This replaces this settlement’s current {kind} project.', {
-            kind:kind === 'faith' ? FB.T('faith') : FB.T('culture')
-          }) : FB.T('This replaces the county’s current {kind} project.', {
+        (active ? '<p>' + esc(FB.T('This replaces the county’s current {kind} project.', {
             kind:kind === 'faith' ? FB.T('faith') : FB.T('culture')
           })) + '</p>' +
-          (!local && active.policy !== policyId &&
+          (active.policy !== policyId &&
               FBDATA.countyCommunityPolicies[active.policy] &&
               FBDATA.countyCommunityPolicies[active.policy].modifier
             ? '<p>' + esc(FB.T(
@@ -3744,49 +3813,16 @@ window.FB = window.FB || {};
           'Opening this review costs nothing and changes no population. Results are resolved annually; no completion date is promised.')) +
         '</p></div><div class="gm-list"><button type="button" ' +
         'class="actionbtn" id="county-project-confirm">' +
-        esc(local
-          ? FB.T('Confirm project in {settlement}, {county}', {
-            settlement:settlement.name, county:province.name
-          })
-          : FB.T('Confirm project in {county}', { county:province.name })) +
+        esc(FB.T('Confirm project in {county}', { county:province.name })) +
         '</button><button type="button" class="actionbtn" ' +
         'id="county-project-confirm-back">' + esc(FB.T('Not yet')) +
         '</button></div>';
-      openModal(title(local ? FB.T('Confirm settlement project')
-        : FB.T('Confirm county project')), h, {
+      openModal(title(FB.T('Confirm county project')), h, {
         modalClass:'county-community-modal', replaceView:true,
         noFocus:true
       });
       $('county-project-confirm').addEventListener('click', function () {
-        const ordered = local
-          ? FB.orderSettlementCommunityProject(
-            FB.state, pid, settlementIndex, kind, targetId, policyId)
-          : FB.orderCountyCommunityProject(
-            FB.state, pid, kind, targetId, policyId);
-        if (!ordered) {
-          const live = orderStatus(targetId, policyId);
-          UI.toast(live.reason || (local
-            ? FB.T('That settlement project is no longer possible.')
-            : FB.T('That county project is no longer possible.')));
-          UI.closeModal();
-          UI.refresh();
-          return;
-        }
-        if (local) UI.showSettlement(pid, settlementIndex);
-        else UI.closeModal();
-        UI.refresh();
-        UI.toast(kind === 'faith'
-          ? (local ? FB.T('Faith conversion begins in {settlement}, {county}.', {
-            settlement:settlement.name, county:province.name
-          }) : FB.T('Faith conversion begins in {county}.', {
-            county:province.name
-          }))
-          : (local ? FB.T(
-            'Cultural assimilation begins in {settlement}, {county}.', {
-              settlement:settlement.name, county:province.name
-            }) : FB.T('Cultural assimilation begins in {county}.', {
-              county:province.name
-            })));
+        orderProject(policyId);
       });
       $('county-project-confirm-back').addEventListener('click', renderPolicies);
     }

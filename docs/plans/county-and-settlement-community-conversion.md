@@ -467,7 +467,11 @@ Steps:
 7. Extend the selected settlement's sheet with the local breakdown and any active local
    project. Make that sheet the canonical entry point for settlement project controls;
    neither the Self-tab Faith details sheet nor the county-wide controls may silently
-   choose a settlement. The county Land breakdown remains the sum of its settlements.
+   choose a settlement. Keep the local picker to target then policy, move policy
+   descriptions and consequences into the shared tooltip/touch disclosure, and start or
+   replace the project when the policy is chosen without a separate confirmation screen.
+   The county Land breakdown remains the sum of its settlements, and county-wide projects
+   retain their broader-scope confirmation.
 8. Measure save growth. If full matrices are too large, keep them lazy and compact any
    matrix that has returned to the county-wide proportional projection; do not weaken the
    conservation invariant.

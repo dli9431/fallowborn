@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.170.1';
+FB.VERSION = '1.170.2';
 FB.CHANGELOG = [
+  { v: '1.170.2', date: '2026-09-05', changes: [
+    'Settlement conversion pickers are shorter, keep policy detail behind accessible help, and begin local projects directly from the policy choice.'
+  ] },
   { v: '1.170.1', date: '2026-09-05', changes: [
     'Community breakdowns now remain readable in narrow Land panels, and settlement-project penalties scale to the settlement instead of applying a full county modifier.'
   ] },

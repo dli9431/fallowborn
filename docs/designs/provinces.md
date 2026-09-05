@@ -284,11 +284,13 @@ desktop tooltip or compact-layout disclosure instead of a generic helper paragra
 
 The same sheet shows the selected slot's culture and faith counts and percentages, plus
 its saved local faith and culture projects. It is the sole entry point for local project
-controls and carries both settlement and county names through target, policy,
-confirmation, and stop views. A count may direct any settlement in a directly held
-county; a baron may direct only the saved home settlement. Foreign and other remote
-sheets remain read-only. County-wide controls stay in Land and never infer a settlement;
-Self/Faith remains character-facing navigation only.
+controls and carries both settlement and county names through target, policy, and stop
+views. Policy rows expose pace and resistance on their face, with descriptions and
+consequences in the shared tooltip/touch disclosure; choosing one begins or replaces the
+local project without a separate confirmation view. A count may direct any settlement in
+a directly held county; a baron may direct only the saved home settlement. Foreign and
+other remote sheets remain read-only. County-wide controls stay in Land and never infer a
+settlement; Self/Faith remains character-facing navigation only.
 
 Where a settlement policy affects county-level tax, levy, Common Voice, unrest, or
 market flow, its contribution is weighted by that settlement's share of the county

@@ -1758,6 +1758,17 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .county-project-preview {
   display: block; margin-top: 4px; color: #c9aa72; font-size: 12px; line-height: 1.4;
 }
+.county-project-target-context {
+  display: flex; align-items: baseline; gap: 8px; margin: 0 2px 7px;
+  color: var(--helper-text-color); font-size: 13px;
+}
+.county-project-target-context b { color: var(--main-text-color); font-size: 14px; }
+.county-project-policy-card .actionbtn { min-height: 58px; }
+.county-project-policy-details {
+  color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
+}
+.county-project-policy-details .county-project-preview { margin: 7px 0; }
+.county-project-policy-details .adesc { margin: 0; }
 .county-project-confirm p { line-height: 1.45; }
 .settlement-community-section { margin: 10px 0 12px; }
 .settlement-community-section > .panelh { margin-top: 0; }
