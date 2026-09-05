@@ -173,9 +173,20 @@ test('spring realm AI reuses political status and skips stable succession repair
       FB.aiBuildingsYear = function () {};
       FB.chance = function () { return false; };
       try {
+        /* Converge any legitimate one-time defensive repair before measuring
+           steady-state Spring work, while retaining a separate bound that
+           prevents preparation from refreshing the whole realm table. */
+        FB.ensureDynasticState(s, { yearly:true });
+        const preparationSuccessionRefreshes = calls.succession;
+        calls.succession = 0;
+        calls.war = 0;
+        calls.alliance = 0;
+        calls.papacyRepair = 0;
         s.date.year++;
         s.turn += 360;
         FB.worldTick(s);
+        calls.preparationSuccessionRefreshes =
+          preparationSuccessionRefreshes;
       } finally {
         FB.chance = originalChance;
         for (let i = 0; i < names.length; i++) FB[names[i]] = original[names[i]];
@@ -188,6 +199,8 @@ test('spring realm AI reuses political status and skips stable succession repair
         warScans:calls.war,
         allianceScans:calls.alliance,
         successionRefreshes:calls.succession,
+        preparationSuccessionRefreshes:
+          calls.preparationSuccessionRefreshes,
         papacyRepairs:calls.papacyRepair,
         livingRealms:living
       };
@@ -195,6 +208,9 @@ test('spring realm AI reuses political status and skips stable succession repair
       return {
         noGlobalWarScans:result.warScans === 0,
         noGlobalAllianceScans:result.allianceScans === 0,
+        boundedPreparationRefreshes:
+          result.preparationSuccessionRefreshes <
+            Math.max(2, result.livingRealms * 0.05),
         noStableSuccessionRefreshes:result.successionRefreshes === 0,
         noPerRealmPapacyRepairs:result.papacyRepairs === 0,
         manyRealms:result.livingRealms > 100
@@ -202,6 +218,7 @@ test('spring realm AI reuses political status and skips stable succession repair
     })).toEqual({
       noGlobalWarScans:true,
       noGlobalAllianceScans:true,
+      boundedPreparationRefreshes:true,
       noStableSuccessionRefreshes:true,
       noPerRealmPapacyRepairs:true,
       manyRealms:true
