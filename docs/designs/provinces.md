@@ -292,6 +292,12 @@ a directly held county; a baron may direct only the saved home settlement. Forei
 other remote sheets remain read-only. County-wide controls stay in Land and never infer a
 settlement; Self/Faith remains character-facing navigation only.
 
+The active-project card follows the same hierarchy: target, policy, estimated annual pace
+or paused state, and resistance remain on its face. Policy explanation, last annual
+transfer, scaled county consequences, scope, and timing move behind its shared tooltip or
+touch disclosure. Empty cards keep only the inactive state and Start project action
+visible, while the disclosure explains what starting a local project changes.
+
 Where a settlement policy affects county-level tax, levy, Common Voice, unrest, or
 market flow, its contribution is weighted by that settlement's share of the county
 population. It is shown on the settlement sheet and never appears as the full-strength

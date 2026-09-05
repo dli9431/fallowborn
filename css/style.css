@@ -1741,6 +1741,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   padding: 8px 9px; border: 1px solid #55452a; border-radius: 7px;
   background: #241d15;
 }
+.community-project-card .settcard-head { align-items: center; }
 .community-project-card p {
   margin: 4px 0; color: var(--helper-text-color); font-size: 12px; line-height: 1.4;
 }
@@ -1751,6 +1752,14 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .community-project-target span { color: #b9c98a; font-size: 12px; text-align: right; }
 .community-project-facts { display: flex; flex-wrap: wrap; gap: 3px 12px; color: #d8c38d; font-size: 12px; }
 .community-project-card .community-project-consequence { color: #c9aa72; }
+.community-project-details {
+  margin-top: 7px; padding-top: 7px; border-top: 1px solid #40331f;
+  color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
+}
+.community-project-details p { margin: 0 0 7px; }
+.community-project-details p:last-child { margin-bottom: 0; }
+.community-project-details .community-project-consequence { color: #c9aa72; }
+.community-project-detail-line { margin-bottom: 7px; color: #d8c38d; }
 .community-project-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
 .community-project-actions .btn { min-height: 36px; }
 .county-community-modal .modalcard { width: min(94vw, 680px); }

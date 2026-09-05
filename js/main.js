@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.170.2';
+FB.VERSION = '1.170.3';
 FB.CHANGELOG = [
+  { v: '1.170.3', date: '2026-09-05', changes: [
+    'Settlement sheets now keep conversion-project summaries concise and place supporting detail behind accessible help.'
+  ] },
   { v: '1.170.2', date: '2026-09-05', changes: [
     'Settlement conversion pickers are shorter, keep policy detail behind accessible help, and begin local projects directly from the policy choice.'
   ] },

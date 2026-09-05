@@ -247,7 +247,7 @@ test('settlement sheets retain local context and never mutate remote browsing',
       .toBeVisible();
     await expect(page.locator(
       '[data-settlement-community-project="culture"]')).toContainText(
-      'No local project is active here.');
+      'No active project.');
 
     await page.locator(
       '[data-settlement-community-project="culture"] ' +
@@ -268,6 +268,32 @@ test('settlement sheets retain local context and never mutate remote browsing',
     await expect(page.locator(
       '[data-settlement-community-project="culture"]')).toContainText(
       'Norse');
+    const activeCulture = page.locator(
+      '[data-settlement-community-project="culture"]');
+    const activeCultureSummary = activeCulture.locator(
+      '.community-project-summary');
+    const activeCultureDetails = activeCulture.locator(
+      '.community-project-details');
+    await expect(activeCulture).toContainText('Cultural assimilation');
+    await expect(activeCultureSummary).toContainText('Voluntary outreach');
+    await expect(activeCultureSummary).toContainText('people/year');
+    await expect(activeCultureSummary).toContainText('resistance');
+    await expect(activeCultureSummary).not.toContainText(
+      'Last annual transfer');
+    await expect(activeCultureDetails).toContainText('Patronage and preaching');
+    await expect(activeCultureDetails).toContainText('Last annual transfer: 0');
+    await expect(activeCultureDetails).toContainText(
+      'Progress resolves annually');
+    await activeCulture.focus();
+    await expect(page.locator('#tooltip')).toContainText(
+      'Last annual transfer: 0');
+
+    await page.setViewportSize({ width:390, height:740 });
+    const activeCultureInfo = activeCulture.locator('.settcard-info');
+    await expect(activeCultureInfo).toBeVisible();
+    await activeCultureInfo.click();
+    await expect(activeCultureInfo).toHaveAttribute('aria-expanded', 'true');
+    await expect(activeCultureDetails).toBeVisible();
     const saved = await page.evaluate(function (pid) {
       const rec = FB.state.population.counties[pid];
       return {

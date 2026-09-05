@@ -94,6 +94,14 @@ sheet. A count can direct any settlement in a directly held county; a baron can 
 only the saved home settlement. County Land controls remain county-wide and retain their
 review/confirmation step, and Self/Faith never chooses a settlement implicitly.
 
+On the settlement sheet, each local-project card keeps only the axis, target, policy,
+current annual estimate or paused state, and resistance visible. The policy description,
+last annual transfer, exact scaled county contribution, local-only scope, and annual
+timing live in that card's shared desktop tooltip or compact `?` disclosure. Inactive
+cards say only that no project is active and offer the start action; their disclosure
+explains scope and timing. Because the surrounding sheet already supplies the settlement
+context, these actions use concise Start/Change/Stop project labels.
+
 Tax, levy, Common Voice, unrest, and market flow are county aggregates rather than
 separate settlement ledgers. A local coercive project therefore contributes its policy
 effects dynamically in proportion to that settlement's share of county population; it

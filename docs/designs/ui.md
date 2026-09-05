@@ -361,6 +361,10 @@ pace, and resistance; its description, scaled county effects, replacement behavi
 annual timing live in the standard hover/focus tooltip or compact `?` disclosure. Choosing
 an enabled policy starts or replaces the local project immediately. County-wide projects
 retain their separate consequence review and confirmation because their scope is broader.
+Their settlement-sheet status cards use the same split: axis, target, policy, pace or
+paused state, and resistance stay visible; policy description, last annual result, scaled
+county effects, scope, and timing move into the shared details surface. Since the sheet
+already names the settlement, its buttons read simply Start, Change, or Stop project.
 
 One-time deed rows use this convention too: the card face keeps only the enlarged action
 name, with gold, green, or blue-green border accents distinguishing day-spending immediate,

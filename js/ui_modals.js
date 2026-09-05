@@ -7293,17 +7293,29 @@ window.FB = window.FB || {};
     if (!project && !canControl) return '';
     const status = project && FB.settlementCommunityProjectStatus
       ? FB.settlementCommunityProjectStatus(s, pid, idx, kind) : null;
+    const detailsId = 'settlement-community-project-details-' + kind;
+    const titleId = 'settlement-community-project-title-' + kind;
     const title = kind === 'faith'
-      ? FB.T('Local faith conversion project')
-      : FB.T('Local cultural assimilation project');
-    let h = '<article class="community-project-card" ' +
-      'data-settlement-community-project="' + kind + '"><h4>' +
-      esc(title) + '</h4>';
+      ? FB.T('Faith conversion')
+      : FB.T('Cultural assimilation');
+    let details = '';
+    let h = '<article class="community-project-card settcard" ' +
+      'data-settlement-community-project="' + kind + '" ' +
+      'aria-labelledby="' + titleId + '" aria-describedby="' + detailsId + '"' +
+      (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
+      '><div class="settcard-head"><h4 id="' + titleId + '">' +
+      esc(title) + '</h4><span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+      detailsId + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details for {project}', { project:title })) +
+      '">?</button></span></div><div class="community-project-summary">';
     if (project) {
       const rec = s.population && s.population.counties &&
         s.population.counties[pid];
       const countyPopulation = rec && Number(rec.count) ||
         (status && status.population) || 1;
+      const policyDef = FBDATA.countyCommunityPolicies &&
+        FBDATA.countyCommunityPolicies[project.policy];
       const effects = status ? countyProjectPolicyEffectText(
         s, project.policy, {
           local:true,
@@ -7313,32 +7325,48 @@ window.FB = window.FB || {};
       h += '<div class="community-project-target"><b>' +
         esc(countyProjectTargetName(s, kind, project.target)) +
         '</b><span>' + esc(countyProjectPolicyName(s, project.policy)) +
-        '</span></div><p>' + esc(status && status.control
-          ? FB.T('About {count} people per year at present', {
+        '</span></div><div class="community-project-facts"><span>' +
+        esc(status && status.control
+          ? FB.T('~{count} people/year', {
             count:Math.round(status.potential)
           })
-          : FB.T('Paused · the project sponsor no longer controls this settlement')) +
-        '</p><div class="community-project-facts"><span>' + esc(FB.T(
-          'Last annual transfer: {count}', {
-            count:(project.lastTransfer || 0).toLocaleString()
-          })) + '</span><span>' + esc(FB.T('Resistance: {percent}%', {
-            percent:Math.round((status ? status.resistance :
-              project.resistance || 0) * 100)
-          })) + '</span></div>' + (effects
+          : FB.T('Paused')) + '</span><span>' +
+        esc(FB.T('{percent}% resistance', {
+          percent:Math.round((status ? status.resistance :
+            project.resistance || 0) * 100)
+        })) + '</span></div>';
+      if (policyDef) {
+        details += '<p>' + esc(dt(s, 'countyCommunityPolicy', project.policy,
+          policyDef, 'desc')) + '</p>';
+      }
+      if (!status || !status.control) {
+        details += '<p>' + esc(FB.T(
+          'Paused: the project sponsor no longer controls this settlement.')) +
+          '</p>';
+      }
+      details += '<div class="community-project-detail-line">' + esc(FB.T(
+        'Last annual transfer: {count}', {
+          count:(project.lastTransfer || 0).toLocaleString()
+        })) + '</div>' + (effects
           ? '<p class="community-project-consequence">' + esc(effects) + '</p>'
-          : '');
+          : '') + '<p>' + esc(FB.T(
+            'This project changes only this settlement’s communities. Progress resolves annually; no fixed completion date.')) + '</p>';
     } else {
-      h += '<p>' + esc(FB.T('No local project is active here.')) + '</p>';
+      h += '<p>' + esc(FB.T('No active project.')) + '</p>';
+      details = '<p>' + esc(FB.T(
+        'Changes apply only to this settlement. Choose a target and policy; progress then resolves annually.')) + '</p>';
     }
+    h += '</div><div class="settcard-details community-project-details hidden" id="' +
+      detailsId + '">' + details + '</div>';
     if (canControl) {
       h += '<div class="community-project-actions"><button type="button" ' +
         'class="btn small settlement-community-project-control" ' +
         'data-community-kind="' + kind + '">' +
-        esc(project ? FB.T('Change local project…') :
-          FB.T('Start local project…')) + '</button>' + (project
+        esc(project ? FB.T('Change project…') :
+          FB.T('Start project…')) + '</button>' + (project
           ? '<button type="button" class="btn small ' +
             'settlement-community-project-stop" data-community-kind="' +
-            kind + '">' + esc(FB.T('Stop local project')) + '</button>' : '') +
+            kind + '">' + esc(FB.T('Stop project')) + '</button>' : '') +
         '</div>';
     }
     return h + '</article>';

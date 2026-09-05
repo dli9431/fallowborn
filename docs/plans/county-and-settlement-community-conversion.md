@@ -471,7 +471,9 @@ Steps:
    descriptions and consequences into the shared tooltip/touch disclosure, and start or
    replace the project when the policy is chosen without a separate confirmation screen.
    The county Land breakdown remains the sum of its settlements, and county-wide projects
-   retain their broader-scope confirmation.
+   retain their broader-scope confirmation. Keep only target, policy, pace or paused state,
+   and resistance on an active settlement-project card; move its policy explanation, last
+   annual result, scaled county effects, scope, and timing into the shared details surface.
 8. Measure save growth. If full matrices are too large, keep them lazy and compact any
    matrix that has returned to the county-wide proportional projection; do not weaken the
    conservation invariant.
