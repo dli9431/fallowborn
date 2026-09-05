@@ -1,7 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/traits.js',
   'js/model.js',
+  'js/ui_misc.js',
   'js/ui_modals.js'
 ]);
 
@@ -14,7 +16,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('sibling courtship trait tooltips show direction without exact modifiers',
+test('all core trait tooltips keep exceptional kinship references discreet',
   async function ({ page }) {
     const effects = await page.evaluate(function () {
       const chip = document.createElement('button');
@@ -39,34 +41,70 @@ test('sibling courtship trait tooltips show direction without exact modifiers',
       return {
         lustful:FB.ui._shared.traitGroupedEffects(FBDATA.traits.lustful),
         chaste:FB.ui._shared.traitGroupedEffects(FBDATA.traits.chaste),
+        content:FB.ui._shared.traitGroupedEffects(FBDATA.traits.content),
+        cynical:FB.ui._shared.traitGroupedEffects(FBDATA.traits.cynical),
+        greedy:FB.ui._shared.traitGroupedEffects(FBDATA.traits.greedy),
+        scandalousUnion:FBDATA.traits.scandalous_union,
+        allTraits:Object.keys(FBDATA.traits).map(function (traitId) {
+          const trait = FBDATA.traits[traitId];
+          const publicCopy = [trait.name, trait.desc, trait.earned];
+          FB.ui._shared.traitGroupedEffects(trait).forEach(function (effect) {
+            publicCopy.push(effect.label, effect.value);
+          });
+          return {
+            id:traitId,
+            copy:publicCopy.filter(function (part) { return !!part; }).join(' ')
+          };
+        }),
         authored:authored
       };
     });
 
     expect(effects.lustful).toEqual(expect.arrayContaining([
-      { label:'Exceptional sibling approach', value:'Encourages' },
-      { label:'Response to a sibling approach', value:'More likely' },
-      { label:'Sibling marriage proposal', value:'More likely' }
+      { label:'Private affections', value:'Inclined' },
+      { label:'Private sympathies', value:'Inclined' },
+      { label:'Private resolve', value:'Inclined' }
     ]));
     expect(effects.chaste).toEqual(expect.arrayContaining([
-      { label:'Exceptional sibling approach', value:'Discourages' },
-      { label:'Response to a sibling approach', value:'Less likely' },
-      { label:'Sibling marriage proposal', value:'Less likely' }
+      { label:'Private affections', value:'Reluctant' },
+      { label:'Private sympathies', value:'Reluctant' },
+      { label:'Private resolve', value:'Reluctant' }
     ]));
+    expect(effects.content).toEqual(expect.arrayContaining([
+      { label:'Dynastic sympathies', value:'Reluctant' },
+      { label:'Dynastic resolve', value:'Reluctant' }
+    ]));
+    expect(effects.cynical).toEqual(expect.arrayContaining([
+      { label:'Private affections', value:'Inclined' },
+      { label:'Sympathy over convention', value:'Inclined' },
+      { label:'Private resolve', value:'Inclined' }
+    ]));
+    expect(effects.greedy).toEqual([]);
+    expect(effects.scandalousUnion.earned).toBe(
+      'Persist in a marriage the surrounding community refuses to recognize.');
+    expect(effects.allTraits.map(function (trait) { return trait.id; }))
+      .toContain('greedy');
+    for (const trait of effects.allTraits) {
+      expect(trait.copy).not.toMatch(
+        /sibling|incest|close[- ]kin|exceptional courtship|more likely|less likely|taboo/i);
+    }
     expect(effects.authored.length).toBeGreaterThan(0);
     for (const item of effects.authored) {
       expect(item.effect.label).not.toContain('courtship.sibling');
+      expect(item.effect.label).not.toMatch(/sibling|incest|close[- ]kin/i);
       expect(item.effect.value).toMatch(
-        /^(Encourages|Discourages|More likely|Less likely|No effect)$/);
+        /^(Inclined|Reluctant|Steady|Fragile|Neutral)$/);
       expect(item.effect.value).not.toMatch(/[0-9%+-]/);
     }
 
     await page.locator('#sibling-courtship-trait-test').hover();
     const tooltip = page.locator('#tooltip');
-    await expect(tooltip).toContainText('Exceptional sibling approach: Encourages');
-    await expect(tooltip).toContainText('Response to a sibling approach: More likely');
-    await expect(tooltip).toContainText('Sibling marriage proposal: More likely');
+    await expect(tooltip).toContainText('Private affections: Inclined');
+    await expect(tooltip).toContainText('Private sympathies: Inclined');
+    await expect(tooltip).toContainText('Private resolve: Inclined');
     await expect(tooltip).not.toContainText('courtship.sibling');
+    expect(await tooltip.innerText()).not.toMatch(
+      /sibling|incest|close[- ]kin|exceptional courtship|more likely|less likely|taboo/i);
     await expect(tooltip).not.toContainText('+0.25');
   });
 

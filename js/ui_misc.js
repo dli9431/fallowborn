@@ -4536,28 +4536,28 @@ window.FB = window.FB || {};
 
   function siblingCourtshipTraitEffect(key, value) {
     const labels = {
-      siblingInitiate:FB.T('Exceptional sibling approach'),
-      siblingDynasticInitiate:FB.T('Dynastic sibling approach'),
-      siblingRiteInitiate:FB.T('Recognized-rite sibling approach'),
-      siblingTabooInitiate:FB.T('Illicit sibling approach'),
-      siblingAccept:FB.T('Response to a sibling approach'),
-      siblingRiteAccept:FB.T('Response under a recognized rite'),
-      siblingIllicitAccept:FB.T('Response to an illicit approach'),
-      siblingTabooAccept:FB.T('Response where the union is taboo'),
-      siblingDynasticAccept:FB.T('Response to a dynastically relevant approach'),
-      siblingProposal:FB.T('Sibling marriage proposal'),
-      siblingRiteProposal:FB.T('Proposal under a recognized rite'),
-      siblingTabooProposal:FB.T('Proposal where the union is taboo'),
-      siblingDynasticProposal:FB.T('Dynastically relevant proposal'),
-      siblingExposure:FB.T('Illicit sibling-courtship exposure')
+      siblingInitiate:FB.T('Private affections'),
+      siblingDynasticInitiate:FB.T('Dynastic duty'),
+      siblingRiteInitiate:FB.T('Sanctioned custom'),
+      siblingTabooInitiate:FB.T('Convention and desire'),
+      siblingAccept:FB.T('Private sympathies'),
+      siblingRiteAccept:FB.T('Sanctioned sympathies'),
+      siblingIllicitAccept:FB.T('Secret sympathies'),
+      siblingTabooAccept:FB.T('Sympathy over convention'),
+      siblingDynasticAccept:FB.T('Dynastic sympathies'),
+      siblingProposal:FB.T('Private resolve'),
+      siblingRiteProposal:FB.T('Sanctioned resolve'),
+      siblingTabooProposal:FB.T('Resolve over convention'),
+      siblingDynasticProposal:FB.T('Dynastic resolve'),
+      siblingExposure:FB.T('Discretion under scrutiny')
     };
     if (!Object.prototype.hasOwnProperty.call(labels, key)) return null;
-    const initiation = /Initiate$/.test(key);
+    const exposure = key === 'siblingExposure';
     return {
       label:labels[key],
-      value:value === 0 ? FB.T('No effect') : (value > 0
-        ? (initiation ? FB.T('Encourages') : FB.T('More likely'))
-        : (initiation ? FB.T('Discourages') : FB.T('Less likely')))
+      value:value === 0 ? FB.T('Neutral') : exposure
+        ? (value < 0 ? FB.T('Steady') : FB.T('Fragile'))
+        : (value > 0 ? FB.T('Inclined') : FB.T('Reluctant'))
     };
   }
 

@@ -351,8 +351,12 @@ Root skill, health, fertility, and general-Standing fields retain their existing
 `FB.traitAgg` behavior. System-specific numeric effects live under named groups and are
 read with `FB.traitBonus(character, group, key)`. The first consumers are assembly
 votes/Common Voice, travel leg time/road incidents, direct levy, direct rent, and
-family Standing. `player.traitProgress` holds current-protagonist acquisition counters,
-is repaired additively in old version-3 saves, and clears on succession. Definitions
+family Standing. Trait surfaces describe exceptional-courtship modifiers as quiet
+character tendencies such as private affection, dynastic duty, sanctioned custom, and
+discretion; exact kinship and probabilities remain in the dedicated courtship review
+instead of being foregrounded on otherwise general personality traits. `player.traitProgress`
+holds current-protagonist acquisition counters, is repaired additively in old version-3
+saves, and clears on succession. Definitions
 with `earn:{threshold:n}` are awarded by `FB.noteTraitProgress`; the resulting Chronicle
 notice stores a locale-neutral trait data reference. Event-driven removal resets the
 counter only when the earned trait was actually present, so a pre-award failure cannot
