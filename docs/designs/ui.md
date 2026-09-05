@@ -1370,6 +1370,23 @@ has been vacant, or the branch's lack of a centralized office, and states excomm
 separately from the trait chip. Faith names on Self and Land are focusable links to a
 details sheet with an in-world origin account, founder/date/place, lineage,
 directional parent relations, authority, spouse and clergy rules, and doctrine sources.
+That sheet keeps conversion character-centered: **Convert your faith…** opens the existing
+personal/household/realm picker, while landed characters receive one **View faith in
+{county}** navigation action per explicitly named direct county (or their named baronial
+home). It closes the character sheet and selects that county in Land. It never starts,
+changes, stops, or silently chooses a territorial project.
+The selected Land county is the canonical community surface. Its unchanged county
+population, carrying-capacity, and annual-change rows are followed by independently
+aggregated Culture and Faith cards; counts sum to the population row, percentages are
+whole-number projections, and the saved dominant identity is first. Compact layouts keep
+the two largest groups visible and place the remainder in native, focusable disclosure.
+The annual movement line distinguishes faith conversion, cultural assimilation, and net
+migration. Active faith and culture projects name their target and policy, show current
+direction, last annual transfer, resistance, and material effects, but promise no finish
+date. Start/change/stop controls appear only for a living count-or-higher direct holder.
+Their final review repeats the county, estimated current rate, resistance, zero immediate
+piety/prestige/Standing/relationship charge, and any Common Voice, unrest, tax, levy,
+market, or migration-pressure consequences before it revalidates the order.
 Faith & Community contains the contextual absolution, Papal-restoration, and
 Caliphate-claim deeds. Their resource/land consequences use ordinary focusable
 confirmation sheets. The occupied Caliphate deed remains visible but disabled while

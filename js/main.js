@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.17';
+FB.VERSION = '1.169.0';
 FB.CHANGELOG = [
+  { v: '1.169.0', date: '2026-09-05', changes: [
+    'Land now shows live county culture and faith shares, explains gradual community change, and gives Counts direct control of county conversion projects.'
+  ] },
   { v: '1.168.17', date: '2026-09-05', changes: [
     'Land and ruler sheets now agree on realm host strength, distinguish gross county levies, and show a baron’s available force.'
   ] },

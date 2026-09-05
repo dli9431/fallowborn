@@ -61,10 +61,17 @@ while `balance.countyCommunityProjectPolicies` supplies mechanics:
   target share grows, those holdouts make its returns diminish sharply.
 
 `FB.startCountyCommunityProject`, `FB.stopCountyCommunityProject`, and the player-facing
-order boundary in `js/actions.js` are intentionally UI-neutral. Milestone 5 places the
-player controls in an explicitly selected Land county. The Self Faith sheet remains about
-personal, household, and realm conversion; it may navigate to Land but never owns or
-silently targets a county project.
+order boundary in `js/actions.js` remain UI-neutral. Land owns the player controls and
+always carries the selected county id through target, policy, review, confirmation, and
+stop. Only a living count-or-higher ruler who directly holds that county may issue them.
+The pure `FB.countyCommunityProjectPreview` evaluates an unopened proposal through the
+same pressure/resistance calculation as an active project, without temporarily writing it
+to state. Starting or changing a baseline project has no immediate piety, prestige,
+Standing, or relationship charge; the confirmation says so explicitly and presents the
+actual Common Voice, unrest, economic, and migration consequences of its policy. The Self
+Faith sheet remains about personal, household, and realm conversion. It links separately
+to that picker and to explicitly named Land counties, but never owns or silently targets a
+territorial project.
 
 ## Costs
 

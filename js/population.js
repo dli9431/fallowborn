@@ -1074,11 +1074,10 @@ window.FB = window.FB || {};
     return { pressure:pressure, resistance:resistance };
   }
 
-  /* Pure, numeric explanation of one active project. Every factor is either
-     saved on the project/county or derived from current political, conflict,
-     institution, and demographic state. */
-  FB.countyCommunityProjectStatus = function (state, pid, kind) {
-    var project = FB.countyCommunityProject(state, pid, kind);
+  /* Pure, numeric explanation of one active or proposed project. Every
+     factor is either supplied by the project/county or derived from current
+     political, conflict, institution, and demographic state. */
+  function countyCommunityProjectStatus(state, pid, kind, project) {
     var rec = state && state.population && state.population.counties &&
       state.population.counties[pid];
     var policy = project && projectPolicyMechanics(project.policy);
@@ -1166,6 +1165,26 @@ window.FB = window.FB || {};
       minimum:Math.max(1, Math.round(balance(
         'countyCommunityProjectMinTransfer', 25)))
     };
+  }
+
+  FB.countyCommunityProjectStatus = function (state, pid, kind) {
+    return countyCommunityProjectStatus(
+      state, pid, kind, FB.countyCommunityProject(state, pid, kind));
+  };
+
+  /* Pure preview for Land controls. It evaluates a proposed target and policy
+     against the same current conditions as an active project without writing
+     a temporary project into campaign state. */
+  FB.countyCommunityProjectPreview = function (state, pid, request) {
+    if (!state || !request || !validProjectKind(request.kind) ||
+        !projectTargetValid(state, request.kind, request.target) ||
+        !projectPolicyDefinition(request.policy)) return null;
+    return countyCommunityProjectStatus(state, pid, request.kind, {
+      target:request.target,
+      sponsor:typeof request.sponsor === 'string' && request.sponsor
+        ? request.sponsor : 'player',
+      policy:request.policy
+    });
   };
 
   function convertedCohorts(communities, kind, targetId, sourceId, amount) {

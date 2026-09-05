@@ -234,6 +234,26 @@ window.FB = window.FB || {};
     }));
     return parts.join(' · ');
   }
+  function countyProjectPolicyEffectText(s, policyId) {
+    const policy = FBDATA.countyCommunityPolicies &&
+      FBDATA.countyCommunityPolicies[policyId];
+    if (!policy || !policy.modifier) {
+      return FB.T('No immediate Common Voice or unrest change.');
+    }
+    const modifier = FBDATA.modifiers && FBDATA.modifiers[policy.modifier];
+    const mechanics = FBDATA.balance &&
+      FBDATA.balance.countyCommunityProjectPolicies &&
+      FBDATA.balance.countyCommunityProjectPolicies[policyId];
+    const migration = mechanics && Number(mechanics.migration) || 0;
+    let text = modifierEffectText(s, policy.modifier);
+    if (modifier && modifier.days) {
+      text = FB.T('{effects} for {days} days, renewed by annual enforcement', {
+        effects:text, days:modifier.days
+      });
+    }
+    return text + (migration ? ' · ' + FB.T(
+      '{amount} migration pressure while enforced', { amount:migration }) : '');
+  }
   function modifierDurationText(s, record, scope) {
     const days = FB.modifierRemainingDays
       ? FB.modifierRemainingDays(s, record) : null;
@@ -4656,6 +4676,7 @@ window.FB = window.FB || {};
   SH.councilSeatDesc = councilSeatDesc;
   SH.councilSeatName = councilSeatName;
   SH.countyCountText = countyCountText;
+  SH.countyProjectPolicyEffectText = countyProjectPolicyEffectText;
   SH.cultureName = cultureName;
   SH.dt = dt;
   SH.epithetText = epithetText;

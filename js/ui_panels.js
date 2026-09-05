@@ -12,6 +12,7 @@ window.FB = window.FB || {};
   const actionLabel = SH.actionLabel;
   const allianceText = SH.allianceText;
   const countyCountText = SH.countyCountText;
+  const countyProjectPolicyEffectText = SH.countyProjectPolicyEffectText;
   const cultureName = SH.cultureName;
   const dt = SH.dt;
   const epithetText = SH.epithetText;
@@ -27,6 +28,7 @@ window.FB = window.FB || {};
   const largeListSurfaceHtml = SH.largeListSurfaceHtml;
   const menText = SH.menText;
   const realmHostText = SH.realmHostText;
+  const mobileLayoutNow = SH.mobileLayoutNow;
   const mobileNavClosed = SH.mobileNavClosed;
   const mobileNavPush = SH.mobileNavPush;
   const modifierChips = SH.modifierChips;
@@ -2444,11 +2446,44 @@ window.FB = window.FB || {};
       kv('Clergy marriage', esc(rel.clergyMarriage
         ? FB.T('Permitted') : FB.T('Forbidden'))) +
       kv('Clergy rule from', esc(faithRuleSource(
-        s, religionId, 'clergyMarriage'))) +
-      '<div class="gm-footer"><button class="btn" id="faith-details-close">' +
+        s, religionId, 'clergyMarriage')));
+    h += panelh('Actions') +
+      '<div class="gm-list faith-details-actions"><button type="button" ' +
+      'class="actionbtn" id="faith-details-convert">' +
+      esc(FB.T('Convert your faith…')) + '<span class="adesc">' +
+      esc(FB.T('Open the personal, household, or realm faith picker.')) +
+      '</span></button>';
+    const faithLandIds = s.player.tier >= 3
+      ? ((s.player.provs || []).length
+        ? s.player.provs.slice() : [s.player.provinceId]) : [];
+    for (let i = 0; i < faithLandIds.length; i++) {
+      const landPid = faithLandIds[i];
+      const land = FB.world.byId[landPid];
+      if (!land || land.wasteland) continue;
+      h += '<button type="button" class="actionbtn faith-details-land" ' +
+        'data-faith-land-pid="' + esc(landPid) + '">' +
+        esc(FB.T('View faith in {county}', { county:land.name })) +
+        '<span class="adesc">' + esc(FB.T(
+          'Open this named county in Land; territorial projects remain there.')) +
+        '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="faith-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(rel.icon + ' ' + religionName(s, religionId), h);
     $('faith-details-close').addEventListener('click', UI.closeModal);
+    $('faith-details-convert').addEventListener('click', function () {
+      UI.closeModal();
+      UI.showConversionPicker('faith');
+    });
+    document.querySelectorAll('#gm-body .faith-details-land').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const pid = button.getAttribute('data-faith-land-pid');
+          UI.closeModal();
+          if (FB.map && FB.map.centerOn) FB.map.centerOn(pid);
+          UI.selectProvince(pid);
+        });
+      });
   };
 
   let rankDetailsSignature = null;
@@ -5968,6 +6003,130 @@ window.FB = window.FB || {};
       '"><span>' + esc(FB.T(label)) + '</span><b>' + value + '</b></div>';
   }
 
+  function countyCommunityAxisGroups(s, communities, kind, dominantId) {
+    const field = kind === 'faith' ? 'religion' : 'culture';
+    const counts = Object.create(null);
+    let total = 0;
+    for (let i = 0; i < communities.length; i++) {
+      const community = communities[i];
+      counts[community[field]] = (counts[community[field]] || 0) +
+        community.count;
+      total += community.count;
+    }
+    return Object.keys(counts).map(function (id) {
+      return { id:id, count:counts[id], total:total };
+    }).sort(function (a, b) {
+      if (a.id === dominantId && b.id !== dominantId) return -1;
+      if (b.id === dominantId && a.id !== dominantId) return 1;
+      if (a.count !== b.count) return b.count - a.count;
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+  }
+
+  function countyCommunityAxisRow(s, kind, group, dominantId) {
+    const definition = kind === 'faith'
+      ? FB.religionOf(group.id, s) : FBDATA.cultures[group.id];
+    const name = kind === 'faith'
+      ? religionName(s, group.id) : cultureName(s, group.id);
+    const icon = kind === 'faith' && definition && definition.icon
+      ? definition.icon + ' ' : '';
+    const percent = group.total > 0
+      ? Math.round(group.count / group.total * 100) : 0;
+    return '<div class="community-share-row" data-community-id="' +
+      esc(group.id) + '"><span>' + esc(icon + name) +
+      (group.id === dominantId
+        ? ' <small>' + esc(FB.T('dominant')) + '</small>' : '') +
+      '</span><b>' + esc(FB.T('{count} people · {percent}%', {
+        count:group.count.toLocaleString(), percent:percent
+      })) + '</b></div>';
+  }
+
+  function countyCommunityAxisHtml(s, communities, kind, dominantId) {
+    const groups = countyCommunityAxisGroups(
+      s, communities, kind, dominantId);
+    const visible = mobileLayoutNow() ? 2 : groups.length;
+    let rows = '';
+    for (let i = 0; i < Math.min(visible, groups.length); i++) {
+      rows += countyCommunityAxisRow(s, kind, groups[i], dominantId);
+    }
+    if (visible < groups.length) {
+      let more = '';
+      for (let i = visible; i < groups.length; i++) {
+        more += countyCommunityAxisRow(s, kind, groups[i], dominantId);
+      }
+      rows += '<details class="community-share-more"><summary>' + esc(FB.T(
+        '{count} smaller communities', { count:groups.length - visible })) +
+        '</summary>' + more + '</details>';
+    }
+    return '<div class="community-axis-card" data-community-axis="' +
+      kind + '"><h4>' + esc(FB.T(kind === 'faith' ? 'Faith' : 'Culture')) +
+      '</h4>' + rows + '</div>';
+  }
+
+  function countyProjectTargetName(s, kind, targetId) {
+    return kind === 'faith'
+      ? religionName(s, targetId) : cultureName(s, targetId);
+  }
+
+  function countyProjectPolicyText(s, policyId) {
+    const policy = FBDATA.countyCommunityPolicies &&
+      FBDATA.countyCommunityPolicies[policyId];
+    return policy ? dt(s, 'countyCommunityPolicy', policyId,
+      policy, 'label') : policyId;
+  }
+
+  function countyCommunityProjectCardHtml(s, pid, kind, canControl) {
+    const project = FB.countyCommunityProject
+      ? FB.countyCommunityProject(s, pid, kind) : null;
+    if (!project && !canControl) return '';
+    const status = project && FB.countyCommunityProjectStatus
+      ? FB.countyCommunityProjectStatus(s, pid, kind) : null;
+    const title = kind === 'faith'
+      ? FB.T('Faith conversion project') : FB.T('Cultural assimilation project');
+    let h = '<article class="community-project-card" data-community-project="' +
+      kind + '"><h4>' + esc(title) + '</h4>';
+    if (project) {
+      const target = countyProjectTargetName(s, kind, project.target);
+      const policy = FBDATA.countyCommunityPolicies &&
+        FBDATA.countyCommunityPolicies[project.policy];
+      const direction = status && status.control
+        ? FB.T('Toward {target} · about {count} people per year at present', {
+          target:target, count:Math.round(status.potential)
+        })
+        : FB.T('Paused · the project sponsor no longer controls this county');
+      h += '<div class="community-project-target"><b>' + esc(target) +
+        '</b><span>' + esc(countyProjectPolicyText(s, project.policy)) +
+        '</span></div>' +
+        '<p>' + esc(direction) + '</p>' +
+        '<div class="community-project-facts"><span>' + esc(FB.T(
+          'Last annual transfer: {count}', {
+            count:(project.lastTransfer || 0).toLocaleString()
+          })) + '</span><span>' + esc(FB.T('Resistance: {percent}%', {
+          percent:Math.round((status ? status.resistance :
+            project.resistance || 0) * 100)
+        })) + '</span></div>' +
+        (policy ? '<p>' + esc(dt(s, 'countyCommunityPolicy',
+          project.policy, policy, 'desc')) + '</p>' : '') +
+        '<p class="community-project-consequence">' +
+          esc(countyProjectPolicyEffectText(s, project.policy) + ' · ' +
+            FB.T('No immediate Standing or relationship change.')) + '</p>';
+    } else {
+      h += '<p>' + esc(FB.T('No project is active in this county.')) + '</p>';
+    }
+    if (canControl) {
+      h += '<div class="community-project-actions"><button type="button" ' +
+        'class="btn small community-project-control" data-community-kind="' +
+        kind + '" data-community-pid="' + esc(pid) + '">' +
+        esc(project ? FB.T('Change project…') : FB.T('Start project…')) +
+        '</button>' + (project
+          ? '<button type="button" class="btn small community-project-stop" ' +
+            'data-community-kind="' + kind + '" data-community-pid="' +
+            esc(pid) + '">' + esc(FB.T('Stop project')) + '</button>' : '') +
+        '</div>';
+    }
+    return h + '</article>';
+  }
+
   function landMarketCard(s, pid) {
     let goodId = FB.map.marketGood || 'provisions';
     if (!FBDATA.marketGoods || !FBDATA.marketGoods[goodId]) goodId = 'provisions';
@@ -6261,6 +6420,11 @@ window.FB = window.FB || {};
         ? FB.countyReligion(s, pid) : pr.religion;
       const B = FBDATA.balance || {};
       const myRealm = rid === 'player';
+      const playerCharacter = s.chars && s.chars[s.player.charId];
+      const canControlCommunityProjects = !s.player.dead && playerCharacter &&
+        !playerCharacter.dead && s.player.tier >= 4 &&
+        FB.playerDirectlyHoldsCounty &&
+        FB.playerDirectlyHoldsCounty(s, pid);
       const realmHostDisplay = realmHostText(s, rid);
       const ownHostDisplay = !myRealm && s.player.tier >= 3
         ? realmHostText(s, 'player') : null;
@@ -6335,13 +6499,6 @@ window.FB = window.FB || {};
         })), true) : '') +
         landKv('Culture', esc(cultureName(s, countyCulture))) +
         landKv('Faith', faithDetailsLink(s, countyReligion)) +
-        (communities.length > 1 ? landKv('Communities',
-          communities.map(function (community) {
-            const faith = FB.religionOf(community.religion, s);
-            return esc(cultureName(s, community.culture)) + ' · ' +
-              esc((faith ? faith.icon + ' ' : '') +
-                religionName(s, community.religion));
-          }).join('<br>'), true) : '') +
         landKv('Terrain', esc(terrainName(pr.terrain)) +
           (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         landKv('County levy (gross)', '~' + esc(menText(s, Math.round(
@@ -6391,12 +6548,39 @@ window.FB = window.FB || {};
         migration: (migDelta >= 0 ? '+' : '') + migDelta.toLocaleString(),
         losses: (lossDelta >= 0 ? '+' : '') + lossDelta.toLocaleString()
       });
+      const communityChange = popRec && popRec.communityChange || {};
+      const faithConverted = Math.max(0, Math.round(
+        Number(communityChange.faithConverted) || 0));
+      const cultureAssimilated = Math.max(0, Math.round(
+        Number(communityChange.cultureAssimilated) || 0));
+      const communityChangeText = FB.T(
+        '{faith} changed faith · {culture} assimilated · {migration} net migration', {
+          faith:faithConverted.toLocaleString(),
+          culture:cultureAssimilated.toLocaleString(),
+          migration:(migDelta >= 0 ? '+' : '') + migDelta.toLocaleString()
+        });
+      const projectCards = countyCommunityProjectCardHtml(
+        s, pid, 'faith', canControlCommunityProjects) +
+        countyCommunityProjectCardHtml(
+          s, pid, 'culture', canControlCommunityProjects);
 
       h += '<section class="land-section"><h3 class="land-section-title">' +
         esc(FB.T('Population')) + '</h3>' +
         landKv('County population', esc(pop.toLocaleString())) +
         landKv('Carrying capacity', esc(popCap.toLocaleString())) +
         landKv('Annual change', esc(netText + ' (' + breakdownText + ')'), true) +
+        '<div class="community-breakdowns" aria-label="' +
+          esc(FB.T('County communities')) + '">' +
+          countyCommunityAxisHtml(
+            s, communities, 'culture', countyCulture) +
+          countyCommunityAxisHtml(
+            s, communities, 'faith', countyReligion) + '</div>' +
+        '<p class="community-change-note">' + esc(FB.T(
+          'Last annual community movement: {change}', {
+            change:communityChangeText
+          })) + '</p>' +
+        (projectCards
+          ? '<div class="community-projects">' + projectCards + '</div>' : '') +
         '</section>';
       const countyModifiers = FB.countyModifierRecords
         ? FB.countyModifierRecords(s, pid) : [];
@@ -6512,6 +6696,20 @@ window.FB = window.FB || {};
     const relocate = $('btn-relocate-capital');
     if (relocate) relocate.addEventListener('click', function () {
       UI.showCapitalRelocation(pid);
+    });
+    box.querySelectorAll('.community-project-control').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showCountyCommunityProjectPicker(
+          btn.getAttribute('data-community-pid'),
+          btn.getAttribute('data-community-kind'));
+      });
+    });
+    box.querySelectorAll('.community-project-stop').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showCountyCommunityProjectStop(
+          btn.getAttribute('data-community-pid'),
+          btn.getAttribute('data-community-kind'));
+      });
     });
     const hostSplit = $('btn-host-split');
     if (hostSplit && hostToShow) hostSplit.addEventListener('click', function () {

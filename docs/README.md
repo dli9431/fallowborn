@@ -368,6 +368,15 @@ nothing, and a duchy of a single county carries no duke's title. The de jure map
 claim; a tapped county's panel lists exactly how many of its counties you hold and how many
 the title still demands.
 
+Land also partitions each county’s one population total into live Culture and Faith
+shares. These are separate: migration carries both identities, faith conversion preserves
+culture, and cultural assimilation preserves faith. Select a county to see its counts,
+percentages, last annual conversion/assimilation/migration, and any gradual project. A
+count or higher may direct a project only in a county held personally; its explicit review
+names that county and shows policy resistance and consequences before confirmation. The
+Self faith-details sheet remains personal, but offers separate links to the ordinary
+character conversion picker and to each named Land county.
+
 Once you are a **count or higher**, your directly held counties can also become the
 family's seat. Select one in the **Land** tab and choose **🏰 Move capital here…**.
 Moving the capital and permanent household home costs 200 prestige, lowers Common Voice

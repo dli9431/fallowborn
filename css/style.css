@@ -1711,6 +1711,54 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .land-kv-detail > b { text-align: left; }
 .land-kv-detail > span { color: var(--helper-text-color); font-size: 12px; }
 .land-section .progressnote { margin: 6px 0 0; }
+.community-breakdowns {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px; margin-top: 9px;
+}
+.community-axis-card {
+  min-width: 0; padding: 7px 8px; border: 1px solid #493c27;
+  border-radius: 7px; background: #211a13;
+}
+.community-axis-card h4, .community-project-card h4 {
+  margin: 0 0 5px; color: #d8b24a; font-size: 13px; font-weight: normal;
+}
+.community-share-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px; padding: 3px 0; font-size: 12px; line-height: 1.35;
+}
+.community-share-row > span { min-width: 0; overflow-wrap: anywhere; }
+.community-share-row > b { color: var(--main-text-color); font-weight: normal; white-space: nowrap; }
+.community-share-row small { color: #b9c98a; font-size: 10px; text-transform: uppercase; }
+.community-share-more { border-top: 1px solid #40331f; margin-top: 3px; padding-top: 3px; }
+.community-share-more summary {
+  min-height: 32px; padding: 6px 0; color: #d8b24a; cursor: pointer; font-size: 12px;
+}
+.community-change-note {
+  margin: 8px 0 0; color: var(--helper-text-color); font-size: 12px; line-height: 1.4;
+}
+.community-projects { display: grid; gap: 7px; margin-top: 8px; }
+.community-project-card {
+  padding: 8px 9px; border: 1px solid #55452a; border-radius: 7px;
+  background: #241d15;
+}
+.community-project-card p {
+  margin: 4px 0; color: var(--helper-text-color); font-size: 12px; line-height: 1.4;
+}
+.community-project-target {
+  display: flex; justify-content: space-between; gap: 8px; line-height: 1.35;
+}
+.community-project-target b { color: var(--main-text-color); font-size: 13px; }
+.community-project-target span { color: #b9c98a; font-size: 12px; text-align: right; }
+.community-project-facts { display: flex; flex-wrap: wrap; gap: 3px 12px; color: #d8c38d; font-size: 12px; }
+.community-project-card .community-project-consequence { color: #c9aa72; }
+.community-project-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.community-project-actions .btn { min-height: 36px; }
+.county-community-modal .modalcard { width: min(94vw, 680px); }
+.county-project-target-list, .county-project-policy-list { display: grid; gap: 7px; }
+.county-project-preview {
+  display: block; margin-top: 4px; color: #c9aa72; font-size: 12px; line-height: 1.4;
+}
+.county-project-confirm p { line-height: 1.45; }
 .war-card {
   border-color: #5c4623;
   background: linear-gradient(135deg, #241d14, #1a1610);
@@ -4810,6 +4858,10 @@ textarea.modjson, textarea.savetext {
   .land-section .land-settlements .settlist {
     justify-content: flex-start; margin-top: 1px;
   }
+  .community-breakdowns { grid-template-columns: minmax(0, 1fr); }
+  .community-share-row { min-height: 36px; align-items: center; font-size: 13px; }
+  .community-share-more summary { min-height: 44px; padding: 12px 0; }
+  .community-project-actions .btn { min-height: 44px; flex: 1 1 130px; }
   .settblock { font-size: 15px; padding: 4px 0; }
   .charrow { font-size: 15px; padding: 8px; }
   .traitchip { font-size: 14px; padding: 4px 11px; }

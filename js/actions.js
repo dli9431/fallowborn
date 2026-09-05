@@ -1107,9 +1107,9 @@ window.FB = window.FB || {};
     return true;
   };
 
-  /* County projects are a separate territorial-policy boundary. Milestone 5
-     will put these commands in Land; keeping the gate here now gives events,
-     AI decisions, and future UI one authoritative player-order contract. */
+  /* County projects are a separate territorial-policy boundary. Land owns
+     their explicit county context while events, AI decisions, and the UI all
+     share this authoritative player-order contract. */
   FB.countyCommunityProjectOrderStatus = function (state, pid, kind,
     targetId, policyId) {
     const out = {

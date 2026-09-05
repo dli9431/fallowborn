@@ -3,8 +3,8 @@
 window.FBDATA = window.FBDATA || {};
 
 /* County community projects are territorial policy, not personal conversion
-   deeds. Milestone 5 presents these definitions from an explicit Land county
-   context; events and AI decisions may use the same ids now. */
+   deeds. Land presents these definitions from an explicit county context;
+   events and AI decisions use the same ids. */
 FBDATA.countyCommunityPolicies = {
   voluntary:{
     id:'voluntary', label:'Voluntary outreach',
