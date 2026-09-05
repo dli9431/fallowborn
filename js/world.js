@@ -7,6 +7,7 @@ window.FB = window.FB || {};
   FB.world = null;
   FB.activeBookmark = null;
   FB.activeBookmarkId = null;
+  FB.activeBookmarkDiagnostics = [];
 
   var worldCache = {};
   var WORLD_FIELDS = [
@@ -56,8 +57,39 @@ window.FB = window.FB || {};
     return source.map(function (entry) {
       var normalized = { culture:entry.culture, religion:entry.religion };
       if (entry.paired === true) normalized.paired = true;
+      if (entry.populationShare0 !== undefined) {
+        normalized.populationShare0 = entry.populationShare0;
+      }
       return normalized;
     });
+  };
+
+  /* Presence-only community lists remain valid for old mods, but exposing the
+     fallback separately lets authoring tools explain that only the principal
+     pair receives simulated population. Core bookmarks have no diagnostics. */
+  FB.communityShareDiagnostics = function (definition) {
+    var diagnostics = [];
+    var label = definition && definition.id ? definition.id : '?';
+    var provinces = definition && Array.isArray(definition.provinces)
+      ? definition.provinces : [];
+    for (var i = 0; i < provinces.length; i++) {
+      var province = provinces[i];
+      if (!province || !Array.isArray(province.communities) ||
+          province.communities.length < 2) continue;
+      var weighted = false;
+      for (var ci = 0; ci < province.communities.length; ci++) {
+        if (province.communities[ci] &&
+            province.communities[ci].populationShare0 !== undefined) {
+          weighted = true;
+          break;
+        }
+      }
+      if (!weighted) {
+        diagnostics.push('Bookmark ' + label + ': province ' + province.id +
+          ' has presence-only communities; simulated population begins entirely in the principal community.');
+      }
+    }
+    return diagnostics;
   };
 
   function topDefinitionRealm(realms, rid) {
@@ -196,6 +228,9 @@ window.FB = window.FB || {};
           fault('province ' + pr.id + ' communities must be a non-empty array.');
         } else {
           var seenCommunities = {};
+          var communityShareTotal = 0;
+          var weightedCommunities = 0;
+          var principalShare = null;
           for (var pci = 0; pci < pr.communities.length; pci++) {
             var community = pr.communities[pci] || {};
             var where = 'province ' + pr.id + ' community ' + pci;
@@ -211,6 +246,20 @@ window.FB = window.FB || {};
                 typeof community.paired !== 'boolean') {
               fault(where + ' paired must be a boolean.');
             }
+            if (community.populationShare0 !== undefined) {
+              if (typeof community.populationShare0 !== 'number' ||
+                  !isFinite(community.populationShare0) ||
+                  Math.floor(community.populationShare0) !== community.populationShare0 ||
+                  community.populationShare0 <= 0 ||
+                  community.populationShare0 > 10000) {
+                fault(where +
+                  ' populationShare0 must be an integer from 1 through 10000.');
+              } else {
+                communityShareTotal += community.populationShare0;
+                weightedCommunities++;
+                if (pci === 0) principalShare = community.populationShare0;
+              }
+            }
             var communityKey = community.culture + '|' + community.religion;
             if (seenCommunities[communityKey]) {
               fault('province ' + pr.id + ' repeats community ' +
@@ -223,6 +272,21 @@ window.FB = window.FB || {};
               principalCommunity.religion !== pr.religion) {
             fault('province ' + pr.id +
               ' principal community must match its culture and religion.');
+          }
+          if (weightedCommunities && weightedCommunities !== pr.communities.length) {
+            fault('province ' + pr.id +
+              ' must give populationShare0 to every community or none of them.');
+          } else if (weightedCommunities && communityShareTotal !== 10000) {
+            fault('province ' + pr.id +
+              ' community populationShare0 values must total 10000.');
+          } else if (weightedCommunities) {
+            for (var psi = 1; psi < pr.communities.length; psi++) {
+              if (pr.communities[psi].populationShare0 > principalShare) {
+                fault('province ' + pr.id +
+                  ' principal community populationShare0 must be at least every later share.');
+                break;
+              }
+            }
           }
         }
       }
@@ -520,6 +584,8 @@ window.FB = window.FB || {};
     }
     FB.activeBookmark = definition;
     FB.activeBookmarkId = definition.id;
+    FB.activeBookmarkDiagnostics = FB.communityShareDiagnostics
+      ? FB.communityShareDiagnostics(definition) : [];
     if (FB.resetWorldDataCaches) FB.resetWorldDataCaches();
     if (FB.invalidateRealmCache) FB.invalidateRealmCache();
     if (FB.indexEventMessages) FB.indexEventMessages();

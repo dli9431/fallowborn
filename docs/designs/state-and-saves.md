@@ -128,12 +128,39 @@ normalizes old bare ids, converts legacy Walls to level 3, adds four seasons of 
 maintenance only when the player already holds them, and performs the one-time AI-seat
 seed behind `state.fortMigration`. No rendered fort, project, or siege prose is saved.
 
-County population is additive save-format-3 data (`state.population = { schema: 1, lastYear, counties: { [pid]: { count, natural, migration, losses } } }`).
-`FB.ensurePopulationState` lazily backfills older saves or fresh game states without a save-version bump:
+County population is additive save-format-3 data. Its subsystem schema is 2:
+`state.population = { schema: 2, lastYear, counties: { [pid]: { count, natural,
+migration, losses, communities, identity, communityChange } } }`. `communities` holds
+positive integer `{culture,religion,count}` cohorts whose counts sum exactly to `count`;
+`identity` caches the independently dominant culture and faith plus `cultureSince` and
+`religionSince`; `communityChange` stores only the last annual faith-conversion and
+culture-assimilation totals. No percentage or rendered demographic prose is saved.
+
+`FB.ensurePopulationState` lazily backfills older saves or fresh game states without a save-wrapper version bump:
 - Baseline populations scale proportionally with current development and standing building capacity bonuses.
-- Restored records clamp to carrying capacity and enforce `populationFloor` (1000).
+- Restored counts enforce `populationFloor` (1000) while preserving an established
+  county's population above or below its current carrying capacity.
+- Fresh and schema-1 county totals are partitioned from the active bookmark's reviewed
+  basis-point shares by stable largest-remainder rounding. A legacy unweighted
+  multi-community list assigns the whole simulated population to its principal pair.
+- Schema-2 repair merges duplicate valid pairs, removes invalid or non-positive records,
+  and assigns the exact residual to the authored principal community. Culture ids resolve
+  through `FBDATA.cultures`; core, modded, and campaign-founded faith ids use the normal
+  `FB.faithExists` / `FB.faithAssignable` path.
+- Migration happens from the save's current date and count. It never replays demographic
+  history that the older save did not record, consumes no RNG, and is idempotent and
+  byte-stable for identical input.
 - Annual simulation records `natural`, `migration`, and `losses` per county.
-- No transient calculations, edge allocations, or prose strings enter serialized state.
+- Population writers reconcile the partition after changing `count`; until cohort-aware
+  annual migration ships, its unexplained net delta belongs to the principal community.
+- Live community readers return detached projections and never repair state as a display
+  side effect. No transient calculations, edge allocations, or prose strings enter
+  serialized state.
+
+Focused storage coverage measures fresh 867, fresh 1066, and enlarged long-running
+population records against the schema-1 projection. The milestone keeps the added
+community state below 200 KB for a fresh bookmark and below 220 KB for the enlarged
+case; no additional county or settlement cache is serialized.
 
 Fort lookup caches (`byCounty`, `bySite`, active projects) are module-private derived
 state. Repair or an external data merge rebuilds them; construction, demolition, and

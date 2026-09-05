@@ -3,8 +3,9 @@
 At character creation, the selected county community supplies one coupled culture and
 faith identity to the protagonist and the whole generated starting family: parents,
 patronymic grandparents, siblings, and any preset spouse and children. Names and the
-founding dynasty follow that culture. The county's ordered static community model and
-principal fallback are defined in [provinces.md](provinces.md); later family identity
+founding dynasty follow that culture. Character creation intentionally reads the county's
+ordered bookmark community model and principal fallback defined in
+[provinces.md](provinces.md), not its live saved population; later family identity
 continues to live on ordinary character records, with no additional save field.
 
 Children always keep their ordinary recorded father and mother. An adopted

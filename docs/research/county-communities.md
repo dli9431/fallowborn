@@ -1,10 +1,9 @@
 # County communities: research manifest
 
-This note records the curated static communities attached to the 867 and 1066
-bookmark counties. It is an editorial gameplay model, not a population estimate:
-the arrow preserves authored display order, the first pair is the principal county
-identity, and later pairs make other grounded local starts available. No percentage,
-conversion, migration, unrest, or demographic change is implied.
+This note records the curated communities attached to the 867 and 1066 bookmark
+counties. The arrow preserves authored display order, the first pair is the principal
+county identity, and later pairs make other grounded local starts available. The
+opening shares are coarse editorial priors for simulation, not census estimates.
 
 The detailed manifest contains 182 bookmark-county records: 72 in 867 and 110 in
 1066, spanning 25 regional groupings. County ids remain stable even when the principal
@@ -70,6 +69,50 @@ identity changes between bookmarks.
 | 867 | Alexandria, Rosetta, Fustat, Fayyum, Asyut, Luxor, Aswan | Arab/Sunni → Coptic/Eastern (`paired`) |
 | 1066 | Alexandria, Rosetta, Fustat, Fayyum, Asyut, Luxor, Aswan | Arab/Shia → Coptic/Eastern (`paired`) |
 | Both | Mosul, Amida, Edessa | Arab/Sunni → Syriac/Eastern (`paired`) |
+
+## Opening-share review
+
+`populationShare0` is authored in basis points and totals 10,000 within every core
+multi-community county. The table below records the profiles used by the county groups
+in the manifest. A slash separates communities in manifest order. Profiles are shared
+only where the historical rationale and desired level of abstraction are the same;
+county-specific exceptions have their own row.
+
+| Bookmark and setting | Opening profile | Uncertainty |
+| --- | --- | --- |
+| 867 Hålogaland; Norrland | 70/30; 65/35 | Low confidence in ratio; sources support a broad Sámi–Norse contact zone, not county counts. |
+| 1066 Hålogaland and Norrland | 85/15 | Low confidence in ratio; a deliberately persistent northern minority after Scandinavian Christianization. |
+| 867 Iona; Man and Lewis; Dublin | 80/20; 65/35; 55/45 | Low confidence in ratio; tuned to distinguish monastic Gaelic Iona, Norse island cores, and a mixed trading port. |
+| 1066 Iona; Man and Lewis; Irish ports | 85/15; 70/30; 75/25 | Low confidence in ratio; represents assimilation without erasing Norse coastal communities. |
+| 867 York and Scarborough | 75/25 | Low confidence in ratio; a surviving Scandinavian community under an English principal identity. |
+| 1066 eastern English counties | 85/15 | Low confidence in ratio; a smaller but still playable Scandinavian legacy. |
+| 1066 Ashkenazi centers | 98/2 | Moderate confidence only in minority scale and attested presence; no medieval county census is implied. |
+| 867 al-Andalus | 60/40 | Low confidence in ratio; keeps substantial Mozarab communities visible across the deliberately broad county model. |
+| 1066 al-Andalus; Granada and Badajoz | 75/25; 65/20/15 | Low confidence in ratio; later Christian minorities are smaller, with explicit Berber settlement in the two taifa exceptions. |
+| Basque core and border counties, both bookmarks | 70/30–75/25 in Pamplona; 60/40–65/35 outside; Bayonne 65/35–75/25 | Low confidence in ratio and county edge; ordering follows the documented linguistic core and transition zone. |
+| 867 Palermo and Messina | 60/40 | Low confidence in ratio; paired reciprocal majorities represent a mixed island without homogeneous map painting. |
+| 1066 Sicily and southern Italy | 55/25/20 to 85/15 | Low confidence in ratio; profiles distinguish mixed Messina, Greek/Arab Palermo and Siracusa, Byzantine-language districts, and the small Norman foothold. |
+| 867 Novgorod and Ladoga; Beloozero; Kiev | 45/20/20/15; 55/45; 55/25/20 | Low confidence in ratio; frontier mixtures are intentionally plural and the principal remains the largest combined pair. |
+| 1066 Novgorod, Ladoga, and Beloozero | 80/20 | Low confidence in ratio; represents Rus consolidation with a persistent Finnic population. |
+| 867 Atil; 1066 Atil | 40/35/25; 60/25/15 | Very low confidence in ratio; Khazar conversion extent is disputed, so the values preserve multiple identities and avoid claiming uniformity. |
+| Tunis and Kairouan, 867; 1066 | 70/30; 60/40 | Low confidence in ratio; a coarse Berber–Arab regional transition rather than modern ethnic data. |
+| Dalmatian coast, 867; 1066 | 55/45–60/40; 65/35–70/30 | Low confidence in ratio; reciprocal profiles express the documented Romance–Slavic coexistence and later principal reversal. |
+| 1066 Hungarian frontier | 75/25 in Magyar principals; 70/30 in Slavic principals | Low confidence in ratio; broad settlement-frontier priors only. |
+| Tbilisi, 867; 1066 | 75/25; 80/20 | Low confidence in ratio; preserves an Arab community under a Georgian principal without treating past rule as a census. |
+| 1066 Armenian–Turkic frontier | 70/30 | Low confidence in ratio; represents settlement pressure before later conversion mechanics act. |
+| 1066 Persian cities | 80/20 | Low confidence in ratio; Turkic presence is deliberately significant but not treated as an urban majority. |
+| Southern Scotland, both bookmarks | 60/40–75/25 | Low confidence in ratio; profiles follow the distinct English, Brythonic, and Gaelic principal zones documented below. |
+| Brittany, 867; 1066 | 65/35; 65/35 reversed | Low confidence in ratio; the mirrored profile makes the attested east-Breton shift visible without erasure. |
+| Balkan Greek–Slavic counties, 867; 1066 | 60/40–65/35; 70/30 | Low confidence in ratio; directional regional priors, not ethnic boundary claims. |
+| Anatolia, 867; 1066 | 65/35; 55/45–65/35, with Tarsos and Adana 50/35/15 | Low confidence in ratio; the Cilician triple keeps Greek, Armenian, and Arab communities simultaneously material. |
+| Egypt, 867; 1066 | 55/45; 65/35 | Very low confidence in ratio; sources establish continuing Coptic identity and progressive Arabization, not county shares. |
+| Mosul, Amida, and Edessa, 867; 1066 | 65/35; 70/30 | Low confidence in ratio; the profile preserves established Syriac communities beneath the Arabic principal abstraction. |
+
+These values were reviewed against the qualitative sources below and against the game's
+principal-first constraint. Where scholarship establishes presence or direction but not
+a count, uncertainty is stated rather than hidden behind extra precision. No profile
+uses a modern census. The basis-point representation exists for exact deterministic
+apportionment; most authored values deliberately move in 5-percentage-point steps.
 
 In data ids, Brythonic is `brezhon`, Arab is `arabic`, and Thessalonica is
 `thessaloniki`. “Italian” remains the game's documented proxy for Dalmatian

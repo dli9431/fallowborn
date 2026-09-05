@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/messages.js',
   'js/model.js',
+  'js/population.js',
   'js/save.js',
   'js/technology.js',
   'js/world.js',
@@ -13,6 +14,8 @@ dependsOnRuntime(__filename, [
   'js/events.js',
   'js/ui_modals.js',
   'data/map_data.js',
+  'data/bookmarks.js',
+  'data/counties.js',
   'data/cultures.js',
   'data/economy.js',
   'data/events_peasant.js',
@@ -653,6 +656,48 @@ test('slots store compressed, verify their round trip, and read back the same li
       identical:true,
       probe:'⚔ Æthelflæd’s café — 👑'
     });
+  });
+
+test('loading the same schema-1 population twice produces byte-stable schema-2 communities',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const legacy = JSON.parse(FB.save.serialize());
+      legacy.state.date.year = 912;
+      legacy.state.population.schema = 1;
+      legacy.state.population.lastYear = 911;
+      for (const pid in legacy.state.population.counties) {
+        const rec = legacy.state.population.counties[pid];
+        delete rec.communities;
+        delete rec.identity;
+        delete rec.communityChange;
+      }
+      const preservedCount = legacy.state.population.counties.york.count;
+      const source = JSON.stringify(legacy);
+      FB.save.restore(JSON.parse(source));
+      const first = JSON.stringify(FB.state.population);
+      const firstYork = JSON.stringify(FB.state.population.counties.york);
+      FB.save.restore(JSON.parse(source));
+      const second = JSON.stringify(FB.state.population);
+      return {
+        schema:FB.state.population.schema,
+        year:FB.state.date.year,
+        count:FB.state.population.counties.york.count,
+        preservedCount:preservedCount,
+        stable:first === second,
+        countyStable:firstYork === JSON.stringify(FB.state.population.counties.york),
+        sourceUnchanged:source === JSON.stringify(legacy)
+      };
+    });
+
+    expect(result.schema).toBe(2);
+    expect(result.year).toBe(912);
+    expect(result.count).toBe(result.preservedCount);
+    expect(result.stable).toBe(true);
+    expect(result.countyStable).toBe(true);
+    expect(result.sourceUnchanged).toBe(true);
   });
 
 test('legacy plain slots and FBS1 exports still load; fresh exports are FBS2',

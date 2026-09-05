@@ -254,14 +254,236 @@ window.FB = window.FB || {};
     return FB.clamp(raw, min, max);
   };
 
-  /* Ensure state.population exists and all inhabited counties are recorded */
+  function stateYear(state) {
+    return (state.date && isFinite(state.date.year) && Math.round(state.date.year)) ||
+      (state.start && isFinite(state.start.year) && Math.round(state.start.year)) || 867;
+  }
+
+  function validCulture(cultureId) {
+    return typeof cultureId === 'string' && !!FBDATA.cultures[cultureId];
+  }
+
+  function validFaith(state, faithId) {
+    return typeof faithId === 'string' &&
+      (!FB.faithExists || FB.faithExists(faithId, state)) &&
+      (!FB.faithAssignable || FB.faithAssignable(faithId, state));
+  }
+
+  function communityKey(cultureId, faithId) {
+    return cultureId + '|' + faithId;
+  }
+
+  /* Stable largest-remainder apportionment. Authored order breaks exact
+     fractional ties, and no RNG or source mutation is involved. */
+  function apportionShares(total, communities) {
+    var allocated = [];
+    var ranked = [];
+    var used = 0;
+    for (var i = 0; i < communities.length; i++) {
+      var share = Number(communities[i].populationShare0) || 0;
+      var exact = total * share / 10000;
+      var count = Math.floor(exact);
+      allocated[i] = count;
+      used += count;
+      ranked.push({ index:i, remainder:exact - count });
+    }
+    ranked.sort(function (a, b) {
+      return (b.remainder - a.remainder) || (a.index - b.index);
+    });
+    var remainder = total - used;
+    for (var ri = 0; ri < remainder; ri++) {
+      allocated[ranked[ri % ranked.length].index]++;
+    }
+    var out = [];
+    for (var ai = 0; ai < communities.length; ai++) {
+      if (allocated[ai] <= 0) continue;
+      out.push({
+        culture:communities[ai].culture,
+        religion:communities[ai].religion,
+        count:allocated[ai]
+      });
+    }
+    return out;
+  }
+
+  function openingCountyCommunities(pr, total) {
+    var source = FB.provinceCommunities ? FB.provinceCommunities(pr) : [
+      { culture:pr.culture, religion:pr.religion }
+    ];
+    var weighted = source.length > 0;
+    var shareTotal = 0;
+    for (var i = 0; i < source.length; i++) {
+      var share = Number(source[i].populationShare0);
+      if (!isFinite(share) || Math.floor(share) !== share || share <= 0) {
+        weighted = false;
+        break;
+      }
+      shareTotal += share;
+    }
+    if (!weighted || shareTotal !== 10000) {
+      source = [{
+        culture:pr.culture,
+        religion:pr.religion,
+        populationShare0:10000
+      }];
+    }
+    return apportionShares(total, source);
+  }
+
+  function stableCommunityOrder(pr, merged, savedOrder) {
+    var order = [];
+    var seen = {};
+    function add(cultureId, faithId) {
+      var key = communityKey(cultureId, faithId);
+      if (!merged[key] || seen[key]) return;
+      seen[key] = 1;
+      order.push(key);
+    }
+    add(pr.culture, pr.religion);
+    var authored = FB.provinceCommunities ? FB.provinceCommunities(pr) : [];
+    for (var i = 0; i < authored.length; i++) {
+      add(authored[i].culture, authored[i].religion);
+    }
+    for (var si = 0; si < savedOrder.length; si++) {
+      var saved = merged[savedOrder[si]];
+      if (saved) add(saved.culture, saved.religion);
+    }
+    return order;
+  }
+
+  /* A saved principal count is the reconciliation remainder. This preserves
+     every valid non-principal cohort when possible; if corrupt cohorts alone
+     exceed the county total, they are proportionally reduced with stable
+     largest-remainder rounding before the principal is omitted. */
+  function normalizedCountyCommunities(state, pr, rec, total) {
+    if (!Array.isArray(rec.communities) || !rec.communities.length) {
+      return openingCountyCommunities(pr, total);
+    }
+    var merged = {};
+    var savedOrder = [];
+    for (var i = 0; i < rec.communities.length; i++) {
+      var source = rec.communities[i];
+      if (!source || !validCulture(source.culture) ||
+          !validFaith(state, source.religion)) continue;
+      var count = Math.round(Number(source.count));
+      if (!isFinite(count) || count <= 0) continue;
+      var key = communityKey(source.culture, source.religion);
+      if (!merged[key]) {
+        merged[key] = {
+          culture:source.culture, religion:source.religion, count:0
+        };
+        savedOrder.push(key);
+      }
+      merged[key].count += count;
+    }
+    if (!savedOrder.length) return openingCountyCommunities(pr, total);
+
+    var principalKey = communityKey(pr.culture, pr.religion);
+    var order = stableCommunityOrder(pr, merged, savedOrder);
+    var others = [];
+    var otherTotal = 0;
+    for (var oi = 0; oi < order.length; oi++) {
+      if (order[oi] === principalKey) continue;
+      var other = merged[order[oi]];
+      others.push(other);
+      otherTotal += other.count;
+    }
+    if (otherTotal > total) {
+      var weightedOthers = [];
+      for (var wi = 0; wi < others.length; wi++) {
+        weightedOthers.push({
+          culture:others[wi].culture,
+          religion:others[wi].religion,
+          populationShare0:others[wi].count * 10000 / otherTotal
+        });
+      }
+      return apportionShares(total, weightedOthers);
+    }
+
+    var out = [];
+    var principalCount = total - otherTotal;
+    if (principalCount > 0) {
+      out.push({ culture:pr.culture, religion:pr.religion, count:principalCount });
+    }
+    for (var ci = 0; ci < others.length; ci++) {
+      out.push({
+        culture:others[ci].culture,
+        religion:others[ci].religion,
+        count:others[ci].count
+      });
+    }
+    return out;
+  }
+
+  function axisTotals(communities, field) {
+    var totals = {};
+    var order = [];
+    var total = 0;
+    for (var i = 0; i < communities.length; i++) {
+      var id = communities[i][field];
+      if (!own(totals, id)) {
+        totals[id] = 0;
+        order.push(id);
+      }
+      totals[id] += communities[i].count;
+      total += communities[i].count;
+    }
+    return { totals:totals, order:order, total:total };
+  }
+
+  function dominantAxis(communities, field, previous) {
+    var aggregate = axisTotals(communities, field);
+    var best = aggregate.order[0] || null;
+    for (var i = 1; i < aggregate.order.length; i++) {
+      var candidate = aggregate.order[i];
+      if (aggregate.totals[candidate] > aggregate.totals[best]) best = candidate;
+    }
+    if (!best) return previous || null;
+    if (aggregate.totals[best] * 2 > aggregate.total) return best;
+    if (previous && aggregate.totals[previous] > 0) return previous;
+    return best;
+  }
+
+  function repairCountyRecord(state, pr, rec, year) {
+    var total = Math.max(populationFloor(), Math.round(Number(rec.count) || populationFloor()));
+    rec.count = total;
+    rec.natural = Math.round(Number(rec.natural) || 0);
+    rec.migration = Math.round(Number(rec.migration) || 0);
+    rec.losses = Math.round(Number(rec.losses) || 0);
+    rec.communities = normalizedCountyCommunities(state, pr, rec, total);
+
+    var identity = rec.identity && typeof rec.identity === 'object'
+      ? rec.identity : {};
+    var oldCulture = validCulture(identity.culture) ? identity.culture : pr.culture;
+    var oldReligion = validFaith(state, identity.religion)
+      ? identity.religion : pr.religion;
+    var culture = dominantAxis(rec.communities, 'culture', oldCulture);
+    var religion = dominantAxis(rec.communities, 'religion', oldReligion);
+    rec.identity = {
+      culture:culture,
+      religion:religion,
+      cultureSince:culture === oldCulture && isFinite(Number(identity.cultureSince))
+        ? Math.round(Number(identity.cultureSince)) : year,
+      religionSince:religion === oldReligion && isFinite(Number(identity.religionSince))
+        ? Math.round(Number(identity.religionSince)) : year
+    };
+    var change = rec.communityChange && typeof rec.communityChange === 'object'
+      ? rec.communityChange : {};
+    rec.communityChange = {
+      faithConverted:Math.round(Number(change.faithConverted) || 0),
+      cultureAssimilated:Math.round(Number(change.cultureAssimilated) || 0)
+    };
+    return rec;
+  }
+
+  /* Ensure schema-2 population state exists and every inhabited county has
+     one exact community partition of its already-authoritative count. */
   FB.ensurePopulationState = function (state) {
     if (!state) return null;
     var floor = populationFloor();
     var table = devFallbackTable();
     var provs = provinceList();
-    var currentYear = (state.date && isFinite(state.date.year) && state.date.year) ||
-      (state.start && isFinite(state.start.year) && state.start.year) || 867;
+    var currentYear = stateYear(state);
 
     if (!state.population || typeof state.population !== 'object' || !state.population.counties) {
       /* Lazy migration for older saves or fresh game initialization */
@@ -292,9 +514,10 @@ window.FB = window.FB || {};
           migration: 0,
           losses: 0
         };
+        repairCountyRecord(state, pr, counties[pid], currentYear);
       }
       state.population = {
-        schema: 1,
+        schema: 2,
         lastYear: currentYear,
         counties: counties
       };
@@ -314,15 +537,93 @@ window.FB = window.FB || {};
           migration: 0,
           losses: 0
         };
-      } else {
-        var rec = existingCounties[p.id];
-        rec.count = Math.max(floor, Math.round(Number(rec.count) || floor));
-        rec.natural = Math.round(Number(rec.natural) || 0);
-        rec.migration = Math.round(Number(rec.migration) || 0);
-        rec.losses = Math.round(Number(rec.losses) || 0);
       }
+      repairCountyRecord(state, p, existingCounties[p.id], currentYear);
     }
+    state.population.schema = 2;
+    state.population.lastYear = isFinite(Number(state.population.lastYear))
+      ? Math.round(Number(state.population.lastYear)) : currentYear;
     return state.population;
+  };
+
+  FB.reconcileCountyCommunities = function (state, pid) {
+    if (!state || !state.population || !state.population.counties) return [];
+    var pr = provinceDef(pid);
+    var rec = pr && !pr.wasteland && state.population.counties[pid];
+    if (!rec || typeof rec !== 'object') return [];
+    repairCountyRecord(state, pr, rec, stateYear(state));
+    return rec.communities.map(function (community) {
+      return {
+        culture:community.culture,
+        religion:community.religion,
+        count:community.count
+      };
+    });
+  };
+
+  FB.countyCommunities = function (state, pid) {
+    var pr = provinceDef(pid);
+    if (!state || !pr || pr.wasteland) return [];
+    var rec = state.population && state.population.counties &&
+      state.population.counties[pid];
+    var total = rec && isFinite(Number(rec.count))
+      ? Math.max(populationFloor(), Math.round(Number(rec.count)))
+      : FB.countyPopulationBaseline(state, pid);
+    var communities = rec && Array.isArray(rec.communities) && rec.communities.length
+      ? rec.communities : openingCountyCommunities(pr, total);
+    var out = [];
+    for (var i = 0; i < communities.length; i++) {
+      var community = communities[i];
+      if (!community || !validCulture(community.culture) ||
+          !validFaith(state, community.religion)) continue;
+      var count = Math.round(Number(community.count));
+      if (!isFinite(count) || count <= 0) continue;
+      out.push({
+        culture:community.culture,
+        religion:community.religion,
+        count:count
+      });
+    }
+    return out;
+  };
+
+  FB.countyCulture = function (state, pid) {
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    if (rec && rec.identity && validCulture(rec.identity.culture)) {
+      return rec.identity.culture;
+    }
+    var communities = FB.countyCommunities(state, pid);
+    return dominantAxis(communities, 'culture', null);
+  };
+
+  FB.countyReligion = function (state, pid) {
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    if (rec && rec.identity && validFaith(state, rec.identity.religion)) {
+      return rec.identity.religion;
+    }
+    var communities = FB.countyCommunities(state, pid);
+    return dominantAxis(communities, 'religion', null);
+  };
+
+  function countyAxisShare(state, pid, field, targetId) {
+    var communities = FB.countyCommunities(state, pid);
+    var matching = 0;
+    var total = 0;
+    for (var i = 0; i < communities.length; i++) {
+      total += communities[i].count;
+      if (communities[i][field] === targetId) matching += communities[i].count;
+    }
+    return total > 0 ? matching / total : 0;
+  }
+
+  FB.countyCultureShare = function (state, pid, cultureId) {
+    return countyAxisShare(state, pid, 'culture', cultureId);
+  };
+
+  FB.countyReligionShare = function (state, pid, faithId) {
+    return countyAxisShare(state, pid, 'religion', faithId);
   };
 
   FB.countyPopulation = function (state, pid) {
@@ -353,6 +654,7 @@ window.FB = window.FB || {};
     if (applied === 0) return 0;
 
     rec.count = after;
+    repairCountyRecord(state, pr, rec, stateYear(state));
     if (applied < 0) {
       rec.losses = (rec.losses || 0) + applied;
       var lossRatio = Math.abs(applied) / Math.max(1, before);
@@ -530,6 +832,8 @@ window.FB = window.FB || {};
       rec.natural = natDelta;
       rec.migration = migDelta;
       rec.losses = 0;
+      rec.communityChange = { faithConverted:0, cultureAssimilated:0 };
+      repairCountyRecord(state, pDef, rec, currentYear);
     }
 
     state.population.lastYear = currentYear;

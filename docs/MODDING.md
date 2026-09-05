@@ -921,17 +921,27 @@ province objects; mods merge full objects as before:
   authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
 - `communities` — optional ordered culture-and-faith records for a settled county, e.g.
-  `"communities": [{ "culture": "gaelic", "religion": "catholic" },
-  { "culture": "norse", "religion": "norse_pagan" }]`. The first record is
+  `"communities": [{ "culture": "gaelic", "religion": "catholic",
+  "populationShare0": 8000 }, { "culture": "norse",
+  "religion": "norse_pagan", "populationShare0": 2000 }]`. The first record is
   the principal population and must exactly repeat the province's `culture` and
-  `religion`; existing county mechanics continue to use those principal fields.
-  Later records are static identities available during character creation. An optional
+  `religion`; existing county mechanics continue to use those principal fields during
+  the storage milestone. `populationShare0` is an optional integer opening share in
+  basis points. If one record has it, every record must have it, the list must total
+  exactly 10,000, and the principal share must be at least as large as every later
+  share. A single-community county implicitly receives 10,000. An optional
   boolean `paired:true` keeps that record's culture and faith indivisible when local
   matchmaking synthesizes mixed identities; use it for an established identity such as
   Ashkenazi/Jewish rather than for ordinary coexisting populations. Lists
   may not be empty or contain a repeated pair, and every culture and assignable
   faith must exist. Counties without the field normalize to their single principal
   pair through `FB.provinceCommunities(province)`.
+
+  An entirely unweighted multi-community list remains compatible: later identities are
+  still available to New Game and matchmaking, but the principal receives the whole
+  simulated opening population. `FB.communityShareDiagnostics(bookmark)` reports each
+  such fallback so authors can replace presence-only data with reviewed shares. Do not
+  use equal shares as a placeholder or derive medieval shares from modern census data.
 - `settlements` — optional ordered list of up to eight historical settlement
   presentations for this county, e.g.
   `"settlements": [{ "site": "praha", "name": "Prague", "kind": "town" }]`.
@@ -3074,10 +3084,21 @@ and keeps its current settlement names, kinds, and indices.
 ordered `communities` list shown in *Adding a province*. It replaces that county's
 community list for the bookmark; there is no cross-bookmark merge by entry. Activation
 rejects empty or non-array values, duplicate culture/faith pairs, unknown cultures,
-invalid or unassignable faiths, non-boolean `paired` values, lists on wasteland, and
-principal entries that disagree with the province's `culture`/`religion`. The list is character-start identity only:
-mods should not infer population shares, conversion, migration, or demographic ticks
-from its order.
+invalid or unassignable faiths, non-boolean `paired` values, invalid/partial/non-totaling
+`populationShare0` values, lists on wasteland, and principal entries that disagree with
+the province's `culture`/`religion`. Authored shares initialize saved schema-2 community
+counts by deterministic largest-remainder apportionment; authored order breaks exact
+rounding ties. Zero-count results are omitted. The county `count` remains the sole
+population used by tax, levy, capacity, and markets.
+
+`FB.provinceCommunities(province)` reads immutable bookmark data. Campaign code that
+needs saved demographics uses `FB.countyCommunities(state,pid)`,
+`FB.countyCulture(state,pid)`, `FB.countyReligion(state,pid)`,
+`FB.countyCultureShare(state,pid,cultureId)`, or
+`FB.countyReligionShare(state,pid,faithId)`. Community projections are detached copies;
+share helpers return a fraction from 0 through 1 and aggregate all matching combined
+pairs. Culture ids must remain in `FBDATA.cultures`. A saved community faith may use a
+campaign-founded id when the ordinary faith validation and assignment APIs accept it.
 
 ## Items
 

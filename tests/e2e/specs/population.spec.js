@@ -1,8 +1,12 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/bookmarks.js',
+  'data/counties.js',
+  'data/cultures.js',
   'js/economy.js',
   'js/population.js',
+  'js/save.js',
   'js/world.js',
   'data/map_data.js'
 ]);
@@ -47,6 +51,55 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
     expect(results.allAboveFloor).toBe(true);
     expect(results.matchesMath).toBe(true);
   });
+
+  test('Schema-2 opening communities exactly partition county population without mutating authored data',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const state = FB.state;
+        const authoredBefore = JSON.stringify(FB.bookmark(state.start.id).provinces);
+        let exact = true;
+        let inhabited = 0;
+        for (let i = 0; i < FB.world.provs.length; i++) {
+          const province = FB.world.provs[i];
+          if (!province || province.wasteland) continue;
+          inhabited++;
+          const rec = state.population.counties[province.id];
+          const sum = rec.communities.reduce(function (total, community) {
+            return total + community.count;
+          }, 0);
+          if (sum !== rec.count || rec.communities.some(function (community) {
+            return !Number.isInteger(community.count) || community.count <= 0;
+          })) exact = false;
+        }
+        const york = FB.countyCommunities(state, 'york');
+        york[0].count = 1;
+        const authoredAfter = JSON.stringify(FB.bookmark(state.start.id).provinces);
+        return {
+          schema:state.population.schema,
+          exact:exact,
+          inhabited:inhabited,
+          records:Object.keys(state.population.counties).filter(function (pid) {
+            return FB.world.byId[pid] && !FB.world.byId[pid].wasteland;
+          }).length,
+          copySafe:FB.countyCommunities(state, 'york')[0].count !== 1,
+          authoredStable:authoredBefore === authoredAfter,
+          yorkCulture:FB.countyCulture(state, 'york'),
+          yorkReligion:FB.countyReligion(state, 'york'),
+          englishShare:FB.countyCultureShare(state, 'york', 'english'),
+          catholicShare:FB.countyReligionShare(state, 'york', 'catholic')
+        };
+      });
+
+      expect(result.schema).toBe(2);
+      expect(result.exact).toBe(true);
+      expect(result.records).toBe(result.inhabited);
+      expect(result.copySafe).toBe(true);
+      expect(result.authoredStable).toBe(true);
+      expect(result.yorkCulture).toBe('english');
+      expect(result.yorkReligion).toBe('catholic');
+      expect(result.englishShare).toBeCloseTo(0.75, 4);
+      expect(result.catholicShare).toBeCloseTo(0.75, 4);
+    });
 
   test('Carrying capacity responds to buildings and technology with caps', async function ({ page }) {
     const capacityData = await page.evaluate(function () {
@@ -171,17 +224,28 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
 
       let sumMigration = 0;
       let hasFlow = false;
+      let communitiesExact = true;
       for (const pr of provs) {
-        const mig = state.population.counties[pr.id].migration;
+        const rec = state.population.counties[pr.id];
+        const mig = rec.migration;
         sumMigration += mig;
         if (mig !== 0) hasFlow = true;
+        const communityTotal = rec.communities.reduce(function (sum, community) {
+          return sum + community.count;
+        }, 0);
+        if (communityTotal !== rec.count) communitiesExact = false;
       }
 
-      return { sumMigration: sumMigration, hasFlow: hasFlow };
+      return {
+        sumMigration:sumMigration,
+        hasFlow:hasFlow,
+        communitiesExact:communitiesExact
+      };
     });
 
     expect(migrationResult.sumMigration).toBe(0);
     expect(migrationResult.hasFlow).toBe(true);
+    expect(migrationResult.communitiesExact).toBe(true);
   });
 
   test('Annual migration calculates each county capacity once',
@@ -323,7 +387,173 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
     });
 
     expect(migrationResult.hasPopulation).toBe(true);
-    expect(migrationResult.schema).toBe(1);
+    expect(migrationResult.schema).toBe(2);
     expect(migrationResult.dorsetCount).toBeGreaterThan(migrationResult.baseline);
   });
+
+  test('Schema-1 migration uses current totals, largest remainders, and byte-stable repair',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const oldState = {
+          turn:500,
+          start:{ id:'867', year:867, season:0, day:1 },
+          date:{ year:912, season:2, day:20 },
+          population:{
+            schema:1,
+            lastYear:911,
+            counties:{
+              atil:{ count:1001, natural:4, migration:-2, losses:-7 }
+            }
+          }
+        };
+        FB.ensurePopulationState(oldState);
+        const first = JSON.stringify(oldState.population);
+        const atil = JSON.parse(JSON.stringify(oldState.population.counties.atil));
+        FB.ensurePopulationState(oldState);
+        return {
+          schema:oldState.population.schema,
+          lastYear:oldState.population.lastYear,
+          communities:atil.communities,
+          identity:atil.identity,
+          currentCount:atil.count,
+          stable:first === JSON.stringify(oldState.population)
+        };
+      });
+
+      expect(result.schema).toBe(2);
+      expect(result.lastYear).toBe(911);
+      expect(result.currentCount).toBe(1001);
+      expect(result.communities).toEqual([
+        { culture:'khazar', religion:'jewish', count:401 },
+        { culture:'khazar', religion:'tengri', count:350 },
+        { culture:'turkic', religion:'tengri', count:250 }
+      ]);
+      expect(result.identity).toEqual({
+        culture:'khazar', religion:'tengri',
+        cultureSince:912, religionSince:912
+      });
+      expect(result.stable).toBe(true);
+    });
+
+  test('Malformed and custom-faith communities repair deterministically with the principal remainder',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const state = FB.state;
+        const customFaith = FB.foundFaith(state, {
+          id:'e2e_county_faith',
+          name:'County Test Faith',
+          group:'$current',
+          relationToParent:'in_fold'
+        }, { convertFounder:false });
+        const rec = state.population.counties.york;
+        rec.count = 1000;
+        rec.communities = [
+          { culture:'english', religion:'catholic', count:100 },
+          { culture:'english', religion:'catholic', count:50 },
+          { culture:'norse', religion:'norse_pagan', count:200 },
+          { culture:'norse', religion:'norse_pagan', count:100 },
+          { culture:'english', religion:customFaith, count:100 },
+          { culture:'missing', religion:'catholic', count:100 },
+          { culture:'english', religion:'catholic', count:-25 }
+        ];
+        rec.identity = { culture:'missing', religion:'missing' };
+        FB.ensurePopulationState(state);
+        const first = JSON.stringify(rec);
+        const projection = FB.countyCommunities(state, 'york');
+        FB.ensurePopulationState(state);
+        const overfull = state.population.counties.scarborough;
+        overfull.count = 1000;
+        overfull.communities = [
+          { culture:'norse', religion:'norse_pagan', count:800 },
+          { culture:'gaelic', religion:customFaith, count:600 }
+        ];
+        FB.ensurePopulationState(state);
+        return {
+          communities:projection,
+          overfull:FB.countyCommunities(state, 'scarborough'),
+          identity:rec.identity,
+          customFaith:customFaith,
+          exact:projection.reduce(function (sum, community) {
+            return sum + community.count;
+          }, 0) === rec.count,
+          stable:first === JSON.stringify(rec)
+        };
+      });
+
+      expect(result.customFaith).toBe('e2e_county_faith');
+      expect(result.communities).toEqual([
+        { culture:'english', religion:'catholic', count:600 },
+        { culture:'norse', religion:'norse_pagan', count:300 },
+        { culture:'english', religion:'e2e_county_faith', count:100 }
+      ]);
+      expect(result.overfull).toEqual([
+        { culture:'norse', religion:'norse_pagan', count:571 },
+        { culture:'gaelic', religion:'e2e_county_faith', count:429 }
+      ]);
+      expect(result.identity.culture).toBe('english');
+      expect(result.identity.religion).toBe('catholic');
+      expect(result.exact).toBe(true);
+      expect(result.stable).toBe(true);
+    });
+
+  test('Community save growth stays bounded for both bookmarks and long-running totals',
+    async function ({ page }) {
+      const result = await page.evaluate(async function () {
+        function activate(bookmarkId) {
+          return new Promise(function (resolve, reject) {
+            FB.activateBookmark(bookmarkId, function () {}, function (error) {
+              if (error) reject(error);
+              else resolve();
+            });
+          });
+        }
+        function withoutCommunities(population) {
+          const legacy = JSON.parse(JSON.stringify(population));
+          legacy.schema = 1;
+          for (const pid in legacy.counties) {
+            delete legacy.counties[pid].communities;
+            delete legacy.counties[pid].identity;
+            delete legacy.counties[pid].communityChange;
+          }
+          return legacy;
+        }
+        function measure() {
+          const state = {
+            start:{ id:FB.activeBookmarkId, year:FB.activeBookmark.date.year },
+            date:{ year:FB.activeBookmark.date.year },
+            owner:{}, buildings:{}, dev:{}, realms:{},
+            realmTechMigration:2, realmTech:{}
+          };
+          FB.ensurePopulationState(state);
+          const schema2 = JSON.stringify(state.population).length;
+          const schema1 = JSON.stringify(withoutCommunities(state.population)).length;
+          const longRunning = JSON.parse(JSON.stringify(state.population));
+          longRunning.lastYear += 180;
+          for (const pid in longRunning.counties) {
+            const rec = longRunning.counties[pid];
+            rec.count *= 17;
+            for (let i = 0; i < rec.communities.length; i++) {
+              rec.communities[i].count *= 17;
+            }
+          }
+          return {
+            total:schema2,
+            added:schema2 - schema1,
+            longRunningAdded:JSON.stringify(longRunning).length - schema1
+          };
+        }
+        await activate('867');
+        const bookmark867 = measure();
+        await activate('1066');
+        const bookmark1066 = measure();
+        return { bookmark867:bookmark867, bookmark1066:bookmark1066 };
+      });
+
+      for (const measurement of [result.bookmark867, result.bookmark1066]) {
+        expect(measurement.added).toBeGreaterThan(0);
+        expect(measurement.added).toBeLessThan(200000);
+        expect(measurement.longRunningAdded).toBeLessThan(220000);
+        expect(measurement.total).toBeLessThan(1.6 * 1024 * 1024);
+      }
+    });
 });

@@ -17,8 +17,8 @@ dependsOnRuntime(__filename, [
   'js/ui_modals.js'
 ]);
 
-/* Static county communities: both bookmark manifests, schema validation,
-   character creation, county/Land display, and start-code compatibility.
+/* Authored county communities: both bookmark manifests, opening shares,
+   schema validation, character creation, county/Land display, and start-code compatibility.
    Authored per docs/designs/provinces.md; NOT run by the authoring agent
    (owner runs the harness). */
 
@@ -242,13 +242,25 @@ async function reachIonaCommunityPicker(page) {
 test('both bookmark manifests validate and expose every curated record in order',
   async function ({ page }) {
     const result = await page.evaluate(function () {
-      const out = { errors:{}, manifests:{}, counts:{} };
+      const out = {
+        errors:{}, diagnostics:{}, manifests:{}, counts:{}, weightedCounts:{}
+      };
       ['867', '1066'].forEach(function (bookmarkId) {
         const bookmark = FB.bookmark(bookmarkId);
         out.errors[bookmarkId] = FB.validateBookmark(bookmark);
+        out.diagnostics[bookmarkId] = FB.communityShareDiagnostics(bookmark);
         out.manifests[bookmarkId] = {};
+        out.weightedCounts[bookmarkId] = 0;
         bookmark.provinces.forEach(function (province) {
           if (!province.communities) return;
+          const shares = province.communities.map(function (community) {
+            return community.populationShare0;
+          });
+          if (shares.every(function (share) { return Number.isInteger(share); }) &&
+              shares.reduce(function (sum, share) { return sum + share; }, 0) === 10000 &&
+              shares.slice(1).every(function (share) { return share <= shares[0]; })) {
+            out.weightedCounts[bookmarkId]++;
+          }
           out.manifests[bookmarkId][province.id] = province.communities.map(
             function (community) {
               return community.culture + '.' + community.religion;
@@ -268,8 +280,10 @@ test('both bookmark manifests validate and expose every curated record in order'
 
     expect(result.errors['867']).toEqual([]);
     expect(result.errors['1066']).toEqual([]);
+    expect(result.diagnostics).toEqual({ '867':[], '1066':[] });
     expect(result.manifests).toEqual(EXPECTED);
     expect(result.counts).toEqual({ '867':72, '1066':110 });
+    expect(result.weightedCounts).toEqual({ '867':72, '1066':110 });
     expect(result.counts['867'] + result.counts['1066']).toBe(182);
     expect(result.ionaArraysAliased).toBe(false);
   });
@@ -371,12 +385,24 @@ test('regional cultures seed their historical bookmark cores and supporting syst
       kiev_1066:'rus', finland_1066:'finnic', karelia_1066:'finnic'
     });
     expect(result.pairedMinorities).toEqual({
-      coptic867:{ culture:'coptic', religion:'eastern', paired:true },
-      coptic1066:{ culture:'coptic', religion:'eastern', paired:true },
-      syriac867:{ culture:'syriac', religion:'eastern', paired:true },
-      syriac1066:{ culture:'syriac', religion:'eastern', paired:true },
-      sami1066:{ culture:'sami', religion:'norse_pagan', paired:true },
-      finnic1066:{ culture:'finnic', religion:'baltic_pagan', paired:true }
+      coptic867:{
+        culture:'coptic', religion:'eastern', paired:true, populationShare0:4500
+      },
+      coptic1066:{
+        culture:'coptic', religion:'eastern', paired:true, populationShare0:3500
+      },
+      syriac867:{
+        culture:'syriac', religion:'eastern', paired:true, populationShare0:3500
+      },
+      syriac1066:{
+        culture:'syriac', religion:'eastern', paired:true, populationShare0:3000
+      },
+      sami1066:{
+        culture:'sami', religion:'norse_pagan', paired:true, populationShare0:1500
+      },
+      finnic1066:{
+        culture:'finnic', religion:'baltic_pagan', paired:true, populationShare0:2000
+      }
     });
     expect(result.techTraditions.latin).toEqual(expect.arrayContaining([
       'norman','occitan','lombard'
@@ -426,6 +452,22 @@ test('community schema faults are actionable and ordinary counties normalize to 
         paired:definitionWith('london', [
           { culture:'english', religion:'catholic', paired:'yes' }
         ]),
+        partialShare:definitionWith('london', [
+          { culture:'english', religion:'catholic', populationShare0:8000 },
+          { culture:'norse', religion:'norse_pagan' }
+        ]),
+        shareTotal:definitionWith('london', [
+          { culture:'english', religion:'catholic', populationShare0:8000 },
+          { culture:'norse', religion:'norse_pagan', populationShare0:1000 }
+        ]),
+        shareInteger:definitionWith('london', [
+          { culture:'english', religion:'catholic', populationShare0:8000.5 },
+          { culture:'norse', religion:'norse_pagan', populationShare0:1999.5 }
+        ]),
+        sharePrincipal:definitionWith('london', [
+          { culture:'english', religion:'catholic', populationShare0:4000 },
+          { culture:'norse', religion:'norse_pagan', populationShare0:6000 }
+        ]),
         principal:definitionWith('london', [
           { culture:'norse', religion:'norse_pagan' }
         ]),
@@ -440,13 +482,18 @@ test('community schema faults are actionable and ordinary counties normalize to 
       })[0];
       const fallback = FB.provinceCommunities(london);
       fallback[0].culture = 'norse';
+      const presenceOnly = definitionWith('london', [
+        { culture:'english', religion:'catholic' },
+        { culture:'norse', religion:'norse_pagan' }
+      ]);
       return {
         errors:errors,
         authored:london.communities,
         fallbackLength:fallback.length,
         fallbackReligion:fallback[0].religion,
         provinceCulture:london.culture,
-        secondRead:FB.provinceCommunities(london)
+        secondRead:FB.provinceCommunities(london),
+        diagnostics:FB.communityShareDiagnostics(presenceOnly)
       };
     });
 
@@ -456,6 +503,14 @@ test('community schema faults are actionable and ordinary counties normalize to 
     expect(result.errors.culture).toContain('has invalid culture missing_culture');
     expect(result.errors.faith).toContain('has invalid or unassignable faith christian');
     expect(result.errors.paired).toContain('paired must be a boolean');
+    expect(result.errors.partialShare)
+      .toContain('must give populationShare0 to every community or none');
+    expect(result.errors.shareTotal)
+      .toContain('populationShare0 values must total 10000');
+    expect(result.errors.shareInteger)
+      .toContain('populationShare0 must be an integer from 1 through 10000');
+    expect(result.errors.sharePrincipal)
+      .toContain('principal community populationShare0 must be at least every later share');
     expect(result.errors.principal)
       .toContain('principal community must match its culture and religion');
     expect(result.errors.wasteland).toContain('wasteland');
@@ -467,6 +522,51 @@ test('community schema faults are actionable and ordinary counties normalize to 
     expect(result.secondRead).toEqual([
       { culture:'english', religion:'catholic' }
     ]);
+    expect(result.diagnostics).toEqual([
+      expect.stringContaining(
+        'simulated population begins entirely in the principal community')
+    ]);
+  });
+
+test('legacy unweighted community data keeps later starts but assigns simulated population to the principal',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const province = FB.world.byId.london;
+      const original = province.communities;
+      province.communities = [
+        { culture:'english', religion:'catholic' },
+        { culture:'norse', religion:'norse_pagan' }
+      ];
+      try {
+        const state = {
+          start:{ id:'867', year:867 }, date:{ year:900 },
+          population:{
+            schema:1, lastYear:899,
+            counties:{ london:{ count:1001, natural:0, migration:0, losses:0 } }
+          }
+        };
+        FB.ensurePopulationState(state);
+        return {
+          authoredStarts:FB.provinceCommunities(province).map(function (community) {
+            return community.culture + '.' + community.religion;
+          }),
+          live:FB.countyCommunities(state, 'london'),
+          diagnostics:FB.communityShareDiagnostics({
+            id:'legacy_mod', provinces:[province]
+          })
+        };
+      } finally {
+        province.communities = original;
+      }
+    });
+
+    expect(result.authoredStarts).toEqual([
+      'english.catholic', 'norse.norse_pagan'
+    ]);
+    expect(result.live).toEqual([
+      { culture:'english', religion:'catholic', count:1001 }
+    ]);
+    expect(result.diagnostics).toHaveLength(1);
   });
 
 test('a 1066 Ashkenazi start keeps its Jewish identity paired in matchmaking',
@@ -500,8 +600,11 @@ test('a 1066 Ashkenazi start keeps its Jewish identity paired in matchmaking',
     expect(result.parents).toEqual(['ashkenazi.jewish', 'ashkenazi.jewish']);
     expect(result.tradition).toBe('west_european');
     expect(result.communities).toEqual([
-      { culture:'german', religion:'catholic' },
-      { culture:'ashkenazi', religion:'jewish', paired:true }
+      { culture:'german', religion:'catholic', populationShare0:9800 },
+      {
+        culture:'ashkenazi', religion:'jewish', paired:true,
+        populationShare0:200
+      }
     ]);
     expect(result.prospectPool).toEqual([
       'german.catholic',

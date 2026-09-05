@@ -52,15 +52,24 @@ does not require another engine-side grouping switch.
 
 A settled bookmark province has one principal culture and faith in its existing
 `culture` and `religion` fields. It may also carry an ordered `communities` array of
-`{culture, religion, paired?}` records. The first entry is always the principal
-population and must repeat those two province fields; later entries are other
-historically grounded local identities. `FB.provinceCommunities(province)` is the normalized read interface:
-it returns the authored order, or a one-entry principal fallback when the optional
-field is absent. Bookmark validation rejects an empty/non-array field, repeated pairs,
-unknown cultures, invalid or unassignable faiths, a non-boolean `paired`, and a first
-entry that disagrees with the province. `paired:true` marks a culture-faith identity
-whose two components should not be split apart by systems that synthesize local
-identities; it does not change its availability as a start.
+`{culture, religion, paired?, populationShare0?}` records. The first entry is always
+the principal population and must repeat those two province fields; later entries are
+other historically grounded local identities. A weighted list gives every entry an
+integer `populationShare0`, totals exactly 10,000 basis points, and keeps the principal
+share at least as large as each later share. Single-community counties implicitly use
+10,000. An entirely unweighted multi-community list remains valid mod compatibility:
+the principal begins with the whole simulated population, later entries remain
+available to character creation, and `FB.communityShareDiagnostics` reports the
+fallback.
+
+`FB.provinceCommunities(province)` remains the immutable bookmark-data reader. It
+returns the authored order and any authored share, or a one-entry principal fallback
+when the optional field is absent. Bookmark validation rejects an empty/non-array
+field, repeated pairs, unknown cultures, invalid or unassignable faiths, a non-boolean
+`paired`, partial/invalid/non-totaling shares, and a first entry that disagrees with the
+province. `paired:true` marks a culture-faith identity whose two components should not
+be split apart by systems that synthesize local identities; it is neither a demographic
+property nor a conversion restriction.
 
 New Game presents each pair as one coupled community choice. Changing counties resets
 the choice to that county's principal entry, while returning to the same county keeps
@@ -79,12 +88,26 @@ are character identities, not new authored communities or changes to the county'
 principal identity. The search county is stamped on each persistent prospect so
 reopening the same pool keeps its geographic source.
 
-The model is deliberately static. Communities have no percentages, conversion,
-migration, unrest, revolt, or daily/seasonal demographic work. Existing county,
-realm, title, intrigue, advancement, and war mechanics continue to read only the
-principal province identity. They already provide the route by which a character from
-another local community can gain power beneath or displace a foreign ruler. The 182
-core bookmark-county records and their evidence are listed in
+At campaign initialization, `state.population.schema:2` turns those opening shares into
+integer community counts by deterministic largest-remainder apportionment, using
+authored order to break ties. Community counts partition the existing authoritative
+county population; they are not another population system. `FB.countyCommunities`,
+`FB.countyCulture`, `FB.countyReligion`, `FB.countyCultureShare`, and
+`FB.countyReligionShare` are copy-only live readers. Culture and faith shares aggregate
+the combined pairs independently. The saved `identity` cache retains each axis and its
+last-change year; an absolute majority overrides the prior identity, while a non-majority
+plurality does not cause a repair-time flip.
+
+`FB.ensurePopulationState` migrates schema-1 saves at their current county counts and
+date, without replaying historical population movement. It merges valid duplicates,
+drops invalid or non-positive groups, and gives the authored principal pair the exact
+reconciliation remainder. Existing county population writes use that same reconciliation
+boundary, so community sums never drift while proportional growth and cohort migration
+remain deferred. Read helpers return projections and never repair state or mutate
+bookmark data. Existing county, realm, title, intrigue, advancement, matchmaking, and
+war mechanics intentionally continue to read the static principal province identity
+until live-identity integration. The 182 core bookmark-county records, reviewed opening
+shares, evidence, and uncertainty are listed in
 [county-communities.md](../research/county-communities.md).
 
 Technology impact: `county_community_identity` is `none`. Selecting an existing local

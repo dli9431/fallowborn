@@ -517,9 +517,9 @@ window.FBDATA = window.FBDATA || {};
     return out;
   }
 
-  /* County communities are static bookmark data, not a population model.
-     The first pair is the principal county identity and is copied back onto
-     culture/religion so every existing world mechanic keeps using it. */
+  /* County communities are bookmark-local opening data. The first pair is
+     the principal county identity and is copied back onto culture/religion so
+     existing world mechanics keep using it until live identity integration. */
   function communityList() {
     var out = [];
     for (var i = 0; i < arguments.length;) {
@@ -549,6 +549,9 @@ window.FBDATA = window.FBDATA || {};
       province.communities = source.map(function (entry) {
         var community = { culture:entry.culture, religion:entry.religion };
         if (entry.paired === true) community.paired = true;
+        if (entry.populationShare0 !== undefined) {
+          community.populationShare0 = entry.populationShare0;
+        }
         return community;
       });
       province.culture = province.communities[0].culture;
@@ -749,6 +752,97 @@ window.FBDATA = window.FBDATA || {};
     amida:communityList('arabic','sunni',pairedCommunity('syriac','eastern')),
     edessa:communityList('arabic','sunni',pairedCommunity('syriac','eastern'))
   };
+
+  /* Editorial opening shares, in basis points. These are deliberately broad
+     regional estimates rather than false-precision census claims; the source
+     and uncertainty review lives in docs/research/county-communities.md. */
+  function assignCommunityShares(manifest, countyIds, shares) {
+    var ids = countyIds.split(' ');
+    for (var i = 0; i < ids.length; i++) {
+      var communities = manifest[ids[i]];
+      if (!communities || communities.length !== shares.length) {
+        throw new Error('data/bookmarks.js: invalid community share profile for ' + ids[i]);
+      }
+      for (var ci = 0; ci < communities.length; ci++) {
+        communities[ci].populationShare0 = shares[ci];
+      }
+    }
+  }
+
+  assignCommunityShares(COMMUNITIES_867, 'halogaland', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_867, 'norrland', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_867, 'iona', [8000,2000]);
+  assignCommunityShares(COMMUNITIES_867, 'man lewis', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_867, 'dublin', [5500,4500]);
+  assignCommunityShares(COMMUNITIES_867, 'york scarborough', [7500,2500]);
+  assignCommunityShares(COMMUNITIES_867,
+    'cordoba sevilla ecija niebla toledo granada malaga almeria badajoz merida evora lisboa santarem coimbra silves beja valencia murcia denia tortosa tarragona lerida zaragoza huesca tudela',
+    [6000,4000]);
+  assignCommunityShares(COMMUNITIES_867, 'pamplona', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_867, 'alava logrono aragon', [6000,4000]);
+  assignCommunityShares(COMMUNITIES_867, 'bayonne', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_867, 'palermo messina', [6000,4000]);
+  assignCommunityShares(COMMUNITIES_867, 'novgorod ladoga', [4500,2000,2000,1500]);
+  assignCommunityShares(COMMUNITIES_867, 'beloozero', [5500,4500]);
+  assignCommunityShares(COMMUNITIES_867, 'kiev', [5500,2500,2000]);
+  assignCommunityShares(COMMUNITIES_867, 'atil', [4000,3500,2500]);
+  assignCommunityShares(COMMUNITIES_867, 'tunis kairouan', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_867, 'split zadar', [6000,4000]);
+  assignCommunityShares(COMMUNITIES_867, 'kotor', [5500,4500]);
+  assignCommunityShares(COMMUNITIES_867, 'tbilisi', [7500,2500]);
+  assignCommunityShares(COMMUNITIES_867, 'edinburgh', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_867, 'glasgow dumbarton', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_867, 'rennes nantes', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_867, 'thessaloniki serres', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_867, 'serdica philippopolis', [6000,4000]);
+  assignCommunityShares(COMMUNITIES_867, 'caesarea sebasteia', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_867,
+    'alexandria rosetta fustat fayyum asyut luxor aswan', [5500,4500]);
+  assignCommunityShares(COMMUNITIES_867, 'mosul amida edessa', [6500,3500]);
+
+  assignCommunityShares(COMMUNITIES_1066, 'halogaland norrland', [8500,1500]);
+  assignCommunityShares(COMMUNITIES_1066,
+    'metz trier troyes cologne mainz worms regensburg', [9800,200]);
+  assignCommunityShares(COMMUNITIES_1066, 'iona', [8500,1500]);
+  assignCommunityShares(COMMUNITIES_1066, 'man lewis', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_1066, 'dublin wexford cork limerick', [7500,2500]);
+  assignCommunityShares(COMMUNITIES_1066,
+    'york scarborough lincoln stamford norwich ipswich', [8500,1500]);
+  assignCommunityShares(COMMUNITIES_1066,
+    'cordoba sevilla ecija niebla toledo malaga almeria merida evora lisboa santarem coimbra silves beja valencia murcia denia tortosa tarragona lerida zaragoza huesca tudela',
+    [7500,2500]);
+  assignCommunityShares(COMMUNITIES_1066, 'granada badajoz', [6500,2000,1500]);
+  assignCommunityShares(COMMUNITIES_1066, 'pamplona', [7500,2500]);
+  assignCommunityShares(COMMUNITIES_1066, 'alava logrono aragon', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_1066, 'bayonne', [7500,2500]);
+  assignCommunityShares(COMMUNITIES_1066, 'palermo siracusa', [6000,4000]);
+  assignCommunityShares(COMMUNITIES_1066, 'messina', [5500,2500,2000]);
+  assignCommunityShares(COMMUNITIES_1066, 'bari', [6000,4000]);
+  assignCommunityShares(COMMUNITIES_1066,
+    'taranto brindisi reggio cosenza', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_1066, 'foggia', [8500,1500]);
+  assignCommunityShares(COMMUNITIES_1066, 'tunis kairouan', [6000,4000]);
+  assignCommunityShares(COMMUNITIES_1066, 'split zadar', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_1066, 'kotor', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_1066, 'szekesfehervar moson', [7500,2500]);
+  assignCommunityShares(COMMUNITIES_1066, 'sirmium osijek', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_1066, 'tbilisi', [8000,2000]);
+  assignCommunityShares(COMMUNITIES_1066, 'van ani kars dvin', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_1066,
+    'rayy hamadan isfahan merv nishapur herat bukhara samarkand', [8000,2000]);
+  assignCommunityShares(COMMUNITIES_1066, 'edinburgh', [7500,2500]);
+  assignCommunityShares(COMMUNITIES_1066, 'glasgow dumbarton', [6000,4000]);
+  assignCommunityShares(COMMUNITIES_1066, 'rennes nantes', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_1066, 'thessaloniki serres', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_1066, 'serdica philippopolis', [7000,3000]);
+  assignCommunityShares(COMMUNITIES_1066, 'caesarea', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_1066, 'sebasteia', [5500,4500]);
+  assignCommunityShares(COMMUNITIES_1066, 'tarsos adana', [5000,3500,1500]);
+  assignCommunityShares(COMMUNITIES_1066, 'novgorod ladoga beloozero', [8000,2000]);
+  assignCommunityShares(COMMUNITIES_1066, 'atil', [6000,2500,1500]);
+  assignCommunityShares(COMMUNITIES_1066,
+    'alexandria rosetta fustat fayyum asyut luxor aswan', [6500,3500]);
+  assignCommunityShares(COMMUNITIES_1066, 'mosul amida edessa', [7000,3000]);
 
   var empires1066 = copyMap(FBDATA.empires);
   var kingdoms1066 = copyMap(FBDATA.kingdoms);

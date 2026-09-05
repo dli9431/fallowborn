@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.12';
+FB.VERSION = '1.168.13';
 FB.CHANGELOG = [
+  { v: '1.168.13', date: '2026-09-05', changes: [
+    'County culture and faith communities now begin with reviewed population shares and persist as exact saved partitions.'
+  ] },
   { v: '1.168.12', date: '2026-09-04', changes: [
     'Settlement sheets now hide the People here section when no local residents are available.'
   ] },

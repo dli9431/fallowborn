@@ -1238,6 +1238,9 @@ window.FB = window.FB || {};
     if (FB.ensureFamilyFreedom) restoreRepair('family freedom', function () {
       FB.ensureFamilyFreedom(FB.state);
     });
+    /* Population schema 1 migrates in place at the restored date and existing
+       county totals. The wrapper remains format 3; no past demographic years
+       are replayed and the repair consumes no RNG. */
     if (FB.ensurePopulationState) restoreRepair('population state', function () {
       FB.ensurePopulationState(FB.state);
     });
