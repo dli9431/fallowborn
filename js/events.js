@@ -8394,7 +8394,8 @@ window.FB = window.FB || {};
     'educateChild','moveRandom','travelReturn','travelSettle','foundFaith',
     'faithRelation','convertToProvince','declareIndependence','pickHeir','queue',
     'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate',
-    'populationCommunity','tenureEnd',
+    'populationCommunity','countyCommunityTransfer','countyCommunityProject',
+    'stopCountyCommunityProject','tenureEnd',
     'serfFreedom','student'
   ];
   FB.eventPreviewEffectKeys = {};
@@ -8932,6 +8933,34 @@ window.FB = window.FB || {};
         cause:fx.cause || 'event',
         cost:true
       }));
+    }
+    if (fx.countyCommunityTransfer) {
+      out.push(impact('population', {
+        action:'community_transfer',
+        kind:fx.countyCommunityTransfer.kind,
+        target:fx.countyCommunityTransfer.target,
+        amount:fx.countyCommunityTransfer.amount,
+        rate:fx.countyCommunityTransfer.rate,
+        permanent:true,
+        variable:fx.countyCommunityTransfer.rate !== undefined
+      }));
+    }
+    if (fx.countyCommunityProject) {
+      out.push(impact('population', {
+        action:'community_project_start',
+        kind:fx.countyCommunityProject.kind,
+        target:fx.countyCommunityProject.target,
+        policy:fx.countyCommunityProject.policy,
+        permanent:true
+      }));
+    }
+    if (fx.stopCountyCommunityProject) {
+      const stopped = typeof fx.stopCountyCommunityProject === 'string'
+        ? fx.stopCountyCommunityProject
+        : fx.stopCountyCommunityProject && fx.stopCountyCommunityProject.kind;
+      if (stopped) out.push(impact('population', {
+          action:'community_project_stop', kind:stopped, permanent:true
+        }));
     }
     if (fx.addModifier) {
       const addSpec = modifierSpec(fx.addModifier);
@@ -9832,6 +9861,20 @@ window.FB = window.FB || {};
       return FB.T('County development {change}', { change:numberText(amount) });
     }
     if (record.type === 'population') {
+      if (record.action === 'community_project_start') {
+        return record.kind === 'culture'
+          ? FB.T('Begin a county assimilation project')
+          : FB.T('Begin a county faith-conversion project');
+      }
+      if (record.action === 'community_project_stop') {
+        return record.kind === 'culture'
+          ? FB.T('Stop the county assimilation project')
+          : FB.T('Stop the county faith-conversion project');
+      }
+      if (record.action === 'community_transfer') {
+        return record.kind === 'culture'
+          ? FB.T('County culture shifts') : FB.T('County faith shifts');
+      }
       if (record.rate !== undefined) {
         return FB.T('Population loss ({rate}%)', {
           rate: Math.round(Math.abs(Number(record.rate) || 0) * 100)
@@ -10025,6 +10068,9 @@ window.FB = window.FB || {};
     let appliedGuildStanding = 0;
     let appliedPricePressure = false;
     let appliedMarketShock = false;
+    let appliedCommunityTransfer = null;
+    let appliedCommunityProject = null;
+    let stoppedCommunityProject = null;
     const p = state.player;
     const me = state.chars[p.charId];
     /* Freeze semantic context before a custom outcome can end a war, move
@@ -10304,6 +10350,56 @@ window.FB = window.FB || {};
         }
       }
     }
+    if (fx.countyCommunityTransfer && FB.convertCountyCommunity) {
+      const spec = fx.countyCommunityTransfer;
+      const targetPid = spec.provinceId || fx.provinceId ||
+        ctx.locationId || ctx.provinceId || p.provinceId;
+      const result = FB.convertCountyCommunity(state, targetPid, {
+        kind:spec.kind,
+        target:spec.target,
+        source:spec.source,
+        amount:spec.amount,
+        rate:spec.rate,
+        cause:spec.cause || 'event community transfer'
+      });
+      if (result && result.count) {
+        appliedCommunityTransfer = {
+          pid:targetPid, kind:spec.kind, target:spec.target,
+          count:result.count
+        };
+      }
+    }
+    if (fx.countyCommunityProject && FB.startCountyCommunityProject) {
+      const spec = fx.countyCommunityProject;
+      const targetPid = spec.provinceId || fx.provinceId ||
+        ctx.locationId || ctx.provinceId || p.provinceId;
+      let sponsor = spec.sponsor;
+      if (!sponsor || sponsor === '$owner') {
+        sponsor = state.owner && state.owner[targetPid];
+      } else if (sponsor === '$player') sponsor = 'player';
+      const project = FB.startCountyCommunityProject(state, targetPid, {
+        kind:spec.kind,
+        target:spec.target,
+        policy:spec.policy,
+        sponsor:sponsor
+      });
+      if (project) {
+        appliedCommunityProject = {
+          pid:targetPid, kind:spec.kind, target:spec.target,
+          policy:spec.policy
+        };
+      }
+    }
+    if (fx.stopCountyCommunityProject && FB.stopCountyCommunityProject) {
+      const spec = typeof fx.stopCountyCommunityProject === 'string'
+        ? { kind:fx.stopCountyCommunityProject }
+        : fx.stopCountyCommunityProject;
+      const targetPid = spec.provinceId || fx.provinceId ||
+        ctx.locationId || ctx.provinceId || p.provinceId;
+      if (FB.stopCountyCommunityProject(state, targetPid, spec.kind)) {
+        stoppedCommunityProject = { pid:targetPid, kind:spec.kind };
+      }
+    }
     if (fx.research) appliedResearch = FB.addResearch(state, fx.research) || 0;
     if (fx.addModifier && FB.addModifier) {
       const spec = typeof fx.addModifier === 'string'
@@ -10485,6 +10581,31 @@ window.FB = window.FB || {};
       severe:appliedMarketShock.severe,
       reward:appliedMarketShock.production + appliedMarketShock.flow -
         appliedMarketShock.demand > 0,
+      resolved:true
+    }));
+    if (appliedCommunityTransfer) ledger.push(impact('population', {
+      action:'community_transfer',
+      pid:appliedCommunityTransfer.pid,
+      kind:appliedCommunityTransfer.kind,
+      target:appliedCommunityTransfer.target,
+      amount:appliedCommunityTransfer.count,
+      permanent:true,
+      resolved:true
+    }));
+    if (appliedCommunityProject) ledger.push(impact('population', {
+      action:'community_project_start',
+      pid:appliedCommunityProject.pid,
+      kind:appliedCommunityProject.kind,
+      target:appliedCommunityProject.target,
+      policy:appliedCommunityProject.policy,
+      permanent:true,
+      resolved:true
+    }));
+    if (stoppedCommunityProject) ledger.push(impact('population', {
+      action:'community_project_stop',
+      pid:stoppedCommunityProject.pid,
+      kind:stoppedCommunityProject.kind,
+      permanent:true,
       resolved:true
     }));
     if (fx.worldNews) ledger.push(impact('worldNews', { resolved:true }));

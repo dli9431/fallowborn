@@ -1,13 +1,18 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/actions.js',
   'data/bookmarks.js',
   'data/counties.js',
   'data/cultures.js',
+  'data/modifiers.js',
   'data/technology.js',
   'js/economy.js',
   'js/events.js',
+  'js/institutions.js',
+  'js/model.js',
   'js/modifiers.js',
+  'js/actions.js',
   'js/population.js',
   'js/save.js',
   'js/world.js',
@@ -295,6 +300,379 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
       expect(result.samePopulation).toBe(true);
       expect(result.rngStable).toBe(true);
       expect(result.faults).toEqual([]);
+    });
+
+  test('Atomic community transfers preserve population and the untouched identity axis',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const state = FB.state;
+        const rec = state.population.counties.york;
+        rec.count = 10000;
+        rec.communities = [
+          { culture:'english', religion:'catholic', count:6000 },
+          { culture:'norse', religion:'catholic', count:1000 },
+          { culture:'norse', religion:'norse_pagan', count:3000 }
+        ];
+        rec.identity = {
+          culture:'english', religion:'catholic',
+          cultureSince:state.date.year - 20,
+          religionSince:state.date.year - 20
+        };
+        FB.reconcileCountyCommunities(state, 'york');
+        const before = JSON.stringify(FB.countyCommunities(state, 'york'));
+        const faith = FB.convertCountyCommunity(state, 'york', {
+          kind:'faith', target:'orthodox', source:'catholic', amount:2800
+        });
+        const afterFaith = FB.countyCommunities(state, 'york');
+        const faithTotals = {};
+        afterFaith.forEach(function (community) {
+          faithTotals[community.religion] =
+            (faithTotals[community.religion] || 0) + community.count;
+        });
+        const culture = FB.convertCountyCommunity(state, 'york', {
+          kind:'culture', target:'gaelic', source:'norse', amount:2000
+        });
+        const afterCulture = FB.countyCommunities(state, 'york');
+        const afterCultureFaithTotals = {};
+        afterCulture.forEach(function (community) {
+          afterCultureFaithTotals[community.religion] =
+            (afterCultureFaithTotals[community.religion] || 0) + community.count;
+        });
+        const customFaith = FB.foundFaith(state, {
+          id:'e2e_project_faith', name:'Project Test Faith',
+          group:'$current', relationToParent:'in_fold'
+        }, { convertFounder:false });
+        const custom = FB.convertCountyCommunity(state, 'york', {
+          kind:'faith', target:customFaith, amount:100
+        });
+        return {
+          before:before,
+          faith:faith,
+          afterFaith:afterFaith,
+          faithTotals:faithTotals,
+          culture:culture,
+          afterCulture:afterCulture,
+          afterCultureFaithTotals:afterCultureFaithTotals,
+          customFaith:customFaith,
+          custom:custom,
+          customShare:FB.countyReligionShare(state, 'york', customFaith),
+          count:rec.count,
+          sum:FB.countyCommunities(state, 'york').reduce(
+            function (total, community) { return total + community.count; }, 0),
+          changes:rec.communityChange,
+          faults:FB.validatePopulationCommunities(state)
+        };
+      });
+
+      expect(result.before).toContain('english');
+      expect(result.faith.count).toBe(2800);
+      expect(result.faith.cohorts).toEqual([
+        {
+          fromCulture:'english', fromReligion:'catholic',
+          toCulture:'english', toReligion:'orthodox', count:2400
+        },
+        {
+          fromCulture:'norse', fromReligion:'catholic',
+          toCulture:'norse', toReligion:'orthodox', count:400
+        }
+      ]);
+      expect(result.faithTotals).toEqual({
+        catholic:4200, norse_pagan:3000, orthodox:2800
+      });
+      expect(result.culture.count).toBe(2000);
+      expect(result.afterCultureFaithTotals).toEqual(result.faithTotals);
+      expect(result.afterCulture.filter(function (community) {
+        return community.culture === 'gaelic';
+      }).reduce(function (total, community) {
+        return total + community.count;
+      }, 0)).toBe(2000);
+      expect(result.customFaith).toBe('e2e_project_faith');
+      expect(result.custom.count).toBe(100);
+      expect(result.customShare).toBeCloseTo(0.01, 6);
+      expect(result.count).toBe(10000);
+      expect(result.sum).toBe(10000);
+      expect(result.changes).toEqual({
+        faithConverted:2900, cultureAssimilated:2000
+      });
+      expect(result.faults).toEqual([]);
+    });
+
+  test('County project progress is saved, bounded, deterministic, and once yearly',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const state = FB.state;
+        const player = state.player;
+        const me = state.chars[player.charId];
+        const rec = state.population.counties.york;
+        state.owner.york = 'player';
+        player.tier = 4;
+        if (player.provs.indexOf('york') < 0) player.provs.push('york');
+        me.culture = 'norse';
+        me.religion = 'norse_pagan';
+        if (state.realms.player) state.realms.player.religion = 'norse_pagan';
+        rec.count = 10000;
+        rec.communities = [
+          { culture:'english', religion:'catholic', count:7000 },
+          { culture:'norse', religion:'norse_pagan', count:3000 }
+        ];
+        rec.identity = {
+          culture:'english', religion:'catholic',
+          cultureSince:state.date.year - 30,
+          religionSince:state.date.year - 30
+        };
+        FB.reconcileCountyCommunities(state, 'york');
+        const faith = FB.startCountyCommunityProject(state, 'york', {
+          kind:'faith', target:'norse_pagan', policy:'voluntary',
+          sponsor:'player'
+        });
+        const orderStatus = FB.countyCommunityProjectOrderStatus(
+          state, 'york', 'culture', 'norse', 'integrative');
+        const ordered = FB.orderCountyCommunityProject(
+          state, 'york', 'culture', 'norse', 'integrative');
+        const culture = FB.countyCommunityProject(state, 'york', 'culture');
+        const status = FB.countyCommunityProjectStatus(state, 'york', 'faith');
+        state.date.year += 1;
+        const snapshot = JSON.stringify(state);
+        const first = FB.resolveCountyCommunityProjects(
+          state, 'york', state.date.year);
+        const afterFirst = JSON.stringify(state.population.counties.york);
+        const repeated = FB.resolveCountyCommunityProjects(
+          state, 'york', state.date.year);
+        const replay = JSON.parse(snapshot);
+        const second = FB.resolveCountyCommunityProjects(
+          replay, 'york', replay.date.year);
+        const afterSecond = JSON.stringify(replay.population.counties.york);
+        const conquered = JSON.parse(snapshot);
+        conquered.owner.york = 'abbasid';
+        conquered.holder = conquered.holder || {};
+        conquered.holder.york = 'abbasid';
+        const conqueredBefore = JSON.stringify(
+          FB.countyCommunities(conquered, 'york'));
+        const conqueredResult = FB.resolveCountyCommunityProjects(
+          conquered, 'york', conquered.date.year);
+        return {
+          faith:faith,
+          culture:culture,
+          orderStatus:orderStatus,
+          ordered:ordered,
+          status:status,
+          first:first,
+          repeated:repeated,
+          sameResults:JSON.stringify(first) === JSON.stringify(second),
+          sameState:afterFirst === afterSecond,
+          conqueredResult:conqueredResult,
+          conquestStable:conqueredBefore === JSON.stringify(
+            FB.countyCommunities(conquered, 'york')),
+          conqueredProject:FB.countyCommunityProject(
+            conquered, 'york', 'faith'),
+          faithProject:FB.countyCommunityProject(state, 'york', 'faith'),
+          cultureProject:FB.countyCommunityProject(state, 'york', 'culture'),
+          total:state.population.counties.york.count,
+          sum:FB.countyCommunities(state, 'york').reduce(
+            function (total, community) { return total + community.count; }, 0),
+          faults:FB.validatePopulationCommunities(state)
+        };
+      });
+
+      expect(result.faith).toMatchObject({
+        target:'norse_pagan', sponsor:'player', policy:'voluntary',
+        progress:0, converted:0, resistance:0, lastTransfer:0
+      });
+      expect(result.culture).toMatchObject({
+        target:'norse', sponsor:'player', policy:'integrative'
+      });
+      expect(result.orderStatus.ready).toBe(true);
+      expect(result.ordered).toBe(true);
+      expect(result.status.control).toBe(true);
+      expect(result.status.rulerMatches).toBe(true);
+      expect(result.status.rate).toBeGreaterThan(0);
+      expect(result.status.rate).toBeLessThanOrEqual(0.006);
+      expect(result.first).toHaveLength(2);
+      expect(result.first[0].count).toBeGreaterThan(0);
+      expect(result.first[1].count).toBeGreaterThan(0);
+      expect(result.repeated).toEqual([]);
+      expect(result.sameResults).toBe(true);
+      expect(result.sameState).toBe(true);
+      expect(result.conqueredResult.every(function (entry) {
+        return entry.count === 0;
+      })).toBe(true);
+      expect(result.conquestStable).toBe(true);
+      expect(result.conqueredProject).not.toBeNull();
+      expect(result.faithProject.converted).toBe(result.first[0].count);
+      expect(result.cultureProject.converted).toBe(result.first[1].count);
+      expect(result.total).toBe(10000);
+      expect(result.sum).toBe(10000);
+      expect(result.faults).toEqual([]);
+    });
+
+  test('Coercive policy raises resistance, unrest, and migration pressure',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const baseline = JSON.parse(JSON.stringify(FB.state));
+        function prepare(policy) {
+          const state = JSON.parse(JSON.stringify(baseline));
+          const player = state.player;
+          const me = state.chars[player.charId];
+          state.owner.york = 'player';
+          player.tier = 4;
+          if (player.provs.indexOf('york') < 0) player.provs.push('york');
+          me.religion = 'norse_pagan';
+          if (state.realms.player) state.realms.player.religion = 'norse_pagan';
+          const rec = state.population.counties.york;
+          rec.count = 10000;
+          rec.communities = [
+            { culture:'english', religion:'catholic', count:8000 },
+            { culture:'norse', religion:'norse_pagan', count:2000 }
+          ];
+          rec.identity = {
+            culture:'english', religion:'catholic',
+            cultureSince:state.date.year - 40,
+            religionSince:state.date.year - 40
+          };
+          FB.reconcileCountyCommunities(state, 'york');
+          FB.startCountyCommunityProject(state, 'york', {
+            kind:'faith', target:'norse_pagan', policy:policy, sponsor:'player'
+          });
+          return state;
+        }
+        const voluntary = prepare('voluntary');
+        const integrative = prepare('integrative');
+        const coercive = prepare('coercive');
+        const voluntaryStatus = FB.countyCommunityProjectStatus(
+          voluntary, 'york', 'faith');
+        const integrativeStatus = FB.countyCommunityProjectStatus(
+          integrative, 'york', 'faith');
+        const coerciveStatus = FB.countyCommunityProjectStatus(
+          coercive, 'york', 'faith');
+        return {
+          voluntary:voluntaryStatus,
+          integrative:integrativeStatus,
+          coercive:coerciveStatus,
+          migration:FB.countyCommunityProjectMigrationPressure(coercive, 'york'),
+          modifiers:(coercive.modifiers.county.york || []).map(
+            function (modifier) { return modifier.id; })
+        };
+      });
+
+      expect(result.voluntary.rate).toBeLessThanOrEqual(0.006);
+      expect(result.integrative.rate).toBeLessThanOrEqual(0.012);
+      expect(result.coercive.rate).toBeLessThanOrEqual(0.009);
+      expect(result.coercive.resistance).toBeGreaterThan(
+        result.integrative.resistance);
+      expect(result.migration).toBeLessThan(0);
+      expect(result.modifiers).toContain('community_coercion');
+    });
+
+  test('Plurality hysteresis is stable near a tie and yields to a clear lead or majority',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const state = FB.state;
+        const rec = state.population.counties.york;
+        rec.count = 10000;
+        rec.identity = {
+          culture:'english', religion:'catholic',
+          cultureSince:state.date.year - 15,
+          religionSince:state.date.year - 15
+        };
+        rec.communities = [
+          { culture:'english', religion:'catholic', count:3201 },
+          { culture:'norse', religion:'catholic', count:3499 },
+          { culture:'gaelic', religion:'catholic', count:3300 }
+        ];
+        FB.reconcileCountyCommunities(state, 'york');
+        const nearTie = FB.countyCulture(state, 'york');
+        rec.communities = [
+          { culture:'english', religion:'catholic', count:3100 },
+          { culture:'norse', religion:'catholic', count:3600 },
+          { culture:'gaelic', religion:'catholic', count:3300 }
+        ];
+        FB.reconcileCountyCommunities(state, 'york');
+        const clearLead = FB.countyCulture(state, 'york');
+        rec.communities = [
+          { culture:'english', religion:'catholic', count:5100 },
+          { culture:'norse', religion:'catholic', count:3000 },
+          { culture:'gaelic', religion:'catholic', count:1900 }
+        ];
+        FB.reconcileCountyCommunities(state, 'york');
+        return {
+          nearTie:nearTie,
+          clearLead:clearLead,
+          majority:FB.countyCulture(state, 'york')
+        };
+      });
+
+      expect(result).toEqual({
+        nearTie:'english', clearLead:'norse', majority:'english'
+      });
+    });
+
+  test('Event effects transfer, begin, and stop county community work explicitly',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const state = FB.state;
+        const rec = state.population.counties.york;
+        state.owner.york = 'player';
+        rec.count = 10000;
+        rec.communities = [
+          { culture:'english', religion:'catholic', count:8000 },
+          { culture:'norse', religion:'norse_pagan', count:2000 }
+        ];
+        FB.reconcileCountyCommunities(state, 'york');
+        const transferEffects = {
+          countyCommunityTransfer:{
+            kind:'faith', target:'norse_pagan', amount:125
+          }
+        };
+        const preview = FB.previewEventOption(state, {
+          id:'e2e_community_preview', title:'Community preview', text:'Preview.'
+        }, { label:'Proceed', effects:transferEffects }, { locationId:'york' });
+        const previewActions = [];
+        preview.sections.forEach(function (section) {
+          section.impacts.forEach(function (impact) {
+            if (impact.action) previewActions.push(impact.action);
+          });
+        });
+        const transferLedger = FB.applyEffects(state, transferEffects,
+          { locationId:'york' }, { id:'e2e_community_transfer' });
+        const projectLedger = FB.applyEffects(state, {
+          countyCommunityProject:{
+            kind:'culture', target:'norse', policy:'integrative',
+            sponsor:'$owner'
+          }
+        }, { locationId:'york' }, { id:'e2e_community_project' });
+        const project = FB.countyCommunityProject(state, 'york', 'culture');
+        const stopLedger = FB.applyEffects(state, {
+          stopCountyCommunityProject:'culture'
+        }, { locationId:'york' }, { id:'e2e_community_stop' });
+        return {
+          previewActions:previewActions,
+          transferred:FB.countyReligionShare(state, 'york', 'norse_pagan'),
+          transferLedger:transferLedger,
+          projectLedger:projectLedger,
+          project:project,
+          stopLedger:stopLedger,
+          stopped:FB.countyCommunityProject(state, 'york', 'culture')
+        };
+      });
+
+      expect(result.previewActions).toContain('community_transfer');
+      expect(result.transferred).toBeCloseTo(0.2125, 6);
+      expect(result.transferLedger).toContainEqual(expect.objectContaining({
+        type:'population', action:'community_transfer', pid:'york', amount:125,
+        resolved:true
+      }));
+      expect(result.project).toMatchObject({
+        target:'norse', sponsor:'player', policy:'integrative'
+      });
+      expect(result.projectLedger).toContainEqual(expect.objectContaining({
+        type:'population', action:'community_project_start', pid:'york',
+        resolved:true
+      }));
+      expect(result.stopLedger).toContainEqual(expect.objectContaining({
+        type:'population', action:'community_project_stop', pid:'york',
+        resolved:true
+      }));
+      expect(result.stopped).toBeNull();
     });
 
   test('Carrying capacity responds to buildings and technology with caps', async function ({ page }) {

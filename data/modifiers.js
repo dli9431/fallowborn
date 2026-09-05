@@ -79,6 +79,13 @@ FBDATA.modifiers = {
     scope:'county', days:1440,
     fx:{ unrest:0.35, commonVoice:-12, tax:-0.08, levy:-0.05 }
   },
+  community_coercion: {
+    name:'Coerced Conformity', icon:'🔥',
+    desc:'Officials force local faith or custom toward the ruler’s chosen identity; holdouts resist and families leave.',
+    scope:'county', days:720,
+    fx:{ unrest:0.40, commonVoice:-8, tax:-0.05, levy:-0.08,
+      marketFlow:-0.10 }
+  },
   conquered_without_right: {
     name:'Conquered Without Right', icon:'⚔',
     desc:'The county was taken without claim or de jure right. Its people resist the new rule and its obligations.',

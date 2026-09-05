@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'js/world.js',
   'js/modifiers.js',
   'js/papacy.js',
+  'js/population.js',
   'js/economy.js',
   'js/keys.js',
   'js/ui_misc.js',
@@ -193,6 +194,10 @@ test('gates realm conversion to landed rulers and makes it once per ruler',
     };
     const vassalBefore = FB.standingOf(state, { kind:'realm', id:'vassal_test' });
     const foldBefore = FB.standingOf(state, { kind:'realm', id:'fold_test' });
+    const countyCommunitiesBefore = JSON.stringify(
+      FB.countyCommunities(state, 'london'));
+    const countyProjectsBefore = JSON.stringify(
+      state.population.counties.london.communityProjects || null);
     const ok = FB.applyConversion(state, 'faith', 'sunni', 'realm');
     const vassalAfter = FB.standingOf(state, { kind:'realm', id:'vassal_test' });
     const foldAfter = FB.standingOf(state, { kind:'realm', id:'fold_test' });
@@ -209,7 +214,11 @@ test('gates realm conversion to landed rulers and makes it once per ruler',
       foldDelta:foldAfter - foldBefore,
       secondOk:second.ok,
       secondReason:second.reason,
-      modifiers:modifiers
+      modifiers:modifiers,
+      countyCommunitiesStable:countyCommunitiesBefore === JSON.stringify(
+        FB.countyCommunities(state, 'london')),
+      countyProjectsStable:countyProjectsBefore === JSON.stringify(
+        state.population.counties.london.communityProjects || null)
     };
   });
   expect(result.commonerOk).toBe(false);
@@ -224,6 +233,8 @@ test('gates realm conversion to landed rulers and makes it once per ruler',
   expect(result.secondOk).toBe(false);
   expect(result.secondReason).toContain('already led the realm');
   expect(result.modifiers).toContain('zealot_unrest');
+  expect(result.countyCommunitiesStable).toBe(true);
+  expect(result.countyProjectsStable).toBe(true);
 });
 
 test('excommunicates an apostate from the papal faith while a Pope reigns',

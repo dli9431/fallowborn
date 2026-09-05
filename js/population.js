@@ -239,6 +239,9 @@ window.FB = window.FB || {};
     if (owner === 'player' && FB.realmPolicySettlementAttraction) {
       attraction += FB.realmPolicySettlementAttraction(state);
     }
+    if (FB.countyCommunityProjectMigrationPressure) {
+      attraction += FB.countyCommunityProjectMigrationPressure(state, pid);
+    }
 
     return attraction;
   };
@@ -599,8 +602,81 @@ window.FB = window.FB || {};
     }
     if (!best) return previous || null;
     if (aggregate.totals[best] * 2 > aggregate.total) return best;
-    if (previous && aggregate.totals[previous] > 0) return previous;
+    if (previous && aggregate.totals[previous] > 0) {
+      if (best === previous) return previous;
+      var margin = FB.clamp(balance(
+        'countyCommunityPluralityHysteresis', 0.03), 0, 0.25);
+      if (aggregate.totals[best] - aggregate.totals[previous] <
+          aggregate.total * margin) return previous;
+    }
     return best;
+  }
+
+  function validProjectKind(kind) {
+    return kind === 'faith' || kind === 'culture';
+  }
+
+  function projectTargetValid(state, kind, targetId) {
+    return kind === 'faith'
+      ? validFaith(state, targetId) : validCulture(targetId);
+  }
+
+  function projectPolicyDefinition(policyId) {
+    var definitions = FBDATA.countyCommunityPolicies || {};
+    var mechanics = FBDATA.balance &&
+      FBDATA.balance.countyCommunityProjectPolicies || {};
+    return definitions[policyId] && mechanics[policyId]
+      ? definitions[policyId] : null;
+  }
+
+  function projectPolicyMechanics(policyId) {
+    var policies = FBDATA.balance &&
+      FBDATA.balance.countyCommunityProjectPolicies || {};
+    return policies[policyId] || null;
+  }
+
+  function roundedProjectNumber(value) {
+    value = Number(value);
+    if (!isFinite(value)) return 0;
+    return Math.round(Math.max(0, value) * 1000000) / 1000000;
+  }
+
+  function projectNonnegativeInteger(value) {
+    value = Number(value);
+    return isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+  }
+
+  function repairCountyProjects(state, rec) {
+    var source = rec.communityProjects;
+    if (!source || typeof source !== 'object' || Array.isArray(source)) {
+      delete rec.communityProjects;
+      return;
+    }
+    var repaired = {};
+    for (var ki = 0; ki < 2; ki++) {
+      var kind = ki ? 'culture' : 'faith';
+      var project = source[kind];
+      if (!project || typeof project !== 'object' ||
+          !projectTargetValid(state, kind, project.target) ||
+          !projectPolicyDefinition(project.policy) ||
+          typeof project.sponsor !== 'string' || !project.sponsor) continue;
+      var next = {
+        target:project.target,
+        sponsor:project.sponsor,
+        startTurn:projectNonnegativeInteger(project.startTurn),
+        policy:project.policy,
+        progress:roundedProjectNumber(project.progress),
+        converted:projectNonnegativeInteger(project.converted),
+        resistance:FB.clamp(Number(project.resistance) || 0, 0, 1),
+        lastTransfer:projectNonnegativeInteger(project.lastTransfer)
+      };
+      if (isFinite(Number(project.lastYear))) {
+        next.lastYear = Math.round(Number(project.lastYear));
+      }
+      repaired[kind] = next;
+    }
+    if (repaired.faith || repaired.culture) rec.communityProjects = repaired;
+    else delete rec.communityProjects;
   }
 
   function repairCountyRecord(state, pr, rec, year) {
@@ -632,6 +708,7 @@ window.FB = window.FB || {};
       faithConverted:Math.round(Number(change.faithConverted) || 0),
       cultureAssimilated:Math.round(Number(change.cultureAssimilated) || 0)
     };
+    repairCountyProjects(state, rec);
     return rec;
   }
 
@@ -886,6 +963,353 @@ window.FB = window.FB || {};
     return countyAxisShare(state, pid, 'religion', faithId);
   };
 
+  function copyProject(project) {
+    if (!project) return null;
+    var out = {
+      target:project.target,
+      sponsor:project.sponsor,
+      startTurn:project.startTurn,
+      policy:project.policy,
+      progress:project.progress,
+      converted:project.converted,
+      resistance:project.resistance,
+      lastTransfer:project.lastTransfer
+    };
+    if (project.lastYear !== undefined) out.lastYear = project.lastYear;
+    return out;
+  }
+
+  FB.countyCommunityProject = function (state, pid, kind) {
+    if (!validProjectKind(kind)) return null;
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    return copyProject(rec && rec.communityProjects &&
+      rec.communityProjects[kind]);
+  };
+
+  function projectSponsorControls(state, pid, sponsor) {
+    if (!state || !sponsor) return false;
+    var owner = provinceOwner(state, pid);
+    var holder = state.holder && state.holder[pid];
+    if (sponsor === owner || sponsor === holder) return true;
+    if (!FB.topRealm) return false;
+    return !!((owner && FB.topRealm(state, owner) === sponsor) ||
+      (holder && FB.topRealm(state, holder) === sponsor));
+  }
+
+  function sponsorIdentity(state, sponsor) {
+    var realm = state && state.realms && state.realms[sponsor];
+    var character = sponsor === 'player' && state && state.player &&
+      state.chars && state.chars[state.player.charId];
+    return {
+      culture:character && character.culture ||
+        realm && realm.ruler && realm.ruler.culture || null,
+      religion:realm && FB.realmReligionId
+        ? FB.realmReligionId(state, sponsor)
+        : (character && character.religion || realm && realm.religion || null)
+    };
+  }
+
+  function projectEligiblePopulation(communities, kind, targetId) {
+    var field = kind === 'faith' ? 'religion' : 'culture';
+    var total = 0;
+    for (var i = 0; i < communities.length; i++) {
+      if (communities[i][field] !== targetId) total += communities[i].count;
+    }
+    return total;
+  }
+
+  function relationResistance(state, communities, kind, targetId) {
+    var eligible = 0;
+    var weighted = 0;
+    var field = kind === 'faith' ? 'religion' : 'culture';
+    var table = kind === 'faith'
+      ? FBDATA.balance.countyCommunityProjectFaithResistance
+      : FBDATA.balance.countyCommunityProjectCultureResistance;
+    table = table || {};
+    for (var i = 0; i < communities.length; i++) {
+      var community = communities[i];
+      if (community[field] === targetId) continue;
+      var relation;
+      if (kind === 'faith') {
+        relation = FB.faithRelation
+          ? FB.faithRelation(state, community.religion, targetId) : 'foreign';
+      } else {
+        var sourceGroup = FB.cultureGroup
+          ? FB.cultureGroup(community.culture) : '';
+        var targetGroup = FB.cultureGroup ? FB.cultureGroup(targetId) : '';
+        relation = sourceGroup && sourceGroup === targetGroup
+          ? 'same_group' : 'foreign';
+      }
+      weighted += community.count * Math.max(0,
+        Number(table[relation]) || 0);
+      eligible += community.count;
+    }
+    return eligible ? weighted / eligible : 0;
+  }
+
+  function projectInstitutionFactors(state, pid, kind, targetId, policyId,
+    rulerMatches) {
+    var pressure = 0;
+    var resistance = 0;
+    if (kind === 'faith' && rulerMatches) {
+      pressure += Math.max(0, countyBuildingBonus(
+        state, pid, 'communityFaithPressure'));
+    }
+    if (provinceOwner(state, pid) === 'player' &&
+        kind === 'faith' && FB.realmPolicyLevelId) {
+      var tolerance = FB.realmPolicyLevelId(state, 'religious_tolerance');
+      if (tolerance === 'persecution' && policyId === 'coercive') {
+        pressure += 0.15;
+        resistance += 0.15;
+      } else if (tolerance === 'protected_worship' &&
+          policyId === 'coercive') {
+        pressure -= 0.15;
+        resistance += 0.10;
+      } else if (tolerance === 'tolerated_minorities' &&
+          policyId !== 'coercive') {
+        resistance -= 0.05;
+      }
+    }
+    return { pressure:pressure, resistance:resistance };
+  }
+
+  /* Pure, numeric explanation of one active project. Every factor is either
+     saved on the project/county or derived from current political, conflict,
+     institution, and demographic state. */
+  FB.countyCommunityProjectStatus = function (state, pid, kind) {
+    var project = FB.countyCommunityProject(state, pid, kind);
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    var policy = project && projectPolicyMechanics(project.policy);
+    if (!project || !rec || !policy) return null;
+    var communities = FB.countyCommunities(state, pid);
+    var eligible = projectEligiblePopulation(
+      communities, kind, project.target);
+    var targetShare = rec.count > 0 ? (rec.count - eligible) / rec.count : 0;
+    var control = projectSponsorControls(state, pid, project.sponsor);
+    var sponsor = sponsorIdentity(state, project.sponsor);
+    var rulerMatches = kind === 'faith'
+      ? sponsor.religion === project.target : sponsor.culture === project.target;
+    var pressure = Math.max(0, Number(policy.pressure) || 0);
+    if (rulerMatches) {
+      pressure += Math.max(0, balance(
+        'countyCommunityProjectRulerPressure', 0.35));
+    }
+    pressure += targetShare * Math.max(0, balance(
+      'countyCommunityProjectLocalSupportPressure', 0.25));
+    var institution = projectInstitutionFactors(
+      state, pid, kind, project.target, project.policy, rulerMatches);
+    pressure = Math.max(0, pressure + institution.pressure);
+
+    var resistance = relationResistance(
+      state, communities, kind, project.target);
+    var identity = rec.identity || {};
+    var currentIdentity = kind === 'faith'
+      ? identity.religion : identity.culture;
+    var since = kind === 'faith' ? identity.religionSince : identity.cultureSince;
+    var yearsEntrenched = currentIdentity !== project.target &&
+      isFinite(Number(since))
+      ? Math.max(0, stateYear(state) - Number(since)) : 0;
+    var entrenchmentYears = Math.max(1, balance(
+      'countyCommunityProjectEntrenchmentYears', 40));
+    var entrenchment = Math.min(1, yearsEntrenched / entrenchmentYears) *
+      Math.max(0, balance('countyCommunityProjectEntrenchmentMax', 0.30));
+    var unrest = FB.modBonus
+      ? Math.max(0, Number(FB.modBonus(state, 'unrest', pid)) || 0) : 0;
+    var unrestResistance = unrest * Math.max(0, balance(
+      'countyCommunityProjectUnrestResistance', 0.35));
+    resistance += entrenchment + unrestResistance +
+      targetShare * Math.max(0, Number(policy.holdout) || 0) +
+      institution.resistance;
+    resistance *= Math.max(0, Number(policy.resistance) || 0);
+    resistance = FB.clamp(resistance, 0, balance(
+      'countyCommunityProjectResistanceCap', 0.85));
+
+    var reference = Math.max(1, balance(
+      'countyCommunityProjectPopulationReference', 24000));
+    var populationScale = Math.sqrt(reference / Math.max(1, rec.count));
+    populationScale = FB.clamp(populationScale,
+      balance('countyCommunityProjectPopulationScaleMin', 0.65),
+      balance('countyCommunityProjectPopulationScaleMax', 1.35));
+    var conflict = 1;
+    var owner = provinceOwner(state, pid);
+    if (realmIsAtWar(state, owner)) conflict *= FB.clamp(balance(
+      'countyCommunityProjectWarMultiplier', 0.50), 0, 1);
+    if (countyOccupiedOrBesieged(state, pid)) conflict *= FB.clamp(balance(
+      'countyCommunityProjectOccupationMultiplier', 0.15), 0, 1);
+
+    var rate = control ? Math.max(0, balance(
+      'countyCommunityProjectBaseRate', 0.012)) * pressure *
+      populationScale * (1 - resistance) * conflict : 0;
+    var rateCap = Math.min(Math.max(0, balance(
+      'countyCommunityProjectMaxRate', 0.015)),
+      Math.max(0, Number(policy.maxRate) || 0));
+    rate = FB.clamp(rate, 0, rateCap);
+    return {
+      active:true,
+      kind:kind,
+      target:project.target,
+      sponsor:project.sponsor,
+      policy:project.policy,
+      control:control,
+      rulerMatches:rulerMatches,
+      population:rec.count,
+      eligible:eligible,
+      targetShare:targetShare,
+      pressure:pressure,
+      resistance:resistance,
+      populationScale:populationScale,
+      conflict:conflict,
+      rate:rate,
+      potential:eligible * rate,
+      minimum:Math.max(1, Math.round(balance(
+        'countyCommunityProjectMinTransfer', 25)))
+    };
+  };
+
+  function convertedCohorts(communities, kind, targetId, sourceId, amount) {
+    var field = kind === 'faith' ? 'religion' : 'culture';
+    var eligible = communities.filter(function (community) {
+      return community[field] !== targetId &&
+        (!sourceId || community[field] === sourceId);
+    });
+    var selected = allocatedCommunityCohorts(eligible, amount);
+    var incoming = [];
+    var detail = [];
+    for (var i = 0; i < selected.length; i++) {
+      var source = selected[i];
+      var target = {
+        culture:kind === 'culture' ? targetId : source.culture,
+        religion:kind === 'faith' ? targetId : source.religion,
+        count:source.count
+      };
+      incoming.push(target);
+      detail.push({
+        fromCulture:source.culture,
+        fromReligion:source.religion,
+        toCulture:target.culture,
+        toReligion:target.religion,
+        count:source.count
+      });
+    }
+    return { outgoing:selected, incoming:incoming, detail:detail };
+  }
+
+  function convertCountyCommunity(state, pid, request, skipEnsure) {
+    var empty = { count:0, cohorts:[] };
+    if (!state || !request || !validProjectKind(request.kind) ||
+        !projectTargetValid(state, request.kind, request.target)) return empty;
+    var pr = provinceDef(pid);
+    if (!pr || pr.wasteland) return empty;
+    if (!skipEnsure) FB.ensurePopulationState(state);
+    var rec = state.population && state.population.counties[pid];
+    if (!rec) return empty;
+    var field = request.kind === 'faith' ? 'religion' : 'culture';
+    var eligible = rec.communities.filter(function (community) {
+      return community[field] !== request.target &&
+        (!request.source || community[field] === request.source);
+    });
+    var available = communityTotal(eligible);
+    var amount = request.amount;
+    if (amount === undefined && request.rate !== undefined) {
+      var rate = FB.clamp(Number(request.rate) || 0, 0, 1);
+      amount = Math.round(available * rate);
+    }
+    amount = Number(amount);
+    if (!isFinite(amount)) return empty;
+    amount = Math.min(available, Math.max(0, Math.round(amount)));
+    if (!amount) return empty;
+    var before = rec.count;
+    var cohorts = convertedCohorts(rec.communities, request.kind,
+      request.target, request.source || null, amount);
+    var applied = communityTotal(cohorts.outgoing);
+    if (!applied) return empty;
+    rec.communities = mergeCohorts(rec.communities, cohorts.outgoing, -1);
+    rec.communities = mergeCohorts(rec.communities, cohorts.incoming, 1);
+    var change = rec.communityChange || {
+      faithConverted:0, cultureAssimilated:0
+    };
+    if (request.kind === 'faith') change.faithConverted += applied;
+    else change.cultureAssimilated += applied;
+    rec.communityChange = change;
+    repairCountyRecord(state, pr, rec, stateYear(state));
+    if (rec.count !== before || communityTotal(rec.communities) !== before) {
+      throw new Error('Population total invariant after county community conversion');
+    }
+    assertPopulationCommunities(state, [pid],
+      request.cause || 'county community conversion');
+    return { count:applied, cohorts:cohorts.detail };
+  }
+
+  FB.convertCountyCommunity = function (state, pid, request) {
+    return convertCountyCommunity(state, pid, request, false);
+  };
+
+  FB.startCountyCommunityProject = function (state, pid, request) {
+    if (!state || !request || !validProjectKind(request.kind) ||
+        !projectTargetValid(state, request.kind, request.target) ||
+        !projectPolicyDefinition(request.policy)) return null;
+    var pr = provinceDef(pid);
+    if (!pr || pr.wasteland) return null;
+    FB.ensurePopulationState(state);
+    var rec = state.population.counties[pid];
+    var sponsor = typeof request.sponsor === 'string' && request.sponsor
+      ? request.sponsor : provinceOwner(state, pid);
+    if (!sponsor || countyAxisShare(state, pid,
+        request.kind === 'faith' ? 'religion' : 'culture',
+        request.target) >= 1) return null;
+    rec.communityProjects = rec.communityProjects || {};
+    rec.communityProjects[request.kind] = {
+      target:request.target,
+      sponsor:sponsor,
+      startTurn:projectNonnegativeInteger(state.turn),
+      policy:request.policy,
+      progress:0,
+      converted:0,
+      resistance:0,
+      lastTransfer:0,
+      lastYear:stateYear(state)
+    };
+    var definition = projectPolicyDefinition(request.policy);
+    if (definition.modifier && FB.addModifier &&
+        projectSponsorControls(state, pid, sponsor)) {
+      FB.addModifier(state, definition.modifier, pid, { silent:true });
+    }
+    return copyProject(rec.communityProjects[request.kind]);
+  };
+
+  FB.stopCountyCommunityProject = function (state, pid, kind) {
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    if (!validProjectKind(kind) || !rec || !rec.communityProjects ||
+        !rec.communityProjects[kind]) return false;
+    delete rec.communityProjects[kind];
+    if (!rec.communityProjects.faith && !rec.communityProjects.culture) {
+      delete rec.communityProjects;
+    }
+    return true;
+  };
+
+  FB.countyCommunityProjectMigrationPressure = function (state, pid) {
+    var rec = state && state.population && state.population.counties &&
+      state.population.counties[pid];
+    var projects = rec && rec.communityProjects;
+    if (!projects) return 0;
+    var total = 0;
+    for (var ki = 0; ki < 2; ki++) {
+      var kind = ki ? 'culture' : 'faith';
+      var project = projects[kind];
+      var policy = project && projectPolicyMechanics(project.policy);
+      if (!project || !policy ||
+          !projectSponsorControls(state, pid, project.sponsor)) continue;
+      var share = countyAxisShare(state, pid,
+        kind === 'faith' ? 'religion' : 'culture', project.target);
+      total += (Number(policy.migration) || 0) * (1 - share);
+    }
+    return Math.max(-3, Math.min(0, total));
+  };
+
   FB.countyPopulation = function (state, pid) {
     if (!state) return 0;
     var pr = provinceDef(pid);
@@ -1034,6 +1458,71 @@ window.FB = window.FB || {};
     }
     assertPopulationCommunities(state, [fromPid, toPid], cause || 'community move');
     return { count:moved, cohorts:copyCommunities(requested) };
+  };
+
+  function resolveCountyCommunityProjects(state, pid, year) {
+    var rec = state.population && state.population.counties[pid];
+    if (!rec || !rec.communityProjects) return [];
+    var results = [];
+    for (var ki = 0; ki < 2; ki++) {
+      var kind = ki ? 'culture' : 'faith';
+      var project = rec.communityProjects && rec.communityProjects[kind];
+      if (!project || project.lastYear === year) continue;
+      var status = FB.countyCommunityProjectStatus(state, pid, kind);
+      if (!status) continue;
+      project.lastYear = year;
+      project.resistance = roundedProjectNumber(status.resistance);
+      project.lastTransfer = 0;
+      if (status.eligible <= 0) {
+        FB.stopCountyCommunityProject(state, pid, kind);
+        results.push({ kind:kind, target:status.target, count:0,
+          completed:true });
+        continue;
+      }
+
+      project.progress = roundedProjectNumber(
+        project.progress + status.potential);
+      var desired = Math.min(status.eligible, Math.floor(project.progress));
+      if (desired < status.minimum && desired < status.eligible) desired = 0;
+      var result = desired > 0 ? convertCountyCommunity(state, pid, {
+        kind:kind,
+        target:project.target,
+        amount:desired,
+        cause:'county community project'
+      }, true) : { count:0, cohorts:[] };
+      project = rec.communityProjects && rec.communityProjects[kind];
+      if (!project) continue;
+      project.progress = roundedProjectNumber(
+        Math.max(0, project.progress - result.count));
+      project.converted += result.count;
+      project.lastTransfer = result.count;
+      project.lastYear = year;
+      project.resistance = roundedProjectNumber(status.resistance);
+      var definition = projectPolicyDefinition(project.policy);
+      if (status.control && definition && definition.modifier && FB.addModifier) {
+        FB.addModifier(state, definition.modifier, pid, { silent:true });
+      }
+      var remaining = projectEligiblePopulation(
+        rec.communities, kind, project.target);
+      var completed = remaining <= 0;
+      results.push({
+        kind:kind,
+        target:project.target,
+        count:result.count,
+        cohorts:result.cohorts,
+        completed:completed
+      });
+      if (completed) FB.stopCountyCommunityProject(state, pid, kind);
+    }
+    return results;
+  }
+
+  FB.resolveCountyCommunityProjects = function (state, pid, year) {
+    if (!state) return [];
+    FB.ensurePopulationState(state);
+    var targetYear = isFinite(Number(year))
+      ? Math.round(Number(year)) : stateYear(state);
+    return resolveCountyCommunityProjects(state, pid, targetYear);
   };
 
   /* Annual population tick */
@@ -1223,6 +1712,14 @@ window.FB = window.FB || {};
       rec.losses = 0;
       rec.communityChange = { faithConverted:0, cultureAssimilated:0 };
       repairCountyRecord(state, pDef, rec, currentYear);
+    }
+
+    /* Stage 4: deterministic county faith and culture projects. Projects are
+       explicit saved commitments; ownership and realm conversion never create
+       one as a side effect. */
+    for (var projectIndex = 0; projectIndex < provs.length; projectIndex++) {
+      resolveCountyCommunityProjects(
+        state, provs[projectIndex].id, currentYear);
     }
 
     state.population.lastYear = currentYear;

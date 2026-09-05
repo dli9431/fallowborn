@@ -130,11 +130,16 @@ seed behind `state.fortMigration`. No rendered fort, project, or siege prose is 
 
 County population is additive save-format-3 data. Its subsystem schema is 2:
 `state.population = { schema: 2, lastYear, counties: { [pid]: { count, natural,
-migration, losses, communities, identity, communityChange } } }`. `communities` holds
+migration, losses, communities, identity, communityChange, communityProjects? } } }`.
+`communities` holds
 positive integer `{culture,religion,count}` cohorts whose counts sum exactly to `count`;
 `identity` caches the independently dominant culture and faith plus `cultureSince` and
 `religionSince`; `communityChange` stores only the last annual faith-conversion and
-culture-assimilation totals. No percentage or rendered demographic prose is saved.
+culture-assimilation totals. `communityProjects`, when present, contains at most a
+`faith` and a `culture` record with `{target,sponsor,startTurn,policy,progress,converted,
+resistance,lastTransfer,lastYear}`. Projects store ids and bounded numbers, never
+percentages or rendered demographic prose; malformed projects are dropped by ordinary
+population repair without advancing the subsystem schema.
 
 `FB.ensurePopulationState` lazily backfills older saves or fresh game states without a save-wrapper version bump:
 - Baseline populations scale proportionally with current development and standing building capacity bonuses.

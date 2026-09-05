@@ -1473,6 +1473,18 @@ either `true` for the same reverse status or an explicit reverse status) ·
 key. At least one valid id is required; only matching live community cohorts are lost.
 Omit it for proportional county-wide loss. This lets famine, persecution, expulsion, and
 other scripted losses declare their affected population without rewriting county identity. ·
+`countyCommunityTransfer:{kind:"faith|culture",target:"id",source?:"id",
+amount?:n,rate?:0..1,provinceId?:"county_id"}` converts an exact amount or bounded
+fraction of eligible live cohorts. Faith transfers preserve culture and culture
+transfers preserve faith; omitting `source` draws proportionally from every non-target
+identity. This changes no population total. ·
+`countyCommunityProject:{kind:"faith|culture",target:"id",
+policy:"voluntary|integrative|coercive",sponsor?:"$owner|$player|realm_id",
+provinceId?:"county_id"}` begins or replaces that county's one saved project on the
+chosen axis. Omitted sponsor and `$owner` resolve to the county's current owner at event
+resolution. `stopCountyCommunityProject:"faith|culture"` stops that axis in the event
+county; an object may add `provinceId`. Projects never begin implicitly on conquest or
+character/realm conversion. ·
 `pickHeir: true` (opens the eligible-heir picker; automation names the first heir in line;
 either result grants 8 prestige and records the choice) · `research: n` (points added to
 the effective sovereign nation's shared research pool; divided among active projects or
@@ -2194,7 +2206,9 @@ a province:
 - One-time on completion: `dev`, `pop` (popular opinion), `prestige`.
 - Demographic modifiers: `populationCapacity` (fractional carrying capacity boost, e.g. `0.05`),
   `populationFamineProtection` (mitigates famine losses, e.g. `0.35`), `populationCrisisProtection`
-  (mitigates general crisis losses, e.g. `0.10`), `migrationAttraction` (integer migration attraction bonus, e.g. `1` or `2`).
+  (mitigates general crisis losses, e.g. `0.10`), `migrationAttraction` (integer migration attraction bonus, e.g. `1` or `2`),
+  and `communityFaithPressure` (annual pressure for a same-faith project sponsored by
+  the county's ruler).
 - `name`/`desc` accept text tokens and religion-variant objects (see the Great {temple}).
 - The `walls` id is reserved for the strategic fortification system below. It is excluded
   from ordinary building pickers, repeat pricing, the Raise ledger, and autobuild.
@@ -3105,6 +3119,24 @@ needs saved demographics uses `FB.countyCommunities(state,pid)`,
 share helpers return a fraction from 0 through 1 and aggregate all matching combined
 pairs. Culture ids must remain in `FBDATA.cultures`. A saved community faith may use a
 campaign-founded id when the ordinary faith validation and assignment APIs accept it.
+
+`FB.convertCountyCommunity(state,pid,request)` is the exact write boundary. `request`
+uses the same `kind`, `target`, optional `source`, and `amount` or `rate` fields as the
+event effect. It returns the applied count and source-to-target cohort detail. The helper
+clamps to eligible population, merges duplicate output pairs, updates the independent
+dominant identity with plurality hysteresis, and consumes no RNG.
+
+`FBDATA.countyCommunityPolicies` defines policy `label`, `desc`, and an optional county
+`modifier`; its three core ids are `voluntary`, `integrative`, and `coercive`. Numeric
+behavior lives under `FBDATA.balance.countyCommunityProjectPolicies`, alongside the
+`countyCommunityProject*` rate, cap, minimum-transfer, population, resistance,
+entrenchment, war, occupation, faith-relation, culture-group, and plurality-hysteresis
+knobs. One `communityProjects.faith` and one `communityProjects.culture` record may exist
+on a saved county. `FB.countyCommunityProject`, `FB.countyCommunityProjectStatus`,
+`FB.startCountyCommunityProject`, `FB.stopCountyCommunityProject`, and
+`FB.resolveCountyCommunityProjects` are the public read/write boundaries. Status is a
+pure numeric explanation; annual resolution carries fractional work until a meaningful
+integer transfer can be made.
 
 ## Items
 

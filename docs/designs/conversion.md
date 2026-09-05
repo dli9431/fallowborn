@@ -23,6 +23,49 @@ headed faiths). Costs and penalties therefore escalate steeply with scope.
   demographic identities, but a realm conversion deliberately does not transfer any
   county community population.
 
+## County community projects
+
+County conversion is a territorial demographic process, separate from every character
+scope above. `FB.convertCountyCommunity(state, pid, request)` is the atomic boundary: a
+faith transfer preserves the culture of every converted cohort, while a culture transfer
+preserves its faith. The request names `kind`, `target`, an integer `amount` or bounded
+`rate`, and optionally one source identity. Without a source, all eligible non-target
+cohorts contribute proportionally through deterministic largest-remainder allocation.
+The county and world population totals never change.
+
+Each county may save at most one faith and one culture project under
+`communityProjects`. A project records only semantic inputs and numeric outcomes:
+`target`, `sponsor`, `startTurn`, `policy`, fractional `progress`, cumulative `converted`,
+the last calculated `resistance`, `lastTransfer`, and `lastYear`. A project survives
+ordinary conquest as part of county population state, but progress stops whenever its
+saved sponsor no longer controls the county. Ownership transfer and ruler, household, or
+realm conversion never create a project implicitly.
+
+Projects resolve once per year after conserved migration. The pure
+`FB.countyCommunityProjectStatus` explanation separates pressure from the bounded annual
+rate. Sponsor identity, target-community support, and target-faith temples or cathedrals
+raise pressure. Population size, relation between source and target faiths or culture
+groups, years of entrenched dominant identity, unrest, war, occupation, religious
+tolerance, and policy holdouts shape resistance or reduce the rate. Sub-person minimum
+work is carried as fractional progress until it reaches the data-defined meaningful
+transfer floor; no RNG is consumed.
+
+`FBDATA.countyCommunityPolicies` supplies localized policy identity and consequences,
+while `balance.countyCommunityProjectPolicies` supplies mechanics:
+
+- `voluntary` is slow outreach with low resistance and no forced flight;
+- `integrative` uses office, marriage, schooling, and patronage for the strongest
+  non-coercive rate;
+- `coercive` adds the `community_coercion` county modifier and migration pressure, then
+  pays substantially greater resistance, holdout pressure, and a lower rate cap. As the
+  target share grows, those holdouts make its returns diminish sharply.
+
+`FB.startCountyCommunityProject`, `FB.stopCountyCommunityProject`, and the player-facing
+order boundary in `js/actions.js` are intentionally UI-neutral. Milestone 5 places the
+player controls in an explicitly selected Land county. The Self Faith sheet remains about
+personal, household, and realm conversion; it may navigate to Land but never owns or
+silently targets a county project.
+
 ## Costs
 
 Piety pays for religion, prestige for culture, scaled by scope; larger scopes charge
@@ -127,7 +170,9 @@ so engine and UI grouping cannot drift apart.
   and penalty list before confirming.
 - Deeds: `convert_faith` (Faith group) and `adopt_culture` (Life group), both
   `noConsume:true`, adult-only, war-locked like other religious deeds.
-- Technology impact review: `faith_conversion` and `culture_adoption` are recorded in
+- Technology impact review: `faith_conversion`, `culture_adoption`, and
+  `county_community_conversion` are recorded in
   `FBDATA.techImpactReviews` as `mode:'none'` — personal and social acts with no
-  credible technology dependency; rulers converted long before (and regardless of)
-  literacy or law innovations.
+  credible technology dependency; rulers and communities converted long before (and
+  regardless of) literacy or law innovations. A later independently gateable
+  administrative improvement must receive its own review instead of gating the baseline.

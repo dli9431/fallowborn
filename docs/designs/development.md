@@ -62,6 +62,11 @@ expand county carrying capacity; Bridges (+1), Markets (+2), and Exchanges (+3) 
 keeps, fortifications, barracks, archery grounds, foundries, and naval arsenals reinforce territorial defense and field forces.
 Every copy is still subject to the county's development ceiling.
 
+Great Temples and Cathedrals also add data-defined target-faith pressure to a county
+faith-conversion project when its sponsor follows that target faith. They do not start a
+project, convert anyone on completion, assist culture assimilation, or change the
+county's political owner.
+
 Buildings are **per-settlement**: each of a province's 2–8 settlement slots
 (`FB.settlementsOf` — stable indices that grow with development and never conceal
 a slot the player has invested in, presented from

@@ -557,9 +557,8 @@ window.FB = window.FB || {};
   /* ================= CONVERSION (faith & culture) =================
      docs/designs/conversion.md — deliberate player conversion to another
      culture or religion. Piety pays for faith, prestige for culture; costs
-     and penalties escalate with scope (self < household < realm). County
-     culture/faith stays authored world data: a realm conversion writes only
-     realm.religion, never province records. */
+     and penalties escalate with scope (self < household < realm). These
+     character-facing deeds never move county community population. */
   function conversionBalance(key, fallback) {
     const value = FBDATA.balance[key];
     return value !== undefined ? value : fallback;
@@ -1106,6 +1105,78 @@ window.FB = window.FB || {};
       text, params));
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
     return true;
+  };
+
+  /* County projects are a separate territorial-policy boundary. Milestone 5
+     will put these commands in Land; keeping the gate here now gives events,
+     AI decisions, and future UI one authoritative player-order contract. */
+  FB.countyCommunityProjectOrderStatus = function (state, pid, kind,
+    targetId, policyId) {
+    const out = {
+      ready:false, pid:pid, kind:kind, target:targetId, policy:policyId,
+      active:FB.countyCommunityProject
+        ? FB.countyCommunityProject(state, pid, kind) : null,
+      reason:''
+    };
+    const p = state && state.player;
+    const c = p && state.chars && state.chars[p.charId];
+    const province = FB.world && FB.world.byId && FB.world.byId[pid];
+    if (!p || !c || c.dead || p.dead) {
+      out.reason = FB.T('Only a living ruler may direct county conversion.');
+      return out;
+    }
+    if (!province || province.wasteland || p.tier < 4 ||
+        !FB.playerDirectlyHoldsCounty ||
+        !FB.playerDirectlyHoldsCounty(state, pid)) {
+      out.reason = FB.T('You must directly hold this county as a count or higher.');
+      return out;
+    }
+    const targetValid = kind === 'faith'
+      ? FB.faithExists(targetId, state) && FB.faithAssignable(targetId, state)
+      : kind === 'culture' && !!FBDATA.cultures[targetId];
+    if (!targetValid || !FBDATA.countyCommunityPolicies ||
+        !FBDATA.countyCommunityPolicies[policyId]) {
+      out.reason = FB.T('That county project is not possible.');
+      return out;
+    }
+    const share = kind === 'faith' && FB.countyReligionShare
+      ? FB.countyReligionShare(state, pid, targetId)
+      : kind === 'culture' && FB.countyCultureShare
+        ? FB.countyCultureShare(state, pid, targetId) : 0;
+    if (share >= 1) {
+      out.reason = FB.T('Everyone in this county already follows that identity.');
+      return out;
+    }
+    if (FB.conversionTargetEncountered &&
+        !FB.conversionTargetEncountered(state, kind, targetId)) {
+      out.reason = FB.T('Your dynasty has not encountered that identity.');
+      return out;
+    }
+    if (out.active && out.active.target === targetId &&
+        out.active.policy === policyId && out.active.sponsor === 'player') {
+      out.reason = FB.T('That county project is already underway.');
+      return out;
+    }
+    out.ready = true;
+    return out;
+  };
+
+  FB.orderCountyCommunityProject = function (state, pid, kind,
+    targetId, policyId) {
+    const status = FB.countyCommunityProjectOrderStatus(
+      state, pid, kind, targetId, policyId);
+    if (!status.ready || !FB.startCountyCommunityProject) return false;
+    return !!FB.startCountyCommunityProject(state, pid, {
+      kind:kind, target:targetId, policy:policyId, sponsor:'player'
+    });
+  };
+
+  FB.cancelCountyCommunityProject = function (state, pid, kind) {
+    if (!state || !state.player || state.player.tier < 4 ||
+        !FB.playerDirectlyHoldsCounty ||
+        !FB.playerDirectlyHoldsCounty(state, pid) ||
+        !FB.stopCountyCommunityProject) return false;
+    return FB.stopCountyCommunityProject(state, pid, kind);
   };
 
   /* Deed-row probe: the cheapest self-scope target decides whether the row

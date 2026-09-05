@@ -2,6 +2,25 @@
    Executable handlers and invariant guards remain private to js/actions.js. */
 window.FBDATA = window.FBDATA || {};
 
+/* County community projects are territorial policy, not personal conversion
+   deeds. Milestone 5 presents these definitions from an explicit Land county
+   context; events and AI decisions may use the same ids now. */
+FBDATA.countyCommunityPolicies = {
+  voluntary:{
+    id:'voluntary', label:'Voluntary outreach',
+    desc:'Patronage and preaching invite change without compulsion.'
+  },
+  integrative:{
+    id:'integrative', label:'Integrative settlement',
+    desc:'Local office, marriage, schooling, and patronage draw communities together.'
+  },
+  coercive:{
+    id:'coercive', label:'Coercive enforcement',
+    desc:'Officials compel conformity, provoking resistance, unrest, and flight.',
+    modifier:'community_coercion'
+  }
+};
+
 FBDATA.focuses = [
   { id:'study', label:'📖 Study', order:0,
     desc:'Learn from whoever will teach you.', handler:'study' },

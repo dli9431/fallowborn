@@ -192,8 +192,10 @@ county's saved culture-faith communities. Proposed migration edges are grouped b
 they are created; after stable capping, each source apportions its total outflow once and sends
 those exact cohorts across canonically ordered edges. Destination counties receive the same
 identities, the migration ledger remains world-sum zero, county floors hold, and the pass consumes
-no RNG. The demographic work stays bounded by counties, adjacency edges, and live community
-records rather than individual people.
+no RNG. Explicit county faith-conversion and culture-assimilation projects then resolve once in
+canonical county order, carrying sub-threshold fractional work and transferring only whole people
+inside the unchanged county total. The demographic work stays bounded by counties, adjacency
+edges, and live community records rather than individual people.
 Annual AI construction snapshots direct holdings once before development grants begin, preventing
 each grant's cache invalidation from forcing another complete map ownership rebuild.
 Mounted disabled deeds with a known standard or system-specific readiness turn

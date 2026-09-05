@@ -94,6 +94,12 @@ Common Voice, −8% county tax, and −5% county levy. A household faith convers
 player holds. A household culture conversion grants `cultural_unrest` to the home county
 and any player-held counties that do not share the newly adopted culture.
 
+County community projects add `community_coercion`: 720 days of +40% harmful `unrest`
+exposure, −8 effective Common Voice, −5% county tax, −8% county levy, and −10% market
+flow. Starting a controlled coercive project grants it immediately, and each controlled
+annual resolution refreshes it. If the sponsor loses control or the project stops, the
+county keeps the political aftermath only until the ordinary timed record expires.
+
 Royal religious-tolerance and settlement policy (see
 [council.md](council.md)) adds five standing definitions without `days` — they have no
 calendar expiry because the policy, not the clock, ends them: `persecuted_minorities`

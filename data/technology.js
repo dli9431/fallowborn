@@ -277,6 +277,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Choosing and preserving local culture-faith communities through ordinary demographic change is baseline identity, not a capability enabled by research.'
       },
+      county_community_conversion:{
+        mode:'none',
+        rationale:'Communal conversion and assimilation are baseline territorial and social processes throughout the period, not capabilities unlocked by sovereign research.'
+      },
       local_marriage_prospect_identity:{
         mode:'none',
         rationale:'Drawing courtship prospects from live local culture-faith communities is baseline social behavior with no credible technology dependency.'

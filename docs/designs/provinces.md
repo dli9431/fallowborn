@@ -132,10 +132,21 @@ as settled raid captives. `count`, `natural`, `migration`, and `losses` remain t
 population totals consumed by UI and economic systems; communities add no multiplier.
 The annual pass and public mutations run the zero-RNG conservation validator.
 
-Technology impact: `county_community_identity` is `none`. Selecting an existing local
-identity and preserving communities through ordinary growth, loss, and movement are
-baseline character and demographic behavior, not advanced capabilities that research
-could credibly gate.
+County conversion and assimilation are exact transfers inside that same partition.
+Faith conversion preserves cohort culture; culture assimilation preserves cohort faith.
+One saved project per axis may apply a bounded transfer during the annual demographic
+pass, with fractional progress carried until it reaches the meaningful-transfer floor.
+The sponsor, policy, target, identity tenure, local share, institutions, unrest, war, and
+occupation explain the result without RNG. A prior plurality is retained inside the
+data-defined hysteresis margin, while an absolute majority changes the saved identity
+immediately. Ownership and character or realm conversion do not rewrite communities or
+start projects. The full policy boundary is documented in [conversion.md](conversion.md).
+
+Technology impact: `county_community_identity` and `county_community_conversion` are
+`none`. Selecting an existing local identity, preserving communities through ordinary
+growth, loss, and movement, and pursuing communal conversion or assimilation are baseline
+character, demographic, and territorial behavior, not advanced capabilities that
+research could credibly gate.
 
 **Settlements are derived, not stored.** Two identities exist. The settlement *slot* —
 the zero-based index inside one county — remains the canonical saved reference for

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.15';
+FB.VERSION = '1.168.16';
 FB.CHANGELOG = [
+  { v: '1.168.16', date: '2026-09-05', changes: [
+    'County rulers and stories can now sustain gradual, saved faith-conversion and culture-assimilation projects without changing county population.'
+  ] },
   { v: '1.168.15', date: '2026-09-05', changes: [
     'Live county communities now shape local characters, travel, events, religious policy, holy-war support, and Land presentation.'
   ] },

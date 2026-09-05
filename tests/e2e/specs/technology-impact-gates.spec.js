@@ -181,6 +181,7 @@ test('the prospective review ledger and every gate schema validate together',
       'concentric_fortress_upgrade',
       'confirmation_of_great_offices',
       'consent_of_estates',
+      'county_community_conversion',
       'county_community_identity',
       'county_goods_markets',
       'county_population_demographics',
@@ -258,6 +259,7 @@ test('the prospective review ledger and every gate schema validate together',
     ]);
     const additiveNoneIds = [
       'broad_family_succession',
+      'county_community_conversion',
       'descendant_betrothal_replacement',
       'enterprise_child_labor',
       'enterprise_hired_labor',
@@ -283,7 +285,7 @@ test('the prospective review ledger and every gate schema validate together',
       'serf_tenure_authority_review'
     ];
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
-      .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
+      .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
         'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
         'none', 'none', 'none', 'none', 'none', 'none', 'none']);
     const additiveHardIds = [

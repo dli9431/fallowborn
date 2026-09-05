@@ -791,6 +791,22 @@ Options are small and all-positive so automation scores them sanely.
 Related: [war.md](war.md) for the war-council events, [characters.md](characters.md) for
 the childhood event filter, [time.md](time.md) for slot days and autoresolve.
 
+## County community effects
+
+Declarative outcomes may make one exact demographic transfer with
+`countyCommunityTransfer`, begin or replace one axis project with
+`countyCommunityProject`, or stop it with `stopCountyCommunityProject`. County targeting
+uses the effect's explicit `provinceId`, then the event's snapshotted location/province,
+then the player's home. `$owner` and `$player` are the only semantic sponsor shorthands;
+save state receives the resolved realm id. These effects call the population subsystem's
+ordinary conservation and project boundaries and emit semantic preview/receipt records.
+
+This event surface does not imply political conversion. `convertToProvince`, founded
+faith options, and personal/household/realm conversion continue to change characters or
+realm identity only. Conversely, a county transfer changes no named character, realm,
+owner, or population total. Events and scripted decisions must opt into a project
+explicitly; conquest and ownership changes never synthesize one.
+
 Temporary modifier integration is described in [modifiers.md](modifiers.md). Event
 contexts snapshot `locationId`; top-level `tags` scale only negative signed effects
 through county/estate tag bonuses; and declarative content may use the `hasModifier`
