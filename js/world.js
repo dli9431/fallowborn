@@ -4015,6 +4015,28 @@ window.FB = window.FB || {};
     return Math.max(0, Math.round(base * captivePenalty) - burden);
   };
 
+  /* One numeric projection for every UI surface that describes what a realm
+     can muster. AI values deliberately use the same base host raised by
+     armies.js; county gross levies are a different, local quantity. */
+  FB.realmHostAvailability = function (state, rid) {
+    var currentBase;
+    var maximum;
+    if (rid === 'player') {
+      currentBase = FB.playerLevy ? FB.playerLevy(state) : 0;
+      maximum = Math.max(
+        FB.playerMaxLevy ? FB.playerMaxLevy(state) : 0,
+        currentBase);
+    } else {
+      currentBase = FB.aiBaseHost(state, rid);
+      maximum = currentBase;
+    }
+    var rearm = FB.rearmScale ? FB.rearmScale(state, rid) : 1;
+    return {
+      current:Math.max(0, Math.round(currentBase * rearm)),
+      maximum:Math.max(0, Math.round(maximum))
+    };
+  };
+
   FB.aiFieldHostRatio = function (state, rid) {
     const field = FB.aiBaseHost(state, rid);
     const burden = FB.fortGarrisonBurden

@@ -67,6 +67,7 @@ window.FB = window.FB || {};
   const livelihoodNote = SH.livelihoodNote;
   const markActionsDirty = SH.markActionsDirty;
   const menText = SH.menText;
+  const realmHostText = SH.realmHostText;
   const mobileLayoutNow = SH.mobileLayoutNow;
   const mobileNavEnsure = SH.mobileNavEnsure;
   const mobileNavClosed = SH.mobileNavClosed;
@@ -8423,10 +8424,8 @@ window.FB = window.FB || {};
   }
 
   function realmMusterText(s, rid) {
-    const men = rid === 'player'
-      ? FB.playerLevy(s) : FB.aiBaseHost(s, rid);
     return FB.T('Realm muster: ~{troops}', {
-      troops:menText(s, men)
+      troops:realmHostText(s, rid).slice(1)
     });
   }
 

@@ -2,9 +2,11 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html',
+  'js/armies.js',
   'js/economy.js',
   'js/population.js',
   'js/ui_misc.js',
+  'js/ui_modals.js',
   'js/ui_panels.js',
   'js/world.js',
   'css/style.css'
@@ -89,6 +91,69 @@ test('Land facts use readable desktop columns and stack on compact layouts',
     expect(compact.columns.trim().split(/\s+/)).toHaveLength(1);
     expect(compact.alignment).toBe('left');
     expect(compact.overflow).toBeLessThanOrEqual(1);
+  });
+
+test('Land uses the war muster for AI realms and exposes a baron’s own force',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const player = state.player;
+      const pid = player.provinceId;
+      const rid = state.owner[pid];
+      player.tier = 3;
+      player.provs = [];
+      state.armyDown = state.armyDown || {};
+      state.armyDown[rid] = state.turn;
+      delete state.armyDown.player;
+      state.armyDownSurvival = state.armyDownSurvival || {};
+      delete state.armyDownSurvival[rid];
+      FB.ui.selectProvince(pid);
+      const panel = document.getElementById('tab-prov');
+      function fact(label) {
+        const rows = panel.querySelectorAll('.land-kv');
+        for (let i = 0; i < rows.length; i++) {
+          const key = rows[i].querySelector('span');
+          const value = rows[i].querySelector('b');
+          if (key && key.textContent.trim() === label) {
+            return value ? value.textContent.trim() : '';
+          }
+        }
+        return null;
+      }
+      const realmHost = fact('Realm host');
+      const ownForce = fact('Your available force');
+      const grossCountyLevy = fact('County levy (gross)');
+      const realmStrength = FB.realmHostAvailability(state, rid);
+      const playerStrength = FB.realmHostAvailability(state, 'player');
+      FB.ui.showLiegeModal(rid);
+      const rulerMuster = document.querySelector(
+        '#gm-body .realm-ruler-muster');
+      return {
+        rid:rid,
+        realmHost:realmHost,
+        ownForce:ownForce,
+        grossCountyLevy:grossCountyLevy,
+        rulerMuster:rulerMuster ? rulerMuster.textContent.trim() : '',
+        expectedRealmText:FB.ui._shared.realmHostText(state, rid),
+        expectedPlayerText:FB.ui._shared.realmHostText(state, 'player'),
+        currentRealm:realmStrength.current,
+        expectedRealm:realmStrength.maximum,
+        expectedPlayer:playerStrength.maximum,
+        actualAiHost:FB.aiBaseHost(state, rid),
+        playerLevy:FB.playerLevy(state)
+      };
+    });
+
+    expect(result.rid).toBeTruthy();
+    expect(result.rid).not.toBe('player');
+    expect(result.currentRealm).toBeLessThan(result.expectedRealm);
+    expect(result.expectedRealm).toBe(result.actualAiHost);
+    expect(result.realmHost).toBe(result.expectedRealmText);
+    expect(result.rulerMuster).toBe(
+      'Realm muster: ' + result.expectedRealmText);
+    expect(result.ownForce).toBe(result.expectedPlayerText);
+    expect(result.playerLevy).toBeGreaterThan(0);
+    expect(result.grossCountyLevy).toMatch(/^~/);
   });
 
 test('portrait phones give the panel a balanced majority of usable height',

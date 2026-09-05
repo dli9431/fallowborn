@@ -2153,4 +2153,14 @@ contexts keep ids and numbers only.
 **Numeric and Decimal Formatting Standards.**
 - *Whole Numbers by Default*: Never display raw floating-point decimals to players. All general gameplay quantities — including troops, hosts, levies, population counts, opinion, standing, prestige, piety, development scores, distances, and percentages — must be rounded to whole integers (`Math.round`, `Math.floor`, or `Math.ceil`).
 - *Strict Decimal Limits for Finances*: Decimals are restricted strictly to financial, coinage, and economic interfaces where sub-unit fractions are required for comprehension (such as fine interest rates, per-season coin rates, or investment dividends). In these exceptional cases, values must be strictly capped and formatted to at most **2 decimal places** (`.toFixed(2)` or `Math.round(n * 100) / 100`).
-- *Realm Host Capacity Formatting*: Realm host displays show current available forces versus maximum capacity (`~{current}/{max} men`) when recovering or rearming across the rearm window. When fully mustered at maximum strength, the display simplifies to `~{max} men`. The player's own realm card shows the real muster composition (`FB.playerLevy` current against the `FB.playerMaxLevy` full-population baseline), matching muster previews and expedition reports; AI realms show the dev-and-population levy estimate. Maximum capacity counts the overpopulation bonus (the population factor above its baseline, capped at ×1.5), so a thriving county's realm host never reads below its province levy; the fraction appears only for genuine deficits — the rearm window or a population fallen below baseline.
+- *Realm Host Capacity Formatting*: Every Realm host or Realm muster display reads
+  `FB.realmHostAvailability`, so the Land panel and ruler sheets cannot present different
+  armies for the same realm. It shows current available forces versus maximum capacity
+  (`~{current}/{max} men`) while rearming and simplifies to `~{max} men` when fully
+  available. Player values use the real `FB.playerLevy` composition against the
+  `FB.playerMaxLevy` full-population baseline; AI values use the same `FB.aiBaseHost`
+  calculation that raises their field army. The selected county separately labels its
+  development/population-derived number **County levy (gross)** because that local levy
+  is not itself the sovereign's deployable host. A non-sovereign landed player, including
+  a baron with no county in hand, receives a prominent **Your available force** Realm row
+  from the same projection rather than having to open a declaration flow.

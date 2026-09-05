@@ -179,7 +179,11 @@ musters the moment war begins — `FB.warFooting`, which every war-start path ca
 raises it — and the muster events that follow only decide whether it takes the field
 with hired companies (`war_mercs`, `balance.mercCompanySize` men each) or a great levy
 (`war_mass`, swelling the levy class by `balance.massLevyMult`) behind
-it. A shattered primary host may muster again only after `balance.armyRearmDays`
+it. `FB.realmHostAvailability` is the shared presentation boundary for those same
+potential hosts: it uses `FB.aiBaseHost` for AI realms and the player's full composition,
+then exposes the rearm-adjusted current and maximum values to Land and ruler sheets. The
+gross levy of one county is deliberately not a realm-host estimate. A shattered primary
+host may muster again only after `balance.armyRearmDays`
 (`state.armyDown`); a destroyed detachment re-forms after the shorter
 `balance.detachmentRearmDays` (`state.armyDetachmentDown`). Destruction records
 which banner was primary before fatal casualties are applied: a zero-strength

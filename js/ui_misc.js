@@ -515,6 +515,15 @@ window.FB = window.FB || {};
       }
     }, { count: rounded }), { state: s, viewer: s.player.charId });
   }
+  function realmHostText(s, rid) {
+    const strength = FB.realmHostAvailability
+      ? FB.realmHostAvailability(s, rid)
+      : { current:rid === 'player' ? FB.playerLevy(s) : FB.aiBaseHost(s, rid),
+          maximum:rid === 'player' ? FB.playerLevy(s) : FB.aiBaseHost(s, rid) };
+    return strength.current < strength.maximum
+      ? '~' + strength.current + '/' + menText(s, strength.maximum)
+      : '~' + menText(s, strength.maximum);
+  }
   function signedNumber(value) {
     const rounded = Math.round(Number(value) || 0);
     return (rounded > 0 ? '+' : '') + rounded;
@@ -4671,6 +4680,7 @@ window.FB = window.FB || {};
   SH.largeListSurfaceHtml = largeListSurfaceHtml;
   SH.largeListViews = largeListViews;
   SH.menText = menText;
+  SH.realmHostText = realmHostText;
   SH.mobileLayoutNow = mobileLayoutNow;
   SH.mobileNavClosed = mobileNavClosed;
   SH.mobileNavClosedAll = mobileNavClosedAll;
