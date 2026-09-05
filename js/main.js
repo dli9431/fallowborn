@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.10';
+FB.VERSION = '1.168.11';
 FB.CHANGELOG = [
+  { v: '1.168.11', date: '2026-09-04', changes: [
+    'Population capacity checks now remain stable while partial world state is initialized.'
+  ] },
   { v: '1.168.10', date: '2026-09-04', changes: [
     'Winter-to-spring fast-forward now avoids repeated annual simulation work that could freeze the interface.',
     'Legacy random knighting, clerical, inheritance, independence, and patronage events no longer grant household rank.'

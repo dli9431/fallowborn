@@ -10,6 +10,7 @@ const fileProjectTests = [
   '**/holywar-lifecycle.spec.js',
   '**/holywar-ui.spec.js',
   '**/journeys.spec.js',
+  '**/music.spec.js',
   '**/player-feedback-milestone-4.spec.js',
   '**/religions.spec.js',
   '**/ruler-titles.spec.js',

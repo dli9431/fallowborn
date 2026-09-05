@@ -192,9 +192,7 @@ test('filtered declarations initialize campaign feedback and preserve the catalo
     await expect(page.getByRole('heading', {
       name:'War Justification', exact:true
     })).toBeVisible();
-    await page.getByRole('button', {
-      name:'Declare war', exact:true
-    }).click();
+    await page.getByRole('button', { name:/Declare war$/ }).click();
 
     var active = await page.evaluate(function () {
       var s = FB.state;

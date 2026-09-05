@@ -3361,6 +3361,7 @@ window.FB = window.FB || {};
       populationCrisisProtection:0, migrationAttraction:0,
       levy:0, retinue:0, retainers:0, prestige:0
     };
+    if (!state || !state.player) return out;
     for (const enterprise of FB.enterpriseList(state)) {
       if (provinceId && enterprise.provinceId !== provinceId) continue;
       if (!FB.enterpriseFullyStaffed(state, enterprise)) continue;

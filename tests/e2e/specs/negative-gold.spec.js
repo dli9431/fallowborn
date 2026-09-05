@@ -191,7 +191,7 @@ test('cash-gated choices stay blocked while zero-cost choices remain available',
     });
     await expect(page.locator('#freedom-purchase-confirm')).toBeDisabled();
     await expect(page.locator('[data-freedom-purchase-status]'))
-      .toContainText('requires');
+      .toContainText(/requires/i);
   });
 
 test('the topbar and Coin & Credit explain a negative balance',

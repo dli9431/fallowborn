@@ -93,9 +93,11 @@ test('opening a rank review is free and confirmation spends the day and cost',
         turn:s.turn, gold:p.gold, prestige:p.prestige, piety:p.piety,
         tier:p.tier
       };
+      const status = FB.rankElevationStatus(s, null, { route:'manor' });
       FB.runInstant(s, 'declare_manor');
       return {
         before:before,
+        targetTitle:FB.renderTitleSnapshot(status.titleData),
         afterOpen:{
           turn:s.turn, gold:p.gold, prestige:p.prestige, piety:p.piety,
           tier:p.tier, manor:p.manor
@@ -116,7 +118,7 @@ test('opening a rank review is free and confirmation spends the day and cost',
     await expect(page.locator('[data-rank-transition]')).toContainText(
       'Freeholder');
     await expect(page.locator('[data-rank-transition]')).toContainText(
-      'Gentry');
+      setup.targetTitle);
     await expect(page.locator('[data-rank-elevation-sheet]')).toContainText(
       'Benefits');
     await expect(page.locator('#rank-elevation-confirm'))

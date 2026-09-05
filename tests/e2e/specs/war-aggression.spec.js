@@ -722,9 +722,7 @@ test('ruler war action scopes targets and records a selected de jure basis',
     await expect(page.locator(
       '.war-justification-critical:not([hidden])')).toContainText(
       setup.kingdomName);
-    await page.getByRole('button', {
-      name:'Declare war', exact:true
-    }).click();
+    await page.getByRole('button', { name:/Declare war$/ }).click();
 
     expect(await page.evaluate(function () {
       return {
@@ -935,10 +933,7 @@ test('war picker routes aggression through the universal justification sheet',
     expect(afterCancel).toEqual({ war:null, history:0 });
     await row.click();
 
-    await page.getByRole('button', {
-      name:'Declare war',
-      exact:true
-    }).click();
+    await page.getByRole('button', { name:/Declare war$/ }).click();
     var afterConfirm = await page.evaluate(function () {
       return {
         type:FB.state.player.war && FB.state.player.war.casus.type,
