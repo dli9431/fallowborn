@@ -8377,7 +8377,8 @@ window.FB = window.FB || {};
     'marry','clearSuitor','adoptChild','killChild','killRole','kinslayer',
     'educateChild','moveRandom','travelReturn','travelSettle','foundFaith',
     'faithRelation','convertToProvince','declareIndependence','pickHeir','queue',
-    'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate','tenureEnd',
+    'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate',
+    'populationCommunity','tenureEnd',
     'serfFreedom','student'
   ];
   FB.eventPreviewEffectKeys = {};
@@ -8911,6 +8912,7 @@ window.FB = window.FB || {};
         action:'loss',
         loss:fx.populationLoss,
         rate:fx.populationLossRate,
+        community:fx.populationCommunity,
         cause:fx.cause || 'event',
         cost:true
       }));
@@ -10276,11 +10278,13 @@ window.FB = window.FB || {};
         if (fx.populationLossRate !== undefined) {
           const baseLossRate = Number(fx.populationLossRate);
           const effectiveRate = -Math.abs(baseLossRate) * (1 - protection);
-          FB.changeCountyPopulationRate(state, targetPid, effectiveRate, fx.cause || 'event');
+          FB.changeCountyPopulationRate(state, targetPid, effectiveRate,
+            fx.cause || 'event', { communityPolicy:fx.populationCommunity });
         } else if (fx.populationLoss !== undefined) {
           const baseLoss = Number(fx.populationLoss);
           const effectiveLoss = -Math.round(Math.abs(baseLoss) * (1 - protection));
-          FB.changeCountyPopulation(state, targetPid, effectiveLoss, fx.cause || 'event');
+          FB.changeCountyPopulation(state, targetPid, effectiveLoss,
+            fx.cause || 'event', { communityPolicy:fx.populationCommunity });
         }
       }
     }

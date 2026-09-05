@@ -273,15 +273,19 @@ window.FB = window.FB || {};
     return cultureId + '|' + faithId;
   }
 
-  /* Stable largest-remainder apportionment. Authored order breaks exact
+  /* Stable largest-remainder apportionment. Input order breaks exact
      fractional ties, and no RNG or source mutation is involved. */
-  function apportionShares(total, communities) {
+  function apportionWeights(total, items, weightReader) {
     var allocated = [];
     var ranked = [];
     var used = 0;
-    for (var i = 0; i < communities.length; i++) {
-      var share = Number(communities[i].populationShare0) || 0;
-      var exact = total * share / 10000;
+    var weightTotal = 0;
+    for (var wi = 0; wi < items.length; wi++) {
+      weightTotal += Math.max(0, Number(weightReader(items[wi], wi)) || 0);
+    }
+    for (var i = 0; i < items.length; i++) {
+      var weight = Math.max(0, Number(weightReader(items[i], i)) || 0);
+      var exact = weightTotal > 0 ? total * weight / weightTotal : 0;
       var count = Math.floor(exact);
       allocated[i] = count;
       used += count;
@@ -291,9 +295,16 @@ window.FB = window.FB || {};
       return (b.remainder - a.remainder) || (a.index - b.index);
     });
     var remainder = total - used;
-    for (var ri = 0; ri < remainder; ri++) {
+    for (var ri = 0; ri < remainder && ranked.length; ri++) {
       allocated[ranked[ri % ranked.length].index]++;
     }
+    return allocated;
+  }
+
+  function apportionShares(total, communities) {
+    var allocated = apportionWeights(total, communities, function (community) {
+      return community.populationShare0;
+    });
     var out = [];
     for (var ai = 0; ai < communities.length; ai++) {
       if (allocated[ai] <= 0) continue;
@@ -304,6 +315,154 @@ window.FB = window.FB || {};
       });
     }
     return out;
+  }
+
+  function copyCommunities(communities) {
+    return communities.map(function (community) {
+      return {
+        culture:community.culture,
+        religion:community.religion,
+        count:community.count
+      };
+    });
+  }
+
+  function communityTotal(communities) {
+    var total = 0;
+    for (var i = 0; i < communities.length; i++) total += communities[i].count;
+    return total;
+  }
+
+  function allocatedCommunityCohorts(communities, total, predicate, allowAboveAvailable) {
+    var eligible = [];
+    for (var i = 0; i < communities.length; i++) {
+      if (!predicate || predicate(communities[i])) eligible.push(communities[i]);
+    }
+    var available = communityTotal(eligible);
+    total = Math.max(0, Math.round(Number(total) || 0));
+    if (!allowAboveAvailable) total = Math.min(available, total);
+    if (!total || !eligible.length) return [];
+    var counts = apportionWeights(total, eligible, function (community) {
+      return community.count;
+    });
+    var out = [];
+    for (var ci = 0; ci < eligible.length; ci++) {
+      if (counts[ci] <= 0) continue;
+      out.push({
+        culture:eligible[ci].culture,
+        religion:eligible[ci].religion,
+        count:counts[ci]
+      });
+    }
+    return out;
+  }
+
+  function mergeCohorts(communities, cohorts, direction) {
+    var out = copyCommunities(communities);
+    var byKey = {};
+    for (var i = 0; i < out.length; i++) {
+      byKey[communityKey(out[i].culture, out[i].religion)] = out[i];
+    }
+    for (var ci = 0; ci < cohorts.length; ci++) {
+      var cohort = cohorts[ci];
+      var key = communityKey(cohort.culture, cohort.religion);
+      var target = byKey[key];
+      if (!target && direction > 0) {
+        target = { culture:cohort.culture, religion:cohort.religion, count:0 };
+        byKey[key] = target;
+        out.push(target);
+      }
+      if (target) target.count += direction * cohort.count;
+    }
+    return out.filter(function (community) { return community.count > 0; });
+  }
+
+  /* Meet exact community and edge totals as two ordered integer partitions.
+     Each boundary advances once, so distribution is linear in cohorts + edges. */
+  function distributeCohortsAcrossEdges(cohorts, edges) {
+    var distributed = [];
+    var cohortIndex = 0;
+    var cohortRemaining = cohorts.length ? cohorts[0].count : 0;
+    for (var ei = 0; ei < edges.length; ei++) {
+      var edgeRemaining = edges[ei].flow;
+      var edgeCohorts = [];
+      while (edgeRemaining > 0 && cohortIndex < cohorts.length) {
+        var cohort = cohorts[cohortIndex];
+        var moved = Math.min(edgeRemaining, cohortRemaining);
+        if (moved > 0) {
+          edgeCohorts.push({
+            culture:cohort.culture, religion:cohort.religion, count:moved
+          });
+          edgeRemaining -= moved;
+          cohortRemaining -= moved;
+        }
+        if (cohortRemaining === 0) {
+          cohortIndex++;
+          cohortRemaining = cohortIndex < cohorts.length
+            ? cohorts[cohortIndex].count : 0;
+        }
+      }
+      if (edgeRemaining !== 0) {
+        throw new Error('Population cohort distribution exceeded its source total');
+      }
+      distributed.push(edgeCohorts);
+    }
+    if (cohortIndex < cohorts.length || cohortRemaining !== 0) {
+      throw new Error('Population cohort distribution left an unassigned source total');
+    }
+    return distributed;
+  }
+
+  function communityPolicy(options) {
+    var policy = options && options.communityPolicy;
+    return policy && typeof policy === 'object' ? policy : null;
+  }
+
+  function policyIsValid(state, policy) {
+    if (!policy) return true;
+    if (!policy.culture && !policy.religion) return false;
+    if (policy.culture && !validCulture(policy.culture)) return false;
+    if (policy.religion && !validFaith(state, policy.religion)) return false;
+    return true;
+  }
+
+  function policyMatches(community, policy) {
+    return !policy ||
+      (!policy.culture || community.culture === policy.culture) &&
+      (!policy.religion || community.religion === policy.religion);
+  }
+
+  function applyCommunityDelta(state, communities, amount, options) {
+    var policy = communityPolicy(options);
+    if (!policyIsValid(state, policy)) {
+      return { communities:copyCommunities(communities), applied:0 };
+    }
+    var matching = [];
+    for (var i = 0; i < communities.length; i++) {
+      if (policyMatches(communities[i], policy)) matching.push(communities[i]);
+    }
+    if (amount > 0 && !matching.length) {
+      if (!policy || !policy.culture || !policy.religion) {
+        return { communities:copyCommunities(communities), applied:0 };
+      }
+      return {
+        communities:mergeCohorts(communities, [{
+          culture:policy.culture, religion:policy.religion, count:amount
+        }], 1),
+        applied:amount
+      };
+    }
+    if (!matching.length) {
+      return { communities:copyCommunities(communities), applied:0 };
+    }
+    var magnitude = amount < 0
+      ? Math.min(-amount, communityTotal(matching)) : amount;
+    var cohorts = allocatedCommunityCohorts(
+      matching, magnitude, null, amount > 0);
+    return {
+      communities:mergeCohorts(communities, cohorts, amount < 0 ? -1 : 1),
+      applied:amount < 0 ? -magnitude : magnitude
+    };
   }
 
   function openingCountyCommunities(pr, total) {
@@ -476,6 +635,69 @@ window.FB = window.FB || {};
     return rec;
   }
 
+  function populationCommunityFaults(state, provinceIds) {
+    var faults = [];
+    if (!state || !state.population || !state.population.counties) {
+      return ['population state is missing'];
+    }
+    var ids = provinceIds || provinceList().filter(function (province) {
+      return province && !province.wasteland;
+    }).map(function (province) { return province.id; }).sort();
+    for (var pi = 0; pi < ids.length; pi++) {
+      var pid = ids[pi];
+      var pr = provinceDef(pid);
+      var rec = state.population.counties[pid];
+      if (!pr || pr.wasteland) continue;
+      if (!rec) {
+        faults.push(pid + ': county population is missing');
+        continue;
+      }
+      if (!isFinite(Number(rec.count)) || Math.round(Number(rec.count)) !== rec.count ||
+          rec.count < populationFloor()) {
+        faults.push(pid + ': invalid county count');
+        continue;
+      }
+      if (!Array.isArray(rec.communities) || !rec.communities.length) {
+        faults.push(pid + ': communities are missing');
+        continue;
+      }
+      var seen = {};
+      var sum = 0;
+      for (var ci = 0; ci < rec.communities.length; ci++) {
+        var community = rec.communities[ci];
+        var key = community && communityKey(community.culture, community.religion);
+        if (!community || !validCulture(community.culture) ||
+            !validFaith(state, community.religion)) {
+          faults.push(pid + ': community ' + ci + ' has an invalid identity');
+          continue;
+        }
+        if (seen[key]) faults.push(pid + ': repeated community ' + key);
+        seen[key] = 1;
+        if (!isFinite(Number(community.count)) ||
+            Math.round(Number(community.count)) !== community.count || community.count <= 0) {
+          faults.push(pid + ': community ' + key + ' has an invalid count');
+          continue;
+        }
+        sum += community.count;
+      }
+      if (sum !== rec.count) {
+        faults.push(pid + ': community total ' + sum + ' does not equal ' + rec.count);
+      }
+    }
+    return faults;
+  }
+
+  FB.validatePopulationCommunities = function (state) {
+    return populationCommunityFaults(state);
+  };
+
+  function assertPopulationCommunities(state, provinceIds, context) {
+    var faults = populationCommunityFaults(state, provinceIds);
+    if (faults.length) {
+      throw new Error('Population community invariant after ' + context + ': ' + faults.join('; '));
+    }
+  }
+
   /* Ensure schema-2 population state exists and every inhabited county has
      one exact community partition of its already-authoritative count. */
   FB.ensurePopulationState = function (state) {
@@ -552,6 +774,7 @@ window.FB = window.FB || {};
     var rec = pr && !pr.wasteland && state.population.counties[pid];
     if (!rec || typeof rec !== 'object') return [];
     repairCountyRecord(state, pr, rec, stateYear(state));
+    assertPopulationCommunities(state, [pid], 'county reconciliation');
     return rec.communities.map(function (community) {
       return {
         culture:community.culture,
@@ -636,8 +859,9 @@ window.FB = window.FB || {};
     return FB.countyPopulationBaseline(state, pid);
   };
 
-  /* Public population mutation helper */
-  FB.changeCountyPopulation = function (state, pid, amount, cause) {
+  /* Public population mutation helper. Ordinary changes are proportional;
+     an explicit communityPolicy may target one culture, faith, or exact pair. */
+  FB.changeCountyPopulation = function (state, pid, amount, cause, options) {
     if (!state) return 0;
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return 0;
@@ -649,11 +873,13 @@ window.FB = window.FB || {};
     if (!rec) return 0;
     var floor = populationFloor();
     var before = rec.count;
-    var after = Math.max(floor, before + delta);
-    var applied = after - before;
+    if (delta < 0) delta = -Math.min(-delta, Math.max(0, before - floor));
+    var result = applyCommunityDelta(state, rec.communities, delta, options);
+    var applied = result.applied;
     if (applied === 0) return 0;
 
-    rec.count = after;
+    rec.communities = result.communities;
+    rec.count = before + applied;
     repairCountyRecord(state, pr, rec, stateYear(state));
     if (applied < 0) {
       rec.losses = (rec.losses || 0) + applied;
@@ -673,24 +899,104 @@ window.FB = window.FB || {};
         }
       }
     }
+    assertPopulationCommunities(state, [pid], cause || 'population change');
     return applied;
   };
 
-  FB.changeCountyPopulationRate = function (state, pid, rate, cause) {
+  FB.changeCountyPopulationRate = function (state, pid, rate, cause, options) {
     if (!state) return 0;
     var r = Number(rate);
     if (!isFinite(r) || r === 0) return 0;
     var current = FB.countyPopulation(state, pid);
     var delta = Math.round(current * r);
-    return FB.changeCountyPopulation(state, pid, delta, cause);
+    return FB.changeCountyPopulation(state, pid, delta, cause, options);
   };
 
-  FB.damageCountyPopulation = function (state, pid, cause) {
+  FB.damageCountyPopulation = function (state, pid, cause, options) {
     if (!state) return 0;
     var fortProtection = FB.countyFortSiegeProtection(state, pid);
     var baseRate = balance('populationHostileCaptureLossRate', 0.02);
     var actualRate = -baseRate * (1 - fortProtection);
-    return FB.changeCountyPopulationRate(state, pid, actualRate, cause || 'capture');
+    return FB.changeCountyPopulationRate(state, pid, actualRate,
+      cause || 'capture', options);
+  };
+
+  /* Move exact people between counties without changing their culture-faith
+     pair. A numeric cohorts argument requests that many proportional cohorts
+     from the source; an array requests explicit pairs and counts. */
+  FB.moveCommunityPopulation = function (state, fromPid, toPid, cohorts, cause) {
+    var empty = { count:0, cohorts:[] };
+    if (!state || fromPid === toPid) return empty;
+    var fromPr = provinceDef(fromPid);
+    var toPr = provinceDef(toPid);
+    if (!fromPr || fromPr.wasteland || !toPr || toPr.wasteland) return empty;
+    FB.ensurePopulationState(state);
+    var fromRec = state.population.counties[fromPid];
+    var toRec = state.population.counties[toPid];
+    if (!fromRec || !toRec) return empty;
+    var combinedBefore = fromRec.count + toRec.count;
+
+    var requested;
+    if (isFinite(Number(cohorts)) && !Array.isArray(cohorts)) {
+      requested = allocatedCommunityCohorts(fromRec.communities,
+        Math.max(0, Math.round(Number(cohorts))));
+    } else if (Array.isArray(cohorts)) {
+      var requestedByKey = {};
+      var requestedOrder = [];
+      for (var ci = 0; ci < cohorts.length; ci++) {
+        var cohort = cohorts[ci];
+        if (!cohort || !validCulture(cohort.culture) ||
+            !validFaith(state, cohort.religion)) continue;
+        var requestedCount = Math.max(0, Math.round(Number(cohort.count) || 0));
+        if (!requestedCount) continue;
+        var requestedKey = communityKey(cohort.culture, cohort.religion);
+        if (!requestedByKey[requestedKey]) {
+          requestedByKey[requestedKey] = {
+            culture:cohort.culture, religion:cohort.religion, count:0
+          };
+          requestedOrder.push(requestedKey);
+        }
+        requestedByKey[requestedKey].count += requestedCount;
+      }
+      var availableByKey = {};
+      for (var ai = 0; ai < fromRec.communities.length; ai++) {
+        var available = fromRec.communities[ai];
+        availableByKey[communityKey(available.culture, available.religion)] =
+          available.count;
+      }
+      requested = [];
+      for (var ri = 0; ri < requestedOrder.length; ri++) {
+        var key = requestedOrder[ri];
+        var request = requestedByKey[key];
+        request.count = Math.min(request.count, availableByKey[key] || 0);
+        if (request.count > 0) requested.push(request);
+      }
+    } else {
+      return empty;
+    }
+
+    var maxMove = Math.max(0, fromRec.count - populationFloor());
+    var requestedTotal = communityTotal(requested);
+    if (requestedTotal > maxMove) {
+      requested = allocatedCommunityCohorts(requested, maxMove);
+    }
+    var moved = communityTotal(requested);
+    if (!moved) return empty;
+
+    fromRec.communities = mergeCohorts(fromRec.communities, requested, -1);
+    toRec.communities = mergeCohorts(toRec.communities, requested, 1);
+    fromRec.count -= moved;
+    toRec.count += moved;
+    fromRec.migration = (fromRec.migration || 0) - moved;
+    toRec.migration = (toRec.migration || 0) + moved;
+    repairCountyRecord(state, fromPr, fromRec, stateYear(state));
+    repairCountyRecord(state, toPr, toRec, stateYear(state));
+    if (fromRec.count + toRec.count !== combinedBefore) {
+      throw new Error('Population transfer invariant after ' +
+        (cause || 'community move'));
+    }
+    assertPopulationCommunities(state, [fromPid, toPid], cause || 'community move');
+    return { count:moved, cohorts:copyCommunities(requested) };
   };
 
   /* Annual population tick */
@@ -702,10 +1008,16 @@ window.FB = window.FB || {};
 
     if (state.population.lastYear === currentYear) return;
 
-    var provs = provinceList();
+    var provs = provinceList().filter(function (province) {
+      return province && !province.wasteland;
+    }).slice().sort(function (a, b) {
+      return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+    });
     var floor = populationFloor();
     var initialP = {};
     var naturalDeltas = {};
+    var postNaturalCommunities = {};
+    var postNaturalP = {};
     var attractions = {};
     var occupied = {};
     var ownerAtWar = {};
@@ -714,15 +1026,20 @@ window.FB = window.FB || {};
     /* Stage 1: Natural growth & capacity */
     for (var i = 0; i < provs.length; i++) {
       var pr = provs[i];
-      if (!pr || pr.wasteland) continue;
       var pid = pr.id;
-      var P = FB.countyPopulation(state, pid);
+      var populationRecord = state.population.counties[pid];
+      var P = populationRecord.count;
       initialP[pid] = P;
       var K = FB.countyPopulationCapacity(state, pid);
       var pressure = FB.clamp(1 - (P / Math.max(1, K)), -0.50, 1.00);
       var natural = Math.round(P * rGrowth * pressure);
       natural = FB.clamp(natural, -Math.round(P * 0.01), Math.round(P * 0.02));
-      naturalDeltas[pid] = natural;
+      if (natural < 0) natural = -Math.min(-natural, Math.max(0, P - floor));
+      var naturalResult = applyCommunityDelta(
+        state, populationRecord.communities, natural, null);
+      naturalDeltas[pid] = naturalResult.applied;
+      postNaturalCommunities[pid] = naturalResult.communities;
+      postNaturalP[pid] = P + naturalResult.applied;
       var owner = provinceOwner(state, pid);
       if (!own(ownerAtWar, owner)) ownerAtWar[owner] = realmIsAtWar(state, owner);
       occupied[pid] = countyOccupiedOrBesieged(state, pid);
@@ -744,11 +1061,11 @@ window.FB = window.FB || {};
 
     for (var j = 0; j < provs.length; j++) {
       var u = provs[j];
-      if (!u || u.wasteland) continue;
       var uId = u.id;
       var adj = (FB.world && FB.world.adj && FB.world.adj[uId]) || {};
-      for (var vId in adj) {
-        if (!own(adj, vId)) continue;
+      var adjacentIds = Object.keys(adj).sort();
+      for (var avi = 0; avi < adjacentIds.length; avi++) {
+        var vId = adjacentIds[avi];
         if (uId >= vId) continue; // process each undirected edge once
         var v = provinceDef(vId);
         if (!v || v.wasteland) continue;
@@ -781,32 +1098,62 @@ window.FB = window.FB || {};
       }
     }
 
+    edgeFlows.sort(function (a, b) {
+      if (a.from !== b.from) return a.from < b.from ? -1 : 1;
+      return a.to < b.to ? -1 : (a.to > b.to ? 1 : 0);
+    });
+    for (var outgoingId in outgoingEdges) {
+      if (!own(outgoingEdges, outgoingId)) continue;
+      outgoingEdges[outgoingId].sort(function (a, b) {
+        return a.to < b.to ? -1 : (a.to > b.to ? 1 : 0);
+      });
+    }
+
     // Scale down any county exceeding its max allowed outflow
     var migrationDeltas = {};
     for (var k = 0; k < provs.length; k++) {
-      if (!provs[k] || provs[k].wasteland) continue;
       migrationDeltas[provs[k].id] = 0;
     }
 
-    for (var source in outflowProposed) {
-      if (!own(outflowProposed, source)) continue;
+    var sourceIds = Object.keys(outflowProposed).sort();
+    for (var sourceIndex = 0; sourceIndex < sourceIds.length; sourceIndex++) {
+      var source = sourceIds[sourceIndex];
       var proposed = outflowProposed[source];
       var maxAllowed = Math.min(
         Math.round(initialP[source] * maxOutflowRate),
-        Math.max(0, initialP[source] - floor)
+        Math.max(0, postNaturalP[source] - floor)
       );
       if (proposed > maxAllowed && proposed > 0) {
-        var mult = maxAllowed / proposed;
-        var allocated = 0;
         var outgoing = outgoingEdges[source] || [];
+        var scaled = apportionWeights(maxAllowed, outgoing, function (edge) {
+          return edge.flow;
+        });
         for (var o = 0; o < outgoing.length; o++) {
-          var scaledFlow = (o === outgoing.length - 1)
-            ? (maxAllowed - allocated)
-            : Math.round(outgoing[o].flow * mult);
-          scaledFlow = Math.max(0, Math.min(outgoing[o].flow, scaledFlow));
-          outgoing[o].flow = scaledFlow;
-          allocated += scaledFlow;
+          outgoing[o].flow = Math.max(0, Math.min(outgoing[o].flow, scaled[o]));
         }
+      }
+    }
+
+    /* Allocate every source's total outflow once. Edge distribution then
+       divides those exact cohorts in canonical destination order. */
+    var outgoingCohorts = {};
+    var incomingCohorts = {};
+    for (var si = 0; si < sourceIds.length; si++) {
+      var cohortSourceId = sourceIds[si];
+      var sourceEdges = outgoingEdges[cohortSourceId] || [];
+      var sourceOutflow = 0;
+      for (var sei = 0; sei < sourceEdges.length; sei++) {
+        sourceOutflow += sourceEdges[sei].flow;
+      }
+      var sourceCohorts = allocatedCommunityCohorts(
+        postNaturalCommunities[cohortSourceId], sourceOutflow);
+      outgoingCohorts[cohortSourceId] = sourceCohorts;
+      var distributedCohorts = distributeCohortsAcrossEdges(
+        sourceCohorts, sourceEdges);
+      for (var di = 0; di < sourceEdges.length; di++) {
+        var sourceEdge = sourceEdges[di];
+        incomingCohorts[sourceEdge.to] = mergeCohorts(
+          incomingCohorts[sourceEdge.to] || [], distributedCohorts[di], 1);
       }
     }
 
@@ -819,16 +1166,21 @@ window.FB = window.FB || {};
     /* Stage 3: Apply & Record */
     for (var m = 0; m < provs.length; m++) {
       var pDef = provs[m];
-      if (!pDef || pDef.wasteland) continue;
       var cId = pDef.id;
       var rec = state.population.counties[cId];
       if (!rec) continue;
-      var curPop = initialP[cId];
       var natDelta = naturalDeltas[cId] || 0;
       var migDelta = migrationDeltas[cId] || 0;
-      var targetPop = Math.max(floor, curPop + natDelta + migDelta);
-
-      rec.count = targetPop;
+      var finalCommunities = mergeCohorts(postNaturalCommunities[cId],
+        outgoingCohorts[cId] || [], -1);
+      finalCommunities = mergeCohorts(finalCommunities,
+        incomingCohorts[cId] || [], 1);
+      rec.communities = finalCommunities;
+      rec.count = communityTotal(finalCommunities);
+      var expectedCount = initialP[cId] + natDelta + migDelta;
+      if (rec.count !== expectedCount) {
+        throw new Error('Population total invariant after annual pass in ' + cId);
+      }
       rec.natural = natDelta;
       rec.migration = migDelta;
       rec.losses = 0;
@@ -837,6 +1189,14 @@ window.FB = window.FB || {};
     }
 
     state.population.lastYear = currentYear;
+    var migrationTotal = 0;
+    for (var mt = 0; mt < provs.length; mt++) {
+      migrationTotal += state.population.counties[provs[mt].id].migration;
+    }
+    if (migrationTotal !== 0) {
+      throw new Error('Population migration invariant after annual pass: ' + migrationTotal);
+    }
+    assertPopulationCommunities(state, null, 'annual pass');
   };
 
   /* Display-only on-demand settlement allocation */

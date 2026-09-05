@@ -101,17 +101,31 @@ plurality does not cause a repair-time flip.
 `FB.ensurePopulationState` migrates schema-1 saves at their current county counts and
 date, without replaying historical population movement. It merges valid duplicates,
 drops invalid or non-positive groups, and gives the authored principal pair the exact
-reconciliation remainder. Existing county population writes use that same reconciliation
-boundary, so community sums never drift while proportional growth and cohort migration
-remain deferred. Read helpers return projections and never repair state or mutate
+reconciliation remainder. Ordinary births, deaths, hostile-capture damage, and other
+county population changes now apportion their exact integer delta among the current
+communities by stable largest-remainder rounding. An explicit `communityPolicy` may
+instead select a culture, faith, or exact pair for persecution, expulsion, colonization,
+famine, or scripted effects; a positive exact-pair policy can establish a new community.
+Read helpers return projections and never repair state or mutate
 bookmark data. Existing county, realm, title, intrigue, advancement, matchmaking, and
 war mechanics intentionally continue to read the static principal province identity
 until live-identity integration. The 182 core bookmark-county records, reviewed opening
 shares, evidence, and uncertainty are listed in
 [county-communities.md](../research/county-communities.md).
 
+Annual migration remains conserved across the world, but now moves culture-faith cohorts
+rather than an anonymous net total. After canonically ordered edge flows are capped by
+the existing source limit and county floor, each source apportions its total outflow once;
+those exact cohorts are divided among its outgoing edges and merged into destinations.
+Thus migration can introduce a live community without changing any person's identity.
+`FB.moveCommunityPopulation` exposes the same exact transfer boundary for mechanics such
+as settled raid captives. `count`, `natural`, `migration`, and `losses` remain the only
+population totals consumed by UI and economic systems; communities add no multiplier.
+The annual pass and public mutations run the zero-RNG conservation validator.
+
 Technology impact: `county_community_identity` is `none`. Selecting an existing local
-identity is baseline character creation, not an advanced capability that research
+identity and preserving communities through ordinary growth, loss, and movement are
+baseline character and demographic behavior, not advanced capabilities that research
 could credibly gate.
 
 **Settlements are derived, not stored.** Two identities exist. The settlement *slot* —
@@ -341,7 +355,7 @@ Each inhabited county tracks an integer civilian population record in `state.pop
   `pop0 = Math.max(1000, Math.round((populationByDevelopment[dev0 - 1] * terrainFactor) / 100) * 100)`.
 - **Carrying capacity**: Authored in bookmark province `populationCapacity0`, or derived from `cap0 = Math.max(pop0, Math.round((pop0 / 0.85) / 100) * 100)`.
   Adjusted by county buildings (Watermill +5%, Harbor +3%, max +40%) and national technology (`crop_rotation`, `heavy_plough`, `three_field`, etc., max +35%).
-- **Annual simulation pass**: Zero-RNG logistic natural growth bounded by pressure $(1 - P / K)$ within $[-1\%, +2\%]$, and conserved land migration across non-hostile borders when attraction differential $\ge 2$. Attraction combines county buildings, national technology, occupancy, war, and market shocks with the player realm's standing settlement policy ([council.md](council.md)); the policy shifts only the draw of player-owned counties and never moves a population record directly. The pass snapshots those county inputs once and groups proposed migration edges by source as it creates them, so enforcing each source's outflow cap remains linear in the map edges.
+- **Annual simulation pass**: Zero-RNG logistic natural growth bounded by pressure $(1 - P / K)$ within $[-1\%, +2\%]$, and conserved land migration across non-hostile borders when attraction differential $\ge 2$. Natural change is proportionally apportioned among live communities. Migration transfers the same exact culture-faith cohorts out of sources and into destinations. Attraction combines county buildings, national technology, occupancy, war, and market shocks with the player realm's standing settlement policy ([council.md](council.md)); the policy shifts only the draw of player-owned counties and never moves a population record directly. The pass snapshots county inputs once, walks counties and edges in canonical id order, and groups proposed migration edges by source so caps and cohort allocation remain bounded by counties, adjacency edges, and live community records.
 - **Economic & military factor**: $\text{clamp}(\sqrt{P / P_0}, 0.50, 1.50)$ scales county tax base, direct & vassal levies, and market household demand.
 - **War & siege mitigation**: Hostile captures cause $-2\%$ population loss, mitigated by fortification strongpoints ($0\%, 10\%, 20\%, 35\%, 50\%$ for fort tiers 0–4).
 - **Settlement allocation**: On-demand display projection weights sites (village 1, town 3, city 7 + 1 per economic building), summing exactly to total county population.

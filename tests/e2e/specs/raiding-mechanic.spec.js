@@ -351,6 +351,21 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
 
       var initialTargetPop = FB.countyPopulation(s, targetPid);
       var initialHomePop = FB.countyPopulation(s, p.provinceId);
+      var targetDef = FB.world.byId[targetPid];
+      var targetMinority = Math.max(1, Math.round(initialTargetPop * 0.25));
+      s.population.counties[targetPid].communities = [
+        {
+          culture:targetDef.culture, religion:targetDef.religion,
+          count:initialTargetPop - targetMinority
+        },
+        { culture:'gaelic', religion:'orthodox', count:targetMinority }
+      ];
+      FB.reconcileCountyCommunities(s, targetPid);
+      var initialHomeMinority = FB.countyCommunities(s, p.provinceId).reduce(
+        function (sum, community) {
+          return sum + (community.culture === 'gaelic' &&
+            community.religion === 'orthodox' ? community.count : 0);
+        }, 0);
       var initialGold = p.gold;
       var initialPrestige = p.prestige;
 
@@ -363,6 +378,11 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
 
       var finalTargetPop = FB.countyPopulation(s, targetPid);
       var finalHomePop = FB.countyPopulation(s, p.provinceId);
+      var finalHomeMinority = FB.countyCommunities(s, p.provinceId).reduce(
+        function (sum, community) {
+          return sum + (community.culture === 'gaelic' &&
+            community.religion === 'orthodox' ? community.count : 0);
+        }, 0);
       var finalGold = p.gold;
       var finalPrestige = p.prestige;
 
@@ -385,6 +405,7 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
         prestigeGained: finalPrestige - initialPrestige,
         targetPopLoss: initialTargetPop - finalTargetPop,
         homePopGain: finalHomePop - initialHomePop,
+        homeMinorityGain: finalHomeMinority - initialHomeMinority,
         captivesReported: report.captives,
         hasRaidShock: hasRaidShock,
         hasCooldown: hasCooldown,
@@ -396,6 +417,7 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
     expect(result.prestigeGained).toBeGreaterThan(0);
     expect(result.targetPopLoss).toBeGreaterThan(0);
     expect(result.homePopGain).toBeGreaterThan(0);
+    expect(result.homeMinorityGain).toBeGreaterThan(0);
     expect(result.captivesReported).toBeGreaterThan(0);
     expect(result.hasRaidShock).toBe(true);
     expect(result.hasCooldown).toBe(true);

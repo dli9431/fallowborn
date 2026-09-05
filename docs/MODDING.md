@@ -1467,6 +1467,10 @@ either `true` for the same reverse status or an explicit reverse status) ·
 `declareIndependence` · `devUp` ·
 `populationLoss: n` (flat civilian loss in the target county; mitigated by crisis/famine building & tech protections) ·
 `populationLossRate: rate` (fractional civilian loss, e.g. `0.05` for 5%; mitigated by crisis/famine protections) ·
+`populationCommunity:{culture?,religion?}` optionally accompanies either population-loss
+key. At least one valid id is required; only matching live community cohorts are lost.
+Omit it for proportional county-wide loss. This lets famine, persecution, expulsion, and
+other scripted losses declare their affected population without rewriting county identity. ·
 `pickHeir: true` (opens the eligible-heir picker; automation names the first heir in line;
 either result grants 8 prestige and records the choice) · `research: n` (points added to
 the effective sovereign nation's shared research pool; divided among active projects or

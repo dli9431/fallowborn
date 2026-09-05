@@ -633,6 +633,11 @@ The preview and resolution receipt disclose the affected county, basket, directi
 duration. Application stores only the normalized, locale-neutral shock record; it does not
 consume RNG or bake rendered prose into the save.
 
+Population-loss effects may add `populationCommunity:{culture?,religion?}`. The
+interpreter passes that selector to the county population boundary after applying the
+usual crisis or famine protection, so a scripted persecution, expulsion, or local famine
+can affect matching live cohorts while an omitted selector remains proportional.
+
 Declarative effects are formatted by the engine. A custom option effect also registers
 `FB.eventImpactAdapters[customId]` with pure `preview(state, ctx, event, effects)` and
 post-resolution `report(state, captured, ctx, event, effects)` functions; `capture` is an

@@ -275,7 +275,7 @@ window.FBDATA = window.FBDATA || {};
       },
       county_community_identity:{
         mode:'none',
-        rationale:'Choosing an authored local culture and faith is baseline character identity, not a capability enabled by research.'
+        rationale:'Choosing and preserving local culture-faith communities through ordinary demographic change is baseline identity, not a capability enabled by research.'
       },
       local_marriage_prospect_identity:{
         mode:'none',

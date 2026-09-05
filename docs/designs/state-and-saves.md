@@ -151,8 +151,10 @@ culture-assimilation totals. No percentage or rendered demographic prose is save
   history that the older save did not record, consumes no RNG, and is idempotent and
   byte-stable for identical input.
 - Annual simulation records `natural`, `migration`, and `losses` per county.
-- Population writers reconcile the partition after changing `count`; until cohort-aware
-  annual migration ships, its unexplained net delta belongs to the principal community.
+- Ordinary population writers proportionally apportion exact integer changes by stable
+  largest remainder. Targeted policies may select one culture, faith, or exact pair.
+  Migration and settled-captive transfers remove and add the same exact cohort records;
+  no transient edge allocation is serialized.
 - Live community readers return detached projections and never repair state as a display
   side effect. No transient calculations, edge allocations, or prose strings enter
   serialized state.

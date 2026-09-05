@@ -956,7 +956,9 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
     (`state.buildings[pid]`) and reduce county development (`state.dev[pid]`).
   - *Population & Captives*: Drains target county population and yields captives. Captives may
     be settled as free/serf population in the raider's home county, bonded as household laborers
-    (+workforce), or ransomed for gold.
+    (+workforce), or ransomed for gold. Settled captives move through
+    `FB.moveCommunityPopulation`, so the exact culture-faith cohorts removed from the target are
+    the ones added at home; the remaining raid deaths stay proportional within the target county.
   - *Market System*: Hauls away commodities matching the target's endowments and applies a
     severe 4-season market shock (`FB.addMarketShock`), disrupting victim production.
   - *Diplomacy*: Reduces Standing with the victim sovereign by 25 and leaves retaliatory grievances.

@@ -10561,15 +10561,13 @@ window.FB = window.FB || {};
     }
 
     if (spoils.success) {
-      if (FB.changeCountyPopulation) {
-        FB.changeCountyPopulation(state, targetPid, -spoils.popLoss, 'raid_losses');
-      }
-
       captiveChoice = captiveChoice || 'settle';
       spoils.captiveChoice = captiveChoice;
+      var settledCaptives = 0;
       if (captiveChoice === 'settle') {
-        if (FB.changeCountyPopulation && homePid) {
-          FB.changeCountyPopulation(state, homePid, spoils.captives, 'raid_captives');
+        if (FB.moveCommunityPopulation && homePid) {
+          settledCaptives = FB.moveCommunityPopulation(
+            state, targetPid, homePid, spoils.captives, 'raid_captives').count;
         }
       } else if (captiveChoice === 'bond') {
         p.bondedWorkers = (p.bondedWorkers || 0) + Math.max(1, Math.round(spoils.captives / 25));
@@ -10578,6 +10576,10 @@ window.FB = window.FB || {};
         p.gold += extraGold;
         p.prestige += 10;
         spoils.ransomGold = extraGold;
+      }
+      if (FB.changeCountyPopulation) {
+        FB.changeCountyPopulation(state, targetPid,
+          -Math.max(0, spoils.popLoss - settledCaptives), 'raid_losses');
       }
 
       if (spoils.ruinedBuildings.length && state.buildings && state.buildings[targetPid]) {

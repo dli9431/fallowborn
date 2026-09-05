@@ -187,8 +187,13 @@ outcomes remain authoritative and unchanged.
 The annual population pass similarly computes each county's population, capacity, occupation,
 and market-shock status once, and each owner's war status once. Natural growth and conserved
 adjacency migration share that snapshot rather than repeating capacity and conflict scans for
-every neighboring edge. Proposed migration edges are grouped by source while they are created, so
-the outflow cap scales each source directly instead of filtering the full edge list again.
+every neighboring edge. Natural change uses stable largest-remainder apportionment over each
+county's saved culture-faith communities. Proposed migration edges are grouped by source while
+they are created; after stable capping, each source apportions its total outflow once and sends
+those exact cohorts across canonically ordered edges. Destination counties receive the same
+identities, the migration ledger remains world-sum zero, county floors hold, and the pass consumes
+no RNG. The demographic work stays bounded by counties, adjacency edges, and live community
+records rather than individual people.
 Annual AI construction snapshots direct holdings once before development grants begin, preventing
 each grant's cache invalidation from forcing another complete map ownership rebuild.
 Mounted disabled deeds with a known standard or system-specific readiness turn
