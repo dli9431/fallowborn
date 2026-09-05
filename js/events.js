@@ -4950,14 +4950,6 @@ window.FB = window.FB || {};
     if (FB.notePlayerStatus) FB.notePlayerStatus(state);
     return true;
   };
-  FB.fns.barony_offer_eligible = function (state) {
-    const B = FBDATA.balance;
-    const lord = FB.getRole(state, 'lord', true);
-    return FB.gentryEstablished(state) &&
-      state.player.prestige >= B.baronyPrestige &&
-      !!lord && characterStanding(state, lord) >= B.baronyOpinion;
-  };
-
   /* ---------- daily event selection ----------
      Queued events fire at once. Random events land on 1-2 pre-rolled "slot
      days" per season (scheduled in main.js), keeping the old seasonal pacing
@@ -8440,7 +8432,7 @@ window.FB = window.FB || {};
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
     'raid_enslave raid_plunder rank_elevation_claim rank_elevation_offer realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome serf_commuted_pay serf_flight_failure serf_neighbor_clear serf_neighbor_context_valid serf_neighbor_officer_current serf_neighbor_shifted serf_old_custom_ready serf_old_custom_replace_officer serf_old_custom_replacement_valid serf_old_custom_sync serf_transition_accept serf_transition_decline_restore serf_transition_pay serf_transition_primary serf_transition_witness_failure serf_transition_witness_success sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
     'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
-    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist liege_land_grant lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay rank_elevation_context_valid serf_commuted_pay_ready serf_transition_adverse serf_transition_pay_ready serf_transition_restore serf_transition_witness suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
+    'agency_marriage_affordable attainder_can_pay attainder_risk bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist liege_land_grant lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay rank_elevation_context_valid serf_commuted_pay_ready serf_transition_adverse serf_transition_pay_ready serf_transition_restore serf_transition_witness suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
   ).split(' ');
   FB.coreEventImpactCustomIds = CORE_CUSTOM_EFFECT_IDS.slice();
   FB.eventImpactAdapters = FB.eventImpactAdapters || {};
@@ -11339,12 +11331,6 @@ window.FB = window.FB || {};
     p.gold += g;
     FB.news(state, FB.msg('news.event.inheritance_settled',
       '💰 The inheritance settles {money:gold} under your stewardship.', { gold: g }));
-    // a noble house's estate lifts a common steward into the gentry
-    if (p.tier < 2 && ctx && ctx.lateStation >= 3) {
-      FB.setPlayerTier(state, 2);
-      FB.news(state, FB.msg('news.event.inheritance_raises_station',
-        '🏛 Stewarding a noble inheritance raises you into the gentry.', {}));
-    }
   };
   FB.fns.claim_lost = function (state, ctx) {
     const g = lateDowry(ctx, 0.3);

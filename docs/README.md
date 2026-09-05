@@ -296,12 +296,13 @@ are included because the family's freedom also ends their inherited servile stat
 The Kin panel remembers how the family first became free, including flight without a
 lawful charter. Freeholders then buy inherited plots settlement by settlement. Land held together grows more
 productive, and five plots in one settlement plus 150 prestige qualify the family to fund
-its 200-gold/100-prestige recognition as gentry. Standing with a lord then earns an established gentle house a
-banner, normally after the manor has passed to an heir; battlefield glory during an active
-war and the church can still raise an exceptional life more quickly. A founder who rose into the gentry
+its 200-gold/100-prestige recognition as gentry through **Rank & Realm**. Standing with a
+lord then lets an established gentle house petition there for a paid barony, normally after
+the manor has passed to an heir. A founder who rose into the gentry
 from below and has already fought and saved the lord may, with Martial 12 and 120 prestige, take command
 of a count-or-greater ruler's live field host; leading that host to a real map victory
-earns an immediate barony offer. Marriage and scheming offer other shortcuts. Meanwhile
+earns an immediate barony offer. Religious office has its own deliberate advancement ladder;
+random marriage, patronage, soldier, and clerical events do not grant rank. Meanwhile
 ~65 sovereign realms fight their own wars — and their dukes and counts
 sometimes break away — so the map redraws itself decade by decade.
 

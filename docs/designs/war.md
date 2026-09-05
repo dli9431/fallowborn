@@ -696,16 +696,11 @@ campaigning protagonist may reach the current local lord without first completin
 priest/freeholder-to-steward chain: muster, guard duty, and the lord's host put otherwise
 distant ranks in the same urgent setting. This is an audience, not equality; cultivation
 and explicit gifts still keep their class-distance effect and cash multipliers. It never
-opens unrelated nobles or foreign rulers. The pattern complements the game's existing
-service route to elevation: early medieval royal land grants explicitly record devoted
-service alongside military, bridge, and fortress obligations ([The National
+opens unrelated nobles or foreign rulers. Saving a fallen lord may establish the favor
+needed for the later field-command route, but the retired random `knighted` event no
+longer raises a serf or freeholder directly. Early medieval royal land grants explicitly
+record devoted service alongside military, bridge, and fortress obligations ([The National
 Archives](https://www.nationalarchives.gov.uk/education/resources/anglo-saxons-gift-from-a-king/)).
-
-**Battlefield knighting belongs to an active war.** Saving the fallen lord may mark a
-soldier for elevation, but `knighted` also requires `realmAtWar:true` when it is selected.
-The top-level `wartime:true` flag controls the wartime event pool; it does not make an
-event war-only during peace. A delayed honor therefore cannot raise a serf or freeholder
-after the armies have stood down.
 
 **A newly gentle founder may take real field command.** `FB.militaryCommandStatus`
 offers the Deed only to the first playable head before the house is established, after

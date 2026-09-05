@@ -533,12 +533,13 @@ give his power base away. The grant changes no liege and no sovereign: the playe
 stays inside the realm. And only the crown can recognize a duke — if the player's living
 liege is not at least a king, a completed duchy majority stays a *claim* without the
 style (announced once per generation) until he answers to a king, an emperor, or no
-one. Independence comes two ways:
-the random `independence_offer` event or the explicit `declare_independence` deed
-(200+ prestige, any sworn tier) — both run `FB.doIndependence`, which founds the
-player realm and starts a defensive war against the old sovereign; a baron doing
-either seizes his home county via `FB.transferProvince` (burying the old holder if
-left landless).
+one. Independence comes two ways: a Count may receive the random
+`independence_offer` event, while the explicit `declare_independence` deed remains
+available at any sworn tier with 200+ prestige. Both run `FB.doIndependence`, which
+founds the player realm and starts a defensive war against the old sovereign; a baron
+using the explicit deed seizes his home county via `FB.transferProvince` (burying the
+old holder if left landless). The random event begins at Count so it cannot double as
+an unrequested Baron-to-Count promotion.
 
 **Feudal patronage diminishes within a lifetime.** A successful barony, liege title
 petition, neighboring-fief petition, or court-awarded escheat increments
@@ -685,19 +686,17 @@ lord's house dies — or the county changes hands under a living lord — the ba
 to whoever holds his home (`FB.transferProvince`, with a catch-all repair in
 `FB.checkTierPromotions`), never standing "independent" nor kneeling to a lord who no
 longer holds his home. Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
-share it: an abbot or qadi keeps the cloth (`tierSet` in `js/events.js` preserves
-monk/priest) but manages the manor like any gentry. Ordinary feudal elevation requires
+share it: an abbot or qadi keeps the cloth while managing the manor like any gentry.
+Ordinary feudal elevation requires
 an **established gentle house**: `player.gentryGeneration` records the line depth that
 first reached tier 2, and only a genuinely later generation of the line may petition
-for a barony or receive the unsolicited offer. Generations are counted by
+for a barony. Generations are counted by
 `player.lineDepth`, the genealogical depth of the current head, so a sibling or cousin
-of the founder's own generation does not qualify. Both paths use `balance.baronyPrestige` and
-`balance.baronyOpinion`. Tier-2 scenarios begin with an established house, and older
-saves without the additive field are treated the same way. Battlefield knighting and
-the learned clerical paths remain exceptional personal careers: they may establish
-gentry or receive personal offices without this ordinary patronage gate. `knighted`
-requires the protagonist's realm still to be at war when the lord raises them; its
-top-level `wartime:true` category alone is not an eligibility gate. A founder who
+of the founder's own generation does not qualify. The petition uses
+`balance.baronyPrestige` and `balance.baronyOpinion`. Tier-2 scenarios begin with an
+established house, and older saves without the additive field are treated the same way.
+The learned clerical paths remain exceptional personal careers: they may establish
+gentry or receive personal offices without this ordinary patronage gate. A founder who
 personally rose into the gentry may also cross the gate once by military command. The
 first playable head must already have fought in battle and saved the local lord, reach
 `balance.militaryBaronyMartial` Martial and `balance.militaryBaronyPrestige` prestige,
@@ -707,15 +706,15 @@ only its next actual map battle victory queues `military_barony_victory`. A shat
 host or ended war closes the command without reward. An established heir or a tier-2
 scenario cannot use this founder-life exception. Accepting the battlefield grant is
 ordinary patronage for `player.liegeGrants` and creates the same territorial tier-3
-barony as `grant_of_barony`; declining it leaves the player gentry. The household
+barony as the ordinary petition; declining it leaves the player gentry. The household
 religious ladder in `js/economy.js` raises abbot/qadi to tier 2 and chief qadi to tier 3.
 A Catholic Bishop's personal see supplies tier-3 compatibility without being a barony;
 dependent officeholders instead receive the corresponding marriage/social `station`
-without becoming the landed player. The unsolicited `grant_of_barony` event lets
-eligible gentry accept, decline for a purse, or decline graciously. It remains a free
-exceptional patronage grant with its existing prestige reward, as do battlefield
-baronies and religious offices. Short of "Autoresolve everything", automation leaves
-every title-changing or independence decision to the player.
+without becoming the landed player. Random soldier, clerical, inheritance, and patronage
+events no longer raise the household's tier; the retired `knighted`, `made_abbot`,
+`made_qadi`, `chief_qadi`, and `grant_of_barony` records cannot bypass the deliberate
+rank or office controls. The battlefield barony remains the one authored-event exception
+because the player explicitly takes command and must win a real map battle first.
 
 **Ordinary rank elevation is an explicit investiture claim.** Meeting the social or
 territorial gate qualifies the household; it does not silently grant the style. Every
@@ -748,8 +747,8 @@ in full to be recognized again. Serf freedom remains its own system and cost.
 
 This fee belongs only to player-initiated ordinary claims: manor recognition, a successful
 petitioned barony, a successful Count investiture, and de jure claims to Duke, King, or
-Emperor. Unsolicited and military baronies, religious offices, inheritance or realm
-absorption, generic authored/mod `tierSet`, and save repair stay free. Centralizing the
+Emperor. The military barony, religious offices, inheritance of an actual realm,
+generic authored/mod `tierSet`, and save repair stay free. Centralizing the
 price in `FB.setPlayerTier` would incorrectly charge those exceptional paths, so callers
 use `FB.attemptRankElevation` and `FB.claimRankElevation` instead. The older
 `FB.queueRankElevationOffer` event boundary remains available for authored event paths and

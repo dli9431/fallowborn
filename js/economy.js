@@ -1355,7 +1355,9 @@ window.FB = window.FB || {};
 
   FB.householdMembers = function (state) {
     const me = playerChar(state);
-    const out = [], seen = {}, married = {};
+    const out = [], seen = {};
+    const reverseSpouses = FB.spouseLinksSnapshot
+      ? FB.spouseLinksSnapshot(state) : null;
     function add(c) {
       if (!c || c.dead || seen[c.id]) return;
       if (c.id !== me.id && FB.isExternalHouseholdAuthority &&
@@ -1363,20 +1365,30 @@ window.FB = window.FB || {};
       seen[c.id] = 1;
       out.push(c);
     }
-    for (const id in state.chars) {
-      const c = state.chars[id];
-      const sp = c && c.spouseId && state.chars[c.spouseId];
-      if (!c || c.dead || !sp || sp.dead) continue;
-      married[c.id] = 1;
-      married[sp.id] = 1;
+    function married(c) {
+      const direct = c && c.spouseId && state.chars[c.spouseId];
+      if (direct && !direct.dead) return true;
+      if (reverseSpouses) {
+        const ids = reverseSpouses[c.id] || [];
+        for (let i = 0; i < ids.length; i++) {
+          const other = state.chars[ids[i]];
+          if (other && !other.dead && other.spouseId === c.id) return true;
+        }
+        return false;
+      }
+      for (const id in state.chars) {
+        const other = state.chars[id];
+        if (other && !other.dead && other.spouseId === c.id) return true;
+      }
+      return false;
     }
     add(me);
     for (const sp of FB.spousesOf(state, me)) add(sp);
     for (const child of FB.childrenOf(state, me)) {
-      if (FB.playerDescendantKind(state, child.id) && !married[child.id]) add(child);
+      if (FB.playerDescendantKind(state, child.id) && !married(child)) add(child);
       for (const grandchild of FB.childrenOf(state, child)) {
         if (FB.playerDescendantKind(state, grandchild.id) === 'grandchild' &&
-            !married[grandchild.id]) add(grandchild);
+            !married(grandchild)) add(grandchild);
       }
     }
     return out;
@@ -1783,9 +1795,18 @@ window.FB = window.FB || {};
        no upkeep, no household semantics — labor only. Age and profession
        filters stay at the call sites. */
     if (FB.manageableKinKind) {
-      for (const id in state.chars) {
-        const c = state.chars[id];
-        if (c && FB.manageableKinKind(state, c.id)) add(c);
+      const kin = FB.kinOf && FB.kinOf(state);
+      const siblings = kin && kin.siblings;
+      if (siblings) {
+        for (let i = 0; i < siblings.length; i++) {
+          const c = siblings[i].c;
+          if (c && FB.manageableKinKind(state, c.id)) add(c);
+        }
+      } else {
+        for (const id in state.chars) {
+          const c = state.chars[id];
+          if (c && FB.manageableKinKind(state, c.id)) add(c);
+        }
       }
     }
     return out;

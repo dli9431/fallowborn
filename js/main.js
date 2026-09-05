@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.9';
+FB.VERSION = '1.168.10';
 FB.CHANGELOG = [
+  { v: '1.168.10', date: '2026-09-04', changes: [
+    'Winter-to-spring fast-forward now avoids repeated annual simulation work that could freeze the interface.',
+    'Legacy random knighting, clerical, inheritance, independence, and patronage events no longer grant household rank.'
+  ] },
   { v: '1.168.9', date: '2026-09-04', changes: [
     'Rank advancement now opens an on-demand investiture review with live requirements, costs, and benefits.',
     'War targets can now be selected directly on the map before reviewing the declaration.',
@@ -3219,6 +3223,7 @@ FB.CHANGELOG = [
     if (FB.financeDay) FB.financeDay(s);
 
     if (seasonBoundary) {
+      let annualContext = null;
       if (FB.intrigueSeason) FB.intrigueSeason(s);
       if (p.dead) return 'dead';
       if (FB.marketSeason) FB.marketSeason(s);
@@ -3284,10 +3289,10 @@ FB.CHANGELOG = [
          adjustment is therefore measured in the next spring-to-summer net,
          while Finance and the gold sheet show it immediately. */
       if (newYear) FB.financeYear(s, seasonEconomy);
-      if (newYear) FB.worldTick(s);
+      if (newYear) annualContext = FB.worldTick(s);
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
       if (newYear) {
-        yearlyLife(s);
+        yearlyLife(s, annualContext);
         if (p.dead) return 'dead';
       }
     }
@@ -4047,7 +4052,7 @@ FB.CHANGELOG = [
   };
 
   /* ---------- yearly aging, mortality, coming of age ---------- */
-  function yearlyLife(s) {
+  function yearlyLife(s, annualContext) {
     const p = s.player;
     const me = s.chars[p.charId];
     const year = s.date.year;
@@ -4107,6 +4112,11 @@ FB.CHANGELOG = [
     const familyLinks = FB.familyLinksSnapshot
       ? FB.familyLinksSnapshot(s) : null;
     const kinRel = familyLinks ? familyLinks.kinById : FB.kinOf(s).byId;
+    const marketMortality = FB.marketMortalityPressure
+      ? FB.marketMortalityPressure(s) : 0;
+    const loadouts = p.loadouts || {};
+    const courtMortalityHandled = annualContext &&
+      annualContext.courtMortalityHandled;
 
     // player mortality (curve scaled by the balance knob, 0.012 = as-authored)
     const mortScale = (FBDATA.balance.mortalityBase || 0.012) / 0.012;
@@ -4126,9 +4136,7 @@ FB.CHANGELOG = [
     q -= FB.techBonus(s, 'health') + FB.holdingBonus(s, 'health') + FB.itemBonus(s, 'health'); // physicians, hearth gardens, remedies
     q -= standardMortality;
     if (!s.player.travel) q -= medicalProtection;
-    if (!s.player.travel && FB.marketMortalityPressure) {
-      q += FB.marketMortalityPressure(s);
-    }
+    if (!s.player.travel) q += marketMortality;
     q = FB.clamp(q, 0.002, 0.6);
     if (age > 90 || FB.chance(q)) {
       G.die(FB.msg('legend.death.age', {
@@ -4166,16 +4174,20 @@ FB.CHANGELOG = [
          compacts the record; one the player can reach stays here, where the
          death is reported. The two conditions are exact complements, so no
          court character is rolled twice and none is immortal. */
-      if (FB.isCourtCharacter && FB.isCourtCharacter(s, c) &&
-          !FB.courtRecordRetained(s, c, kinRel)) continue;
+      if (FB.isCourtCharacter && FB.isCourtCharacter(s, c)) {
+        if (courtMortalityHandled && courtMortalityHandled[c.id]) continue;
+        if (!FB.courtRecordRetained(s, c, kinRel, familyLinks)) continue;
+      }
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
+      const descendantKind = a < 16
+        ? FB.playerDescendantKind(s, c.id) : null;
+      const householdCharacter = descendantKind || medicalProtection || marketMortality
+        ? FB.isHouseholdCharacter(s, c.id, familyLinks) : false;
       /* the house's resident descendants share its table: each station above serf means
          better food and water — slightly fewer child deaths and slightly
          hardier children (rulers and rich merchants alike) */
-      if (a < 16 && FB.playerDescendantKind(s, c.id) &&
-          FB.isHouseholdCharacter(s, c.id)) {
-        const station = FB.playerStation(s);
+      if (descendantKind && householdCharacter) {
         cq *= 1 - station * (FBDATA.balance.richChildMortalityBonus || 0);
         if (c.health < 8 && FB.chance(station * (FBDATA.balance.richChildHealthChance || 0))) c.health++;
       }
@@ -4189,16 +4201,19 @@ FB.CHANGELOG = [
           FB.characterResidence(s, c) === p.provinceId;
         if (residentHere) cq += 0.05;
       }
-      cq -= FB.traitAgg(c).health + FB.itemBonus(s, 'health', c.id);
+      const itemHealth = loadouts[c.id] && FB.itemBonusReadOnly
+        ? FB.itemBonusReadOnly(s, 'health', c.id)
+        : (loadouts[c.id] ? FB.itemBonus(s, 'health', c.id) : 0);
+      cq -= FB.traitAgg(c).health + itemHealth;
       if (maintainedHousehold[c.id]) cq -= standardMortality;
-      if (medicalProtection && FB.isHouseholdCharacter(s, c.id)) {
+      if (medicalProtection && householdCharacter) {
         cq -= medicalProtection;
       }
-      if (FB.marketMortalityPressure && FB.isHouseholdCharacter(s, c.id) &&
+      if (marketMortality && householdCharacter &&
           (residentHere !== undefined ? residentHere :
             (!FB.characterResidence ||
               FB.characterResidence(s, c) === p.provinceId))) {
-        cq += FB.marketMortalityPressure(s);
+        cq += marketMortality;
       }
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
         const wasSpouse = c.id === me.spouseId || c.spouseId === me.id;
@@ -4216,7 +4231,7 @@ FB.CHANGELOG = [
            BEFORE the death: FB.killChar severs the very links the predicate
            consults, and a spouse checked afterwards reads as a stranger. */
         const compactRoyal = !!(c.royalLine && FB.courtRecordRetained &&
-          !FB.courtRecordRetained(s, c, kinRel));
+          !FB.courtRecordRetained(s, c, kinRel, familyLinks));
         FB.killChar(s, c, { familyLinks:familyLinks });
         if (compactRoyal && FB.compactRoyalRecordOnDeath) {
           FB.compactRoyalRecordOnDeath(s, c, {

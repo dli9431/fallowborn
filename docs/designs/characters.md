@@ -81,6 +81,20 @@ a stranger. Compaction is forward-only: it lives in the death path and never run
 retroactively over a loaded save, where dead materialized royals the player once met are
 already present.
 
+Succession mutations refresh the affected house immediately. The ordinary Spring pass
+therefore trusts an unchanged house's saved order rather than replaying its complete history;
+its local legacy guard still closes a missing or already-dead materialized member. That repair
+also derives an in-memory living-member frontier and the current consort. Annual court fill and
+mortality walk this bounded frontier, so dead ancestral tombstones remain available to genealogy
+without becoming yearly simulation work. A missing frontier pays for one full repair, as it does
+when a save is loaded. When a refresh is required, one parent-to-children index expands every
+dead branch in linear passes over the member table instead of rescanning the whole table at each
+generation. The realm roll records which unrelated full court characters it handled, so the
+following player-family mortality pass does not classify them a second time. Household membership
+uses the shared reverse-spouse index to test the current children and grandchildren directly,
+rather than scanning the complete world character table on every household read. Worker lists
+likewise test manageable kin only within the already-derived sibling slice.
+
 The accepted tradeoff: a never-inheriting royal child who died untouched has a name and
 dates in the family tree, but no posthumous character sheet. Records are spent on what
 the player can see and touch. See [realms.md](realms.md) for the court's structure and
@@ -939,9 +953,9 @@ home county. The see grants tier-3 compatibility while the Bishop is otherwise u
 is not a generic barony: it has its own income, household retinue, actions, events, and
 succession. A Bishop who later inherits real counties or a crown keeps the see alongside
 those lay titles. On death or elevation to Pope, the see returns to the Church; a see-only
-heir resumes as gentry and keeps the family's private property. Legacy
-`player.flags.abbot/bishop/qadi/chief_qadi` remain compatibility mirrors for old events and
-saves.
+heir resumes as gentry and keeps the family's private property.
+`player.flags.abbot/bishop/qadi/chief_qadi` remain compatibility mirrors for the current
+office systems and old saves; the former random appointment events are no longer authored.
 
 Every baseline path and rank remains at its historical index. Each rank now also has a
 stable id for localization and special office consumers; mods may append ranks but cannot

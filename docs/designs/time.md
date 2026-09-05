@@ -164,6 +164,33 @@ player requests the corresponding review sheet and is rechecked on confirmation.
 An active title lapse likewise reuses its last territorial check between mutations and
 wakes only on its exact warning or demotion day, rather than rescanning de jure substance
 on every skipped day.
+At the Winter-to-Spring boundary, realm AI builds one pass-local index of active wars and
+alliances, then memoizes defensive strength until a conquest, succession, breakaway, or new
+conflict invalidates it. Candidate wars, raids, breakaways, and marriage alliances therefore
+do not repeat whole-realm political scans. Stable royal houses keep the succession order their
+last mutation established instead of rebuilding every accumulated generation each Spring; a
+death or other succession mutation refreshes only that house, using one parent index so the work
+is linear in its saved members rather than a whole-tree scan for every dead branch. That repair
+derives an unsaved living-court frontier and current-consort lookup, so later annual court fill
+and mortality ignore accumulated dead generations entirely. The court pass also returns an
+unsaved set of unrelated courtiers whose mortality it settled, letting the following player-family
+pass skip them without repeating the retention classification. The player's annual mortality pass
+reuses its one reverse-family-link snapshot for household residency, and household enumeration
+uses that same derived spouse index rather than rescanning every character for a few descendants.
+It reads market hardship once and skips equipment resolution for characters without a household
+loadout. The Papal
+claimant is resolved only for the Papacy's territorial realm, and that read trusts the normalized
+Papacy model instead of repairing every Catholic sovereign for each realm considered. A consistory
+also builds reverse spouse links once for its all-character eligibility sweep rather than once per
+candidate. These are derived, unsaved optimizations; mutation order, random draws, and annual
+outcomes remain authoritative and unchanged.
+The annual population pass similarly computes each county's population, capacity, occupation,
+and market-shock status once, and each owner's war status once. Natural growth and conserved
+adjacency migration share that snapshot rather than repeating capacity and conflict scans for
+every neighboring edge. Proposed migration edges are grouped by source while they are created, so
+the outflow cap scales each source directly instead of filtering the full edge list again.
+Annual AI construction snapshots direct holdings once before development grants begin, preventing
+each grant's cache invalidation from forcing another complete map ownership rebuild.
 Mounted disabled deeds with a known standard or system-specific readiness turn
 are the narrow deadline exception: if a cooldown expires between general passes,
 only the due row is patched on the exact day. Large raid, conquest, holy-war,

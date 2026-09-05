@@ -2,8 +2,23 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
+  'data/events_agency.js',
+  'data/events_artifacts.js',
+  'data/events_common.js',
+  'data/events_council.js',
+  'data/events_intrigue.js',
+  'data/events_lifepaths.js',
   'data/events_noble.js',
+  'data/events_parliament.js',
   'data/events_paths.js',
+  'data/events_peasant.js',
+  'data/events_politics.js',
+  'data/events_settlements.js',
+  'data/events_tournament.js',
+  'data/events_travel.js',
+  'data/events_tutorial.js',
+  'data/events_war.js',
+  'data/events_world.js',
   'data/map_data.js',
   'css/style.css',
   'js/actions.js',
@@ -577,36 +592,48 @@ test('a refused barony petition keeps its investiture and starts its cooldown',
     });
   });
 
-test('an unsolicited barony and generic tierSet remain free exceptions',
+test('legacy event promotions are retired and inheritance cannot bypass rank review',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
-      p.tier = 2;
-      p.gold = 777;
-      p.prestige = 500;
-      p.piety = 44;
-      p.gentryGeneration = Math.max(0, (p.lineDepth || 1) - 1);
-      const event = FB.eventById('grant_of_barony');
-      const ctx = FB.eventContextFor(s, event, {});
-      const resolved = !!FB.resolveEventOption(
-        s, event, event.options[0], ctx);
-      const afterOffer = {
-        tier:p.tier, gold:p.gold, prestige:p.prestige, piety:p.piety
-      };
-      FB.applyEffects(s, { tierSet:4 });
-      return {
-        resolved:resolved,
-        afterOffer:afterOffer,
-        afterGeneric:{
-          tier:p.tier, gold:p.gold, prestige:p.prestige, piety:p.piety
+      const retired = [
+        'knighted', 'made_abbot', 'made_qadi', 'chief_qadi',
+        'grant_of_barony'
+      ];
+      const directTierEvents = [];
+      function hasTierEffect(option) {
+        const effects = [option.effects,
+          option.success && option.success.effects,
+          option.failure && option.failure.effects];
+        return effects.some(function (fx) {
+          return !!(fx && (fx.tierSet !== undefined || fx.tierUp));
+        });
+      }
+      FBDATA.events.forEach(function (event) {
+        if ((event.options || []).some(hasTierEffect)) {
+          directTierEvents.push(event.id);
         }
+      });
+      p.tier = 1;
+      p.gold = 100;
+      const beforeGold = p.gold;
+      FB.fns.claim_won(s, { lateName:'a noble spouse', lateStation:4 });
+      const independenceOffer = FB.eventById('independence_offer');
+      return {
+        retired:retired.filter(function (id) { return !!FB.eventById(id); }),
+        directTierEvents:directTierEvents.sort(),
+        independenceOfferTierMin:independenceOffer.trigger.tierMin,
+        tierAfterInheritance:p.tier,
+        inheritancePaid:p.gold > beforeGold
       };
     });
 
     expect(result).toEqual({
-      resolved:true,
-      afterOffer:{ tier:3, gold:777, prestige:560, piety:44 },
-      afterGeneric:{ tier:4, gold:777, prestige:560, piety:44 }
+      retired:[],
+      directTierEvents:['military_barony_victory'],
+      independenceOfferTierMin:4,
+      tierAfterInheritance:1,
+      inheritancePaid:true
     });
   });

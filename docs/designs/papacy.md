@@ -78,6 +78,8 @@ per year and appoint up to two candidates while below target. One appointment fr
 Pope's dynasty is tolerated each pontificate; every later relative costs 5 authority
 and 10 Curial opinion with each non-family Cardinal. These Cardinal-to-Cardinal election
 relationships are pairwise and remain distinct from player-relative Standing.
+The annual consistory candidate sweep reuses one derived reverse-spouse index, keeping
+eligibility linear in the character population even in long-running saves.
 
 Every Cardinal is a full `state.chars` character with an order, bloc, Roman title church,
 relationships, residence, gifts, travel, and mortality. Appointees before 1100 relocate
@@ -227,3 +229,7 @@ The read-only obedience and excommunication gateways (`FB.papalObedienceForRealm
 reach them once per realm per research season and on every war evaluation, so routing
 them through the world-wide repair rebuilt every Catholic court many times per quiet
 day. The full ensure remains the boundary for creation, load, and incomplete shapes.
+The yearly Papacy path likewise trusts a complete saved shape and synchronizes supporters
+once. During realm AI, the territorial claimant lookup runs only for the realm holding the
+Roman office and reads that normalized shape directly; it does not repeat the sovereign-wide
+repair for every non-Roman realm rejected by the lookup.

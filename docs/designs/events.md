@@ -122,7 +122,8 @@ seasonal slots and 30% chance of a second slot each season, those two gates prov
 a 1.03% combined annual candidate opportunity before weighted competition. Once the Old
 Custom case has resolved, **What Is Remembered** has no second random gate: it concludes
 the case promptly rather than pretending that delayed presentation makes the underlying
-opportunity rarer. **Raised Up** retains its separate wartime promotion pacing.
+opportunity rarer. Soldier service may establish favor for the deliberate field-command
+route, but no random wartime event now promotes the household.
 
 Exact recurring local participants have technology impact **none**. Remembering who
 testified, enforced a duty, or shared a village quarrel is baseline social continuity, not
@@ -137,11 +138,12 @@ Every actual tier-0-to-tier-1 freedom route uses `FB.resolveSerfFreedom`; a gene
 `tierSet:1` or `FB.setPlayerTier(state, 1)` deliberately creates no freedom history.
 Any promotion that takes the playable head above tier 0 still releases every living
 spouse and descendant to at least Freeholder personal station. This includes exceptional
-event and office elevations that jump directly to Gentry or higher; only the protagonist
+office elevations and the explicit field-command victory that jump directly to Gentry or
+higher; only the protagonist
 receives the elevated station, and parents or collateral siblings remain bound unless a
 freedom route explicitly includes them. The centralized `FB.setPlayerTier` boundary owns
-this invariant so **Raised Up**, religious appointments, and custom event promotions
-cannot leave older children behind as serfs.
+this invariant so religious appointments, deliberate title awards, and modded custom
+promotions cannot leave older children behind as serfs.
 The bounded `serfFreedom:{route:'old_custom'|'flight'}` event effect preflights its
 route before any sibling effect, rejects combinations with `tierSet` or `tierUp`, and
 resolves before movement. Direct purchase and saved negotiated offers call the same
@@ -726,6 +728,14 @@ remain eligible until their final decision. No new lower-station opener begins
 after promotion. Once those flags clear, a once-per-character `station_farewell`
 decision asks the new ruler to honor or renounce the former life; succession or
 demotion cancels an unresolved farewell belonging to the prior station.
+
+Random life-path stories do not promote the household. The former soldier knighting,
+Abbot, Qadi, Chief Qadi, and unsolicited barony events were retired so an eligible event
+slot cannot bypass the player-opened rank or office review. Winning a noble spouse's
+`house_claim` still pays the inherited portion but no longer raises a commoner to Gentry.
+The random independence offer likewise begins at Count instead of raising a Baron.
+The explicit field-command victory remains an authored exception: it begins with a
+player-selected Deed and requires that exact commanded host to win a real map battle.
 
 **A woman’s road to arms.** With the martial training foci closed to women (see
 [characters.md](characters.md)), the *Sweet Polly Oliver* chain is one of the few ways a

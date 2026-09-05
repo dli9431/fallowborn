@@ -70,6 +70,10 @@ quality roll, and save format are unchanged.
 health protection. Battle, gold, prestige, and piety effects count only when worn by the
 current head. Unequipped wealth is mechanically inert. Base clothing shown by the paper
 doll is rank/profession/culture dress and never occupies an armory slot.
+The annual mortality sweep resolves health effects only for character ids that actually
+have a loadout. Its household-residency checks reuse the sweep's reverse-family-link
+snapshot, including reverse-only spouse records, instead of rescanning every character for
+each child or grandchild; deaths during the sweep are still read from the live records.
 Equipped footwear replaces the cosmetic shoes: the shoe construction takes the item's
 leather palette and rises over the ankle as a boot shaft. Hand objects are not glued to
 the hands: the card shows weapons, shields, tools, and books as framed inset panels in

@@ -122,12 +122,6 @@ FBDATA.events.push(
       failure:{ text:'You reach him — then something bursts against your helm. You wake in the surgeons’ tent, honored and broken.', effects:{ health:-3, prestige:12, opinion:{role:'lord', amt:25}, addTrait:'scarred' } } },
     { label:'A dead lord pays no wages. Keep formation.', desc:'Cold sense — and men will see that it was cold.', effects:{ prestige:-2 } }
   ]},
-{ id:'knighted', title:'Raised Up',
-  trigger:{ professions:['soldier'], flags:['lords_favor'], tierMax:1, realmAtWar:true, chance:0.2 }, wartime:true, weight:20,
-  text:'Before the assembled retinue, {lord} bids you kneel. A sword touches your shoulder. When you rise, you are no longer common.',
-  options:[
-    { label:'Rise, and serve with honor.', desc:'The first step out of the mud. Take it.', effects:{ tierSet:2, profession:'noble', prestige:40, log:'Raised to the gentry for valor!' } }
-  ]},
 { id:'loot_temptation', title:'The Sacked Town',
   trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:8, cooldown:6,
   text:'The town has fallen and discipline with it. Doors splinter; men stagger past with armfuls of plate and cloth. The {temple} stands unguarded.',
@@ -179,15 +173,6 @@ FBDATA.events.push(
       success:{ text:'Miracles are soon reported. Pilgrims flood in, and the house prospers — as do you.', effects:{ gold:15, piety:10, prestige:10, log:'Discovered holy relics.' } },
       failure:{ text:'The bishop’s examiner declares them sheep bones. Humiliation.', effects:{ piety:-8, prestige:-8 } } },
     { label:'Bury them again with honest prayers.', desc:'No profit, but a clear conscience.', effects:{ piety:8 } }
-  ]},
-{ id:'made_abbot', title:'The Abbot’s Chair',
-  trigger:{ never:true },
-  text:'The old abbot has gone to his reward. The brothers gather to choose a successor, and many eyes turn to you.',
-  options:[
-    { label:'Accept the burden.', desc:'The brothers may raise you — or close ranks against you.', chance:0.65,
-      success:{ text:'The house is yours to rule — lands, tithes, and souls.', effects:{ tierSet:2, prestige:30, piety:10, setFlag:'abbot', log:'Elected abbot!' } },
-      failure:{ text:'The prior’s faction outvotes yours. You remain a brother among brothers.', effects:{ piety:3 } } },
-    { label:'Decline in humility.', desc:'Piety grows fastest out of office.', effects:{ piety:10, addTrait:'humble' } }
   ]},
 { id:'bishops_mitre', title:'A Mitre Within Reach',
   trigger:{ never:true },
@@ -339,26 +324,6 @@ FBDATA.events.push(
       success:{ text:'Your copies are precise and sought after. Scholars speak your name.', effects:{ prestige:5, gold:3, skills:{lea:1} } },
       failure:{ text:'A blot of ink ruins a week’s work. Begin again, with patience.', effects:{ piety:1 } } }
   ]},
-{ id:'made_qadi', title:'The Qadi’s Seat',
-  trigger:{ professions:['monk','priest'], religionGroups:['muslim'], sex:'m', notFlags:['qadi','chief_qadi'], pietyMin:80, leaMin:8, chance:0.3 }, weight:10, once:true,
-  text:'The old qadi has died, and the district needs a judge — a man of learning, piety, and patience. The notables gather, and many eyes turn to you.',
-  options:[
-    { label:'Accept the burden of judgment.', desc:'The seat could be yours, if the notables agree.', chance:0.65,
-      success:{ text:'The seat is yours — disputes, deeds, and dowries, all beneath your seal.', effects:{ tierSet:2, prestige:30, piety:10, setFlag:'qadi', log:'Appointed qadi!' } },
-      failure:{ text:'A rival with better connections is chosen. Your time will come.', effects:{ piety:3 } } },
-    { label:'Decline in humility.', desc:'Piety grows fastest out of office.', effects:{ piety:10, addTrait:'humble' } }
-  ]},
-{ id:'chief_qadi', title:'The Emir’s Justice',
-  trigger:{ professions:['monk','priest'], religionGroups:['muslim'], sex:'m', flags:['qadi'], notFlags:['chief_qadi'], pietyMin:150, chance:0.2 }, weight:8, once:true,
-  text:'The emir requires a chief judge for the whole province, and hints the appointment can be yours — for merit, or for a “gift to the treasury” of {money:200}.',
-  options:[
-    { label:'Pay the gift.', require:{ goldMin:200 }, desc:'{money:200} buys the seat — and {god}’s raised eyebrow.',
-      effects:{ gold:-200, tierSet:3, prestige:50, piety:-10, setFlag:'chief_qadi', log:'Bought the chief judgeship.' } },
-    { label:'Trust to merit alone.', desc:'Merit against money; money usually wins.', chance:0.35,
-      success:{ text:'Against all cynics, learning prevails. The judgeship is yours.', effects:{ tierSet:3, prestige:60, piety:20, setFlag:'chief_qadi', log:'Raised to Grand Qadi!' } },
-      failure:{ text:'A richer man with poorer Arabic is chosen.', effects:{ piety:5 } } },
-    { label:'Refuse the game entirely.', desc:'Keep your hands clean and your seat low.', effects:{ piety:12 } }
-  ]},
 { id:'poetry_quarrel', title:'A Duel of Verses',
   trigger:{ religionGroups:['muslim'], minAge:16, chance:0.1 }, weight:4, cooldown:12,
   text:'At the evening majlis a braggart recites verses mocking your family — polished, cruel, and already being repeated with delight.',
@@ -408,14 +373,6 @@ FBDATA.events.push(
     { label:'Take the boar yourself.', desc:'Steal the lord’s kill and men will talk — including the lord.', chance:0.5,
       success:{ text:'Your spear takes the boar before the lord’s. Bold — perhaps too bold. But men saw it.', effects:{ prestige:10, opinion:{role:'lord', amt:-3}, skills:{mar:1} } },
       failure:{ text:'The boar takes exception. You are carried home on a litter.', effects:{ health:-2, addTrait:'scarred' } } }
-  ]},
-{ id:'grant_of_barony', title:'A Banner of Your Own',
-  trigger:{ tierMin:2, tierMax:2, custom:'barony_offer_eligible', chance:0.3 }, weight:15, once:true,
-  text:'{lord} summons you before the hall. “You have served beyond any debt. The vacant lands and tower shall be yours — swear to me, and hold them as my sworn baron.”',
-  options:[
-    { label:'Kneel and swear.', desc:'A tower, a banner, and a lord above you.', effects:{ tierSet:3, prestige:60, custom:'record_liege_grant', log:'Granted a barony — a lord at last!' } },
-    { label:'Decline, but ask for coin.', desc:'A fat purse, and a colder look from {lord}.', effects:{ gold:80, opinion:{role:'lord', amt:-10}, rivalContact:{role:'lord', score:1, cause:'public_refusal'} } },
-    { label:'Decline graciously.', desc:'Remain gentry, without turning the refusal into an insult.', effects:{ } }
   ]},
 { id:'feud_gentry', title:'An Affair of Honor',
   trigger:{ tierMin:2, hasRole:'rival', roleOpinionBelow:{role:'rival', value:-40}, rivalHeatMin:40, chance:0.2 }, weight:6, cooldown:12,

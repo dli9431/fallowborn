@@ -231,6 +231,10 @@ Libraries) during peacetime based on sovereign technology, geography, and priori
 grant permanent development, unlock and promote settlements, expand carrying capacity, and
 persist in `state.buildings` across conquest. Unfinished sieges or contested borders block new
 construction.
+The annual builder snapshots every living AI realm's direct holdings before placing the first
+building. Development grants may invalidate realm strength caches, but they cannot change county
+ownership during this pass; reusing the snapshot prevents each grant from forcing the next realm
+to rebuild the holdings index from the complete map.
 
 Every visible settlement slot (`FB.settlementsOf`) contributes to the county's fiscal output
 (Villages 0.75g, Towns 2.0g, Cities 4.5g per season), scaled by the sovereign's demographic

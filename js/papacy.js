@@ -599,10 +599,18 @@ window.FB = window.FB || {};
     return papacy;
   };
 
-  function hasLivingSpouse(state, c) {
+  function hasLivingSpouse(state, c, reverseSpouses) {
     if (!c) return false;
     if (c.spouseId && state.chars[c.spouseId] && !state.chars[c.spouseId].dead) {
       return true;
+    }
+    if (reverseSpouses) {
+      var spouseIds = reverseSpouses[c.id] || [];
+      for (var i = 0; i < spouseIds.length; i++) {
+        var linked = state.chars[spouseIds[i]];
+        if (linked && !linked.dead && linked.spouseId === c.id) return true;
+      }
+      return false;
     }
     for (var id in state.chars) {
       var other = state.chars[id];
@@ -781,12 +789,12 @@ window.FB = window.FB || {};
     return fallback || 0;
   };
 
-  function candidateEligibleForAppointment(state, c, obedience) {
+  function candidateEligibleForAppointment(state, c, obedience, reverseSpouses) {
     var req = definition().cardinalRequirements || {};
     return !!(c && !c.dead &&
       !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) &&
       catholicFaith(state, c) && c.sex === 'm' &&
-      !hasLivingSpouse(state, c) && !c.betrothedId &&
+      !hasLivingSpouse(state, c, reverseSpouses) && !c.betrothedId &&
       FB.isCatholicBishop(state, c) &&
       FB.ageOf(c, state.date.year) >= req.age &&
       FB.skillOf(c, 'lea') >= req.learning &&
@@ -803,9 +811,15 @@ window.FB = window.FB || {};
     ];
     var out = [];
     if (!obedience) return out;
+    /* Consistories are an annual whole-character sweep. Build reverse spouse
+       links once so unmarried eligibility stays linear instead of scanning
+       the complete character table again for every Catholic man. */
+    var reverseSpouses = FB.spouseLinksSnapshot
+      ? FB.spouseLinksSnapshot(state) : null;
     for (var charId in state.chars) {
       var c = state.chars[charId];
-      if (candidateEligibleForAppointment(state, c, obedience)) out.push(c);
+      if (candidateEligibleForAppointment(
+          state, c, obedience, reverseSpouses)) out.push(c);
     }
     if (generate && out.length < 4) {
       var needed = 4 - out.length;
@@ -2619,7 +2633,10 @@ window.FB = window.FB || {};
   };
 
   FB.papacyClaimantForRealm = function (state, rid) {
-    var papacy = FB.ensurePapacy(state);
+    /* Creation, load, and Papal mutations preserve the normalized model.
+       World-year callers ask this while walking every realm, so a read must
+       not rescan all Catholic sovereigns merely to reject a non-Roman id. */
+    var papacy = savedPapacy(state) || FB.ensurePapacy(state);
     if (!papacy || rid !== romanRealmId(state)) return null;
     var obedience = papacy.obediences[papacy.romanObedience];
     return obedience && obedience.claimantId || null;
@@ -2784,7 +2801,10 @@ window.FB = window.FB || {};
   }
 
   FB.papacyYearly = function (state) {
-    var papacy = FB.ensurePapacy(state);
+    /* Creation/load normalized this model, and the mutation paths preserve
+       it. Avoid making the annual pass scan Catholic sovereigns once in the
+       general repair and immediately again in supporter synchronization. */
+    var papacy = savedPapacy(state) || FB.ensurePapacy(state);
     if (!papacy) return;
     syncObedienceSupporters(state, papacy);
     syncPlayerExcommunicationTrait(state);

@@ -1362,8 +1362,8 @@ honest courtship effects, with a small contribution from the active sibling.
 
 Marrying up also pays out at the end: when a spouse of higher station dies, `FB.spouseDied`
 queues `widow_settlement` (no living child of that blood) or `house_claim` (there is one —
-pressing it uses the `house_claim` named chance; success can raise a tier-0/1 widow(er) of
-a noble into the gentry). Their payouts scale off `dowryByStation` via the custom effect
+pressing it uses the `house_claim` named chance; success pays the inherited portion but
+does not change household rank). Their payouts scale off `dowryByStation` via the custom effect
 fns `dower_take dower_take_full claim_won claim_lost claim_sold` (js/events.js), and their
 texts use the `{late}` token (the dead spouse's name, carried in the event ctx).
 
@@ -2448,8 +2448,8 @@ character can learn and perform:
 
 Religious ladders are the validated `religiousPaths` registry documented above, separate
 from career rank labels. Unsupported faiths receive no routed ladder. Formal religious
-offices may raise `character.station`; Abbot/Qadi and Chief Qadi retain their legacy
-player tiers and flags.
+offices may raise `character.station`; Abbot/Qadi and Chief Qadi use compatibility player
+tiers and flags when the player deliberately advances through those ladders.
 
 Catholic Bishop is a core personal office saved in `character.bishopric`, not an ordinary
 career rank or province title. `FB.bishopricOf`, `FB.hasBishopric`,

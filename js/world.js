@@ -1358,6 +1358,8 @@ window.FB = window.FB || {};
       strengthTurn:-1, strength:null
     };
     rcRevision++;
+    livingMemberCache = new WeakMap();
+    consortMemberCache = new WeakMap();
     if (FB.ui && FB.ui.resetLocationSearchCache) FB.ui.resetLocationSearchCache();
   };
 
@@ -1523,6 +1525,59 @@ window.FB = window.FB || {};
      game or a load hands over a different state object, and until that world
      has been indexed every lookup falls back to the scan it always did. */
   let rulerIndexState = null;
+  /* A realm's succession tree keeps every dead generation for genealogy, but
+     the annual court roll only needs the handful of members still alive.
+     Keep that frontier derived and in memory: load/new-game repair and every
+     succession mutation already perform the authoritative full-tree walk.
+     This avoids rereading centuries of tombstones several times each Spring
+     without adding redundant arrays to the serialized save. */
+  let livingMemberCache = new WeakMap();
+  let consortMemberCache = new WeakMap();
+
+  function cachedLivingMemberIds(succession) {
+    if (!succession || !succession.members) return null;
+    const record = livingMemberCache.get(succession);
+    if (!record || record.members !== succession.members) return null;
+    for (let i = 0; i < record.ids.length; i++) {
+      const member = succession.members[record.ids[i]];
+      if (!member || member.alive === false) {
+        livingMemberCache.delete(succession);
+        return null;
+      }
+    }
+    return record.ids;
+  }
+
+  function rememberLivingMembers(succession, ids) {
+    if (!succession || !succession.members) return;
+    livingMemberCache.set(succession, {
+      members:succession.members,
+      ids:ids.slice()
+    });
+  }
+
+  function addLivingMember(succession, member) {
+    const ids = cachedLivingMemberIds(succession);
+    if (!ids || !member || member.alive === false ||
+        ids.indexOf(member.id) >= 0) return;
+    ids.push(member.id);
+  }
+
+  function removeLivingMember(succession, memberId) {
+    const ids = cachedLivingMemberIds(succession);
+    if (!ids) return;
+    const at = ids.indexOf(memberId);
+    if (at >= 0) ids.splice(at, 1);
+  }
+
+  function rememberConsortMember(succession, generation, member) {
+    if (!succession || !succession.members) return;
+    consortMemberCache.set(succession, {
+      members:succession.members,
+      generation:generation,
+      memberId:member ? member.id : null
+    });
+  }
 
   function indexRuler(charId, rid) {
     if (charId && rid) rulerIndex[charId] = rid;
@@ -2110,6 +2165,10 @@ window.FB = window.FB || {};
       delete c.royalLine;
     }
     delete succession.members[member.id];
+    removeLivingMember(succession, member.id);
+    const generation = succession.rulerGeneration === undefined
+      ? 1 : succession.rulerGeneration;
+    rememberConsortMember(succession, generation, null);
     if (FB.touchFamily) FB.touchFamily();
   }
 
@@ -2174,6 +2233,8 @@ window.FB = window.FB || {};
       consortGen:generation
     };
     s.members[m.id] = m;
+    addLivingMember(s, m);
+    rememberConsortMember(s, generation, m);
     return m;
   }
 
@@ -2185,11 +2246,26 @@ window.FB = window.FB || {};
     const s = r && r.succession;
     if (!s || !s.members) return null;
     const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
+    const cached = consortMemberCache.get(s);
+    if (cached && cached.members === s.members &&
+        cached.generation === generation) {
+      if (cached.memberId === null) return null;
+      const member = s.members[cached.memberId];
+      if (member && member.role === 'consort' &&
+          (member.consortGen === undefined ? 1 : member.consortGen) === generation) {
+        return member;
+      }
+      consortMemberCache.delete(s);
+    }
     for (const id in s.members) {
       const m = s.members[id];
       if (!m || m.role !== 'consort') continue;
-      if ((m.consortGen === undefined ? 1 : m.consortGen) === generation) return m;
+      if ((m.consortGen === undefined ? 1 : m.consortGen) === generation) {
+        rememberConsortMember(s, generation, m);
+        return m;
+      }
     }
+    rememberConsortMember(s, generation, null);
     return null;
   };
 
@@ -2207,14 +2283,51 @@ window.FB = window.FB || {};
     return list.map(function (m) { return m.id; });
   }
 
-  function expandDeadBranch(succession, id, out, seen) {
+  /* Build the parent lookup once for a succession refresh. The old recursive
+     walk found every dead member's children by scanning the complete saved
+     house again; over a long campaign that made Spring quadratic in each
+     realm's accumulated royal history. parentId remains authoritative and
+     the per-parent sort preserves the exact former inheritance order. */
+  function successionMemberIndex(succession) {
+    const children = Object.create(null);
+    const living = [];
+    const generation = succession.rulerGeneration === undefined
+      ? 1 : succession.rulerGeneration;
+    let consort = null;
+    for (const id in succession.members) {
+      const m = succession.members[id];
+      if (!m) continue;
+      if (m.alive !== false) living.push(id);
+      if (m.role === 'consort') {
+        if (!consort &&
+            (m.consortGen === undefined ? 1 : m.consortGen) === generation) {
+          consort = m;
+        }
+        continue;
+      }
+      const parent = m.parentId || '';
+      if (!children[parent]) children[parent] = [];
+      children[parent].push(m);
+    }
+    for (const parent in children) children[parent].sort(royalMemberSort);
+    return { children:children, living:living, consort:consort };
+  }
+
+  function indexedMemberIds(children, parentId) {
+    const members = children[parentId || ''] || [];
+    return members.map(function (m) { return m.id; });
+  }
+
+  function expandDeadBranch(succession, id, out, seen, children) {
     if (seen[id]) return;
     seen[id] = 1;
     const m = succession.members[id];
     if (!m) return;
     if (m.alive !== false) { out.push(id); return; }
-    const kids = orderedMemberIds(succession, id);
-    for (const kid of kids) expandDeadBranch(succession, kid, out, seen);
+    const kids = indexedMemberIds(children, id);
+    for (const kid of kids) {
+      expandDeadBranch(succession, kid, out, seen, children);
+    }
   }
 
   FB.refreshRealmSuccession = function (state, rid) {
@@ -2223,8 +2336,10 @@ window.FB = window.FB || {};
     const s = r.succession;
     if (!s || !s.members) return FB.ensureRealmSuccession(state, rid);
     if (s.papalElective) return s;
+    const memberIndex = successionMemberIndex(s);
+    const children = memberIndex.children;
     const source = s.order && s.order.length ? s.order.slice() :
-      orderedMemberIds(s, s.rulerMemberId || null);
+      indexedMemberIds(children, s.rulerMemberId || null);
     /* Keep the reigning-ruler index honest from the one place that already
        notices a linked character has gone. */
     const rulerMember = s.rulerMemberId && s.members[s.rulerMemberId];
@@ -2242,14 +2357,25 @@ window.FB = window.FB || {};
            removed, so a missing character here is genuinely a death. */
         if (!c || c.dead) m.alive = false;
       }
-      expandDeadBranch(s, id, out, seen);
+      expandDeadBranch(s, id, out, seen, children);
     }
     s.order = out;
     s.heirId = out.length ? out[0] : null;
     // Every compact royal house exposes one designated successor. If an
     // entire lightweight line dies out, repair it with a young collateral
     // branch instead of leaving the UI and ruler transition heirless.
-    if (!s.heirId) makeHeirIfEmpty(state, r, s);
+    const repairedHeir = !s.heirId ? makeHeirIfEmpty(state, r, s) : null;
+    const living = memberIndex.living.filter(function (id) {
+      const member = s.members[id];
+      return !!member && member.alive !== false;
+    });
+    if (repairedHeir && living.indexOf(repairedHeir.id) < 0) {
+      living.push(repairedHeir.id);
+    }
+    rememberLivingMembers(s, living);
+    rememberConsortMember(s,
+      s.rulerGeneration === undefined ? 1 : s.rulerGeneration,
+      memberIndex.consort);
     return s;
   };
 
@@ -2343,8 +2469,35 @@ window.FB = window.FB || {};
     return true;
   }
 
-  FB.ensureDynasticState = function (state) {
+  /* Annual fast path for a house whose mutation boundary already left a
+     usable frontier. Inspect only the live order, never the accumulated dead
+     tree. A malformed or stale frontier falls back to the full public repair
+     so skipping unchanged houses does not weaken old-save recovery. */
+  function successionReadyForYear(state, r) {
+    const s = r && r.succession;
+    if (!s || !s.members || !Array.isArray(s.order) || !s.order.length ||
+        !s.heirId || s.heirId !== s.order[0]) return false;
+    /* A missing frontier means this succession object was installed without
+       passing through new-game/load repair. Pay the full repair once; stable
+       years thereafter stay proportional to the living court. */
+    if (!cachedLivingMemberIds(s)) return false;
+    for (let i = 0; i < s.order.length; i++) {
+      const m = s.members[s.order[i]];
+      if (!m || m.alive === false) return false;
+      if (m.charId) {
+        const c = state.chars && state.chars[m.charId];
+        if (!c || c.dead) return false;
+      }
+    }
+    return true;
+  }
+
+  FB.ensureDynasticState = function (state, opts) {
+    opts = opts || {};
     state.alliances = state.alliances || [];
+    const papalTerritorial = FB.religiousHeadSnapshot &&
+      FB.religiousHeadSnapshot(state, 'catholic');
+    const papalTerritorialId = papalTerritorial && papalTerritorial.id;
     let made = false;
     for (const rid in state.realms) {
       const r = state.realms[rid];
@@ -2356,10 +2509,19 @@ window.FB = window.FB || {};
           rulerGeneration: r.ruler ? r.ruler.generation : 1,
           heirCharId: null
         };
-      } else if (isPapalTerritorialRealm(state, rid)) {
+      } else if (papalTerritorialId
+          ? rid === papalTerritorialId
+          : isPapalTerritorialRealm(state, rid)) {
         if (seedInitialPapalRuler(state, rid, { bulk:true })) made = true;
       } else {
-        FB.ensureRealmSuccession(state, rid);
+        /* New games and restores retain the full defensive refresh. During an
+           ordinary year, mutation paths already refresh the one affected
+           house; re-reading every unchanged historical tree here was both
+           redundant and the dominant long-campaign Spring cost. Missing
+           state still takes the normal repair path. */
+        if (!opts.yearly || !successionReadyForYear(state, r)) {
+          FB.ensureRealmSuccession(state, rid);
+        }
         if (ensureCourtMaterialized(state, rid, { bulk:true })) made = true;
       }
     }
@@ -2367,7 +2529,9 @@ window.FB = window.FB || {};
        would make world creation quadratic in the size of the character map. */
     if (made && FB.ensureCharacterBynames) FB.ensureCharacterBynames(state);
     FB.rebuildRulerIndex(state);
-    FB.repairAlliances(state);
+    /* The yearly political index performs this validation immediately after
+       preparation; creation and restore still repair here for all callers. */
+    if (!opts.yearly) FB.repairAlliances(state);
   };
 
   /* Materialize the living court according to COURT_EAGERNESS, through the
@@ -2432,7 +2596,10 @@ window.FB = window.FB || {};
     /* This runs for every realm every world tick, so establish there is
        actually work before paying for the ordered walk below. */
     let pending = false;
-    for (const id in s.members) {
+    const livingIds = cachedLivingMemberIds(s);
+    const memberIds = livingIds || Object.keys(s.members);
+    for (let memberIndex = 0; memberIndex < memberIds.length; memberIndex++) {
+      const id = memberIds[memberIndex];
       const m = s.members[id];
       if (m && m.alive !== false && m.role !== 'consort' &&
           id !== s.rulerMemberId && (!m.charId || !state.chars[m.charId])) {
@@ -2487,9 +2654,23 @@ window.FB = window.FB || {};
   function realmFamilyMembers(s) {
     if (!s || !s.members) return [];
     const parent = s.rulerMemberId || null;
-    const ids = orderedMemberIds(s, parent).filter(function (id) {
-      return s.members[id] && s.members[id].alive !== false;
-    });
+    const livingIds = cachedLivingMemberIds(s);
+    let ids;
+    if (livingIds) {
+      const direct = [];
+      for (let i = 0; i < livingIds.length; i++) {
+        const member = s.members[livingIds[i]];
+        if (!member || member.role === 'consort' ||
+            (member.parentId || null) !== parent) continue;
+        direct.push(member);
+      }
+      direct.sort(royalMemberSort);
+      ids = direct.map(function (member) { return member.id; });
+    } else {
+      ids = orderedMemberIds(s, parent).filter(function (id) {
+        return s.members[id] && s.members[id].alive !== false;
+      });
+    }
     for (const id of (s.order || [])) {
       const member = s.members[id];
       if (member && member.alive !== false && ids.indexOf(id) < 0) ids.push(id);
@@ -2516,29 +2697,51 @@ window.FB = window.FB || {};
      dies: the player's mortality pass leaves court characters alone unless the
      player has a tie to one, so nobody is rolled twice and nobody is immortal.
      A materialized member is rolled here exactly as a compact one is. */
-  function tickRoyalFamily(state, rid, familyLinks) {
-    const s = FB.ensureRealmSuccession(state, rid);
+  function tickRoyalFamily(state, rid, familyLinks, preparedSuccession,
+      annualContext) {
+    const s = preparedSuccession || FB.ensureRealmSuccession(state, rid);
     if (!s) return;
     const kinById = familyLinks && familyLinks.kinById;
     const mortScale = (FBDATA.balance.mortalityBase || 0.012) / 0.012;
-    for (const id in s.members) {
+    let changed = false;
+    const livingIds = cachedLivingMemberIds(s);
+    const memberIds = livingIds ? livingIds.slice() : Object.keys(s.members);
+    for (let memberIndex = 0; memberIndex < memberIds.length; memberIndex++) {
+      const id = memberIds[memberIndex];
       const m = s.members[id];
-      if (m.alive === false || id === s.rulerMemberId) continue;
+      if (!m || m.alive === false || id === s.rulerMemberId) continue;
       const c = m.charId && state.chars[m.charId];
-      if (c && c.dead) continue;
+      /* A direct or legacy writer may have killed or removed a materialized
+         court record without going through royalCharDied. The old blanket
+         dynasty refresh repaired this before the roll; keep that repair local
+         now that unchanged houses skip the blanket rebuild. */
+      if (m.charId && (!c || c.dead)) {
+        m.alive = false;
+        changed = true;
+        continue;
+      }
       /* A royal descendant can retain their birth line while reigning
          elsewhere. The crown's realm owns that person's mortality and
          succession; this family's tick must leave them alone. */
       if (c && FB.isReigningRealmRuler(state, c)) continue;
       /* A court character the player can reach belongs to the player's own
          yearly pass, which is the one that reports the death. */
-      const retained = c && FB.courtRecordRetained(state, c, kinById);
+      const retained = c && FB.courtRecordRetained(
+        state, c, kinById, familyLinks);
       if (retained) continue;
+      /* yearlyLife follows this world pass and otherwise repeats the same
+         retention predicate for every unrelated court character. Record the
+         full characters whose mortality was settled here so that second
+         whole-court classification becomes an O(1) skip. */
+      if (c && annualContext) {
+        annualContext.courtMortalityHandled[c.id] = 1;
+      }
       const age = Math.max(0, state.date.year - m.born);
       const q = (age < 5 ? 0.03 : age < 16 ? 0.006 : age < 50 ? 0.008 :
         age < 65 ? 0.03 : age < 80 ? 0.1 : 0.25) * mortScale;
       if (!FB.chance(FB.clamp(q, 0, 1))) continue;
       m.alive = false;
+      changed = true;
       if (c) {
         FB.courtMemberDied(state, m, c, {
           retained:false,
@@ -2547,7 +2750,9 @@ window.FB = window.FB || {};
         });
       }
     }
-    FB.refreshRealmSuccession(state, rid);
+    /* The annual preparation leaves healthy houses untouched. Rebuild only
+       when this mortality roll or its local legacy repair changed the tree. */
+    if (changed) FB.refreshRealmSuccession(state, rid);
   }
 
   function linkMaterializedRoyalFamily(state, succession, member, c, opts) {
@@ -2786,6 +2991,7 @@ window.FB = window.FB || {};
         role:null
       };
       s.members[m.id] = m;
+      addLivingMember(s, m);
       s.rulerMemberId = m.id;
       for (const id in s.members) {
         const child = s.members[id];
@@ -2959,7 +3165,7 @@ window.FB = window.FB || {};
      the record. Everything that can put this person in front of the player
      again does count, and a missed reference class is the likeliest bug here,
      so the check errs toward keeping the record. */
-  FB.courtRecordRetained = function (state, c, kinById) {
+  FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
     if (!state || !c || !state.player) return false;
     const p = state.player;
     if (c.id === p.charId || p.courtingId === c.id) return true;
@@ -2995,7 +3201,8 @@ window.FB = window.FB || {};
       if (child && !child.dead &&
           FB.playerDescendantKind(state, child.id)) return true;
     }
-    if (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id)) return true;
+    if (FB.isHouseholdCharacter &&
+        FB.isHouseholdCharacter(state, c.id, familyLinks)) return true;
     if (FB.retainerRecord && FB.retainerRecord(state, c.id)) return true;
     if (FB.papalOfficeOf && FB.papalOfficeOf(state, c)) return true;
     if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) return true;
@@ -3017,7 +3224,7 @@ window.FB = window.FB || {};
     opts = opts || {};
     const retained = opts.retained !== undefined
       ? opts.retained
-      : FB.courtRecordRetained(state, c, opts.kinById);
+      : FB.courtRecordRetained(state, c, opts.kinById, opts.familyLinks);
     if (!c.dead && FB.killChar) {
       FB.killChar(state, c, { familyLinks:opts.familyLinks });
     }
@@ -3045,7 +3252,8 @@ window.FB = window.FB || {};
     if (member.alive !== false) return false;
     opts = opts || {};
     if (!opts.retentionChecked &&
-        FB.courtRecordRetained(state, c, opts.kinById)) return false;
+        FB.courtRecordRetained(
+          state, c, opts.kinById, opts.familyLinks)) return false;
     member.name = c.name;
     member.born = c.born;
     if (c.died !== undefined) member.died = c.died;
@@ -3454,7 +3662,7 @@ window.FB = window.FB || {};
   };
 
   function makeHeirIfEmpty(state, r, s) {
-    if (s.order.length) return;
+    if (s.order.length) return null;
     const parentId = s.rulerMemberId || null;
     const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
     let ordinal = 0;
@@ -3477,6 +3685,8 @@ window.FB = window.FB || {};
     }
     s.order = [m.id];
     s.heirId = m.id;
+    addLivingMember(s, m);
+    return m;
   }
 
   FB.advanceRealmSuccession = function (state, rid, opts) {
@@ -3794,8 +4004,9 @@ window.FB = window.FB || {};
           FB.faithGroup(faith, state)) >= 0))));
   };
 
-  FB.aiRaidTick = function (state, rid, r, B) {
-    if (!state || !r || !r.alive || r.liege || FB.isRealmAtWar(state, rid)) return;
+  FB.aiRaidTick = function (state, rid, r, B, knownPeaceful) {
+    if (!state || !r || !r.alive || r.liege ||
+        (!knownPeaceful && FB.isRealmAtWar(state, rid))) return;
     const cult = r.culture || (r.ruler && r.ruler.culture);
     const faith = r.religion || (r.ruler && r.ruler.religion);
     const isRaider = FB.hasRaidingTradition(cult, faith, state);
@@ -5314,13 +5525,25 @@ window.FB = window.FB || {};
     ];
 
     const realmIds = Object.keys(state.realms);
+    /* Development granted below invalidates strength and holdings caches.
+       Direct ownership itself cannot change during this construction pass,
+       so snapshot every realm's held counties before the first grant. Without
+       this, each builder dirties the cache and the next realm rebuilds it by
+       walking the complete political map. */
+    const heldByRealm = Object.create(null);
+    for (let ri = 0; ri < realmIds.length; ri++) {
+      const rid = realmIds[ri];
+      const realm = state.realms[rid];
+      if (rid === 'player' || !realm || !realm.alive) continue;
+      heldByRealm[rid] = FB.realmHeldCounties(state, rid).slice();
+    }
     for (let ri = 0; ri < realmIds.length; ri++) {
       const rid = realmIds[ri];
       if (rid === 'player') continue;
       const realm = state.realms[rid];
       if (!realm || !realm.alive) continue;
 
-      const held = FB.realmHeldCounties(state, rid);
+      const held = heldByRealm[rid] || [];
       if (!held.length) continue;
 
       let builtThisYear = 0;
@@ -5393,9 +5616,128 @@ window.FB = window.FB || {};
     }
   };
 
+  /* The yearly realm simulation asks the same two global questions many
+     times while considering wars, raids, breakaways, and alliances. Their
+     public helpers deliberately validate from authoritative state, but each
+     validation walks every realm or every alliance. Build one live index for
+     this annual pass instead; the few mutations below rebuild it immediately.
+     This keeps Spring proportional to the map instead of multiplying every
+     candidate realm by another complete political scan. */
+  function worldYearWarIndex(state) {
+    let counts = Object.create(null);
+    let revision = 0;
+    function key(rid) {
+      if (!rid || rid === 'player') return rid || null;
+      return FB.topRealm(state, rid);
+    }
+    function add(rid) {
+      rid = key(rid);
+      if (rid) counts[rid] = (counts[rid] || 0) + 1;
+    }
+    function recordWar(ownerId, war) {
+      if (!war) return;
+      add(ownerId);
+      add(war.enemy);
+    }
+    function addWar(ownerId, war) {
+      recordWar(ownerId, war);
+      revision++;
+    }
+    function rebuild() {
+      counts = Object.create(null);
+      const realms = state.realms || {};
+      for (const rid in realms) {
+        const realm = realms[rid];
+        if (realm && realm.alive && realm.war) recordWar(rid, realm.war);
+      }
+      const playerWar = state.player && state.player.war;
+      if (playerWar) {
+        add('player');
+        add(FB.playerRealmId(state));
+        add(playerWar.enemy);
+      }
+      if (FB.greatHolyWarCamp) {
+        for (const rid in realms) {
+          const realm = realms[rid];
+          if (realm && realm.alive && FB.greatHolyWarCamp(state, rid)) add(rid);
+        }
+      }
+      revision++;
+    }
+    rebuild();
+    return {
+      has:function (rid) {
+        const normalized = key(rid);
+        return !!((rid && counts[rid]) || (normalized && counts[normalized]));
+      },
+      addWar:addWar,
+      addPlayerWar:function (war) {
+        if (!war) return;
+        add('player');
+        add(FB.playerRealmId(state));
+        add(war.enemy);
+        revision++;
+      },
+      revision:function () { return revision; },
+      rebuild:rebuild
+    };
+  }
+
+  function worldYearAllianceIndex(state) {
+    let partners = Object.create(null);
+    let revision = 0;
+    function rebuild() {
+      partners = Object.create(null);
+      const alliances = FB.repairAlliances(state);
+      for (let i = 0; i < alliances.length; i++) {
+        const alliance = alliances[i];
+        partners[alliance.a] = alliance.b;
+        partners[alliance.b] = alliance.a;
+      }
+      revision++;
+    }
+    rebuild();
+    return {
+      has:function (rid) { return !!partners[rid]; },
+      paired:function (a, b) { return partners[a] === b; },
+      partner:function (rid) { return partners[rid] || null; },
+      revision:function () { return revision; },
+      rebuild:rebuild
+    };
+  }
+
+  function worldYearDefensiveStrengthReader(state, wars, alliances) {
+    let stamp = '';
+    let values = Object.create(null);
+    return function (rid) {
+      const currentStamp = String(FB.realmStateRevision()) + ':' +
+        wars.revision() + ':' + alliances.revision();
+      if (stamp !== currentStamp) {
+        stamp = currentStamp;
+        values = Object.create(null);
+      }
+      if (Object.prototype.hasOwnProperty.call(values, rid)) return values[rid];
+      const base = rid === 'player'
+        ? (FB.playerMaxLevy ? FB.playerMaxLevy(state) : FB.playerLevy(state))
+        : FB.aiBaseHost(state, rid);
+      const allyId = alliances.partner(rid);
+      if (!allyId || wars.has(allyId)) {
+        values[rid] = base;
+        return base;
+      }
+      const defenderBase = rid === 'player'
+        ? FB.playerLevy(state) : FB.aiBaseHost(state, rid);
+      const allyBase = allyId === 'player'
+        ? FB.playerLevy(state) : FB.aiBaseHost(state, allyId);
+      values[rid] = base + Math.max(0,
+        Math.round(Math.min(allyBase * 0.25, defenderBase * 0.5)));
+      return values[rid];
+    };
+  }
+
   FB.worldTick = function (state) {
     const B = FBDATA.balance;
-    FB.ensureDynasticState(state);
+    FB.ensureDynasticState(state, { yearly:true });
     FB.checkAllCrownRecognition(state);
     if (FB.fortAIYear) FB.fortAIYear(state);
     if (FB.populationYear) FB.populationYear(state);
@@ -5406,17 +5748,30 @@ window.FB = window.FB || {};
        mortality pass, avoiding one full character rebuild per corpse. */
     const familyLinks = FB.familyLinksSnapshot
       ? FB.familyLinksSnapshot(state) : null;
+    const yearWars = worldYearWarIndex(state);
+    const yearAlliances = worldYearAllianceIndex(state);
+    const yearDefensiveStrength = worldYearDefensiveStrengthReader(
+      state, yearWars, yearAlliances);
+    const papalTerritorial = FB.religiousHeadSnapshot &&
+      FB.religiousHeadSnapshot(state, 'catholic');
+    const papalTerritorialId = papalTerritorial && papalTerritorial.id;
+    const annualContext = {
+      courtMortalityHandled:Object.create(null)
+    };
 
     // realm AI
     for (const id in state.realms) {
       const r = state.realms[id];
       if (!r.alive || id === 'player') continue;
-      FB.ensureRealmSuccession(state, id);
-      const papalTerritorialRealm = FB.papacyTerritorialRealm &&
-        FB.papacyTerritorialRealm(state, id);
-      const papalClaimantId = FB.papacyClaimantForRealm &&
+      const papalTerritorialRealm = papalTerritorialId
+        ? id === papalTerritorialId
+        : (FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(state, id));
+      const papalClaimantId = papalTerritorialRealm &&
+        FB.papacyClaimantForRealm &&
         FB.papacyClaimantForRealm(state, id);
-      if (!papalTerritorialRealm) tickRoyalFamily(state, id, familyLinks);
+      if (!papalTerritorialRealm) {
+        tickRoyalFamily(state, id, familyLinks, r.succession, annualContext);
+      }
       // a vassal house's standing at its liege's court drifts with the years
       if (r.liege) {
         r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
@@ -5437,7 +5792,11 @@ window.FB = window.FB || {};
         // Escheat is now the last resort for a genuinely exhausted count line.
         if (!appointedTenureEnds && !papalClaimantId && r.liege && r.rank === 1 &&
             (!succession || !succession.heirId) &&
-            FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) continue;
+            FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) {
+          yearAlliances.rebuild();
+          yearWars.rebuild();
+          continue;
+        }
         const oldGeneration = r.ruler.generation;
         const rulerMember = succession && succession.members[succession.rulerMemberId];
         const rulerChar = papalClaimantId
@@ -5456,7 +5815,7 @@ window.FB = window.FB || {};
           const compactRuler = !papalClaimantId && rulerMember &&
             rulerMember.charId === rulerChar.id && FB.courtRecordRetained &&
             !FB.courtRecordRetained(state, rulerChar,
-              familyLinks && familyLinks.kinById);
+              familyLinks && familyLinks.kinById, familyLinks);
           // A courted royal remains a full character after taking the throne.
           // Use the normal death path so marriage and role links also close;
           // royalCharDied advances the realm exactly once.
@@ -5488,8 +5847,17 @@ window.FB = window.FB || {};
         if (!papalClaimantId && r.alive && r.ruler.generation === oldGeneration) {
           FB.advanceRealmSuccession(state, id);
         }
+        /* Succession can end an alliance, absorb a realm, or otherwise
+           change which sovereign owns a live conflict. Refresh the annual
+           indexes once for that actual mutation, not on every query. */
+        yearAlliances.rebuild();
+        yearWars.rebuild();
         if (appointedTenureEnds && r.alive && FB.revertFeudalRealm &&
-            FB.revertFeudalRealm(state, id, appointedTenure)) continue;
+            FB.revertFeudalRealm(state, id, appointedTenure)) {
+          yearAlliances.rebuild();
+          yearWars.rebuild();
+          continue;
+        }
         if (!papalClaimantId &&
             (FB.game.observe || id === FB.playerRealmId(state) ||
               id === state.player.liege)) {
@@ -5504,7 +5872,11 @@ window.FB = window.FB || {};
       if (r.war) {
         const war = r.war;
         const enemy = state.realms[war.enemy];
-        if (!enemy || !enemy.alive) { r.war = null; continue; }
+        if (!enemy || !enemy.alive) {
+          r.war = null;
+          yearWars.rebuild();
+          continue;
+        }
         const sa = FB.realmStrength(state, id) *
           (1 + (FB.techBonus ? FB.techBonus(state, 'levy', id) : 0)) *
           FB.aiFieldHostRatio(state, id) *
@@ -5514,7 +5886,7 @@ window.FB = window.FB || {};
           (1 + 0.12 * ((war.fw || 0) - (war.fl || 0))); // field wins tilt the war
         const enemyGarrisons = FB.fortGarrisonBurden
           ? FB.fortGarrisonBurden(state, war.enemy) : 0;
-        const defenseRatio = FB.realmDefensiveStrength(state, war.enemy) /
+        const defenseRatio = yearDefensiveStrength(war.enemy) /
           Math.max(1, FB.aiBaseHost(state, war.enemy) + enemyGarrisons);
         const sd = FB.realmStrength(state, war.enemy) *
           (1 + (FB.techBonus ? FB.techBonus(state, 'levy', war.enemy) : 0)) *
@@ -5566,6 +5938,8 @@ window.FB = window.FB || {};
           if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, taken);
           if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, taken, 'ai_conquest');
           FB.transferProvince(state, taken, winner);
+          yearWars.rebuild();
+          yearAlliances.rebuild();
           war.captures = (war.captures || 0) + 1;
           const pv = FB.world.byId[taken];
           if (FB.game.observe) { // the watcher hears of every fall, far or near
@@ -5594,6 +5968,8 @@ window.FB = window.FB || {};
             FB.papacyDecisiveWarLost(state, loser);
           }
           r.war = null;
+          yearWars.rebuild();
+          yearAlliances.rebuild();
         }
         else if (war.years >= 3 + fortDelay || FB.chance(0.35) ||
                  (war.captures || 0) >= 2) {
@@ -5601,9 +5977,10 @@ window.FB = window.FB || {};
             FB.papacyDecisiveWarLost(state, loser);
           }
           r.war = null; // peace
+          yearWars.rebuild();
         }
         if (!r.alive) continue;
-      } else if (!FB.isRealmAtWar(state, id) &&
+      } else if (!yearWars.has(id) &&
                  !(FB.intrigueRealmRulerCaptive &&
                    FB.intrigueRealmRulerCaptive(state, id)) &&
                  FB.chance(B.aiWarChance * (0.5 + 0.5 * r.aggression))) {
@@ -5612,8 +5989,8 @@ window.FB = window.FB || {};
         for (const id2 in state.realms) {
           if (id2 === id) continue;
           const r2 = state.realms[id2];
-          if (!r2.alive || r2.liege || FB.isRealmAtWar(state, id2) ||
-              FB.areAllied(state, id, id2)) continue; // peaceful sovereigns only
+          if (!r2.alive || r2.liege || yearWars.has(id2) ||
+              yearAlliances.paired(id, id2)) continue; // peaceful sovereigns only
           if (id2 === 'player') continue; // wars vs player handled below
           if (FB.sameFaithHeadWarPolicy(state,
               FB.realmReligionId(state, id), id2, null)) continue;
@@ -5622,11 +5999,12 @@ window.FB = window.FB || {};
         if (targets.length) {
           // prefer weaker targets
           targets.sort(function (a, b) {
-            return FB.realmDefensiveStrength(state, a) - FB.realmDefensiveStrength(state, b);
+            return yearDefensiveStrength(a) - yearDefensiveStrength(b);
           });
           const t = targets[FB.chance(0.6) ? 0 : Math.floor(FB.rng() * targets.length)];
           r.war = { enemy: t, years: 0, captures: 0,
             casus: { type: 'border', label: 'Border war' } };
+          yearWars.addWar(id, r.war);
           const homeRealm = state.owner[state.player.provinceId];
           if (FB.game.observe || id === homeRealm || t === homeRealm) {
             FB.news(state, FB.msg('news.world.ai_war',
@@ -5640,11 +6018,11 @@ window.FB = window.FB || {};
       // are only computed when a declaration is actually possible, and the
       // FB.chance roll still fires under exactly the same conditions
       if (FB.isPlayerSovereign(state) && !state.player.war &&
-        !FB.isRealmAtWar(state, id) &&
+        !yearWars.has(id) &&
         !(FB.intrigueRealmRulerCaptive &&
           FB.intrigueRealmRulerCaptive(state, id)) &&
         !(state.pacts && state.pacts[id] > state.turn) &&
-        !FB.areAllied(state, id, 'player') &&
+        !yearAlliances.paired(id, 'player') &&
         !FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, id), 'player', null)) {
         const relationMult = FB.clamp(
           1 - FB.standingOf(state, { kind:'realm', id:id }) / 100,
@@ -5652,11 +6030,12 @@ window.FB = window.FB || {};
           B.foreignOpinionAttackMax
         );
         const deterrence = FB.clamp(FB.aiBaseHost(state, id) /
-          Math.max(1, FB.realmDefensiveStrength(state, 'player')), 0.25, 1.25);
+          Math.max(1, yearDefensiveStrength('player')), 0.25, 1.25);
         if (FB.chance(0.04 * r.aggression * relationMult * deterrence) &&
           FB.realmsAdjacent(state, id, 'player')) {
           state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
             defending: true, casus: { type: 'border', label: 'Border war' } };
+          yearWars.addPlayerWar(state.player.war);
           FB.news(state, FB.msg('news.world.war_declared_on_player',
             '🔥 {realm} declares war upon YOU!', { realm: r.name }));
           FB.warFooting(state);
@@ -5668,8 +6047,8 @@ window.FB = window.FB || {};
           }
         }
       }
-      if (!r.war && !FB.isRealmAtWar(state, id) && FB.aiRaidTick) {
-        FB.aiRaidTick(state, id, r, B);
+      if (!r.war && !yearWars.has(id) && FB.aiRaidTick) {
+        FB.aiRaidTick(state, id, r, B, true);
       }
     }
 
@@ -5681,7 +6060,7 @@ window.FB = window.FB || {};
       if (FB.intrigueRealmRulerCaptive &&
           FB.intrigueRealmRulerCaptive(state, id)) continue;
       const top = FB.topRealm(state, id);
-      if (top === id || FB.isRealmAtWar(state, top)) continue;
+      if (top === id || yearWars.has(top)) continue;
       // the 1.5% gate first: realmTerritory walks the whole realm table, and
       // ~98.5% of that work was thrown away when the roll failed
       if (!FB.chance(FB.vassalBreakawayChance(state, id))) continue;
@@ -5700,6 +6079,7 @@ window.FB = window.FB || {};
         if (tr && tr.alive && !state.player.war) {
           state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
             defending: true, casus: { type: 'independence' } };
+          yearWars.addPlayerWar(state.player.war);
           FB.warFooting(state);
           FB.queueWarEvent(state, 'war_defense_muster', {});
           if (FB.ui && FB.ui.maybeTip) {
@@ -5711,7 +6091,10 @@ window.FB = window.FB || {};
       } else if (tr && tr.alive && !tr.war) {
         tr.war = { enemy: id, years: 0, captures: 0,
           casus: { type: 'border', label: 'Breakaway war' } };
+        yearWars.addWar(top, tr.war);
       }
+      yearWars.rebuild();
+      yearAlliances.rebuild();
       if (top === FB.playerRealmId(state) || id === state.player.liege || FB.game.observe) {
         FB.news(state, FB.msg('news.world.breakaway', {
           forms: {
@@ -5729,13 +6112,13 @@ window.FB = window.FB || {};
     const courted = {};
     for (const id in state.realms) {
       const r = state.realms[id];
-      if (id === 'player' || !r.alive || r.liege || r.rank < 3 || FB.isRealmAtWar(state, id) ||
-          courted[id] || FB.allianceOf(state, id) || !FB.chance(0.08)) continue;
+      if (id === 'player' || !r.alive || r.liege || r.rank < 3 || yearWars.has(id) ||
+          courted[id] || yearAlliances.has(id) || !FB.chance(0.08)) continue;
       const choices = [];
       for (const id2 in state.realms) {
         const r2 = state.realms[id2];
         if (id2 === id || id2 === 'player' || !r2.alive || r2.liege || r2.rank < 3 ||
-            FB.isRealmAtWar(state, id2) || courted[id2] || FB.allianceOf(state, id2)) continue;
+            yearWars.has(id2) || courted[id2] || yearAlliances.has(id2)) continue;
         if (!FB.realmsAdjacent(state, id, id2)) continue;
         if (!realmsFaithCompatible(state, id, id2)) continue;
         choices.push(id2);
@@ -5743,6 +6126,7 @@ window.FB = window.FB || {};
       if (choices.length) {
         const partner = FB.pick(choices);
         if (FB.formAlliance(state, id, partner, 'dynastic')) {
+          yearAlliances.rebuild();
           courted[id] = courted[partner] = 1;
           if (FB.game.observe || id === FB.playerRealmId(state) || partner === FB.playerRealmId(state)) {
             FB.news(state, FB.msg('news.world.alliance_formed',
@@ -5756,6 +6140,7 @@ window.FB = window.FB || {};
     if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state, familyLinks);
 
     FB.aiBuildingsYear(state);
+    return annualContext;
   };
 
   /* ================= PLAYER WAR (seasonal) ================= */

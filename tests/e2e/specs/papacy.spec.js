@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'css/style.css',
+  'js/model.js',
   'js/papacy.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -16,6 +17,73 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
 });
+
+test('consistory candidate scan reuses one reverse spouse index',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const papacy = FB.ensurePapacy(state);
+      const obedience = papacy.obediences[papacy.romanObedience];
+      const candidate = FB.makeCharacter(state, {
+        sex:'m', culture:'frankish', religion:'catholic',
+        born:state.date.year - 45, dyn:'Consistory Test'
+      });
+      candidate.bishopric = {
+        seeProvinceId:'london', appointedTurn:state.turn,
+        previousTier:2, appointerKind:'canonical', appointerId:null,
+        investiturePolicy:'canonical'
+      };
+      candidate.skills.lea = 20;
+      candidate.clericalPiety = 500;
+      candidate.clericalPrestige = 300;
+      candidate.curialOpinion = 80;
+      candidate.spouseId = null;
+      const spouse = FB.makeCharacter(state, {
+        sex:'f', culture:'frankish', religion:'catholic',
+        born:state.date.year - 40, dyn:'Consistory Test'
+      });
+      spouse.spouseId = candidate.id;
+
+      for (let i = 0; i < 240; i++) {
+        const id = 'consistory_shape_' + i;
+        state.chars[id] = {
+          id:id, name:'Candidate ' + i, sex:'m', culture:'frankish',
+          religion:'catholic', born:state.date.year - 40,
+          dead:false, skills:{ lea:1 }, traits:[], childrenIds:[]
+        };
+      }
+
+      FB.touchFamily();
+      const characters = state.chars;
+      let tablePasses = 0;
+      state.chars = new Proxy(characters, {
+        ownKeys:function (target) {
+          tablePasses++;
+          return Reflect.ownKeys(target);
+        }
+      });
+      const whileMarried = FB.papalAppointmentCandidates(
+        state, obedience.id, false).some(function (c) {
+          return c.id === candidate.id;
+        });
+      spouse.dead = true;
+      const afterWidowhood = FB.papalAppointmentCandidates(
+        state, obedience.id, false).some(function (c) {
+          return c.id === candidate.id;
+        });
+      state.chars = characters;
+      FB.touchFamily();
+      return {
+        whileMarried:whileMarried,
+        afterWidowhood:afterWidowhood,
+        tablePasses:tablePasses
+      };
+    });
+
+    expect(result.whileMarried).toBe(false);
+    expect(result.afterWidowhood).toBe(true);
+    expect(result.tablePasses).toBeLessThanOrEqual(6);
+  });
 
 test('reserves Rome from personal bishopric appointments', async function ({ page }) {
   const result = await page.evaluate(function () {

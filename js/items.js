@@ -85,7 +85,7 @@ window.FB = window.FB || {};
     return directHouseholdIds(state).slice();
   };
 
-  FB.isHouseholdCharacter = function (state, cid) {
+  FB.isHouseholdCharacter = function (state, cid, familyLinks) {
     if (!state || !state.player || !state.chars) return false;
     const c = state.chars[cid];
     const me = state.chars[state.player.charId];
@@ -110,9 +110,22 @@ window.FB = window.FB || {};
        husband while only his first wife is stored on him. */
     const spouse = c.spouseId && state.chars[c.spouseId];
     if (spouse && !spouse.dead) return false;
-    for (const id in state.chars) {
-      const other = state.chars[id];
-      if (other && !other.dead && other.spouseId === c.id) return false;
+    /* Annual mortality already owns one reverse-link snapshot. Reuse it so
+       asking whether each descendant still lives at home does not rescan the
+       complete character table per person. Deaths during the sweep remain
+       visible because candidates are re-read from the live character map. */
+    const reverseSpouses = familyLinks && familyLinks.spouses;
+    if (reverseSpouses) {
+      const spouseIds = reverseSpouses[c.id] || [];
+      for (let i = 0; i < spouseIds.length; i++) {
+        const other = state.chars[spouseIds[i]];
+        if (other && !other.dead && other.spouseId === c.id) return false;
+      }
+    } else {
+      for (const id in state.chars) {
+        const other = state.chars[id];
+        if (other && !other.dead && other.spouseId === c.id) return false;
+      }
     }
     return true;
   };

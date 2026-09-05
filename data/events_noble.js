@@ -206,7 +206,7 @@ FBDATA.events.push(
     { label:'Rule alone.', desc:'Pride keeps poor company at night.', effects:{ opinion:{role:'spouse', amt:-10}, prestige:1 } }
   ]},
 { id:'independence_offer', title:'Whispers of a Crown',
-  trigger:{ tierMin:3, tierMax:4, notFlags:['bishop'], isVassal:true, liegeAtWar:false, prestigeMin:200, chance:0.1 }, weight:5, cooldown:20,
+  trigger:{ tierMin:4, tierMax:4, notFlags:['bishop'], isVassal:true, liegeAtWar:false, prestigeMin:200, chance:0.1 }, weight:5, cooldown:20,
   text:'Discontented lords gather in your hall when the candles burn low. “Why kneel at all?” they murmur. “Your own banner. Your own crown.”',
   options:[
     { label:'Declare independence!', desc:'A crown of your own — and a war to keep it.', effects:{ declareIndependence:true, log:'Declared independence!' } },

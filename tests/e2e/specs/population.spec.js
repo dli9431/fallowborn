@@ -183,6 +183,32 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
     expect(migrationResult.hasFlow).toBe(true);
   });
 
+  test('Annual migration calculates each county capacity once',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const state = FB.state;
+        const originalCapacity = FB.countyPopulationCapacity;
+        let capacityCalls = 0;
+        FB.countyPopulationCapacity = function () {
+          capacityCalls++;
+          return originalCapacity.apply(this, arguments);
+        };
+        let inhabited = 0;
+        for (let i = 0; i < FB.world.provs.length; i++) {
+          if (FB.world.provs[i] && !FB.world.provs[i].wasteland) inhabited++;
+        }
+        state.population.lastYear = state.date.year - 1;
+        try {
+          FB.populationYear(state);
+        } finally {
+          FB.countyPopulationCapacity = originalCapacity;
+        }
+        return { capacityCalls:capacityCalls, inhabited:inhabited };
+      });
+
+      expect(result.capacityCalls).toBe(result.inhabited);
+    });
+
   test('Population factor scales tax, levies, and market demand within 0.50 - 1.50 range', async function ({ page }) {
     const factorData = await page.evaluate(function () {
       const state = {

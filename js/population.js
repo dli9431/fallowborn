@@ -207,11 +207,14 @@ window.FB = window.FB || {};
     return false;
   }
 
-  FB.countyMigrationAttraction = function (state, pid) {
+  FB.countyMigrationAttraction = function (state, pid, yearly) {
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return 0;
-    var pop = FB.countyPopulation(state, pid);
-    var cap = FB.countyPopulationCapacity(state, pid);
+    yearly = yearly || null;
+    var pop = yearly && yearly.population !== undefined
+      ? yearly.population : FB.countyPopulation(state, pid);
+    var cap = yearly && yearly.capacity !== undefined
+      ? yearly.capacity : FB.countyPopulationCapacity(state, pid);
     var bldgAttraction = FB.countyBuildingAttraction(state, pid);
     var owner = provinceOwner(state, pid);
     var techAttraction = FB.techBonus ? FB.techBonus(state, 'migrationAttraction', owner) : 0;
@@ -224,9 +227,13 @@ window.FB = window.FB || {};
     } else if (pop < 0.95 * cap) {
       attraction += 1;
     }
-    if (countyOccupiedOrBesieged(state, pid)) attraction -= 3;
-    if (realmIsAtWar(state, owner)) attraction -= 2;
-    if (countySevereMarketShock(state, pid)) attraction -= 2;
+    if (yearly ? yearly.occupied : countyOccupiedOrBesieged(state, pid)) {
+      attraction -= 3;
+    }
+    if (yearly ? yearly.ownerAtWar : realmIsAtWar(state, owner)) attraction -= 2;
+    if (yearly ? yearly.severeShock : countySevereMarketShock(state, pid)) {
+      attraction -= 2;
+    }
     /* Royal settlement policy (js/institutions.js) shifts the draw of the
        player's own counties; the conserved migration itself is untouched. */
     if (owner === 'player' && FB.realmPolicySettlementAttraction) {
@@ -398,6 +405,8 @@ window.FB = window.FB || {};
     var initialP = {};
     var naturalDeltas = {};
     var attractions = {};
+    var occupied = {};
+    var ownerAtWar = {};
     var rGrowth = balance('populationGrowthRate', 0.020);
 
     /* Stage 1: Natural growth & capacity */
@@ -412,13 +421,23 @@ window.FB = window.FB || {};
       var natural = Math.round(P * rGrowth * pressure);
       natural = FB.clamp(natural, -Math.round(P * 0.01), Math.round(P * 0.02));
       naturalDeltas[pid] = natural;
-      attractions[pid] = FB.countyMigrationAttraction(state, pid);
+      var owner = provinceOwner(state, pid);
+      if (!own(ownerAtWar, owner)) ownerAtWar[owner] = realmIsAtWar(state, owner);
+      occupied[pid] = countyOccupiedOrBesieged(state, pid);
+      attractions[pid] = FB.countyMigrationAttraction(state, pid, {
+        population:P,
+        capacity:K,
+        occupied:occupied[pid],
+        ownerAtWar:ownerAtWar[owner],
+        severeShock:countySevereMarketShock(state, pid)
+      });
     }
 
     /* Stage 2: Conserved Adjacency Migration */
     var migRate = balance('populationMigrationRate', 0.002);
     var maxOutflowRate = balance('populationMigrationMaxOutflow', 0.01);
     var edgeFlows = [];
+    var outgoingEdges = {};
     var outflowProposed = {};
 
     for (var j = 0; j < provs.length; j++) {
@@ -439,7 +458,7 @@ window.FB = window.FB || {};
         if (uOwner && vOwner && uOwner !== vOwner && FB.realmsAreHostile && FB.realmsAreHostile(state, uOwner, vOwner)) {
           hostile = true;
         }
-        if (countyOccupiedOrBesieged(state, uId) || countyOccupiedOrBesieged(state, vId)) {
+        if (occupied[uId] || occupied[vId]) {
           hostile = true;
         }
         if (hostile) continue;
@@ -452,7 +471,9 @@ window.FB = window.FB || {};
         var mag = Math.abs(diff);
         var flow = Math.round(initialP[sourceId] * migRate * Math.min(3, mag - 1));
         if (flow > 0) {
-          edgeFlows.push({ from: sourceId, to: targetId, flow: flow });
+          var edge = { from: sourceId, to: targetId, flow: flow };
+          edgeFlows.push(edge);
+          (outgoingEdges[sourceId] = outgoingEdges[sourceId] || []).push(edge);
           outflowProposed[sourceId] = (outflowProposed[sourceId] || 0) + flow;
         }
       }
@@ -475,10 +496,7 @@ window.FB = window.FB || {};
       if (proposed > maxAllowed && proposed > 0) {
         var mult = maxAllowed / proposed;
         var allocated = 0;
-        var outgoing = [];
-        for (var e = 0; e < edgeFlows.length; e++) {
-          if (edgeFlows[e].from === source) outgoing.push(edgeFlows[e]);
-        }
+        var outgoing = outgoingEdges[source] || [];
         for (var o = 0; o < outgoing.length; o++) {
           var scaledFlow = (o === outgoing.length - 1)
             ? (maxAllowed - allocated)

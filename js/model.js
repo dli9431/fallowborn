@@ -1670,6 +1670,13 @@ window.FB = window.FB || {};
     return familyIndexOf(state).spouses[cid] || [];
   };
 
+  /* Annual candidate sweeps need every reverse spouse link, not one lookup.
+     Expose the derived map without also building the player-kin snapshot. */
+  FB.spouseLinksSnapshot = function (state) {
+    if (!state || !state.chars) return Object.create(null);
+    return familyIndexOf(state).spouses;
+  };
+
   /* Death cleanup and yearly family systems need the reverse relationship
      maps and grouped kin. Expose a read-only same-tick snapshot so the sweep
      can keep using one indexed pass even though each death invalidates the
@@ -2068,8 +2075,9 @@ window.FB = window.FB || {};
     if (c.dead) return 'dead';
     const spouse = c.spouseId && state.chars[c.spouseId];
     if (spouse && !spouse.dead) return 'married';
-    for (const id in state.chars) {
-      const other = state.chars[id];
+    const reverseSpouses = FB.spouseLinksTo(state, c.id);
+    for (let i = 0; i < reverseSpouses.length; i++) {
+      const other = state.chars[reverseSpouses[i]];
       if (other && !other.dead && other.spouseId === c.id) return 'married';
     }
     if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
