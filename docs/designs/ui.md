@@ -93,8 +93,9 @@ attention changes the Connections label to **Cultivated connection**. Children r
 profile-only household context.
 
 Settlement sheets show **People here** from the same character ids. A current settlement
-offers its residents; a remote settlement shows only already-known residents or a travel
-hint and never generates a cast. Local character sheets include their exact settlement
+offers its residents; a remote settlement shows only already-known residents and never
+generates a cast. When no residents qualify for display, the sheet omits
+the entire **People here** section. Local character sheets include their exact settlement
 and a household strip, use the existing full-sheet history/Back behavior, and require no
 new art or custom input controls.
 

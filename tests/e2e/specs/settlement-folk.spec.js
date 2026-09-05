@@ -275,7 +275,7 @@ test('local meeting venues use standard actions below Standing with specific det
     await expect(page.locator('#tooltip')).toContainText('30-day cooldown');
   });
 
-test('Network and settlement sheets share the same nearby people without remote generation',
+test('Network and settlement sheets share people while empty rosters stay hidden',
   async function ({ page }) {
     const home = await page.evaluate(function () {
       return FB.state.player.provinceId;
@@ -376,8 +376,9 @@ test('Network and settlement sheets share the same nearby people without remote 
       };
     }, remote);
     expect(remoteRead).toEqual({ stateUnchanged:true, rngUnchanged:true });
-    await expect(page.locator('#gm-body')).toContainText(
-      'Travel here to meet the people who live around this settlement.');
+    await expect(page.locator('#gm-body .panelh', { hasText:'People here' }))
+      .toHaveCount(0);
+    await expect(page.locator('[data-settlement-folk]')).toHaveCount(0);
   });
 
 test('road travel hides the roster and pruning retains only connected distant households',

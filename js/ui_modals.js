@@ -6980,9 +6980,9 @@ window.FB = window.FB || {};
       ? FB.localFolkAt(s, pid, idx).filter(function (c) {
         return physicallyHere || FB.localFolkKnown(s, c.id);
       }) : [];
-    h += '<div class="panelh">' + esc(FB.T('People here')) + '</div>';
     if (settlementFolk.length) {
-      h += '<div class="gm-list settlement-folk-list">';
+      h += '<div class="panelh">' + esc(FB.T('People here')) + '</div>' +
+        '<div class="gm-list settlement-folk-list">';
       for (let folkIndex = 0; folkIndex < settlementFolk.length; folkIndex++) {
         const folk = settlementFolk[folkIndex];
         const folkAge = FB.ageOf(folk, s.date.year);
@@ -7003,11 +7003,6 @@ window.FB = window.FB || {};
           '</span></span></button>';
       }
       h += '</div>';
-    } else {
-      h += '<p class="hint">' + esc(physicallyHere
-        ? FB.T('No local household lives at this settlement.')
-        : FB.T('Travel here to meet the people who live around this settlement.')) +
-        '</p>';
     }
     h += '<div class="gm-footer">' +
       '<button class="btn" id="gm-cancel">' +

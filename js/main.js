@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.168.11';
+FB.VERSION = '1.168.12';
 FB.CHANGELOG = [
+  { v: '1.168.12', date: '2026-09-04', changes: [
+    'Settlement sheets now hide the People here section when no local residents are available.'
+  ] },
   { v: '1.168.11', date: '2026-09-04', changes: [
     'Population capacity checks now remain stable while partial world state is initialized.'
   ] },
