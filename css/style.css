@@ -1151,8 +1151,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   }
   .person-assignment-card,
   .enterprise-purchase-option,
-  .declarative-choice-card > .actionbtn,
-  .culture-details-action > .actionbtn { padding-right: 60px; }
+  .declarative-choice-card > .actionbtn { padding-right: 60px; }
 }
 .settcard-actions .btn.small.settcard-raise,
 .settcard-actions .btn.small.convcard-select {
@@ -1961,23 +1960,6 @@ button.modifierchip:hover, button.modifierchip:focus-visible {
    repeats here so it beats the `.kv b` value styling (equal specificity,
    later rule wins) */
 button.linklike { background: none; border: 0; padding: 0; font: inherit; color: #d8b24a; }
-.culture-details-actions { display: grid; gap: 8px; }
-.culture-details-action {
-  position: relative; overflow: hidden; border: 1px solid #55452a;
-  border-radius: 8px; background: #2a2216;
-}
-.culture-details-action:hover, .culture-details-action:focus-within {
-  border-color: #c9a24a;
-}
-.culture-details-action > .actionbtn { width: 100%; margin: 0; border: 0; }
-.culture-details-action > .settcard-actions {
-  position: absolute; z-index: 2; top: 8px; right: 8px;
-}
-.culture-details-action-details {
-  padding: 8px 10px; color: var(--helper-text-color); font-size: 13px;
-  line-height: 1.4;
-}
-.culture-details-action-details p { margin: 0; }
 .realm-highlight-summary, .main-text-color-summary, .helper-text-color-summary {
   display: flex; align-items: center; gap: 11px; margin: 4px 0 10px;
   padding: 9px 10px; border: 1px solid #493c27; border-radius: 7px;

@@ -76,11 +76,11 @@ same pressure/resistance calculation as an active project, without temporarily w
 to state. Starting or changing a baseline project has no immediate piety, prestige,
 Standing, or relationship charge; the confirmation says so explicitly and presents the
 actual Common Voice, unrest, economic, and migration consequences of its policy. The Self
-Faith and Culture sheets remain character-centered. Each links separately to its personal
-conversion picker and to explicitly named Land counties, but neither owns or silently
-targets a territorial project. Culture keeps its current identity and tradition visible
-while naming conventions and route explanations use the shared desktop tooltip or compact
-`?` disclosure.
+Faith sheet remains character-centered and links separately to its personal conversion
+picker and to explicitly named Land counties, but never owns or silently targets a
+territorial project. The Self Culture sheet is informational: it shows the player's current
+culture, regional tradition, dynasty style, and representative names. Culture adoption
+remains in Deeds, while territorial assimilation remains in Land.
 
 Settlement projects reuse the same saved project fields, annual pressure/resistance
 model, and policy consequences under `settlementCommunityProjects[settlementIndex]`.
@@ -94,7 +94,7 @@ shared desktop tooltip or compact-layout `?` disclosure. Selecting a policy star
 replaces the local project immediately; settlement policy has no separate confirmation
 sheet. A count can direct any settlement in a directly held county; a baron can direct
 only the saved home settlement. County Land controls remain county-wide and retain their
-review/confirmation step, and Self/Faith/Culture never chooses a settlement implicitly.
+review/confirmation step, and Self, Faith, or Culture never chooses a settlement implicitly.
 
 On the settlement sheet, each local-project card keeps only the axis, target, policy,
 current annual estimate or paused state, and resistance visible. The policy description,

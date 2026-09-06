@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.171.7';
+FB.VERSION = '1.171.8';
 FB.CHANGELOG = [
+  { v: '1.171.8', date: '2026-09-06', changes: [
+    'The Self Culture sheet now presents regional and naming traditions without conversion or county actions.'
+  ] },
   { v: '1.171.7', date: '2026-09-06', changes: [
     'Self now opens a Culture sheet with the current tradition, adoption choices, and direct routes to county assimilation.'
   ] },

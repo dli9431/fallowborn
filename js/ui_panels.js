@@ -2360,21 +2360,6 @@ window.FB = window.FB || {};
     return FB.T('Family surname');
   }
 
-  function cultureDetailsActionHtml(id, label, details, dataName, dataValue) {
-    const detailsId = id + '-details';
-    return '<div class="culture-details-action settcard" aria-describedby="' +
-      esc(detailsId) + '"><button type="button" class="actionbtn" id="' +
-      esc(id) + '"' + (dataName
-        ? ' data-' + dataName + '="' + esc(dataValue) + '"' : '') +
-      ' aria-describedby="' + esc(detailsId) + '">' + esc(label) +
-      '</button><span class="settcard-actions"><button type="button" ' +
-      'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
-      esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
-      esc(FB.T('Details')) + '">?</button></span><div class="settcard-details ' +
-      'culture-details-action-details hidden" id="' + esc(detailsId) +
-      '"><p>' + esc(details) + '</p></div></div>';
-  }
-
   UI.showCultureDetails = function (cultureId) {
     const s = FB.state;
     const culture = s && FBDATA.cultures && FBDATA.cultures[cultureId];
@@ -2384,53 +2369,19 @@ window.FB = window.FB || {};
     const icon = tradition.icon || '🌍';
     const traditionName = dt(
       s, 'cultureTradition', traditionId, tradition, 'name');
-    const samples = (culture.male || []).slice(0, 4).concat(
-      (culture.female || []).slice(0, 4));
-    let titleDetails = '<p><b>' + esc(FB.T('Dynasty style')) + '</b><br>' +
-      esc(cultureDynastyStyleText(culture)) + '</p>';
-    if (samples.length) {
-      titleDetails += '<p><b>' + esc(FB.T('Sample names')) + '</b><br>' +
-        esc(samples.join(', ')) + '</p>';
-    }
-    let h = panelh('Identity') +
+    const maleNames = (culture.male || []).slice(0, 4).join(', ');
+    const femaleNames = (culture.female || []).slice(0, 4).join(', ');
+    const h = panelh('Identity') +
       kv('Current culture', esc(cultureName(s, cultureId))) +
-      kv('Tradition', esc(icon) + ' ' + esc(traditionName)) +
-      panelh('Actions') + '<div class="gm-list culture-details-actions">' +
-      cultureDetailsActionHtml(
-        'culture-details-adopt', FB.T('Adopt a new culture…'),
-        FB.T('Choose a culture for yourself or your household.'));
-    const landIds = s.player.tier >= 3
-      ? ((s.player.provs || []).length
-        ? s.player.provs.slice() : [s.player.provinceId]) : [];
-    for (let i = 0; i < landIds.length; i++) {
-      const landPid = landIds[i];
-      const land = FB.world.byId[landPid];
-      if (!land || land.wasteland) continue;
-      h += cultureDetailsActionHtml(
-        'culture-details-land-' + landPid,
-        FB.T('View culture in {county}', { county:land.name }),
-        FB.T('Open this county in Land, where territorial assimilation is managed.'),
-        'culture-land-pid', landPid);
-    }
-    h += '</div><div class="gm-footer"><button class="btn" ' +
+      kv('Regional tradition', esc(icon) + ' ' + esc(traditionName)) +
+      panelh('Naming traditions') +
+      kv('Dynasty style', esc(cultureDynastyStyleText(culture))) +
+      (maleNames ? kv('Men’s names', esc(maleNames)) : '') +
+      (femaleNames ? kv('Women’s names', esc(femaleNames)) : '') +
+      '<div class="gm-footer"><button class="btn" ' +
       'id="culture-details-close">' + esc(FB.T('Close')) + '</button></div>';
-    openModal(icon + ' ' + cultureName(s, cultureId), h, {
-      titleDetailsHtml:titleDetails
-    });
+    openModal(icon + ' ' + cultureName(s, cultureId), h);
     $('culture-details-close').addEventListener('click', UI.closeModal);
-    $('culture-details-adopt').addEventListener('click', function () {
-      UI.closeModal();
-      UI.showConversionPicker('culture');
-    });
-    document.querySelectorAll('#gm-body [data-culture-land-pid]').forEach(
-      function (button) {
-        button.addEventListener('click', function () {
-          const pid = button.getAttribute('data-culture-land-pid');
-          UI.closeModal();
-          if (FB.map && FB.map.centerOn) FB.map.centerOn(pid);
-          UI.selectProvince(pid);
-        });
-      });
   };
 
   function foundedFaithOriginText(s, religionId, rel, parent, founder,

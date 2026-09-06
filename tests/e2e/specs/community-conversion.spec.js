@@ -514,10 +514,9 @@ test('Faith details links to personal conversion and an explicit Land county',
     })).toEqual({ selected:setup.pid, tab:'prov', modalClosed:true });
   });
 
-test('Self culture details stay concise and route personal and county conversion',
+test('Self culture details show regional and naming traditions without actions',
   async function ({ page }) {
-    await page.setViewportSize({ width:1280, height:800 });
-    const setup = await configureCountyProjectUi(page);
+    await configureCountyProjectUi(page);
     await page.evaluate(function () {
       FB.ui.showTab('char');
       FB.ui.refresh();
@@ -531,61 +530,24 @@ test('Self culture details stay concise and route personal and county conversion
     await expect(body.locator('.kv').filter({
       has:page.locator('span', { hasText:'Current culture' })
     }).locator('b')).toHaveText('Gaelic');
-    await expect(body).toContainText('Celtic Traditions');
+    await expect(body.locator('.kv').filter({
+      has:page.locator('span', { hasText:'Regional tradition' })
+    }).locator('b')).toHaveText('☘ Celtic Traditions');
+    await expect(body.locator('.kv').filter({
+      has:page.locator('span', { hasText:'Dynasty style' })
+    }).locator('b')).toHaveText('Clan prefix (mac)');
+    await expect(body.locator('.kv').filter({
+      has:page.locator('span', { hasText:'Men’s names' })
+    }).locator('b')).toHaveText('Aed, Niall, Domnall, Cormac');
+    await expect(body.locator('.kv').filter({
+      has:page.locator('span', { hasText:'Women’s names' })
+    }).locator('b')).toHaveText('Gormlaith, Derbail, Mor, Eithne');
+    await expect(page.locator('#culture-details-adopt')).toHaveCount(0);
+    await expect(page.locator('[data-culture-land-pid]')).toHaveCount(0);
+    await expect(page.locator('.modal-title-info')).toHaveCount(0);
 
-    const heading = page.locator('.gm-heading.has-modal-title-details');
-    await expect(page.locator('#gm-title-details')).toBeHidden();
-    await expect(page.locator('.culture-details-action .settcard-info').first())
-      .toBeHidden();
-    await heading.hover();
-    await expect(page.locator('#tooltip')).toContainText('Dynasty style');
-    await expect(page.locator('#tooltip')).toContainText('Clan prefix (mac)');
-    await expect(page.locator('#tooltip')).toContainText('Sample names');
-
-    const adoptCard = page.locator('.culture-details-action', {
-      has:page.locator('#culture-details-adopt')
-    });
-    await expect(adoptCard.locator('.culture-details-action-details'))
-      .toBeHidden();
-    await expect(page.locator('#culture-details-adopt'))
-      .toContainText('Adopt a new culture…');
-    await adoptCard.hover();
-    await expect(page.locator('#tooltip')).toContainText(
-      'Choose a culture for yourself or your household.');
-    await page.locator('#culture-details-adopt').click();
-    await expect(page.locator('#gm-title')).toHaveText('Adopt a new culture');
-    await page.locator('#conv-close').click();
-
-    await page.evaluate(function () { FB.ui.showCultureDetails('gaelic'); });
-    const land = page.locator(
-      '[data-culture-land-pid="' + setup.pid + '"]');
-    await expect(land).toContainText('View culture in ' + setup.county);
-    await land.locator('..').hover();
-    await expect(page.locator('#tooltip')).toContainText(
-      'territorial assimilation is managed');
-
-    await page.setViewportSize({ width:390, height:740 });
-    const adoptInfo = adoptCard.locator('.settcard-info');
-    await expect(adoptInfo).toBeVisible();
-    await adoptInfo.click();
-    await expect(adoptInfo).toHaveAttribute('aria-expanded', 'true');
-    await expect(adoptCard.locator('.culture-details-action-details'))
-      .toBeVisible();
-    const titleInfo = page.locator('.modal-title-info');
-    await expect(titleInfo).toBeVisible();
-    await titleInfo.click();
-    await expect(page.locator('#gm-title-details')).toBeVisible();
-    await expect(page.locator('#gm-title-details')).toContainText(
-      'Clan prefix (mac)');
-
-    await land.click();
-    expect(await page.evaluate(function () {
-      return {
-        selected:FB.map.selected,
-        tab:FB.ui._shared.activeTab,
-        modalClosed:document.getElementById('genmodal').classList.contains('hidden')
-      };
-    })).toEqual({ selected:setup.pid, tab:'prov', modalClosed:true });
+    await page.locator('#culture-details-close').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
 test('community triggers and effects retain exact county and settlement context',
