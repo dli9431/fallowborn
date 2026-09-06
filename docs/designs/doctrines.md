@@ -42,6 +42,10 @@ doctrines and cannot be purchased through this flow.
 
 ## Reform transaction
 
+Reform Chronicle entries use the durable `news.doctrine.reformed` message descriptor
+with the identity's proper name as a parameter. The sentence renders in the current
+locale after loading, rather than saving translated prose.
+
 `FB.doctrineReformStatus` is the pure preview and gate. `FB.applyDoctrineReform`
 rechecks it before writing anything. Faith reforms cost piety; culture reforms cost
 prestige. Core option costs live with their options. Global pacing lives in

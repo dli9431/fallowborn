@@ -29,6 +29,94 @@ async function startGame(page, testInfo) {
   await startDeterministicGame(page);
 }
 
+test('map zoom bands keep marker order with one rank lookup per candidate',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const results = await page.evaluate(function () {
+      var map = FB.map, state = FB.state;
+      var home = FB.world.byId[state.player.provinceId];
+      return [5.9, 6, 6.1, 8, 11.9, 12, 20, 80].map(function (zoom) {
+        map.zoom = zoom;
+        map.viewX = home.cx - map.canvas.width / zoom / 2;
+        map.viewY = home.cy - map.canvas.height / zoom / 2;
+        var expected = [];
+        if (zoom >= 6) {
+          for (var rank = 2; rank >= 0; rank--) {
+            FB.world.sitesRender.forEach(function (site) {
+              var x = (site.x - map.viewX) * zoom, y = (site.y - map.viewY) * zoom;
+              if (x < -40 * map.dpr || y < -40 * map.dpr ||
+                  x > map.canvas.width + 80 * map.dpr ||
+                  y > map.canvas.height + 48 * map.dpr) return;
+              if (!FB.siteVisible(state, site) || FB.siteKindRank(state, site) !== rank) return;
+              if (zoom < 12 && !(site.index === 0 || (site.authored && rank === 2))) return;
+              expected.push(site.pid + ':' + site.index);
+            });
+          }
+        }
+        var ranks = {}, visibility = {};
+        var originalRank = FB.siteKindRank, originalVisible = FB.settlementVisibleCount;
+        FB.siteKindRank = function (s, site) {
+          var id = site.pid + ':' + site.index;
+          ranks[id] = (ranks[id] || 0) + 1;
+          return originalRank.apply(FB, arguments);
+        };
+        FB.settlementVisibleCount = function (s, pid) {
+          visibility[pid] = (visibility[pid] || 0) + 1;
+          return originalVisible.apply(FB, arguments);
+        };
+        try { map.render(); }
+        finally { FB.siteKindRank = originalRank; FB.settlementVisibleCount = originalVisible; }
+        return { zoom:zoom, expected:expected,
+          actual:map.visibleSites.map(function (site) { return site.pid + ':' + site.index; }),
+          ranks:Object.keys(ranks).map(function (id) { return ranks[id]; }),
+          visibility:Object.keys(visibility).map(function (id) { return visibility[id]; }) };
+      });
+    });
+    for (const result of results) {
+      expect(result.actual).toEqual(result.expected);
+      expect(result.ranks.every(function (count) { return count === 1; })).toBe(true);
+      expect(result.visibility.every(function (count) { return count === 1; })).toBe(true);
+    }
+  });
+
+test('close county borders reuse geometry during pan and invalidate with political data',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      var map = FB.map;
+      map.zoom = 7;
+      map.render();
+      var cache = map.countyBorderCache;
+      var ids = Object.keys(cache.tiles);
+      var paths = ids.map(function (id) { return cache.tiles[id]; });
+      var strokes = 0, original = cache.ctx.stroke;
+      cache.ctx.stroke = function () { strokes++; return original.apply(this, arguments); };
+      try {
+        map.render();
+        var stationary = strokes;
+        map.viewX += 1;
+        map.render();
+        var panStrokes = strokes;
+      } finally { cache.ctx.stroke = original; }
+      var reused = ids.every(function (id, i) { return cache.tiles[id] === paths[i]; });
+      map.setOwnerFns(map.ownerOf, map.colorOf, map.capitals,
+        function () { return 'changed-holder'; }, map.colorOpacityOf);
+      var cleared = map.countyBorderCache === null;
+      map.render();
+      var refreshed = map.countyBorderCache !== cache &&
+        map.countyBorderCache.keys[1].indexOf('changed-holder') >= 0;
+      map.buildBase();
+      return { stationary:stationary, panStrokes:panStrokes, reused:reused,
+        cleared:cleared, refreshed:refreshed, baseCleared:map.countyBorderCache === null };
+    });
+    expect(result.stationary).toBe(0);
+    expect(result.panStrokes).toBeGreaterThan(0);
+    expect(result.reused).toBe(true);
+    expect(result.cleared).toBe(true);
+    expect(result.refreshed).toBe(true);
+    expect(result.baseCleared).toBe(true);
+  });
+
 test('travel selection paints before using the county-only map highlight',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);

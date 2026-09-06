@@ -4,6 +4,9 @@ dependsOnRuntime(__filename, [
   'index.html',
   'js/keys.js',
   'js/mapview.js',
+  'js/world.js',
+  'data/counties.js',
+  'data/map_data.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -339,12 +342,11 @@ test('Map filter button opens a direct chooser with unavailable modes visible',
       .toHaveText('At peace');
 
     await overlay.locator('[data-map-mode="mine"]').click();
-    await expect(overlay).toBeHidden();
-    await expect(mapmodeBtn).toHaveAttribute('aria-expanded', 'false');
+    await expect(overlay).toBeVisible();
+    await expect(mapmodeBtn).toHaveAttribute('aria-expanded', 'true');
     await expect(mapmodeBtn).toHaveAttribute('title', 'Map filters: Mine (R)');
     await expect(mapmodeBtn).toHaveClass(/on/);
 
-    await page.keyboard.press('r');
     await expect(overlay).toBeVisible();
     await expect(overlay.locator('[data-map-mode="mine"]')).toBeFocused();
     await page.keyboard.press('Escape');
@@ -368,8 +370,9 @@ test('Map filter button opens a direct chooser with unavailable modes visible',
     for (const choice of directChoices) {
       await mapmodeBtn.click();
       await overlay.locator('[data-map-mode="' + choice.mode + '"]').click();
-      await expect(overlay).toBeHidden();
+      await expect(overlay).toBeVisible();
       await expect(mapmodeBtn).toHaveAttribute('title', choice.title);
+      await page.keyboard.press('Escape');
     }
 
     await page.evaluate(function () {
@@ -389,7 +392,7 @@ test('Map filter button opens a direct chooser with unavailable modes visible',
     await page.keyboard.press('End');
     await expect(overlay.locator('[data-map-mode="war"]')).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(overlay).toBeHidden();
+    await expect(overlay).toBeVisible();
     await expect(mapmodeBtn).toHaveAttribute('title', 'Map filters: War (R)');
 
     const warHighlight = await page.evaluate(function () {
@@ -403,8 +406,259 @@ test('Map filter button opens a direct chooser with unavailable modes visible',
     expect(warHighlight.focusColor).toBe('#c8352b');
     expect(warHighlight.focusGroupActive).toBe(true);
 
-    await mapmodeBtn.click();
     await overlay.locator('[data-map-mode="realm"]').click();
     await expect(mapmodeBtn).toHaveAttribute('title', 'Map filters: Realm (R)');
+    await page.keyboard.press('Escape');
     await expect(mapmodeBtn).not.toHaveClass(/on/);
+  });
+
+test('map panning keeps the filter chooser open and its close controls usable',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      FB.map.zoom = 4;
+      FB.map.viewX = FB.world.W / 2;
+      FB.map.viewY = FB.world.H / 2;
+      FB.map.request();
+    });
+    await page.locator('#btn-mapmode').click();
+    const overlay = page.locator('#map-filter-controls');
+    const before = await page.evaluate(function () {
+      return { x:FB.map.viewX, y:FB.map.viewY };
+    });
+    const box = await page.locator('#map').boundingBox();
+    const x = box.x + box.width * 0.7;
+    const y = box.y + box.height * 0.85;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await expect(overlay).toBeVisible();
+    await page.mouse.move(x - 60, y - 30, { steps:6 });
+    await page.mouse.up();
+    await expect(overlay).toBeVisible();
+    await expect(page.locator('#btn-mapmode')).toHaveAttribute('aria-expanded', 'true');
+    const after = await page.evaluate(function () {
+      return { x:FB.map.viewX, y:FB.map.viewY };
+    });
+    expect(after).not.toEqual(before);
+    await overlay.locator('[data-map-mode="mine"]').click();
+    await expect(overlay).toBeVisible();
+    await page.locator('#map-filter-close').click();
+    await expect(overlay).toBeHidden();
+    await page.locator('#btn-mapmode').click();
+    await page.keyboard.press('Escape');
+    await expect(overlay).toBeHidden();
+  });
+
+test('de jure filters draw all title borders and reuse geometry across selections',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      var map = FB.map;
+      var results = [];
+      ['duchy', 'kingdom'].forEach(function (mode) {
+        FB.ui.setMapMode(mode);
+        var cached = map.dejureBorderCache[mode];
+        var expected = FB.world.provs.filter(function (pr) {
+          return !pr.wasteland && (mode === 'duchy'
+            ? pr.duchy : FB.dejureOf(pr.id).kingdom);
+        });
+        var allMatch = expected.every(function (pr) {
+          return cached.keys[pr.idx + 1] === (mode === 'duchy'
+            ? pr.duchy : FB.dejureOf(pr.id).kingdom);
+        });
+        var probe = document.createElement('canvas').getContext('2d');
+        probe.lineWidth = 0.1;
+        var boundary = null, internal = null, w = FB.world;
+        for (var y = 1; y < w.H && (!boundary || !internal); y++) {
+          for (var x = 1; x < w.W && (!boundary || !internal); x++) {
+            var a = w.grid[(y - 1) * w.W + x - 1];
+            var b = w.grid[(y - 1) * w.W + x];
+            if (!a || !b || a === b) continue;
+            var ka = cached.keys[a], kb = cached.keys[b];
+            if (!ka || !kb) continue;
+            if (ka !== kb && !boundary) {
+              boundary = { x:x, y:y };
+            } else if (ka === kb && !internal &&
+                cached.keys[w.grid[y * w.W + x - 1]] === ka &&
+                cached.keys[w.grid[y * w.W + x]] === ka) {
+              internal = { x:x, y:y };
+            }
+          }
+        }
+        function hits(sample) {
+          if (!sample) throw new Error('Expected title boundary samples');
+          map.zoom = 10;
+          map.viewX = sample.x - 5;
+          map.viewY = sample.y - 5;
+          map.render();
+          var path = cached.tiles[Math.floor(sample.x / 64) + ':' + Math.floor(sample.y / 64)];
+          return probe.isPointInStroke(path, sample.x, sample.y - 0.5);
+        }
+        var boundaryHit = hits(boundary), internalOmitted = !hits(internal);
+        var strokes = [], originalStroke = cached.ctx.stroke;
+        cached.ctx.stroke = function (path) {
+          strokes.push(this.strokeStyle);
+          return originalStroke.apply(this, arguments);
+        };
+        try {
+          map.render();
+          map.selectProvince(expected[expected.length - 1].id);
+          map.setDejureBorders(mode);
+          map.render();
+        } finally { cached.ctx.stroke = originalStroke; }
+        results.push({ allMatch:allMatch, count:expected.length,
+          reused:map.dejureBorderCache[mode] === cached, strokes:strokes,
+          boundaryHit:boundaryHit, internalOmitted:internalOmitted });
+      });
+      FB.ui.setMapMode('realm');
+      var cleared = map.dejureBorderMode === null;
+      FB.ui.setMapMode('duchy');
+      FB.ui.setMarketLens(true);
+      var marketCleared = map.dejureBorderMode === null;
+      map.useWorld();
+      return { modes:results, cleared:cleared,
+        marketCleared:marketCleared,
+        worldCleared:Object.keys(map.dejureBorderCache).length === 0 };
+    });
+    for (const mode of result.modes) {
+      expect(mode.count).toBeGreaterThan(100);
+      expect(mode.allMatch).toBe(true);
+      expect(mode.reused).toBe(true);
+      expect(mode.boundaryHit).toBe(true);
+      expect(mode.internalOmitted).toBe(true);
+      expect(mode.strokes).toHaveLength(0);
+    }
+    expect(result.cleared).toBe(true);
+    expect(result.marketCleared).toBe(true);
+    expect(result.worldCleared).toBe(true);
+  });
+
+test('de jure filters replace county labels with title names until close zoom',
+  async function ({ page }) {
+    const results = await page.evaluate(function () {
+      var map = FB.map, out = [];
+      // Isolate the county/title switch from settlement-label collision rules.
+      var sites = FB.world.sitesRender;
+      FB.world.sitesRender = [];
+      map.canvas.width = 640;
+      map.canvas.height = 480;
+      ['duchy', 'kingdom'].forEach(function (mode) {
+        map.setDejureBorders(mode);
+        var cache = map.dejureBorderCache[mode];
+        var group = cache.labels[0];
+        var pr = FB.world.provs.filter(function (candidate) {
+          return candidate.cx === group.cx && candidate.cy === group.cy;
+        })[0];
+        var table = mode === 'duchy' ? FBDATA.duchies : FBDATA.kingdoms;
+        var drawn = [], original = map.ctx.fillText;
+        map.ctx.fillText = function (text) {
+          drawn.push(text);
+          return original.apply(this, arguments);
+        };
+        try {
+          map.zoom = 1;
+          map.viewX = group.cx - 320;
+          map.viewY = group.cy - 240;
+          map.render();
+          var wide = cache.labelLayout;
+          var titleDrawn = drawn.indexOf(FB.L(table[group.id].name)) >= 0;
+          map.render();
+          var reused = cache.labelLayout === wide;
+          drawn = [];
+          map.zoom = 80;
+          map.viewX = pr.cx - 320 / map.zoom;
+          map.viewY = pr.cy - 240 / map.zoom;
+          map.render();
+          var closeCounties = cache.labelLayout.counties;
+          var countyDrawn = drawn.indexOf(FB.L(pr.name)) >= 0;
+          map.setDejureBorders(null);
+          map.zoom = 4;
+          map.viewX = pr.cx - 320 / map.zoom;
+          map.viewY = pr.cy - 240 / map.zoom;
+          drawn = [];
+          map.render();
+          out.push({ wideCounties:wide.counties, titleDrawn:titleDrawn,
+            reused:reused, closeCounties:closeCounties, countyDrawn:countyDrawn,
+            ordinaryCounty:drawn.indexOf(FB.L(pr.name)) >= 0 });
+        } finally { map.ctx.fillText = original; }
+      });
+      FB.world.sitesRender = sites;
+      return out;
+    });
+    for (const result of results) {
+      expect(result.wideCounties).toBe(false);
+      expect(result.titleDrawn).toBe(true);
+      expect(result.reused).toBe(true);
+      expect(result.closeCounties).toBe(true);
+      expect(result.countyDrawn).toBe(true);
+      expect(result.ordinaryCounty).toBe(true);
+    }
+  });
+
+test('de jure border work is limited to visible tiles and stationary frames reuse pixels',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      var map = FB.map, results = [];
+      map.canvas.width = 320;
+      map.canvas.height = 240;
+      map.zoom = 80;
+      ['duchy', 'kingdom'].forEach(function (mode) {
+        map.setDejureBorders(mode);
+        var cache = map.dejureBorderCache[mode];
+        var before = Object.keys(cache.tiles).length;
+        var original = cache.ctx.stroke, strokes = 0;
+        cache.ctx.stroke = function () {
+          strokes++;
+          return original.apply(this, arguments);
+        };
+        try {
+          map.viewX = 128;
+          map.viewY = 128;
+          map.render();
+          var initialStrokes = strokes;
+          var initialTiles = Object.keys(cache.tiles).length;
+          var tileIds = Object.keys(cache.tiles);
+          var paths = tileIds.map(function (id) { return cache.tiles[id]; });
+          map.render();
+          map.render();
+          var stationaryStrokes = strokes;
+          map.viewX = FB.world.W - 128;
+          map.viewY = FB.world.H - 128;
+          map.render();
+          var panStrokes = strokes - stationaryStrokes;
+          var afterPan = Object.keys(cache.tiles).length;
+          var reused = tileIds.every(function (id, i) { return cache.tiles[id] === paths[i]; });
+          map.zoom = 40;
+          map.render();
+          var zoomRepainted = strokes > stationaryStrokes + panStrokes;
+          var afterZoom = strokes;
+          map.canvas.width++;
+          map.render();
+          var resized = strokes > afterZoom && cache.canvas.width === map.canvas.width;
+          var afterResize = strokes;
+          map.dpr *= 2;
+          map.render();
+          var dprRepainted = strokes > afterResize;
+          map.dpr /= 2;
+          map.zoom = 80;
+          results.push({ before:before, initialTiles:initialTiles,
+            initialStrokes:initialStrokes, stationaryStrokes:stationaryStrokes,
+            panStrokes:panStrokes, afterPan:afterPan, reused:reused,
+            zoomRepainted:zoomRepainted, resized:resized, dprRepainted:dprRepainted });
+        } finally { cache.ctx.stroke = original; }
+      });
+      return results;
+    });
+    for (const mode of result) {
+      expect(mode.before).toBe(0);
+      expect(mode.initialTiles).toBeGreaterThan(0);
+      expect(mode.initialTiles).toBeLessThanOrEqual(4);
+      expect(mode.initialStrokes).toBeLessThanOrEqual(8);
+      expect(mode.stationaryStrokes).toBe(mode.initialStrokes);
+      expect(mode.panStrokes).toBeGreaterThan(0);
+      expect(mode.panStrokes).toBeLessThanOrEqual(8);
+      expect(mode.afterPan).toBeLessThanOrEqual(8);
+      expect(mode.reused).toBe(true);
+      expect(mode.zoomRepainted).toBe(true);
+      expect(mode.resized).toBe(true);
+      expect(mode.dprRepainted).toBe(true);
+    }
   });

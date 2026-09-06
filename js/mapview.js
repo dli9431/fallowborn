@@ -26,6 +26,8 @@ window.FB = window.FB || {};
     groupOutline: null, selectedOutline: null,
     groupOutlineSmooth: null, selectedOutlineSmooth: null,
     highlightColor: null,
+    dejureBorderMode: null, dejureBorderCache: {},
+    countyBorderCache: null,
     onTap: null, dirty: true,
     marketGood: null,
     warTargets: null, warSelected: null, warTargetMap: null,
@@ -110,6 +112,9 @@ window.FB = window.FB || {};
     M.groupOutlineSmooth = null;
     M.selectedOutlineSmooth = null;
     M.highlightColor = null;
+    M.dejureBorderMode = null;
+    M.dejureBorderCache = {};
+    M.countyBorderCache = null;
     M.warTargets = null;
     M.warSelected = null;
     M.warTargetMap = null;
@@ -192,6 +197,7 @@ window.FB = window.FB || {};
 
   /* ---------- base image ---------- */
   M.setOwnerFns = function (ownerOf, colorOf, capitals, holderOf, colorOpacityOf) {
+    M.countyBorderCache = null;
     M.ownerOf = ownerOf; M.colorOf = colorOf; M.capitals = capitals || [];
     /* lookup for the per-label capital star; rebuilt with the capitals list */
     M.capitalSet = {};
@@ -220,6 +226,7 @@ window.FB = window.FB || {};
   }
 
   M.buildBase = function () {
+    M.countyBorderCache = null;
     const w = FB.world, W = w.W, H = w.H;
     const img = M.baseCtx.createImageData(W, H);
     const d = img.data;
@@ -314,29 +321,213 @@ window.FB = window.FB || {};
   ];
   const borderCross = new Float32Array(8);
 
-  function drawCloseBorders(ctx, sx, sy, z, alpha) {
-    const el = M.canvas, w = FB.world, W = w.W, H = w.H, grid = w.grid;
-    const x0 = Math.max(1, Math.floor(sx) - 1);
-    const y0 = Math.max(1, Math.floor(sy) - 1);
-    const x1 = Math.min(W - 1, Math.ceil(sx + el.width / z) + 1);
-    const y1 = Math.min(H - 1, Math.ceil(sy + el.height / z) + 1);
-    if (x1 <= x0 || y1 <= y0) return;
-    const keys = ownerHolderKeys(), owners = keys[0], holders = keys[1];
+  /* Small lazy spatial tiles bound geometry work to the visible map. A cached
+     viewport bitmap also avoids restroking borders on stationary tick frames. */
+  const DEJURE_TILE_SIZE = 64;
+  M.setDejureBorders = function (mode) {
+    M.dejureBorderMode = mode === 'duchy' || mode === 'kingdom' ? mode : null;
+    const w = FB.world;
+    if (!M.dejureBorderMode || !w || M.dejureBorderCache[mode]) {
+      M.request();
+      return;
+    }
+    const keys = [null], groups = {};
+    for (let i = 0; i < w.provs.length; i++) {
+      const pr = w.provs[i];
+      keys[pr.idx + 1] = pr.wasteland ? null :
+        (mode === 'duchy' ? pr.duchy : FB.dejureOf(pr.id).kingdom) || null;
+      const id = keys[pr.idx + 1];
+      if (!id) continue;
+      const group = groups[id] || (groups[id] = { id:id, area:0, x:0, y:0 });
+      const area = Math.max(1, pr.area);
+      group.area += area;
+      group.x += pr.cx * area;
+      group.y += pr.cy * area;
+    }
+    const labels = Object.keys(groups).map(function (id) {
+      const group = groups[id];
+      group.x /= group.area;
+      group.y /= group.area;
+      group.distance = Infinity;
+      return group;
+    });
+    // Anchor on a member county nearest the centroid, keeping labels on land.
+    for (let i = 0; i < w.provs.length; i++) {
+      const pr = w.provs[i], group = groups[keys[pr.idx + 1]];
+      if (!group) continue;
+      const dx = pr.cx - group.x, dy = pr.cy - group.y;
+      const distance = dx * dx + dy * dy;
+      if (distance < group.distance) {
+        group.distance = distance;
+        group.cx = pr.cx; group.cy = pr.cy;
+      }
+    }
+    labels.sort(function (a, b) { return b.area - a.area || a.id.localeCompare(b.id); });
+    const canvas = document.createElement('canvas');
+    M.dejureBorderCache[mode] = {
+      keys:keys, labels:labels, tiles:{}, canvas:canvas,
+      ctx:canvas.getContext('2d'), view:null, labelLayout:null
+    };
+    M.request();
+  };
+
+  function dejureBorderTile(cache, tx, ty) {
+    const id = tx + ':' + ty;
+    if (cache.tiles[id]) return cache.tiles[id];
+    const w = FB.world, keys = cache.keys;
+    const path = new Path2D();
+    const points = [];
+    function cross(a, b, x, y) {
+      if (a !== b && (a || b)) points.push(x, y);
+    }
+    function key(x, y) {
+      return x < 0 || y < 0 || x >= w.W || y >= w.H ? null :
+        keys[w.grid[y * w.W + x]] || null;
+    }
+    const x0 = tx * DEJURE_TILE_SIZE, y0 = ty * DEJURE_TILE_SIZE;
+    const x1 = Math.min(w.W + 1, x0 + DEJURE_TILE_SIZE);
+    const y1 = Math.min(w.H + 1, y0 + DEJURE_TILE_SIZE);
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const a = key(x - 1, y - 1), b = key(x, y - 1);
+        const c = key(x - 1, y), d = key(x, y);
+        if (a === b && b === c && c === d) continue;
+        points.length = 0;
+        cross(a, b, x, y - 0.5);
+        cross(c, d, x, y + 0.5);
+        cross(a, c, x - 0.5, y);
+        cross(b, d, x + 0.5, y);
+        if (points.length === 4) {
+          path.moveTo(points[0], points[1]);
+          path.lineTo(points[2], points[3]);
+        } else {
+          for (let i = 0; i < points.length; i += 2) {
+            path.moveTo(x, y);
+            path.lineTo(points[i], points[i + 1]);
+          }
+        }
+      }
+    }
+    cache.tiles[id] = path;
+    return path;
+  }
+
+  function drawDejureBorders(ctx, sx, sy, z) {
+    const cache = M.dejureBorderMode && M.dejureBorderCache[M.dejureBorderMode];
+    if (!cache) return;
+    const width = M.canvas.width, height = M.canvas.height;
+    const view = cache.view;
+    if (!view || view.x !== sx || view.y !== sy || view.z !== z ||
+        view.width !== width || view.height !== height || view.dpr !== M.dpr) {
+      const canvas = cache.canvas, paint = cache.ctx;
+      if (canvas.width !== width) canvas.width = width;
+      if (canvas.height !== height) canvas.height = height;
+      paint.clearRect(0, 0, width, height);
+      // Include midpoint overhang and the screen-width keyline at tile edges.
+      const margin = 1 + 4 * M.dpr / z;
+      const w = FB.world;
+      const tx0 = Math.max(0, Math.floor((sx - margin) / DEJURE_TILE_SIZE));
+      const ty0 = Math.max(0, Math.floor((sy - margin) / DEJURE_TILE_SIZE));
+      const tx1 = Math.min(Math.floor(w.W / DEJURE_TILE_SIZE),
+        Math.floor((sx + width / z + margin) / DEJURE_TILE_SIZE));
+      const ty1 = Math.min(Math.floor(w.H / DEJURE_TILE_SIZE),
+        Math.floor((sy + height / z + margin) / DEJURE_TILE_SIZE));
+      paint.save();
+      paint.scale(z, z);
+      paint.translate(-sx, -sy);
+      // Draw every dark keyline before the pale pass to avoid tile seams.
+      for (let pass = 0; pass < 2; pass++) {
+        paint.strokeStyle = pass ? DEFAULT_FOCUS_COLOR : outlineUnderColor(DEFAULT_FOCUS_COLOR);
+        paint.lineWidth = (pass ? 1.35 : 3.55) * M.dpr / z;
+        paint.lineCap = 'square';
+        paint.lineJoin = 'round';
+        for (let ty = ty0; ty <= ty1; ty++) {
+          for (let tx = tx0; tx <= tx1; tx++) {
+            paint.stroke(dejureBorderTile(cache, tx, ty));
+          }
+        }
+      }
+      paint.restore();
+      cache.view = { x:sx, y:sy, z:z, width:width, height:height, dpr:M.dpr };
+    }
+    ctx.drawImage(cache.canvas, 0, 0);
+  }
+
+  function dejureLabelLayout(ctx, sx, sy, z) {
+    const cache = M.dejureBorderMode && M.dejureBorderCache[M.dejureBorderMode];
+    if (!cache) return null;
+    if (cache.labelLayout && cache.labelLayout.view === cache.view &&
+        cache.labelLayout.locale === FB.locale) return cache.labelLayout;
+    const width = M.canvas.width, height = M.canvas.height;
+    const size = 8 * M.dpr;
+    let occupied = {};
+    // Conservative screen bins avoid pairwise label comparisons.
+    function fits(x, y, w, h) {
+      const x0 = Math.floor((x - w / 2 - 3 * M.dpr) / size);
+      const x1 = Math.floor((x + w / 2 + 3 * M.dpr) / size);
+      const y0 = Math.floor((y - h - 3 * M.dpr) / size);
+      const y1 = Math.floor((y + 3 * M.dpr) / size);
+      for (let yy = y0; yy <= y1; yy++) {
+        for (let xx = x0; xx <= x1; xx++) if (occupied[xx + ':' + yy]) return false;
+      }
+      for (let yy = y0; yy <= y1; yy++) {
+        for (let xx = x0; xx <= x1; xx++) occupied[xx + ':' + yy] = true;
+      }
+      return true;
+    }
+    const layout = { view:cache.view, locale:FB.locale, counties:z >= SITE_Z_MID, labels:[] };
+    if (layout.counties) {
+      const fs = Math.round(10 * M.dpr + Math.min(4, z));
+      ctx.font = fs + 'px Georgia';
+      const provs = FB.world.provs;
+      for (let i = 0; i < provs.length; i++) {
+        const pr = provs[i];
+        if (pr.wasteland) continue;
+        const x = (pr.cx - sx) * z, y = (pr.cy - sy) * z;
+        if (x < 0 || y < 0 || x > width || y > height) continue;
+        const textWidth = ctx.measureText(FB.L(pr.name)).width + 14 * M.dpr;
+        if (pr.area * z * z < 1200 * M.dpr || !fits(x, y, textWidth, fs)) {
+          layout.counties = false;
+          break;
+        }
+      }
+    }
+    if (!layout.counties) {
+      occupied = {};
+      const table = M.dejureBorderMode === 'duchy' ? FBDATA.duchies : FBDATA.kingdoms;
+      const fs = Math.round(13 * M.dpr);
+      ctx.font = 'bold ' + fs + 'px Georgia';
+      for (let i = 0; i < cache.labels.length; i++) {
+        const group = cache.labels[i], definition = table[group.id];
+        if (!definition) continue;
+        const x = (group.cx - sx) * z, y = (group.cy - sy) * z;
+        if (x < 0 || y < 0 || x > width || y > height) continue;
+        const name = FB.L(definition.name);
+        if (fits(x, y, ctx.measureText(name).width, fs)) {
+          layout.labels.push({ text:name, x:x, y:y });
+        }
+      }
+    }
+    cache.labelLayout = layout;
+    return layout;
+  }
+
+  function countyBorderTile(cache, tx, ty) {
+    const id = tx + ':' + ty;
+    if (cache.tiles[id]) return cache.tiles[id];
+    const w = FB.world, W = w.W, H = w.H, grid = w.grid;
+    const x0 = Math.max(1, tx * DEJURE_TILE_SIZE);
+    const y0 = Math.max(1, ty * DEJURE_TILE_SIZE);
+    const x1 = Math.min(W - 1, (tx + 1) * DEJURE_TILE_SIZE - 1);
+    const y1 = Math.min(H - 1, (ty + 1) * DEJURE_TILE_SIZE - 1);
+    const owners = cache.keys[0], holders = cache.keys[1];
+    const paths = [new Path2D(), new Path2D(), new Path2D()];
     function strength(u, v) {
       if (!u || !v) return 2; // coastline
       if (holders[u - 1] === holders[v - 1]) return 0;
       if (owners[u - 1] === owners[v - 1]) return 1;
       return 2;
     }
-    ctx.save();
-    ctx.scale(z, z);
-    ctx.translate(-sx, -sy);
-    ctx.lineWidth = 1.2 / z;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    for (let cls = 0; cls <= 2; cls++) {
-      ctx.beginPath();
-      let any = false;
       for (let gy = y0; gy <= y1; gy++) {
         const rowUp = (gy - 1) * W, rowDn = gy * W;
         for (let gx = x0; gx <= x1; gx++) {
@@ -360,7 +551,8 @@ window.FB = window.FB || {};
             borderCross[n * 2] = gx + 0.5; borderCross[n * 2 + 1] = gy; n++;
             const s = strength(b, d); if (s > blockCls) blockCls = s;
           }
-          if (blockCls !== cls || n < 2) continue;
+          if (n < 2) continue;
+          const ctx = paths[blockCls];
           if (n === 2) {
             ctx.moveTo(borderCross[0], borderCross[1]);
             ctx.lineTo(borderCross[2], borderCross[3]);
@@ -370,17 +562,49 @@ window.FB = window.FB || {};
               ctx.lineTo(borderCross[i * 2], borderCross[i * 2 + 1]);
             }
           }
-          any = true;
         }
       }
-      if (any) {
-        ctx.globalAlpha = alpha;
-        ctx.strokeStyle = BORDER_STYLE[cls];
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
+    cache.tiles[id] = paths;
+    return paths;
+  }
+
+  function drawCloseBorders(ctx, sx, sy, z, alpha) {
+    if (!M.countyBorderCache) {
+      const canvas = document.createElement('canvas');
+      M.countyBorderCache = { keys:ownerHolderKeys(), tiles:{}, canvas:canvas,
+        ctx:canvas.getContext('2d'), view:null };
     }
-    ctx.restore();
+    const cache = M.countyBorderCache, width = M.canvas.width, height = M.canvas.height;
+    const view = cache.view;
+    if (!view || view.x !== sx || view.y !== sy || view.z !== z ||
+        view.width !== width || view.height !== height) {
+      const paint = cache.ctx, canvas = cache.canvas;
+      if (canvas.width !== width) canvas.width = width;
+      if (canvas.height !== height) canvas.height = height;
+      paint.clearRect(0, 0, width, height);
+      const tx0 = Math.max(0, Math.floor((sx - 2) / DEJURE_TILE_SIZE));
+      const ty0 = Math.max(0, Math.floor((sy - 2) / DEJURE_TILE_SIZE));
+      const tx1 = Math.min(Math.floor((FB.world.W - 1) / DEJURE_TILE_SIZE),
+        Math.floor((sx + width / z + 2) / DEJURE_TILE_SIZE));
+      const ty1 = Math.min(Math.floor((FB.world.H - 1) / DEJURE_TILE_SIZE),
+        Math.floor((sy + height / z + 2) / DEJURE_TILE_SIZE));
+      paint.save();
+      paint.scale(z, z); paint.translate(-sx, -sy);
+      paint.lineWidth = 1.2 / z;
+      paint.lineJoin = 'round'; paint.lineCap = 'round';
+      for (let cls = 0; cls < 3; cls++) {
+        paint.strokeStyle = BORDER_STYLE[cls];
+        for (let ty = ty0; ty <= ty1; ty++) {
+          for (let tx = tx0; tx <= tx1; tx++) {
+            paint.stroke(countyBorderTile(cache, tx, ty)[cls]);
+          }
+        }
+      }
+      paint.restore();
+      cache.view = { x:sx, y:sy, z:z, width:width, height:height };
+    }
+    ctx.save(); ctx.globalAlpha = alpha;
+    ctx.drawImage(cache.canvas, 0, 0); ctx.restore();
     if (M.marketGood && FB.state && FB.renderMarketOverlay) {
       FB.renderMarketOverlay(ctx, M.marketGood, sx, sy, z);
     }
@@ -864,15 +1088,41 @@ window.FB = window.FB || {};
   /* ---------- settlement markers (screen space) ----------
      Runs after the base raster and selection overlay, before county labels,
      armies, campaign objectives, and travelers. Iterates the compiled
-     world.sitesRender list (head/authored/province/index order) once per
-     kind rank so label priority is city > town > village without any
-     per-frame allocation; a rejected label keeps its marker and hit target.
+     world.sitesRender list once into reusable rank buckets, retaining
+     head/authored/province/index order within city > town > village;
+     a rejected label keeps its marker and hit target.
      Name labels draw only in the emblem band (zoom >= SITE_Z_DETAIL) — the
      intermediate band shows bare shape markers. Only markers actually drawn
      land in the reused M.visibleSites list. */
   function settlementHitRecord(n) {
     if (M._sitePool.length <= n) M._sitePool.push({ pid:'', index:0, x:0, y:0, hs:0 });
     return M._sitePool[n];
+  }
+
+  const settlementDrawBuckets = [[], [], []];
+  let labelRectBins = {};
+  function indexLabelRect(rect) {
+    const size = 64 * M.dpr;
+    for (let y = Math.floor(rect[1] / size); y <= Math.floor(rect[3] / size); y++) {
+      for (let x = Math.floor(rect[0] / size); x <= Math.floor(rect[2] / size); x++) {
+        const key = x + ':' + y;
+        (labelRectBins[key] || (labelRectBins[key] = [])).push(rect);
+      }
+    }
+  }
+  function labelRectBlocked(x0, y0, x1, y1) {
+    const size = 64 * M.dpr;
+    for (let y = Math.floor(y0 / size); y <= Math.floor(y1 / size); y++) {
+      for (let x = Math.floor(x0 / size); x <= Math.floor(x1 / size); x++) {
+        const bin = labelRectBins[x + ':' + y];
+        if (!bin) continue;
+        for (let i = 0; i < bin.length; i++) {
+          const r = bin[i];
+          if (!(x1 < r[0] || x0 > r[2] || y1 < r[1] || y0 > r[3])) return true;
+        }
+      }
+    }
+    return false;
   }
 
   function drawSettlements(ctx, z) {
@@ -882,15 +1132,25 @@ window.FB = window.FB || {};
     /* the frame-level smoothing rule already applies at these zooms,
        including to the scaled emblem blits */
     ctx.textAlign = 'center';
+    for (let rank = 0; rank < 3; rank++) settlementDrawBuckets[rank].length = 0;
+    const countyVisibility = {};
+    for (const site of sites) {
+      // Most generated sites cannot appear in the intermediate marker band.
+      if (!detail && site.index !== 0 && !site.authored) continue;
+      const x = (site.x - M.viewX) * z, y = (site.y - M.viewY) * z;
+      if (x < m || y < m || x > mw || y > mh) continue;
+      if (countyVisibility[site.pid] === undefined) {
+        countyVisibility[site.pid] = FB.settlementVisibleCount(FB.state, site.pid);
+      }
+      if (site.index >= countyVisibility[site.pid]) continue;
+      const rank = FB.siteKindRank(FB.state, site);
+      if (!detail && site.index !== 0 && rank !== 2) continue;
+      settlementDrawBuckets[rank].push(site);
+    }
     for (let sweep = 2; sweep >= 0; sweep--) {
-      for (const site of sites) {
+      for (const site of settlementDrawBuckets[sweep]) {
         const scrX = (site.x - M.viewX) * z, scrY = (site.y - M.viewY) * z;
-        if (scrX < m || scrY < m || scrX > mw || scrY > mh) continue;
-        if (!FB.siteVisible(FB.state, site)) continue;
-        const rank = FB.siteKindRank(FB.state, site);
-        if (rank !== sweep) continue;
-        // intermediate zoom: county heads and authored cities only
-        if (!detail && !(site.index === 0 || (site.authored && rank === 2))) continue;
+        const rank = sweep;
         const focused = !M.focusGroupActive ||
           (M.focusMembers && M.focusMembers[site.pidx]);
         const u = dpr;
@@ -951,17 +1211,11 @@ window.FB = window.FB || {};
             const ly = above ? scrY - gap - fs * 0.28 : scrY + gap + fs * 0.72;
             const rx0 = lx - tw / 2 - pad, ry0 = ly - fs - pad;
             const rx1 = lx + tw / 2 + pad, ry1 = ly + pad;
-            let blocked = false;
-            for (let ri = 0; ri < M._rectCount; ri++) {
-              const r = M._labelRects[ri];
-              if (!(rx1 < r[0] || rx0 > r[2] || ry1 < r[1] || ry0 > r[3])) {
-                blocked = true; break;
-              }
-            }
-            if (blocked) continue;
+            if (labelRectBlocked(rx0, ry0, rx1, ry1)) continue;
             if (M._labelRects.length <= M._rectCount) M._labelRects.push([0, 0, 0, 0]);
             const rr = M._labelRects[M._rectCount++];
             rr[0] = rx0; rr[1] = ry0; rr[2] = rx1; rr[3] = ry1;
+            indexLabelRect(rr);
             ctx.lineWidth = 2.5 * dpr;
             ctx.strokeStyle = focused ? 'rgba(20,16,10,0.72)' : 'rgba(20,16,10,0.4)';
             ctx.fillStyle = focused ? 'rgba(255,250,235,0.95)' : 'rgba(255,250,235,0.5)';
@@ -977,6 +1231,7 @@ window.FB = window.FB || {};
           const ir = M._labelRects[M._rectCount++];
           ir[0] = scrX - half - pad; ir[1] = scrY - half - pad;
           ir[2] = scrX + half + pad; ir[3] = scrY + half + pad;
+          indexLabelRect(ir);
         }
         const hit = settlementHitRecord(M.visibleSites.length);
         hit.pid = site.pid; hit.index = site.index; hit.x = scrX; hit.y = scrY;
@@ -1076,6 +1331,8 @@ window.FB = window.FB || {};
       ctx.restore();
     }
 
+    drawDejureBorders(ctx, sx, sy, z);
+
     // labels & markers in screen space
     function toScreen(wx, wy) { return [(wx - sx) * z, (wy - sy) * z]; }
 
@@ -1083,9 +1340,23 @@ window.FB = window.FB || {};
     // detailed-zoom county label yields to a placed settlement label
     M.visibleSites.length = 0;
     M._rectCount = 0;
+    labelRectBins = {};
     if (FB.world.sitesRender && z >= SITE_Z_MID) drawSettlements(ctx, z);
 
-    if (z >= 1.1 * 0.75) {
+    const titleLabels = dejureLabelLayout(ctx, sx, sy, z);
+    if (titleLabels && !titleLabels.counties) {
+      ctx.textAlign = 'center';
+      ctx.font = 'bold ' + Math.round(13 * M.dpr) + 'px Georgia';
+      ctx.lineWidth = 3 * M.dpr;
+      ctx.strokeStyle = 'rgba(20,16,10,0.85)';
+      ctx.fillStyle = '#e8dec4';
+      for (let i = 0; i < titleLabels.labels.length; i++) {
+        const label = titleLabels.labels[i];
+        ctx.strokeText(label.text, label.x, label.y);
+        ctx.fillText(label.text, label.x, label.y);
+      }
+    }
+    if (z >= 1.1 * 0.75 && (!titleLabels || titleLabels.counties)) {
       ctx.textAlign = 'center';
       for (const pr of FB.world.provs) {
         if (pr.area * z * z < 1200 * M.dpr) continue;
@@ -1104,15 +1375,8 @@ window.FB = window.FB || {};
         if (z >= SITE_Z_DETAIL && M._rectCount) {
           // a county label covered by a placed settlement label steps aside
           const cw = ctx.measureText(provinceName).width, pad = 2 * M.dpr;
-          let covered = false;
-          for (let ri = 0; ri < M._rectCount; ri++) {
-            const r = M._labelRects[ri];
-            if (!(s[0] + cw / 2 + pad < r[0] || s[0] - cw / 2 - pad > r[2] ||
-                  s[1] + pad < r[1] || s[1] - fs - pad > r[3])) {
-              covered = true; break;
-            }
-          }
-          if (covered) continue;
+          if (labelRectBlocked(s[0] - cw / 2 - pad, s[1] - fs - pad,
+              s[0] + cw / 2 + pad, s[1] + pad)) continue;
         }
         ctx.strokeText(provinceName, s[0], s[1]);
         ctx.fillText(provinceName, s[0], s[1]);

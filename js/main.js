@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.172.3';
+FB.VERSION = '1.172.4';
 FB.CHANGELOG = [
+  { v: '1.172.4', date: '2026-09-06', changes: [
+    'De jure map filters show title borders and zoom-aware names, stay open while panning, and reuse border and marker work. Raid origins now match their previews, and doctrine reform notices support language changes.'
+  ] },
   { v: '1.172.3', date: '2026-09-06', changes: [
     'Map filters now open as a direct chooser, with unavailable Liege and War views explained in place.'
   ] },

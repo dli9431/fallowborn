@@ -924,6 +924,13 @@ or captor succession removes that penalty.
 
 ## Raiding expeditions
 
+Target discovery, direct previews, and execution share the same nearest eligible
+origin calculation, including local seafaring support. Execution resolves that origin
+from live state before calculating its march and applying home-county consequences.
+Each target scan computes seafaring support before visiting destinations rather than
+reconstructing settlement communities for every destination; the geometry scan reuses
+those per-origin results.
+
 Adult landed rulers (tier 3+) from historical raiding cultures (`norse`, `magyar`, `turkic`,
 `khazar`, `berber`, `andalusi`, `arabic`, `baltic`, `gaelic`, `brezhon`) or pagan faiths
 (`norse_pagan`, `tengri`, `baltic_pagan`, `slavic_pagan`, and all pagan traditions) may launch

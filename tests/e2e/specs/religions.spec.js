@@ -5,6 +5,8 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/events.js',
   'js/model.js',
+  'js/messages.js',
+  'js/i18n.js',
   'js/population.js',
   'js/save.js',
   'js/technology.js',
@@ -412,6 +414,29 @@ test('faith details explain a campaign branch, lineage, doctrine, and authority'
     const closeBox = await close.boundingBox();
     expect(closeBox.width).toBeGreaterThanOrEqual(199);
     expect(closeBox.height).toBeGreaterThanOrEqual(52);
+  });
+
+test('doctrine reforms save message descriptors that survive serialization',
+  async function ({ page }, testInfo) {
+    primaryFileOnly(testInfo);
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      var s = FB.state, p = s.player, me = s.chars[p.charId];
+      me.culture = 'german';
+      p.prestige = 5000;
+      p.war = null;
+      p.cooldowns = {};
+      var branch = FB.applyDoctrineReform(s, 'culture', 'raiding', 'practiced');
+      var entry = JSON.parse(JSON.stringify(s.log[s.log.length - 1]));
+      return { branch:branch, entry:entry,
+        rendered:FB.renderMessage(entry.msg, { state:s }) };
+    });
+    expect(result.branch).toBeTruthy();
+    expect(result.entry.t).toBeUndefined();
+    expect(result.entry.msg.key).toBe('news.doctrine.reformed');
+    expect(result.entry.msg.params.identity).toBe('Reformed German');
+    expect(result.rendered).toBe('Reformed German has reformed its doctrines.');
   });
 
 test('paid doctrine reform persists faith and culture branches with escalating divergence',

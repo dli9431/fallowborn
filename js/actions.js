@@ -841,11 +841,10 @@ window.FB = window.FB || {};
     }
     if (FB.clearPortraitCache) FB.clearPortraitCache();
     if (FB.news) {
-      FB.news(state, FB.T('{identity} now follows {doctrine}.', {
+      FB.news(state, FB.msg('news.doctrine.reformed', '{identity} has reformed its doctrines.', {
         identity:kind === 'faith'
           ? FB.religionOf(identityId, state).name
-          : FB.cultureOf(identityId, state).name,
-        doctrine:found.option.name
+          : FB.cultureOf(identityId, state).name
       }));
     }
     return identityId;
@@ -10515,64 +10514,63 @@ window.FB = window.FB || {};
     return reachable;
   }
 
+  function raidOriginContext(state, charId) {
+    const realmId = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+    const nationalLongships = FB.hasTech && FB.hasTech(state, 'longships', realmId);
+    const range = FB.raidRangePx(state, charId);
+    return {
+      range:range,
+      // River reach is immutable and shared across scans and executions.
+      naval:range.naval > 0 ? navalRaidReachable() : {},
+      origins:FB.raidOriginPids(state, charId).map(function (pid) {
+        return { province:FB.world.byId[pid], seafaring:!!(nationalLongships ||
+          FB.raidHasSupportedSeafaring(state, charId, pid)) };
+      }).filter(function (origin) { return !!origin.province; })
+    };
+  }
+
+  function closestRaidOrigin(context, target) {
+    let distance = Infinity, pid = null;
+    for (let i = 0; i < context.origins.length; i++) {
+      const origin = context.origins[i], sp = origin.province;
+      const sameLand = (sp.landmass && target.landmass && sp.landmass === target.landmass) ||
+        (FB.world.waterAdj && FB.world.waterAdj[sp.id] && FB.world.waterAdj[sp.id][target.id]);
+      const d = Math.hypot(target.sx - sp.sx, target.sy - sp.sy);
+      if (d < distance && ((sameLand && d <= context.range.overland) ||
+          (origin.seafaring && context.naval[target.id] && d <= context.range.naval))) {
+        distance = d;
+        pid = sp.id;
+      }
+    }
+    return { pid:pid, distance:distance };
+  }
+
   FB.raidTargets = function (state, charId, options) {
     const out = [];
     if (!FB.canRaid(state, charId) || !FB.world || !FB.world.byId) return out;
-    const p = state.player;
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
-    const realmId = playerRealm;
-    const rangePx = FB.raidRangePx(state, charId);
-    const hasLongships = rangePx.naval > 0;
-    const nationalLongships = FB.hasTech &&
-      FB.hasTech(state, 'longships', realmId);
+    const originContext = raidOriginContext(state, charId);
 
-    const startPids = FB.raidOriginPids
-      ? FB.raidOriginPids(state, charId) : [];
+    const startPids = originContext.origins.map(function (origin) {
+      return origin.province.id;
+    });
     if (!startPids.length) return out;
 
     const dist = {};
     const originByPid = {};
-    const startPrs = [];
     for (let i = 0; i < startPids.length; i++) {
       const sp = startPids[i];
-      const spr = FB.world.byId[sp];
-      if (spr) startPrs.push(spr);
       dist[sp] = 0;
     }
-
-    /* River reach depends only on immutable world geometry. Reuse it across
-       deed availability, the target sheet, and the map picker. */
-    const navalReachable = hasLongships ? navalRaidReachable() : {};
 
     // Evaluate all target provinces by physical distance from raider territory
     for (let j = 0; j < FB.world.provs.length; j++) {
       const tp = FB.world.provs[j];
       if (tp.wasteland || dist[tp.id] === 0) continue;
 
-      let bestDistPx = Infinity;
-
-      // 1. Direct overland distance from home territories (must share landmass or strait)
-      for (let i = 0; i < startPrs.length; i++) {
-        const sp = startPrs[i];
-        const sameLand = (sp.landmass && tp.landmass && sp.landmass === tp.landmass) ||
-                         (FB.world.waterAdj && FB.world.waterAdj[sp.id] && FB.world.waterAdj[sp.id][tp.id]);
-        const dPx = Math.hypot(tp.sx - sp.sx, tp.sy - sp.sy);
-        if (sameLand) {
-          if (dPx <= rangePx.overland && dPx < bestDistPx) {
-            bestDistPx = dPx;
-            originByPid[tp.id] = sp.id;
-          }
-        }
-        // 2. Naval longship distance from coastal or river-reachable targets
-        const localSeafaring = nationalLongships ||
-          (FB.raidHasSupportedSeafaring &&
-            FB.raidHasSupportedSeafaring(state, charId, sp.id));
-        if (hasLongships && localSeafaring && navalReachable[tp.id] &&
-            dPx <= rangePx.naval && dPx < bestDistPx) {
-          bestDistPx = dPx;
-          originByPid[tp.id] = sp.id;
-        }
-      }
+      const closest = closestRaidOrigin(originContext, tp);
+      const bestDistPx = closest.distance;
+      originByPid[tp.id] = closest.pid;
 
       if (bestDistPx < Infinity) {
         dist[tp.id] = Math.max(1, Math.round(bestDistPx / 35));
@@ -10599,7 +10597,7 @@ window.FB = window.FB || {};
       let intermediateForts = 0;
       for (let sIdx = 0; sIdx < route.length - 1; sIdx++) {
         const stepPid = route[sIdx];
-        if (stepPid === startPids[0]) continue;
+        if (stepPid === originPid) continue;
         const stepOwner = state.owner && state.owner[stepPid];
         const isStepFriendly = (stepOwner === playerRealm || stepOwner === 'player' || (FB.areAllied && FB.areAllied(state, playerRealm, stepOwner)));
         if (!isStepFriendly) {
@@ -10828,6 +10826,7 @@ window.FB = window.FB || {};
     const raidOrigins = FB.raidOriginPids
       ? FB.raidOriginPids(state, charId) : [];
     const homePid = previewTarget && previewTarget.originPid ||
+      (pr && closestRaidOrigin(raidOriginContext(state, charId), pr).pid) ||
       raidOrigins[0] || p.provinceId || (p.provs && p.provs[0]);
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
 

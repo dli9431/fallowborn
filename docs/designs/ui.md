@@ -612,7 +612,14 @@ Realm, Mine, Liege, de jure Duchies, de jure Kingdoms, and War as direct choices
 of making the player cycle through them. The active choice stays marked; Liege and War
 remain visible but disabled with a short reason when the player is independent or at peace.
 Arrow keys move among available choices, Enter applies one, and Escape returns focus to the
-HUD button.
+HUD button. Choosing a filter leaves the chooser open, so another view can be selected
+immediately. Map canvas interactions, including panning, keep it open. Close, Escape,
+the HUD toggle, or an interaction outside both the chooser and canvas dismisses it.
+De jure Duchies and Kingdoms outline every title on the map in pale parchment with a
+dark keyline, while retaining the selected county and title focus.
+At wider zooms these filters show title names instead of county names. County names
+return at close zoom when the visible labels have enough room; other filters keep their
+existing county labels.
 
 The map HUD also exposes a **Find location** overlay, with `?` as its desktop
 shortcut. Its local, cached index covers settlements, counties, duchies, and

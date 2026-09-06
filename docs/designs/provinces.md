@@ -390,6 +390,43 @@ At minimum zoom, a mobile viewport can be larger than the permitted map span on 
 axis. `mapview.js` centers that surplus axis instead of passing reversed bounds to the
 pan clamp; dragging therefore remains stable while the other axis can still move.
 
+**De jure borders cover the world.** Duchy and kingdom filters add a pale parchment
+outline with a dark keyline around every de jure title, including coastlines. Shared
+county edges inside one title are omitted. Each mode indexes province title ids once,
+then lazily compiles marching-squares paths in 64-cell spatial tiles as they enter the
+viewport. Pan and zoom stroke only intersecting tiles (including a small keyline margin),
+never a world-sized path. Both color passes draw into a viewport-sized transparent bitmap;
+stationary frames and selection changes reuse those pixels without stroking any paths.
+Camera position, zoom, viewport dimensions, or device pixel ratio invalidate the bitmap.
+Geometry remains cached across camera changes; a bookmark/world switch clears both mode
+caches, and other filters disable this border pass. Line widths stay constant on screen
+at every zoom. Initial geometry work is linear in visible raster cells, with at most one
+tile of padding per edge; subsequent camera work is bounded by visible border segments.
+
+The ordinary close-zoom county borders use the same 64-cell spatial granularity.
+Each visited tile classifies its contours in one raster pass into the three existing
+demesne/realm/sovereign strengths. Camera changes reuse geometry; stationary frames
+reuse a transparent viewport bitmap, with the zoom 6–8 fade applied at composition.
+Rebinding ownership callbacks, rebuilding the political base, or changing worlds clears
+this cache so conquests and holder changes cannot leave stale border strengths.
+
+Settlement rendering collects candidates once per frame into reusable city/town/village
+buckets, preserving the original priority order and hit targets. Intermediate zooms
+reject non-head, non-authored sites before live lookups. Visibility is calculated once
+per onscreen county and rank once per eligible candidate; hidden and offscreen sites do
+not pay for repeated passes. Visibility remains live on each frame, including development,
+building, enterprise, and home-settlement changes.
+At detailed zoom, accepted label and emblem rectangles are indexed in 64-pixel
+screen bins. Settlement and county labels check only nearby obstacles with the
+same exact rectangle-overlap rule, preserving placement priority and hit targets.
+
+These two filters replace county labels with their duchy or kingdom names at wider
+zooms. County labels return from zoom 6 only when the visible counties pass the area
+threshold and their names fit without crowding. Other filters retain ordinary county
+label behavior. Title anchors use the member county nearest the area's weighted center;
+larger titles take label priority. Screen bins reject crowded labels without pairwise
+comparisons, and the layout is cached by camera, viewport, pixel ratio, and locale.
+
 **Selection highlights are group-aware.** `FB.map.select(pid, groupOf)` (mapview.js) keeps
 the political and terrain colors of every province sharing the clicked one's group key,
 places a cool shade over other land, mutes outside labels, and traces both the group's

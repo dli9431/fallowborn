@@ -5960,6 +5960,9 @@ window.FB = window.FB || {};
     if (!target) return;
     if (overlay && (overlay === target || overlay.contains(target))) return;
     if (button && (button === target || button.contains(target))) return;
+    // Canvas gestures keep the chooser available for comparing map views.
+    // Pointer capture also routes the end of a pan back to this canvas.
+    if (FB.map && target === FB.map.canvas) return;
     UI.setMapFilterOverlay(false);
   }
 
@@ -5972,9 +5975,7 @@ window.FB = window.FB || {};
     for (let i = 0; i < options.length; i++) {
       const option = options[i];
       option.addEventListener('click', function () {
-        if (UI.setMapMode(option.getAttribute('data-map-mode'))) {
-          UI.setMapFilterOverlay(false);
-        }
+        UI.setMapMode(option.getAttribute('data-map-mode'));
       });
     }
     if (closeButton) {
@@ -6047,6 +6048,7 @@ window.FB = window.FB || {};
   UI.setMarketLens = function (active) {
     if (!FB.state) return;
     mapMode = active === false ? 'realm' : 'market';
+    FB.map.setDejureBorders(null);
     if (mapMode === 'market') {
       if (UI.setFindOverlay && UI.isFindOverlayOpen && UI.isFindOverlayOpen()) {
         UI.setFindOverlay(false);
@@ -6092,6 +6094,7 @@ window.FB = window.FB || {};
       return false;
     }
     mapMode = next;
+    FB.map.setDejureBorders(next);
     marketLensControls(mapMode === 'market');
     updateMapModeButton();
     UI.renderMapFilterOverlay();

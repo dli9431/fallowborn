@@ -295,6 +295,85 @@ test('campaign-culture AI raid pressure scales with territorial followers',
     expect(result.pressure).toBeCloseTo(result.expected, 10);
   });
 
+test('raid execution uses the same nearby origin as the reviewed multi-holding target',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      var s = FB.state, p = s.player, me = s.chars[p.charId];
+      p.tier = 4;
+      me.culture = 'norse';
+      me.religion = 'norse_pagan';
+      p.provs = [p.provinceId];
+      FB.realmTechRecord(s, FB.playerRealmId(s)).completed.push('longships');
+      var target = FB.raidTargets(s)[0];
+      if (!target) throw new Error('Expected a reachable raid target');
+      var home = FB.world.byId[p.provinceId];
+      var destination = FB.world.byId[target.pid];
+      var far = FB.world.provs.filter(function (pr) {
+        return !pr.wasteland && pr.id !== target.pid && pr.id !== home.id;
+      }).sort(function (a, b) {
+        return Math.hypot(b.sx - destination.sx, b.sy - destination.sy) -
+          Math.hypot(a.sx - destination.sx, a.sy - destination.sy);
+      })[0];
+      p.provs = [far.id, home.id];
+      target = FB.raidTargets(s).filter(function (entry) {
+        return entry.pid === destination.id;
+      })[0];
+      if (!target) throw new Error('Expected the original target to remain reachable');
+      var shared = FB.calculateRaidSpoils(s, target.pid, 'sack', null, true,
+        { target:target, shared:{} });
+      var direct = FB.calculateRaidSpoils(s, target.pid, 'sack', null, true);
+      var original = FB.raidMarchRoute, origins = [];
+      FB.raidMarchRoute = function (state, fromPid) {
+        origins.push(fromPid);
+        return original.apply(FB, arguments);
+      };
+      try { FB.executeRaid(s, target.pid, 'sack'); }
+      finally { FB.raidMarchRoute = original; }
+      return { home:home.id, first:far.id, targetOrigin:target.originPid,
+        previewsMatch:JSON.stringify(shared) === JSON.stringify(direct),
+        executionOrigins:origins };
+    });
+    expect(result.targetOrigin).toBe(result.home);
+    expect(result.targetOrigin).not.toBe(result.first);
+    expect(result.previewsMatch).toBe(true);
+    expect(result.executionOrigins).toContain(result.home);
+    expect(result.executionOrigins).not.toContain(result.first);
+  });
+
+test('reformed seafaring support is resolved per origin rather than per target',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      var s = FB.state, p = s.player, me = s.chars[p.charId];
+      p.tier = 3;
+      p.provs = [];
+      me.religion = 'catholic';
+      me.culture = FB.createCulture(s, { parent:'norse', name:'Mariners' });
+      FB.convertSettlementCommunity(s, p.provinceId, p.homeSettlement || 0,
+        { kind:'culture', target:me.culture, rate:1 });
+      var tech = FB.realmTechRecord(s, FB.playerRealmId(s));
+      tech.completed = tech.completed.filter(function (id) { return id !== 'longships'; });
+      var original = FB.raidHasSupportedSeafaring, calls = 0;
+      FB.raidHasSupportedSeafaring = function (state, charId, pid) {
+        if (pid) calls++;
+        return original.apply(FB, arguments);
+      };
+      // Route checks legitimately inspect their origin again. Count just the
+      // geographic scan by replacing the route boundary for this probe.
+      var originalRoute = FB.raidMarchRoute;
+      FB.raidMarchRoute = function (state, fromPid, toPid) { return [toPid]; };
+      try {
+        FB.raidTargets(s);
+        return { calls:calls, counties:FB.world.provs.length };
+      } finally {
+        FB.raidHasSupportedSeafaring = original;
+        FB.raidMarchRoute = originalRoute;
+      }
+    });
+    expect(result.counties).toBeGreaterThan(100);
+    expect(result.calls).toBeGreaterThan(0);
+    expect(result.calls).toBeLessThanOrEqual(3);
+  });
+
 test('first-only raid target scans stop after finding one valid county',
   async function ({ page }) {
     const result = await page.evaluate(function () {
