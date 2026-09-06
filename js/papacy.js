@@ -375,7 +375,9 @@ window.FB = window.FB || {};
       ? FB.countyCulture(state, seat.id) : seat && seat.culture;
     var culture = index % 3 === 0 ? 'italian' :
       pope && pope.culture || seatCulture || 'italian';
-    if (!FBDATA.cultures[culture]) culture = pope && pope.culture || 'frankish';
+    if (!(FB.cultureExists && FB.cultureExists(culture, state))) {
+      culture = pope && pope.culture || 'frankish';
+    }
     var c = FB.makeCharacter(state, {
       sex:'m',
       culture:culture,

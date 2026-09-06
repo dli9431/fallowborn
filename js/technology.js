@@ -149,6 +149,12 @@ window.FB = window.FB || {};
   }
 
   function realmCulture(state, rid) {
+    if (rid === 'player' && state.player && state.chars) {
+      var playerCharacter = state.chars[state.player.charId];
+      if (playerCharacter && playerCharacter.culture) {
+        return playerCharacter.culture;
+      }
+    }
     var realm = state.realms && state.realms[rid];
     if (realm && realm.ruler && realm.ruler.culture) return realm.ruler.culture;
     var capital = realm && FB.world && FB.world.byId[realm.capital];
@@ -167,10 +173,13 @@ window.FB = window.FB || {};
     var culture = realmCulture(state, rid);
     var faith = realmFaith(state, rid);
     var table = FBDATA.techTraditions || {};
+    var culturalLearning = FB.cultureValue && culture
+      ? FB.cultureValue(state, culture, 'doctrines.learning').value : null;
+    if (culturalLearning && table[culturalLearning]) out.push(culturalLearning);
     for (var id in table) {
       if (!own(table, id)) continue;
       var def = table[id] || {};
-      if ((def.cultures || []).indexOf(culture) >= 0 ||
+      if ((!culturalLearning && (def.cultures || []).indexOf(culture) >= 0) ||
           (def.religions || []).indexOf(faith) >= 0) out.push(id);
     }
     out = unique(out);
@@ -1685,6 +1694,12 @@ window.FB = window.FB || {};
                 ' references unknown culture ' + cultureList[cultureIndex] + '.');
             }
           }
+        }
+        if (unitClass.cultureDoctrine !== undefined &&
+            (typeof unitClass.cultureDoctrine !== 'string' ||
+             !unitClass.cultureDoctrine)) {
+          errors.push('Unit class ' + classId +
+            ': cultureDoctrine must be a non-empty string.');
         }
         if (unitClass.counters !== undefined) {
           if (!unitClass.counters || typeof unitClass.counters !== 'object' ||

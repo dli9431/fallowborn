@@ -4104,7 +4104,10 @@ window.FB = window.FB || {};
     const cultures = rules.cultures || [];
     const faiths = rules.faiths || [];
     const faithGroups = rules.faithGroups || [];
-    return !!((culture && cultures.indexOf(culture) >= 0) ||
+    const cultural = culture && FB.cultureValue
+      ? FB.cultureValue(state, culture, 'doctrines.raiding').value
+      : cultures.indexOf(culture) >= 0;
+    return !!(cultural || (culture && cultures.indexOf(culture) >= 0) ||
       (faith && (faiths.indexOf(faith) >= 0 ||
         (FB.faithGroup && faithGroups.indexOf(
           FB.faithGroup(faith, state)) >= 0))));
@@ -4125,7 +4128,10 @@ window.FB = window.FB || {};
     if (!ownProvs.length) return;
 
     const targets = [];
-    const maxRange = (cult === 'norse' || (FB.hasTech && FB.hasTech(state, 'longships', rid))) ? 5 : 2;
+    const seafaring = FB.cultureValue &&
+      FB.cultureValue(state, cult, 'doctrines.seafaring').value;
+    const maxRange = (seafaring ||
+      (FB.hasTech && FB.hasTech(state, 'longships', rid))) ? 5 : 2;
     for (let i = 0; i < ownProvs.length; i++) {
       const op = ownProvs[i];
       const adj = FB.world.adj && FB.world.adj[op];
@@ -4199,7 +4205,11 @@ window.FB = window.FB || {};
 
   FB.settlementName = function (cultureId, h) {
     const sets = FBDATA.settlementNames || {};
-    const s = sets[cultureId] || sets.default || { pre: ['New'], suf: ['town'] };
+    let names = sets[cultureId];
+    const lineage = !names && FB.cultureLineage
+      ? FB.cultureLineage(cultureId) : [];
+    for (let i = 1; !names && i < lineage.length; i++) names = sets[lineage[i]];
+    const s = names || sets.default || { pre: ['New'], suf: ['town'] };
     // unsigned shift: a signed >> on large hashes goes negative and indexes nothing
     return s.pre[h % s.pre.length] + s.suf[(h >>> 4) % s.suf.length];
   };

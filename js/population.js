@@ -297,8 +297,9 @@ window.FB = window.FB || {};
       (state.start && isFinite(state.start.year) && Math.round(state.start.year)) || 867;
   }
 
-  function validCulture(cultureId) {
-    return typeof cultureId === 'string' && !!FBDATA.cultures[cultureId];
+  function validCulture(state, cultureId) {
+    return typeof cultureId === 'string' && (FB.cultureExists
+      ? FB.cultureExists(cultureId, state) : !!FBDATA.cultures[cultureId]);
   }
 
   function validFaith(state, faithId) {
@@ -459,7 +460,7 @@ window.FB = window.FB || {};
   function policyIsValid(state, policy) {
     if (!policy) return true;
     if (!policy.culture && !policy.religion) return false;
-    if (policy.culture && !validCulture(policy.culture)) return false;
+    if (policy.culture && !validCulture(state, policy.culture)) return false;
     if (policy.religion && !validFaith(state, policy.religion)) return false;
     return true;
   }
@@ -560,7 +561,7 @@ window.FB = window.FB || {};
     var savedOrder = [];
     for (var i = 0; i < rec.communities.length; i++) {
       var source = rec.communities[i];
-      if (!source || !validCulture(source.culture) ||
+      if (!source || !validCulture(state, source.culture) ||
           !validFaith(state, source.religion)) continue;
       var count = Math.round(Number(source.count));
       if (!isFinite(count) || count <= 0) continue;
@@ -810,7 +811,7 @@ window.FB = window.FB || {};
 
   function projectTargetValid(state, kind, targetId) {
     return kind === 'faith'
-      ? validFaith(state, targetId) : validCulture(targetId);
+      ? validFaith(state, targetId) : validCulture(state, targetId);
   }
 
   function projectPolicyDefinition(policyId) {
@@ -916,7 +917,7 @@ window.FB = window.FB || {};
 
     var identity = rec.identity && typeof rec.identity === 'object'
       ? rec.identity : {};
-    var oldCulture = validCulture(identity.culture) ? identity.culture : pr.culture;
+    var oldCulture = validCulture(state, identity.culture) ? identity.culture : pr.culture;
     var oldReligion = validFaith(state, identity.religion)
       ? identity.religion : pr.religion;
     var culture = dominantAxis(rec.communities, 'culture', oldCulture);
@@ -970,7 +971,7 @@ window.FB = window.FB || {};
       for (var ci = 0; ci < rec.communities.length; ci++) {
         var community = rec.communities[ci];
         var key = community && communityKey(community.culture, community.religion);
-        if (!community || !validCulture(community.culture) ||
+        if (!community || !validCulture(state, community.culture) ||
             !validFaith(state, community.religion)) {
           faults.push(pid + ': community ' + ci + ' has an invalid identity');
           continue;
@@ -1189,7 +1190,7 @@ window.FB = window.FB || {};
     var out = [];
     for (var i = 0; i < communities.length; i++) {
       var community = communities[i];
-      if (!community || !validCulture(community.culture) ||
+      if (!community || !validCulture(state, community.culture) ||
           !validFaith(state, community.religion)) continue;
       var count = Math.round(Number(community.count));
       if (!isFinite(count) || count <= 0) continue;
@@ -1301,7 +1302,7 @@ window.FB = window.FB || {};
   FB.countyCulture = function (state, pid) {
     var rec = state && state.population && state.population.counties &&
       state.population.counties[pid];
-    if (rec && rec.identity && validCulture(rec.identity.culture)) {
+    if (rec && rec.identity && validCulture(state, rec.identity.culture)) {
       return rec.identity.culture;
     }
     var communities = FB.countyCommunities(state, pid);
@@ -1418,11 +1419,8 @@ window.FB = window.FB || {};
         relation = FB.faithRelation
           ? FB.faithRelation(state, community.religion, targetId) : 'foreign';
       } else {
-        var sourceGroup = FB.cultureGroup
-          ? FB.cultureGroup(community.culture) : '';
-        var targetGroup = FB.cultureGroup ? FB.cultureGroup(targetId) : '';
-        relation = sourceGroup && sourceGroup === targetGroup
-          ? 'same_group' : 'foreign';
+        relation = FB.cultureRelation
+          ? FB.cultureRelation(state, community.culture, targetId) : 'foreign';
       }
       weighted += community.count * Math.max(0,
         Number(table[relation]) || 0);
@@ -2094,7 +2092,7 @@ window.FB = window.FB || {};
       var requestedOrder = [];
       for (var ci = 0; ci < cohorts.length; ci++) {
         var cohort = cohorts[ci];
-        if (!cohort || !validCulture(cohort.culture) ||
+        if (!cohort || !validCulture(state, cohort.culture) ||
             !validFaith(state, cohort.religion)) continue;
         var requestedCount = Math.max(0, Math.round(Number(cohort.count) || 0));
         if (!requestedCount) continue;

@@ -2063,7 +2063,8 @@ window.FB = window.FB || {};
         delete state.siblingCourtships[key];
         continue;
       }
-      record.route = record.route === 'xwedodah' ? 'xwedodah' : 'illicit';
+      record.route = record.route === 'xwedodah' || record.route === 'sanctioned'
+        ? record.route : 'illicit';
       record.exposed = !!record.exposed;
       const currentId = state.player && state.player.charId;
       const activeTargetId = state.player && state.player.courtingId;
@@ -2100,8 +2101,10 @@ window.FB = window.FB || {};
     if (!a || !b || a.religion !== b.religion) return 'illicit';
     const first = FB.marriageDoctrine(a.religion, state).kinship || {};
     const second = FB.marriageDoctrine(b.religion, state).kinship || {};
-    return first.siblingRite === 'xwedodah' &&
-      second.siblingRite === 'xwedodah' ? 'xwedodah' : 'illicit';
+    if (!first.siblingRite || first.siblingRite !== second.siblingRite) {
+      return 'illicit';
+    }
+    return first.siblingRite === 'xwedodah' ? 'xwedodah' : 'sanctioned';
   }
   FB.siblingCourtshipRoute = siblingCourtshipRoute;
 
@@ -2124,7 +2127,7 @@ window.FB = window.FB || {};
     if (dynastic) {
       score += FB.traitBonus(c, 'courtship', 'siblingDynasticInitiate');
     }
-    score += FB.traitBonus(c, 'courtship', route === 'xwedodah'
+    score += FB.traitBonus(c, 'courtship', route !== 'illicit'
       ? 'siblingRiteInitiate' : 'siblingTabooInitiate');
     return score;
   }
@@ -2151,7 +2154,7 @@ window.FB = window.FB || {};
     const standingBonus = FB.clamp((standing - 40) / 200, 0, 0.30);
     let trait = FB.traitBonus(target, 'courtship', 'siblingAccept');
     let receptive = trait > 0;
-    if (route === 'xwedodah') {
+    if (route !== 'illicit') {
       const rite = FB.traitBonus(target, 'courtship', 'siblingRiteAccept');
       trait += rite;
       if (rite > 0) receptive = true;
@@ -2168,8 +2171,8 @@ window.FB = window.FB || {};
       if (ambition > 0) receptive = true;
     }
     let chance = FB.clamp(0.05 + standingBonus + trait, 0.02,
-      route === 'xwedodah' ? 0.85 : 0.70);
-    if (!receptive && route !== 'xwedodah') chance = Math.min(chance, 0.10);
+      route !== 'illicit' ? 0.85 : 0.70);
+    if (!receptive && route === 'illicit') chance = Math.min(chance, 0.10);
     return {
       chance:chance,
       standingBonus:standingBonus,
@@ -2200,11 +2203,11 @@ window.FB = window.FB || {};
     const acceptance = me && target
       ? siblingAcceptance(state, me, target, route, dynastic)
       : { chance:0, standingBonus:0, traitBonus:0, receptive:false };
-    const playerKeys = ['siblingInitiate', route === 'xwedodah'
+    const playerKeys = ['siblingInitiate', route !== 'illicit'
       ? 'siblingRiteInitiate' : 'siblingTabooInitiate'];
-    const targetKeys = ['siblingAccept', route === 'xwedodah'
+    const targetKeys = ['siblingAccept', route !== 'illicit'
       ? 'siblingRiteAccept' : 'siblingIllicitAccept'];
-    if (route !== 'xwedodah') targetKeys.push('siblingTabooAccept');
+    if (route === 'illicit') targetKeys.push('siblingTabooAccept');
     if (dynastic) {
       playerKeys.push('siblingDynasticInitiate');
       targetKeys.push('siblingDynasticAccept');
@@ -2298,11 +2301,11 @@ window.FB = window.FB || {};
       standing:ordinary.standing,
       terms:{ amount:0, subjectPays:false, playerPays:false, playerDelta:0 },
       route:route,
-      gold:route === 'xwedodah' ? 25 : 0,
+      gold:route !== 'illicit' ? 25 : 0,
       piety:75,
-      prestige:route === 'xwedodah' ? 0 : 25,
-      commonVoice:route === 'xwedodah' ? 0 : 15,
-      liegeStanding:route === 'xwedodah' ? 0 : 20
+      prestige:route !== 'illicit' ? 0 : 25,
+      commonVoice:route !== 'illicit' ? 0 : 15,
+      liegeStanding:route !== 'illicit' ? 0 : 20
     };
     if ((degree !== 'full_sibling' && degree !== 'half_sibling') ||
         !record || record.status !== 'accepted') {
@@ -2344,7 +2347,7 @@ window.FB = window.FB || {};
     const route = siblingCourtshipRoute(state, me, target);
     const dynastic = siblingDynasticRelevance(state, me, target);
     let traits = FB.traitBonus(target, 'courtship', 'siblingProposal');
-    traits += FB.traitBonus(target, 'courtship', route === 'xwedodah'
+    traits += FB.traitBonus(target, 'courtship', route !== 'illicit'
       ? 'siblingRiteProposal' : 'siblingTabooProposal');
     if (dynastic) {
       traits += FB.traitBonus(target, 'courtship',
@@ -6017,7 +6020,7 @@ window.FB = window.FB || {};
       if (!matchesFaith) failed.push('faithAncestor');
     }
     if (sel.traditionsAny) {
-      const cul = FBDATA.cultures && FBDATA.cultures[context.culture];
+      const cul = FB.cultureOf && FB.cultureOf(context.culture, state);
       const tradition = cul ? cul.tradition : null;
       if (!tradition || sel.traditionsAny.indexOf(tradition) < 0) {
         failed.push('traditionsAny');
@@ -6424,7 +6427,8 @@ window.FB = window.FB || {};
           (!Number.isInteger(generation) || generation < 0)) return false;
     }
     if (authority.rulerCultureId !== null &&
-        !(FBDATA.cultures && FBDATA.cultures[authority.rulerCultureId])) {
+        !(FB.cultureExists &&
+          FB.cultureExists(authority.rulerCultureId, state))) {
       return false;
     }
     if (authority.rulerCultureTraditionId !== null &&
@@ -6433,7 +6437,7 @@ window.FB = window.FB || {};
       return false;
     }
     if (authority.rulerCultureId !== null &&
-        (FBDATA.cultures[authority.rulerCultureId].tradition || null) !==
+        (FB.cultureOf(authority.rulerCultureId, state).tradition || null) !==
           authority.rulerCultureTraditionId) return false;
     if (authority.rulerFaithId !== null && FB.faithExists &&
         !FB.faithExists(authority.rulerFaithId, state)) return false;
@@ -6485,9 +6489,9 @@ window.FB = window.FB || {};
     const sovereign = serfRealmPoliticalIdentity(state, sovereignRealmId);
     const political = holder.culture || holder.faith ? holder : sovereign;
     const protagonist = state.chars && state.chars[p.charId];
-    const tradition = political.culture && FBDATA.cultures &&
-      FBDATA.cultures[political.culture]
-      ? FBDATA.cultures[political.culture].tradition || null : null;
+    const politicalCulture = political.culture && FB.cultureOf
+      ? FB.cultureOf(political.culture, state) : null;
+    const tradition = politicalCulture ? politicalCulture.tradition || null : null;
     return {
       provinceId:tenure.provinceId,
       settlement:tenure.settlement,
@@ -11794,7 +11798,7 @@ window.FB = window.FB || {};
     const reviewedChance = ctx.siblingResponseChance === undefined
       ? status.acceptance.chance
       : FB.clamp(Number(ctx.siblingResponseChance), 0.02,
-        status.route === 'xwedodah' ? 0.85 : 0.70);
+        status.route !== 'illicit' ? 0.85 : 0.70);
     const accepted = FB.chance(reviewedChance);
     const record = {
       initiatorId:me.id,
@@ -11860,11 +11864,18 @@ window.FB = window.FB || {};
     state.player.gold -= status.gold;
     state.player.prestige = Math.max(0,
       state.player.prestige - status.prestige);
-    if (status.route === 'xwedodah') {
-      FB.news(state, FB.msg('news.social.xwedodah_marriage',
-        '🔥 Before the sacred fire, you and {name} enter xwēdōdah. No dowry or alliance follows.', {
-          name:FB.fullName(target)
-        }));
+    if (status.route !== 'illicit') {
+      if (status.route === 'xwedodah') {
+        FB.news(state, FB.msg('news.social.xwedodah_marriage',
+          '🔥 Before the sacred fire, you and {name} enter xwēdōdah. No dowry or alliance follows.', {
+            name:FB.fullName(target)
+          }));
+      } else {
+        FB.news(state, FB.msg('news.social.sanctioned_close_kin_marriage',
+          '🕯 Before your community, you and {name} enter a recognized close-kin union. No dowry or alliance follows.', {
+            name:FB.fullName(target)
+          }));
+      }
     } else {
       state.player.pop = FB.clamp(state.player.pop - status.commonVoice,
         -100, 100);

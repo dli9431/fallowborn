@@ -148,6 +148,8 @@ A JSON mod is one object with any of these keys:
   "scripted":  [ ... ],
   "cultureTraditions": { "id": { "name": "...", "icon": "...", "order": 1 } },
   "cultures":  { "id": { ... } },
+  "cultureDoctrineDefaults": { "cultureId": { "raiding": true } },
+  "doctrineCatalogs": { "faith": { "doctrineId": { ... } }, "culture": {} },
   "religions": { "id": { ... } },
   "religiousPaths": { "id": { "kind": "lay", "ranks": [ ... ] } },
   "councilSeats": { "id": { "name": "...", "bonusKey": "tax", ... } },
@@ -1390,7 +1392,8 @@ Faith sets the rest of the rules (`FB.marriageDoctrine` in js/model.js).
 cooldown; and `acceptedRelations` filters cross-faith matches through the directional
 faith graph. Optional `properties.marriage.kinship.siblingRite:'xwedodah'` recognizes
 the exceptional player sibling-marriage route when both characters share the exact
-faith; other values currently have no core consumer. `balance.wivesByGroup` remains
+faith. The additional value `sanctioned` recognizes the same route without
+Zoroastrian-specific presentation. `balance.wivesByGroup` remains
 only a fallback for legacy definitions with
 no marriage property. Every eligible spouse pairing can bear children, the first is the
 one `{spouse}` and the spouse-role address, and the next in line is promoted when the
@@ -3583,7 +3586,8 @@ class a save predates defaults to 0 on load.
   terrain keys must match the shared terrain set (`balance.terrainMarchMult`), and a
   missing terrain reads as 1.
 - `share` (0–1) converts that fraction of the mustered levy into the class when the
-  realm qualifies; `requiresTech` gates on a completed technology, `cultures` /
+  realm qualifies; `requiresTech` gates on a completed technology,
+  `cultureDoctrine` names the required `doctrines.military` value, and `cultures` /
   `notCultures` gate on `FBDATA.cultures` ids (the player's own character culture for
   the player, the ruler or capital culture for AI realms).
 - `hired: true` marks contract troops (`mercs`): never mustered from the levy, charged
@@ -3603,7 +3607,7 @@ re-added.
 ## Cultures, religions, traits, titles, balance
 
 Culture definitions are complete records replaced by id. Their core shape is
-`{name, tradition?, dyn, male, female, family?}`: `dyn` selects the dynasty naming
+`{name, tradition?, dyn, male, female, family?, doctrines?}`: `dyn` selects the dynasty naming
 pattern, `male` and `female` are personal-name lists, and `family` supplies surnames for
 the `plain` pattern. `tradition` refers to a `cultureTraditions` record shaped as
 `{name, icon?, order?}`. The tradition controls cultural affinity, conversion distance,
@@ -3613,6 +3617,18 @@ back to `other`; replacement definitions that omit it retain an existing culture
 membership for legacy-mod compatibility. Unknown declared traditions fail bookmark
 activation. See `data/cultures.js` and `data/traits.js` for the full culture and trait
 shapes.
+
+`cultureDoctrineDefaults` supplies inherited baseline values for cultures that do not
+author them inline. When `learning` is omitted, the first `techTraditions.cultures`
+membership supplies it, then Latin is the fallback. `doctrineCatalogs` defines the
+complete player-visible faith and culture reform surface. Each doctrine has a stable
+`path`, display `order`, and an
+`options` map. `shownAboveDoctrine:true` avoids a duplicate detail row when another
+section already presents the value. Each option has `name`, `desc`, JSON-safe `value`,
+and a piety or prestige `cost`. A culture doctrine may instead use
+`optionsFrom:"cultureTraditions"` or `optionsFrom:"techTraditions"`. Catalog additions
+merge by doctrine id. See
+`docs/designs/doctrines.md` for branch thresholds and the runtime transaction.
 
 `FBDATA.rulerTraits` (mod key `rulerTraits`) is the ordered, non-empty trait-id pool used
 when the world creates an AI ruler or repairs a missing vassal-ruler temperament. The
@@ -3625,6 +3641,8 @@ retain their current value, while an explicit empty array disables that route. C
 and faith ids must exist after same-mod additions; a faith-group id must be an existing
 root religion definition. Player and AI raid eligibility consult the same resulting
 record. These lists do not change raid range, spoils, cooldown, or technology effects.
+The culture doctrine `doctrines.raiding` grants the same eligibility and is inherited by
+campaign culture branches. `doctrines.seafaring` controls long-range raid reach.
 
 A trait definition may use this extended shape:
 

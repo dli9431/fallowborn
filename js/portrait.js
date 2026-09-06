@@ -454,6 +454,13 @@ window.FB = window.FB || {};
       return {tone:CULTURE_TONE[id],fair:CULTURE_FAIR[id] || 0,
         red:CULTURE_RED[id] || .02};
     }
+    var lineage = FB.cultureLineage ? FB.cultureLineage(id) : [];
+    for (var i = 1; i < lineage.length; i++) {
+      if (Object.prototype.hasOwnProperty.call(CULTURE_TONE, lineage[i])) {
+        return {tone:CULTURE_TONE[lineage[i]],fair:CULTURE_FAIR[lineage[i]] || 0,
+          red:CULTURE_RED[lineage[i]] || .02};
+      }
+    }
     /* Resolve the mod culture through the public fallback, then choose a
        deterministic nearby palette rather than throwing or consuming RNG. */
     var fallback = FB.cultureOf ? FB.cultureOf(id) : null;
@@ -590,7 +597,8 @@ window.FB = window.FB || {};
         saltedUnit(identity,'wardrobe-recede',0) > .62) style = 'receding';
     if (!spec.female && spec.age > 52 &&
         saltedUnit(identity,'wardrobe-recede',0) > .87) style = 'bald';
-    if (!spec.female && spec.culture === 'norse' &&
+    if (!spec.female && (spec.culture === 'norse' ||
+        (FB.cultureIsA && FB.cultureIsA(spec.culture, 'norse'))) &&
         saltedByte(identity,'wardrobe-hair',1) > 120) style = 'longLoose';
     if (spec.child) style = spec.female ? 'braids' : 'crop';
     return style;
@@ -650,7 +658,11 @@ window.FB = window.FB || {};
     if (spec.female && !spec.child && spec.tier >= 2 && roll > 96) return 'fillet';
     if (spec.female && spec.child && roll > 176) return 'garland';
     if ((spec.culture === 'norse' || spec.culture === 'slavic' ||
-        spec.culture === 'baltic') && !spec.child && roll > 168) return 'furHat';
+        spec.culture === 'baltic' || (FB.cultureIsA &&
+          (FB.cultureIsA(spec.culture, 'norse') ||
+           FB.cultureIsA(spec.culture, 'slavic') ||
+           FB.cultureIsA(spec.culture, 'baltic')))) &&
+        !spec.child && roll > 168) return 'furHat';
     if (spec.female && spec.tier <= 2 && !spec.child && roll > 88) return 'kerchief';
     if (spec.tier <= 1 && !spec.child && roll > 200) return 'strawHat';
     if (spec.tier <= 3 && !spec.female && !spec.child && roll < 40) return 'chaperon';

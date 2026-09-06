@@ -312,6 +312,13 @@ means “no generated faiths,” while a new life preserves its non-historical s
 derived graph, lineage, and property-source maps never live on state. See
 [religions.md](religions.md).
 
+Culture-reform state follows the same additive pattern at save version 3.
+`state.cultures` maps generated ids to parent-plus-override records, while
+`state.cultureNextId` supplies deterministic ids. Restore supplies `{}` and `1` to old
+lives before recompiling the effective culture graph. Authored culture data remains in
+`FBDATA.cultures`; compiled lineage and source maps are derived only. See
+[doctrines.md](doctrines.md).
+
 Religious-head state is additive and keeps save version 3.
 `state.religiousHeads` maps a stable `head.officeId` to a realm id or to `null` for an
 explicit vacancy. The built-in office ids equal the old Catholic and Sunni religion ids,

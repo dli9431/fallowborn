@@ -199,8 +199,11 @@ window.FB = window.FB || {};
   FB.unitClassUnlocked = function (state, classId, realmId) {
     const def = unitClassDef(classId);
     if (!def) return false;
+    const culture = realmUnitCulture(state, realmId);
+    if (def.cultureDoctrine && FB.cultureValue &&
+        FB.cultureValue(state, culture, 'doctrines.military').value !==
+          def.cultureDoctrine) return false;
     if (def.cultures || def.notCultures) {
-      const culture = realmUnitCulture(state, realmId);
       if (def.cultures && def.cultures.indexOf(culture) < 0) return false;
       if (def.notCultures && def.notCultures.indexOf(culture) >= 0) return false;
     }

@@ -2926,7 +2926,7 @@ window.FB = window.FB || {};
      anything is spent. */
   function conversionTargetName(s, kind, id) {
     if (kind === 'faith') return religionName(s, id);
-    const def = FBDATA.cultures[id];
+    const def = FB.cultureOf(id, s);
     return dt(s, 'culture', id, def, 'name');
   }
 
@@ -3004,7 +3004,7 @@ window.FB = window.FB || {};
   }
 
   function conversionCultureGroup(s, cid) {
-    const gid = FB.cultureGroup ? FB.cultureGroup(cid) : 'other';
+    const gid = FB.cultureGroup ? FB.cultureGroup(cid, s) : 'other';
     const traditions = FBDATA.cultureTraditions || {};
     const def = traditions[gid] || traditions.other || {
       name:'Other Cultures', icon:'🌍', order:999
@@ -3106,7 +3106,7 @@ window.FB = window.FB || {};
   }
 
   function conversionCultureTooltipHtml(s, cid) {
-    const def = FBDATA.cultures && FBDATA.cultures[cid];
+    const def = FB.cultureOf(cid, s);
     if (!def) return '';
     const name = dt(s, 'culture', cid, def, 'name') || cid;
     const lines = [];
@@ -3171,7 +3171,8 @@ window.FB = window.FB || {};
     if (!s || !c || (kind !== 'faith' && kind !== 'culture')) return;
     const currentId = kind === 'faith' ? c.religion : c.culture;
     const ids = kind === 'faith'
-      ? FB.religionIds(s, true) : Object.keys(FBDATA.cultures);
+      ? FB.religionIds(s, true) : (FB.cultureIds
+        ? FB.cultureIds(s) : Object.keys(FBDATA.cultures));
     const targets = [];
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
@@ -3486,14 +3487,15 @@ window.FB = window.FB || {};
 
   function countyProjectTargetIds(s, pid, kind, settlementIndex) {
     const ids = kind === 'faith'
-      ? FB.religionIds(s, true) : Object.keys(FBDATA.cultures || {});
+      ? FB.religionIds(s, true) : (FB.cultureIds
+        ? FB.cultureIds(s) : Object.keys(FBDATA.cultures || {}));
     const local = typeof settlementIndex === 'number';
     const communities = local && FB.settlementCommunities
       ? FB.settlementCommunities(s, pid, settlementIndex) : [];
     return ids.filter(function (id) {
       const valid = kind === 'faith'
         ? FB.faithExists(id, s) && FB.faithAssignable(id, s)
-        : !!FBDATA.cultures[id];
+        : !!(FB.cultureExists ? FB.cultureExists(id, s) : FBDATA.cultures[id]);
       let share = 0;
       if (local) {
         const field = kind === 'faith' ? 'religion' : 'culture';
@@ -7268,7 +7270,7 @@ window.FB = window.FB || {};
     for (let gi = 0; gi < groups.length; gi++) {
       const group = groups[gi];
       const definition = kind === 'faith'
-        ? FB.religionOf(group.id, s) : FBDATA.cultures[group.id];
+        ? FB.religionOf(group.id, s) : FB.cultureOf(group.id, s);
       const icon = kind === 'faith' && definition && definition.icon
         ? definition.icon + ' ' : '';
       const name = countyProjectTargetName(s, kind, group.id);
@@ -20124,7 +20126,9 @@ window.FB = window.FB || {};
     if (!status || !status.ready) return;
     const route = status.route === 'xwedodah'
       ? FB.T('Your shared faith recognizes xwēdōdah, so discovery does not create the illicit-courtship exposure risk.')
-      : FB.T('Your faith does not recognize this union. While the courtship continues, it may be exposed once each season.');
+      : status.route === 'sanctioned'
+        ? FB.T('Your shared faith recognizes close-kin union, so discovery does not create the illicit-courtship exposure risk.')
+        : FB.T('Your faith does not recognize this union. While the courtship continues, it may be exposed once each season.');
     function modifiers(items, percent) {
       const out = [];
       for (let i = 0; i < items.length; i++) {
@@ -20184,8 +20188,8 @@ window.FB = window.FB || {};
     const c = s && s.chars[cid];
     const status = c && FB.siblingProposalStatus(s, c);
     if (!status || !status.ready) return;
-    const consequence = status.route === 'xwedodah'
-      ? FB.T('A recognized xwēdōdah wedding costs {piety} piety and {money:gold}. It creates no dowry, royal compact, or alliance.', {
+    const consequence = status.route !== 'illicit'
+      ? FB.T('A recognized close-kin wedding costs {piety} piety and {money:gold}. It creates no dowry, royal compact, or alliance.', {
         piety:status.piety, gold:status.gold
       })
       : FB.T('An irregular wedding costs {piety} piety and {prestige} prestige, lowers Common Voice by {voice} and liege Standing by {standing}, and gives both spouses Scandalous Union. It creates no dowry, royal compact, or alliance.', {
@@ -20194,7 +20198,7 @@ window.FB = window.FB || {};
         voice:status.commonVoice,
         standing:status.liegeStanding
       });
-    const authority = status.route === 'xwedodah' ? '' :
+    const authority = status.route !== 'illicit' ? '' :
       (FB.faithHasSystem(s.chars[s.player.charId].religion, 'papacy', s)
         ? FB.T('You also lose 20 Papal Standing, the recognized obedience loses 8 authority, and it gains grounds to excommunicate you.')
         : FB.T('Rulers of your faith also lose 8 Standing.'));
@@ -20752,7 +20756,7 @@ window.FB = window.FB || {};
         enabled:proposal.ready,
         blockedReason:proposal.reason || null,
         consequence:siblingSuit
-          ? (proposal.route === 'xwedodah'
+          ? (proposal.route !== 'illicit'
             ? FB.T('A recognized rite costs 75 piety and {money:gold}; no dowry, compact, or alliance follows.', {
               gold:proposal.gold
             })

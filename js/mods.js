@@ -163,7 +163,8 @@ window.FBMODS = window.FBMODS || [];
     focuses:true, deeds:true, countyCommunityPolicies:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
     events:true, straits:true, crossingClasses:true, scripted:true,
-    cultureTraditions:true, cultures:true, religions:true, religiousPaths:true,
+    cultureTraditions:true, cultures:true, cultureDoctrineDefaults:true,
+    doctrineCatalogs:true, religions:true, religiousPaths:true,
     traits:true,
     ailments:true, modifiers:true, buildings:true, forts:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
@@ -1363,6 +1364,16 @@ window.FBMODS = window.FBMODS || [];
         }
       }
     }
+    if (mod.cultureDoctrineDefaults) {
+      mergeTable(FBDATA.cultureDoctrineDefaults, mod.cultureDoctrineDefaults);
+    }
+    if (mod.doctrineCatalogs) {
+      for (const kind in mod.doctrineCatalogs) {
+        if (!own(mod.doctrineCatalogs, kind)) continue;
+        if (!FBDATA.doctrineCatalogs[kind]) FBDATA.doctrineCatalogs[kind] = {};
+        mergeTable(FBDATA.doctrineCatalogs[kind], mod.doctrineCatalogs[kind]);
+      }
+    }
     if (mod.settlementNames) for (const k in mod.settlementNames) FBDATA.settlementNames[k] = mod.settlementNames[k];
     /* Physical settlement sites merge by site id into the shared table.
        Per-county `settlements` presentations ride inside complete bookmark or
@@ -1525,6 +1536,10 @@ window.FBMODS = window.FBMODS || [];
         FB.clearPortraitCache) FB.clearPortraitCache();
     if ((mod.religions || mod.titles) && FB.invalidateReligionData) {
       FB.invalidateReligionData();
+    }
+    if ((mod.cultures || mod.cultureTraditions || mod.cultureDoctrineDefaults ||
+        mod.doctrineCatalogs || mod.techTraditions) && FB.invalidateCultureData) {
+      FB.invalidateCultureData();
     }
   };
 

@@ -559,6 +559,225 @@ window.FB = window.FB || {};
      culture or religion. Piety pays for faith, prestige for culture; costs
      and penalties escalate with scope (self < household < realm). These
      character-facing deeds never move county community population. */
+  function doctrineWrite(target, path, value) {
+    const parts = String(path || '').split('.');
+    let cursor = target;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!cursor[parts[i]] || typeof cursor[parts[i]] !== 'object' ||
+          Array.isArray(cursor[parts[i]])) cursor[parts[i]] = {};
+      cursor = cursor[parts[i]];
+    }
+    cursor[parts[parts.length - 1]] = JSON.parse(JSON.stringify(value));
+  }
+
+  function doctrineOption(kind, doctrineId, optionId) {
+    const definitions = FB.doctrineDefinitions ? FB.doctrineDefinitions(kind) : [];
+    let definition = null;
+    for (let i = 0; i < definitions.length; i++) {
+      if (definitions[i].id === doctrineId) definition = definitions[i];
+    }
+    if (!definition) return null;
+    const options = FB.doctrineOptions(kind, doctrineId);
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].id === optionId) {
+        return { doctrine:definition, option:options[i] };
+      }
+    }
+    return null;
+  }
+
+  function doctrineIdentity(state, kind) {
+    const me = state && state.player && state.chars &&
+      state.chars[state.player.charId];
+    return me ? (kind === 'faith' ? me.religion : me.culture) : null;
+  }
+
+  function doctrineParent(state, kind, identityId) {
+    if (kind === 'faith') {
+      const rel = FB.religionOf(identityId, state);
+      return state.faiths && state.faiths[identityId] && rel.parent
+        ? rel.parent : identityId;
+    }
+    const culture = FB.cultureOf(identityId, state);
+    return state.cultures && state.cultures[identityId] && culture.parent
+      ? culture.parent : identityId;
+  }
+
+  function doctrineRelation(kind, count) {
+    if (kind === 'culture') {
+      const threshold = Number(FBDATA.balance.cultureDoctrineDivergenceThreshold) || 3;
+      return count >= threshold ? 'foreign' : 'same_group';
+    }
+    const hostile = Number(FBDATA.balance.faithDoctrineHostileThreshold) || 5;
+    const schism = Number(FBDATA.balance.faithDoctrineSchismThreshold) || 3;
+    return count >= hostile ? 'hostile' : count >= schism ? 'schismatic' : 'in_fold';
+  }
+
+  FB.doctrineReformStatus = function (state, kind, doctrineId, optionId) {
+    const out = {
+      ok:false, reason:'', kind:kind, doctrineId:doctrineId,
+      optionId:optionId, identityId:null, parentId:null,
+      pietyCost:0, prestigeCost:0, divergence:0, relation:null,
+      createsBranch:false
+    };
+    const p = state && state.player;
+    const me = p && state.chars && state.chars[p.charId];
+    if (!p || !me || p.dead || me.dead) {
+      out.reason = FB.T('Only a living character may reform doctrines.');
+      return out;
+    }
+    if (kind !== 'faith' && kind !== 'culture') {
+      out.reason = FB.T('That doctrine cannot be reformed.');
+      return out;
+    }
+    if (FB.ageOf(me, state.date.year) < 16) {
+      out.reason = FB.T('Only an adult may reform doctrines.');
+      return out;
+    }
+    if (p.war) {
+      out.reason = FB.T('You must first make peace.');
+      return out;
+    }
+    const found = doctrineOption(kind, doctrineId, optionId);
+    if (!found) {
+      out.reason = FB.T('That doctrine option is not available.');
+      return out;
+    }
+    out.identityId = doctrineIdentity(state, kind);
+    const current = FB.doctrineOption(
+      state, kind, out.identityId, doctrineId).definition;
+    if (current && current.id === optionId) {
+      out.reason = FB.T('That doctrine is already followed.');
+      return out;
+    }
+    const cooldownDays = Number(FBDATA.balance.doctrineReformCooldownDays) || 360;
+    const last = p.cooldowns && p.cooldowns['reform_doctrine:' + kind];
+    if (last !== undefined && state.turn - last < cooldownDays) {
+      out.reason = FB.T('Ready in {days} days.', {
+        days:cooldownDays - (state.turn - last)
+      });
+      return out;
+    }
+    out.parentId = doctrineParent(state, kind, out.identityId);
+    const projected = FB.doctrineDivergence(state, kind, out.identityId,
+      out.parentId, doctrineId, optionId);
+    out.divergence = projected.count;
+    out.relation = doctrineRelation(kind, projected.count);
+    if (kind === 'culture') {
+      let projectedTradition = FB.doctrineValue(
+        state, kind, out.identityId, 'regional_tradition').value;
+      if (doctrineId === 'regional_tradition') {
+        projectedTradition = found.option.value;
+      }
+      if (projectedTradition !== FB.cultureGroup(out.parentId, state)) {
+        out.relation = 'foreign';
+      }
+    }
+    out.createsBranch = out.parentId === out.identityId;
+    const currentDivergence = FB.doctrineDivergence(
+      state, kind, out.identityId, out.parentId).count;
+    const escalation = Number(FBDATA.balance.doctrineReformEscalation) || 0.25;
+    const multiplier = 1 + currentDivergence * escalation;
+    const cost = found.option.cost || found.doctrine.cost || {};
+    out.pietyCost = Math.ceil((Number(cost.piety) || 0) * multiplier);
+    out.prestigeCost = Math.ceil((Number(cost.prestige) || 0) * multiplier);
+    if ((Number(p.piety) || 0) < out.pietyCost) {
+      out.reason = FB.T('Requires {needed} piety; currently {current}.', {
+        needed:out.pietyCost, current:Math.floor(Number(p.piety) || 0)
+      });
+      return out;
+    }
+    if ((Number(p.prestige) || 0) < out.prestigeCost) {
+      out.reason = FB.T('Requires {needed} prestige; currently {current}.', {
+        needed:out.prestigeCost, current:Math.floor(Number(p.prestige) || 0)
+      });
+      return out;
+    }
+    out.ok = true;
+    return out;
+  };
+
+  FB.applyDoctrineReform = function (state, kind, doctrineId, optionId) {
+    const status = FB.doctrineReformStatus(
+      state, kind, doctrineId, optionId);
+    if (!status.ok) return false;
+    const p = state.player;
+    const me = state.chars[p.charId];
+    const found = doctrineOption(kind, doctrineId, optionId);
+    let identityId = status.identityId;
+
+    if (kind === 'faith') {
+      if (status.createsBranch) {
+        const parent = FB.religionOf(identityId, state);
+        const properties = {};
+        doctrineWrite(properties, found.doctrine.path, found.option.value);
+        if (status.relation === 'in_fold' && parent.head) properties.head = {};
+        const created = FB.foundFaith(state, {
+          name:FB.T('Reformed {faith}', { faith:parent.name }),
+          icon:parent.icon, parent:identityId,
+          relationToParent:status.relation, properties:properties
+        }, { convertFounder:true });
+        if (!created) return false;
+        identityId = created;
+      } else {
+        const rawFaith = state.faiths[identityId];
+        if (!rawFaith.properties || typeof rawFaith.properties !== 'object') {
+          rawFaith.properties = {};
+        }
+        doctrineWrite(rawFaith.properties, found.doctrine.path, found.option.value);
+        rawFaith.relationToParent = status.relation;
+        if (status.relation !== 'in_fold') {
+          rawFaith.properties.head = null;
+        } else {
+          const parent = FB.religionOf(rawFaith.parent, state);
+          if (parent && parent.head) rawFaith.properties.head = {};
+        }
+        if (FB.invalidateFaithState) FB.invalidateFaithState(state);
+      }
+    } else {
+      if (status.createsBranch) {
+        const parent = FB.cultureOf(identityId, state);
+        const definition = {
+          name:FB.T('Reformed {culture}', { culture:parent.name }),
+          parent:identityId, relationToParent:status.relation,
+          founderId:me.id, originProvinceId:p.provinceId
+        };
+        doctrineWrite(definition, found.doctrine.path, found.option.value);
+        const created = FB.createCulture(state, definition);
+        if (!created) return false;
+        me.culture = created;
+        identityId = created;
+      } else {
+        const rawCulture = state.cultures[identityId];
+        doctrineWrite(rawCulture, found.doctrine.path, found.option.value);
+        rawCulture.relationToParent = status.relation;
+        if (FB.configureCultures) FB.configureCultures(state);
+      }
+    }
+    p.piety = Math.max(0, (Number(p.piety) || 0) - status.pietyCost);
+    p.prestige = Math.max(0,
+      (Number(p.prestige) || 0) - status.prestigeCost);
+    p.cooldowns = p.cooldowns || {};
+    p.cooldowns['reform_doctrine:' + kind] = state.turn;
+    if (kind === 'faith') {
+      p.encounteredFaiths = p.encounteredFaiths || {};
+      p.encounteredFaiths[identityId] = 1;
+    } else {
+      p.encounteredCultures = p.encounteredCultures || {};
+      p.encounteredCultures[identityId] = 1;
+    }
+    if (FB.clearPortraitCache) FB.clearPortraitCache();
+    if (FB.news) {
+      FB.news(state, FB.T('{identity} now follows {doctrine}.', {
+        identity:kind === 'faith'
+          ? FB.religionOf(identityId, state).name
+          : FB.cultureOf(identityId, state).name,
+        doctrine:found.option.name
+      }));
+    }
+    return identityId;
+  };
+
   function conversionBalance(key, fallback) {
     const value = FBDATA.balance[key];
     return value !== undefined ? value : fallback;
@@ -822,10 +1041,14 @@ window.FB = window.FB || {};
         return { kind:'tradition', label:FB.T('Reformed') };
       }
     } else {
-      const myGroup = FB.cultureGroup ? FB.cultureGroup(c.culture) : '';
-      const targetGroup = FB.cultureGroup ? FB.cultureGroup(targetId) : '';
+      const myGroup = FB.cultureGroup ? FB.cultureGroup(c.culture, state) : '';
+      const targetGroup = FB.cultureGroup ? FB.cultureGroup(targetId, state) : '';
       if (myGroup && targetGroup && myGroup === targetGroup && myGroup !== 'other') {
         return { kind:'tradition', label:FB.T('Related') };
+      }
+      const culture = FB.cultureOf && FB.cultureOf(targetId, state);
+      if (culture && culture.createdTurn !== undefined) {
+        return { kind:'tradition', label:FB.T('Reformed') };
       }
     }
     if (p.visitedProvinces && p.visitedProvinces.length) {
@@ -881,7 +1104,8 @@ window.FB = window.FB || {};
         return out;
       }
     } else {
-      if (!targetId || !FBDATA.cultures[targetId]) {
+      if (!targetId || !(FB.cultureExists
+          ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId])) {
         out.reason = FB.T('That culture cannot be adopted.');
         return out;
       }
@@ -1133,7 +1357,8 @@ window.FB = window.FB || {};
     }
     const targetValid = kind === 'faith'
       ? FB.faithExists(targetId, state) && FB.faithAssignable(targetId, state)
-      : kind === 'culture' && !!FBDATA.cultures[targetId];
+      : kind === 'culture' && !!(FB.cultureExists
+        ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId]);
     if (!targetValid || !FBDATA.countyCommunityPolicies ||
         !FBDATA.countyCommunityPolicies[policyId]) {
       out.reason = FB.T('That county project is not possible.');
@@ -1214,7 +1439,8 @@ window.FB = window.FB || {};
     }
     const targetValid = kind === 'faith'
       ? FB.faithExists(targetId, state) && FB.faithAssignable(targetId, state)
-      : kind === 'culture' && !!FBDATA.cultures[targetId];
+      : kind === 'culture' && !!(FB.cultureExists
+        ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId]);
     if (!targetValid || !FBDATA.countyCommunityPolicies ||
         !FBDATA.countyCommunityPolicies[policyId]) {
       out.reason = FB.T('That settlement project is not possible.');
@@ -1269,7 +1495,8 @@ window.FB = window.FB || {};
   function conversionProbe(state, kind) {
     const c = me(state);
     const ids = kind === 'faith'
-      ? FB.religionIds(state, true) : Object.keys(FBDATA.cultures);
+      ? FB.religionIds(state, true) : (FB.cultureIds
+        ? FB.cultureIds(state) : Object.keys(FBDATA.cultures));
     let cheapest = null;
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
@@ -7972,6 +8199,14 @@ window.FB = window.FB || {};
      county. The selector is deliberately geographic and read-only: no realm
      or county is changed, and the event picker owns the one seeded draw after
      it has chosen the story. */
+  function historicCultureIs(state, cultureId, ids) {
+    for (let i = 0; i < ids.length; i++) {
+      if (cultureId === ids[i] ||
+          (FB.cultureIsA && FB.cultureIsA(cultureId, ids[i], state))) return true;
+    }
+    return false;
+  }
+
   function historicRaidProfile(state) {
     const c = state.chars[state.player.charId];
     if (!c) return 'rival_raiders';
@@ -7983,19 +8218,18 @@ window.FB = window.FB || {};
     if (FB.faithIsA(c.religion, 'slavic_pagan', state)) return 'steppe_riders';
     if (FB.faithIsA(c.religion, 'tengri', state)) return 'rus_raiders';
     if (FB.faithIsA(c.religion, 'jewish', state) &&
-        (c.culture === 'turkic' || c.culture === 'magyar' ||
-          c.culture === 'khazar')) {
+        historicCultureIs(state, c.culture, ['turkic','magyar','khazar'])) {
       return 'rus_raiders';
     }
-    if (c.culture === 'persian' || c.culture === 'armenian' ||
-        c.culture === 'georgian' || c.culture === 'slavic') {
+    if (historicCultureIs(state, c.culture,
+        ['persian','armenian','georgian','slavic'])) {
       return 'steppe_riders';
     }
-    if (c.culture === 'norse' || c.culture === 'baltic') return 'saxon_host';
-    if (c.culture === 'turkic' || c.culture === 'magyar' ||
-        c.culture === 'khazar') return 'rus_raiders';
-    if (c.culture === 'arabic' || c.culture === 'andalusi' ||
-        c.culture === 'berber') return 'cross_banners';
+    if (historicCultureIs(state, c.culture, ['norse','baltic'])) return 'saxon_host';
+    if (historicCultureIs(state, c.culture,
+        ['turkic','magyar','khazar'])) return 'rus_raiders';
+    if (historicCultureIs(state, c.culture,
+        ['arabic','andalusi','berber'])) return 'cross_banners';
     return 'rival_raiders';
   }
 
@@ -8007,18 +8241,19 @@ window.FB = window.FB || {};
       ? FB.countyCulture(state, pr.id) : pr.culture;
     const religion = FB.countyReligion
       ? FB.countyReligion(state, pr.id) : pr.religion;
-    if (profile === 'northmen') return culture === 'norse' ||
+    if (profile === 'northmen') return historicCultureIs(
+      state, culture, ['norse']) ||
       FB.faithIsA(religion, 'norse_pagan', state);
     if (profile === 'cross_banners') return FB.faithIsA(
       religion, 'christian', state);
-    if (profile === 'saxon_host') return culture === 'german' ||
-      culture === 'frankish' || culture === 'english' ||
+    if (profile === 'saxon_host') return historicCultureIs(
+      state, culture, ['german','frankish','english']) ||
       FB.faithIsA(religion, 'christian', state);
-    if (profile === 'steppe_riders') return culture === 'turkic' ||
-      culture === 'magyar' || culture === 'khazar' ||
+    if (profile === 'steppe_riders') return historicCultureIs(
+      state, culture, ['turkic','magyar','khazar']) ||
       FB.faithIsA(religion, 'tengri', state);
-    if (profile === 'rus_raiders') return culture === 'slavic' ||
-      culture === 'norse' ||
+    if (profile === 'rus_raiders') return historicCultureIs(
+      state, culture, ['slavic','norse']) ||
       FB.faithIsA(religion, 'slavic_pagan', state) ||
       FB.faithIsA(religion, 'orthodox', state);
     return culture !== player.culture || religion !== player.religion;

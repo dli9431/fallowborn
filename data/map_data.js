@@ -1529,6 +1529,11 @@ FBDATA.balance = {
   cultureAdoptionSameGroupMult: 0.8, cultureAdoptionForeignMult: 1.25,
   conversionPopularOpinionSelf: -10, conversionPopularOpinionHousehold: -30,
   conversionPopularOpinionRealm: -50,
+  /* Doctrine reform creates a campaign child identity on the first change.
+     Further departures cost more; enough departures break parent affinity. */
+  doctrineReformCooldownDays: 360, doctrineReformEscalation: 0.25,
+  faithDoctrineSchismThreshold: 3, faithDoctrineHostileThreshold: 5,
+  cultureDoctrineDivergenceThreshold: 3,
   /* County demographic projects (js/population.js). Rates are yearly shares
      of the eligible non-target population and all work is deterministic. */
   countyCommunityPluralityHysteresis: 0.03,

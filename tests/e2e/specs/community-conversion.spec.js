@@ -507,6 +507,18 @@ test('Faith details open personal conversion without territorial navigation',
     await action.hover();
     await expect(page.locator('#tooltip')).toContainText(
       'Open the personal, household, or realm faith picker.');
+
+    await page.setViewportSize({ width:390, height:740 });
+    const info = action.locator('.settcard-info');
+    await expect(info).toBeVisible();
+    const faithActionBox = await page.locator(
+      '#faith-details-convert').boundingBox();
+    const faithInfoBox = await info.boundingBox();
+    expect(Math.abs(faithActionBox.y - faithInfoBox.y))
+      .toBeLessThanOrEqual(1);
+    expect(Math.abs(faithActionBox.height - faithInfoBox.height))
+      .toBeLessThanOrEqual(1);
+
     await page.locator('#faith-details-convert').click();
     await expect(page.locator('#gm-title')).toHaveText('Convert faith');
     await expect(page.locator('#conv-search')).toBeVisible();
@@ -553,6 +565,13 @@ test('Self culture details show traditions and open personal conversion',
     await page.setViewportSize({ width:390, height:740 });
     const info = action.locator('.settcard-info');
     await expect(info).toBeVisible();
+    const cultureActionBox = await page.locator(
+      '#culture-details-adopt').boundingBox();
+    const cultureInfoBox = await info.boundingBox();
+    expect(Math.abs(cultureActionBox.y - cultureInfoBox.y))
+      .toBeLessThanOrEqual(1);
+    expect(Math.abs(cultureActionBox.height - cultureInfoBox.height))
+      .toBeLessThanOrEqual(1);
     await info.click();
     await expect(info).toHaveAttribute('aria-expanded', 'true');
     await expect(action.locator('.identity-conversion-action-details'))
@@ -563,6 +582,65 @@ test('Self culture details show traditions and open personal conversion',
     await page.locator('#culture-details-adopt').click();
     await expect(page.locator('#gm-title')).toHaveText('Adopt a new culture');
     await expect(page.locator('#conv-search')).toBeVisible();
+  });
+
+test('identity sheets expose every doctrine and confirm paid branch reforms',
+  async function ({ page }) {
+    await configureCountyProjectUi(page);
+    await page.evaluate(function () {
+      FB.state.player.piety = 2000;
+      FB.state.player.prestige = 2000;
+      FB.state.player.war = null;
+      FB.state.player.cooldowns = {};
+      var me = FB.state.chars[FB.state.player.charId];
+      me.religion = 'catholic';
+      me.culture = 'gaelic';
+      FB.ui.showFaithDetails(me.religion);
+    });
+
+    const faithBody = page.locator('#gm-body');
+    await expect(faithBody).toContainText('Marriage form');
+    await expect(faithBody).toContainText('Marriage with other faiths');
+    await expect(faithBody).toContainText('Divorce');
+    await expect(faithBody).toContainText('Close-kin marriage');
+    await expect(faithBody).toContainText('Clergy marriage');
+    await expect(page.locator('#faith-details-reform')).toBeVisible();
+    await page.locator('#faith-details-reform').click();
+    await expect(page.locator('#gm-title')).toHaveText('Reform Faith');
+    await page.locator('[data-doctrine-id="close_kin"]').click();
+    await expect(page.locator('#gm-title')).toHaveText('Close-kin marriage');
+    await page.locator('[data-doctrine-option="sanctioned"]').click();
+    await expect(page.locator('#gm-title')).toHaveText(
+      'Confirm Doctrine Reform');
+    await expect(page.locator('#gm-body')).toContainText('400 piety');
+    await page.locator('#doctrine-confirm').click();
+    await expect(page.locator('#gm-title')).toContainText(
+      'Reformed Latin Christianity');
+    await expect(page.locator('#gm-body')).toContainText(
+      'Religiously sanctioned');
+    await expect(page.locator('#gm-body')).toContainText(
+      '1 doctrine · In the parent’s fold');
+
+    await page.evaluate(function () {
+      delete FB.state.player.cooldowns['reform_doctrine:culture'];
+      var me = FB.state.chars[FB.state.player.charId];
+      FB.ui.showCultureDetails(me.culture);
+    });
+    const cultureBody = page.locator('#gm-body');
+    await expect(cultureBody).toContainText('Raiding tradition');
+    await expect(cultureBody).toContainText('Seafaring tradition');
+    await expect(cultureBody).toContainText('Military tradition');
+    await expect(cultureBody).toContainText('Learning tradition');
+    await expect(page.locator('#culture-details-reform')).toBeVisible();
+    await page.locator('#culture-details-reform').click();
+    await page.locator('[data-doctrine-id="military"]').click();
+    await page.locator('[data-doctrine-option="huscarl"]').click();
+    await expect(page.locator('#gm-body')).toContainText('350 prestige');
+    await page.locator('#doctrine-confirm').click();
+    await expect(page.locator('#gm-title')).toContainText('Reformed Gaelic');
+    await expect(page.locator('#gm-body')).toContainText('Huscarls');
+    await expect(page.locator('#gm-body')).toContainText(
+      '1 doctrine · Related to parent');
   });
 
 test('community triggers and effects retain exact county and settlement context',

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.171.9';
+FB.VERSION = '1.172.0';
 FB.CHANGELOG = [
+  { v: '1.172.0', date: '2026-09-06', changes: [
+    'Faith and Culture sheets now expose gameplay doctrines and let players spend piety or prestige to form increasingly divergent branches.'
+  ] },
   { v: '1.171.9', date: '2026-09-06', changes: [
     'Faith and Culture sheets now keep territorial projects in Land, while each retains its personal conversion action.'
   ] },
@@ -2019,6 +2022,7 @@ FB.CHANGELOG = [
          A changed mod string therefore falls back to that exact current English. */
       FB.mods.applyStored();
       if (FB.configureReligions) FB.configureReligions();
+      if (FB.configureCultures) FB.configureCultures();
       if (FB.indexEventMessages) FB.indexEventMessages();
       FB.finalizeLocale(loaded);
       refreshOfflineStatus();
@@ -2833,6 +2837,7 @@ FB.CHANGELOG = [
       armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
       alliances: [],
       faiths: {}, faithRelations: {}, faithNextId: 1,
+      cultures: {}, cultureNextId: 1,
       religiousHeads: {},
       religiousHeadVacancies: {},
       papacy: null,
@@ -3118,6 +3123,7 @@ FB.CHANGELOG = [
       armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
       alliances: [],
       faiths: {}, faithRelations: {}, faithNextId: 1,
+      cultures: {}, cultureNextId: 1,
       religiousHeads: {},
       religiousHeadVacancies: {},
       papacy: null,

@@ -122,6 +122,172 @@ nubian: { name:'Nubian', tradition:'african', dyn:'of_place',
   female:['Martha','Maria','Theodora','Anna','Elisabet','Sara','Rebekka','Damiana','Eirene','Sophia','Anastasia','Eudokia','Helena','Joanna','Kandake','Mariakouda','Ngonnena','Pelagia','Ponngila','Susanna','Tapara','Thekla','Titta','Toungesi','Abrotona','Adaueta','Atirkouda','Dapausa','Dousa','Eiopa','Iesousigne','Kapia','Kojoka','Mikaela','Ngaddakouda','Ngollena','Pachnita','Sakina','Sauoka','Serena','Sia','Sitte','Souaein','Takomphit','Tasine','Tekram','Thatil','Tsia'] }
 };
 
+/* Doctrine catalogs are presentation and mechanics data together. The engine
+   reads each option's value through its path, so mods can add choices without
+   adding a matching UI branch. Reform costs are deliberately paid in the
+   identity's social currency: piety for faith, prestige for culture. */
+FBDATA.doctrineCatalogs = {
+  faith:{
+    marriage_form:{ name:'Marriage form', path:'marriage.spouseLimit', order:1,
+      options:{
+        monogamy:{ name:'Monogamy', desc:'One spouse for men and women.',
+          value:{ m:1, f:1 }, cost:{ piety:150 } },
+        dual_polygyny:{ name:'Dual polygyny',
+          desc:'Men may have up to two wives; women one husband.',
+          value:{ m:2, f:1 }, cost:{ piety:175 } },
+        polygyny:{ name:'Polygyny', desc:'Men may have up to four wives; women one husband.',
+          value:{ m:4, f:1 }, cost:{ piety:225 } },
+        limited_polygyny:{ name:'Limited polygyny',
+          desc:'Men may have up to three wives; women one husband.',
+          value:{ m:3, f:1 }, cost:{ piety:200 } },
+        plural:{ name:'Plural marriage', desc:'Men and women may each have up to three spouses.',
+          value:{ m:3, f:3 }, cost:{ piety:300 } }
+      } },
+    marriage_faith:{ name:'Marriage with other faiths',
+      path:'marriage.acceptedRelations', order:2,
+      options:{
+        exact:{ name:'Exact faith only', desc:'Marriage is limited to the same faith.',
+          value:['same'], cost:{ piety:125 } },
+        communion:{ name:'Within the communion',
+          desc:'Marriage is accepted with the same faith and in-fold branches.',
+          value:['same','in_fold'], cost:{ piety:150 } },
+        broad:{ name:'Across related branches',
+          desc:'Marriage is accepted with same, in-fold, and schismatic branches.',
+          value:['same','in_fold','schismatic'], cost:{ piety:225 } },
+        universal:{ name:'Universal marriage',
+          desc:'Faith does not bar marriage on religious grounds.',
+          value:['same','in_fold','schismatic','foreign','hostile'],
+          cost:{ piety:350 } }
+      } },
+    divorce:{ name:'Divorce', path:'marriage.divorce', order:3,
+      options:{
+        annulment:{ name:'Annulment by petition',
+          desc:'A costly petition may dissolve the union after a year.',
+          value:{ kind:'annulment', direct:false, gold:15, piety:20,
+            failurePiety:25, cooldownDays:360 }, cost:{ piety:150 } },
+        talaq:{ name:'Direct repudiation',
+          desc:'The union may be ended directly by returning the dowry.',
+          value:{ kind:'talaq', direct:true, gold:'dowry', piety:0,
+            prestige:0, cooldownDays:0 }, cost:{ piety:200 } },
+        get:{ name:'Mutual writ of divorce',
+          desc:'The union may be ended by a formal writ and returned dowry.',
+          value:{ kind:'get', direct:true, gold:'dowry', piety:0,
+            prestige:0, cooldownDays:0 }, cost:{ piety:200 } },
+        sunder:{ name:'Sunder the union',
+          desc:'The union may be ended directly at a small prestige cost.',
+          value:{ kind:'sunder', direct:true, gold:0, piety:0,
+            prestige:5, cooldownDays:0 }, cost:{ piety:225 } },
+        sacred_sunder:{ name:'Sunder by sacred law',
+          desc:'The union may be ended at piety and prestige cost after a year.',
+          value:{ kind:'sunder', direct:true, gold:0, piety:15,
+            prestige:5, cooldownDays:360 }, cost:{ piety:250 } }
+      } },
+    close_kin:{ name:'Close-kin marriage', path:'marriage.kinship.siblingRite',
+      order:4, options:{
+        forbidden:{ name:'Forbidden',
+          desc:'Sibling unions remain illicit and socially dangerous.',
+          value:null, cost:{ piety:100 } },
+        sanctioned:{ name:'Religiously sanctioned',
+          desc:'A shared faith may recognize sibling unions without scandal.',
+          value:'sanctioned', cost:{ piety:400 } },
+        xwedodah:{ name:'Xwedodah',
+          desc:'Close-kin union is honored as a sacred dynastic rite.',
+          value:'xwedodah', cost:{ piety:450 } }
+      } },
+    clergy_marriage:{ name:'Clergy marriage', path:'clergyMarriage', order:5,
+      options:{
+        celibate:{ name:'Forbidden', desc:'Clergy and monastics may not marry.',
+          value:false, cost:{ piety:150 } },
+        permitted:{ name:'Permitted', desc:'Clergy and monastics may marry.',
+          value:true, cost:{ piety:175 } }
+      } }
+  },
+  culture:{
+    regional_tradition:{ name:'Regional tradition', path:'tradition', order:1,
+      shownAboveDoctrine:true,
+      optionsFrom:'cultureTraditions', cost:{ prestige:300 } },
+    dynasty_style:{ name:'Dynasty naming', path:'dyn', order:2,
+      shownAboveDoctrine:true,
+      options:{
+        of_place:{ name:'Toponymic', desc:'Houses are named for a place.',
+          value:'of_place', cost:{ prestige:100 } },
+        patronym:{ name:'Norse patronymic', desc:'Names use -sson and -datter.',
+          value:'patronym', cost:{ prestige:125 } },
+        mac:{ name:'Clan prefix', desc:'Houses use the mac clan prefix.',
+          value:'mac', cost:{ prestige:125 } },
+        ibn:{ name:'Lineage prefix', desc:'Houses use Banu and Ibn forms.',
+          value:'ibn', cost:{ prestige:125 } },
+        ov:{ name:'Patronymic suffix', desc:'Houses use the -ovich suffix.',
+          value:'ov', cost:{ prestige:125 } },
+        ap:{ name:'Patronymic prefix', desc:'Houses use the ap prefix.',
+          value:'ap', cost:{ prestige:125 } },
+        plain:{ name:'Family surname', desc:'Houses use inherited family surnames.',
+          value:'plain', cost:{ prestige:100 } }
+      } },
+    raiding:{ name:'Raiding tradition', path:'doctrines.raiding', order:3,
+      options:{
+        forbidden:{ name:'No raiding tradition',
+          desc:'Rulers cannot organize ordinary cultural raids.',
+          value:false, cost:{ prestige:175 } },
+        practiced:{ name:'Raiding practiced',
+          desc:'Rulers may organize raids when other conditions allow.',
+          value:true, cost:{ prestige:300 } }
+      } },
+    seafaring:{ name:'Seafaring tradition', path:'doctrines.seafaring', order:4,
+      options:{
+        local:{ name:'Local seafaring',
+          desc:'Raiders use ordinary coastal and overland reach.',
+          value:false, cost:{ prestige:175 } },
+        oceanic:{ name:'Long-range seafaring',
+          desc:'Coastal raiders gain long-range reach without Longships technology.',
+          value:true, cost:{ prestige:350 } }
+      } },
+    military:{ name:'Military tradition', path:'doctrines.military', order:5,
+      options:{
+        levy:{ name:'General levy', desc:'No culture-specific professional unit.',
+          value:'levy', cost:{ prestige:150 } },
+        horsearcher:{ name:'Horse archers', desc:'Unlocks horse-archer companies.',
+          value:'horsearcher', cost:{ prestige:350 } },
+        huscarl:{ name:'Huscarls', desc:'Unlocks huscarl companies.',
+          value:'huscarl', cost:{ prestige:350 } },
+        camel:{ name:'Camel riders', desc:'Unlocks camel-rider companies.',
+          value:'camel', cost:{ prestige:350 } },
+        cataphract:{ name:'Cataphracts', desc:'Unlocks cataphract companies once their armor is known.',
+          value:'cataphract', cost:{ prestige:400 } }
+      } },
+    learning:{ name:'Learning tradition', path:'doctrines.learning', order:6,
+      optionsFrom:'techTraditions', cost:{ prestige:300 } }
+  }
+};
+
+/* Baseline cultural doctrine belongs in data rather than culture-id branches
+   in the engine. Missing entries use the conservative default. */
+FBDATA.cultureDoctrineDefaults = {
+  default:{ raiding:false, seafaring:false, military:'levy' },
+  frankish:{ learning:'latin' }, german:{ learning:'latin' },
+  norman:{ learning:'latin' }, ashkenazi:{ learning:'latin' },
+  english:{ learning:'latin', military:'huscarl' },
+  norse:{ learning:'nordic', raiding:true, seafaring:true, military:'huscarl' },
+  gaelic:{ learning:'latin', raiding:true },
+  brezhon:{ learning:'latin', raiding:true },
+  iberian:{ learning:'latin' }, basque:{ learning:'latin' },
+  occitan:{ learning:'latin' }, andalusi:{ learning:'islamic', raiding:true },
+  italian:{ learning:'latin' }, lombard:{ learning:'latin' },
+  greek:{ learning:'byzantine', military:'cataphract' },
+  slavic:{ learning:'slavic' }, rus:{ learning:'slavic' },
+  magyar:{ learning:'steppe', raiding:true, military:'horsearcher' },
+  turkic:{ learning:'steppe', raiding:true, military:'horsearcher' },
+  khazar:{ learning:'steppe', raiding:true, military:'horsearcher' },
+  arabic:{ learning:'islamic', raiding:true, military:'camel' },
+  syriac:{ learning:'byzantine' },
+  berber:{ learning:'islamic', raiding:true, military:'camel' },
+  persian:{ learning:'persianate' },
+  armenian:{ learning:'caucasian', military:'cataphract' },
+  georgian:{ learning:'caucasian' }, baltic:{ learning:'baltic_finnic', raiding:true },
+  finnic:{ learning:'baltic_finnic' }, sami:{ learning:'baltic_finnic' },
+  coptic:{ learning:'northeast_african' }, nubian:{ learning:'northeast_african' }
+};
+
 /* Settlement name parts per culture — combined pre+suf deterministically by
    FB.settlementsOf (no RNG draw, so saves stay stable). 'default' covers any
    culture without its own set. */
@@ -166,7 +332,8 @@ FBDATA.religions = {
         spouseLimit:{ m:1, f:1 },
         divorce:{ kind:'annulment', direct:false, gold:15, piety:20,
           failurePiety:25, cooldownDays:360 },
-        acceptedRelations:['same','in_fold']
+        acceptedRelations:['same','in_fold'],
+        kinship:{ siblingRite:null }
       },
       rankTitles:{
         m:['Serf','Freeholder','Gentry','Baron','Count','Duke','King','Emperor'],
@@ -214,7 +381,8 @@ FBDATA.religions = {
         spouseLimit:{ m:4, f:1 },
         divorce:{ kind:'talaq', direct:true, gold:'dowry', piety:0,
           prestige:0, cooldownDays:0 },
-        acceptedRelations:['same','in_fold']
+        acceptedRelations:['same','in_fold'],
+        kinship:{ siblingRite:null }
       },
       rankTitles:{
         m:['Fellah','Freeman','Sayyid','Sheikh','Emir','Grand Emir','Sultan','Great Sultan'],
@@ -260,7 +428,8 @@ FBDATA.religions = {
         spouseLimit:{ m:3, f:1 },
         divorce:{ kind:'sunder', direct:true, gold:0, piety:0,
           prestige:5, cooldownDays:0 },
-        acceptedRelations:['same','in_fold']
+        acceptedRelations:['same','in_fold'],
+        kinship:{ siblingRite:null }
       },
       rankTitles:{
         m:['Thrall','Karl','Huscarl','Hersir','Jarl','High Chief','King','High King'],
@@ -305,7 +474,8 @@ FBDATA.religions = {
         spouseLimit:{ m:1, f:1 },
         divorce:{ kind:'get', direct:true, gold:'dowry', piety:0,
           prestige:0, cooldownDays:0 },
-        acceptedRelations:['same','in_fold']
+        acceptedRelations:['same','in_fold'],
+        kinship:{ siblingRite:null }
       },
       rankTitles:{
         m:['Serf','Freeholder','Gentry','Elder','Bek','Great Bek','Khagan','Khagan'],

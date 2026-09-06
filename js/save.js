@@ -1147,6 +1147,12 @@ window.FB = window.FB || {};
     if (FB.configureReligions) restoreRepair('religion definitions', function () {
       FB.configureReligions(FB.state);
     });
+    if (FB.ensureCultureState) restoreRepair('culture state', function () {
+      FB.ensureCultureState(FB.state);
+    });
+    if (FB.configureCultures) restoreRepair('culture definitions', function () {
+      FB.configureCultures(FB.state);
+    });
     /* Save format 3 remains stable: missing religious-office assignments gain
        bookmark-aware defaults; vacancies gain additive turn/former-holder
        metadata, while own null vacancies and changed holders persist. */

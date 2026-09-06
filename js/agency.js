@@ -1163,8 +1163,8 @@ window.FB = window.FB || {};
         if (!motivated) continue;
         var relation = kind === 'faith' && FB.faithRelation
           ? FB.faithRelation(state, dominant, target) : null;
-        var sameGroup = kind === 'culture' && FB.cultureGroup &&
-          FB.cultureGroup(dominant) === FB.cultureGroup(target);
+        var sameGroup = kind === 'culture' && FB.cultureRelation &&
+          FB.cultureRelation(state, dominant, target) === 'same_group';
         var zealous = identity.traits.indexOf('zealous') >= 0;
         var policy = relation === 'hostile' && zealous &&
           aim && aim.id === 'defend_faith' && share >= strongShare &&

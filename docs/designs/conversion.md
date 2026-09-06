@@ -11,6 +11,11 @@ is a public act; turning a whole realm is the kind of decision that tore kingdom
 reactions against royal baptisms in Scandinavia and Poland, apostasy penalties under the
 headed faiths). Costs and penalties therefore escalate steeply with scope.
 
+Doctrine reform is adjacent but separate. It creates or updates a child of the player's
+current identity, converts only the player, and spends piety or prestige through
+`FB.applyDoctrineReform`. Conversion remains the explicit way to bring a household or
+realm into that branch. See [doctrines.md](doctrines.md).
+
 ## Scopes
 
 - `self` — the player character only.

@@ -1395,16 +1395,20 @@ The Self sheet's faith block names the live religious head, the number of days i
 has been vacant, or the branch's lack of a centralized office, and states excommunication
 separately from the trait chip. Faith names on Self and Land are focusable links to a
 details sheet with an in-world origin account, founder/date/place, lineage,
-directional parent relations, authority, spouse and clergy rules, and doctrine sources.
+directional parent relations, authority, and every religious doctrine.
+The sheet's **Reform religious doctrines...** action opens data-driven choices with
+cost, total divergence, and the resulting parent relationship before confirmation.
 That sheet keeps conversion character-centered: **Convert your faith…** opens the existing
 personal/household/realm picker. It contains no county-navigation actions and never starts,
 changes, stops, or silently chooses a territorial project.
 The culture value beside it is also a focusable link. Its compact, informational Culture
-sheet shows the player's current culture, regional tradition, dynasty naming style, and
-representative men's and women's names. **Adopt a new culture…** opens the existing
+sheet shows the player's current culture, regional tradition, dynasty naming style,
+representative men's and women's names, and every cultural doctrine. **Reform cultural
+doctrines...** uses the same preview and confirmation pattern. **Adopt a new culture…** opens the existing
 personal/household picker. Like Faith, it contains no county-navigation actions;
 territorial assimilation remains in Land. Both identity-sheet conversion actions keep their
-supporting explanation in the shared desktop tooltip or compact `?` disclosure.
+supporting explanation in the shared desktop tooltip or compact `?` disclosure. On compact
+layouts, the conversion action and its disclosure form one equal-height split row.
 The selected Land county is the canonical community surface. Its unchanged county
 population, carrying-capacity, and annual-change rows are followed by independently
 aggregated Culture and Faith cards; counts sum to the population row, percentages are

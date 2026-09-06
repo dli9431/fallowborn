@@ -2287,7 +2287,7 @@ window.FB = window.FB || {};
   }
 
   function cultureDetailsLink(s, cultureId, id) {
-    const culture = FBDATA.cultures && FBDATA.cultures[cultureId];
+    const culture = FB.cultureOf(cultureId, s);
     if (!culture) return esc(cultureId);
     return '<button type="button" class="linklike"' +
       (id ? ' id="' + esc(id) + '"' : '') +
@@ -2374,12 +2374,205 @@ window.FB = window.FB || {};
       'id="' + esc(detailsId) + '"><p>' + esc(details) + '</p></div></div>';
   }
 
+  function doctrineCostText(status) {
+    const parts = [];
+    if (status.pietyCost) {
+      parts.push(FB.T('{amount} piety', { amount:status.pietyCost }));
+    }
+    if (status.prestigeCost) {
+      parts.push(FB.T('{amount} prestige', { amount:status.prestigeCost }));
+    }
+    return parts.length ? parts.join(' + ') : FB.T('No resource cost');
+  }
+
+  function doctrineRelationText(kind, relation) {
+    if (kind === 'culture') {
+      return relation === 'foreign'
+        ? FB.T('Divergent from parent') : FB.T('Related to parent');
+    }
+    if (relation === 'hostile') return FB.T('Hostile to parent');
+    if (relation === 'schismatic') return FB.T('Schismatic from parent');
+    return FB.T('In the parent’s fold');
+  }
+
+  function doctrineDepartureText(count) {
+    return Number(count) === 1
+      ? FB.T('1 doctrine')
+      : FB.T('{count} doctrines', { count:count });
+  }
+
+  function doctrineRowsHtml(s, kind, identityId) {
+    const definitions = FB.doctrineDefinitions(kind);
+    let h = '';
+    for (let i = 0; i < definitions.length; i++) {
+      const definition = definitions[i];
+      if (definition.shownAboveDoctrine) continue;
+      const current = FB.doctrineOption(
+        s, kind, identityId, definition.id).definition;
+      h += kv(definition.name, esc(FB.T(current.name)));
+    }
+    return h;
+  }
+
+  function doctrineBranchStatusHtml(s, kind, identityId) {
+    const generated = kind === 'faith' ? s.faiths : s.cultures;
+    if (!generated ||
+        !Object.prototype.hasOwnProperty.call(generated, identityId)) return '';
+    const identity = kind === 'faith'
+      ? FB.religionOf(identityId, s) : FB.cultureOf(identityId, s);
+    if (!identity || !identity.parent) return '';
+    const divergence = FB.doctrineDivergence(
+      s, kind, identityId, identity.parent);
+    return kv('Departure from parent', esc(FB.T('{count} · {relation}', {
+      count:doctrineDepartureText(divergence.count),
+      relation:doctrineRelationText(kind, identity.relationToParent)
+    })));
+  }
+
+  function doctrineOptionCardsHtml(s, kind, doctrineId) {
+    const identityId = kind === 'faith'
+      ? s.chars[s.player.charId].religion : s.chars[s.player.charId].culture;
+    const options = FB.doctrineOptions(kind, doctrineId);
+    let h = '<div class="gm-list identity-conversion-actions">';
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
+      const status = FB.doctrineReformStatus(
+        s, kind, doctrineId, option.id);
+      const detailId = 'doctrine-option-' + i + '-details';
+      const detail = FB.T(option.desc || '') + ' ' + (status.ok
+        ? FB.T('{cost}. Result: {count} from the parent, {relation}.', {
+          cost:doctrineCostText(status),
+          count:doctrineDepartureText(status.divergence),
+          relation:doctrineRelationText(kind, status.relation)
+        })
+        : status.reason);
+      h += '<div class="identity-conversion-action settcard"><button type="button" ' +
+        'class="actionbtn" data-doctrine-option="' + esc(option.id) + '"' +
+        (status.ok ? '' : ' disabled') + ' aria-describedby="' + esc(detailId) + '">' +
+        esc(FB.T(option.name)) + (status.ok
+          ? '<span class="doctrine-action-value">' + esc(doctrineCostText(status)) + '</span>'
+          : '') + '</button><span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+        esc(detailId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span><div class="settcard-details ' +
+        'identity-conversion-action-details hidden" id="' + esc(detailId) + '"><p>' +
+        esc(detail) + '</p></div></div>';
+    }
+    return h + '</div>';
+  }
+
+  UI.showDoctrineReform = function (kind) {
+    const s = FB.state;
+    const me = s && s.player && s.chars[s.player.charId];
+    if (!me || (kind !== 'faith' && kind !== 'culture')) return;
+    const identityId = kind === 'faith' ? me.religion : me.culture;
+    const definitions = FB.doctrineDefinitions(kind);
+    let h = '<p class="progressnote">' + esc(FB.T(
+      'Reforming one doctrine creates a child tradition. Further departures cost more and can break with its parent.')) +
+      '</p>' + doctrineBranchStatusHtml(s, kind, identityId) +
+      '<div class="gm-list">';
+    for (let i = 0; i < definitions.length; i++) {
+      const definition = definitions[i];
+      const current = FB.doctrineOption(
+        s, kind, identityId, definition.id).definition;
+      h += '<button type="button" class="actionbtn" data-doctrine-id="' +
+        esc(definition.id) + '">' + esc(FB.T(definition.name)) +
+        '<span class="doctrine-action-value">' + esc(FB.T(current.name)) +
+        '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="doctrine-close">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T(kind === 'faith' ? 'Reform Faith' : 'Reform Culture'), h,
+      { historyView:true, historyBackRender:function () {
+        if (kind === 'faith') UI.showFaithDetails(identityId);
+        else UI.showCultureDetails(identityId);
+      } });
+    const buttons = $('gm-body').querySelectorAll('[data-doctrine-id]');
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        UI.showDoctrineOptions(kind,
+          buttons[i].getAttribute('data-doctrine-id'));
+      });
+    }
+    $('doctrine-close').addEventListener('click', UI.backModal);
+  };
+
+  UI.showDoctrineOptions = function (kind, doctrineId) {
+    const s = FB.state;
+    const catalog = FBDATA.doctrineCatalogs &&
+      FBDATA.doctrineCatalogs[kind];
+    const definition = catalog && catalog[doctrineId];
+    if (!definition) return;
+    const h = doctrineOptionCardsHtml(s, kind, doctrineId) +
+      '<div class="gm-footer"><button class="btn" id="doctrine-options-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T(definition.name), h, {
+      historyView:true, noFocus:true,
+      historyBackRender:function () { UI.showDoctrineReform(kind); }
+    });
+    const buttons = $('gm-body').querySelectorAll('[data-doctrine-option]');
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        UI.showDoctrineConfirm(kind, doctrineId,
+          buttons[i].getAttribute('data-doctrine-option'));
+      });
+    }
+    $('doctrine-options-back').addEventListener('click', UI.backModal);
+  };
+
+  UI.showDoctrineConfirm = function (kind, doctrineId, optionId) {
+    const s = FB.state;
+    const status = FB.doctrineReformStatus(s, kind, doctrineId, optionId);
+    if (!status.ok) {
+      UI.toast(status.reason);
+      UI.showDoctrineOptions(kind, doctrineId);
+      return;
+    }
+    const catalog = FBDATA.doctrineCatalogs[kind][doctrineId];
+    const options = FB.doctrineOptions(kind, doctrineId);
+    let option = null;
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].id === optionId) option = options[i];
+    }
+    if (!option) return;
+    const h = '<p>' + esc(FB.T('Adopt {doctrine}: {option}?', {
+      doctrine:catalog.name, option:option.name
+    })) + '</p><div class="decision-cost"><b>' + esc(FB.T('Cost')) + ':</b> ' +
+      esc(doctrineCostText(status)) + '<br><b>' + esc(FB.T('Parent relationship')) +
+      ':</b> ' + esc(doctrineRelationText(kind, status.relation)) +
+      '<br><b>' + esc(FB.T('Total departures')) + ':</b> ' +
+      esc(status.divergence) + '</div><p class="muted">' +
+      esc(FB.T(option.desc || '')) + '</p><div class="gm-list"><button ' +
+      'type="button" class="actionbtn" id="doctrine-confirm">' +
+      esc(FB.T('Confirm reform')) + '</button></div><div class="gm-footer">' +
+      '<button class="btn" id="doctrine-confirm-back">' + esc(FB.T('Back')) +
+      '</button></div>';
+    openModal(FB.T('Confirm Doctrine Reform'), h, {
+      historyView:true, noFocus:true,
+      historyBackRender:function () {
+        UI.showDoctrineOptions(kind, doctrineId);
+      }
+    });
+    $('doctrine-confirm').addEventListener('click', function () {
+      const identityId = FB.applyDoctrineReform(s, kind, doctrineId, optionId);
+      if (!identityId) {
+        const live = FB.doctrineReformStatus(s, kind, doctrineId, optionId);
+        UI.toast(live.reason || FB.T('The reform could not be completed.'));
+        return;
+      }
+      UI.refresh();
+      if (kind === 'faith') UI.showFaithDetails(identityId);
+      else UI.showCultureDetails(identityId);
+    });
+    $('doctrine-confirm-back').addEventListener('click', UI.backModal);
+  };
+
   UI.showCultureDetails = function (cultureId) {
     const s = FB.state;
-    const culture = s && FBDATA.cultures && FBDATA.cultures[cultureId];
+    const culture = s && FB.cultureOf(cultureId, s);
     if (!culture) return;
-    const traditionId = FB.cultureGroup(cultureId);
-    const tradition = FB.cultureTraditionOf(cultureId) || {};
+    const traditionId = FB.cultureGroup(cultureId, s);
+    const tradition = FB.cultureTraditionOf(cultureId, s) || {};
     const icon = tradition.icon || '🌍';
     const traditionName = dt(
       s, 'cultureTradition', traditionId, tradition, 'name');
@@ -2387,15 +2580,24 @@ window.FB = window.FB || {};
     const femaleNames = (culture.female || []).slice(0, 4).join(', ');
     const h = panelh('Identity') +
       kv('Current culture', esc(cultureName(s, cultureId))) +
+      (culture.parent
+        ? kv('Parent culture', esc(cultureName(s, culture.parent))) : '') +
       kv('Regional tradition', esc(icon) + ' ' + esc(traditionName)) +
       panelh('Naming traditions') +
       kv('Dynasty style', esc(cultureDynastyStyleText(culture))) +
       (maleNames ? kv('Men’s names', esc(maleNames)) : '') +
       (femaleNames ? kv('Women’s names', esc(femaleNames)) : '') +
+      panelh('Doctrine') + doctrineRowsHtml(s, 'culture', cultureId) +
+      doctrineBranchStatusHtml(s, 'culture', cultureId) +
       panelh('Actions') + '<div class="gm-list identity-conversion-actions">' +
       identityConversionActionHtml(
         'culture-details-adopt', FB.T('Adopt a new culture…'),
-        FB.T('Open the personal or household culture picker.')) + '</div>' +
+        FB.T('Open the personal or household culture picker.')) +
+      (s.chars[s.player.charId].culture === cultureId
+        ? identityConversionActionHtml(
+          'culture-details-reform', FB.T('Reform cultural doctrines…'),
+          FB.T('Spend prestige to establish or reshape a cultural branch.')) : '') +
+      '</div>' +
       '<div class="gm-footer"><button class="btn" ' +
       'id="culture-details-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(icon + ' ' + cultureName(s, cultureId), h);
@@ -2403,6 +2605,10 @@ window.FB = window.FB || {};
     $('culture-details-adopt').addEventListener('click', function () {
       UI.closeModal();
       UI.showConversionPicker('culture');
+    });
+    const reform = $('culture-details-reform');
+    if (reform) reform.addEventListener('click', function () {
+      UI.showDoctrineReform('culture');
     });
   };
 
@@ -2454,7 +2660,6 @@ window.FB = window.FB || {};
     const origin = rel.originProvinceId && FB.world.byId[rel.originProvinceId];
     const founded = isFinite(rel.createdTurn)
       ? FB.dateAtTurn(s, rel.createdTurn) : null;
-    const doctrine = FB.marriageDoctrine(religionId, s);
     let h = '<div class="progressnote">' + esc(campaignFounded
       ? foundedFaithOriginText(
         s, religionId, rel, parent, founder, origin, founded)
@@ -2512,22 +2717,17 @@ window.FB = window.FB || {};
         kv('Office tradition', esc(faithRuleSource(
           s, religionId, 'head.officeId')));
     }
-    h += panelh('Doctrine') +
-      kv('Spouse limits (men / women)', esc(
-        doctrine.spouseLimit.m + ' / ' + doctrine.spouseLimit.f)) +
-      kv('Marriage accepted with', esc(faithRelationListText(
-        doctrine.acceptedRelations))) +
-      kv('Marriage rules from', esc(faithRuleSource(
-        s, religionId, 'marriage'))) +
-      kv('Clergy marriage', esc(rel.clergyMarriage
-        ? FB.T('Permitted') : FB.T('Forbidden'))) +
-      kv('Clergy rule from', esc(faithRuleSource(
-        s, religionId, 'clergyMarriage')));
+    h += panelh('Doctrine') + doctrineRowsHtml(s, 'faith', religionId) +
+      doctrineBranchStatusHtml(s, 'faith', religionId);
     h += panelh('Actions') +
       '<div class="gm-list identity-conversion-actions">' +
       identityConversionActionHtml(
         'faith-details-convert', FB.T('Convert your faith…'),
         FB.T('Open the personal, household, or realm faith picker.')) +
+      (s.chars[s.player.charId].religion === religionId
+        ? identityConversionActionHtml(
+          'faith-details-reform', FB.T('Reform religious doctrines…'),
+          FB.T('Spend piety to establish or reshape a religious branch.')) : '') +
       '</div><div class="gm-footer"><button class="btn" id="faith-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(rel.icon + ' ' + religionName(s, religionId), h);
@@ -2535,6 +2735,10 @@ window.FB = window.FB || {};
     $('faith-details-convert').addEventListener('click', function () {
       UI.closeModal();
       UI.showConversionPicker('faith');
+    });
+    const reform = $('faith-details-reform');
+    if (reform) reform.addEventListener('click', function () {
+      UI.showDoctrineReform('faith');
     });
   };
 
@@ -6140,7 +6344,7 @@ window.FB = window.FB || {};
 
   function countyCommunityAxisRow(s, kind, group, dominantId) {
     const definition = kind === 'faith'
-      ? FB.religionOf(group.id, s) : FBDATA.cultures[group.id];
+      ? FB.religionOf(group.id, s) : FB.cultureOf(group.id, s);
     const name = kind === 'faith'
       ? religionName(s, group.id) : cultureName(s, group.id);
     const icon = kind === 'faith' && definition && definition.icon

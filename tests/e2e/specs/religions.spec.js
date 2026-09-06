@@ -1,7 +1,12 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/cultures.js',
+  'js/actions.js',
+  'js/events.js',
   'js/model.js',
+  'js/save.js',
+  'js/technology.js',
   'js/ui_modals.js',
   'js/world.js'
 ]);
@@ -396,14 +401,120 @@ test('faith details explain a campaign branch, lineage, doctrine, and authority'
       'The Living Way › Latin Christianity › Christianity');
     await expect(body).toContainText('In communion');
     await expect(body).toContainText('does not recognize the Pope');
-    await expect(body).toContainText('Spouse limits (men / women)');
-    await expect(body).toContainText('2 / 1');
-    await expect(body).toContainText('Marriage rules from');
-    await expect(body).toContainText('The Living Way');
+    await expect(body).toContainText('Marriage form');
+    await expect(body).toContainText('Dual polygyny');
+    await expect(body).toContainText('Close-kin marriage');
+    await expect(body).toContainText('Clergy marriage');
     const close = body.locator(
       ':scope > .gm-footer > #faith-details-close');
     await expect(close).toBeVisible();
     const closeBox = await close.boundingBox();
     expect(closeBox.width).toBeGreaterThanOrEqual(199);
     expect(closeBox.height).toBeGreaterThanOrEqual(52);
+  });
+
+test('paid doctrine reform persists faith and culture branches with escalating divergence',
+  async function ({ page }, testInfo) {
+    primaryFileOnly(testInfo);
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var me = s.chars[s.player.charId];
+      me.religion = 'catholic';
+      me.culture = 'frankish';
+      var parentFaith = me.religion;
+      var parentCulture = me.culture;
+      s.player.piety = 5000;
+      s.player.prestige = 5000;
+      s.player.war = null;
+      s.player.cooldowns = {};
+      var catholicCloseKin = FB.doctrineOption(
+        s, 'faith', 'catholic', 'close_kin').definition.id;
+      var zoroastrianCloseKin = FB.doctrineOption(
+        s, 'faith', 'zoroastrian', 'close_kin').definition.id;
+
+      var closeKinStatus = FB.doctrineReformStatus(
+        s, 'faith', 'close_kin', 'sanctioned');
+      var faithId = FB.applyDoctrineReform(
+        s, 'faith', 'close_kin', 'sanctioned');
+      delete s.player.cooldowns['reform_doctrine:faith'];
+      FB.applyDoctrineReform(s, 'faith', 'marriage_form', 'plural');
+      delete s.player.cooldowns['reform_doctrine:faith'];
+      FB.applyDoctrineReform(s, 'faith', 'divorce', 'sunder');
+      var faith = FB.religionOf(faithId, s);
+
+      var raidStatus = FB.doctrineReformStatus(
+        s, 'culture', 'raiding', 'practiced');
+      var cultureId = FB.applyDoctrineReform(
+        s, 'culture', 'raiding', 'practiced');
+      delete s.player.cooldowns['reform_doctrine:culture'];
+      FB.applyDoctrineReform(s, 'culture', 'military', 'huscarl');
+      delete s.player.cooldowns['reform_doctrine:culture'];
+      FB.applyDoctrineReform(s, 'culture', 'learning', 'steppe');
+      var culture = FB.cultureOf(cultureId, s);
+      s.realms.e2e_doctrine = {
+        id:'e2e_doctrine', alive:true, liege:null,
+        ruler:{ culture:cultureId }, religion:'catholic'
+      };
+      var learning = FB.techTraditionsForRealm(s, 'e2e_doctrine');
+      delete s.realms.e2e_doctrine;
+      var saved = JSON.parse(FB.save.serialize());
+      FB.save.restore(JSON.parse(JSON.stringify(saved)));
+      var restored = FB.state;
+
+      return {
+        parentFaith:parentFaith,
+        faithId:faithId,
+        catholicCloseKin:catholicCloseKin,
+        zoroastrianCloseKin:zoroastrianCloseKin,
+        closeKinCost:closeKinStatus.pietyCost,
+        faithParent:faith.parent,
+        faithRelation:faith.relationToParent,
+        faithDivergence:FB.doctrineDivergence(
+          s, 'faith', faithId, parentFaith).count,
+        closeKin:FB.marriageDoctrine(faithId, s).kinship.siblingRite,
+        closeKinRoute:FB.siblingCourtshipRoute(s,
+          { religion:faithId }, { religion:faithId }),
+        head:faith.head,
+        parentCulture:parentCulture,
+        cultureId:cultureId,
+        raidCost:raidStatus.prestigeCost,
+        cultureParent:culture.parent,
+        cultureRelation:culture.relationToParent,
+        cultureDivergence:FB.doctrineDivergence(
+          s, 'culture', cultureId, parentCulture).count,
+        raids:FB.hasRaidingTradition(cultureId, null, s),
+        military:FB.cultureValue(s, cultureId, 'doctrines.military').value,
+        learning:learning,
+        restoredCulture:FB.cultureExists(cultureId, restored),
+        restoredLineage:FB.cultureLineage(cultureId, restored),
+        restoredFaith:FB.faithExists(faithId, restored)
+      };
+    });
+
+    expect(result.faithId).toMatch(/^generated_faith_/);
+    expect(result.catholicCloseKin).toBe('forbidden');
+    expect(result.zoroastrianCloseKin).toBe('xwedodah');
+    expect(result.closeKinCost).toBe(400);
+    expect(result.faithParent).toBe(result.parentFaith);
+    expect(result.faithRelation).toBe('schismatic');
+    expect(result.faithDivergence).toBe(3);
+    expect(result.closeKin).toBe('sanctioned');
+    expect(result.closeKinRoute).toBe('sanctioned');
+    expect(result.head).toBe(null);
+    expect(result.cultureId).toMatch(/^culture_/);
+    expect(result.raidCost).toBe(300);
+    expect(result.cultureParent).toBe(result.parentCulture);
+    expect(result.cultureRelation).toBe('foreign');
+    expect(result.cultureDivergence).toBe(3);
+    expect(result.raids).toBe(true);
+    expect(result.military).toBe('huscarl');
+    expect(result.learning).toContain('steppe');
+    expect(result.restoredCulture).toBe(true);
+    expect(result.restoredLineage).toEqual([
+      result.cultureId, result.parentCulture
+    ]);
+    expect(result.restoredFaith).toBe(true);
   });

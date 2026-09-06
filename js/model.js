@@ -14,78 +14,435 @@ window.FB = window.FB || {};
     return FB.T(FB.SKILL_NAMES[id] || id);
   };
 
-  FB.cultureOf = function (id) { return FBDATA.cultures[id] || FBDATA.cultures.frankish; };
+  /* Authored and campaign-founded cultures share a small inheritance graph.
+     Generated records store only their parent and changed fields; names,
+     appearance pools, and unaltered doctrines continue to follow the parent. */
+  let staticCultureCompiled = null;
+  let liveCultureState = null;
+  let liveCultureRevision = -1;
+  let liveCultureCompiled = null;
 
-  FB.cultureGroup = function (cid) {
-    const culture = FBDATA.cultures && FBDATA.cultures[cid];
+  function cultureRawTable(state) {
+    const table = {};
+    const base = FBDATA.cultures || {};
+    for (const id in base) if (own(base, id)) table[id] = base[id];
+    const generated = state && plainObject(state.cultures) ? state.cultures : null;
+    if (generated) for (const id in generated) if (own(generated, id)) {
+      table[id] = generated[id];
+    }
+    return table;
+  }
+
+  function cultureDefaults(id) {
+    const table = FBDATA.cultureDoctrineDefaults || {};
+    const out = cloneFaithValue(table.default || {});
+    if (plainObject(table[id])) mergeFaithValues(out, table[id], {}, '', '');
+    if (out.learning === undefined) {
+      const traditions = FBDATA.techTraditions || {};
+      for (const traditionId in traditions) {
+        if (!own(traditions, traditionId)) continue;
+        const definition = traditions[traditionId];
+        const cultures = definition && Array.isArray(definition.cultures)
+          ? definition.cultures : [];
+        if (cultures.indexOf(id) >= 0) {
+          out.learning = traditionId;
+          break;
+        }
+      }
+      if (out.learning === undefined) out.learning = 'latin';
+    }
+    return out;
+  }
+
+  function doctrineCatalogErrors() {
+    const errors = [];
+    const catalogs = FBDATA.doctrineCatalogs;
+    if (!plainObject(catalogs)) {
+      return ['Doctrine data: FBDATA.doctrineCatalogs must be an object.'];
+    }
+    function validateCost(where, cost) {
+      if (!plainObject(cost)) {
+        errors.push(where + ' cost must be an object.');
+        return;
+      }
+      for (const resource in cost) if (own(cost, resource)) {
+        if ((resource !== 'piety' && resource !== 'prestige') ||
+            typeof cost[resource] !== 'number' ||
+            !isFinite(cost[resource]) || cost[resource] < 0) {
+          errors.push(where + ' has an invalid ' + resource + ' cost.');
+        }
+      }
+    }
+    for (let ki = 0; ki < 2; ki++) {
+      const kind = ki ? 'culture' : 'faith';
+      const catalog = catalogs[kind];
+      if (!plainObject(catalog)) {
+        errors.push('Doctrine data: ' + kind + ' catalog must be an object.');
+        continue;
+      }
+      for (const id in catalog) if (own(catalog, id)) {
+        const definition = catalog[id];
+        const where = 'Doctrine ' + kind + '.' + id;
+        if (!plainObject(definition)) {
+          errors.push(where + ' must be an object.');
+          continue;
+        }
+        if (typeof definition.name !== 'string' || !definition.name) {
+          errors.push(where + ' requires a name.');
+        }
+        if (typeof definition.path !== 'string' || !definition.path) {
+          errors.push(where + ' requires a path.');
+        }
+        if (definition.order !== undefined &&
+            (typeof definition.order !== 'number' ||
+             !isFinite(definition.order))) {
+          errors.push(where + ' order must be finite.');
+        }
+        if (definition.shownAboveDoctrine !== undefined &&
+            typeof definition.shownAboveDoctrine !== 'boolean') {
+          errors.push(where + ' shownAboveDoctrine must be boolean.');
+        }
+        if (definition.cost !== undefined) {
+          validateCost(where, definition.cost);
+        }
+        if (definition.optionsFrom !== undefined) {
+          if (definition.optionsFrom !== 'cultureTraditions' &&
+              definition.optionsFrom !== 'techTraditions') {
+            errors.push(where + ' has an unknown optionsFrom source.');
+          }
+          if (definition.cost === undefined) {
+            errors.push(where + ' requires a cost for generated options.');
+          }
+          continue;
+        }
+        if (!plainObject(definition.options) ||
+            !Object.keys(definition.options).length) {
+          errors.push(where + ' requires options.');
+          continue;
+        }
+        for (const optionId in definition.options) {
+          if (!own(definition.options, optionId)) continue;
+          const option = definition.options[optionId];
+          const optionWhere = where + '.' + optionId;
+          if (!plainObject(option)) {
+            errors.push(optionWhere + ' must be an object.');
+            continue;
+          }
+          if (typeof option.name !== 'string' || !option.name) {
+            errors.push(optionWhere + ' requires a name.');
+          }
+          if (!own(option, 'value') || !jsonSafeFaithValue(option.value)) {
+            errors.push(optionWhere + ' requires a JSON-safe value.');
+          }
+          validateCost(optionWhere,
+            option.cost !== undefined ? option.cost : definition.cost);
+        }
+      }
+    }
+    return errors;
+  }
+
+  function compileCultureTable(state) {
+    const raw = cultureRawTable(state);
+    const resolved = {}, errors = [], visiting = {};
+    const traditions = FBDATA.cultureTraditions || {};
+    const slug = /^[a-z0-9]+(?:_[a-z0-9]+)*$/;
+    function fault(id, text) { errors.push('Culture ' + id + ': ' + text); }
+    const doctrineErrors = doctrineCatalogErrors();
+    for (let dei = 0; dei < doctrineErrors.length; dei++) {
+      errors.push(doctrineErrors[dei]);
+    }
+    if (!plainObject(FBDATA.cultureTraditions)) {
+      errors.push('Culture data: FBDATA.cultureTraditions must be an object keyed by tradition id.');
+    } else {
+      if (!own(traditions, 'other')) {
+        errors.push('Culture data: missing other tradition.');
+      }
+      for (const traditionId in traditions) if (own(traditions, traditionId)) {
+        const tradition = traditions[traditionId];
+        if (!slug.test(traditionId)) {
+          errors.push('Culture data: invalid tradition id ' + traditionId + '.');
+        }
+        if (!plainObject(tradition)) {
+          errors.push('Culture data: tradition ' + traditionId +
+            ' must be an object.');
+          continue;
+        }
+        if (typeof tradition.name !== 'string' || !tradition.name) {
+          errors.push('Culture data: tradition ' + traditionId +
+            ' requires a name.');
+        }
+        if (tradition.icon !== undefined && typeof tradition.icon !== 'string') {
+          errors.push('Culture data: tradition ' + traditionId +
+            ' icon must be a string.');
+        }
+        if (tradition.order !== undefined &&
+            (typeof tradition.order !== 'number' || !isFinite(tradition.order))) {
+          errors.push('Culture data: tradition ' + traditionId +
+            ' order must be finite.');
+        }
+      }
+    }
+    if (!plainObject(FBDATA.cultures)) {
+      errors.push('Culture data: FBDATA.cultures must be an object keyed by culture id.');
+    }
+    function resolve(id) {
+      if (resolved[id]) return resolved[id];
+      const def = raw[id];
+      if (!plainObject(def)) { fault(id, 'definition must be an object.'); return null; }
+      if (!jsonSafeFaithValue(def)) {
+        fault(id, 'definition must contain only finite JSON-safe values.');
+        return null;
+      }
+      if (visiting[id]) { fault(id, 'inheritance cycle.'); return null; }
+      visiting[id] = true;
+      const parentId = def.parent ? String(def.parent) : null;
+      const parent = parentId && raw[parentId] ? resolve(parentId) : null;
+      if (parentId && !parent) fault(id, 'unknown parent ' + parentId + '.');
+      const effective = parent ? cloneFaithValue(parent) : {};
+      delete effective.id;
+      delete effective.parent;
+      delete effective.relationToParent;
+      delete effective.createdTurn;
+      delete effective.founderId;
+      delete effective.originProvinceId;
+      const sources = parent ? cloneFaithValue(parent._cultureSources) : {};
+      if (!parent) {
+        effective.doctrines = cultureDefaults(id);
+        for (const key in effective.doctrines) if (own(effective.doctrines, key)) {
+          sources['doctrines.' + key] = id;
+        }
+      }
+      for (const key in def) {
+        if (!own(def, key) || key === 'id' || key === 'parent' ||
+            key === 'relationToParent' || key === 'createdTurn' ||
+            key === 'founderId' || key === 'originProvinceId' || key === 'name') continue;
+        if (plainObject(def[key])) {
+          if (!plainObject(effective[key])) effective[key] = {};
+          mergeFaithValues(effective[key], def[key], sources, id, key);
+        } else {
+          effective[key] = cloneFaithValue(def[key]);
+          sources[key] = id;
+        }
+      }
+      effective.id = id;
+      effective.name = typeof def.name === 'string' && def.name
+        ? def.name : parent && parent.name || id;
+      if (!effective.tradition) effective.tradition = 'other';
+      if (!effective.dyn) effective.dyn = 'of_place';
+      effective.parent = parentId;
+      effective.relationToParent = def.relationToParent ||
+        (parentId ? 'same_group' : null);
+      effective.createdTurn = def.createdTurn;
+      effective.founderId = def.founderId;
+      effective.originProvinceId = def.originProvinceId;
+      const lineage = [id];
+      if (parent && parent._cultureLineage) {
+        for (let i = 0; i < parent._cultureLineage.length; i++) {
+          lineage.push(parent._cultureLineage[i]);
+        }
+      }
+      Object.defineProperty(effective, '_cultureLineage', {
+        value:lineage, enumerable:false
+      });
+      Object.defineProperty(effective, '_cultureSources', {
+        value:sources, enumerable:false
+      });
+      Object.defineProperty(effective, '_cultureRaw', {
+        value:def, enumerable:false
+      });
+      resolved[id] = effective;
+      visiting[id] = false;
+      return effective;
+    }
+    for (const id in raw) if (own(raw, id)) resolve(id);
+    for (const id in resolved) if (own(resolved, id)) {
+      const culture = resolved[id];
+      if (!slug.test(id)) fault(id, 'id must use lowercase letters, numbers, and underscores.');
+      if (!culture.name) fault(id, 'requires a name.');
+      if (!own(traditions, culture.tradition)) {
+        errors.push('Culture data: culture ' + id +
+          ' has invalid tradition ' + culture.tradition + '.');
+      }
+      const rawCulture = raw[id];
+      if (rawCulture.relationToParent !== undefined && !culture.parent) {
+        fault(id, 'relationToParent requires a parent.');
+      } else if (rawCulture.relationToParent !== undefined &&
+          rawCulture.relationToParent !== 'same_group' &&
+          rawCulture.relationToParent !== 'foreign') {
+        fault(id, 'relationToParent must be same_group or foreign.');
+      }
+    }
+    return { raw:raw, resolved:resolved, errors:errors };
+  }
+
+  function stateCultureRevision(state) {
+    return state && isFinite(state._cultureRevision) ? state._cultureRevision : 0;
+  }
+
+  function compiledCultures(state) {
+    state = state === undefined ? FB.state : state;
+    if (state && plainObject(state.cultures) && Object.keys(state.cultures).length) {
+      const revision = stateCultureRevision(state);
+      if (liveCultureState !== state || liveCultureRevision !== revision ||
+          !liveCultureCompiled) {
+        liveCultureState = state;
+        liveCultureRevision = revision;
+        liveCultureCompiled = compileCultureTable(state);
+      }
+      return liveCultureCompiled;
+    }
+    if (!staticCultureCompiled) staticCultureCompiled = compileCultureTable(null);
+    return staticCultureCompiled;
+  }
+
+  function touchCultureState(state) {
+    if (!state) return;
+    const next = stateCultureRevision(state) + 1;
+    try {
+      Object.defineProperty(state, '_cultureRevision', {
+        value:next, writable:true, configurable:true, enumerable:false
+      });
+    } catch (e) { state._cultureRevision = next; }
+    if (liveCultureState === state) liveCultureCompiled = null;
+  }
+
+  FB.invalidateCultureData = function () {
+    staticCultureCompiled = null;
+    liveCultureCompiled = null;
+  };
+
+  FB.ensureCultureState = function (state) {
+    if (!state) return {};
+    let changed = false;
+    if (!plainObject(state.cultures)) { state.cultures = {}; changed = true; }
+    if (!isFinite(state.cultureNextId) || state.cultureNextId < 1) {
+      state.cultureNextId = 1;
+      changed = true;
+    } else state.cultureNextId = Math.floor(state.cultureNextId);
+    if (changed) touchCultureState(state);
+    return state.cultures;
+  };
+
+  FB.configureCultures = function (state) {
+    if (state) touchCultureState(state);
+    else FB.invalidateCultureData();
+    return compiledCultures(state).errors.slice();
+  };
+
+  FB.cultureIds = function (state) {
+    return Object.keys(compiledCultures(state).resolved);
+  };
+
+  FB.cultureExists = function (id, state) {
+    return !!compiledCultures(state).resolved[id];
+  };
+
+  FB.cultureOf = function (id, state) {
+    const table = compiledCultures(state).resolved;
+    return table[id] || table.frankish || table[Object.keys(table)[0]] || null;
+  };
+
+  FB.cultureLineage = function (id, state) {
+    const culture = compiledCultures(state).resolved[id];
+    return culture && culture._cultureLineage ? culture._cultureLineage.slice() : [];
+  };
+
+  FB.cultureIsA = function (id, ancestorId, state) {
+    return FB.cultureLineage(id, state).indexOf(ancestorId) >= 0;
+  };
+
+  FB.cultureValue = function (state, id, path) {
+    const culture = compiledCultures(state).resolved[id];
+    if (!culture) return { value:undefined, sourceId:null };
+    let value = culture;
+    const parts = String(path || '').split('.');
+    for (let i = 0; i < parts.length; i++) {
+      if (value === undefined || value === null) break;
+      value = value[parts[i]];
+    }
+    let sourceId = id;
+    let probe = String(path || '');
+    while (probe) {
+      if (culture._cultureSources[probe]) {
+        sourceId = culture._cultureSources[probe];
+        break;
+      }
+      const dot = probe.lastIndexOf('.');
+      probe = dot >= 0 ? probe.slice(0, dot) : '';
+    }
+    return { value:value, sourceId:sourceId };
+  };
+
+  FB.cultureGroup = function (cid, state) {
+    const culture = FB.cultureOf(cid, state);
     const id = culture && culture.tradition;
-    return id && FBDATA.cultureTraditions &&
-      Object.prototype.hasOwnProperty.call(FBDATA.cultureTraditions, id)
+    return id && FBDATA.cultureTraditions && own(FBDATA.cultureTraditions, id)
       ? id : 'other';
   };
 
-  FB.cultureTraditionOf = function (cid) {
-    const id = FB.cultureGroup(cid);
+  FB.cultureTraditionOf = function (cid, state) {
+    const id = FB.cultureGroup(cid, state);
     return FBDATA.cultureTraditions && FBDATA.cultureTraditions[id] ||
       FBDATA.cultureTraditions && FBDATA.cultureTraditions.other || null;
   };
 
-  FB.validateCultureData = function () {
-    const errors = [];
-    const traditions = FBDATA.cultureTraditions;
-    const cultures = FBDATA.cultures;
-    const slug = /^[a-z0-9]+(?:_[a-z0-9]+)*$/;
-    if (!traditions || typeof traditions !== 'object' || Array.isArray(traditions)) {
-      return ['Culture data: FBDATA.cultureTraditions must be an object keyed by tradition id.'];
-    }
-    if (!Object.prototype.hasOwnProperty.call(traditions, 'other')) {
-      errors.push('Culture data: missing other tradition.');
-    }
-    for (const tid in traditions) {
-      if (!Object.prototype.hasOwnProperty.call(traditions, tid)) continue;
-      const tradition = traditions[tid];
-      if (!slug.test(tid)) errors.push('Culture data: invalid tradition id ' + tid + '.');
-      if (!tradition || typeof tradition !== 'object' || Array.isArray(tradition)) {
-        errors.push('Culture data: tradition ' + tid + ' must be an object.');
-        continue;
-      }
-      if (typeof tradition.name !== 'string' || !tradition.name) {
-        errors.push('Culture data: tradition ' + tid + ' requires a name.');
-      }
-      if (tradition.icon !== undefined && typeof tradition.icon !== 'string') {
-        errors.push('Culture data: tradition ' + tid + ' icon must be a string.');
-      }
-      if (tradition.order !== undefined &&
-          (typeof tradition.order !== 'number' || !isFinite(tradition.order))) {
-        errors.push('Culture data: tradition ' + tid + ' order must be finite.');
-      }
-    }
-    if (!cultures || typeof cultures !== 'object' || Array.isArray(cultures)) {
-      errors.push('Culture data: FBDATA.cultures must be an object keyed by culture id.');
-      return errors;
-    }
-    for (const cid in cultures) {
-      if (!Object.prototype.hasOwnProperty.call(cultures, cid)) continue;
-      const culture = cultures[cid];
-      if (!culture || typeof culture !== 'object' || Array.isArray(culture)) {
-        errors.push('Culture data: culture ' + cid + ' must be an object.');
-        continue;
-      }
-      if (culture.tradition !== undefined &&
-          !Object.prototype.hasOwnProperty.call(traditions, culture.tradition)) {
-        errors.push('Culture data: culture ' + cid + ' has invalid tradition ' +
-          culture.tradition + '.');
-      }
-    }
-    return errors;
+  FB.validateCultureData = function (state) {
+    return compileCultureTable(state || null).errors.slice();
   };
 
   FB.cultureRelation = function (state, observerId, targetId) {
-    if (observerId === targetId) return 'same';
-    const g1 = FB.cultureGroup(observerId);
-    const g2 = FB.cultureGroup(targetId);
+    if (observerId === targetId && FB.cultureExists(observerId, state)) {
+      return 'same';
+    }
+    if (!FB.cultureExists(observerId, state) ||
+        !FB.cultureExists(targetId, state)) return 'foreign';
+    const observerLine = FB.cultureLineage(observerId, state);
+    const targetLine = FB.cultureLineage(targetId, state);
+    let observerCommon = -1, targetCommon = -1;
+    for (let oi = 0; oi < observerLine.length && observerCommon < 0; oi++) {
+      const ti = targetLine.indexOf(observerLine[oi]);
+      if (ti >= 0) { observerCommon = oi; targetCommon = ti; }
+    }
+    const compiled = compiledCultures(state).resolved;
+    for (let oi = 0; oi < observerCommon; oi++) {
+      if (compiled[observerLine[oi]].relationToParent === 'foreign') {
+        return 'foreign';
+      }
+    }
+    for (let ti = 0; ti < targetCommon; ti++) {
+      if (compiled[targetLine[ti]].relationToParent === 'foreign') {
+        return 'foreign';
+      }
+    }
+    const g1 = FB.cultureGroup(observerId, state);
+    const g2 = FB.cultureGroup(targetId, state);
     if (g1 === g2 && g1 !== 'other') return 'same_group';
     return 'foreign';
+  };
+
+  FB.createCulture = function (state, definition) {
+    if (!state || !plainObject(definition)) return null;
+    FB.ensureCultureState(state);
+    const requested = definition.id && String(definition.id);
+    let id = requested;
+    if (!id) {
+      do { id = 'culture_' + state.cultureNextId++; }
+      while (FB.cultureExists(id, state));
+    }
+    if (!/^[a-z0-9_]+$/.test(id) || FB.cultureExists(id, state)) return null;
+    const stored = cloneFaithValue(definition);
+    delete stored.id;
+    if (stored.createdTurn === undefined) stored.createdTurn = Number(state.turn) || 0;
+    state.cultures[id] = stored;
+    touchCultureState(state);
+    const errors = FB.validateCultureData(state);
+    if (errors.length) {
+      delete state.cultures[id];
+      touchCultureState(state);
+      return null;
+    }
+    return id;
   };
 
   /* ---------- faith definitions ----------
@@ -548,6 +905,129 @@ window.FB = window.FB || {};
       }
     }
     return { value:faithPath(rel, path), sourceId:sourceId };
+  };
+
+  function doctrineEqual(a, b) {
+    if (a === b) return true;
+    if (Array.isArray(a) || Array.isArray(b)) {
+      if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+        return false;
+      }
+      for (let i = 0; i < a.length; i++) {
+        if (!doctrineEqual(a[i], b[i])) return false;
+      }
+      return true;
+    }
+    if (plainObject(a) || plainObject(b)) {
+      if (!plainObject(a) || !plainObject(b)) return false;
+      const ak = Object.keys(a).sort();
+      const bk = Object.keys(b).sort();
+      if (!doctrineEqual(ak, bk)) return false;
+      for (let i = 0; i < ak.length; i++) {
+        if (!doctrineEqual(a[ak[i]], b[ak[i]])) return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  FB.doctrineDefinitions = function (kind) {
+    const catalog = FBDATA.doctrineCatalogs && FBDATA.doctrineCatalogs[kind];
+    if (!plainObject(catalog)) return [];
+    const out = [];
+    for (const id in catalog) if (own(catalog, id)) {
+      const definition = cloneFaithValue(catalog[id]);
+      definition.id = id;
+      out.push(definition);
+    }
+    out.sort(function (a, b) {
+      const ao = a.order === undefined ? 999 : Number(a.order);
+      const bo = b.order === undefined ? 999 : Number(b.order);
+      return ao - bo ||
+        String(a.id).localeCompare(String(b.id));
+    });
+    return out;
+  };
+
+  FB.doctrineOptions = function (kind, doctrineId) {
+    const catalog = FBDATA.doctrineCatalogs && FBDATA.doctrineCatalogs[kind];
+    const definition = catalog && catalog[doctrineId];
+    if (!definition) return [];
+    let table = definition.options || {};
+    if (definition.optionsFrom === 'cultureTraditions') {
+      table = {};
+      for (const id in (FBDATA.cultureTraditions || {})) {
+        if (!own(FBDATA.cultureTraditions, id)) continue;
+        const source = FBDATA.cultureTraditions[id];
+        table[id] = {
+          name:source.name, desc:'Adopt this regional cultural affinity.',
+          value:id, cost:definition.cost
+        };
+      }
+    } else if (definition.optionsFrom === 'techTraditions') {
+      table = {};
+      for (const id in (FBDATA.techTraditions || {})) {
+        if (!own(FBDATA.techTraditions, id)) continue;
+        const source = FBDATA.techTraditions[id];
+        table[id] = {
+          name:source.name, desc:'Follow this tradition of learning and innovation.',
+          value:id, cost:definition.cost
+        };
+      }
+    }
+    const out = [];
+    for (const id in table) if (own(table, id)) {
+      const option = cloneFaithValue(table[id]);
+      option.id = id;
+      if (!option.cost && definition.cost) option.cost = cloneFaithValue(definition.cost);
+      out.push(option);
+    }
+    return out;
+  };
+
+  FB.doctrineValue = function (state, kind, identityId, doctrineId) {
+    const catalog = FBDATA.doctrineCatalogs && FBDATA.doctrineCatalogs[kind];
+    const definition = catalog && catalog[doctrineId];
+    if (!definition) return { value:undefined, sourceId:null };
+    return kind === 'faith'
+      ? FB.faithValue(state, identityId, definition.path)
+      : FB.cultureValue(state, identityId, definition.path);
+  };
+
+  FB.doctrineOption = function (state, kind, identityId, doctrineId) {
+    const found = FB.doctrineValue(state, kind, identityId, doctrineId);
+    const options = FB.doctrineOptions(kind, doctrineId);
+    for (let i = 0; i < options.length; i++) {
+      if (doctrineEqual(found.value, options[i].value)) {
+        return { definition:options[i], sourceId:found.sourceId };
+      }
+    }
+    return { definition:{ id:'custom', name:'Custom doctrine',
+      desc:'This identity uses a modded doctrine value.', value:found.value },
+      sourceId:found.sourceId };
+  };
+
+  FB.doctrineDivergence = function (state, kind, identityId, againstId,
+      proposedDoctrineId, proposedOptionId) {
+    const definitions = FB.doctrineDefinitions(kind);
+    let changed = 0;
+    const differences = [];
+    for (let i = 0; i < definitions.length; i++) {
+      const definition = definitions[i];
+      let current = FB.doctrineValue(state, kind, identityId, definition.id).value;
+      if (definition.id === proposedDoctrineId) {
+        const options = FB.doctrineOptions(kind, definition.id);
+        for (let oi = 0; oi < options.length; oi++) {
+          if (options[oi].id === proposedOptionId) current = options[oi].value;
+        }
+      }
+      const baseline = FB.doctrineValue(state, kind, againstId, definition.id).value;
+      if (!doctrineEqual(current, baseline)) {
+        changed++;
+        differences.push(definition.id);
+      }
+    }
+    return { count:changed, doctrineIds:differences };
   };
 
   FB.faithDataText = function (state, viewer, id, path, ctx) {

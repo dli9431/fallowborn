@@ -48,7 +48,7 @@ window.FB = window.FB || {};
       : dt(s, 'action', id, action, 'label');
   }
   function cultureName(s, id) {
-    const def = FB.cultureOf(id);
+    const def = FB.cultureOf(id, s);
     return dt(s, 'culture', id, def, 'name');
   }
   function religionName(s, id) {

@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js',
+  'js/model.js',
   'js/world.js',
   'js/events.js',
   'js/fortifications.js',
@@ -287,6 +288,13 @@ test('unit-class gates read the player character culture',
       out.norseHuscarl = FB.unitClassUnlocked(state, 'huscarl');
       out.norseCamel = FB.unitClassUnlocked(state, 'camel');
       out.norsePike = FB.unitClassUnlocked(state, 'pike'); // tech-gated: absent
+      var branch = FB.createCulture(state, {
+        id:'e2e_martial_franks', name:'Martial Franks', parent:'frankish',
+        doctrines:{ military:'huscarl' }
+      });
+      me.culture = branch;
+      out.reformedHuscarl = FB.unitClassUnlocked(state, 'huscarl');
+      out.reformedCamel = FB.unitClassUnlocked(state, 'camel');
       me.culture = keptCulture;
       return out;
     });
@@ -295,6 +303,8 @@ test('unit-class gates read the player character culture',
     expect(result.norseHuscarl).toBe(true);
     expect(result.norseCamel).toBe(false);
     expect(result.norsePike).toBe(false);
+    expect(result.reformedHuscarl).toBe(true);
+    expect(result.reformedCamel).toBe(false);
   });
 
 test('the selected host readout lists unlocked classes with their icons',

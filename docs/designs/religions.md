@@ -56,6 +56,11 @@ The initial property vocabulary is intentionally extensible rather than a closed
 - optional `head` metadata, including a stable office, holder-sex eligibility,
   recovery, and great holy wars.
 
+The player-reformable subset is declared separately in
+[doctrines.md](doctrines.md). Its catalog maps options onto these same inherited paths,
+so the details sheet, cost preview, and mechanics cannot drift into separate doctrine
+lists.
+
 Engine code reads these through `FB.religionOf`, `FB.faithValue`, and capability helpers,
 not by switching on ids or broad groups. `FB.faithValue` also reports the ancestor that
 authored the effective value. That source id owns its localization key.
@@ -195,3 +200,8 @@ and relationship changes therefore round-trip, while every older version-3 save 
 as a campaign with no generated faiths. Title snapshots retain the legacy `group`/`tier`
 fields and add source faith, sex, and English fallback words, so both old snapshots and
 new generated-faith snapshots remain renderable.
+
+Paid doctrine reform uses this graph directly. The first change creates an in-fold
+campaign child. Further departures increase the price and change the parent relation to
+schismatic, then hostile. A schismatic reform no longer recognizes the inherited
+central office. Full rules: [doctrines.md](doctrines.md).
