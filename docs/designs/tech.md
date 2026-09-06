@@ -273,6 +273,11 @@ entry or adds one for a separately gateable option. This procedural rule catches
 the validator can verify a declaration but cannot infer that arbitrary JavaScript introduced
 a semantic feature.
 
+AI consolidation-first conquest planning is recorded as
+`ai_dejure_expansion_planning` with mode `none`. Coherent world expansion is baseline
+strategic behavior, and gating it on each simulated realm's research would make border
+quality arbitrary rather than create a meaningful player-facing fallback.
+
 Player-initiated descendant-to-royal marriage negotiation is recorded as
 `player_initiated_royal_family_matches` with mode `none`. It is baseline dynastic and
 social play from birth onward, while the counterpart court's research is AI-controlled,

@@ -21118,6 +21118,19 @@ window.FB = window.FB || {};
     const defender = defenderRealm ? defenderRealm.name : context.defender;
     const targetId = war.target || casus.target;
     const target = targetId && FB.world.byId[targetId];
+    if (type === 'consolidation' && target && casus.titleId) {
+      const titleTable = casus.titleKind === 'duchy' ? FBDATA.duchies :
+        (casus.titleKind === 'kingdom' ? FBDATA.kingdoms : FBDATA.empires);
+      const title = titleTable && titleTable[casus.titleId];
+      const titleName = title && title.name || casus.titleId;
+      return attackerGoal
+        ? FB.T('Take {county} to consolidate {title}.', {
+          county:target.name, title:titleName
+        })
+        : FB.T('Hold {county} outside {attacker}’s claim to {title}.', {
+          county:target.name, attacker:attacker, title:titleName
+        });
+    }
     if (type === 'independence' || type === 'defection' ||
         casus.label === 'Breakaway war') {
       return attackerGoal

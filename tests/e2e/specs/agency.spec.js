@@ -603,6 +603,124 @@ test('a royal family sheet arranges an exact match with a managed descendant fro
       }, setup.partnerId));
   });
 
+test('royal family proposals reach fellow and subordinate courts under one sovereign',
+  async function ({ page }, testInfo) {
+    await startAgencyGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var rid = Object.keys(s.realms).filter(function (id) {
+        var realm = s.realms[id];
+        return id !== 'player' && realm && realm.alive && realm.ruler &&
+          FB.realmFamilySnapshot(s, id).some(function (member) {
+            var c = member.charId && s.chars[member.charId];
+            return c && !c.dead && FB.ageOf(c, s.date.year) >= 0 &&
+              !(FB.isReigningRealmRuler && FB.isReigningRealmRuler(s, c)) &&
+              !FB.spousesSnapshot(s, c).length && !c.betrothedId &&
+              !(FB.papacyCelibateSnapshot &&
+                FB.papacyCelibateSnapshot(s, c));
+          });
+      })[0];
+      var realm = s.realms[rid];
+      var partner = FB.realmFamilySnapshot(s, rid).map(function (member) {
+        return member.charId && s.chars[member.charId];
+      }).filter(function (c) {
+        return c && !c.dead && FB.ageOf(c, s.date.year) >= 0 &&
+          !(FB.isReigningRealmRuler && FB.isReigningRealmRuler(s, c)) &&
+          !FB.spousesSnapshot(s, c).length && !c.betrothedId &&
+          !(FB.papacyCelibateSnapshot && FB.papacyCelibateSnapshot(s, c));
+      })[0];
+      var sovereignId = Object.keys(s.realms).filter(function (id) {
+        var candidate = s.realms[id];
+        return id !== rid && id !== 'player' && candidate &&
+          candidate.alive && !candidate.liege;
+      })[0];
+      var foreignId = Object.keys(s.realms).filter(function (id) {
+        var candidate = s.realms[id];
+        return id !== rid && id !== sovereignId && id !== 'player' &&
+          candidate && candidate.alive && !candidate.liege;
+      })[0];
+      if (!rid || !partner || !sovereignId || !foreignId) {
+        return { found:false };
+      }
+
+      s.realms[sovereignId].liege = null;
+      s.realms[sovereignId].rank = Math.max(3,
+        s.realms[sovereignId].rank || 0);
+      s.realms[foreignId].liege = null;
+      var middleId = 'e2e_marriage_middle_vassal';
+      s.realms[middleId] = {
+        id:middleId, name:'Middle Vassal', alive:true, rank:2,
+        liege:sovereignId, capital:p.provinceId,
+        ruler:{ name:'Middle Ruler', sex:'m', mar:5 }
+      };
+      s.realms.player = {
+        id:'player', name:'Player Duchy', alive:true, rank:2,
+        liege:sovereignId, capital:p.provinceId,
+        ruler:{ name:me.name, sex:me.sex, mar:5 }
+      };
+      p.tier = 5;
+      p.liege = sovereignId;
+      p.prestige = 1000;
+      p.gold = 1000;
+      realm.rank = 2;
+      realm.liege = sovereignId;
+      partner.religion = me.religion;
+      partner.spouseId = null;
+      partner.betrothedId = null;
+      var child = FB.makeCharacter(s, {
+        name:'Intra-realm Match',
+        sex:partner.sex === 'm' ? 'f' : 'm',
+        culture:me.culture,
+        religion:me.religion,
+        born:s.date.year,
+        dyn:me.dyn,
+        fatherId:me.id,
+        station:4,
+        traitsN:0
+      });
+      child.homeProvinceId = p.provinceId;
+      me.childrenIds = me.childrenIds || [];
+      me.childrenIds.push(child.id);
+      FB.touchFamily();
+      FB.ensureAgency(s);
+      if (FB.invalidateRealmCache) FB.invalidateRealmCache();
+
+      var fellow = FB.royalKinMatchStatus(s, child, partner);
+      var fellowPickerEntry = FB.royalKinMatchCandidates(s, partner)
+        .filter(function (entry) {
+          return entry.character.id === child.id;
+        })[0];
+      realm.liege = middleId;
+      var subordinate = FB.royalKinMatchStatus(s, child, partner);
+      realm.liege = foreignId;
+      var foreign = FB.royalKinMatchStatus(s, child, partner);
+      return {
+        found:true,
+        fellowReady:fellow.ready,
+        fellowReason:fellow.reasonCode,
+        fellowPickerReady:!!(fellowPickerEntry &&
+          fellowPickerEntry.status.ready),
+        subordinateReady:subordinate.ready,
+        subordinateReason:subordinate.reasonCode,
+        foreignReady:foreign.ready,
+        foreignReason:foreign.reasonCode
+      };
+    });
+
+    expect(result).toEqual({
+      found:true,
+      fellowReady:true,
+      fellowReason:null,
+      fellowPickerReady:true,
+      subordinateReady:true,
+      subordinateReason:null,
+      foreignReady:false,
+      foreignReason:'reach'
+    });
+  });
+
 test('AI royal offers revalidate and can pledge exact managed kin from birth',
   async function ({ page }, testInfo) {
     await startAgencyGame(page, testInfo);

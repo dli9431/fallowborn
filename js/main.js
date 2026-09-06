@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.171.4';
+FB.VERSION = '1.171.5';
 FB.CHANGELOG = [
+  { v: '1.171.5', date: '2026-09-06', changes: [
+    'AI realms now expand through compact de jure duchies and realms instead of reaching along scattered border counties.',
+    'Dynastic marriage proposals now reach fellow and subordinate courts anywhere within the player’s sovereign realm.'
+  ] },
   { v: '1.171.4', date: '2026-09-05', changes: [
     'Betrothals can now be arranged from birth and ended before the wedding through family management or an inherited pledge.'
   ] },

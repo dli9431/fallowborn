@@ -75,6 +75,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      ai_dejure_expansion_planning:{
+        mode:'none',
+        rationale:'AI preference for compact de jure consolidation is baseline world strategy and must not depend on research controlled by those same simulated realms.'
+      },
       rank_elevation_investiture:{
         mode:'none',
         rationale:'Recognition, investiture, and sacred legitimacy are core political progression rather than optional capabilities unlocked by sovereign research.'

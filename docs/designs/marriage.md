@@ -81,9 +81,10 @@ reason when marriage, another pledge, or the absence of managed descendants prev
 it. When available, that sheet opens a bounded picker containing
 only resident, managed children and grandchildren. Both partners may be pledged
 from birth, must be opposite-sex under the modeled doctrine, exact-faith compatible, and
-outside the close-kin and celibate-office gates. The court must lie in the player's
-liege chain or be an adjacent sovereign peer, ordinary rank access must be ready,
-and the existing one-station/prestige and bride's-house dowry rules remain
+outside the close-kin and celibate-office gates. The court must lie anywhere within the
+player's sovereign realm (including sibling-vassal and subordinate courts) or be an
+adjacent sovereign peer, ordinary rank access must be ready, and the existing
+one-station/prestige and bride's-house dowry rules remain
 authoritative. The ruler's current aim, realm Standing, house rank and prestige,
 and the household head's and descendant's Diplomacy shape the displayed acceptance
 chance. Making the proposal spends one day. Acceptance seals the ordinary betrothal
@@ -229,7 +230,9 @@ ending a descendant's match.
 Player-initiated descendant-to-royal arrangements add
 `player_initiated_royal_family_matches` with `mode:'none'`. Negotiating an accessible
 dynastic marriage is a baseline personal and social action, and the relevant court's
-technology is controlled by AI; no credible research gate belongs on the option.
+technology is controlled by AI; no credible research gate belongs on the option. Reach
+throughout one sovereign realm is part of that same baseline capability rather than a
+separately gateable expansion.
 
 `FB.marriageTerms` is the single transfer rule for protagonist and descendant
 marriages: the bride's house pays the displayed dowry. A protagonist courtship

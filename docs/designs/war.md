@@ -79,10 +79,22 @@ store only a descriptive `border` cause.
 
 Ruler sheets summarize both sides beneath the linked **Current war** notice. Player wars
 name the saved semantic objective where one exists, while AI border wars describe the
-attacker's territorial aim and the defender's goal of holding the border. Independence,
+attacker’s territorial aim and the defender’s goal of holding the border. Independence,
 defection, restoration, Caliphate succession, and great holy wars receive cause-specific
 two-sided summaries. These are read-only projections of the live war record and never
 add a second objective store.
+
+AI territorial wars select and save one consolidation objective. The ordering is a partial
+de jure duchy first, then a partial kingdom, then a partial empire, followed by a new de
+jure frontier and finally non-de-jure land. Compact shared borders and the capital's title
+region break strategic ties before enemy weakness. The primary host hunts an enemy army as
+before, but otherwise it and its siege detachment march on the saved objective county rather
+than automatically cutting toward the enemy capital. A winning yearly resolution takes only
+counties inside that objective and keeps the war open while the same enemy has another
+adjacent objective county; completing the available package ends the campaign. A defending
+winner chooses its counter-capture through the same consolidation preference. This prevents
+unrelated border picks from creating long one-county tendrils while allowing later wars to
+continue from duchy to kingdom and kingdom to empire.
 
 Every ordinary war involving the protagonist makes the enemy ruler immediately Hostile:
 the shared Standing score is capped at `warEnemyStandingCeiling` (−60 by default) when

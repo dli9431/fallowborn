@@ -217,6 +217,171 @@ test('spring realm AI reuses political status and bounds succession repairs',
       .toBeLessThanOrEqual(successionRepairLimit);
   });
 
+test('AI expansion finishes a partial de jure duchy before opening a weaker frontier',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      let consolidation = null;
+      let frontier = null;
+      for (const pr of FB.world.provs) {
+        if (pr.wasteland || !pr.duchy) continue;
+        const adj = FB.world.adj[pr.id] || {};
+        for (const nb in adj) {
+          const other = FB.world.byId[nb];
+          if (!other || other.wasteland || !other.duchy) continue;
+          if (!consolidation && other.duchy === pr.duchy &&
+              FB.duchyCounties(pr.duchy).length >= 3) {
+            consolidation = { held:pr.id, target:other.id, duchy:pr.duchy };
+          }
+        }
+        if (consolidation) break;
+      }
+      for (const pr of FB.world.provs) {
+        if (!consolidation || pr.wasteland || !pr.duchy ||
+            pr.duchy === consolidation.duchy ||
+            pr.id === consolidation.held || pr.id === consolidation.target) {
+          continue;
+        }
+        const adj = FB.world.adj[pr.id] || {};
+        for (const nb in adj) {
+          const other = FB.world.byId[nb];
+          if (!other || other.wasteland || !other.duchy ||
+              other.duchy === pr.duchy ||
+              other.duchy === consolidation.duchy ||
+              other.id === consolidation.held ||
+              other.id === consolidation.target) continue;
+          frontier = { held:pr.id, target:other.id };
+          break;
+        }
+        if (frontier) break;
+      }
+      if (!consolidation || !frontier) return { found:false };
+
+      const attacker = 'e2e_compact_expander';
+      const consolidatingDefender = 'e2e_duchy_defender';
+      const weakFrontier = 'e2e_weak_frontier';
+      s.realms[attacker] = {
+        id:attacker, name:'Compact Expander', alive:true, liege:null,
+        rank:2, capital:consolidation.held, ruler:{ mar:8 }
+      };
+      s.realms[consolidatingDefender] = {
+        id:consolidatingDefender, name:'Duchy Defender', alive:true,
+        liege:null, rank:1, capital:consolidation.target, ruler:{ mar:8 }
+      };
+      s.realms[weakFrontier] = {
+        id:weakFrontier, name:'Weak Frontier', alive:true, liege:null,
+        rank:1, capital:frontier.target, ruler:{ mar:2 }
+      };
+      s.owner[consolidation.held] = attacker;
+      s.owner[consolidation.target] = consolidatingDefender;
+      s.owner[frontier.held] = attacker;
+      s.owner[frontier.target] = weakFrontier;
+      s.holder[consolidation.held] = attacker;
+      s.holder[consolidation.target] = consolidatingDefender;
+      s.holder[frontier.held] = attacker;
+      s.holder[frontier.target] = weakFrontier;
+      FB.invalidateRealmCache();
+
+      const duchyPriority = FB.aiExpansionPriority(
+        s, attacker, consolidation.target);
+      const frontierPriority = FB.aiExpansionPriority(
+        s, attacker, frontier.target);
+      const choice = FB.aiExpansionTarget(s, attacker,
+        [weakFrontier, consolidatingDefender], function (rid) {
+          return rid === consolidatingDefender ? 10000 : 1;
+        });
+      return {
+        found:true,
+        duchyBand:duchyPriority.band,
+        duchyKind:duchyPriority.titleKind,
+        duchyId:duchyPriority.titleId,
+        frontierBand:frontierPriority.band,
+        targetRealm:choice && choice.realmId,
+        targetProvince:choice && choice.pid,
+        expectedRealm:consolidatingDefender,
+        expectedProvince:consolidation.target,
+        expectedDuchy:consolidation.duchy
+      };
+    });
+
+    expect(result.found).toBe(true);
+    expect(result.duchyBand).toBe(0);
+    expect(result.duchyKind).toBe('duchy');
+    expect(result.duchyId).toBe(result.expectedDuchy);
+    expect(result.targetRealm).toBe(result.expectedRealm);
+    expect(result.targetProvince).toBe(result.expectedProvince);
+    expect(result.expectedRealm).toBe('e2e_duchy_defender');
+    expect(result.frontierBand).toBeGreaterThan(result.duchyBand);
+  });
+
+test('AI expansion steps outward from kingdom to empire before a fresh realm',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      let core = null;
+      let kingdomTarget = null;
+      let empireTarget = null;
+      let foreignTarget = null;
+      for (const pr of FB.world.provs) {
+        if (pr.wasteland || !pr.duchy) continue;
+        const dj = FB.dejureOf(pr.id);
+        if (!dj.kingdom || !dj.empire) continue;
+        const sameKingdom = FB.kingdomCounties(dj.kingdom).filter(function (pid) {
+          return FB.dejureOf(pid).duchy !== dj.duchy;
+        })[0];
+        let sameEmpire = null;
+        let otherEmpire = null;
+        for (const candidate of FB.world.provs) {
+          if (candidate.wasteland || !candidate.duchy) continue;
+          const candidateDj = FB.dejureOf(candidate.id);
+          if (!sameEmpire && candidateDj.empire === dj.empire &&
+              candidateDj.kingdom !== dj.kingdom) sameEmpire = candidate.id;
+          if (!otherEmpire && candidateDj.empire &&
+              candidateDj.empire !== dj.empire) otherEmpire = candidate.id;
+          if (sameEmpire && otherEmpire) break;
+        }
+        if (sameKingdom && sameEmpire && otherEmpire) {
+          core = pr.id;
+          kingdomTarget = sameKingdom;
+          empireTarget = sameEmpire;
+          foreignTarget = otherEmpire;
+          break;
+        }
+      }
+      if (!core) return { found:false };
+      const attacker = 'e2e_title_hierarchy_expander';
+      s.realms[attacker] = {
+        id:attacker, name:'Title Hierarchy Expander', alive:true,
+        liege:null, rank:2, capital:core, ruler:{ mar:8 }
+      };
+      s.owner[core] = attacker;
+      s.holder[core] = attacker;
+      FB.invalidateRealmCache();
+      return {
+        found:true,
+        kingdomBand:FB.aiExpansionPriority(
+          s, attacker, kingdomTarget).band,
+        empireBand:FB.aiExpansionPriority(
+          s, attacker, empireTarget).band,
+        freshBand:FB.aiExpansionPriority(
+          s, attacker, foreignTarget).band
+      };
+    });
+
+    expect(result).toEqual({
+      found:true,
+      kingdomBand:1,
+      empireBand:2,
+      freshBand:3
+    });
+  });
+
 test('annual AI construction snapshots holdings before development invalidation',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',

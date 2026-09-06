@@ -2293,10 +2293,10 @@ window.FB = window.FB || {};
   }
 
   /* what an AI host wants: run home when broken, hunt the nearest enemy
-     host, else march on the enemy's seat. A detachment (any host but the
-     realm's primary) leaves the hunting to the main body and makes for the
-     enemy seat or the holy-war goal — screening and besieging while the
-     main host fights. */
+     host, else march on the war's saved objective (falling back to the enemy
+     seat for legacy wars). A detachment (any host but the realm's primary)
+     leaves the hunting to the main body and makes for that territorial or
+     holy-war goal — screening and besieging while the main host fights. */
   function aiGoal(state, army, warring, primaryByRealm) {
     const r = state.realms[army.realm];
     if (!r) return army.at;
@@ -2324,7 +2324,15 @@ window.FB = window.FB || {};
       return FB.greatHolyWarArmyGoal(state, army.realm, army.at) || army.at;
     }
     const en = warring[army.realm];
-    if (en === 'player') return playerHome(state);
+    if (en === 'player') {
+      const playerWar = state.player && state.player.war;
+      if (playerWar && playerWar.defending &&
+          playerWar.enemy === army.realm && playerWar.target &&
+          state.owner[playerWar.target] === 'player') return playerWar.target;
+      return playerHome(state);
+    }
+    if (r.war && r.war.enemy === en && r.war.target &&
+        state.owner[r.war.target] === en) return r.war.target;
     const er = en && state.realms[en];
     return er ? er.capital : army.at;
   }

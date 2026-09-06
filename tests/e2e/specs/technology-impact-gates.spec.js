@@ -162,6 +162,7 @@ test('the prospective review ledger and every gate schema validate together',
     expect(result.baseline).toBe('1.127.1');
     expect(result.featureIds).toEqual([
       'adventuring_expeditions',
+      'ai_dejure_expansion_planning',
       'auction_enterprise_lots',
       'auction_item_lots',
       'auction_title_rights',
@@ -259,6 +260,7 @@ test('the prospective review ledger and every gate schema validate together',
       'war_justification_selection'
     ]);
     const additiveNoneIds = [
+      'ai_dejure_expansion_planning',
       'betrothal_release',
       'broad_family_succession',
       'county_community_conversion',
@@ -289,7 +291,7 @@ test('the prospective review ledger and every gate schema validate together',
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
       .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
         'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
-        'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none']);
+        'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none']);
     const additiveHardIds = [
       'enterprise_upgrades',
       'ruler_household_establishments'

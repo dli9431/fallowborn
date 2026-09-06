@@ -609,6 +609,9 @@ window.FB = window.FB || {};
     var chain = state.player.liege && FB.liegeChain
       ? FB.liegeChain(state, state.player.liege) : [];
     if (chain.indexOf(rid) >= 0) return true;
+    var playerRealm = FB.playerRealmId ? FB.playerRealmId(state) :
+      (state.player.liege || 'player');
+    if (FB.topRealm && FB.topRealm(state, rid) === playerRealm) return true;
     return !!(FB.isPlayerSovereign && FB.isPlayerSovereign(state) &&
       state.realms.player && state.realms.player.rank >= 3 &&
       !realm.liege && realm.rank >= 3 && FB.realmsAdjacent &&
@@ -627,7 +630,7 @@ window.FB = window.FB || {};
     if (code === 'doctrine') return FB.T('Marriage doctrine or a celibate office forbids this match.');
     if (code === 'kinship') return FB.T('Close kin cannot be joined through an arranged match.');
     if (code === 'courtship') return FB.T('This royal family member is already part of the protagonist’s courtship.');
-    if (code === 'reach') return FB.T('Only your liege chain or an adjacent sovereign court will hear this proposal.');
+    if (code === 'reach') return FB.T('Only a court within your sovereign realm or an adjacent sovereign court will hear this proposal.');
     if (code === 'access') return values && values.accessReason ||
       FB.T('Your house lacks access to this court.');
     if (code === 'station') return FB.T('The royal match stands two or more stations above your house.');

@@ -473,6 +473,19 @@ dissolution rule of `FB.realmBuryIfEmpty`/`FB.transferProvince` — restore
 (`FB.repairVassalLieges`) reattaches vassals left sworn to a dead house by
 saves that predate that rule.
 
+**AI sovereign expansion is consolidation-first.** Among legal neighboring enemies,
+`FB.aiExpansionTarget` first prefers a county that completes a partially held de jure
+duchy, then territory inside a partially held kingdom, then a partially held empire.
+Only after those opportunities does it open a new de jure frontier or take land outside
+the title map. Equal claims prefer the capital's title region, fewer counties remaining,
+more shared border contacts, and greater development before comparing defensive strength.
+An offensive war records the selected county and de jure objective; AI hosts march on that
+county instead of the enemy capital, and a winning campaign may continue through adjacent
+counties of the same objective. Once that enemy holds no reachable county in the objective,
+the war closes rather than shifting sideways into a territorial snake. Defenders use the
+same compact-capture preference when they take land in return. This strategic behavior is
+recorded as technology impact `ai_dejure_expansion_planning` with mode `none`.
+
 `swear_fealty` offers only peaceful neighboring sovereigns whose realm rank is
 strictly greater than the player's current title rank. Counts may therefore kneel
 to dukes, kings, or emperors; dukes to kings or emperors; kings only to emperors;

@@ -1400,6 +1400,7 @@ window.FB = window.FB || {};
     return dejureCounties[did] || [];
   };
   let kingdomCountyLists = {}; // static like dejureCounties; rebuilt per kid on demand
+  let aiDejureTotals = null;
   FB.kingdomCounties = function (kid) {
     if (!kingdomCountyLists[kid]) {
       const out = [];
@@ -1419,6 +1420,7 @@ window.FB = window.FB || {};
   FB.resetWorldDataCaches = function () {
     dejureCounties = null;
     kingdomCountyLists = {};
+    aiDejureTotals = null;
     rc = {
       state:null, dirty:true, provs:null, held:null, vassals:null,
       strengthTurn:-1, strength:null
@@ -4928,6 +4930,178 @@ window.FB = window.FB || {};
     return FB.pick(opts);
   };
 
+  /* AI conquest is consolidation-first. A partial duchy outranks a partial
+     kingdom, which outranks a partial empire, and only then may a realm open
+     a fresh de jure frontier or take land outside the title map. Compact
+     contact and development break ties so equal claims fill borders instead
+     of growing one-county tendrils. */
+  function ensureAIDejureTotals() {
+    if (aiDejureTotals) return aiDejureTotals;
+    aiDejureTotals = { duchy:{}, kingdom:{}, empire:{} };
+    for (const pr of FBDATA.provinces) {
+      if (!pr || pr.wasteland || !pr.duchy) continue;
+      const dj = FB.dejureOf(pr.id);
+      aiDejureTotals.duchy[dj.duchy] =
+        (aiDejureTotals.duchy[dj.duchy] || 0) + 1;
+      if (dj.kingdom) {
+        aiDejureTotals.kingdom[dj.kingdom] =
+          (aiDejureTotals.kingdom[dj.kingdom] || 0) + 1;
+      }
+      if (dj.empire) {
+        aiDejureTotals.empire[dj.empire] =
+          (aiDejureTotals.empire[dj.empire] || 0) + 1;
+      }
+    }
+    return aiDejureTotals;
+  }
+
+  function aiExpansionProfile(state, realmId) {
+    rcEnsure(state);
+    const profile = {
+      realmId:realmId,
+      duchy:{}, kingdom:{}, empire:{},
+      capital:FB.dejureOf(state.realms[realmId] &&
+        state.realms[realmId].capital)
+    };
+    for (const pid of (rc.provs[realmId] || [])) {
+      const dj = FB.dejureOf(pid);
+      if (dj.duchy) profile.duchy[dj.duchy] =
+        (profile.duchy[dj.duchy] || 0) + 1;
+      if (dj.kingdom) profile.kingdom[dj.kingdom] =
+        (profile.kingdom[dj.kingdom] || 0) + 1;
+      if (dj.empire) profile.empire[dj.empire] =
+        (profile.empire[dj.empire] || 0) + 1;
+    }
+    return profile;
+  }
+
+  function aiExpansionPriorityWithProfile(state, profile, pid) {
+    const totals = ensureAIDejureTotals();
+    const dj = FB.dejureOf(pid);
+    const dHeld = dj.duchy ? profile.duchy[dj.duchy] || 0 : 0;
+    const kHeld = dj.kingdom ? profile.kingdom[dj.kingdom] || 0 : 0;
+    const eHeld = dj.empire ? profile.empire[dj.empire] || 0 : 0;
+    let band = 4, titleKind = null, titleId = null, remaining = 9999;
+    if (dj.duchy && dHeld > 0) {
+      band = 0; titleKind = 'duchy'; titleId = dj.duchy;
+      remaining = (totals.duchy[dj.duchy] || 0) - dHeld;
+    } else if (dj.kingdom && kHeld > 0) {
+      band = 1; titleKind = 'kingdom'; titleId = dj.kingdom;
+      remaining = (totals.kingdom[dj.kingdom] || 0) - kHeld;
+    } else if (dj.empire && eHeld > 0) {
+      band = 2; titleKind = 'empire'; titleId = dj.empire;
+      remaining = (totals.empire[dj.empire] || 0) - eHeld;
+    } else if (dj.duchy) {
+      band = 3;
+    }
+    let core = 2;
+    if (band === 0) {
+      core = dj.kingdom && dj.kingdom === profile.capital.kingdom ? 0 :
+        (dj.empire && dj.empire === profile.capital.empire ? 1 : 2);
+    } else if (band === 1) {
+      core = dj.kingdom === profile.capital.kingdom ? 0 :
+        (dj.empire && dj.empire === profile.capital.empire ? 1 : 2);
+    } else if (band === 2) {
+      core = dj.empire === profile.capital.empire ? 0 : 1;
+    }
+    let contacts = 0;
+    const adj = FB.world.adj[pid] || {};
+    for (const nb in adj) if (state.owner[nb] === profile.realmId) contacts++;
+    return {
+      pid:pid,
+      band:band,
+      core:core,
+      remaining:Math.max(0, remaining),
+      contacts:contacts,
+      development:Number(state.dev[pid]) || 1,
+      titleKind:titleKind,
+      titleId:titleId
+    };
+  }
+
+  function compareAIExpansionStructure(a, b) {
+    return a.band - b.band || a.core - b.core ||
+      a.remaining - b.remaining || b.contacts - a.contacts ||
+      b.development - a.development;
+  }
+
+  function compareAIExpansionPriority(a, b) {
+    return compareAIExpansionStructure(a, b) ||
+      (a.pid < b.pid ? -1 : a.pid > b.pid ? 1 : 0);
+  }
+
+  FB.aiExpansionPriority = function (state, realmId, pid) {
+    return aiExpansionPriorityWithProfile(
+      state, aiExpansionProfile(state, realmId), pid);
+  };
+
+  function aiExpansionProvincePlan(state, profile, loserRealm, allowed) {
+    rcEnsure(state);
+    const plans = [];
+    for (const pid of (rc.provs[loserRealm] || [])) {
+      if (allowed && !allowed(pid)) continue;
+      const adj = FB.world.adj[pid] || {};
+      let bordering = false;
+      for (const nb in adj) {
+        if (state.owner[nb] === profile.realmId) { bordering = true; break; }
+      }
+      if (bordering) {
+        plans.push(aiExpansionPriorityWithProfile(state, profile, pid));
+      }
+    }
+    plans.sort(compareAIExpansionPriority);
+    return plans[0] || null;
+  }
+
+  FB.aiExpansionProvince = function (state, winnerRealm, loserRealm, allowed) {
+    const plan = aiExpansionProvincePlan(
+      state, aiExpansionProfile(state, winnerRealm), loserRealm, allowed);
+    return plan ? plan.pid : null;
+  };
+
+  FB.aiExpansionTarget = function (state, attackerRealm, defenderIds,
+      defensiveStrength, allowed) {
+    const profile = aiExpansionProfile(state, attackerRealm);
+    const choices = [];
+    for (const defenderId of defenderIds || []) {
+      const priority = aiExpansionProvincePlan(
+        state, profile, defenderId, allowed);
+      if (!priority) continue;
+      choices.push({
+        realmId:defenderId,
+        pid:priority.pid,
+        priority:priority,
+        strength:defensiveStrength ? defensiveStrength(defenderId) : 0
+      });
+    }
+    choices.sort(function (a, b) {
+      return compareAIExpansionStructure(a.priority, b.priority) ||
+        a.strength - b.strength ||
+        (a.pid < b.pid ? -1 : a.pid > b.pid ? 1 : 0) ||
+        (a.realmId < b.realmId ? -1 : a.realmId > b.realmId ? 1 : 0);
+    });
+    return choices[0] || null;
+  };
+
+  function aiExpansionCasus(priority) {
+    if (priority && priority.titleKind && priority.titleId) {
+      return {
+        type:'consolidation',
+        titleKind:priority.titleKind,
+        titleId:priority.titleId
+      };
+    }
+    return { type:'border' };
+  }
+
+  function aiExpansionObjectiveAllows(war, pid) {
+    const casus = war && war.casus;
+    if (!casus || casus.type !== 'consolidation' ||
+        !casus.titleKind || !casus.titleId) return true;
+    const dj = FB.dejureOf(pid);
+    return dj[casus.titleKind] === casus.titleId;
+  }
+
   FB.transferProvince = function (state, pid, toRealm) {
     const serfTenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
     const serfAuthorityBefore = serfTenure &&
@@ -6060,16 +6234,21 @@ window.FB = window.FB || {};
         let taken = null;
         for (const winnerHost of winnerHosts) {
           if (state.owner[winnerHost.at] === loser && FB.fortBlocksArmy &&
-              FB.fortBlocksArmy(state, winnerHost.at, winnerHost)) {
+              FB.fortBlocksArmy(state, winnerHost.at, winnerHost) &&
+              (winner !== id || aiExpansionObjectiveAllows(
+                war, winnerHost.at))) {
             taken = winnerHost.at;
             break;
           }
         }
         if (taken && FB.sameFaithHeadWarPolicy(
             state, winnerReligion, loser, taken)) taken = null;
-        if (!taken) taken = FB.borderProvince(state, loser, winner, function (pid) {
-          return !FB.sameFaithHeadWarPolicy(state, winnerReligion, loser, pid);
-        });
+        if (!taken) taken = FB.aiExpansionProvince(
+          state, winner, loser, function (pid) {
+            return !FB.sameFaithHeadWarPolicy(
+              state, winnerReligion, loser, pid) &&
+              (winner !== id || aiExpansionObjectiveAllows(war, pid));
+          });
         let fortDelay = 0;
         const takenFort = taken && FB.fortAt ? FB.fortAt(state, taken) : null;
         if (takenFort && (Number(takenFort.level) || 0) > 0) {
@@ -6089,6 +6268,8 @@ window.FB = window.FB || {};
           fortDelay = Math.max(fortDelay,
             siegeDef ? Number(siegeDef.siegeDelay) || 0 : 0);
         }
+        let objectiveOpen = false;
+        let objectiveCompleted = false;
         if (taken) {
           if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, taken);
           if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, taken, 'ai_conquest');
@@ -6096,6 +6277,18 @@ window.FB = window.FB || {};
           yearWars.rebuild();
           yearAlliances.rebuild();
           war.captures = (war.captures || 0) + 1;
+          if (winner === id && war.casus &&
+              war.casus.type === 'consolidation' &&
+              state.realms[war.enemy] && state.realms[war.enemy].alive) {
+            war.target = FB.aiExpansionProvince(
+              state, id, war.enemy, function (pid) {
+                return aiExpansionObjectiveAllows(war, pid) &&
+                  !FB.sameFaithHeadWarPolicy(
+                    state, winnerReligion, war.enemy, pid);
+              });
+            objectiveOpen = !!war.target;
+            objectiveCompleted = !objectiveOpen;
+          }
           const pv = FB.world.byId[taken];
           if (FB.game.observe) { // the watcher hears of every fall, far or near
             FB.news(state, FB.msg('news.world.province_falls',
@@ -6126,8 +6319,9 @@ window.FB = window.FB || {};
           yearWars.rebuild();
           yearAlliances.rebuild();
         }
-        else if (war.years >= 3 + fortDelay || FB.chance(0.35) ||
-                 (war.captures || 0) >= 2) {
+        else if (objectiveCompleted || (!objectiveOpen &&
+                 (war.years >= 3 + fortDelay || FB.chance(0.35) ||
+                   (war.captures || 0) >= 2))) {
           if (FB.papacyDecisiveWarLost) {
             FB.papacyDecisiveWarLost(state, loser);
           }
@@ -6152,19 +6346,19 @@ window.FB = window.FB || {};
           if (FB.realmsAdjacent(state, id, id2)) targets.push(id2);
         }
         if (targets.length) {
-          // prefer weaker targets
-          targets.sort(function (a, b) {
-            return yearDefensiveStrength(a) - yearDefensiveStrength(b);
-          });
-          const t = targets[FB.chance(0.6) ? 0 : Math.floor(FB.rng() * targets.length)];
-          r.war = { enemy: t, years: 0, captures: 0,
-            casus: { type: 'border', label: 'Border war' } };
-          yearWars.addWar(id, r.war);
-          const homeRealm = state.owner[state.player.provinceId];
-          if (FB.game.observe || id === homeRealm || t === homeRealm) {
-            FB.news(state, FB.msg('news.world.ai_war',
-              '🔥 War! {attacker} marches against {defender}.',
-              { attacker: r.name, defender: state.realms[t].name }));
+          const expansion = FB.aiExpansionTarget(
+            state, id, targets, yearDefensiveStrength);
+          if (expansion) {
+            const t = expansion.realmId;
+            r.war = { enemy:t, target:expansion.pid, years:0, captures:0,
+              casus:aiExpansionCasus(expansion.priority) };
+            yearWars.addWar(id, r.war);
+            const homeRealm = state.owner[state.player.provinceId];
+            if (FB.game.observe || id === homeRealm || t === homeRealm) {
+              FB.news(state, FB.msg('news.world.ai_war',
+                '🔥 War! {attacker} marches against {defender}.',
+                { attacker: r.name, defender: state.realms[t].name }));
+            }
           }
         }
       }
@@ -6188,8 +6382,16 @@ window.FB = window.FB || {};
           Math.max(1, yearDefensiveStrength('player')), 0.25, 1.25);
         if (FB.chance(0.04 * r.aggression * relationMult * deterrence) &&
           FB.realmsAdjacent(state, id, 'player')) {
-          state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
-            defending: true, casus: { type: 'border', label: 'Border war' } };
+          const playerTarget = FB.aiExpansionProvince(
+            state, id, 'player', function (pid) {
+              return state.player.provs &&
+                state.player.provs.indexOf(pid) >= 0;
+            });
+          const playerPriority = playerTarget &&
+            FB.aiExpansionPriority(state, id, playerTarget);
+          state.player.war = { enemy:id, target:playerTarget,
+            wins:0, losses:0, seasons:0, defending:true,
+            casus:aiExpansionCasus(playerPriority) };
           yearWars.addPlayerWar(state.player.war);
           FB.news(state, FB.msg('news.world.war_declared_on_player',
             '🔥 {realm} declares war upon YOU!', { realm: r.name }));
@@ -7073,18 +7275,19 @@ window.FB = window.FB || {};
     if (forcedPid && p.provs && p.provs.indexOf(forcedPid) >= 0) {
       lost = forcedPid;
     } else if (p.provs && p.provs.length) {
-      const opts = [];
-      for (const pid of p.provs) {
-        const adj = FB.world.adj[pid] || {};
-        for (const nb in adj) {
-          const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
-          if (state.owner[nb] === w.enemy &&
-              !(fort && (Number(fort.level) || 0) > 0)) {
-            opts.push(pid); break;
-          }
+      if (w.target && p.provs.indexOf(w.target) >= 0) {
+        const adj = FB.world.adj[w.target] || {};
+        for (const nb in adj) if (state.owner[nb] === w.enemy) {
+          lost = w.target;
+          break;
         }
       }
-      if (opts.length) lost = FB.pick(opts);
+      if (!lost) {
+        lost = FB.aiExpansionProvince(
+          state, w.enemy, FB.playerRealmId(state), function (pid) {
+            return p.provs.indexOf(pid) >= 0;
+          });
+      }
     }
     if (!lost && !forcedPid) {
       lost = FB.borderProvince(state, FB.playerRealmId(state), w.enemy,

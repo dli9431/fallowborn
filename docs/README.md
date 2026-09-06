@@ -306,7 +306,9 @@ of a count-or-greater ruler's live field host; leading that host to a real map v
 earns an immediate barony offer. Religious office has its own deliberate advancement ladder;
 random marriage, patronage, soldier, and clerical events do not grant rank. Meanwhile
 ~65 sovereign realms fight their own wars — and their dukes and counts
-sometimes break away — so the map redraws itself decade by decade.
+sometimes break away — so the map redraws itself decade by decade. Their conquests
+prefer finishing compact de jure duchies and larger title regions instead of stretching
+through whichever weak border county happens to be available.
 
 #### The religious ladder
 
