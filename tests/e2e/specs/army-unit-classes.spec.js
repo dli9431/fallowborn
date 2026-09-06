@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js',
   'js/model.js',
+  'js/population.js',
   'js/world.js',
   'js/events.js',
   'js/fortifications.js',
@@ -292,7 +293,13 @@ test('unit-class gates read the player character culture',
         id:'e2e_martial_franks', name:'Martial Franks', parent:'frankish',
         doctrines:{ military:'huscarl' }
       });
+      state.player.tier = 3;
       me.culture = branch;
+      out.reformedBeforeFollowers = FB.unitClassUnlocked(state, 'huscarl');
+      FB.convertSettlementCommunity(
+        state, state.player.provinceId, state.player.homeSettlement || 0, {
+          kind:'culture', target:branch, rate:1
+        });
       out.reformedHuscarl = FB.unitClassUnlocked(state, 'huscarl');
       out.reformedCamel = FB.unitClassUnlocked(state, 'camel');
       me.culture = keptCulture;
@@ -303,6 +310,7 @@ test('unit-class gates read the player character culture',
     expect(result.norseHuscarl).toBe(true);
     expect(result.norseCamel).toBe(false);
     expect(result.norsePike).toBe(false);
+    expect(result.reformedBeforeFollowers).toBe(false);
     expect(result.reformedHuscarl).toBe(true);
     expect(result.reformedCamel).toBe(false);
   });

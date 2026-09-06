@@ -161,6 +161,27 @@ window.FB = window.FB || {};
     return capital ? capital.culture : null;
   }
 
+  function establishedLearningCulture(state, rid, culture) {
+    if (!culture || !state.cultures ||
+        !Object.prototype.hasOwnProperty.call(state.cultures, culture)) {
+      return culture;
+    }
+    if (rid === 'player' && state.player && state.player.tier === 3 &&
+        FB.settlementCulture) {
+      var home = state.player.homeSettlement !== undefined
+        ? state.player.homeSettlement
+        : (state.player.settlement !== undefined ? state.player.settlement : 0);
+      return FB.settlementCulture(
+        state, state.player.provinceId, Number(home) || 0) || culture;
+    }
+    var realm = state.realms && state.realms[rid];
+    var capitalId = rid === 'player' && state.player
+      ? (realm && realm.capital || state.player.provinceId)
+      : realm && realm.capital;
+    return capitalId && FB.countyCulture
+      ? (FB.countyCulture(state, capitalId) || culture) : culture;
+  }
+
   FB.techCulture = function (state, realmId) {
     return realmCulture(state, FB.techRealmId(state, realmId));
   };
@@ -171,6 +192,7 @@ window.FB = window.FB || {};
     var out = [], explicit = realm && realm.techTraditions;
     if (Array.isArray(explicit) && explicit.length) return unique(explicit);
     var culture = realmCulture(state, rid);
+    culture = establishedLearningCulture(state, rid, culture);
     var faith = realmFaith(state, rid);
     var table = FBDATA.techTraditions || {};
     var culturalLearning = FB.cultureValue && culture

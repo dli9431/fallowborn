@@ -316,7 +316,13 @@ Culture-reform state follows the same additive pattern at save version 3.
 `state.cultures` maps generated ids to parent-plus-override records, while
 `state.cultureNextId` supplies deterministic ids. Restore supplies `{}` and `1` to old
 lives before recompiling the effective culture graph. Authored culture data remains in
-`FBDATA.cultures`; compiled lineage and source maps are derived only. See
+`FBDATA.cultures`; compiled lineage, source maps, and territorial doctrine shares are
+derived only. Returning the last doctrine override to its inherited value remaps live
+character, realm, community, and project references to the remembered parent id without
+adding an alias, then marks the unused child inactive for future conversion targets. New
+doctrine children carry an additive `doctrineBranch:true` marker;
+the deterministic v1.172.0 id/name shape remains recognized for saves made before that
+marker. See
 [doctrines.md](doctrines.md).
 
 Religious-head state is additive and keeps save version 3.

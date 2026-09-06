@@ -811,7 +811,9 @@ window.FB = window.FB || {};
 
   function projectTargetValid(state, kind, targetId) {
     return kind === 'faith'
-      ? validFaith(state, targetId) : validCulture(state, targetId);
+      ? validFaith(state, targetId)
+      : validCulture(state, targetId) && (!FB.cultureAssignable ||
+        FB.cultureAssignable(targetId, state));
   }
 
   function projectPolicyDefinition(policyId) {
@@ -1336,6 +1338,122 @@ window.FB = window.FB || {};
 
   FB.countyReligionShare = function (state, pid, faithId) {
     return countyAxisShare(state, pid, 'religion', faithId);
+  };
+
+  function settlementAxisShare(state, pid, settlementIndex, field, targetId) {
+    var communities = FB.settlementCommunities(state, pid, settlementIndex);
+    var matching = 0;
+    var total = 0;
+    for (var i = 0; i < communities.length; i++) {
+      total += communities[i].count;
+      if (communities[i][field] === targetId) matching += communities[i].count;
+    }
+    return total > 0 ? matching / total : 0;
+  }
+
+  FB.settlementCultureShare = function (state, pid, settlementIndex, cultureId) {
+    return settlementAxisShare(
+      state, pid, settlementIndex, 'culture', cultureId);
+  };
+
+  FB.settlementReligionShare = function (state, pid, settlementIndex, faithId) {
+    return settlementAxisShare(
+      state, pid, settlementIndex, 'religion', faithId);
+  };
+
+  /* Campaign doctrine benefits use the followers who actually live under the
+     ruler, not merely the ruler's personal identity. Barons draw from their
+     exact home settlement; higher rulers draw from directly held counties.
+     AI callers supply their realm id and use its whole territorial levy base. */
+  FB.identityTerritoryShare = function (state, kind, identityId, realmId) {
+    if (!state || (kind !== 'faith' && kind !== 'culture') || !identityId) {
+      return 0;
+    }
+    var field = kind === 'faith' ? 'religion' : 'culture';
+    if ((realmId === undefined || realmId === null || realmId === 'player') &&
+        state.player && state.player.tier === 3) {
+      var home = state.player.homeSettlement !== undefined
+        ? state.player.homeSettlement
+        : (state.player.settlement !== undefined ? state.player.settlement : 0);
+      return settlementAxisShare(
+        state, state.player.provinceId, Number(home) || 0, field, identityId);
+    }
+    var pids;
+    if (realmId === undefined || realmId === null || realmId === 'player') {
+      pids = state.player && Array.isArray(state.player.provs) &&
+        state.player.provs.length
+        ? state.player.provs.slice()
+        : (state.player && state.player.provinceId
+          ? [state.player.provinceId] : []);
+    } else {
+      pids = FB.realmProvinces ? FB.realmProvinces(state, realmId) : [];
+    }
+    var matching = 0;
+    var total = 0;
+    for (var pi = 0; pi < pids.length; pi++) {
+      var communities = FB.countyCommunities(state, pids[pi]);
+      for (var ci = 0; ci < communities.length; ci++) {
+        total += communities[ci].count;
+        if (communities[ci][field] === identityId) {
+          matching += communities[ci].count;
+        }
+      }
+    }
+    return total > 0 ? matching / total : 0;
+  };
+
+  /* When the last departure is undone, a generated identity is recognized as
+     its remembered parent again. Consolidate live county and settlement
+     cohorts at the population boundary so totals and settlement matrices stay
+     exact; historical records may keep the now-unused generated definition. */
+  FB.remapCommunityIdentity = function (state, kind, fromId, toId) {
+    if (!state || (kind !== 'faith' && kind !== 'culture') || !fromId ||
+        !toId || fromId === toId) return 0;
+    if (!state.population || !state.population.counties) return 0;
+    var field = kind === 'faith' ? 'religion' : 'culture';
+    var counties = state.population.counties;
+    var changed = 0;
+    var touchedIds = [];
+    for (var pid in counties) {
+      if (!own(counties, pid)) continue;
+      var rec = counties[pid];
+      var pr = provinceDef(pid);
+      if (!rec || !pr || pr.wasteland || !Array.isArray(rec.communities)) {
+        continue;
+      }
+      var touched = false;
+      for (var ci = 0; ci < rec.communities.length; ci++) {
+        if (rec.communities[ci][field] !== fromId) continue;
+        changed += Math.max(0, Number(rec.communities[ci].count) || 0);
+        rec.communities[ci][field] = toId;
+        touched = true;
+      }
+      if (rec.identity && rec.identity[field] === fromId) {
+        rec.identity[field] = toId;
+        touched = true;
+      }
+      if (rec.communityProjects && rec.communityProjects[kind] &&
+          rec.communityProjects[kind].target === fromId) {
+        rec.communityProjects[kind].target = toId;
+        touched = true;
+      }
+      var local = rec.settlementCommunityProjects || {};
+      for (var settlement in local) {
+        if (!own(local, settlement)) continue;
+        var project = local[settlement] && local[settlement][kind];
+        if (project && project.target === fromId) {
+          project.target = toId;
+          touched = true;
+        }
+      }
+      if (touched) {
+        repairCountyRecord(state, pr, rec, stateYear(state));
+        touchedIds.push(pid);
+      }
+    }
+    assertPopulationCommunities(state, touchedIds,
+      'restored doctrine parent');
+    return changed;
   };
 
   function copyProject(project) {

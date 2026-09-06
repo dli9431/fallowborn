@@ -570,6 +570,27 @@ window.FB = window.FB || {};
     cursor[parts[parts.length - 1]] = JSON.parse(JSON.stringify(value));
   }
 
+  function doctrineDelete(target, path) {
+    const parts = String(path || '').split('.');
+    const trail = [];
+    let cursor = target;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!cursor || typeof cursor !== 'object' ||
+          Array.isArray(cursor) || !Object.prototype.hasOwnProperty.call(
+            cursor, parts[i])) return;
+      trail.push({ parent:cursor, key:parts[i] });
+      cursor = cursor[parts[i]];
+    }
+    if (!cursor || typeof cursor !== 'object' || Array.isArray(cursor)) return;
+    delete cursor[parts[parts.length - 1]];
+    for (let i = trail.length - 1; i >= 0; i--) {
+      const child = trail[i].parent[trail[i].key];
+      if (!child || typeof child !== 'object' || Array.isArray(child) ||
+          Object.keys(child).length) break;
+      delete trail[i].parent[trail[i].key];
+    }
+  }
+
   function doctrineOption(kind, doctrineId, optionId) {
     const definitions = FB.doctrineDefinitions ? FB.doctrineDefinitions(kind) : [];
     let definition = null;
@@ -613,12 +634,34 @@ window.FB = window.FB || {};
     return count >= hostile ? 'hostile' : count >= schism ? 'schismatic' : 'in_fold';
   }
 
+  function doctrineBranchIdentity(state, kind, identityId, parentId) {
+    const raw = kind === 'faith'
+      ? state.faiths && state.faiths[identityId]
+      : state.cultures && state.cultures[identityId];
+    if (!raw) return false;
+    if (raw.doctrineBranch !== undefined) return raw.doctrineBranch === true;
+    /* v1.172.0 created doctrine branches before it saved an explicit marker.
+       Recognize its deterministic ids and generated display name so those
+       short-lived saves can still return cleanly to their parent. */
+    const generatedId = kind === 'faith'
+      ? /^generated_faith_[0-9]+$/.test(identityId)
+      : /^culture_[0-9]+$/.test(identityId);
+    const parent = kind === 'faith'
+      ? FB.religionOf(parentId, state) : FB.cultureOf(parentId, state);
+    if (!generatedId || !parent || !raw.name) return false;
+    const englishName = 'Reformed ' + parent.name;
+    const localizedName = FB.T(kind === 'faith'
+      ? 'Reformed {faith}' : 'Reformed {culture}', kind === 'faith'
+      ? { faith:parent.name } : { culture:parent.name });
+    return raw.name === englishName || raw.name === localizedName;
+  }
+
   FB.doctrineReformStatus = function (state, kind, doctrineId, optionId) {
     const out = {
       ok:false, reason:'', kind:kind, doctrineId:doctrineId,
       optionId:optionId, identityId:null, parentId:null,
       pietyCost:0, prestigeCost:0, divergence:0, relation:null,
-      createsBranch:false
+      createsBranch:false, restoresDoctrine:false, restoresParent:false
     };
     const p = state && state.player;
     const me = p && state.chars && state.chars[p.charId];
@@ -659,6 +702,10 @@ window.FB = window.FB || {};
       return out;
     }
     out.parentId = doctrineParent(state, kind, out.identityId);
+    const parentOption = FB.doctrineOption(
+      state, kind, out.parentId, doctrineId).definition;
+    out.restoresDoctrine = out.parentId !== out.identityId &&
+      parentOption && parentOption.id === optionId;
     const projected = FB.doctrineDivergence(state, kind, out.identityId,
       out.parentId, doctrineId, optionId);
     out.divergence = projected.count;
@@ -674,6 +721,8 @@ window.FB = window.FB || {};
       }
     }
     out.createsBranch = out.parentId === out.identityId;
+    out.restoresParent = !out.createsBranch && projected.count === 0 &&
+      doctrineBranchIdentity(state, kind, out.identityId, out.parentId);
     const currentDivergence = FB.doctrineDivergence(
       state, kind, out.identityId, out.parentId).count;
     const escalation = Number(FBDATA.balance.doctrineReformEscalation) || 0.25;
@@ -697,6 +746,40 @@ window.FB = window.FB || {};
     return out;
   };
 
+  function restoreDoctrineIdentity(state, kind, fromId, parentId) {
+    const field = kind === 'faith' ? 'religion' : 'culture';
+    for (const charId in (state.chars || {})) {
+      if (!Object.prototype.hasOwnProperty.call(state.chars, charId)) continue;
+      const character = state.chars[charId];
+      if (character && !character.dead && character[field] === fromId) {
+        character[field] = parentId;
+      }
+    }
+    for (const realmId in (state.realms || {})) {
+      if (!Object.prototype.hasOwnProperty.call(state.realms, realmId)) continue;
+      const realm = state.realms[realmId];
+      if (!realm || realm.alive === false) continue;
+      if (realm[field] === fromId) realm[field] = parentId;
+      if (realm.ruler && typeof realm.ruler === 'object' &&
+          realm.ruler[field] === fromId) realm.ruler[field] = parentId;
+    }
+    if (FB.remapCommunityIdentity) {
+      FB.remapCommunityIdentity(state, kind, fromId, parentId);
+    }
+    const raw = kind === 'faith'
+      ? state.faiths && state.faiths[fromId]
+      : state.cultures && state.cultures[fromId];
+    if (raw) {
+      raw.active = false;
+      if (kind === 'faith') {
+        raw.assignable = false;
+        if (FB.invalidateFaithState) FB.invalidateFaithState(state);
+      } else if (FB.configureCultures) {
+        FB.configureCultures(state);
+      }
+    }
+  }
+
   FB.applyDoctrineReform = function (state, kind, doctrineId, optionId) {
     const status = FB.doctrineReformStatus(
       state, kind, doctrineId, optionId);
@@ -715,7 +798,8 @@ window.FB = window.FB || {};
         const created = FB.foundFaith(state, {
           name:FB.T('Reformed {faith}', { faith:parent.name }),
           icon:parent.icon, parent:identityId,
-          relationToParent:status.relation, properties:properties
+          relationToParent:status.relation, properties:properties,
+          doctrineBranch:true
         }, { convertFounder:true });
         if (!created) return false;
         identityId = created;
@@ -724,7 +808,12 @@ window.FB = window.FB || {};
         if (!rawFaith.properties || typeof rawFaith.properties !== 'object') {
           rawFaith.properties = {};
         }
-        doctrineWrite(rawFaith.properties, found.doctrine.path, found.option.value);
+        if (status.restoresDoctrine) {
+          doctrineDelete(rawFaith.properties, found.doctrine.path);
+        } else {
+          doctrineWrite(rawFaith.properties,
+            found.doctrine.path, found.option.value);
+        }
         rawFaith.relationToParent = status.relation;
         if (status.relation !== 'in_fold') {
           rawFaith.properties.head = null;
@@ -740,7 +829,8 @@ window.FB = window.FB || {};
         const definition = {
           name:FB.T('Reformed {culture}', { culture:parent.name }),
           parent:identityId, relationToParent:status.relation,
-          founderId:me.id, originProvinceId:p.provinceId
+          founderId:me.id, originProvinceId:p.provinceId,
+          doctrineBranch:true
         };
         doctrineWrite(definition, found.doctrine.path, found.option.value);
         const created = FB.createCulture(state, definition);
@@ -749,10 +839,18 @@ window.FB = window.FB || {};
         identityId = created;
       } else {
         const rawCulture = state.cultures[identityId];
-        doctrineWrite(rawCulture, found.doctrine.path, found.option.value);
+        if (status.restoresDoctrine) {
+          doctrineDelete(rawCulture, found.doctrine.path);
+        } else {
+          doctrineWrite(rawCulture, found.doctrine.path, found.option.value);
+        }
         rawCulture.relationToParent = status.relation;
         if (FB.configureCultures) FB.configureCultures(state);
       }
+    }
+    if (status.restoresParent) {
+      restoreDoctrineIdentity(state, kind, identityId, status.parentId);
+      identityId = status.parentId;
     }
     p.piety = Math.max(0, (Number(p.piety) || 0) - status.pietyCost);
     p.prestige = Math.max(0,
@@ -1104,8 +1202,10 @@ window.FB = window.FB || {};
         return out;
       }
     } else {
-      if (!targetId || !(FB.cultureExists
-          ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId])) {
+      if (!targetId || !(FB.cultureAssignable
+          ? FB.cultureAssignable(targetId, state)
+          : (FB.cultureExists
+            ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId]))) {
         out.reason = FB.T('That culture cannot be adopted.');
         return out;
       }
@@ -1357,8 +1457,10 @@ window.FB = window.FB || {};
     }
     const targetValid = kind === 'faith'
       ? FB.faithExists(targetId, state) && FB.faithAssignable(targetId, state)
-      : kind === 'culture' && !!(FB.cultureExists
-        ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId]);
+      : kind === 'culture' && !!(FB.cultureAssignable
+        ? FB.cultureAssignable(targetId, state)
+        : (FB.cultureExists
+          ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId]));
     if (!targetValid || !FBDATA.countyCommunityPolicies ||
         !FBDATA.countyCommunityPolicies[policyId]) {
       out.reason = FB.T('That county project is not possible.');
@@ -1439,8 +1541,10 @@ window.FB = window.FB || {};
     }
     const targetValid = kind === 'faith'
       ? FB.faithExists(targetId, state) && FB.faithAssignable(targetId, state)
-      : kind === 'culture' && !!(FB.cultureExists
-        ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId]);
+      : kind === 'culture' && !!(FB.cultureAssignable
+        ? FB.cultureAssignable(targetId, state)
+        : (FB.cultureExists
+          ? FB.cultureExists(targetId, state) : FBDATA.cultures[targetId]));
     if (!targetValid || !FBDATA.countyCommunityPolicies ||
         !FBDATA.countyCommunityPolicies[policyId]) {
       out.reason = FB.T('That settlement project is not possible.');
@@ -1496,7 +1600,7 @@ window.FB = window.FB || {};
     const c = me(state);
     const ids = kind === 'faith'
       ? FB.religionIds(state, true) : (FB.cultureIds
-        ? FB.cultureIds(state) : Object.keys(FBDATA.cultures));
+        ? FB.cultureIds(state, true) : Object.keys(FBDATA.cultures));
     let cheapest = null;
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
@@ -3962,10 +4066,15 @@ window.FB = window.FB || {};
       return FB.T('Cross border or sea to plunder foreign wealth, livestock, goods, and thralls without a formal war.');
     },
     show: function (s) {
-      return FB.canRaid ? FB.canRaid(s) : false;
+      return FB.canOrganizeRaid ? FB.canOrganizeRaid(s) :
+        (FB.canRaid ? FB.canRaid(s) : false);
     },
     can: function (s) {
       if (s.player.flags && s.player.flags.in_prison) return FB.T('You are imprisoned.');
+      if (FB.raidMuster && FB.raidMuster(s) <= 0) {
+        return FB.T(
+          'Too few people in your lands follow the reformed raiding tradition to muster a host. Spread your culture through a settlement project first.');
+      }
       if (s.player.raidCooldownUntil && s.player.raidCooldownUntil > s.turn) {
         return FB.T('Your raiders are resting ({days} days remain).', {
           days: Math.max(1, s.player.raidCooldownUntil - s.turn)
@@ -10265,22 +10374,99 @@ window.FB = window.FB || {};
      FB.calculateRaidSpoils, FB.executeRaid)
      ========================================================================= */
 
-  FB.canRaid = function (state, charId) {
-    if (!state || !state.player) return false;
+  function raidCharacterEligible(state, charId) {
+    if (!state || !state.player) return null;
     const cid = charId || state.player.charId;
     const c = state.chars && state.chars[cid];
-    if (!c) return false;
+    if (!c) return null;
     const currentYear = (state.date && state.date.year) || 867;
-    if (FB.ageOf(c, currentYear) < 16) return false;
-    if (state.player.flags && state.player.flags.in_prison) return false;
-    /* Independent expeditions require a landed warband. Freeholders and
-       gentry may serve in a lord's campaigns, but do not command the county
-       host represented by the raid resolver. */
-    if (state.player.tier < 3) return false;
+    if (FB.ageOf(c, currentYear) < 16) return null;
+    if (state.player.flags && state.player.flags.in_prison) return null;
+    if (state.player.tier < 3) return null;
+    return c;
+  }
 
-    const cult = c.culture;
-    const faith = c.religion;
-    return FB.hasRaidingTradition(cult, faith, state);
+  FB.raidTerritorialShare = function (state, charId) {
+    const c = raidCharacterEligible(state, charId);
+    if (!c) return 0;
+    if (FB.hasFaithRaidingTradition &&
+        FB.hasFaithRaidingTradition(c.religion, state)) return 1;
+    if (!FB.hasCulturalRaidingTradition ||
+        !FB.hasCulturalRaidingTradition(c.culture, state)) return 0;
+    const campaignCulture = state.cultures &&
+      Object.prototype.hasOwnProperty.call(state.cultures, c.culture);
+    if (!campaignCulture) return 1;
+    return FB.identityTerritoryShare
+      ? FB.identityTerritoryShare(
+        state, 'culture', c.culture, 'player') : 0;
+  };
+
+  FB.raidMuster = function (state, charId) {
+    const full = FB.playerLevy ? FB.playerLevy(state) : 120;
+    return Math.max(0, Math.round(full * FB.clamp(
+      FB.raidTerritorialShare(state, charId), 0, 1)));
+  };
+
+  FB.canOrganizeRaid = function (state, charId) {
+    const c = raidCharacterEligible(state, charId);
+    return !!(c && FB.hasRaidingTradition(
+      c.culture, c.religion, state));
+  };
+
+  FB.canRaid = function (state, charId) {
+    return FB.canOrganizeRaid(state, charId) &&
+      FB.raidMuster(state, charId) > 0;
+  };
+
+  FB.raidOriginPids = function (state, charId) {
+    if (!FB.canOrganizeRaid(state, charId)) return [];
+    const p = state.player;
+    const c = state.chars[charId || p.charId];
+    let pids = p.provs && p.provs.length
+      ? p.provs.slice() : (p.provinceId ? [p.provinceId] : []);
+    const campaignCulture = state.cultures &&
+      Object.prototype.hasOwnProperty.call(state.cultures, c.culture);
+    const faithRaiding = FB.hasFaithRaidingTradition &&
+      FB.hasFaithRaidingTradition(c.religion, state);
+    if (!campaignCulture || faithRaiding) return pids;
+    if (p.tier === 3) {
+      const home = p.homeSettlement !== undefined
+        ? p.homeSettlement : (p.settlement !== undefined ? p.settlement : 0);
+      return FB.settlementCultureShare && FB.settlementCultureShare(
+        state, p.provinceId, Number(home) || 0, c.culture) > 0
+        ? [p.provinceId] : [];
+    }
+    return pids.filter(function (pid) {
+      return FB.countyCultureShare &&
+        FB.countyCultureShare(state, pid, c.culture) > 0;
+    });
+  };
+
+  FB.raidHasSupportedSeafaring = function (state, charId, originPid) {
+    const c = raidCharacterEligible(state, charId);
+    if (!c || !FB.cultureValue ||
+        !FB.cultureValue(state, c.culture, 'doctrines.seafaring').value) {
+      return false;
+    }
+    const campaignCulture = state.cultures &&
+      Object.prototype.hasOwnProperty.call(state.cultures, c.culture);
+    if (!campaignCulture) return true;
+    if (originPid) {
+      if (state.player.tier === 3 && originPid === state.player.provinceId) {
+        const home = state.player.homeSettlement !== undefined
+          ? state.player.homeSettlement
+          : (state.player.settlement !== undefined ? state.player.settlement : 0);
+        return !!(FB.settlementCultureShare && FB.settlementCultureShare(
+          state, originPid, Number(home) || 0, c.culture) > 0);
+      }
+      return !!(FB.countyCultureShare &&
+        FB.countyCultureShare(state, originPid, c.culture) > 0);
+    }
+    const origins = FB.raidOriginPids(state, charId);
+    for (let i = 0; i < origins.length; i++) {
+      if (FB.raidHasSupportedSeafaring(state, charId, origins[i])) return true;
+    }
+    return false;
   };
 
   FB.raidRange = function (state, charId) {
@@ -10288,6 +10474,8 @@ window.FB = window.FB || {};
     const realmId = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
 
     if (FB.hasTech && FB.hasTech(state, 'longships', realmId)) {
+      range += (FBDATA.balance && FBDATA.balance.raidLongshipRange) || 4;
+    } else if (FB.raidHasSupportedSeafaring(state, charId)) {
       range += (FBDATA.balance && FBDATA.balance.raidLongshipRange) || 4;
     }
     if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) range += 1;
@@ -10300,7 +10488,9 @@ window.FB = window.FB || {};
 
   FB.raidRangePx = function (state, charId) {
     const realmId = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
-    const hasLongships = FB.hasTech && FB.hasTech(state, 'longships', realmId);
+    const hasLongships = (FB.hasTech &&
+      FB.hasTech(state, 'longships', realmId)) ||
+      FB.raidHasSupportedSeafaring(state, charId);
 
     // Overland baseline: 85px radius (~2.4 standard county widths)
     let overlandPx = 85;
@@ -10358,17 +10548,15 @@ window.FB = window.FB || {};
     const realmId = playerRealm;
     const rangePx = FB.raidRangePx(state, charId);
     const hasLongships = rangePx.naval > 0;
+    const nationalLongships = FB.hasTech &&
+      FB.hasTech(state, 'longships', realmId);
 
-    const startPids = [];
-    if (p.provinceId) startPids.push(p.provinceId);
-    if (p.provs && p.provs.length) {
-      for (let i = 0; i < p.provs.length; i++) {
-        if (startPids.indexOf(p.provs[i]) < 0) startPids.push(p.provs[i]);
-      }
-    }
+    const startPids = FB.raidOriginPids
+      ? FB.raidOriginPids(state, charId) : [];
     if (!startPids.length) return out;
 
     const dist = {};
+    const originByPid = {};
     const startPrs = [];
     for (let i = 0; i < startPids.length; i++) {
       const sp = startPids[i];
@@ -10397,12 +10585,17 @@ window.FB = window.FB || {};
         if (sameLand) {
           if (dPx <= rangePx.overland && dPx < bestDistPx) {
             bestDistPx = dPx;
+            originByPid[tp.id] = sp.id;
           }
         }
         // 2. Naval longship distance from coastal or river-reachable targets
-        if (hasLongships && navalReachable[tp.id] &&
+        const localSeafaring = nationalLongships ||
+          (FB.raidHasSupportedSeafaring &&
+            FB.raidHasSupportedSeafaring(state, charId, sp.id));
+        if (hasLongships && localSeafaring && navalReachable[tp.id] &&
             dPx <= rangePx.naval && dPx < bestDistPx) {
           bestDistPx = dPx;
+          originByPid[tp.id] = sp.id;
         }
       }
 
@@ -10422,7 +10615,9 @@ window.FB = window.FB || {};
       if (FB.areAllied && FB.areAllied(state, playerRealm, enemyRealm)) continue;
 
       // Check if passage to target is blocked by intermediate hostile forts
-      const route = FB.raidMarchRoute ? FB.raidMarchRoute(state, startPids[0], pid) : [pid];
+      const originPid = originByPid[pid] || startPids[0];
+      const route = FB.raidMarchRoute
+        ? FB.raidMarchRoute(state, originPid, pid, charId) : [pid];
       if (!route) continue;
 
       let intermediateCounties = 0;
@@ -10458,6 +10653,7 @@ window.FB = window.FB || {};
 
       out.push({
         pid: pid,
+        originPid: originPid,
         name: pr.name,
         terrain: pr.terrain,
         coastal: !!pr.coastal,
@@ -10488,14 +10684,17 @@ window.FB = window.FB || {};
     return out;
   };
 
-  FB.raidMarchRoute = function (state, fromPid, toPid) {
+  FB.raidMarchRoute = function (state, fromPid, toPid, charId) {
     if (!fromPid || !toPid || fromPid === toPid || !FB.world || !FB.world.byId) return [toPid];
     const fromPr = FB.world.byId[fromPid];
     const toPr = FB.world.byId[toPid];
     if (!fromPr || !toPr) return [toPid];
 
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
-    const hasLongships = FB.hasTech && FB.hasTech(state, 'longships', playerRealm);
+    const hasLongships = (FB.hasTech &&
+      FB.hasTech(state, 'longships', playerRealm)) ||
+      (FB.raidHasSupportedSeafaring &&
+        FB.raidHasSupportedSeafaring(state, charId, fromPid));
 
     function isHostileFort(pid) {
       if (pid === fromPid || pid === toPid) return false;
@@ -10651,7 +10850,10 @@ window.FB = window.FB || {};
     const mult = isSack ? 1.35 : 0.65;
 
     const p = state.player;
-    const homePid = p.provinceId || (p.provs && p.provs[0]);
+    const raidOrigins = FB.raidOriginPids
+      ? FB.raidOriginPids(state, charId) : [];
+    const homePid = previewTarget && previewTarget.originPid ||
+      raidOrigins[0] || p.provinceId || (p.provs && p.provs[0]);
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
 
     // 1. Initial Raider Strength
@@ -10659,7 +10861,9 @@ window.FB = window.FB || {};
     if (previewShared && previewShared.initialMen !== undefined) {
       initialMen = previewShared.initialMen;
     } else {
-      initialMen = (FB.playerLevy ? FB.playerLevy(state) : 0) || 120;
+      initialMen = FB.raidMuster
+        ? FB.raidMuster(state, charId)
+        : ((FB.playerLevy ? FB.playerLevy(state) : 0) || 120);
       if (previewShared) previewShared.initialMen = initialMen;
     }
     let currentMen = initialMen;
@@ -10671,10 +10875,12 @@ window.FB = window.FB || {};
 
     // Calculate march route through intermediate counties (respecting fort zone of control)
     const route = previewTarget && previewTarget.route ? previewTarget.route :
-      (FB.raidMarchRoute ? FB.raidMarchRoute(state, homePid, targetPid) : [targetPid]);
+      (FB.raidMarchRoute
+        ? FB.raidMarchRoute(state, homePid, targetPid, charId) : [targetPid]);
     if (!route || !route.length) {
       return {
         targetPid: targetPid,
+        originPid: homePid,
         strategy: strategy,
         success: false,
         victoryGrade: 'repelled',
@@ -10939,6 +11145,7 @@ window.FB = window.FB || {};
 
     return {
       targetPid: targetPid,
+      originPid: homePid,
       strategy: strategy,
       success: success,
       victoryGrade: victoryGrade,
@@ -10962,11 +11169,13 @@ window.FB = window.FB || {};
   };
 
   FB.executeRaid = function (state, targetPid, strategy, charId, captiveChoice) {
+    if (FB.raidMuster && FB.raidMuster(state, charId) <= 0) return false;
     const spoils = FB.calculateRaidSpoils(state, targetPid, strategy, charId);
     const p = state.player;
     const pr = FB.world.byId[targetPid];
     const targetRid = state.owner && state.owner[targetPid];
-    const homePid = p.provinceId || (p.provs && p.provs[0]);
+    const homePid = spoils.originPid || p.provinceId ||
+      (p.provs && p.provs[0]);
 
     p.gold = (Number(p.gold) || 0) + spoils.gold;
     p.prestige = (Number(p.prestige) || 0) + spoils.prestige;

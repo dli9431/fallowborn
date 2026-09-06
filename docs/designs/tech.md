@@ -87,7 +87,10 @@ conversion. Bookmark realms may still author overlaps when a court crossed sever
 routes of transmission.
 
 `techTraditions` and `techSeed:{complete,expose,omit}` may be authored on a bookmark realm.
-Otherwise traditions derive from the capital/ruler culture and religion. On a fresh
+Otherwise traditions derive from the capital/ruler culture and religion. A campaign-created
+culture's changed learning doctrine is not treated as nationally established from its ruler
+alone: it replaces the inherited route only when the branch is dominant in a baron's exact
+home settlement or in a higher ruler's capital county. On a fresh
 bookmark, `FB.seedRealmTechnologies`:
 
 1. completes entries whose regional widespread-adoption date has passed;
@@ -308,7 +311,9 @@ unit-class table (with `FBDATA.unitClassAliases` covering the pre-table targets
 the mustered levy; hosts already fielded keep their composition after any technology
 loss. The `new_unit_classes` ledger entry records this as a hard gate with the baseline
 five classes as fallback; `culture_unit_classes` (horse archers, huscarls, camel riders)
-is `none` — a people's traditional arm is culture-gated, not research-gated.
+is `none` — a people's traditional arm is culture-gated, not research-gated. An authored
+culture starts with that arm established; a campaign-created branch converts only the
+share supplied by settlements or directly held counties that actually follow it.
 Seafaring and naval-organization technologies provide two army effects without adding
 fleets: additive `fx.seaMovement` shortens water-crossing cycles (capped at 0.40), while
 positive-integer `fx.seaTransport` is max-valued rather than summed. The best completed
@@ -379,9 +384,10 @@ opens the exact missing technology, and never disables an existing fort or in-fl
 project when allegiance later changes. Technology detail reverse discovery scans
 `FBDATA.fortLevels` alongside ordinary content consumers.
 
-Raiding expeditions add four technology reviews. `overseas_raiding` is hard on `longships`:
-deep trans-oceanic and upriver inland raids into distant water basins require shallow-draft
-longships, while baseline overland and coastal border reaving operates with basic transport.
+Raiding expeditions add four technology reviews. `overseas_raiding` is hard on `longships`
+for cultures without an established long-range seafaring tradition: deep trans-oceanic and
+upriver inland raids into distant water basins otherwise require shallow-draft longships,
+while baseline overland and coastal border reaving operates with basic transport.
 `mounted_raiding` is soft on `mounted_archery` and `cavalry_lances`: cavalry innovations expand
 overland raiding range, speed, and carry payload. `raiding_navigation` is soft on
 `celestial_navigation`, `naval_logbooks`, and `mariners_compass`: navigational arts extend

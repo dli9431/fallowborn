@@ -196,6 +196,22 @@ window.FB = window.FB || {};
     return capital ? capital.culture : null;
   }
 
+  /* Authored cultures begin with an established territorial tradition.
+     Campaign-created branches do not: their special companies grow only as
+     county or settlement communities adopt that exact branch. */
+  FB.unitClassTerritorialShare = function (state, classId, realmId) {
+    const def = unitClassDef(classId);
+    if (!def || !def.cultureDoctrine) return 1;
+    const culture = realmUnitCulture(state, realmId);
+    const generated = state && state.cultures &&
+      Object.prototype.hasOwnProperty.call(state.cultures, culture);
+    if (!generated) return 1;
+    return FB.identityTerritoryShare
+      ? FB.identityTerritoryShare(
+        state, 'culture', culture, realmId === undefined ? 'player' : realmId)
+      : 0;
+  };
+
   FB.unitClassUnlocked = function (state, classId, realmId) {
     const def = unitClassDef(classId);
     if (!def) return false;
@@ -203,6 +219,10 @@ window.FB = window.FB || {};
     if (def.cultureDoctrine && FB.cultureValue &&
         FB.cultureValue(state, culture, 'doctrines.military').value !==
           def.cultureDoctrine) return false;
+    if (def.cultureDoctrine &&
+        FB.unitClassTerritorialShare(state, classId, realmId) <= 0) {
+      return false;
+    }
     if (def.cultures || def.notCultures) {
       if (def.cultures && def.cultures.indexOf(culture) < 0) return false;
       if (def.notCultures && def.notCultures.indexOf(culture) >= 0) return false;
@@ -487,7 +507,7 @@ window.FB = window.FB || {};
       const share = def && Number(def.share);
       if (share > 0 && !(fracs[id] > 0) &&
           FB.unitClassUnlocked(state, id, rid)) {
-        fracs[id] = share;
+        fracs[id] = share * FB.unitClassTerritorialShare(state, id, rid);
       }
     }
     let professional = 0;

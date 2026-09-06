@@ -3172,7 +3172,7 @@ window.FB = window.FB || {};
     const currentId = kind === 'faith' ? c.religion : c.culture;
     const ids = kind === 'faith'
       ? FB.religionIds(s, true) : (FB.cultureIds
-        ? FB.cultureIds(s) : Object.keys(FBDATA.cultures));
+        ? FB.cultureIds(s, true) : Object.keys(FBDATA.cultures));
     const targets = [];
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
@@ -3488,14 +3488,16 @@ window.FB = window.FB || {};
   function countyProjectTargetIds(s, pid, kind, settlementIndex) {
     const ids = kind === 'faith'
       ? FB.religionIds(s, true) : (FB.cultureIds
-        ? FB.cultureIds(s) : Object.keys(FBDATA.cultures || {}));
+        ? FB.cultureIds(s, true) : Object.keys(FBDATA.cultures || {}));
     const local = typeof settlementIndex === 'number';
     const communities = local && FB.settlementCommunities
       ? FB.settlementCommunities(s, pid, settlementIndex) : [];
     return ids.filter(function (id) {
       const valid = kind === 'faith'
         ? FB.faithExists(id, s) && FB.faithAssignable(id, s)
-        : !!(FB.cultureExists ? FB.cultureExists(id, s) : FBDATA.cultures[id]);
+        : !!(FB.cultureAssignable
+          ? FB.cultureAssignable(id, s)
+          : (FB.cultureExists ? FB.cultureExists(id, s) : FBDATA.cultures[id]));
       let share = 0;
       if (local) {
         const field = kind === 'faith' ? 'religion' : 'culture';
@@ -3528,7 +3530,8 @@ window.FB = window.FB || {};
     const settlement = local && s ? FB.settlementsOf(s, pid)[settlementIndex] : null;
     if (!s || !province || province.wasteland ||
         (kind !== 'faith' && kind !== 'culture') || (local && !settlement)) return;
-    let targetId = null;
+    let targetId = typeof options.target === 'string' && options.target
+      ? options.target : null;
 
     function currentProject() {
       return local && FB.settlementCommunityProject
@@ -3829,7 +3832,14 @@ window.FB = window.FB || {};
       $('county-project-confirm-back').addEventListener('click', renderPolicies);
     }
 
-    renderTargets();
+    if (targetId && countyProjectTargetIds(
+        s, pid, kind, local ? settlementIndex : undefined).indexOf(
+          targetId) >= 0) {
+      renderPolicies();
+    } else {
+      targetId = null;
+      renderTargets();
+    }
   };
 
   UI.showCountyCommunityProjectStop = function (pid, kind, options) {

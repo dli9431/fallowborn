@@ -14,7 +14,10 @@ headed faiths). Costs and penalties therefore escalate steeply with scope.
 Doctrine reform is adjacent but separate. It creates or updates a child of the player's
 current identity, converts only the player, and spends piety or prestige through
 `FB.applyDoctrineReform`. Conversion remains the explicit way to bring a household or
-realm into that branch. See [doctrines.md](doctrines.md).
+realm into that branch. A landed founder's identity sheet may open the existing project
+picker for the exact home settlement and new branch; choosing a policy still starts the
+ordinary gradual local project rather than transferring population immediately. See
+[doctrines.md](doctrines.md).
 
 ## Scopes
 
@@ -81,11 +84,14 @@ same pressure/resistance calculation as an active project, without temporarily w
 to state. Starting or changing a baseline project has no immediate piety, prestige,
 Standing, or relationship charge; the confirmation says so explicitly and presents the
 actual Common Voice, unrest, economic, and migration consequences of its policy. The Self
-Faith and Culture sheets remain character-centered. Each links only to its personal
-conversion picker and never owns, navigates to, or silently targets a territorial project.
-Culture also shows the player's current culture, regional tradition, dynasty style, and
-representative names. Territorial faith conversion and cultural assimilation remain in
-Land.
+Faith and Culture sheets remain character-centered. Their general conversion actions never
+own or silently target a territorial project. A campaign branch that the player currently
+follows additionally shows its home-settlement following and an explicit **Spread to your
+home settlement...** action. That action carries the exact home settlement and branch into
+the ordinary policy picker; no project begins until the player chooses a policy. Culture
+also shows the player's current culture, regional tradition, dynasty style, and
+representative names. Other territorial faith conversion and cultural assimilation remain
+in Land.
 
 Settlement projects reuse the same saved project fields, annual pressure/resistance
 model, and policy consequences under `settlementCommunityProjects[settlementIndex]`.

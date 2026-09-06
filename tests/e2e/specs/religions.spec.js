@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/events.js',
   'js/model.js',
+  'js/population.js',
   'js/save.js',
   'js/technology.js',
   'js/ui_modals.js',
@@ -517,4 +518,144 @@ test('paid doctrine reform persists faith and culture branches with escalating d
       result.cultureId, result.parentCulture
     ]);
     expect(result.restoredFaith).toBe(true);
+  });
+
+test('undoing the last doctrine departure restores the remembered parent identity',
+  async function ({ page }, testInfo) {
+    primaryFileOnly(testInfo);
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var pid = p.provinceId;
+      var settlement = p.homeSettlement || 0;
+      p.tier = 3;
+      p.piety = 5000;
+      p.prestige = 5000;
+      p.war = null;
+      p.cooldowns = {};
+      me.culture = 'german';
+      me.religion = 'catholic';
+      FB.convertSettlementCommunity(s, pid, settlement, {
+        kind:'culture', target:'german', rate:1
+      });
+      FB.convertSettlementCommunity(s, pid, settlement, {
+        kind:'faith', target:'catholic', rate:1
+      });
+
+      var cultureBranch = FB.applyDoctrineReform(
+        s, 'culture', 'raiding', 'practiced');
+      FB.convertSettlementCommunity(s, pid, settlement, {
+        kind:'culture', target:cultureBranch, amount:50
+      });
+      FB.startSettlementCommunityProject(s, pid, settlement, {
+        kind:'culture', target:cultureBranch,
+        policy:'integrative', sponsor:'player'
+      });
+      var cultureFollowingBefore = FB.settlementCultureShare(
+        s, pid, settlement, cultureBranch);
+      var cultureDoctrineBranch = s.cultures[cultureBranch].doctrineBranch;
+      delete s.cultures[cultureBranch].doctrineBranch;
+      delete p.cooldowns['reform_doctrine:culture'];
+      var restoredCulture = FB.applyDoctrineReform(
+        s, 'culture', 'raiding', 'forbidden');
+
+      var faithBranch = FB.applyDoctrineReform(
+        s, 'faith', 'close_kin', 'sanctioned');
+      FB.convertSettlementCommunity(s, pid, settlement, {
+        kind:'faith', target:faithBranch, amount:50
+      });
+      FB.startSettlementCommunityProject(s, pid, settlement, {
+        kind:'faith', target:faithBranch,
+        policy:'integrative', sponsor:'player'
+      });
+      var faithFollowingBefore = FB.settlementReligionShare(
+        s, pid, settlement, faithBranch);
+      var faithDoctrineBranch = s.faiths[faithBranch].doctrineBranch;
+      delete s.faiths[faithBranch].doctrineBranch;
+      delete p.cooldowns['reform_doctrine:faith'];
+      var restoredFaith = FB.applyDoctrineReform(
+        s, 'faith', 'close_kin', 'forbidden');
+
+      var independentFaith = FB.foundFaith(s, {
+        name:'Independent Fellowship', parent:'catholic',
+        relationToParent:'in_fold',
+        properties:{ marriage:{ kinship:{ siblingRite:'sanctioned' } } }
+      }, { convertFounder:false });
+      me.religion = independentFaith;
+      delete p.cooldowns['reform_doctrine:faith'];
+      var unchangedIndependentFaith = FB.applyDoctrineReform(
+        s, 'faith', 'close_kin', 'forbidden');
+      me.religion = restoredFaith;
+
+      var cultureProject = FB.settlementCommunityProject(
+        s, pid, settlement, 'culture');
+      var faithProject = FB.settlementCommunityProject(
+        s, pid, settlement, 'faith');
+      return {
+        cultureBranch:cultureBranch,
+        cultureDoctrineBranch:cultureDoctrineBranch,
+        restoredCulture:restoredCulture,
+        characterCulture:me.culture,
+        cultureFollowingBefore:cultureFollowingBefore,
+        cultureFollowingAfter:FB.settlementCultureShare(
+          s, pid, settlement, cultureBranch),
+        parentCultureFollowing:FB.settlementCultureShare(
+          s, pid, settlement, 'german'),
+        cultureProjectTarget:cultureProject && cultureProject.target,
+        cultureActive:s.cultures[cultureBranch].active,
+        cultureAssignable:FB.cultureAssignable(cultureBranch, s),
+        cultureOverride:!!(s.cultures[cultureBranch].doctrines &&
+          Object.prototype.hasOwnProperty.call(
+            s.cultures[cultureBranch].doctrines, 'raiding')),
+        faithBranch:faithBranch,
+        faithDoctrineBranch:faithDoctrineBranch,
+        restoredFaith:restoredFaith,
+        characterFaith:me.religion,
+        faithFollowingBefore:faithFollowingBefore,
+        faithFollowingAfter:FB.settlementReligionShare(
+          s, pid, settlement, faithBranch),
+        parentFaithFollowing:FB.settlementReligionShare(
+          s, pid, settlement, 'catholic'),
+        faithProjectTarget:faithProject && faithProject.target,
+        faithActive:s.faiths[faithBranch].active,
+        faithAssignable:FB.faithAssignable(faithBranch, s),
+        faithOverride:!!(s.faiths[faithBranch].properties.marriage &&
+          s.faiths[faithBranch].properties.marriage.kinship &&
+          Object.prototype.hasOwnProperty.call(
+            s.faiths[faithBranch].properties.marriage.kinship,
+            'siblingRite')),
+        independentFaith:independentFaith,
+        unchangedIndependentFaith:unchangedIndependentFaith,
+        independentDoctrineBranch:s.faiths[independentFaith].doctrineBranch
+      };
+    });
+
+    expect(result.cultureBranch).toMatch(/^culture_/);
+    expect(result.cultureDoctrineBranch).toBe(true);
+    expect(result.cultureFollowingBefore).toBeGreaterThan(0);
+    expect(result.restoredCulture).toBe('german');
+    expect(result.characterCulture).toBe('german');
+    expect(result.cultureFollowingAfter).toBe(0);
+    expect(result.parentCultureFollowing).toBe(1);
+    expect(result.cultureProjectTarget).toBe('german');
+    expect(result.cultureActive).toBe(false);
+    expect(result.cultureAssignable).toBe(false);
+    expect(result.cultureOverride).toBe(false);
+    expect(result.faithBranch).toMatch(/^generated_faith_/);
+    expect(result.faithDoctrineBranch).toBe(true);
+    expect(result.faithFollowingBefore).toBeGreaterThan(0);
+    expect(result.restoredFaith).toBe('catholic');
+    expect(result.characterFaith).toBe('catholic');
+    expect(result.faithFollowingAfter).toBe(0);
+    expect(result.parentFaithFollowing).toBe(1);
+    expect(result.faithProjectTarget).toBe('catholic');
+    expect(result.faithActive).toBe(false);
+    expect(result.faithAssignable).toBe(false);
+    expect(result.faithOverride).toBe(false);
+    expect(result.unchangedIndependentFaith).toBe(result.independentFaith);
+    expect(result.independentDoctrineBranch).toBeUndefined();
   });

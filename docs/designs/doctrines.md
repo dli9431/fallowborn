@@ -55,9 +55,32 @@ prestige. Core option costs live with their options. Global pacing lives in
 - `cultureDoctrineDivergenceThreshold` is three departures.
 
 The first change creates a campaign child identity and converts the player character.
-It does not silently convert the household, realm, county, or settlement. Those scopes
-continue to use the existing conversion and community-project systems. Further reforms
-alter that saved child record instead of multiplying near-identical descendants.
+It does not silently convert the household, realm, county, or settlement. The identity
+sheet reports the exact following in the player's home settlement and links a landed
+founder directly to a gradual local faith-conversion or cultural-assimilation project.
+Other settlements and counties continue to use their explicit Land project controls.
+Further reforms alter that saved child record instead of multiplying near-identical
+descendants.
+
+Campaign cultural doctrine is not territorial merely because its founder rules land.
+Raiding manpower and culture-specific companies scale with the share of people in the
+founder's settlement or directly held counties who have adopted that exact campaign
+culture. A new raiding branch therefore begins with no raiding host; each annual local
+assimilation transfer grows the eligible host. Long-range seafaring becomes usable only
+from an origin where the branch has followers, and a reformed learning tradition becomes
+the realm's technology tradition only after that culture is locally dominant at the
+baron's settlement or higher ruler's capital. Established authored cultures retain their
+already-established territorial traditions.
+
+The direct parent id remains on every generated definition, and doctrine-founded children
+carry `doctrineBranch:true` so an unrelated event- or mod-founded identity is never collapsed
+merely for sharing the parent's catalog values. Selecting the parent's value removes that
+local override instead of copying it. When the last departure is removed,
+the branch's live characters, political identities, county/settlement cohorts, and active
+community-project targets are consolidated back into the parent id. This makes an exact
+return to German, Catholicism, or another parent recognizable as that original identity;
+the unused generated definition remains resolvable for campaign history but becomes inactive
+and cannot be adopted or targeted by a new community project.
 
 One or two faith departures remain in the parent's fold. Three become schismatic and
 five become hostile. Crossing into schism removes allegiance to the parent's central
@@ -75,4 +98,7 @@ settlement naming, and unaltered doctrine. `FB.cultureOf`, `FB.cultureValue`, an
 `FB.cultureLineage` compile the effective record.
 
 The fields are additive at save version 3. Restore initializes them for older saves and
-rebuilds the derived culture graph. No compiled lineage or source map is serialized.
+rebuilds the derived culture graph. No compiled lineage, source map, or territorial
+doctrine cache is serialized. `doctrine_reform` is recorded in the technology-impact
+ledger as `none`: reform is personal and communal, while its territorial adoption already
+uses the ungated settlement conversion process.

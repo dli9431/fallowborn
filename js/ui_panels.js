@@ -2429,6 +2429,27 @@ window.FB = window.FB || {};
     })));
   }
 
+  function doctrineHomeSpread(s, kind, identityId) {
+    const generated = kind === 'faith' ? s.faiths : s.cultures;
+    if (!generated || !Object.prototype.hasOwnProperty.call(
+        generated, identityId) || !s.player || s.player.tier < 3) return null;
+    const pid = s.player.provinceId;
+    const settlement = s.player.homeSettlement !== undefined
+      ? s.player.homeSettlement
+      : (s.player.settlement !== undefined ? s.player.settlement : 0);
+    if (!pid || !FB.playerControlsSettlementCommunity ||
+        !FB.playerControlsSettlementCommunity(s, pid, settlement)) return null;
+    const share = kind === 'faith'
+      ? (FB.settlementReligionShare
+        ? FB.settlementReligionShare(s, pid, settlement, identityId) : 0)
+      : (FB.settlementCultureShare
+        ? FB.settlementCultureShare(s, pid, settlement, identityId) : 0);
+    return {
+      pid:pid, settlement:settlement,
+      share:FB.clamp(Number(share) || 0, 0, 1)
+    };
+  }
+
   function doctrineOptionCardsHtml(s, kind, doctrineId) {
     const identityId = kind === 'faith'
       ? s.chars[s.player.charId].religion : s.chars[s.player.charId].culture;
@@ -2444,7 +2465,8 @@ window.FB = window.FB || {};
           cost:doctrineCostText(status),
           count:doctrineDepartureText(status.divergence),
           relation:doctrineRelationText(kind, status.relation)
-        })
+        }) + (status.restoresParent ? ' ' + FB.T(
+          'This restores the original parent identity.') : '')
         : status.reason);
       h += '<div class="identity-conversion-action settcard"><button type="button" ' +
         'class="actionbtn" data-doctrine-option="' + esc(option.id) + '"' +
@@ -2535,6 +2557,9 @@ window.FB = window.FB || {};
       if (options[i].id === optionId) option = options[i];
     }
     if (!option) return;
+    const adoptionText = kind === 'faith'
+      ? FB.T('This changes your character immediately. Settlements keep their current faith until gradual conversion changes their communities.')
+      : FB.T('This changes your character immediately. Settlements and counties keep their current culture until gradual assimilation changes their communities; territorial doctrine benefits follow those adopters.');
     const h = '<p>' + esc(FB.T('Adopt {doctrine}: {option}?', {
       doctrine:catalog.name, option:option.name
     })) + '</p><div class="decision-cost"><b>' + esc(FB.T('Cost')) + ':</b> ' +
@@ -2542,7 +2567,11 @@ window.FB = window.FB || {};
       ':</b> ' + esc(doctrineRelationText(kind, status.relation)) +
       '<br><b>' + esc(FB.T('Total departures')) + ':</b> ' +
       esc(status.divergence) + '</div><p class="muted">' +
-      esc(FB.T(option.desc || '')) + '</p><div class="gm-list"><button ' +
+      esc(FB.T(option.desc || '')) + '</p><p class="progressnote">' +
+      esc(adoptionText) + '</p>' + (status.restoresParent
+        ? '<p class="progressnote">' + esc(FB.T(
+          'With no departures left, followers of this branch will be recognized as the original parent identity.')) + '</p>'
+        : '') + '<div class="gm-list"><button ' +
       'type="button" class="actionbtn" id="doctrine-confirm">' +
       esc(FB.T('Confirm reform')) + '</button></div><div class="gm-footer">' +
       '<button class="btn" id="doctrine-confirm-back">' + esc(FB.T('Back')) +
@@ -2578,6 +2607,8 @@ window.FB = window.FB || {};
       s, 'cultureTradition', traditionId, tradition, 'name');
     const maleNames = (culture.male || []).slice(0, 4).join(', ');
     const femaleNames = (culture.female || []).slice(0, 4).join(', ');
+    const spread = s.chars[s.player.charId].culture === cultureId
+      ? doctrineHomeSpread(s, 'culture', cultureId) : null;
     const h = panelh('Identity') +
       kv('Current culture', esc(cultureName(s, cultureId))) +
       (culture.parent
@@ -2589,6 +2620,9 @@ window.FB = window.FB || {};
       (femaleNames ? kv('Women’s names', esc(femaleNames)) : '') +
       panelh('Doctrine') + doctrineRowsHtml(s, 'culture', cultureId) +
       doctrineBranchStatusHtml(s, 'culture', cultureId) +
+      (spread ? kv('Home settlement followers', esc(FB.T('{percent}%', {
+        percent:Math.round(spread.share * 100)
+      }))) : '') +
       panelh('Actions') + '<div class="gm-list identity-conversion-actions">' +
       identityConversionActionHtml(
         'culture-details-adopt', FB.T('Adopt a new culture…'),
@@ -2597,6 +2631,10 @@ window.FB = window.FB || {};
         ? identityConversionActionHtml(
           'culture-details-reform', FB.T('Reform cultural doctrines…'),
           FB.T('Spend prestige to establish or reshape a cultural branch.')) : '') +
+      (spread && spread.share < 1
+        ? identityConversionActionHtml(
+          'culture-details-spread', FB.T('Spread to your home settlement…'),
+          FB.T('Begin gradual cultural assimilation there; local doctrine benefits grow only as its people adopt the branch.')) : '') +
       '</div>' +
       '<div class="gm-footer"><button class="btn" ' +
       'id="culture-details-close">' + esc(FB.T('Close')) + '</button></div>';
@@ -2609,6 +2647,12 @@ window.FB = window.FB || {};
     const reform = $('culture-details-reform');
     if (reform) reform.addEventListener('click', function () {
       UI.showDoctrineReform('culture');
+    });
+    const spreadAction = $('culture-details-spread');
+    if (spreadAction) spreadAction.addEventListener('click', function () {
+      UI.showCountyCommunityProjectPicker(spread.pid, 'culture', {
+        settlement:spread.settlement, target:cultureId
+      });
     });
   };
 
@@ -2660,6 +2704,8 @@ window.FB = window.FB || {};
     const origin = rel.originProvinceId && FB.world.byId[rel.originProvinceId];
     const founded = isFinite(rel.createdTurn)
       ? FB.dateAtTurn(s, rel.createdTurn) : null;
+    const spread = s.chars[s.player.charId].religion === religionId
+      ? doctrineHomeSpread(s, 'faith', religionId) : null;
     let h = '<div class="progressnote">' + esc(campaignFounded
       ? foundedFaithOriginText(
         s, religionId, rel, parent, founder, origin, founded)
@@ -2719,6 +2765,11 @@ window.FB = window.FB || {};
     }
     h += panelh('Doctrine') + doctrineRowsHtml(s, 'faith', religionId) +
       doctrineBranchStatusHtml(s, 'faith', religionId);
+    if (spread) {
+      h += kv('Home settlement followers', esc(FB.T('{percent}%', {
+        percent:Math.round(spread.share * 100)
+      })));
+    }
     h += panelh('Actions') +
       '<div class="gm-list identity-conversion-actions">' +
       identityConversionActionHtml(
@@ -2728,6 +2779,10 @@ window.FB = window.FB || {};
         ? identityConversionActionHtml(
           'faith-details-reform', FB.T('Reform religious doctrines…'),
           FB.T('Spend piety to establish or reshape a religious branch.')) : '') +
+      (spread && spread.share < 1
+        ? identityConversionActionHtml(
+          'faith-details-spread', FB.T('Spread to your home settlement…'),
+          FB.T('Begin gradual faith conversion there; local institutions change only as its people adopt the branch.')) : '') +
       '</div><div class="gm-footer"><button class="btn" id="faith-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(rel.icon + ' ' + religionName(s, religionId), h);
@@ -2739,6 +2794,12 @@ window.FB = window.FB || {};
     const reform = $('faith-details-reform');
     if (reform) reform.addEventListener('click', function () {
       UI.showDoctrineReform('faith');
+    });
+    const spreadAction = $('faith-details-spread');
+    if (spreadAction) spreadAction.addEventListener('click', function () {
+      UI.showCountyCommunityProjectPicker(spread.pid, 'faith', {
+        settlement:spread.settlement, target:religionId
+      });
     });
   };
 

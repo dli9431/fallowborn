@@ -1398,15 +1398,18 @@ details sheet with an in-world origin account, founder/date/place, lineage,
 directional parent relations, authority, and every religious doctrine.
 The sheet's **Reform religious doctrines...** action opens data-driven choices with
 cost, total divergence, and the resulting parent relationship before confirmation.
-That sheet keeps conversion character-centered: **Convert your faith…** opens the existing
-personal/household/realm picker. It contains no county-navigation actions and never starts,
-changes, stops, or silently chooses a territorial project.
+That sheet keeps general conversion character-centered: **Convert your faith…** opens the
+existing personal/household/realm picker. A campaign branch followed by a landed player also
+shows the exact percentage following it in the home settlement and offers **Spread to your
+home settlement...**. This explicit shortcut opens the existing local policy step with the
+branch and settlement already identified; it never starts a project by itself.
 The culture value beside it is also a focusable link. Its compact, informational Culture
 sheet shows the player's current culture, regional tradition, dynasty naming style,
 representative men's and women's names, and every cultural doctrine. **Reform cultural
 doctrines...** uses the same preview and confirmation pattern. **Adopt a new culture…** opens the existing
-personal/household picker. Like Faith, it contains no county-navigation actions;
-territorial assimilation remains in Land. Both identity-sheet conversion actions keep their
+personal/household picker. A campaign culture uses the same home-following row and explicit
+settlement-project shortcut as Faith; other territorial assimilation remains in Land. The
+identity-sheet actions keep their
 supporting explanation in the shared desktop tooltip or compact `?` disclosure. On compact
 layouts, the conversion action and its disclosure form one equal-height split row.
 The selected Land county is the canonical community surface. Its unchanged county

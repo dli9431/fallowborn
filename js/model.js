@@ -206,6 +206,8 @@ window.FB = window.FB || {};
       delete effective.createdTurn;
       delete effective.founderId;
       delete effective.originProvinceId;
+      delete effective.active;
+      delete effective.doctrineBranch;
       const sources = parent ? cloneFaithValue(parent._cultureSources) : {};
       if (!parent) {
         effective.doctrines = cultureDefaults(id);
@@ -330,12 +332,20 @@ window.FB = window.FB || {};
     return compiledCultures(state).errors.slice();
   };
 
-  FB.cultureIds = function (state) {
-    return Object.keys(compiledCultures(state).resolved);
+  FB.cultureIds = function (state, assignableOnly) {
+    const resolved = compiledCultures(state).resolved;
+    return Object.keys(resolved).filter(function (id) {
+      return !assignableOnly || resolved[id].active !== false;
+    });
   };
 
   FB.cultureExists = function (id, state) {
     return !!compiledCultures(state).resolved[id];
+  };
+
+  FB.cultureAssignable = function (id, state) {
+    const culture = compiledCultures(state).resolved[id];
+    return !!(culture && culture.active !== false);
   };
 
   FB.cultureOf = function (id, state) {
@@ -454,7 +464,8 @@ window.FB = window.FB || {};
     id:true, name:true, adjective:true, collective:true, desc:true, icon:true,
     parent:true, group:true, assignable:true, active:true,
     relationToParent:true, relations:true, properties:true,
-    createdTurn:true, founderId:true, originProvinceId:true
+    createdTurn:true, founderId:true, originProvinceId:true,
+    doctrineBranch:true
   };
   const FAITH_RELATIONS = {
     same:0, in_fold:1, schismatic:2, hostile:3, foreign:4

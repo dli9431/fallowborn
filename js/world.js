@@ -4099,18 +4099,27 @@ window.FB = window.FB || {};
     return !!(r && r.alive && !r.liege);
   };
 
-  FB.hasRaidingTradition = function (culture, faith, state) {
+  FB.hasCulturalRaidingTradition = function (culture, state) {
     const rules = FBDATA.raidingTraditions || {};
     const cultures = rules.cultures || [];
-    const faiths = rules.faiths || [];
-    const faithGroups = rules.faithGroups || [];
     const cultural = culture && FB.cultureValue
       ? FB.cultureValue(state, culture, 'doctrines.raiding').value
       : cultures.indexOf(culture) >= 0;
-    return !!(cultural || (culture && cultures.indexOf(culture) >= 0) ||
-      (faith && (faiths.indexOf(faith) >= 0 ||
-        (FB.faithGroup && faithGroups.indexOf(
-          FB.faithGroup(faith, state)) >= 0))));
+    return !!(cultural || (culture && cultures.indexOf(culture) >= 0));
+  };
+
+  FB.hasFaithRaidingTradition = function (faith, state) {
+    const rules = FBDATA.raidingTraditions || {};
+    const faiths = rules.faiths || [];
+    const faithGroups = rules.faithGroups || [];
+    return !!(faith && (faiths.indexOf(faith) >= 0 ||
+      (FB.faithGroup && faithGroups.indexOf(
+        FB.faithGroup(faith, state)) >= 0)));
+  };
+
+  FB.hasRaidingTradition = function (culture, faith, state) {
+    return FB.hasCulturalRaidingTradition(culture, state) ||
+      FB.hasFaithRaidingTradition(faith, state);
   };
 
   FB.aiRaidTick = function (state, rid, r, B, knownPeaceful) {
@@ -4121,17 +4130,31 @@ window.FB = window.FB || {};
     const isRaider = FB.hasRaidingTradition(cult, faith, state);
     if (!isRaider) return;
 
+    const campaignCulture = state.cultures &&
+      Object.prototype.hasOwnProperty.call(state.cultures, cult);
+    const faithRaiding = FB.hasFaithRaidingTradition(faith, state);
+    const raidShare = campaignCulture && !faithRaiding
+      ? (FB.identityTerritoryShare
+        ? FB.identityTerritoryShare(state, 'culture', cult, rid) : 0)
+      : 1;
+    if (raidShare <= 0) return;
     const baseChance = (B && B.aiRaidChance) || 0.12;
-    if (!FB.chance(baseChance * (0.5 + 0.5 * (r.aggression || 1)))) return;
+    if (!FB.chance(baseChance * (0.5 + 0.5 * (r.aggression || 1)) *
+        raidShare)) return;
 
-    const ownProvs = FB.realmProvinces ? FB.realmProvinces(state, rid) : [];
+    let ownProvs = FB.realmProvinces ? FB.realmProvinces(state, rid) : [];
+    if (campaignCulture && !faithRaiding) {
+      ownProvs = ownProvs.filter(function (pid) {
+        return FB.countyCultureShare &&
+          FB.countyCultureShare(state, pid, cult) > 0;
+      });
+    }
     if (!ownProvs.length) return;
 
     const targets = [];
     const seafaring = FB.cultureValue &&
       FB.cultureValue(state, cult, 'doctrines.seafaring').value;
-    const maxRange = (seafaring ||
-      (FB.hasTech && FB.hasTech(state, 'longships', rid))) ? 5 : 2;
+    const longships = FB.hasTech && FB.hasTech(state, 'longships', rid);
     for (let i = 0; i < ownProvs.length; i++) {
       const op = ownProvs[i];
       const adj = FB.world.adj && FB.world.adj[op];
@@ -4143,7 +4166,11 @@ window.FB = window.FB || {};
           }
         }
       }
-      if (maxRange > 2 && FB.world.byId[op] && FB.world.byId[op].coastal) {
+      const localSeafaring = seafaring && (!campaignCulture ||
+        (FB.countyCultureShare &&
+          FB.countyCultureShare(state, op, cult) > 0));
+      if ((localSeafaring || longships) && FB.world.byId[op] &&
+          FB.world.byId[op].coastal) {
         const curPr = FB.world.byId[op];
         for (let j = 0; j < FB.world.provs.length; j++) {
           const pr = FB.world.provs[j];
@@ -6721,8 +6748,11 @@ window.FB = window.FB || {};
       if (!(FB.unitClassUnlocked && FB.unitClassUnlocked(state, unit))) {
         continue;
       }
+      const territorialShare = FB.unitClassTerritorialShare
+        ? FB.unitClassTerritorialShare(state, unit, 'player') : 1;
       const converted = Math.min(comp.levy,
-        Math.round(comp.levy * Math.min(1, share)));
+        Math.round(comp.levy * Math.min(1, share) *
+          FB.clamp(territorialShare, 0, 1)));
       if (!converted) continue;
       add('levy', 'unit_class_conversion', -converted, { unitClassId:unit });
       add(unit, 'unit_class', converted, { unitClassId:unit });

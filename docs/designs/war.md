@@ -263,7 +263,10 @@ a realm's muster automatically through `FB.unitClassUnlocked`: **crossbowmen**
 riders** (cultures `arabic`/`berber`), and **cataphracts** (cultures
 `greek`/`armenian` plus tech `cataphract_armor`). An unlocked class converts its
 `share` of the mustered levy into its own companies — the headcount is unchanged,
-the mix improves. `FB.playerComposition` (world.js) computes the player's
+the mix improves. Authored cultures begin with their traditional class established; for
+a campaign-created culture, only the share mustered from adherents in a baron's exact home
+settlement or a higher ruler's directly held counties converts to the new class.
+`FB.playerComposition` (world.js) computes the player's
 split — `FB.playerLevy` remains the total for callers that want a number — and AI hosts
 start from `balance.aiRetinueFrac`/`aiArcherFrac`, then add the effective sovereign's
 `fx.aiUnits` fractions and their own unlocked classes keyed on capital culture and
@@ -929,11 +932,20 @@ raiding expeditions against foreign counties (`FB.canRaid`, `FB.raidTargets`,
 and faith, not the sovereign realm's: Freeholders and gentry may join military service, but do
 not independently command the county host used by this resolver. Christian Gaelic rulers retain
 historical border and cattle raiding; their unrelated subjects do not inherit a private warband.
+An authored culture's tradition is already established. A campaign-created cultural branch,
+however, contributes raiders only in proportion to its followers in the baron's exact home
+settlement or the higher ruler's directly held counties. Its valid origins are limited to those
+counties, casualties return to the selected origin, and its doctrine cannot turn an unreformed
+German county into raiders instantly. A raiding faith remains an independent source of the
+tradition. AI sovereigns using a campaign culture likewise scale raid pressure by that branch's
+realm-wide following and project cultural seafaring only from follower counties.
 
 Raiding does not declare a formal conquest war, nor does it occupy land permanently:
 
 - **Expedition Range**: Overland baseline is 2 legs. `longships` unlocks deep overseas and
-  upriver naval raiding (+4 legs and cross-water navigation). Navigational arts
+  upriver naval raiding (+4 legs and cross-water navigation). A campaign culture's equivalent
+  long-range seafaring doctrine grants that route only from an origin where the branch has
+  followers. Navigational arts
   (`celestial_navigation`, `naval_logbooks`, `mariners_compass`) and cavalry innovations
   (`mounted_archery`, `cavalry_lances`) extend operational reach.
 - **Expedition Strategies**:

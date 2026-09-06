@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
+  'js/model.js',
   'js/technology.js',
   'js/market.js',
   'js/population.js',
@@ -133,6 +134,165 @@ test('independent raiding requires a landed ruler with a personal tradition',
     expect(result.gentry).toBe(false);
     expect(result.realmFound).toBe(true);
     expect(result.realmTradition).toBe(false);
+  });
+
+test('a reformed raiding culture raises troops only as its home settlement adopts it',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var pid = p.provinceId;
+      var settlement = p.homeSettlement || 0;
+      p.tier = 3;
+      p.prestige = 2000;
+      p.cooldowns = {};
+      p.war = null;
+      me.culture = 'german';
+      me.religion = 'catholic';
+      FB.convertSettlementCommunity(s, pid, settlement, {
+        kind:'culture', target:'german', rate:1
+      });
+      var parentLandCulture = FB.settlementCulture(s, pid, settlement);
+      var branch = FB.applyDoctrineReform(
+        s, 'culture', 'raiding', 'practiced');
+      delete p.cooldowns['reform_doctrine:culture'];
+      FB.applyDoctrineReform(s, 'culture', 'seafaring', 'oceanic');
+      delete p.cooldowns['reform_doctrine:culture'];
+      FB.applyDoctrineReform(s, 'culture', 'learning', 'steppe');
+      s.realms.e2e_doctrine_learning = {
+        id:'e2e_doctrine_learning', alive:true, liege:null,
+        capital:pid, ruler:{ culture:branch }, religion:'catholic'
+      };
+      var playerRealm = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
+      var raidTech = FB.realmTechRecord(s, playerRealm);
+      raidTech.completed = raidTech.completed.filter(function (id) {
+        return id !== 'longships';
+      });
+      var fullMuster = FB.playerLevy(s);
+      var before = {
+        landCulture:FB.settlementCulture(s, pid, settlement),
+        branchShare:FB.settlementCultureShare(s, pid, settlement, branch),
+        canOrganize:FB.canOrganizeRaid(s),
+        canRaid:FB.canRaid(s),
+        muster:FB.raidMuster(s),
+        range:FB.raidRange(s),
+        learning:FB.techTraditionsForRealm(s, 'e2e_doctrine_learning')
+      };
+      var blockedExecution = FB.executeRaid(
+        s, 'paris', 'sack', p.charId, 'settle');
+      FB.convertSettlementCommunity(s, pid, settlement, {
+        kind:'culture', target:branch, rate:0.5
+      });
+      var partial = {
+        share:FB.settlementCultureShare(s, pid, settlement, branch),
+        canRaid:FB.canRaid(s),
+        muster:FB.raidMuster(s),
+        origins:FB.raidOriginPids(s),
+        range:FB.raidRange(s),
+        learning:FB.techTraditionsForRealm(s, 'e2e_doctrine_learning')
+      };
+      FB.convertCountyCommunity(s, pid, {
+        kind:'culture', target:branch, rate:1
+      });
+      return {
+        parentLandCulture:parentLandCulture,
+        branch:branch,
+        fullMuster:fullMuster,
+        blockedExecution:blockedExecution,
+        before:before,
+        partial:partial,
+        completeShare:FB.settlementCultureShare(
+          s, pid, settlement, branch),
+        completeMuster:FB.raidMuster(s),
+        completeLearning:FB.techTraditionsForRealm(
+          s, 'e2e_doctrine_learning')
+      };
+    });
+
+    expect(result.parentLandCulture).toBe('german');
+    expect(result.branch).toMatch(/^culture_/);
+    expect(result.before.landCulture).toBe('german');
+    expect(result.before.branchShare).toBe(0);
+    expect(result.before.canOrganize).toBe(true);
+    expect(result.before.canRaid).toBe(false);
+    expect(result.before.muster).toBe(0);
+    expect(result.blockedExecution).toBe(false);
+    expect(result.before.learning).toContain('latin');
+    expect(result.partial.share).toBeGreaterThan(0);
+    expect(result.partial.share).toBeLessThan(1);
+    expect(result.partial.canRaid).toBe(true);
+    expect(result.partial.muster).toBeGreaterThan(0);
+    expect(result.partial.muster).toBeLessThan(result.fullMuster);
+    expect(result.partial.range).toBeGreaterThan(result.before.range);
+    expect(result.partial.learning).toContain('latin');
+    expect(result.partial.origins).toContain(
+      await page.evaluate(function () { return FB.state.player.provinceId; }));
+    expect(result.completeShare).toBe(1);
+    expect(result.completeMuster).toBe(result.fullMuster);
+    expect(result.completeLearning).toContain('steppe');
+  });
+
+test('campaign-culture AI raid pressure scales with territorial followers',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var playerRealm = FB.playerRealmId(s);
+      var selected = null;
+      var selectedProvs = null;
+      for (var rid in s.realms) {
+        var realm = s.realms[rid];
+        if (rid === playerRealm || !realm || !realm.alive || realm.liege) continue;
+        var provs = FB.realmProvinces(s, rid);
+        if (!provs.length || selectedProvs &&
+            selectedProvs.length <= provs.length) continue;
+        selected = rid;
+        selectedProvs = provs.slice();
+      }
+      if (!selected) return { realmFound:false };
+      var branch = FB.createCulture(s, {
+        name:'E2E March Raiders', parent:'german',
+        relationToParent:'same_group', doctrines:{ raiding:true }
+      });
+      var r = s.realms[selected];
+      r.culture = branch;
+      for (var i = 0; i < selectedProvs.length; i++) {
+        FB.convertCountyCommunity(s, selectedProvs[i], {
+          kind:'culture', target:'german', rate:1
+        });
+      }
+      var chanceCalls = [];
+      var originalChance = FB.chance;
+      FB.chance = function (value) {
+        chanceCalls.push(value);
+        return false;
+      };
+      try {
+        FB.aiRaidTick(s, selected, r, { aiRaidChance:0.12 }, true);
+        var callsWithoutFollowers = chanceCalls.length;
+        FB.convertCountyCommunity(s, selectedProvs[0], {
+          kind:'culture', target:branch, rate:0.5
+        });
+        var share = FB.identityTerritoryShare(
+          s, 'culture', branch, selected);
+        FB.aiRaidTick(s, selected, r, { aiRaidChance:0.12 }, true);
+        return {
+          realmFound:!!selected,
+          callsWithoutFollowers:callsWithoutFollowers,
+          share:share,
+          pressure:chanceCalls[0],
+          expected:0.12 * (0.5 + 0.5 * (r.aggression || 1)) * share
+        };
+      } finally {
+        FB.chance = originalChance;
+      }
+    });
+
+    expect(result.realmFound).toBe(true);
+    expect(result.callsWithoutFollowers).toBe(0);
+    expect(result.share).toBeGreaterThan(0);
+    expect(result.share).toBeLessThan(1);
+    expect(result.pressure).toBeCloseTo(result.expected, 10);
   });
 
 test('first-only raid target scans stop after finding one valid county',
@@ -273,8 +433,8 @@ test('technology tree extends raid reach and unlocks deep overseas raiding',
       var p = s.player;
       var me = s.chars[p.charId];
       p.tier = 3;
-      me.culture = 'norse';
-      me.religion = 'norse_pagan';
+      me.culture = 'gaelic';
+      me.religion = 'catholic';
 
       var realmId = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
       var baseRange = FB.raidRange(s);
@@ -794,8 +954,8 @@ test('raid against overwhelming garrison resistance is repelled with troop casua
       me.religion = 'norse_pagan';
 
       var targetPid = 'paris';
-      // Home one land step from the target: the Channel crossing needs
-      // longships, so a London start would find no route at all
+      // Keep the target one land step from home so this resistance case does
+      // not depend on the expedition's available naval reach.
       var homeAdj = FB.world.adj[targetPid] || {};
       for (var nb in homeAdj) {
         var npr = FB.world.byId[nb];
@@ -1030,8 +1190,8 @@ test('assaulting fortified counties inflicts significantly higher casualties tha
       me.culture = 'norse';
       me.religion = 'norse_pagan';
 
-      // Home one land step from Paris: the Channel crossing needs longships,
-      // so a London start would find no route at all
+      // Keep Paris one land step from home so this defender case does not
+      // depend on the expedition's available naval reach.
       var homeAdj = FB.world.adj['paris'] || {};
       for (var hb in homeAdj) {
         var hpr = FB.world.byId[hb];

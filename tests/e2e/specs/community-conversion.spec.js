@@ -613,6 +613,8 @@ test('identity sheets expose every doctrine and confirm paid branch reforms',
     await expect(page.locator('#gm-title')).toHaveText(
       'Confirm Doctrine Reform');
     await expect(page.locator('#gm-body')).toContainText('400 piety');
+    await expect(page.locator('#gm-body')).toContainText(
+      'Settlements keep their current faith until gradual conversion');
     await page.locator('#doctrine-confirm').click();
     await expect(page.locator('#gm-title')).toContainText(
       'Reformed Latin Christianity');
@@ -636,11 +638,24 @@ test('identity sheets expose every doctrine and confirm paid branch reforms',
     await page.locator('[data-doctrine-id="military"]').click();
     await page.locator('[data-doctrine-option="huscarl"]').click();
     await expect(page.locator('#gm-body')).toContainText('350 prestige');
+    await expect(page.locator('#gm-body')).toContainText(
+      'territorial doctrine benefits follow those adopters');
     await page.locator('#doctrine-confirm').click();
     await expect(page.locator('#gm-title')).toContainText('Reformed Gaelic');
     await expect(page.locator('#gm-body')).toContainText('Huscarls');
     await expect(page.locator('#gm-body')).toContainText(
       '1 doctrine · Related to parent');
+    await expect(page.locator('#gm-body')).toContainText(
+      'Home settlement followers');
+    await expect(page.locator('#culture-details-spread')).toBeVisible();
+    await page.locator('#culture-details-spread').click();
+    await expect(page.locator('#gm-title')).toContainText('Choose policy');
+    await expect(page.locator('#gm-body')).toContainText('Reformed Gaelic');
+    expect(await page.evaluate(function () {
+      var s = FB.state;
+      return FB.settlementCommunityProject(
+        s, s.player.provinceId, s.player.homeSettlement || 0, 'culture');
+    })).toBeNull();
   });
 
 test('community triggers and effects retain exact county and settlement context',

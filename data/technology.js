@@ -428,7 +428,7 @@ window.FBDATA = window.FBDATA || {};
       },
       overseas_raiding:{
         mode:'hard', tech:['longships'], fallback:'coastal_and_border_raiding',
-        rationale:'Trans-oceanic and upriver inland raiding requires specialized clinker longships, while baseline coastal and overland border reaving operates with basic transport.'
+        rationale:'For cultures without an established long-range seafaring tradition, trans-oceanic and upriver inland raiding requires specialized clinker longships; baseline coastal and overland border reaving remains available with basic transport.'
       },
       mounted_raiding:{
         mode:'soft', tech:['mounted_archery','cavalry_lances'],
@@ -450,6 +450,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Adopting another people’s language and customs is a personal and social act with no credible technology dependency; courts and households assimilated long before any researched practice.'
       },
+      doctrine_reform:{
+        mode:'none',
+        rationale:'Reinterpreting religious law or cultural custom is a personal and communal act with no credible technology dependency; the new branch still has to spread through ordinary settlement conversion before territorial benefits take root.'
+      },
       field_supply_attrition:{
         mode:'soft', tech:['pack_saddles','wheeled_carts','logistics_magazines'],
         rationale:'Every field host carries supply, refills it on friendly land, and starves abroad from the baseline; pack, cart, and magazine innovations stretch how long a campaign can range before attrition bites.'
@@ -466,7 +470,7 @@ window.FBDATA = window.FBDATA || {};
       },
       culture_unit_classes:{
         mode:'none',
-        rationale:'Horse-archer, huscarl, and camel-rider companies gate on the mustering realm’s culture alone; no period technology credibly blocks a people’s traditional arm, so no dependency is invented.'
+        rationale:'Horse-archer, huscarl, and camel-rider companies gate on the mustering population’s culture and local adoption rather than research; no period technology credibly blocks a people’s traditional arm, so no dependency is invented.'
       },
       war_justification_selection:{
         mode:'none',

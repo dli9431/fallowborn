@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.172.0';
+FB.VERSION = '1.172.1';
 FB.CHANGELOG = [
+  { v: '1.172.1', date: '2026-09-06', changes: [
+    'Reformed doctrines now spread through settlement communities over time, with territorial benefits following local believers and full reversions restoring the parent identity.'
+  ] },
   { v: '1.172.0', date: '2026-09-06', changes: [
     'Faith and Culture sheets now expose gameplay doctrines and let players spend piety or prestige to form increasingly divergent branches.'
   ] },

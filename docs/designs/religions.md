@@ -168,7 +168,9 @@ not follow a capital county's demographic change.
 
 Founding a faith can convert characters and the player realm, but it does not add county
 followers. County population changes only through the population-owned community
-transactions and the later explicit county-conversion project system.
+transactions and the later explicit county-conversion project system. A landed founder's
+faith sheet exposes a shortcut to that same gradual project for the exact home settlement;
+it does not confer local adherence or begin a project on its own.
 
 ## Player conversion
 
@@ -204,4 +206,7 @@ new generated-faith snapshots remain renderable.
 Paid doctrine reform uses this graph directly. The first change creates an in-fold
 campaign child. Further departures increase the price and change the parent relation to
 schismatic, then hostile. A schismatic reform no longer recognizes the inherited
-central office. Full rules: [doctrines.md](doctrines.md).
+central office. Removing the final departure remaps live followers and project targets to
+the saved direct parent, so a full doctrinal return is recognized as the original faith
+rather than an empty custom branch; the historical child stays resolvable but is no longer
+assignable. Full rules: [doctrines.md](doctrines.md).
