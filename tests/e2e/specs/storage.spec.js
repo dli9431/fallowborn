@@ -25,7 +25,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { START_CODE, startDeterministicGame } = require('../support/game/start');
-const COMPLETE_SAVE_BUDGET = 1.6 * 1024 * 1024;
+const COMPLETE_SAVE_BUDGET = 1.8 * 1024 * 1024;
 
 test('restore repairs an empty technology record for a landed player realm',
   async function ({ page }, testInfo) {
@@ -440,7 +440,8 @@ test('an eager-court save stays within the storage budget and reloads whole',
     });
     /* Court population is bound by the map, so this is a flat ceiling and not
        a figure that should drift upward with campaign length. The county-market
-       state has its own 64 KB cap; 1.6 MB preserves a narrow combined
+       state has its own 64 KB cap; the bounded community table raises the
+       complete-save ceiling to 1.8 MB while preserving a combined
        serialization margin. Keep the byte assertion direct so a regression
        reports its exact payload instead of only a derived false boolean. */
     expect(result.bytes).toBeLessThan(COMPLETE_SAVE_BUDGET);

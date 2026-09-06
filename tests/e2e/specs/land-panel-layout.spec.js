@@ -299,8 +299,8 @@ test('De jure title promotion progress notes only appear for titles where the pl
     await expect(panel).toContainText('Essex');
     await expect(panel).toContainText('England');
     // Should show Essex and England progress since player holds London (have > 0)
-    await expect(panel).toContainText('make the duke');
-    await expect(panel).toContainText('make the king');
+    await expect(panel).toContainText('qualify you to claim the duchy');
+    await expect(panel).toContainText('qualify you to claim the crown');
 
     // Select a distant foreign county in France (Limoges in Poitou / Aquitaine / Francia)
     await page.evaluate(function () {
@@ -312,9 +312,9 @@ test('De jure title promotion progress notes only appear for titles where the pl
     await expect(panel).toContainText('Aquitaine');
     await expect(panel).toContainText('Francia');
     // Progress notes must NOT appear when player holds 0 counties in that title
-    await expect(panel).not.toContainText('make the duke');
-    await expect(panel).not.toContainText('make the king');
-    await expect(panel).not.toContainText('make the emperor');
+    await expect(panel).not.toContainText('qualify you to claim the duchy');
+    await expect(panel).not.toContainText('qualify you to claim the crown');
+    await expect(panel).not.toContainText('qualify you to claim the empire');
   });
 
 test('Development card folds starting development into settlement growth and population card omits factor and percent',

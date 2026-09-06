@@ -179,7 +179,7 @@ test('runtime mods accept bounded event participants and reject unsupported part
       slot:'witness', source:'local_witness', required:true
     });
     expect(result.duplicateError).toContain(
-      'participant slots must be unique lowercase identifiers');
+      'participant slots must be unique ASCII identifiers starting with a lowercase letter');
     expect(result.invalidApplied).toBe(false);
   });
 

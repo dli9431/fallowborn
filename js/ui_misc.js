@@ -4573,6 +4573,13 @@ window.FB = window.FB || {};
         }
         scheduleHideTip();
       });
+      window.addEventListener('resize', function () {
+        /* A roomy desktop card can keep keyboard focus while a viewport
+           change switches that card to its compact disclosure. Retire the
+           desktop layer at the same boundary so it cannot cover the newly
+           exposed ? control. */
+        if (eventChoiceUsesDisclosure()) hideTipImmediately();
+      });
     }
   };
 

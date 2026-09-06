@@ -439,8 +439,8 @@ ordinary rules block them.
 **The save must fit the localStorage quota beside its siblings** (~5 MB per origin on
 WebKit/iOS, ~10 MB elsewhere — shared by the autosave and all three slots; a serialized
 character record is ~400 bytes). Court records are map-bound by the eager-court
-compaction; the bounded simulation-state budget before complete Chronicle growth is
-about 1.6 MB. The player's wider family
+compaction; with the bounded county-community table, the simulation-state budget before
+complete Chronicle growth is about 1.8 MB. The player's wider family
 is bounded at creation instead, because dead kin are never pruned (the family tree is
 the product). Two balance knobs do the bounding
 (see [../MODDING.md](../MODDING.md)): `kinConceiveCap` keeps stacked fertility

@@ -214,6 +214,7 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
           })[0],
           floorLoss:floorLoss,
           floorCount:state.population.counties.york.count,
+          populationFloor:FBDATA.balance.populationFloor || 1000,
           faults:FB.validatePopulationCommunities(state)
         };
       });
@@ -249,7 +250,7 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
       expect(result.londonIntroduced).toEqual({
         culture:'gaelic', religion:'orthodox', count:30
       });
-      expect(result.floorCount).toBe(FBDATA.balance.populationFloor || 1000);
+      expect(result.floorCount).toBe(result.populationFloor);
       expect(result.floorLoss).toBe(-result.afterScripted[0].count);
       expect(result.faults).toEqual([]);
     });

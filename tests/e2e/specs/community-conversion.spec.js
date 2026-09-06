@@ -342,7 +342,7 @@ test('settlement sheets retain local context and never mutate remote browsing',
     await expect(page.locator('#county-project-confirm')).toHaveCount(0);
     await expect(page.locator(
       '[data-settlement-community-project="faith"]')).toContainText(
-      'Orthodox Christianity');
+      'Greek Christianity');
 
     const remote = await page.evaluate(function () {
       const s = FB.state;
@@ -429,6 +429,7 @@ test('settlement policy penalties are weighted instead of county modifiers',
       'Officials compel conformity');
 
     await page.setViewportSize({ width:390, height:740 });
+    await expect(page.locator('#tooltip')).toBeHidden();
     const disclosure = coerciveCard.locator('.settcard-info');
     await expect(disclosure).toBeVisible();
     await disclosure.click();
@@ -548,18 +549,36 @@ test('community triggers and effects retain exact county and settlement context'
         settlementCommunityProject:{ kind:'faith', active:false,
           settlement:'$context' }
       }, ctx);
+      function communityCount(communities, culture, religion) {
+        const match = communities.filter(function (community) {
+          return community.culture === culture &&
+            community.religion === religion;
+        })[0];
+        return match ? match.count : 0;
+      }
       const beforeCombined = s.population.counties[pid].count +
         s.population.counties[other].count;
-      const beforeLocal = FB.settlementPopulation(s, pid, 0);
+      const beforeLocal = FB.settlementCommunities(s, pid, 0);
+      const beforeNeighbor = FB.settlementCommunities(s, pid, 1);
       let receipts = FB.applyEffects(s, {
         settlementCommunityTransfer:{ kind:'faith', target:'catholic',
           source:'orthodox', amount:10, settlement:'$context' },
-        communityResettlement:{ fromProvinceId:other,
-          toProvinceId:'$context', toSettlement:'$context',
-          community:{ culture:'norse' }, amount:20 },
         settlementCommunityProject:{ kind:'culture', target:'norse',
           policy:'voluntary', sponsor:'$player', settlement:'$context' }
       }, ctx, { id:'e2e_community_effects' });
+      const afterTransferLocal = FB.settlementCommunities(s, pid, 0);
+      const afterTransferNeighbor = FB.settlementCommunities(s, pid, 1);
+      const exactSettlementTransfer =
+        communityCount(afterTransferLocal, 'english', 'catholic') ===
+          communityCount(beforeLocal, 'english', 'catholic') + 10 &&
+        communityCount(afterTransferLocal, 'english', 'orthodox') ===
+          communityCount(beforeLocal, 'english', 'orthodox') - 10 &&
+        JSON.stringify(afterTransferNeighbor) === JSON.stringify(beforeNeighbor);
+      receipts = receipts.concat(FB.applyEffects(s, {
+        communityResettlement:{ fromProvinceId:other,
+          toProvinceId:'$context', toSettlement:'$context',
+          community:{ culture:'norse' }, amount:20 }
+      }, ctx, { id:'e2e_community_resettlement' }));
       receipts = receipts.concat(FB.applyEffects(s, {
         communityMigration:{ fromProvinceId:'$context', toProvinceId:other,
           fromSettlement:'$context', community:{ culture:'norse' }, amount:5 }
@@ -574,8 +593,12 @@ test('community triggers and effects retain exact county and settlement context'
         combined:s.population.counties[pid].count +
           s.population.counties[other].count,
         beforeCombined:beforeCombined,
-        localStable:FB.settlementPopulation(s, pid, 0) === beforeLocal + 20,
+        exactSettlementTransfer:exactSettlementTransfer,
+        localConserved:FB.settlementCommunities(s, pid, 0).reduce(
+          function (sum, community) { return sum + community.count; }, 0) ===
+            FB.settlementPopulation(s, pid, 0),
         project:FB.settlementCommunityProject(s, pid, 0, 'culture'),
+        otherProject:FB.settlementCommunityProject(s, pid, 1, 'culture'),
         receiptActions:receipts.filter(function (entry) {
           return entry.type === 'population';
         }).map(function (entry) { return entry.action; })
@@ -583,8 +606,10 @@ test('community triggers and effects retain exact county and settlement context'
     }, setup.pid);
     expect(result.trigger).toBe(true);
     expect(result.combined).toBe(result.beforeCombined);
-    expect(result.localStable).toBe(true);
+    expect(result.exactSettlementTransfer).toBe(true);
+    expect(result.localConserved).toBe(true);
     expect(result.project.target).toBe('norse');
+    expect(result.otherProject).toBeNull();
     expect(result.receiptActions).toEqual(expect.arrayContaining([
       'settlement_community_transfer', 'resettlement',
       'migration', 'expulsion',

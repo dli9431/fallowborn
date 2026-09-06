@@ -25,7 +25,7 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { unlockStartTier } = require('../support/game/start');
+const { startDeterministicGame, unlockStartTier } = require('../support/game/start');
 
 const EXPECTED = {
   '867':{
@@ -531,6 +531,7 @@ test('community schema faults are actionable and ordinary counties normalize to 
 
 test('legacy unweighted community data keeps later starts but assigns simulated population to the principal',
   async function ({ page }) {
+    await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const province = FB.world.byId.london;
       const original = province.communities;
@@ -662,9 +663,11 @@ test('1066 Iona creates a Gaelic Catholic household beneath its Norse ruler and 
     expect(result.communityOrder).toEqual([
       'gaelic.catholic', 'norse.catholic'
     ]);
-    await expect(page.locator('#tab-prov')).toContainText('Communities');
-    await expect(page.locator('#tab-prov')).toContainText('Gaelic');
-    await expect(page.locator('#tab-prov')).toContainText('Norse');
+    const land = page.locator('#tab-prov');
+    await expect(land.locator('[data-community-axis="culture"]'))
+      .toContainText('Gaelic');
+    await expect(land.locator('[data-community-axis="culture"]'))
+      .toContainText('Norse');
     const landText = await page.locator('#tab-prov').innerText();
     expect(landText.lastIndexOf('Gaelic')).toBeLessThan(landText.lastIndexOf('Norse'));
   });
@@ -672,7 +675,7 @@ test('1066 Iona creates a Gaelic Catholic household beneath its Norse ruler and 
 test('live county identity drives local runtime consumers without rewriting setup or realms',
   async function ({ page }) {
     await useStartCode(page,
-      'COMMUNITY-867-farmer-london-f-Ada-standard-0-english.catholic');
+      'COMMUNITY-867-farmer-london-f-Ada');
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();
     await page.getByRole('button', { name:'Begin', exact:true }).click();
