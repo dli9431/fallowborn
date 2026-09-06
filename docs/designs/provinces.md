@@ -401,7 +401,8 @@ political color without changing the saved realm color; other realms retain thei
 colors. A second browser-local opacity preference scales that color's contribution from
 terrain-only to the full political mix, while leaving the outline clear. The dark/light
 keyline keeps arbitrary chosen colors legible. `groupOf` comes from
-`mapGroupOf` in `ui_panels.js` and follows the map filter (`R` key / 🗺 HUD button): **Realm** (default —
+`mapGroupOf` in `ui_panels.js` and follows the map filter chosen from the overlay opened by
+the `R` key / 🗺 HUD button: **Realm** (default —
 your own province focuses your realm, demesne + vassals; a foreign one focuses its
 sovereign's), **Mine** (only your realm), **Liege** (your liege's whole sub-realm),
 **De jure duchies**, **De jure kingdoms** (the historical de jure groupings), and

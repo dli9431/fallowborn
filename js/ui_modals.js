@@ -24572,6 +24572,9 @@ window.FB = window.FB || {};
       if (UI.setFindOverlay && UI.isFindOverlayOpen && UI.isFindOverlayOpen()) {
         UI.setFindOverlay(false);
       }
+      if (UI.setMapFilterOverlay && UI.isMapFilterOverlayOpen && UI.isMapFilterOverlayOpen()) {
+        UI.setMapFilterOverlay(false);
+      }
       UI.renderMusicOverlay();
     }
     if (UI.layoutMapToasts) UI.layoutMapToasts();
@@ -24985,6 +24988,9 @@ window.FB = window.FB || {};
       }
       if (UI.setMarketLens && FB.map && FB.map.marketGood) {
         UI.setMarketLens(false);
+      }
+      if (UI.setMapFilterOverlay && UI.isMapFilterOverlayOpen && UI.isMapFilterOverlayOpen()) {
+        UI.setMapFilterOverlay(false);
       }
       overlay.classList.remove('hidden');
       if (button) {
@@ -26766,7 +26772,7 @@ window.FB = window.FB || {};
       '<h4>Mobile navigation</h4>' +
       '<p>On a phone, the browser or device Back control steps out of equipment choices, dialogs, and the Self/Kin drawer. It never undoes a decision that changed the game.</p>' +
       '<h4>Map filters</h4>' +
-      '<p>The 🗺 button (or <b>R</b>) cycles map filters: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, <b>de jure kingdoms</b>, and <b>war</b>.</p>' +
+      '<p>The 🗺 button (or <b>R</b>) opens the map filter chooser: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, <b>de jure kingdoms</b>, and <b>war</b>.</p>' +
       '<h4>War</h4>' +
       '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war prefers a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). ' +
       esc(FB.T('Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming.')) +

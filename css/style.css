@@ -539,6 +539,51 @@ body.war-picking #timebtns { visibility: hidden; }
 #maphud { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 6px; z-index: 4; }
 .hudbtn { width: 40px; height: 40px; font-size: 19px; padding: 0; opacity: .9; flex: 0 0 auto; }
 .hudbtn.on { opacity: 1; box-shadow: 0 0 0 2px #ffd24a inset; }
+.map-filter-controls {
+  position: absolute; z-index: 31; left: 10px; top: 10px;
+  width: min(340px, calc(100% - 70px)); max-height: calc(100% - 20px);
+  overflow-y: auto; padding: 10px;
+  background: linear-gradient(180deg, rgba(37,31,23,.97), rgba(22,25,29,.97));
+  border: 1px solid #806936; border-radius: 9px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.52), inset 0 1px rgba(255,236,181,.05);
+  color: var(--main-text-color);
+}
+.map-filter-header {
+  display: flex; min-height: 34px; align-items: center;
+  justify-content: space-between; gap: 8px; margin-bottom: 8px;
+}
+.map-filter-header > b { color: #f0d170; font-size: 15px; }
+.map-filter-close {
+  width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0;
+  display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  font-size: 14px;
+}
+.map-filter-options {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
+}
+.map-filter-option {
+  min-width: 0; min-height: 54px; padding: 7px 9px;
+  border: 1px solid #55452a; border-radius: 7px;
+  background: #272017; color: var(--main-text-color);
+  font-family: inherit; text-align: left; cursor: pointer;
+}
+.map-filter-option:hover, .map-filter-option:focus-visible {
+  border-color: #d0ad50; background: #3a2f1d;
+}
+.map-filter-option[aria-pressed="true"] {
+  border-color: #d0ad50; background: #40341f;
+  box-shadow: inset 3px 0 #e0c060;
+}
+.map-filter-option:disabled {
+  border-color: #40372a; background: #201b16; color: #8f887d;
+  cursor: not-allowed; opacity: .72;
+}
+.map-filter-option b, .map-filter-option small { display: block; overflow-wrap: anywhere; }
+.map-filter-option b { font-size: 14px; line-height: 1.2; }
+.map-filter-option small {
+  margin-top: 3px; color: var(--helper-text-color); font-size: 11px; line-height: 1.2;
+}
+.map-filter-option:disabled small { color: #8f887d; }
 .market-lens-controls {
   position: absolute; left: 10px; top: 10px; z-index: 3;
   display: grid; grid-template-columns: minmax(400px, auto) minmax(210px, 1fr);
@@ -4989,10 +5034,11 @@ textarea.modjson, textarea.savetext {
   .market-sheet-picker {
     grid-template-columns: minmax(0, 1fr); gap: 4px; margin-bottom: 10px;
   }
-  .map-finder-input, .map-finder-clear, .map-finder-close {
+  .map-finder-input, .map-finder-clear, .map-finder-close, .map-filter-close {
     min-height: 44px;
   }
-  .map-finder-clear, .map-finder-close { min-width: 44px; }
+  .map-finder-clear, .map-finder-close, .map-filter-close { min-width: 44px; }
+  .btn.small.map-filter-close { min-width: 44px; min-height: 44px; }
   .market-sheet-dropdown summary, .market-sheet-option,
   .enterprise-view-controls .enterprise-view-select select {
     min-height: 44px; font-size: 14px;
@@ -5455,7 +5501,7 @@ textarea.modjson, textarea.savetext {
     width: 44px; height: 44px; min-width: 44px; min-height: 44px;
     font-size: 20px;
   }
-  .market-lens-controls, .music-controls, .map-finder {
+  .market-lens-controls, .music-controls, .map-finder, .map-filter-controls {
     left: 8px; top: 8px; width: min(300px, calc(100% - 110px));
     max-width: calc(100% - 110px);
     max-height: calc(100% - 16px);
@@ -5467,7 +5513,8 @@ textarea.modjson, textarea.savetext {
   body.mobile-pane-map-compact #maphud,
   body.mobile-pane-map-compact #market-lens-controls,
   body.mobile-pane-map-compact #music-controls,
-  body.mobile-pane-map-compact #map-finder {
+  body.mobile-pane-map-compact #map-finder,
+  body.mobile-pane-map-compact #map-filter-controls {
     display: none !important;
   }
   body.mobile-pane-map-compact #toasts {
@@ -5479,7 +5526,8 @@ textarea.modjson, textarea.savetext {
   }
   body.mobile-pane-map-tall #market-lens-controls,
   body.mobile-pane-map-tall #music-controls,
-  body.mobile-pane-map-tall #map-finder {
+  body.mobile-pane-map-tall #map-finder,
+  body.mobile-pane-map-tall #map-filter-controls {
     width: min(300px, calc(100% - 66px));
     max-width: calc(100% - 66px);
   }
@@ -5501,7 +5549,7 @@ textarea.modjson, textarea.savetext {
     width: min(292px, calc(100% - 110px));
     max-width: calc(100% - 110px);
   }
-  .music-controls, .map-finder {
+  .music-controls, .map-finder, .map-filter-controls {
     left: 8px; top: 8px; width: min(290px, calc(100% - 110px));
     max-width: calc(100% - 110px);
     overflow: hidden;
@@ -5521,7 +5569,7 @@ textarea.modjson, textarea.savetext {
     width: min(260px, calc(100% - 110px));
     max-width: calc(100% - 110px);
   }
-  .music-controls, .map-finder {
+  .music-controls, .map-finder, .map-filter-controls {
     left: 4px; top: 4px; width: min(260px, calc(100% - 110px));
     max-width: calc(100% - 110px);
     max-height: calc(100% - 8px);
@@ -5541,7 +5589,7 @@ textarea.modjson, textarea.savetext {
     width: min(240px, calc(100% - 110px));
     max-width: calc(100% - 110px);
   }
-  .music-controls, .map-finder {
+  .music-controls, .map-finder, .map-filter-controls {
     left: 3px; top: 2px; width: min(240px, calc(100% - 110px));
     max-width: calc(100% - 110px);
     max-height: calc(100% - 4px);
@@ -5562,13 +5610,17 @@ textarea.modjson, textarea.savetext {
     width: min(300px, calc(100% - 112px));
     max-width: calc(100% - 112px); padding: 7px; gap: 6px;
   }
-  .map-finder {
+  .map-finder, .map-filter-controls {
     left: max(8px, env(safe-area-inset-left)); top: 8px;
     width: min(300px, calc(100% - 112px));
     max-width: calc(100% - 112px); max-height: calc(100% - 16px);
     padding: 7px;
   }
   .map-finder-results { max-height: 160px; }
+  .map-filter-controls { padding: 7px; }
+  .map-filter-header { margin-bottom: 5px; }
+  .map-filter-options { gap: 4px; }
+  .map-filter-option { min-height: 48px; padding: 5px 7px; }
   #toasts { max-width: calc(100% - 108px); }
 }
 

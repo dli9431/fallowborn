@@ -356,7 +356,10 @@ window.FB = window.FB || {};
         M.centerHome();
         return;
       case 'r': case 'R':
-        if (FB.state) FB.ui.cycleMapMode();
+        if (FB.state && FB.ui.toggleMapFilterOverlay && !FB.ui.eventsBusy()) {
+          e.preventDefault();
+          FB.ui.toggleMapFilterOverlay();
+        }
         return;
       case 'Enter': {
         if (onButton) return; // let the focused button click natively
@@ -393,6 +396,10 @@ window.FB = window.FB || {};
       case '[': if (FB.state) FB.ui.cycleTab(-1); return;
       case ']': if (FB.state) FB.ui.cycleTab(1); return;
       case 'Escape': case 'm': case 'M':
+        if (FB.state && k === 'Escape' && FB.ui.isMapFilterOverlayOpen && FB.ui.isMapFilterOverlayOpen()) {
+          FB.ui.setMapFilterOverlay(false);
+          return;
+        }
         if (FB.state && k === 'Escape' && FB.ui.isFindOverlayOpen && FB.ui.isFindOverlayOpen()) {
           FB.ui.setFindOverlay(false);
           return;

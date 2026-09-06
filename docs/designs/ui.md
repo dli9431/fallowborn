@@ -607,6 +607,13 @@ and native music buttons retain 44-pixel minimum
 touch targets. Settings keeps focus-loss pausing as the default and
 offers an opt-in background-playback checkbox for inactive tabs, windows, and locked screens.
 
+The map HUD exposes a **Map filters** overlay from the 🗺 button or `R`. It presents
+Realm, Mine, Liege, de jure Duchies, de jure Kingdoms, and War as direct choices instead
+of making the player cycle through them. The active choice stays marked; Liege and War
+remain visible but disabled with a short reason when the player is independent or at peace.
+Arrow keys move among available choices, Enter applies one, and Escape returns focus to the
+HUD button.
+
 The map HUD also exposes a **Find location** overlay, with `?` as its desktop
 shortcut. Its local, cached index covers settlements, counties, duchies, and
 kingdoms in the active bookmark; choosing a result selects its county and
@@ -617,7 +624,7 @@ start picker, while choosing a settlement also selects its stable birthplace
 slot. Its settlement matches are limited to the slots visible at the bookmark's
 starting development; broader duchy and kingdom results remain map-navigation
 aids rather than silently choosing an arbitrary county.
-The overlay and Market lens are mutually exclusive so their controls never
+The map overlays and Market lens are mutually exclusive so their controls never
 compete for the map corner. Portrait maps reserve enough height to keep the
 seven 44-pixel HUD targets in one rail; shallow landscape maps use a compact
 two-column HUD cluster while preserving the same touch floor.

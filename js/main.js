@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.172.2';
+FB.VERSION = '1.172.3';
 FB.CHANGELOG = [
+  { v: '1.172.3', date: '2026-09-06', changes: [
+    'Map filters now open as a direct chooser, with unavailable Liege and War views explained in place.'
+  ] },
   { v: '1.172.2', date: '2026-09-06', changes: [
     'Settlement conversion projects now stop immediately, and returning to a parent doctrine no longer erases communities that adopted the reformed branch.'
   ] },

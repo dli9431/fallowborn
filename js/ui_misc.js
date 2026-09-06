@@ -1917,7 +1917,10 @@ window.FB = window.FB || {};
        rail or a large map sheet. When a sheet is open, start the rail just
        beneath its actual rendered edge; compact CSS keeps a new notice to one
        readable line in that deliberately narrow remainder. */
-    const overlays = [$('music-controls'), $('map-finder'), $('market-lens-controls')];
+    const overlays = [
+      $('music-controls'), $('map-finder'), $('map-filter-controls'),
+      $('market-lens-controls')
+    ];
     let overlay = null;
     for (const candidate of overlays) {
       if (candidate && !candidate.classList.contains('hidden') &&
@@ -2914,7 +2917,7 @@ window.FB = window.FB || {};
 
   UI.maybeMapFiltersTip = function () {
     return UI.maybeTip('map-filters',
-      '💡 Use Map filters (R on desktop) to cycle views of realms, your lands, your liege, de jure titles, and wars.',
+      '💡 Open Map filters (R on desktop) to choose realms, your lands, your liege, de jure titles, or wars.',
       '#btn-mapmode', { noNext:true });
   };
 
@@ -4018,7 +4021,10 @@ window.FB = window.FB || {};
     $('btn-home').addEventListener('click', function () {
       FB.map.centerHome();
     });
-    $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
+    $('btn-mapmode').addEventListener('click', function () {
+      if (UI.toggleMapFilterOverlay) UI.toggleMapFilterOverlay();
+    });
+    if (UI.initMapFilterOverlayEvents) UI.initMapFilterOverlayEvents();
     const btnMusic = $('btn-music');
     if (btnMusic) {
       btnMusic.addEventListener('click', function () {
