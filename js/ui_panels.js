@@ -5804,6 +5804,153 @@ window.FB = window.FB || {};
   }
 
   const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege', duchy: 'De jure duchies', kingdom: 'De jure kingdoms', war: 'War', market: 'Market' };
+  const FILTER_MAP_MODES = ['realm', 'mine', 'liege', 'duchy', 'kingdom', 'war'];
+  let mapFilterOverlayEventsInitialized = false;
+
+  function mapFilterModeAvailable(mode) {
+    const s = FB.state;
+    if (!s) return false;
+    if (mode === 'liege') return !!s.player.liege;
+    if (mode === 'war') return !!(s.player && s.player.war && s.player.war.enemy);
+    return FILTER_MAP_MODES.indexOf(mode) >= 0;
+  }
+
+  function mapFilterModeStatus(mode) {
+    if (mode === 'realm') return 'Selected realm';
+    if (mode === 'mine') return 'Your realm';
+    if (mode === 'liege') return mapFilterModeAvailable(mode) ? 'Liege’s realm' : 'No liege';
+    if (mode === 'duchy' || mode === 'kingdom') return 'De jure';
+    if (mode === 'war') return mapFilterModeAvailable(mode) ? 'Active war' : 'At peace';
+    return '';
+  }
+
+  UI.isMapFilterOverlayOpen = function () {
+    const overlay = $('map-filter-controls');
+    return !!(overlay && !overlay.classList.contains('hidden'));
+  };
+
+  function updateMapModeButton() {
+    const button = $('btn-mapmode');
+    if (!button) return;
+    const filterMode = mapMode === 'market' ? 'realm' : mapMode;
+    const open = UI.isMapFilterOverlayOpen();
+    button.classList.toggle('on', open || filterMode !== 'realm');
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    button.title = FB.T('Map filters: {mode} (R)', {
+      mode:FB.T(MAPMODES[filterMode] || MAPMODES.realm)
+    });
+    button.setAttribute('aria-label', button.title);
+  }
+
+  UI.renderMapFilterOverlay = function () {
+    const overlay = $('map-filter-controls');
+    if (!overlay) return;
+    const filterMode = mapMode === 'market' ? 'realm' : mapMode;
+    const options = overlay.querySelectorAll('[data-map-mode]');
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
+      const mode = option.getAttribute('data-map-mode');
+      const available = mapFilterModeAvailable(mode);
+      const statusText = FB.T(mapFilterModeStatus(mode));
+      const status = option.querySelector('[data-map-filter-status]');
+      option.disabled = !available;
+      option.setAttribute('aria-pressed', mode === filterMode ? 'true' : 'false');
+      option.title = statusText;
+      if (status) status.textContent = statusText;
+    }
+  };
+
+  UI.setMapFilterOverlay = function (active) {
+    const overlay = $('map-filter-controls');
+    const button = $('btn-mapmode');
+    if (!overlay || !FB.state) return;
+    const visible = active === undefined ? !UI.isMapFilterOverlayOpen() : !!active;
+    if (visible) {
+      if (UI.setMusicOverlay && UI.isMusicOverlayOpen && UI.isMusicOverlayOpen()) {
+        UI.setMusicOverlay(false);
+      }
+      if (UI.setFindOverlay && UI.isFindOverlayOpen && UI.isFindOverlayOpen()) {
+        UI.setFindOverlay(false);
+      }
+      if (FB.map && FB.map.marketGood && UI.setMarketLens) UI.setMarketLens(false);
+    }
+    overlay.classList.toggle('hidden', !visible);
+    UI.renderMapFilterOverlay();
+    updateMapModeButton();
+    if (UI.layoutMapToasts) UI.layoutMapToasts();
+    if (visible) {
+      const selected = overlay.querySelector('[data-map-mode][aria-pressed="true"]:not(:disabled)');
+      const first = overlay.querySelector('[data-map-mode]:not(:disabled)');
+      if (selected || first) (selected || first).focus();
+    } else if (overlay.contains(document.activeElement) && button) {
+      button.focus();
+    }
+  };
+
+  UI.toggleMapFilterOverlay = function () {
+    UI.setMapFilterOverlay(!UI.isMapFilterOverlayOpen());
+  };
+
+  function handleOutsideMapFilterInteraction(event) {
+    if (!UI.isMapFilterOverlayOpen()) return;
+    const overlay = $('map-filter-controls');
+    const button = $('btn-mapmode');
+    const target = event.target;
+    if (!target) return;
+    if (overlay && (overlay === target || overlay.contains(target))) return;
+    if (button && (button === target || button.contains(target))) return;
+    UI.setMapFilterOverlay(false);
+  }
+
+  UI.initMapFilterOverlayEvents = function () {
+    const overlay = $('map-filter-controls');
+    const closeButton = $('map-filter-close');
+    if (!overlay || mapFilterOverlayEventsInitialized) return;
+    mapFilterOverlayEventsInitialized = true;
+    const options = overlay.querySelectorAll('[data-map-mode]');
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
+      option.addEventListener('click', function () {
+        if (UI.setMapMode(option.getAttribute('data-map-mode'))) {
+          UI.setMapFilterOverlay(false);
+        }
+      });
+    }
+    if (closeButton) {
+      closeButton.addEventListener('click', function () {
+        UI.setMapFilterOverlay(false);
+      });
+    }
+    overlay.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        UI.setMapFilterOverlay(false);
+        return;
+      }
+      const navigationKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+      if (navigationKeys.indexOf(event.key) < 0) return;
+      const available = Array.prototype.filter.call(
+        overlay.querySelectorAll('[data-map-mode]'), function (option) {
+          return !option.disabled;
+        });
+      if (!available.length) return;
+      event.preventDefault();
+      event.stopPropagation();
+      let index = available.indexOf(document.activeElement);
+      if (event.key === 'Home') index = 0;
+      else if (event.key === 'End') index = available.length - 1;
+      else {
+        const step = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+        index = (Math.max(0, index) + step + available.length) % available.length;
+      }
+      available[index].focus();
+    });
+    document.addEventListener('pointerdown', handleOutsideMapFilterInteraction, true);
+    document.addEventListener('click', handleOutsideMapFilterInteraction, true);
+    UI.renderMapFilterOverlay();
+    updateMapModeButton();
+  };
 
   function marketLensControls(active) {
     const controls = $('market-lens-controls');
@@ -5839,16 +5986,14 @@ window.FB = window.FB || {};
   UI.setMarketLens = function (active) {
     if (!FB.state) return;
     mapMode = active === false ? 'realm' : 'market';
-    if (mapMode === 'market' && UI.setFindOverlay && UI.isFindOverlayOpen && UI.isFindOverlayOpen()) {
-      UI.setFindOverlay(false);
+    if (mapMode === 'market') {
+      if (UI.setFindOverlay && UI.isFindOverlayOpen && UI.isFindOverlayOpen()) {
+        UI.setFindOverlay(false);
+      }
+      if (UI.isMapFilterOverlayOpen()) UI.setMapFilterOverlay(false);
     }
     marketLensControls(mapMode === 'market');
-    const btn = $('btn-mapmode');
-    if (btn) {
-      btn.classList.toggle('on', mapMode !== 'realm');
-      btn.title = FB.T('Map filter: {mode} (R)', { mode:FB.T(MAPMODES[mapMode]) });
-      btn.setAttribute('aria-label', btn.title);
-    }
+    updateMapModeButton();
     const targetPid = FB.map.selected || FB.state.player.provinceId;
     FB.map.select(targetPid, mapGroupOf, mapHighlightColorOf(targetPid));
     FB.map.request();
@@ -5874,27 +6019,21 @@ window.FB = window.FB || {};
     return best;
   }
 
-  UI.cycleMapMode = function () {
+  UI.setMapMode = function (next) {
     const s = FB.state;
-    if (!s) return;
-    const order = ['realm', 'mine', 'liege', 'duchy', 'kingdom', 'war'];
-    let next = order[(order.indexOf(mapMode) + 1) % order.length];
+    if (!s || FILTER_MAP_MODES.indexOf(next) < 0) return false;
     if (next === 'liege' && !s.player.liege) {
       UI.toast(FB.T('🗺 You answer to no one — no liege to show.'));
-      next = order[(order.indexOf(next) + 1) % order.length];
+      return false;
     }
     if (next === 'war' && !(s.player && s.player.war && s.player.war.enemy)) {
       UI.toast(FB.T('🗺 At peace — no active war to show.'));
-      next = order[(order.indexOf(next) + 1) % order.length];
+      return false;
     }
     mapMode = next;
     marketLensControls(mapMode === 'market');
-    const btn = $('btn-mapmode');
-    if (btn) {
-      btn.classList.toggle('on', mapMode !== 'realm');
-      btn.title = FB.T('Map filter: {mode} (R)', { mode: FB.T(MAPMODES[mapMode]) });
-      btn.setAttribute('aria-label', btn.title);
-    }
+    updateMapModeButton();
+    UI.renderMapFilterOverlay();
     let toastText = '🗺 Map filter: {mode}';
     let toastParams = { mode: FB.T(MAPMODES[mapMode]) };
     let selectProvId = FB.map.selected || s.player.provinceId;
@@ -5934,6 +6073,7 @@ window.FB = window.FB || {};
     UI.toast(toastText, toastParams);
     FB.map.select(selectProvId, mapGroupOf, mapHighlightColorOf(selectProvId));
     if (FB.map && FB.map.request) FB.map.request();
+    return true;
   };
 
   let selectedProv = null;

@@ -42,7 +42,7 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   in events and dialogs, `1–9` choose an
   item and `Shift+1–9` reaches items 10–18 (the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
-  `V` opens autoresolve settings · `R` cycles the map filter (Realm / Mine / Liege /
+  `V` opens autoresolve settings · `R` opens the map filter chooser (Realm / Mine / Liege /
   De jure duchies / De jure kingdoms / War) ·
   `[` `]` cycle panels · `Esc` menu/back/close ·
   `Tab` moves between buttons.

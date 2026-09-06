@@ -143,6 +143,8 @@ window.FB = window.FB || {};
   function refreshNow(liveTick) {
     const s = FB.state;
     if (!s || s.player.dead) return;
+    if (UI.isMapFilterOverlayOpen && UI.isMapFilterOverlayOpen() &&
+        UI.renderMapFilterOverlay) UI.renderMapFilterOverlay();
     // the fast-forward button's F hotkey badge (desktop only) — rendered every
     // refresh so it holds in both observe and normal modes and in every locale
     $('btn-skip').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">F</span> ') + '▶▶';

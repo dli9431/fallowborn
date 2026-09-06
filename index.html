@@ -527,10 +527,13 @@
               <button
                 id="btn-mapmode"
                 class="btn hudbtn"
-                title="Map filter: Realm (R)"
-                aria-label="Map filter: Realm (R)"
-                data-i18n-title="Map filter: Realm (R)"
-                data-i18n-aria-label="Map filter: Realm (R)"
+                title="Map filters: Realm (R)"
+                aria-label="Map filters: Realm (R)"
+                aria-haspopup="dialog"
+                aria-controls="map-filter-controls"
+                aria-expanded="false"
+                data-i18n-title="Map filters: Realm (R)"
+                data-i18n-aria-label="Map filters: Realm (R)"
               >
                 &#128506;
               </button>
@@ -554,6 +557,56 @@
               >
                 ?
               </button>
+            </div>
+            <div
+              id="map-filter-controls"
+              class="map-filter-controls hidden"
+              role="dialog"
+              aria-labelledby="map-filter-title"
+            >
+              <div class="map-filter-header">
+                <b id="map-filter-title" data-i18n="Map filters">Map filters</b>
+                <button
+                  type="button"
+                  class="btn small map-filter-close"
+                  id="map-filter-close"
+                  aria-label="Close"
+                  data-i18n-aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              <div
+                class="map-filter-options"
+                role="group"
+                aria-label="Map filters"
+                data-i18n-aria-label="Map filters"
+              >
+                <button type="button" class="map-filter-option" data-map-mode="realm" aria-pressed="true">
+                  <b data-i18n="Realm">Realm</b>
+                  <small data-map-filter-status data-i18n="Selected realm">Selected realm</small>
+                </button>
+                <button type="button" class="map-filter-option" data-map-mode="mine" aria-pressed="false">
+                  <b data-i18n="Mine">Mine</b>
+                  <small data-map-filter-status data-i18n="Your realm">Your realm</small>
+                </button>
+                <button type="button" class="map-filter-option" data-map-mode="liege" aria-pressed="false">
+                  <b data-i18n="Liege">Liege</b>
+                  <small data-map-filter-status data-i18n="Liege’s realm">Liege’s realm</small>
+                </button>
+                <button type="button" class="map-filter-option" data-map-mode="duchy" aria-pressed="false">
+                  <b data-i18n="Duchies">Duchies</b>
+                  <small data-map-filter-status data-i18n="De jure">De jure</small>
+                </button>
+                <button type="button" class="map-filter-option" data-map-mode="kingdom" aria-pressed="false">
+                  <b data-i18n="Kingdoms">Kingdoms</b>
+                  <small data-map-filter-status data-i18n="De jure">De jure</small>
+                </button>
+                <button type="button" class="map-filter-option" data-map-mode="war" aria-pressed="false">
+                  <b data-i18n="War">War</b>
+                  <small data-map-filter-status data-i18n="At peace">At peace</small>
+                </button>
+              </div>
             </div>
             <div id="market-lens-controls" class="market-lens-controls hidden">
               <div class="market-lens-picker">

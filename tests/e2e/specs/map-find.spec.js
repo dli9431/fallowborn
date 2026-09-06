@@ -1,8 +1,11 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'index.html',
+  'js/keys.js',
   'js/mapview.js',
   'js/ui_misc.js',
+  'js/ui_modals.js',
   'js/ui_panels.js',
   'js/ui_topbar.js',
   'css/style.css'
@@ -191,7 +194,7 @@ test('all right-hand HUD buttons stay in a single column without wrapping',
     expect(layout.isSingleColumn).toBe(true);
   });
 
-test('map HUD buttons and find overlay fit balanced portrait and shallow viewports',
+test('map HUD buttons and map overlays fit balanced portrait and shallow viewports',
   async function ({ page }) {
     const viewports = [
       { name: 'tablet-portrait', width: 768, height: 1024 },
@@ -269,41 +272,106 @@ test('map HUD buttons and find overlay fit balanced portrait and shallow viewpor
 
       // Close finder overlay
       await page.locator('#map-finder-close').click();
+
+      // Open map filters and check the chooser stays within mapwrap
+      await page.locator('#btn-mapmode').click();
+      const filtersFit = await page.evaluate(function () {
+        const wrap = document.getElementById('mapwrap');
+        const filters = document.getElementById('map-filter-controls');
+        const wrapRect = wrap.getBoundingClientRect();
+        const filtersRect = filters.getBoundingClientRect();
+        const targets = Array.from(filters.querySelectorAll('button'));
+        const targetRects = targets.map(function (target) {
+          return target.getBoundingClientRect();
+        });
+        return {
+          inside:filtersRect.top >= wrapRect.top - 1 &&
+            filtersRect.bottom <= wrapRect.bottom + 1 &&
+            filtersRect.left >= wrapRect.left - 1 &&
+            filtersRect.right <= wrapRect.right + 1,
+          minimumTargetHeight:Math.min.apply(null, targetRects.map(function (rect) {
+            return rect.height;
+          })),
+          minimumTargetWidth:Math.min.apply(null, targetRects.map(function (rect) {
+            return rect.width;
+          }))
+        };
+      });
+      expect(filtersFit.inside).toBe(true);
+      if (vp.width <= 820 || vp.height <= 520) {
+        expect(filtersFit.minimumTargetHeight).toBeGreaterThanOrEqual(44);
+        expect(filtersFit.minimumTargetWidth).toBeGreaterThanOrEqual(44);
+      }
+      await page.locator('#map-filter-close').click();
     }
   });
 
-test('Map filter button cycles through Realm, Mine, Liege, Duchies, Kingdoms, and War without cycling Market',
+test('Map filter button opens a direct chooser with unavailable modes visible',
   async function ({ page }) {
     const mapmodeBtn = page.locator('#btn-mapmode');
+    const overlay = page.locator('#map-filter-controls');
     await expect(mapmodeBtn).toBeVisible();
-    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Realm (R)');
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filters: Realm (R)');
+    await expect(mapmodeBtn).toHaveAttribute('aria-expanded', 'false');
+    await expect(overlay).toBeHidden();
 
-    // 1. Cycle to Mine
     await mapmodeBtn.click();
-    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Mine (R)');
+    await expect(overlay).toBeVisible();
+    await expect(mapmodeBtn).toHaveAttribute('aria-expanded', 'true');
+    await expect(overlay.locator('[data-map-mode]')).toHaveCount(6);
+    await expect(overlay.locator('[data-map-mode="market"]')).toHaveCount(0);
+    await expect(overlay.locator('[data-map-mode="realm"]')).toHaveAttribute('aria-pressed', 'true');
 
-    // 2. Cycle to Liege or skip if independent
-    await mapmodeBtn.click();
     const hasLiege = await page.evaluate(function () {
       return !!(FB.state && FB.state.player && FB.state.player.liege);
     });
     if (hasLiege) {
-      await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Liege (R)');
+      await expect(overlay.locator('[data-map-mode="liege"]')).toBeEnabled();
+      await expect(overlay.locator('[data-map-mode="liege"] [data-map-filter-status]'))
+        .toHaveText('Liege’s realm');
+    } else {
+      await expect(overlay.locator('[data-map-mode="liege"]')).toBeDisabled();
+      await expect(overlay.locator('[data-map-mode="liege"] [data-map-filter-status]'))
+        .toHaveText('No liege');
+    }
+    await expect(overlay.locator('[data-map-mode="war"]')).toBeDisabled();
+    await expect(overlay.locator('[data-map-mode="war"] [data-map-filter-status]'))
+      .toHaveText('At peace');
+
+    await overlay.locator('[data-map-mode="mine"]').click();
+    await expect(overlay).toBeHidden();
+    await expect(mapmodeBtn).toHaveAttribute('aria-expanded', 'false');
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filters: Mine (R)');
+    await expect(mapmodeBtn).toHaveClass(/on/);
+
+    await page.keyboard.press('r');
+    await expect(overlay).toBeVisible();
+    await expect(overlay.locator('[data-map-mode="mine"]')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(overlay).toBeHidden();
+    await expect(mapmodeBtn).toBeFocused();
+
+    await page.keyboard.press('r');
+    await page.locator('#btn-find').click();
+    await expect(overlay).toBeHidden();
+    await expect(page.locator('#map-finder')).toBeVisible();
+    await page.locator('#map-finder-close').click();
+
+    const directChoices = hasLiege ? [
+      { mode:'liege', title:'Map filters: Liege (R)' },
+      { mode:'duchy', title:'Map filters: De jure duchies (R)' },
+      { mode:'kingdom', title:'Map filters: De jure kingdoms (R)' }
+    ] : [
+      { mode:'duchy', title:'Map filters: De jure duchies (R)' },
+      { mode:'kingdom', title:'Map filters: De jure kingdoms (R)' }
+    ];
+    for (const choice of directChoices) {
       await mapmodeBtn.click();
+      await overlay.locator('[data-map-mode="' + choice.mode + '"]').click();
+      await expect(overlay).toBeHidden();
+      await expect(mapmodeBtn).toHaveAttribute('title', choice.title);
     }
 
-    // 3. Duchy mode
-    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: De jure duchies (R)');
-
-    // 4. Kingdom mode
-    await mapmodeBtn.click();
-    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: De jure kingdoms (R)');
-
-    // 5. When at peace, next cycle skips war and returns to realm (market is excluded)
-    await mapmodeBtn.click();
-    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Realm (R)');
-
-    // 6. Set up active war and cycle to War mode
     await page.evaluate(function () {
       FB.state.player.war = {
         enemy: 'croatia',
@@ -314,15 +382,15 @@ test('Map filter button cycles through Realm, Mine, Liege, Duchies, Kingdoms, an
       };
     });
 
-    // Advance to Kingdom
-    await mapmodeBtn.click(); // Mine
-    if (hasLiege) await mapmodeBtn.click(); // Liege
-    await mapmodeBtn.click(); // Duchy
-    await mapmodeBtn.click(); // Kingdom
-
-    // Now cycle from Kingdom to War
-    await mapmodeBtn.click();
-    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: War (R)');
+    await page.keyboard.press('r');
+    await expect(overlay.locator('[data-map-mode="war"]')).toBeEnabled();
+    await expect(overlay.locator('[data-map-mode="war"] [data-map-filter-status]'))
+      .toHaveText('Active war');
+    await page.keyboard.press('End');
+    await expect(overlay.locator('[data-map-mode="war"]')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(overlay).toBeHidden();
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filters: War (R)');
 
     const warHighlight = await page.evaluate(function () {
       return {
@@ -335,7 +403,8 @@ test('Map filter button cycles through Realm, Mine, Liege, Duchies, Kingdoms, an
     expect(warHighlight.focusColor).toBe('#c8352b');
     expect(warHighlight.focusGroupActive).toBe(true);
 
-    // 7. Cycling from War returns directly to Realm (market remains excluded)
     await mapmodeBtn.click();
-    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Realm (R)');
+    await overlay.locator('[data-map-mode="realm"]').click();
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filters: Realm (R)');
+    await expect(mapmodeBtn).not.toHaveClass(/on/);
   });
