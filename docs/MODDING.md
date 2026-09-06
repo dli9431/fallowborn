@@ -3163,7 +3163,12 @@ non-empty `label` and `desc`, an optional matching `id`, and an optional known c
 modifier. Every mod-added policy must also have a same-id mechanics record under
 `balance.countyCommunityProjectPolicies` with finite `pressure`, `resistance`, `maxRate`,
 `holdout`, and `migration` numbers. This nested mechanics table merges by policy id so a
-mod can add one profile without erasing the three core profiles. Community event triggers
+mod can add one profile without erasing the three core profiles. Mechanics-only replacements
+of a core policy are validated even when the mod supplies no policy metadata, and each
+replacement must be a complete valid profile; a new mechanics id still requires matching
+`countyCommunityPolicies` metadata. The AI pacing keys include
+`countyCommunityAIAnnualChance` for the single yearly decision and
+`countyCommunityAIMaxActiveProjects` for the concurrent world cap. Community event triggers
 and effects validate against the combined core-plus-mod culture, faith, province, and
 policy tables before any mod data is applied; errors identify the exact event field.
 

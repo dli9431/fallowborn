@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.171.1';
+FB.VERSION = '1.171.2';
 FB.CHANGELOG = [
+  { v: '1.171.2', date: '2026-09-05', changes: [
+    'Community conversion now keeps ruler projects sparse and avoids population slowdowns during seasonal markets and yearly simulation.'
+  ] },
   { v: '1.171.1', date: '2026-09-05', changes: [
     'Land ruler cards now keep names and political relationships readable in narrow side panels.'
   ] },

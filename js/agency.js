@@ -1111,6 +1111,10 @@ window.FB = window.FB || {};
       ? configuredStrongShare : 0.25, 0, 1);
     var maximumUnrest = Math.max(0, isFinite(configuredUnrest)
       ? configuredUnrest : 0.20);
+    var warSnapshot = FB.realmWarSnapshot
+      ? FB.realmWarSnapshot(state) : null;
+    var conflictSnapshot = FB.countyConflictSnapshot
+      ? FB.countyConflictSnapshot(state) : null;
     var provinces = (FB.world.provs || []).filter(function (province) {
       return province && !province.wasteland;
     }).slice().sort(function (a, b) {
@@ -1123,9 +1127,11 @@ window.FB = window.FB || {};
         state.owner && state.owner[pid];
       var realm = rid && state.realms[rid];
       if (!rid || rid === 'player' || !realm || !realm.alive ||
-          (FB.isRealmAtWar && FB.isRealmAtWar(state, rid)) ||
-          (FB.countyOccupiedOrBesieged &&
-            FB.countyOccupiedOrBesieged(state, pid))) continue;
+          (warSnapshot ? warSnapshot.has(rid) :
+            (FB.isRealmAtWar && FB.isRealmAtWar(state, rid))) ||
+          (conflictSnapshot ? !!conflictSnapshot[pid] :
+            (FB.countyOccupiedOrBesieged &&
+              FB.countyOccupiedOrBesieged(state, pid)))) continue;
       var unrest = FB.modBonus
         ? Math.max(0, Number(FB.modBonus(state, 'unrest', pid)) || 0) : 0;
       if (unrest > maximumUnrest) continue;
@@ -1164,7 +1170,7 @@ window.FB = window.FB || {};
             sameGroup || isCapital ? 'integrative' : 'voluntary');
         var preview = FB.countyCommunityProjectPreview(state, pid, {
           kind:kind, target:target, policy:policy, sponsor:rid
-        });
+        }, { ownerAtWar:false, occupied:false });
         if (!preview || !preview.control || preview.rate <= 0) continue;
         out.push({
           rid:rid, pid:pid, kind:kind, target:target, policy:policy,
@@ -1184,28 +1190,45 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.communityProjectAIActiveCount = function (state) {
+    var counties = state && state.population && state.population.counties || {};
+    var count = 0;
+    for (var pid in counties) {
+      var projects = counties[pid] && counties[pid].communityProjects;
+      if (!projects) continue;
+      for (var ki = 0; ki < 2; ki++) {
+        var project = projects[ki ? 'culture' : 'faith'];
+        if (project && project.sponsor && project.sponsor !== 'player') count++;
+      }
+    }
+    return count;
+  };
+
   FB.communityProjectAIYearly = function (state) {
-    var candidates = FB.communityProjectAICandidates(state);
+    if (!state) return [];
+    var B = FBDATA.balance || {};
     var configuredChance = Number(
-      FBDATA.balance.countyCommunityAIAnnualChance);
-    var configuredLimit = Number(
-      FBDATA.balance.countyCommunityAIMaxStartsPerYear);
+      B.countyCommunityAIAnnualChance);
+    var configuredCap = Number(
+      B.countyCommunityAIMaxActiveProjects);
     var chance = FB.clamp(isFinite(configuredChance)
       ? configuredChance : 0.16, 0, 1);
-    var limit = Math.max(0, Math.floor(isFinite(configuredLimit)
-      ? configuredLimit : 4));
-    var started = [];
-    for (var i = 0; i < candidates.length && started.length < limit; i++) {
+    var cap = Math.max(0, Math.floor(isFinite(configuredCap)
+      ? configuredCap : 4));
+    if (FB.communityProjectAIActiveCount(state) >= cap) return [];
+    if (!FB.chance(chance)) return [];
+    var candidates = FB.communityProjectAICandidates(state);
+    if (!candidates.length) return [];
+    for (var i = 0; i < candidates.length; i++) {
       var candidate = candidates[i];
-      if (!FB.chance(chance)) continue;
       var project = FB.startCountyCommunityProject(
         state, candidate.pid, {
           kind:candidate.kind, target:candidate.target,
           policy:candidate.policy, sponsor:candidate.rid
         });
-      if (project) started.push(candidate);
+      if (project) return [candidate];
     }
-    return started;
+    return [];
   };
 
   function communitySituationTrigger(state, id, ctx) {

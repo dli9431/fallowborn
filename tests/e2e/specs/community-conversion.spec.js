@@ -625,6 +625,21 @@ test('AI sponsorship requires authority, community support, stability, and motiv
       const candidate = FB.communityProjectAICandidates(s).filter(
         function (entry) { return entry.rid === rid && entry.kind === 'faith'; }
       )[0];
+      s.realms.e2e_community_enemy = {
+        id:'e2e_community_enemy', name:'Enemy Court', alive:true,
+        capital:'missing', religion:'catholic', rank:1,
+        ruler:{ culture:'gaelic', religion:'catholic', age:40,
+          generation:1, traits:[] }
+      };
+      s.realms[rid].war = { enemy:'e2e_community_enemy' };
+      const noWar = !FB.communityProjectAICandidates(s).some(
+        function (entry) { return entry.rid === rid; });
+      delete s.realms[rid].war;
+      s.occupations = s.occupations || {};
+      s.occupations[pid] = { progress:1 };
+      const noSiege = !FB.communityProjectAICandidates(s).some(
+        function (entry) { return entry.rid === rid; });
+      delete s.occupations[pid];
       s.realms[rid].capital = 'missing';
       s.agency.rulerAims[rid].id = 'keep_peace';
       s.population.counties[pid].communities = [
@@ -646,37 +661,122 @@ test('AI sponsorship requires authority, community support, stability, and motiv
       ];
       FB.reconcileCountyCommunities(s, pid);
       const oldCandidates = FB.communityProjectAICandidates;
+      const oldChanceFunction = FB.chance;
       const oldChance = FBDATA.balance.countyCommunityAIAnnualChance;
-      const oldLimit = FBDATA.balance.countyCommunityAIMaxStartsPerYear;
+      const oldCap = FBDATA.balance.countyCommunityAIMaxActiveProjects;
+      let chanceCalls = 0;
       FB.communityProjectAICandidates = function () {
         return candidate ? [candidate, candidate] : [];
       };
-      FBDATA.balance.countyCommunityAIAnnualChance = 1;
-      FBDATA.balance.countyCommunityAIMaxStartsPerYear = 1;
+      FB.chance = function () {
+        chanceCalls++;
+        return true;
+      };
+      FBDATA.balance.countyCommunityAIAnnualChance = 0.16;
+      FBDATA.balance.countyCommunityAIMaxActiveProjects = 1;
       const started = FB.communityProjectAIYearly(s);
-      FB.communityProjectAICandidates = oldCandidates;
-      FBDATA.balance.countyCommunityAIAnnualChance = oldChance;
-      FBDATA.balance.countyCommunityAIMaxStartsPerYear = oldLimit;
+      const blockedAtCap = FB.communityProjectAIYearly(s);
       const project = FB.countyCommunityProject(s, pid, 'faith');
+      const activeProjects = FB.communityProjectAIActiveCount(s);
+      FB.stopCountyCommunityProject(s, pid, 'faith');
+      let rejectedCandidateScans = 0;
+      FB.communityProjectAICandidates = function () {
+        rejectedCandidateScans++;
+        return candidate ? [candidate] : [];
+      };
+      FB.chance = function () {
+        chanceCalls++;
+        return false;
+      };
+      const rejected = FB.communityProjectAIYearly(s);
+      FB.communityProjectAICandidates = oldCandidates;
+      FB.chance = oldChanceFunction;
+      FBDATA.balance.countyCommunityAIAnnualChance = oldChance;
+      FBDATA.balance.countyCommunityAIMaxActiveProjects = oldCap;
       return {
         candidate:!!candidate,
+        noWar:noWar,
+        noSiege:noSiege,
         noMotive:noMotive,
         noAuthority:noAuthority,
         share:candidate && candidate.share,
         motive:candidate && candidate.aim,
         policy:candidate && candidate.policy,
         started:started.length,
+        blockedAtCap:blockedAtCap.length,
+        activeProjects:activeProjects,
+        chanceCalls:chanceCalls,
+        rejected:rejected.length,
+        rejectedCandidateScans:rejectedCandidateScans,
         sponsor:project && project.sponsor
       };
     });
     expect(result.candidate).toBe(true);
+    expect(result.noWar).toBe(true);
+    expect(result.noSiege).toBe(true);
     expect(result.noMotive).toBe(true);
     expect(result.noAuthority).toBe(true);
     expect(result.share).toBeCloseTo(0.3, 8);
     expect(result.motive).toBe('defend_faith');
     expect(['voluntary','integrative','coercive']).toContain(result.policy);
     expect(result.started).toBe(1);
+    expect(result.blockedAtCap).toBe(0);
+    expect(result.activeProjects).toBe(1);
+    expect(result.chanceCalls).toBe(2);
+    expect(result.rejected).toBe(0);
+    expect(result.rejectedCandidateScans).toBe(0);
     expect(result.sponsor).toBe('e2e_community_ruler');
+  });
+
+test('AI candidate scans snapshot global war and siege state once',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const oldWarSnapshot = FB.realmWarSnapshot;
+      const oldConflictSnapshot = FB.countyConflictSnapshot;
+      const oldWarQuery = FB.isRealmAtWar;
+      const oldConflictQuery = FB.countyOccupiedOrBesieged;
+      let warSnapshots = 0;
+      let conflictSnapshots = 0;
+      let repeatedWarQueries = 0;
+      let repeatedConflictQueries = 0;
+      FB.realmWarSnapshot = function (state) {
+        warSnapshots++;
+        return oldWarSnapshot(state);
+      };
+      FB.countyConflictSnapshot = function (state) {
+        conflictSnapshots++;
+        return oldConflictSnapshot(state);
+      };
+      FB.isRealmAtWar = function (state, rid) {
+        repeatedWarQueries++;
+        return oldWarQuery(state, rid);
+      };
+      FB.countyOccupiedOrBesieged = function (state, pid) {
+        repeatedConflictQueries++;
+        return oldConflictQuery(state, pid);
+      };
+      let candidateCount = 0;
+      try {
+        candidateCount = FB.communityProjectAICandidates(FB.state).length;
+      } finally {
+        FB.realmWarSnapshot = oldWarSnapshot;
+        FB.countyConflictSnapshot = oldConflictSnapshot;
+        FB.isRealmAtWar = oldWarQuery;
+        FB.countyOccupiedOrBesieged = oldConflictQuery;
+      }
+      return {
+        candidateCount:candidateCount,
+        warSnapshots:warSnapshots,
+        conflictSnapshots:conflictSnapshots,
+        repeatedWarQueries:repeatedWarQueries,
+        repeatedConflictQueries:repeatedConflictQueries
+      };
+    });
+    expect(result.candidateCount).toBeGreaterThanOrEqual(0);
+    expect(result.warSnapshots).toBe(1);
+    expect(result.conflictSnapshots).toBe(1);
+    expect(result.repeatedWarQueries).toBe(0);
+    expect(result.repeatedConflictQueries).toBe(0);
   });
 
 test('historical situations, long-horizon observations, and save diagnostics are bounded',
@@ -684,9 +784,24 @@ test('historical situations, long-horizon observations, and save diagnostics are
     const setup = await configureCountyProjectUi(page);
     const result = await page.evaluate(function (pid) {
       const s = FB.state;
+      const customFaith = FB.foundFaith(s, {
+        id:'e2e_observed_faith', name:'Observed Faith', group:'$current',
+        relationToParent:'in_fold'
+      }, { convertFounder:false });
+      const me = s.chars[s.player.charId];
+      me.religion = customFaith;
+      s.realms.player.religion = customFaith;
+      FB.convertCountyCommunity(s, pid, {
+        kind:'faith', target:customFaith, amount:80,
+        cause:'e2e founded faith observation'
+      });
       const before = JSON.stringify(s);
       const observation = FB.observeCommunityProject(s, pid, {
         kind:'culture', target:'norse', policy:'voluntary', sponsor:'player'
+      }, [25, 50, 100]);
+      const foundedFaith = FB.observeCommunityProject(s, pid, {
+        kind:'faith', target:customFaith,
+        policy:'integrative', sponsor:'player'
       }, [25, 50, 100]);
       const diagnostics = FB.populationSaveDiagnostics(s);
       const ids = [
@@ -704,6 +819,10 @@ test('historical situations, long-horizon observations, and save diagnostics are
         shares:observation.observations.map(function (entry) {
           return entry.share;
         }),
+        foundedInitial:foundedFaith.initialShare,
+        foundedShares:foundedFaith.observations.map(function (entry) {
+          return entry.share;
+        }),
         diagnostics:diagnostics,
         situations:ids.map(function (id) {
           const event = FB.eventById(id);
@@ -717,6 +836,11 @@ test('historical situations, long-horizon observations, and save diagnostics are
     expect(result.shares[0]).toBeLessThan(0.9);
     expect(result.shares[1]).toBeGreaterThanOrEqual(result.shares[0]);
     expect(result.shares[2]).toBeGreaterThanOrEqual(result.shares[1]);
+    expect(result.foundedInitial).toBeGreaterThan(0);
+    expect(result.foundedShares[0]).toBeGreaterThan(result.foundedInitial);
+    expect(result.foundedShares[1]).toBeGreaterThanOrEqual(result.foundedShares[0]);
+    expect(result.foundedShares[2]).toBeGreaterThanOrEqual(result.foundedShares[1]);
+    expect(result.foundedShares[2]).toBeLessThan(0.98);
     expect(result.diagnostics.bytes).toBeGreaterThan(0);
     expect(result.diagnostics.counties).toBeGreaterThan(400);
     expect(result.situations).toEqual([true, true, true, true, true]);
@@ -745,42 +869,132 @@ test('both bookmarks retain mixed communities across 25, 50, and 100 year observ
           realmTechMigration:2, realmTech:{}
         };
         FB.ensurePopulationState(state);
-        for (const pid in state.population.counties) {
-          const communities = state.population.counties[pid].communities || [];
-          if (communities.length < 2) continue;
-          const principal = communities[0];
-          let target = null;
-          let kind = null;
-          for (let i = 1; i < communities.length; i++) {
-            if (communities[i].culture !== principal.culture) {
-              target = communities[i];
-              kind = 'culture';
-              break;
-            }
-            if (communities[i].religion !== principal.religion) {
-              target = communities[i];
-              kind = 'faith';
-              break;
+        const holyWarCounties = {};
+        for (const faithId in FBDATA.religions) {
+          const faith = FBDATA.religions[faithId];
+          const campaign = faith && faith.properties &&
+            faith.properties.head && faith.properties.head.greatHolyWar;
+          const rows = campaign && campaign.sacredTargets || [];
+          for (let ri = 0; ri < rows.length; ri++) {
+            const counties = rows[ri].counties || [];
+            for (let ci = 0; ci < counties.length; ci++) {
+              holyWarCounties[counties[ci]] = true;
             }
           }
-          if (!target) continue;
-          state.player.provinceId = pid;
-          state.owner[pid] = 'player';
-          state.holder[pid] = 'player';
-          state.chars.calibrator.culture = target.culture;
-          state.chars.calibrator.religion = target.religion;
-          state.realms.player = {
-            id:'player', alive:true, capital:pid, ruler:'calibrator',
-            religion:target.religion
-          };
-          const observation = FB.observeCommunityProject(state, pid, {
-            kind:kind,
-            target:kind === 'culture' ? target.culture : target.religion,
-            policy:'voluntary', sponsor:'player'
-          }, [25, 50, 100]);
-          if (observation) return observation;
         }
-        return null;
+        const sacredPids = Object.keys(holyWarCounties).sort();
+        for (let spi = 0; spi < sacredPids.length; spi++) {
+          const sacredPid = sacredPids[spi];
+          const sacred = state.population.counties[sacredPid];
+          if (!sacred) continue;
+          const currentFaith = sacred.identity.religion;
+          const targetFaith = Object.keys(FBDATA.religions).sort().filter(
+            function (faithId) {
+              const relation = FB.faithRelation(
+                state, currentFaith, faithId);
+              return faithId !== currentFaith &&
+                (!FB.faithAssignable || FB.faithAssignable(faithId, state)) &&
+                (relation === 'hostile' || relation === 'foreign');
+            })[0];
+          if (!targetFaith) continue;
+          FB.convertCountyCommunity(state, sacredPid, {
+            kind:'faith', target:targetFaith,
+            amount:Math.max(1, Math.round(sacred.count * 0.15)),
+            cause:'e2e holy-war-region calibration'
+          });
+          break;
+        }
+        const candidates = [];
+        const pids = Object.keys(state.population.counties).sort();
+        for (let pi = 0; pi < pids.length; pi++) {
+          const pid = pids[pi];
+          const rec = state.population.counties[pid];
+          const communities = rec.communities || [];
+          if (communities.length < 2) continue;
+          for (const kind of ['culture','faith']) {
+            const field = kind === 'culture' ? 'culture' : 'religion';
+            const dominant = rec.identity[field];
+            const targets = [];
+            for (let ci = 0; ci < communities.length; ci++) {
+              const target = communities[ci][field];
+              if (target !== dominant && targets.indexOf(target) < 0) {
+                targets.push(target);
+              }
+            }
+            targets.sort();
+            if (!targets.length) continue;
+            const target = targets[0];
+            const adjacent = FB.world.adj[pid] || {};
+            const borderland = Object.keys(adjacent).some(function (otherPid) {
+              const other = state.population.counties[otherPid];
+              return other && other.identity[field] !== dominant;
+            });
+            const tradeCenter = (FB.settlementsOf(state, pid) || []).some(
+              function (site) {
+                return site.kind === 'city' || site.kind === 'town';
+              });
+            const relation = kind === 'faith' && FB.faithRelation
+              ? FB.faithRelation(state, dominant, target) : null;
+            const opposedFaith = relation === 'hostile' || relation === 'foreign';
+            candidates.push({
+              pid:pid, kind:kind, target:target,
+              dominantCulture:rec.identity.culture,
+              dominantFaith:rec.identity.religion,
+              borderland:borderland, tradeCenter:tradeCenter,
+              holyWarRegion:!!holyWarCounties[pid] && opposedFaith
+            });
+          }
+        }
+        const wanted = {
+          culture:function (entry) { return entry.kind === 'culture'; },
+          faith:function (entry) { return entry.kind === 'faith'; },
+          borderland:function (entry) { return entry.borderland; },
+          trade_center:function (entry) { return entry.tradeCenter; },
+          holy_war_region:function (entry) { return entry.holyWarRegion; }
+        };
+        const selected = [];
+        const coverage = {};
+        for (const category in wanted) {
+          const candidate = candidates.filter(wanted[category])[0];
+          coverage[category] = !!candidate;
+          if (!candidate) continue;
+          const key = candidate.pid + '|' + candidate.kind + '|' + candidate.target;
+          let row = selected.filter(function (entry) {
+            return entry.key === key;
+          })[0];
+          if (!row) {
+            row = { key:key, candidate:candidate, categories:[] };
+            selected.push(row);
+          }
+          row.categories.push(category);
+        }
+        const observations = [];
+        for (let si = 0; si < selected.length; si++) {
+          const candidate = selected[si].candidate;
+          state.player.provinceId = candidate.pid;
+          state.owner[candidate.pid] = 'player';
+          state.holder[candidate.pid] = 'player';
+          state.chars.calibrator.culture = candidate.kind === 'culture'
+            ? candidate.target : candidate.dominantCulture;
+          state.chars.calibrator.religion = candidate.kind === 'faith'
+            ? candidate.target : candidate.dominantFaith;
+          state.realms.player = {
+            id:'player', alive:true, capital:candidate.pid, ruler:'calibrator',
+            religion:state.chars.calibrator.religion
+          };
+          const observation = FB.observeCommunityProject(
+            state, candidate.pid, {
+              kind:candidate.kind, target:candidate.target,
+              policy:'voluntary', sponsor:'player'
+            }, [25, 50, 100]);
+          if (observation) {
+            observations.push({
+              categories:selected[si].categories,
+              observation:observation
+            });
+          }
+        }
+        return { coverage:coverage, observations:observations };
       }
       await activate('867');
       const bookmark867 = observeBookmark();
@@ -788,17 +1002,26 @@ test('both bookmarks retain mixed communities across 25, 50, and 100 year observ
       const bookmark1066 = observeBookmark();
       return { bookmark867:bookmark867, bookmark1066:bookmark1066 };
     });
-    for (const observation of [result.bookmark867, result.bookmark1066]) {
-      expect(observation).not.toBeNull();
-      expect(observation.observations.map(function (entry) {
-        return entry.years;
-      })).toEqual([25, 50, 100]);
-      expect(observation.observations[0].share)
-        .toBeGreaterThan(observation.initialShare);
-      expect(observation.observations[0].share).toBeLessThan(0.9);
-      expect(observation.observations[1].share)
-        .toBeGreaterThanOrEqual(observation.observations[0].share);
-      expect(observation.observations[2].share)
-        .toBeGreaterThanOrEqual(observation.observations[1].share);
+    for (const bookmark of [result.bookmark867, result.bookmark1066]) {
+      expect(bookmark.observations.length).toBeGreaterThanOrEqual(3);
+      expect(bookmark.coverage).toEqual({
+        culture:true, faith:true, borderland:true,
+        trade_center:true, holy_war_region:true
+      });
+      for (const sample of bookmark.observations) {
+        const observation = sample.observation;
+        expect(observation.observations.map(function (entry) {
+          return entry.years;
+        })).toEqual([25, 50, 100]);
+        expect(observation.observations[0].share)
+          .toBeGreaterThan(observation.initialShare);
+        for (const horizon of observation.observations) {
+          expect(horizon.share).toBeLessThan(0.98);
+        }
+        expect(observation.observations[1].share)
+          .toBeGreaterThanOrEqual(observation.observations[0].share);
+        expect(observation.observations[2].share)
+          .toBeGreaterThanOrEqual(observation.observations[1].share);
+      }
     }
   });

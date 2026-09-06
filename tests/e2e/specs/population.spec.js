@@ -10,6 +10,7 @@ dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/events.js',
   'js/institutions.js',
+  'js/market.js',
   'js/model.js',
   'js/modifiers.js',
   'js/actions.js',
@@ -29,6 +30,37 @@ test.beforeEach(async function ({ page }, testInfo) {
 });
 
 test.describe('County Population & Lightweight Demographics Engine', function () {
+  test('Market-scale reads and targeted writes do not trigger full-world population repair',
+    async function ({ page }) {
+      const result = await page.evaluate(function () {
+        const state = FB.state;
+        const oldEnsure = FB.ensurePopulationState;
+        let fullRepairs = 0;
+        FB.ensurePopulationState = function (target) {
+          fullRepairs++;
+          return oldEnsure(target);
+        };
+        let populationReads = 0;
+        try {
+          for (let i = 0; i < FB.world.provs.length; i++) {
+            const province = FB.world.provs[i];
+            if (!province || province.wasteland) continue;
+            FB.countyPopulation(state, province.id);
+            populationReads++;
+          }
+          FB.changeCountyPopulation(
+            state, state.player.provinceId, 1, 'e2e targeted write');
+          state.turn++;
+          FB.marketSeason(state);
+        } finally {
+          FB.ensurePopulationState = oldEnsure;
+        }
+        return { fullRepairs:fullRepairs, populationReads:populationReads };
+      });
+      expect(result.populationReads).toBeGreaterThan(400);
+      expect(result.fullRepairs).toBe(0);
+    });
+
   test('Deterministic opening baseline fallback and bookmark overrides', async function ({ page }) {
     const results = await page.evaluate(function () {
       const state = FB.state || {};
@@ -1070,7 +1102,7 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
       expect(result.stable).toBe(true);
     });
 
-  test('Community save growth stays bounded for both bookmarks and long-running totals',
+  test('Community save growth stays bounded for both bookmarks and mature mixed states',
     async function ({ page }) {
       const result = await page.evaluate(async function () {
         function activate(bookmarkId) {
@@ -1088,6 +1120,8 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
             delete legacy.counties[pid].communities;
             delete legacy.counties[pid].identity;
             delete legacy.counties[pid].communityChange;
+            delete legacy.counties[pid].communityProjects;
+            delete legacy.counties[pid].settlementCommunityProjects;
           }
           return legacy;
         }
@@ -1101,19 +1135,66 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
           FB.ensurePopulationState(state);
           const schema2 = JSON.stringify(state.population).length;
           const schema1 = JSON.stringify(withoutCommunities(state.population)).length;
-          const longRunning = JSON.parse(JSON.stringify(state.population));
-          longRunning.lastYear += 180;
-          for (const pid in longRunning.counties) {
-            const rec = longRunning.counties[pid];
-            rec.count *= 17;
-            for (let i = 0; i < rec.communities.length; i++) {
-              rec.communities[i].count *= 17;
+          const cultureIds = Object.keys(FBDATA.cultures).sort();
+          const faithIds = Object.keys(FBDATA.religions).sort().filter(
+            function (faithId) {
+              return !FB.faithAssignable ||
+                FB.faithAssignable(faithId, state);
+            });
+          const pids = Object.keys(state.population.counties).sort();
+          let projects = 0;
+          for (let pi = 0; pi < pids.length; pi++) {
+            const pid = pids[pi];
+            const rec = state.population.counties[pid];
+            const originalCulture = rec.identity.culture;
+            const originalFaith = rec.identity.religion;
+            rec.communities = [{
+              culture:originalCulture,
+              religion:originalFaith,
+              count:rec.count
+            }];
+            FB.reconcileCountyCommunities(state, pid);
+            const cultureTargets = cultureIds.filter(function (cultureId) {
+              return cultureId !== originalCulture;
+            }).slice(0, 2);
+            for (let ci = 0; ci < cultureTargets.length; ci++) {
+              FB.convertCountyCommunity(state, pid, {
+                kind:'culture', target:cultureTargets[ci],
+                amount:Math.max(1, Math.floor(rec.count * 0.03)),
+                cause:'e2e mature community spread'
+              });
+            }
+            const faithTarget = faithIds.filter(function (faithId) {
+              return faithId !== originalFaith;
+            })[0];
+            if (faithTarget) {
+              FB.convertCountyCommunity(state, pid, {
+                kind:'faith', target:faithTarget,
+                amount:Math.max(1, Math.floor(rec.count * 0.09)),
+                cause:'e2e mature community spread'
+              });
+            }
+            if (pi % 4 === 0) FB.materializeSettlementCommunities(state, pid);
+            if (projects < 4) {
+              let target = null;
+              for (let ci = 0; ci < rec.communities.length; ci++) {
+                if (rec.communities[ci].culture !== rec.identity.culture) {
+                  target = rec.communities[ci].culture;
+                  break;
+                }
+              }
+              if (target && FB.startCountyCommunityProject(state, pid, {
+                kind:'culture', target:target, policy:'voluntary',
+                sponsor:'e2e_ai_' + projects
+              })) projects++;
             }
           }
+          const mature = FB.populationSaveDiagnostics(state);
           return {
             total:schema2,
             added:schema2 - schema1,
-            longRunningAdded:JSON.stringify(longRunning).length - schema1
+            matureAdded:mature.bytes - schema1,
+            mature:mature
           };
         }
         await activate('867');
@@ -1126,8 +1207,15 @@ test.describe('County Population & Lightweight Demographics Engine', function ()
       for (const measurement of [result.bookmark867, result.bookmark1066]) {
         expect(measurement.added).toBeGreaterThan(0);
         expect(measurement.added).toBeLessThan(200000);
-        expect(measurement.longRunningAdded).toBeLessThan(220000);
+        expect(measurement.matureAdded).toBeLessThan(900000);
         expect(measurement.total).toBeLessThan(1.6 * 1024 * 1024);
+        expect(measurement.mature.bytes).toBeLessThan(2.5 * 1024 * 1024);
+        expect(measurement.mature.communityRecords).toBeLessThanOrEqual(
+          measurement.mature.counties * 6);
+        expect(measurement.mature.maxCountyCommunities).toBeLessThanOrEqual(6);
+        expect(measurement.mature.materializedCounties).toBeGreaterThan(80);
+        expect(measurement.mature.settlementCells).toBeGreaterThan(0);
+        expect(measurement.mature.projectCount).toBe(4);
       }
     });
 });

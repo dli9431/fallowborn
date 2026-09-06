@@ -21,6 +21,24 @@ test('community policies and event fields validate against the combined mod cata
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     const result = await page.evaluate(function () {
+      let invalidMechanics = '';
+      let missingPolicy = '';
+      try {
+        FB.mods.apply({ balance:{ countyCommunityProjectPolicies:{
+          voluntary:{ pressure:'quickly', resistance:0.8,
+            maxRate:0.006, holdout:0.12, migration:0 }
+        } } });
+      } catch (error) {
+        invalidMechanics = error.message;
+      }
+      try {
+        FB.mods.apply({ balance:{ countyCommunityProjectPolicies:{
+          undocumented_policy:{ pressure:0.8, resistance:0.7,
+            maxRate:0.007, holdout:0.08, migration:0 }
+        } } });
+      } catch (error) {
+        missingPolicy = error.message;
+      }
       const event = {
         id:'mod_community_charter', title:'A Local Charter',
         trigger:{ countyCommunityShare:{ kind:'culture', target:'norse',
@@ -59,7 +77,9 @@ test('community policies and event fields validate against the combined mod cata
         mechanics:FBDATA.balance.countyCommunityProjectPolicies
           .chartered_exchange.maxRate,
         event:FB.eventById('mod_community_charter').id,
-        invalid:invalid
+        invalid:invalid,
+        invalidMechanics:invalidMechanics,
+        missingPolicy:missingPolicy
       };
     });
     expect(result.policy).toBe('Chartered exchange');
@@ -67,6 +87,10 @@ test('community policies and event fields validate against the combined mod cata
     expect(result.event).toBe('mod_community_charter');
     expect(result.invalid).toContain(
       'events[0] trigger.countyCommunityShare.target must name a known faith');
+    expect(result.invalidMechanics).toContain(
+      'balance.countyCommunityProjectPolicies.voluntary.pressure must be a finite number');
+    expect(result.missingPolicy).toContain(
+      'countyCommunityPolicies.undocumented_policy must be an object under a lowercase id');
   });
 
 test('runtime mods add culture traditions and retain a replaced core culture affinity',

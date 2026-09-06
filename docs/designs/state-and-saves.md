@@ -144,9 +144,10 @@ percentages or rendered demographic prose; malformed projects are dropped by ord
 population repair without advancing the subsystem schema.
 
 `FB.populationSaveDiagnostics(state)` is a read-only development aid that reports the
-serialized population byte count and counts of counties, materialized settlement cohorts,
-and active projects. It stores nothing in the save. Settlement matrices remain lazy and are
-compacted when they again equal the proportional county projection.
+serialized population byte count and counts of counties, live community records, maximum
+county diversity, materialized settlement cohorts and cells, and active projects. It stores
+nothing in the save. Settlement matrices remain lazy and are compacted when they again equal
+the proportional county projection.
 
 The existing `state.agency` object may also hold the numeric
 `lastCommunitySituationYear`. It is a global pacing stamp for rare community situations,
@@ -186,11 +187,16 @@ percentages, rendered prose, or derived identity cache is added per settlement.
 - Live community readers return detached projections and never repair state as a display
   side effect. No transient calculations, edge allocations, or prose strings enter
   serialized state.
+- Full-world repair runs at initialization, restore, and the annual population boundary.
+  Ordinary population reads use the already-authoritative county count, while targeted
+  writers repair only their source and destination records. Market-scale reads therefore
+  remain O(counties), and a single county mutation is not amplified into a world repair.
 
-Focused storage coverage measures fresh 867, fresh 1066, enlarged long-running, and
-one-county materialized population records against the schema-1 projection. The milestone keeps the added
-community state below 200 KB for a fresh bookmark and below 220 KB for the enlarged
-case. A materialized county adds only its community-by-slot integer cells and optional
+Focused storage coverage measures fresh 867 and 1066 states against their schema-1
+projection, then stress-tests a mature shape with six live pairs per county, settlement
+matrices in every fourth county, and four AI-sponsored projects. Fresh community state stays
+below 200 KB; the deliberately dense mature projection stays below 900 KB added and 2.5 MB
+total. A materialized county adds only its community-by-slot integer cells and optional
 project records; unmaterialized counties serialize no settlement cache.
 
 Fort lookup caches (`byCounty`, `bySite`, active projects) are module-private derived

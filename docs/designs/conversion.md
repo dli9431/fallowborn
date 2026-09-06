@@ -243,14 +243,22 @@ ruler must directly hold the county; the ruler’s identity must already represe
 and an existing project exclude a candidate. Related communities tend toward integrative
 policy, unrelated communities toward voluntary policy, and coercion is reserved for a
 zealous defender confronting a hostile faith under unusually stable conditions. A saved-RNG
-16% annual choice and a four-project world cap keep intervention sparse. These values are
-data-driven under the `countyCommunityAI*` balance keys.
+16% annual choice can start at most one project, and
+`countyCommunityAIMaxActiveProjects` caps concurrent AI-sponsored county projects at four
+worldwide. A full cap skips both candidate construction and the RNG roll. Candidate
+construction runs only after a successful annual roll and snapshots realm wars and
+occupied or besieged counties once, so its accepted-year cost is proportional to realms,
+conflicts, and counties instead of multiplying counties by complete conflict scans. These
+values are data-driven under the
+`countyCommunityAI*` balance keys.
 
 `FB.observeCommunityProject` is a read-only 25/50/100-year calibration helper. It clones the
 serializable campaign and runs the real project resolver without world simulation or RNG;
-`FB.populationSaveDiagnostics` reports serialized population bytes, materialized settlement
-matrices, cohorts, and projects. Calibration covers both bookmarks and deliberately expects
-mixed communities to persist for generations. The reusable situations in
+`FB.populationSaveDiagnostics` reports serialized population bytes, live community records,
+maximum county diversity, materialized settlement matrices and cells, and projects.
+Calibration covers culture and faith mixes, borderlands, trade centers, authored holy-war
+regions, and a newly founded faith across both bookmarks, and deliberately expects mixed
+communities to persist at each 25/50/100-year horizon. The reusable situations in
 `data/events_communities.js` are informed by Nora Berend’s *Christianization and the Rise of
 Christian Monarchy* ([Cambridge excerpt](https://assets.cambridge.org/97805218/76162/excerpt/9780521876162_excerpt.pdf)),
 Miri Rubin’s [*Cities of Strangers*](https://www.cambridge.org/core/books/cities-of-strangers/DF614DA2B1B257B2F771EE9C412550E3),

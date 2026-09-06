@@ -1096,20 +1096,28 @@ window.FBMODS = window.FBMODS || [];
   }
 
   function validateCommunityPolicies(mod) {
-    if (!own(mod, 'countyCommunityPolicies')) return;
+    const suppliesPolicies = own(mod, 'countyCommunityPolicies');
+    const suppliesMechanics = !!(mod.balance &&
+      own(mod.balance, 'countyCommunityProjectPolicies'));
+    if (!suppliesPolicies && !suppliesMechanics) return;
     const policies = communityEventReferenceTables(mod).policies;
     const modifiers = combinedTable(
       FBDATA.modifiers, mod.modifiers, 'modifiers');
     const mechanics = {};
     const baseMechanics = FBDATA.balance.countyCommunityProjectPolicies || {};
     for (const id in baseMechanics) mechanics[id] = baseMechanics[id];
-    const modMechanics = mod.balance &&
-      mod.balance.countyCommunityProjectPolicies;
+    const modMechanics = suppliesMechanics
+      ? mod.balance.countyCommunityProjectPolicies : undefined;
     if (modMechanics !== undefined && !plainObject(modMechanics)) {
       fail('balance.countyCommunityProjectPolicies', 'must be an object.');
     }
     for (const id in (modMechanics || {})) mechanics[id] = modMechanics[id];
-    for (const id in mod.countyCommunityPolicies) {
+    const ids = {};
+    if (suppliesPolicies) {
+      for (const id in mod.countyCommunityPolicies) ids[id] = true;
+    }
+    for (const id in (modMechanics || {})) ids[id] = true;
+    for (const id in ids) {
       const policy = policies[id];
       const path = 'countyCommunityPolicies.' + id;
       if (!/^[a-z][a-z0-9_]*$/.test(id) || !plainObject(policy)) {

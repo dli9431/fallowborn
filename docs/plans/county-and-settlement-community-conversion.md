@@ -515,8 +515,13 @@ Steps:
    elite-led conversion, frontier settlement, urban minority persistence, and coercive
    backlash. Avoid deterministic modern borders or guaranteed outcomes.
 5. Balance rates over 25-, 50-, and 100-year observations in both bookmarks. Review mixed
-   counties, borderlands, trade centers, holy-war regions, and newly founded faiths.
+   counties, borderlands, trade centers, holy-war regions, and newly founded faiths. The
+   automated matrix samples both culture and faith projects in each bookmark, asserts
+   persistence at every horizon, and includes a campaign-founded faith.
 6. Complete documentation, mod validation, save-size diagnostics, and the test matrix.
+   Mechanics-only policy overrides are validated before merge; save diagnostics cover a
+   dense mature state with widespread community rows, lazy settlement matrices, and the
+   concurrent AI-project cap.
 7. At each integration into `main` or `dev`, assign the next version and changelog entry
    according to the repository workflow. Regenerate i18n catalogs only if the owner
    separately requests it.

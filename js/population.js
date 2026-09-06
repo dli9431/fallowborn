@@ -175,6 +175,41 @@ window.FB = window.FB || {};
   }
   FB.countyOccupiedOrBesieged = countyOccupiedOrBesieged;
 
+  /* Build the occupied/sieged county set once for world-scale passes. The
+     public single-county helper remains authoritative for isolated queries,
+     while annual population and agency scans avoid walking every war once
+     per province. */
+  function countyConflictSnapshot(state) {
+    var result = Object.create(null);
+    if (!state) return result;
+    function record(table) {
+      if (!table || typeof table !== 'object') return;
+      for (var pid in table) {
+        var entry = table[pid];
+        if (entry && (entry.occupied || Number(entry.progress) > 0)) {
+          result[pid] = true;
+        }
+      }
+    }
+    record(state.occupations);
+    record(state.greatHolyWar && state.greatHolyWar.occupations);
+    var playerWar = state.player && state.player.war;
+    if (playerWar && playerWar.enemyTarget &&
+        Number(playerWar.enemySiege) > 0) {
+      result[playerWar.enemyTarget] = true;
+    }
+    var wars = state.wars || {};
+    for (var wid in wars) {
+      var sieges = wars[wid] && wars[wid].fortSieges;
+      if (!sieges || typeof sieges !== 'object') continue;
+      for (var siegePid in sieges) {
+        if (sieges[siegePid]) result[siegePid] = true;
+      }
+    }
+    return result;
+  }
+  FB.countyConflictSnapshot = countyConflictSnapshot;
+
   function realmIsAtWar(state, rid) {
     if (!state || !rid) return false;
     if (rid === 'player' || (FB.playerRealmId && FB.playerRealmId(state) === rid)) {
@@ -1068,6 +1103,24 @@ window.FB = window.FB || {};
     return state.population;
   };
 
+  /* Targeted write-boundary repair. Full-world repair belongs at load,
+     initialization, and annual simulation boundaries; a county mutation
+     must not rebuild every other county's community arrays. */
+  function ensureCountyPopulationRecord(state, pid) {
+    if (!state) return null;
+    var pr = provinceDef(pid);
+    if (!pr || pr.wasteland) return null;
+    var rec = state.population && state.population.counties &&
+      state.population.counties[pid];
+    if (!rec || typeof rec !== 'object') {
+      FB.ensurePopulationState(state);
+      rec = state.population && state.population.counties &&
+        state.population.counties[pid];
+    }
+    if (!rec || typeof rec !== 'object') return null;
+    return repairCountyRecord(state, pr, rec, stateYear(state));
+  }
+
   FB.reconcileCountyCommunities = function (state, pid) {
     if (!state || !state.population || !state.population.counties) return [];
     var pr = provinceDef(pid);
@@ -1088,8 +1141,7 @@ window.FB = window.FB || {};
     if (!state) return [];
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return [];
-    FB.ensurePopulationState(state);
-    var rec = state.population.counties[pid];
+    var rec = ensureCountyPopulationRecord(state, pid);
     if (!rec) return [];
     if (!hasSettlementPartition(rec.communities)) {
       reconcileSettlementRecord(state, pid, rec, null);
@@ -1409,7 +1461,7 @@ window.FB = window.FB || {};
      factor is either supplied by the project/county or derived from current
      political, conflict, institution, and demographic state. */
   function countyCommunityProjectStatus(state, pid, kind, project,
-    settlementIndex) {
+    settlementIndex, context) {
     var rec = state && state.population && state.population.counties &&
       state.population.counties[pid];
     var policy = project && projectPolicyMechanics(project.policy);
@@ -1476,9 +1528,13 @@ window.FB = window.FB || {};
       balance('countyCommunityProjectPopulationScaleMax', 1.35));
     var conflict = 1;
     var owner = provinceOwner(state, pid);
-    if (realmIsAtWar(state, owner)) conflict *= FB.clamp(balance(
+    var ownerAtWar = context && context.ownerAtWar !== undefined
+      ? !!context.ownerAtWar : realmIsAtWar(state, owner);
+    var occupied = context && context.occupied !== undefined
+      ? !!context.occupied : countyOccupiedOrBesieged(state, pid);
+    if (ownerAtWar) conflict *= FB.clamp(balance(
       'countyCommunityProjectWarMultiplier', 0.50), 0, 1);
-    if (countyOccupiedOrBesieged(state, pid)) conflict *= FB.clamp(balance(
+    if (occupied) conflict *= FB.clamp(balance(
       'countyCommunityProjectOccupationMultiplier', 0.15), 0, 1);
 
     var rate = control ? Math.max(0, balance(
@@ -1519,7 +1575,7 @@ window.FB = window.FB || {};
   /* Pure preview for Land controls. It evaluates a proposed target and policy
      against the same current conditions as an active project without writing
      a temporary project into campaign state. */
-  FB.countyCommunityProjectPreview = function (state, pid, request) {
+  FB.countyCommunityProjectPreview = function (state, pid, request, context) {
     if (!state || !request || !validProjectKind(request.kind) ||
         !projectTargetValid(state, request.kind, request.target) ||
         !projectPolicyDefinition(request.policy)) return null;
@@ -1528,7 +1584,7 @@ window.FB = window.FB || {};
       sponsor:typeof request.sponsor === 'string' && request.sponsor
         ? request.sponsor : 'player',
       policy:request.policy
-    });
+    }, undefined, context);
   };
 
   FB.settlementCommunityProject = function (state, pid, settlementIndex, kind) {
@@ -1594,8 +1650,10 @@ window.FB = window.FB || {};
         !projectTargetValid(state, request.kind, request.target)) return empty;
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return empty;
-    if (!skipEnsure) FB.ensurePopulationState(state);
-    var rec = state.population && state.population.counties[pid];
+    var rec = skipEnsure
+      ? state.population && state.population.counties &&
+        state.population.counties[pid]
+      : ensureCountyPopulationRecord(state, pid);
     if (!rec) return empty;
     var field = request.kind === 'faith' ? 'religion' : 'culture';
     var eligible = rec.communities.filter(function (community) {
@@ -1649,8 +1707,11 @@ window.FB = window.FB || {};
         !isFinite(idx) || Math.floor(idx) !== idx || idx < 0) return empty;
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return empty;
-    if (!skipEnsure) FB.ensurePopulationState(state);
-    var rec = state.population.counties[pid];
+    var rec = skipEnsure
+      ? state.population && state.population.counties &&
+        state.population.counties[pid]
+      : ensureCountyPopulationRecord(state, pid);
+    if (!rec) return empty;
     var rows = settlementPopulationAllocation(state, pid, rec.count);
     if (idx >= rows.length) return empty;
     if (!hasSettlementPartition(rec.communities)) {
@@ -1737,8 +1798,8 @@ window.FB = window.FB || {};
         !projectPolicyDefinition(request.policy)) return null;
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return null;
-    FB.ensurePopulationState(state);
-    var rec = state.population.counties[pid];
+    var rec = ensureCountyPopulationRecord(state, pid);
+    if (!rec) return null;
     var sponsor = typeof request.sponsor === 'string' && request.sponsor
       ? request.sponsor : provinceOwner(state, pid);
     if (!sponsor || countyAxisShare(state, pid,
@@ -1785,8 +1846,8 @@ window.FB = window.FB || {};
         Math.floor(idx) !== idx || idx < 0) return null;
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return null;
-    FB.ensurePopulationState(state);
-    var rec = state.population.counties[pid];
+    var rec = ensureCountyPopulationRecord(state, pid);
+    if (!rec) return null;
     var communities = FB.settlementCommunities(state, pid, idx);
     if (!communities.length) return null;
     if (projectEligiblePopulation(communities, request.kind,
@@ -1915,9 +1976,12 @@ window.FB = window.FB || {};
     if (!state) return 0;
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return 0;
-    FB.ensurePopulationState(state);
     var rec = state.population && state.population.counties && state.population.counties[pid];
-    if (rec && isFinite(rec.count)) return Math.max(populationFloor(), rec.count);
+    var count = rec && Number(rec.count);
+    if (isFinite(count) && Math.round(count) === count &&
+        count >= populationFloor()) return count;
+    rec = ensureCountyPopulationRecord(state, pid);
+    if (rec && isFinite(Number(rec.count))) return rec.count;
     return FB.countyPopulationBaseline(state, pid);
   };
 
@@ -1927,11 +1991,10 @@ window.FB = window.FB || {};
     if (!state) return 0;
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return 0;
-    FB.ensurePopulationState(state);
     var delta = Math.round(Number(amount));
     if (!isFinite(delta) || delta === 0) return 0;
 
-    var rec = state.population.counties[pid];
+    var rec = ensureCountyPopulationRecord(state, pid);
     if (!rec) return 0;
     var floor = populationFloor();
     var before = rec.count;
@@ -1995,9 +2058,8 @@ window.FB = window.FB || {};
     var fromPr = provinceDef(fromPid);
     var toPr = provinceDef(toPid);
     if (!fromPr || fromPr.wasteland || !toPr || toPr.wasteland) return empty;
-    FB.ensurePopulationState(state);
-    var fromRec = state.population.counties[fromPid];
-    var toRec = state.population.counties[toPid];
+    var fromRec = ensureCountyPopulationRecord(state, fromPid);
+    var toRec = ensureCountyPopulationRecord(state, toPid);
     if (!fromRec || !toRec) return empty;
     options = options && typeof options === 'object' ? options : {};
     var fromSettlement = Number(options.fromSettlement);
@@ -2202,7 +2264,7 @@ window.FB = window.FB || {};
 
   FB.resolveCountyCommunityProjects = function (state, pid, year) {
     if (!state) return [];
-    FB.ensurePopulationState(state);
+    if (!ensureCountyPopulationRecord(state, pid)) return [];
     var targetYear = isFinite(Number(year))
       ? Math.round(Number(year)) : stateYear(state);
     return resolveCountyCommunityProjects(state, pid, targetYear);
@@ -2271,7 +2333,7 @@ window.FB = window.FB || {};
 
   FB.resolveSettlementCommunityProjects = function (state, pid, year) {
     if (!state) return [];
-    FB.ensurePopulationState(state);
+    if (!ensureCountyPopulationRecord(state, pid)) return [];
     var targetYear = isFinite(Number(year))
       ? Math.round(Number(year)) : stateYear(state);
     return resolveSettlementCommunityProjects(state, pid, targetYear);
@@ -2344,12 +2406,14 @@ window.FB = window.FB || {};
   FB.populationSaveDiagnostics = function (state) {
     if (!state || !state.population) return {
       bytes:0, counties:0, materializedCounties:0,
-      materializedCohorts:0, projectCount:0
+      materializedCohorts:0, settlementCells:0,
+      communityRecords:0, maxCountyCommunities:0, projectCount:0
     };
     var result = {
       bytes:JSON.stringify(state.population).length,
       counties:0, materializedCounties:0,
-      materializedCohorts:0, projectCount:0
+      materializedCohorts:0, settlementCells:0,
+      communityRecords:0, maxCountyCommunities:0, projectCount:0
     };
     var counties = state.population.counties || {};
     for (var pid in counties) {
@@ -2357,10 +2421,15 @@ window.FB = window.FB || {};
       if (!rec) continue;
       result.counties++;
       var materialized = false;
-      for (var i = 0; i < (rec.communities || []).length; i++) {
-        if (Array.isArray(rec.communities[i].bySettlement)) {
+      var communities = rec.communities || [];
+      result.communityRecords += communities.length;
+      result.maxCountyCommunities = Math.max(
+        result.maxCountyCommunities, communities.length);
+      for (var i = 0; i < communities.length; i++) {
+        if (Array.isArray(communities[i].bySettlement)) {
           materialized = true;
           result.materializedCohorts++;
+          result.settlementCells += communities[i].bySettlement.length;
         }
       }
       if (materialized) result.materializedCounties++;
@@ -2401,6 +2470,9 @@ window.FB = window.FB || {};
     var attractions = {};
     var occupied = {};
     var ownerAtWar = {};
+    var conflictSnapshot = countyConflictSnapshot(state);
+    var warSnapshot = FB.realmWarSnapshot
+      ? FB.realmWarSnapshot(state) : null;
     var rGrowth = balance('populationGrowthRate', 0.020);
 
     /* Stage 1: Natural growth & capacity */
@@ -2421,8 +2493,11 @@ window.FB = window.FB || {};
       postNaturalCommunities[pid] = naturalResult.communities;
       postNaturalP[pid] = P + naturalResult.applied;
       var owner = provinceOwner(state, pid);
-      if (!own(ownerAtWar, owner)) ownerAtWar[owner] = realmIsAtWar(state, owner);
-      occupied[pid] = countyOccupiedOrBesieged(state, pid);
+      if (!own(ownerAtWar, owner)) {
+        ownerAtWar[owner] = warSnapshot
+          ? warSnapshot.has(owner) : realmIsAtWar(state, owner);
+      }
+      occupied[pid] = !!conflictSnapshot[pid];
       attractions[pid] = FB.countyMigrationAttraction(state, pid, {
         population:P,
         capacity:K,

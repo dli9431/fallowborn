@@ -5793,10 +5793,20 @@ window.FB = window.FB || {};
         add(FB.playerRealmId(state));
         add(playerWar.enemy);
       }
-      if (FB.greatHolyWarCamp) {
-        for (const rid in realms) {
-          const realm = realms[rid];
-          if (realm && realm.alive && FB.greatHolyWarCamp(state, rid)) add(rid);
+      const campaign = state.greatHolyWar;
+      if (campaign && (campaign.phase === 'preparation' ||
+          campaign.phase === 'active') && campaign.participants) {
+        for (const camp of ['attackers','defenders']) {
+          const participants = campaign.participants[camp] || [];
+          for (let i = 0; i < participants.length; i++) {
+            if (participants[i] && participants[i].realm) {
+              add(participants[i].realm);
+            }
+          }
+        }
+        if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) {
+          add('player');
+          add(FB.playerRealmId(state));
         }
       }
       revision++;
@@ -5819,6 +5829,14 @@ window.FB = window.FB || {};
       rebuild:rebuild
     };
   }
+
+  /* Read-only projection for other world-scale yearly systems. It shares the
+     exact normalization and great-holy-war handling used by the world tick,
+     without exposing the tick's mutation hooks. */
+  FB.realmWarSnapshot = function (state) {
+    const index = worldYearWarIndex(state);
+    return { has:index.has };
+  };
 
   function worldYearAllianceIndex(state) {
     let partners = Object.create(null);

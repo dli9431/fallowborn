@@ -7760,6 +7760,246 @@
         "text": "A Hairy Star"
       }
     },
+    "event.community_coercive_backlash.options.0.desc.default": {
+      "context": "Event community_coercive_backlash, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Stop the county faith project before more people leave."
+      }
+    },
+    "event.community_coercive_backlash.options.0.label.default": {
+      "context": "Event community_coercive_backlash, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "End the enforcement."
+      }
+    },
+    "event.community_coercive_backlash.options.1.desc.default": {
+      "context": "Event community_coercive_backlash, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "A bounded Norse-pagan community is expelled into a neighboring county."
+      }
+    },
+    "event.community_coercive_backlash.options.1.label.default": {
+      "context": "Event community_coercive_backlash, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Drive the holdouts onward."
+      }
+    },
+    "event.community_coercive_backlash.text.default": {
+      "context": "Event community_coercive_backlash, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Searches and penalties harden resistance. Some households prepare to flee rather than submit."
+      }
+    },
+    "event.community_coercive_backlash.title.default": {
+      "context": "Event community_coercive_backlash, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Flight From the Officials"
+      }
+    },
+    "event.community_elite_led_conversion.options.0.desc.default": {
+      "context": "Event community_elite_led_conversion, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Begin gradual, integrative work in this county."
+      }
+    },
+    "event.community_elite_led_conversion.options.0.label.default": {
+      "context": "Event community_elite_led_conversion, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Sustain the settlement."
+      }
+    },
+    "event.community_elite_led_conversion.options.1.desc.default": {
+      "context": "Event community_elite_led_conversion, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Elite practice does not become a territorial project."
+      }
+    },
+    "event.community_elite_led_conversion.options.1.label.default": {
+      "context": "Event community_elite_led_conversion, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Keep the hall apart from the villages."
+      }
+    },
+    "event.community_elite_led_conversion.text.default": {
+      "context": "Event community_elite_led_conversion, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Clerks and leading households offer schools, offices, and patronage around a new religious settlement. Their reach is real, but the county will not change in a season."
+      }
+    },
+    "event.community_elite_led_conversion.title.default": {
+      "context": "Event community_elite_led_conversion, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Patronage From the Hall"
+      }
+    },
+    "event.community_frontier_settlement.options.0.desc.default": {
+      "context": "Event community_frontier_settlement, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Move a bounded Norse community from the event county to your home county."
+      }
+    },
+    "event.community_frontier_settlement.options.0.label.default": {
+      "context": "Event community_frontier_settlement, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Grant land near home."
+      }
+    },
+    "event.community_frontier_settlement.options.1.desc.default": {
+      "context": "Event community_frontier_settlement, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "No families are moved."
+      }
+    },
+    "event.community_frontier_settlement.options.1.label.default": {
+      "context": "Event community_frontier_settlement, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Leave the frontier open."
+      }
+    },
+    "event.community_frontier_settlement.text.default": {
+      "context": "Event community_frontier_settlement, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Families seek land across the frontier. A charter could move a modest community without emptying the place they leave."
+      }
+    },
+    "event.community_frontier_settlement.title.default": {
+      "context": "Event community_frontier_settlement, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Families at the Frontier"
+      }
+    },
+    "event.community_peaceful_adoption.options.0.desc.default": {
+      "context": "Event community_peaceful_adoption, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "A small, bounded group adopts the faith without compulsion."
+      }
+    },
+    "event.community_peaceful_adoption.options.0.label.default": {
+      "context": "Event community_peaceful_adoption, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Welcome those who come freely."
+      }
+    },
+    "event.community_peaceful_adoption.options.1.desc.default": {
+      "context": "Event community_peaceful_adoption, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "No community changes immediately."
+      }
+    },
+    "event.community_peaceful_adoption.options.1.label.default": {
+      "context": "Event community_peaceful_adoption, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Let each hearth decide in its own time."
+      }
+    },
+    "event.community_peaceful_adoption.text.default": {
+      "context": "Event community_peaceful_adoption, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Neighbors have begun attending one another’s feasts and instruction. Some ask for baptism; others ask that custom be left to grow at its own pace."
+      }
+    },
+    "event.community_peaceful_adoption.title.default": {
+      "context": "Event community_peaceful_adoption, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Teaching at the Hearth"
+      }
+    },
+    "event.community_urban_minority.options.0.desc.default": {
+      "context": "Event community_urban_minority, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Stop the local assimilation project."
+      }
+    },
+    "event.community_urban_minority.options.0.label.default": {
+      "context": "Event community_urban_minority, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Protect the quarter’s customs."
+      }
+    },
+    "event.community_urban_minority.options.1.desc.default": {
+      "context": "Event community_urban_minority, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "The minority persists while the existing project continues."
+      }
+    },
+    "event.community_urban_minority.options.1.label.default": {
+      "context": "Event community_urban_minority, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Keep the present policy."
+      }
+    },
+    "event.community_urban_minority.text.default": {
+      "context": "Event community_urban_minority, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "Long-settled strangers keep workshops, worship, and kin in one quarter. Their ties sustain the town even as officials press for conformity."
+      }
+    },
+    "event.community_urban_minority.title.default": {
+      "context": "Event community_urban_minority, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_communities.js",
+      "source": {
+        "text": "The Strangers’ Quarter"
+      }
+    },
     "event.conversion_pressure.options.0.desc.default": {
       "context": "Event conversion_pressure, authored option 0, desc, branch default.",
       "glossary": [],
@@ -40044,6 +40284,22 @@
         "text": "Closed Settlement"
       }
     },
+    "modifier.community_coercion.desc.default": {
+      "context": "modifier community_coercion, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Officials force local faith or custom toward the ruler’s chosen identity; holdouts resist and families leave."
+      }
+    },
+    "modifier.community_coercion.name.default": {
+      "context": "modifier community_coercion, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Coerced Conformity"
+      }
+    },
     "modifier.conquered_without_right.desc.default": {
       "context": "modifier conquered_without_right, desc, faith branch default.",
       "glossary": [],
@@ -54770,6 +55026,16 @@
         "text": "That royal policy is not recognized."
       }
     },
+    "src.01949837": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Toward {target} · about {count} people per year at present"
+      }
+    },
     "src.0198783c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55389,6 +55655,16 @@
       ],
       "source": {
         "text": "💡 In Rank & Realm, use Buy a plot of land to purchase your first plot. Plots held together in one settlement are more productive."
+      }
+    },
+    "src.02b8dc0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": settlement community column does not match county community"
       }
     },
     "src.02bb37f1": {
@@ -56132,6 +56408,16 @@
         "text": "👴 Hand over the house"
       }
     },
+    "src.047597bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Population cohort distribution exceeded its source total"
+      }
+    },
     "src.0478725c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56301,6 +56587,16 @@
       ],
       "source": {
         "text": "Raise"
+      }
+    },
+    "src.04b5f52d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "must declare min or max."
       }
     },
     "src.04bc8160": {
@@ -57035,6 +57331,16 @@
         "text": "The missionaries grow bolder, and converts multiply around you. The old gods’ shrines stand quieter each year. To rise here may mean to kneel at their font."
       }
     },
+    "src.062e8629": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "A bounded Norse-pagan community is expelled into a neighboring county."
+      }
+    },
     "src.063014d2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57283,6 +57589,16 @@
       ],
       "source": {
         "text": "Termez"
+      }
+    },
+    "src.06abc564": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Long-settled strangers keep workshops, worship, and kin in one quarter. Their ties sustain the town even as officials press for conformity."
       }
     },
     "src.06abd28f": {
@@ -57733,6 +58049,16 @@
       ],
       "source": {
         "text": "You promise rain for the harvest and the heavens send none. The patron tells everyone."
+      }
+    },
+    "src.0766be51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "population state is missing"
       }
     },
     "src.07672685": {
@@ -58855,6 +59181,16 @@
         "text": "Correct the tally openly."
       }
     },
+    "src.09501282": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "population change"
+      }
+    },
     "src.0952cc73": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58963,6 +59299,16 @@
       ],
       "source": {
         "text": "Purse"
+      }
+    },
+    "src.09823233": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "event community movement"
       }
     },
     "src.098e759c": {
@@ -59384,6 +59730,16 @@
       ],
       "source": {
         "text": "Permitted"
+      }
+    },
+    "src.0a61044b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop the {kind} project toward {target} in {county}? Population already changed will remain as it is."
       }
     },
     "src.0a61de35": {
@@ -60059,6 +60415,16 @@
         "text": "no autobuild"
       }
     },
+    "src.0b88ca2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Secret sympathies"
+      }
+    },
     "src.0b8e1859": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60067,6 +60433,16 @@
       ],
       "source": {
         "text": "Requires: {requirements}. This becomes the vocation’s permanent title."
+      }
+    },
+    "src.0b923ac9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Population total invariant after annual pass in"
       }
     },
     "src.0b94b451": {
@@ -60838,16 +61214,6 @@
       ],
       "source": {
         "text": "Discipline rises while Common Voice falls."
-      }
-    },
-    "src.0d17f0d0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Illicit sibling-courtship exposure"
       }
     },
     "src.0d18150e": {
@@ -61622,6 +61988,17 @@
         "text": "Territorial commands link military obligation to provincial government."
       }
     },
+    "src.0e95677c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Stop project"
+      }
+    },
     "src.0e9589f7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61854,6 +62231,16 @@
       ],
       "source": {
         "text": "💍 The match assistant recommends {match} for {child}. Review the match in Household Plan."
+      }
+    },
+    "src.0f18d9ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No encountered identity can be advanced in this county."
       }
     },
     "src.0f1cd590": {
@@ -62248,6 +62635,16 @@
         "text": "Name"
       }
     },
+    "src.0fe07e62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "must be a non-negative integer, $context, or $home."
+      }
+    },
     "src.0fe4ef03": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62639,6 +63036,26 @@
         "text": "Crossbowmen"
       }
     },
+    "src.10ac75ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Protect the quarter’s customs."
+      }
+    },
+    "src.10b8e95d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Opening this review costs nothing and changes no population. Results are resolved annually; no completion date is promised."
+      }
+    },
     "src.10bcfdd7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62971,6 +63388,16 @@
         "text": "Take the tools you bought."
       }
     },
+    "src.116b4ab6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Stop the county faith-conversion project"
+      }
+    },
     "src.1172bda6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63051,14 +63478,14 @@
         "text": "A splinter of the wood itself, carried out of Jerusalem’s treasuries. Pilgrims will come, and pilgrims must be fed."
       }
     },
-    "src.118c9e81": {
+    "src.11922bec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/population.js"
       ],
       "source": {
-        "text": "Travel here to meet the people who live around this settlement."
+        "text": ": invalid settlement community cell"
       }
     },
     "src.11927fe9": {
@@ -63581,6 +64008,16 @@
       ],
       "source": {
         "text": "Careers, training, and work"
+      }
+    },
+    "src.126fc16b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Clerks and leading households offer schools, offices, and patronage around a new religious settlement. Their reach is real, but the county will not change in a season."
       }
     },
     "src.127509ae": {
@@ -64162,6 +64599,16 @@
       ],
       "source": {
         "text": "Won a market charter for the home county in the estates."
+      }
+    },
+    "src.136db59a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Estimated direction:"
       }
     },
     "src.136f9608": {
@@ -65167,14 +65614,14 @@
         "text": "Hang them before the tents."
       }
     },
-    "src.15071d45": {
+    "src.15095b30": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/traits.js"
+        "js/ui_misc.js"
       ],
       "source": {
-        "text": "Persist in a close-kin marriage without a rite recognized by the couple’s faith."
+        "text": "Dynastic duty"
       }
     },
     "src.150e851f": {
@@ -65991,6 +66438,16 @@
         "text": "Learning and lay-standing result"
       }
     },
+    "src.167eb247": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Settlement faith shifts"
+      }
+    },
     "src.1681d009": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66400,6 +66857,17 @@
       ],
       "source": {
         "text": "The court decides after you spend the day. Refusal closes only this exact pairing."
+      }
+    },
+    "src.1728d36f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That county project is not possible."
       }
     },
     "src.1729d0ba": {
@@ -67993,6 +68461,16 @@
         "text": "Student"
       }
     },
+    "src.1a0ffdf6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Neighbors have begun attending one another’s feasts and instruction. Some ask for baptism; others ask that custom be left to grow at its own pace."
+      }
+    },
     "src.1a1c6624": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68302,6 +68780,16 @@
       ],
       "source": {
         "text": "Choose the Method"
+      }
+    },
+    "src.1aa86181": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "{amount} migration pressure while enforced"
       }
     },
     "src.1aa8e209": {
@@ -69215,6 +69703,16 @@
         "text": "Swore an oath of brotherhood."
       }
     },
+    "src.1cb94afe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Patronage From the Hall"
+      }
+    },
     "src.1cbc177d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69515,6 +70013,16 @@
       ],
       "source": {
         "text": "⚖ The debt is paid to the last penny; the writ is burned."
+      }
+    },
+    "src.1d766cde": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Discretion under scrutiny"
       }
     },
     "src.1d79c629": {
@@ -70470,6 +70978,16 @@
         "text": "Munster"
       }
     },
+    "src.1f214607": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "community move"
+      }
+    },
     "src.1f232b98": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70620,6 +71138,16 @@
         "text": "{workers} leave this staff."
       }
     },
+    "src.1f588a3a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "settlement community project"
+      }
+    },
     "src.1f5a9860": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70660,6 +71188,16 @@
         "text": "The fiefs will revert to your hand when the remaining ninety days end."
       }
     },
+    "src.1f6ffff8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No project is active in this county."
+      }
+    },
     "src.1f71131c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70680,6 +71218,16 @@
       ],
       "source": {
         "text": "levy"
+      }
+    },
+    "src.1f79e0f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "must define mechanics for this policy."
       }
     },
     "src.1f7b66c3": {
@@ -70740,6 +71288,16 @@
       ],
       "source": {
         "text": "📯 {caller} calls the faithful to a {campaign} for {kingdom}. The banners have 180 days to gather."
+      }
+    },
+    "src.1f91131b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Start {policy}"
       }
     },
     "src.1f936902": {
@@ -72251,6 +72809,16 @@
         "text": "Begin in religious service with education and piety."
       }
     },
+    "src.225fc638": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "County levy (gross)"
+      }
+    },
     "src.226627d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72269,6 +72837,16 @@
       ],
       "source": {
         "text": "Destroyed a pretender in open war."
+      }
+    },
+    "src.2271caec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the identity toward which {county} should change. This is county policy, not a personal conversion."
       }
     },
     "src.227373e6": {
@@ -72682,16 +73260,6 @@
         "text": "Unavailable during an unresolved event"
       }
     },
-    "src.2337df0d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Proposal where the union is taboo"
-      }
-    },
     "src.2337fffc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72832,6 +73400,16 @@
       ],
       "source": {
         "text": "County market"
+      }
+    },
+    "src.236c5df9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "event community transfer"
       }
     },
     "src.236d6558": {
@@ -75893,6 +76471,16 @@
         "text": "A Knife Between Companies"
       }
     },
+    "src.2933b987": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": invalid county count"
+      }
+    },
     "src.293702c5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75971,6 +76559,16 @@
       ],
       "source": {
         "text": " · 🔒 lock recorded"
+      }
+    },
+    "src.297a2c56": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "The minority persists while the existing project continues."
       }
     },
     "src.29809af7": {
@@ -76543,6 +77141,16 @@
         "text": "Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements."
       }
     },
+    "src.2a9b8056": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "has an invalid count"
+      }
+    },
     "src.2a9f37a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76631,6 +77239,16 @@
       ],
       "source": {
         "text": "Petition on merit — {chance}%"
+      }
+    },
+    "src.2acf2c31": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "settlement community conversion"
       }
     },
     "src.2ad09faa": {
@@ -77898,6 +78516,16 @@
         "text": "Learning"
       }
     },
+    "src.2d097d79": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{percent}% of the county now"
+      }
+    },
     "src.2d158bba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78498,6 +79126,16 @@
         "text": "Admit the proof is uncertain and refer it upward."
       }
     },
+    "src.2e48e474": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Faith conversion begins in {county}."
+      }
+    },
     "src.2e4b843e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78998,6 +79636,16 @@
         "text": "A small gift buys a large peace."
       }
     },
+    "src.2f569c51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "balance.countyCommunityProjectPolicies."
+      }
+    },
     "src.2f616a54": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79086,6 +79734,16 @@
       ],
       "source": {
         "text": "Meet them with the host you already have."
+      }
+    },
+    "src.2f90bb6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "View faith in {county}"
       }
     },
     "src.2f93f05b": {
@@ -79542,6 +80200,16 @@
         "text": "Ballot"
       }
     },
+    "src.30629c51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{percent}% of this settlement now"
+      }
+    },
     "src.30682fdd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79720,6 +80388,16 @@
       ],
       "source": {
         "text": "Sovereign county"
+      }
+    },
+    "src.30aea186": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Only a living ruler may direct settlement conversion."
       }
     },
     "src.30b0ac86": {
@@ -80114,16 +80792,6 @@
         "text": "Adds 7.5 percentage points to yearly education chances and 0.5 national research each season."
       }
     },
-    "src.3165181c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Proposal under a recognized rite"
-      }
-    },
     "src.316564b1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80354,6 +81022,16 @@
         "text": "greatHolyWar has invalid firstTarget"
       }
     },
+    "src.31dfb1d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Searches and penalties harden resistance. Some households prepare to flee rather than submit."
+      }
+    },
     "src.31e23ee3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80412,16 +81090,6 @@
       ],
       "source": {
         "text": "choices require the resource_choice capability."
-      }
-    },
-    "src.31fba7cb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Dynastically relevant proposal"
       }
     },
     "src.32035a59": {
@@ -80795,6 +81463,16 @@
         "text": "This enterprise is not recognized."
       }
     },
+    "src.32c148da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Paused: the project sponsor no longer controls this settlement."
+      }
+    },
     "src.32c5b4e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80894,6 +81572,16 @@
       ],
       "source": {
         "text": "Territorial rank opens Governance; institutions vary by relationship to the crown."
+      }
+    },
+    "src.330803ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Stop the local assimilation project."
       }
     },
     "src.3308fc2f": {
@@ -81527,6 +82215,16 @@
         "text": "The labor grinds you down."
       }
     },
+    "src.343437f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "about {count} people per year at current conditions; resistance is {percent}%."
+      }
+    },
     "src.343c52de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82019,6 +82717,16 @@
       ],
       "source": {
         "text": "+{rate} Standing each ordinary day together."
+      }
+    },
+    "src.353cb7fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "must give populationShare0 to every community or none of them."
       }
     },
     "src.35438956": {
@@ -83295,6 +84003,16 @@
         "text": "Foreign-policy direction"
       }
     },
+    "src.37d299ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Convention and desire"
+      }
+    },
     "src.37d387c1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83599,6 +84317,16 @@
         "text": "Your falcon vanishes over the ridge with your dignity."
       }
     },
+    "src.387b3461": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Sanctioned resolve"
+      }
+    },
     "src.387dc25b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83730,6 +84458,16 @@
       ],
       "source": {
         "text": "your liege"
+      }
+    },
+    "src.38cb598a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That settlement project can no longer be stopped."
       }
     },
     "src.38d14980": {
@@ -84062,6 +84800,16 @@
       ],
       "source": {
         "text": "Beg your liege’s aid. ({money:20})"
+      }
+    },
+    "src.395798b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Private resolve"
       }
     },
     "src.395a0491": {
@@ -84825,6 +85573,16 @@
         "text": "Review higher dignity…"
       }
     },
+    "src.3a8dbdc3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Inclined"
+      }
+    },
     "src.3a94b148": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84833,6 +85591,16 @@
       ],
       "source": {
         "text": "Paid the liege’s fine for refused service."
+      }
+    },
+    "src.3a94cdc8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "About {count} people/year · {percent}% resistance"
       }
     },
     "src.3a96cdf5": {
@@ -85365,6 +86133,16 @@
         "text": "Colchester"
       }
     },
+    "src.3b65933f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Population transfer invariant after"
+      }
+    },
     "src.3b6a4601": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85463,6 +86241,16 @@
       ],
       "source": {
         "text": "Muster count adjustment"
+      }
+    },
+    "src.3bc6524c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Piety:"
       }
     },
     "src.3bcf87f4": {
@@ -85776,6 +86564,16 @@
         "text": "⚔ {winner} has conquered {province} — your home! New masters rule here now."
       }
     },
+    "src.3c788cb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Population migration invariant after annual pass:"
+      }
+    },
     "src.3c852ae2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85954,6 +86752,16 @@
       ],
       "source": {
         "text": "{percent}% discount"
+      }
+    },
+    "src.3cd717b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Teaching at the Hearth"
       }
     },
     "src.3cd96da5": {
@@ -86157,16 +86965,6 @@
         "text": "The body may follow where will leads."
       }
     },
-    "src.3d6610ad": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household."
-      }
-    },
     "src.3d6811b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86321,6 +87119,16 @@
       ],
       "source": {
         "text": "⚜ {name} is one county alone — no duke’s title to claim."
+      }
+    },
+    "src.3db51fa1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Settlement culture shifts"
       }
     },
     "src.3dc0ef7a": {
@@ -87188,6 +87996,16 @@
         "text": "The gold and yearly motion remain spent; unused redress evidence is preserved."
       }
     },
+    "src.3f7c2cc6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "County communities"
+      }
+    },
     "src.3f7de41b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87266,6 +88084,16 @@
       ],
       "source": {
         "text": "Chronicle archive"
+      }
+    },
+    "src.3f9f581e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Families at the Frontier"
       }
     },
     "src.3fa047ca": {
@@ -87689,6 +88517,16 @@
         "text": "Eligible under the current house succession order."
       }
     },
+    "src.40696346": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Stop the county assimilation project"
+      }
+    },
     "src.4069ebb6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87707,6 +88545,16 @@
       ],
       "source": {
         "text": "Locked"
+      }
+    },
+    "src.406b4486": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "County culture shifts"
       }
     },
     "src.406b631c": {
@@ -87827,6 +88675,16 @@
       ],
       "source": {
         "text": "Leave the purse with a trusted elder."
+      }
+    },
+    "src.40986ad5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Elite practice does not become a territorial project."
       }
     },
     "src.40a52bf3": {
@@ -88458,6 +89316,16 @@
         "text": "🎓 You are left to your own devices."
       }
     },
+    "src.41e61ae6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Prestige:"
+      }
+    },
     "src.41e773cc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88476,16 +89344,6 @@
       ],
       "source": {
         "text": "No save found."
-      }
-    },
-    "src.41f0f8d3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Sibling marriage proposal"
       }
     },
     "src.41fd4a2d": {
@@ -90811,6 +91669,16 @@
         "text": "This recurring duty returns every {days} days under the saved household tenure."
       }
     },
+    "src.45ae14a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{label} · {settlement}, {county}"
+      }
+    },
     "src.45b21509": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90941,6 +91809,17 @@
         "text": "The hall is not with you today. The old lord’s suit fails, and you have damaged your Standing on a losing cause."
       }
     },
+    "src.45e06b28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Last annual transfer: {count}"
+      }
+    },
     "src.45e320b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91029,6 +91908,16 @@
       ],
       "source": {
         "text": "The Empty Chair"
+      }
+    },
+    "src.46110cb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Resistance: {percent}%"
       }
     },
     "src.46155b8e": {
@@ -91670,6 +92559,16 @@
       ],
       "source": {
         "text": "adoption window."
+      }
+    },
+    "src.4723b44b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Population total invariant after county community conversion"
       }
     },
     "src.472d53f6": {
@@ -93087,6 +93986,16 @@
         "text": "Return the courtesy generously."
       }
     },
+    "src.4a5d8693": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Settlement conversion exceeded its source community"
+      }
+    },
     "src.4a61c348": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93408,16 +94317,6 @@
       ],
       "source": {
         "text": "Mint Assaying"
-      }
-    },
-    "src.4b14a7da": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Discourages"
       }
     },
     "src.4b1a5b7d": {
@@ -94282,6 +95181,16 @@
         "text": "Your obstacle leaves court under a cloud, and his place in the lord’s regard falls quietly to you."
       }
     },
+    "src.4ce0580d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Keep project"
+      }
+    },
     "src.4ce0a50f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94450,6 +95359,16 @@
       ],
       "source": {
         "text": "references unknown vocation"
+      }
+    },
+    "src.4d451086": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "event community"
       }
     },
     "src.4d4e6f73": {
@@ -94954,6 +95873,16 @@
         "text": "Name what this service is meant to secure. A precise vow strengthens that claim and weakens unrelated claims."
       }
     },
+    "src.4e6175ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "must be a target id or object."
+      }
+    },
     "src.4e6304bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95032,6 +95961,16 @@
       ],
       "source": {
         "text": "Sweat is the surest inheritance."
+      }
+    },
+    "src.4e815332": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "must be an object under a lowercase id."
       }
     },
     "src.4e865057": {
@@ -97972,6 +98911,16 @@
         "text": "Currently serving as {office}."
       }
     },
+    "src.5402e95b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Migration between counties"
+      }
+    },
     "src.5409f1be": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98491,6 +99440,16 @@
       ],
       "source": {
         "text": "Glory if the line holds; a wound and ashes if it breaks."
+      }
+    },
+    "src.5522eec0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "current project target"
       }
     },
     "src.55232b65": {
@@ -99437,6 +100396,16 @@
         "text": "📜 {grantor} grants the household a {profession} monopoly for {years} years."
       }
     },
+    "src.56d648de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Keep the hall apart from the villages."
+      }
+    },
     "src.56d6adf9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99616,6 +100585,16 @@
       ],
       "source": {
         "text": "🕊 A captive is released without terms."
+      }
+    },
+    "src.57195966": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Move a bounded Norse community from the event county to your home county."
       }
     },
     "src.571fc625": {
@@ -100900,6 +101879,16 @@
         "text": "Social and religious roles"
       }
     },
+    "src.59650b84": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "].effects"
+      }
+    },
     "src.5965768a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102066,6 +103055,16 @@
       ],
       "source": {
         "text": "Curiosity is cheap; its prizes are not."
+      }
+    },
+    "src.5b8ac945": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Population community invariant after"
       }
     },
     "src.5b95e921": {
@@ -103889,6 +104888,16 @@
         "text": "You gain {piety} piety and {prestige} prestige, recover {standing} Standing with Catholic rulers, and any excommunication is cleared."
       }
     },
+    "src.5f101b59": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "does not equal"
+      }
+    },
     "src.5f1689ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103967,6 +104976,16 @@
       ],
       "source": {
         "text": "Charity asked for is charity halved."
+      }
+    },
+    "src.5f27ef4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": community total"
       }
     },
     "src.5f2986d0": {
@@ -104097,6 +105116,16 @@
       ],
       "source": {
         "text": "Your household lives here as free commoners."
+      }
+    },
+    "src.5f6ee9de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{percent}% resistance"
       }
     },
     "src.5f7546b6": {
@@ -105138,6 +106167,16 @@
         "text": "{count}× great-granddaughter"
       }
     },
+    "src.614d8a35": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Begin a county assimilation project"
+      }
+    },
     "src.6164a10a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105991,6 +107030,16 @@
         "text": "Renew the surviving pact. ({money:8})"
       }
     },
+    "src.62ed6b6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "This settlement is {percent}% of the county; while enforced its county-wide share is: {effects}"
+      }
+    },
     "src.62f83f34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106712,6 +107761,16 @@
       ],
       "source": {
         "text": "Cancel the march and stand fast; the automated stances leave a held host alone."
+      }
+    },
+    "src.645fdb8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This replaces the county’s current {kind} project."
       }
     },
     "src.6460a6a4": {
@@ -107580,6 +108639,16 @@
         "text": "🏛 Govern the demesne"
       }
     },
+    "src.66120e41": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No encountered identity can be advanced in this settlement."
+      }
+    },
     "src.6620e4c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107608,6 +108677,16 @@
       ],
       "source": {
         "text": "Requires {standing} Guild Standing; currently {current}."
+      }
+    },
+    "src.6629a244": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Details for {policy}"
       }
     },
     "src.662aa231": {
@@ -109002,16 +110081,6 @@
         "text": "People living around {province}. Meet an adult through a local activity, then cultivate the relationship from their sheet."
       }
     },
-    "src.68b63db8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Response to an illicit approach"
-      }
-    },
     "src.68ba69f8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109150,6 +110219,16 @@
       ],
       "source": {
         "text": "Available again in {days} days."
+      }
+    },
+    "src.68f581a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop project · {settlement}, {county}"
       }
     },
     "src.68f7e1df": {
@@ -109442,6 +110521,16 @@
       ],
       "source": {
         "text": "Answer with sharper verses of your own."
+      }
+    },
+    "src.6968eeab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "must be from 0 to 1."
       }
     },
     "src.6969dbe9": {
@@ -111441,6 +112530,26 @@
         "text": "A homestead stands or falls on water. The map of {location} is written in damp hollows, green seams, and the flight of birds at dusk."
       }
     },
+    "src.6cffbe6f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Dynastic sympathies"
+      }
+    },
+    "src.6d0b9ea9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count} smaller communities"
+      }
+    },
     "src.6d0cf2b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111840,6 +112949,16 @@
       ],
       "source": {
         "text": "There is no compatible object in the armory."
+      }
+    },
+    "src.6db72a97": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "settlement reconciliation"
       }
     },
     "src.6dc7c512": {
@@ -112350,6 +113469,16 @@
       ],
       "source": {
         "text": "{student} learns to see security and sufficiency as achievements of their own."
+      }
+    },
+    "src.6eb1e5f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Faith conversion"
       }
     },
     "src.6eb43ad2": {
@@ -115243,6 +116372,16 @@
         "text": "of {province}"
       }
     },
+    "src.7432b6cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "county community project"
+      }
+    },
     "src.743a8d76": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115261,6 +116400,16 @@
       ],
       "source": {
         "text": "{icon} {unit} ×{count} — attack {attack}, defense {defense}"
+      }
+    },
+    "src.7447c26f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose how {county} will move toward {target}. Annual results change with local conditions."
       }
     },
     "src.744d77b3": {
@@ -116415,6 +117564,16 @@
         "text": "Pack Ass"
       }
     },
+    "src.76716bcf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cultural assimilation begins in {county}."
+      }
+    },
     "src.767c94d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117411,16 +118570,6 @@
       ],
       "source": {
         "text": "A merchant train needs spears for the road. Easy duty, fair pay."
-      }
-    },
-    "src.78634944": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Response to a dynastically relevant approach"
       }
     },
     "src.7865024c": {
@@ -119525,6 +120674,16 @@
         "text": "The road is open to freeholders and gentry."
       }
     },
+    "src.7c515451": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Stop the local assimilation project"
+      }
+    },
     "src.7c5c321c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119693,6 +120852,16 @@
       ],
       "source": {
         "text": "Exact effect"
+      }
+    },
+    "src.7cbb29d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": community"
       }
     },
     "src.7cbbe25b": {
@@ -119993,6 +121162,16 @@
       ],
       "source": {
         "text": "Guilds and merchants"
+      }
+    },
+    "src.7d5f437a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "{effects} for {days} days, renewed by annual enforcement"
       }
     },
     "src.7d64d643": {
@@ -120435,6 +121614,16 @@
         "text": "Accounts and confidence against cudgels."
       }
     },
+    "src.7e076ffa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your available force"
+      }
+    },
     "src.7e0911a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120663,6 +121852,16 @@
       ],
       "source": {
         "text": "battle power"
+      }
+    },
+    "src.7e6164f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "No community changes immediately."
       }
     },
     "src.7e636c0a": {
@@ -121428,6 +122627,16 @@
         "text": "Coffers, Bills and Caravan Tackle"
       }
     },
+    "src.7fc98aa4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "That settlement project is not possible."
+      }
+    },
     "src.7fca69e8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121779,6 +122988,16 @@
         "text": "Departure keeps your personal attention on {name}; progress resumes only once you arrive."
       }
     },
+    "src.806c059f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "has invalid community event data."
+      }
+    },
     "src.80754c3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121917,6 +123136,16 @@
       ],
       "source": {
         "text": "Fully staffed"
+      }
+    },
+    "src.80a68009": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Any existing county modifier continues until its displayed expiry."
       }
     },
     "src.80acf1e9": {
@@ -122110,6 +123339,16 @@
         "text": "Rest while you can."
       }
     },
+    "src.80ea3bb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No active project."
+      }
+    },
     "src.80f87f7f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122228,6 +123467,16 @@
       ],
       "source": {
         "text": "Peace bought with a little pride."
+      }
+    },
+    "src.8123776b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Stop the county faith project before more people leave."
       }
     },
     "src.8125b301": {
@@ -122823,6 +124072,16 @@
         "text": "No more land is for sale here."
       }
     },
+    "src.8235afb7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That county project can no longer be stopped."
+      }
+    },
     "src.8236afb4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122901,6 +124160,16 @@
       ],
       "source": {
         "text": "Change helper text color…"
+      }
+    },
+    "src.82581d17": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "No families are moved."
       }
     },
     "src.8260cf65": {
@@ -123705,6 +124974,16 @@
         "text": "Their response chance"
       }
     },
+    "src.83bd4320": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Flight From the Officials"
+      }
+    },
     "src.83bffafa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123833,6 +125112,16 @@
       ],
       "source": {
         "text": "{duty} (commuted)"
+      }
+    },
+    "src.83ee84ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Persist in a marriage the surrounding community refuses to recognize."
       }
     },
     "src.83ef2527": {
@@ -124184,6 +125473,16 @@
       ],
       "source": {
         "text": "A wall wants mending and a wagon wants loading. Honest coin."
+      }
+    },
+    "src.84870621": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Local communities"
       }
     },
     "src.84887ebb": {
@@ -124606,6 +125905,16 @@
       ],
       "source": {
         "text": "Success strengthens the next redress vote; failure strengthens the liege’s hand and raises the aid."
+      }
+    },
+    "src.8529a9c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Grant land near home."
       }
     },
     "src.852b4041": {
@@ -125602,6 +126911,16 @@
       ],
       "source": {
         "text": "Put shoulder and tools to the gearing."
+      }
+    },
+    "src.872974e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Officials force local faith or custom toward the ruler’s chosen identity; holdouts resist and families leave."
       }
     },
     "src.872bdfe5": {
@@ -127321,6 +128640,16 @@
       ],
       "source": {
         "text": "Wear the chain you helped fasten on others."
+      }
+    },
+    "src.8a4d91e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "~{count} people/year · {percent}% resistance"
       }
     },
     "src.8a53b8d2": {
@@ -129440,6 +130769,16 @@
         "text": "Controlled by its current owner"
       }
     },
+    "src.8de905fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "County faith shifts"
+      }
+    },
     "src.8debbe3f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129789,6 +131128,16 @@
       ],
       "source": {
         "text": "Let the child find their own way."
+      }
+    },
+    "src.8e954638": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "These prospects reflect the communities currently living in {county}."
       }
     },
     "src.8e95bf33": {
@@ -130558,6 +131907,16 @@
         "text": "The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears."
       }
     },
+    "src.8ff496f9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "settlement materialization"
+      }
+    },
     "src.8ffab842": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131122,6 +132481,16 @@
         "text": "Storm-fallen wood"
       }
     },
+    "src.90ff895d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Reluctant"
+      }
+    },
     "src.910252dc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131220,6 +132589,16 @@
       ],
       "source": {
         "text": "Spend 2 gold and gain +7 Standing."
+      }
+    },
+    "src.91581652": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Starts immediately. No upfront personal cost. Progress resolves annually; no fixed completion date."
       }
     },
     "src.915ce25a": {
@@ -131542,6 +132921,16 @@
         "text": "must be plain, well, or masterwork."
       }
     },
+    "src.91e83732": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "No immediate Common Voice or unrest change."
+      }
+    },
     "src.91f7f98a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131681,6 +133070,16 @@
       ],
       "source": {
         "text": "Scorched but standing. You saved the most of it."
+      }
+    },
+    "src.92521211": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Confirm project in {county}"
       }
     },
     "src.9257ee49": {
@@ -133057,6 +134456,16 @@
         "text": "Debts tell stories the grieving cannot."
       }
     },
+    "src.9541c8d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This project changes only this settlement’s communities. Progress resolves annually; no fixed completion date."
+      }
+    },
     "src.9541d3e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133340,6 +134749,16 @@
       ],
       "source": {
         "text": "All political attention is assigned. Set another court to Neutral before choosing a new direction here."
+      }
+    },
+    "src.95ca2b82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{movement} ({rate}% of the named community)"
       }
     },
     "src.95cadf45": {
@@ -134378,16 +135797,6 @@
       ],
       "source": {
         "text": "Bath"
-      }
-    },
-    "src.97ae9dec": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "More likely"
       }
     },
     "src.97b86a29": {
@@ -135536,6 +136945,26 @@
         "text": "Future candidacy cooldown: {days} days remain."
       }
     },
+    "src.99b69aaa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop project in {settlement}, {county}"
+      }
+    },
+    "src.99bf92d3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "must contain non-empty label and desc strings."
+      }
+    },
     "src.99c0222c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135604,16 +137033,6 @@
       ],
       "source": {
         "text": "Fund a joint survey. ({money:10})"
-      }
-    },
-    "src.99d8a6cd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Response under a recognized rite"
       }
     },
     "src.99ee500e": {
@@ -136046,6 +137465,16 @@
       ],
       "source": {
         "text": "Open this realm ruler’s sheet"
+      }
+    },
+    "src.9a8a8998": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": county population is missing"
       }
     },
     "src.9a8eef75": {
@@ -136631,6 +138060,16 @@
         "text": "Won local redress through the estates."
       }
     },
+    "src.9ba69a9c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Your dynasty has not encountered that identity."
+      }
+    },
     "src.9ba7d086": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137180,6 +138619,17 @@
       ],
       "source": {
         "text": "⚖ A rival carries the lot at {money:price}; your purse stays closed."
+      }
+    },
+    "src.9c8cd690": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Start project…"
       }
     },
     "src.9c8d0867": {
@@ -137773,16 +139223,6 @@
         "text": "must retain baseline id"
       }
     },
-    "src.9db6bdc8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Recognized-rite sibling approach"
-      }
-    },
     "src.9db71640": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137852,6 +139292,16 @@
       ],
       "source": {
         "text": "Grant as a complete duchy · {count} counties"
+      }
+    },
+    "src.9dd541fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Only a living ruler may direct county conversion."
       }
     },
     "src.9dd68f38": {
@@ -138256,16 +139706,6 @@
         "text": "Let them take what the law says is owed. Hiding goods from a writ costs more than goods."
       }
     },
-    "src.9e895144": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Less likely"
-      }
-    },
     "src.9e933ab9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138660,6 +140100,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -139187,6 +140628,16 @@
         "text": "The return stake and lading fee cost {money:cost}; you have {money:gold}."
       }
     },
+    "src.a0463fe6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Paused · the project sponsor no longer controls this county"
+      }
+    },
     "src.a046bfe7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139205,6 +140656,16 @@
       ],
       "source": {
         "text": "A Suit Against a Neighbor"
+      }
+    },
+    "src.a04bc779": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You must hold authority over this exact settlement."
       }
     },
     "src.a0517dfa": {
@@ -139931,6 +141392,16 @@
         "text": "Reform clerical discipline."
       }
     },
+    "src.a19584cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "annual pass"
+      }
+    },
     "src.a19713a8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139990,6 +141461,16 @@
       ],
       "source": {
         "text": "This enterprise"
+      }
+    },
+    "src.a1be3633": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Details for {project}"
       }
     },
     "src.a1bf2599": {
@@ -140141,6 +141622,17 @@
       ],
       "source": {
         "text": "Master craftsman"
+      }
+    },
+    "src.a20c7eb1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "dominant"
       }
     },
     "src.a20edae3": {
@@ -140664,6 +142156,16 @@
         "text": "The crown’s gratitude, on the record."
       }
     },
+    "src.a2f067eb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": ": province"
+      }
+    },
     "src.a2f8cbde": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140892,6 +142394,16 @@
       ],
       "source": {
         "text": "Kars"
+      }
+    },
+    "src.a37b77a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Community expelled to another county"
       }
     },
     "src.a37cbef8": {
@@ -141486,6 +142998,16 @@
         "text": "Worked through the turning weather."
       }
     },
+    "src.a4796d64": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cultural assimilation begins in {settlement}, {county}."
+      }
+    },
     "src.a4837b3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141776,6 +143298,16 @@
       ],
       "source": {
         "text": "Duchy of"
+      }
+    },
+    "src.a519e551": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "has presence-only communities; simulated population begins entirely in the principal community."
       }
     },
     "src.a5237161": {
@@ -142593,6 +144125,16 @@
         "text": "The potter’s wheel makes vessels quickly and to regular shapes."
       }
     },
+    "src.a689553e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{faith} changed faith · {culture} assimilated · {migration} net migration"
+      }
+    },
     "src.a68a7f59": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142723,6 +144265,16 @@
         "text": "Hide grain from the collector and the sin from yourself."
       }
     },
+    "src.a6cedd0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{county} will pursue {target} through {policy}."
+      }
+    },
     "src.a6eceb86": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142761,6 +144313,16 @@
       ],
       "source": {
         "text": "A lie that holds is as good as the truth."
+      }
+    },
+    "src.a6fca229": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Open the personal, household, or realm faith picker."
       }
     },
     "src.a705efea": {
@@ -142943,6 +144505,16 @@
         "text": "Drive away everyone without a spear."
       }
     },
+    "src.a76002e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Begin a local assimilation project"
+      }
+    },
     "src.a7633950": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143081,6 +144653,16 @@
       ],
       "source": {
         "text": "Feared in life; the mourning is largely procedural."
+      }
+    },
+    "src.a7ad6bd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": incomplete settlement community partition"
       }
     },
     "src.a7b22b7f": {
@@ -143486,6 +145068,16 @@
       ],
       "source": {
         "text": "There is no heir."
+      }
+    },
+    "src.a8729ee2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Changes apply only to this settlement. Choose a target and policy; progress then resolves annually."
       }
     },
     "src.a874cf29": {
@@ -144087,6 +145679,16 @@
       ],
       "source": {
         "text": "{purse} purse"
+      }
+    },
+    "src.a9581874": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "That county project is already underway."
       }
     },
     "src.a95c095f": {
@@ -144803,6 +146405,16 @@
         "text": "The Go-Between"
       }
     },
+    "src.ab2ee7c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "must match its table key."
+      }
+    },
     "src.ab31d405": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145246,6 +146858,16 @@
         "text": "Watched doors sleep better at night."
       }
     },
+    "src.ac04fe32": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "A small, bounded group adopts the faith without compulsion."
+      }
+    },
     "src.ac0e8e5f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145635,6 +147257,16 @@
       ],
       "source": {
         "text": "Exact target"
+      }
+    },
+    "src.acf73aa8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Switch to {policy}"
       }
     },
     "src.acfb24f1": {
@@ -147528,6 +149160,16 @@
         "text": "Trade a higher aid for temporary exemption."
       }
     },
+    "src.b02b4a9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Everyone in this settlement already follows that identity."
+      }
+    },
     "src.b02c747e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -148259,6 +149901,16 @@
         "text": "The household may escape if its property is made easier to catch."
       }
     },
+    "src.b1522925": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "balance.countyCommunityProjectPolicies"
+      }
+    },
     "src.b15712cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -148889,6 +150541,16 @@
         "text": "Drill, guard duty, and paid service beneath another person’s banner."
       }
     },
+    "src.b273744e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cultural assimilation"
+      }
+    },
     "src.b277991e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149147,6 +150809,16 @@
       ],
       "source": {
         "text": "row on any province, and the 🗺 map filters ("
+      }
+    },
+    "src.b2fb7304": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Its settlement-weighted county effects end when enforcement stops."
       }
     },
     "src.b2fbd354": {
@@ -149883,6 +151555,16 @@
         "text": "Gain county: {province}"
       }
     },
+    "src.b448873f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Starts immediately and replaces this settlement’s current {kind} project. No upfront personal cost. Progress resolves annually; no fixed completion date."
+      }
+    },
     "src.b44a6d7f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150436,6 +152118,16 @@
       ],
       "source": {
         "text": "repeats site"
+      }
+    },
+    "src.b557c0e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Faith conversion begins in {settlement}, {county}."
       }
     },
     "src.b55867f8": {
@@ -152213,6 +153905,16 @@
         "text": "Not currently serving"
       }
     },
+    "src.b89c97f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Their household draws whispers wherever it is known."
+      }
+    },
     "src.b8a01dcb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152774,6 +154476,16 @@
         "text": "Eligible: living grandparent of the family."
       }
     },
+    "src.b9e0015f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Standing and relationships:"
+      }
+    },
     "src.b9e030b1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152824,6 +154536,16 @@
       ],
       "source": {
         "text": "{season} {year}: {name}"
+      }
+    },
+    "src.b9ecffdd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That settlement project is no longer possible."
       }
     },
     "src.b9efe2d7": {
@@ -152924,6 +154646,16 @@
       ],
       "source": {
         "text": "{count} active"
+      }
+    },
+    "src.ba23ba14": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Keep the present policy."
       }
     },
     "src.ba25b0b6": {
@@ -153549,16 +155281,6 @@
         "text": "Open their sheet and your dealings with them"
       }
     },
-    "src.bbb24a4b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No local household lives at this settlement."
-      }
-    },
     "src.bbb7bec1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153788,6 +155510,16 @@
       ],
       "source": {
         "text": "Pay scutage, by the estates’ charter. ({money:8})"
+      }
+    },
+    "src.bc11ecd6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Confirm county project"
       }
     },
     "src.bc12b6e2": {
@@ -154224,6 +155956,16 @@
         "text": "Defeated"
       }
     },
+    "src.bd03da66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Begin gradual, integrative work in this county."
+      }
+    },
     "src.bd06cff3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -154252,6 +155994,16 @@
       ],
       "source": {
         "text": "Culture data: culture"
+      }
+    },
+    "src.bd0e716f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Welcome those who come freely."
       }
     },
     "src.bd11a4b4": {
@@ -154302,6 +156054,16 @@
       ],
       "source": {
         "text": "Open the authoritative career, office, enterprise, and staffing controls."
+      }
+    },
+    "src.bd2b2086": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Private affections"
       }
     },
     "src.bd2ee5b0": {
@@ -154525,6 +156287,16 @@
       ],
       "source": {
         "text": "Cosenza"
+      }
+    },
+    "src.bd8a4579": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Stop the local faith-conversion project"
       }
     },
     "src.bd8c6ad7": {
@@ -154935,6 +156707,16 @@
       ],
       "source": {
         "text": "Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom."
+      }
+    },
+    "src.be511597": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Private sympathies"
       }
     },
     "src.be54e0cb": {
@@ -155509,6 +157291,16 @@
       ],
       "source": {
         "text": "Only a sovereign may restore the Papacy."
+      }
+    },
+    "src.bfa13149": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Population cohort distribution left an unassigned source total"
       }
     },
     "src.bfa21e10": {
@@ -156182,6 +157974,16 @@
         "text": "family enterprises"
       }
     },
+    "src.c0edc7fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{label} · {county}"
+      }
+    },
     "src.c0ee5389": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156710,6 +158512,16 @@
         "text": "must be at most 16 characters."
       }
     },
+    "src.c1b5f1a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "has an invalid identity"
+      }
+    },
     "src.c1b76632": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156738,6 +158550,16 @@
       ],
       "source": {
         "text": "Inheritance is a challenge, not a cushion."
+      }
+    },
+    "src.c1c15d1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop the {kind} project toward {target} in {settlement}, {county}? Population already changed will remain as it is."
       }
     },
     "src.c1c43225": {
@@ -157061,7 +158883,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/institutions.js"
+        "js/institutions.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "faith"
@@ -157105,6 +158928,16 @@
       ],
       "source": {
         "text": "Valencia"
+      }
+    },
+    "src.c2631043": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop project in {county}"
       }
     },
     "src.c26509f2": {
@@ -157829,6 +159662,16 @@
         "text": "Drilled the levy in peacetime."
       }
     },
+    "src.c3a1c524": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Sanctioned custom"
+      }
+    },
     "src.c3abfada": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -158551,6 +160394,16 @@
         "text": "📜 Name Your Heir"
       }
     },
+    "src.c4eda0d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "culture"
+      }
+    },
     "src.c4f2acc4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159083,6 +160936,16 @@
         "text": "Simpler than verse, and bloodier to lose."
       }
     },
+    "src.c6029985": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "~{count} people/year"
+      }
+    },
     "src.c606de81": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159101,6 +160964,17 @@
       ],
       "source": {
         "text": "Dowry {money:amount}"
+      }
+    },
+    "src.c6200976": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Change project…"
       }
     },
     "src.c6305f85": {
@@ -159693,16 +161567,6 @@
         "text": "Tax and levy comparisons cover base land contributions; personal and realm-wide modifiers remain outside the estimate."
       }
     },
-    "src.c718103a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/traits.js"
-      ],
-      "source": {
-        "text": "Lives openly in a union forbidden by most neighbors."
-      }
-    },
     "src.c7219737": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159812,6 +161676,16 @@
       ],
       "source": {
         "text": "Grease the loudest tongues."
+      }
+    },
+    "src.c74a5ad2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "County Common Voice and unrest:"
       }
     },
     "src.c74a9221": {
@@ -160032,6 +161906,16 @@
       ],
       "source": {
         "text": "Declare the succession war"
+      }
+    },
+    "src.c79bb8b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "references an unknown modifier."
       }
     },
     "src.c79bd784": {
@@ -161158,16 +163042,6 @@
         "text": "Practitioner’s examination"
       }
     },
-    "src.c9ad5a6b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "men"
-      }
-    },
     "src.c9b024bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -161759,6 +163633,16 @@
       ],
       "source": {
         "text": "🏳 The gathering {campaign} collapses before the banners can march."
+      }
+    },
+    "src.cae1d784": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "community populationShare0 values must total 10000."
       }
     },
     "src.caeddd1e": {
@@ -162936,6 +164820,16 @@
         "text": "Return cargo loaded. It will be sold upon your return to {home}."
       }
     },
+    "src.ccc6ca8a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Community resettled in another county"
+      }
+    },
     "src.cccf0196": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -163167,6 +165061,16 @@
         "text": "Beg for mercy."
       }
     },
+    "src.cd24dc60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Open this named county in Land; territorial projects remain there."
+      }
+    },
     "src.cd2657f5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -163373,6 +165277,16 @@
         "text": "Permanent: property lost and station falls to {rank}"
       }
     },
+    "src.cd945433": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Steady"
+      }
+    },
     "src.cd9ebf91": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -163521,6 +165435,16 @@
       ],
       "source": {
         "text": "Curial Standing, order, bloc, piety, and relationships within the college matter."
+      }
+    },
+    "src.cdea2bcd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Begin a county faith-conversion project"
       }
     },
     "src.cdf0d7bc": {
@@ -163681,6 +165605,16 @@
       ],
       "source": {
         "text": "Purchase peace, and accept a smaller right."
+      }
+    },
+    "src.ce466cbe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Coerced Conformity"
       }
     },
     "src.ce47f22c": {
@@ -163984,6 +165918,16 @@
         "text": "Hive them with smoke and patience."
       }
     },
+    "src.ced4e8ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "That settlement project is already underway."
+      }
+    },
     "src.ced6ee11": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -164152,6 +166096,16 @@
       ],
       "source": {
         "text": "A strip of land is cheaper than a feud."
+      }
+    },
+    "src.cf337332": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Current: {policy}"
       }
     },
     "src.cf33fab7": {
@@ -164412,6 +166366,16 @@
       ],
       "source": {
         "text": "Submit your claim voluntarily"
+      }
+    },
+    "src.cfd25e08": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Last annual community movement: {change}"
       }
     },
     "src.cfeeb50e": {
@@ -165158,6 +167122,16 @@
         "text": "No Estates motion is currently being campaigned."
       }
     },
+    "src.d177692d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop project · {county}"
+      }
+    },
     "src.d17cb678": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -165627,6 +167601,16 @@
       ],
       "source": {
         "text": "Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls."
+      }
+    },
+    "src.d26a30ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "event settlement community transfer"
       }
     },
     "src.d26e0084": {
@@ -166247,6 +168231,16 @@
       ],
       "source": {
         "text": "Emirate of Crete"
+      }
+    },
+    "src.d3a8c2ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Convert your faith…"
       }
     },
     "src.d3a97243": {
@@ -166939,6 +168933,16 @@
       ],
       "source": {
         "text": "Crusade"
+      }
+    },
+    "src.d5398e2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You must directly hold this county as a count or higher."
       }
     },
     "src.d53d5a58": {
@@ -168463,16 +170467,6 @@
         "text": "Book of Hours"
       }
     },
-    "src.d7b4e00b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Encourages"
-      }
-    },
     "src.d7bea0f6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -168651,6 +170645,16 @@
       ],
       "source": {
         "text": "Your reply cuts twice as deep. The gathering roars; his shame will outlive him."
+      }
+    },
+    "src.d81b0519": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No immediate change."
       }
     },
     "src.d81d436a": {
@@ -170051,6 +172055,16 @@
         "text": "Show {rulername} the letters in private."
       }
     },
+    "src.db0726e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Sanctioned sympathies"
+      }
+    },
     "src.db0b633c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -170321,16 +172335,6 @@
         "text": "Choose whether to play with music while the chronicle is prepared. Soundtrack music downloads as you play and is cached after it arrives."
       }
     },
-    "src.db91e43f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Exceptional sibling approach"
-      }
-    },
     "src.dba4bfa3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -170499,6 +172503,16 @@
       ],
       "source": {
         "text": "Patient work could make your name — or waste the season."
+      }
+    },
+    "src.dbeefc0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Faith conversion project"
       }
     },
     "src.dbef8ef5": {
@@ -171353,6 +173367,16 @@
         "text": "Revocation rule"
       }
     },
+    "src.ddbeddb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "county reconciliation"
+      }
+    },
     "src.ddc4d385": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -171569,6 +173593,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -171926,6 +173951,16 @@
         "text": "Days remaining: {days}"
       }
     },
+    "src.dec42c3f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Sympathy over convention"
+      }
+    },
     "src.dec5afd6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -172224,6 +174259,16 @@
       ],
       "source": {
         "text": "Faith answers doubt."
+      }
+    },
+    "src.df3ec7a2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": settlement population row does not match allocation"
       }
     },
     "src.df3f5047": {
@@ -173128,6 +175173,16 @@
       ],
       "source": {
         "text": "Current position"
+      }
+    },
+    "src.e0e53479": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Families seek land across the frontier. A charter could move a modest community without emptying the place they leave."
       }
     },
     "src.e0e599c6": {
@@ -174631,16 +176686,6 @@
         "text": "Pasture due"
       }
     },
-    "src.e3a999ba": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Dynastic sibling approach"
-      }
-    },
     "src.e3abdac3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -174659,6 +176704,16 @@
       ],
       "source": {
         "text": "A neglected record speaks of pasture and fuel owed to every hearth."
+      }
+    },
+    "src.e3b605fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "The Strangers’ Quarter"
       }
     },
     "src.e3c2332d": {
@@ -174720,6 +176775,16 @@
       ],
       "source": {
         "text": "Send them to the village inn."
+      }
+    },
+    "src.e3f075aa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose policy"
       }
     },
     "src.e3f3cf8e": {
@@ -174910,6 +176975,16 @@
       ],
       "source": {
         "text": "Early revocation possible — unlawful"
+      }
+    },
+    "src.e44dea5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "county community conversion"
       }
     },
     "src.e44f4fe0": {
@@ -176085,6 +178160,16 @@
         "text": ": population0 must be a positive integer."
       }
     },
+    "src.e63c0b87": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "populationShare0 must be an integer from 1 through 10000."
+      }
+    },
     "src.e63cffc3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -176153,6 +178238,16 @@
       ],
       "source": {
         "text": "If carried, your home county gains a chartered market: richer tolls and cheaper building, for a small seasonal upkeep."
+      }
+    },
+    "src.e65fb504": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Actions"
       }
     },
     "src.e6634310": {
@@ -176403,6 +178498,16 @@
       ],
       "source": {
         "text": "🗣 You have wed beneath your station, and folk mark it."
+      }
+    },
+    "src.e6d5bed4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Begin a local faith-conversion project"
       }
     },
     "src.e6d5c67a": {
@@ -176823,6 +178928,16 @@
       ],
       "source": {
         "text": "Called to Answer"
+      }
+    },
+    "src.e7a39f98": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Dynastic resolve"
       }
     },
     "src.e7acb27c": {
@@ -177698,6 +179813,16 @@
         "text": "He defaults — but the mill pledge makes you whole, and his kin blacken your name through the market."
       }
     },
+    "src.e8e9efb0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "principal community populationShare0 must be at least every later share."
+      }
+    },
     "src.e8f3fee7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -177947,6 +180072,16 @@
       ],
       "source": {
         "text": "Add shortcut"
+      }
+    },
+    "src.e9af49e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "Population total invariant after settlement community conversion"
       }
     },
     "src.e9b23955": {
@@ -178299,16 +180434,6 @@
       ],
       "source": {
         "text": "🛑 No more children — open your spouse’s sheet to change this."
-      }
-    },
-    "src.ea4a05e3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "No effect"
       }
     },
     "src.ea4ee888": {
@@ -178911,16 +181036,6 @@
       ],
       "source": {
         "text": "{authority} authority"
-      }
-    },
-    "src.ebaa2202": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Response where the union is taboo"
       }
     },
     "src.ebafe2f7": {
@@ -179913,6 +182028,16 @@
       ],
       "source": {
         "text": "🌍 {name} takes up the {culture} way of life."
+      }
+    },
+    "src.ed97a9ce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "must identify the community being expelled."
       }
     },
     "src.ed9f0f60": {
@@ -180941,6 +183066,16 @@
         "text": "Full Larder"
       }
     },
+    "src.ef98ccde": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Resolve over convention"
+      }
+    },
     "src.ef9e29fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -181444,6 +183579,16 @@
         "text": "Interlocking planks create strong shell-built hulls."
       }
     },
+    "src.f074e764": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "must be a finite number."
+      }
+    },
     "src.f076b5a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -181472,16 +183617,6 @@
       ],
       "source": {
         "text": "Campaign supply modifiers"
-      }
-    },
-    "src.f0874356": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Communities"
       }
     },
     "src.f088c8c9": {
@@ -182504,16 +184639,6 @@
         "text": "One year · 4 seasons"
       }
     },
-    "src.f26e851d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Province levy"
-      }
-    },
     "src.f27422b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -182662,6 +184787,17 @@
       ],
       "source": {
         "text": "Prepare an eligible heir and the prestige for a barony."
+      }
+    },
+    "src.f2d0e326": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count} people · {percent}%"
       }
     },
     "src.f2e379ed": {
@@ -182992,6 +185128,16 @@
       ],
       "source": {
         "text": "No current lord"
+      }
+    },
+    "src.f353a332": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That county project is no longer possible."
       }
     },
     "src.f3611609": {
@@ -183516,6 +185662,16 @@
       ],
       "source": {
         "text": "credit capacity"
+      }
+    },
+    "src.f43efc74": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": repeated community"
       }
     },
     "src.f45134e9": {
@@ -184546,6 +186702,16 @@
         "text": "Steel answers what words cannot."
       }
     },
+    "src.f6216497": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Fragile"
+      }
+    },
     "src.f625e57a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -185270,6 +187436,16 @@
         "text": "Daily devotions. (+piety)"
       }
     },
+    "src.f7841b90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{movement} ({amount} people)"
+      }
+    },
     "src.f7a13696": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -185608,6 +187784,16 @@
       ],
       "source": {
         "text": "✨ Out of the earth: {item}."
+      }
+    },
+    "src.f83e491b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Drive the holdouts onward."
       }
     },
     "src.f8405704": {
@@ -186010,6 +188196,16 @@
         "text": " — your liege"
       }
     },
+    "src.f8f9986c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "countyCommunityPolicies."
+      }
+    },
     "src.f8fc8cbd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -186330,6 +188526,16 @@
       ],
       "source": {
         "text": "Town Councilman"
+      }
+    },
+    "src.f9826bb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Sustain the settlement."
       }
     },
     "src.f982a04a": {
@@ -186684,6 +188890,16 @@
         "text": "Alter the service roll now. ({money:20})"
       }
     },
+    "src.fa3303d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Its existing county modifier continues until the displayed expiry."
+      }
+    },
     "src.fa36f5ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -186732,6 +188948,16 @@
       ],
       "source": {
         "text": "research education tutoring careers examinations trade guild religion papal medicine knowledge literacy"
+      }
+    },
+    "src.fa4c6b06": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Leave the frontier open."
       }
     },
     "src.fa50409e": {
@@ -186832,16 +189058,6 @@
       ],
       "source": {
         "text": "A durable family work — the heavens, made portable."
-      }
-    },
-    "src.fa718f75": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Illicit sibling approach"
       }
     },
     "src.fa759946": {
@@ -187495,6 +189711,16 @@
         "text": "Grapple the blade and hope the dark is kind."
       }
     },
+    "src.fba5542e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "must declare exactly one of amount or rate."
+      }
+    },
     "src.fba6027f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -187949,6 +190175,16 @@
       ],
       "source": {
         "text": "Set a trap for their agent."
+      }
+    },
+    "src.fc9bb81b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Cultural assimilation project"
       }
     },
     "src.fc9c511f": {
@@ -188543,6 +190779,16 @@
         "text": "Raised and drained roadbeds keep important routes usable in wet seasons."
       }
     },
+    "src.fdde85ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No immediate Standing or relationship change."
+      }
+    },
     "src.fddf9fc1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -188601,16 +190847,6 @@
       ],
       "source": {
         "text": "How quickly the days flow while time runs — on a keyboard, −/+ change it at any time."
-      }
-    },
-    "src.fdfc0a0a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Response to a sibling approach"
       }
     },
     "src.fdfe1d1b": {
@@ -188691,6 +190927,16 @@
       ],
       "source": {
         "text": "Supplies raise abstract condition; promises burden your reputation."
+      }
+    },
+    "src.fe31c53b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "End the enforcement."
       }
     },
     "src.fe39b430": {
@@ -188894,16 +191140,6 @@
         "text": "fullsheet-modal education-policy-modal"
       }
     },
-    "src.fe9b82eb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🛡 They can field {theirs} — you can field ~{yours}."
-      }
-    },
     "src.fea230f3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -188922,6 +191158,16 @@
       ],
       "source": {
         "text": "Stop cultivating"
+      }
+    },
+    "src.feb63839": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_communities.js"
+      ],
+      "source": {
+        "text": "Let each hearth decide in its own time."
       }
     },
     "src.febb6270": {
@@ -189072,6 +191318,16 @@
       ],
       "source": {
         "text": "Encountered via active trade partners"
+      }
+    },
+    "src.ff06098e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": ": communities are missing"
       }
     },
     "src.ff07ac86": {
@@ -189355,6 +191611,16 @@
         "text": "Crown-restoration right"
       }
     },
+    "src.ff99385c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Everyone in this county already follows that identity."
+      }
+    },
     "src.ffa4cff6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -189403,6 +191669,16 @@
       ],
       "source": {
         "text": "Somehow, you turn rage to laughter. Men remember it."
+      }
+    },
+    "src.ffbd688e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "must name a known province, $context, $home, or $destination."
       }
     },
     "src.ffc4ad1f": {
@@ -195090,7 +197366,7 @@
       "glossary": [],
       "location": "data/traits.js",
       "source": {
-        "text": "Lives openly in a union forbidden by most neighbors."
+        "text": "Their household draws whispers wherever it is known."
       }
     },
     "trait.scandalous_union.earned.default": {
@@ -195098,7 +197374,7 @@
       "glossary": [],
       "location": "data/traits.js",
       "source": {
-        "text": "Persist in a close-kin marriage without a rite recognized by the couple’s faith."
+        "text": "Persist in a marriage the surrounding community refuses to recognize."
       }
     },
     "trait.scandalous_union.name.default": {
@@ -197064,6 +199340,17 @@
         "text": "About the family tree"
       }
     },
+    "ui:About {count} people/year · {percent}% resistance": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "About {count} people/year · {percent}% resistance"
+      }
+    },
     "ui:About {money:amount} each season": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -198129,6 +200416,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Any distance"
+      }
+    },
+    "ui:Any existing county modifier continues until its displayed expiry.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Any existing county modifier continues until its displayed expiry."
       }
     },
     "ui:Any faith": {
@@ -199326,12 +201621,44 @@
         "text": "Begin a Plot"
       }
     },
+    "ui:Begin a county assimilation project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Begin a county assimilation project"
+      }
+    },
+    "ui:Begin a county faith-conversion project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Begin a county faith-conversion project"
+      }
+    },
     "ui:Begin a courtship before making a proposal.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/events.js",
       "source": {
         "text": "Begin a courtship before making a proposal."
+      }
+    },
+    "ui:Begin a local assimilation project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Begin a local assimilation project"
+      }
+    },
+    "ui:Begin a local faith-conversion project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Begin a local faith-conversion project"
       }
     },
     "ui:Begin courtship": {
@@ -200527,6 +202854,14 @@
         "text": "Change occupation or training…"
       }
     },
+    "ui:Change project…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Change project…"
+      }
+    },
     "ui:Change realm highlight color…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -200543,6 +202878,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Change the Match for {name}"
+      }
+    },
+    "ui:Changes apply only to this settlement. Choose a target and policy; progress then resolves annually.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Changes apply only to this settlement. Choose a target and policy; progress then resolves annually."
       }
     },
     "ui:Changes the household conception preference immediately.": {
@@ -201056,6 +203399,17 @@
         "text": "Choose from {count} reachable developed markets."
       }
     },
+    "ui:Choose how {county} will move toward {target}. Annual results change with local conditions.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose how {county} will move toward {target}. Annual results change with local conditions."
+      }
+    },
     "ui:Choose long-range diplomatic and research priorities.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -201098,6 +203452,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose one tactic for this ballot."
+      }
+    },
+    "ui:Choose policy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose policy"
       }
     },
     "ui:Choose return cargo": {
@@ -201215,6 +203577,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose the focus outline and, when you are independent, your realm’s map color."
+      }
+    },
+    "ui:Choose the identity toward which {county} should change. This is county policy, not a personal conversion.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the identity toward which {county} should change. This is county policy, not a personal conversion."
       }
     },
     "ui:Choose the market whose auction you will attend. Opening a lot starts the attendance cooldown, but the bidding itself resolves at once.": {
@@ -201839,6 +204211,14 @@
         "text": "Confirm Land Grant"
       }
     },
+    "ui:Confirm county project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Confirm county project"
+      }
+    },
     "ui:Confirm grant": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -201861,6 +204241,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Confirm one choice. Its transaction resolves before the day is spent."
+      }
+    },
+    "ui:Confirm project in {county}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Confirm project in {county}"
       }
     },
     "ui:Confirm the Scheme": {
@@ -202142,6 +204532,14 @@
         "text": "Controls whether household automation may begin construction in this county."
       }
     },
+    "ui:Convention and desire": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Convention and desire"
+      }
+    },
     "ui:Conversion scope": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -202174,6 +204572,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Convert to {target}?"
+      }
+    },
+    "ui:Convert your faith…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Convert your faith…"
       }
     },
     "ui:Converts your family and household. Moderate piety and prestige cost; zealot unrest in your home county.": {
@@ -202455,6 +204861,30 @@
         "text": "County"
       }
     },
+    "ui:County Common Voice and unrest:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "County Common Voice and unrest:"
+      }
+    },
+    "ui:County communities": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "County communities"
+      }
+    },
+    "ui:County culture shifts": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "County culture shifts"
+      }
+    },
     "ui:County development may rise": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -202498,6 +204928,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "County economy, levies, and local events"
+      }
+    },
+    "ui:County faith shifts": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "County faith shifts"
       }
     },
     "ui:County in {duchy}": {
@@ -202760,12 +205198,57 @@
         "text": "Cultivated connection"
       }
     },
+    "ui:Cultural assimilation": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Cultural assimilation"
+      }
+    },
+    "ui:Cultural assimilation begins in {county}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Cultural assimilation begins in {county}."
+      }
+    },
+    "ui:Cultural assimilation begins in {settlement}, {county}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "settlement"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Cultural assimilation begins in {settlement}, {county}."
+      }
+    },
+    "ui:Cultural assimilation project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Cultural assimilation project"
+      }
+    },
     "ui:Cultural unrest rises in your lands, risking rebellion and peasant revolts.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Cultural unrest rises in your lands, risking rebellion and peasant revolts."
+      }
+    },
+    "ui:Culture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Culture"
       }
     },
     "ui:Culture of a neighboring border county": {
@@ -202946,6 +205429,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Current war"
+      }
+    },
+    "ui:Current: {policy}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "policy"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Current: {policy}"
       }
     },
     "ui:Currently assigned": {
@@ -203663,6 +206156,26 @@
         "text": "Details for {name}"
       }
     },
+    "ui:Details for {policy}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "policy"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Details for {policy}"
+      }
+    },
+    "ui:Details for {project}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "project"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Details for {project}"
+      }
+    },
     "ui:Details for {section}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -203873,12 +206386,12 @@
         "text": "Discouraged"
       }
     },
-    "ui:Discourages": {
+    "ui:Discretion under scrutiny": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "Discourages"
+        "text": "Discretion under scrutiny"
       }
     },
     "ui:Dismiss": {
@@ -204303,20 +206816,28 @@
         "text": "Duty details"
       }
     },
-    "ui:Dynastic sibling approach": {
+    "ui:Dynastic duty": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "Dynastic sibling approach"
+        "text": "Dynastic duty"
       }
     },
-    "ui:Dynastically relevant proposal": {
+    "ui:Dynastic resolve": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "Dynastically relevant proposal"
+        "text": "Dynastic resolve"
+      }
+    },
+    "ui:Dynastic sympathies": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Dynastic sympathies"
       }
     },
     "ui:Dynasty style": {
@@ -204796,14 +207317,6 @@
         "text": "Encouragement gives this family member a yearly chance to gain the skill tied to the goal. Steering them away replaces the goal immediately; leaving it alone preserves their own agency."
       }
     },
-    "ui:Encourages": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Encourages"
-      }
-    },
     "ui:End modifier: {modifier}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -205214,6 +207727,14 @@
         "text": "Established branch"
       }
     },
+    "ui:Estimated direction:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Estimated direction:"
+      }
+    },
     "ui:Estimated spoils: ~{money:gold} · ~{captives} thralls & captives": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -205323,6 +207844,22 @@
         "text": "Every undecided bloc resolves once, in stable order. There is no final global roll."
       }
     },
+    "ui:Everyone in this county already follows that identity.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Everyone in this county already follows that identity."
+      }
+    },
+    "ui:Everyone in this settlement already follows that identity.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Everyone in this settlement already follows that identity."
+      }
+    },
     "ui:Exact faith": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -205339,14 +207876,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Exact upfront cost: {money:cost}."
-      }
-    },
-    "ui:Exceptional sibling approach": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Exceptional sibling approach"
       }
     },
     "ui:Exceptional sibling courtship": {
@@ -205611,6 +208140,43 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Faith communities"
+      }
+    },
+    "ui:Faith conversion": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Faith conversion"
+      }
+    },
+    "ui:Faith conversion begins in {county}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Faith conversion begins in {county}."
+      }
+    },
+    "ui:Faith conversion begins in {settlement}, {county}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "settlement"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Faith conversion begins in {settlement}, {county}."
+      }
+    },
+    "ui:Faith conversion project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Faith conversion project"
       }
     },
     "ui:Faith relations change": {
@@ -206307,6 +208873,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Fourth cousin"
+      }
+    },
+    "ui:Fragile": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Fragile"
       }
     },
     "ui:Free": {
@@ -208091,22 +210665,6 @@
         "text": "Ill"
       }
     },
-    "ui:Illicit sibling approach": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Illicit sibling approach"
-      }
-    },
-    "ui:Illicit sibling-courtship exposure": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Illicit sibling-courtship exposure"
-      }
-    },
     "ui:Immediate consequences": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -208297,6 +210855,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Inactive until fully staffed"
+      }
+    },
+    "ui:Inclined": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Inclined"
       }
     },
     "ui:Incoming monopoly": {
@@ -208697,6 +211263,22 @@
         "text": "Items from the family armory"
       }
     },
+    "ui:Its existing county modifier continues until the displayed expiry.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Its existing county modifier continues until the displayed expiry."
+      }
+    },
+    "ui:Its settlement-weighted county effects end when enforcement stops.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Its settlement-weighted county effects end when enforcement stops."
+      }
+    },
     "ui:Jewish Traditions": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -208771,6 +211353,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Keep music playing in background"
+      }
+    },
+    "ui:Keep project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Keep project"
       }
     },
     "ui:Keep proving the land": {
@@ -209105,6 +211695,26 @@
         "text": "Last Papal ballot"
       }
     },
+    "ui:Last annual community movement: {change}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "change"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Last annual community movement: {change}"
+      }
+    },
+    "ui:Last annual transfer: {count}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Last annual transfer: {count}"
+      }
+    },
     "ui:Last ballot · {threshold} votes required": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -209342,14 +211952,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Length"
-      }
-    },
-    "ui:Less likely": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Less likely"
       }
     },
     "ui:Lessons begin at age 6": {
@@ -209725,6 +212327,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Local authority"
+      }
+    },
+    "ui:Local communities": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Local communities"
       }
     },
     "ui:Local custom": {
@@ -211001,14 +213611,6 @@
         "text": "More info"
       }
     },
-    "ui:More likely": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "More likely"
-      }
-    },
     "ui:Most likely opposition": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -211683,6 +214285,14 @@
         "text": "No active privilege is recorded."
       }
     },
+    "ui:No active project.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No active project."
+      }
+    },
     "ui:No active sentence from the recognized obedience.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -211973,14 +214583,6 @@
         "text": "No dowry will change hands."
       }
     },
-    "ui:No effect": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "No effect"
-      }
-    },
     "ui:No eligible claimant remains for this asset.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -212037,6 +214639,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No empty land borders your demesne."
+      }
+    },
+    "ui:No encountered identity can be advanced in this county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No encountered identity can be advanced in this county."
+      }
+    },
+    "ui:No encountered identity can be advanced in this settlement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No encountered identity can be advanced in this settlement."
       }
     },
     "ui:No enterprise assignment": {
@@ -212311,6 +214929,30 @@
         "text": "No household worker yet."
       }
     },
+    "ui:No immediate Common Voice or unrest change.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "No immediate Common Voice or unrest change."
+      }
+    },
+    "ui:No immediate Standing or relationship change.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "No immediate Standing or relationship change."
+      }
+    },
+    "ui:No immediate change.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No immediate change."
+      }
+    },
     "ui:No immediate gold expense": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -212389,14 +215031,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No loan offer fits this household."
-      }
-    },
-    "ui:No local household lives at this settlement.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No local household lives at this settlement."
       }
     },
     "ui:No local households are present.": {
@@ -212740,6 +215374,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No prestige requirement"
+      }
+    },
+    "ui:No project is active in this county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "No project is active in this county."
       }
     },
     "ui:No property upkeep; hired-worker wages remain separate": {
@@ -213937,6 +216579,22 @@
         "text": "Only a living head of the house can retire."
       }
     },
+    "ui:Only a living ruler may direct county conversion.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Only a living ruler may direct county conversion."
+      }
+    },
+    "ui:Only a living ruler may direct settlement conversion.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Only a living ruler may direct settlement conversion."
+      }
+    },
     "ui:Only a neighboring sovereign court lies within envoy reach.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -214443,6 +217101,14 @@
         "text": "Open the office ledger to compare this person with other eligible retainers."
       }
     },
+    "ui:Open the personal, household, or realm faith picker.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Open the personal, household, or realm faith picker."
+      }
+    },
     "ui:Open the rank review for eligibility, cost, and benefits.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -214465,6 +217131,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Open their sheet and your dealings with them"
+      }
+    },
+    "ui:Open this named county in Land; territorial projects remain there.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Open this named county in Land; territorial projects remain there."
       }
     },
     "ui:Open this realm ruler’s sheet": {
@@ -214517,6 +217191,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Open {name}’s character sheet"
+      }
+    },
+    "ui:Opening this review costs nothing and changes no population. Results are resolved annually; no completion date is promised.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Opening this review costs nothing and changes no population. Results are resolved annually; no completion date is promised."
       }
     },
     "ui:Opens a short scene. The meeting spends the day and starts a {days}-day cooldown for this person.": {
@@ -214995,6 +217677,22 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Paused"
+      }
+    },
+    "ui:Paused · the project sponsor no longer controls this county": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Paused · the project sponsor no longer controls this county"
+      }
+    },
+    "ui:Paused: the project sponsor no longer controls this settlement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Paused: the project sponsor no longer controls this settlement."
       }
     },
     "ui:Pay Homage": {
@@ -215610,6 +218308,14 @@
         "text": "Piety {change}"
       }
     },
+    "ui:Piety:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Piety:"
+      }
+    },
     "ui:Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -216214,6 +218920,14 @@
         "text": "Prestige, liege Standing, household offices, and an established house support noble advancement."
       }
     },
+    "ui:Prestige:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Prestige:"
+      }
+    },
     "ui:Preview": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -216292,6 +219006,30 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Primary skill: {skill}. {requirements}"
+      }
+    },
+    "ui:Private affections": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Private affections"
+      }
+    },
+    "ui:Private resolve": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Private resolve"
+      }
+    },
+    "ui:Private sympathies": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Private sympathies"
       }
     },
     "ui:Privileges & charters…": {
@@ -216446,22 +219184,6 @@
       "location": "js/events.js",
       "source": {
         "text": "Property or contract terms change"
-      }
-    },
-    "ui:Proposal under a recognized rite": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Proposal under a recognized rite"
-      }
-    },
-    "ui:Proposal where the union is taboo": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Proposal where the union is taboo"
       }
     },
     "ui:Propose": {
@@ -217282,14 +220004,6 @@
         "text": "Recognized rights avoid aggression penalties; land changes hands only through siege."
       }
     },
-    "ui:Recognized-rite sibling approach": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Recognized-rite sibling approach"
-      }
-    },
     "ui:Recommend descendant matches": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -217624,6 +220338,14 @@
       "location": "js/events.js",
       "source": {
         "text": "Religious vows forbid this marriage."
+      }
+    },
+    "ui:Reluctant": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Reluctant"
       }
     },
     "ui:Remain in guest residence for {days} more days before returning home.": {
@@ -218722,6 +221444,16 @@
         "text": "Resist"
       }
     },
+    "ui:Resistance: {percent}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Resistance: {percent}%"
+      }
+    },
     "ui:Resize map and panels. {state}. Drag or use the arrow keys.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -218738,6 +221470,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Resolve each asset in order. Claims combine service, vows, occupation, rights, local support, and religious standing. Land winners may receive only one territorial award."
+      }
+    },
+    "ui:Resolve over convention": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Resolve over convention"
       }
     },
     "ui:Resolve the current auction first.": {
@@ -218802,46 +221542,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Resources and reputation"
-      }
-    },
-    "ui:Response to a dynastically relevant approach": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Response to a dynastically relevant approach"
-      }
-    },
-    "ui:Response to a sibling approach": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Response to a sibling approach"
-      }
-    },
-    "ui:Response to an illicit approach": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Response to an illicit approach"
-      }
-    },
-    "ui:Response under a recognized rite": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Response under a recognized rite"
-      }
-    },
-    "ui:Response where the union is taboo": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Response where the union is taboo"
       }
     },
     "ui:Restore the Papacy?": {
@@ -219951,6 +222651,30 @@
         "text": "Sample names"
       }
     },
+    "ui:Sanctioned custom": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Sanctioned custom"
+      }
+    },
+    "ui:Sanctioned resolve": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Sanctioned resolve"
+      }
+    },
+    "ui:Sanctioned sympathies": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Sanctioned sympathies"
+      }
+    },
     "ui:Sanctions require {authority} authority.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -220179,6 +222903,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Second missed payment:"
+      }
+    },
+    "ui:Secret sympathies": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Secret sympathies"
       }
     },
     "ui:Secure your own lawful freedom before redeeming relatives separately.": {
@@ -220725,6 +223457,22 @@
         "text": "Settlement council · {asset}"
       }
     },
+    "ui:Settlement culture shifts": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Settlement culture shifts"
+      }
+    },
+    "ui:Settlement faith shifts": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Settlement faith shifts"
+      }
+    },
     "ui:Settlement in {county}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -220927,14 +223675,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Sibling"
-      }
-    },
-    "ui:Sibling marriage proposal": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Sibling marriage proposal"
       }
     },
     "ui:Siblings": {
@@ -221402,6 +224142,14 @@
         "text": "Standing and cooldown begin only when the courier arrives."
       }
     },
+    "ui:Standing and relationships:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Standing and relationships:"
+      }
+    },
     "ui:Standing and the cooldown begin only when the courier arrives.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -221716,6 +224464,14 @@
         "text": "Start or load a game before using this shortcut."
       }
     },
+    "ui:Start project…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Start project…"
+      }
+    },
     "ui:Start seed: {seed}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -221724,6 +224480,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Start seed: {seed}"
+      }
+    },
+    "ui:Start {policy}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "policy"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Start {policy}"
       }
     },
     "ui:Started at development {start}. Next at {threshold}: {change}.": {
@@ -221746,6 +224512,24 @@
       "location": "js/ui_misc.js",
       "source": {
         "text": "Started at development {start}. The settlements have grown as far as the land allows."
+      }
+    },
+    "ui:Starts immediately and replaces this settlement’s current {kind} project. No upfront personal cost. Progress resolves annually; no fixed completion date.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "kind"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Starts immediately and replaces this settlement’s current {kind} project. No upfront personal cost. Progress resolves annually; no fixed completion date."
+      }
+    },
+    "ui:Starts immediately. No upfront personal cost. Progress resolves annually; no fixed completion date.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Starts immediately. No upfront personal cost. Progress resolves annually; no fixed completion date."
       }
     },
     "ui:Starving": {
@@ -221832,6 +224616,14 @@
         "text": "Stays with the county when political control changes"
       }
     },
+    "ui:Steady": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Steady"
+      }
+    },
     "ui:Steer them toward another road": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -221893,12 +224685,119 @@
         "text": "Stop cultivating"
       }
     },
+    "ui:Stop project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Stop project"
+      }
+    },
+    "ui:Stop project in {county}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stop project in {county}"
+      }
+    },
+    "ui:Stop project in {settlement}, {county}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "settlement"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stop project in {settlement}, {county}"
+      }
+    },
+    "ui:Stop project · {county}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stop project · {county}"
+      }
+    },
+    "ui:Stop project · {settlement}, {county}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "settlement"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stop project · {settlement}, {county}"
+      }
+    },
+    "ui:Stop the county assimilation project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Stop the county assimilation project"
+      }
+    },
+    "ui:Stop the county faith-conversion project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Stop the county faith-conversion project"
+      }
+    },
+    "ui:Stop the local assimilation project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Stop the local assimilation project"
+      }
+    },
+    "ui:Stop the local faith-conversion project": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Stop the local faith-conversion project"
+      }
+    },
     "ui:Stop the short action-first and situational tips shown to brand-new players. The guide-hints switch above also silences them.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Stop the short action-first and situational tips shown to brand-new players. The guide-hints switch above also silences them."
+      }
+    },
+    "ui:Stop the {kind} project toward {target} in {county}? Population already changed will remain as it is.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "kind",
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stop the {kind} project toward {target} in {county}? Population already changed will remain as it is."
+      }
+    },
+    "ui:Stop the {kind} project toward {target} in {settlement}, {county}? Population already changed will remain as it is.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "kind",
+        "settlement",
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stop the {kind} project toward {target} in {settlement}, {county}? Population already changed will remain as it is."
       }
     },
     "ui:Stop tips": {
@@ -222126,6 +225025,16 @@
         "text": "Switch research"
       }
     },
+    "ui:Switch to {policy}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "policy"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Switch to {policy}"
+      }
+    },
     "ui:Switch to {technology}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -222160,6 +225069,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Sycophant tendency — affected Council seats: {count}."
+      }
+    },
+    "ui:Sympathy over convention": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Sympathy over convention"
       }
     },
     "ui:Take a historic Papal regnal name.": {
@@ -222320,6 +225237,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Tap troops, then tap a county to move."
+      }
+    },
+    "ui:Target": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Target"
       }
     },
     "ui:Tax and levy comparisons cover base land contributions; personal and realm-wide modifiers remain outside the estimate.": {
@@ -222548,6 +225473,38 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "That county is not an available war target."
+      }
+    },
+    "ui:That county project can no longer be stopped.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "That county project can no longer be stopped."
+      }
+    },
+    "ui:That county project is already underway.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "That county project is already underway."
+      }
+    },
+    "ui:That county project is no longer possible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "That county project is no longer possible."
+      }
+    },
+    "ui:That county project is not possible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "That county project is not possible."
       }
     },
     "ui:That culture cannot be adopted.": {
@@ -222784,6 +225741,38 @@
       "location": "js/actions.js",
       "source": {
         "text": "That service charter is not recognized."
+      }
+    },
+    "ui:That settlement project can no longer be stopped.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "That settlement project can no longer be stopped."
+      }
+    },
+    "ui:That settlement project is already underway.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "That settlement project is already underway."
+      }
+    },
+    "ui:That settlement project is no longer possible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "That settlement project is no longer possible."
+      }
+    },
+    "ui:That settlement project is not possible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "That settlement project is not possible."
       }
     },
     "ui:That stake is not available.": {
@@ -224842,14 +227831,14 @@
         "text": "These identity rules do not change the child’s recorded mother and father."
       }
     },
-    "ui:These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household.": {
+    "ui:These prospects reflect the communities currently living in {county}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "county"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household."
+        "text": "These prospects reflect the communities currently living in {county}."
       }
     },
     "ui:These terms are no longer valid.": {
@@ -225489,6 +228478,14 @@
         "text": "This pledge cannot be changed now."
       }
     },
+    "ui:This project changes only this settlement’s communities. Progress resolves annually; no fixed completion date.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This project changes only this settlement’s communities. Progress resolves annually; no fixed completion date."
+      }
+    },
     "ui:This realm": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -225521,6 +228518,16 @@
       "location": "js/events.js",
       "source": {
         "text": "This relationship cannot become a formal friendship."
+      }
+    },
+    "ui:This replaces the county’s current {kind} project.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "kind"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This replaces the county’s current {kind} project."
       }
     },
     "ui:This revocation breaks the protected term. Common Voice falls, mistreatment is recorded, and the affected constituency organizes opposition.": {
@@ -225593,6 +228600,17 @@
       "location": "js/economy.js",
       "source": {
         "text": "This settlement is not available."
+      }
+    },
+    "ui:This settlement is {percent}% of the county; while enforced its county-wide share is: {effects}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "effects",
+        "percent"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "This settlement is {percent}% of the county; while enforced its county-wide share is: {effects}"
       }
     },
     "ui:This sheet follows the Papal obedience recognized by your character. Rival obediences retain separate claimants, Colleges, authority, supporters, sanctions, and elections.": {
@@ -225733,6 +228751,17 @@
         "text": "Total seasonal logistics: {money:amount}"
       }
     },
+    "ui:Toward {target} · about {count} people per year at present": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "target"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Toward {target} · about {count} people per year at present"
+      }
+    },
     "ui:Town Council of {province}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -225838,14 +228867,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Travel and journeys"
-      }
-    },
-    "ui:Travel here to meet the people who live around this settlement.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Travel here to meet the people who live around this settlement."
       }
     },
     "ui:Travel home without cargo. No investment at risk on the return road.": {
@@ -226735,6 +229756,16 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "View battle report"
+      }
+    },
+    "ui:View faith in {county}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "View faith in {county}"
       }
     },
     "ui:View prerequisite: {technology}": {
@@ -227876,6 +230907,14 @@
         "text": "You must be in their county to meet them."
       }
     },
+    "ui:You must directly hold this county as a count or higher.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You must directly hold this county as a count or higher."
+      }
+    },
     "ui:You must first bleed in your liege’s wars (service {needed}+, now {current}).": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -227901,6 +230940,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "You must hold Roma personally."
+      }
+    },
+    "ui:You must hold authority over this exact settlement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You must hold authority over this exact settlement."
       }
     },
     "ui:You must keep at least one county in your own hand.": {
@@ -228338,6 +231385,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Your directly held domain is already within its limit."
+      }
+    },
+    "ui:Your dynasty has not encountered that identity.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Your dynasty has not encountered that identity."
       }
     },
     "ui:Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again.": {
@@ -229162,6 +232217,17 @@
         "text": "a stranger"
       }
     },
+    "ui:about {count} people per year at current conditions; resistance is {percent}%.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "about {count} people per year at current conditions; resistance is {percent}%."
+      }
+    },
     "ui:about {men}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -229629,6 +232695,22 @@
         "text": "cultivated connection"
       }
     },
+    "ui:culture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "culture"
+      }
+    },
+    "ui:current project target": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "current project target"
+      }
+    },
     "ui:custody of the sacred places": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -229724,6 +232806,14 @@
         "text": "direct-holder succession"
       }
     },
+    "ui:dominant": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "dominant"
+      }
+    },
     "ui:ducal title": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -229815,7 +232905,7 @@
     "ui:faith": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/institutions.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "faith"
       }
@@ -230089,14 +233179,6 @@
       "location": "js/events.js",
       "source": {
         "text": "march speed"
-      }
-    },
-    "ui:men": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "men"
       }
     },
     "ui:men-at-arms": {
@@ -231560,6 +234642,16 @@
         "text": "{amount} migration draw in your counties."
       }
     },
+    "ui:{amount} migration pressure while enforced": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "{amount} migration pressure while enforced"
+      }
+    },
     "ui:{amount} percentage points": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -232322,6 +235414,18 @@
         "text": "{county} market"
       }
     },
+    "ui:{county} will pursue {target} through {policy}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "policy",
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{county} will pursue {target} through {policy}."
+      }
+    },
     "ui:{county} — the stock changes with the season.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -232632,6 +235736,17 @@
         "text": "{count} owned"
       }
     },
+    "ui:{count} people · {percent}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "percent"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count} people · {percent}%"
+      }
+    },
     "ui:{count} possible": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -232680,6 +235795,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{count} settlement buildings ruined."
+      }
+    },
+    "ui:{count} smaller communities": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count} smaller communities"
       }
     },
     "ui:{count} songs · {duration} · {size}": {
@@ -233220,6 +236345,17 @@
         "text": "{dynasty} · {start}–{end} · {count} entries"
       }
     },
+    "ui:{effects} for {days} days, renewed by annual enforcement": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "effects"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "{effects} for {days} days, renewed by annual enforcement"
+      }
+    },
     "ui:{effect}: {value}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -233337,6 +236473,18 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "{faith} arose as a new branch of {parent}."
+      }
+    },
+    "ui:{faith} changed faith · {culture} assimilated · {migration} net migration": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "culture",
+        "faith",
+        "migration"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{faith} changed faith · {culture} assimilated · {migration} net migration"
       }
     },
     "ui:{faith} is an established branch of {parent}.": {
@@ -233918,6 +237066,29 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{kind} · a day’s outing"
+      }
+    },
+    "ui:{label} · {county}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "label"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{label} · {county}"
+      }
+    },
+    "ui:{label} · {settlement}, {county}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "label",
+        "settlement"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{label} · {settlement}, {county}"
       }
     },
     "ui:{label}: {amount}": {
@@ -234584,6 +237755,28 @@
         "text": "{motion}: {posture} ({chance}%)"
       }
     },
+    "ui:{movement} ({amount} people)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "movement"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "{movement} ({amount} people)"
+      }
+    },
+    "ui:{movement} ({rate}% of the named community)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "movement",
+        "rate"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "{movement} ({rate}% of the named community)"
+      }
+    },
     "ui:{name} (heir)": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -235151,6 +238344,36 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{percent}% of noble revenue"
+      }
+    },
+    "ui:{percent}% of the county now": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{percent}% of the county now"
+      }
+    },
+    "ui:{percent}% of this settlement now": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{percent}% of this settlement now"
+      }
+    },
+    "ui:{percent}% resistance": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{percent}% resistance"
       }
     },
     "ui:{percent}% siege progress for the {camp} camp": {
@@ -237192,6 +240415,27 @@
         "text": "{year} BC"
       }
     },
+    "ui:~{count} people/year": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "~{count} people/year"
+      }
+    },
+    "ui:~{count} people/year · {percent}% resistance": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "~{count} people/year · {percent}% resistance"
+      }
+    },
     "ui:~{men} ({condition}%) · 🚩 {place}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -238102,17 +241346,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "🛑 No more children — open your spouse’s sheet to change this."
-      }
-    },
-    "ui:🛡 They can field {theirs} — you can field ~{yours}.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "theirs",
-        "yours"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "🛡 They can field {theirs} — you can field ~{yours}."
       }
     },
     "ui:🤝 Personal attention 0/{capacity} · no assignment · +{rate} Standing/day when assigned": {

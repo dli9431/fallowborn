@@ -1562,7 +1562,7 @@ FBDATA.balance = {
      and a political or devotional motive. A global cap keeps sponsorship a
      sparse historical pressure rather than a map-wide cleanup pass. */
   countyCommunityAIAnnualChance:0.16,
-  countyCommunityAIMaxStartsPerYear:4,
+  countyCommunityAIMaxActiveProjects:4,
   countyCommunityAIMinPopulation:500,
   countyCommunityAIMinTargetShare:0.12,
   countyCommunityAIStrongTargetShare:0.25,
