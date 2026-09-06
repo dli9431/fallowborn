@@ -772,7 +772,9 @@ that holder's direct vassal realms, then every liege through the sovereign, with
 row cap or duplicates. Every entry is a native focusable row with the reigning
 character's procedural portrait and opens that ruler's character sheet. Each row states
 realm, political relationship, age,
-Martial, and the player-relative Standing. Generated local characters appear only as a
+Martial, and the player-relative Standing. The portrait occupies a stable left column;
+the identity text uses the full right column and Standing sits beneath it, so narrow side
+panels never compress names and relationships into a sliver. Generated local characters appear only as a
 defensive fallback when no political ruler can be resolved.
 
 Every reigning ruler uses the standard character sheet, rather than a duplicate

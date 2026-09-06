@@ -5900,8 +5900,9 @@ window.FB = window.FB || {};
           standing:standingText(value)
         })) + '</span>';
     }
-    return '<button type="button" class="charrow actionbtn"' + action + '>' +
-      art + '<span><span class="cname">' + esc(heading) + '</span><br>' +
+    return '<button type="button" class="charrow actionbtn land-ruler-row"' +
+      action + '>' + art + '<span class="land-ruler-copy"><span class="cname">' +
+      esc(heading) + '</span><br>' +
       '<span class="cmeta">' + esc(FB.T('{realm} · {relationship}', {
         realm:realmName, relationship:relationship
       })) + '</span><br><span class="cmeta">' +

@@ -2009,6 +2009,19 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .charrow .cname { color: var(--main-text-color); }
 .charrow .cmeta { color: var(--helper-text-color); font-size: 12px; }
 .charrow .cop { margin-left: auto; font-size: 12px; white-space: nowrap; }
+.land-ruler-row {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-areas: 'portrait copy' 'portrait standing';
+  align-items: start; column-gap: 8px; row-gap: 4px;
+}
+.land-ruler-row > .pface { grid-area: portrait; }
+.land-ruler-row > .land-ruler-copy {
+  grid-area: copy; min-width: 0; line-height: 1.25;
+}
+.land-ruler-row > .cop {
+  grid-area: standing; justify-self: start; margin-left: 0;
+  line-height: 1.25; white-space: normal;
+}
 .op-good, .adesc.op-good { color: #9fc06a; }
 .op-bad, .adesc.op-bad, .adesc.warnote { color: #d07050; }
 .op-mid, .adesc.op-mid { color: var(--helper-text-color); }

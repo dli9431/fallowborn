@@ -67,6 +67,31 @@ test('phone UI keeps body, action, helper, and modal-help text readable',
       'A plot uses your daily focus');
   });
 
+test('tablet Land ruler rows reserve a readable text column',
+  async function ({ page }) {
+    await page.setViewportSize({ width:1024, height:768 });
+    await page.locator('#sidetabs .tab[data-tab="prov"]').click();
+
+    const row = page.locator('#tab-prov .land-ruler-row').first();
+    await expect(row).toBeVisible();
+    const layout = await row.evaluate(function (element) {
+      const copy = element.querySelector('.land-ruler-copy');
+      const standing = element.querySelector('.cop');
+      const copyBox = copy.getBoundingClientRect();
+      const standingBox = standing.getBoundingClientRect();
+      return {
+        display:getComputedStyle(element).display,
+        copyWidth:copyBox.width,
+        sameColumn:Math.abs(copyBox.left - standingBox.left) < 1,
+        standingBelow:standingBox.top >= copyBox.bottom
+      };
+    });
+    expect(layout.display).toBe('grid');
+    expect(layout.copyWidth).toBeGreaterThan(175);
+    expect(layout.sameColumn).toBe(true);
+    expect(layout.standingBelow).toBe(true);
+  });
+
 test('major information sheets expose contextual Guide routes', async function ({ page }) {
   await page.evaluate(function () { FB.ui.showFinance(); });
   await expect(page.locator('#finance-guide')).toBeVisible();
