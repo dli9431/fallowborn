@@ -405,7 +405,189 @@ test('vassal cards keep crucial dues visible and move terms into the details too
     await expect(tip).toContainText('Tenure');
     await expect(tip).toContainText('Council office');
     await expect(tip).toContainText('Exceptional levy');
+    const tooltipColumns = await tip.locator('.governance-vassal-stats')
+      .evaluate(function (stats) {
+        return getComputedStyle(stats).gridTemplateColumns.split(' ').length;
+      });
+    expect(tooltipColumns).toBe(2);
     await expect(details).toBeHidden();
+  });
+
+test('Land summarizes top vassal levies and Governance sorts the complete ledger',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    const expected = await page.evaluate(function () {
+      var state = FB.state;
+      var home = FB.world.byId[state.player.provinceId];
+      var held = {};
+      FB.realmTerritory(state, 'player').forEach(function (pid) {
+        held[pid] = true;
+      });
+      var counties = FB.world.provs.filter(function (province) {
+        return !province.wasteland && !held[province.id];
+      }).slice(0, 3);
+      var additions = [
+        { id:'ledger_zeta', name:'Zeta Vale', ruler:'Zeno', dev:3,
+          rank:1, standing:5 },
+        { id:'ledger_abbey', name:'Abbey Reach', ruler:'Adela', dev:18,
+          rank:2, standing:67 },
+        { id:'ledger_middle', name:'Middle March', ruler:'Merek', dev:9,
+          rank:1, standing:31 }
+      ];
+      additions.forEach(function (entry, index) {
+        var pid = counties[index].id;
+        state.owner[pid] = 'player';
+        state.holder[pid] = entry.id;
+        state.dev[pid] = entry.dev;
+        state.realms[entry.id] = {
+          id:entry.id,
+          name:entry.name,
+          color:'#705435',
+          capital:pid,
+          aggression:0,
+          rank:entry.rank,
+          liege:'player',
+          alive:true,
+          favor:0,
+          ruler:{
+            name:entry.ruler,
+            sex:index === 1 ? 'f' : 'm',
+            culture:home.culture,
+            religion:home.religion,
+            age:35 + index,
+            mar:5 + index,
+            trait:'diligent',
+            generation:1
+          }
+        };
+        FB.setRealmRulerStanding(state, entry.id, entry.standing);
+      });
+      FB.invalidateRealmCache();
+      FB.playerVassals(state).forEach(function (rid) {
+        FB.materializeRealmRuler(state, rid);
+      });
+      FB.ensureEconomy(state);
+      var summary = FB.governanceSummary(state);
+      var byLevy = summary.directVassals.slice().sort(function (a, b) {
+        if (a.levyContribution !== b.levyContribution) {
+          return b.levyContribution - a.levyContribution;
+        }
+        var an = state.realms[a.realmId].name.toLowerCase();
+        var bn = state.realms[b.realmId].name.toLowerCase();
+        return an < bn ? -1 : (an > bn ? 1 : 0);
+      });
+      var byLand = summary.directVassals.slice().sort(function (a, b) {
+        if (a.levyContribution !== b.levyContribution) {
+          return b.levyContribution - a.levyContribution;
+        }
+        if (a.taxContribution !== b.taxContribution) {
+          return b.taxContribution - a.taxContribution;
+        }
+        var an = state.realms[a.realmId].name.toLowerCase();
+        var bn = state.realms[b.realmId].name.toLowerCase();
+        return an < bn ? -1 : (an > bn ? 1 : 0);
+      });
+      var byStanding = summary.directVassals.slice().sort(function (a, b) {
+        if (a.standing !== b.standing) return b.standing - a.standing;
+        return state.realms[a.realmId].name < state.realms[b.realmId].name
+          ? -1 : 1;
+      });
+      var names = summary.directVassals.map(function (item) {
+        return state.realms[item.realmId].name;
+      });
+      var totalLevy = summary.directVassals.reduce(function (sum, item) {
+        return sum + item.levyContribution;
+      }, 0);
+      var totalTax = summary.directVassals.reduce(function (sum, item) {
+        return sum + item.taxContribution;
+      }, 0);
+      FB.ui.selectProvince(state.player.provinceId);
+      FB.ui.refresh();
+      return {
+        count:summary.directVassals.length,
+        top:byLand.slice(0, 3).map(function (item) {
+          return state.realms[item.realmId].name;
+        }),
+        levyOrder:byLevy.map(function (item) {
+          return state.realms[item.realmId].name;
+        }),
+        nameOrder:names.sort(),
+        standingOrder:byStanding.map(function (item) {
+          return state.realms[item.realmId].name;
+        }),
+        totalLevy:Math.round(totalLevy) + ' men',
+        totalTax:FB.money(Math.round(totalTax * 100) / 100),
+        firstShare:Math.round(
+          byLevy[0].levyContribution / totalLevy * 100) +
+          '% of vassal levy'
+      };
+    });
+    await waitForUiRefresh(page);
+    await page.locator('#sidetabs .tab[data-tab="prov"]').click();
+
+    const land = page.locator('#tab-prov');
+    await expect(land.locator('.land-ruler-row')).toHaveCount(1);
+    await expect(land.locator('.land-vassal-summary')).toContainText(
+      expected.count + ' direct vassals');
+    await expect(land.locator('.land-vassal-summary')).toContainText(
+      expected.totalLevy);
+    await expect(land.locator('.land-vassal-summary')).toContainText(
+      expected.totalTax);
+    await expect(land.locator('.land-vassal-summary-row')).toHaveCount(
+      expected.count);
+    await expect(land.locator('.land-vassal-summary-row:not([hidden])'))
+      .toHaveCount(3);
+    const extraRows = land.locator('[data-land-vassal-extra]');
+    await expect(extraRows.first()).toBeHidden();
+    expect(await land.locator('.land-vassal-summary-row:not([hidden])').evaluateAll(
+      function (rows) {
+        return rows.map(function (row) {
+          return row.querySelector('span').textContent.trim();
+        });
+      })).toEqual(expected.top);
+    const more = land.locator('.land-vassal-more');
+    await expect(more).toContainText(
+      '+' + (expected.count - 3) + ' more');
+    await expect(more).toHaveAttribute('aria-expanded', 'false');
+    await more.click();
+    await expect(more).toHaveAttribute('aria-expanded', 'true');
+    await expect(more).toContainText('Show top 3');
+    await expect(land.locator('.land-vassal-summary-row:not([hidden])'))
+      .toHaveCount(expected.count);
+    await expect(extraRows.first()).toBeVisible();
+    await more.click();
+    await expect(more).toHaveAttribute('aria-expanded', 'false');
+    await expect(more).toContainText('+' + (expected.count - 3) + ' more');
+    await expect(extraRows.first()).toBeHidden();
+
+    await land.locator('[data-land-vassals]').click();
+    await expect(page.locator('#governance-vassals')).toBeVisible();
+    await expect(page.locator('.governance-vassal-overview')).toContainText(
+      expected.totalLevy);
+    await expect(page.locator('.governance-vassal-overview')).toContainText(
+      expected.totalTax);
+    const sort = page.locator('#governance-vassal-sort');
+    await expect(sort).toHaveValue('levy');
+    await expect(sort.locator('option')).toHaveCount(5);
+    const ledgerNames = async function () {
+      return page.locator('#governance-vassal-list .governance-vassal')
+        .evaluateAll(function (rows) {
+          return rows.map(function (row) {
+            return row.getAttribute('data-vassal-name');
+          });
+        });
+    };
+    expect(await ledgerNames()).toEqual(expected.levyOrder);
+    await expect(page.locator('.governance-vassal').first()).toContainText(
+      expected.firstShare);
+    await expect(page.locator('.governance-vassal').first().locator('.pface'))
+      .toBeVisible();
+
+    await sort.selectOption('name');
+    expect(await ledgerNames()).toEqual(expected.nameOrder);
+    await sort.selectOption('standing');
+    expect(await ledgerNames()).toEqual(expected.standingOrder);
   });
 
 test('tablet-width vassal cards swap the hover tooltip for the ? disclosure',

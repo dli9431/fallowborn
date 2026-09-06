@@ -5826,11 +5826,6 @@ window.FB = window.FB || {};
     if (r && r.name) return r.name;
     return rid === 'player' ? FB.T('Your realm') : rid;
   }
-  function landRulerRank(s, rid) {
-    const r = landRulerRealm(s, rid);
-    return r && r.rank ? r.rank : (rid === 'player'
-      ? Math.max(1, (s.player.tier || 4) - 3) : 0);
-  }
   function landRulers(s, pid) {
     const out = [], seen = {};
     const holder = (s.holder && s.holder[pid]) ||
@@ -5845,28 +5840,8 @@ window.FB = window.FB || {};
 
     add(holder, 'holder', null);
 
-    /* Every realm sworn exactly to the holder belongs here. Rank and names
-       make the order stable even when object insertion order differs. */
-    const vassals = [];
-    for (const rid in (s.realms || {})) {
-      if (!Object.prototype.hasOwnProperty.call(s.realms, rid)) continue;
-      const r = s.realms[rid];
-      if (rid !== holder && r && r.alive && r.liege === holder &&
-          landRulerValid(s, rid)) vassals.push(rid);
-    }
-    vassals.sort(function (a, b) {
-      const rankDiff = landRulerRank(s, b) - landRulerRank(s, a);
-      if (rankDiff) return rankDiff;
-      const an = String(landRulerRealmName(s, a)).toLowerCase();
-      const bn = String(landRulerRealmName(s, b)).toLowerCase();
-      if (an < bn) return -1;
-      if (an > bn) return 1;
-      return a < b ? -1 : (a > b ? 1 : 0);
-    });
-    for (const rid of vassals) add(rid, 'vassal', holder);
-
-    /* Walk separately from the vassal list so its breadth stays between the
-       holder and the upward chain. seen also contains malformed cycles. */
+    /* The county context follows upward only. A sovereign player's broad
+       direct-vassal roster has its own compact contribution summary below. */
     let subject = holder, liege = landRulerLiege(s, holder), guard = 0;
     while (liege && guard++ < 20) {
       if (!add(liege, 'liege', subject)) break;
@@ -5875,15 +5850,78 @@ window.FB = window.FB || {};
     }
     return out;
   }
+  function landVassalSummary(s, holder) {
+    if (holder !== 'player' || !FB.governanceEligible ||
+        !FB.governanceEligible(s) || !FB.playerVassals ||
+        !FB.vassalLevyContribution || !FB.vassalTaxContribution) return null;
+    const entries = FB.playerVassals(s).map(function (rid) {
+      return {
+        realmId:rid,
+        name:landRulerRealmName(s, rid),
+        levy:FB.vassalLevyContribution(s, rid),
+        tax:FB.vassalTaxContribution(s, rid)
+      };
+    });
+    if (!entries.length) return null;
+    entries.sort(function (a, b) {
+      if (a.levy !== b.levy) return b.levy - a.levy;
+      if (a.tax !== b.tax) return b.tax - a.tax;
+      const an = String(a.name).toLowerCase();
+      const bn = String(b.name).toLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return a.realmId < b.realmId ? -1 :
+        (a.realmId > b.realmId ? 1 : 0);
+    });
+    return {
+      entries:entries,
+      levy:entries.reduce(function (sum, item) { return sum + item.levy; }, 0),
+      tax:entries.reduce(function (sum, item) { return sum + item.tax; }, 0)
+    };
+  }
+  function landVassalSummaryHtml(s, summary) {
+    let h = '<div class="land-vassal-summary"><div class="land-vassal-summary-head">' +
+      '<div><strong>' + esc(FB.T('Your vassals')) + '</strong><span>' +
+      esc(summary.entries.length === 1 ? FB.T('1 direct vassal') :
+        FB.T('{count} direct vassals', { count:summary.entries.length })) +
+      '</span></div><button type="button" class="btn small" ' +
+      'data-land-vassals="1">' + esc(FB.T('View all vassals')) +
+      ' &rarr;</button></div><div class="land-vassal-totals"><span>' +
+      esc(FB.T('{levy} levy', { levy:menText(s, summary.levy) })) +
+      '</span><span>' + esc(FB.T('{tax} tax per season', {
+        tax:FB.money(Math.round(summary.tax * 100) / 100)
+      })) + '</span></div><div class="land-vassal-summary-list">';
+    const visibleCount = Math.min(3, summary.entries.length);
+    for (let i = 0; i < summary.entries.length; i++) {
+      const item = summary.entries[i];
+      const share = summary.levy > 0
+        ? Math.round(item.levy / summary.levy * 100) : 0;
+      h += '<button type="button" class="land-vassal-summary-row"' +
+        (i < visibleCount ? '' : ' data-land-vassal-extra="1" hidden') +
+        ' data-liege="' +
+        esc(item.realmId) + '" title="' +
+        esc(FB.T('Open this realm ruler’s sheet')) + '"><span>' +
+        esc(item.name) + '</span><b>' + esc(FB.T('{levy} · {share}%', {
+          levy:menText(s, item.levy), share:share
+        })) + '</b></button>';
+    }
+    if (summary.entries.length > visibleCount) {
+      h += '<button type="button" class="land-vassal-more" ' +
+        'data-land-vassal-toggle="1" aria-expanded="false" aria-label="' +
+        esc(FB.T('Show all {count} direct vassals', {
+          count:summary.entries.length
+        })) + '">' + esc(FB.T('+{count} more', {
+          count:summary.entries.length - visibleCount
+        })) + '</button>';
+    }
+    return h + '</div></div>';
+  }
   function landRulerRelationship(s, entry) {
     const subject = landRulerRealmName(s, entry.subject);
     if (entry.kind === 'holder') {
       return landRulerLiege(s, entry.id)
         ? FB.T('Holds this county')
         : FB.T('Holds this county · sovereign');
-    }
-    if (entry.kind === 'vassal') {
-      return FB.T('Direct vassal of {realm}', { realm:subject });
     }
     return landRulerLiege(s, entry.id)
       ? FB.T('Liege of {realm}', { realm:subject })
@@ -6677,7 +6715,12 @@ window.FB = window.FB || {};
       h += panelh('Notable folk');
       const rulers = landRulers(s, pid);
       if (rulers.length) {
-        for (const ruler of rulers) h += landRulerRow(s, ruler);
+        h += landRulerRow(s, rulers[0]);
+        const vassalSummary = landVassalSummary(s, holdId);
+        if (vassalSummary) h += landVassalSummaryHtml(s, vassalSummary);
+        for (let i = 1; i < rulers.length; i++) {
+          h += landRulerRow(s, rulers[i]);
+        }
         h += '<div class="hint" style="margin:4px 0 0">' +
           esc(FB.T('Select a ruler for their character sheet and dealings.')) +
           '</div>';
@@ -6720,6 +6763,24 @@ window.FB = window.FB || {};
     const relocate = $('btn-relocate-capital');
     if (relocate) relocate.addEventListener('click', function () {
       UI.showCapitalRelocation(pid);
+    });
+    const landVassals = box.querySelector('[data-land-vassals]');
+    if (landVassals) landVassals.addEventListener('click', function () {
+      UI.showGovernance('vassals');
+    });
+    const landVassalToggle = box.querySelector('[data-land-vassal-toggle]');
+    if (landVassalToggle) landVassalToggle.addEventListener('click', function () {
+      const expanded = landVassalToggle.getAttribute('aria-expanded') === 'true';
+      const extra = box.querySelectorAll('[data-land-vassal-extra]');
+      for (const row of extra) row.hidden = expanded;
+      landVassalToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+      landVassalToggle.setAttribute('aria-label', expanded
+        ? FB.T('Show all {count} direct vassals', {
+          count:box.querySelectorAll('.land-vassal-summary-row').length
+        }) : FB.T('Show only the top 3 vassals'));
+      landVassalToggle.textContent = expanded
+        ? FB.T('+{count} more', { count:extra.length })
+        : FB.T('Show top 3');
     });
     box.querySelectorAll('.community-project-control').forEach(function (btn) {
       btn.addEventListener('click', function () {

@@ -11810,15 +11810,73 @@ window.FB = window.FB || {};
     return h;
   }
 
+  let governanceVassalSort = 'levy';
+  function governanceVassalSortValue(s, item, sortId) {
+    const realm = s.realms[item.realmId] || {};
+    if (sortId === 'tax') return Number(item.taxContribution) || 0;
+    if (sortId === 'standing') return Number(item.standing) || 0;
+    if (sortId === 'rank') return Number(realm.rank) || 0;
+    if (sortId === 'name') {
+      return String(realm.name || item.realmId).toLowerCase();
+    }
+    return Number(item.levyContribution) || 0;
+  }
+  function compareGovernanceVassals(s, sortId, a, b) {
+    const av = governanceVassalSortValue(s, a, sortId);
+    const bv = governanceVassalSortValue(s, b, sortId);
+    if (av !== bv) {
+      if (sortId === 'name') return av < bv ? -1 : 1;
+      return bv - av;
+    }
+    const an = governanceVassalSortValue(s, a, 'name');
+    const bn = governanceVassalSortValue(s, b, 'name');
+    if (an !== bn) return an < bn ? -1 : 1;
+    return a.realmId < b.realmId ? -1 : (a.realmId > b.realmId ? 1 : 0);
+  }
   function governanceVassalsHtml(s, summary) {
     if (!summary.directVassals.length) {
       return '<div class="hint">' + esc(FB.T(
         'No realm is sworn directly to you. Counties held in your own hand appear under Domain.')) + '</div>';
     }
-    let h = '';
+    let totalLevy = 0, totalTax = 0;
     for (const item of summary.directVassals) {
+      totalLevy += Number(item.levyContribution) || 0;
+      totalTax += Number(item.taxContribution) || 0;
+    }
+    const sortOptions = [
+      ['levy', FB.T('Levy')],
+      ['tax', FB.T('Tax')],
+      ['standing', FB.T('Standing')],
+      ['rank', FB.T('Rank')],
+      ['name', FB.T('Name')]
+    ];
+    let h = '<div class="governance-vassal-overview">' +
+      kv('Direct vassals', esc(String(summary.directVassals.length))) +
+      kv('Total vassal levy', esc(menText(s, totalLevy))) +
+      kv('Total seasonal tax', esc(FB.money(
+        Math.round(totalTax * 100) / 100))) + '</div>' +
+      '<div class="governance-vassal-toolbar"><label for="governance-vassal-sort">' +
+      esc(FB.T('Sort vassals by')) + '</label><select id="governance-vassal-sort">';
+    for (const option of sortOptions) {
+      h += '<option value="' + option[0] + '"' +
+        (governanceVassalSort === option[0] ? ' selected' : '') + '>' +
+        esc(option[1]) + '</option>';
+    }
+    h += '</select></div><div class="governance-vassal-list" ' +
+      'id="governance-vassal-list">';
+    const vassals = summary.directVassals.slice().sort(function (a, b) {
+      return compareGovernanceVassals(s, governanceVassalSort, a, b);
+    });
+    for (const item of vassals) {
       const realm = s.realms[item.realmId];
       if (!realm) continue;
+      const ruler = FB.realmRulerCharacterSnapshot &&
+        FB.realmRulerCharacterSnapshot(s, item.realmId);
+      const rulerName = ruler ? ruler.name :
+        (realm.ruler ? realm.ruler.name : realm.name);
+      const portrait = ruler ? FB.faceTag(ruler, 36, 42) : '';
+      const levyShare = totalLevy > 0
+        ? Math.round(item.levyContribution / totalLevy * 100) : 0;
       const favor = FB.vassalLevyFavorStatus(s, item.realmId);
       const office = item.councilSeatId
         ? councilSeatName(item.councilSeatId) : FB.T('No Council office');
@@ -11838,13 +11896,19 @@ window.FB = window.FB || {};
         : FB.T('Breakaway ×{multiplier}', {
           multiplier:item.breakawayMultiplier
         });
-      h += '<div class="governance-vassal settcard">' +
-        '<div class="governance-vassal-head"><div>' +
+      h += '<div class="governance-vassal settcard" data-vassal-name="' +
+        esc(realm.name) + '" data-vassal-rid="' + esc(item.realmId) +
+        '" data-vassal-levy="' + esc(String(item.levyContribution)) +
+        '" data-vassal-tax="' + esc(String(item.taxContribution)) +
+        '" data-vassal-standing="' + esc(String(item.standing)) +
+        '" data-vassal-rank="' + esc(String(realm.rank || 0)) + '">' +
+        '<div class="governance-vassal-head">' +
+        '<div class="governance-vassal-identity">' + portrait + '<div>' +
         governanceRealmLink(s, item.realmId, realm.name, 'vassals') +
         '<span>' + esc(FB.T('{title} {ruler}', {
           title:FB.realmRankTitle(s, realm),
-          ruler:realm.ruler ? realm.ruler.name : realm.name
-        })) + '</span></div>' +
+          ruler:rulerName
+        })) + '</span></div></div>' +
         '<span class="settcard-actions">' + standingSpan(item.standing) +
         '<button type="button" class="btn small settcard-info"' +
         ' aria-expanded="false" aria-controls="gov-vassal-det-' +
@@ -11857,9 +11921,11 @@ window.FB = window.FB || {};
         '<div class="governance-vassal-stats governance-vassal-face">' +
         kv('Territory', esc(countyCountText(s, item.countyIds.length))) +
         kv('Seasonal tax contribution', esc(FB.money(
-          Math.round(item.taxContribution * 10) / 10))) +
-        kv('Host levy contribution', esc(menText(
-          s, Math.round(item.levyContribution * 10) / 10))) +
+          Math.round(item.taxContribution * 100) / 100))) +
+        kv('Host levy contribution', esc(FB.T(
+          '{levy} · {share}% of vassal levy', {
+            levy:menText(s, item.levyContribution), share:levyShare
+          }))) +
         '</div>' +
         '<div class="settcard-details hidden" id="gov-vassal-det-' +
         esc(item.realmId) + '"><div class="governance-vassal-stats">' +
@@ -11892,7 +11958,7 @@ window.FB = window.FB || {};
           })
           : favor.reason) + '</div></div></div>';
     }
-    return h;
+    return h + '</div>';
   }
 
   function governanceModifierConsequencesHtml(s, summary) {
@@ -12141,6 +12207,7 @@ window.FB = window.FB || {};
       guide:guideModalOption('governance-guide', 'government',
         'Guide: government')
     });
+    FB.paintFaces($('gm-body'), s);
     const sectionButtons = document.querySelectorAll(
       '[data-governance-section]');
     bindCardInfoToggles($('gm-body'));
@@ -12210,6 +12277,34 @@ window.FB = window.FB || {};
       });
     });
     refreshGovernanceActionHints(selectedSection);
+    const vassalSort = $('governance-vassal-sort');
+    if (vassalSort) vassalSort.addEventListener('change', function () {
+      governanceVassalSort = vassalSort.value;
+      const list = $('governance-vassal-list');
+      if (!list) return;
+      const rows = Array.prototype.slice.call(
+        list.querySelectorAll('.governance-vassal'));
+      function rowValue(row, key) {
+        const value = row.getAttribute('data-vassal-' + key) || '';
+        return key === 'name' || key === 'rid'
+          ? value.toLowerCase() : Number(value) || 0;
+      }
+      rows.sort(function (a, b) {
+        const av = rowValue(a, governanceVassalSort);
+        const bv = rowValue(b, governanceVassalSort);
+        if (av !== bv) {
+          if (governanceVassalSort === 'name') return av < bv ? -1 : 1;
+          return bv - av;
+        }
+        const an = rowValue(a, 'name');
+        const bn = rowValue(b, 'name');
+        if (an !== bn) return an < bn ? -1 : 1;
+        const ar = rowValue(a, 'rid');
+        const br = rowValue(b, 'rid');
+        return ar < br ? -1 : (ar > br ? 1 : 0);
+      });
+      for (const row of rows) list.appendChild(row);
+    });
     document.querySelectorAll('[data-governance-realm]').forEach(
       function (button) {
         button.addEventListener('click', function (event) {

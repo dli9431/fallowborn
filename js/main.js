@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.171.5';
+FB.VERSION = '1.171.6';
 FB.CHANGELOG = [
+  { v: '1.171.6', date: '2026-09-06', changes: [
+    'Land now summarizes and expands vassal levy contributors, while Governance adds readable details, sortable totals, and contribution shares.'
+  ] },
   { v: '1.171.5', date: '2026-09-06', changes: [
     'AI realms now expand through compact de jure duchies and realms instead of reaching along scattered border counties.',
     'Dynastic marriage proposals now reach fellow and subordinate courts anywhere within the player’s sovereign realm.'

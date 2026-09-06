@@ -768,15 +768,22 @@ aligned 48px action row. Exact settlement placement and permanent demolition rem
 from the Land-tab settlement view. Every settlement name there links to that settlement's
 sheet and centers the map on its parent county. Province settlement lists wrap between
 places, never inside a settlement name, so each link stays readable.
-The Land tab's **Notable folk** list is ruler-first: it shows the county holder, all of
-that holder's direct vassal realms, then every liege through the sovereign, without a
-row cap or duplicates. Every entry is a native focusable row with the reigning
-character's procedural portrait and opens that ruler's character sheet. Each row states
-realm, political relationship, age,
-Martial, and the player-relative Standing. The portrait occupies a stable left column;
-the identity text uses the full right column and Standing sits beneath it, so narrow side
-panels never compress names and relationships into a sliver. Generated local characters appear only as a
-defensive fallback when no political ruler can be resolved.
+The Land tab's **Notable folk** list stays local: it shows the county holder and then
+each liege through the sovereign, without duplicates. Every entry is a native focusable
+row with the reigning character's procedural portrait and opens that ruler's character
+sheet. Each row states realm, political relationship, age, Martial, and the
+player-relative Standing. The portrait occupies a stable left column; the identity text
+uses the full right column and Standing sits beneath it, so narrow side panels never
+compress names and relationships into a sliver. When the player holds the selected
+county, a separate compact **Your vassals** block shows direct-vassal count, aggregate
+seasonal tax and levy, and the three largest exact levy contributors with their shares.
+Its **+{count} more** control expands the complete direct-vassal list in place and can
+collapse it back to the leading three; **View all vassals** opens Governance directly to
+the complete management ledger. This
+prevents a king's or emperor's county context from becoming an unbounded wall of ruler
+cards; foreign browsing does not pretend to expose another ruler's obligation ledger.
+Generated local characters appear only as a defensive fallback when no political ruler
+can be resolved.
 
 Every reigning ruler uses the standard character sheet, rather than a duplicate
 realm-ruler sheet. Their title, **Realm muster** line, court, political actions, and
@@ -1443,9 +1450,14 @@ tab to a clean leading edge, and never leaves a clipped label at that edge. Mobi
 reserve stable label and value columns, use the full sheet width, and wrap each side within
 its own column. The content viewport and exit footer remain fixed while only the active
 section scrolls. Direct vassals use a compact aligned ledger on desktop and
-two-column stat cards on narrow screens. Controls are native buttons, ordinary number
-hints and shortcuts apply only to actions in the active section, and no layout hides
-blocked reasons. The legacy Estates and Royal Council
+two-column stat cards on narrow screens. The section begins with direct-vassal, aggregate
+levy, and seasonal-tax totals; its session-only native selector sorts the full roster by
+levy (the default), tax, Standing, rank, or name. Each row retains ruler portrait,
+territory, obligations, office, and management controls while showing its exact levy and
+share of all direct-vassal levies on the permanent face. Controls are native buttons,
+ordinary number hints and shortcuts apply only to actions in the active section, and no
+layout hides blocked reasons. This is a presentation-only projection of existing
+authoritative obligation values, so it requires no technology-impact entry. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
 Duke, King, and Emperor claim launchers appear in both the Deeds action group and the
