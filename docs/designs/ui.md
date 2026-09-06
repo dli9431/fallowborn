@@ -1401,6 +1401,12 @@ personal/household/realm picker, while landed characters receive one **View fait
 {county}** navigation action per explicitly named direct county (or their named baronial
 home). It closes the character sheet and selects that county in Land. It never starts,
 changes, stops, or silently chooses a territorial project.
+The culture value beside it is also a focusable link. Its compact Culture sheet keeps the
+player's current culture and tradition visible, with naming conventions behind the shared
+desktop tooltip or compact `?` disclosure. **Adopt a new culture…** opens the existing
+personal/household picker, while one explicitly named **View culture in {county}** action per
+direct holding routes territorial assimilation to Land. Supporting action explanations use
+the same tooltip/disclosure path rather than permanent helper copy.
 The selected Land county is the canonical community surface. Its unchanged county
 population, carrying-capacity, and annual-change rows are followed by independently
 aggregated Culture and Faith cards; counts sum to the population row, percentages are

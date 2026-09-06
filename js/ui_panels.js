@@ -2286,6 +2286,17 @@ window.FB = window.FB || {};
       '</button>';
   }
 
+  function cultureDetailsLink(s, cultureId, id) {
+    const culture = FBDATA.cultures && FBDATA.cultures[cultureId];
+    if (!culture) return esc(cultureId);
+    return '<button type="button" class="linklike"' +
+      (id ? ' id="' + esc(id) + '"' : '') +
+      ' data-culture-details="' + esc(cultureId) + '" aria-label="' +
+      esc(FB.T('Open details for {culture}', {
+        culture:cultureName(s, cultureId)
+      })) + '">' + esc(cultureName(s, cultureId)) + '</button>';
+  }
+
   function rankDetailsLink(s) {
     const rank = FB.styledTitle(s);
     const landed = s.player.tier >= 3;
@@ -2329,6 +2340,98 @@ window.FB = window.FB || {};
       });
     }
   }
+
+  function bindCultureDetails(root) {
+    const buttons = root.querySelectorAll('[data-culture-details]');
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        UI.showCultureDetails(buttons[i].getAttribute('data-culture-details'));
+      });
+    }
+  }
+
+  function cultureDynastyStyleText(culture) {
+    if (culture.dyn === 'patronym') return FB.T('Patronymic (-sson / -datter)');
+    if (culture.dyn === 'mac') return FB.T('Clan prefix (mac)');
+    if (culture.dyn === 'ibn') return FB.T('Lineage prefix (Banu / Ibn)');
+    if (culture.dyn === 'ov') return FB.T('Patronymic suffix (-ovich)');
+    if (culture.dyn === 'ap') return FB.T('Patronymic prefix (ap)');
+    if (culture.dyn === 'of_place') return FB.T('Toponymic (of [Place])');
+    return FB.T('Family surname');
+  }
+
+  function cultureDetailsActionHtml(id, label, details, dataName, dataValue) {
+    const detailsId = id + '-details';
+    return '<div class="culture-details-action settcard" aria-describedby="' +
+      esc(detailsId) + '"><button type="button" class="actionbtn" id="' +
+      esc(id) + '"' + (dataName
+        ? ' data-' + dataName + '="' + esc(dataValue) + '"' : '') +
+      ' aria-describedby="' + esc(detailsId) + '">' + esc(label) +
+      '</button><span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+      esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span><div class="settcard-details ' +
+      'culture-details-action-details hidden" id="' + esc(detailsId) +
+      '"><p>' + esc(details) + '</p></div></div>';
+  }
+
+  UI.showCultureDetails = function (cultureId) {
+    const s = FB.state;
+    const culture = s && FBDATA.cultures && FBDATA.cultures[cultureId];
+    if (!culture) return;
+    const traditionId = FB.cultureGroup(cultureId);
+    const tradition = FB.cultureTraditionOf(cultureId) || {};
+    const icon = tradition.icon || '🌍';
+    const traditionName = dt(
+      s, 'cultureTradition', traditionId, tradition, 'name');
+    const samples = (culture.male || []).slice(0, 4).concat(
+      (culture.female || []).slice(0, 4));
+    let titleDetails = '<p><b>' + esc(FB.T('Dynasty style')) + '</b><br>' +
+      esc(cultureDynastyStyleText(culture)) + '</p>';
+    if (samples.length) {
+      titleDetails += '<p><b>' + esc(FB.T('Sample names')) + '</b><br>' +
+        esc(samples.join(', ')) + '</p>';
+    }
+    let h = panelh('Identity') +
+      kv('Current culture', esc(cultureName(s, cultureId))) +
+      kv('Tradition', esc(icon) + ' ' + esc(traditionName)) +
+      panelh('Actions') + '<div class="gm-list culture-details-actions">' +
+      cultureDetailsActionHtml(
+        'culture-details-adopt', FB.T('Adopt a new culture…'),
+        FB.T('Choose a culture for yourself or your household.'));
+    const landIds = s.player.tier >= 3
+      ? ((s.player.provs || []).length
+        ? s.player.provs.slice() : [s.player.provinceId]) : [];
+    for (let i = 0; i < landIds.length; i++) {
+      const landPid = landIds[i];
+      const land = FB.world.byId[landPid];
+      if (!land || land.wasteland) continue;
+      h += cultureDetailsActionHtml(
+        'culture-details-land-' + landPid,
+        FB.T('View culture in {county}', { county:land.name }),
+        FB.T('Open this county in Land, where territorial assimilation is managed.'),
+        'culture-land-pid', landPid);
+    }
+    h += '</div><div class="gm-footer"><button class="btn" ' +
+      'id="culture-details-close">' + esc(FB.T('Close')) + '</button></div>';
+    openModal(icon + ' ' + cultureName(s, cultureId), h, {
+      titleDetailsHtml:titleDetails
+    });
+    $('culture-details-close').addEventListener('click', UI.closeModal);
+    $('culture-details-adopt').addEventListener('click', function () {
+      UI.closeModal();
+      UI.showConversionPicker('culture');
+    });
+    document.querySelectorAll('#gm-body [data-culture-land-pid]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const pid = button.getAttribute('data-culture-land-pid');
+          UI.closeModal();
+          if (FB.map && FB.map.centerOn) FB.map.centerOn(pid);
+          UI.selectProvince(pid);
+        });
+      });
+  };
 
   function foundedFaithOriginText(s, religionId, rel, parent, founder,
       origin, founded) {
@@ -2797,7 +2900,7 @@ window.FB = window.FB || {};
       kv('Rank', rankDetailsLink(s)) +
       papalOfficeHtml(s, me) +
       selfLiveValueRow('age', 'Age', FB.ageOf(me, s.date.year)) +
-      kv('Culture', esc(cultureName(s, me.culture))) +
+      kv('Culture', cultureDetailsLink(s, me.culture, 'self-culture-details')) +
       kv('Faith', faithDetailsLink(s, me.religion, 'self-faith-details')) +
       religiousHeadStatusRow(s, me.religion) +
       (FB.playerExcommunicated && FB.playerExcommunicated(s)
@@ -2857,6 +2960,7 @@ window.FB = window.FB || {};
     FB.localizeTree(box);
     FB.paintFaces(box, s);
     bindFaithDetails(box);
+    bindCultureDetails(box);
     bindSelfWorkButton();
     const rankDetails = $('self-rank-details');
     if (rankDetails) rankDetails.addEventListener('click', UI.showRankDetails);
