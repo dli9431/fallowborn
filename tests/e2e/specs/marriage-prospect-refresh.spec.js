@@ -13,6 +13,7 @@ dependsOnRuntime(__filename, [
   'js/travel.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
   'js/world.js'
 ]);
 
@@ -556,7 +557,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
     })).toBeVisible();
     await expect(matchCell).toContainText('Betrothed');
     await expect(matchCell).toContainText('Promised to');
-    await expect(matchCell).toContainText('Select to change this match');
+    await expect(matchCell).toContainText('Select to review, change, or end this pledge');
     const firstPledge = await page.evaluate(function (ids) {
       const state = FB.state;
       const child = state.chars[ids.childId];
@@ -645,6 +646,242 @@ test('Household Plan arranges a descendant match and can replace its pledge',
       gold:replacementTerms.gold - replacementTerms.dowry,
       turn:2,
       forfeitureLogged:true
+    });
+  });
+
+test('a descendant can be pledged from birth and the pledge can be ended without a refund',
+  async function ({ page }) {
+    const setup = await page.evaluate(function () {
+      const state = FB.state;
+      const parent = state.chars[state.player.charId];
+      state.player.tier = 2;
+      state.player.gold = 1000;
+      state.player.prestige = 1000;
+      const child = FB.makeCharacter(state, {
+        name:'Newborn Aveline',
+        sex:'f',
+        culture:parent.culture,
+        religion:parent.religion,
+        born:state.date.year,
+        role:'child',
+        dyn:parent.dyn,
+        traitsN:0
+      });
+      if (parent.sex === 'f') child.motherId = parent.id;
+      else child.fatherId = parent.id;
+      parent.childrenIds.push(child.id);
+      FB.touchFamily();
+      FB.ui.showCharModal(child.id);
+      return {
+        childId:child.id,
+        childName:child.name,
+        turn:state.turn,
+        gold:state.player.gold
+      };
+    });
+    const characterMatch = page.locator(
+      '[data-interaction-action="management.arranged-match"]');
+    await expect(characterMatch).toContainText('Arrange a match');
+    await expect(characterMatch).toBeEnabled();
+    await characterMatch.click();
+    await expect(page.getByRole('heading', {
+      name:'A Match for ' + setup.childName,
+      exact:true
+    })).toBeVisible();
+    const earlyProspects = await page.evaluate(function (childId) {
+      const state = FB.state;
+      return state.chars[childId].matchIds.map(function (id) {
+        const candidate = state.chars[id];
+        return {
+          age:FB.ageOf(candidate, state.date.year),
+          career:candidate.career || null
+        };
+      });
+    }, setup.childId);
+    expect(earlyProspects).toHaveLength(3);
+    expect(earlyProspects.every(function (prospect) {
+      return prospect.age >= 0 && prospect.age <= 5 && !prospect.career;
+    })).toBe(true);
+
+    const choice = page.locator('[data-match]').last();
+    const partnerId = await choice.getAttribute('data-match');
+    const dowry = await page.evaluate(function (id) {
+      return Math.max(0, Number(FB.state.chars[id].dowryAsk) || 0);
+    }, partnerId);
+    expect(dowry).toBeGreaterThan(0);
+    await choice.click();
+    await expect(page.locator('#gm-title')).toContainText(setup.childName);
+    await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+    await expect(page.getByRole('heading', { name:/Household Plan/ }))
+      .toBeVisible();
+    const matchCell = page.locator(
+      '[data-household-plan-action="match"]' +
+      '[data-household-plan-cid="' + setup.childId + '"]');
+    await expect(matchCell).toContainText('Betrothed');
+    await expect(matchCell).toContainText(
+      'Select to review, change, or end this pledge');
+
+    await matchCell.click();
+    await expect(page.locator('#match-betrothal-break')).toBeVisible();
+    await page.locator('#match-betrothal-break').click();
+    await expect(page.getByRole('heading', {
+      name:'Break Betrothal', exact:true
+    })).toBeVisible();
+    await expect(page.getByText(/paid dowry.*will not be returned/i))
+      .toBeVisible();
+    await page.locator('#betrothal-break-confirm').click();
+    await expect(page.getByRole('heading', { name:/Household Plan/ }))
+      .toBeVisible();
+
+    const ended = await page.evaluate(function (ids) {
+      const state = FB.state;
+      const child = state.chars[ids.childId];
+      return {
+        childBetrothedId:child.betrothedId,
+        partnerStillTracked:!!state.chars[ids.partnerId],
+        gold:state.player.gold,
+        turn:state.turn,
+        logged:state.log.some(function (entry) {
+          return entry.msg &&
+            entry.msg.key === 'news.event.kin_pledge_broken_forfeit';
+        })
+      };
+    }, { childId:setup.childId, partnerId:partnerId });
+    expect(ended).toEqual({
+      childBetrothedId:null,
+      partnerStillTracked:false,
+      gold:setup.gold - dowry,
+      turn:setup.turn + 1,
+      logged:true
+    });
+    await expect(matchCell).toContainText('Arrange a match');
+  });
+
+test('Self can end an inherited betrothal without spending a day',
+  async function ({ page }) {
+    const setup = await page.evaluate(function () {
+      const state = FB.state;
+      const me = state.chars[state.player.charId];
+      const partner = FB.makeCharacter(state, {
+        name:'Inherited Pledge',
+        sex:me.sex === 'm' ? 'f' : 'm',
+        culture:me.culture,
+        religion:me.religion,
+        born:me.born,
+        role:'kinspouse',
+        station:FB.stationOf(me),
+        traitsN:0
+      });
+      me.spouseId = null;
+      partner.spouseId = null;
+      me.betrothedId = partner.id;
+      partner.betrothedId = me.id;
+      partner.dowryAsk = 23;
+      FB.touchFamily();
+      FB.ui.showTab('char', { history:false });
+      return {
+        meId:me.id,
+        partnerId:partner.id,
+        turn:state.turn,
+        gold:state.player.gold
+      };
+    });
+    await expect(page.locator('#self-betrothed-person'))
+      .toContainText('Inherited Pledge');
+    await expect(page.locator('#self-break-betrothal')).toBeVisible();
+    await page.locator('#self-break-betrothal').click();
+    await expect(page.getByRole('heading', {
+      name:'Break Betrothal', exact:true
+    })).toBeVisible();
+    await expect(page.getByText(/paid dowry.*will not be returned/i))
+      .toBeVisible();
+    await page.locator('#betrothal-break-confirm').click();
+    await expect(page.locator('#self-break-betrothal')).toHaveCount(0);
+    const ended = await page.evaluate(function (ids) {
+      const state = FB.state;
+      return {
+        playerBetrothedId:state.chars[ids.meId].betrothedId,
+        partnerStillTracked:!!state.chars[ids.partnerId],
+        turn:state.turn,
+        gold:state.player.gold
+      };
+    }, setup);
+    expect(ended).toEqual({
+      playerBetrothedId:null,
+      partnerStillTracked:false,
+      turn:setup.turn,
+      gold:setup.gold
+    });
+  });
+
+test('a managed sibling can expose and end an accepted household pledge',
+  async function ({ page }) {
+    const setup = await page.evaluate(function () {
+      const state = FB.state;
+      const me = state.chars[state.player.charId];
+      const sibling = FB.makeCharacter(state, {
+        name:'Resident Sibling',
+        sex:'f',
+        culture:me.culture,
+        religion:me.religion,
+        born:state.date.year - 18,
+        role:'sibling',
+        dyn:me.dyn,
+        fatherId:me.fatherId,
+        motherId:me.motherId,
+        station:0,
+        traitsN:0
+      });
+      sibling.homeProvinceId = state.player.provinceId;
+      sibling.residenceProvinceId = state.player.provinceId;
+      const partner = FB.makeCharacter(state, {
+        name:'Sibling Pledge',
+        sex:'m',
+        culture:me.culture,
+        religion:me.religion,
+        born:state.date.year - 18,
+        role:'kinspouse',
+        station:0,
+        traitsN:0
+      });
+      sibling.betrothedId = partner.id;
+      partner.betrothedId = sibling.id;
+      FB.touchFamily();
+      const manageable = FB.manageableKinKind(state, sibling.id);
+      FB.ui.showCharModal(sibling.id);
+      return {
+        siblingId:sibling.id,
+        partnerId:partner.id,
+        manageable:manageable,
+        turn:state.turn
+      };
+    });
+    expect(setup.manageable).toBe('sibling');
+    const release = page.locator(
+      '[data-interaction-action="management.break-betrothal"]');
+    await expect(release).toBeVisible();
+    await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+    const planRelease = page.locator(
+      '[data-household-plan-action="break-betrothal"]' +
+      '[data-household-plan-cid="' + setup.siblingId + '"]');
+    await expect(planRelease).toContainText('Select to end this pledge');
+    await planRelease.click();
+    await page.locator('#betrothal-break-confirm').click();
+    await expect(page.getByRole('heading', { name:/Household Plan/ }))
+      .toBeVisible();
+    await expect(planRelease).toHaveCount(0);
+    const ended = await page.evaluate(function (ids) {
+      const state = FB.state;
+      return {
+        siblingBetrothedId:state.chars[ids.siblingId].betrothedId,
+        partnerStillTracked:!!state.chars[ids.partnerId],
+        turn:state.turn
+      };
+    }, setup);
+    expect(ended).toEqual({
+      siblingBetrothedId:null,
+      partnerStillTracked:false,
+      turn:setup.turn
     });
   });
 

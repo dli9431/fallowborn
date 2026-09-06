@@ -2769,6 +2769,8 @@ window.FB = window.FB || {};
     const titleCount = titles.high.length + titles.counties.length;
     const items = FB.itemList(s);
     const standardSummaryParts = householdStandardsSummaryParts(s);
+    const betrothalStatus = FB.betrothalBreakStatus
+      ? FB.betrothalBreakStatus(s, me) : null;
     const houseRow = me.dyn
       ? '<div class="kv dynasty-house-row"><span>' + esc(FB.T('House')) +
         '</span><span class="dynasty-house-value"><b>' + esc(me.dyn) +
@@ -2811,11 +2813,24 @@ window.FB = window.FB || {};
         }))) : '') +
       (titleCount ? selfSectionHtml('titles', 'Titles', titleCount, titleRows(s, titles)) : '') +
       dynasticStatusRows(s, me) +
+      (betrothalStatus && betrothalStatus.ready
+        ? kv('Betrothal', '<button type="button" class="linklike" ' +
+          'id="self-betrothed-person">' + esc(FB.T('Promised to {name}', {
+            name:FB.fullName(betrothalStatus.partner)
+          })) + '</button>')
+        : '') +
       selfSectionHtml('possessions', 'Possessions', items.length, itemChips(s, items)) +
       panelh('Dynasty') +
       houseRow +
       kv('Generation', (s.generation || 1));
     h += panelh('Livelihood') + livelihoodNote(s, me, true);
+    if (betrothalStatus && betrothalStatus.ready) {
+      h += '<button class="actionbtn" id="self-break-betrothal">💔 ' +
+        esc(FB.T('Break betrothal…')) + '<span class="adesc">' +
+        esc(FB.T(
+          'End this pledge without spending a day; any paid dowry is not returned.')) +
+        '</span></button>';
+    }
     if (FB.hasBishopric && FB.hasBishopric(s, me)) {
       h += '<button class="actionbtn" id="self-bishopric">⛪ ' +
         esc(FB.T('Open the Bishopric')) +
@@ -2880,6 +2895,14 @@ window.FB = window.FB || {};
     });
     const bishopric = $('self-bishopric');
     if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
+    const betrothedPerson = $('self-betrothed-person');
+    if (betrothedPerson) betrothedPerson.addEventListener('click', function () {
+      UI.showCharModal(betrothalStatus.partner.id, { view:'self' });
+    });
+    const breakBetrothal = $('self-break-betrothal');
+    if (breakBetrothal) breakBetrothal.addEventListener('click', function () {
+      UI.showBreakBetrothal(me.id);
+    });
     const srh = $('self-rename-house');
     if (srh) srh.addEventListener('click', UI.showRenameHouse);
     const titleLinks = box.querySelectorAll('[data-title-pid]');

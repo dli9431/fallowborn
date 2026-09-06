@@ -431,7 +431,7 @@ test('AI royal offers hard-gate a lowborn sibling by station and prestige',
     expect(result.staleContext).toBe(false);
   });
 
-test('a royal family sheet arranges an exact match with a managed descendant',
+test('a royal family sheet arranges an exact match with a managed descendant from birth',
   async function ({ page }, testInfo) {
     await startAgencyGame(page, testInfo);
     const setup = await page.evaluate(function () {
@@ -473,7 +473,7 @@ test('a royal family sheet arranges an exact match with a managed descendant',
         sex:partner.sex === 'm' ? 'f' : 'm',
         culture:me.culture,
         religion:me.religion,
-        born:s.date.year - 14,
+        born:s.date.year,
         dyn:me.dyn,
         fatherId:me.id,
         station:4,
@@ -603,7 +603,7 @@ test('a royal family sheet arranges an exact match with a managed descendant',
       }, setup.partnerId));
   });
 
-test('AI royal offers revalidate exact managed kin, ruler generation, and dowry',
+test('AI royal offers revalidate and can pledge exact managed kin from birth',
   async function ({ page }, testInfo) {
     await startAgencyGame(page, testInfo);
     const result = await page.evaluate(function () {
@@ -639,7 +639,7 @@ test('AI royal offers revalidate exact managed kin, ruler generation, and dowry'
       var child = FB.makeCharacter(s, {
         name:'Proposed Kin', sex:partner.sex === 'm' ? 'f' : 'm',
         culture:me.culture, religion:me.religion,
-        born:s.date.year - 20, dyn:me.dyn,
+        born:s.date.year, dyn:me.dyn,
         fatherId:me.id, traitsN:0
       });
       me.childrenIds.push(child.id);
@@ -666,6 +666,9 @@ test('AI royal offers revalidate exact managed kin, ruler generation, and dowry'
         valid:valid,
         accepted:accepted,
         spouse:child.spouseId,
+        betrothed:child.betrothedId,
+        partnerBetrothed:partner.betrothedId,
+        child:child.id,
         partner:partner.id,
         staleValid:staleBeforeAcceptance,
         gold:s.player.gold,
@@ -676,10 +679,12 @@ test('AI royal offers revalidate exact managed kin, ruler generation, and dowry'
 
     expect(result.valid).toBe(true);
     expect(result.accepted).toBe(true);
-    expect(result.spouse).toBe(result.partner);
+    expect(result.spouse).toBe(null);
+    expect(result.betrothed).toBe(result.partner);
+    expect(result.partnerBetrothed).toBe(result.child);
     expect(result.staleValid).toBe(false);
     expect(result.gold).toBe(result.expectedGold);
-    expect(result.familyOnly).toBe(false);
+    expect(result.familyOnly).toBe(true);
   });
 
 test('the annual agency pass caps player approaches and family requests',

@@ -15147,27 +15147,23 @@ window.FB = window.FB || {};
         betrothed && !betrothed.dead && betrothed.betrothedId === c.id);
       const changeable = !!(mutual && FB.matchCandidateRefreshStatus(
         s, c, { replacingBetrothedId:betrothed.id }).eligible);
+      const breakable = FB.betrothalBreakStatus &&
+        FB.betrothalBreakStatus(s, c).ready;
       return {
         content:householdPlanLines(FB.T('Betrothed'),
           betrothed && !betrothed.dead
             ? FB.T('Promised to {name}', { name:betrothed.name })
             : FB.T('A pledge is recorded'),
-          changeable ? FB.T('Select to change this match') : null),
-        action:changeable ? 'match' : null
+          changeable
+            ? FB.T('Select to review, change, or end this pledge')
+            : breakable ? FB.T('Select to end this pledge') : null),
+        action:changeable ? 'match' : (breakable ? 'break-betrothal' : null)
       };
     }
     if (!FB.playerDescendantKind(s, c.id)) {
       return {
         content:householdPlanLines(FB.T('Not applicable'),
           FB.T('Matches are arranged for the descent line only')),
-        action:null
-      };
-    }
-    const age = FB.ageOf(c, s.date.year);
-    if (age < 12) {
-      return {
-        content:householdPlanLines(FB.T('Underage'),
-          FB.T('Eligible from age 12')),
         action:null
       };
     }
@@ -15423,6 +15419,10 @@ window.FB = window.FB || {};
           UI.showLivelihoods(HOUSEHOLD_PLAN_RETURN);
         } else if (action === 'match') {
           UI.showMatchPicker(cid, HOUSEHOLD_PLAN_RETURN);
+        } else if (action === 'break-betrothal') {
+          UI.showBreakBetrothal(cid, {
+            returnContext:HOUSEHOLD_PLAN_RETURN
+          });
         } else if (action === 'equipment') {
           UI.showEquipmentModal(cid, 'close', HOUSEHOLD_PLAN_RETURN);
         }
@@ -15875,7 +15875,7 @@ window.FB = window.FB || {};
       for (const entry of preview) h += matchPolicyPreviewCard(s, entry);
     } else {
       h += '<p class="hint education-policy-empty">' + esc(FB.T(
-        'No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from age 12.')) +
+        'No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from birth.')) +
         '</p>';
     }
     return { html:h + '</div>', count:preview.length };
@@ -20905,18 +20905,39 @@ window.FB = window.FB || {};
         route:'tutor'
       });
     }
+    const descendantPledge = FB.betrothalBreakStatus
+      ? FB.betrothalBreakStatus(s, c) : null;
     if (descendantKind && household && !FB.spouseSnapshot(s, c) &&
-        FB.ageOf(c, s.date.year) >= 12 && !c.betrothedId) {
+        (!c.betrothedId || descendantPledge && descendantPledge.ready)) {
       addInteractionAction(model, {
         id:'management.arranged-match',
         group:'management',
-        label:FB.T('Arrange a match…'),
-        detail:FB.T(
-          'Sound out families for a binding pledge; sealing one spends the day.'),
+        label:descendantPledge && descendantPledge.ready
+          ? FB.T('Review or change this match…')
+          : FB.T('Arrange a match…'),
+        detail:descendantPledge && descendantPledge.ready
+          ? FB.T('Review this pledge, choose another match, or end it outright.')
+          : FB.T(
+            'Sound out families for a binding pledge; sealing one spends the day.'),
         enabled:true,
         blockedReason:null,
-        consequence:FB.T('The wedding follows once both partners are of age.'),
+        consequence:descendantPledge && descendantPledge.ready
+          ? FB.T('Changing or ending the pledge does not return any paid dowry.')
+          : FB.T('The wedding follows once both partners are of age.'),
         route:'match'
+      });
+    }
+    if (!descendantKind && descendantPledge && descendantPledge.ready) {
+      addInteractionAction(model, {
+        id:'management.break-betrothal',
+        group:'management',
+        label:FB.T('Break betrothal…'),
+        detail:FB.T('End this living pledge before the wedding.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T(
+          'No day is spent; any paid dowry is not returned.'),
+        route:'break-betrothal'
       });
     }
     if (c.royalLine && !descendantKind && !reigningRealmId &&
@@ -20926,7 +20947,6 @@ window.FB = window.FB || {};
         pledged.betrothedId === c.id &&
         FB.playerDescendantKind(s, pledged.id));
       const royalKin = FB.royalKinMatchCandidates(s, c);
-      const ageReady = FB.ageOf(c, s.date.year) >= 12;
       const unwed = !FB.spouseSnapshot(s, c);
       let label = FB.T('Arrange a family marriage…');
       let detail = royalKin.length
@@ -20935,7 +20955,7 @@ window.FB = window.FB || {};
             count:royalKin.length
           })
         : FB.T('No resident child or grandchild is available for you to propose.');
-      let enabled = ageReady && unwed && !c.betrothedId && royalKin.length > 0;
+      let enabled = unwed && !c.betrothedId && royalKin.length > 0;
       let blockedReason = null;
       let route = 'royal-family-match';
       let matchCharacterId = null;
@@ -20950,8 +20970,6 @@ window.FB = window.FB || {};
         blockedReason = enabled ? null : FB.T('This pledge cannot be changed now.');
         route = 'match';
         matchCharacterId = pledged.id;
-      } else if (!ageReady) {
-        blockedReason = FB.T('Royal family matches become available at age 12.');
       } else if (!unwed) {
         blockedReason = FB.T('This person is already married.');
       } else if (c.betrothedId) {
@@ -21663,6 +21681,14 @@ window.FB = window.FB || {};
             characterId:c.id,
             returnContext:returnContext
           });
+        } else if (action.route === 'break-betrothal') {
+          UI.showBreakBetrothal(c.id, {
+            returnContext:{
+              view:'character',
+              characterId:c.id,
+              returnContext:returnContext
+            }
+          });
         } else if (action.route === 'royal-family-match') {
           UI.showRoyalKinMatchPicker(c.id, {
             view:'character',
@@ -22025,11 +22051,66 @@ window.FB = window.FB || {};
     updatePreview();
   };
 
+  UI.showBreakBetrothal = function (cid, options) {
+    options = options || {};
+    const s = FB.state;
+    const status = s && FB.betrothalBreakStatus &&
+      FB.betrothalBreakStatus(s, cid);
+    if (!status || !status.ready) return false;
+    const c = status.character;
+    const partner = status.partner;
+    const fromMatchPicker = !!options.fromMatchPicker;
+    const returnContext = options.returnContext;
+    const fromInteraction = returnsToInteractionManagement(returnContext);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'End the betrothal between {child} and {partner}? No wedding will follow.', {
+        child:FB.fullName(c), partner:FB.fullName(partner)
+      })) + '</p>';
+    if (status.dowryForfeited) {
+      h += '<p class="household-warning op-bad">' + esc(FB.T(
+        'The paid dowry of {money:gold} will not be returned.', {
+          gold:status.dowryForfeited
+        })) + '</p>';
+    }
+    h += '<p class="adesc">' + esc(FB.T(
+      'Breaking this pledge costs no day.')) + '</p></div>' +
+      '<div class="gm-footer"><button class="btn danger" ' +
+      'id="betrothal-break-confirm">' + esc(FB.T('Break betrothal')) +
+      '</button><button class="btn" id="betrothal-break-cancel">' +
+      esc(FB.T('Keep the pledge')) + '</button></div>';
+    const modalOptions = fromMatchPicker ? { replaceView:true } :
+      (returnsToHouseholdPlan(returnContext)
+        ? householdPlanHistoryOptions(returnContext)
+        : fromInteraction ? {
+        historyView:true,
+        historyBackRender:function () { interactionReturn(returnContext); }
+      } : undefined);
+    openModal(FB.T('Break Betrothal'), h, modalOptions);
+    $('betrothal-break-confirm').addEventListener('click', function () {
+      if (!FB.breakBetrothal(s, c)) return;
+      UI.refresh();
+      resumeManagementAfterDay(returnContext, UI.closeModal);
+    });
+    $('betrothal-break-cancel').addEventListener('click', function () {
+      if (fromMatchPicker) {
+        UI.showMatchPicker(cid, returnContext, true);
+        return;
+      }
+      if (fromInteraction || returnsToHouseholdPlan(returnContext)) {
+        finishManagementReturn(returnContext, UI.closeModal);
+        return;
+      }
+      UI.closeModal();
+    });
+    return true;
+  };
+
   /* ================= arranged match picker =================
      Three families sounded out for a managed descendant's hand — the same
      three wait until a pledge is sealed, the search cooldown permits a new
      pool, or the descendant weds elsewhere. A sealed mutual pledge may reopen
-     the picker; browsing preserves it and choosing another family replaces it.
+     the picker; browsing preserves it, choosing another family replaces it,
+     and an explicit release ends it without choosing a new match.
      A daughter's or granddaughter's dowry is paid at the pledge; a son's or
      grandson's bride brings hers to the wedding. */
   UI.showMatchPicker = function (cid, returnContext, replaceView) {
@@ -22043,7 +22124,7 @@ window.FB = window.FB || {};
     const matchOptions = replacing
       ? { replacingBetrothedId:former.id } : undefined;
     if (!c || c.dead || !FB.playerDescendantKind(s, cid) ||
-        !FB.isHouseholdCharacter(s, cid) || FB.ageOf(c, s.date.year) < 12 ||
+        !FB.isHouseholdCharacter(s, cid) ||
         FB.spouseOf(s, c) || (c.betrothedId && !replacing)) return;
     let cands = FB.spawnMatchCandidates(s, c, matchOptions);
     const matchPolicy = FB.ensureMatchPolicy(s);
@@ -22076,7 +22157,13 @@ window.FB = window.FB || {};
       (recommendedId ? '<p class="hint">' + esc(FB.T(
         'The assistant’s recommendation is listed first. Every family remains your decision.')) +
         '</p>' : '') +
-      '</div><button class="actionbtn" id="match-candidate-refresh"' +
+      '</div>' + (replacing
+        ? '<button class="actionbtn" id="match-betrothal-break">💔 ' +
+          esc(FB.T('Break current betrothal…')) + '<span class="adesc">' +
+          esc(FB.T(
+            'End the pledge without choosing another. No day is spent; any paid dowry is forfeited.')) +
+          '</span></button>'
+        : '') + '<button class="actionbtn" id="match-candidate-refresh"' +
       (refreshStatus.ready ? '' : ' disabled') + '>🔄 ' +
       esc(FB.T('Sound out new families')) + '<span class="adesc">' +
       esc(refreshStatus.ready
@@ -22174,6 +22261,13 @@ window.FB = window.FB || {};
       : FB.T('A Match for {name}', { name:c.name }), h, historyOptions);
     FB.paintFaces($('gm-body'), s);
     bindCardInfoToggles($('gm-body'));
+    const breakButton = $('match-betrothal-break');
+    if (breakButton) breakButton.addEventListener('click', function () {
+      UI.showBreakBetrothal(cid, {
+        fromMatchPicker:true,
+        returnContext:returnContext
+      });
+    });
     $('match-candidate-refresh').addEventListener('click', function () {
       if (!FB.refreshMatchCandidates(s, c, matchOptions)) return;
       UI.showMatchPicker(cid, returnContext, true);

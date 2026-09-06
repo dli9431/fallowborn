@@ -46,8 +46,8 @@ AI rulers may initiate a bounded royal-family offer during the annual ruler
 agency pass. The proposing ruler must pass the distance/culture/faith relevance
 rule in [realms.md](realms.md), and their current aim must favor dynastic security,
 peace, or crown consolidation. The candidate on the player's side is drawn only
-from managed family, never arbitrary visible kin; both people must be at least
-twelve, uncommitted, opposite-sex under the modeled doctrine, exact-faith
+from managed family, never arbitrary visible kin; both people may be pledged
+from birth and must be uncommitted, opposite-sex under the modeled doctrine, exact-faith
 compatible, and outside the close-kin gate. Before the proposing court scores a
 pair, two hard house-rank gates apply to the royal partner: a match two or more
 stations above the player's house or candidate is unreachable, and an otherwise eligible
@@ -77,10 +77,10 @@ missing-intermediary reason.
 
 The household head may also initiate a negotiated royal-family match from a
 royal family member's character sheet. The action remains visible with an exact blocked
-reason when age, marriage, another pledge, or the absence of managed descendants prevents
+reason when marriage, another pledge, or the absence of managed descendants prevents
 it. When available, that sheet opens a bounded picker containing
-only resident, managed children and grandchildren. Both partners must be at least
-twelve, opposite-sex under the modeled doctrine, exact-faith compatible, and
+only resident, managed children and grandchildren. Both partners may be pledged
+from birth, must be opposite-sex under the modeled doctrine, exact-faith compatible, and
 outside the close-kin and celibate-office gates. The court must lie in the player's
 liege chain or be an adjacent sovereign peer, ordinary rank access must be ready,
 and the existing one-station/prestige and bride's-house dowry rules remain
@@ -220,9 +220,11 @@ Technology impact review: `local_marriage_prospect_identity` is `mode:'none'` in
 `FBDATA.techImpactReviews`. Drawing courtship prospects from live local culture-faith
 communities is baseline social behavior with no credible research dependency.
 
-Household-arranged first pledges and exact replacements are recorded as
-`descendant_betrothal_replacement` with `mode:'none'`: both are baseline family and social
-authority, so no credible technology gate belongs on correcting a descendant's match.
+Household-arranged pledges from birth and exact replacements are recorded as
+`descendant_betrothal_replacement` with `mode:'none'`. Explicit release is recorded
+separately as `betrothal_release`, also with `mode:'none'`: both are baseline family and
+social authority, so no credible technology gate belongs on arranging, correcting, or
+ending a descendant's match.
 
 Player-initiated descendant-to-royal arrangements add
 `player_initiated_royal_family_matches` with `mode:'none'`. Negotiating an accessible
@@ -290,7 +292,7 @@ candidate must be unmarried or widowed and not betrothed before episcopal appoin
 a widowed Bishop may later petition for the red hat, but cannot remarry while holding
 either office.
 
-The household head arranges descendant matches: from age 12 an unwed resident child or
+The household head arranges descendant matches from birth: an unwed resident child or
 grandchild's sheet or actionable Household Plan match cell offers three sounded-out families
 (`FB.spawnMatchCandidates`/`FB.sealKinMatch`/`FB.doKinWedding` in events.js, picker in
 ui_modals.js; the candidates persist on the descendant as `matchIds`). The
@@ -313,13 +315,17 @@ above the player's station gate on prestige (20 per step). Marriage removes that
 from the managed household, clears work and equipment assignments, and leaves their outfit
 in the shared armory.
 
-A living mutual betrothal remains actionable in Household Plan until the wedding. Opening
-it sounds out alternatives without disturbing the current pledge; choosing an alternative
+A living mutual betrothal under the household head's authority remains actionable until
+the wedding. A managed descendant can open it from Household Plan or their character sheet
+to sound out alternatives without disturbing the current pledge; choosing an alternative
 atomically validates and clears both sides of the former pledge, discards an ordinary
-generated former match, and seals the selected replacement. Any dowry already paid on the
-former pledge is forfeited rather than refunded, and the replacement warning states that
-before the player commits. Stale, dead, one-sided, married, or non-descendant records remain
-read-only instead of granting replacement authority.
+generated former match, and seals the selected replacement. The same picker may instead
+end the pledge without choosing a replacement or spending a day. A manageable resident
+sibling can end an accepted pledge from Household Plan or their character sheet, and a
+protagonist who inherits a live pledge receives that release action on Self as well. Any dowry already paid on the
+former pledge is forfeited rather than refunded, and the confirmation states that before
+the player commits. Stale, dead, one-sided, married, or non-descendant records remain
+read-only instead of granting replacement or release authority.
 
 ## Child culture, faith, and house
 
@@ -336,7 +342,7 @@ reviews the same three persistent `matchIds`, applies their ordinary current-res
 faith, close-kin, celibacy/doctrine, and royal-compact gates, then ranks qualifying
 families by higher station, lower immediate expense, lower prestige requirement, and
 nearer age. Saving the policy triggers an immediate review, and each New Year reviews
-eligible resident descendants from age 12. `matchRecommendation` records only a candidate
+eligible resident descendants from birth. `matchRecommendation` records only a candidate
 id and the policy signature;
 it creates a Household Plan marker and one Chronicle notice, not a betrothal. Reviewing
 the live policy details, saving, and refreshing a recommendation spend no resources or
@@ -388,7 +394,8 @@ history after divorce or death, and restore repairs missing current-spouse
 links without duplicating an existing one.
 
 **Occupational marriage backgrounds are real state.** The station-flavored match
-epithets seed a compatible career on the candidate. In particular, a
+epithets seed a compatible career on an adult candidate; a child candidate receives that
+background on reaching the age-sixteen wedding instead. In particular, a
 Guildmaster's son or daughter carries `background.guildmasterFamily`; marriage sponsors
 a craft/merchant player into the guild, or otherwise brings ten gold and commercial
 contacts. The spouse then joins the managed household workforce and may staff an

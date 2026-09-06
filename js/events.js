@@ -3190,7 +3190,7 @@ window.FB = window.FB || {};
       descendant.betrothedId === replacing.id &&
       replacing.betrothedId === descendant.id);
     if (!descendant || descendant.dead ||
-        FB.ageOf(descendant, state.date.year) < 12 ||
+        FB.ageOf(descendant, state.date.year) < 0 ||
         (FB.intrigueCaptivityOf &&
           FB.intrigueCaptivityOf(state, descendant.id)) ||
         FB.spousesOf(state, descendant).length ||
@@ -3251,7 +3251,7 @@ window.FB = window.FB || {};
     else if (!cand || cand.dead || cand.role !== 'match') reason = 'candidate';
     else if (FB.intrigueCaptivityOf &&
         FB.intrigueCaptivityOf(state, cand.id)) reason = 'captive';
-    else if (FB.ageOf(cand, state.date.year) < 12) reason = 'age';
+    else if (FB.ageOf(cand, state.date.year) < 0) reason = 'age';
     else if (FB.spousesOf(state, cand).length || cand.betrothedId) reason = 'pledged';
     else if (cand.sex === child.sex) reason = 'doctrine';
     else if (!FB.faithAllowsMarriage(state, child.religion, cand.religion) ||
@@ -3461,7 +3461,8 @@ window.FB = window.FB || {};
     const steps = [-1, 0, 1];
     child.matchIds = [];
     for (const m of out) {
-      if (!m.career && FB.applyMarriageBackground) {
+      if (!m.career && FB.ageOf(m, y) >= 16 &&
+          FB.applyMarriageBackground) {
         FB.applyMarriageBackground(m, FB.stationOf(m), m.epithetMsg);
       }
       child.matchIds.push(m.id);
@@ -3471,11 +3472,13 @@ window.FB = window.FB || {};
       const m = FB.makeCharacter(state, {
         sex: child.sex === 'm' ? 'f' : 'm',
         culture: child.culture, religion: child.religion,
-        born: y - FB.clamp(cAge + FB.ri(-2, 5), 12, 40),
+        born: y - FB.clamp(cAge + FB.ri(-2, 5), 0, 40),
         role: 'match', station: st, quality: st + FB.ri(0, 1)
       });
       m.epithetMsg = FB.pick(SUITOR_EPITHETS[st][m.sex]);
-      if (FB.applyMarriageBackground) FB.applyMarriageBackground(m, st, m.epithetMsg);
+      if (FB.ageOf(m, y) >= 16 && FB.applyMarriageBackground) {
+        FB.applyMarriageBackground(m, st, m.epithetMsg);
+      }
       const sum = Math.round((FBDATA.balance.dowryByStation[st] || 0) * FB.rf(0.7, 1.3));
       const marriage = FB.marriageTerms(state, child, m, sum);
       if (marriage.subjectPays) m.dowryAsk = sum; else m.dowryDue = sum;
@@ -3528,6 +3531,69 @@ window.FB = window.FB || {};
     }
   };
 
+  FB.betrothalBreakStatus = function (state, character) {
+    const p = state && state.player;
+    const c = character && typeof character === 'object'
+      ? character : state && state.chars && state.chars[character];
+    const partner = state && state.chars && c && c.betrothedId &&
+      state.chars[c.betrothedId];
+    const managedDescendant = !!(state && c &&
+      FB.playerDescendantKind(state, c.id) &&
+      FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id));
+    const managedKin = !!(state && c && FB.manageableKinKind &&
+      FB.manageableKinKind(state, c.id));
+    const controlled = !!(p && c &&
+      (c.id === p.charId || managedDescendant || managedKin));
+    const mutual = !!(partner && !partner.dead &&
+      partner.betrothedId === c.id);
+    const ready = !!(controlled && !c.dead && mutual &&
+      !FB.spousesOf(state, c).length && !FB.spousesOf(state, partner).length);
+    return {
+      relevant:!!(controlled && c && c.betrothedId),
+      ready:ready,
+      character:c || null,
+      partner:partner || null,
+      dowryForfeited:mutual
+        ? Math.max(0, Number(partner.dowryAsk) || 0) : 0,
+      reason:ready ? '' : FB.T('This betrothal cannot be ended now.')
+    };
+  };
+
+  function clearManagedBetrothal(state, character, partner) {
+    const partnerName = partner.name;
+    const forfeited = Math.max(0, Number(partner.dowryAsk) || 0);
+    const discardPartner = partner.role === 'kinspouse' &&
+      !partner.royalLine && state.player.courtingId !== partner.id;
+    character.betrothedId = null;
+    if (partner.betrothedId === character.id) partner.betrothedId = null;
+    delete partner.dowryAsk;
+    delete partner.dowryDue;
+    if (partner.role === 'kinspouse') partner.role = null;
+    if (discardPartner) delete state.chars[partner.id];
+    return { partnerName:partnerName, forfeited:forfeited };
+  }
+
+  FB.breakBetrothal = function (state, character) {
+    const status = FB.betrothalBreakStatus(state, character);
+    if (!status.ready) return false;
+    const result = clearManagedBetrothal(
+      state, status.character, status.partner);
+    FB.touchFamily();
+    FB.news(state, result.forfeited
+      ? FB.msg('news.event.kin_pledge_broken_forfeit',
+        '💔 The pledge between {child} and {former} is ended; the paid dowry of {money:gold} is not recovered.', {
+          child:status.character.name,
+          former:result.partnerName,
+          gold:result.forfeited
+        })
+      : FB.msg('news.event.kin_pledge_broken',
+        '💔 The pledge between {child} and {former} is ended.', {
+          child:status.character.name,
+          former:result.partnerName
+        }));
+    return result;
+  };
+
   FB.sealKinMatch = function (state, child, cand, options) {
     const replacingId = options && options.replacingBetrothedId;
     const former = replacingId && state.chars[replacingId];
@@ -3539,24 +3605,16 @@ window.FB = window.FB || {};
     const p = state.player;
     FB.discardMatches(state, child, cand.id);
     if (former) {
-      const formerName = former.name;
-      const forfeited = Math.max(0, Number(former.dowryAsk) || 0);
-      child.betrothedId = null;
-      if (former.betrothedId === child.id) former.betrothedId = null;
-      delete former.dowryAsk;
-      delete former.dowryDue;
-      if (former.role === 'kinspouse') former.role = null;
-      if (!former.royalLine && state.player.courtingId !== former.id) {
-        delete state.chars[former.id];
-      }
-      FB.news(state, forfeited
+      const cleared = clearManagedBetrothal(state, child, former);
+      FB.news(state, cleared.forfeited
         ? FB.msg('news.event.kin_pledge_replaced_forfeit',
           '💔 The pledge between {child} and {former} is set aside; the paid dowry of {money:gold} is not recovered.', {
-            child:child.name, former:formerName, gold:forfeited
+            child:child.name, former:cleared.partnerName,
+            gold:cleared.forfeited
           })
         : FB.msg('news.event.kin_pledge_replaced',
           '💔 The pledge between {child} and {former} is set aside.', {
-            child:child.name, former:formerName
+            child:child.name, former:cleared.partnerName
           }));
     }
     child.betrothedId = cand.id;
@@ -3589,6 +3647,9 @@ window.FB = window.FB || {};
             FB.intrigueCaptivityOf(state, sp.id)))) return false;
     const B = FBDATA.balance, p = state.player;
     const descendantKind = FB.playerDescendantKind(state, k.id);
+    if (!sp.career && sp.epithetMsg && FB.applyMarriageBackground) {
+      FB.applyMarriageBackground(sp, FB.stationOf(sp), sp.epithetMsg);
+    }
     /* A managed kinsman (descendant or resident unwed sibling) establishing
        another household leaves work and equipment assignments behind. The
        current head's own pledged wedding is exempt. */

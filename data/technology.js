@@ -287,11 +287,15 @@ window.FBDATA = window.FBDATA || {};
       },
       descendant_betrothal_replacement:{
         mode:'none',
-        rationale:'Arranging or revising a managed descendant’s pledge is baseline household and social authority, not a capability created by research.'
+        rationale:'Arranging a managed descendant’s pledge from birth or revising it later is baseline household and social authority, not a capability created by research.'
+      },
+      betrothal_release:{
+        mode:'none',
+        rationale:'Ending a living mutual pledge under the household’s authority is baseline family and social agency, not a capability created by research.'
       },
       player_initiated_royal_family_matches:{
         mode:'none',
-        rationale:'Negotiating a marriage between a managed descendant and an accessible royal family is baseline dynastic diplomacy, not a capability created by research.'
+        rationale:'Negotiating a pledge from birth between a managed descendant and an accessible royal family is baseline dynastic diplomacy, not a capability created by research.'
       },
       auction_item_lots:{
         mode:'none',

@@ -275,12 +275,14 @@ a semantic feature.
 
 Player-initiated descendant-to-royal marriage negotiation is recorded as
 `player_initiated_royal_family_matches` with mode `none`. It is baseline dynastic and
-social play, while the counterpart court's research is AI-controlled, so no credible
-technology gate belongs on access to the proposal.
+social play from birth onward, while the counterpart court's research is AI-controlled,
+so no credible technology gate belongs on access to the proposal.
 
-Household-initiated first matches and exact betrothal replacement are recorded as
-`descendant_betrothal_replacement` with mode `none`. They exercise baseline family and
-social authority; research should not prevent correcting a managed descendant's pledge.
+Household-initiated matches from birth and exact betrothal replacement are recorded as
+`descendant_betrothal_replacement` with mode `none`. Explicitly ending a living mutual
+pledge is separately recorded as `betrothal_release`, also with mode `none`. Both exercise
+baseline family and social authority; research should neither delay the first arrangement
+nor prevent correcting or ending a managed pledge.
 
 Most entries expose a discrete practice, rule, building, enterprise, career, unit access,
 or research slot through `unlocks`. Data definitions use `requiresTech` for buildings,

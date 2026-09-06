@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.171.3';
+FB.VERSION = '1.171.4';
 FB.CHANGELOG = [
+  { v: '1.171.4', date: '2026-09-05', changes: [
+    'Betrothals can now be arranged from birth and ended before the wedding through family management or an inherited pledge.'
+  ] },
   { v: '1.171.3', date: '2026-09-05', changes: [
     'Card details now stay accessible when the layout narrows, without an old tooltip covering their controls.'
   ] },

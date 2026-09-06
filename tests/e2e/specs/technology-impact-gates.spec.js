@@ -165,6 +165,7 @@ test('the prospective review ledger and every gate schema validate together',
       'auction_enterprise_lots',
       'auction_item_lots',
       'auction_title_rights',
+      'betrothal_release',
       'bounded_market_auctions',
       'broad_family_succession',
       'building_arsenal',
@@ -258,6 +259,7 @@ test('the prospective review ledger and every gate schema validate together',
       'war_justification_selection'
     ]);
     const additiveNoneIds = [
+      'betrothal_release',
       'broad_family_succession',
       'county_community_conversion',
       'descendant_betrothal_replacement',
@@ -287,7 +289,7 @@ test('the prospective review ledger and every gate schema validate together',
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
       .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
         'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
-        'none', 'none', 'none', 'none', 'none', 'none', 'none']);
+        'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none']);
     const additiveHardIds = [
       'enterprise_upgrades',
       'ruler_household_establishments'

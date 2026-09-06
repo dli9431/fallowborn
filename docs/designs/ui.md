@@ -1045,11 +1045,15 @@ training-cost-modified seasonal fee; unavailable rank, technology, town, focus, 
 combinations remain visible with their exact reason. A school with annual mortality states
 its per-term and four-term danger in the picker. The upbringing summary repeats the current
 arrangement, projected chance, fee, paused payment state, and any completed dangerous terms
-even after the child switches to another arrangement. From age 12, child and grandchild
+even after the child switches to another arrangement. From birth, child and grandchild
 sheets also expose the same arranged-match picker. Career, guild, religious-standing,
 enterprise, and equipment controls use managed household eligibility at both render and
 action time, so a stale sheet cannot manage someone who has married out or otherwise left.
-Every live betrothal commitment names the other party as a character-sheet link. Royal
+Every live betrothal commitment names the other party as a character-sheet link. A managed
+descendant's picker may replace or explicitly end the pledge; a manageable sibling's sheet
+and Household Plan row may end an accepted pledge, and an inherited protagonist pledge
+exposes the same release on Self. Every release surface confirms that paid dowry is forfeited.
+Royal
 family sheets keep their family-marriage control visible after a pledge: a pledge to a
 managed descendant reopens that descendant's replacement picker, while other commitments
 show the exact reason a new arrangement cannot be proposed.

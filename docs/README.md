@@ -199,7 +199,7 @@ Time passes **day by day** (90-day seasons, 360-day years).
    instruction raises the yearly learning chance, while schools and masters charge every
    season. Gentry households whose realm knows Scholarly Networks may pay dearly for the
    academy's broad 75% instruction and noble connections, but each completed term adds a
-   small fatality risk at New Year—four terms reach 2%. From age twelve you can also arrange
+   small fatality risk at New Year—four terms reach 2%. From birth you can also arrange
    a child's match from
    their sheet: three families stand ready to hear an offer — a daughter's dowry is paid when
    the pledge is sealed, a son's bride brings hers to the wedding, and the vows follow once
@@ -250,8 +250,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
    in one place: education, instruction and fees, work and standing, enterprise or office
    assignments, match eligibility, and equipped-item/slot counts. Select an available cell
    to use the same detailed controls found on character and Work & Enterprises sheets.
-   An eligible descendant's Match cell can arrange a first pledge or reopen a living
-   betrothal to choose another family; changing it forfeits any dowry already paid.
+   An eligible descendant's Match cell can arrange a first pledge from birth or reopen a living
+   betrothal to choose another family or end the pledge; either change forfeits any dowry
+   already paid. A resident manageable sibling can end an accepted pledge from the same plan
+   or their character sheet, and an inherited pledge can be ended from the *Self* tab.
    **Work & Enterprises** uses the same counted sections and large-list search. Its filters
    separate attention, settled work, staffed or idle enterprises, and unavailable people;
    every enterprise row still opens the exact owned instance.

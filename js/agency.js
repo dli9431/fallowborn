@@ -620,7 +620,7 @@ window.FB = window.FB || {};
       return FB.T('Choose a resident child or grandchild whose marriage you manage.');
     }
     if (code === 'partner') return FB.T('This person is not an available royal family member.');
-    if (code === 'age') return FB.T('Both partners must be at least 12.');
+    if (code === 'age') return FB.T('Both partners must already be born.');
     if (code === 'pledged') return FB.T('One of these characters is already married or betrothed.');
     if (code === 'captive') return FB.T('A captive cannot enter or arrange a marriage.');
     if (code === 'faith') return FB.T('The royal court requires an exact shared faith for this arranged match.');
@@ -679,8 +679,8 @@ window.FB = window.FB || {};
         String(member.charId || '') !== String(partner.id) ||
         partner.dead || (FB.isReigningRealmRuler &&
           FB.isReigningRealmRuler(state, partner))) reason = 'partner';
-    else if (FB.ageOf(target, state.date.year) < 12 ||
-        FB.ageOf(partner, state.date.year) < 12) reason = 'age';
+    else if (FB.ageOf(target, state.date.year) < 0 ||
+        FB.ageOf(partner, state.date.year) < 0) reason = 'age';
     else if (charCommitted(state, target) || charCommitted(state, partner)) {
       reason = 'pledged';
     } else if ((state.player.flags && state.player.flags.in_prison) ||
@@ -759,8 +759,8 @@ window.FB = window.FB || {};
         .indexOf(rulerAim.id) < 0) return null;
     var family = (familySnapshot || FB.agencyFamilyMembers(state))
       .filter(function (c) {
-        var age = FB.ageOf(c, state.date.year);
-        return age >= 12 && !charCommitted(state, c) &&
+        return FB.ageOf(c, state.date.year) >= 0 &&
+          !charCommitted(state, c) &&
           !(FB.papacyCelibateSnapshot &&
             FB.papacyCelibateSnapshot(state, c)) &&
           !(FB.isReigningRealmRuler &&
@@ -771,7 +771,8 @@ window.FB = window.FB || {};
     for (var i = 0; i < members.length; i++) {
       var member = members[i];
       var partner = member.charId && state.chars[member.charId];
-      if (!partner || partner.dead || FB.ageOf(partner, state.date.year) < 12 ||
+      if (!partner || partner.dead ||
+          FB.ageOf(partner, state.date.year) < 0 ||
           charCommitted(state, partner) ||
           (FB.papacyCelibateSnapshot &&
             FB.papacyCelibateSnapshot(state, partner))) continue;
@@ -1379,8 +1380,8 @@ window.FB = window.FB || {};
     var partner = state.chars[ctx.partnerId];
     var offerStatus = FB.agencyMarriageOfferStatus(state, partner, target);
     return !!(target && partner &&
-      FB.ageOf(target, state.date.year) >= 12 &&
-      FB.ageOf(partner, state.date.year) >= 12 &&
+      FB.ageOf(target, state.date.year) >= 0 &&
+      FB.ageOf(partner, state.date.year) >= 0 &&
       !charCommitted(state, target) &&
       !charCommitted(state, partner) &&
       !(FB.papacyCelibateSnapshot &&
@@ -1404,8 +1405,10 @@ window.FB = window.FB || {};
     var partner = state.chars[ctx.partnerId];
     if (!target || !partner) return false;
     var dowry = Math.max(0, Number(ctx.dowry) || 0);
-    if (ctx.playerPays === 'yes') state.player.gold -= dowry;
-    else partner.dowryDue = dowry;
+    if (ctx.playerPays === 'yes') {
+      state.player.gold -= dowry;
+      partner.dowryAsk = dowry;
+    } else partner.dowryDue = dowry;
     target.betrothedId = partner.id;
     partner.betrothedId = target.id;
     partner.role = 'kinspouse';
