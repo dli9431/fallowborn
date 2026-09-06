@@ -414,12 +414,10 @@ Steps:
 5. Add project start/change/stop controls only where the player's rank and authority make
    them credible. Preview piety, prestige, Standing, Common Voice, unrest, and relationship
    costs before confirmation.
-6. Keep the Self-tab Faith details sheet character-centered. It may link to the existing
-   personal/household/realm **Convert faith…** picker, and a landed ruler may receive a
-   **View faith in your lands** shortcut that opens an explicit Land county context. These
-   are navigation aids, not alternate county-project controls. Preserve an equally direct
-   Land route for cultural assimilation rather than nesting territorial policy beneath
-   religion.
+6. Keep the Self-tab Faith and Culture details sheets character-centered. Each may link to
+   its existing personal conversion picker, but neither provides county navigation or
+   alternate county-project controls. Territorial faith conversion and cultural
+   assimilation remain directly available in Land.
 7. Route every new string through i18n as authored. Catalog regeneration remains an
    integration-only action when separately requested by the owner.
 

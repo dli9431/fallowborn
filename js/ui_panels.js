@@ -2360,6 +2360,20 @@ window.FB = window.FB || {};
     return FB.T('Family surname');
   }
 
+  function identityConversionActionHtml(id, label, details) {
+    const detailsId = id + '-details';
+    return '<div class="identity-conversion-action settcard" ' +
+      'aria-describedby="' + esc(detailsId) + '"><button type="button" ' +
+      'class="actionbtn" id="' + esc(id) + '" aria-describedby="' +
+      esc(detailsId) + '">' + esc(label) + '</button><span ' +
+      'class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+      esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span><div ' +
+      'class="settcard-details identity-conversion-action-details hidden" ' +
+      'id="' + esc(detailsId) + '"><p>' + esc(details) + '</p></div></div>';
+  }
+
   UI.showCultureDetails = function (cultureId) {
     const s = FB.state;
     const culture = s && FBDATA.cultures && FBDATA.cultures[cultureId];
@@ -2378,10 +2392,18 @@ window.FB = window.FB || {};
       kv('Dynasty style', esc(cultureDynastyStyleText(culture))) +
       (maleNames ? kv('Men’s names', esc(maleNames)) : '') +
       (femaleNames ? kv('Women’s names', esc(femaleNames)) : '') +
+      panelh('Actions') + '<div class="gm-list identity-conversion-actions">' +
+      identityConversionActionHtml(
+        'culture-details-adopt', FB.T('Adopt a new culture…'),
+        FB.T('Open the personal or household culture picker.')) + '</div>' +
       '<div class="gm-footer"><button class="btn" ' +
       'id="culture-details-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(icon + ' ' + cultureName(s, cultureId), h);
     $('culture-details-close').addEventListener('click', UI.closeModal);
+    $('culture-details-adopt').addEventListener('click', function () {
+      UI.closeModal();
+      UI.showConversionPicker('culture');
+    });
   };
 
   function foundedFaithOriginText(s, religionId, rel, parent, founder,
@@ -2502,26 +2524,11 @@ window.FB = window.FB || {};
       kv('Clergy rule from', esc(faithRuleSource(
         s, religionId, 'clergyMarriage')));
     h += panelh('Actions') +
-      '<div class="gm-list faith-details-actions"><button type="button" ' +
-      'class="actionbtn" id="faith-details-convert">' +
-      esc(FB.T('Convert your faith…')) + '<span class="adesc">' +
-      esc(FB.T('Open the personal, household, or realm faith picker.')) +
-      '</span></button>';
-    const faithLandIds = s.player.tier >= 3
-      ? ((s.player.provs || []).length
-        ? s.player.provs.slice() : [s.player.provinceId]) : [];
-    for (let i = 0; i < faithLandIds.length; i++) {
-      const landPid = faithLandIds[i];
-      const land = FB.world.byId[landPid];
-      if (!land || land.wasteland) continue;
-      h += '<button type="button" class="actionbtn faith-details-land" ' +
-        'data-faith-land-pid="' + esc(landPid) + '">' +
-        esc(FB.T('View faith in {county}', { county:land.name })) +
-        '<span class="adesc">' + esc(FB.T(
-          'Open this named county in Land; territorial projects remain there.')) +
-        '</span></button>';
-    }
-    h += '</div><div class="gm-footer"><button class="btn" id="faith-details-close">' +
+      '<div class="gm-list identity-conversion-actions">' +
+      identityConversionActionHtml(
+        'faith-details-convert', FB.T('Convert your faith…'),
+        FB.T('Open the personal, household, or realm faith picker.')) +
+      '</div><div class="gm-footer"><button class="btn" id="faith-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(rel.icon + ' ' + religionName(s, religionId), h);
     $('faith-details-close').addEventListener('click', UI.closeModal);
@@ -2529,15 +2536,6 @@ window.FB = window.FB || {};
       UI.closeModal();
       UI.showConversionPicker('faith');
     });
-    document.querySelectorAll('#gm-body .faith-details-land').forEach(
-      function (button) {
-        button.addEventListener('click', function () {
-          const pid = button.getAttribute('data-faith-land-pid');
-          UI.closeModal();
-          if (FB.map && FB.map.centerOn) FB.map.centerOn(pid);
-          UI.selectProvince(pid);
-        });
-      });
   };
 
   let rankDetailsSignature = null;

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.171.8';
+FB.VERSION = '1.171.9';
 FB.CHANGELOG = [
+  { v: '1.171.9', date: '2026-09-06', changes: [
+    'Faith and Culture sheets now keep territorial projects in Land, while each retains its personal conversion action.'
+  ] },
   { v: '1.171.8', date: '2026-09-06', changes: [
     'The Self Culture sheet now presents regional and naming traditions without conversion or county actions.'
   ] },

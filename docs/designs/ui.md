@@ -1397,15 +1397,14 @@ separately from the trait chip. Faith names on Self and Land are focusable links
 details sheet with an in-world origin account, founder/date/place, lineage,
 directional parent relations, authority, spouse and clergy rules, and doctrine sources.
 That sheet keeps conversion character-centered: **Convert your faith…** opens the existing
-personal/household/realm picker, while landed characters receive one **View faith in
-{county}** navigation action per explicitly named direct county (or their named baronial
-home). It closes the character sheet and selects that county in Land. It never starts,
+personal/household/realm picker. It contains no county-navigation actions and never starts,
 changes, stops, or silently chooses a territorial project.
 The culture value beside it is also a focusable link. Its compact, informational Culture
 sheet shows the player's current culture, regional tradition, dynasty naming style, and
-representative men's and women's names. It contains no conversion or county-navigation
-actions: personal culture adoption remains in Deeds and territorial assimilation remains in
-Land.
+representative men's and women's names. **Adopt a new culture…** opens the existing
+personal/household picker. Like Faith, it contains no county-navigation actions;
+territorial assimilation remains in Land. Both identity-sheet conversion actions keep their
+supporting explanation in the shared desktop tooltip or compact `?` disclosure.
 The selected Land county is the canonical community surface. Its unchanged county
 population, carrying-capacity, and annual-change rows are followed by independently
 aggregated Culture and Faith cards; counts sum to the population row, percentages are

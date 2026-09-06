@@ -490,31 +490,29 @@ test('settlement policy penalties are weighted instead of county modifiers',
     expect(result.afterBothStop).toBeCloseTo(result.before.tax, 8);
   });
 
-test('Faith details links to personal conversion and an explicit Land county',
+test('Faith details open personal conversion without territorial navigation',
   async function ({ page }) {
-    const setup = await configureCountyProjectUi(page);
+    await page.setViewportSize({ width:1280, height:800 });
+    await configureCountyProjectUi(page);
     await page.evaluate(function () { FB.ui.showFaithDetails('catholic'); });
+    const action = page.locator('.identity-conversion-action', {
+      has:page.locator('#faith-details-convert')
+    });
     await expect(page.locator('#faith-details-convert')).toBeVisible();
+    await expect(page.locator('[data-faith-land-pid]')).toHaveCount(0);
+    await expect(page.locator('.faith-details-land')).toHaveCount(0);
+    await expect(action.locator('.settcard-info')).toBeHidden();
+    await expect(action.locator('.identity-conversion-action-details'))
+      .toBeHidden();
+    await action.hover();
+    await expect(page.locator('#tooltip')).toContainText(
+      'Open the personal, household, or realm faith picker.');
     await page.locator('#faith-details-convert').click();
     await expect(page.locator('#gm-title')).toHaveText('Convert faith');
     await expect(page.locator('#conv-search')).toBeVisible();
-    await page.locator('#conv-close').click();
-    await page.evaluate(function () { FB.ui.showFaithDetails('catholic'); });
-    const land = page.locator(
-      '[data-faith-land-pid="' + setup.pid + '"]');
-    await expect(land).toContainText(setup.county);
-    await expect(land).toContainText('territorial projects remain there');
-    await land.click();
-    expect(await page.evaluate(function () {
-      return {
-        selected:FB.map.selected,
-        tab:FB.ui._shared.activeTab,
-        modalClosed:document.getElementById('genmodal').classList.contains('hidden')
-      };
-    })).toEqual({ selected:setup.pid, tab:'prov', modalClosed:true });
   });
 
-test('Self culture details show regional and naming traditions without actions',
+test('Self culture details show traditions and open personal conversion',
   async function ({ page }) {
     await configureCountyProjectUi(page);
     await page.evaluate(function () {
@@ -542,12 +540,29 @@ test('Self culture details show regional and naming traditions without actions',
     await expect(body.locator('.kv').filter({
       has:page.locator('span', { hasText:'Women’s names' })
     }).locator('b')).toHaveText('Gormlaith, Derbail, Mor, Eithne');
-    await expect(page.locator('#culture-details-adopt')).toHaveCount(0);
+    const action = page.locator('.identity-conversion-action', {
+      has:page.locator('#culture-details-adopt')
+    });
+    await expect(page.locator('#culture-details-adopt'))
+      .toContainText('Adopt a new culture…');
     await expect(page.locator('[data-culture-land-pid]')).toHaveCount(0);
     await expect(page.locator('.modal-title-info')).toHaveCount(0);
+    await expect(action.locator('.identity-conversion-action-details'))
+      .toBeHidden();
 
-    await page.locator('#culture-details-close').click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await page.setViewportSize({ width:390, height:740 });
+    const info = action.locator('.settcard-info');
+    await expect(info).toBeVisible();
+    await info.click();
+    await expect(info).toHaveAttribute('aria-expanded', 'true');
+    await expect(action.locator('.identity-conversion-action-details'))
+      .toBeVisible();
+    await expect(action.locator('.identity-conversion-action-details'))
+      .toContainText('Open the personal or household culture picker.');
+
+    await page.locator('#culture-details-adopt').click();
+    await expect(page.locator('#gm-title')).toHaveText('Adopt a new culture');
+    await expect(page.locator('#conv-search')).toBeVisible();
   });
 
 test('community triggers and effects retain exact county and settlement context',

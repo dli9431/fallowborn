@@ -76,11 +76,11 @@ same pressure/resistance calculation as an active project, without temporarily w
 to state. Starting or changing a baseline project has no immediate piety, prestige,
 Standing, or relationship charge; the confirmation says so explicitly and presents the
 actual Common Voice, unrest, economic, and migration consequences of its policy. The Self
-Faith sheet remains character-centered and links separately to its personal conversion
-picker and to explicitly named Land counties, but never owns or silently targets a
-territorial project. The Self Culture sheet is informational: it shows the player's current
-culture, regional tradition, dynasty style, and representative names. Culture adoption
-remains in Deeds, while territorial assimilation remains in Land.
+Faith and Culture sheets remain character-centered. Each links only to its personal
+conversion picker and never owns, navigates to, or silently targets a territorial project.
+Culture also shows the player's current culture, regional tradition, dynasty style, and
+representative names. Territorial faith conversion and cultural assimilation remain in
+Land.
 
 Settlement projects reuse the same saved project fields, annual pressure/resistance
 model, and policy consequences under `settlementCommunityProjects[settlementIndex]`.
