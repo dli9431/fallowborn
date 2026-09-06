@@ -206,7 +206,7 @@ new generated-faith snapshots remain renderable.
 Paid doctrine reform uses this graph directly. The first change creates an in-fold
 campaign child. Further departures increase the price and change the parent relation to
 schismatic, then hostile. A schismatic reform no longer recognizes the inherited
-central office. Removing the final departure remaps live followers and project targets to
-the saved direct parent, so a full doctrinal return is recognized as the original faith
-rather than an empty custom branch; the historical child stays resolvable but is no longer
-assignable. Full rules: [doctrines.md](doctrines.md).
+central office. Removing the player's final departure returns that character to the saved
+direct parent. Existing followers and territorial projects keep the campaign child and
+its doctrines until explicit conversion changes them, so a personal return is recognized
+without erasing an established local faith. Full rules: [doctrines.md](doctrines.md).

@@ -19,6 +19,10 @@ picker for the exact home settlement and new branch; choosing a policy still sta
 ordinary gradual local project rather than transferring population immediately. See
 [doctrines.md](doctrines.md).
 
+Returning the final doctrine departure moves only the player back to the remembered parent.
+Communities already converted into the branch and projects still targeting it remain intact;
+moving those followers back to the parent requires the same explicit, gradual conversion.
+
 ## Scopes
 
 - `self` — the player character only.
@@ -103,9 +107,11 @@ policy rows keep the immediate action, estimated annual pace, and resistance vis
 Descriptions, scaled county consequences, replacement terms, and annual timing use the
 shared desktop tooltip or compact-layout `?` disclosure. Selecting a policy starts or
 replaces the local project immediately; settlement policy has no separate confirmation
-sheet. A count can direct any settlement in a directly held county; a baron can direct
-only the saved home settlement. County Land controls remain county-wide and retain their
-review/confirmation step, and Self, Faith, or Culture never chooses a settlement implicitly.
+sheet. Stopping a local project is likewise immediate and redraws the settlement sheet
+without a confirmation view. A count can direct any settlement in a directly held county;
+a baron can direct only the saved home settlement. County Land controls remain county-wide
+and retain their review/confirmation step, and Self, Faith, or Culture never chooses a
+settlement implicitly.
 
 On the settlement sheet, each local-project card keeps only the axis, target, policy,
 current annual estimate or paused state, and resistance visible. The policy description,

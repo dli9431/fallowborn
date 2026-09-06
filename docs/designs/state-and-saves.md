@@ -317,10 +317,11 @@ Culture-reform state follows the same additive pattern at save version 3.
 `state.cultureNextId` supplies deterministic ids. Restore supplies `{}` and `1` to old
 lives before recompiling the effective culture graph. Authored culture data remains in
 `FBDATA.cultures`; compiled lineage, source maps, and territorial doctrine shares are
-derived only. Returning the last doctrine override to its inherited value remaps live
-character, realm, community, and project references to the remembered parent id without
-adding an alias, then marks the unused child inactive for future conversion targets. New
-doctrine children carry an additive `doctrineBranch:true` marker;
+derived only. Returning the player's last doctrine departure moves that character to the
+remembered parent id without aliasing or rewriting the saved child. Character, realm,
+community, and project references that already use the child remain valid and retain its
+saved doctrines until explicit conversion changes them. New doctrine children carry an
+additive `doctrineBranch:true` marker;
 the deterministic v1.172.0 id/name shape remains recognized for saves made before that
 marker. See
 [doctrines.md](doctrines.md).

@@ -344,6 +344,18 @@ test('settlement sheets retain local context and never mutate remote browsing',
       '[data-settlement-community-project="faith"]')).toContainText(
       'Greek Christianity');
 
+    await page.locator(
+      '[data-settlement-community-project="faith"] ' +
+      '.settlement-community-project-stop').click();
+    await expect(page.locator('#gm-title')).toContainText(settlement.name);
+    await expect(page.locator('#county-project-stop-confirm')).toHaveCount(0);
+    await expect(page.locator(
+      '[data-settlement-community-project="faith"]')).toContainText(
+      'No active project.');
+    expect(await page.evaluate(function (pid) {
+      return FB.settlementCommunityProject(FB.state, pid, 0, 'faith');
+    }, setup.pid)).toBeNull();
+
     const remote = await page.evaluate(function () {
       const s = FB.state;
       const pid = FB.world.provs.filter(function (province) {

@@ -520,7 +520,7 @@ test('paid doctrine reform persists faith and culture branches with escalating d
     expect(result.restoredFaith).toBe(true);
   });
 
-test('undoing the last doctrine departure restores the remembered parent identity',
+test('returning to a doctrine parent preserves branch followers and projects across saves',
   async function ({ page }, testInfo) {
     primaryFileOnly(testInfo);
     await openGame(page, testInfo);
@@ -591,6 +591,12 @@ test('undoing the last doctrine departure restores the remembered parent identit
         s, 'faith', 'close_kin', 'forbidden');
       me.religion = restoredFaith;
 
+      var saved = JSON.parse(FB.save.serialize());
+      FB.save.restore(JSON.parse(JSON.stringify(saved)));
+      s = FB.state;
+      p = s.player;
+      me = s.chars[p.charId];
+
       var cultureProject = FB.settlementCommunityProject(
         s, pid, settlement, 'culture');
       var faithProject = FB.settlementCommunityProject(
@@ -608,6 +614,8 @@ test('undoing the last doctrine departure restores the remembered parent identit
         cultureProjectTarget:cultureProject && cultureProject.target,
         cultureActive:s.cultures[cultureBranch].active,
         cultureAssignable:FB.cultureAssignable(cultureBranch, s),
+        cultureDoctrineAfter:FB.doctrineOption(
+          s, 'culture', cultureBranch, 'raiding').definition.id,
         cultureOverride:!!(s.cultures[cultureBranch].doctrines &&
           Object.prototype.hasOwnProperty.call(
             s.cultures[cultureBranch].doctrines, 'raiding')),
@@ -623,6 +631,8 @@ test('undoing the last doctrine departure restores the remembered parent identit
         faithProjectTarget:faithProject && faithProject.target,
         faithActive:s.faiths[faithBranch].active,
         faithAssignable:FB.faithAssignable(faithBranch, s),
+        faithDoctrineAfter:FB.doctrineOption(
+          s, 'faith', faithBranch, 'close_kin').definition.id,
         faithOverride:!!(s.faiths[faithBranch].properties.marriage &&
           s.faiths[faithBranch].properties.marriage.kinship &&
           Object.prototype.hasOwnProperty.call(
@@ -639,23 +649,29 @@ test('undoing the last doctrine departure restores the remembered parent identit
     expect(result.cultureFollowingBefore).toBeGreaterThan(0);
     expect(result.restoredCulture).toBe('german');
     expect(result.characterCulture).toBe('german');
-    expect(result.cultureFollowingAfter).toBe(0);
-    expect(result.parentCultureFollowing).toBe(1);
-    expect(result.cultureProjectTarget).toBe('german');
-    expect(result.cultureActive).toBe(false);
-    expect(result.cultureAssignable).toBe(false);
-    expect(result.cultureOverride).toBe(false);
+    expect(result.cultureFollowingAfter)
+      .toBeCloseTo(result.cultureFollowingBefore, 8);
+    expect(result.parentCultureFollowing + result.cultureFollowingAfter)
+      .toBeCloseTo(1, 8);
+    expect(result.cultureProjectTarget).toBe(result.cultureBranch);
+    expect(result.cultureActive).toBeUndefined();
+    expect(result.cultureAssignable).toBe(true);
+    expect(result.cultureDoctrineAfter).toBe('practiced');
+    expect(result.cultureOverride).toBe(true);
     expect(result.faithBranch).toMatch(/^generated_faith_/);
     expect(result.faithDoctrineBranch).toBe(true);
     expect(result.faithFollowingBefore).toBeGreaterThan(0);
     expect(result.restoredFaith).toBe('catholic');
     expect(result.characterFaith).toBe('catholic');
-    expect(result.faithFollowingAfter).toBe(0);
-    expect(result.parentFaithFollowing).toBe(1);
-    expect(result.faithProjectTarget).toBe('catholic');
-    expect(result.faithActive).toBe(false);
-    expect(result.faithAssignable).toBe(false);
-    expect(result.faithOverride).toBe(false);
+    expect(result.faithFollowingAfter)
+      .toBeCloseTo(result.faithFollowingBefore, 8);
+    expect(result.parentFaithFollowing + result.faithFollowingAfter)
+      .toBeCloseTo(1, 8);
+    expect(result.faithProjectTarget).toBe(result.faithBranch);
+    expect(result.faithActive).toBeUndefined();
+    expect(result.faithAssignable).toBe(true);
+    expect(result.faithDoctrineAfter).toBe('sanctioned');
+    expect(result.faithOverride).toBe(true);
     expect(result.unchangedIndependentFaith).toBe(result.independentFaith);
     expect(result.independentDoctrineBranch).toBeUndefined();
   });

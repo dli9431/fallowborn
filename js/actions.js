@@ -746,37 +746,12 @@ window.FB = window.FB || {};
     return out;
   };
 
-  function restoreDoctrineIdentity(state, kind, fromId, parentId) {
+  function restorePlayerDoctrineIdentity(state, kind, fromId, parentId) {
     const field = kind === 'faith' ? 'religion' : 'culture';
-    for (const charId in (state.chars || {})) {
-      if (!Object.prototype.hasOwnProperty.call(state.chars, charId)) continue;
-      const character = state.chars[charId];
-      if (character && !character.dead && character[field] === fromId) {
-        character[field] = parentId;
-      }
-    }
-    for (const realmId in (state.realms || {})) {
-      if (!Object.prototype.hasOwnProperty.call(state.realms, realmId)) continue;
-      const realm = state.realms[realmId];
-      if (!realm || realm.alive === false) continue;
-      if (realm[field] === fromId) realm[field] = parentId;
-      if (realm.ruler && typeof realm.ruler === 'object' &&
-          realm.ruler[field] === fromId) realm.ruler[field] = parentId;
-    }
-    if (FB.remapCommunityIdentity) {
-      FB.remapCommunityIdentity(state, kind, fromId, parentId);
-    }
-    const raw = kind === 'faith'
-      ? state.faiths && state.faiths[fromId]
-      : state.cultures && state.cultures[fromId];
-    if (raw) {
-      raw.active = false;
-      if (kind === 'faith') {
-        raw.assignable = false;
-        if (FB.invalidateFaithState) FB.invalidateFaithState(state);
-      } else if (FB.configureCultures) {
-        FB.configureCultures(state);
-      }
+    const me = state && state.player && state.chars &&
+      state.chars[state.player.charId];
+    if (me && me[field] === fromId) {
+      me[field] = parentId;
     }
   }
 
@@ -803,7 +778,7 @@ window.FB = window.FB || {};
         }, { convertFounder:true });
         if (!created) return false;
         identityId = created;
-      } else {
+      } else if (!status.restoresParent) {
         const rawFaith = state.faiths[identityId];
         if (!rawFaith.properties || typeof rawFaith.properties !== 'object') {
           rawFaith.properties = {};
@@ -837,7 +812,7 @@ window.FB = window.FB || {};
         if (!created) return false;
         me.culture = created;
         identityId = created;
-      } else {
+      } else if (!status.restoresParent) {
         const rawCulture = state.cultures[identityId];
         if (status.restoresDoctrine) {
           doctrineDelete(rawCulture, found.doctrine.path);
@@ -849,7 +824,7 @@ window.FB = window.FB || {};
       }
     }
     if (status.restoresParent) {
-      restoreDoctrineIdentity(state, kind, identityId, status.parentId);
+      restorePlayerDoctrineIdentity(state, kind, identityId, status.parentId);
       identityId = status.parentId;
     }
     p.piety = Math.max(0, (Number(p.piety) || 0) - status.pietyCost);

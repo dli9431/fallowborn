@@ -3856,53 +3856,45 @@ window.FB = window.FB || {};
         FB.countyCommunityProject(s, pid, kind);
     if (!province || !project ||
         (kind !== 'faith' && kind !== 'culture') || (local && !settlement)) return;
+    if (local) {
+      const stopped = FB.cancelSettlementCommunityProject(
+        FB.state, pid, settlementIndex, kind);
+      if (!stopped) {
+        UI.toast(FB.T(
+          'That settlement project can no longer be stopped.'));
+      }
+      UI.showSettlement(pid, settlementIndex);
+      UI.refresh();
+      return;
+    }
     const target = countyProjectTargetName(s, kind, project.target);
-    const stopText = local ? FB.T(
-      'Stop the {kind} project toward {target} in {settlement}, {county}? Population already changed will remain as it is.', {
-        kind:kind === 'faith' ? FB.T('faith') : FB.T('culture'),
-        target:target, settlement:settlement.name, county:province.name
-      }) : FB.T(
+    const stopText = FB.T(
       'Stop the {kind} project toward {target} in {county}? Population already changed will remain as it is.', {
         kind:kind === 'faith' ? FB.T('faith') : FB.T('culture'),
         target:target, county:province.name
       });
-    const continuation = local
-      ? FB.T('Its settlement-weighted county effects end when enforcement stops.')
-      : FB.T('Any existing county modifier continues until its displayed expiry.');
+    const continuation = FB.T(
+      'Any existing county modifier continues until its displayed expiry.');
     const h = '<div class="gm-body-text"><p>' + esc(stopText) +
       '</p><p>' + esc(continuation) +
       '</p></div><div class="gm-list"><button type="button" ' +
       'class="actionbtn" id="county-project-stop-confirm">' +
-      esc(local ? FB.T('Stop project in {settlement}, {county}', {
-        settlement:settlement.name, county:province.name
-      }) : FB.T('Stop project in {county}', { county:province.name })) +
+      esc(FB.T('Stop project in {county}', { county:province.name })) +
       '</button><button type="button" class="actionbtn" ' +
       'id="county-project-stop-cancel">' + esc(FB.T('Keep project')) +
       '</button></div>';
-    openModal(local
-      ? FB.T('Stop project · {settlement}, {county}', {
-        settlement:settlement.name, county:province.name
-      })
-      : FB.T('Stop project · {county}', { county:province.name }), h, {
+    openModal(FB.T('Stop project · {county}', { county:province.name }), h, {
       modalClass:'county-community-modal', noFocus:true
     });
     $('county-project-stop-confirm').addEventListener('click', function () {
-      const stopped = local
-        ? FB.cancelSettlementCommunityProject(
-          FB.state, pid, settlementIndex, kind)
-        : FB.cancelCountyCommunityProject(FB.state, pid, kind);
+      const stopped = FB.cancelCountyCommunityProject(FB.state, pid, kind);
       if (!stopped) {
-        UI.toast(local
-          ? FB.T('That settlement project can no longer be stopped.')
-          : FB.T('That county project can no longer be stopped.'));
+        UI.toast(FB.T('That county project can no longer be stopped.'));
       }
-      if (local) UI.showSettlement(pid, settlementIndex);
-      else UI.closeModal();
+      UI.closeModal();
       UI.refresh();
     });
-    $('county-project-stop-cancel').addEventListener('click', local
-      ? function () { UI.showSettlement(pid, settlementIndex); }
-      : UI.closeModal);
+    $('county-project-stop-cancel').addEventListener('click', UI.closeModal);
   };
 
   function greatHolyWarRealmName(s, rid) {

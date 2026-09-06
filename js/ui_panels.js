@@ -2466,7 +2466,7 @@ window.FB = window.FB || {};
           count:doctrineDepartureText(status.divergence),
           relation:doctrineRelationText(kind, status.relation)
         }) + (status.restoresParent ? ' ' + FB.T(
-          'This restores the original parent identity.') : '')
+          'This returns your character to the original parent identity; existing followers keep the branch.') : '')
         : status.reason);
       h += '<div class="identity-conversion-action settcard"><button type="button" ' +
         'class="actionbtn" data-doctrine-option="' + esc(option.id) + '"' +
@@ -2570,7 +2570,7 @@ window.FB = window.FB || {};
       esc(FB.T(option.desc || '')) + '</p><p class="progressnote">' +
       esc(adoptionText) + '</p>' + (status.restoresParent
         ? '<p class="progressnote">' + esc(FB.T(
-          'With no departures left, followers of this branch will be recognized as the original parent identity.')) + '</p>'
+          'With no departures left, your character returns to the original parent identity. Existing followers and territorial projects keep this branch and its doctrines until conversion changes them.')) + '</p>'
         : '') + '<div class="gm-list"><button ' +
       'type="button" class="actionbtn" id="doctrine-confirm">' +
       esc(FB.T('Confirm reform')) + '</button></div><div class="gm-footer">' +

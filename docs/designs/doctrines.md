@@ -75,12 +75,12 @@ already-established territorial traditions.
 The direct parent id remains on every generated definition, and doctrine-founded children
 carry `doctrineBranch:true` so an unrelated event- or mod-founded identity is never collapsed
 merely for sharing the parent's catalog values. Selecting the parent's value removes that
-local override instead of copying it. When the last departure is removed,
-the branch's live characters, political identities, county/settlement cohorts, and active
-community-project targets are consolidated back into the parent id. This makes an exact
-return to German, Catholicism, or another parent recognizable as that original identity;
-the unused generated definition remains resolvable for campaign history but becomes inactive
-and cannot be adopted or targeted by a new community project.
+departure from the player by returning the player character to the remembered parent id.
+It does not rewrite the saved branch: other characters, political identities,
+county/settlement cohorts, and active community-project targets remain with that branch
+and retain its doctrines. This makes an exact personal return to German, Catholicism, or
+another parent recognizable as the original identity without erasing territorial adoption;
+followers move back only through ordinary personal or community conversion.
 
 One or two faith departures remain in the parent's fold. Three become schismatic and
 five become hostile. Crossing into schism removes allegiance to the parent's central

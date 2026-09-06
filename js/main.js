@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.172.1';
+FB.VERSION = '1.172.2';
 FB.CHANGELOG = [
+  { v: '1.172.2', date: '2026-09-06', changes: [
+    'Settlement conversion projects now stop immediately, and returning to a parent doctrine no longer erases communities that adopted the reformed branch.'
+  ] },
   { v: '1.172.1', date: '2026-09-06', changes: [
     'Reformed doctrines now spread through settlement communities over time, with territorial benefits following local believers and full reversions restoring the parent identity.'
   ] },

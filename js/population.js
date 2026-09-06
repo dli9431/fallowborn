@@ -1402,60 +1402,6 @@ window.FB = window.FB || {};
     return total > 0 ? matching / total : 0;
   };
 
-  /* When the last departure is undone, a generated identity is recognized as
-     its remembered parent again. Consolidate live county and settlement
-     cohorts at the population boundary so totals and settlement matrices stay
-     exact; historical records may keep the now-unused generated definition. */
-  FB.remapCommunityIdentity = function (state, kind, fromId, toId) {
-    if (!state || (kind !== 'faith' && kind !== 'culture') || !fromId ||
-        !toId || fromId === toId) return 0;
-    if (!state.population || !state.population.counties) return 0;
-    var field = kind === 'faith' ? 'religion' : 'culture';
-    var counties = state.population.counties;
-    var changed = 0;
-    var touchedIds = [];
-    for (var pid in counties) {
-      if (!own(counties, pid)) continue;
-      var rec = counties[pid];
-      var pr = provinceDef(pid);
-      if (!rec || !pr || pr.wasteland || !Array.isArray(rec.communities)) {
-        continue;
-      }
-      var touched = false;
-      for (var ci = 0; ci < rec.communities.length; ci++) {
-        if (rec.communities[ci][field] !== fromId) continue;
-        changed += Math.max(0, Number(rec.communities[ci].count) || 0);
-        rec.communities[ci][field] = toId;
-        touched = true;
-      }
-      if (rec.identity && rec.identity[field] === fromId) {
-        rec.identity[field] = toId;
-        touched = true;
-      }
-      if (rec.communityProjects && rec.communityProjects[kind] &&
-          rec.communityProjects[kind].target === fromId) {
-        rec.communityProjects[kind].target = toId;
-        touched = true;
-      }
-      var local = rec.settlementCommunityProjects || {};
-      for (var settlement in local) {
-        if (!own(local, settlement)) continue;
-        var project = local[settlement] && local[settlement][kind];
-        if (project && project.target === fromId) {
-          project.target = toId;
-          touched = true;
-        }
-      }
-      if (touched) {
-        repairCountyRecord(state, pr, rec, stateYear(state));
-        touchedIds.push(pid);
-      }
-    }
-    assertPopulationCommunities(state, touchedIds,
-      'restored doctrine parent');
-    return changed;
-  };
-
   function copyProject(project) {
     if (!project) return null;
     var out = {
