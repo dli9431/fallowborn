@@ -143,10 +143,21 @@ window.FB = window.FB || {};
     }
   }
 
+  const heldEventKeys = {};
+  document.addEventListener('keyup', function (e) {
+    const epoch = heldEventKeys[e.code || e.key];
+    delete heldEventKeys[e.code || e.key];
+    if (eventOpen() && epoch !== undefined && epoch !== (FB.ui.eventInputEpoch || 0)) {
+      e.preventDefault(); e.stopImmediatePropagation();
+    }
+  }, true);
+
   document.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const t = e.target;
     const k = e.key;
+    const keyId = e.code || k;
+    if (heldEventKeys[keyId] === undefined) heldEventKeys[keyId] = FB.ui.eventInputEpoch || 0;
     /* 1-9 hotkeys by PHYSICAL key (number row or numpad, any layout, any
        NumLock state); dialogs and pickers use Shift for items 10-18. */
     let digit = 0;
@@ -154,6 +165,11 @@ window.FB = window.FB || {};
     else if (e.code && e.code.length === 7 && e.code.indexOf('Numpad') === 0) digit = +e.code.charAt(6) || 0;
     if (!digit && k >= '1' && k <= '9') digit = +k;
     const slot = digit ? digit - 1 + (e.shiftKey ? 9 : 0) : -1;
+    if (eventOpen() && (digit || k === 'Enter' || k === ' ')) {
+      if (e.repeat || heldEventKeys[keyId] !== (FB.ui.eventInputEpoch || 0) || (FB.ui.eventInputGuarded && FB.ui.eventInputGuarded())) {
+        e.preventDefault(); return;
+      }
+    }
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
       if (k === 'Enter' && t.id === 'cg-name') { e.preventDefault(); $('btn-cg-start').click(); }
       if (k === 'Enter' && t.id === 'ev-name') { e.preventDefault(); clickNth('#ev-options .evopt', 0); return; }
@@ -181,7 +197,8 @@ window.FB = window.FB || {};
 
     /* ---- event modal first: it demands a choice ---- */
     if (eventOpen()) {
-      if (k === 'Tab') containEventTab(e);
+      if (k === 'Escape' && FB.ui.cancelEventConfirmation && FB.ui.cancelEventConfirmation()) e.preventDefault();
+      else if (k === 'Tab') containEventTab(e);
       else if (digit) { e.preventDefault(); clickNth('#ev-options .evopt', slot); }
       return; // Enter/Space act natively on the focused control
     }

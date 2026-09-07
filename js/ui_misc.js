@@ -719,8 +719,7 @@ window.FB = window.FB || {};
     }).join(', ');
   };
   function warStatusRealmId(s, rid) {
-    return rid === 'player' && (!s.realms.player || !s.realms.player.alive)
-      ? FB.playerRealmId(s) : FB.topRealm(s, rid);
+    return rid;
   }
   FB.warStatusText = function (s, rid) {
     const realmId = warStatusRealmId(s, rid);
@@ -766,6 +765,8 @@ window.FB = window.FB || {};
     return html;
   };
   function foreignPolicyStatusText(s, rid) {
+    const truce = FB.truceText && FB.truceText(s, 'player', rid);
+    if (truce) return truce;
     if (s.player.war && s.player.war.enemy === rid) {
       const realm = s.realms[rid];
       return FB.T('At war with {realm} — policy is suspended', {

@@ -939,7 +939,7 @@ window.FB = window.FB || {};
     if (pw) {
       var playerTop = FB.playerRealmId(state), enemyTop = sovereignRealm(state, pw.enemy);
       if (top === playerTop || top === enemyTop || rid === 'player') {
-        if (FB.endPlayerWar) FB.endPlayerWar(state);
+        if (FB.endPlayerWar) FB.endPlayerWar(state, true);
         else state.player.war = null;
       }
     }

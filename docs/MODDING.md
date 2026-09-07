@@ -4345,3 +4345,7 @@ seeded `FB.chance`. Data-defined `marriageCulturePersuasion*` balance fields gov
 base/rates/caps, heir multiplier, and refusal penalty. Culture price and cooldown reuse
 `cultureAdoption*`. Knowledge and attempt state schemas are in
 [state-and-saves.md](designs/state-and-saves.md); all additions retain format 3.
+
+### Voluntary ordinary-war peace confirmation
+
+An event option may set `confirm:'war_end'` for the built-in `war_accept_tribute`, `war_terms`, `war_negotiated_withdrawal`, `war_submit`, or `war_submission_tribute` custom effect. The blocking confirmation quotes current terms and revalidates the same war/option before resolution. Cancel or Escape returns to the same event. Category automation shows events with this metadata; explicit Resolve everything may resolve them. IDs and confirmation metadata are semantic, not translated display fields.

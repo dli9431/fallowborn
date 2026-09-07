@@ -2380,3 +2380,5 @@ per-pair attempt limit, refusal Standing loss, cooldown, and unchanged faith/dyn
 Marriage is still a separate proposal. Opening either review performs no writes or rolls.
 The Deeds proposal also uses this review; its day and proposal cooldown begin only on
 confirmation, preserving the existing wartime suitor event after the terms are chosen.
+
+War events initially focus their container (preserving the name-input exception) and guard every input modality for 350 ms after event/confirmation transitions. Canceling peace stays in the unresolved blocking event. Held activation keys and pointer input begun before a transition cannot select its next action. Deeds and Land retain compact siege, recruitment and starvation nodes for live refresh without rebuilding focused controls or disclosures.

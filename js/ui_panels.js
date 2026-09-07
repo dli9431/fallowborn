@@ -902,6 +902,7 @@ window.FB = window.FB || {};
        Chronicle appends only new entries; Deeds uses a bounded status-only
        pass that leaves its catalogue and listeners mounted. */
     if (liveTick) {
+      refreshLiveWarValues();
       refreshLiveSelfValues();
       refreshLiveKinValues();
       if (SH.activeTab === 'actions') refreshVisibleDeedStatuses();
@@ -930,9 +931,8 @@ window.FB = window.FB || {};
 
     const feedback = FB.warFeedback ? FB.warFeedback(s) : null;
     const pHost = FB.playerHost ? FB.playerHost(s) : null;
-    const men = pHost ? pHost.men :
-      Math.round(Math.max(FBDATA.balance.armyMinMen || 40, FB.playerLevy(s)) * (w.strength || 1) +
-        (w.mercCos || 0) * (FBDATA.balance.mercCompanySize || 150));
+    const muster = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
+    const men = pHost ? pHost.men : (muster ? muster.men : FB.playerLevy(s));
     const conditionPct = Math.round((w.strength || 1) * 100);
     const hostPlace = pHost ? (FB.world.byId[pHost.at] ? FB.world.byId[pHost.at].name : '?') : FB.T('Not yet mustered');
 
@@ -1036,7 +1036,11 @@ window.FB = window.FB || {};
       '</span></div>' +
       landKv('Your Host', esc(hostLine), true) +
       landKv('Supply & Upkeep', esc(supplyUpkeepLine)) +
-      landKv('Battle Odds', esc(oddsLine));
+      landKv('Battle Odds', esc(oddsLine)) +
+      '<div data-war-siege="">' + siegeFeedbackHtml(s) + '</div>' +
+      '<div data-war-recruitment>' + esc(recruitmentFeedback(s)) + '</div>' +
+      '<div data-host-starvation="' + esc(pHost ? String(pHost.id) : '') + '">' +
+      esc(starvationText(s, pHost)) + '</div>';
 
     if (pHost && (!pHost.path || !pHost.path.length) && !pHost.goal) {
       const marchHint = FB.isTouch
@@ -1049,6 +1053,56 @@ window.FB = window.FB || {};
     cardHtml += '</section>';
 
     return cardHtml;
+  }
+
+  function siegeFeedbackHtml(s, county) {
+    const status = FB.warSiegeProjection && FB.warSiegeProjection(s, county);
+    if (!status) return '';
+    const province = FB.world.byId[status.pid];
+    const blocker = status.blocker === 'absent' ? FB.T('No halted besiegers') :
+      status.blocker === 'contested' ? FB.T('Contested ground') :
+      status.blocker === 'shortage' ? FB.T('Needs {men} more men', { men:status.shortage }) :
+      FB.T('Siege works advancing');
+    return '<b>' + esc(FB.T('Siege objective: {province}', {
+      province:province ? province.name : status.pid })) + '</b><div>' +
+      '<progress max="100" value="' + status.percent + '" aria-label="' +
+      esc(FB.T('Siege progress')) + '"></progress> ' + status.percent + '%</div><div>' +
+      esc(FB.T('Next seasonal check in {days} days', { days:status.days })) +
+      ' · ' + esc(blocker) + '</div>';
+  }
+
+  function recruitmentFeedback(s) {
+    const preview = FB.playerMusterPreview && FB.playerMusterPreview(s);
+    if (!preview) return '';
+    const parts = [];
+    if (preview.days) parts.push(FB.T('Primary host ready in {days} days', { days:preview.days }));
+    const detach = FB.musterDelay(s, 'player', true);
+    if (detach) parts.push(FB.T('Detachment ready in {days} days', { days:detach }));
+    if (!preview.territory.rally) parts.push(FB.T('Recruitment blocked: no eligible rally county.'));
+    else if (preview.territory.blocked.length) parts.push(FB.T(
+      '{count} counties cannot recruit while besieged or occupied.', { count:preview.territory.blocked.length }));
+    return parts.join(' · ');
+  }
+
+  function starvationText(s, host) {
+    const status = host && FB.hostSupplyStatus(s, host);
+    return status && status.daysToAttrition !== null ? FB.T('Starvation in {days} days', {
+      days:status.daysToAttrition }) : '';
+  }
+
+  function refreshLiveWarValues() {
+    const s = FB.state;
+    document.querySelectorAll('[data-war-siege]').forEach(function (node) {
+      node.innerHTML = siegeFeedbackHtml(s, node.getAttribute('data-war-siege') || null);
+    });
+    document.querySelectorAll('[data-host-starvation]').forEach(function (node) {
+      const id = node.getAttribute('data-host-starvation');
+      const host = (s.armies || []).find(function (a) { return String(a.id) === id; });
+      node.textContent = starvationText(s, host);
+    });
+    document.querySelectorAll('[data-war-recruitment]').forEach(function (node) {
+      node.textContent = recruitmentFeedback(s);
+    });
   }
 
   function renderActions(reuse) {
@@ -6988,7 +7042,9 @@ window.FB = window.FB || {};
       '</span></div>' +
       landKv('Status', esc(hostStatusText)) +
       landKv('Troops', esc(troopSummary), true) +
-      landKv('Supply & Upkeep', esc(supplyUpkeepLine));
+      landKv('Supply & Upkeep', esc(supplyUpkeepLine)) +
+      '<div data-host-starvation="' + esc(String(selA.id)) + '">' +
+      esc(starvationText(s, selA)) + '</div>';
 
     if (warLossSummary) {
       cardHtml += landKv('Battle & Losses', esc(warLossSummary));
@@ -7051,6 +7107,7 @@ window.FB = window.FB || {};
       : '';
     let h = '<div class="panelh">' + esc(pr.name) +
       (homeLabel ? ' ' + esc(homeLabel) : '') + '</div>';
+    h += '<div data-war-siege="' + esc(pid) + '">' + siegeFeedbackHtml(s, pid) + '</div>';
     const selectedRealmId = !pr.wasteland && s.owner[pid];
     const selectedRealm = selectedRealmId && s.realms[selectedRealmId];
     if (selectedRealm && FB.isRealmAtWar(s, selectedRealmId)) {

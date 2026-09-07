@@ -467,6 +467,10 @@ test('event dismissal respects automatic resume ' + autoResume + ' and defers an
     }, autoResume);
 
     await expect(page.locator('#eventmodal:not(.hidden)')).toBeVisible();
+    await expect(page.locator('#eventmodal')).toBeFocused();
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
     await page.locator('#ev-options .evopt').first().click();
     await expect(page.locator('#eventmodal')).toHaveClass(/hidden/);
 

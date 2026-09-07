@@ -1212,3 +1212,5 @@ save `cultureAdoptionUntil` on their own character, including when they later be
 All are additive JSON data under unchanged save wrapper format 3. Missing contracts,
 pledges, and pregnancy fields retain historical inheritance; restore and rendering do not
 backfill them, and no existing child's dynasty is rewritten.
+
+Ordinary-war truces are additive format-3 state: `state.truces[JSON.stringify([realmA, realmB].sort())] = expiryTurn`. Normal settlements set 720-day protection for actual opponents, independent of ruler generation and voluntary pacts. War repair initializes missing ledgers without RNG and preserves concurrent personal-vassal and unrelated liege campaigns. Per-host `lowSupplyWarned` survives saves and clears after supply recovery.

@@ -1048,3 +1048,5 @@ materialization, compaction, and accession. An accepted betrothal keeps its agre
 when a partner inherits. Reigning rulers cannot accept a prospect culture invitation;
 designated heirs may, with +80 Standing and halved odds capped at 25%. The invitation
 transaction rechecks reigning authority before spending or rolling.
+
+Personal vassal campaigns occupy the vassal and its named enemy, independently of the liege. Concurrent unrelated liege wars survive repair and have separate hostility/notices. Household exposure to an inherited realm war remains distinct from personal participation. Technology impact is none (`personal_vassal_campaigns`); no autonomous AI vassal conquest generation is introduced.

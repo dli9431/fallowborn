@@ -873,3 +873,5 @@ resident cooldown; it does not add a public interpreter effect or saved prose. R
 the event spends the day through the same queued-action path as other deliberate events.
 Autoresolve always takes the first available approach for these scenes instead of
 applying the campaign's risk-style scoring to a deliberately chosen social meeting.
+
+Voluntary ordinary-war peace options use `confirm:'war_end'`. The event UI retains the unresolved event while quoting the exact `FB.warPeaceTerms` transaction. Cancel/Escape restores its mounted controls without repeating preparation or firing; confirm revalidates the exact war and current option. Category automation must show these events; Resolve everything remains explicit authorization to automate them.

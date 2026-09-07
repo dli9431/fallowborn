@@ -143,6 +143,18 @@ window.FBDATA = window.FBDATA || {};
         rationale:'Agreed maternal dynasty membership is a cultural and family custom with no credible technology dependency.' },
       marriage_prospect_culture_persuasion:{ mode:'none',
         rationale:'Inviting a marriage prospect to adopt a culture is baseline personal persuasion, independent of research.' },
+      ordinary_war_truces:{
+        mode:'none',
+        rationale:'Mutual protection after settlement is baseline diplomacy and survives rulers without research.'
+      },
+      personal_vassal_campaigns:{
+        mode:'none',
+        rationale:'A personal campaign belongs to its actual opponents independently of their lieges; this is baseline political participation.'
+      },
+      territorial_recruitment_eligibility:{
+        mode:'none',
+        rationale:'Recruiting from accessible counties is a core military constraint. Relief restores eligibility without research.'
+      },
       ai_dejure_expansion_planning:{
         mode:'none',
         rationale:'AI preference for compact de jure consolidation is baseline world strategy and must not depend on research controlled by those same simulated realms.'
