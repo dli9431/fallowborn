@@ -1240,14 +1240,16 @@ window.FB = window.FB || {};
     return joined;
   }
 
-  /* fresh musters take every drilled replacement of the realm; returns the
-     per-class amounts added so the caller can consume the ledger */
-  function cohortMusterAdditions(state, realmId) {
+  /* Ready professionals replace levy within the eligible muster capacity.
+     Return only the amounts that the successful muster may consume. */
+  function cohortMusterAdditions(state, realmId, room) {
     const out = {};
     const status = FB.cohortStatus(state, realmId);
+    room = Math.max(0, Number(room) || 0);
     for (const classId in status.classes) {
       if (status.classes[classId].ready > 0) {
-        out[classId] = status.classes[classId].ready;
+        out[classId] = Math.min(room, status.classes[classId].ready);
+        room -= out[classId];
       }
     }
     return out;
@@ -1274,8 +1276,10 @@ window.FB = window.FB || {};
       units[key] = Math.max(0, Number(comp[key]) || 0);
       men += units[key];
     }
+    const territory = FB.recruitmentTerritory(state, 'player');
+    if (!territory.rally) return hostUpkeepParts(emptyUnitCounts(), 0);
     const floor = B().armyMinMen || 40;
-    if (men < floor) units.levy += floor - men;
+    if (!territory.blocked.length && men < floor) units.levy += floor - men;
     return hostUpkeepParts(units, 0);
   };
 
@@ -1295,12 +1299,14 @@ window.FB = window.FB || {};
       const greatCampB = FB.greatHolyWarCamp(state, b.realm);
       if (greatCampA && greatCampB) return greatCampA !== greatCampB;
     }
-    const w = state.player.war;
-    if (a.realm === 'player') return !!(w && w.enemy === b.realm);
-    if (b.realm === 'player') return !!(w && w.enemy === a.realm);
+    function opposed(owner, war) {
+      const pair = FB.ordinaryWarParticipants(state, owner, war);
+      return pair.length === 2 && pair.indexOf(a.realm) >= 0 && pair.indexOf(b.realm) >= 0;
+    }
+    if (opposed('player', state.player.war)) return true;
     const ra = state.realms[a.realm], rb = state.realms[b.realm];
-    if (ra && ra.war && ra.war.enemy === b.realm) return true;
-    if (rb && rb.war && rb.war.enemy === a.realm) return true;
+    if (ra && opposed(a.realm, ra.war)) return true;
+    if (rb && opposed(b.realm, rb.war)) return true;
     return false;
   };
 
@@ -1396,6 +1402,54 @@ window.FB = window.FB || {};
       (p.provs && p.provs[0]) || p.provinceId;
   }
 
+  /* Read-only military eligibility; abandoned works do not close the rolls. */
+  FB.recruitmentCountyBlocked = function (state, realm, pid) {
+    const campaign = state.greatHolyWar;
+    const occupied = campaign && campaign.phase === 'active' &&
+      campaign.occupations && campaign.occupations[pid];
+    if (occupied && occupied.occupied && FB.greatHolyWarCamp &&
+        FB.greatHolyWarCamp(state, realm) === 'defenders') return true;
+    const probe = { realm:realm }, forces = {};
+    for (const host of state.armies || []) {
+      if (host.at !== pid || host.men <= 0 || host.moveLeft > 0 ||
+          (host.path && host.path.length)) continue;
+      if (FB.armiesHostile(state, probe, host) ||
+          FB.armiesHostile(state, { realm:(state.holder || {})[pid] }, host) ||
+          FB.armiesHostile(state, { realm:(state.owner || {})[pid] }, host)) {
+        (forces[host.realm] || (forces[host.realm] = [])).push(host);
+      }
+    }
+    for (const enemy in forces) {
+      const opposition = (state.armies || []).some(function (host) {
+        return host.at === pid && host.men > 0 &&
+          FB.armiesHostile(state, { realm:enemy }, host);
+      });
+      if (!opposition && FB.fortSiegeStatus(state, pid, {}, forces[enemy]).canProgress) return true;
+    }
+    return false;
+  };
+
+  FB.recruitmentTerritory = function (state, realm) {
+    const p = state.player;
+    let counties = FB.realmTerritory(state, realm).slice();
+    if (realm === 'player') {
+      for (const pid of p.provs || []) if (counties.indexOf(pid) < 0) counties.push(pid);
+      if (!counties.length && p.tier >= 3) counties.push(p.provinceId);
+    }
+    const eligible = [], blocked = [];
+    let development = 0;
+    for (const pid of counties) {
+      if (FB.recruitmentCountyBlocked(state, realm, pid)) blocked.push(pid);
+      else { eligible.push(pid); development += state.dev[pid] || 1; }
+    }
+    eligible.sort(function (a, b) {
+      return (state.dev[b] || 1) - (state.dev[a] || 1) || (a < b ? -1 : a > b ? 1 : 0);
+    });
+    const home = realm === 'player' ? playerHome(state) : (state.realms[realm] || {}).capital;
+    return { eligible:eligible, blocked:blocked, development:development,
+      rally:eligible.indexOf(home) >= 0 ? home : eligible[0] || null };
+  };
+
   /* ---------- raising & disbanding ---------- */
 
   /* One calculation feeds both the Deeds estimate and the actual host. A
@@ -1409,6 +1463,12 @@ window.FB = window.FB || {};
     const greatHost = FB.playerGreatHolyWarHostActive &&
       FB.playerGreatHolyWarHostActive(state);
     if (!w && !greatHost) return null;
+    const territory = FB.recruitmentTerritory(state, 'player');
+    if (!territory.rally) return {
+      territory:territory, units:emptyUnitCounts(), allied:{ ally:null, men:0 },
+      men:0, floor:B().armyMinMen || 40, limited:!!(w && w.musterPool),
+      greatHost:greatHost, cohort:null
+    };
     const cs = B().mercCompanySize || 150;
     const comp = FB.playerComposition(state);
     const units = emptyUnitCounts();
@@ -1431,28 +1491,38 @@ window.FB = window.FB || {};
     /* drilled replacement cohorts answer a fresh muster at no surcharge; a
        de-muster-capped muster leaves them waiting — those veterans already
        returned in the pool */
-    const cohort = limited ? null : cohortMusterAdditions(state, 'player');
+    const cohort = limited || !territory.rally ? null : cohortMusterAdditions(state, 'player', units.levy);
     if (cohort) {
-      for (const key in cohort) units[key] = (units[key] || 0) + cohort[key];
+      for (const key in cohort) {
+        units[key] = (units[key] || 0) + cohort[key];
+        units.levy -= cohort[key];
+      }
     }
     const allied = w && w.defending && !w.alliedWithdrew && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
     if (allied.men) units.levy += allied.men;
     let men = unitCountTotal(units);
     const floor = B().armyMinMen || 40;
-    if (!limited && men < floor) { units.levy += floor - men; men = floor; }
+    if (!limited && !territory.blocked.length && territory.rally && men < floor) { units.levy += floor - men; men = floor; }
     return {
-      units:units, allied:allied, men:men, floor:floor,
+      territory:territory, units:units, allied:allied, men:territory.rally ? men : 0, floor:floor,
       limited:limited, greatHost:greatHost, cohort:cohort
     };
   }
+
+  FB.musterDelay = function (state, realm, detachment) {
+    const down = ((detachment ? state.armyDetachmentDown : state.armyDown) || {})[realm];
+    const days = detachment ? (B().detachmentRearmDays || 25) : (B().armyRearmDays || 60);
+    return down === undefined ? 0 : Math.max(0, days - (state.turn - down));
+  };
 
   FB.playerMusterPreview = function (state) {
     const plan = playerMusterPlan(state);
     if (!plan) return null;
     return {
       men:plan.men, minimum:plan.floor,
-      canRaise:plan.men >= plan.floor, limited:plan.limited,
+      canRaise:plan.men >= plan.floor && !FB.musterDelay(state, 'player'), limited:plan.limited,
+      days:FB.musterDelay(state, 'player'), territory:plan.territory,
       units:copyUnitCounts(plan.units)
     };
   };
@@ -1469,7 +1539,7 @@ window.FB = window.FB || {};
     if (plan.limited) delete w.musterPool;
     if (plan.cohort) cohortConsumeReady(state, 'player', plan.cohort);
     const units = plan.units, allied = plan.allied, men = plan.men;
-    const home = playerHome(state);
+    const home = plan.territory.rally;
     const host = { id: FB.uid(), realm: 'player', men: men, size: men, units: units,
       at: home, from: home, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
@@ -1492,6 +1562,8 @@ window.FB = window.FB || {};
   function raiseAIHost(state, rid) {
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
+    const territory = FB.recruitmentTerritory(state, rid);
+    if (!territory.rally) return null;
     let men = FB.aiBaseHost(state, rid);
     let defending = !!(state.player.war && !state.player.war.defending && state.player.war.enemy === rid);
     if (!defending) {
@@ -1505,6 +1577,7 @@ window.FB = window.FB || {};
     const allied = !FB.greatHolyWarCamp(state, rid) && defending && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, rid) : { ally: null, men: 0 };
     men += allied.men;
+    if (men < (B().armyMinMen || 40)) return null;
     const f = aiFracs(state, rid);
     const base = men - allied.men;
     const units = emptyUnitCounts();
@@ -1515,7 +1588,7 @@ window.FB = window.FB || {};
     }
     units.levy = base - professional + allied.men;
     /* drilled replacement cohorts answer the fresh muster too */
-    const cohort = cohortMusterAdditions(state, rid);
+    const cohort = cohortMusterAdditions(state, rid, Math.max(0, units.levy - allied.men));
     let cohortMen = 0;
     for (const classId in cohort) {
       units[classId] = (units[classId] || 0) + cohort[classId];
@@ -1523,10 +1596,10 @@ window.FB = window.FB || {};
     }
     if (cohortMen) {
       cohortConsumeReady(state, rid, cohort);
-      men += cohortMen;
+      units.levy -= cohortMen;
     }
     const host = { id: FB.uid(), realm: rid, men: men, size: men, units: units,
-      at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
+      at: territory.rally, from: territory.rally, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
     state.armies.push(host);
     if (FB.greatHolyWarMarkMuster) {
@@ -2340,7 +2413,8 @@ window.FB = window.FB || {};
         const d = (pa.cx - pb.cx) * (pa.cx - pb.cx) + (pa.cy - pb.cy) * (pa.cy - pb.cy);
         if (d < bd) { bd = d; best = o; }
       }
-      if (best) return best.at;
+      if (best) return FB.armyCanPursue(state, army, best.at)
+        ? best.at : (FB.armyRegroupGoal(state, army) || army.at);
     }
     if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, army.realm) &&
         FB.greatHolyWarArmyGoal) {
@@ -2458,6 +2532,34 @@ window.FB = window.FB || {};
     if (!w.defending && w.target && state.owner[w.target] === w.enemy) return w.target;
     return home;
   }
+
+  /* Use the battle's location and roles, including every hostile banner. */
+  FB.armyCanPursue = function (state, army, pid) {
+    let defending = 0;
+    for (const other of state.armies || []) {
+      if (other.at === pid && other.men > 0 && FB.armiesHostile(state, army, other)) {
+        defending += battlePower(state, other, pid, 'defense');
+      }
+    }
+    return !defending || battlePower(state, army, pid, 'attack') >= defending * 1.1;
+  };
+
+  FB.armyRegroupGoal = function (state, army) {
+    const home = army.realm === 'player' ? playerHome(state) :
+      (state.realms[army.realm] || {}).capital;
+    const candidates = Object.keys((FB.world || {}).byId || {}).sort();
+    if (home) candidates.unshift(home);
+    let best = null, days = Infinity;
+    for (const pid of candidates) {
+      if (!FB.armyFriendlyProvince(state, army, pid) ||
+          !FB.armyCanPursue(state, army, pid)) continue;
+      const route = findArmyPathFrom(state, army, army.at, pid);
+      if (!route || route.blockedByFort) continue;
+      if (pid === home) return pid;
+      if (route.totalDays < days) { best = pid; days = route.totalDays; }
+    }
+    return best;
+  };
 
   /* role: 'defense' for the camp holding the ground, 'attack' otherwise
      (the default for neutral previews such as the automation odds check) */
@@ -2987,14 +3089,22 @@ window.FB = window.FB || {};
     const drain = supplyDrainPerDay(state, army, distCache);
     if (drain <= 0) {
       army.supply = Math.min(100, army.supply + supplyRecoverPerDay(state, army));
+      if (army.supply >= (bal.supplyLowThreshold === undefined ? 30 : bal.supplyLowThreshold)) delete army.lowSupplyWarned;
       return;
     }
     army.supply = Math.max(0, army.supply - drain);
+    if (army.supply < (bal.supplyLowThreshold === undefined ? 30 : bal.supplyLowThreshold) &&
+        !army.lowSupplyWarned) {
+      army.lowSupplyWarned = true;
+      if (army.realm === 'player') FB.news(state, FB.msg('news.army.low_supply',
+        'The host at {province} is low on supplies. Reach friendly ground before starvation.',
+        { province:provName(army.at) }));
+    }
     if (army.supply > 0) return;
     if (army.men > 0) {
       const wasPrimary = FB.hostOf(state, army.realm) === army;
       const rate = bal.supplyAttritionPerDay === undefined
-        ? 0.01 : bal.supplyAttritionPerDay;
+        ? 0.0025 : bal.supplyAttritionPerDay;
       const losses = FB.applyHostLosses(army,
         Math.max(1, Math.round(army.men * Math.max(0, rate))));
       FB.noteCohortLosses(state, army.realm, losses);
@@ -3198,7 +3308,12 @@ window.FB = window.FB || {};
         a.realm === militaryCommand.sovereignRealmId &&
         (!militaryCommand.hostId || a.id === militaryCommand.hostId));
       if (a.realm !== 'player' && !commandedByPlayer) {
-        const goal = aiGoal(state, a, warring, primaryByRealm);
+        let goal = aiGoal(state, a, warring, primaryByRealm);
+        if (!(a.broken !== undefined && state.turn - a.broken < 40) &&
+            !(FB.fortPinnedStatus && FB.fortPinnedStatus(state, a)) &&
+            !FB.armyCanPursue(state, a, goal)) {
+          goal = FB.armyRegroupGoal(state, a) || a.at;
+        }
         if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
           FB.orderArmy(state, a, goal);
         }
@@ -3252,6 +3367,7 @@ window.FB = window.FB || {};
     cohortTick(state);
     let reinforcementChanged = false;
     let reinforcementCompleted = false;
+    const recruitRoom = {};
     for (const a of state.armies) {
       if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
       FB.hostUnits(a); // hosts from before levy tiers
@@ -3263,14 +3379,28 @@ window.FB = window.FB || {};
         : (a.realm === 'player'
             ? ((p.provs && p.provs.indexOf(a.at) >= 0) || (state.holder && state.holder[a.at] === 'player'))
             : state.owner[a.at] === a.realm);
-      if (own) {
+      if (own && !FB.recruitmentCountyBlocked(state, a.realm, a.at)) {
+        if (recruitRoom[a.realm] === undefined) {
+          const territory = FB.recruitmentTerritory(state, a.realm);
+          const plan = a.realm === 'player' ? playerMusterPlan(state) : null;
+          let capacity = a.realm === 'player' ? (plan ? plan.men : 0) : FB.aiBaseHost(state, a.realm);
+          let serving = 0;
+          for (const host of state.armies) {
+            if (host.realm !== a.realm) continue;
+            serving += host.men;
+            if (a.realm !== 'player' && host.allied) capacity += host.allied.men || 0;
+          }
+          recruitRoom[a.realm] = territory.rally ? Math.max(0, Math.floor(capacity - serving)) : 0;
+        }
         const beforeMen = a.men;
-        cohortJoinHost(state, a, a.size - a.men);
-        const room = a.size - a.men;
+        const joined = cohortJoinHost(state, a, Math.min(a.size - a.men, recruitRoom[a.realm]));
+        recruitRoom[a.realm] -= joined;
+        const room = Math.min(a.size - a.men, recruitRoom[a.realm]);
         if (room > 0) {
           const add = Math.min(room, Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
           a.units.levy += add;
           a.men += add;
+          recruitRoom[a.realm] -= add;
         }
         if (a.men > beforeMen) {
           reinforcementChanged = true;

@@ -151,19 +151,31 @@ even the last county creates an explicit office vacancy through the realm-death
 boundary and never grants the religious office or defeated crown. The single exception
 is the player-only `caliphate` succession war above, whose whole stake is the office.
 
-Each sovereign may participate in only one active war. `FB.isRealmAtWar` treats both
-endpoints as occupied, including both sides of `player.war`; declarations, breakaways,
-independence, and fealty/defection conflicts wait until every affected sovereign is at
-peace. On load, `FB.repairWars` restores the invariant without changing save version 3:
-it preserves a valid player war first, then accepts non-conflicting valid AI wars in
-stable realm-id order and removes later overlaps and hosts no longer attached to a war.
-`FB.playerRealmAtWar(state)` resolves the sovereign returned by `FB.playerRealmId` through
-that same test. Economic effects therefore follow the war of the realm the household
-belongs to, including a liege's war, rather than only the protagonist's personal campaign.
-`FB.warOpponents(state, realmId)` is the companion read-only presentation lookup: it returns
-the opposing sovereign in an ordinary war or the valid sovereigns in the other great-holy-war
-camp. War notices and lock explanations use those ids to name both sides instead of reporting
-an unspecified conflict.
+Each actual participant may occupy only one ordinary war. The shared
+`FB.ordinaryWarParticipants` lookup returns the declaring realm and its enemy; a
+personal player war always belongs to `player` and the saved enemy, including under
+a liege. A personal foreign conquest neither occupies nor mobilizes that liege.
+Declaration gates, yearly indexes, hostility, repair, and ruler notices use these
+actual identities. An independence war still includes the liege as its named enemy.
+Great holy wars keep their separate camp participation rules. This does not add AI
+vassal foreign-war generation or expand foreign conquest eligibility.
+
+`FB.repairWars` preserves a valid personal war first, then non-overlapping AI wars
+in stable realm-id order, without reserving the personal player's sovereign.
+`FB.playerRealmAtWar` deliberately includes both personal participation and inherited
+sovereign war exposure for household economics; inherited exposure is not a second
+personal campaign. `FB.warOpponents` names the actual opponents in notices.
+
+Normal ordinary settlements pass through `FB.concludeOrdinaryWar` (including player
+settlements through `FB.endPlayerWar`) and protect both actual opponents for 720 days.
+`state.truces` maps a JSON-encoded, sorted pair of realm IDs to its expiry turn.
+Protection ends exactly at that turn, survives ruler succession, and is separate
+from voluntary peace pacts. Declaration previews and notices show the date and turn.
+Invalid-war cleanup and mandatory great-holy-war transitions create no truce.
+Old saves receive an empty ledger during war repair without RNG or a format bump.
+The technology decisions are **none** for `ordinary_war_truces` and
+`personal_vassal_campaigns`: baseline diplomacy and political participation do not
+require research.
 
 Alliances are defensive abstractions, not extra war parties. `state.alliances` stores
 canonical realm pairs with their source and both ruler-generation stamps, and each realm
@@ -1021,3 +1033,53 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
     performs the normal live execution calculation.
   - *Target List*: Each candidate row summarizes the march route (e.g. `Passes 2 counties (1 fort)` or `Direct landing`), destination fort tier (e.g. `🏰 Stone Keep (Tier 2)`), garrison size, and combat risk assessment.
   - *Interactive Map Overlay*: When selecting on the map, reachable unfortified counties are illuminated with clean pips, while fortified counties display distinct square fortress badges with `🏰` emblems. Selecting a target renders the full dotted march path through intermediate counties, highlighting intermediate forts along the march route and displaying live spoils and defender counts in the floating `#raid-picker` card.
+
+## Peace decisions and live campaign feedback
+
+Voluntary tribute acceptance, terms, negotiated withdrawal, submission, and submission
+tribute carry option metadata `confirm:'war_end'`. Their shared blocking confirmation
+quotes enemy, objective, exact gold/prestige changes, and submission's liege change.
+Cancel and Escape restore the mounted unresolved event without firing or preparing it
+again. Confirmation rechecks the war object, context, live option and quoted terms.
+All event transitions have a 350 ms input guard for mouse, touch and keyboard; held
+keys and carried pointer activations cannot choose the next screen. Initial focus is
+on the event container, except for the existing child-name input behavior. Category
+automation shows any event with voluntary peace; explicit Resolve everything may
+still resolve it automatically.
+
+`FB.warSiegeProjection` supplies Deeds and the relevant Land county with the objective,
+whole-number percentage, progress element, days to the next seasonal pulse, and absent,
+contested or insufficient-strength blocker. Fractional progress is floored and remains
+below 100 until breach. Retained compact nodes update on live ticks without replacing
+panel controls or disclosure state. Host cards show days to starvation. Each host
+warns once below the low-supply threshold and rearms after recovering to that threshold.
+Starvation removes 0.25% per day (including the fallback); fort seasonal attrition,
+supply drain/recovery, siege cadence, and objectives remain unchanged.
+
+Before deliberate pursuit, AI compares its existing attacking battle-power estimate at
+the destination against the sum of all hostile defending hosts there, including terrain.
+It needs a 110% advantage. Otherwise it regroups on reachable friendly ground that is
+not occupied by an overwhelming enemy. Forced retreats and fort pinning keep priority.
+
+## Territorial recruitment
+
+`FB.recruitmentTerritory` is a read-only military projection of eligible and blocked
+counties, their development, and a rally county. Halted hostile forces block a county
+only when they meet its siege strength requirement without opposition; completed
+hostile occupation also blocks it. Passing armies, undersized besiegers and abandoned
+progress do not block recruitment. Relief restores eligibility immediately.
+
+County levies, military buildings, associated garrison deductions, and vassal levies
+exclude blocked counties. This filter does not alter ordinary realm development or
+research. Nonterritorial household and paid troops still answer when there is an
+eligible rally point. The capital is preferred; otherwise highest development wins,
+then province ID. A landless baron uses their unblocked home. Full blockade prevents
+raising a host despite minimum floors, hired companies, allies, or ready cohorts.
+
+Ready cohorts replace part of a fresh levy within its capacity instead of adding
+unbounded strength. Resting hosts share the realm's remaining recruiting capacity,
+respecting each host's size and prior demuster ceiling. Unused cohorts remain ready;
+existing soldiers are never removed because a county becomes blocked. The primary
+60-day and detachment 25-day rearm clocks remain unchanged and are shown alongside
+territorial blockers. `territorial_recruitment_eligibility` has technology impact
+**none**: access and relief are core military constraints, not researched capabilities.

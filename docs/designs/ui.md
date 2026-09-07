@@ -2264,3 +2264,5 @@ same effect explanation, with up to two examples in each direction and fuller
 conditions. Tooltips keep the effect first, group cost and recovery together, and
 use muted supporting context. Known sources are limited to two names plus a count.
 Both desktop hover/focus and compact disclosures share this concise copy.
+
+War events initially focus their container (preserving the name-input exception) and guard every input modality for 350 ms after event/confirmation transitions. Canceling peace stays in the unresolved blocking event. Held activation keys and pointer input begun before a transition cannot select its next action. Deeds and Land retain compact siege, recruitment and starvation nodes for live refresh without rebuilding focused controls or disclosures.

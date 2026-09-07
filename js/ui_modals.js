@@ -167,13 +167,33 @@ window.FB = window.FB || {};
      outcome by accident. Briefly drop input after each set of action buttons
      renders: long enough to catch an instant follow-up tap, but short enough
      that deliberately moving through events stays responsive. Autoresolved
-     events render no buttons and never arm this guard. Desktop mouse users act
-     on a centered modal with no button under the pointer, so the guard is
-     limited to touch. */
+     events render no buttons and never arm this guard. Every input modality
+     shares this boundary, including confirmation transitions. */
   const EVENT_INPUT_GUARD_MS = 350;
   let eventGuardUntil = 0;
-  function armEventGuard() { eventGuardUntil = Date.now() + EVENT_INPUT_GUARD_MS; }
-  function eventInputGuarded() { return FB.isTouch && Date.now() < eventGuardUntil; }
+  function armEventGuard() { eventGuardUntil = Date.now() + EVENT_INPUT_GUARD_MS; UI.eventInputEpoch = (UI.eventInputEpoch || 0) + 1; }
+  function eventInputGuarded() { return Date.now() < eventGuardUntil; }
+
+  let pointerEventEpoch = null;
+  ['pointerdown', 'mousedown', 'touchstart'].forEach(function (name) {
+    document.addEventListener(name, function () {
+      pointerEventEpoch = UI.eventInputEpoch || 0;
+    }, true);
+  });
+  document.addEventListener('click', function (e) {
+    if (!$('eventmodal').contains(e.target)) return;
+    if (eventInputGuarded() || (e.detail > 0 && pointerEventEpoch !== null &&
+        pointerEventEpoch !== (UI.eventInputEpoch || 0))) {
+      e.preventDefault(); e.stopImmediatePropagation();
+    }
+  }, true);
+  UI.eventInputGuarded = eventInputGuarded;
+  let cancelWarConfirmation = null;
+  UI.cancelEventConfirmation = function () {
+    if (!cancelWarConfirmation) return false;
+    cancelWarConfirmation();
+    return true;
+  };
 
   /* ================= autoresolve ================= */
   /* Which category does an event fall into for the autoresolve settings? */
@@ -235,6 +255,7 @@ window.FB = window.FB || {};
     /* resolve everything: no event interrupts the days — only death itself
        (never an event) and the succession screen stop the flow */
     if (a.all) return true;
+    if ((ev.options || []).some(function (o) { return o.confirm === 'war_end'; })) return false;
     /* the naming of an heir is a human choice, however automation is set */
     if (hasHeirPick(ev)) return false;
     /* accepting a title or declaring independence is likewise shown */
@@ -974,7 +995,8 @@ window.FB = window.FB || {};
                 FB.techUiRelevant(s)) UI.showTechDetail(status.missingTech[0]);
             return;
           }
-          chooseOption(ev, opt, ctx);
+          if (opt.confirm === 'war_end') confirmWarOption(ev, opt, ctx);
+          else chooseOption(ev, opt, ctx);
         });
       })(o, optionStatus);
       const details = document.createElement('div');
@@ -1009,13 +1031,92 @@ window.FB = window.FB || {};
     setTimeout(function () {
       const inp = $('ev-name');
       if (inp && !FB.isTouch) { inp.focus(); inp.select(); return; }
-      const b = box.querySelector('.evopt');
-      if (b) b.focus();
+      const card = $('eventmodal');
+      card.tabIndex = -1;
+      card.focus();
     }, 0);
+  }
+
+  function confirmWarOption(ev, opt, ctx) {
+    const state = FB.state, war = state.player.war;
+    if (!war || !FB.warPeaceTerms(state, opt.effects && opt.effects.custom) ||
+        !FB.eventOptionStatus(state, ev, opt, ctx).ready) return;
+    const box = $('ev-options'), body = $('ev-text');
+    const originalBody = document.createDocumentFragment();
+    while (body.firstChild) originalBody.appendChild(body.firstChild);
+    const saved = document.createDocumentFragment();
+    while (box.firstChild) saved.appendChild(box.firstChild);
+    const enemy = state.realms[war.enemy];
+    const objective = war.target && FB.world.byId[war.target];
+    const custom = opt.effects && opt.effects.custom;
+    const terms = FB.warPeaceTerms(state, custom);
+    const quote = JSON.stringify(terms), optionQuote = JSON.stringify(opt);
+    const objectiveText = terms.cause === 'restoration' ? FB.T('Restore the rightful crown') :
+      terms.cause === 'caliphate' ? FB.T('Claim the Caliphate') :
+      terms.cause === 'independence' ? FB.T('Independence') :
+      war.defending ? FB.T('Defend your lands') :
+      objective ? FB.T('Conquer {province}', { province:objective.name }) : FB.T('The current campaign');
+    const target = war.target, enemyId = war.enemy, liege = state.player.liege;
+    body.innerHTML = '<p>' + esc(FB.T('End the war with {enemy}?', {
+      enemy:enemy ? enemy.name : war.enemy })) + '</p><p>' +
+      esc(FB.T('Abandoned objective: {objective}.', {
+        objective:objectiveText })) + '</p>' +
+      '<p>' + esc(FB.T('Gold change: {gold}. Prestige change: {prestige}.', {
+        gold:(terms.gold > 0 ? '+' : '') + terms.gold,
+        prestige:(terms.prestige > 0 ? '+' : '') + terms.prestige })) + '</p>' +
+      (opt.effects && opt.effects.custom === 'war_submit' ? '<p>' +
+        esc(FB.T('Your new liege will be {enemy}.', {
+          enemy:enemy ? enemy.name : war.enemy })) + '</p><p>' +
+        esc(FB.T('Standing with the new liege: {standing}. Your lands remain held from them; sovereign titles may lapse.', {
+          standing:(terms.standing > 0 ? '+' : '') + terms.standing })) + '</p>' : '');
+    let finished = false;
+    function restore() {
+      if (finished) return;
+      finished = true;
+      cancelWarConfirmation = null;
+      body.innerHTML = '';
+      body.appendChild(originalBody);
+      box.innerHTML = '';
+      box.appendChild(saved);
+      armEventGuard();
+      $('eventmodal').focus();
+    }
+    cancelWarConfirmation = restore;
+    const confirm = document.createElement('button');
+    confirm.className = 'evopt';
+    confirm.textContent = FB.T('Confirm peace');
+    confirm.id = 'war-peace-confirm';
+    confirm.onclick = function () {
+      if (finished || eventInputGuarded()) return;
+      if (!FB.eventContextStillValid(FB.state, ev, ctx)) {
+        finished = true;
+        cancelWarConfirmation = null;
+        nextEvent();
+        return;
+      }
+      if (FB.state !== state || state.player.war !== war ||
+          war.target !== target || war.enemy !== enemyId || state.player.liege !== liege ||
+          !ev.options || ev.options.indexOf(opt) < 0 || JSON.stringify(opt) !== optionQuote ||
+          JSON.stringify(FB.warPeaceTerms(state, custom)) !== quote ||
+          !FB.eventOptionStatus(state, ev, opt, ctx).ready) { restore(); return; }
+      finished = true;
+      cancelWarConfirmation = null;
+      if (chooseOption(ev, opt, ctx) === false) { finished = false; restore(); }
+    };
+    const cancel = document.createElement('button');
+    cancel.className = 'evopt';
+    cancel.textContent = FB.T('Cancel');
+    cancel.id = 'war-peace-cancel';
+    cancel.onclick = function () { if (!eventInputGuarded()) restore(); };
+    box.appendChild(confirm);
+    box.appendChild(cancel);
+    armEventGuard();
+    $('eventmodal').focus();
   }
 
   function chooseOption(ev, opt, ctx) {
     const s = FB.state;
+    if (!FB.eventContextStillValid(s, ev, ctx)) return false;
     if (FB.eventOptionStatus &&
         !FB.eventOptionStatus(s, ev, opt, ctx).ready) return false;
     if (!s.player.flags) s.player.flags = {};
@@ -21207,13 +21308,12 @@ window.FB = window.FB || {};
   }
 
   function ordinaryWarContext(s, rid) {
-    const sovereign = rid === 'player' && (!s.realms.player ||
-      !s.realms.player.alive) ? FB.playerRealmId(s) : FB.topRealm(s, rid);
+    const sovereign = rid;
     if (!sovereign) return null;
     const playerWar = s.player && s.player.war;
     if (playerWar) {
-      const playerRealm = FB.playerRealmId(s);
-      const enemyRealm = FB.topRealm(s, playerWar.enemy);
+      const playerRealm = 'player';
+      const enemyRealm = playerWar.enemy;
       if (sovereign === playerRealm || sovereign === 'player' ||
           sovereign === enemyRealm) {
         return {
@@ -21226,8 +21326,8 @@ window.FB = window.FB || {};
     for (const id in s.realms) {
       const realm = s.realms[id];
       if (!realm || !realm.alive || !realm.war) continue;
-      const attacker = FB.topRealm(s, id);
-      const defender = FB.topRealm(s, realm.war.enemy);
+      const attacker = id;
+      const defender = realm.war.enemy;
       if (sovereign === attacker || sovereign === defender) {
         return { attacker:attacker, defender:defender, war:realm.war };
       }
@@ -21353,11 +21453,14 @@ window.FB = window.FB || {};
   }
 
   function realmWarNoticeHtml(s, rid) {
-    if (!rid || !FB.isRealmAtWar(s, rid)) return '';
+    if (!rid) return '';
+    const truce = FB.truceText(s, 'player', rid);
+    if (!FB.isRealmAtWar(s, rid)) return truce ? '<div class="progressnote">' + esc(truce) + '</div>' : '';
     return '<div class="progressnote warnote character-current-war" ' +
       'data-current-war="' + esc(rid) + '"><b>' +
       esc(FB.T('Current war')) + '</b><br>⚔ ' +
-      FB.warStatusLinkHtml(s, rid) + realmWarGoalsHtml(s, rid) + '</div>';
+      FB.warStatusLinkHtml(s, rid) + realmWarGoalsHtml(s, rid) +
+      (truce ? '<p>' + esc(truce) + '</p>' : '') + '</div>';
   }
 
   function bindWarRealmLinks(root, s, rid, cid, returnContext) {

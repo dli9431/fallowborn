@@ -1195,3 +1195,5 @@ Generation uses a private seed scope derived from world seed, bookmark, county, 
 generation, so loading an old save or arriving in a different order neither changes the
 cast nor advances the shared RNG. Missing containers are created at load without raising
 the save version.
+
+Ordinary-war truces are additive format-3 state: `state.truces[JSON.stringify([realmA, realmB].sort())] = expiryTurn`. Normal settlements set 720-day protection for actual opponents, independent of ruler generation and voluntary pacts. War repair initializes missing ledgers without RNG and preserves concurrent personal-vassal and unrelated liege campaigns. Per-host `lowSupplyWarned` survives saves and clears after supply recovery.

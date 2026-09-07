@@ -257,8 +257,16 @@ test('a host drains supply abroad, starves at 0, and refills at home',
       host.from = 'a';
       FB.armyTick(state);
       const firstHome = { supply:host.supply, men:host.men };
+      const savedTerritory = FB.recruitmentTerritory;
+      FB.recruitmentTerritory = function (s, realm) {
+        return realm === 'player' ? { eligible:['a'], blocked:[], rally:'a', development:100 } : savedTerritory(s, realm);
+      };
+      const savedComposition = FB.playerComposition;
+      FB.playerComposition = function () { return { levy:1000 }; };
       FB.armyTick(state);
       const secondHome = { supply:host.supply, men:host.men };
+      FB.playerComposition = savedComposition;
+      FB.recruitmentTerritory = savedTerritory;
       const homeStatus = FB.hostSupplyStatus(state, host);
 
       state.date.season = originalSeason;
@@ -292,12 +300,12 @@ test('a host drains supply abroad, starves at 0, and refills at home',
     expect(result.afterDrain).toBeCloseTo(47.9, 8);
     expect(result.afterWinter).toBeCloseTo(46.85, 8);
     expect(result.starving.supply).toBe(0);
-    expect(result.starving.men).toBe(990);
-    expect(result.starvingAgain.men).toBe(980);
+    expect(result.starving.men).toBe(997);
+    expect(result.starvingAgain.men).toBe(995);
     expect(result.starvingNews).toBe(1);
     expect(result.abroadStatus.status).toBe('starving');
     expect(result.abroadStatus.friendly).toBe(false);
-    expect(result.firstHome.men).toBe(980); // 0 supply: no reinforcement
+    expect(result.firstHome.men).toBe(995); // 0 supply: no reinforcement
     expect(result.firstHome.supply).toBe(3);
     expect(result.secondHome.men).toBe(1000); // fed again: ranks refill
     expect(result.secondHome.supply).toBe(6);

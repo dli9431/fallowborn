@@ -1441,7 +1441,7 @@ FBDATA.balance = {
   },
   supplyWinterDrainMult: 1.5, // winter multiplies the daily drain abroad
   supplyDistanceDepth: 0.25, // the drain grows by this per county of distance from the nearest friendly land
-  supplyAttritionPerDay: 0.01, // fraction of the host lost to hunger each day at 0 supply
+  supplyAttritionPerDay: 0.0025, // fraction of the host lost to hunger each day at 0 supply
   supplyStarvedPowerMult: 0.75, // battle power multiplier at 0 supply
   supplyLowThreshold: 30, // below this the host reads Low and fights worse
   supplyLowPowerMult: 0.9, // battle power multiplier below the low threshold

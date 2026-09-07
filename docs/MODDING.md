@@ -4310,3 +4310,7 @@ wages; `doctrines.mutualCare` supplies non-stacking resident household mortality
 protection. Core defaults are zero. See `docs/designs/doctrines.md` for core values.
 New reform options require an encountered assignable identity actually following
 their value, or must match the current or remembered parent identity.
+
+### Voluntary ordinary-war peace confirmation
+
+An event option may set `confirm:'war_end'` for the built-in `war_accept_tribute`, `war_terms`, `war_negotiated_withdrawal`, `war_submit`, or `war_submission_tribute` custom effect. The blocking confirmation quotes current terms and revalidates the same war/option before resolution. Cancel or Escape returns to the same event. Category automation shows events with this metadata; explicit Resolve everything may resolve them. IDs and confirmation metadata are semantic, not translated display fields.

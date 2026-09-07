@@ -461,6 +461,9 @@ test('drilled replacements survive dismissal and answer the next fresh muster',
         }
       }
       p.war = { enemy:enemyId };
+      p.tier = 3;
+      const originalComposition = FB.playerComposition;
+      FB.playerComposition = function () { return { levy:200 }; };
       FB.noteCohortLosses(state, 'player', { ret:80, total:80 });
       state.turn += 120;
       FB.armyTick(state); // the drilling completes with no host fielded
@@ -474,6 +477,7 @@ test('drilled replacements survive dismissal and answer the next fresh muster',
       /* a resting host on home ground draws the next batch in before the
          levy refill claims the room */
       host.size = 300;
+      host.units.levy -= 50; host.men -= 50;
       state.holder[host.at] = 'player';
       FB.noteCohortLosses(state, 'player', { ret:50, total:50 });
       state.turn += 120;
@@ -490,6 +494,7 @@ test('drilled replacements survive dismissal and answer the next fresh muster',
         pendingFinal:final.pendingTotal,
         readyFinal:final.readyTotal
       };
+      FB.playerComposition = originalComposition;
       p.war = originalWar;
       FB.game.auto.hosts = originalAuto;
       return out;
@@ -497,11 +502,11 @@ test('drilled replacements survive dismissal and answer the next fresh muster',
 
     expect(result.readyBefore).toBe(80);
     expect(result.retAfterMuster).toBe(80);
-    expect(result.menAfterMuster).toBe(80);
+    expect(result.menAfterMuster).toBe(200);
     expect(result.readyAfterMuster).toBe(0);
     expect(result.retFinal).toBe(130); // 80 mustered + 50 drilled back
-    expect(result.levyFinal).toBe(6); // 2% of the 300-man size, after the cohort
-    expect(result.menFinal).toBe(136);
+    expect(result.levyFinal).toBe(70); // shared capacity is filled by the ready cohort
+    expect(result.menFinal).toBe(200);
     expect(result.pendingFinal).toBe(0);
     expect(result.readyFinal).toBe(0);
   });

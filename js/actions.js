@@ -3253,6 +3253,7 @@ window.FB = window.FB || {};
         const cause = FB.caliphateWarCause(s);
         if (!cause) return FB.T('The sitting Caliph cannot be contested from this world state.');
         const blocked = diplomacyBlocksWar(s, cause.enemy);
+        if (blocked === 'truce') return FB.truceText(s, 'player', cause.enemy);
         if (blocked === 'war') return activeWarReason(s, cause.enemy);
         if (blocked === 'alliance') return FB.T('Your defensive alliance forbids an attack on the Caliph’s realm.');
         if (blocked === 'pact') return FB.T('A sworn peace pact protects the Caliph’s realm.');
@@ -3976,6 +3977,9 @@ window.FB = window.FB || {};
         });
       }
       const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
+      if (preview && preview.territory && !preview.territory.rally) {
+        return FB.T('Recruitment blocked: no eligible rally county.');
+      }
       if (preview && !preview.canRaise) {
         return FB.T('At least {minimum} men must answer before a field host can form; only {men} are available. Hire mercenaries before mustering again.', {
           minimum:preview.minimum, men:preview.men
@@ -4055,7 +4059,7 @@ window.FB = window.FB || {};
       /* Full cause discovery belongs to the conquest picker. Keep only the
          active-war locks here so panel refreshes do not build every target,
          justification, and diplomatic block for an unopened sheet. */
-      const playerRealm = FB.playerRealmId(s);
+      const playerRealm = 'player';
       if (s.player.war ||
           (FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, 'player')) ||
           (playerRealm && FB.isRealmAtWar(s, playerRealm))) {
@@ -4124,6 +4128,7 @@ window.FB = window.FB || {};
     },
     can: function (s) {
       const sovereign = FB.topRealm(s, s.player.liege);
+      if (FB.truceExpiry(s, 'player', sovereign)) return FB.truceText(s, 'player', sovereign);
       if (sovereign && FB.isRealmAtWar(s, sovereign)) return activeWarReason(s, sovereign);
       return s.player.prestige >= 200 ? true
         : FB.T('You need at least 200 prestige to rally men to your banner (now {current}).',
@@ -5829,7 +5834,7 @@ window.FB = window.FB || {};
     if (!realm || !realm.alive || realm.liege !== 'player') return false;
     const name = realm.name;
     if (state.player.war && state.player.war.enemy === rid) {
-      if (FB.endPlayerWar) FB.endPlayerWar(state);
+      if (FB.endPlayerWar) FB.endPlayerWar(state, true);
       else state.player.war = null;
     }
     for (const otherId in state.realms) {
@@ -7554,13 +7559,14 @@ window.FB = window.FB || {};
 
   /* One named vassal's exact contribution to the authoritative host ledger.
      playerCompositionBreakdown and Governance both consume this adapter. */
-  FB.vassalLevyContribution = function (state, rid) {
+  FB.vassalLevyContribution = function (state, rid, recruitmentRealm) {
     const realm = state.realms[rid];
     if (!realm || !realm.alive || realm.liege !== 'player') return 0;
     const B = FBDATA.balance;
     const rate = FB.vassalLevyRate(state, rid);
     let amount = 0;
     for (const pid of FB.realmHeldCounties(state, rid)) {
+      if (recruitmentRealm && FB.recruitmentCountyBlocked(state, recruitmentRealm, pid)) continue;
       const modifier = FB.modBonus
         ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
       const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
@@ -9591,9 +9597,10 @@ window.FB = window.FB || {};
     return includeForts ? index.standingTotal : index.standingNonFort;
   };
 
-  FB.buildingBonusCounts = function (state, key) {
+  FB.buildingBonusCounts = function (state, key, recruitmentRealm) {
     const out = Object.create(null);
     for (const pid of FB.demesne(state)) {
+      if (recruitmentRealm && FB.recruitmentCountyBlocked(state, recruitmentRealm, pid)) continue;
       const counts = buildingIndexFor(state, pid).bonusCounts[key];
       if (!counts) continue;
       for (const id in counts) out[id] = (out[id] || 0) + counts[id];
@@ -9905,6 +9912,7 @@ window.FB = window.FB || {};
   };
 
   function diplomacyBlocksWar(state, enemy, readOnly) {
+    if (FB.truceExpiry(state, 'player', enemy)) return 'truce';
     if (FB.isRealmAtWar(state, enemy)) return 'war';
     if (state.pacts && state.pacts[enemy] > state.turn) return 'pact';
     if ((readOnly && FB.areAlliedSnapshot
@@ -10050,7 +10058,8 @@ window.FB = window.FB || {};
         ? FB.warPrestigeReward(cause, 'declaration') : 5,
       victoryPrestige:FB.warPrestigeReward
         ? FB.warPrestigeReward(cause, 'conquest') : 50,
-      aggression:null
+      aggression:null,
+      truceExpiry:FB.truceExpiry(state, 'player', cause.enemy || state.owner[cause.target])
     };
     if (cause.type !== 'aggression') {
       if (cause.type === 'restoration') out.victoryPrestige = 100;
@@ -10161,7 +10170,7 @@ window.FB = window.FB || {};
   FB.warCauses = function (state, includeBlocked, readOnly) {
     const p = state.player, out = [], seen = {};
     if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) return out;
-    const playerRealm = FB.playerRealmId(state);
+    const playerRealm = 'player';
     if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return out;
     const me = state.chars[p.charId];
     const restoration = me && me.restorationRight;
@@ -10269,9 +10278,7 @@ window.FB = window.FB || {};
   };
 
   function activeWarReason(state, realmId) {
-    const sovereign = realmId === 'player' && (!state.realms.player ||
-        !state.realms.player.alive)
-      ? FB.playerRealmId(state) : FB.topRealm(state, realmId);
+    const sovereign = realmId;
     const realm = sovereign && state.realms[sovereign];
     const opponents = FB.warOpponents ? FB.warOpponents(state, realmId) : [];
     const names = opponents.map(function (id) {
@@ -10292,6 +10299,7 @@ window.FB = window.FB || {};
   FB.warCauseBlockedReason = function (state, cause) {
     if (!cause) { cause = state; state = FB.state; }
     if (!cause || !cause.blocked) return '';
+    if (cause.blocked === 'truce') return FB.truceText(state, 'player', cause.enemy);
     if (cause.blocked === 'war') return activeWarReason(state, cause.enemy);
     if (cause.blocked === 'alliance') {
       return FB.T('Your defensive alliance forbids an attack on this realm.');
@@ -10313,13 +10321,14 @@ window.FB = window.FB || {};
     if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) {
       return activeWarReason(state, 'player');
     }
-    const playerRealm = FB.playerRealmId(state);
+    const playerRealm = 'player';
     if (playerRealm && FB.isRealmAtWar(state, playerRealm)) {
       return activeWarReason(state, playerRealm);
     }
     const all = FB.warCauses(state, true);
     let allianceBlocked = false, pactBlocked = false;
     for (const cause of all) {
+      if (cause.blocked === 'truce') return FB.truceText(state, 'player', cause.enemy);
       if (cause.blocked === 'war') return activeWarReason(state, cause.enemy);
       if (cause.blocked === 'alliance') allianceBlocked = true;
       if (cause.blocked === 'pact') pactBlocked = true;
@@ -11629,7 +11638,7 @@ window.FB = window.FB || {};
     if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
     if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) return false;
     opts = opts || {};
-    const playerRealm = FB.playerRealmId(state);
+    const playerRealm = 'player';
     if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return false;
     let cause = causeOrTarget && typeof causeOrTarget === 'object' ? causeOrTarget : null;
     if (!cause) {

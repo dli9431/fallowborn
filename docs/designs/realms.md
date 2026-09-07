@@ -1037,3 +1037,5 @@ existing rebel-sponsorship system or sabotage a county across a shared border. C
 rulers cannot start wars or schemes and their projected host is multiplied by 0.8.
 Succession invalidates generation-stamped schemes, releases captives held by the former
 ruler, and removes predecessor leverage without substituting the new ruler.
+
+Personal vassal campaigns occupy the vassal and its named enemy, independently of the liege. Concurrent unrelated liege wars survive repair and have separate hostility/notices. Household exposure to an inherited realm war remains distinct from personal participation. Technology impact is none (`personal_vassal_campaigns`); no autonomous AI vassal conquest generation is introduced.

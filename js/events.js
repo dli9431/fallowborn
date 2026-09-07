@@ -9089,6 +9089,15 @@ window.FB = window.FB || {};
     if (id === 'war_pay_deserters' && FB.warDeserterPayment) {
       return [impact('gold', { amount:-FB.warDeserterPayment(state) })];
     }
+    if (id === 'war_accept_tribute' && p.war) {
+      return [impact('gold', { amount:25 }),
+        impact('prestige', { amount:FB.warPrestigeReward(p.war, 'tribute') }),
+        impact('system', { system:'war', permanent:true })];
+    }
+    if (id === 'war_negotiated_withdrawal') {
+      return [impact('prestige', { amount:-Math.min(p.prestige, 4) }),
+        impact('system', { system:'war', permanent:true })];
+    }
     if (id === 'war_terms' && p.war) {
       if (p.war.defending) {
         return [
@@ -12389,7 +12398,8 @@ window.FB = window.FB || {};
     const p = state.player;
     if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
-    if (oldLiege && FB.isRealmAtWar(state, oldLiege)) return false;
+    if (p.war || (oldLiege && (FB.isRealmAtWar(state, oldLiege) ||
+        FB.truceExpiry(state, 'player', oldLiege)))) return false;
     if (!p.provs || !p.provs.length) {
       // a baron who renounces his lord seizes the home county he was
       // enfeoffed in — transferProvince buries the old holder if landless

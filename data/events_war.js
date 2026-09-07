@@ -39,14 +39,14 @@ FBDATA.events.push(
       effects:{ custom:'war_hunt' } },
     { label:'Fall back and refit.', desc:'The host mends and your borders are relieved — but no ground is gained.',
       effects:{ custom:'war_hold', health:1 } },
-    { label:'Seek terms.', desc:'End the war now, at a price.', effects:{ custom:'war_terms' } }
+    { label:'Seek terms.', desc:'End the war now, at a price.', confirm:'war_end', effects:{ custom:'war_terms' } }
   ]},
 { id:'war_tribute_offer', title:'Envoys Under a White Flag', trigger:{ never:true }, wartime:true, warStatus:true,
   contextValidator:'war_event_context_valid',
   text:'Beaten in the field again and again, {enemy} sends envoys under a white flag: silver enough to end this war today, if you sheath the sword. But {target} still stands untaken — and its walls will not fall to a purse.',
   options:[
     { label:'Take the tribute.', desc:'Their coin, your glory — the war ends here.',
-      effects:{ custom:'war_accept_tribute', log:'Took the enemy’s tribute and ended the war.' } },
+      confirm:'war_end', effects:{ custom:'war_accept_tribute', log:'Took the enemy’s tribute and ended the war.' } },
     { label:'Press on for {target}.', desc:'Keep your host standing on {target} — the works advance each season it holds the ground. Fortifications may demand more work and a larger host.',
       effects:{ prestige:2, custom:'war_press_on', log:'Refused tribute; the war goes on.' } }
   ]},
@@ -59,10 +59,10 @@ FBDATA.events.push(
   text:'The herald of {enemy} does not gloat — greatness need not. His master’s offer is plain: kneel, swear the oaths, and this war dies here. Keep every acre, every tower, every man still breathing — held from a new lord. Or refuse, and lose them one by one.',
   options:[
     { label:'Bend the knee.', desc:'The war ends at once. Your lands remain yours — held now from {enemy}.',
-      effects:{ custom:'war_submit', log:'Swore the oaths to end a losing war.' } },
+      confirm:'war_end', effects:{ custom:'war_submit', log:'Swore the oaths to end a losing war.' } },
     { label:'Buy the peace with heavy tribute.', desc:'Silver where oaths would serve — {enemy} will name a conqueror’s price.',
       require:{ custom:'war_submission_tribute_affordable' },
-      effects:{ custom:'war_submission_tribute', log:'Bought off a conqueror.' } },
+      confirm:'war_end', effects:{ custom:'war_submission_tribute', log:'Bought off a conqueror.' } },
     { label:'Fight on.', desc:'Better a free fall than a kneeling survival.',
       effects:{ prestige:3, log:'Refused the enemy’s terms; the war goes on.' } }
   ]},
@@ -317,7 +317,7 @@ FBDATA.events.push(
   trigger:{ tierMin:3, atWar:true, custom:'war_negotiation_possible', chance:0.24 }, wartime:true, warStatus:true, weight:7, cooldown:3,
   text:'A neutral household offers safe conduct, an exchange of captives, and an end without triumph. The road home is open now; another defeat may close it.',
   options:[
-    { label:'Negotiate the withdrawal.', desc:'End the war now with a smaller prestige loss than abandoning it unilaterally.', effects:{ custom:'war_negotiated_withdrawal' } },
+    { label:'Negotiate the withdrawal.', desc:'End the war now with a smaller prestige loss than abandoning it unilaterally.', confirm:'war_end', effects:{ custom:'war_negotiated_withdrawal' } },
     { label:'Use the talks to rest the host.', desc:'Supply raises abstract condition; the war continues.', effects:{ custom:'war_supply', prestige:-1 } },
     { label:'Break off the talks.', desc:'Discipline rises in the abstract ledger; the war continues.', effects:{ custom:'war_discipline', prestige:2 } }
   ]},

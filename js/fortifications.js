@@ -413,12 +413,14 @@ window.FB = window.FB || {};
     return total;
   };
 
-  FB.fortGarrisonBurden = function (state, subject) {
+  FB.fortGarrisonBurden = function (state, subject, recruitmentRealm) {
     var total = 0;
     var forts = indexOf(state).forts;
     for (var i = 0; i < forts.length; i++) {
       var item = forts[i], fort = item.record;
       if (fort.ruined || !fort.level) continue;
+      if (recruitmentRealm && FB.recruitmentCountyBlocked &&
+          FB.recruitmentCountyBlocked(state, recruitmentRealm, item.pid)) continue;
       var include = false;
       if (!subject || subject === 'player') include = playerHolds(state, item.pid);
       else if (state.realms && state.realms[subject]) {
@@ -447,6 +449,7 @@ window.FB = window.FB || {};
 
   function realmFriendlyTo(state, realmId, controller) {
     if (!controller || realmId === controller) return true;
+    if (FB.armiesHostile && FB.armiesHostile(state, { realm:realmId }, { realm:controller })) return false;
     var topA = resolveArmyTopRealm(state, realmId);
     var topB = FB.topRealm ? FB.topRealm(state, controller) : controller;
     if (topA && topB && topA === topB) return true;
