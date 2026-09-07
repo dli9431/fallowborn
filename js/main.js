@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.173.0';
+FB.VERSION = '1.173.1';
 FB.CHANGELOG = [
+  { v: '1.173.1', date: '2026-09-06', changes: [
+    'Knightly equipment gains matching helmets and armored footwear, with consistent set availability and rebalanced military stats.',
+    'Settings lets you keep time paused after closing an event.'
+  ] },
   { v: '1.173.0', date: '2026-09-06', changes: [
     'Historical armor and weapons appear in regional markets as their technologies become available. Shops carry everyday equipment, while auctions offer masterworks.'
   ] },
@@ -3516,6 +3520,7 @@ FB.CHANGELOG = [
     hideBeginnerHints:false,
     hideTips:false,
     eventToastOpensChronicle:false,
+    autoResumeAfterEvents:true,
     tipsSeen:{},
     tipsGrandfathered:false,
     onboardingStarted:false,
@@ -3562,6 +3567,7 @@ FB.CHANGELOG = [
       G.uiPrefs.hideTips = !!storedUiPrefs.hideTips;
       G.uiPrefs.eventToastOpensChronicle =
         !!storedUiPrefs.eventToastOpensChronicle;
+      G.uiPrefs.autoResumeAfterEvents = storedUiPrefs.autoResumeAfterEvents !== false;
       if (storedUiPrefs.tipsSeen && typeof storedUiPrefs.tipsSeen === 'object') {
         G.uiPrefs.tipsSeen = storedUiPrefs.tipsSeen;
       }

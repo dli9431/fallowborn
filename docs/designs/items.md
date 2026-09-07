@@ -236,10 +236,13 @@ Each row has its own `equipment_<id>` hard technology-impact review:
 
 | Item | Technology | Earliest year | Production area |
 | --- | --- | --- | --- |
-| Knightly Mail Hauberk | Mail Hauberks | 867 | Latin West and Nordic counties |
+| Knightly Mail Hauberk | Mail Hauberks | 1200 | Latin West and Nordic counties |
 | Lamellar Cuirass | Scale and Lamellar Armor | 867 | Byzantine, Caucasian, Iranian, Rus and steppe counties |
 | Knight's Plate Armor | Plate Armor | 1400 | Latin West and Nordic counties |
-| Mail Coif | Mail Hauberks | 1100 | Latin West and Nordic counties |
+| Mail Coif | Mail Hauberks | 1200 | Latin West and Nordic counties |
+| Mail Chausses | Mail Hauberks | 1200 | Latin West and Nordic counties |
+| Knightly Bascinet | Plate Armor | 1400 | Latin West and Nordic counties |
+| Plate Sabatons | Plate Armor | 1400 | Latin West and Nordic counties |
 | Knightly Lance | Couched Cavalry Lance | 1050 | Latin West and Nordic counties |
 | Steppe Composite Bow | Composite Bow | 867 | Steppe and Iranian counties |
 | Crucible-steel Sword | Crucible Steel | 867 | Iranian, Arabic and Turkic counties |
@@ -248,6 +251,13 @@ Each row has its own `equipment_<id>` hard technology-impact review:
 Pattern-Welded Blades gates the composite forging technique of the northern sword;
 the ordinary Broad Sword remains its fallback.
 The dates are conservative catalogue availability floors, not claims of first invention.
+The complete knightly mail set shares a 1200 floor, including the hauberk and coif
+previously stocked earlier; mail itself is much older. The plate set shares a 1400
+floor. Every head/body/feet piece within a set has identical technology, county cultures,
+minimum wearer age, and military-market quality rules. Existing equipment and opened
+offers are grandfathered through the date rebalance. Mail Chausses and Plate Sabatons
+occupy `feet`; the Knightly Bascinet occupies `head`. Their individual hard reviews
+use ordinary Turnshoe Boots and Nasal Helm as ungated fallbacks.
 Early knights wear mail; complete plate is a fifteenth-century harness with a separately
 equipped helmet. Historical basis: [Met, European armor 1300-1400](https://www.metmuseum.org/essays/fashion-in-european-armor-1300-1400)
 and [Regia Anglorum, Byzantine lamellar](https://regia.org/research/warfare/lamellar.htm).
@@ -263,3 +273,40 @@ item requirements, and technology validation checks the item table.
 Procedural `mail`, `lamellar`, `plate`, and `coif` art uses saved palettes and visual seeds.
 Worn body armor replaces garment detailing with rings, overlapping plates, or breastplate
 and articulated waist bands; the coif frames the face with mail. Rendering uses no RNG.
+`mail_boots` draws ring-covered leggings and feet; `plate_boots` draws overlapping
+foot plates. `bascinet` draws a pointed steel helmet with a visor and breathing holes.
+
+### Era and slot balance
+
+Military stat values are gameplay abstractions, not measured historical effectiveness.
+Body protection establishes the largest tier difference; head and feet contribute less.
+Mail and lamellar are equal regional alternatives. A coif trades the nasal helmet's
+rigid protection for coverage rather than being a straight upgrade merely because its
+catalogue date is later. Plate's greater protection applies in all three matching slots.
+
+| Armor | Plain battle bonus | Per quality step |
+| --- | --- | --- |
+| Padded Jack | 2% | 0.5% |
+| Knightly Mail / Lamellar Cuirass | 5% | 0.5% |
+| Knight's Plate Armor | 8% | 1% |
+| Nasal Helm / Mail Coif | 2% | 0.5% |
+| Knightly Bascinet | 4% | 0.5% |
+| Mail Chausses | 1.5% | 0.5% |
+| Plate Sabatons | 3% | 0.5% |
+
+Masterwork padding stays below Plain mail; Masterwork mail stays below Plain plate.
+Armor adds no generic health or martial-training bonus. Civilian footwear retains its
+health or prestige role. Weapon steel traditions receive modest premiums rather than
+a universal later-year multiplier: Pattern-welded Sword gives 2% battle and Crucible-steel
+Sword 2.5%, both with +1 martial and +0.5% per quality step. The Knightly Lance gives
+3%, +1 martial, and +0.5% per step. Broad Sword, Bearded Axe, and Round Shield retain
+their base effects but gain only +0.5% battle per step. Two-handed Ash Spear gives
+3% battle and Steppe Composite Bow 5%, both with +1 martial and +1% battle per step;
+their two occupied slots count once. These changes apply through definitions to existing
+instances without changing their saved quality or visual seed. Authored legendary powers
+and nonmilitary household tools are outside this equipment balance pass.
+
+Historical context: [The Met, Arms and Armor in Medieval Europe](https://www.metmuseum.org/ja/essays/arms-and-armor-in-medieval-europe)
+places widespread mounted-warrior chausses by 1200; [Royal Collection, sabatons](https://www.rct.uk/collection/stories/european-armour-in-the-royal-collection/sabatons-from-the-armour-garniture-of-henry-viii-for-the-field-and-tilt-rcin-72834l-and-m)
+describes fifteenth-century pointed plate footwear. The common set floors are a catalogue
+consistency choice, not first-invention dates for each component.

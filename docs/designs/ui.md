@@ -1,5 +1,14 @@
 # UI: keyboard & mobile
 
+The equipment paper doll renders Mail Chausses as ring-covered leggings and footwear,
+Plate Sabatons as steel foot plates, and the Knightly Bascinet as a visored helmet.
+The existing Feet and Head controls equip them with the standard keyboard and touch flow.
+
+Settings places **Automatically resume after events** beside the speed control. This
+keyboard-accessible checkbox defaults to enabled and persists in browser-local `fb_ui`.
+Turning it off leaves time paused after a visible event's final choice; Play continues
+the game. The first-event hint follows the preference.
+
 Identity workflows explain their scope at the choice and confirmation: personal or
 household adoption joins an existing tradition, doctrine reform creates or reshapes a
 branch, and settlement projects gradually change local populations. Official realm faith

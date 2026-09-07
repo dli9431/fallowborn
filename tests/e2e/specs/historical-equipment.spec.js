@@ -20,7 +20,8 @@ test('historical production requires the exact technology, date and county cultu
     const province = FB.world.byId[s.player.provinceId];
     const record = FB.realmTechRecord(s);
     const ids = ['knightly_mail', 'lamellar_cuirass', 'knights_plate', 'mail_coif',
-      'knightly_lance', 'steppe_bow', 'crucible_sword', 'pattern_welded_sword'];
+      'knightly_lance', 'steppe_bow', 'crucible_sword', 'pattern_welded_sword',
+      'mail_chausses', 'plate_sabatons', 'knightly_bascinet'];
     const rows = ids.map(function (id) {
       const def = FBDATA.items[id];
       const tech = def.requiresTech;
@@ -142,7 +143,8 @@ test('armor renders distinctly and deterministically without changing saved stat
   const result = await page.evaluate(function () {
     const s = FB.state;
     const c = s.chars[s.player.charId];
-    const ids = ['knightly_mail', 'lamellar_cuirass', 'knights_plate', 'mail_coif'];
+    const ids = ['knightly_mail', 'lamellar_cuirass', 'knights_plate', 'mail_coif',
+      'mail_chausses', 'plate_sabatons', 'knightly_bascinet'];
     const refs = ids.map(function (id) {
       return FB.grantItem(s, id, { quality:'well' });
     });
@@ -171,6 +173,86 @@ test('armor renders distinctly and deterministically without changing saved stat
   });
   expect(result.repeated).toBe(true);
   expect(result.unchanged).toBe(true);
-  expect(result.distinct).toBe(4);
+  expect(result.distinct).toBe(7);
   expect(result.validatesItem).toBe(true);
+});
+
+test('knightly sets share production gates and maintain protection tiers at every quality', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    const sets = [
+      ['mail_coif', 'knightly_mail', 'mail_chausses'],
+      ['knightly_bascinet', 'knights_plate', 'plate_sabatons']
+    ];
+    const gates = sets.map(function (ids) {
+      return ids.map(function (id) {
+        const d = FBDATA.items[id];
+        return { tech:d.requiresTech, year:d.yearMin, cultures:d.cultures,
+          slot:d.slot, market:d.militaryMarket };
+      });
+    });
+    function battle(id, quality) {
+      return FB.resolveItem(s, FB.createItemInstance(s, id, { quality:quality })).fx.battle || 0;
+    }
+    const tiers = ['plain', 'well', 'masterwork'].map(function (quality) {
+      const padded = battle('padded_jack', quality);
+      const mail = battle('knightly_mail', quality);
+      const lamellar = battle('lamellar_cuirass', quality);
+      const plate = battle('knights_plate', quality);
+      return { body:padded < mail && mail === lamellar && mail < plate,
+        head:battle('nasal_helm', quality) === battle('mail_coif', quality) &&
+          battle('mail_coif', quality) < battle('knightly_bascinet', quality),
+        feet:battle('mail_chausses', quality) < battle('plate_sabatons', quality),
+        weapons:battle('broad_sword', quality) === battle('bearded_axe', quality) &&
+          battle('broad_sword', quality) < battle('pattern_welded_sword', quality) &&
+          battle('pattern_welded_sword', quality) < battle('crucible_sword', quality) &&
+          battle('crucible_sword', quality) < battle('knightly_lance', quality),
+        bow:battle('steppe_bow', quality) >=
+          battle('broad_sword', quality) + battle('round_shield', quality) };
+    });
+    return { gates:gates, tiers:tiers,
+      masterworkPadding:battle('padded_jack', 'masterwork'), plainMail:battle('knightly_mail', 'plain'),
+      masterworkMail:battle('knightly_mail', 'masterwork'), plainPlate:battle('knights_plate', 'plain'),
+      errors:FB.validateTechnologyData() };
+  });
+  for (const [index, set] of result.gates.entries()) {
+    expect(set.map(function (row) { return row.slot; })).toEqual(['head', 'body', 'feet']);
+    for (const row of set) {
+      expect(row.tech).toBe(index === 0 ? 'mail_hauberks' : 'plate_armor');
+      expect(row.year).toBe(index === 0 ? 1200 : 1400);
+      expect(row.cultures).toEqual(set[0].cultures);
+      expect(row.market).toBe(true);
+    }
+  }
+  for (const row of result.tiers) expect(row).toEqual({ body:true, head:true, feet:true, weapons:true, bow:true });
+  expect(result.masterworkPadding).toBeLessThan(result.plainMail);
+  expect(result.masterworkMail).toBeLessThan(result.plainPlate);
+  expect(result.errors).toEqual([]);
+});
+
+test('new knightly head and foot equipment survives save and production-gate loss while equipped', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    const cid = s.player.charId;
+    const refs = ['mail_chausses', 'plate_sabatons', 'knightly_bascinet'].map(function (id) {
+      return FB.grantItem(s, id, { quality:'well' });
+    });
+    const mailEquipped = FB.equipItem(s, cid, 'feet', refs[0]).ok;
+    const plateEquipped = FB.equipItem(s, cid, 'feet', refs[1]).ok;
+    const helmEquipped = FB.equipItem(s, cid, 'head', refs[2]).ok;
+    FB.realmTechRecord(s).completed = [];
+    s.date.year = 867;
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    const restored = FB.state;
+    const loadout = FB.loadoutReadOnly(restored, cid);
+    return { equipped:mailEquipped && plateEquipped && helmEquipped,
+      feet:loadout.feet === refs[1], head:loadout.head === refs[2],
+      owned:refs.every(function (ref) { return FB.itemOwner(restored, ref).kind === 'armory'; }),
+      bonus:FB.itemBonusReadOnly(restored, 'battle') };
+  });
+  expect(result.equipped).toBe(true);
+  expect(result.feet).toBe(true);
+  expect(result.head).toBe(true);
+  expect(result.owned).toBe(true);
+  expect(result.bonus).toBeGreaterThanOrEqual(0.08);
 });

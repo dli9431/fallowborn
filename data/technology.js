@@ -75,6 +75,21 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      equipment_mail_chausses:{
+        mode:'hard', tech:['mail_hauberks'],
+        fallback:'Turnshoe Boots and Nasal Helm remain available without technology.',
+        rationale:'Advanced knightly equipment requires the matching armor technology for new production; existing possessions and materialized offers remain usable.'
+      },
+      equipment_plate_sabatons:{
+        mode:'hard', tech:['plate_armor'],
+        fallback:'Turnshoe Boots and Nasal Helm remain available without technology.',
+        rationale:'Advanced knightly equipment requires the matching armor technology for new production; existing possessions and materialized offers remain usable.'
+      },
+      equipment_knightly_bascinet:{
+        mode:'hard', tech:['plate_armor'],
+        fallback:'Turnshoe Boots and Nasal Helm remain available without technology.',
+        rationale:'Advanced knightly equipment requires the matching armor technology for new production; existing possessions and materialized offers remain usable.'
+      },
       equipment_knightly_mail:{
         mode:'hard', tech:['mail_hauberks'],
         fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',

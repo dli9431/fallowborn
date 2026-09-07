@@ -450,10 +450,12 @@ test('siege Chronicle progress keeps ledger precision but displays whole steps',
     expect(result.text).not.toMatch(/\d+\.\d+/);
   });
 
-test('dismissing a paused event resumes time and defers an unread batch',
+for (const autoResume of [true, false]) {
+test('event dismissal respects automatic resume ' + autoResume + ' and defers an unread batch',
   async function ({ page }) {
-    await page.evaluate(function () {
+    await page.evaluate(function (enabled) {
       const s = FB.state;
+      FB.game.uiPrefs.autoResumeAfterEvents = enabled;
       s.eventQueue = [];
       FB.game.auto.all = false;
       FB.game.auto.war = false;
@@ -462,7 +464,7 @@ test('dismissing a paused event resumes time and defers an unread batch',
         { id:'field_battle_won', ctx:{ pid:s.player.provinceId } },
         { id:'field_battle_lost', ctx:{ pid:s.player.provinceId } }
       ]);
-    });
+    }, autoResume);
 
     await expect(page.locator('#eventmodal:not(.hidden)')).toBeVisible();
     await page.locator('#ev-options .evopt').first().click();
@@ -474,8 +476,30 @@ test('dismissing a paused event resumes time and defers an unread batch',
         queued:FB.state.eventQueue.map(function (item) { return item.id; })
       };
     });
-    expect(result.paused).toBe(false);
+    expect(result.paused).toBe(!autoResume);
     expect(result.queued).toEqual(['field_battle_lost']);
+  });
+}
+
+test('automatic event resume defaults on and its Settings toggle persists across reloads',
+  async function ({ page }, testInfo) {
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    const toggle = page.locator('#set-auto-resume-events');
+    await expect(toggle).toBeChecked();
+    await toggle.focus();
+    await page.keyboard.press('Space');
+    await expect(toggle).not.toBeChecked();
+    expect(await page.evaluate(function () {
+      return JSON.parse(localStorage.getItem('fb_ui')).autoResumeAfterEvents;
+    })).toBe(false);
+    await openGame(page, testInfo);
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await expect(toggle).not.toBeChecked();
+    await toggle.check();
+    expect(await page.evaluate(function () {
+      return FB.game.uiPrefs.autoResumeAfterEvents &&
+        JSON.parse(localStorage.getItem('fb_ui')).autoResumeAfterEvents;
+    })).toBe(true);
   });
 
 test('detachment battles score the campaign without personal event or capture spam',

@@ -525,13 +525,13 @@ window.FB = window.FB || {};
       forcePromotionCheck:true
     });
     /* A visible event is the interruption, not a new persistent pause state.
-       Resume after its final answer even when it was reached by fast-forward
+       When enabled in Settings, resume after its final answer even when reached by fast-forward
        or while the player had paused manually. Do this after mortal outcome
        handling so an event that ends the current life remains paused on the
        succession screen. Autoresolve-only batches never opened a modal and
        therefore leave the caller's pause state alone. */
     if (dismissedEventModal && FB.game && FB.game.setPaused && s && s.player &&
-        !s.player.dead) FB.game.setPaused(false);
+        !s.player.dead) FB.game.setPaused(FB.game.uiPrefs.autoResumeAfterEvents === false);
     if (openAuction && FB.auctionOf && FB.auctionOf(s) &&
         s.player && !s.player.dead) {
       UI.showAuction();
@@ -889,8 +889,9 @@ window.FB = window.FB || {};
       }
     }
     if (UI.hintDue && UI.hintDue('event-pauses')) {
-      bodyHtml = '<p class="hint">' + esc(FB.T(
-        'Events pause the days until you choose an answer, then time resumes automatically.')) + '</p>' + bodyHtml;
+      bodyHtml = '<p class="hint">' + esc(FB.game.uiPrefs.autoResumeAfterEvents === false
+        ? FB.T('Events pause the days until you choose an answer. Time stays paused afterward; use Play to continue.')
+        : FB.T('Events pause the days until you choose an answer, then time resumes automatically.')) + '</p>' + bodyHtml;
     }
     $('ev-text').innerHTML = bodyHtml;
     FB.paintFaces($('ev-text'), s);
@@ -25288,6 +25289,10 @@ window.FB = window.FB || {};
       (G.SPEEDS.length - 1) + '" step="1" value="' + G.speedIdx + '" aria-label="' +
       esc(FB.T('Speed of days')) + '">' +
       '<div class="adesc" id="set-speed-label">' + speedLabel(G.speedIdx) + '</div></div>';
+    h += settingsDetailToggle('set-auto-resume-events',
+      'Automatically resume after events',
+      'Resume time after the final event choice. Disable this to stay paused and continue with Play when ready.',
+      G.uiPrefs.autoResumeAfterEvents !== false);
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Accessibility')) + '</p></div>' +
       '<div class="main-text-color-summary"><span id="set-main-text-color-swatch" ' +
@@ -25533,6 +25538,10 @@ window.FB = window.FB || {};
         });
       }
     }
+    $('set-auto-resume-events').addEventListener('change', function () {
+      G.uiPrefs.autoResumeAfterEvents = $('set-auto-resume-events').checked;
+      G.saveUiPrefs();
+    });
     $('set-event-toast-opens-chronicle').addEventListener('change', function () {
       G.uiPrefs.eventToastOpensChronicle =
         $('set-event-toast-opens-chronicle').checked;

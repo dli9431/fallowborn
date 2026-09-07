@@ -1,5 +1,13 @@
 # National technology
 
+Knightly equipment uses matching production gates across Head, Body, and Feet:
+Mail Coif, Knightly Mail Hauberk, and Mail Chausses require `mail_hauberks` and 1200;
+Knightly Bascinet, Knight's Plate Armor, and Plate Sabatons require `plate_armor` and
+1400. The three added definitions each have a hard technology-impact review, with
+Turnshoe Boots and Nasal Helm as ungated alternatives. Production dates are separate
+from technology research windows. Existing possessions and materialized offers remain
+usable. See [items.md](items.md) for shared regional restrictions and balance.
+
 Technology belongs to sovereign nations, not dynasties. It models durable knowledge and
 institutional practice from inherited late-antique foundations through the medieval
 diffusions of 476–1300. The campaign remains playable after 1300: projects do not acquire

@@ -150,6 +150,18 @@ window.FB = window.FB || {};
         ctx.beginPath(); ctx.moveTo(-21, q); ctx.lineTo(21, q); ctx.stroke();
       }
       ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, 34); ctx.stroke();
+    } else if (kind === 'bascinet') {
+      ctx.fillStyle = metal;
+      ctx.beginPath();ctx.moveTo(0,-38);ctx.quadraticCurveTo(30,-24,26,10);
+      ctx.lineTo(18,32);ctx.lineTo(-18,32);ctx.lineTo(-26,10);
+      ctx.quadraticCurveTo(-30,-24,0,-38);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle='#263139';ctx.fillRect(-19,-2,38,3);
+      ctx.strokeStyle=polish;ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo(0,3);ctx.lineTo(5,18);ctx.lineTo(0,29);ctx.stroke();
+      ctx.fillStyle='#465158';
+      for(let y=9;y<25;y+=6)for(let x=-15;x<16;x+=6){
+        ctx.beginPath();ctx.arc(x,y,1,0,Math.PI*2);ctx.fill();
+      }
     } else if (kind === 'helm') {
       ctx.fillStyle = metal;
       ctx.beginPath(); ctx.arc(0, 0, 25, Math.PI, 0); ctx.lineTo(23, 12);
@@ -193,8 +205,8 @@ window.FB = window.FB || {};
         ctx.beginPath(); ctx.arc(-28, 0, 3, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(28, 0, 3, 0, Math.PI * 2); ctx.fill();
       }
-    } else if (kind === 'boots') {
-      ctx.fillStyle = base;
+    } else if (kind === 'boots' || kind === 'mail_boots' || kind === 'plate_boots') {
+      ctx.fillStyle = kind === 'boots' ? base : metal;
       for (let b = -1; b <= 1; b += 2) {
         ctx.beginPath();
         ctx.moveTo(b * 14, -31); ctx.lineTo(b * 35, -31);
@@ -204,6 +216,17 @@ window.FB = window.FB || {};
         ctx.lineTo(b * 14, 33);
         ctx.quadraticCurveTo(b * 11, 29, b * 14, 22);
         ctx.closePath(); ctx.fill(); ctx.stroke();
+        if(kind !== 'boots'){
+          ctx.save();ctx.clip();ctx.strokeStyle='#53616a';ctx.lineWidth=.8;
+          for(let y=-28;y<34;y+=5){
+            if(kind==='plate_boots'){
+              ctx.beginPath();ctx.moveTo(b*10,y);ctx.lineTo(b*42,y+3);ctx.stroke();
+            }else for(let x=13;x<41;x+=5){
+              ctx.beginPath();ctx.arc(b*x,y,1.8,0,Math.PI*2);ctx.stroke();
+            }
+          }
+          ctx.restore();
+        }
         ctx.strokeStyle = 'rgba(205,163,119,0.42)';
         ctx.lineWidth = 1.4;
         ctx.beginPath();
@@ -1104,7 +1127,7 @@ window.FB = window.FB || {};
       var head=descriptor.loadout.head;
       var kind=head
         ? (head.art.kind==='crown'?'crown'
-          : (head.art.kind==='helm'||head.art.kind==='coif')?'helm':'none')
+          : (head.art.kind==='helm'||head.art.kind==='coif'||head.art.kind==='bascinet')?'helm':'none')
         : spec.headwear;
       var riseU=HEADWEAR_RISE[kind]||6;
       if(!head&&!spec.coversHair){
@@ -3621,6 +3644,11 @@ window.FB = window.FB || {};
      the procedural item art scaled to the head. */
   function paintHeadItem(ctx, scaffold, spec, item, q) {
     var f=scaffold.face,kind=item.art.kind;
+    if(kind==='bascinet'){
+      drawItemArt(ctx,item,f.cx,(f.top+f.chinBottom)/2,
+        (f.chinBottom-f.top)/60,0,false);
+      return;
+    }
     if(kind==='coif'){
       ctx.save();
       ctx.beginPath();ctx.ellipse(f.cx,(f.top+f.chinBottom)/2,
@@ -4325,7 +4353,8 @@ window.FB = window.FB || {};
     var feetItem=descriptor.loadout.feet;
     var shoe=[52,40,32];
     if(feetItem){
-      var fc=hexToRgbV2(pickArt(feetItem,['leathers','cloths'],'#5b402b',2));
+      var armoredFeet=feetItem.art.kind==='mail_boots'||feetItem.art.kind==='plate_boots';
+      var fc=hexToRgbV2(pickArt(feetItem,armoredFeet?['metals']:['leathers','cloths'],'#5b402b',2));
       if(fc)shoe=fc;
     }
     var sx=-spec.lightSide;
@@ -4350,6 +4379,17 @@ window.FB = window.FB || {};
         legPath(ctx,b,side);
         fillStrokeA(ctx,hose,shadeV2(hose,-.22),1.8,.9,q);
         legDetail(ctx,b,spec,hose,side,q);
+        if(feetItem&&feetItem.art.kind==='mail_boots'){
+          ctx.save();legPath(ctx,b,side);ctx.clip();
+          ctx.fillStyle=cssV2(shoe);ctx.fill();
+          ctx.strokeStyle=cssV2(shadeV2(shoe,-.35));ctx.lineWidth=.6;
+          for(var ly=b.hipY;ly<b.soleY;ly+=3){
+            for(var lx=cx-45;lx<cx+45;lx+=3){
+              ctx.beginPath();ctx.arc(lx,ly,1.1,0,Math.PI*2);ctx.stroke();
+            }
+          }
+          ctx.restore();
+        }
       }
       /* the far leg reads back by a wash */
       ctx.save();
@@ -4369,6 +4409,18 @@ window.FB = window.FB || {};
       shoePath(ctx,b,side);
       fillStrokeA(ctx,side===spec.lightSide?shoe:shadeV2(shoe,-.1),
         shadeV2(shoe,-.3),1.6,.9,q);
+      if(feetItem&&armoredFeet){
+        ctx.save();shoePath(ctx,b,side);ctx.clip();
+        ctx.strokeStyle=cssV2(shadeV2(shoe,-.35));ctx.lineWidth=.7;
+        for(var fy=b.soleY-b.shoeH*2;fy<b.soleY+4;fy+=3){
+          if(feetItem.art.kind==='plate_boots'){
+            ctx.beginPath();ctx.moveTo(cx-45,fy);ctx.lineTo(cx+45,fy+2);ctx.stroke();
+          }else for(var fx=cx-45;fx<cx+45;fx+=3){
+            ctx.beginPath();ctx.arc(fx,fy,1.1,0,Math.PI*2);ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
     }
     gownPath(ctx,b);
     fillStrokeA(ctx,cl.base,cl.deep,2,.9,q);
@@ -4546,7 +4598,7 @@ window.FB = window.FB || {};
     quality.fine=quality.bold<1.6;
     quality.grow=1+(quality.bold-1)*.38;
     var headItem=descriptor.loadout.head;
-    var coversHair=(headItem&&(headItem.art.kind==='helm'||headItem.art.kind==='coif'))||
+    var coversHair=(headItem&&(headItem.art.kind==='helm'||headItem.art.kind==='coif'||headItem.art.kind==='bascinet'))||
       (!headItem&&spec.coversHair);
     /* Attachment order is structural: back hair behind the body, the
        neck under the robe, draped cloth behind the head, then the face
