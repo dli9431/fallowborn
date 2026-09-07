@@ -15,7 +15,7 @@ successfully conquered.
 Defensive alliances complement pacts but do not replace them. AI crowns may form rare
 same-faith-group neighbor alliances; independent player kings and emperors may offer an
 adjacent sovereign king or emperor an alliance at Standing 60+, spending 25 gold and
-using the ordinary envoy chance. A successful neighboring sovereign royal marriage is
+using the envoy chance plus any qualifying family-marriage bonus (capped at 90%). A successful neighboring sovereign royal marriage is
 the other player route. Each realm may have one ally, partners cannot attack one
 another, and a compact ends when either stamped ruler generation changes.
 
@@ -232,3 +232,26 @@ tradition. AI sovereigns continue to read their own realm identity.
 Range, technology extensions, spoils, cooldowns, AI cadence, and raid resolution remain
 engine behavior. This configuration exposure changes no baseline capability, so it does
 not add a technology-impact ledger entry.
+
+## Family ties in defensive-alliance negotiations
+
+`FB.dynasticAllianceTieSnapshot(state, realmId)` derives living ordinary marriages
+between close family of the current protagonist and the current foreign ruler.
+Close family includes self, parents, grandparents, full/half siblings, children, and
+grandchildren, regardless of residence. Betrothals, dead spouses, ended marriages,
+and exceptional sibling unions do not qualify. Multiple marriages do not stack.
+Succession recalculates the relationship to each current ruler; an unrelated
+replacement house inherits no bonus. Existing saves need no migration.
+
+`balance.dynasticAllianceBonus` defaults to 0.15. `FB.allianceOfferStatus` exposes
+the tie, base envoy chance, bonus, and final chance capped at 90%; every alliance
+preview and the actual offer use that final chance. Peace-pact odds are unchanged.
+Sovereign/rank, adjacency, Standing, cost, war, and one-ally restrictions remain
+authoritative. Losing a marriage removes only the negotiation bonus, not an already
+negotiated alliance, whose existing expiry rules continue.
+
+Network / Realm's **Alliances & pacts...** centralizes neighboring sovereigns and
+current commitments, including blocked offers, costs, Standing, odds, estimated
+defensive aid, and family ties. Envoy entry points use the same list. Each court
+links to its marriage candidates. Technology review `dynastic_alliance_negotiation`
+is `none`: family-based diplomacy has no credible research dependency.

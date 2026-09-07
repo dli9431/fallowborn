@@ -8679,6 +8679,43 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* Derived from living marriage links: no save migration or cached bonus. */
+  FB.dynasticAllianceTieSnapshot = function (state, rid) {
+    const result = { qualifying:false, bonus:0, marriages:[] };
+    const me = state && state.player && state.chars[state.player.charId];
+    const realm = state && state.realms && state.realms[rid];
+    const succession = realm && realm.succession;
+    const member = succession && succession.members && succession.members[succession.rulerMemberId];
+    const ruler = FB.realmRulerCharacterSnapshot(state, rid) ||
+      (realm && realm.alive && member && member.alive !== false && !member.charId ? {
+        id:'compact:' + rid + ':' + member.id,
+        royalLine:{ realmId:rid, memberId:member.id }
+      } : null);
+    if (!me || !ruler) return result;
+    function close(a, b) {
+      return ['self', 'parent_child', 'grandparent', 'full_sibling',
+        'half_sibling'].indexOf(FB.kinshipDegreeSnapshot(state, a, b)) >= 0;
+    }
+    const seen = {};
+    for (const id in state.chars) {
+      const a = state.chars[id];
+      if (a.dead || !close(me, a)) continue;
+      for (const b of FB.spousesSnapshot(state, a)) {
+        if (b.dead || !close(ruler, b) ||
+            FB.closeMarriageKinSnapshot(state, a, b)) continue;
+        const key = [a.id, b.id].sort().join(':');
+        if (seen[key]) continue;
+        seen[key] = true;
+        result.marriages.push({ subjectId:a.id, partnerId:b.id });
+      }
+    }
+    result.qualifying = result.marriages.length > 0;
+    result.bonus = result.qualifying
+      ? Number(FBDATA.balance.dynasticAllianceBonus === undefined
+        ? 0.15 : FBDATA.balance.dynasticAllianceBonus) : 0;
+    return result;
+  };
+
   FB.allianceOfferStatus = function (state, rid) {
     const mine = state.realms && state.realms.player;
     const realm = state.realms && state.realms[rid];
@@ -8694,6 +8731,10 @@ window.FB = window.FB || {};
       chance:0,
       reason:''
     };
+    status.tie = FB.dynasticAllianceTieSnapshot(state, rid);
+    status.baseChance = realm ? FB.envoyChance(state, rid) : 0;
+    status.dynasticBonus = status.tie.bonus;
+    status.chance = Math.min(0.9, status.baseChance + status.dynasticBonus);
     if (!FB.isPlayerSovereign(state) || !mine || mine.rank < 3) {
       status.reason = FB.T(
         'Only an independent king or emperor may offer a defensive alliance.');
@@ -8711,7 +8752,6 @@ window.FB = window.FB || {};
       return status;
     }
     status.relevant = true;
-    status.chance = FB.envoyChance(state, rid);
     if (FB.allianceSnapshot(state, 'player')) {
       status.reason = FB.T('Your realm already has one defensive ally.');
     } else if (FB.allianceSnapshot(state, rid)) {
@@ -8741,7 +8781,7 @@ window.FB = window.FB || {};
     if (!status.ready) return false;
     state.player.gold -= status.cost;
     const r = state.realms[rid];
-    if (FB.chance(FB.envoyChance(state, rid)) && FB.formAlliance(state, 'player', rid, 'envoy')) {
+    if (FB.chance(status.chance) && FB.formAlliance(state, 'player', rid, 'envoy')) {
       FB.news(state, FB.msg('news.action.alliance_success',
         '🤝 {realm} accepts your envoy: your crowns will defend one another until either ruler dies.',
         { realm: r.name }));

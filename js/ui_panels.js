@@ -1256,6 +1256,13 @@ window.FB = window.FB || {};
             : 'Ruler decisions'))
         : 'One-time deeds');
       body.appendChild(ih);
+      if (groupId === 'life' || (groupingStyle === 'action-type' && groupId === 'personal')) {
+        const finder = document.createElement('button');
+        finder.className = 'btn';
+        finder.textContent = FB.T('Find a marriage…');
+        finder.onclick = function () { UI.showMarriageFinder(null, null); };
+        body.appendChild(finder);
+      }
       for (const listedItem of items) {
         let item = listedItem;
         if (listedItem.statusDeferred) {
@@ -3749,6 +3756,7 @@ window.FB = window.FB || {};
     let h = '<button class="btn small" id="btn-ftree" style="width:100%" ' +
       'title="' + esc(FB.T('See the whole family drawn as a tree')) + '">' +
       esc(FB.T('🌳 See the family tree')) + '</button>';
+    h += '<button class="btn" id="kin-marriage-finder">' + esc(FB.T('Find a marriage…')) + '</button>';
     const freedomHistory = FB.familyFreedomView
       ? FB.familyFreedomView(s) : null;
     if (freedomHistory) {
@@ -3851,6 +3859,7 @@ window.FB = window.FB || {};
     }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
+    $('kin-marriage-finder').onclick = function () { UI.showMarriageFinder(null, null); };
     $('btn-ftree').addEventListener('click', function () {
       UI.showFamilyTree();
     });
@@ -5170,7 +5179,7 @@ window.FB = window.FB || {};
         id:'realm',
         hotkey:5,
         title:FB.T('Realm'),
-        summary:realmSummary,
+        summary:'<button class="btn" id="network-pacts">' + esc(FB.T('Alliances & pacts…')) + '</button>' + realmSummary,
         rows:realmRows,
         empty:FB.T('No realm ties.')
       },
@@ -5192,6 +5201,7 @@ window.FB = window.FB || {};
     }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
+    $('network-pacts').onclick = function () { UI.showEnvoys(); };
     initLargeListSurface('network', { restoreFocus:true });
     if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
     const sectionToggles = box.querySelectorAll('[data-list-toggle]');

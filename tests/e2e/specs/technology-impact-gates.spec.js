@@ -469,3 +469,13 @@ test('formal privileges reject new grants, filter demands, and preserve records'
     expect(result.legacyDemandCleared).toBe(true);
     expect(result.legacyPrivilegeGranted).toBe(true);
   });
+
+
+test('marriage discovery and family diplomacy have no technology gate', async function ({ page }) {
+  const modes = await page.evaluate(function () {
+    return ['marriage_discovery', 'dynastic_alliance_negotiation'].map(function (id) {
+      return FBDATA.techImpactReviews.features[id].mode;
+    });
+  });
+  expect(modes).toEqual(['none', 'none']);
+});

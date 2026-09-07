@@ -75,6 +75,14 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      dynastic_alliance_negotiation:{
+        mode:'none',
+        rationale:'Close-family marriage diplomacy is baseline social negotiation with no credible research dependency.'
+      },
+      marriage_discovery:{
+        mode:'none',
+        rationale:'Browsing known courts does not expand marriage or travel permissions and has no research dependency.'
+      },
       ai_dejure_expansion_planning:{
         mode:'none',
         rationale:'AI preference for compact de jure consolidation is baseline world strategy and must not depend on research controlled by those same simulated realms.'

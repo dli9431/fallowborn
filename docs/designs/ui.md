@@ -2264,3 +2264,19 @@ same effect explanation, with up to two examples in each direction and fuller
 conditions. Tooltips keep the effect first, group cost and recovery together, and
 use muted supporting context. Known sources are limited to two names plus a count.
 Both desktop hover/focus and compact disclosures share this concise copy.
+
+## Marriage finder and diplomatic partners
+
+**Find a marriage...** appears in Kin and Deeds / Life & Family, existing personal
+and descendant match pickers, and managed descendant character sheets. A descendant
+entry preselects that person. The modal uses native labeled search, number, select,
+and checkbox controls in the existing scrolling bottom sheet, with full-width
+inputs and minimum 44px controls. Search preferences live only in UI session state.
+Existing modal history retains filters, scroll, and focus after reviewing a match
+or court; proposal execution revalidates the selected pair against live state.
+
+**Alliances & pacts...** under Network / Realm is also the envoy overview. It lists
+neighboring sovereigns and active commitments, with exact blocked reasons and links
+to each court's marriage search. Marriage cards distinguish designated succession,
+future negotiation benefits, and the existing personal royal-marriage alliance rule.
+New display text routes through `FB.T`; catalogs remain integration-owned.

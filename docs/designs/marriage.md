@@ -403,3 +403,25 @@ Guildmaster's son or daughter carries `background.guildmasterFamily`; marriage s
 a craft/merchant player into the guild, or otherwise brings ten gold and commercial
 contacts. The spouse then joins the managed household workforce and may staff an
 enterprise like any other resident adult.
+
+## Marriage discovery
+
+Kin, Life & Family deeds, personal match pickers, and managed descendant sheets
+link to **Find a marriage...**. The session-only finder selects the protagonist or
+a managed child/grandchild, defaults to courts in the player's sovereign realm
+and neighboring sovereign realms, and can expand to all courts. Person, house,
+realm, age, faith, court rank, heir, and availability filters only affect discovery.
+Actionable pairs sort first; blocked pairs retain their authoritative explanation.
+
+`FB.marriageCandidateQuery` reads existing bounded court-family and ruler snapshots.
+It never ensures succession, creates characters, consumes RNG, or spends time or
+resources. Compact records show known identity and route through the existing court
+opening before exact terms can be reviewed. Personal matches reuse courtship and
+read-only travel checks; descendant proposals retain the selected pair and revalidate
+through `FB.proposeRoyalKinMatch`. Modal history restores filters, scroll, and focus.
+No search preference or derived bonus is added to saved state.
+
+Technology review `marriage_discovery` is `none`: finding known courts does not
+expand existing marriage, household, rank-access, or travel permissions. Completed
+ordinary close-family weddings can improve later defensive-alliance negotiations
+(see the diplomacy design). They do not grant descendant weddings an automatic alliance.

@@ -743,6 +743,80 @@ window.FB = window.FB || {};
     };
   };
 
+  FB.marriageDiscoverySubjects = function (state) {
+    return [state.chars[state.player.charId]].concat(
+      Object.keys(state.chars).map(function (id) { return state.chars[id]; }).filter(function (c) {
+        return !c.dead && FB.playerDescendantKind(state, c.id) &&
+          FB.isHouseholdCharacter(state, c.id);
+      }));
+  };
+
+  /* Discovery deliberately never ensures a court or materializes a character. */
+  FB.marriageCandidateQuery = function (state, options) {
+    const o = options || {}, out = [], seen = {};
+    const subject = FB.marriageDiscoverySubjects(state).filter(function (c) {
+      return c.id === (o.subjectId || state.player.charId);
+    })[0];
+    if (!subject) return out;
+    const home = FB.playerRealmId(state);
+    for (const rid in state.realms) {
+      const r = state.realms[rid];
+      if (!r.alive || rid === 'player' || (o.realmId && rid !== o.realmId)) continue;
+      const sovereign = FB.topRealm(state, rid);
+      if (o.scope !== 'all' && sovereign !== home &&
+          !FB.realmsAdjacent(state, home, sovereign)) continue;
+      const members = FB.realmFamilySnapshot(state, rid).slice();
+      if (r.succession && r.succession.members && r.succession.members[r.succession.rulerMemberId]) {
+        members.unshift(r.succession.members[r.succession.rulerMemberId]);
+      }
+      const consort = FB.realmConsortMember(state, rid);
+      for (const member of members) {
+        const c = member.charId && state.chars[member.charId];
+        const key = c ? c.id : rid + ':' + member.id;
+        if (seen[key] || member.alive === false || (c && c.dead)) continue;
+        seen[key] = true;
+        const person = c || member;
+        if (person.sex === subject.sex || (c && c.id === subject.id)) continue;
+        const age = c ? FB.ageOf(c, state.date.year) : state.date.year - member.born;
+        const faith = person.religion || FB.realmReligionId(state, rid);
+        const committed = c ? !!(FB.spousesSnapshot(state, c).length || c.betrothedId)
+          : member.role === 'consort' || !!(r.succession && member.id === r.succession.rulerMemberId &&
+            consort && consort.alive !== false && age >= 16 && state.date.year - consort.born >= 16);
+        const heir = !!(r.succession && r.succession.heirId === member.id);
+        const name = c ? FB.fullName(c) : member.name;
+        if (o.availability !== 'all' && committed) continue;
+        if (o.minAge !== undefined && o.minAge !== '' && age < Number(o.minAge)) continue;
+        if (o.maxAge !== undefined && o.maxAge !== '' && age > Number(o.maxAge)) continue;
+        if (o.faith && faith !== o.faith) continue;
+        if (o.rank && Number(o.rank) !== r.rank) continue;
+        if (o.heirs && !heir) continue;
+        if (o.search && (name + ' ' + (person.dyn || person.house || r.dyn || '') + ' ' + r.name).toLowerCase().indexOf(o.search.toLowerCase()) < 0) continue;
+        const status = !c ? { ready:false, reason:FB.T('Open this court to learn exact marriage terms.') }
+          : subject.id === state.player.charId ? FB.courtshipStatus(state, c)
+          : FB.royalKinMatchStatus(state, subject, c);
+        let travel = null;
+        if (c && subject.id === state.player.charId && status.ready &&
+            FB.socialAttentionPresence(state, c).status !== 'active') {
+          travel = FB.socialVisitPreview(state, c, { courtship:true, readOnly:true });
+          if (!travel.eligible) { status.ready = false; status.reason = travel.reason; }
+          else if (state.player.gold < travel.cost) {
+            status.ready = false;
+            status.reason = FB.T('Travel requires {money:cost}; you have {money:gold}.', { cost:travel.cost, gold:Math.floor(state.player.gold) });
+          }
+        }
+        out.push({ key:key, memberKey:rid + ':' + member.id, realmId:rid, characterId:c && c.id, travel:travel,
+          threshold:c && subject.id === state.player.charId ? FB.courtshipStandingThreshold(state, c) : null,
+          name:name, age:age, faith:faith, rank:r.rank, heir:heir,
+          committed:committed, status:status,
+          terms:c ? (subject.id === state.player.charId ? FB.courtshipTerms(state, c, false) : FB.marriageTerms(state, subject, c)) : null });
+      }
+    }
+    return out.sort(function (a, b) {
+      return Number(b.status.ready) - Number(a.status.ready) ||
+        String(a.name).localeCompare(String(b.name)) || a.key.localeCompare(b.key);
+    });
+  };
+
   FB.royalKinMatchCandidates = function (state, partner) {
     var out = [];
     var family = FB.agencyFamilyMembers ? FB.agencyFamilyMembers(state) : [];
