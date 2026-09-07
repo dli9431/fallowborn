@@ -2,6 +2,10 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
+  'data/map_data.js',
+  'js/model.js',
+  'js/world.js',
+  'js/events.js',
   'js/actions.js',
   'js/intrigue.js',
   'js/ui_modals.js',
@@ -664,3 +668,166 @@ test('plot target picker shows realm cards and starts the exact selected plot',
     expect(plot.id).toBe('diplomatic_correspondence');
     expect(plot.context).toEqual({ realmId:setup.first });
   });
+
+
+test('dynastic ties require living weddings, do not stack, and follow current families', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    const rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive && !s.realms[id].liege; });
+    FB.ensureRealmCourtForDisplay(s, rid);
+    const ruler = FB.materializeRealmRuler(s, rid);
+    function child(parent, sex, name) {
+      const c = FB.makeCharacter(s, { name:name, sex:sex, born:s.date.year - 20,
+        culture:me.culture, religion:me.religion, station:2 });
+      c.fatherId = parent.id;
+      parent.childrenIds = (parent.childrenIds || []).concat(c.id);
+      return c;
+    }
+    const a = child(me, 'm', 'Tie Son'), b = child(ruler, 'f', 'Tie Daughter');
+    a.betrothedId = b.id; b.betrothedId = a.id;
+    FB.touchFamily();
+    const pledged = FB.dynasticAllianceTieSnapshot(s, rid).qualifying;
+    a.betrothedId = null; b.betrothedId = null;
+    a.spouseId = b.id; b.spouseId = a.id; FB.touchFamily();
+    const wedding = FB.dynasticAllianceTieSnapshot(s, rid);
+    const c = child(me, 'm', 'Second Son'), d = child(ruler, 'f', 'Second Daughter');
+    c.spouseId = d.id; d.spouseId = c.id; FB.touchFamily();
+    const multiple = FB.dynasticAllianceTieSnapshot(s, rid);
+    const restored = FB.dynasticAllianceTieSnapshot(JSON.parse(JSON.stringify(s)), rid);
+    b.dead = true; d.dead = true; FB.touchFamily();
+    const death = FB.dynasticAllianceTieSnapshot(s, rid).qualifying;
+    b.dead = false; d.dead = false;
+    a.spouseId = null; b.spouseId = null; c.spouseId = null; d.spouseId = null; FB.touchFamily();
+    const divorce = FB.dynasticAllianceTieSnapshot(s, rid).qualifying;
+    a.spouseId = b.id; b.spouseId = a.id; FB.touchFamily();
+    s.player.charId = c.id;
+    const playerSuccession = FB.dynasticAllianceTieSnapshot(s, rid).qualifying;
+    const replacement = child({ id:'unrelated', childrenIds:[] }, 'm', 'Replacement House');
+    s.realms[rid].succession.members[s.realms[rid].succession.rulerMemberId].charId = replacement.id;
+    const replacementTie = FB.dynasticAllianceTieSnapshot(s, rid).qualifying;
+    return { pledged:pledged, wedding:wedding, multiple:multiple, restored:restored,
+      death:death, divorce:divorce, playerSuccession:playerSuccession, replacement:replacementTie };
+  });
+  expect(result.pledged).toBe(false);
+  expect(result.wedding.qualifying).toBe(true);
+  expect(result.wedding.bonus).toBe(0.15);
+  expect(result.multiple.marriages).toHaveLength(2);
+  expect(result.multiple.bonus).toBe(0.15);
+  expect(result.restored.bonus).toBe(0.15);
+  expect(result.death).toBe(false);
+  expect(result.divorce).toBe(false);
+  expect(result.playerSuccession).toBe(true);
+  expect(result.replacement).toBe(false);
+});
+
+test('alliance offers use their displayed final chance and retain diplomatic gates', async function ({ page }) {
+  const setup = await page.evaluate(function () {
+    const s = FB.state, p = s.player;
+    p.tier = 6; p.liege = null; p.provs = [p.provinceId]; p.gold = 1000; p.prestige = 0;
+    FB.foundPlayerRealm(s);
+    const rid = Object.keys(s.realms).find(function (id) {
+      return id !== 'player' && s.realms[id].alive && !s.realms[id].liege && FB.realmsAdjacent(s, 'player', id);
+    });
+    const r = s.realms[rid]; r.rank = 3;
+    for (const id in s.realms) s.realms[id].war = null;
+    s.alliances = [];
+    FB.adjustStanding(s, { kind:'realm', id:rid }, 60 - FB.standingOf(s, { kind:'realm', id:rid }), 'test');
+    FB.ensureRealmCourtForDisplay(s, rid);
+    const ruler = FB.materializeRealmRuler(s, rid), me = s.chars[p.charId];
+    const a = FB.makeCharacter(s, { name:'Alliance Son', sex:'m', born:s.date.year - 20, culture:me.culture, religion:me.religion });
+    const b = FB.makeCharacter(s, { name:'Alliance Daughter', sex:'f', born:s.date.year - 20, culture:me.culture, religion:me.religion });
+    a.fatherId = me.id; b.fatherId = ruler.id;
+    a.spouseId = b.id; b.spouseId = a.id; FB.touchFamily();
+    const peace = FB.envoyChance(s, rid), status = FB.allianceOfferStatus(s, rid);
+    p.prestige = 10000;
+    const ceiling = FB.allianceOfferStatus(s, rid).chance;
+    p.prestige = 0;
+    p.gold = 0; const poor = FB.allianceOfferStatus(s, rid); p.gold = 1000;
+    FB.adjustStanding(s, { kind:'realm', id:rid }, -1, 'test');
+    const standing = FB.allianceOfferStatus(s, rid);
+    FB.adjustStanding(s, { kind:'realm', id:rid }, 1, 'test');
+    r.liege = 'player'; const vassal = FB.allianceOfferStatus(s, rid); r.liege = null;
+    p.tier = 2; const rank = FB.allianceOfferStatus(s, rid); p.tier = 6;
+    r.war = { enemy:'player' }; const war = FB.allianceOfferStatus(s, rid); r.war = null;
+    FB.ui.showEnvoys(rid);
+    window.allianceTestRealm = rid;
+    return { rid:rid, chance:status.chance, base:status.baseChance, peace:peace,
+      ready:status.ready, ceiling:ceiling,
+      gates:[poor, standing, vassal, rank, war].map(function (x) { return !x.ready && !!x.reason; }) };
+  });
+  expect(setup.ready).toBe(true);
+  expect(setup.chance).toBe(Math.min(0.9, setup.base + 0.15));
+  expect(setup.base).toBe(setup.peace);
+  expect(setup.ceiling).toBe(0.9);
+  expect(setup.gates).toEqual([true, true, true, true, true]);
+  await expect(page.locator('[data-alliance-offer="' + setup.rid + '"]')).toContainText(String(Math.round(setup.chance * 100)) + '%');
+  const resolution = await page.evaluate(function () {
+    const s = FB.state, rid = window.allianceTestRealm;
+    const original = FB.chance;
+    let used = null;
+    FB.chance = function (chance) { used = chance; return false; };
+    const gold = s.player.gold;
+    try {
+      FB.offerAlliance(s, rid);
+      const spent = gold - s.player.gold;
+      FB.formAlliance(s, 'player', rid, 'envoy');
+      const blocked = !FB.allianceOfferStatus(s, rid).ready;
+      const tie = FB.dynasticAllianceTieSnapshot(s, rid).marriages[0];
+      s.chars[tie.subjectId].spouseId = null; s.chars[tie.partnerId].spouseId = null;
+      FB.touchFamily();
+      return { used:used, spent:spent, blocked:blocked,
+        retained:FB.areAlliedSnapshot(s, 'player', rid), bonus:FB.dynasticAllianceTieSnapshot(s, rid).bonus };
+    } finally { FB.chance = original; }
+  });
+  expect(resolution.used).toBe(setup.chance);
+  expect(resolution.spent).toBe(25);
+  expect(resolution.blocked).toBe(true);
+  expect(resolution.retained).toBe(true);
+  expect(resolution.bonus).toBe(0);
+});
+
+
+test('close-family eligibility includes every generation and excludes cousins and sibling unions', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const original = FB.state;
+    const rid = Object.keys(original.realms).find(function (id) { return original.realms[id].alive && id !== 'player'; });
+    function sample(left, right, exceptional) {
+      const s = Object.assign({}, original, { chars:{}, roles:{},
+        player:Object.assign({}, original.player, { charId:'tie-me' }),
+        realms:Object.assign({}, original.realms) });
+      function person(id) { return s.chars[id] = { id:id, childrenIds:[], born:800 }; }
+      const me = person('tie-me'), ruler = person('tie-ruler');
+      s.realms[rid] = Object.assign({}, original.realms[rid], { succession:{
+        rulerMemberId:'root', members:{ root:{ id:'root', charId:ruler.id, alive:true } }
+      } });
+      function relative(root, kind) {
+        if (kind === 'self') return root;
+        const c = person(root.id + '-relative'), parent = person(root.id + '-parent');
+        if (kind === 'parent') root.fatherId = c.id;
+        if (kind === 'grandparent') { root.fatherId = parent.id; parent.fatherId = c.id; }
+        if (kind === 'sibling') { root.fatherId = parent.id; c.fatherId = parent.id; }
+        if (kind === 'child') c.fatherId = root.id;
+        if (kind === 'grandchild') { parent.fatherId = root.id; c.fatherId = parent.id; }
+        if (kind === 'cousin') {
+          const uncle = person(root.id + '-uncle'), grand = person(root.id + '-grand');
+          root.fatherId = parent.id; parent.fatherId = grand.id;
+          uncle.fatherId = grand.id; c.fatherId = uncle.id;
+        }
+        return c;
+      }
+      const a = relative(me, left), b = relative(ruler, right);
+      if (exceptional) { a.motherId = 'shared-mother'; b.motherId = 'shared-mother'; }
+      a.spouseId = b.id; b.spouseId = a.id;
+      FB.touchFamily();
+      return FB.dynasticAllianceTieSnapshot(s, rid).qualifying;
+    }
+    const kinds = ['self', 'parent', 'grandparent', 'sibling', 'child', 'grandchild'];
+    const included = [];
+    kinds.forEach(function (a) { kinds.forEach(function (b) { included.push(sample(a, b, false)); }); });
+    return { included:included, cousin:sample('cousin', 'child', false),
+      exceptional:sample('self', 'self', true) };
+  });
+  expect(result.included).toEqual(Array(36).fill(true));
+  expect(result.cousin).toBe(false);
+  expect(result.exceptional).toBe(false);
+});

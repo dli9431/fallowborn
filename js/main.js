@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.173.1';
+FB.VERSION = '1.174.0';
 FB.CHANGELOG = [
+  { v: '1.174.0', date: '2026-09-06', changes: [
+    'Find marriage candidates across known courts from Kin and Deeds. Family marriages can strengthen alliance negotiations, with a shared overview of alliances and pacts.'
+  ] },
   { v: '1.173.1', date: '2026-09-06', changes: [
     'Knightly equipment gains matching helmets and armored footwear, with consistent set availability and rebalanced military stats.',
     'Settings lets you keep time paused after closing an event.'

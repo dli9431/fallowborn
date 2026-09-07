@@ -8199,29 +8199,144 @@ window.FB = window.FB || {};
     $('intrigue-assets-close').addEventListener('click', UI.closeModal);
   };
 
+  /* Preferences are UI-session state only. Modal history retains DOM, scroll and focus. */
+  function addMarriageFinderLink(subjectId) {
+    const button = document.createElement('button');
+    button.className = 'btn';
+    button.textContent = FB.T('Find a marriage…');
+    button.onclick = function () { UI.showMarriageFinder(subjectId, null); };
+    $('gm-body').insertBefore(button, $('gm-body').firstChild);
+  }
+  function marriageFinderRankLabel(rank) {
+    return [FB.T('Court'), FB.T('Count'), FB.T('Duke'), FB.T('King'), FB.T('Emperor')][rank] || FB.T('Court');
+  }
+  let marriageFinderPreferences = {};
+  UI.showMarriageFinder = function (subjectId, realmId) {
+    const s = FB.state;
+    if (!s || UI.eventsBusy()) return;
+    const prefs = marriageFinderPreferences;
+    if (subjectId) prefs.subjectId = subjectId;
+    if (realmId !== undefined) prefs.realmId = realmId;
+    if (realmId) prefs.scope = 'all';
+    const subjects = FB.marriageDiscoverySubjects(s);
+    if (!subjects.some(function (c) { return c.id === prefs.subjectId; })) {
+      prefs.subjectId = s.player.charId;
+    }
+    let h = '<div class="marriage-finder"><label>' + esc(FB.T('Marriage for')) +
+      '<select id="finder-subject">';
+    subjects.forEach(function (c) {
+      h += '<option value="' + esc(c.id) + '">' + esc(c.id === s.player.charId
+        ? FB.T('Yourself') : FB.fullName(c)) + '</option>';
+    });
+    h += '</select></label><label>' + esc(FB.T('Court scope')) +
+      '<select id="finder-scope"><option value="near">' + esc(FB.T('Your realm and neighbors')) +
+      '</option><option value="all">' + esc(FB.T('All courts')) + '</option></select></label>' +
+      '<label>' + esc(FB.T('Search person, house, or realm')) + '<input id="finder-search" type="search"></label>';
+    [['minAge', FB.T('Minimum age')], ['maxAge', FB.T('Maximum age')]].forEach(function (field) {
+      h += '<label>' + esc(field[1]) + '<input type="number" min="0" id="finder-' + field[0] + '"></label>';
+    });
+    h += '<label>' + esc(FB.T('Faith')) + '<select id="finder-faith"><option value="">' + esc(FB.T('All faiths')) + '</option>';
+    const faiths = {};
+    Object.keys(s.realms).forEach(function (rid) {
+      if (s.realms[rid].alive) faiths[FB.realmReligionId(s, rid)] = true;
+    });
+    Object.keys(s.chars).forEach(function (cid) {
+      if (!s.chars[cid].dead && s.chars[cid].religion) faiths[s.chars[cid].religion] = true;
+    });
+    Object.keys(faiths).sort().forEach(function (faith) {
+      h += '<option value="' + esc(faith) + '">' + esc(religionName(s, faith)) + '</option>';
+    });
+    h += '</select></label><label>' + esc(FB.T('Court rank')) + '<select id="finder-rank"><option value="">' + esc(FB.T('All ranks')) + '</option>';
+    [1, 2, 3, 4].forEach(function (rank) { h += '<option value="' + rank + '">' + esc(marriageFinderRankLabel(rank)) + '</option>'; });
+    h += '</select></label><label>' + esc(FB.T('Availability')) + '<select id="finder-availability"><option value="free">' + esc(FB.T('Uncommitted')) + '</option><option value="all">' + esc(FB.T('Everyone')) + '</option></select></label>' +
+      '<label><input type="checkbox" id="finder-heirs"> ' + esc(FB.T('Designated heirs only')) + '</label>' +
+      '<button class="btn" id="finder-clear-court">' + esc(FB.T('Clear court filter')) + '</button>' +
+      '<p class="hint">' + esc(FB.T('Succession follows the designated heir. A completed close-family wedding may improve future alliance negotiations; descendant weddings do not automatically create an alliance. Personal royal marriages retain their existing alliance rules.')) + '</p>' +
+      '<div id="finder-results" class="gm-list"></div></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Find a marriage…'), h, { historyView:true });
+    const fields = { subject:'subjectId', scope:'scope', search:'search', minAge:'minAge', maxAge:'maxAge', faith:'faith', rank:'rank', availability:'availability', heirs:'heirs' };
+    function render() {
+      let rows = '';
+      FB.marriageCandidateQuery(FB.state, prefs).forEach(function (row) {
+        const terms = row.terms;
+        const requirements = row.threshold !== null ? FB.T('Requires +{standing} personal Standing before proposing.', { standing:row.threshold }) : '';
+        const detail = row.status.reason || (row.status.chance
+          ? FB.T('{chance}% acceptance chance', { chance:Math.round(row.status.chance * 100) })
+          : FB.T('Review courtship and travel requirements.'));
+        rows += '<section class="settcard"><b>' + esc(row.name) + '</b><p>' +
+          esc(FB.T('Age {age} · {faith} · {court}', { age:row.age, faith:religionName(FB.state, row.faith), court:FB.state.realms[row.realmId].name })) + ' / ' + esc(marriageFinderRankLabel(row.rank)) +
+          (row.heir ? ' · ' + esc(FB.T('Designated heir')) : '') + '</p><p>' + esc(detail) + '</p><p>' + esc(requirements) + '</p>' +
+          (row.travel && row.travel.eligible ? '<p>' + esc(FB.T('Travel: {days} days, {money:cost}.', { days:row.travel.days, cost:row.travel.cost })) + '</p>' : '') +
+          (terms ? '<p>' + esc(terms.subjectPays ? FB.T('Your house provides {money:gold}', { gold:terms.amount }) : FB.T('Their house provides {money:gold}', { gold:terms.amount })) + '</p>' : '') +
+          '<button class="btn" data-finder-review="' + esc(row.key) + '">' + esc(FB.T(row.characterId ? 'Review match…' : 'Review court…')) + '</button>' +
+          (row.characterId ? '<button class="btn" data-finder-character="' + esc(row.characterId) + '">' + esc(FB.T('Character details')) + '</button>' : '') +
+          '<button class="btn" data-finder-court="' + esc(row.realmId) + '">' + esc(FB.T('Court details')) + '</button></section>';
+      });
+      $('finder-results').innerHTML = rows || '<p>' + esc(FB.T('No matches for these filters.')) + '</p>';
+      $('finder-results').querySelectorAll('[data-finder-review]').forEach(function (button) {
+        button.onclick = function () {
+          const row = FB.marriageCandidateQuery(FB.state, prefs).filter(function (entry) { return entry.key === button.dataset.finderReview || entry.memberKey === button.dataset.finderReview; })[0];
+          if (!row) { render(); return; }
+          if (!row.characterId) { UI.showLiegeModal(row.realmId, { view:'marriage-finder' }); return; }
+          if (prefs.subjectId !== FB.state.player.charId) {
+            UI.showRoyalKinMatchPicker(row.characterId, { view:'marriage-finder' }, false, prefs.subjectId);
+          } else if (row.status.ready && row.travel && row.travel.eligible) {
+            UI.showSocialVisit(row.characterId, { courtship:true, returnContext:{ view:'marriage-finder' } });
+          } else {
+            UI.showCharModal(row.characterId, { view:'marriage-finder' });
+          }
+        };
+      });
+      $('finder-results').querySelectorAll('[data-finder-character]').forEach(function (button) {
+        button.onclick = function () { UI.showCharModal(button.dataset.finderCharacter, { view:'marriage-finder' }); };
+      });
+      $('finder-results').querySelectorAll('[data-finder-court]').forEach(function (button) {
+        button.onclick = function () { UI.showLiegeModal(button.dataset.finderCourt, { view:'marriage-finder' }); };
+      });
+    }
+    Object.keys(fields).forEach(function (field) {
+      const input = $('finder-' + field), key = fields[field];
+      if (field === 'heirs') input.checked = !!prefs[key];
+      else if (prefs[key] !== undefined) input.value = prefs[key];
+      input.addEventListener(field === 'search' || field === 'minAge' || field === 'maxAge' ? 'input' : 'change', function () {
+        prefs[key] = field === 'heirs' ? input.checked : input.value;
+        render();
+      });
+    });
+    $('finder-clear-court').onclick = function () { delete prefs.realmId; render(); };
+    $('gm-cancel').onclick = function () { modalHistoryBack(UI.closeModal); };
+    render();
+  };
+
   /* ================= envoy picker ================= */
   UI.showEnvoys = function (focusRealmId, returnContext) {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T(
       'A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+.')) +
       '</p><div class="gm-list">';
-    const focusedEnvoy = focusRealmId && FB.envoyStatus
-      ? FB.envoyStatus(s, focusRealmId) : null;
-    const focusedAlliance = focusRealmId && FB.allianceOfferStatus
-      ? FB.allianceOfferStatus(s, focusRealmId) : null;
-    const pactTargets = focusRealmId
-      ? (focusedEnvoy && focusedEnvoy.relevant ? [focusRealmId] : [])
-      : FB.envoyTargets(s);
-    const allianceTargets = focusRealmId
-      ? (focusedAlliance && focusedAlliance.relevant ? [focusRealmId] : [])
-      : FB.allianceOfferTargets(s);
-    const targetMap = {}, targets = [];
-    for (const rid of pactTargets.concat(allianceTargets)) {
-      if (!targetMap[rid]) { targetMap[rid] = 1; targets.push(rid); }
-    }
-    for (const rid of targets) {
-      if (focusRealmId && rid !== focusRealmId) continue;
+    const targets = Object.keys(s.realms).filter(function (rid) {
       const r = s.realms[rid];
+      return rid !== 'player' && r.alive &&
+        (rid === focusRealmId || (!r.liege && FB.realmsAdjacent(s, FB.playerRealmId(s), rid)) ||
+          (s.pacts && s.pacts[rid] > s.turn) ||
+          (FB.allianceSnapshot(s, 'player') && FB.areAlliedSnapshot(s, 'player', rid)));
+    });
+    const pactTargets = targets, allianceTargets = targets;
+    for (const rid of targets) {
+      const focusedEnvoy = FB.envoyStatus(s, rid);
+      const focusedAlliance = FB.allianceOfferStatus(s, rid);
+      const r = s.realms[rid];
+      h += '<h3>' + esc(s.realms[rid].name) + '</h3><p>' + esc(FB.T('Peace envoy: {money:pact}. Alliance envoy: {money:alliance}.', { pact:focusedEnvoy.cost, alliance:focusedAlliance.cost })) + '</p>';
+      if (s.pacts && s.pacts[rid] > s.turn) h += '<p>' + esc(FB.T('Peace pact: {days} days remaining.', { days:s.pacts[rid] - s.turn })) + '</p>';
+      if (FB.areAlliedSnapshot(s, 'player', rid)) h += '<p>' + esc(FB.T('Current defensive ally')) + '</p>';
+      const tie = FB.dynasticAllianceTieSnapshot(s, rid);
+      h += '<p>' + esc(tie.qualifying ? FB.T('Family marriage: +{bonus} percentage points to alliance negotiations.', { bonus:Math.round(tie.bonus * 100) }) : FB.T('No qualifying family marriage.')) + '</p><button class="btn" data-envoy-marriages="' + esc(rid) + '">' + esc(FB.T('Marriage candidates…')) + '</button>';
+      for (const marriage of tie.marriages) {
+        h += '<p>' + esc(FB.T('{first} married to {second}', {
+          first:FB.fullName(s.chars[marriage.subjectId]),
+          second:FB.fullName(s.chars[marriage.partnerId])
+        })) + '</p>';
+      }
       const men = FB.aiBaseHost(s, rid);
       const standing = FB.standingOf(s, { kind:'realm', id:rid });
       if (pactTargets.indexOf(rid) >= 0) {
@@ -8248,7 +8363,7 @@ window.FB = window.FB || {};
           '<span class="adesc">' + esc(FB.T('{ruler} · Standing {standing} · chance ~{chance}% · their aid would add up to ~{men} defenders', {
             ruler: r.ruler.name,
             standing: standingText(standing),
-            chance: Math.round(FB.envoyChance(s, rid) * 100),
+            chance: Math.round(focusedAlliance.chance * 100),
             men: menText(s, Math.round(Math.min(
               men * 0.25, FB.playerLevy(s) * 0.5)))
           }) + (allianceBlocked
@@ -8263,12 +8378,15 @@ window.FB = window.FB || {};
     }
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Not now')) + '</button>';
-    openModal(FB.T('Send an Envoy'), h, {
+    openModal(FB.T('Alliances & pacts…'), h, {
       historyView:!!returnContext,
       historyBackRender:function () {
         interactionReturn(returnContext);
       },
       guide:guideModalOption('envoy-guide', 'government', 'Guide: government')
+    });
+    document.querySelectorAll('[data-envoy-marriages]').forEach(function (button) {
+      button.onclick = function () { UI.showMarriageFinder(null, button.dataset.envoyMarriages); };
     });
     document.querySelectorAll('[data-envoy]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -9401,7 +9519,7 @@ window.FB = window.FB || {};
         enabled:alliance.ready,
         blockedReason:alliance.reason || null,
         consequence:FB.T(
-          'Each realm may have one ally; the compact ends when either ruler changes.'),
+          'Each realm may have one ally; the compact ends when either ruler changes.') + ' ' + FB.T('Base chance {base}%; family bonus +{bonus} percentage points; ceiling 90%.', { base:Math.round(alliance.baseChance * 100), bonus:Math.round(alliance.dynasticBonus * 100) }),
         route:'envoy-alliance'
       });
     }
@@ -9581,7 +9699,9 @@ window.FB = window.FB || {};
       UI.closeModal();
       return;
     }
-    if (returnContext.view === 'governance') {
+    if (returnContext.view === 'marriage-finder') {
+      UI.showMarriageFinder();
+    } else if (returnContext.view === 'governance') {
       UI.showGovernance(returnContext.section || 'position');
     } else if (returnContext.view === 'council') {
       UI.showCouncil(returnContext.returnView,
@@ -21499,6 +21619,7 @@ window.FB = window.FB || {};
         interactionReturn(returnContext);
       }
     });
+    if (FB.playerDescendantKind(s, c.id) && FB.isHouseholdCharacter(s, c.id)) addMarriageFinderLink(c.id);
     FB.paintFaces($('gm-body'), s);
     bindCharacterSkillsGuides($('gm-body'));
     bindCharacterCommitmentNavigation($('gm-body'), c.id, returnContext);
@@ -22406,6 +22527,7 @@ window.FB = window.FB || {};
     openModal(replacing
       ? FB.T('Change the Match for {name}', { name:c.name })
       : FB.T('A Match for {name}', { name:c.name }), h, historyOptions);
+    addMarriageFinderLink(cid);
     FB.paintFaces($('gm-body'), s);
     bindCardInfoToggles($('gm-body'));
     const breakButton = $('match-betrothal-break');
@@ -22447,12 +22569,14 @@ window.FB = window.FB || {};
      The royal family member's character sheet fixes one side of the proposal. The
      picker supplies only resident children and grandchildren whose marriage
      remains under the protagonist's management. */
-  UI.showRoyalKinMatchPicker = function (partnerId, returnContext, replaceView) {
+  UI.showRoyalKinMatchPicker = function (partnerId, returnContext, replaceView, subjectId) {
     const s = FB.state;
     const partner = s && s.chars[partnerId];
     if (!s || !partner || partner.dead || !partner.royalLine ||
         !FB.royalKinMatchCandidates || UI.eventsBusy()) return;
-    const entries = FB.royalKinMatchCandidates(s, partner);
+    const entries = FB.royalKinMatchCandidates(s, partner).filter(function (entry) {
+      return !subjectId || entry.character.id === subjectId;
+    });
     let h = '<div class="gm-list">';
     for (const entry of entries) {
       const child = entry.character;
@@ -22530,7 +22654,7 @@ window.FB = window.FB || {};
         const result = FB.proposeRoyalKinMatch(
           s, button.getAttribute('data-royal-kin-match'), partner.id);
         if (!result || !result.resolved) {
-          UI.showRoyalKinMatchPicker(partner.id, returnContext, true);
+          UI.showRoyalKinMatchPicker(partner.id, returnContext, true, subjectId);
           return;
         }
         UI.closeModal();
@@ -22625,6 +22749,7 @@ window.FB = window.FB || {};
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Decide nothing today')) + '</button>';
     openModal(FB.T('Seeking a Match'), h);
+    addMarriageFinderLink(s.player.charId);
     bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-suitor]').forEach(function (b) {
       b.addEventListener('click', function () {

@@ -131,6 +131,14 @@ window.FBDATA = window.FBDATA || {};
         rationale:'New production of pattern-welded sword requires pattern_welding; existing objects and opened offers remain usable after knowledge or allegiance changes.'
       },
 
+      dynastic_alliance_negotiation:{
+        mode:'none',
+        rationale:'Close-family marriage diplomacy is baseline social negotiation with no credible research dependency.'
+      },
+      marriage_discovery:{
+        mode:'none',
+        rationale:'Browsing known courts does not expand marriage or travel permissions and has no research dependency.'
+      },
       ai_dejure_expansion_planning:{
         mode:'none',
         rationale:'AI preference for compact de jure consolidation is baseline world strategy and must not depend on research controlled by those same simulated realms.'

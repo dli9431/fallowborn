@@ -1543,6 +1543,7 @@ FBDATA.balance = {
   foreignPolicyBase: 1, foreignPolicyDipCap: 1,
   diplomacySuccessionChance: 0.35,
   foreignOpinionEnvoyDivisor: 400,
+  dynasticAllianceBonus: 0.15,
   foreignOpinionAttackMin: 0.25, foreignOpinionAttackMax: 2,
   /* centralized religious offices: condemnation, reconciliation, and
      player/AI recovery after a saved vacancy */
