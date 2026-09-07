@@ -1749,6 +1749,24 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 }
 .kv { display: flex; justify-content: space-between; font-size: 14px; padding: 3px 0; }
 .kv b { color: var(--main-text-color); font-weight: normal; }
+.ghw-campaign-modal .kv {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 4px 16px;
+  align-items: start;
+}
+.ghw-campaign-modal .kv > span,
+.ghw-campaign-modal .kv > b {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.ghw-campaign-modal .kv > b > .adesc { display: block; margin-top: 4px; }
+@media (max-width: 600px) {
+  .ghw-campaign-modal .kv {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px 0;
+  }
+}
 .self-household-standards { display: block; }
 .self-household-standards > b {
   display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 3px;

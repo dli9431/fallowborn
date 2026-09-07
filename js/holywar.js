@@ -791,6 +791,7 @@ window.FB = window.FB || {};
     pledge.renewalRequired = false;
     pledge.vowOutcome = inherited ? 'declined' : (broken ? 'broken' : 'fulfilled');
     removeParticipant(campaign, pledge.camp, 'player', !!pledge.mandatory);
+    pruneParticipants(state, campaign);
     if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
     if (FB.validateFocus) FB.validateFocus(state);
     FB.news(state, FB.msg('news.holywar.player_withdraws',
@@ -911,6 +912,19 @@ window.FB = window.FB || {};
         out.push(part);
       }
       campaign.participants[camp] = out;
+    }
+    if (campaign.phase === 'active') {
+      var leader = participantOf(campaign, 'attackers', campaign.leaderRealm);
+      if (!leader || !leader.sovereign) {
+        var candidates = campaign.participants.attackers.filter(function (part) {
+          return part.sovereign;
+        });
+        candidates.sort(function (a, b) {
+          return (paperStrength(state, b.realm) - paperStrength(state, a.realm)) ||
+            (a.realm < b.realm ? -1 : a.realm > b.realm ? 1 : 0);
+        });
+        campaign.leaderRealm = candidates.length ? candidates[0].realm : null;
+      }
     }
     var pledge = state.player.greatHolyWar;
     if (pledge && pledge.campaignId === campaign.id && !pledge.withdrawn &&

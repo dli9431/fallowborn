@@ -450,6 +450,10 @@ window.FB = window.FB || {};
   function realmFriendlyTo(state, realmId, controller) {
     if (!controller || realmId === controller) return true;
     if (FB.armiesHostile && FB.armiesHostile(state, { realm:realmId }, { realm:controller })) return false;
+    if (state.greatHolyWar && state.greatHolyWar.phase === 'active' && FB.greatHolyWarCamp) {
+      var camp = FB.greatHolyWarCamp(state, realmId);
+      if (camp && camp === FB.greatHolyWarCamp(state, controller)) return true;
+    }
     var topA = resolveArmyTopRealm(state, realmId);
     var topB = FB.topRealm ? FB.topRealm(state, controller) : controller;
     if (topA && topB && topA === topB) return true;
@@ -494,6 +498,15 @@ window.FB = window.FB || {};
     var holyWarControl = holyWarFortControl(state, army, pid);
     if (holyWarControl !== null) return !holyWarControl;
     if (FB.armyFriendlyProvince(state, army, pid)) return false;
+    /* Campaign hosts may cross neutral land without besieging a country
+       outside their war. This grants passage, not friendly supply depots. */
+    if (state.greatHolyWar && state.greatHolyWar.phase === 'active' &&
+        FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, army.realm)) {
+      var holder = state.holder && state.holder[pid];
+      var owner = state.owner && state.owner[pid];
+      if (!FB.armiesHostile(state, army, { realm:holder }) &&
+          !FB.armiesHostile(state, army, { realm:owner })) return false;
+    }
     return true;
   };
 

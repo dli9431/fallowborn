@@ -797,6 +797,20 @@ before ordinary enemies, so same-camp hosts are friendly and opposite camps figh
 they share a county. `FB.isRealmAtWar` includes preparation pledges and active
 participants, preventing a participant from opening another ordinary war.
 
+The campaign detail sheet keeps labels and values in separated columns,
+stacking them below 600 CSS pixels so translated service descriptions and objective
+names retain their width. Fort requirements occupy a separate line below siege status.
+
+Active coalition members treat one another's territory as friendly for fort passage
+and supply recovery. Neutral forts permit campaign transit without becoming supply
+depots; hostile forts and objective occupation control still block normally. Campaign
+AI prioritizes its objectives over distant enemy banners and retreats from a pinned
+non-objective fort, where this campaign cannot advance an occupation. Coalition changes
+invalidate retained supply-distance maps. Withdrawal, participant pruning, and save
+repair replace an absent military leader with the strongest remaining sovereign attacker,
+using realm-id order to break ties. These repair existing campaign behavior and add no
+technology eligibility or save fields.
+
 Preparation lasts 180 days. Attackers may volunteer when their faith remains in the
 caller's fold. Sovereigns controlling frozen objective land are mandatory defenders;
 other sovereigns whose faith is `hostile` or `foreign` to the caller may volunteer.

@@ -2408,7 +2408,20 @@ window.FB = window.FB || {};
     if (army.broken !== undefined && state.turn - army.broken < 40) {
       return FB.armyRetreatGoal(state, army) || army.at;
     }
-    if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, army)) return army.at;
+    const campaign = state.greatHolyWar;
+    const greatCamp = campaign && campaign.phase === 'active' &&
+      FB.greatHolyWarCamp(state, army.realm);
+    if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, army)) {
+      if (greatCamp && campaign.objectiveCounties.indexOf(army.at) < 0) {
+        return FB.armyRetreatGoal(state, army) || army.at;
+      }
+      return army.at;
+    }
+    /* Pursuing a remote banner must not divert the whole coalition from
+       its objectives into forts that this campaign can never occupy. */
+    if (greatCamp) {
+      return FB.greatHolyWarArmyGoal(state, army.realm, army.at) || army.at;
+    }
     const detachment = (primaryByRealm
       ? primaryByRealm[army.realm]
       : FB.hostOf(state, army.realm)) !== army;
@@ -2994,6 +3007,14 @@ window.FB = window.FB || {};
     const alliances = state && Array.isArray(state.alliances)
       ? state.alliances : [];
     const parts = [];
+    const campaign = state.greatHolyWar;
+    if (campaign && campaign.phase === 'active') {
+      parts.push(campaign.id);
+      for (const camp of ['attackers', 'defenders']) {
+        parts.push(camp);
+        for (const part of campaign.participants[camp] || []) parts.push(part.realm);
+      }
+    }
     for (let i = 0; i < alliances.length; i++) {
       const alliance = alliances[i];
       if (!alliance) continue;

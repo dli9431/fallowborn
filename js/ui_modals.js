@@ -4453,7 +4453,9 @@ window.FB = window.FB || {};
     }
     h += '<div class="gm-footer"><button class="btn primary" id="ghw-panel-close">' +
       esc(FB.T('Close')) + '</button></div>';
-    openModal(greatHolyWarName(s, campaign), h, { modalClass:'fullsheet-modal' });
+    openModal(greatHolyWarName(s, campaign), h, {
+      modalClass:'fullsheet-modal ghw-campaign-modal'
+    });
     $('ghw-panel-close').addEventListener('click', UI.closeModal);
   };
 

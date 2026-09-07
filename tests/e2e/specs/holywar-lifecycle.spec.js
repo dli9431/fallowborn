@@ -2,6 +2,11 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/holywar.js',
+  'js/armies.js',
+  'js/fortifications.js',
+  'js/technology.js',
+  'data/map_data.js',
+  'data/units.js',
   'js/save.js',
   'js/world.js',
   'data/events_world.js'
@@ -20,6 +25,147 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
   await injectHolyWarHarness(page);
 });
+
+test('active holy-war leaders and participants muster and remuster without ordinary wars',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.war = null;
+      for (const id in s.realms) s.realms[id].war = null;
+      s.armies = [];
+      s.armyDown = {};
+      const campaign = FBTEST.makeGreatHolyWar({
+        phase:'preparation', capturedCounties:[],
+        attackers:[
+          { realm:'west_francia', mustered:false },
+          { realm:'italy', mustered:false }
+        ]
+      });
+      const realms = ['west_francia', 'italy', 'abbasid'];
+      function fielded() {
+        return realms.map(function (id) {
+          return FB.hostsOf(s, id).some(function (host) {
+            return host.men > 0;
+          });
+        });
+      }
+      FB.armyTick(s);
+      const preparation = fielded();
+      campaign.phase = 'active';
+      campaign.resolve = 0;
+      FB.armyTick(s);
+      const active = fielded();
+      const leader = !!FB.hostOf(s, campaign.leaderRealm);
+      const mustered = campaign.participants.attackers.map(function (part) {
+        return part.mustered;
+      });
+      s.turn++;
+      FB.armyTick(s);
+      const retained = fielded();
+      // Model shattered banners; the ordinary rearm boundary also applies here.
+      s.armies = [];
+      for (const id of realms) s.armyDown[id] = s.turn;
+      FB.armyTick(s);
+      const waiting = fielded();
+      s.turn += FBDATA.balance.armyRearmDays;
+      FB.armyTick(s);
+      const remustered = fielded();
+      return { preparation, active, leader, mustered, retained, waiting, remustered };
+    });
+    expect(result).toEqual({
+      preparation:[false, false, false],
+      active:[true, true, true],
+      leader:true,
+      mustered:[true, true],
+      retained:[true, true, true],
+      waiting:[false, false, false],
+      remustered:[true, true, true]
+    });
+  });
+
+test('campaign passage distinguishes coalition depots, neutral forts, and enemy objectives',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const campaign = FBTEST.makeGreatHolyWar({ capturedCounties:[] });
+      s.player.war = null;
+      for (const id in s.realms) s.realms[id].war = null;
+      const host = { realm:'west_francia', at:'rome', men:1000 };
+      function control(pid, realm) {
+        s.owner[pid] = realm;
+        s.holder[pid] = realm;
+        s.buildings[pid] = [{ id:'walls', s:0, level:2 }];
+      }
+      control('rome', 'italy');
+      control('paris', 'papacy');
+      control('jerusalem', 'abbasid');
+      FB.invalidateRealmCache();
+      FB.invalidateFortIndex();
+      function view(pid) {
+        return {
+          friendly:FB.armyFriendlyProvince(s, host, pid),
+          blocked:FB.fortBlocksArmy(s, pid, host)
+        };
+      }
+      const ally = view('rome');
+      const neutral = view('paris');
+      const enemy = view('jerusalem');
+      campaign.occupations.jerusalem.occupied = true;
+      const captured = view('jerusalem');
+      campaign.phase = 'preparation';
+      const gathering = view('rome');
+      campaign.phase = 'active';
+      campaign.leaderRealm = 'player';
+      FB.repairGreatHolyWar(s);
+      const repairedLeader = campaign.leaderRealm;
+      return { ally, neutral, enemy, captured, gathering,
+        validLeader:campaign.participants.attackers.some(function (part) {
+          return part.realm === repairedLeader && part.sovereign;
+        }) };
+    });
+    expect(result).toEqual({
+      ally:{ friendly:true, blocked:false },
+      neutral:{ friendly:false, blocked:false },
+      enemy:{ friendly:false, blocked:true },
+      captured:{ friendly:false, blocked:false },
+      gathering:{ friendly:false, blocked:true },
+      validLeader:true
+    });
+  });
+
+test('holy-war armies march on objectives instead of a stronger remote enemy',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      FBTEST.makeGreatHolyWar({
+        objectiveCounties:['orleans'], holyCounties:[], capturedCounties:[]
+      });
+      s.player.war = null;
+      for (const id in s.realms) {
+        s.realms[id].war = null;
+        s.armyDown[id] = s.turn;
+      }
+      s.owner.paris = s.holder.paris = 'west_francia';
+      s.owner.orleans = s.holder.orleans = 'abbasid';
+      s.owner.rome = s.holder.rome = 'abbasid';
+      s.buildings.paris = [];
+      s.buildings.orleans = [];
+      s.buildings.rome = [];
+      FB.invalidateRealmCache();
+      FB.invalidateFortIndex();
+      FB.world.adj = { paris:{ orleans:1, rome:1 },
+        orleans:{ paris:1 }, rome:{ paris:1 } };
+      const host = { id:'campaign-march', realm:'west_francia', at:'paris',
+        from:'paris', men:500, size:500, units:{ levy:500 }, supply:100,
+        path:[], moveLeft:0, goal:null };
+      s.armies = [host, { id:'remote-enemy', realm:'abbasid', at:'rome',
+        from:'rome', men:10000, size:10000, units:{ levy:10000 }, supply:100,
+        path:[], moveLeft:0, goal:null }];
+      FB.armyTick(s);
+      return host.goal === 'orleans' || host.at === 'orleans';
+    });
+    expect(result).toBe(true);
+  });
 
 test('completed holy-war occupations damage development once per transition',
   async function ({ page }, testInfo) {

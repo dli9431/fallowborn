@@ -21,6 +21,46 @@ async function restoreBaseline(page, baseline) {
   }, baseline);
 }
 
+test('campaign details separate long service labels and values on narrow screens',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      FBTEST.makeGreatHolyWar({
+        includePlayer:true, capturedCounties:[],
+        playerDesire:{ kind:'sacred', id:null }
+      });
+      const translate = FB.T;
+      // Scenario-local translation expansion, including the reported service label.
+      FB.T = function (text, params) {
+        if (text === 'Occupation evidence') return 'Comprovante de ocupação';
+        if (text === 'Projected claim standing') return 'Projeção de legitimidade para reivindicação';
+        return translate(text, params);
+      };
+      try { FB.ui.showGreatHolyWarPanel(); }
+      finally { FB.T = translate; }
+    });
+    for (const width of [320, 390, 466, 900]) {
+      await page.setViewportSize({ width:width, height:900 });
+      const geometry = await page.locator('.ghw-campaign-modal .kv').evaluateAll(function (rows) {
+        return rows.map(function (row) {
+          const label = row.children[0].getBoundingClientRect();
+          const value = row.children[1].getBoundingClientRect();
+          return {
+            separated:value.top >= label.bottom + 3 || value.left >= label.right + 15,
+            fits:row.scrollWidth <= row.clientWidth + 1,
+            labelWidth:label.width,
+            rowWidth:row.getBoundingClientRect().width
+          };
+        });
+      });
+      expect(geometry.length).toBeGreaterThan(10);
+      for (const row of geometry) {
+        expect(row.separated).toBe(true);
+        expect(row.fits).toBe(true);
+        if (width <= 600) expect(row.labelWidth).toBeGreaterThan(row.rowWidth * 0.9);
+      }
+    }
+  });
+
 async function showScenario(page, baseline, mode, seed) {
   await restoreBaseline(page, baseline);
   await page.evaluate(function (setup) {
