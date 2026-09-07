@@ -353,16 +353,26 @@ test('finder exposes terms and current/max realm levies and preserves review ret
   await expect(terms).toContainText('Travel: 9 days');
   await expect(terms).toContainText('Your house provides 12 gold');
   const details = page.locator('#finder-results .settcard-details').nth(8);
+  const info = page.locator('#finder-results .settcard-info').nth(8);
+  const usesDisclosure = await page.evaluate(function () {
+    return window.matchMedia('(pointer: coarse), (max-width: 1100px), (max-height: 520px)').matches;
+  });
   await expect(details).toBeHidden();
-  await page.locator('#finder-results .settcard-info').nth(8).click();
-  await expect(details).toBeVisible();
-  await expect(details).toContainText('Capital:');
-  await expect(details.locator('.finder-realm-stats')).toHaveText(/^Realm levies: [0-9]+\/[0-9]+ men$/);
-  await expect(details).not.toContainText('Pop ');
-  await expect(details).not.toContainText('Econ ');
-  await expect(details.locator('p')).toHaveCount(2);
-  await expect(details).not.toContainText('alliance');
-  await expect(details).not.toContainText('Requires +40');
+  if (usesDisclosure) {
+    await info.click();
+  } else {
+    await expect(info).toBeHidden();
+    await page.locator('#finder-results .settcard').nth(8).hover();
+  }
+  const visibleDetails = usesDisclosure ? details : page.locator('#tooltip');
+  await expect(visibleDetails).toBeVisible();
+  await expect(visibleDetails).toContainText('Capital:');
+  await expect(visibleDetails.locator('.finder-realm-stats')).toHaveText(/^Realm levies: [0-9]+\/[0-9]+ men$/);
+  await expect(visibleDetails).not.toContainText('Pop ');
+  await expect(visibleDetails).not.toContainText('Econ ');
+  await expect(visibleDetails.locator('p')).toHaveCount(2);
+  await expect(visibleDetails).not.toContainText('alliance');
+  await expect(visibleDetails).not.toContainText('Requires +40');
   const review = page.locator('[data-finder-review]').nth(8);
   await review.scrollIntoViewIfNeeded();
   await review.focus();
@@ -372,7 +382,7 @@ test('finder exposes terms and current/max realm levies and preserves review ret
   await expect(page.locator('#social-visit-depart')).toBeVisible();
   await page.locator('#social-visit-cancel').click();
   await expect(terms).toBeVisible();
-  await expect(details).toBeVisible();
+  await expect(details).toBeVisible({ visible:usesDisclosure });
   await expect(review).toBeFocused();
   expect(await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; })).toBe(scroll);
   // Exercise the same saved position when the native modal history is absent.
@@ -383,7 +393,7 @@ test('finder exposes terms and current/max realm levies and preserves review ret
   });
   await page.locator('#social-visit-cancel').click();
   await expect(review).toBeFocused();
-  await expect(details).toBeVisible();
+  await expect(details).toBeVisible({ visible:usesDisclosure });
   expect(await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; })).toBe(scroll);
   await expect(page.locator('#cm-close')).toHaveCount(0);
 });
