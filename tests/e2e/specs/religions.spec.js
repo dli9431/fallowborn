@@ -1,4 +1,5 @@
 'use strict';
+const { seedDoctrineContacts } = require('../support/game/doctrines');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/cultures.js',
@@ -11,6 +12,7 @@ dependsOnRuntime(__filename, [
   'js/save.js',
   'js/technology.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
   'js/world.js'
 ]);
 
@@ -421,6 +423,7 @@ test('doctrine reforms save message descriptors that survive serialization',
     primaryFileOnly(testInfo);
     await openGame(page, testInfo);
     await startDeterministicGame(page);
+    await seedDoctrineContacts(page);
     const result = await page.evaluate(function () {
       var s = FB.state, p = s.player, me = s.chars[p.charId];
       me.culture = 'german';
@@ -444,6 +447,7 @@ test('paid doctrine reform persists faith and culture branches with escalating d
     primaryFileOnly(testInfo);
     await openGame(page, testInfo);
     await startDeterministicGame(page);
+    await seedDoctrineContacts(page);
 
     const result = await page.evaluate(function () {
       var s = FB.state;
@@ -550,6 +554,7 @@ test('returning to a doctrine parent preserves branch followers and projects acr
     primaryFileOnly(testInfo);
     await openGame(page, testInfo);
     await startDeterministicGame(page);
+    await seedDoctrineContacts(page);
 
     const result = await page.evaluate(function () {
       var s = FB.state;

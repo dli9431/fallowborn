@@ -1532,6 +1532,7 @@ FBDATA.balance = {
   /* Doctrine reform creates a campaign child identity on the first change.
      Further departures cost more; enough departures break parent affinity. */
   doctrineReformCooldownDays: 360, doctrineReformEscalation: 0.25,
+  doctrineReformPopularPenalty: 5,
   faithDoctrineSchismThreshold: 3, faithDoctrineHostileThreshold: 5,
   cultureDoctrineDivergenceThreshold: 3,
   /* County demographic projects (js/population.js). Rates are yearly shares

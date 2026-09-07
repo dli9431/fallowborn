@@ -656,6 +656,21 @@ window.FB = window.FB || {};
     return raw.name === englishName || raw.name === localizedName;
   }
 
+  FB.doctrineReformSources = function (state, kind, doctrineId, optionId) {
+    const identityId = doctrineIdentity(state, kind);
+    const parentId = doctrineParent(state, kind, identityId);
+    const ids = kind === 'faith' ? FB.religionIds(state, true) : FB.cultureIds(state, true);
+    if (parentId && ids.indexOf(parentId) < 0) ids.push(parentId);
+    const out = [];
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      if (FB.doctrineOption(state, kind, id, doctrineId).definition.id !== optionId) continue;
+      if (id === identityId || id === parentId ||
+          FB.conversionTargetEncountered(state, kind, id)) out.push(id);
+    }
+    return out;
+  };
+
   FB.doctrineReformStatus = function (state, kind, doctrineId, optionId) {
     const out = {
       ok:false, reason:'', kind:kind, doctrineId:doctrineId,
@@ -693,7 +708,15 @@ window.FB = window.FB || {};
       out.reason = FB.T('That doctrine is already followed.');
       return out;
     }
-    const cooldownDays = Number(FBDATA.balance.doctrineReformCooldownDays) || 360;
+    out.sources = FB.doctrineReformSources(state, kind, doctrineId, optionId);
+    if (!out.sources.length) {
+      out.reason = FB.T('Encounter a faith or culture that follows this doctrine first.');
+      return out;
+    }
+    const history = p.doctrineReforms && p.doctrineReforms[kind];
+    const prior = history && history.charId === p.charId ? history : null;
+    const cooldownDays = prior ? prior.cooldownDays :
+      (Number(FBDATA.balance.doctrineReformCooldownDays) || 360);
     const last = p.cooldowns && p.cooldowns['reform_doctrine:' + kind];
     if (last !== undefined && state.turn - last < cooldownDays) {
       out.reason = FB.T('Ready in {days} days.', {
@@ -726,7 +749,12 @@ window.FB = window.FB || {};
     const currentDivergence = FB.doctrineDivergence(
       state, kind, out.identityId, out.parentId).count;
     const escalation = Number(FBDATA.balance.doctrineReformEscalation) || 0.25;
-    const multiplier = 1 + currentDivergence * escalation;
+    out.reformCount = Math.max(currentDivergence, prior ? Number(prior.count) || 0 : 0);
+    const multiplier = 1 + out.reformCount * escalation;
+    out.cooldownDays = Math.ceil((Number(FBDATA.balance.doctrineReformCooldownDays) || 360) * multiplier);
+    out.popularOpinion = out.restoresDoctrine ? 0 :
+      -Math.ceil((Number(FBDATA.balance.doctrineReformPopularPenalty) || 5) *
+        Math.max(projected.count, out.reformCount + 1));
     const cost = found.option.cost || found.doctrine.cost || {};
     out.pietyCost = Math.ceil((Number(cost.piety) || 0) * multiplier);
     out.prestigeCost = Math.ceil((Number(cost.prestige) || 0) * multiplier);
@@ -832,6 +860,11 @@ window.FB = window.FB || {};
       (Number(p.prestige) || 0) - status.prestigeCost);
     p.cooldowns = p.cooldowns || {};
     p.cooldowns['reform_doctrine:' + kind] = state.turn;
+    p.doctrineReforms = p.doctrineReforms || {};
+    p.doctrineReforms[kind] = {
+      charId:p.charId, count:status.reformCount + 1, cooldownDays:status.cooldownDays
+    };
+    if (status.popularOpinion) FB.applyEffects(state, { popularOpinion:status.popularOpinion });
     if (kind === 'faith') {
       p.encounteredFaiths = p.encounteredFaiths || {};
       p.encounteredFaiths[identityId] = 1;

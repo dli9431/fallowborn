@@ -1,4 +1,5 @@
 'use strict';
+const { seedDoctrineContacts } = require('../support/game/doctrines');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html',
@@ -12,6 +13,11 @@ dependsOnRuntime(__filename, [
   'js/agency.js',
   'js/events.js',
   'js/modifiers.js',
+  'js/model.js',
+  'js/technology.js',
+  'js/armies.js',
+  'data/units.js',
+  'data/technology.js',
   'js/population.js',
   'js/settlement.js',
   'js/ui_misc.js',
@@ -559,10 +565,10 @@ test('Self culture details show traditions and open personal conversion',
       has:page.locator('span', { hasText:'Dynasty style' })
     }).locator('b')).toHaveText('Clan prefix (mac)');
     await expect(body.locator('.kv').filter({
-      has:page.locator('span', { hasText:'Men’s names' })
+      has:page.getByText('Men’s names', { exact:true })
     }).locator('b')).toHaveText('Aed, Niall, Domnall, Cormac');
     await expect(body.locator('.kv').filter({
-      has:page.locator('span', { hasText:'Women’s names' })
+      has:page.getByText('Women’s names', { exact:true })
     }).locator('b')).toHaveText('Gormlaith, Derbail, Mor, Eithne');
     const action = page.locator('.identity-conversion-action', {
       has:page.locator('#culture-details-adopt')
@@ -599,6 +605,7 @@ test('Self culture details show traditions and open personal conversion',
 test('identity sheets expose every doctrine and confirm paid branch reforms',
   async function ({ page }) {
     await configureCountyProjectUi(page);
+    await seedDoctrineContacts(page);
     await page.evaluate(function () {
       FB.state.player.piety = 2000;
       FB.state.player.prestige = 2000;
@@ -626,7 +633,7 @@ test('identity sheets expose every doctrine and confirm paid branch reforms',
       'Confirm Doctrine Reform');
     await expect(page.locator('#gm-body')).toContainText('400 piety');
     await expect(page.locator('#gm-body')).toContainText(
-      'Settlements keep their current faith until gradual conversion');
+      'Creates a new branch and changes only your character’s identity');
     await page.locator('#doctrine-confirm').click();
     await expect(page.locator('#gm-title')).toContainText(
       'Reformed Latin Christianity');
@@ -651,7 +658,7 @@ test('identity sheets expose every doctrine and confirm paid branch reforms',
     await page.locator('[data-doctrine-option="huscarl"]').click();
     await expect(page.locator('#gm-body')).toContainText('350 prestige');
     await expect(page.locator('#gm-body')).toContainText(
-      'territorial doctrine benefits follow those adopters');
+      'local populations keep their current identities');
     await page.locator('#doctrine-confirm').click();
     await expect(page.locator('#gm-title')).toContainText('Reformed Gaelic');
     await expect(page.locator('#gm-body')).toContainText('Huscarls');
@@ -660,6 +667,18 @@ test('identity sheets expose every doctrine and confirm paid branch reforms',
     await expect(page.locator('#gm-body')).toContainText(
       'Home settlement followers');
     await expect(page.locator('#culture-details-spread')).toBeVisible();
+    await expect(page.locator('[data-doctrine-adoption]')).toBeVisible();
+    await expect(page.locator('#gm-body')).toContainText('Adoption in your recruiting lands');
+    await page.evaluate(function () {
+      delete FB.state.player.cooldowns['reform_doctrine:culture'];
+      FB.ui.showDoctrineConfirm('culture', 'seafaring', 'oceanic');
+    });
+    await expect(page.locator('#gm-body')).toContainText(
+      'Changes the existing branch’s doctrines for every current follower');
+    await page.evaluate(function () {
+      var s = FB.state;
+      FB.ui.showCultureDetails(s.chars[s.player.charId].culture);
+    });
     await page.locator('#culture-details-spread').click();
     await expect(page.locator('#gm-title')).toContainText('Choose policy');
     await expect(page.locator('#gm-body')).toContainText('Reformed Gaelic');
@@ -668,6 +687,98 @@ test('identity sheets expose every doctrine and confirm paid branch reforms',
       return FB.settlementCommunityProject(
         s, s.player.provinceId, s.player.homeSettlement || 0, 'culture');
     })).toBeNull();
+  });
+
+test('general culture adoption lists generated cultures only after three dominant counties',
+  async function ({ page }) {
+    await configureCountyProjectUi(page);
+    const setup = await page.evaluate(function () {
+      var s = FB.state;
+      var id = FB.createCulture(s, { name:'Test regional branch', parent:'gaelic', doctrineBranch:true });
+      var pids = FB.world.provs.filter(function (pr) { return !pr.wasteland; })
+        .slice(0, 3).map(function (pr) { return pr.id; });
+      for (var i = 0; i < 2; i++) {
+        FB.convertCountyCommunity(s, pids[i], { kind:'culture', target:id, rate:1 });
+      }
+      FB.ui.showConversionPicker('culture');
+      return { id:id, pids:pids };
+    });
+    await expect(page.locator('[data-conv-target="' + setup.id + '"]')).toHaveCount(0);
+    await expect(page.locator('#gm-body')).toContainText('dominant in at least 3 counties');
+    await page.evaluate(function (setup) {
+      FB.convertCountyCommunity(FB.state, setup.pids[2], {
+        kind:'culture', target:setup.id, rate:1
+      });
+      FB.ui.showConversionPicker('culture');
+    }, setup);
+    await expect(page.locator('[data-conv-target="' + setup.id + '"]')).toBeVisible();
+    await page.locator('#conv-search').fill('Test regional branch');
+    await expect(page.locator('[data-conv-target="' + setup.id + '"]')).toBeVisible();
+    await page.evaluate(function (setup) {
+      FB.convertCountyCommunity(FB.state, setup.pids[2], {
+        kind:'culture', target:'gaelic', rate:1
+      });
+      FB.ui.showConversionPicker('culture');
+    }, setup);
+    await expect(page.locator('[data-conv-target="' + setup.id + '"]')).toHaveCount(0);
+  });
+
+for (const kind of ['culture', 'faith']) {
+  test('return to parent ' + kind + ' uses personal conversion and preserves the branch',
+    async function ({ page }) {
+      await configureCountyProjectUi(page);
+      await seedDoctrineContacts(page);
+      const setup = await page.evaluate(function (kind) {
+        var s = FB.state, p = s.player, me = s.chars[p.charId];
+        p.piety = 5000; p.prestige = 5000; p.cooldowns = {}; p.war = null;
+        me.culture = 'gaelic'; me.religion = 'catholic';
+        var parent = kind === 'faith' ? me.religion : me.culture;
+        var doctrine = kind === 'faith' ? 'close_kin' : 'military';
+        var branch = FB.applyDoctrineReform(s, kind, doctrine,
+          kind === 'faith' ? 'sanctioned' : 'huscarl');
+        FB.convertCountyCommunity(s, p.provinceId, { kind:kind, target:branch, rate:0.5 });
+        var status = FB.conversionStatus(s, kind, parent, 'self');
+        var snapshot = {
+          branch:JSON.stringify((kind === 'faith' ? s.faiths : s.cultures)[branch]),
+          communities:JSON.stringify(FB.countyCommunities(s, p.provinceId))
+        };
+        if (kind === 'faith') FB.ui.showFaithDetails(branch);
+        else FB.ui.showCultureDetails(branch);
+        return { parent:parent, branch:branch, snapshot:snapshot, doctrine:doctrine,
+          parentOption:FB.doctrineOption(s, kind, parent, doctrine).definition.id,
+          piety:p.piety, prestige:p.prestige, status:status };
+      }, kind);
+      expect(setup.status.ok).toBe(true);
+      await expect(page.locator('#' + kind + '-details-return')).toBeVisible();
+      await page.evaluate(function (args) {
+        FB.ui.showDoctrineOptions(args.kind, args.doctrine);
+      }, { kind:kind, doctrine:setup.doctrine });
+      await expect(page.locator('[data-doctrine-option="' + setup.parentOption + '"]')).toHaveCount(0);
+      await page.locator('#' + kind + '-details-return').click();
+      await expect(page.locator('#gm-body')).toContainText('Only your character returns');
+      await expect(page.locator('#doctrine-confirm')).toHaveCount(0);
+      await page.locator('#conv-confirm').click();
+      const after = await page.evaluate(function (args) {
+        var s = FB.state, p = s.player;
+        return { identity:s.chars[p.charId][args.kind === 'faith' ? 'religion' : 'culture'],
+          piety:p.piety, prestige:p.prestige,
+          branch:JSON.stringify((args.kind === 'faith' ? s.faiths : s.cultures)[args.branch]),
+          communities:JSON.stringify(FB.countyCommunities(s, p.provinceId)) };
+      }, { kind:kind, branch:setup.branch });
+      expect(after.identity).toBe(setup.parent);
+      expect(after.branch).toBe(setup.snapshot.branch);
+      expect(after.communities).toBe(setup.snapshot.communities);
+      expect(after.piety).toBe(setup.piety - setup.status.pietyCost);
+      expect(after.prestige).toBe(setup.prestige - setup.status.prestigeCost);
+    });
+}
+
+test('official faith scope explains that local populations need separate conversion',
+  async function ({ page }) {
+    await configureCountyProjectUi(page);
+    await page.evaluate(function () { FB.ui.showConversionPicker('faith', 'realm'); });
+    await expect(page.locator('[data-conv-scope="realm"]')).toHaveText('Realm’s official faith');
+    await expect(page.locator('#conv-scope-desc')).toContainText('County and settlement populations keep their faith');
   });
 
 test('community triggers and effects retain exact county and settlement context',

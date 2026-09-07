@@ -105,6 +105,9 @@ window.FB = window.FB || {};
         if (definition.cost !== undefined) {
           validateCost(where, definition.cost);
         }
+        if (own(definition, 'defaultValue') && !jsonSafeFaithValue(definition.defaultValue)) {
+          errors.push(where + ' defaultValue must be JSON-safe.');
+        }
         if (definition.optionsFrom !== undefined) {
           if (definition.optionsFrom !== 'cultureTraditions' &&
               definition.optionsFrom !== 'techTraditions') {
@@ -971,7 +974,7 @@ window.FB = window.FB || {};
         if (!own(FBDATA.cultureTraditions, id)) continue;
         const source = FBDATA.cultureTraditions[id];
         table[id] = {
-          name:source.name, desc:'Adopt this regional cultural affinity.',
+          name:source.name, desc:'Changes cultural affinity and conversion costs. A different tradition makes this branch foreign to its parent.',
           value:id, cost:definition.cost
         };
       }
@@ -981,7 +984,7 @@ window.FB = window.FB || {};
         if (!own(FBDATA.techTraditions, id)) continue;
         const source = FBDATA.techTraditions[id];
         table[id] = {
-          name:source.name, desc:'Follow this tradition of learning and innovation.',
+          name:source.name, desc:'Changes adoption dates and research costs; grants no technology immediately.',
           value:id, cost:definition.cost
         };
       }
@@ -1000,9 +1003,13 @@ window.FB = window.FB || {};
     const catalog = FBDATA.doctrineCatalogs && FBDATA.doctrineCatalogs[kind];
     const definition = catalog && catalog[doctrineId];
     if (!definition) return { value:undefined, sourceId:null };
-    return kind === 'faith'
+    const result = kind === 'faith'
       ? FB.faithValue(state, identityId, definition.path)
       : FB.cultureValue(state, identityId, definition.path);
+    if (result.value === undefined && definition.defaultValue !== undefined) {
+      return { value:cloneFaithValue(definition.defaultValue), sourceId:null };
+    }
+    return result;
   };
 
   FB.doctrineOption = function (state, kind, identityId, doctrineId) {

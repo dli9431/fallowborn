@@ -425,3 +425,10 @@ sweep and before season-boundary income. Records expire exactly when
 that boundary. Direct-demesne modifier upkeep settles with household income; campaign
 host supply adjustments settle later with the live host bill. See
 [modifiers.md](modifiers.md).
+
+Seasonal livelihood accounting includes doctrine benefits: communal worship adds
+2 player piety; organized alms appears as a 1-gold expense and grants 1 Common Voice
+only when funds after wages cover it. Shared craft knowledge raises positive wages
+of household workers who follow that culture by 10%, leaving enterprise revenue
+and apprentice costs unchanged. See [doctrines.md](doctrines.md) for discovery,
+inheritance, and the four explicit ungated technology reviews.

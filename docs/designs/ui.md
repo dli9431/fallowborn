@@ -1,5 +1,14 @@
 # UI: keyboard & mobile
 
+Identity workflows explain their scope at the choice and confirmation: personal or
+household adoption joins an existing tradition, doctrine reform creates or reshapes a
+branch, and settlement projects gradually change local populations. Official realm faith
+is labeled separately from population conversion. Campaign identity sheets link personal
+return to the parent through the ordinary conversion preview and show local adoption with
+territorial benefit availability next to the home-settlement project action. The general
+culture picker lists a generated culture only after it dominates three counties; explicit
+parent returns and territorial project pickers retain their independent scope.
+
 The character interaction card exposes exceptional sibling courtship only on
 an actual full- or half-sibling target. Its disabled state explains the first
 failed hard gate or trait score. The approach review shows player trait score,
@@ -2237,3 +2246,21 @@ contexts keep ids and numbers only.
   is not itself the sovereign's deployable host. A non-sovereign landed player, including
   a baron with no county in hand, receives a prominent **Your available force** Realm row
   from the same projection rather than having to open a declaration flow.
+
+Doctrine option sheets hide unencountered choices using the same encounter rules as
+conversion. Option disclosures and confirmations show the exact Common Voice
+penalty and recovery duration alongside costs and parent divergence. The overview
+explains escalating per-ruler costs and that restoring a parent doctrine incurs
+no new backlash.
+
+Doctrine option buttons label spending as **Cost: 300 prestige**. Desktop tooltips and compact
+disclosures separate effects, resource costs, backlash/recovery, parent relationship,
+and known sources. Learning tooltips compare at most one earlier and one later
+widespread-adoption dates against the current cultural learning tradition, explain
+the research-cost consequence, and state local-dominance and sovereign constraints.
+These are cultural timing comparisons, not a promise of immediate realm research
+savings; faith traditions may already supply earlier dates. Confirmations reuse the
+same effect explanation, with up to two examples in each direction and fuller
+conditions. Tooltips keep the effect first, group cost and recovery together, and
+use muted supporting context. Known sources are limited to two names plus a count.
+Both desktop hover/focus and compact disclosures share this concise copy.

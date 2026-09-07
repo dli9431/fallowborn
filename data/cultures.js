@@ -128,6 +128,16 @@ nubian: { name:'Nubian', tradition:'african', dyn:'of_place',
    identity's social currency: piety for faith, prestige for culture. */
 FBDATA.doctrineCatalogs = {
   faith:{
+    observance:{ name:'Religious observance', path:'doctrines.observance', order:6,
+      defaultValue:0, options:{
+        private:{ name:'Private devotion', desc:'No additional seasonal piety.', value:0, cost:{ piety:150 } },
+        communal:{ name:'Communal worship', desc:'+2 piety each season.', value:2, cost:{ piety:250 } }
+      } },
+    charity:{ name:'Religious charity', path:'doctrines.charity', order:7,
+      defaultValue:0, options:{
+        personal:{ name:'Personal alms', desc:'No automatic seasonal alms.', value:0, cost:{ piety:150 } },
+        organized:{ name:'Organized alms', desc:'Spend 1 gold per season for +1 Common Voice; skipped if unaffordable.', value:1, cost:{ piety:250 } }
+      } },
     marriage_form:{ name:'Marriage form', path:'marriage.spouseLimit', order:1,
       options:{
         monogamy:{ name:'Monogamy', desc:'One spouse for men and women.',
@@ -203,6 +213,16 @@ FBDATA.doctrineCatalogs = {
       } }
   },
   culture:{
+    craftsmanship:{ name:'Craft mentorship', path:'doctrines.craftsmanship', order:7,
+      defaultValue:0, options:{
+        customary:{ name:'Customary instruction', desc:'Ordinary household wages.', value:0, cost:{ prestige:150 } },
+        mentorship:{ name:'Shared craft knowledge', desc:'+10% wages for adult household workers of this culture. Excludes enterprise income.', value:0.1, cost:{ prestige:300 } }
+      } },
+    mutual_care:{ name:'Mutual care', path:'doctrines.mutualCare', order:8,
+      defaultValue:0, options:{
+        family:{ name:'Family care', desc:'Ordinary household medical protection.', value:0, cost:{ prestige:150 } },
+        communal:{ name:'Communal nursing', desc:'An adult follower at home reduces annual household death risk by 0.1 percentage points. Does not stack.', value:0.001, cost:{ prestige:300 } }
+      } },
     regional_tradition:{ name:'Regional tradition', path:'tradition', order:1,
       shownAboveDoctrine:true,
       optionsFrom:'cultureTraditions', cost:{ prestige:300 } },
@@ -230,7 +250,7 @@ FBDATA.doctrineCatalogs = {
           desc:'Rulers cannot organize ordinary cultural raids.',
           value:false, cost:{ prestige:175 } },
         practiced:{ name:'Raiding practiced',
-          desc:'Rulers may organize raids when other conditions allow.',
+          desc:'Allows raids. For new branches, the host scales with adoption in your recruiting lands.',
           value:true, cost:{ prestige:300 } }
       } },
     seafaring:{ name:'Seafaring tradition', path:'doctrines.seafaring', order:4,
@@ -239,20 +259,20 @@ FBDATA.doctrineCatalogs = {
           desc:'Raiders use ordinary coastal and overland reach.',
           value:false, cost:{ prestige:175 } },
         oceanic:{ name:'Long-range seafaring',
-          desc:'Coastal raiders gain long-range reach without Longships technology.',
+          desc:'Long-range coastal raids without Longships. A new branch needs followers at the departure point.',
           value:true, cost:{ prestige:350 } }
       } },
     military:{ name:'Military tradition', path:'doctrines.military', order:5,
       options:{
         levy:{ name:'General levy', desc:'No culture-specific professional unit.',
           value:'levy', cost:{ prestige:150 } },
-        horsearcher:{ name:'Horse archers', desc:'Unlocks horse-archer companies.',
+        horsearcher:{ name:'Horse archers', desc:'Allows horse-archer companies. For new branches, strength scales with adoption in recruiting lands; hiring costs gold.',
           value:'horsearcher', cost:{ prestige:350 } },
-        huscarl:{ name:'Huscarls', desc:'Unlocks huscarl companies.',
+        huscarl:{ name:'Huscarls', desc:'Allows huscarl companies. For new branches, strength scales with adoption in recruiting lands; hiring costs gold.',
           value:'huscarl', cost:{ prestige:350 } },
-        camel:{ name:'Camel riders', desc:'Unlocks camel-rider companies.',
+        camel:{ name:'Camel riders', desc:'Allows camel-rider companies. For new branches, strength scales with adoption in recruiting lands; hiring costs gold.',
           value:'camel', cost:{ prestige:350 } },
-        cataphract:{ name:'Cataphracts', desc:'Unlocks cataphract companies once their armor is known.',
+        cataphract:{ name:'Cataphracts', desc:'Allows cataphracts with Cataphract Barding. For new branches, strength scales with local adoption; hiring costs gold.',
           value:'cataphract', cost:{ prestige:400 } }
       } },
     learning:{ name:'Learning tradition', path:'doctrines.learning', order:6,
@@ -264,15 +284,15 @@ FBDATA.doctrineCatalogs = {
    in the engine. Missing entries use the conservative default. */
 FBDATA.cultureDoctrineDefaults = {
   default:{ raiding:false, seafaring:false, military:'levy' },
-  frankish:{ learning:'latin' }, german:{ learning:'latin' },
+  frankish:{ learning:'latin', craftsmanship:0.1 }, german:{ learning:'latin' },
   norman:{ learning:'latin' }, ashkenazi:{ learning:'latin' },
   english:{ learning:'latin', military:'huscarl' },
   norse:{ learning:'nordic', raiding:true, seafaring:true, military:'huscarl' },
-  gaelic:{ learning:'latin', raiding:true },
+  gaelic:{ learning:'latin', raiding:true, mutualCare:0.001 },
   brezhon:{ learning:'latin', raiding:true },
   iberian:{ learning:'latin' }, basque:{ learning:'latin' },
   occitan:{ learning:'latin' }, andalusi:{ learning:'islamic', raiding:true },
-  italian:{ learning:'latin' }, lombard:{ learning:'latin' },
+  italian:{ learning:'latin', craftsmanship:0.1 }, lombard:{ learning:'latin' },
   greek:{ learning:'byzantine', military:'cataphract' },
   slavic:{ learning:'slavic' }, rus:{ learning:'slavic' },
   magyar:{ learning:'steppe', raiding:true, military:'horsearcher' },
@@ -328,6 +348,7 @@ FBDATA.settlementNames = {
 FBDATA.religions = {
   christian: { name:'Christianity', assignable:false, icon:'✝',
     properties:{
+      doctrines:{ observance:2 },
       marriage:{
         spouseLimit:{ m:1, f:1 },
         divorce:{ kind:'annulment', direct:false, gold:15, piety:20,
@@ -377,6 +398,7 @@ FBDATA.religions = {
     relationToParent:'schismatic', icon:'☧' },
   muslim: { name:'Islam', assignable:false, icon:'☪',
     properties:{
+      doctrines:{ charity:1 },
       marriage:{
         spouseLimit:{ m:4, f:1 },
         divorce:{ kind:'talaq', direct:true, gold:'dowry', piety:0,

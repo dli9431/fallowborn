@@ -2932,14 +2932,14 @@ window.FB = window.FB || {};
 
   function conversionScopeLabel(scope) {
     if (scope === 'household') return FB.T('With my household');
-    if (scope === 'realm') return FB.T('Across my whole realm');
+    if (scope === 'realm') return FB.T('Realm’s official faith');
     return FB.T('Myself alone');
   }
 
   function conversionScopeDesc(kind, scope) {
     if (kind === 'faith') {
       if (scope === 'realm') {
-        return FB.T('Proclaims the state religion across your realm. Piety and prestige cost; zealot unrest in all held counties.');
+        return FB.T('Changes your household and the realm’s official faith. County and settlement populations keep their faith; converting them requires local projects. Piety and prestige cost; zealot unrest in all held counties.');
       }
       if (scope === 'household') {
         return FB.T('Converts your family and household. Moderate piety and prestige cost; zealot unrest in your home county.');
@@ -3165,17 +3165,33 @@ window.FB = window.FB || {};
     return h;
   }
 
-  UI.showConversionPicker = function (kind, initialScope) {
+  UI.showConversionPicker = function (kind, initialScope, returnParentId) {
     const s = FB.state;
     const c = s && s.chars && s.chars[s.player.charId];
     if (!s || !c || (kind !== 'faith' && kind !== 'culture')) return;
     const currentId = kind === 'faith' ? c.religion : c.culture;
+    const current = kind === 'faith' ? FB.religionOf(currentId, s) : FB.cultureOf(currentId, s);
+    const generated = kind === 'faith' ? s.faiths : s.cultures;
+    const returning = returnParentId && generated && generated[currentId] &&
+      current.parent === returnParentId && initialScope === 'self';
     const ids = kind === 'faith'
       ? FB.religionIds(s, true) : (FB.cultureIds
         ? FB.cultureIds(s, true) : Object.keys(FBDATA.cultures));
     const targets = [];
+    // One county pass per opening, reused by search and scope changes.
+    const dominantCount = {};
+    if (kind === 'culture' && s.cultures && Object.keys(s.cultures).length) {
+      for (let pi = 0; pi < FB.world.provs.length; pi++) {
+        const pr = FB.world.provs[pi];
+        if (pr.wasteland) continue;
+        const culture = FB.countyCulture(s, pr.id);
+        dominantCount[culture] = (dominantCount[culture] || 0) + 1;
+      }
+    }
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
+      if (kind === 'culture' && s.cultures && s.cultures[id] &&
+          (dominantCount[id] || 0) < 3) continue;
       if (id !== currentId && (!FB.conversionTargetEncountered || FB.conversionTargetEncountered(s, kind, id))) {
         targets.push(id);
       }
@@ -3286,7 +3302,8 @@ window.FB = window.FB || {};
       let h = '<div class="gm-body-text">' +
         '<p>' + esc(kind === 'faith'
           ? FB.T('Choose the faith to turn to, and how far the conversion reaches. The old faithful will not forgive it.')
-          : FB.T('Choose the culture to adopt, and how far the change reaches.')) +
+          : FB.T('Choose an existing culture for yourself or your household. Reformed cultures appear here once they are dominant in at least 3 counties.')) +
+        '</p><p>' + esc(FB.T('This changes people’s identity, not a tradition’s doctrines. Settlement populations change separately through gradual local projects.')) +
         '</p></div>' +
         '<div class="conversion-scope-bar" role="tablist" aria-label="' + esc(FB.T('Conversion scope')) + '">';
       for (let i = 0; i < scopes.length; i++) {
@@ -3392,7 +3409,7 @@ window.FB = window.FB || {};
       let lead;
       if (kind === 'faith') {
         lead = scope === 'realm'
-          ? FB.T('Proclaim the {target} faith throughout your realm?', { target:name })
+          ? FB.T('Adopt {target} as your realm’s official faith?', { target:name })
           : scope === 'household'
             ? FB.T('Lead your whole household into the {target} faith?', { target:name })
             : FB.T('Turn to the {target} faith?', { target:name });
@@ -3438,7 +3455,10 @@ window.FB = window.FB || {};
         lines.push(FB.T(
           'Your realm becomes a lawful target for the great holy wars of your old faith.'));
       }
-      let h = '<div class="gm-body-text"><p>' + esc(lead) + '</p>' +
+      let h = '<div class="gm-body-text"><p>' + esc(lead) + '</p><p>' +
+        esc(returning
+          ? FB.T('Only your character returns to the parent identity. The branch’s doctrines, other followers, communities, and active projects remain unchanged.')
+          : conversionScopeDesc(kind, scope)) + '</p>' +
         '<p class="conversion-confirm-cost"><b>' + esc(FB.T('Cost:')) + '</b> <span class="cost-highlight">' + esc(conversionCostText(st)) + '</span></p>';
       for (let i = 0; i < lines.length; i++) {
         h += '<p>' + esc(lines[i]) + '</p>';
@@ -3462,10 +3482,16 @@ window.FB = window.FB || {};
         UI.closeModal();
         UI.refresh();
       });
-      $('conv-cancel').addEventListener('click', function () { render(); });
+      $('conv-cancel').addEventListener('click', function () {
+        if (returning) {
+          if (kind === 'faith') UI.showFaithDetails(currentId);
+          else UI.showCultureDetails(currentId);
+        } else render();
+      });
     }
 
-    render();
+    if (returning) confirmConversion(returnParentId);
+    else render();
   };
 
   function countyProjectTargetName(s, kind, targetId) {

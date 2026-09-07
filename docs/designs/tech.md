@@ -445,3 +445,9 @@ focus fallback is still authoring behavior rather than research available to the
 Related: [state-and-saves.md](state-and-saves.md), [development.md](development.md),
 [war.md](war.md), [finance.md](finance.md), [markets.md](markets.md), [time.md](time.md),
 [ui.md](ui.md), and [mods.md](mods.md).
+
+Learning-doctrine tooltips compare authored widespread-adoption dates with the
+current cultural tradition, using the attestation and emergence floors from the
+research-cost model. Examples show both earlier and later adoption where present.
+The explanation distinguishes cultural timing from the sovereign realm?s effective
+traditions, preserves completed research, and identifies the local-adoption condition.

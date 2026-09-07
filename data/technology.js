@@ -454,6 +454,18 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Reinterpreting religious law or cultural custom is a personal and communal act with no credible technology dependency; the new branch still has to spread through ordinary settlement conversion before territorial benefits take root.'
       },
+      doctrine_communal_worship:{
+        mode:'none', rationale:'Communal worship provides personal seasonal piety through an established social practice with no technology dependency.'
+      },
+      doctrine_organized_alms:{
+        mode:'none', rationale:'Seasonal almsgiving exchanges affordable coin for popular goodwill without requiring an advanced institution or technology.'
+      },
+      doctrine_craft_mentorship:{
+        mode:'none', rationale:'Sharing practical craft knowledge improves individual household wages without unlocking new production methods or replacing their technology gates.'
+      },
+      doctrine_mutual_care:{
+        mode:'none', rationale:'Informal communal nursing provides modest household protection independently of professional medicine and its existing technology benefits.'
+      },
       field_supply_attrition:{
         mode:'soft', tech:['pack_saddles','wheeled_carts','logistics_magazines'],
         rationale:'Every field host carries supply, refills it on friendly land, and starves abroad from the baseline; pack, cart, and magazine innovations stretch how long a campaign can range before attrition bites.'

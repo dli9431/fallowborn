@@ -4298,3 +4298,15 @@ to once per that many campaign days. `warDeserterLossMin` / `warDeserterLossMax`
 the seeded fraction removed from the live host. Paying costs the ceiling of current
 seasonal upkeep times `warDeserterPayUpkeepSeasons`, with `warDeserterPayMin` as the
 minimum.
+
+## Household doctrine properties
+
+Doctrine catalog definitions may provide `defaultValue`, used only when the
+effective inherited path is absent. Faith `properties.doctrines.observance` supplies
+seasonal player piety, and `properties.doctrines.charity` supplies an affordable
+seasonal gold expense with matching popular-opinion gain. Cultural
+`doctrines.craftsmanship` is an additive multiplier on positive household-worker
+wages; `doctrines.mutualCare` supplies non-stacking resident household mortality
+protection. Core defaults are zero. See `docs/designs/doctrines.md` for core values.
+New reform options require an encountered assignable identity actually following
+their value, or must match the current or remembered parent identity.

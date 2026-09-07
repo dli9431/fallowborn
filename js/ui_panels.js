@@ -2385,6 +2385,56 @@ window.FB = window.FB || {};
     return parts.length ? parts.join(' + ') : FB.T('No resource cost');
   }
 
+  function doctrineFalloutText(status) {
+    return FB.T('Common Voice: {amount}. Next reform in {days} days.', {
+      amount:status.popularOpinion || 0, days:status.cooldownDays
+    });
+  }
+
+  function doctrineSourceText(s, kind, status) {
+    const names = (status.sources || []).map(function (id) {
+      const identity = kind === 'faith' ? FB.religionOf(id, s) : FB.cultureOf(id, s);
+      return FB.T(identity.name);
+    });
+    return names.length > 2
+      ? FB.T('Known from: {identities}, and {count} others.', {
+        identities:names.slice(0, 2).join(', '), count:names.length - 2
+      })
+      : FB.T('Known from: {identities}.', { identities:names.join(', ') });
+  }
+
+  function doctrineEffectHtml(s, kind, doctrineId, option, detailed) {
+    let h = '<p><b>' + esc(FB.T('Effect')) + ':</b> ' + esc(FB.T(option.desc || '')) + '</p>';
+    const definition = FBDATA.doctrineCatalogs[kind][doctrineId];
+    if (definition.optionsFrom !== 'techTraditions') return h;
+    const me = s.chars[s.player.charId];
+    const current = FB.doctrineValue(s, kind, me.culture, doctrineId).value;
+    const earlier = [], later = [];
+    for (const id in FBDATA.tech) {
+      const tech = FBDATA.tech[id];
+      const history = tech.history || {};
+      const adoption = history.adoption || {};
+      const before = adoption[current] || adoption.default;
+      const after = adoption[option.value] || adoption.default;
+      if (!before || !after) continue;
+      const floor = history.attested && Number(history.attested[0]) || 0;
+      const oldYear = Math.max(floor, Number(before[0]), Number(before[1]));
+      const newYear = Math.max(floor, Number(after[0]), Number(after[1]));
+      if (!isFinite(oldYear) || !isFinite(newYear) || oldYear === newYear) continue;
+      const rows = newYear < oldYear ? earlier : later;
+      rows.push(FB.T('{technology}: {year} instead of {previous}', {
+        technology:FB.T(tech.name), year:newYear, previous:oldYear
+      }));
+    }
+    if (earlier.length) h += '<p><b>' + esc(FB.T('Earlier widespread adoption (examples)')) +
+      ':</b><br>' + earlier.slice(0, detailed ? 2 : 1).map(esc).join('<br>') + '</p>';
+    if (later.length) h += '<p><b>' + esc(FB.T('Later widespread adoption (examples)')) +
+      ':</b><br>' + later.slice(0, detailed ? 2 : 1).map(esc).join('<br>') + '</p>';
+    if (!earlier.length && !later.length) h += '<p>' + esc(FB.T('No change to widespread adoption dates compared with your current learning tradition.')) + '</p>';
+    if (!detailed) return h + '<p class="muted">' + esc(FB.T('Requires local dominance at home or the capital. Vassals use sovereign traditions; faith may already provide earlier dates.')) + '</p>';
+    return h + '<p>' + esc(FB.T('Earlier adoption can reduce research costs. Other traditions supplied by the realm’s faith may already provide earlier dates. Completed technology is retained; this grants no technology immediately. A new branch must become locally dominant at the baron’s home settlement or the ruler’s capital before its learning tradition applies. Vassals use their sovereign’s technology.')) + '</p>';
+  }
+
   function doctrineRelationText(kind, relation) {
     if (kind === 'culture') {
       return relation === 'foreign'
@@ -2450,6 +2500,70 @@ window.FB = window.FB || {};
     };
   }
 
+  function doctrineReturnParent(s, kind, identityId) {
+    const table = kind === 'faith' ? s.faiths : s.cultures;
+    const identity = kind === 'faith' ? FB.religionOf(identityId, s) : FB.cultureOf(identityId, s);
+    return table && table[identityId] && identity.parent || null;
+  }
+
+  function doctrineReturnAction(s, kind, identityId) {
+    if (!doctrineReturnParent(s, kind, identityId)) return '';
+    return identityConversionActionHtml(kind + '-details-return',
+      FB.T(kind === 'faith' ? 'Return to parent faith…' : 'Return to parent culture…'),
+      FB.T('Review a personal conversion back to the parent. Other followers and local projects stay with the branch. Normal conversion costs and cooldowns apply.'));
+  }
+
+  function bindDoctrineReturn(s, kind, identityId) {
+    const button = $(kind + '-details-return');
+    if (button) button.addEventListener('click', function () {
+      UI.showConversionPicker(kind, 'self', doctrineReturnParent(s, kind, identityId));
+    });
+  }
+
+  function doctrineReturnOption(s, kind, identityId, doctrineId, optionId) {
+    const parent = doctrineReturnParent(s, kind, identityId);
+    const raw = (kind === 'faith' ? s.faiths : s.cultures) || {};
+    return parent && raw[identityId].doctrineBranch === true &&
+      FB.doctrineDivergence(s, kind, identityId, parent, doctrineId, optionId).count === 0;
+  }
+
+  function doctrineAdoptionHtml(s, kind, identityId, spread) {
+    if (!spread) return '';
+    let h = '<div class="progressnote" data-doctrine-adoption>' +
+      esc(FB.T('Your identity, your tradition’s doctrines, and local population adoption are separate.')) + '</div>';
+    if (kind !== 'culture') return h;
+    const share = FB.identityTerritoryShare(s, 'culture', identityId, 'player');
+    h += kv('Adoption in your recruiting lands', esc(FB.T('{percent}%', {
+      percent:Math.round(share * 100)
+    })));
+    if (FB.canOrganizeRaid(s)) {
+      h += kv('Available raiders', esc(FB.T('{count} people', { count:FB.raidMuster(s) })));
+    }
+    const military = FB.cultureValue(s, identityId, 'doctrines.military').value;
+    const units = FBDATA.unitClasses || {};
+    for (const id in units) {
+      const unit = units[id];
+      if (!unit.cultureDoctrine || unit.cultureDoctrine !== military) continue;
+      const reason = unit.requiresTech && !FB.techRequirementMet(s, unit.requiresTech, 'player')
+        ? FB.techRequirementReason(s, unit.requiresTech, 'player') : '';
+      h += kv(FB.T(unit.name), esc(FB.unitClassUnlocked(s, id, 'player')
+        ? FB.T('Available; strength scales with local adoption')
+        : reason || FB.T('Unavailable until people in your recruiting lands adopt this culture')));
+    }
+    if (FB.cultureValue(s, identityId, 'doctrines.seafaring').value) {
+      h += kv('Cultural seafaring', esc(FB.raidHasSupportedSeafaring(s)
+        ? FB.T('Available from an adopted departure point')
+        : FB.T('Needs followers at a departure point')));
+    }
+    h += '<p class="progressnote">' + esc(FB.T(
+      'Cultural raiding hosts and special companies scale with local adoption; special companies still require their technology. Seafaring requires followers at the departure point. Learning traditions require local dominance at your home settlement or realm capital.')) + '</p>';
+    const traditions = FB.techTraditionsForRealm(s).map(function (id) {
+      return FB.T(FBDATA.techTraditions[id] ? FBDATA.techTraditions[id].name : id);
+    });
+    h += kv('Current realm learning traditions', esc(traditions.join(', ')));
+    return h;
+  }
+
   function doctrineOptionCardsHtml(s, kind, doctrineId) {
     const identityId = kind === 'faith'
       ? s.chars[s.player.charId].religion : s.chars[s.player.charId].culture;
@@ -2457,28 +2571,32 @@ window.FB = window.FB || {};
     let h = '<div class="gm-list identity-conversion-actions">';
     for (let i = 0; i < options.length; i++) {
       const option = options[i];
+      if (!FB.doctrineReformSources(s, kind, doctrineId, option.id).length) continue;
+      if (doctrineReturnOption(s, kind, identityId, doctrineId, option.id)) {
+        h += doctrineReturnAction(s, kind, identityId);
+        continue;
+      }
       const status = FB.doctrineReformStatus(
         s, kind, doctrineId, option.id);
       const detailId = 'doctrine-option-' + i + '-details';
-      const detail = FB.T(option.desc || '') + ' ' + (status.ok
-        ? FB.T('{cost}. Result: {count} from the parent, {relation}.', {
-          cost:doctrineCostText(status),
+      const detail = doctrineEffectHtml(s, kind, doctrineId, option) + (status.cooldownDays
+        ? '<p><b>' + esc(FB.T('Cost')) + ':</b> ' + esc(doctrineCostText(status)) +
+          '<br>' + esc(doctrineFalloutText(status)) + '</p><p class="muted">' + esc(FB.T('Result: {count} from the parent, {relation}.', {
           count:doctrineDepartureText(status.divergence),
           relation:doctrineRelationText(kind, status.relation)
-        }) + (status.restoresParent ? ' ' + FB.T(
-          'This returns your character to the original parent identity; existing followers keep the branch.') : '')
-        : status.reason);
+        })) + '<br>' + esc(doctrineSourceText(s, kind, status)) + '</p>' : '') +
+        (!status.ok ? '<p>' + esc(status.reason) + '</p>' : '');
       h += '<div class="identity-conversion-action settcard"><button type="button" ' +
         'class="actionbtn" data-doctrine-option="' + esc(option.id) + '"' +
         (status.ok ? '' : ' disabled') + ' aria-describedby="' + esc(detailId) + '">' +
-        esc(FB.T(option.name)) + (status.ok
-          ? '<span class="doctrine-action-value">' + esc(doctrineCostText(status)) + '</span>'
+        esc(FB.T(option.name)) + (status.cooldownDays
+          ? '<span class="doctrine-action-value">' + esc(FB.T('Cost: {cost}', { cost:doctrineCostText(status) })) + '</span>'
           : '') + '</button><span class="settcard-actions"><button type="button" ' +
         'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
         esc(detailId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
         esc(FB.T('Details')) + '">?</button></span><div class="settcard-details ' +
-        'identity-conversion-action-details hidden" id="' + esc(detailId) + '"><p>' +
-        esc(detail) + '</p></div></div>';
+        'identity-conversion-action-details hidden" id="' + esc(detailId) + '">' +
+        detail + '</div></div>';
     }
     return h + '</div>';
   }
@@ -2490,7 +2608,8 @@ window.FB = window.FB || {};
     const identityId = kind === 'faith' ? me.religion : me.culture;
     const definitions = FB.doctrineDefinitions(kind);
     let h = '<p class="progressnote">' + esc(FB.T(
-      'Reforming one doctrine creates a child tradition. Further departures cost more and can break with its parent.')) +
+      'The first reform creates a branch and changes only your identity. Later reforms change that branch’s doctrines for all its existing followers. Communities outside the branch join only through conversion projects.')) +
+      '</p><p class="progressnote">' + esc(FB.T('Choices come from encountered traditions. Departures cost Common Voice; each reform increases later costs and recovery time for this ruler. Restoring a parent doctrine causes no new backlash.')) +
       '</p>' + doctrineBranchStatusHtml(s, kind, identityId) +
       '<div class="gm-list">';
     for (let i = 0; i < definitions.length; i++) {
@@ -2533,6 +2652,8 @@ window.FB = window.FB || {};
       historyBackRender:function () { UI.showDoctrineReform(kind); }
     });
     const buttons = $('gm-body').querySelectorAll('[data-doctrine-option]');
+    const me = s.chars[s.player.charId];
+    bindDoctrineReturn(s, kind, kind === 'faith' ? me.religion : me.culture);
     for (let i = 0; i < buttons.length; i++) {
       buttons[i].addEventListener('click', function () {
         UI.showDoctrineConfirm(kind, doctrineId,
@@ -2544,6 +2665,12 @@ window.FB = window.FB || {};
 
   UI.showDoctrineConfirm = function (kind, doctrineId, optionId) {
     const s = FB.state;
+    const me = s.chars[s.player.charId];
+    const currentId = kind === 'faith' ? me.religion : me.culture;
+    if (doctrineReturnOption(s, kind, currentId, doctrineId, optionId)) {
+      UI.showConversionPicker(kind, 'self', doctrineReturnParent(s, kind, currentId));
+      return;
+    }
     const status = FB.doctrineReformStatus(s, kind, doctrineId, optionId);
     if (!status.ok) {
       UI.toast(status.reason);
@@ -2557,17 +2684,18 @@ window.FB = window.FB || {};
       if (options[i].id === optionId) option = options[i];
     }
     if (!option) return;
-    const adoptionText = kind === 'faith'
-      ? FB.T('This changes your character immediately. Settlements keep their current faith until gradual conversion changes their communities.')
-      : FB.T('This changes your character immediately. Settlements and counties keep their current culture until gradual assimilation changes their communities; territorial doctrine benefits follow those adopters.');
+    const adoptionText = status.createsBranch
+      ? FB.T('Creates a new branch and changes only your character’s identity. Your household, official realm faith, and local populations keep their current identities. Use conversion or assimilation to bring them into the branch.')
+      : FB.T('Changes the existing branch’s doctrines for every current follower, including communities that already adopted it. This does not bring new people into the branch.');
     const h = '<p>' + esc(FB.T('Adopt {doctrine}: {option}?', {
       doctrine:catalog.name, option:option.name
     })) + '</p><div class="decision-cost"><b>' + esc(FB.T('Cost')) + ':</b> ' +
       esc(doctrineCostText(status)) + '<br><b>' + esc(FB.T('Parent relationship')) +
       ':</b> ' + esc(doctrineRelationText(kind, status.relation)) +
       '<br><b>' + esc(FB.T('Total departures')) + ':</b> ' +
-      esc(status.divergence) + '</div><p class="muted">' +
-      esc(FB.T(option.desc || '')) + '</p><p class="progressnote">' +
+      esc(status.divergence) + '<br>' + esc(doctrineFalloutText(status)) +
+      '</div>' + doctrineEffectHtml(s, kind, doctrineId, option, true) + '<p class="progressnote">' +
+      esc(doctrineSourceText(s, kind, status)) + '</p><p class="progressnote">' +
       esc(adoptionText) + '</p>' + (status.restoresParent
         ? '<p class="progressnote">' + esc(FB.T(
           'With no departures left, your character returns to the original parent identity. Existing followers and territorial projects keep this branch and its doctrines until conversion changes them.')) + '</p>'
@@ -2623,7 +2751,10 @@ window.FB = window.FB || {};
       (spread ? kv('Home settlement followers', esc(FB.T('{percent}%', {
         percent:Math.round(spread.share * 100)
       }))) : '') +
+      doctrineAdoptionHtml(s, 'culture', cultureId, spread) +
       panelh('Actions') + '<div class="gm-list identity-conversion-actions">' +
+      (s.chars[s.player.charId].culture === cultureId
+        ? doctrineReturnAction(s, 'culture', cultureId) : '') +
       identityConversionActionHtml(
         'culture-details-adopt', FB.T('Adopt a new culture…'),
         FB.T('Open the personal or household culture picker.')) +
@@ -2639,6 +2770,7 @@ window.FB = window.FB || {};
       '<div class="gm-footer"><button class="btn" ' +
       'id="culture-details-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(icon + ' ' + cultureName(s, cultureId), h);
+    bindDoctrineReturn(s, 'culture', cultureId);
     $('culture-details-close').addEventListener('click', UI.closeModal);
     $('culture-details-adopt').addEventListener('click', function () {
       UI.closeModal();
@@ -2770,8 +2902,11 @@ window.FB = window.FB || {};
         percent:Math.round(spread.share * 100)
       })));
     }
+    h += doctrineAdoptionHtml(s, 'faith', religionId, spread);
     h += panelh('Actions') +
       '<div class="gm-list identity-conversion-actions">' +
+      (s.chars[s.player.charId].religion === religionId
+        ? doctrineReturnAction(s, 'faith', religionId) : '') +
       identityConversionActionHtml(
         'faith-details-convert', FB.T('Convert your faith…'),
         FB.T('Open the personal, household, or realm faith picker.')) +
@@ -2786,6 +2921,7 @@ window.FB = window.FB || {};
       '</div><div class="gm-footer"><button class="btn" id="faith-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(rel.icon + ' ' + religionName(s, religionId), h);
+    bindDoctrineReturn(s, 'faith', religionId);
     $('faith-details-close').addEventListener('click', UI.closeModal);
     $('faith-details-convert').addEventListener('click', function () {
       UI.closeModal();

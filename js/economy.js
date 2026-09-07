@@ -5010,9 +5010,17 @@ window.FB = window.FB || {};
       if (age < 16 || career.rank === 'apprentice') amount = -0.25;
       else amount = career.rank === 'master' ? def.masterWage : def.wage;
       if (amount > 0) amount *= FB.householdWorkMultiplier(state, career.profession);
+      if (amount > 0) amount *= 1 + (Number(FB.doctrineValue(
+        state, 'culture', c.culture, 'craftsmanship').value) || 0);
       if (amount) lines.push({
         label:def.icon + ' ' + c.name + ' — ' + FB.careerTitle(state, c), amount:amount
       });
+    }
+    const alms = Number(FB.doctrineValue(state, 'faith', me.religion, 'charity').value) || 0;
+    let available = Number(state.player.gold) || 0;
+    for (const line of lines) available += line.amount;
+    if (alms > 0 && available >= alms) {
+      lines.push({ label:FB.T('Organized alms'), amount:-alms, doctrineAlms:alms });
     }
     return lines;
   };
@@ -5020,6 +5028,7 @@ window.FB = window.FB || {};
   FB.livelihoodPiety = function (state) {
     let amount = 0;
     const me = playerChar(state);
+    amount += Number(FB.doctrineValue(state, 'faith', me.religion, 'observance').value) || 0;
     for (const c of FB.householdMembers(state)) {
       if (FB.ageOf(c, state.date.year) < 16) continue;
       const career = FB.careerOf(state, c);
@@ -5047,6 +5056,14 @@ window.FB = window.FB || {};
      current qualification so a large dynasty cannot erase mortality. */
   FB.householdMedicalProtection = function (state) {
     let best = 0;
+    let mutualCare = 0;
+    for (const c of FB.householdMembers(state)) {
+      if (!c || c.dead || FB.ageOf(c, state.date.year) < 16 ||
+          FB.characterResidence(state, c) !== state.player.provinceId ||
+          (c.id === state.player.charId && state.player.travel)) continue;
+      mutualCare = Math.max(mutualCare, Number(FB.doctrineValue(
+        state, 'culture', c.culture, 'mutual_care').value) || 0);
+    }
     for (const c of FB.householdWorkers(state)) {
       if (!c || c.dead || FB.ageOf(c, state.date.year) < 16) continue;
       if (c.id === state.player.charId &&
@@ -5065,12 +5082,16 @@ window.FB = window.FB || {};
       if (!isFinite(protection) || protection < 0) protection = 0.002;
       best = Math.max(best, protection);
     }
-    return best;
+    return best + mutualCare;
   };
 
   FB.livelihoodSeason = function (state) {
     let gold = 0;
-    for (const line of FB.livelihoodBreakdown(state)) gold += line.amount;
+    let alms = 0;
+    for (const line of FB.livelihoodBreakdown(state)) {
+      gold += line.amount;
+      alms += line.doctrineAlms || 0;
+    }
     state.player.gold += gold;
     if (gold > 0 && FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('first-coin',
@@ -5078,6 +5099,7 @@ window.FB = window.FB || {};
         '#tb-gold');
     }
     state.player.piety += FB.livelihoodPiety(state);
+    if (alms > 0) FB.applyEffects(state, { popularOpinion:alms });
   };
 
   FB.livelihoodYearly = function (state) {

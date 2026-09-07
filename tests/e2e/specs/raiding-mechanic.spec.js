@@ -1,4 +1,5 @@
 'use strict';
+const { seedDoctrineContacts } = require('../support/game/doctrines');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
@@ -138,6 +139,7 @@ test('independent raiding requires a landed ruler with a personal tradition',
 
 test('a reformed raiding culture raises troops only as its home settlement adopts it',
   async function ({ page }) {
+    await seedDoctrineContacts(page);
     const result = await page.evaluate(function () {
       var s = FB.state;
       var p = s.player;
@@ -256,6 +258,8 @@ test('campaign-culture AI raid pressure scales with territorial followers',
       });
       var r = s.realms[selected];
       r.culture = branch;
+      // Isolate cultural adoption from the independent pagan-faith route.
+      r.religion = 'catholic';
       for (var i = 0; i < selectedProvs.length; i++) {
         FB.convertCountyCommunity(s, selectedProvs[i], {
           kind:'culture', target:'german', rate:1
@@ -276,11 +280,23 @@ test('campaign-culture AI raid pressure scales with territorial followers',
         var share = FB.identityTerritoryShare(
           s, 'culture', branch, selected);
         FB.aiRaidTick(s, selected, r, { aiRaidChance:0.12 }, true);
+        var culturalPressure = chanceCalls[0];
+        for (var pi = 0; pi < selectedProvs.length; pi++) {
+          FB.convertCountyCommunity(s, selectedProvs[pi], {
+            kind:'culture', target:'german', rate:1
+          });
+        }
+        r.religion = 'norse_pagan';
+        chanceCalls.length = 0;
+        FB.aiRaidTick(s, selected, r, { aiRaidChance:0.12 }, true);
         return {
           realmFound:!!selected,
           callsWithoutFollowers:callsWithoutFollowers,
           share:share,
-          pressure:chanceCalls[0],
+          pressure:culturalPressure,
+          faithCalls:chanceCalls.length,
+          faithPressure:chanceCalls[0],
+          faithExpected:0.12 * (0.5 + 0.5 * (r.aggression || 1)),
           expected:0.12 * (0.5 + 0.5 * (r.aggression || 1)) * share
         };
       } finally {
@@ -293,6 +309,8 @@ test('campaign-culture AI raid pressure scales with territorial followers',
     expect(result.share).toBeGreaterThan(0);
     expect(result.share).toBeLessThan(1);
     expect(result.pressure).toBeCloseTo(result.expected, 10);
+    expect(result.faithCalls).toBe(1);
+    expect(result.faithPressure).toBeCloseTo(result.faithExpected, 10);
   });
 
 test('raid execution uses the same nearby origin as the reviewed multi-holding target',

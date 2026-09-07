@@ -11,8 +11,9 @@ is a public act; turning a whole realm is the kind of decision that tore kingdom
 reactions against royal baptisms in Scandinavia and Poland, apostasy penalties under the
 headed faiths). Costs and penalties therefore escalate steeply with scope.
 
-Doctrine reform is adjacent but separate. It creates or updates a child of the player's
-current identity, converts only the player, and spends piety or prestige through
+Doctrine reform is adjacent but separate. Its first reform creates a child of the player's
+current identity and converts only the player. Later reforms update that existing branch
+for all its followers. Reform spends piety or prestige through
 `FB.applyDoctrineReform`. Conversion remains the explicit way to bring a household or
 realm into that branch. A landed founder's identity sheet may open the existing project
 picker for the exact home settlement and new branch; choosing a policy still starts the
@@ -22,6 +23,9 @@ ordinary gradual local project rather than transferring population immediately. 
 Returning the final doctrine departure moves only the player back to the remembered parent.
 Communities already converted into the branch and projects still targeting it remain intact;
 moving those followers back to the parent requires the same explicit, gradual conversion.
+The UI routes this choice through **Return to parent faith/culture**, using the ordinary
+personal conversion preview, costs, and cooldown rather than presenting it as a doctrine
+edit. Existing engine callers of final doctrine restoration remain compatible.
 
 ## Scopes
 
@@ -34,6 +38,17 @@ moving those followers back to the parent requires the same explicit, gradual co
   culture is derived from ruler and capital). County culture and faith are live saved
   demographic identities, but a realm conversion deliberately does not transfer any
   county community population.
+
+The realm scope is labeled **Realm’s official faith**, and both its explanation and
+confirmation distinguish the household/official change from gradual local conversion.
+Picker introductions distinguish changing an identity from reforming doctrines.
+
+The general culture-adoption picker hides campaign-created cultures until they are
+dominant in at least three non-wasteland counties. This uses live county identity, counted
+once per picker opening and reused by search and scope changes. Authored cultures retain
+their existing encounter rules. This is a discovery filter, not a new conversion gate:
+settlement projects, saved followers, and explicit personal return to a generated parent
+remain valid even below that threshold. Faith pickers retain their existing discovery rules.
 
 ## County and settlement community projects
 
@@ -287,3 +302,9 @@ frontier resettlement, durable urban minorities, and coercive flight remain choi
 than scripted geographic outcomes. The annual agency pass may queue at most one currently
 valid player-relevant situation, with a 10% roll and an eight-year saved cooldown; opening or
 ignoring a different county never retargets the queued context.
+
+Doctrine reform choices reuse `FB.conversionTargetEncountered`: only an encountered
+identity can supply a new doctrine option. Current and parent options remain known.
+Reform additionally charges escalating Common Voice backlash and saves per-ruler
+cost/recovery history; personal conversion does not reset that history. See
+[doctrines.md](doctrines.md).

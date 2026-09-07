@@ -1037,3 +1037,10 @@ or queued event preserves the connected household. Unconnected casts are retaine
 for the home and current destination counties. This bounded cast is a social foreground,
 not a demographic simulation. The technology impact is **none**: everyday community life
 is baseline social play.
+
+Communal nursing is a cultural household practice: one adult resident follower
+adds 0.001 annual mortality protection to the strongest professional provider.
+Additional followers do not stack, and a traveling player supplies no protection.
+This is informal mutual aid (`doctrine_mutual_care`, technology review `none`),
+independent of professional qualifications and medical innovations. See
+[doctrines.md](doctrines.md).
