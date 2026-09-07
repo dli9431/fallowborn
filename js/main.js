@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.1';
+FB.VERSION = '1.176.2';
 FB.CHANGELOG = [
+  { v: '1.176.2', date: '2026-09-07', changes: [
+    'Dynastic marriage searches start with your realm and neighbors. Returning from a review keeps your chosen filters.'
+  ] },
   { v: '1.176.1', date: '2026-09-07', changes: [
     'Fast-forward avoids repeated identity and recruitment lookups. Desktop dialogs keep their place on Back, and Kin no longer has an extra marriage-search button.'
   ] },

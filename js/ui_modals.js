@@ -8330,8 +8330,9 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
     const prefs = marriageFinderPreferences;
+    if (!restorePosition) prefs.scope = realmId ? 'all' : 'near';
     if (subjectId) prefs.subjectId = subjectId;
-    if (realmId !== undefined) prefs.realmId = realmId;
+    if (!restorePosition || realmId !== undefined) prefs.realmId = realmId || null;
     if (realmId) prefs.scope = 'all';
     const subjects = FB.marriageDiscoverySubjects(s);
     if (!subjects.some(function (c) { return c.id === prefs.subjectId; })) {
@@ -8443,7 +8444,12 @@ window.FB = window.FB || {};
         render();
       });
     });
-    $('finder-clear-court').onclick = function () { delete prefs.realmId; render(); };
+    $('finder-clear-court').onclick = function () {
+      delete prefs.realmId;
+      prefs.scope = 'near';
+      $('finder-scope').value = prefs.scope;
+      render();
+    };
     $('gm-cancel').onclick = function () { modalHistoryBack(UI.closeModal); };
     render();
     $('finder-results').addEventListener('click', function (event) {

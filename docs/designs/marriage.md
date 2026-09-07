@@ -411,6 +411,9 @@ link to **Find a marriage...**. The session-only finder selects the protagonist 
 a managed child/grandchild, defaults to courts in the player's sovereign realm
 and neighboring sovereign realms, and can expand to all courts. Person, house,
 realm, age, faith, court rank, heir, and availability filters only affect discovery.
+Each fresh general opening resets court scope to realm and neighbors; returning
+from a review preserves the chosen scope. Opening a specific court may use all-court
+scope to include a distant court, but clearing that court filter restores nearby scope.
 Actionable pairs sort first; blocked pairs retain their authoritative explanation.
 
 `FB.marriageCandidateQuery` reads existing bounded court-family and ruler snapshots.

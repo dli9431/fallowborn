@@ -57,6 +57,30 @@ test('both subjects browse scopes and filters without writing state or consuming
   expect(result.blockedExplain).toBe(true);
 });
 
+test('fresh dynastic searches and clearing a court default to nearby courts', async function ({ page }) {
+  await page.evaluate(function () { FB.ui.showMarriageFinder(); });
+  await expect(page.locator('#finder-scope')).toHaveValue('near');
+  await page.locator('#finder-filters > summary').click();
+  await page.locator('#finder-scope').selectOption('all');
+  await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showMarriageFinder(null, null); });
+  await expect(page.locator('#finder-scope')).toHaveValue('near');
+  const court = await page.evaluate(function () {
+    const s = FB.state, home = FB.playerRealmId(s);
+    return FB.marriageCandidateQuery(s, { scope:'all', availability:'all' }).find(function (row) {
+      const sovereign = FB.topRealm(s, row.realmId);
+      return sovereign !== home && !FB.realmsAdjacent(s, home, sovereign);
+    }).realmId;
+  });
+  await page.evaluate(function (rid) { FB.ui.closeModal(); FB.ui.showMarriageFinder(null, rid); }, court);
+  await expect(page.locator('#finder-scope')).toHaveValue('all');
+  await expect(page.locator('[data-finder-court="' + court + '"]').first()).toBeVisible();
+  await page.locator('#finder-filters > summary').click();
+  await page.locator('#finder-clear-court').click();
+  await expect(page.locator('#finder-scope')).toHaveValue('near');
+  await expect(page.locator('#finder-clear-court')).toBeHidden();
+  await expect(page.locator('[data-finder-court="' + court + '"]')).toHaveCount(0);
+});
+
 test('compact court review restores filters, scroll and keyboard focus', async function ({ page }) {
   await page.evaluate(function () { FB.ui.showMarriageFinder(); });
   await page.locator('#finder-filters > summary').click();
