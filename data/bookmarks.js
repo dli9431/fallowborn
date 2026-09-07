@@ -126,7 +126,7 @@ window.FBDATA = window.FBDATA || {};
     barghawata:profile('Yunus ibn Ilyas','berber',820,8,'zealous'),
     sijilmasa:profile('Maymun ibn Midrar','berber',825,7,'greedy'),
     makuria:profile('Georgios I','nubian',820,8,'zealous'),
-    abyssinia:profile('Degna Djan','nubian',820,9,'zealous'),
+    abyssinia:profile('Degna Djan','abyssinian',820,9,'zealous'),
     crete:profile('Shu’ayb I','arabic',820,10,'ambitious')
   };
 
@@ -321,7 +321,7 @@ window.FBDATA = window.FBDATA || {};
     realm('makuria_1066','Makuria','#6fcfcf','dongola',0,3,
       ruler1066('Georgios III','nubian',1010,8,'zealous')),
     realm('abyssinia_1066','Abyssinia','#4f9f9f','axum',0,3,
-      ruler1066('Jan Seyum','nubian',1010,9,'zealous'))
+      ruler1066('Jan Seyum','abyssinian',1010,9,'zealous'))
   ];
 
   var DUCHY_OWNER = {};

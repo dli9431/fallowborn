@@ -403,3 +403,45 @@ Guildmaster's son or daughter carries `background.guildmasterFamily`; marriage s
 a craft/merchant player into the guild, or otherwise brings ten gold and commercial
 contacts. The spouse then joins the managed household workforce and may staff an
 enterprise like any other resident adult.
+
+## Agreed marriage lineage
+
+New manual proposals default to paternal terms: children join their father's house,
+including a female protagonist's children. Maternal terms require both actual partners'
+effective cultures to permit `doctrines.matrilinealMarriage`. Their exact cultures may
+differ. The household head's culture alone cannot authorize a managed relative's match.
+Autonomous unions prefer maternal terms when both partners permit them. Informal weddings,
+generated courts, starting families, and automatic kin weddings also establish terms.
+
+`FB.marriageLineageStatus` is the shared read-only eligibility boundary.
+`FB.sealMarriageLineage` writes a separate contract for each couple at accepted pledge or
+wedding; subsequent reform, conversion, or accession cannot revoke it. Replacement and
+remarriage negotiate afresh. Dowries, residence, biological links, culture/faith inheritance,
+and household membership use their existing rules. `FB.childDynastySource` supplies births
+and `FB.childIdentityPreview`; conception saves the source parent and dynasty so divorce,
+parental death, remarriage, and protagonist succession cannot retarget an unborn child.
+
+A head following maternal permission may separately invite an adult eligible prospect to
+adopt the head's exact culture, including all its doctrines. Both prospective partners and
+the head must be adults; the prospect must be alive, uncaptured, and physically with the
+head. Reigning rulers are excluded. Personal courtship and managed descendant match gates
+still apply. Existing practitioners require no conversion. Success changes only the target's
+culture and starts the ordinary 730-day personal culture-adoption cooldown. Marriage remains
+a separate proposal under its normal rank, faith, Standing, and acceptance rules.
+
+An attempt costs the ordinary 150-prestige personal culture price scaled by cultural
+distance, plus one day, regardless of outcome. Standing must reach +60 or the current
+courtship requirement if higher. Ordinary acceptance is 25 + 0.5*(Standing-60) +
+2*(head Diplomacy-target Diplomacy) percent, bounded to 5-60%. Designated royal heirs need
+at least +80 Standing, halve that ordinary chance, and cap at 25%. Refusal costs 10 Standing.
+The campaign remembers one attempt per protagonist-target pair across cultural branch
+changes, list refreshes, and saves. Confirmation revalidates before spending or rolling.
+`FB.marriageCulturePersuasionStatus` is pure; `FB.persuadeMarriageCulture` performs the
+transaction and its UI caller completes exactly one day for a resolved attempt, matching
+other marriage transactions. Balance knobs use the `marriageCulturePersuasion` prefix.
+
+Technology reviews `matrilineal_marriage` and `marriage_prospect_culture_persuasion` both use
+`mode:'none'`: these are cultural agreement and personal persuasion, without credible
+research dependencies. Succession order, blood claims, and broad playable-heir eligibility
+are unchanged. Missing contracts on existing unions or pledges preserve legacy inheritance;
+existing children are never rewritten.

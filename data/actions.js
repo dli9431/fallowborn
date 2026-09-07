@@ -88,7 +88,7 @@ FBDATA.deeds = [
   { id:'seek_match', label:'💍 Seek a match', order:2,
     group:'life', flow:'choices', handler:'seek_match' },
   { id:'propose', label:'💒 Propose marriage', order:3,
-    desc:'Ask for their hand. Standing and wealth weigh heavily.', group:'life', flow:'immediate', cooldownDays:20, handler:'propose' },
+    desc:'Agree on marriage lineage, then ask for their hand. Standing and wealth weigh heavily.', group:'life', flow:'choices', cooldownDays:20, handler:'propose' },
   { id:'go_to_town', label:'🏘 Go into town…', order:4,
     desc:'Spend a day at one of the province’s settlements — markets, pulpits, and hiring fairs, as fits your station.', group:'work', flow:'choices', cooldownDays:30, handler:'go_to_town' },
   { id:'attend_auction', label:'⚖ Attend auction…', order:5,

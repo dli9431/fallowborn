@@ -1037,3 +1037,14 @@ existing rebel-sponsorship system or sabotage a county across a shared border. C
 rulers cannot start wars or schemes and their projected host is multiplied by 0.8.
 Succession invalidates generation-stamped schemes, releases captives held by the former
 ruler, and removes predecessor leverage without substituting the new ruler.
+
+## Marriage lineage and royal succession
+
+Agreed paternal/maternal marriage terms govern newborn dynasty membership only. Existing
+title order, biological claims, and the breadth of playable successor choice are unchanged;
+a selected eligible relative still joins the playable house through ordinary succession.
+Royal compact members preserve each child's actual `dyn` through registration,
+materialization, compaction, and accession. An accepted betrothal keeps its agreed terms
+when a partner inherits. Reigning rulers cannot accept a prospect culture invitation;
+designated heirs may, with +80 Standing and halved odds capped at 25%. The invitation
+transaction rechecks reigning authority before spending or rolling.

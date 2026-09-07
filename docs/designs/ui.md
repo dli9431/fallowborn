@@ -2264,3 +2264,15 @@ same effect explanation, with up to two examples in each direction and fuller
 conditions. Tooltips keep the effect first, group cost and recovery together, and
 use muted supporting context. Known sources are limited to two names plus a count.
 Both desktop hover/focus and compact disclosures share this concise copy.
+
+## Marriage lineage reviews
+
+Protagonist, descendant, and negotiated royal proposals open a marriage-terms review with
+a labeled native select, paternal default, disabled maternal option when either partner
+lacks permission, and a live house preview. Native keyboard selection and the confirmation
+button work at compact widths. A separate cultural-invitation review names the target,
+exact culture, all-doctrine conversion, price, day cost, percentage, heir resistance,
+per-pair attempt limit, refusal Standing loss, cooldown, and unchanged faith/dynasty/family.
+Marriage is still a separate proposal. Opening either review performs no writes or rolls.
+The Deeds proposal also uses this review; its day and proposal cooldown begin only on
+confirmation, preserving the existing wartime suitor event after the terms are chosen.

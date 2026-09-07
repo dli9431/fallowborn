@@ -184,3 +184,22 @@ same effect explanation, with up to two examples in each direction and fuller
 conditions. Tooltips keep the effect first, group cost and recovery together, and
 use muted supporting context. Known sources are limited to two names plus a count.
 Both desktop hover/focus and compact disclosures share this concise copy.
+
+## Marriage lineage and learned customs
+
+`marriage_lineage` resolves `doctrines.matrilinealMarriage`, default false. Paternal-only
+reform costs 175 prestige and maternal-permitted reform costs 300, under the existing
+escalation, Common Voice, and recovery rules. Maternal permission requires actual contact
+with practitioners, or durably learned knowledge of the custom. Neither shared African
+affinity, a neighboring county alone, opening a sheet, a generated culture's existence,
+nor a parent identity alone supplies this knowledge. Current practitioners qualify.
+
+Nubian culture permits maternal terms in Dongola and Soba. This is a gameplay abstraction
+of maternal-descent traditions discussed in Christopher Ehret's
+[Matrilineal Descent and the Gendering of Authority](https://www.quest-journal.net/shikanda/Rethinking_history_conference/Ehret%20conference%20paper.pdf),
+not a universal Nubian marriage rule or a change to title succession. Axum, Lalibela, and
+Abyssinian rulers use separate paternal-only Abyssinian culture in both bookmarks, retaining
+African affinity, appearance, and Northeast African learning. Recorded identities in old
+campaigns are not migrated. Reforming only the head leaves relatives' identities intact;
+use household adoption to prepare consenting managed partners. The capability's technology
+review is `matrilineal_marriage`, mode none (cultural custom).

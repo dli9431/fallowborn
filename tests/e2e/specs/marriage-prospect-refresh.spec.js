@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/main.js',
   'css/style.css',
   'data/bookmarks.js',
   'data/cultures.js',
@@ -551,6 +552,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
     }, firstId);
     expect(firstTerms.dowry).toBeGreaterThan(0);
     await firstChoice.click();
+    await page.locator('#marriage-lineage-confirm').click();
 
     await expect(page.getByRole('heading', {
       name:/Household Plan/
@@ -614,6 +616,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
       };
     }, replacementId);
     await replacementChoice.click();
+    await page.locator('#marriage-lineage-confirm').click();
 
     await expect(page.getByRole('heading', {
       name:/Household Plan/
@@ -710,6 +713,7 @@ test('a descendant can be pledged from birth and the pledge can be ended without
     }, partnerId);
     expect(dowry).toBeGreaterThan(0);
     await choice.click();
+    await page.locator('#marriage-lineage-confirm').click();
     await expect(page.locator('#gm-title')).toContainText(setup.childName);
     await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
     await expect(page.getByRole('heading', { name:/Household Plan/ }))

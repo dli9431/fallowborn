@@ -1195,3 +1195,20 @@ Generation uses a private seed scope derived from world seed, bookmark, county, 
 generation, so loading an old save or arriving in a different order neither changes the
 cast nor advances the shared RNG. Missing containers are created at load without raising
 the save version.
+
+## Marriage lineage additions (format 3)
+
+Optional character `marriageLineages[partnerId] = {lineage,turn}` freezes a couple's agreed
+paternal or maternal terms while their union or pledge exists. A replacement union records
+new terms. Pregnancy adds `dynastyParentId` and the conception-time `dynasty`, independently
+of `lineParentId` (culture/faith source). The birth resolver honors that snapshot after
+remarriage, divorce, paternal death, and a change of protagonist. Compact royal members
+retain `dyn` when registered or compacted and reuse it on materialization and accession.
+
+`state.maternalCustomKnowledge[cultureId] = {cultureId,turn,source}` records contact-time
+custom knowledge. `state.marriageCultureAttempts[headId + ':' + targetId]` records
+`{turn,cultureId,accepted}`; changing culture never changes that key. Successful prospects
+save `cultureAdoptionUntil` on their own character, including when they later become head.
+All are additive JSON data under unchanged save wrapper format 3. Missing contracts,
+pledges, and pregnancy fields retain historical inheritance; restore and rendering do not
+backfill them, and no existing child's dynasty is rewritten.

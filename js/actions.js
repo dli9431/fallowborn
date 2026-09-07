@@ -657,6 +657,9 @@ window.FB = window.FB || {};
   }
 
   FB.doctrineReformSources = function (state, kind, doctrineId, optionId) {
+    if (kind === 'culture' && doctrineId === 'marriage_lineage' && optionId === 'maternal') {
+      return FB.maternalCustomSources(state);
+    }
     const identityId = doctrineIdentity(state, kind);
     const parentId = doctrineParent(state, kind, identityId);
     const ids = kind === 'faith' ? FB.religionIds(state, true) : FB.cultureIds(state, true);
@@ -791,6 +794,7 @@ window.FB = window.FB || {};
     const me = state.chars[p.charId];
     const found = doctrineOption(kind, doctrineId, optionId);
     let identityId = status.identityId;
+    FB.learnMaternalCustoms(state);
 
     if (kind === 'faith') {
       if (status.createsBranch) {
@@ -1022,19 +1026,43 @@ window.FB = window.FB || {};
       ? province.religion === targetId : province.culture === targetId));
   }
 
-  FB.conversionTargetPresence = function (state, kind, targetId) {
+  FB.conversionTargetPresence = function (state, kind, targetId, strictInteraction) {
     if (!state || !targetId) return null;
     const p = state.player;
     if (!p) return null;
     const c = p.charId && state.chars ? state.chars[p.charId] : null;
     if (!c) return null;
 
+    if (strictInteraction && kind === 'culture') {
+      const location = FB.travelLocation ? FB.travelLocation(state) : null;
+      if ((!p.travel || p.travel.phase === 'arrived') && countyContainsConversionIdentity(state,
+          location ? location.id : p.provinceId, kind, targetId)) {
+        return { kind:'local', label:FB.T('Local community') };
+      }
+      const contacts = [c.fatherId, c.motherId, c.betrothedId];
+      Array.prototype.push.apply(contacts, c.childrenIds || []);
+      Array.prototype.push.apply(contacts, Object.keys(p.friendContacts || {}));
+      if (FB.kinOf) Array.prototype.push.apply(contacts, Object.keys(FB.kinOf(state).byId || {}));
+      for (const id of Object.keys(p.socialAttention || {})) {
+        const contact = state.chars[id];
+        if (contact && FB.socialAttentionPresence(state, contact).status === 'active') contacts.push(id);
+      }
+      if (p.travel && p.travel.phase === 'arrived' && p.travel.targetCharId) contacts.push(p.travel.targetCharId);
+      for (const id of contacts) {
+        const contact = state.chars[id];
+        if (contact && !contact.dead && contact.culture === targetId) {
+          return { kind:'family_contact', label:FB.T('Personal contact'), name:contact.name };
+        }
+      }
+    }
+
     if (kind === 'faith' ? c.religion === targetId : c.culture === targetId) {
       return { kind:'self', label:FB.T('Current') };
     }
     if (c.spouseId && state.chars[c.spouseId]) {
       const sp = state.chars[c.spouseId];
-      if (kind === 'faith' ? sp.religion === targetId : sp.culture === targetId) {
+      if ((!strictInteraction || !sp.dead) &&
+          (kind === 'faith' ? sp.religion === targetId : sp.culture === targetId)) {
         return { kind:'spouse', label:FB.T('Spouse'), name:sp.name };
       }
     }
@@ -1059,7 +1087,7 @@ window.FB = window.FB || {};
         }
       }
     }
-    for (let i = 0; i < rProvs.length; i++) {
+    for (let i = 0; !strictInteraction && i < rProvs.length; i++) {
       const pid = rProvs[i];
       const prov = FB.world && FB.world.byId && FB.world.byId[pid];
       if (prov && prov.adj) {
@@ -1075,7 +1103,8 @@ window.FB = window.FB || {};
     if (p.network) {
       for (const nid in p.network) {
         const nc = state.chars && state.chars[nid];
-        if (nc && (kind === 'faith' ? nc.religion === targetId : nc.culture === targetId)) {
+        if (nc && (!strictInteraction || !nc.dead) &&
+            (kind === 'faith' ? nc.religion === targetId : nc.culture === targetId)) {
           return { kind:'network', label:FB.T('Contact'), name:nc.name };
         }
       }
@@ -1083,7 +1112,8 @@ window.FB = window.FB || {};
     if (p.captives && p.captives.length) {
       for (let i = 0; i < p.captives.length; i++) {
         const cap = state.chars && state.chars[p.captives[i]];
-        if (cap && (kind === 'faith' ? cap.religion === targetId : cap.culture === targetId)) {
+        if (cap && (!strictInteraction || !cap.dead) &&
+            (kind === 'faith' ? cap.religion === targetId : cap.culture === targetId)) {
           return { kind:'network', label:FB.T('Captive'), name:cap.name };
         }
       }
@@ -1098,15 +1128,22 @@ window.FB = window.FB || {};
         let relKind = 'diplomacy';
         if (r.liege === 'player') { isInteracted = true; relKind = 'vassal'; }
         else if (pRealm && pRealm.liege === rid) { isInteracted = true; relKind = 'liege'; }
+        else if (p.liege && FB.liegeChain(state, p.liege).indexOf(rid) >= 0) { isInteracted = true; relKind = 'liege'; }
+        else if (state.pacts && state.pacts[rid] > state.turn) { isInteracted = true; relKind = 'treaty'; }
+        else if (FB.areAlliedSnapshot && FB.areAlliedSnapshot(state, 'player', rid)) { isInteracted = true; relKind = 'treaty'; }
+        else if (p.war && p.war.enemy === rid) { isInteracted = true; relKind = 'war'; }
         else if (p.tradePartners && p.tradePartners.indexOf(rid) >= 0) { isInteracted = true; relKind = 'trade'; }
         else if (p.treaties && p.treaties[rid]) { isInteracted = true; relKind = 'treaty'; }
         else if (p.wars && p.wars.indexOf(rid) >= 0) { isInteracted = true; relKind = 'war'; }
-        else if (p.standings && p.standings[rid] !== undefined) { isInteracted = true; relKind = 'standing'; }
+        else if (!strictInteraction && p.standings && p.standings[rid] !== undefined) { isInteracted = true; relKind = 'standing'; }
 
         if (isInteracted) {
           const rFaith = FB.realmReligionId ? FB.realmReligionId(state, rid) : r.religion;
-          const rCult = r.culture || (r.capital && FB.world && FB.world.byId[r.capital] && FB.world.byId[r.capital].culture);
-          if (kind === 'faith' ? rFaith === targetId : rCult === targetId) {
+          const ruler = FB.realmRulerCharacterSnapshot
+            ? FB.realmRulerCharacterSnapshot(state, rid) : null;
+          const rulerCulture = ruler ? ruler.culture : r.ruler && r.ruler.culture;
+          if (kind === 'faith' ? rFaith === targetId :
+              rulerCulture === targetId || countyContainsConversionIdentity(state, r.capital, kind, targetId)) {
             return {
               kind:relKind,
               label:relKind === 'trade' ? FB.T('Trade')
@@ -1132,6 +1169,7 @@ window.FB = window.FB || {};
         }
       }
     }
+    if (strictInteraction) return null;
     if (kind === 'faith') {
       const myGroup = FB.faithGroup ? FB.faithGroup(c.religion, state) : '';
       const targetGroup = FB.faithGroup ? FB.faithGroup(targetId, state) : '';
@@ -1173,8 +1211,35 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.conversionTargetEncountered = function (state, kind, targetId) {
-    return !!FB.conversionTargetPresence(state, kind, targetId);
+  FB.conversionTargetEncountered = function (state, kind, targetId, strictInteraction) {
+    if (kind === 'culture' && FB.permitsMatrilinealMarriage(state, targetId) &&
+        !FB.maternalCustomSources(state).length) return false;
+    return !!FB.conversionTargetPresence(state, kind, targetId, strictInteraction);
+  };
+
+  /* Knowledge snapshots the custom at contact time, rather than rereading old
+     visited counties after their inhabitants have changed doctrine. */
+  FB.maternalCustomSources = function (state) {
+    const known = state.maternalCustomKnowledge || {};
+    const ids = FB.cultureIds(state, true), out = Object.keys(known);
+    for (const id of ids) {
+      if (out.indexOf(id) < 0 && FB.permitsMatrilinealMarriage(state, id) &&
+          FB.conversionTargetPresence(state, 'culture', id, true)) out.push(id);
+    }
+    return out;
+  };
+
+  FB.learnMaternalCustoms = function (state) {
+    const sources = FB.maternalCustomSources(state);
+    if (!sources.length) return;
+    state.maternalCustomKnowledge = state.maternalCustomKnowledge || {};
+    for (const id of sources) {
+      if (state.maternalCustomKnowledge[id]) continue;
+      const source = FB.conversionTargetPresence(state, 'culture', id, true);
+      state.maternalCustomKnowledge[id] = {
+        cultureId:id, turn:state.turn || 0, source:source ? source.kind : 'known'
+      };
+    }
   };
 
   FB.conversionStatus = function (state, kind, targetId, scope) {
@@ -1216,13 +1281,25 @@ window.FB = window.FB || {};
         out.reason = FB.T('That culture cannot be adopted.');
         return out;
       }
-      if (targetId === c.culture) {
+      if (targetId === c.culture && (scope === 'self' ||
+          !FB.householdMembers(state).some(function (member) {
+            return member && !member.dead && member.culture !== targetId;
+          }))) {
         out.reason = FB.T('That is already your culture.');
         return out;
       }
     }
     out.targetValid = true;
     out.encountered = !FB.conversionTargetEncountered || FB.conversionTargetEncountered(state, kind, targetId);
+    if (kind === 'culture' && FB.permitsMatrilinealMarriage(state, targetId) &&
+        !FB.maternalCustomSources(state).length) {
+      out.reason = FB.T('Encounter followers of maternal marriage before adopting this culture.');
+      return out;
+    }
+    if (kind === 'culture' && c.cultureAdoptionUntil > state.turn) {
+      out.reason = FB.T('Ready in {days} days.', { days:c.cultureAdoptionUntil - state.turn });
+      return out;
+    }
     if (scope === 'realm') {
       const realm = state.realms && state.realms.player;
       if (p.tier < 3 || !realm || !realm.alive) {
@@ -1320,6 +1397,7 @@ window.FB = window.FB || {};
   FB.applyConversion = function (state, kind, targetId, scope) {
     const status = FB.conversionStatus(state, kind, targetId, scope);
     if (!status.ok) return false;
+    FB.learnMaternalCustoms(state);
     const p = state.player;
     const c = state.chars[p.charId];
     const from = kind === 'faith' ? c.religion : c.culture;
@@ -2891,20 +2969,35 @@ window.FB = window.FB || {};
         FB.queueEvent(s, 'meet_suitor', {});
       }
     } },
-  { id: 'propose',
+  { id: 'propose', opensChoices:true, noConsume:true, deferCooldown:true,
     show: function (s) { return suitorReady(s) && FB.canPropose(s); },
     run: function (s) {
       const p = s.player, m = s.chars[p.charId];
-      // a woman's suit can be overtaken by the war: about a quarter of the time
-      // her intended is swept into the levy before he can answer, opening the
-      // disguise-at-war chain (events_peasant.js, docs/designs/events.md). Same
-      // female + low-station + once-per-life gate as the random opener.
-      if (m.sex === 'f' && p.tier <= 2 && FB.ageOf(m, s.date.year) <= 35 &&
-        !p.flags.polly_ever && FB.chance(0.25)) {
-        FB.queueEvent(s, 'polly_propose_war', {});
-      } else {
-        FB.queueEvent(s, 'proposal_made', {});
+      const targetId = p.courtingId;
+      function propose(lineage) {
+        if (p.charId !== m.id || p.courtingId !== targetId ||
+            !FB.instantStatus(s, 'propose').can ||
+            !FB.marriageLineageStatus(s, m, s.chars[targetId], lineage).ok) return;
+        FB.ensureCourtshipTerms(s);
+        p.courtshipTerms.lineage = lineage;
+        p.cooldowns = p.cooldowns || {};
+        p.cooldowns.propose = s.turn;
+        if (FB.ui && FB.ui.closeModal) FB.ui.closeModal();
+        // a woman's suit can be overtaken by the war: about a quarter of the time
+        // her intended is swept into the levy before he can answer, opening the
+        // disguise-at-war chain (events_peasant.js, docs/designs/events.md). Same
+        // female + low-station + once-per-life gate as the random opener.
+        if (m.sex === 'f' && p.tier <= 2 && FB.ageOf(m, s.date.year) <= 35 &&
+          !p.flags.polly_ever && FB.chance(0.25)) {
+          FB.queueEvent(s, 'polly_propose_war', {});
+        } else {
+          FB.queueEvent(s, 'proposal_made', {});
+        }
+        if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
       }
+      if (FB.ui && FB.ui.showMarriageLineageReview) {
+        FB.ui.showMarriageLineageReview(m.id, targetId, propose);
+      } else propose('paternal');
     } },
 
   { id: 'go_to_town', opensChoices:true, noConsume: true, requiresAdult:true,

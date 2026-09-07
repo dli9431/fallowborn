@@ -1,6 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/cultures.js',
+  'js/main.js',
+  'js/events.js',
   'css/style.css',
   'js/model.js',
   'js/ui_misc.js',
@@ -318,6 +321,7 @@ test('reserved descendants stay manual and a sealed match returns to Household P
 
     await protection.uncheck();
     await page.locator('[data-match="' + family.peerId + '"]').click();
+    await page.locator('#marriage-lineage-confirm').click();
     await expect(page.locator('#gm-title')).toContainText('Household Plan');
     const sealed = await page.evaluate(function (ids) {
       const child = FB.state.chars[ids.childId];

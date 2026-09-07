@@ -2949,7 +2949,9 @@ FB.CHANGELOG = [
       station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
     });
     dad.health = 8; mom.health = 8;
+    if (FB.permitsMatrilinealMarriage(state, cultureId)) mom.dyn = me.dyn;
     dad.spouseId = mom.id; mom.spouseId = dad.id;
+    FB.sealMarriageLineage(state, dad, mom, FB.preferredMarriageLineage(state, dad, mom));
     dad.childrenIds.push(me.id); mom.childrenIds.push(me.id);
     me.fatherId = dad.id; me.motherId = mom.id;
 
@@ -2968,7 +2970,9 @@ FB.CHANGELOG = [
         station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
       });
       granddad.health = 8; grandmom.health = 8;
+      if (FB.permitsMatrilinealMarriage(state, cultureId)) grandmom.dyn = dad.dyn;
       granddad.spouseId = grandmom.id; grandmom.spouseId = granddad.id;
+      FB.sealMarriageLineage(state, granddad, grandmom, FB.preferredMarriageLineage(state, granddad, grandmom));
       granddad.childrenIds.push(dad.id); grandmom.childrenIds.push(dad.id);
       dad.fatherId = granddad.id; dad.motherId = grandmom.id;
       dad.byname = FB.patronym(granddad.name, dad.sex);
@@ -3003,6 +3007,7 @@ FB.CHANGELOG = [
       });
       spouse.health = 8;
       me.spouseId = spouse.id; spouse.spouseId = me.id;
+      FB.sealMarriageLineage(state, me, spouse, FB.preferredMarriageLineage(state, me, spouse));
       state.roles.spouse = spouse.id;
       /* no child predates either parent turning sixteen */
       const oldestChild = Math.max(1,
@@ -3013,7 +3018,7 @@ FB.CHANGELOG = [
         const child = FB.makeCharacter(state, {
           culture: cultureId, religion: religionId,
           born: start.year - FB.ri(minChildAge, oldestChild),
-          dyn: me.dyn, // children of the playable line carry the house name
+          dyn: FB.childDynastySource(state, me, spouse, true).dyn,
           fatherId: me.sex === 'm' ? me.id : spouse.id,
           motherId: me.sex === 'm' ? spouse.id : me.id,
           station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
@@ -3260,6 +3265,7 @@ FB.CHANGELOG = [
     }
 
     if (!G.observe) {
+      FB.learnMaternalCustoms(s);
       if (!p.travel) {
         if (!(opts && opts.skipFocus)) FB.tickFocus(s);
         else FB.validateFocus(s);
@@ -4183,7 +4189,6 @@ FB.CHANGELOG = [
       if (!b || b.dead) { me.betrothedId = null; }
       else if (FB.ageOf(me, year) >= 16 && FB.ageOf(b, year) >= 16 &&
           !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, b.id))) {
-        me.betrothedId = null; b.betrothedId = null;
         delete b.dowryAsk; delete b.dowryDue; // settled between the houses long ago
         p.courtingId = b.id;
         FB.doMarry(s, { settleDowry:false });
@@ -4524,6 +4529,7 @@ FB.CHANGELOG = [
         if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(s, k.id);
         if (FB.clearLoadout) FB.clearLoadout(s, k.id);
         k.spouseId = sp.id; sp.spouseId = k.id;
+        FB.sealMarriageLineage(s, k, sp, FB.preferredMarriageLineage(s, k, sp));
         FB.touchFamily();
         if (close) {
           if (e.rel === 'Grandson' || e.rel === 'Granddaughter') {
@@ -4566,7 +4572,8 @@ FB.CHANGELOG = [
           culture: k.culture, religion: k.religion, born: year,
           traits: FB.inheritTraits(father, mother), traitsN: 0,
           fatherId: father.id, motherId: mother.id,
-          dyn: k.sex === 'm' ? (k.dyn || me.dyn) : sp.dyn || null,
+          dyn: FB.childDynastySource(s, k, sp, false).dyn ||
+            (!FB.marriageLineageContract(k, sp) && k.sex === 'm' ? me.dyn : null),
           station:Math.max(FB.stationOf(father), FB.stationOf(mother)),
           unfree:FB.stationOf(father) === 0 && FB.stationOf(mother) === 0 &&
             (FB.isUnfreeCharacter(s, father) ||
@@ -4627,7 +4634,8 @@ FB.CHANGELOG = [
           born: s.date.year,
           traits: FB.inheritTraits(father, mother), traitsN: 0,
           fatherId: father ? father.id : null, motherId: mother.id,
-          dyn: lineParent.dyn,
+          dyn: pregnancy.dynastyParentId
+            ? pregnancy.dynasty : lineParent.dyn,
           station:Math.max(father ? FB.stationOf(father) : 0,
             FB.stationOf(mother)),
           unfree:(!father || FB.stationOf(father) === 0) &&
@@ -4701,11 +4709,14 @@ FB.CHANGELOG = [
       }
       if (tutorialConceptionDue || FB.chance(fert)) {
         delete s.player.flags.blessed_union; // the prayer is answered
+        const dynastyParent = FB.childDynastySource(s, me, mate, true);
         s.pregnant = {
           due: s.turn + 270,
           motherId: mother.id,
           fatherId: father.id,
-          lineParentId: me.id
+          lineParentId: me.id,
+          dynastyParentId: dynastyParent.id,
+          dynasty: dynastyParent.dyn
         };
         if (mother.id === me.id) FB.news(s, FB.msg('news.life.player_pregnant',
           '🤰 You are with child.', {}));
@@ -4717,20 +4728,17 @@ FB.CHANGELOG = [
   }
 
   /* ---------- death & succession ---------- */
-  FB.childIdentityPreview = function (s, familyParent, spouse, playableLine) {
+  FB.childIdentityPreview = function (s, familyParent, spouse, playableLine, lineage) {
     const me = s && s.player && s.chars[s.player.charId];
     const source = playableLine ? me : familyParent;
-    const father = familyParent && familyParent.sex === 'm'
-      ? familyParent : spouse;
+    const dynastySource = FB.childDynastySource(s, familyParent, spouse, playableLine, lineage);
     return {
       culture:source && source.culture,
       cultureParentId:source && source.id,
       religion:source && source.religion,
       religionParentId:source && source.id,
-      dynasty:playableLine
-        ? (source && source.dyn) : (father && father.dyn || null),
-      dynastyParentId:playableLine
-        ? (source && source.id) : (father && father.id || null),
+      dynasty:dynastySource && dynastySource.dyn || null,
+      dynastyParentId:dynastySource && dynastySource.id || null,
       playableLine:!!playableLine
     };
   };
@@ -5180,6 +5188,7 @@ FB.CHANGELOG = [
     }
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
+    FB.learnMaternalCustoms(s);
     p.charId = heir.id;
     if (FB.chronicleNoteHead) FB.chronicleNoteHead(s);
     if (successionTier !== p.tier) {

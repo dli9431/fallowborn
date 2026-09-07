@@ -541,8 +541,8 @@ const COUNTIES = [
 /* ---------- NUBIA & ABYSSINIA ---------- */
 ['dongola','Dongola',30.48,19.17,'d_makuria','nubian','eastern','desert',3,'makuria'],
 ['soba','Soba',32.66,15.5,'d_alodia','nubian','eastern','desert',2,'makuria'],
-['axum','Axum',38.72,14.13,'d_axum','nubian','eastern','mountains',3,'abyssinia'],
-['lalibela','Lalibela',39.04,13.6,'d_amhara','nubian','eastern','mountains',2,'abyssinia'],
+['axum','Axum',38.72,14.13,'d_axum','abyssinian','eastern','mountains',3,'abyssinia'],
+['lalibela','Lalibela',39.04,13.6,'d_amhara','abyssinian','eastern','mountains',2,'abyssinia'],
 
 /* ---------- WASTELANDS (impassable scenery) ---------- */
 ['w_sahara_w','Western Sahara',-6.0,24.0,null,null,null,'desert'],

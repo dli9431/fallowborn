@@ -856,6 +856,13 @@ window.FB = window.FB || {};
     let bodyHtml = scheduledDutyTeachingHtml(
       s, ev, ctx, eventDescription) || esc(eventDescription);
     bodyHtml += freedomOfferTermsHtml(s, ev);
+    if (ev.id === 'ruler_marriage_offer' || ev.id === 'proposal_made' || ev.id === 'sibling_proposal_made') {
+      const lineage = ev.id === 'ruler_marriage_offer' ? ctx && ctx.lineage :
+        s.player.courtshipTerms && s.player.courtshipTerms.lineage;
+      if (lineage) bodyHtml += '<p class="decision-cost">' + esc(FB.T(lineage === 'maternal'
+        ? 'Maternal terms: children join their mother’s house.'
+        : 'Paternal terms: children join their father’s house.')) + '</p>';
+    }
     if (ev.id === 'proposal_made' && s.player.courtingId) {
       const suitor = s.chars[s.player.courtingId];
       const terms = suitor && FB.courtshipTerms
@@ -3190,9 +3197,11 @@ window.FB = window.FB || {};
     }
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
-      if (kind === 'culture' && s.cultures && s.cultures[id] &&
+      if (kind === 'culture' && id !== currentId && s.cultures && s.cultures[id] &&
           (dominantCount[id] || 0) < 3) continue;
-      if (id !== currentId && (!FB.conversionTargetEncountered || FB.conversionTargetEncountered(s, kind, id))) {
+      if ((id !== currentId || (kind === 'culture' &&
+          FB.permitsMatrilinealMarriage(s, id))) &&
+          (!FB.conversionTargetEncountered || FB.conversionTargetEncountered(s, kind, id))) {
         targets.push(id);
       }
     }
@@ -21067,6 +21076,18 @@ window.FB = window.FB || {};
         route:'break-betrothal'
       });
     }
+    if (FB.permitsMatrilinealMarriage(s, me.culture) &&
+        FB.courtshipStatus(s, c, true).relevant && c.id !== me.id && !descendantKind) {
+      const invitation = FB.marriageCulturePersuasionStatus(s, c, me);
+      addInteractionAction(model, {
+        id:'relationship.culture-invitation', group:'relationship',
+        label:FB.T('Invite to adopt your culture'),
+        detail:FB.T('A separate invitation; marriage still requires its ordinary proposal.'),
+        enabled:invitation.ready, blockedReason:invitation.reason || null,
+        consequence:FB.T('Changes only this person’s culture, including all its doctrines.'),
+        route:'culture-invitation'
+      });
+    }
     if (c.royalLine && !descendantKind && !reigningRealmId &&
         FB.royalKinMatchCandidates) {
       const pledged = c.betrothedId && s.chars[c.betrothedId];
@@ -21546,11 +21567,22 @@ window.FB = window.FB || {};
           });
         } else if (action.route === 'proposal') {
           if (!FB.proposalStatus(s, c).ready) return;
-          UI.closeModal();
-          FB.queueEvent(s, 'proposal_made', {});
-          FB.game.passDay({ skipFocus:true });
+          UI.showMarriageLineageReview(s.player.charId, c.id, function (lineage) {
+            if (!FB.proposalStatus(s, c).ready) return;
+            FB.ensureCourtshipTerms(s);
+            s.player.courtshipTerms.lineage = lineage;
+            UI.closeModal();
+            FB.queueEvent(s, 'proposal_made', {});
+            FB.game.passDay({ skipFocus:true });
+          });
+        } else if (action.route === 'culture-invitation') {
+          UI.showMarriageCultureInvitation(c.id, s.player.charId);
         } else if (action.route === 'sibling-proposal') {
-          UI.showSiblingProposalConfirm(c.id, returnContext);
+          UI.showMarriageLineageReview(s.player.charId, c.id, function (lineage) {
+            FB.ensureCourtshipTerms(s);
+            s.player.courtshipTerms.lineage = lineage;
+            UI.showSiblingProposalConfirm(c.id, returnContext);
+          }, { noDowry:true });
         } else if (action.route === 'courtship-end') {
           UI.closeModal();
           FB.clearCourtship(s, { penalty:true, news:true });
@@ -22423,10 +22455,13 @@ window.FB = window.FB || {};
       b.addEventListener('click', function () {
         const m = s.chars[b.dataset.match];
         if (!m) return;
-        if (!FB.sealKinMatch(s, c, m, matchOptions)) return;
-        UI.closeModal();
-        FB.game.passDay({ skipFocus: true });
-        resumeManagementAfterDay(returnContext);
+        UI.showMarriageLineageReview(c.id, m.id, function (lineage) {
+          const options = Object.assign({}, matchOptions, { lineage:lineage });
+          if (!FB.sealKinMatch(s, c, m, options)) return;
+          UI.closeModal();
+          FB.game.passDay({ skipFocus:true });
+          resumeManagementAfterDay(returnContext);
+        }, matchOptions);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -22434,6 +22469,93 @@ window.FB = window.FB || {};
         modalHistoryBack(function () { UI.showCharModal(cid); });
       });
     });
+  };
+
+  UI.showMarriageCultureInvitation = function (targetId, partnerId, matchOptions) {
+    const s = FB.state, target = s.chars[targetId], partner = s.chars[partnerId];
+    const status = FB.marriageCulturePersuasionStatus(s, target, partner, matchOptions);
+    if (!target || !partner) return;
+    const culture = FB.cultureOf(s.chars[s.player.charId].culture, s);
+    let h = '<p>' + esc(FB.T(
+      'Only {name} will adopt {culture}, including all its doctrines. Faith, dynasty, relatives, territory, and marriage status stay as they are.', {
+        name:target.name, culture:culture.name
+      })) + '</p><p>' + esc(FB.T(
+      'Acceptance: {chance}%. Requires +{standing} Standing. An attempt costs {prestige} prestige and one day, whether accepted or refused.', {
+        chance:Math.round(status.chance * 10000) / 100,
+        standing:status.threshold, prestige:status.prestigeCost
+      })) + '</p>';
+    if (status.heir) h += '<p>' + esc(FB.T(
+      'Designated heir: dynastic resistance lowers the ordinary chance to {percent}% of its value, capped at {cap}%.', {
+        percent:FBDATA.balance.marriageCulturePersuasionHeirMult * 100,
+        cap:FBDATA.balance.marriageCulturePersuasionHeirCap * 100
+      })) + '</p>';
+    h += '<p>' + esc(FB.T(
+      'One invitation per protagonist and prospect. Refusal costs {standing} Standing. Acceptance begins the personal culture-adoption cooldown; marriage remains a separate proposal.', {
+        standing:FBDATA.balance.marriageCulturePersuasionRefusalStanding
+      })) +
+      '</p><p>' + esc(status.reason) + '</p><button class="actionbtn" id="culture-invitation-confirm"' +
+      (status.ready ? '' : ' disabled') + '>' + esc(FB.T('Invite to adopt your culture')) +
+      '</button><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Cultural invitation'), h, { historyView:true });
+    $('culture-invitation-confirm').addEventListener('click', function () {
+      const result = FB.persuadeMarriageCulture(s, target, partner, matchOptions);
+      if (!result.resolved) {
+        UI.showMarriageCultureInvitation(targetId, partnerId, matchOptions);
+        return;
+      }
+      UI.closeModal();
+      FB.game.passDay({ skipFocus:true });
+    });
+    $('gm-cancel').addEventListener('click', function () { modalHistoryBack(); });
+  };
+
+  UI.showMarriageLineageReview = function (partnerId, targetId, confirm, matchOptions) {
+    const s = FB.state, partner = s.chars[partnerId], target = s.chars[targetId];
+    if (!partner || !target) return;
+    const status = FB.marriageLineageStatus(s, partner, target);
+    const invitation = FB.marriageCulturePersuasionStatus(s, target, partner, matchOptions);
+    const dowry = matchOptions && matchOptions.noDowry ? { amount:0 } : partner.id === s.player.charId
+      ? FB.courtshipTerms(s, target, false)
+      : FB.marriageTerms(s, partner, target,
+        target.dowryAsk !== undefined ? target.dowryAsk : target.dowryDue);
+    const h = '<p>' + esc(FB.T('Marriage between {first} and {second}.', {
+      first:FB.fullName(partner), second:FB.fullName(target)
+    })) + '</p><p>' + esc(dowry.amount ? FB.T('{payer}’s house provides {money:gold}.', {
+      payer:dowry.subjectPays ? partner.name : target.name, gold:dowry.amount
+    }) : FB.T('No dowry will change hands.')) + '</p>' +
+      '<label for="marriage-lineage">' + esc(FB.T('Marriage lineage')) +
+      '</label><select id="marriage-lineage"><option value="paternal">' +
+      esc(FB.T('Paternal: children join their father’s house')) +
+      '</option><option value="maternal"' + (status.maternalAllowed ? '' : ' disabled') + '>' +
+      esc(FB.T('Maternal: children join their mother’s house')) + '</option></select>' +
+      '<p>' + esc(FB.T('Both partners must permit maternal marriage. Accepted terms survive later conversion and accession. Title succession and blood claims are unchanged.')) +
+      '</p><p id="marriage-lineage-preview"></p>' +
+      '<button class="actionbtn" id="marriage-culture-invitation"' + (invitation.ready ? '' : ' disabled') + '>' +
+      esc(FB.T('Invite to adopt your culture')) + '</button><p class="muted">' + esc(invitation.reason) +
+      '</p><button class="actionbtn" id="marriage-lineage-confirm">' + esc(FB.T('Propose these terms')) +
+      '</button><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Marriage terms'), h, { historyView:true });
+    function preview() {
+      const identity = FB.childIdentityPreview(s, partner, target,
+        partner.id === s.player.charId, $('marriage-lineage').value);
+      $('marriage-lineage-preview').textContent = FB.T('Children’s house: {dynasty}.', {
+        dynasty:identity.dynasty || ''
+      });
+    }
+    preview();
+    $('marriage-lineage').addEventListener('change', preview);
+    $('marriage-lineage-confirm').addEventListener('click', function () {
+      const lineage = $('marriage-lineage').value;
+      if (!FB.marriageLineageStatus(s, partner, target, lineage).ok) {
+        UI.showMarriageLineageReview(partnerId, targetId, confirm, matchOptions);
+        return;
+      }
+      confirm(lineage);
+    });
+    $('marriage-culture-invitation').addEventListener('click', function () {
+      UI.showMarriageCultureInvitation(targetId, partnerId, matchOptions);
+    });
+    $('gm-cancel').addEventListener('click', function () { modalHistoryBack(); });
   };
 
   /* ================= negotiated royal-family match =================
@@ -22520,15 +22642,17 @@ window.FB = window.FB || {};
     bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-royal-kin-match]').forEach(function (button) {
       button.addEventListener('click', function () {
-        const result = FB.proposeRoyalKinMatch(
-          s, button.getAttribute('data-royal-kin-match'), partner.id);
-        if (!result || !result.resolved) {
-          UI.showRoyalKinMatchPicker(partner.id, returnContext, true);
-          return;
-        }
-        UI.closeModal();
-        FB.game.passDay({ skipFocus:true });
-        resumeManagementAfterDay(returnContext);
+        UI.showMarriageLineageReview(button.getAttribute('data-royal-kin-match'), partner.id, function (lineage) {
+          const result = FB.proposeRoyalKinMatch(
+            s, button.getAttribute('data-royal-kin-match'), partner.id, lineage);
+          if (!result || !result.resolved) {
+            UI.showRoyalKinMatchPicker(partner.id, returnContext, true);
+            return;
+          }
+          UI.closeModal();
+          FB.game.passDay({ skipFocus:true });
+          resumeManagementAfterDay(returnContext);
+        });
       });
     });
     $('gm-cancel').addEventListener('click', function () {

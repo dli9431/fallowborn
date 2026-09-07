@@ -1444,6 +1444,7 @@ window.FB = window.FB || {};
     const t = state.player.travel;
     if (!t) return;
     t.phase = 'arrived';
+    if (FB.learnMaternalCustoms) FB.learnMaternalCustoms(state);
     t.legDaysLeft = 0;
     if (FB.localFolkArrive) FB.localFolkArrive(state, t.destinationId);
     const pr = FB.world.byId[t.destinationId];

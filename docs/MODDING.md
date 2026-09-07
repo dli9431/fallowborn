@@ -4310,3 +4310,28 @@ wages; `doctrines.mutualCare` supplies non-stacking resident household mortality
 protection. Core defaults are zero. See `docs/designs/doctrines.md` for core values.
 New reform options require an encountered assignable identity actually following
 their value, or must match the current or remembered parent identity.
+
+## Cultural marriage lineage
+
+The culture doctrine catalog adds `marriage_lineage` at `doctrines.matrilinealMarriage`
+(boolean; absent defaults false). Its paternal/maternal options cost 175/300 prestige.
+`FB.marriageLineageStatus(state,a,b,lineage)` accepts `paternal` or `maternal` and returns
+`{ok,lineage,maternalAllowed,frozen,reason}`. Both effective cultural identities must permit
+maternal terms when accepted. `FB.sealMarriageLineage` writes terms before linking a new
+couple. Existing mutual pledges without terms must remain legacy, rather than being
+silently normalized. `FB.preferredMarriageLineage` supplies autonomous preferences.
+
+`FB.sealKinMatch` accepts `options.lineage`; `FB.doMarry` accepts `options.lineage` or the
+current `player.courtshipTerms.lineage`; `FB.proposeRoyalKinMatch` accepts a fourth lineage
+argument. New royal offer contexts include `lineage`. Missing legacy contexts remain valid.
+`FB.childDynastySource` resolves the dynasty parent for both births and previews; callers
+must snapshot that parent id and dynasty at conception when birth is deferred.
+
+`FB.marriageCulturePersuasionStatus(state,target,partner,matchOptions)` returns readiness,
+reason, probability (0-1), Standing threshold, heir flag, and prestige cost without writes.
+`FB.persuadeMarriageCulture` revalidates and returns `{resolved,accepted,status}`; the action
+caller completes one day only when resolved, just like royal marriage proposals. It uses
+seeded `FB.chance`. Data-defined `marriageCulturePersuasion*` balance fields govern Standing,
+base/rates/caps, heir multiplier, and refusal penalty. Culture price and cooldown reuse
+`cultureAdoption*`. Knowledge and attempt state schemas are in
+[state-and-saves.md](designs/state-and-saves.md); all additions retain format 3.
