@@ -1403,14 +1403,15 @@ window.FB = window.FB || {};
   }
 
   /* Read-only military eligibility; abandoned works do not close the rolls. */
-  FB.recruitmentCountyBlocked = function (state, realm, pid) {
+  FB.recruitmentCountyBlocked = function (state, realm, pid, countyHosts) {
     const campaign = state.greatHolyWar;
     const occupied = campaign && campaign.phase === 'active' &&
       campaign.occupations && campaign.occupations[pid];
     if (occupied && occupied.occupied && FB.greatHolyWarCamp &&
         FB.greatHolyWarCamp(state, realm) === 'defenders') return true;
     const probe = { realm:realm }, forces = {};
-    for (const host of state.armies || []) {
+    const hosts = countyHosts || state.armies || [];
+    for (const host of hosts) {
       if (host.at !== pid || host.men <= 0 || host.moveLeft > 0 ||
           (host.path && host.path.length)) continue;
       if (FB.armiesHostile(state, probe, host) ||
@@ -1420,7 +1421,7 @@ window.FB = window.FB || {};
       }
     }
     for (const enemy in forces) {
-      const opposition = (state.armies || []).some(function (host) {
+      const opposition = hosts.some(function (host) {
         return host.at === pid && host.men > 0 &&
           FB.armiesHostile(state, { realm:enemy }, host);
       });
@@ -1432,14 +1433,22 @@ window.FB = window.FB || {};
   FB.recruitmentTerritory = function (state, realm) {
     const p = state.player;
     let counties = FB.realmTerritory(state, realm).slice();
+    const included = Object.create(null), hostsByCounty = Object.create(null);
+    for (const pid of counties) included[pid] = true;
     if (realm === 'player') {
-      for (const pid of p.provs || []) if (counties.indexOf(pid) < 0) counties.push(pid);
+      for (const pid of p.provs || []) if (!included[pid]) {
+        counties.push(pid); included[pid] = true;
+      }
       if (!counties.length && p.tier >= 3) counties.push(p.provinceId);
+    }
+    // This projection is synchronous: index once, discard before armies can move.
+    for (const host of state.armies || []) {
+      (hostsByCounty[host.at] || (hostsByCounty[host.at] = [])).push(host);
     }
     const eligible = [], blocked = [];
     let development = 0;
     for (const pid of counties) {
-      if (FB.recruitmentCountyBlocked(state, realm, pid)) blocked.push(pid);
+      if (FB.recruitmentCountyBlocked(state, realm, pid, hostsByCounty[pid] || [])) blocked.push(pid);
       else { eligible.push(pid); development += state.dev[pid] || 1; }
     }
     eligible.sort(function (a, b) {

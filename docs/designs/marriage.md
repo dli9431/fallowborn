@@ -406,7 +406,7 @@ enterprise like any other resident adult.
 
 ## Marriage discovery
 
-Kin, Life & Family deeds, personal match pickers, and managed descendant sheets
+Life & Family deeds, personal match pickers, and managed descendant sheets
 link to **Find a marriage...**. The session-only finder selects the protagonist or
 a managed child/grandchild, defaults to courts in the player's sovereign realm
 and neighboring sovereign realms, and can expand to all courts. Person, house,
@@ -419,6 +419,9 @@ resources. Compact records show known identity and route through the existing co
 opening before exact terms can be reviewed. Personal matches reuse courtship and
 read-only travel checks; descendant proposals retain the selected pair and revalidate
 through `FB.proposeRoyalKinMatch`. Modal history restores filters, scroll, and focus.
+This includes desktop returns from the route chooser, royal match picker, lineage
+review, and cultural invitation. Opening a review directly still provides a safe exit
+when no previous modal exists.
 No search preference or derived bonus is added to saved state.
 
 Technology review `marriage_discovery` is `none`: finding known courts does not
@@ -430,7 +433,8 @@ ordinary close-family weddings can improve later defensive-alliance negotiations
 The Deeds **Seek a match** entry first offers local prospects or **Find a dynastic
 match**. Choosing the route spends nothing and does not refresh prospects; only
 choosing local matchmaking invokes the existing search and cooldown. The separate
-Deeds finder button is removed. Kin and descendant shortcuts remain available.
+Deeds finder button is removed. Descendant shortcuts remain available; the standalone
+Kin finder button is removed.
 The finder keeps **Marriage for** visible and groups the other inputs beneath a
 native **Filters** disclosure, collapsed on opening. Initial focus stays on the
 dialog, avoiding the mobile keyboard. Candidate cards use procedural portraits,

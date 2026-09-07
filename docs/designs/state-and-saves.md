@@ -312,6 +312,11 @@ means “no generated faiths,” while a new life preserves its non-historical s
 derived graph, lineage, and property-source maps never live on state. See
 [religions.md](religions.md).
 
+Compiled faith and culture lookups first check the state, identity-table reference,
+and revision. Repeated reads reuse the effective graph without enumerating generated
+identities. Replacing a table, reforming an identity, loading a save, or invalidating
+mod data rebuilds the relevant graph, including transitions from an empty table.
+
 Culture-reform state follows the same additive pattern at save version 3.
 `state.cultures` maps generated ids to parent-plus-override records, while
 `state.cultureNextId` supplies deterministic ids. Restore supplies `{}` and `1` to old

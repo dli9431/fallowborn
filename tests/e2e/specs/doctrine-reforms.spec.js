@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/cultures.js', 'data/economy.js', 'data/map_data.js', 'data/technology.js',
   'js/actions.js', 'js/model.js', 'js/economy.js', 'js/events.js',
-  'js/save.js', 'js/technology.js', 'js/ui_panels.js', 'js/ui_misc.js', 'js/i18n.js'
+  'js/save.js', 'js/technology.js', 'js/ui_panels.js', 'js/ui_misc.js', 'js/ui_modals.js', 'js/i18n.js', 'js/mods.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -65,12 +65,21 @@ for (const kind of ['faith', 'culture']) {
             name:'Contact craft', desc:'A modded craft practice.', value:0.2, cost:{ prestige:300 }
           };
         }
-        var donor = kind === 'faith' ? FB.createFaith(s, {
-          name:'Remote fellowship', parent:'pagan', relationToParent:'hostile',
-          properties:{ marriage:{ spouseLimit:{ m:3, f:3 } } }
-        }) : FB.createCulture(s, {
-          name:'Remote craftsmen', parent:'arabic', doctrines:{ craftsmanship:0.2 }
+        // Authored identities have no campaign creation stamp granting discovery.
+        var donor = kind === 'faith' ? 'remote_fellowship' : 'remote_craftsmen';
+        FB.mods.apply(kind === 'faith' ? {
+          religions:{ remote_fellowship:{
+            name:'Remote fellowship', parent:'pagan', relationToParent:'hostile',
+            properties:{ marriage:{ spouseLimit:{ m:3, f:3 } } }
+          } }
+        } : {
+          cultures:{ remote_craftsmen:{
+            name:'Remote craftsmen', parent:'arabic', doctrines:{ craftsmanship:0.2 }
+          } }
         });
+        if (!(kind === 'faith' ? FB.faithAssignable(donor, s) : FB.cultureAssignable(donor, s))) {
+          throw new Error('Remote doctrine source must be an assignable authored identity.');
+        }
         var before = JSON.stringify(s);
         var rejected = FB.applyDoctrineReform(s, kind, doctrine, option);
         var unchanged = before === JSON.stringify(s);

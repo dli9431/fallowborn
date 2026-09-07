@@ -1026,12 +1026,14 @@ window.FB = window.FB || {};
       ? province.religion === targetId : province.culture === targetId));
   }
 
-  FB.conversionTargetPresence = function (state, kind, targetId, strictInteraction) {
+  FB.conversionTargetPresence = function (state, kind, targetId, strictInteraction, reads) {
     if (!state || !targetId) return null;
     const p = state.player;
     if (!p) return null;
     const c = p.charId && state.chars ? state.chars[p.charId] : null;
     if (!c) return null;
+    // Optional read batch belongs to one synchronous discovery pass, never a turn.
+    reads = reads || {};
 
     if (strictInteraction && kind === 'culture') {
       const location = FB.travelLocation ? FB.travelLocation(state) : null;
@@ -1039,16 +1041,16 @@ window.FB = window.FB || {};
           location ? location.id : p.provinceId, kind, targetId)) {
         return { kind:'local', label:FB.T('Local community') };
       }
-      const contacts = [c.fatherId, c.motherId, c.betrothedId];
-      Array.prototype.push.apply(contacts, c.childrenIds || []);
-      Array.prototype.push.apply(contacts, Object.keys(p.friendContacts || {}));
-      if (FB.kinOf) Array.prototype.push.apply(contacts, Object.keys(FB.kinOf(state).byId || {}));
-      for (const id of Object.keys(p.socialAttention || {})) {
-        const contact = state.chars[id];
-        if (contact && FB.socialAttentionPresence(state, contact).status === 'active') contacts.push(id);
+      if (!reads.contacts) {
+        reads.contacts = [c.fatherId, c.motherId, c.betrothedId].concat(c.childrenIds || [],
+          Object.keys(p.friendContacts || {}), FB.kinOf ? Object.keys(FB.kinOf(state).byId || {}) : []);
+        for (const id of Object.keys(p.socialAttention || {})) {
+          const contact = state.chars[id];
+          if (contact && FB.socialAttentionPresence(state, contact).status === 'active') reads.contacts.push(id);
+        }
+        if (p.travel && p.travel.phase === 'arrived' && p.travel.targetCharId) reads.contacts.push(p.travel.targetCharId);
       }
-      if (p.travel && p.travel.phase === 'arrived' && p.travel.targetCharId) contacts.push(p.travel.targetCharId);
-      for (const id of contacts) {
+      for (const id of reads.contacts) {
         const contact = state.chars[id];
         if (contact && !contact.dead && contact.culture === targetId) {
           return { kind:'family_contact', label:FB.T('Personal contact'), name:contact.name };
@@ -1071,7 +1073,8 @@ window.FB = window.FB || {};
     if (countyContainsConversionIdentity(state, capPid, kind, targetId)) {
       return { kind:'capital', label:FB.T('Capital') };
     }
-    const rProvs = FB.realmProvinces ? FB.realmProvinces(state, 'player') : (p.provs || [p.provinceId]);
+    const rProvs = reads.provinces || (reads.provinces = FB.realmProvinces
+      ? FB.realmProvinces(state, 'player') : (p.provs || [p.provinceId]));
     for (let i = 0; i < rProvs.length; i++) {
       const pid = rProvs[i];
       if (countyContainsConversionIdentity(state, pid, kind, targetId)) {
@@ -1079,7 +1082,7 @@ window.FB = window.FB || {};
       }
     }
     if (FB.householdMembers) {
-      const household = FB.householdMembers(state);
+      const household = reads.household || (reads.household = FB.householdMembers(state));
       for (let i = 0; i < household.length; i++) {
         const hm = household[i];
         if (hm && (kind === 'faith' ? hm.religion === targetId : hm.culture === targetId)) {
@@ -1120,6 +1123,7 @@ window.FB = window.FB || {};
     }
     if (state.realms) {
       const pRealm = state.realms.player;
+      const lieges = reads.lieges || (reads.lieges = p.liege ? FB.liegeChain(state, p.liege) : []);
       for (const rid in state.realms) {
         if (!Object.prototype.hasOwnProperty.call(state.realms, rid) || rid === 'player') continue;
         const r = state.realms[rid];
@@ -1128,7 +1132,7 @@ window.FB = window.FB || {};
         let relKind = 'diplomacy';
         if (r.liege === 'player') { isInteracted = true; relKind = 'vassal'; }
         else if (pRealm && pRealm.liege === rid) { isInteracted = true; relKind = 'liege'; }
-        else if (p.liege && FB.liegeChain(state, p.liege).indexOf(rid) >= 0) { isInteracted = true; relKind = 'liege'; }
+        else if (lieges.indexOf(rid) >= 0) { isInteracted = true; relKind = 'liege'; }
         else if (state.pacts && state.pacts[rid] > state.turn) { isInteracted = true; relKind = 'treaty'; }
         else if (FB.areAlliedSnapshot && FB.areAlliedSnapshot(state, 'player', rid)) { isInteracted = true; relKind = 'treaty'; }
         else if (p.war && p.war.enemy === rid) { isInteracted = true; relKind = 'war'; }
@@ -1221,23 +1225,24 @@ window.FB = window.FB || {};
      visited counties after their inhabitants have changed doctrine. */
   FB.maternalCustomSources = function (state) {
     const known = state.maternalCustomKnowledge || {};
-    const ids = FB.cultureIds(state, true), out = Object.keys(known);
+    const ids = FB.cultureIds(state, true), out = Object.keys(known), reads = {};
     for (const id of ids) {
-      if (out.indexOf(id) < 0 && FB.permitsMatrilinealMarriage(state, id) &&
-          FB.conversionTargetPresence(state, 'culture', id, true)) out.push(id);
+      if (!Object.prototype.hasOwnProperty.call(known, id) && FB.permitsMatrilinealMarriage(state, id) &&
+          FB.conversionTargetPresence(state, 'culture', id, true, reads)) out.push(id);
     }
     return out;
   };
 
   FB.learnMaternalCustoms = function (state) {
-    const sources = FB.maternalCustomSources(state);
-    if (!sources.length) return;
-    state.maternalCustomKnowledge = state.maternalCustomKnowledge || {};
-    for (const id of sources) {
-      if (state.maternalCustomKnowledge[id]) continue;
-      const source = FB.conversionTargetPresence(state, 'culture', id, true);
+    const reads = {};
+    for (const id of FB.cultureIds(state, true)) {
+      if (state.maternalCustomKnowledge && state.maternalCustomKnowledge[id]) continue;
+      if (!FB.permitsMatrilinealMarriage(state, id)) continue;
+      const source = FB.conversionTargetPresence(state, 'culture', id, true, reads);
+      if (!source) continue;
+      state.maternalCustomKnowledge = state.maternalCustomKnowledge || {};
       state.maternalCustomKnowledge[id] = {
-        cultureId:id, turn:state.turn || 0, source:source ? source.kind : 'known'
+        cultureId:id, turn:state.turn || 0, source:source.kind
       };
     }
   };

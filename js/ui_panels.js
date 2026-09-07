@@ -3803,7 +3803,6 @@ window.FB = window.FB || {};
     let h = '<button class="btn small" id="btn-ftree" style="width:100%" ' +
       'title="' + esc(FB.T('See the whole family drawn as a tree')) + '">' +
       esc(FB.T('🌳 See the family tree')) + '</button>';
-    h += '<button class="btn" id="kin-marriage-finder">' + esc(FB.T('Find a marriage…')) + '</button>';
     const freedomHistory = FB.familyFreedomView
       ? FB.familyFreedomView(s) : null;
     if (freedomHistory) {
@@ -3906,7 +3905,6 @@ window.FB = window.FB || {};
     }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
-    $('kin-marriage-finder').onclick = function () { UI.showMarriageFinder(null, null); };
     $('btn-ftree').addEventListener('click', function () {
       UI.showFamilyTree();
     });

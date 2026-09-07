@@ -698,7 +698,7 @@ test('returning to a doctrine parent preserves branch followers and projects acr
     expect(result.parentFaithFollowing + result.faithFollowingAfter)
       .toBeCloseTo(1, 8);
     expect(result.faithProjectTarget).toBe(result.faithBranch);
-    expect(result.faithActive).toBeUndefined();
+    expect(result.faithActive).toBe(true);
     expect(result.faithAssignable).toBe(true);
     expect(result.faithDoctrineAfter).toBe('sanctioned');
     expect(result.faithOverride).toBe(true);

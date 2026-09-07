@@ -5429,8 +5429,19 @@ window.FB = window.FB || {};
   };
 
   FB.isRealmAtWar = function (state, realmId) {
-    return !!((FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, realmId)) ||
-      FB.warOpponents(state, realmId).length);
+    if (!state || !realmId) return false;
+    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, realmId)) return true;
+    const personal = state.player && state.player.war;
+    if (personal && personal.enemy &&
+        (realmId === 'player' || personal.enemy === realmId)) return true;
+    const own = state.realms && state.realms[realmId];
+    if (realmId !== 'player' && own && own.alive && own.war && own.war.enemy) return true;
+    for (const id in state.realms) {
+      const realm = state.realms[id];
+      if (id !== 'player' && realm && realm.alive && realm.war &&
+          realm.war.enemy === realmId) return true;
+    }
+    return false;
   };
 
   function truceKey(a, b) { return JSON.stringify([a, b].sort()); }

@@ -7,6 +7,32 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
+test('boolean war checks avoid opponent lists and reflect same-day peace', async function ({ page }, testInfo) {
+  const ids = await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state;
+    s.player.liege = ids.liege;
+    s.realms[ids.liege].war = { enemy:ids.other };
+    const original = FB.warOpponents;
+    let lists = 0;
+    FB.warOpponents = function () { lists++; return original.apply(this, arguments); };
+    const rng = FB.getRngState();
+    let active, peaceful, personal;
+    try {
+      active = ['player', ids.enemy, ids.liege, ids.other].map(function (id) {
+        return FB.isRealmAtWar(s, id);
+      });
+      s.realms[ids.liege].war = null;
+      peaceful = [ids.liege, ids.other].map(function (id) { return FB.isRealmAtWar(s, id); });
+      personal = FB.isRealmAtWar(s, 'player');
+    } finally { FB.warOpponents = original; }
+    return { active:active, peaceful:peaceful, personal:personal, lists:lists,
+      rngSame:rng === FB.getRngState() };
+  }, ids);
+  expect(result).toEqual({ active:[true, true, true, true], peaceful:[false, false],
+    personal:true, lists:0, rngSame:true });
+});
+
 for (const preferred of ['hre', null]) {
   test('personal and liege campaigns survive repair: ' + (preferred || 'another liege'),
     async function ({ page }, testInfo) {

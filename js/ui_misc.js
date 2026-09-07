@@ -3330,6 +3330,7 @@ window.FB = window.FB || {};
     view.historyBack = !!(genericNavSnapshot && genericNavSnapshot.historyBack);
     view.historyBackRender = genericNavSnapshot &&
       genericNavSnapshot.historyBackRender;
+    view.previousView = genericNavSnapshot && genericNavSnapshot.previousView;
     view.returnFocus = UI._gmReturnFocus;
     view.returnAction = UI._gmReturnAction;
     view.modalClass = UI._gmModalClass || '';
@@ -3366,6 +3367,7 @@ window.FB = window.FB || {};
       onDismiss:view.onDismiss,
       historyBack:view.historyBack,
       historyBackRender:view.historyBackRender,
+      previousView:view.previousView,
       returnFocus:view.returnFocus,
       returnAction:view.returnAction,
       modalClass:view.modalClass,
@@ -3396,7 +3398,21 @@ window.FB = window.FB || {};
       mobileNavRequestBack();
       return;
     }
-    fallback();
+    if (genericNavSnapshot && genericNavSnapshot.previousView) {
+      const previous = genericNavSnapshot.previousView;
+      const render = genericNavSnapshot.historyBackRender;
+      if (render) {
+        const applying = mobileNavApplying;
+        mobileNavApplying = true;
+        try {
+          render();
+          if (genericNavSnapshot) genericNavSnapshot.previousView = previous.previousView;
+        } finally { mobileNavApplying = applying; }
+      } else restoreModalView(previous);
+      return;
+    }
+    if (typeof fallback === 'function') fallback();
+    else UI.closeModal();
   }
 
   /* Dialog builders historically put exit controls in several places:
@@ -3577,8 +3593,8 @@ window.FB = window.FB || {};
       : genericNavSnapshot && genericNavSnapshot.mobilePanePosition;
     let previousView = null;
     if (!wasHidden && !replacingView && opts && opts.historyView &&
-      !mobileNavApplying &&
-      mobileNavEnsure()) {
+      !mobileNavApplying) {
+      mobileNavEnsure();
       previousView = {};
       captureModalView(previousView);
     }
@@ -3645,6 +3661,7 @@ window.FB = window.FB || {};
       historyBackRender:retainedNavigation
         ? retainedNavigation.historyBackRender
         : (opts && opts.historyBackRender),
+      previousView:retainedNavigation ? retainedNavigation.previousView : previousView,
       returnFocus:retainedNavigation
         ? retainedNavigation.returnFocus : UI._gmReturnFocus,
       returnAction:retainedNavigation

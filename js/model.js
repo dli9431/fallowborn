@@ -78,6 +78,7 @@ window.FB = window.FB || {};
      appearance pools, and unaltered doctrines continue to follow the parent. */
   let staticCultureCompiled = null;
   let liveCultureState = null;
+  let liveCultureTable = null;
   let liveCultureRevision = -1;
   let liveCultureCompiled = null;
 
@@ -346,13 +347,18 @@ window.FB = window.FB || {};
 
   function compiledCultures(state) {
     state = state === undefined ? FB.state : state;
-    if (state && plainObject(state.cultures) && Object.keys(state.cultures).length) {
-      const revision = stateCultureRevision(state);
-      if (liveCultureState !== state || liveCultureRevision !== revision ||
-          !liveCultureCompiled) {
-        liveCultureState = state;
-        liveCultureRevision = revision;
-        liveCultureCompiled = compileCultureTable(state);
+    const table = state && state.cultures;
+    const revision = stateCultureRevision(state);
+    if (liveCultureState === state && liveCultureTable === table &&
+        liveCultureRevision === revision && liveCultureCompiled) return liveCultureCompiled;
+    if (plainObject(table)) {
+      liveCultureState = state;
+      liveCultureTable = table;
+      liveCultureRevision = revision;
+      if (Object.keys(table).length) liveCultureCompiled = compileCultureTable(state);
+      else {
+        if (!staticCultureCompiled) staticCultureCompiled = compileCultureTable(null);
+        liveCultureCompiled = staticCultureCompiled;
       }
       return liveCultureCompiled;
     }
@@ -543,6 +549,7 @@ window.FB = window.FB || {};
   };
   let staticFaithCompiled = null;
   let liveFaithState = null;
+  let liveFaithTable = null;
   let liveFaithRevision = -1;
   let liveFaithCompiled = null;
 
@@ -851,13 +858,18 @@ window.FB = window.FB || {};
   }
 
   function compiledFaiths(state) {
-    if (state && plainObject(state.faiths) && Object.keys(state.faiths).length) {
-      const revision = stateFaithRevision(state);
-      if (liveFaithState !== state || liveFaithRevision !== revision ||
-          !liveFaithCompiled) {
-        liveFaithState = state;
-        liveFaithRevision = revision;
-        liveFaithCompiled = compileFaithTable(state);
+    const table = state && state.faiths;
+    const revision = stateFaithRevision(state);
+    if (liveFaithState === state && liveFaithTable === table &&
+        liveFaithRevision === revision && liveFaithCompiled) return liveFaithCompiled;
+    if (plainObject(table)) {
+      liveFaithState = state;
+      liveFaithTable = table;
+      liveFaithRevision = revision;
+      if (Object.keys(table).length) liveFaithCompiled = compileFaithTable(state);
+      else {
+        if (!staticFaithCompiled) staticFaithCompiled = compileFaithTable(null);
+        liveFaithCompiled = staticFaithCompiled;
       }
       return liveFaithCompiled;
     }

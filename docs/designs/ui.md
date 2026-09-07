@@ -29,6 +29,11 @@ rebuilds the list at the top. If an action changes the list, restore its view st
 and nearest surviving row after refreshing data. Focus restoration must not scroll
 away from the saved position. Cover a nonzero scroll offset in regression tests.
 
+Generic `historyView` dialogs retain their previous DOM on desktop as well as mobile.
+Visible Back and Escape restore that view even when browser-history navigation is
+unavailable, including its scroll, focus, and listeners. Explicit `historyBackRender`
+callbacks still own flows requiring refreshed data; a top-level Back closes safely.
+
 Every new or changed modal, screen, card, and confirmation must make the decision
 clear at a glance: intended benefit, exact immediate cost, duration or minimum
 commitment, and material risk or replacement consequence. Keep these essentials
@@ -2326,7 +2331,7 @@ The shop exposes a keyboard-accessible native Regional arms and armor disclosure
 
 ## Marriage finder and diplomatic partners
 
-**Find a marriage...** appears in Kin, the Deeds **Seek a match** route chooser,
+**Find a marriage...** appears in the Deeds **Seek a match** route chooser,
 and descendant match pickers, and managed descendant character sheets. A descendant
 entry preselects that person. The modal uses native labeled search, number, select,
 and checkbox controls in the existing scrolling bottom sheet, with full-width
@@ -2344,7 +2349,8 @@ New display text routes through `FB.T`; catalogs remain integration-owned.
 The Deeds **Seek a match** entry first offers local prospects or **Find a dynastic
 match**. Choosing the route spends nothing and does not refresh prospects; only
 choosing local matchmaking invokes the existing search and cooldown. The separate
-Deeds finder button is removed. Kin and descendant shortcuts remain available.
+Deeds finder button is removed. Descendant shortcuts remain available; Kin has no
+standalone finder button above the family list.
 The finder keeps **Marriage for** visible and groups the other inputs beneath a
 native **Filters** disclosure, collapsed on opening. Initial focus stays on the
 dialog, avoiding the mobile keyboard. Candidate cards use procedural portraits,

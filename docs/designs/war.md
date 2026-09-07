@@ -1068,6 +1068,10 @@ counties, their development, and a rally county. Halted hostile forces block a c
 only when they meet its siege strength requirement without opposition; completed
 hostile occupation also blocks it. Passing armies, undersized besiegers and abandoned
 progress do not block recruitment. Relief restores eligibility immediately.
+Each recruitment projection groups armies by their current county once, then checks
+only that county's hosts. The index is discarded at return so movement and relief
+within the same day are visible to the next calculation. Boolean war checks stop at
+the first matching participant instead of constructing full opponent lists.
 
 County levies, military buildings, associated garrison deductions, and vassal levies
 exclude blocked counties. This filter does not alter ordinary realm development or

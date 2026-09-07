@@ -7,6 +7,37 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
+test('recruitment scans the army collection once and immediately sees moved hosts', async function ({ page }, testInfo) {
+  const ids = await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state;
+    s.armies = Array.from({ length:80 }, function (_, i) {
+      return { id:'distant-' + i, realm:ids.enemy, at:s.player.war.target,
+        men:10000, size:10000, moveLeft:0, path:[] };
+    });
+    const iterate = s.armies[Symbol.iterator];
+    let scans = 0;
+    s.armies[Symbol.iterator] = function () { scans++; return iterate.call(this); };
+    const before = JSON.stringify(s), rng = FB.getRngState();
+    let first;
+    try { first = FB.recruitmentTerritory(s, 'player'); }
+    finally { delete s.armies[Symbol.iterator]; }
+    const pure = JSON.stringify(s) === before && rng === FB.getRngState();
+    s.armies[0].at = ids.home;
+    const moved = FB.recruitmentTerritory(s, 'player');
+    s.armies[0].moveLeft = 1;
+    const passing = FB.recruitmentTerritory(s, 'player');
+    return { scans:scans, pure:pure, first:first, moved:moved, passing:passing };
+  }, ids);
+  expect(result.scans).toBeLessThanOrEqual(1);
+  expect(result.pure).toBe(true);
+  expect(result.first.blocked).toEqual([]);
+  expect(result.first.rally).toBe(ids.home);
+  expect(result.moved.blocked).toEqual([ids.home]);
+  expect(result.moved.rally).toBe(ids.second);
+  expect(result.passing.blocked).toEqual([]);
+});
+
 test('halted sufficient sieges block counties; passing, contested and relieved works do not',
   async function ({ page }, testInfo) {
     const scenario = await startWarSafety(page, testInfo);

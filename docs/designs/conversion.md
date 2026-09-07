@@ -327,3 +327,8 @@ visit before the local adoption of the custom grants no retrospective knowledge.
 status reads remain pure. Prospect invitations use the separate status/transaction pair
 in [marriage.md](marriage.md), change only their target, and preserve faith and dynasty.
 The separate persuasion technology review is mode none: this is personal social agency.
+
+Maternal-custom discovery shares kin, household, realm-county, and liege-chain reads
+within one synchronous pass. Learning records the source from that same lookup rather
+than repeating discovery. Each later pass reads live state again, including changes
+made on the same day; no discovery cache enters saves or outlives the calculation.

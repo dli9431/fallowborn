@@ -108,6 +108,13 @@ technology, and other eligibility work until those controls are opened.
 Daily focus validation likewise requests availability only. Mechanical preview ledgers and
 seasonal projections are presentation data and are materialized only for an explicit focus
 status or the open Deeds panel, never merely to let the active focus advance another day.
+
+Fast-forward uses the same daily discovery and military calculations as normal play.
+Maternal-custom discovery batches contact reads only within each synchronous pass;
+recruitment likewise indexes hosts by county for that projection. Faith/culture graph
+reads reuse revision-checked compiled records without scanning generated identity tables
+on every lookup. These optimizations preserve day ordering and RNG consumption; none
+changes the fast-forward frame budget or keeps military/contact results across days.
 Focus-based skill training applies the shared
 `balance.focusSkillGainRate` multiplier (0.75 by default) to its seasonal chance; other
 focus outcomes and non-focus skill gains are unaffected. Martial *training* foci (`militia`, `drill`,

@@ -10,10 +10,13 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.0';
+FB.VERSION = '1.176.1';
 FB.CHANGELOG = [
+  { v: '1.176.1', date: '2026-09-07', changes: [
+    'Fast-forward avoids repeated identity and recruitment lookups. Desktop dialogs keep their place on Back, and Kin no longer has an extra marriage-search button.'
+  ] },
   { v: '1.176.0', date: '2026-09-06', changes: [
-    'Peace agreements bring mutual truces, and personal campaigns stay separate from your liege?s wars. Peace choices require confirmation, with clearer siege and supply feedback and recruitment limited by blockades.'
+    'Peace agreements bring mutual truces, and personal campaigns stay separate from your liege’s wars. Peace choices require confirmation, with clearer siege and supply feedback and recruitment limited by blockades.'
   ] },
   { v: '1.175.0', date: '2026-09-06', changes: [
     'Marriage proposals let families agree to maternal lineage where both cultures permit it. Eligible prospects can be invited to adopt your culture before a separate proposal.'

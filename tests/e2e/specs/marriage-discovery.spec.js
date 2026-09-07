@@ -129,6 +129,16 @@ test('finder controls fit a mobile viewport and retain native keyboard input', a
   expect(layout).toBe(true);
 });
 
+test('Kin omits the standalone finder while descendant sheets retain their shortcut', async function ({ page }) {
+  await page.evaluate(function () { FB.ui.showTab('family'); });
+  await expect(page.locator('#btn-ftree')).toBeVisible();
+  await expect(page.locator('#kin-marriage-finder')).toHaveCount(0);
+  await page.evaluate(function () { FB.ui.showCharModal(window.discoveryChildId); });
+  await page.getByRole('button', { name:'Find a marriage', exact:false }).click();
+  const childId = await page.evaluate(function () { return window.discoveryChildId; });
+  await expect(page.locator('#finder-subject')).toHaveValue(childId);
+});
+
 test('selected royal match reviews lineage and retains its subject after an unresolved proposal', async function ({ page }) {
   const setup = await page.evaluate(function () {
     const s = FB.state, child = s.chars[window.discoveryChildId];
@@ -166,6 +176,15 @@ test('selected royal match reviews lineage and retains its subject after an unre
   expect(await page.evaluate(function () {
     return { state:JSON.stringify(FB.state), rng:FB.getRngState() };
   })).toEqual(setup.before);
+  for (const invitation of [false, true]) {
+    await page.evaluate(function (args) {
+      FB.ui.closeModal();
+      if (args.invitation) FB.ui.showMarriageCultureInvitation(args.partner, args.child);
+      else FB.ui.showMarriageLineageReview(args.child, args.partner, function () {});
+    }, { child:setup.child, partner:setup.partner, invitation:invitation });
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  }
 });
 
 
@@ -277,12 +296,13 @@ test('travel review keeps decision terms visible and calculations in Details', a
   await page.locator('.modal-title-info').click();
   await expect(page.locator('#gm-title-details')).toBeVisible();
   await expect(page.locator('#gm-title-details')).toContainText('Standing improves only while together');
-  await expect(page.locator('#social-visit-depart')).toHaveText('Depart');
+  await expect(page.locator('#social-visit-depart')).toHaveText(/^(?:1\s*)?Depart$/);
 });
 
 
-test('finder exposes terms and current/max realm levies and preserves review return position', async function ({ page }) {
-  await page.setViewportSize({ width:390, height:844 });
+for (const width of [390, 1280]) {
+test('finder exposes terms and current/max realm levies and preserves review return position at ' + width, async function ({ page }) {
+  await page.setViewportSize({ width:width, height:844 });
   await page.evaluate(function () {
     const s = FB.state;
     const row = FB.marriageCandidateQuery(s, { scope:'all', availability:'all' }).find(function (entry) {
@@ -343,6 +363,7 @@ test('finder exposes terms and current/max realm levies and preserves review ret
   expect(await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; })).toBe(scroll);
   await expect(page.locator('#cm-close')).toHaveCount(0);
 });
+}
 
 test('finder-origin travel cancellation fallback opens finder instead of character sheet', async function ({ page }) {
   await page.evaluate(function () {
