@@ -8,6 +8,65 @@ window.FB = window.FB || {};
   const CHARACTER_RESIDENCE_CACHE =
     typeof WeakMap === 'function' ? new WeakMap() : null;
   FB.SKILLS = SKILLS;
+  /* Couple contracts are additive format-3 data. Absence on an existing union
+     deliberately means legacy inheritance, never an invitation to repair it. */
+  FB.permitsMatrilinealMarriage = function (state, cultureId) {
+    const culture = FB.cultureOf(cultureId, state);
+    return !!(culture && culture.doctrines && culture.doctrines.matrilinealMarriage);
+  };
+
+  FB.marriageLineageContract = function (a, b) {
+    if (!a || !b) return null;
+    const linked = a.spouseId === b.id || b.spouseId === a.id ||
+      (a.betrothedId === b.id && b.betrothedId === a.id);
+    return linked && a.marriageLineages && a.marriageLineages[b.id] || null;
+  };
+
+  FB.marriageLineageStatus = function (state, a, b, lineage) {
+    const contract = FB.marriageLineageContract(a, b);
+    const maternalAllowed = !!(a && b &&
+      FB.permitsMatrilinealMarriage(state, a.culture) &&
+      FB.permitsMatrilinealMarriage(state, b.culture));
+    const selected = contract ? contract.lineage : (lineage || 'paternal');
+    const ok = !!(a && b && a.sex !== b.sex &&
+      (selected === 'paternal' || selected === 'maternal') &&
+      (contract || selected !== 'maternal' || maternalAllowed));
+    return { ok:ok, lineage:selected, maternalAllowed:maternalAllowed,
+      frozen:!!contract, reason:ok ? '' :
+        FB.T('Both partners must follow cultures permitting maternal marriage.') };
+  };
+
+  FB.sealMarriageLineage = function (state, a, b, lineage) {
+    const status = FB.marriageLineageStatus(state, a, b, lineage);
+    if (!status.ok) return false;
+    if (status.frozen) return true;
+    const record = { lineage:status.lineage, turn:state.turn || 0 };
+    a.marriageLineages = a.marriageLineages || {};
+    b.marriageLineages = b.marriageLineages || {};
+    a.marriageLineages[b.id] = record;
+    b.marriageLineages[a.id] = { lineage:record.lineage, turn:record.turn };
+    return true;
+  };
+
+  FB.preferredMarriageLineage = function (state, a, b) {
+    return FB.marriageLineageStatus(state, a, b, 'maternal').maternalAllowed
+      ? 'maternal' : 'paternal';
+  };
+
+  FB.childDynastySource = function (state, a, b, playableLine, lineage) {
+    const father = a && a.sex === 'm' ? a : b;
+    const mother = a && a.sex === 'f' ? a : b;
+    const contract = FB.marriageLineageContract(a, b);
+    const linked = a && b && (a.spouseId === b.id || b.spouseId === a.id ||
+      a.betrothedId === b.id || b.betrothedId === a.id);
+    const proposal = state && state.player && state.player.courtshipTerms;
+    const terms = contract ? contract.lineage : (lineage ||
+      (state && state.player && a && b && a.id === state.player.charId &&
+        proposal && proposal.suitorId === b.id ? proposal.lineage : null));
+    if (terms === 'maternal') return mother;
+    if (terms === 'paternal' || !linked) return father;
+    return playableLine ? a : father;
+  };
   FB.SKILL_NAMES = { dip: 'Diplomacy', mar: 'Martial', ste: 'Stewardship', int: 'Intrigue', lea: 'Learning' };
   FB.SKILL_ICONS = { dip: '🤝', mar: '⚔', ste: '⚖', int: '🕸', lea: '📖' };
   FB.skillName = function (id) {

@@ -416,7 +416,7 @@ window.FB = window.FB || {};
     gaelic:.4,brezhon:.5,magyar:.8,khazar:1.3,iberian:1.3,basque:1.2,
     occitan:1.1,italian:1.2,lombard:1.1,greek:1.3,armenian:1.4,
     georgian:1.35,turkic:1.5,andalusi:1.9,arabic:2.2,syriac:1.8,
-    berber:2.3,persian:2,coptic:2.4,nubian:3.7
+    berber:2.3,persian:2,coptic:2.4,nubian:3.7,abyssinian:3.7
   };
   var CULTURE_FAIR = {
     norse:.68,english:.48,german:.55,frankish:.42,norman:.45,ashkenazi:.18,
@@ -424,7 +424,7 @@ window.FB = window.FB || {};
     gaelic:.4,brezhon:.42,magyar:.32,khazar:.08,iberian:.08,basque:.1,
     occitan:.12,italian:.1,lombard:.12,greek:.07,armenian:.05,georgian:.06,
     turkic:.05,andalusi:.04,arabic:.02,syriac:.03,berber:.02,persian:.03,
-    coptic:.02,nubian:.01
+    coptic:.02,nubian:.01,abyssinian:.01
   };
   var CULTURE_RED = {
     norse:.18,english:.1,german:.07,frankish:.07,norman:.08,ashkenazi:.08,

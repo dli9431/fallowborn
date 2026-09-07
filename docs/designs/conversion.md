@@ -308,3 +308,22 @@ identity can supply a new doctrine option. Current and parent options remain kno
 Reform additionally charges escalating Common Voice backlash and saves per-ruler
 cost/recovery history; personal conversion does not reset that history. See
 [doctrines.md](doctrines.md).
+
+## Maternal custom contact and prospect invitations
+
+Culture adoption that would introduce maternal permission also requires learned or actual
+practitioner contact; same-group adoption cannot bypass the doctrine gate. The current
+maternal culture remains selectable for household adoption, even when a newly founded
+branch has fewer than three dominant counties. Self adoption of the current identity
+remains unavailable. This lets a reformed head prepare managed relatives without silently
+converting them at reform time.
+
+The strict-interaction argument to `conversionTargetPresence` excludes adjacency, affinity,
+old unsnapshotted visits, generic Standing records, and mere catalog existence. Actual local
+or ruled communities, personal/family contacts, and established diplomatic/trade dealings
+qualify. Arrival and daily observation snapshot current practitioners through
+`learnMaternalCustoms`; `maternalCustomKnowledge` survives protagonist succession. An old
+visit before the local adoption of the custom grants no retrospective knowledge. All UI
+status reads remain pure. Prospect invitations use the separate status/transaction pair
+in [marriage.md](marriage.md), change only their target, and preserve faith and dynasty.
+The separate persuasion technology review is mode none: this is personal social agency.

@@ -2151,6 +2151,12 @@ window.FB = window.FB || {};
       };
     };
     const person = opts.scope ? FB.withSeed(opts.scope, drawn) : drawn();
+    const parentMember = realm.succession && realm.succession.members &&
+      realm.succession.members[parentId];
+    const parent = parentMember && state.chars[parentMember.charId];
+    const spouse = parent && FB.spouseSnapshot && FB.spouseSnapshot(state, parent);
+    const dynastySource = parent && spouse
+      ? FB.childDynastySource(state, parent, spouse, false) : parent;
     /* Before eager courts, compact heirs consumed one uid. Keep that counter
        movement for non-court seed compatibility, but never put the result in
        a member identity. */
@@ -2158,6 +2164,7 @@ window.FB = window.FB || {};
     return {
       id:courtMemberId(realm, opts.key),
       name: person.name,
+      dyn:dynastySource ? dynastySource.dyn : (realm.dynasty || 'of ' + realm.name),
       sex: person.sex,
       born: person.born,
       alive: true,
@@ -2309,6 +2316,7 @@ window.FB = window.FB || {};
       childIds:[],
       charId:null,
       role:'consort',
+      lineage:FB.permitsMatrilinealMarriage(state, r.ruler.culture) ? 'maternal' : 'paternal',
       consortGen:generation
     };
     s.members[m.id] = m;
@@ -2895,7 +2903,7 @@ window.FB = window.FB || {};
         culture: r.ruler.culture,
         religion: courtReligion(state, r, cap),
         born: m.born,
-        dyn: 'of ' + r.name,
+        dyn: m.dyn || 'of ' + r.name,
         station: r.rank <= 2 ? 3 : 4,
         quality: Math.max(2, r.rank + 1),
         opinion: FB.ri(-5, 20)
@@ -2962,7 +2970,7 @@ window.FB = window.FB || {};
           culture:r.ruler.culture,
           religion:courtReligion(state, r, cap),
           born:m.born,
-          dyn:'of ' + r.name,
+          dyn:m.dyn || 'of ' + r.name,
           station:r.rank <= 2 ? 3 : 4,
           quality:Math.max(2, r.rank + 1),
           opinion:FB.ri(-5, 20)
@@ -2981,6 +2989,11 @@ window.FB = window.FB || {};
       if (!captivityBlocksMarriage &&
           !committedToOther(state, ruler, c, opts) &&
           !committedToOther(state, c, ruler, opts)) {
+        if (m.lineage && ruler.spouseId !== c.id && c.spouseId !== ruler.id &&
+            ruler.betrothedId !== c.id && c.betrothedId !== ruler.id) {
+          m.lineage = FB.preferredMarriageLineage(state, ruler, c);
+          FB.sealMarriageLineage(state, ruler, c, m.lineage);
+        }
         if (ruler.betrothedId === c.id) {
           ruler.betrothedId = null;
           changed = true;
@@ -3204,7 +3217,7 @@ window.FB = window.FB || {};
         culture:r.ruler.culture || (cap && cap.culture),
         religion:courtReligion(state, r, cap),
         born:m.born,
-        dyn:'of ' + r.name,
+        dyn:m.dyn || 'of ' + r.name,
         station:r.rank <= 2 ? 3 : 4,
         quality:Math.max(2, r.rank + 1),
         traits:trait,
@@ -3339,6 +3352,7 @@ window.FB = window.FB || {};
         FB.courtRecordRetained(
           state, c, opts.kinById, opts.familyLinks)) return false;
     member.name = c.name;
+    member.dyn = c.dyn;
     member.born = c.born;
     if (c.died !== undefined) member.died = c.died;
     member.charId = null;
@@ -3461,7 +3475,7 @@ window.FB = window.FB || {};
       ? realm.ruler.generation : 1;
     const rootId = 'royal_' + realmId + '_' + c.id;
     const root = {
-      id:rootId, name:c.name, sex:c.sex, born:c.born, alive:true,
+      id:rootId, name:c.name, dyn:c.dyn, sex:c.sex, born:c.born, alive:true,
       parentId:null, childIds:[], charId:c.id, role:null
     };
     const succession = {
@@ -3484,6 +3498,7 @@ window.FB = window.FB || {};
       succession.members[memberId] = {
         id:memberId,
         name:child.name,
+        dyn:child.dyn,
         sex:child.sex,
         born:child.born,
         alive:true,
@@ -3676,6 +3691,7 @@ window.FB = window.FB || {};
     const m = {
       id:courtMemberId(r, 'child_' + child.id),
       name: child.name,
+      dyn: child.dyn,
       sex: child.sex,
       born: child.born,
       alive: !child.dead,

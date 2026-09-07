@@ -52,6 +52,102 @@ window.FB = window.FB || {};
       amount, source) : 0;
   }
 
+  FB.marriageCulturePersuasionStatus = function (state, target, partner, options) {
+    const p = state && state.player;
+    const head = p && state.chars[p.charId];
+    partner = partner || head;
+    const b = FBDATA.balance;
+    const out = { ready:false, reason:'', chance:0, prestigeCost:0,
+      threshold:b.marriageCulturePersuasionStanding, heir:false, targetId:target && target.id };
+    function blocked(reason) { out.reason = reason; return out; }
+    if (!head || head.dead || !target || target.dead || !partner || partner.dead || p.dead) {
+      return blocked(FB.T('That marriage prospect is unavailable.'));
+    }
+    if (!FB.permitsMatrilinealMarriage(state, head.culture)) {
+      return blocked(FB.T('Your culture must permit maternal marriage first.'));
+    }
+    if (FB.permitsMatrilinealMarriage(state, target.culture)) {
+      return blocked(FB.T('This person already permits maternal marriage; no conversion is needed.'));
+    }
+    if (FB.isReigningRealmRuler(state, target)) {
+      return blocked(FB.T('Reigning rulers cannot be persuaded to adopt your culture.'));
+    }
+    if (FB.ageOf(head, state.date.year) < 16 || FB.ageOf(target, state.date.year) < 16 ||
+        FB.ageOf(partner, state.date.year) < 16) {
+      return blocked(FB.T('Both marriage partners and the household head must be adults.'));
+    }
+    if (FB.intrigueCaptivityOf && (FB.intrigueCaptivityOf(state, head.id) ||
+        FB.intrigueCaptivityOf(state, target.id) || FB.intrigueCaptivityOf(state, partner.id))) {
+      return blocked(FB.T('Captives cannot negotiate this change.'));
+    }
+    if (FB.socialAttentionPresence(state, target).status !== 'active') {
+      return blocked(FB.T('Visit this person before inviting cultural adoption.'));
+    }
+    const eligible = partner.id === head.id
+      ? FB.courtshipStatus(state, target, true).ready
+      : (target.royalLine ? FB.royalKinMatchStatus(state, partner, target).ready
+        : !!(partner.matchIds && partner.matchIds.indexOf(target.id) >= 0 &&
+          FB.kinMatchTerms(state, partner, target, options).ok));
+    if (!eligible) return blocked(FB.T('This person must be eligible for the proposed marriage.'));
+    const attempts = state.marriageCultureAttempts || {};
+    if (attempts[head.id + ':' + target.id]) {
+      return blocked(FB.T('You have already invited this person to adopt your culture.'));
+    }
+    if (target.cultureAdoptionUntil > state.turn) {
+      return blocked(FB.T('This person is still recovering from cultural adoption.'));
+    }
+    const royal = target.royalLine;
+    const realm = royal && state.realms[royal.realmId];
+    out.heir = !!(realm && realm.alive && realm.succession &&
+      realm.succession.heirId === royal.memberId);
+    out.threshold = Math.max(out.threshold, FB.courtshipStandingThreshold(state, target),
+      out.heir ? b.marriageCulturePersuasionHeirStanding : 0);
+    out.standing = characterStanding(state, target);
+    let chance = b.marriageCulturePersuasionBase +
+      b.marriageCulturePersuasionStandingRate * (out.standing - b.marriageCulturePersuasionStanding) +
+      b.marriageCulturePersuasionDiplomacyRate *
+        (FB.skillSnapshot(state, head, 'dip') - FB.skillSnapshot(state, target, 'dip'));
+    chance = FB.clamp(chance, b.marriageCulturePersuasionMin, b.marriageCulturePersuasionMax);
+    out.chance = out.heir ? Math.min(b.marriageCulturePersuasionHeirCap,
+      chance * b.marriageCulturePersuasionHeirMult) : chance;
+    const same = FB.cultureRelation(state, target.culture, head.culture) !== 'foreign';
+    out.prestigeCost = Math.ceil(b.cultureAdoptionSelfPrestige *
+      (same ? b.cultureAdoptionSameGroupMult : b.cultureAdoptionForeignMult));
+    if (out.standing < out.threshold) {
+      out.reason = FB.T('Requires +{threshold} Standing; currently {standing}.', {
+        threshold:out.threshold, standing:Math.round(out.standing)
+      });
+      return out;
+    }
+    if (p.prestige < out.prestigeCost) return blocked(FB.T('You lack the prestige for this invitation.'));
+    out.ready = true;
+    return out;
+  };
+
+  /* As with marriage proposals, the UI completes one day for a resolved
+     transaction. Rejected preflights consume neither resources nor RNG. */
+  FB.persuadeMarriageCulture = function (state, target, partner, options) {
+    const status = FB.marriageCulturePersuasionStatus(state, target, partner, options);
+    if (!status.ready) return { resolved:false, accepted:false, status:status };
+    const head = state.chars[state.player.charId];
+    FB.learnMaternalCustoms(state);
+    state.player.prestige -= status.prestigeCost;
+    const accepted = FB.chance(status.chance);
+    state.marriageCultureAttempts = state.marriageCultureAttempts || {};
+    state.marriageCultureAttempts[head.id + ':' + target.id] = {
+      turn:state.turn, cultureId:head.culture, accepted:accepted
+    };
+    if (accepted) {
+      target.culture = head.culture;
+      target.cultureAdoptionUntil = state.turn + FBDATA.balance.cultureAdoptionSelfCooldown;
+    } else adjustCharacterStanding(state, target,
+      -FBDATA.balance.marriageCulturePersuasionRefusalStanding, 'marriage:culture_refused');
+    FB.news(state, accepted
+      ? FB.msg('news.marriage.culture_accepted', '{name} accepts your invitation to adopt your culture.', { name:target.name })
+      : FB.msg('news.marriage.culture_refused', '{name} refuses your invitation to adopt your culture.', { name:target.name }));
+    return { resolved:true, accepted:accepted, status:status };
+  };
+
   function realmStanding(state, rid) {
     return rid ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
   }
@@ -3196,7 +3292,7 @@ window.FB = window.FB || {};
         FB.ageOf(descendant, state.date.year) < 0 ||
         (FB.intrigueCaptivityOf &&
           FB.intrigueCaptivityOf(state, descendant.id)) ||
-        FB.spousesOf(state, descendant).length ||
+        FB.spousesSnapshot(state, descendant).length ||
         (descendant.betrothedId && !replacingExact) ||
         (replacingId && !replacingExact) ||
         (FB.isHouseholdCharacter &&
@@ -3255,14 +3351,14 @@ window.FB = window.FB || {};
     else if (FB.intrigueCaptivityOf &&
         FB.intrigueCaptivityOf(state, cand.id)) reason = 'captive';
     else if (FB.ageOf(cand, state.date.year) < 0) reason = 'age';
-    else if (FB.spousesOf(state, cand).length || cand.betrothedId) reason = 'pledged';
+    else if (FB.spousesSnapshot(state, cand).length || cand.betrothedId) reason = 'pledged';
     else if (cand.sex === child.sex) reason = 'doctrine';
     else if (!FB.faithAllowsMarriage(state, child.religion, cand.religion) ||
         !FB.faithAllowsMarriage(state, cand.religion, child.religion)) reason = 'faith';
     else if (closeMatchKin(state, child, cand)) reason = 'kinship';
-    else if (FB.papacyCelibate &&
-        (FB.papacyCelibate(state, child) ||
-          FB.papacyCelibate(state, cand))) reason = 'doctrine';
+    else if (FB.papacyCelibateSnapshot &&
+        (FB.papacyCelibateSnapshot(state, child) ||
+          FB.papacyCelibateSnapshot(state, cand))) reason = 'doctrine';
     else if (cand.royalLine) reason = 'compact';
     else if (state.player.courtingId === cand.id) reason = 'courtship';
     else if (dowry > 0 && state.player.gold + 0.0001 < dowry) reason = 'gold';
@@ -3605,6 +3701,8 @@ window.FB = window.FB || {};
       child.matchIds.indexOf(cand && cand.id) >= 0;
     const terms = FB.kinMatchTerms(state, child, cand, options);
     if (!kind || !listed || !terms.ok) return false;
+    const lineage = options && options.lineage || 'paternal';
+    if (!FB.marriageLineageStatus(state, child, cand, lineage).ok) return false;
     const p = state.player;
     FB.discardMatches(state, child, cand.id);
     if (former) {
@@ -3620,6 +3718,7 @@ window.FB = window.FB || {};
             child:child.name, former:cleared.partnerName
           }));
     }
+    FB.sealMarriageLineage(state, child, cand, lineage);
     child.betrothedId = cand.id;
     cand.betrothedId = child.id;
     cand.role = 'kinspouse';
@@ -3648,6 +3747,9 @@ window.FB = window.FB || {};
         (FB.intrigueCaptivityOf &&
           (FB.intrigueCaptivityOf(state, k.id) ||
             FB.intrigueCaptivityOf(state, sp.id)))) return false;
+    const pledged = k.betrothedId === sp.id && sp.betrothedId === k.id;
+    if (!pledged && !FB.sealMarriageLineage(state, k, sp,
+        FB.preferredMarriageLineage(state, k, sp))) return false;
     const B = FBDATA.balance, p = state.player;
     const descendantKind = FB.playerDescendantKind(state, k.id);
     if (!sp.career && sp.epithetMsg && FB.applyMarriageBackground) {
@@ -11596,6 +11698,12 @@ window.FB = window.FB || {};
       FB.clearCourtship(state, { news:true });
       return false;
     }
+    const lineage = options.lineage ||
+      (p.courtshipTerms && p.courtshipTerms.suitorId === s.id &&
+        p.courtshipTerms.lineage) || 'paternal';
+    const legacyPledge = me.betrothedId === s.id && s.betrothedId === me.id &&
+      !FB.marriageLineageContract(me, s);
+    if (!legacyPledge && !FB.sealMarriageLineage(state, me, s, lineage)) return false;
     const weddingTravel = p.travel && p.tier >= 3 &&
       p.travel.purpose === 'relationship' &&
       p.travel.phase === 'arrived' &&

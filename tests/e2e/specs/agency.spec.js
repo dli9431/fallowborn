@@ -1,6 +1,10 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/cultures.js',
+  'js/main.js',
+  'js/model.js',
+  'js/events.js',
   'js/agency.js',
   'js/politics.js',
   'js/ui_modals.js',
@@ -525,6 +529,7 @@ test('a royal family sheet arranges an exact match with a managed descendant fro
       };
     });
     await candidate.click();
+    await page.locator('#marriage-lineage-confirm').click();
     const refused = await page.evaluate(function (ids) {
       var child = FB.state.chars[ids.childId];
       var partner = FB.state.chars[ids.partnerId];
@@ -556,6 +561,7 @@ test('a royal family sheet arranges an exact match with a managed descendant fro
       '[data-interaction-action="relationship.royal-family-match"]').click();
     await page.locator(
       '[data-royal-kin-match="' + setup.childId + '"]').click();
+    await page.locator('#marriage-lineage-confirm').click();
     const accepted = await page.evaluate(function (ids) {
       var child = FB.state.chars[ids.childId];
       var partner = FB.state.chars[ids.partnerId];

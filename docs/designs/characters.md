@@ -1044,3 +1044,9 @@ Additional followers do not stack, and a traveling player supplies no protection
 This is informal mutual aid (`doctrine_mutual_care`, technology review `none`),
 independent of professional qualifications and medical innovations. See
 [doctrines.md](doctrines.md).
+
+New starting families and generated settlement households record the shared marriage-lineage
+contract. Starting children and later collateral births use its dynasty-source parent.
+The founder's chosen house is preserved by identifying the permitting maternal ancestor
+with that house at initial generation. Existing saved children and old backfilled ancestor
+records are not migrated. See [marriage.md](marriage.md) for the cultural agreement rules.

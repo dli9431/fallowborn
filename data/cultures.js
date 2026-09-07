@@ -119,6 +119,9 @@ coptic: { name:'Coptic', tradition:'african', dyn:'of_place',
   female:['Damiana','Mariam','Sarah','Rebecca','Rachel','Hannah','Theodora','Sophia','Helena','Anna','Anastasia','Barbara','Catherine','Christina','Deborah','Elizabeth','Euphemia','Irene','Joanna','Judith','Leah','Magdalena','Marina','Martha','Mary','Pelagia','Salome','Susanna','Tamar','Thekla','Verena','Zipporah'] },
 nubian: { name:'Nubian', tradition:'african', dyn:'of_place',
   male:['Zacharias','Georgios','Kyriakos','Merkurios','Solomon','Basil','Rafael','Stephanos','Ioannes','Abraam','Chael','David','Elias','Ezekiel','Giyorgis','Ioustinos','Kaleb','Kosmas','Makarios','Markos','Menas','Mouses','Petros','Qalidurut','Simeon','Theophilos','Tokil','Aaron','Abratoye','Armenna','Doud','Epimachos','Iesou','Israel','Kollouthos','Masal','Mashshouda','Moukatra','Newaya','Onnoshkouda','Ordu','Ouasta','Ouesen','Paulos','Tamal','Tanta','Togoti','Ura','Yasan','Yosh'],
+  female:['Martha','Maria','Theodora','Anna','Elisabet','Sara','Rebekka','Damiana','Eirene','Sophia','Anastasia','Eudokia','Helena','Joanna','Kandake','Mariakouda','Ngonnena','Pelagia','Ponngila','Susanna','Tapara','Thekla','Titta','Toungesi','Abrotona','Adaueta','Atirkouda','Dapausa','Dousa','Eiopa','Iesousigne','Kapia','Kojoka','Mikaela','Ngaddakouda','Ngollena','Pachnita','Sakina','Sauoka','Serena','Sia','Sitte','Souaein','Takomphit','Tasine','Tekram','Thatil','Tsia'] },
+abyssinian: { name:'Abyssinian', tradition:'african', dyn:'of_place',
+  male:['Zacharias','Georgios','Kyriakos','Merkurios','Solomon','Basil','Rafael','Stephanos','Ioannes','Abraam','Chael','David','Elias','Ezekiel','Giyorgis','Ioustinos','Kaleb','Kosmas','Makarios','Markos','Menas','Mouses','Petros','Qalidurut','Simeon','Theophilos','Tokil','Aaron','Abratoye','Armenna','Doud','Epimachos','Iesou','Israel','Kollouthos','Masal','Mashshouda','Moukatra','Newaya','Onnoshkouda','Ordu','Ouasta','Ouesen','Paulos','Tamal','Tanta','Togoti','Ura','Yasan','Yosh'],
   female:['Martha','Maria','Theodora','Anna','Elisabet','Sara','Rebekka','Damiana','Eirene','Sophia','Anastasia','Eudokia','Helena','Joanna','Kandake','Mariakouda','Ngonnena','Pelagia','Ponngila','Susanna','Tapara','Thekla','Titta','Toungesi','Abrotona','Adaueta','Atirkouda','Dapausa','Dousa','Eiopa','Iesousigne','Kapia','Kojoka','Mikaela','Ngaddakouda','Ngollena','Pachnita','Sakina','Sauoka','Serena','Sia','Sitte','Souaein','Takomphit','Tasine','Tekram','Thatil','Tsia'] }
 };
 
@@ -213,6 +216,11 @@ FBDATA.doctrineCatalogs = {
       } }
   },
   culture:{
+    marriage_lineage:{ name:'Marriage lineage', path:'doctrines.matrilinealMarriage', order:9,
+      defaultValue:false, options:{
+        paternal:{ name:'Paternal only', desc:'New marriages give children their father’s house.', value:false, cost:{ prestige:175 } },
+        maternal:{ name:'Maternal permitted', desc:'Partners who both permit maternal marriage may agree that children join their mother’s house.', value:true, cost:{ prestige:300 } }
+      } },
     craftsmanship:{ name:'Craft mentorship', path:'doctrines.craftsmanship', order:7,
       defaultValue:0, options:{
         customary:{ name:'Customary instruction', desc:'Ordinary household wages.', value:0, cost:{ prestige:150 } },
@@ -283,7 +291,7 @@ FBDATA.doctrineCatalogs = {
 /* Baseline cultural doctrine belongs in data rather than culture-id branches
    in the engine. Missing entries use the conservative default. */
 FBDATA.cultureDoctrineDefaults = {
-  default:{ raiding:false, seafaring:false, military:'levy' },
+  default:{ raiding:false, seafaring:false, military:'levy', matrilinealMarriage:false },
   frankish:{ learning:'latin', craftsmanship:0.1 }, german:{ learning:'latin' },
   norman:{ learning:'latin' }, ashkenazi:{ learning:'latin' },
   english:{ learning:'latin', military:'huscarl' },
@@ -305,7 +313,8 @@ FBDATA.cultureDoctrineDefaults = {
   armenian:{ learning:'caucasian', military:'cataphract' },
   georgian:{ learning:'caucasian' }, baltic:{ learning:'baltic_finnic', raiding:true },
   finnic:{ learning:'baltic_finnic' }, sami:{ learning:'baltic_finnic' },
-  coptic:{ learning:'northeast_african' }, nubian:{ learning:'northeast_african' }
+  coptic:{ learning:'northeast_african' }, nubian:{ learning:'northeast_african', matrilinealMarriage:true },
+  abyssinian:{ learning:'northeast_african' }
 };
 
 /* Settlement name parts per culture — combined pre+suf deterministically by

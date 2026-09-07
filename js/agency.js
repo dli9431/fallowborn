@@ -1115,6 +1115,7 @@ window.FB = window.FB || {};
       FB.queueEvent(state, 'ruler_marriage_offer', {
         realmId:chosen.rid, rulerGeneration:rulerGeneration(realm2),
         studentId:pair.target.id, partnerId:pair.partner.id,
+        lineage:FB.preferredMarriageLineage(state, pair.target, pair.partner),
         dowry:pair.terms.amount,
         playerPays:pair.terms.subjectPays ? 'yes' : 'no',
         aimId:FB.rulerAimSnapshot(state, chosen.rid).id
@@ -1456,6 +1457,7 @@ window.FB = window.FB || {};
     var target = state.chars[ctx.studentId];
     var partner = state.chars[ctx.partnerId];
     var offerStatus = FB.agencyMarriageOfferStatus(state, partner, target);
+    if (ctx.lineage && !FB.marriageLineageStatus(state, target, partner, ctx.lineage).ok) return false;
     return !!(target && partner &&
       FB.ageOf(target, state.date.year) >= 0 &&
       FB.ageOf(partner, state.date.year) >= 0 &&
@@ -1481,6 +1483,7 @@ window.FB = window.FB || {};
     var target = state.chars[ctx.studentId];
     var partner = state.chars[ctx.partnerId];
     if (!target || !partner) return false;
+    if (ctx.lineage && !FB.sealMarriageLineage(state, target, partner, ctx.lineage)) return false;
     var dowry = Math.max(0, Number(ctx.dowry) || 0);
     if (ctx.playerPays === 'yes') {
       state.player.gold -= dowry;
@@ -1513,11 +1516,15 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.proposeRoyalKinMatch = function (state, targetId, partnerId) {
+  FB.proposeRoyalKinMatch = function (state, targetId, partnerId, lineage) {
     var target = state && state.chars && state.chars[targetId];
     var partner = state && state.chars && state.chars[partnerId];
     var status = FB.royalKinMatchStatus(state, target, partner);
     if (!status.ready) return { resolved:false, accepted:false, status:status };
+    lineage = lineage || 'paternal';
+    if (!FB.marriageLineageStatus(state, target, partner, lineage).ok) {
+      return { resolved:false, accepted:false, status:status };
+    }
     var realm = state.realms[status.realmId];
     var accepted = FB.chance(status.chance);
     if (!accepted) {
@@ -1543,6 +1550,7 @@ window.FB = window.FB || {};
       rulerGeneration:rulerGeneration(realm),
       studentId:target.id,
       partnerId:partner.id,
+      lineage:lineage,
       dowry:terms.amount,
       playerPays:terms.subjectPays ? 'yes' : 'no'
     };

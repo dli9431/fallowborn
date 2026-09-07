@@ -2368,3 +2368,15 @@ scroll, then restore originating focus without scrolling. Apply the saved offset
 after the source layout and focus are restored. Finder fallback navigation retains
 these values in UI session state; none belongs in the game save. Regression tests
 must cover nonzero scroll for both retained-history and rebuilt-list returns.
+
+## Marriage lineage reviews
+
+Protagonist, descendant, and negotiated royal proposals open a marriage-terms review with
+a labeled native select, paternal default, disabled maternal option when either partner
+lacks permission, and a live house preview. Native keyboard selection and the confirmation
+button work at compact widths. A separate cultural-invitation review names the target,
+exact culture, all-doctrine conversion, price, day cost, percentage, heir resistance,
+per-pair attempt limit, refusal Standing loss, cooldown, and unchanged faith/dynasty/family.
+Marriage is still a separate proposal. Opening either review performs no writes or rolls.
+The Deeds proposal also uses this review; its day and proposal cooldown begin only on
+confirmation, preserving the existing wartime suitor event after the terms are chosen.

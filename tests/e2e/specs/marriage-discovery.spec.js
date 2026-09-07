@@ -1,6 +1,6 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/agency.js', 'js/model.js', 'js/events.js',
+dependsOnRuntime(__filename, ['data/cultures.js', 'js/agency.js', 'js/model.js', 'js/events.js',
   'js/world.js', 'js/travel.js', 'js/items.js', 'js/economy.js', 'js/actions.js',
   'js/ui_modals.js', 'js/ui_misc.js', 'js/population.js', 'js/ui_panels.js', 'js/portrait.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
@@ -127,6 +127,45 @@ test('finder controls fit a mobile viewport and retain native keyboard input', a
     });
   });
   expect(layout).toBe(true);
+});
+
+test('selected royal match reviews lineage and retains its subject after an unresolved proposal', async function ({ page }) {
+  const setup = await page.evaluate(function () {
+    const s = FB.state, child = s.chars[window.discoveryChildId];
+    child.culture = 'nubian';
+    const partner = FB.makeCharacter(s, { sex:child.sex === 'm' ? 'f' : 'm',
+      born:s.date.year - 20, culture:'nubian', religion:child.religion });
+    partner.royalLine = { realmId:s.player.liege, memberId:'review-partner' };
+    // Fix candidate availability to isolate the selected-subject navigation contract.
+    FB.royalKinMatchCandidates = function () {
+      return [child, s.chars[s.player.charId]].map(function (c) {
+        return { character:c, status:{ ready:true, chance:0.5, descendantKind:'child' } };
+      });
+    };
+    FB.proposeRoyalKinMatch = function (state, childId, partnerId, lineage) {
+      window.reviewedRoyalPair = { child:childId, partner:partnerId, lineage:lineage };
+      return { resolved:false };
+    };
+    const before = { state:JSON.stringify(s), rng:FB.getRngState() };
+    FB.ui.showRoyalKinMatchPicker(partner.id, null, false, child.id);
+    return { child:child.id, partner:partner.id, before:before };
+  });
+  await page.locator('[data-royal-kin-match]').click();
+  await expect(page.locator('#marriage-lineage')).toHaveValue('paternal');
+  await page.locator('#gm-cancel').click();
+  await expect(page.locator('[data-royal-kin-match]')).toHaveCount(1);
+  await expect(page.locator('[data-royal-kin-match]')).toHaveAttribute('data-royal-kin-match', setup.child);
+  await page.locator('[data-royal-kin-match]').click();
+  await page.locator('#marriage-lineage').selectOption('maternal');
+  await page.locator('#marriage-lineage-confirm').click();
+  await expect(page.locator('[data-royal-kin-match]')).toHaveCount(1);
+  await expect(page.locator('[data-royal-kin-match]')).toHaveAttribute('data-royal-kin-match', setup.child);
+  expect(await page.evaluate(function () { return window.reviewedRoyalPair; })).toEqual({
+    child:setup.child, partner:setup.partner, lineage:'maternal'
+  });
+  expect(await page.evaluate(function () {
+    return { state:JSON.stringify(FB.state), rng:FB.getRngState() };
+  })).toEqual(setup.before);
 });
 
 

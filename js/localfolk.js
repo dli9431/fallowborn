@@ -254,6 +254,8 @@ window.FB = window.FB || {};
         }, household, 'adult', 1);
         father.spouseId = mother.id;
         mother.spouseId = father.id;
+        FB.sealMarriageLineage(state, father, mother,
+          FB.preferredMarriageLineage(state, father, mother));
         const childCount = FB.ri(1, 2);
         const oldest = Math.max(0, Math.min(15,
           Math.min(fatherAge, motherAge) - 17));
@@ -262,7 +264,7 @@ window.FB = window.FB || {};
           const child = newPerson(state, {
             culture:culture, religion:religion,
             born:state.date.year - age,
-            dyn:father.dyn,
+            dyn:FB.childDynastySource(state, father, mother, false).dyn,
             fatherId:father.id, motherId:mother.id,
             station:Math.max(fatherStation, motherStation),
             unfree:fatherStation === 0 && motherStation === 0,

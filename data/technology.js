@@ -49,7 +49,7 @@ window.FBDATA = window.FBDATA || {};
     },
     caucasian:{ name:'Caucasian', cultures:['armenian','georgian'], religions:[] },
     northeast_african:{
-      name:'Northeast African', cultures:['nubian','coptic'], religions:[]
+      name:'Northeast African', cultures:['nubian','coptic','abyssinian'], religions:[]
     }
   };
 
@@ -139,6 +139,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Browsing known courts does not expand marriage or travel permissions and has no research dependency.'
       },
+      matrilineal_marriage:{ mode:'none',
+        rationale:'Agreed maternal dynasty membership is a cultural and family custom with no credible technology dependency.' },
+      marriage_prospect_culture_persuasion:{ mode:'none',
+        rationale:'Inviting a marriage prospect to adopt a culture is baseline personal persuasion, independent of research.' },
       ai_dejure_expansion_planning:{
         mode:'none',
         rationale:'AI preference for compact de jure consolidation is baseline world strategy and must not depend on research controlled by those same simulated realms.'
