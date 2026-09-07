@@ -77,7 +77,7 @@ test('Seek a match replaces all three prospects only after its cooldown',
     expect(before.runtimeCooldown).toBe(before.configured);
 
     await page.evaluate(function () {
-      FB.runInstant(FB.state, 'seek_match');
+      FB.runInstant(FB.state, 'seek_match', { localMatch:true });
     });
     await expect(page.getByRole('heading', {
       name:'Seeking a Match', exact:true
@@ -116,7 +116,7 @@ test('Seek a match replaces all three prospects only after its cooldown',
       const firstTurn = state.player.cooldowns.seek_match;
       state.turn = firstTurn + FBDATA.balance.marriageProspectRefreshDays - 1;
       const status = FB.instantStatus(state, 'seek_match');
-      FB.runInstant(state, 'seek_match');
+      FB.runInstant(state, 'seek_match', { localMatch:true });
       return {
         can:status.can,
         reason:status.reason,
@@ -131,7 +131,7 @@ test('Seek a match replaces all three prospects only after its cooldown',
       const state = FB.state;
       state.turn = state.player.cooldowns.seek_match +
         FBDATA.balance.marriageProspectRefreshDays;
-      FB.runInstant(state, 'seek_match');
+      FB.runInstant(state, 'seek_match', { localMatch:true });
     });
     await expect(page.getByRole('heading', {
       name:'Seeking a Match', exact:true

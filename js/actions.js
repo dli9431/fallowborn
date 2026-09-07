@@ -12023,6 +12023,11 @@ window.FB = window.FB || {};
   FB.runInstant = function (state, id, options) {
     const status = FB.instantStatus(state, id);
     if (!status.shown || !status.can) return;
+    if (id === 'seek_match' && !(options && options.localMatch) &&
+        FB.ui && FB.ui.showMatchChoices) {
+      FB.ui.showMatchChoices();
+      return;
+    }
     const a = status.action;
     if (a) {
       const declarative = !!a.declarative;

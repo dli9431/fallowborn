@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.174.0';
+FB.VERSION = '1.174.1';
 FB.CHANGELOG = [
+  { v: '1.174.1', date: '2026-09-06', changes: [
+    'Seek a match now offers local prospects or a dynastic search, with clearer marriage cards and travel reviews. Lists keep your place when you return, and inputs share a consistent style.'
+  ] },
   { v: '1.174.0', date: '2026-09-06', changes: [
     'Find marriage candidates across known courts from Kin and Deeds. Family marriages can strengthen alliance negotiations, with a shared overview of alliances and pacts.'
   ] },

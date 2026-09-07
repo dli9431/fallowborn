@@ -1990,8 +1990,6 @@ window.FB = window.FB || {};
     }
     const destination = FB.world.byId[preview.destinationId];
     if (!destination) return;
-    const cultivated = FB.socialAttentionTarget(s);
-    const continuing = !!(cultivated && cultivated.id === c.id);
     const threshold = preview.standingThreshold === undefined
       ? FB.relationshipOpinionThreshold() : preview.standingThreshold;
     let estimate;
@@ -2012,51 +2010,37 @@ window.FB = window.FB || {};
           totalDays:preview.daysFromDeparture
         });
     }
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      '{name} resides in {destination}. The route is {legs} county legs and {days} travel days each way.', {
-        name:FB.fullName(c),
-        destination:destination.name,
-        legs:preview.legs,
-        days:preview.days
-      })) + '</p><p>' + esc(FB.T(
-      'After arrival you must stay at least {days} days, but you may remain longer. Outbound and return travel do not advance Standing.', {
-        days:preview.minimumStay
-      })) + '</p><p>' + esc(estimate) + '</p>' +
-      (options.courtship
-        ? '<p>' + esc(FB.T(
-          'Departure begins the courtship and assigns your personal attention to {name}.', {
-            name:c.name
-          })) + '</p>'
-        : '<p>' + esc(continuing
-          ? FB.T(
-            'Departure keeps your personal attention on {name}; progress resumes only once you arrive.',
-            { name:c.name })
-           : FB.T(
-             'Departure assigns your personal attention to {name}; progress begins only once you arrive.',
-             { name:c.name })) + '</p>') +
-      (options.courtship && s.player.tier >= 3
-        ? '<p>' + esc(FB.T(
-          'If the visit ends in marriage, a baron or greater ruler may then choose whether to abdicate and stay here, continue as the lawful heir, or decide later.')) + '</p>'
-        : '') +
-      '<p><b>' + esc(FB.T('Exact upfront cost: {money:cost}.', {
-        cost:preview.cost
-      })) + '</b>' + (preview.cost > s.player.gold
-        ? ' ' + esc(FB.T('You have only {money:gold}.', {
-          gold:Math.floor(s.player.gold)
-        }))
-        : '') + '</p></div><div class="gm-list">' +
-      '<button class="actionbtn" id="social-visit-depart"' +
-      (preview.cost > s.player.gold ? ' disabled' : '') + '>🧭 ' +
-      esc(options.courtship
-        ? FB.T('Depart to court {name}', { name:c.name })
-        : (continuing
-          ? FB.T('Depart to continue cultivating {name}', { name:c.name })
-          : FB.T('Depart to cultivate {name}', { name:c.name }))) +
+    const benefit = options.courtship
+      ? FB.T('Begin courtship with {name} in {destination}.', {
+        name:c.name, destination:destination.name })
+      : FB.T('Spend time with {name} in {destination}.', {
+        name:c.name, destination:destination.name });
+    const readiness = preview.daysToThreshold === null
+      ? FB.T('Standing is not currently improving.')
+      : !preview.daysToThreshold
+        ? FB.T('Required Standing already reached: +{threshold}.', { threshold:threshold })
+        : FB.T('Estimated time to +{threshold} Standing: {days} days from departure.', {
+          threshold:threshold, days:preview.daysFromDeparture });
+    const details = '<p>' + esc(estimate) + '</p><p>' + esc(FB.T(
+      'Personal attention moves to this person. Standing improves only while together, not on the road.')) + '</p>' +
+      (options.courtship ? '<p>' + esc(FB.T('Reaching the required Standing allows a proposal; acceptance is not guaranteed.')) + '</p>' : '') +
+      (options.courtship && s.player.tier >= 3 ? '<p>' + esc(FB.T(
+        'After marriage, you may review abdication and residence choices.')) + '</p>' : '');
+    let h = '<div class="gm-body-text social-visit-summary"><p>' + esc(benefit) +
+      '</p><p><b>' + esc(FB.T('Cost: {money:cost} upfront.', { cost:preview.cost })) +
+      '</b></p><p>' + esc(FB.T('{days} travel days each way; minimum stay {stay} days.', {
+        days:preview.days, stay:preview.minimumStay })) + '</p><p>' + esc(readiness) + '</p>' +
+      (options.courtship ? '<p>' + esc(FB.T('Uses your personal attention. Marriage is not guaranteed.')) + '</p>' : '') +
+      (preview.cost > s.player.gold ? '<p>' + esc(FB.T('You have only {money:gold}.', {
+        gold:Math.floor(s.player.gold) })) + '</p>' : '') +
+      '</div><div class="gm-list"><button class="actionbtn" id="social-visit-depart"' +
+      (preview.cost > s.player.gold ? ' disabled' : '') + '>' + esc(FB.T('Depart')) +
       '</button><button class="actionbtn" id="social-visit-cancel">' +
       esc(FB.T('Not now')) + '</button></div>';
     openModal(options.courtship
       ? FB.T('Travel to court {name}', { name:c.name })
       : FB.T('Travel to cultivate {name}', { name:c.name }), h, {
+        titleDetailsHtml:details,
         historyView:true,
         historyBack:true
       });
@@ -2071,7 +2055,9 @@ window.FB = window.FB || {};
     });
     $('social-visit-cancel').addEventListener('click', function () {
       modalHistoryBack(function () {
-        if (options.returnRealmId) {
+        if (options.returnContext && options.returnContext.view === 'marriage-finder') {
+          UI.showMarriageFinder(null, undefined, true);
+        } else if (options.returnRealmId) {
           UI.showLiegeModal(options.returnRealmId, options.returnContext);
         } else {
           UI.showCharModal(c.id, options.returnContext);
@@ -8199,6 +8185,24 @@ window.FB = window.FB || {};
     $('intrigue-assets-close').addEventListener('click', UI.closeModal);
   };
 
+  UI.showMatchChoices = function () {
+    if (!FB.state || UI.eventsBusy()) return;
+    openModal(FB.T('Seek a match'),
+      '<div class="gm-list"><button class="btn" id="match-local">' +
+      esc(FB.T('Seek a match')) + '</button><p class="hint">' +
+      esc(FB.T('Meet three or four local prospects.')) +
+      '</p><button class="btn" id="match-dynastic">' +
+      esc(FB.T('Find a dynastic match')) + '</button><p class="hint">' +
+      esc(FB.T('Browse courts for yourself or your family.')) +
+      '</p></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>',
+      { historyView:true });
+    $('match-local').onclick = function () {
+      FB.runInstant(FB.state, 'seek_match', { localMatch:true });
+    };
+    $('match-dynastic').onclick = function () { UI.showMarriageFinder(null, null); };
+    $('gm-cancel').onclick = function () { modalHistoryBack(UI.closeModal); };
+  };
+
   /* Preferences are UI-session state only. Modal history retains DOM, scroll and focus. */
   function addMarriageFinderLink(subjectId) {
     const button = document.createElement('button');
@@ -8211,7 +8215,8 @@ window.FB = window.FB || {};
     return [FB.T('Court'), FB.T('Count'), FB.T('Duke'), FB.T('King'), FB.T('Emperor')][rank] || FB.T('Court');
   }
   let marriageFinderPreferences = {};
-  UI.showMarriageFinder = function (subjectId, realmId) {
+  let marriageFinderPosition = null;
+  UI.showMarriageFinder = function (subjectId, realmId, restorePosition) {
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
     const prefs = marriageFinderPreferences;
@@ -8228,7 +8233,8 @@ window.FB = window.FB || {};
       h += '<option value="' + esc(c.id) + '">' + esc(c.id === s.player.charId
         ? FB.T('Yourself') : FB.fullName(c)) + '</option>';
     });
-    h += '</select></label><label>' + esc(FB.T('Court scope')) +
+    h += '</select></label><details id="finder-filters"><summary>' + esc(FB.T('Filters')) +
+      '</summary><label>' + esc(FB.T('Court scope')) +
       '<select id="finder-scope"><option value="near">' + esc(FB.T('Your realm and neighbors')) +
       '</option><option value="all">' + esc(FB.T('All courts')) + '</option></select></label>' +
       '<label>' + esc(FB.T('Search person, house, or realm')) + '<input id="finder-search" type="search"></label>';
@@ -8251,28 +8257,52 @@ window.FB = window.FB || {};
     h += '</select></label><label>' + esc(FB.T('Availability')) + '<select id="finder-availability"><option value="free">' + esc(FB.T('Uncommitted')) + '</option><option value="all">' + esc(FB.T('Everyone')) + '</option></select></label>' +
       '<label><input type="checkbox" id="finder-heirs"> ' + esc(FB.T('Designated heirs only')) + '</label>' +
       '<button class="btn" id="finder-clear-court">' + esc(FB.T('Clear court filter')) + '</button>' +
-      '<p class="hint">' + esc(FB.T('Succession follows the designated heir. A completed close-family wedding may improve future alliance negotiations; descendant weddings do not automatically create an alliance. Personal royal marriages retain their existing alliance rules.')) + '</p>' +
-      '<div id="finder-results" class="gm-list"></div></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Find a marriage…'), h, { historyView:true });
+      '</details><div id="finder-results" class="gm-list"></div></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Find a marriage…'), h, { historyView:true, noFocus:true,
+      titleDetailsHtml:'<p>' + esc(FB.T('Succession follows the designated heir. Family weddings may improve alliance negotiations; they do not automatically create an alliance.')) + '</p>' });
     const fields = { subject:'subjectId', scope:'scope', search:'search', minAge:'minAge', maxAge:'maxAge', faith:'faith', rank:'rank', availability:'availability', heirs:'heirs' };
     function render() {
       let rows = '';
+      const previewFaces = [];
       FB.marriageCandidateQuery(FB.state, prefs).forEach(function (row) {
         const terms = row.terms;
         const requirements = row.threshold !== null ? FB.T('Requires +{standing} personal Standing before proposing.', { standing:row.threshold }) : '';
         const detail = row.status.reason || (row.status.chance
           ? FB.T('{chance}% acceptance chance', { chance:Math.round(row.status.chance * 100) })
-          : FB.T('Review courtship and travel requirements.'));
-        rows += '<section class="settcard"><b>' + esc(row.name) + '</b><p>' +
+          : '');
+        const realm = FB.state.realms[row.realmId];
+        const capital = FB.world.byId[realm.capital];
+        const land = FB.T('{realm}: {count} counties. Capital: {capital}.', {
+          realm:realm.name, count:FB.realmTerritory(FB.state, row.realmId).length,
+          capital:capital ? capital.name : FB.T('Unknown')
+        });
+        const levies = FB.realmHostAvailability(FB.state, row.realmId);
+        const realmStats = FB.T('Realm levies: {current}/{max} men', {
+          current:Math.round(levies.current), max:Math.round(levies.maximum)
+        });
+        const detailsId = 'finder-details-' + row.key;
+        const character = row.characterId && FB.state.chars[row.characterId];
+        const face = character || Object.assign({}, row.portrait, { id:'finder-preview-' + row.key });
+        if (!character) previewFaces.push(face);
+        rows += '<section class="asset-owned-row settcard"><div class="settcard-head">' +
+          FB.faceTag(face, 44, 50) + '<b>' + esc(row.name) + '</b><span class="settcard-actions"><button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="' + esc(detailsId) + '" aria-label="' + esc(FB.T('Details')) + '">?</button></span></div><p>' +
           esc(FB.T('Age {age} · {faith} · {court}', { age:row.age, faith:religionName(FB.state, row.faith), court:FB.state.realms[row.realmId].name })) + ' / ' + esc(marriageFinderRankLabel(row.rank)) +
-          (row.heir ? ' · ' + esc(FB.T('Designated heir')) : '') + '</p><p>' + esc(detail) + '</p><p>' + esc(requirements) + '</p>' +
+          (row.heir ? ' · ' + esc(FB.T('Designated heir')) : '') + '</p>' + (detail ? '<p>' + esc(detail) + '</p>' : '') + '<div class="finder-match-terms">' + (requirements ? '<p>' + esc(requirements) + '</p>' : '') +
           (row.travel && row.travel.eligible ? '<p>' + esc(FB.T('Travel: {days} days, {money:cost}.', { days:row.travel.days, cost:row.travel.cost })) + '</p>' : '') +
-          (terms ? '<p>' + esc(terms.subjectPays ? FB.T('Your house provides {money:gold}', { gold:terms.amount }) : FB.T('Their house provides {money:gold}', { gold:terms.amount })) + '</p>' : '') +
-          '<button class="btn" data-finder-review="' + esc(row.key) + '">' + esc(FB.T(row.characterId ? 'Review match…' : 'Review court…')) + '</button>' +
+          (terms ? '<p>' + esc((prefs.subjectId === FB.state.player.charId ? terms.playerPays : terms.subjectPays) ? FB.T('Your house provides {money:gold}', { gold:terms.amount }) : FB.T('Their house provides {money:gold}', { gold:terms.amount })) + '</p>' : '') +
+          '</div><div class="settcard-details hidden" id="' + esc(detailsId) + '"><p>' +
+          esc(land) + '</p><p class="finder-realm-stats">' + esc(realmStats) + '</p></div><div class="finder-card-actions"><button class="btn finder-review" data-finder-review="' + esc(row.key) + '">' + esc(FB.T(row.characterId ? 'Review match…' : 'Review court…')) + '</button>' +
           (row.characterId ? '<button class="btn" data-finder-character="' + esc(row.characterId) + '">' + esc(FB.T('Character details')) + '</button>' : '') +
-          '<button class="btn" data-finder-court="' + esc(row.realmId) + '">' + esc(FB.T('Court details')) + '</button></section>';
+          '<button class="btn" data-finder-court="' + esc(row.realmId) + '">' + esc(FB.T('Court details')) + '</button></div></section>';
       });
       $('finder-results').innerHTML = rows || '<p>' + esc(FB.T('No matches for these filters.')) + '</p>';
+      bindCardInfoToggles($('finder-results'));
+      FB.paintFaces($('finder-results'), FB.state);
+      previewFaces.forEach(function (face) {
+        const canvas = $('finder-results').querySelector('[data-cid="' + face.id + '"]');
+        FB.paintPortrait(canvas, face, FB.state.date.year, { state:FB.state });
+      });
+      $('finder-clear-court').hidden = !prefs.realmId;
       $('finder-results').querySelectorAll('[data-finder-review]').forEach(function (button) {
         button.onclick = function () {
           const row = FB.marriageCandidateQuery(FB.state, prefs).filter(function (entry) { return entry.key === button.dataset.finderReview || entry.memberKey === button.dataset.finderReview; })[0];
@@ -8306,6 +8336,36 @@ window.FB = window.FB || {};
     $('finder-clear-court').onclick = function () { delete prefs.realmId; render(); };
     $('gm-cancel').onclick = function () { modalHistoryBack(UI.closeModal); };
     render();
+    $('finder-results').addEventListener('click', function (event) {
+      const button = event.target.closest('button[data-finder-review], button[data-finder-character], button[data-finder-court]');
+      if (!button) return;
+      marriageFinderPosition = {
+        scrollTop:$('gm-body').scrollTop,
+        filtersOpen:$('finder-filters').open,
+        details:Array.from($('finder-results').querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (el) { return el.getAttribute('aria-controls'); }),
+        focusAttribute:button.hasAttribute('data-finder-review') ? 'data-finder-review' : button.hasAttribute('data-finder-character') ? 'data-finder-character' : 'data-finder-court',
+        focusValue:button.getAttribute('data-finder-review') || button.getAttribute('data-finder-character') || button.getAttribute('data-finder-court')
+      };
+    }, true);
+    if (restorePosition && marriageFinderPosition) {
+      const position = marriageFinderPosition;
+      $('finder-filters').open = position.filtersOpen;
+      position.details.forEach(function (id) {
+        const details = $(id);
+        if (details) details.classList.remove('hidden');
+        $('finder-results').querySelectorAll('.settcard-info').forEach(function (button) {
+          if (button.getAttribute('aria-controls') === id) button.setAttribute('aria-expanded', 'true');
+        });
+      });
+      setTimeout(function () {
+        if (!$('finder-results')) return;
+        const button = Array.from($('finder-results').querySelectorAll('button')).filter(function (el) {
+          return el.getAttribute(position.focusAttribute) === position.focusValue;
+        })[0];
+        if (button) button.focus({ preventScroll:true });
+        $('gm-body').scrollTop = position.scrollTop;
+      }, 0);
+    }
   };
 
   /* ================= envoy picker ================= */
@@ -9700,7 +9760,7 @@ window.FB = window.FB || {};
       return;
     }
     if (returnContext.view === 'marriage-finder') {
-      UI.showMarriageFinder();
+      UI.showMarriageFinder(null, undefined, true);
     } else if (returnContext.view === 'governance') {
       UI.showGovernance(returnContext.section || 'position');
     } else if (returnContext.view === 'council') {
@@ -9926,7 +9986,8 @@ window.FB = window.FB || {};
         modalClass:'fullsheet-modal interaction-modal realm-interaction-modal',
         historyView:!!returnContext,
         replaceView:!!replaceView,
-        historyBackRender:function () {
+        historyBackRender:returnContext && returnContext.view === 'marriage-finder'
+        ? null : function () {
           interactionReturn(returnContext);
         }
       });
@@ -21615,7 +21676,8 @@ window.FB = window.FB || {};
       modalClass:'fullsheet-modal interaction-modal character-interaction-modal',
       historyView:!!returnContext && !royalCourt,
       replaceView:!!replaceView,
-      historyBackRender:function () {
+      historyBackRender:returnContext && returnContext.view === 'marriage-finder'
+        ? null : function () {
         interactionReturn(returnContext);
       }
     });
@@ -22748,8 +22810,7 @@ window.FB = window.FB || {};
         '</div></div></div>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Decide nothing today')) + '</button>';
-    openModal(FB.T('Seeking a Match'), h);
-    addMarriageFinderLink(s.player.charId);
+    openModal(FB.T('Seeking a Match'), h, { historyView:true });
     bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-suitor]').forEach(function (b) {
       b.addEventListener('click', function () {

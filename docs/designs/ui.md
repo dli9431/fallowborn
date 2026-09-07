@@ -1,5 +1,53 @@
 # UI: keyboard & mobile
 
+## Shared input and dropdown style
+
+All native selects and text, search, number, and multiline inputs use the shared
+field skin in `css/style.css`, with the Market basket overlay as the visual
+reference: brown parchment gradient, gold border, six-pixel corners, light serif
+text, inset highlight, gold hover border, and a visible gold focus outline.
+Selects share one CSS-drawn gold arrow and dark option colors; icons are optional.
+Keep native select/input semantics, keyboard navigation, labels, and mobile pickers.
+Platform-owned option menus may retain their OS selection highlight.
+
+Feature-specific CSS controls placement and width, not a separate field skin.
+Do not add another wrapper arrow, background, border palette, or focus treatment.
+Fields have at least 44px height and use 16px text on compact/touch layouts to avoid
+iOS focus zoom. Disabled controls remain legible and placeholders use helper text.
+Checkboxes, radios, sliders, file pickers, and color wells retain their appropriate
+native form with the shared gold/dark palette where supported. Save/mod source
+textareas retain monospace for editing structured text. New fields inherit this
+contract automatically; regression coverage compares field styles across screens.
+
+## Required navigation and decision presentation
+
+Every list -> scroll -> detail/modal -> Back journey must preserve the originating
+list position, filters, sort, pagination, expanded controls, and originating focus.
+This applies to visible Back, Escape, and browser/mobile Back. Prefer retained
+modal history for read-only detail views; do not replace it with a callback that
+rebuilds the list at the top. If an action changes the list, restore its view state
+and nearest surviving row after refreshing data. Focus restoration must not scroll
+away from the saved position. Cover a nonzero scroll offset in regression tests.
+
+Every new or changed modal, screen, card, and confirmation must make the decision
+clear at a glance: intended benefit, exact immediate cost, duration or minimum
+commitment, and material risk or replacement consequence. Keep these essentials
+visible beside the action; never bury them in a tooltip. Use short labels and a few
+concise lines. Put calculations, background rules, and conditional future outcomes
+in the shared desktop hover/focus tooltip and compact question-mark disclosure.
+Do not repeat generic instructions such as "review requirements" where an action
+already communicates that purpose. Show authoritative blockers when applicable.
+Mobile actions must align consistently, wrap translated labels, fit the card,
+and retain at least 44px touch targets; use a full-width primary action and an
+explicit grid or stack for secondary actions rather than incidental inline wrapping.
+
+Marriage finder character/court returns retain the existing DOM through modal
+history. Its primary Review action spans the card; secondary details share a row
+and stack on the narrowest screens. Relationship travel review shows its upfront
+cost, each-way travel, minimum stay, Standing readiness estimate, and personal
+attention commitment before departure. Rate calculations and later residence
+choices are disclosed through the title Details control.
+
 The equipment paper doll renders Mail Chausses as ring-covered leggings and footwear,
 Plate Sabatons as steel foot plates, and the Knightly Bascinet as a visored helmet.
 The existing Feet and Head controls equip them with the standard keyboard and touch flow.
@@ -2278,7 +2326,7 @@ The shop exposes a keyboard-accessible native Regional arms and armor disclosure
 
 ## Marriage finder and diplomatic partners
 
-**Find a marriage...** appears in Kin and Deeds / Life & Family, existing personal
+**Find a marriage...** appears in Kin, the Deeds **Seek a match** route chooser,
 and descendant match pickers, and managed descendant character sheets. A descendant
 entry preselects that person. The modal uses native labeled search, number, select,
 and checkbox controls in the existing scrolling bottom sheet, with full-width
@@ -2291,3 +2339,32 @@ neighboring sovereigns and active commitments, with exact blocked reasons and li
 to each court's marriage search. Marriage cards distinguish designated succession,
 future negotiation benefits, and the existing personal royal-marriage alliance rule.
 New display text routes through `FB.T`; catalogs remain integration-owned.
+
+
+The Deeds **Seek a match** entry first offers local prospects or **Find a dynastic
+match**. Choosing the route spends nothing and does not refresh prospects; only
+choosing local matchmaking invokes the existing search and cooldown. The separate
+Deeds finder button is removed. Kin and descendant shortcuts remain available.
+The finder keeps **Marriage for** visible and groups the other inputs beneath a
+native **Filters** disclosure, collapsed on opening. Initial focus stays on the
+dialog, avoiding the mobile keyboard. Candidate cards use procedural portraits,
+including read-only previews of compact court members. Standing requirements, travel, and dowry terms appear directly on each card
+alongside availability reasons. The card tooltip / compact question-mark
+disclosure shows county count and capital, followed by **Realm levies: current/max men**. Both values always appear, even at full strength, using `FB.realmHostAvailability`. Alliance context uses the title
+details disclosure. Filters and disclosure state survive nested modal Back.
+This is presentation and navigation only; marriage eligibility is unchanged.
+
+Marriage finder card details contain only county/capital and the realm levies line;
+requirements and travel/dowry costs remain visible text. Court territory is not
+presented as the candidate's personal property, and marriage never promises an
+immediate land transfer or unconditional alliance. Cancelling a finder-origin
+travel review returns to the finder, using retained history when available; the
+fallback route also targets the finder rather than the character sheet.
+
+All list-to-modal returns, including **Not now**, Cancel, visible Back, Escape,
+and browser/mobile Back, must preserve the list position. This is mandatory even
+when a fallback must rebuild the list. Restore filters and expanded details before
+scroll, then restore originating focus without scrolling. Apply the saved offset
+after the source layout and focus are restored. Finder fallback navigation retains
+these values in UI session state; none belongs in the game save. Regression tests
+must cover nonzero scroll for both retained-history and rebuilt-list returns.

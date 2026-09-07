@@ -806,7 +806,7 @@ window.FB = window.FB || {};
         }
         out.push({ key:key, memberKey:rid + ':' + member.id, realmId:rid, characterId:c && c.id, travel:travel,
           threshold:c && subject.id === state.player.charId ? FB.courtshipStandingThreshold(state, c) : null,
-          name:name, age:age, faith:faith, rank:r.rank, heir:heir,
+          name:name, age:age, faith:faith, rank:r.rank, heir:heir, portrait:person,
           committed:committed, status:status,
           terms:c ? (subject.id === state.player.charId ? FB.courtshipTerms(state, c, false) : FB.marriageTerms(state, subject, c)) : null });
       }

@@ -3351,8 +3351,8 @@ window.FB = window.FB || {};
     body.appendChild(view.body);
     setModalGuide(view.guide);
     setModalTitleDetails(view.titleDetails);
-    body.scrollTop = view.scrollTop || 0;
     setModalClasses(gm, view.modalClass);
+    body.scrollTop = view.scrollTop || 0;
     UI._gmDismiss = view.dismiss;
     UI._gmOnDismiss = view.onDismiss;
     UI._gmModalKey = view.modalKey;
@@ -3383,6 +3383,8 @@ window.FB = window.FB || {};
       } else {
         focusModalContainer();
       }
+      // Layout and focus restoration must not move the originating list.
+      body.scrollTop = view.scrollTop || 0;
     }, 0);
   }
 

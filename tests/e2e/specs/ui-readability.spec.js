@@ -2,6 +2,11 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/technology.js',
+  'js/agency.js',
+  'js/actions.js',
+  'js/model.js',
+  'js/travel.js',
+  'js/portrait.js',
   'js/main.js',
   'js/technology.js',
   'js/ui_misc.js',
@@ -406,3 +411,56 @@ test('mobile Play and fast-forward close the Self drawer before controlling time
       };
     })).toEqual({ paused:true, calls:1, pausedAtCall:true });
   });
+
+
+for (const width of [390, 1280]) {
+  test('fields share the market dropdown skin at ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:900 });
+    await page.evaluate(function () { FB.ui.showMarriageFinder(); });
+    await page.locator('#finder-filters > summary').click();
+    const styles = await page.evaluate(function () {
+      const reference = getComputedStyle(document.getElementById('market-lens-good'));
+      const keys = ['borderTopColor', 'borderRadius', 'color', 'boxShadow', 'fontFamily'];
+      function skin(element) {
+        const css = getComputedStyle(element), out = {};
+        keys.forEach(function (key) { out[key] = css[key]; });
+        return out;
+      }
+      const expected = {};
+      keys.forEach(function (key) { expected[key] = reference[key]; });
+      const fields = Array.from(document.querySelectorAll('.marriage-finder select, .marriage-finder input:not([type="checkbox"])'));
+      // Exercise legacy CSS contexts as well as actual marriage controls.
+      const contexts = ['tech-controls', 'guide-controls', 'chronicle-viewer-controls',
+        'education-policy-field', 'governance-vassal-toolbar', 'war-target-toolbar',
+        'raid-target-toolbar', 'building-county-picker', 'autorow auto-select',
+        'enterprise-view-controls'];
+      const probe = document.createElement('div');
+      document.getElementById('gm-body').appendChild(probe);
+      contexts.forEach(function (name) {
+        const wrapper = document.createElement('div');
+        wrapper.className = name;
+        wrapper.innerHTML = '<span class="enterprise-view-select"><select aria-label="Style probe"><option>Example</option></select></span>';
+        probe.appendChild(wrapper);
+        fields.push(wrapper.querySelector('select'));
+      });
+      const result = { expected:expected, fields:fields.map(skin),
+        arrows:fields.filter(function (el) { return el.tagName === 'SELECT'; }).map(function (el) {
+          return getComputedStyle(el).backgroundImage === reference.backgroundImage;
+        }),
+        heights:fields.map(function (el) { return parseFloat(getComputedStyle(el).minHeight); }),
+        sizes:fields.map(function (el) { return parseFloat(getComputedStyle(el).fontSize); }) };
+      probe.remove();
+      return result;
+    });
+    styles.fields.forEach(function (field) { expect(field).toEqual(styles.expected); });
+    expect(styles.arrows.every(Boolean)).toBe(true);
+    expect(styles.heights.every(function (height) { return height >= 44; })).toBe(true);
+    if (width === 390) expect(styles.sizes.every(function (size) { return size >= 16; })).toBe(true);
+    await page.locator('#finder-search').fill('No matching house');
+    await expect(page.locator('#finder-results')).toContainText('No matches');
+    await expect(page.locator('#finder-search')).toBeFocused();
+    expect(await page.locator('#finder-search').evaluate(function (el) {
+      return getComputedStyle(el).outlineStyle;
+    })).not.toBe('none');
+  });
+}

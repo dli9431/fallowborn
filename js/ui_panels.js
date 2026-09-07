@@ -1256,13 +1256,6 @@ window.FB = window.FB || {};
             : 'Ruler decisions'))
         : 'One-time deeds');
       body.appendChild(ih);
-      if (groupId === 'life' || (groupingStyle === 'action-type' && groupId === 'personal')) {
-        const finder = document.createElement('button');
-        finder.className = 'btn';
-        finder.textContent = FB.T('Find a marriage…');
-        finder.onclick = function () { UI.showMarriageFinder(null, null); };
-        body.appendChild(finder);
-      }
       for (const listedItem of items) {
         let item = listedItem;
         if (listedItem.statusDeferred) {

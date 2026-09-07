@@ -425,3 +425,40 @@ Technology review `marriage_discovery` is `none`: finding known courts does not
 expand existing marriage, household, rank-access, or travel permissions. Completed
 ordinary close-family weddings can improve later defensive-alliance negotiations
 (see the diplomacy design). They do not grant descendant weddings an automatic alliance.
+
+
+The Deeds **Seek a match** entry first offers local prospects or **Find a dynastic
+match**. Choosing the route spends nothing and does not refresh prospects; only
+choosing local matchmaking invokes the existing search and cooldown. The separate
+Deeds finder button is removed. Kin and descendant shortcuts remain available.
+The finder keeps **Marriage for** visible and groups the other inputs beneath a
+native **Filters** disclosure, collapsed on opening. Initial focus stays on the
+dialog, avoiding the mobile keyboard. Candidate cards use procedural portraits,
+including read-only previews of compact court members. Standing requirements, travel, and dowry terms appear directly on each card
+alongside availability reasons. The card tooltip / compact question-mark
+disclosure shows county count and capital, followed by **Realm levies: current/max men**. Both values always appear, even at full strength, using `FB.realmHostAvailability`. Alliance context uses the title
+details disclosure. Filters and disclosure state survive nested modal Back.
+This is presentation and navigation only; marriage eligibility is unchanged.
+
+Finder cards omit generic courtship/travel instructions. Character and court
+reviews restore the retained list position and controls on Back. Mobile cards use
+a full-width Review action with aligned secondary details. Courtship travel
+confirmation keeps cost, travel and minimum-stay time, estimated Standing readiness,
+and personal-attention commitment visible; calculations and potential post-wedding
+residence choices use title Details. These follow the mandatory navigation and
+decision-presentation rules in [ui.md](ui.md).
+
+Marriage finder card details contain only county/capital and the realm levies line;
+requirements and travel/dowry costs remain visible text. Court territory is not
+presented as the candidate's personal property, and marriage never promises an
+immediate land transfer or unconditional alliance. Cancelling a finder-origin
+travel review returns to the finder, using retained history when available; the
+fallback route also targets the finder rather than the character sheet.
+
+All list-to-modal returns, including **Not now**, Cancel, visible Back, Escape,
+and browser/mobile Back, must preserve the list position. This is mandatory even
+when a fallback must rebuild the list. Restore filters and expanded details before
+scroll, then restore originating focus without scrolling. Apply the saved offset
+after the source layout and focus are restored. Finder fallback navigation retains
+these values in UI session state; none belongs in the game save. Regression tests
+must cover nonzero scroll for both retained-history and rebuilt-list returns.

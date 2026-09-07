@@ -216,6 +216,20 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   script after the title shell has had a chance to paint and before setting `FB.game.bootReady`.
   Preserve that dependency order when changing boot.
 
+## Required UI/UX review before implementation
+
+Before creating or changing any UI/UX, read and follow
+[`docs/designs/ui.md`](docs/designs/ui.md), the owning system design doc, and
+[`docs/i18n-authoring.md`](docs/i18n-authoring.md). This is mandatory for every
+screen, modal, card, list, form, tooltip, and navigation flow. Apply the existing
+shared styles and interaction patterns as you implement; do not defer this review
+until the owner reports inconsistencies. In particular, keep decision costs and
+benefits immediately clear, use the prescribed tooltip/disclosure pattern, retain
+keyboard and mobile accessibility, and preserve list position and view state on
+**every** list -> modal -> return path, including Back, Cancel, and Not now.
+Add or update relevant regression tests, leaving execution to the owner under the
+test policy above. Update the UI/UX documentation when introducing a shared rule.
+
 ## Design decisions
 
 Each system has a design doc under `docs/designs/`. **Read the one for the system you are
