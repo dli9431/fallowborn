@@ -108,6 +108,36 @@ window.FB = window.FB || {};
       ctx.fillStyle = base; ctx.fillRect(-17, -26, 3, 52);
       ctx.strokeStyle = polish; ctx.lineWidth = 1.5;
       ctx.strokeRect(-20, -27, 40, 54);
+    } else if (kind === 'mail' || kind === 'lamellar' || kind === 'plate' || kind === 'coif') {
+      ctx.fillStyle = metal;
+      ctx.beginPath();
+      if (kind === 'coif') {
+        ctx.arc(0, -12, 23, Math.PI, 0);
+        ctx.lineTo(30, 30); ctx.lineTo(-30, 30);
+      } else {
+        ctx.moveTo(-30, -25); ctx.lineTo(-17, -36); ctx.lineTo(0, -28);
+        ctx.lineTo(17, -36); ctx.lineTo(30, -25); ctx.lineTo(23, 34);
+        ctx.lineTo(-23, 34);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.save(); ctx.clip(); ctx.strokeStyle = '#505d65'; ctx.lineWidth = 1;
+      if (kind === 'plate') {
+        ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(0, 13); ctx.stroke();
+        for (let y = 15; y < 36; y += 6) {
+          ctx.beginPath(); ctx.moveTo(-27, y); ctx.quadraticCurveTo(0, y + 7, 27, y); ctx.stroke();
+        }
+      } else {
+        for (let y = -36; y < 36; y += (kind === 'lamellar' ? 10 : 5)) {
+          for (let x = -30; x < 30; x += (kind === 'lamellar' ? 7 : 5)) {
+            if (kind === 'lamellar') ctx.strokeRect(x, y, 6, 9);
+            else { ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.stroke(); }
+          }
+        }
+      }
+      ctx.restore();
+      if (kind === 'coif') {
+        ctx.fillStyle = '#302b28'; ctx.beginPath(); ctx.ellipse(0, -8, 12, 16, 0, 0, Math.PI * 2); ctx.fill();
+      }
     } else if (kind === 'jack') {
       ctx.fillStyle = base;
       ctx.beginPath();
@@ -1074,7 +1104,7 @@ window.FB = window.FB || {};
       var head=descriptor.loadout.head;
       var kind=head
         ? (head.art.kind==='crown'?'crown'
-          : head.art.kind==='helm'?'helm':'none')
+          : (head.art.kind==='helm'||head.art.kind==='coif')?'helm':'none')
         : spec.headwear;
       var riseU=HEADWEAR_RISE[kind]||6;
       if(!head&&!spec.coversHair){
@@ -1566,7 +1596,7 @@ window.FB = window.FB || {};
     if(bodyItem){
       /* worn armor recolors the visible shoulder band; nothing is
          pasted over it */
-      var bc=hexToRgbV2(pickArt(bodyItem,['cloths','leathers'],'#5b402b',2));
+      var bc=hexToRgbV2(pickArt(bodyItem,['metals','cloths','leathers'],'#5b402b',2));
       if(bc){base=cssV2(bc);deep=cssV2(shadeV2(bc,-.22));}
     }
     traceShoulders(ctx,f,bottom);
@@ -3591,6 +3621,21 @@ window.FB = window.FB || {};
      the procedural item art scaled to the head. */
   function paintHeadItem(ctx, scaffold, spec, item, q) {
     var f=scaffold.face,kind=item.art.kind;
+    if(kind==='coif'){
+      ctx.save();
+      ctx.beginPath();ctx.ellipse(f.cx,(f.top+f.chinBottom)/2,
+        (f.right-f.left)*.64,(f.chinBottom-f.top)*.66,0,0,Math.PI*2);
+      ctx.ellipse(f.cx,(f.top+f.chinBottom)/2,
+        (f.right-f.left)*.46,(f.chinBottom-f.top)*.46,0,0,Math.PI*2,true);
+      ctx.fillStyle=pickArt(item,['metals'],'#939fa6',1);ctx.fill();ctx.clip();
+      ctx.strokeStyle='#505d65';ctx.lineWidth=.7;
+      for(var cy=f.top-20;cy<f.chinBottom+30;cy+=4){
+        for(var cx=f.left-30;cx<f.right+30;cx+=4){
+          ctx.beginPath();ctx.arc(cx,cy,1.6,0,Math.PI*2);ctx.stroke();
+        }
+      }
+      ctx.restore();return;
+    }
     if(kind!=='helm'&&kind!=='crown'){
       drawItemArt(ctx,item,f.cx,f.top+2,(f.right-f.left)/52,0,false);
       return;
@@ -4005,7 +4050,24 @@ window.FB = window.FB || {};
     var kind=b.kind;
     var seam=shadeV2(cl.deep,-.12);
     var i,x,y,n,qx;
-    if(kind==='gambeson'){
+    if(kind==='mail'||kind==='lamellar'||kind==='plate'){
+      ink(ctx,1,seam,.75,q);
+      if(kind==='plate'){
+        ctx.beginPath();ctx.moveTo(b.cx,b.shoulderY);ctx.lineTo(b.cx,b.waistY);ctx.stroke();
+        for(y=b.waistY;y<b.hemY;y+=hh*.12){
+          ctx.beginPath();ctx.moveTo(b.cx-b.hipHalf,y);
+          ctx.quadraticCurveTo(b.cx,y+hh*.12,b.cx+b.hipHalf,y);ctx.stroke();
+        }
+      }else{
+        var step=kind==='mail'?hh*.075:hh*.15;
+        for(y=b.shoulderY;y<b.hemY;y+=step){
+          for(x=b.cx-b.waistHalf;x<b.cx+b.waistHalf;x+=step){
+            if(kind==='lamellar')ctx.strokeRect(x,y,step*.8,step*.9);
+            else{ctx.beginPath();ctx.arc(x,y,step*.35,0,Math.PI*2);ctx.stroke();}
+          }
+        }
+      }
+    }else if(kind==='gambeson'){
       ink(ctx,1.15,seam,.6,q);
       for(x=-3;x<=3;x++){
         qx=b.cx+x*hh*.155;
@@ -4152,6 +4214,12 @@ window.FB = window.FB || {};
   function sleeveDetail(ctx, b, side, cl, q) {
     var a=armPoints(b,side),hh=b.headH;
     var court=b.kind==='court'||b.kind==='royal';
+    if(b.kind==='plate'){
+      ink(ctx,1.2,shadeV2(cl.deep,-.12),.8,q);
+      ctx.beginPath();ctx.moveTo(a.shoulderX,a.shoulderY);
+      ctx.lineTo(a.elbowX,a.elbowY);ctx.lineTo(a.wristX,a.wristY);ctx.stroke();
+      ctx.beginPath();ctx.ellipse(a.elbowX,a.elbowY,b.armR*.86,hh*.06,0,0,Math.PI*2);ctx.stroke();
+    }
     if(b.kind==='gambeson'){
       var eR=b.armR*.84,g;
       ink(ctx,1.05,shadeV2(cl.deep,-.12),.5,q);
@@ -4241,7 +4309,7 @@ window.FB = window.FB || {};
        all; the equipment grid names it. */
     var bodyItem=descriptor.loadout.body;
     if(bodyItem){
-      var bc=hexToRgbV2(pickArt(bodyItem,['cloths','leathers'],'#5b402b',2));
+      var bc=hexToRgbV2(pickArt(bodyItem,['metals','cloths','leathers'],'#5b402b',2));
       var bt=hexToRgbV2(pickArt(bodyItem,['threads','trims','gems'],'#c5a454',3));
       if(bc){
         cl.base=bc;cl.dark=shadeV2(bc,-.12);
@@ -4249,6 +4317,9 @@ window.FB = window.FB || {};
       }
       if(bt)cl.trim=bt;
       if(bodyItem.art.kind==='jack'||bodyItem.art.kind==='chest')b.kind='gambeson';
+      if(['mail','lamellar','plate'].indexOf(bodyItem.art.kind)>=0){
+        b.kind=bodyItem.art.kind; b.floorLength=false; b.hemY=b.hipY+b.headH*.45;
+      }
     }
     var hose=shadeV2(cl.deep,-.04);
     var feetItem=descriptor.loadout.feet;
@@ -4316,7 +4387,7 @@ window.FB = window.FB || {};
     ctx.closePath();
     ctx.fill();
     ctx.globalAlpha=1;
-    if(b.kind!=='gambeson'&&b.kind!=='habit'){
+    if(['gambeson','habit','plate','mail','lamellar'].indexOf(b.kind)<0){
       ink(ctx,1.1,shadeV2(cl.deep,-.05),.45,q);
       var fold,fx;
       for(fold=-2;fold<=2;fold++){
@@ -4475,7 +4546,7 @@ window.FB = window.FB || {};
     quality.fine=quality.bold<1.6;
     quality.grow=1+(quality.bold-1)*.38;
     var headItem=descriptor.loadout.head;
-    var coversHair=(headItem&&headItem.art.kind==='helm')||
+    var coversHair=(headItem&&(headItem.art.kind==='helm'||headItem.art.kind==='coif'))||
       (!headItem&&spec.coversHair);
     /* Attachment order is structural: back hair behind the body, the
        neck under the robe, draped cloth behind the head, then the face

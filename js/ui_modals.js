@@ -19486,7 +19486,8 @@ window.FB = window.FB || {};
       kind === 'policy' ? FBDATA.policies :
       kind === 'privilege' ? FBDATA.privileges :
       kind === 'feudalServiceCharter' ? FBDATA.feudalServiceCharters :
-      kind === 'fort' ? FBDATA.fortLevels : null;
+      kind === 'fort' ? FBDATA.fortLevels :
+      kind === 'item' ? FBDATA.items : null;
     const dataKind = kind === 'building' ? 'building' :
       kind === 'career' ? 'career' :
       kind === 'enterprise' ? 'enterprise' :
@@ -19494,10 +19495,14 @@ window.FB = window.FB || {};
       kind === 'policy' ? 'policy' :
       kind === 'privilege' ? 'privilege' :
       kind === 'feudalServiceCharter' ? 'feudalServiceCharter' :
+      kind === 'item' ? 'item' :
       kind === 'fort' ? 'fort' :
       'householdStandard';
     if (table && table[target]) {
       const content = dt(s, dataKind, target, table[target], 'name');
+      if (kind === 'item') {
+        return FB.T('Allows production of {content} in its historical period and region.', { content:content });
+      }
       if (kind === 'building') {
         return FB.T('Allows construction of {content}.', { content:content });
       }
@@ -19566,6 +19571,7 @@ window.FB = window.FB || {};
     }
 
     const tables = [
+      { kind:'item', data:FBDATA.items },
       { kind:'building', data:FBDATA.buildings },
       { kind:'career', data:FBDATA.careers },
       { kind:'enterprise', data:FBDATA.enterprises },
@@ -22791,6 +22797,16 @@ window.FB = window.FB || {};
           county:province.name })
         : FB.T('The stock changes with the season.')) + ' · ' +
       esc(FB.T('Your purse: {money:gold}', { gold:gold })) + '</p></div>';
+    h += '<details><summary>' + esc(FB.T('Regional arms and armor')) + '</summary><p>' +
+      esc(FB.T('Plain and well-made equipment may appear at stalls. Masterworks are auction lots. Existing equipment remains usable everywhere.')) + '</p>';
+    for (const id in FBDATA.items) {
+      const def = FBDATA.items[id];
+      if (!def.militaryMarket) continue;
+      const status = FB.itemAvailability(s, id, pid);
+      h += '<p><b>' + esc(dt(s, 'item', id, def, 'name')) + '</b> — ' +
+        esc(status.ready ? FB.T('May appear in seasonal stock or auctions.') : status.reason) + '</p>';
+    }
+    h += '</details>';
     /* The panes sit side by side on wide layouts; on mobile/tablet widths
        (.shop-split in style.css) the tab pair above the list toggles which
        pane shows. Re-renders pass the current pane so a transaction never

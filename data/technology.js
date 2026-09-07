@@ -75,6 +75,47 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      equipment_knightly_mail:{
+        mode:'hard', tech:['mail_hauberks'],
+        fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',
+        rationale:'New production of knightly mail hauberk requires mail_hauberks; existing objects and opened offers remain usable after knowledge or allegiance changes.'
+      },
+      equipment_lamellar_cuirass:{
+        mode:'hard', tech:['scale_lamellar'],
+        fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',
+        rationale:'New production of lamellar cuirass requires scale_lamellar; existing objects and opened offers remain usable after knowledge or allegiance changes.'
+      },
+      equipment_knights_plate:{
+        mode:'hard', tech:['plate_armor'],
+        fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',
+        rationale:'New production of knight’s plate armor requires plate_armor; existing objects and opened offers remain usable after knowledge or allegiance changes.'
+      },
+      equipment_mail_coif:{
+        mode:'hard', tech:['mail_hauberks'],
+        fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',
+        rationale:'New production of mail coif requires mail_hauberks; existing objects and opened offers remain usable after knowledge or allegiance changes.'
+      },
+      equipment_knightly_lance:{
+        mode:'hard', tech:['cavalry_lances'],
+        fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',
+        rationale:'New production of knightly lance requires cavalry_lances; existing objects and opened offers remain usable after knowledge or allegiance changes.'
+      },
+      equipment_steppe_bow:{
+        mode:'hard', tech:['composite_bow'],
+        fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',
+        rationale:'New production of steppe composite bow requires composite_bow; existing objects and opened offers remain usable after knowledge or allegiance changes.'
+      },
+      equipment_crucible_sword:{
+        mode:'hard', tech:['crucible_steel'],
+        fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',
+        rationale:'New production of crucible-steel sword requires crucible_steel; existing objects and opened offers remain usable after knowledge or allegiance changes.'
+      },
+      equipment_pattern_welded_sword:{
+        mode:'hard', tech:['pattern_welding'],
+        fallback:'Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain available.',
+        rationale:'New production of pattern-welded sword requires pattern_welding; existing objects and opened offers remain usable after knowledge or allegiance changes.'
+      },
+
       ai_dejure_expansion_planning:{
         mode:'none',
         rationale:'AI preference for compact de jure consolidation is baseline world strategy and must not depend on research controlled by those same simulated realms.'
@@ -303,7 +344,7 @@ window.FBDATA = window.FBDATA || {};
       },
       auction_item_lots:{
         mode:'none',
-        rationale:'Fine and famed household goods need no additional innovation beyond access to the auction itself.'
+        rationale:'Item auctions add no blanket innovation; historical military lots inherit their own production technologies while existing fine and famed goods remain available.'
       },
       auction_enterprise_lots:{
         mode:'none',

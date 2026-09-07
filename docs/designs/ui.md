@@ -2264,3 +2264,5 @@ same effect explanation, with up to two examples in each direction and fuller
 conditions. Tooltips keep the effect first, group cost and recovery together, and
 use muted supporting context. Known sources are limited to two names plus a count.
 Both desktop hover/focus and compact disclosures share this concise copy.
+
+The shop exposes a keyboard-accessible native Regional arms and armor disclosure listing equipment and exact technology, historical date, or region locks. Technology sheets include item production unlocks. Equipped mail, lamellar, plate, and coifs have distinct procedural details; appearance still requires owner visual review.

@@ -1716,6 +1716,27 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* Production gates apply to fresh stock and random finds, never ownership. */
+  FB.itemAvailability = function (state, id, pid) {
+    const def = FBDATA.items[id];
+    if (!def) return { ready:false, reason:FB.T('Unknown item.') };
+    const missing = def.requiresTech ? FB.techRequirementStatus(state, def.requiresTech) :
+      { ready:true, missing:[] };
+    if (!missing.ready) return { ready:false, missing:missing.missing,
+      reason:FB.techRequirementReason(state, def.requiresTech) };
+    if (def.yearMin && state.date.year < def.yearMin) return { ready:false,
+      reason:FB.T('Available from {year}.', { year:def.yearMin }) };
+    if (!def.cultures) return { ready:true, missing:[], reason:'' };
+    const location = !pid && FB.travelLocation && FB.travelLocation(state);
+    const province = FB.world && FB.world.byId[pid || (location && location.id) || state.player.provinceId];
+    const culture = province && (FB.countyCulture
+      ? FB.countyCulture(state, province.id) : province.culture);
+    if (def.cultures && !def.cultures.some(function (id) {
+      return culture === id || (FB.cultureIsA && FB.cultureIsA(culture, id, state));
+    })) return { ready:false, reason:FB.T('Not made in this region.') };
+    return { ready:true, missing:[], reason:'' };
+  };
+
   function weightedItemPool(state, opts) {
     opts = opts || {};
     const pool = [];
@@ -1723,6 +1744,7 @@ window.FB = window.FB || {};
       const info = definitionOf(id);
       if (!info) continue;
       if (info.eventOnly) continue;
+      if (!FB.itemAvailability(state, id).ready) continue;
       if (opts.ordinary && !info.ordinary) continue;
       if (opts.rarity && info.def.rarity !== opts.rarity) continue;
       if (!opts.includeOwned && info.unique && FB.itemOwner(state, id)) continue;
@@ -1797,6 +1819,7 @@ window.FB = window.FB || {};
       const info = definitionOf(id);
       if (!info) continue;
       if (info.eventOnly) continue;
+      if (!FB.itemAvailability(state, id).ready) continue;
       if (info.unique && FB.itemOwner(state, id)) continue;
       const rarity = own(RARITY_RANK, info.def.rarity) ? info.def.rarity : 'common';
       byClass[rarity].push(id);
@@ -1844,7 +1867,8 @@ window.FB = window.FB || {};
       return null;
     }
     const info = definitionOf(defId);
-    const ref = info.ordinary ? FB.createItemInstance(state, defId) : defId;
+    const ref = info.ordinary ? FB.createItemInstance(state, defId,
+      info.def.militaryMarket ? { quality:FB.rng() < 0.7 ? 'plain' : 'well' } : undefined) : defId;
     const item = rawResolved(state, ref);
     const location = FB.travelLocation && FB.travelLocation(state);
     const price = FB.marketCostQuote ? FB.marketCostQuote(state, item.value,
@@ -1955,7 +1979,8 @@ window.FB = window.FB || {};
     const pool = [];
     for (const id in FBDATA.items) {
       const info = definitionOf(id);
-      if (info && info.ordinary && !info.eventOnly) pool.push(id);
+      if (info && info.ordinary && !info.eventOnly &&
+          FB.itemAvailability(state, id, pid).ready) pool.push(id);
     }
     pool.sort(); /* stable pool order keeps the seeded roll load-order independent */
     const ratio = bal.shopPriceRatio === undefined ? 1.1 : Number(bal.shopPriceRatio);
@@ -1967,7 +1992,9 @@ window.FB = window.FB || {};
       if (used[defId]) continue;
       used[defId] = 1;
       usedCount++;
-      const ref = FB.createItemInstance(state, defId, { quality:shopQualityRoll(odds) });
+      let quality = shopQualityRoll(odds);
+      if (FBDATA.items[defId].militaryMarket && quality === 'masterwork') quality = 'well';
+      const ref = FB.createItemInstance(state, defId, { quality:quality });
       if (!ref) continue;
       const item = rawResolved(state, ref);
       if (!item) continue;

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.172.5';
+FB.VERSION = '1.173.0';
 FB.CHANGELOG = [
+  { v: '1.173.0', date: '2026-09-06', changes: [
+    'Historical armor and weapons appear in regional markets as their technologies become available. Shops carry everyday equipment, while auctions offer masterworks.'
+  ] },
   { v: '1.172.5', date: '2026-09-06', changes: [
     'Doctrine reforms draw on encountered traditions, carry escalating costs and backlash, and offer new household benefits with clearer tooltips. Faith and culture sheets clarify local adoption and returning to a parent tradition.'
   ] },
