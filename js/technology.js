@@ -1921,6 +1921,7 @@ window.FB = window.FB || {};
       }
     }
     var requirementTables = {
+      Item:FBDATA.items,
       Building:FBDATA.buildings,
       Fort:FBDATA.fortLevels,
       Career:FBDATA.careers,

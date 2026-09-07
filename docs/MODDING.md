@@ -4310,3 +4310,7 @@ wages; `doctrines.mutualCare` supplies non-stacking resident household mortality
 protection. Core defaults are zero. See `docs/designs/doctrines.md` for core values.
 New reform options require an encountered assignable identity actually following
 their value, or must match the current or remembered parent identity.
+
+### Historical item production
+
+Items may declare `requiresTech` (one technology id or an all-of array), `yearMin`, and `cultures` (county culture ids, inheritance-aware). These gate new random stock and finds through `FB.itemAvailability(state,id,pid)`, never existing ownership or explicit story grants. `militaryMarket:true` reserves market Masterworks for auctions while stalls and peddlers produce Plain/Well-made instances. Open offers are grandfathered. Item requirements participate in technology validation and detail discovery. Art additionally accepts `mail`, `lamellar`, `plate`, and `coif`.

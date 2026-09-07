@@ -451,3 +451,5 @@ current cultural tradition, using the attestation and emergence floors from the
 research-cost model. Examples show both earlier and later adoption where present.
 The explanation distinguishes cultural timing from the sovereign realm?s effective
 traditions, preserves completed research, and identifies the local-adoption condition.
+
+Historical equipment adds one hard review per item (`equipment_<id>`). Item requirements are validated and reverse-discovered in technology details. See the historical military equipment table in [items.md](items.md) for gates, regional/date floors, ungated fallbacks, and grandfathering.

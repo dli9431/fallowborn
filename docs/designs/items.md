@@ -220,3 +220,46 @@ best one-handed pair against every two-handed object without consuming RNG.
 Related: [characters.md](characters.md) for wearer-specific skill and health effects,
 [ui.md](ui.md) for paper-doll interaction, and [state-and-saves.md](state-and-saves.md)
 for version-3 migration.
+
+
+## Historical military equipment
+
+Fresh production and random acquisition use `FB.itemAvailability`: all `requiresTech`
+innovations must be completed by the effective player sovereign, `yearMin` is a hard
+historical floor, and `cultures` matches the market county (including derived cultures).
+This is a regional production rule, not an ethnic restriction on the wearer. Explicit
+story grants, existing possessions, and already materialized shop/peddler/auction offers
+are grandfathered. Relocation never prevents wearing, inheriting, gifting, or selling gear.
+Baseline Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain ungated.
+
+Each row has its own `equipment_<id>` hard technology-impact review:
+
+| Item | Technology | Earliest year | Production area |
+| --- | --- | --- | --- |
+| Knightly Mail Hauberk | Mail Hauberks | 867 | Latin West and Nordic counties |
+| Lamellar Cuirass | Scale and Lamellar Armor | 867 | Byzantine, Caucasian, Iranian, Rus and steppe counties |
+| Knight's Plate Armor | Plate Armor | 1400 | Latin West and Nordic counties |
+| Mail Coif | Mail Hauberks | 1100 | Latin West and Nordic counties |
+| Knightly Lance | Couched Cavalry Lance | 1050 | Latin West and Nordic counties |
+| Steppe Composite Bow | Composite Bow | 867 | Steppe and Iranian counties |
+| Crucible-steel Sword | Crucible Steel | 867 | Iranian, Arabic and Turkic counties |
+| Pattern-welded Sword | Pattern-Welded Blades | 867 | Norse, Frankish, German and English counties |
+
+Pattern-Welded Blades gates the composite forging technique of the northern sword;
+the ordinary Broad Sword remains its fallback.
+The dates are conservative catalogue availability floors, not claims of first invention.
+Early knights wear mail; complete plate is a fifteenth-century harness with a separately
+equipped helmet. Historical basis: [Met, European armor 1300-1400](https://www.metmuseum.org/essays/fashion-in-european-armor-1300-1400)
+and [Regia Anglorum, Byzantine lamellar](https://regia.org/research/warfare/lamellar.htm).
+
+`militaryMarket:true` routes Plain and Well-made production to ordinary seasonal shops
+and peddlers, and Masterwork production to auctions, using the existing 1/2/4 value and
+quality-effect scales. Random loot retains its ordinary quality roll. No new auction-wide
+gate applies. Cached offers keep exact quality, price, and ownership behavior. The shop's
+native disclosure lists every new definition and its exact missing technology, date, or
+regional restriction, even when no copy rolled into stock. Technology details discover
+item requirements, and technology validation checks the item table.
+
+Procedural `mail`, `lamellar`, `plate`, and `coif` art uses saved palettes and visual seeds.
+Worn body armor replaces garment detailing with rings, overlapping plates, or breastplate
+and articulated waist bands; the coif frames the face with mail. Rendering uses no RNG.

@@ -187,7 +187,8 @@ no coin.
 Lots are an unowned Fine/Famed item (transferred through the ordinary item API), one
 valid neighboring foreign county title right (the existing single fabricated-claim
 record, with `source:'auction'`), or an ordinary family enterprise at the exact venue.
-The auction itself and item lots have no technology gate. Enterprise lots inherit the
+The auction itself and ordinary heirloom lots have no technology gate. Historical military
+item lots inherit their production gates. Enterprise lots inherit the
 selected enterprise's own `requiresTech`; county title rights require Notarial Contracts,
 with ordinary claim fabrication and other war rights as the fallback. Once a lot opens,
 it is grandfathered through resolution if allegiance changes its effective technology.
@@ -268,3 +269,5 @@ directly held counties and enters seasonal settlement, `FB.reliableGoldIncome`, 
 `FB.incomeBreakdown` through the same `FB.modifierUpkeep` source. Great-holy-war
 `supplyUse` adjusts the live raised-host logistics total and receives its own ledger
 line. See [modifiers.md](modifiers.md).
+
+Historical military equipment extends item lots to Masterwork repeatable gear. Fresh lots inherit the item technology, date, and regional production gates; open lots remain grandfathered. Seasonal shops and peddlers carry Plain and Well-made versions. See [items.md](items.md).

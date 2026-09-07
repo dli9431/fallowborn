@@ -4005,13 +4005,15 @@ window.FB = window.FB || {};
     if (!FBDATA.items || !FB.itemDefinition || !FB.itemOwner) return out;
     for (const id in FBDATA.items) {
       const info = FB.itemDefinition(id);
-      if (!info || (info.def.rarity !== 'fine' && info.def.rarity !== 'famed')) {
+      if (!info || (!info.def.militaryMarket &&
+          info.def.rarity !== 'fine' && info.def.rarity !== 'famed')) {
         continue;
       }
       /* Event-only curios remain tied to the story that introduces them;
          ordinary Fine/Famed definitions still create a temporary auction
          instance when a mod supplies one. */
       if (info.def.eventOnly) continue;
+      if (!FB.itemAvailability(state, id).ready) continue;
       if (info.unique && FB.itemOwner(state, id)) continue;
       out.push({ id:id, ordinary:info.ordinary });
     }
@@ -4064,7 +4066,7 @@ window.FB = window.FB || {};
       let ref = entry.id;
       let temporary = false;
       if (entry.ordinary) {
-        ref = FB.createItemInstance(state, entry.id, { quality:'well' });
+        ref = FB.createItemInstance(state, entry.id, { quality:FBDATA.items[entry.id].militaryMarket ? 'masterwork' : 'well' });
         temporary = !!ref;
       }
       const item = ref && FB.resolveItemReadOnly(state, ref);
