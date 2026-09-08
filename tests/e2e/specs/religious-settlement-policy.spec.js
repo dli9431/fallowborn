@@ -162,6 +162,10 @@ test('Realm launchers share action styling and policy explanations use responsiv
   const scrollBefore = await page.locator('#gm-body').evaluate(function (node) { return node.scrollTop; });
   expect(scrollBefore).toBeGreaterThan(0);
   await proclaim.click();
+  await expect(card.locator('.settcard-head')).toContainText('Standing policy');
+  await expect(card.locator('[data-realm-policy]')).toHaveCount(0);
+  // Include the modal's deferred focus and refresh before checking restoration.
+  await waitForUiRefresh(page);
   await expect(card).toBeFocused();
   await expect(card.locator('.settcard-details')).toBeVisible();
   const scrollAfter = await page.locator('#gm-body').evaluate(function (node) { return node.scrollTop; });

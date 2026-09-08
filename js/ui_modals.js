@@ -13508,9 +13508,14 @@ window.FB = window.FB || {};
             if (info) info.setAttribute('aria-expanded', 'true');
           }
           const details = $('realm-policy-' + parts[0] + '-' + parts[1] + '-details');
-          if (details) details.closest('.realm-policy-card').focus({ preventScroll:true });
           $('gm-body').scrollTop = scrollTop;
           UI.refresh();
+          // Restore after openModal's deferred container focus has settled.
+          setTimeout(function () {
+            if (!details || !document.documentElement.contains(details) ||
+                $('genmodal').classList.contains('hidden')) return;
+            details.closest('.realm-policy-card').focus({ preventScroll:true });
+          }, 0);
         });
       });
     $('realm-policies-back').addEventListener('click', function () {

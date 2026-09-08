@@ -56,7 +56,8 @@ sovereign links, rather than mixing stacked facts with right-aligned columns.
 Royal laws & policy uses dedicated policy cards with ongoing effects, immediate
 changes, scope, protected terms, cost, and blockers visible. Policy descriptions
 and background rules use the shared disclosures. Proclaiming retains list scroll
-and focuses the updated policy card.
+and focuses the updated policy card after the modal's deferred initial focus.
+A pending restoration does nothing if the policy view has been replaced or closed.
 
 ## Label and value rows
 

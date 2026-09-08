@@ -951,24 +951,19 @@ test('enterprise groups and sorts persist and share their order with Household P
         };
       });
     });
-    expect(dropdownStyles).toEqual([
-      {
-        arrow:'"▾"',
-        background:'linear-gradient(rgb(59, 48, 32), rgb(42, 34, 24))',
-        borderColor:'rgb(138, 110, 52)',
-        borderRadius:'8px',
-        height:42,
-        paddingRight:'34px'
-      },
-      {
-        arrow:'"▾"',
-        background:'linear-gradient(rgb(59, 48, 32), rgb(42, 34, 24))',
-        borderColor:'rgb(138, 110, 52)',
-        borderRadius:'8px',
-        height:42,
-        paddingRight:'34px'
-      }
-    ]);
+    // Shared selects draw their arrow in the background and retain 44px targets.
+    expect(dropdownStyles[0]).toEqual(dropdownStyles[1]);
+    for (const style of dropdownStyles) {
+      expect(style.arrow).toBe('none');
+      expect(style.background).toContain('linear-gradient(45deg');
+      expect(style.background).toContain('linear-gradient(135deg');
+      expect(style.background).toContain(
+        'linear-gradient(rgb(59, 48, 32), rgb(42, 34, 24))');
+      expect(style.borderColor).toBe('rgb(138, 110, 52)');
+      expect(style.borderRadius).toBe('8px');
+      expect(style.height).toBeGreaterThanOrEqual(44);
+      expect(style.paddingRight).toBe('34px');
+    }
     await group.selectOption('category');
     await expect(page.locator(
       '[data-list-section="family-enterprises-category-farmer"]')).toBeVisible();
