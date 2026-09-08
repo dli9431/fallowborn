@@ -187,7 +187,7 @@ FBDATA.deeds = [
     desc:'Judge under canon law: mercifully, strictly, or for customary fees.', group:'faith', flow:'immediate', cooldownDays:90, handler:'ecclesiastical_court' },
   { id:'convene_synod', label:'📜 Convene a synod', order:52,
     desc:'Spend 10 gold to gather the clergy for reform, learning, or alms.', group:'faith', flow:'immediate', cooldownDays:360, handler:'convene_synod' },
-  { id:'extraordinary_tithe', label:'🪙 Levy an extraordinary tithe', order:53,
+  { id:'extraordinary_tithe', label:'💰 Levy an extraordinary tithe', order:53,
     desc:'Collect fully, moderate the demand, or remit it for pastoral standing.', group:'faith', flow:'immediate', cooldownDays:360, handler:'extraordinary_tithe' },
   { id:'adopt_tech', label:'💡 Technology…', order:54,
     group:'realm', flow:'choices', layoutGroup:'ruler', handler:'adopt_tech' },

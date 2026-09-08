@@ -28,7 +28,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await waitForUiRefresh(page);
 });
 
-test('Land facts use readable desktop columns and stack on compact layouts',
+test('Land facts share a left-aligned stack on desktop and compact layouts',
   async function ({ page }) {
     const panel = page.locator('#tab-prov');
     await expect(panel.locator('.land-section')).toHaveCount(4);
@@ -68,8 +68,8 @@ test('Land facts use readable desktop columns and stack on compact layouts',
         overflow:root.scrollWidth - root.clientWidth
       };
     });
-    expect(desktop.shortColumns.trim().split(/\s+/)).toHaveLength(2);
-    expect(desktop.shortAlignment).toBe('right');
+    expect(desktop.shortColumns.trim().split(/\s+/)).toHaveLength(1);
+    expect(desktop.shortAlignment).toBe('left');
     expect(desktop.detailColumns.trim().split(/\s+/)).toHaveLength(1);
     expect(desktop.detailAlignment).toBe('left');
     expect(desktop.overflow).toBeLessThanOrEqual(1);

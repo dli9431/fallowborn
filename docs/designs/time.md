@@ -1,5 +1,12 @@
 # Time, focuses & automation
 
+Automation follows the shared UI typography and spacing contract. Each checkbox
+keeps its selected state and action visible; its explanation uses the shared
+desktop hover/focus tooltip or compact `?` disclosure. The everything option
+always displays its mortal-danger and heir-decision warning. General operation
+belongs to the modal-title details, and host/research rules use the same disclosure
+pattern without changing saved preferences or simulation behavior.
+
 Post-decision acknowledgements pause the existing event sheet until Continue or
 Escape. Delayed acknowledgements are separated from the gameplay queue before
 daily selection and do not consume seasonal story slots or postpone decisions.

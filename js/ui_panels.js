@@ -1030,7 +1030,7 @@ window.FB = window.FB || {};
     let cardHtml = '<section class="land-section war-card settcard" id="deeds-war-card">' +
       '<div class="settcard-head"><b>⚔ ' + FB.T('At War with {enemy}', { enemy: enemyLink }) + '</b>' +
       '<span class="settcard-actions">' +
-      '<span style="font-size:12.5px;color:#f0d888;margin-right:6px">🏆 ' + esc(FB.T('{wins}W · {losses}L', { wins: wins, losses: losses })) + '</span>' +
+      '<span style="font-size:var(--ui-label-size);color:var(--ui-accent-color);margin-right:6px">🏆 ' + esc(FB.T('{wins}W · {losses}L', { wins: wins, losses: losses })) + '</span>' +
       '<button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="deeds-war-details" title="' +
       esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) + '">?</button>' +
       '</span></div>' +
@@ -2200,7 +2200,7 @@ window.FB = window.FB || {};
           (pledged ? ' - ' + esc(FB.T('pledged')) : '') + '</span>';
       }
     }
-    return h + '<div class="cmeta" style="font-size:12px;margin-top:2px">' +
+    return h + '<div class="cmeta" style="font-size:var(--ui-label-size);margin-top:2px">' +
       esc(FB.T('The armory is shared. Only equipped objects grant their powers.')) + '</div>';
   }
 
@@ -3834,7 +3834,7 @@ window.FB = window.FB || {};
         h += '<div class="hint" style="margin:2px 0 0">' + esc(FB.T(
           '🛑 No more children — open your spouse’s sheet to change this.')) + '</div>';
       }
-    } else h += '<div class="cmeta" style="font-size:13px">Unwed. A dynasty needs heirs — seek a match.</div>';
+    } else h += '<div class="cmeta" style="font-size:var(--ui-label-size)">Unwed. A dynasty needs heirs — seek a match.</div>';
     const su = s.player.courtingId ? s.chars[s.player.courtingId] : null;
     if (su) {
       h += panelh('Courting') + UI.charCardHtml(s, su, true);
@@ -3851,7 +3851,7 @@ window.FB = window.FB || {};
         h += charRow(s, k, childKinMeta(s, k), false, 'child');
       }
       h += '<div class="hint" style="margin:2px 0 0">Tap a child to set their education focus and schooling.</div>';
-    } else h += '<div class="cmeta" style="font-size:13px">No living children. Without an heir, your story ends with you.</div>';
+    } else h += '<div class="cmeta" style="font-size:var(--ui-label-size)">No living children. Without an heir, your story ends with you.</div>';
     if ((!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) &&
         FB.tutorialLife && FB.tutorialLife(s) &&
         s.player.flags.tut_track_first_steps &&
@@ -5232,7 +5232,9 @@ window.FB = window.FB || {};
         id:'realm',
         hotkey:5,
         title:FB.T('Realm'),
-        summary:'<button class="btn" id="network-pacts">' + esc(FB.T('Alliances & pacts…')) + '</button>' + realmSummary,
+        summary:networkActionHtml('pacts', 'id="network-pacts" data-network-action',
+          '🤝 ' + esc(FB.T('Alliances & pacts…')),
+          esc(FB.T('Review alliances, diplomatic partners, and active agreements.'))) + realmSummary,
         rows:realmRows,
         empty:FB.T('No realm ties.')
       },
@@ -7403,7 +7405,7 @@ window.FB = window.FB || {};
             esc(FB.T('Tap a person for their sheet — and your dealings with them.')) +
             '</div>';
         } else {
-          h += '<div class="cmeta" style="font-size:13px">' +
+          h += '<div class="cmeta" style="font-size:var(--ui-label-size)">' +
             esc(FB.T('No one of note.')) + '</div>';
         }
       }

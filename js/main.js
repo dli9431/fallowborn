@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.7';
+FB.VERSION = '1.176.8';
 FB.CHANGELOG = [
+  { v: '1.176.8', date: '2026-09-08', changes: [
+    'Panels and dialogs share consistent labels, readable stats, and simpler collapsible sections. Self, Network, Land, and royal policy cards have clearer alignment and details.'
+  ] },
   { v: '1.176.7', date: '2026-09-07', changes: [
     'Significant outcomes keep their toasts and use shorter result text. Freedom purchases earn family gratitude, with clearer portraits and guidance to local intermediaries.'
   ] },

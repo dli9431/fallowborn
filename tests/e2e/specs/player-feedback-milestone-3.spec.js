@@ -956,7 +956,7 @@ test('enterprise groups and sorts persist and share their order with Household P
         arrow:'"▾"',
         background:'linear-gradient(rgb(59, 48, 32), rgb(42, 34, 24))',
         borderColor:'rgb(138, 110, 52)',
-        borderRadius:'6px',
+        borderRadius:'8px',
         height:42,
         paddingRight:'34px'
       },
@@ -964,7 +964,7 @@ test('enterprise groups and sorts persist and share their order with Household P
         arrow:'"▾"',
         background:'linear-gradient(rgb(59, 48, 32), rgb(42, 34, 24))',
         borderColor:'rgb(138, 110, 52)',
-        borderRadius:'6px',
+        borderRadius:'8px',
         height:42,
         paddingRight:'34px'
       }

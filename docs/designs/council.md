@@ -144,8 +144,11 @@ and ledger effects without claiming a demographic simulation.
 
 Governance's Institution section shows each family's standing level and opens
 the **Royal laws & policy** sheet (`UI.showRealmPolicies`), which lists every
-level with its effects, the exact blocked reason on disabled proclamations,
-the proclamation cost, and the repeal and protected-term rules. The sheet is
+level in a dedicated policy card. Concise ongoing effects, immediate numeric
+changes, scope, protected terms, proclamation cost, and the exact blocked reason
+stay visible. Descriptions and detailed repeal rules use the shared desktop
+tooltip or compact question-mark disclosure. Proclaiming preserves scroll and
+focuses the updated card. The sheet is
 read-only until a proclamation; its Back contract returns to Governance's
 Institution section. Both families record `none` technology-impact reviews in
 `FBDATA.techImpactReviews`: tolerance and settlement are social prerogatives

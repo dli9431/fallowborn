@@ -1,10 +1,85 @@
 # UI: keyboard & mobile
 
+## Shared visual and content standard
+
+This contract applies to every title/setup screen, retained panel, card, picker,
+dialog, event/outcome, tooltip, and compact disclosure. It supersedes older
+component-specific typography and decoration rules in this document. Components
+own layout and behavior; the shared stylesheet owns their visual language.
+
+| Role | Convention |
+| --- | --- |
+| Primary text | Warm ivory `--main-text-color` (`#f2eadb`); Georgia/system serif; 14px body copy, 1.4 line height. |
+| Labels and context | Muted parchment `--helper-text-color` (`#c9b991`); 13px, normal weight, sentence case. |
+| Values and stats | Ivory, 15px, bold, tabular digits; 16px in compact layouts. Keep the label, value, unit, and time period together. |
+| Headings and interaction accents | Gold `--ui-accent-color` (`#d8b24a`); section headings 16px bold, modal headings 20px. Links and section toggles use gold; action buttons use ivory text and a gold interaction border. |
+| Benefits, risk, danger | Green `#9fc06a`, amber `#e0bd79`, rose `#d79579`; always accompany color with text, a signed value, or an icon. |
+| Surfaces | Dark parchment `#211a13`, raised cards `#241d15`, one quiet `#55452a` border where a card or control needs a boundary; 8px corners. |
+| Spacing | 4px within a fact, 8px between related controls/rows, 12px card padding and between cards, 16px between sections. Ordinary stat rows use 6px vertical padding and a 12px column gap. |
+| Compact layouts | Labels/supporting copy at least 14px; values and action text 16px; preserve the shared 44px minimum target and existing larger modal controls. Wrap text rather than shrinking it. |
+
+No all-caps UI text, uppercase transforms, small caps, or decorative letter spacing.
+Author new labels in sentence case; preserve proper names, Roman numerals, and
+literal keyboard bindings. Use concise nouns for labels and verbs for actions.
+Do not append a colon to a separate label; inline facts use `Label: value`.
+Show explicit units and periods (`120 men`, `6 each season`, `30 days`) and
+current/maximum for capacity. Use the existing locale-aware money/number helpers;
+do not invent another formatter or expose raw internal ids. Explain abbreviations.
+
+The first glance must answer what this is, its current status, and the numbers
+needed to act: amount/capacity, progress, immediate cost, benefit, commitment,
+deadline, material risk, and the first actionable blocker. Do not bury these in
+muted prose, clip them, or require a tooltip to discover them. Saved outcomes keep
+actual gains/losses visible. Narrative event prose, deliberate rule/Guide pages,
+and empty states remain readable primary content.
+
+Supporting explanations, formulas, background rules, repeated instructions, and
+long prerequisite audits belong to the shared desktop hover/focus tooltip and
+compact `?` disclosure described below. Keep essential decision facts visible
+even when an explanation also mentions them. Never hide prose using CSS without
+providing that accessible disclosure; never put a button inside another button.
+
+Collapsible sections use Deeds as the template: one full-width, gold-text toggle,
+minimum 44px high, 8px by 12px padding, one quiet border, and an explicit caret.
+The expanded body uses spacing, not another enclosing border or nested shaded
+frame. Use the same rule for Network, filters, and native `details` sections;
+native dropdown menus retain their input skin. Preserve native keyboard behavior,
+`aria-expanded`, section shortcuts, scroll, focus, and saved expansion state.
+Selection uses a gold border and a subtle background, not an extra box.
+
+Self keeps the house name and pencil in one flex row, aligned to the left with
+an explicit gap; long house names wrap beside the fixed-size edit control.
+Network's Alliances & pacts, Governance, and Royal Council use the same action
+renderer, including keyboard shortcuts and responsive details. Land's narrow
+sidebar always stacks labels above left-aligned values, including ruler and
+sovereign links, rather than mixing stacked facts with right-aligned columns.
+Royal laws & policy uses dedicated policy cards with ongoing effects, immediate
+changes, scope, protected terms, cost, and blockers visible. Policy descriptions
+and background rules use the shared disclosures. Proclaiming retains list scroll
+and focuses the updated policy card.
+
+## Label and value rows
+
+Shared `.kv` rows reserve readable space for both fields and an explicit column
+gap. They wrap whole fields onto separate lines when the containing card is too
+narrow, including desktop card grids and tooltips; long names and translated prose
+can wrap inside either field without overflowing. Linked values follow the same
+width limit. Deliberately stacked summary tiles keep content-sized heights, and
+specialized grid rows retain their existing responsive columns. Do not reinstate
+nowrap values or percentage caps in ordinary label/value rows.
+Ordinary rows use smaller, sentence-case helper-colored labels above or beside bold values,
+with six pixels of vertical padding per row. This keeps each fact visually grouped
+when fields stack, instead of making the card read as a continuous paragraph.
+Specialized compact summaries and tooltip rows retain their own spacing.
+Label typography applies only to the label itself, never nested standing or other
+value spans. Summary cards share this hierarchy across Church, household, and
+governance surfaces while retaining their responsive layouts.
+
 ## Shared input and dropdown style
 
 All native selects and text, search, number, and multiline inputs use the shared
 field skin in `css/style.css`, with the Market basket overlay as the visual
-reference: brown parchment gradient, gold border, six-pixel corners, light serif
+reference: brown parchment gradient, gold border, eight-pixel corners, light serif
 text, inset highlight, gold hover border, and a visible gold focus outline.
 Selects share one CSS-drawn gold arrow and dark option colors; icons are optional.
 Keep native select/input semantics, keyboard navigation, labels, and mobile pickers.
@@ -443,10 +518,10 @@ mixing 40–52 px controls. Better Household standard steppers use that same swi
 roomy pointers get action-specific hover/focus terms, while compact layouts get one
 48 px `?` that expands both decrease and increase consequences inline.
 
-**Helper text always belongs in that tooltip/disclosure path.** Explanatory prose,
-instructions, ownership and scope audits, costs already represented by an action,
-consequences, and disabled reasons must not remain as permanent copy beneath a title or
-control. Keep the title, action label, selected value, progress needed for a decision,
+**Supporting explanation belongs in that tooltip/disclosure path.** Explanatory prose,
+instructions, ownership and scope audits, calculations, and repeated rules must not
+remain as permanent copy beneath a title or control. Keep the title, action label,
+selected value, progress, exact cost, material consequences, first actionable blocker,
 and urgent warning state on the face; put the supporting explanation in the shared
 desktop hover/focus tooltip and compact `?` disclosure. This applies to modal sections
 and standalone actions as well as list cards.

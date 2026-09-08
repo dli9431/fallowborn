@@ -32,6 +32,16 @@ definition that deliberately remains under Rome must explicitly retain
 
 ## Bishoprics and investiture
 
+The Bishopric sheet uses the shared responsive label/value rows. Its see, Church
+standing, and temporalities cards allow fields to stack at narrow card widths.
+Succession shows Non-hereditary on the face and explains the separate treatment
+of Church office and family property through the Temporalities disclosure.
+The extraordinary-tithe deed uses the established money-bag emoji so its icon
+does not depend on system-font support for the newer coin character.
+Episcopal power cards keep their action and cooldown or blocker visible. Supporting
+power descriptions use the shared desktop tooltip and compact `?` disclosure.
+All Church facts follow the sentence-case label and bold-value UI contract.
+
 The Catholic monastic and clerical ladders end in eligibility for office rather than a
 purchased promotion. Abbot or Abbess uses a contested election with a 360-day refusal
 cooldown. A Bishop candidate must be a living Catholic man, unmarried or widowed and not

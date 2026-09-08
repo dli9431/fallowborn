@@ -7,6 +7,9 @@ dependsOnRuntime(__filename, [
   'js/population.js',
   'js/technology.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
+  'js/ui_misc.js',
+  'css/style.css',
   'data/policies.js',
   'data/modifiers.js',
   'data/political_institutions.js',
@@ -118,6 +121,52 @@ async function configureCrown(page) {
   await waitForUiRefresh(page);
   return configured;
 }
+
+test('Realm launchers share action styling and policy explanations use responsive details', async function ({ page }) {
+  await configureCrown(page);
+  await page.setViewportSize({ width:1280, height:850 });
+  await page.evaluate(function () { FB.ui.showTab('network'); });
+  const realmToggle = page.locator('#tab-network [data-list-toggle="realm"]');
+  if (await realmToggle.getAttribute('aria-expanded') !== 'true') await realmToggle.click();
+  const styles = [];
+  for (const id of ['network-pacts', 'network-governance', 'network-council']) {
+    const button = page.locator('#' + id);
+    await expect(button).toHaveClass(/network-main-action/);
+    styles.push(await button.evaluate(function (node) {
+      const s = getComputedStyle(node);
+      return [s.fontSize, s.fontWeight, s.padding, s.borderRadius, s.backgroundColor];
+    }));
+  }
+  expect(styles[0]).toEqual(styles[1]);
+  expect(styles[0]).toEqual(styles[2]);
+
+  await page.evaluate(function () { FB.ui.showRealmPolicies(); });
+  const card = page.locator('.realm-policy-card').filter({
+    has:page.locator('#realm-policy-religious_tolerance-protected_worship-details')
+  });
+  await expect(card).toHaveCount(1);
+  await expect(card.locator('.realm-policy-facts')).toContainText('Protected term');
+  await expect(card.locator('.realm-policy-facts')).toContainText('On proclamation');
+  await expect(card.locator('[data-realm-policy]')).toContainText('Proclaim');
+  await expect(card.locator('.settcard-details')).toBeHidden();
+  await card.focus();
+  await expect(page.locator('#tooltip')).toContainText('unlawful revocation');
+  await page.setViewportSize({ width:390, height:850 });
+  await card.locator('.settcard-info').click();
+  await expect(card.locator('.settcard-details')).toBeVisible();
+  await expect(page.locator('#tooltip')).toBeHidden();
+  const overflow = await card.evaluate(function (node) { return node.scrollWidth - node.clientWidth; });
+  expect(overflow).toBeLessThanOrEqual(1);
+  const proclaim = card.locator('[data-realm-policy]');
+  await proclaim.scrollIntoViewIfNeeded();
+  const scrollBefore = await page.locator('#gm-body').evaluate(function (node) { return node.scrollTop; });
+  expect(scrollBefore).toBeGreaterThan(0);
+  await proclaim.click();
+  await expect(card).toBeFocused();
+  await expect(card.locator('.settcard-details')).toBeVisible();
+  const scrollAfter = await page.locator('#gm-body').evaluate(function (node) { return node.scrollTop; });
+  expect(Math.abs(scrollAfter - scrollBefore)).toBeLessThanOrEqual(1);
+});
 
 test('old saves heal to the declared default levels with no standing effects',
   async function ({ page }) {

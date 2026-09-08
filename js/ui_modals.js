@@ -421,8 +421,15 @@ window.FB = window.FB || {};
     const s = FB.state;
     const access = automationAccess(s);
     function cb(id, checked, label, desc) {
-      return '<label class="autorow"><input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') + '> ' +
-        label + (desc ? '<span class="adesc">' + desc + '</span>' : '') + '</label>';
+      const detailsId = id + '-details';
+      return '<div class="ui-control-row settcard"><div class="settcard-head">' +
+        '<label class="autorow"><input type="checkbox" id="' + id + '"' +
+        (checked ? ' checked' : '') + '> ' + label + '</label>' +
+        (desc ? cardInfoButton(detailsId) : '') + '</div>' +
+        (id === 'ar-all' ? '<p class="ui-control-warning">' + esc(FB.T(
+          'Includes mortal danger and heir decisions.')) + '</p>' : '') +
+        (desc ? '<div class="settcard-details hidden" id="' + detailsId + '">' +
+          desc + '</div>' : '') + '</div>';
     }
     function rb(val, label) {
       return '<label class="autorow"><input type="radio" name="ar-style" value="' + val + '"' +
@@ -432,20 +439,23 @@ window.FB = window.FB || {};
       return '<label class="autorow"><input type="radio" name="ar-hosts" value="' + val + '"' +
         ((a.hosts || 'manual') === val ? ' checked' : '') + '> ' + label + '</label>';
     }
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+    const titleDetails = '<p>' + esc(FB.T(
       'While the days flow (or fast-forward), the chosen kinds of events resolve themselves. Every outcome is written to the Chronicle.')) +
-      '</p></div>';
+      '</p>';
+    let h = '';
     h += cb('ar-minor', a.minor, '<b>Autoresolve minor events</b>', 'Everyday happenings — the small incidents of daily life.');
     h += cb('ar-major', a.major, '<b>Autoresolve major events</b>', 'Once-in-a-life moments and story events — but never one that could cost you your life, name an heir, accept a title, or declare independence. Those are always shown.');
     h += cb('ar-war', a.war, '<b>Autoresolve war events</b>', 'Musters, war councils, tribute envoys, and battle reports. Your hosts still raise, march, and fight on the map by their own rules — this chooses your orders each season.');
     h += cb('ar-all', a.all, '<b>Autoresolve everything</b>', 'No event ever interrupts the days — even mortal danger and the naming of an heir resolve on their own. Only your death and the choice of a successor stop the flow.');
-    h += '<div class="gm-body-text" style="margin-top:8px"><p>How to choose between options:</p></div>';
+    h += panelh('Choice preference');
     h += rb('safe', 'Prudent — avoid risk, prefer sure gains');
     h += rb('bold', 'Bold — chase the bigger prize');
     h += rb('first', 'First option — take the default');
     if (access.hosts) {
-      h += '<div class="gm-body-text" style="margin-top:8px"><p>' + esc(FB.T(
-        'Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):')) + '</p></div>';
+      h += '<div class="settcard" tabindex="0"><div class="settcard-head">' +
+        panelh('Host orders') + cardInfoButton('ar-host-orders-details') + '</div>' +
+        '<div class="settcard-details hidden" id="ar-host-orders-details">' + esc(FB.T(
+          'Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):')) + '</div></div>';
       h += hr('manual', 'Manually — you march the host yourself');
       h += hr('def', 'Defensive — throw back invaders, then refit at home');
       h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
@@ -454,19 +464,21 @@ window.FB = window.FB || {};
         'At one week of supply remaining, or after supplies run out, automated hosts retreat to reachable friendly territory and refill before resuming their stance. Manual routes and holds remain yours.');
     }
     if (access.build) {
-      h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
-        esc(FB.T('Realm stewardship (once a season):')) + '</p></div>';
+      h += panelh('Realm stewardship');
       h += cb('ar-build', a.build, 'Raise buildings automatically', 'The cheapest available building, when the treasury can spare it.');
     }
     if (access.research) {
       h += cb('ar-research', a.research,
         esc(FB.T('Fill research slots automatically')),
         esc(FB.T('Open slots are filled immediately and whenever a project completes.')));
-      h += '<label class="autorow auto-select"><span>' +
+      h += '<div class="ui-control-row settcard"><div class="settcard-head">' +
+        '<label class="autorow auto-select"><span>' +
         esc(FB.T('Research priority')) + '</span><select id="ar-research-mode">' +
-        techAutomationOptions(a.researchMode) + '</select><span class="adesc">' +
+        techAutomationOptions(a.researchMode) + '</select></label>' +
+        cardInfoButton('ar-research-mode-details') + '</div>' +
+        '<div class="settcard-details hidden" id="ar-research-mode-details">' +
         esc(FB.T('A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain.')) +
-        '</span></label>';
+        '</div></div>';
     } else if (access.technology) {
       h += '<div class="hint">' + esc(FB.T(
         'Only a sovereign player chooses national technology; your sovereign selects the project.')) +
@@ -475,6 +487,7 @@ window.FB = window.FB || {};
     h += '<div class="gm-footer"><button class="btn primary" id="ar-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal('⚙ Automation', h, {
       modalClass:'fullsheet-modal', modalKey:'v',
+      titleDetailsHtml:titleDetails,
       returnFocus:options.returnFocus || null
     });
     function sync() {
@@ -3300,7 +3313,7 @@ window.FB = window.FB || {};
     let h = '<b>' + (icon ? icon + ' ' : '') + esc(name) + '</b>';
     if (desc) h += '<br><span class="adesc">' + esc(desc) + '</span>';
     if (lines.length) {
-      h += '<div class="settdesc" style="margin-top:6px;font-size:13px;line-height:1.4;">' +
+      h += '<div class="settdesc" style="margin-top:6px;font-size:var(--ui-label-size);line-height:1.4;">' +
         lines.join('<br>') + '</div>';
     }
     return h;
@@ -3360,7 +3373,7 @@ window.FB = window.FB || {};
 
     let h = '<b>🌍 ' + esc(name) + '</b>';
     if (lines.length) {
-      h += '<div class="settdesc" style="margin-top:6px;font-size:13px;line-height:1.4;">' +
+      h += '<div class="settdesc" style="margin-top:6px;font-size:var(--ui-label-size);line-height:1.4;">' +
         lines.join('<br>') + '</div>';
     }
     return h;
@@ -8851,7 +8864,7 @@ window.FB = window.FB || {};
   UI.showAppeal = function (returnContext) {
     const s = FB.state;
     const chain = FB.liegeChain(s, s.player.liege).slice(1);
-    let h = '<p class="hint">Carry your suit past your own lord to a greater one. Success makes you HIS direct man — and an enemy of the man you passed over.</p><div class="gm-list">';
+    let h = '<p class="hint">Carry your suit past your own lord to a greater one. Success makes you his direct man — and an enemy of the man you passed over.</p><div class="gm-list">';
     for (const rid of chain) {
       const r = s.realms[rid];
       h += '<button class="actionbtn" data-rid="' + esc(rid) + '">⚖ ' +
@@ -13359,6 +13372,49 @@ window.FB = window.FB || {};
     return lines;
   }
 
+  function realmPolicyFactsHtml(s, level, summary) {
+    const ongoing = [];
+    if (level.modifier) {
+      const effects = modifierEffectText(s, level.modifier);
+      if (effects) ongoing.push(effects);
+      const mod = FBDATA.modifiers[level.modifier];
+      if (mod && mod.upkeep && mod.upkeep.gold) ongoing.push(FB.T(
+        '{money:cost} per county each season', { cost:mod.upkeep.gold }));
+    }
+    if (level.seasonPiety) ongoing.push(FB.T('{amount} piety each season', {
+      amount:politicalSigned(level.seasonPiety) }));
+    if (level.researchFactor) ongoing.push(FB.T('{amount}% research', {
+      amount:realmPolicySignedPercent(level.researchFactor) }));
+    if (level.migrationAttraction) ongoing.push(FB.T('{amount} migration attraction', {
+      amount:politicalSigned(level.migrationAttraction) }));
+    if (level.developmentGrowth) ongoing.push(FB.T('Chance of county development each season'));
+    if (level.privilege) ongoing.push(FB.T('Charter protection for minority congregations'));
+    let h = '<div class="realm-policy-facts">';
+    if (ongoing.length) h += kv('Ongoing', esc(ongoing.join(' · ')));
+    if (level.modifier) h += kv('Applies to', esc(level.modifierScope === 'minority'
+      ? FB.T('{count} minority-faith counties', { count:summary.minorityCountyIds.length })
+      : FB.T('All directly held counties')));
+    const enact = level.onEnact || {};
+    const labels = {
+      piety:FB.T('Piety'), prestige:FB.T('Prestige'), pop:FB.T('Common Voice'),
+      authority:FB.T('Crown Authority'), headFaith:FB.T('Religious-head Standing'),
+      sameFold:FB.T('Same-faith foreign Standing'), otherFold:FB.T('Other-faith foreign Standing'),
+      vassalSameFaith:FB.T('Same-faith vassal Standing'),
+      vassalOtherFaith:FB.T('Other-faith vassal Standing')
+    };
+    const changes = [];
+    for (const key in labels) {
+      if (enact[key]) changes.push(FB.T('{label}: {amount}', {
+        label:labels[key], amount:politicalSigned(enact[key]) }));
+    }
+    if (changes.length) h += kv('On proclamation', esc(changes.join(' · ')));
+    if (enact.mistreatment) h += '<p class="realm-policy-warning">' +
+      esc(FB.T('Mistreatment; may trigger collective demands.')) + '</p>';
+    if (level.protectedTerm) h += kv('Protected term', esc(FB.T('{days} days', {
+      days:summary.protectedDays })));
+    return h + '</div>';
+  }
+
   UI.showRealmPolicies = function (returnView, replaceView) {
     if (returnView !== 'governance') returnView = null;
     const s = FB.state;
@@ -13367,44 +13423,46 @@ window.FB = window.FB || {};
       UI.toast(FB.T('No royal policy is recognized.'));
       return;
     }
-    let h = '<p class="hint">' + esc(FB.T(
-      'Standing laws of your realm, proclaimed by the crown alone — no Estates vote. A new proclamation costs {money:cost}, replaces the standing level, and settles that family’s policy for the year. County faith and local identity are never rewritten by policy; the law decides how the realm treats the difference.', {
-        cost:summary.changeCost
-      })) + '</p>';
+    const titleDetails = '<p>' + esc(FB.T(
+      'The crown proclaims these laws without an Estates vote. Policies change how the realm treats its communities; they do not change county faith or identity.')) + '</p>';
+    let h = '<p class="realm-policy-terms">' + esc(FB.T(
+      'One change per policy each calendar year. A proclamation replaces the current level.')) + '</p>';
     if (!summary.active) {
       h += '<div class="progressnote warnote">' + esc(FB.T(
         'Royal policy requires a crowned sovereign ruling a realm of their own.')) + '</div>';
     }
     for (const policy of summary.policies) {
       const policyDef = FB.policyDef(policy.id);
-      h += '<div class="panelh">' + esc(dt(s, 'policy', policy.id,
-        policyDef, 'name')) + '</div>' +
-        '<p class="hint">' + esc(dt(s, 'policy', policy.id, policyDef,
-          'desc')) + '</p>';
+      h += '<section class="realm-policy-family"><div class="panelh">' +
+        esc(dt(s, 'policy', policy.id, policyDef, 'name')) + '</div>';
       for (const levelRow of policy.levels) {
         const level = policyDef.levels[levelRow.index];
         const status = levelRow.status;
-        h += '<div class="charcard"><div><div class="ccname">' +
+        const detailsId = 'realm-policy-' + policy.id + '-' + level.id + '-details';
+        h += '<article class="realm-policy-card settcard" tabindex="0"><div class="settcard-head"><b>' +
           (level.icon ? esc(level.icon) + ' ' : '') +
           esc(dt(s, 'policy', policy.id, policyDef,
             'levels.' + levelRow.index + '.name')) +
           (levelRow.current ? ' · ' + esc(FB.T('Standing policy')) : '') +
-          '</div>' +
-          '<div class="cmeta">' + esc(dt(s, 'policy', policy.id, policyDef,
-            'levels.' + levelRow.index + '.desc')) + '</div>';
+          '</b>' + cardInfoButton(detailsId) + '</div>' +
+          realmPolicyFactsHtml(s, level, summary) +
+          '<div class="settcard-details hidden" id="' + detailsId + '"><p>' +
+          esc(dt(s, 'policy', policy.id, policyDef, 'desc')) + '</p><p>' +
+          esc(dt(s, 'policy', policy.id, policyDef, 'levels.' + levelRow.index + '.desc')) + '</p>';
         const lines = realmPolicyLevelEffectLines(s, policy, level, summary);
         for (const line of lines) {
-          h += '<div class="cmeta">' + esc(line) + '</div>';
+          h += '<p>' + esc(line) + '</p>';
         }
+        h += '</div>';
         if (levelRow.current) {
-          h += '</div></div>';
+          h += '</article>';
           continue;
         }
         if (status.warning) {
-          h += '<div class="cmeta">' + esc(FB.T(
-            'Warning: the standing level’s protected term has {days} days remaining.', {
+          h += '<p class="realm-policy-warning">' + esc(FB.T(
+            'Unlawful revocation: {days} protected days remain.', {
               days:status.warning.days
-            })) + '</div>';
+            })) + '</p>';
         }
         h += '<button type="button" class="btn" data-realm-policy="' +
           esc(policy.id + ':' + level.id) + '"' +
@@ -13415,16 +13473,18 @@ window.FB = window.FB || {};
           })) + '</button>' +
           (status.ready
             ? ''
-            : '<div class="cmeta">' + esc(status.reason) + '</div>') +
-          '</div></div>';
+            : '<p class="realm-policy-warning">' + esc(status.reason) + '</p>') +
+          '</article>';
       }
+      h += '</section>';
     }
     h += '<div class="gm-footer"><button type="button" class="btn" ' +
       'id="realm-policies-back">' +
       esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
       '</button></div>';
     openModal(FB.T('👑 Royal laws & policy'), h, {
-      modalClass:'fullsheet-modal',
+      modalClass:'fullsheet-modal realm-policies-modal',
+      titleDetailsHtml:titleDetails,
       noFocus:true,
       historyView:returnView === 'governance',
       replaceView:!!replaceView,
@@ -13434,8 +13494,22 @@ window.FB = window.FB || {};
       function (button) {
         button.addEventListener('click', function () {
           const parts = String(button.dataset.realmPolicy).split(':');
+          const scrollTop = $('gm-body').scrollTop;
+          const expandedDetails = Array.prototype.map.call(
+            $('gm-body').querySelectorAll('.settcard-details:not(.hidden)'),
+            function (node) { return node.id; });
           if (!FB.realmPolicyProclaim(s, parts[0], parts[1])) return;
           UI.showRealmPolicies(returnView, true);
+          for (const id of expandedDetails) {
+            const node = $(id);
+            if (!node) continue;
+            node.classList.remove('hidden');
+            const info = document.querySelector('.settcard-info[aria-controls="' + id + '"]');
+            if (info) info.setAttribute('aria-expanded', 'true');
+          }
+          const details = $('realm-policy-' + parts[0] + '-' + parts[1] + '-details');
+          if (details) details.closest('.realm-policy-card').focus({ preventScroll:true });
+          $('gm-body').scrollTop = scrollTop;
           UI.refresh();
         });
       });
@@ -17902,7 +17976,9 @@ window.FB = window.FB || {};
         ? (FB.focusLabel ? FB.focusLabel(s, currentFocus) :
           dt(s, 'focus', currentFocus.id, currentFocus, 'label'))
         : FB.T('None'))) +
-      '</section><section class="papacy-card">' + panelh('Temporalities') +
+      '</section><section class="papacy-card settcard" tabindex="0">' +
+      '<div class="settcard-head">' + panelh('Temporalities') +
+      cardInfoButton('bishop-temporalities-details') + '</div>' +
       kv('Seasonal revenue', esc(FB.T('{money:gold}', {
         gold:FB.bishopricIncome(s)
       }))) +
@@ -17910,8 +17986,9 @@ window.FB = window.FB || {};
       kv('Episcopal household', esc(FB.T('{men} men-at-arms', {
         men:FB.bishopricRetinue(s)
       }))) +
-      kv('Succession', esc(FB.T(
-        'The see returns to the Church; private property and separate secular titles follow dynasty law.'))) +
+      kv('Succession', esc(FB.T('Non-hereditary'))) +
+      '<div class="settcard-details hidden" id="bishop-temporalities-details">' +
+      esc(FB.T('The see returns to the Church; private property and separate secular titles follow dynasty law.')) + '</div>' +
       '</section></div>';
 
     const powerIds = [
@@ -17924,15 +18001,17 @@ window.FB = window.FB || {};
     for (let i = 0; i < powerIds.length; i++) {
       const item = available[powerIds[i]];
       if (!item) continue;
-      h += '<button class="actionbtn" data-bishop-power="' + item.a.id + '"' +
+      const detailsId = 'bishop-power-' + item.a.id + '-details';
+      h += '<div class="ui-action-card settcard"' + (item.can ? '' : ' tabindex="0"') +
+        '><div class="settcard-head"><button class="actionbtn" data-bishop-power="' + item.a.id + '"' +
         (item.can ? '' : ' disabled') + '>' +
         esc(actionLabel(s, item.a.id, item.a)) +
         '<span class="adesc">' + esc(item.can
-          ? FB.T('{description} · {days}-day cooldown', {
-            description:FB.translateKnown(item.a.desc(s)),
-            days:item.a.cd
-          }) : item.reason) +
-        '</span></button>';
+          ? FB.T('1 day · {days}-day cooldown', { days:item.a.cd }) : item.reason) +
+        (item.a.id === 'convene_synod' ? ' · ' + esc(FB.T('Cost: {money:10}')) : '') +
+        '</span></button>' + cardInfoButton(detailsId) + '</div>' +
+        '<div class="settcard-details hidden" id="' + detailsId + '">' +
+        esc(FB.translateKnown(item.a.desc(s))) + '</div></div>';
     }
     h += '</div>';
 
@@ -18032,7 +18111,7 @@ window.FB = window.FB || {};
     return s.realms[rid] ? s.realms[rid].name : rid || FB.T('None');
   }
 
-  function papalInfoButton(detailsId) {
+  function cardInfoButton(detailsId) {
     return '<span class="settcard-actions"><button type="button" ' +
       'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
       esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
@@ -18046,7 +18125,7 @@ window.FB = window.FB || {};
         '" aria-describedby="' + esc(detailsId) + '"' : '') +
       '><button type="button" class="actionbtn" id="' + esc(id) + '"' +
       (disabled ? ' disabled' : '') + '>' + icon + ' ' + esc(label) +
-      '</button>' + papalInfoButton(detailsId) +
+      '</button>' + cardInfoButton(detailsId) +
       '<div class="settcard-details papacy-action-details hidden" id="' +
       esc(detailsId) + '"><p>' + esc(details) + '</p></div></div>';
   }
@@ -18169,7 +18248,7 @@ window.FB = window.FB || {};
           esc(c.id) + '"><button type="button" class="papacy-ballot-voter-main" ' +
           'data-papal-character="' + esc(c.id) + '" aria-describedby="' +
           esc(detailsId) + '"><span>' + esc(FB.fullName(c)) + '</span></button>' +
-          papalInfoButton(detailsId) +
+          cardInfoButton(detailsId) +
           '<div class="settcard-details papacy-ballot-voter-details hidden" id="' +
           esc(detailsId) + '">' + details + '</div></div>';
       }
@@ -18236,7 +18315,7 @@ window.FB = window.FB || {};
     let h = '<div class="papacy-summary">' +
       '<section class="papacy-card papacy-overview settcard">' +
       '<div class="settcard-head"><b>' + esc(FB.T('Obedience')) + '</b>' +
-      papalInfoButton(overviewDetailsId) + '</div>' +
+      cardInfoButton(overviewDetailsId) + '</div>' +
       kv('Claimant', esc(pope ? FB.papalDisplayName(s, pope) :
         FB.T('The Apostolic See is vacant'))) +
       kv('Recognition', esc(chosen === recognizedId
@@ -18328,7 +18407,7 @@ window.FB = window.FB || {};
       h += panelh(law.enclosed ? 'Conclave' : 'Papal election');
       h += '<section class="papacy-card papacy-election-card settcard">' +
         '<div class="settcard-head"><b>' + esc(FB.T('Election state')) +
-        '</b>' + papalInfoButton(electionDetailsId) + '</div>' +
+        '</b>' + cardInfoButton(electionDetailsId) + '</div>' +
         kv('Phase', esc(election.phase === 'name'
           ? FB.T('Regnal name') : election.phase === 'vacancy'
             ? FB.T('Vacancy') : FB.T('Balloting'))) +
@@ -18371,7 +18450,7 @@ window.FB = window.FB || {};
             h += '<div class="papacy-tactic-card settcard"><button ' +
               'class="btn small" data-papal-tactic="' + esc(tactic.id) + '"' +
               (disabled ? ' disabled' : '') + '>' + esc(tacticName) +
-              '</button>' + papalInfoButton(tacticDetailsId) +
+              '</button>' + cardInfoButton(tacticDetailsId) +
               '<div class="settcard-details papacy-tactic-details hidden" id="' +
               esc(tacticDetailsId) + '">' + tacticDetails + '</div></div>';
           }
@@ -18398,7 +18477,7 @@ window.FB = window.FB || {};
     h += panelh('Investiture') +
       '<section class="papacy-card papacy-investiture-card settcard">' +
       '<div class="settcard-head"><b>' + esc(investitureName) + '</b>' +
-      papalInfoButton(investitureDetailsId) + '</div>';
+      cardInfoButton(investitureDetailsId) + '</div>';
     if (policy) {
       h += '<div class="papacy-policy-effects">' + esc(FB.T(
         'Tax {tax}% · realm strength {strength}% · seasonal piety {piety}', {
@@ -27450,7 +27529,7 @@ window.FB = window.FB || {};
           '<button class="btn small danger" data-unmod="' + i + '">Remove</button></div>';
       }
     } else {
-      h += '<p class="cmeta" style="font-size:13px;margin:4px 0">None — no JSON mods applied.</p>';
+      h += '<p class="cmeta" style="font-size:var(--ui-label-size);margin:4px 0">None — no JSON mods applied.</p>';
     }
     h += panelh('Add a mod') +
       '<p style="margin:8px 0"><input type="file" id="modfile" accept=".json"></p>' +
