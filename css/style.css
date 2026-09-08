@@ -5655,3 +5655,16 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 .decision-outcome-modal .event-participant-identity { min-width:0; overflow-wrap:break-word; }
 .decision-outcome-modal .event-participant-identity > b { white-space:normal; }
 .decision-outcome-modal #outcome-continue { width:100%; min-height:44px; }
+
+/* Keep freedom identities aligned without changing shared key/value rows. */
+[data-rank-details-surface] > .kv { align-items: center; gap: 16px; padding: 7px 0; }
+[data-rank-details-surface] > .kv > b { min-width: 0; text-align: right; }
+.tenure-character-link, .social-intermediary { display: inline-flex; align-items: center; gap: 10px; }
+.tenure-character-link { max-width: 100%; text-align: left; }
+.tenure-character-link .pface, .social-intermediary .pface { flex: 0 0 auto; margin: 0; }
+.autorow.freedom-relative-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+.autorow.freedom-relative-row input { flex: 0 0 auto; margin: 0; }
+.freedom-relative-row .pface { flex: 0 0 auto; margin: 0; }
+.freedom-relative-copy { min-width: 0; overflow-wrap: anywhere; }
+.autorow.freedom-relative-row .adesc { margin: 3px 0 0; }
+[data-social-access-route] p { margin: 0 0 8px; }

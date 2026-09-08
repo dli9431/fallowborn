@@ -182,6 +182,8 @@ window.FB = window.FB || {};
   });
   document.addEventListener('click', function (e) {
     if (!$('eventmodal').contains(e.target)) return;
+    // Read-only disclosures do not commit or acknowledge a decision.
+    if (e.target.closest('.event-details-button, .settcard-info')) return;
     if (eventInputGuarded() || (e.detail > 0 && pointerEventEpoch !== null &&
         pointerEventEpoch !== (UI.eventInputEpoch || 0))) {
       e.preventDefault(); e.stopImmediatePropagation();
@@ -1144,12 +1146,13 @@ window.FB = window.FB || {};
     const s = FB.state;
     eventOpen = true;
     const modal = $('eventmodal');
-    $('tooltip').classList.add('hidden');
-    const oldToast = document.querySelector('.event-receipt-toast');
-    if (oldToast && oldToast.parentNode) oldToast.parentNode.removeChild(oldToast);
+    const tooltip = $('tooltip');
+    if (tooltip) tooltip.classList.add('hidden');
+
     modal.classList.remove('hidden');
     modal.classList.add('decision-outcome-modal');
     const context = { state:s, viewer:s.player.charId };
+    if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
     const milestones = receipt.milestones || [];
     const freedom = milestones.some(function (msg) {
       return /^news\.freedom\.(purchase|manumission|manumission_service|old_custom|flight)$/.test(msg.key);
@@ -1160,7 +1163,7 @@ window.FB = window.FB || {};
     });
     let title = freedom ? FB.T('Freedom gained') :
       (receipt.result === 'success' ? FB.T('Success') :
-        (receipt.result === 'failure' ? FB.T('Failure') : FB.T('Decision resolved')));
+        (receipt.result === 'failure' ? FB.T('Failure') : FB.T('Outcome')));
     if (receipt.eventId === 'child_fever') title = receipt.result === 'success'
       ? FB.T('The fever breaks') : FB.T('A child lost');
     if (receipt.eventId === 'proposal_made' || receipt.eventId === 'sibling_proposal_made') {
@@ -1175,7 +1178,9 @@ window.FB = window.FB || {};
       h += '<p class="decision-outcome-source">' + esc(FB.renderMessage(receipt.title, context)) + '</p>';
     }
     const messages = [];
-    if (receipt.outcome && !freedom) messages.push(receipt.outcome);
+    const genericResult = receipt.outcome &&
+      /^fx\.event\.autoresolve\.(success|failure)$/.test(receipt.outcome.key);
+    if (receipt.outcome && !freedom && !genericResult) messages.push(receipt.outcome);
     milestones.forEach(function (msg) {
       if (freedom && /^news\.freedom\./.test(msg.key)) return;
       if (!messages.some(function (existing) { return existing.key === msg.key; })) messages.push(msg);
@@ -1183,13 +1188,8 @@ window.FB = window.FB || {};
     messages.forEach(function (msg) {
       h += '<p class="decision-outcome-summary">' + esc(FB.renderMessage(msg, context)) + '</p>';
     });
-    if (!messages.length && receipt.option && !freedom) {
-      h += '<p>' + esc(FB.T('Resolved: {choice}', {
-        choice:FB.renderMessage(receipt.option, context)
-      })) + '</p>';
-    }
     if (freedom) h += '<p class="decision-outcome-summary">' + esc(FB.T(
-      'Serf → Freeholder. The household’s serf duties have ended.')) + '</p>';
+      'Your household rises from Serf to Freeholder, free of customary service and able to travel, pursue free livelihoods, and own lasting property.')) + '</p>';
     const primary = [], secondary = [];
     (receipt.impacts || []).forEach(function (r) {
       if (FB.eventImpactVisible && !FB.eventImpactVisible(r)) return;
@@ -2330,13 +2330,13 @@ window.FB = window.FB || {};
       const relative = relatives[i];
       const relation = relative.kind === 'parent'
         ? FB.T('Parent') : FB.T('Sibling');
-      h += '<label class="autorow"><input type="checkbox" ' +
+      h += '<label class="autorow freedom-relative-row"><input type="checkbox" ' +
         'data-freedom-relative="' + esc(relative.id) + '"> ' +
-        (s.chars[relative.id] ? FB.faceTag(s.chars[relative.id], 44, 50) : '') + '<b>' +
+        (s.chars[relative.id] ? FB.faceTag(s.chars[relative.id], 44, 50) : '') + '<span class="freedom-relative-copy"><b>' +
         esc(relative.name) + '</b><span class="adesc">' +
         esc(FB.T('{relation} · adds {money:price}', {
           relation:relation, price:relative.cost
-        })) + '</span></label>';
+        })) + '</span></span></label>';
     }
     return h + '</div>';
   }
@@ -21894,7 +21894,29 @@ window.FB = window.FB || {};
     if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
     h += localFolkSheetHtml(s, c);
-    if (!c.dead) h += interactionCardHtml(model);
+    if (!c.dead) {
+      const access = FB.rankAccessStatus(s, { kind:'character', id:c.id });
+      if (!access.ready && access.neededStation !== null) {
+        h += '<div class="progressnote" data-social-access-route><p>' +
+          esc(access.reason) + '</p>';
+        // Existing local contacts only: opening guidance must not create people.
+        const guide = ['priest', 'steward', 'notable'].map(function (role) {
+          return FB.getRole(s, role, false);
+        }).filter(function (person) {
+          return person && !person.dead && person.id !== c.id &&
+            FB.stationOf(person) === access.neededStation &&
+            FB.socialAttentionStatus(s, person).ready &&
+            FB.socialAttentionPresence(s, person).status === 'active';
+        })[0];
+        if (guide) h += '<button type="button" class="actionbtn social-intermediary" ' +
+          'data-social-intermediary="' + esc(guide.id) + '">' +
+          FB.faceTag(guide, 44, 50) + '<span>' +
+          esc(FB.T('Cultivate {name}', { name:FB.fullName(guide) })) +
+          '</span></button>';
+        h += '</div>';
+      }
+      h += interactionCardHtml(model);
+    }
     /* Back walks the sheet-to-sheet return chain, which can loop between two
        linked rulers; always offer a plain Close that dismisses the modal
        stack outright. */
@@ -21918,6 +21940,12 @@ window.FB = window.FB || {};
         ? null : function () {
         interactionReturn(returnContext);
       }
+    });
+    const intermediary = $('gm-body').querySelector('[data-social-intermediary]');
+    if (intermediary) intermediary.addEventListener('click', function () {
+      UI.showCharModal(intermediary.dataset.socialIntermediary, {
+        view:'character', characterId:c.id, returnContext:returnContext
+      });
     });
     if (FB.playerDescendantKind(s, c.id) && FB.isHouseholdCharacter(s, c.id)) addMarriageFinderLink(c.id);
     FB.paintFaces($('gm-body'), s);

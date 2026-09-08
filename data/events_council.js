@@ -66,8 +66,8 @@ FBDATA.events.push(
       requiresTech:'representative_estates', showWhenTechLocked:true,
       effects:{ custom:'council_charter_seal', prestige:-5, log:'Sealed a charter of liberties for the great council.' } },
     { label:'Tear it up before their faces.', desc:'The crown answers to God, not to its own servants.', chance:0.5,
-      success:{ text:'A long, dangerous silence — and then they kneel, one by one. The crown stands alone, and stands supreme. They will remember this.', effects:{ custom:'council_defy_hold', prestige:5 } },
-      failure:{ text:'The eldest of them picks up the pieces, bows with insulting correctness, and rides home. Within the month, his defiance is armed.', effects:{ custom:'council_defy_fail' } } }
+      success:{ text:'The council submits, and you retain your authority without a charter.', effects:{ custom:'council_defy_hold', prestige:5 } },
+      failure:{ text:'Your refusal drives a councillor into armed rebellion.', effects:{ custom:'council_defy_fail' } } }
   ]},
 
 /* ---- the working council ---- */

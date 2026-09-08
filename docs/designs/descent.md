@@ -174,3 +174,5 @@ Related: [realms.md](realms.md) (tiers and the hierarchy),
 [war.md](war.md) (the war systems), [finance.md](finance.md) (loans and
 defaults), [holdings.md](holdings.md) (commoner property),
 [events.md](events.md) (the chain template).
+
+Final downfall aftermaths briefly distinguish retaining rule, fleeing after defeat, and surviving an attack while losing the seat; exact land and station losses remain in the outcome chips.

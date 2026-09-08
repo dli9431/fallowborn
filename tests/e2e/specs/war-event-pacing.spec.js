@@ -471,15 +471,19 @@ test('event dismissal respects automatic resume ' + autoResume + ' and defers an
     await expect.poll(function () {
       return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
     }).toBe(false);
-    await page.locator('#ev-options .evopt').first().click();
-    await expect(page.locator('#eventmodal')).toHaveClass(/hidden/);
-
+    // Observe dismissal synchronously before the resumed live ticker can
+    // legitimately open tomorrow's deferred battle.
     const result = await page.evaluate(function () {
-      return {
+      document.querySelector('#ev-options .evopt').click();
+      const snapshot = {
+        hidden:document.getElementById('eventmodal').classList.contains('hidden'),
         paused:FB.game.paused,
         queued:FB.state.eventQueue.map(function (item) { return item.id; })
       };
+      FB.game.setPaused(true);
+      return snapshot;
     });
+    expect(result.hidden).toBe(true);
     expect(result.paused).toBe(!autoResume);
     expect(result.queued).toEqual(['field_battle_lost']);
   });

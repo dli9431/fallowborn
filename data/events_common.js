@@ -110,9 +110,9 @@ FBDATA.events.push(
   text:'{late} is dead — and {childname}, your child together, carries the blood of a house that never welcomed you. Now its kin gather to settle the inheritance, and every eye turns to your child.',
   options:[
     { label:'Press {childname}’s claim.', desc:'Your standing and cunning against their lawyers and pride.', chance:'house_claim',
-      success:{ text:'Oaths are read, kin are counted — and the house yields. {childname} is named to the inheritance, and its stewardship falls to your side of the hearth.',
+      success:{ text:'The house recognizes {childname}’s inheritance, placing it in your household’s care.',
         effects:{ custom:'claim_won', prestige:20, log:'{childname} was acknowledged by the house of {late}.' } },
-      failure:{ text:'The house closes ranks. Cold words, a grudging purse, and a door shut on {childname}’s name.',
+      failure:{ text:'The house rejects {childname}’s claim and offers only a small payment.',
         effects:{ custom:'claim_lost', prestige:-5, log:'The house of {late} shut its doors on {childname}.' } } },
     { label:'Sell the claim back to them.', desc:'A fat purse now, and no feud.',
       effects:{ custom:'claim_sold', log:'Sold {childname}’s claim on the house of {late}.' } },

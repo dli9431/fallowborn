@@ -907,3 +907,10 @@ Autoresolve always takes the first available approach for these scenes instead o
 applying the campaign's risk-style scoring to a deliberately chosen social meeting.
 
 Voluntary ordinary-war peace options use `confirm:'war_end'`. The event UI retains the unresolved event while quoting the exact `FB.warPeaceTerms` transaction. Cancel/Escape restores its mounted controls without repeating preparation or firing; confirm revalidates the exact war and current option. Category automation must show these events; Resolve everything remains explicit authorization to automate them.
+
+Refusing tribute and continuing a campaign is an ordinary decision, not a milestone
+outcome. Outcome rendering tolerates touch boots without a desktop tooltip element.
+
+Significant decisions keep their result toast alongside the Continue screen; delayed milestones also retain their ordinary news toast, including under autoresolve. Purchasing lawful freedom grants +20 Standing from each newly freed family member, including separately purchased relatives, once at actual release.
+
+Outcome aftermaths state the result in one concise sentence for downfall, tournaments, grants, political negotiations, and commissioned works. Specific custom-handler prose replaces generic chance text when available; otherwise actual consequence chips carry the result without repeating the chosen instruction. This changes presentation only.

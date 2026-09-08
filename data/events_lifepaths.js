@@ -100,8 +100,8 @@ FBDATA.events.push(
   text:'{lord} desires a work to give the household luster — a book with your name in it and the patron’s arms on the cover. The fee is agreed in advance; only the writing remains.',
   options:[
     { label:'Accept the commission.', desc:'Months at the writing desk for coin, standing, and another family work.', chance:'skill_lea',
-      success:{ text:'The work is finished, read aloud, and praised in the right houses. A fair copy stays with your own family.', effects:{ gold:15, prestige:6, custom:'lifepath_author_work', log:'Completed a commissioned work.' } },
-      failure:{ text:'The words will not come together, and the deadline will not wait. The patron pays a quarter fee and looks elsewhere.', effects:{ gold:4, prestige:-2 } } },
+      success:{ text:'You complete the commissioned work, earn your fee, and keep a copy for your family.', effects:{ gold:15, prestige:6, custom:'lifepath_author_work', log:'Completed a commissioned work.' } },
+      failure:{ text:'You miss the deadline and receive only a quarter of the agreed fee.', effects:{ gold:4, prestige:-2 } } },
     { label:'Decline politely.', desc:'Your own projects need the winter more.', effects:{} }
   ]},
 

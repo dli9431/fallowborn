@@ -429,7 +429,7 @@ test('desktop choices keep side tooltips visible and separate from resolution',
     await expect(resolveButton).toBeHidden();
     await expect(page.locator('#outcome-continue')).toBeVisible();
     await expect(page.locator('#ev-text')).toContainText('A Child Burns With Fever');
-    await expect(page.locator('.event-receipt-toast')).toHaveCount(0);
+    await expect(page.locator('.event-receipt-toast')).toBeVisible();
     expect(await page.evaluate(function () {
       return FB.state.log.filter(function (entry) {
         return entry.receipt && entry.receipt.eventId === 'child_fever';
@@ -745,3 +745,24 @@ test('event option buttons do not render helper desc text under label',
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText('Guaranteed');
   });
+
+
+test('Details opens during the input guard while a committing choice remains blocked', async function ({ page }, testInfo) {
+  await startGame(page, testInfo);
+  await page.setViewportSize({ width:390, height:740 });
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    FB.game.auto.all = false;
+    FB.game.auto.minor = false;
+    FB.game.auto.major = false;
+    FB.ui.runEvents([{ id:'good_omen', ctx:FB.eventContext(s, {}) }]);
+    const before = FB.save.serialize();
+    const guarded = FB.ui.eventInputGuarded();
+    const details = document.querySelector('.event-details-button');
+    details.click();
+    document.querySelector('#ev-options .evopt').click();
+    return { guarded:guarded, expanded:details.getAttribute('aria-expanded'),
+      unchanged:FB.save.serialize() === before };
+  });
+  expect(result).toEqual({ guarded:true, expanded:'true', unchanged:true });
+});

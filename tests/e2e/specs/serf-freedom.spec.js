@@ -1195,3 +1195,55 @@ test('station and freedom is the single deed for both lawful routes', async func
   await expect(page.locator('[data-freedom-offer-family-price]')).toHaveCount(0);
   await expect(page.locator('[data-freedom-routes]')).not.toContainText('Petition threshold');
 });
+
+
+for (const width of [320, 390, 1440]) {
+  test('freedom portraits align with identity and price at ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:844 });
+    await page.evaluate(function () { FB.ui.showRankDetails(); });
+    const lord = page.locator('.tenure-character-link');
+    await expect(lord.locator('canvas')).toBeVisible();
+    expect(await lord.evaluate(function (node) {
+      return getComputedStyle(node).alignItems;
+    })).toBe('center');
+    await page.locator('#rank-buy-freedom').click();
+    const rows = page.locator('.freedom-relative-row');
+    expect(await rows.count()).toBeGreaterThan(0);
+    expect(await rows.evaluateAll(function (nodes) {
+      return nodes.every(function (node) {
+        const face = node.querySelector('canvas').getBoundingClientRect();
+        const copy = node.querySelector('.freedom-relative-copy').getBoundingClientRect();
+        const input = node.querySelector('input').getBoundingClientRect();
+        return input.right < face.left && face.right < copy.left &&
+          Math.abs((face.top + face.bottom) / 2 - (copy.top + copy.bottom) / 2) < 2 &&
+          node.scrollWidth <= node.clientWidth + 1;
+      });
+    })).toBe(true);
+    await rows.first().locator('input').check();
+    await expect(rows.first().locator('input')).toBeChecked();
+  });
+}
+
+
+test('purchased freedom earns gratitude only once from each newly freed relative', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    const me = s.chars[s.player.charId];
+    const parent = FB.parentsOf(s, me)[0];
+    const sibling = FB.siblingsOf(s, me)[0];
+    s.player.gold = 10000;
+    const target = { kind:'character', id:parent.id };
+    const other = { kind:'character', id:sibling.id };
+    const before = FB.standingOf(s, target);
+    const otherBefore = FB.standingOf(s, other);
+    FB.resolveSerfFreedom(s, { route:'purchase', additionalIds:[parent.id] }, {});
+    const after = FB.standingOf(s, target);
+    const unselected = FB.standingOf(s, other);
+    const repeated = FB.resolveFamilyManumission(s, parent.id);
+    FB.resolveFamilyManumission(s, sibling.id);
+    return { gain:after - before, unselected:unselected - otherBefore,
+      repeated:repeated, final:FB.standingOf(s, target) - before,
+      individual:FB.standingOf(s, other) - otherBefore };
+  });
+  expect(result).toEqual({ gain:20, unselected:0, repeated:false, final:20, individual:20 });
+});

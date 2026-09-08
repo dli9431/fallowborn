@@ -493,7 +493,7 @@ window.FB = window.FB || {};
     state.log.push(entry);
     if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
     const outcomeQueued = FB.noteOutcomeNews && FB.noteOutcomeNews(state, entry, options);
-    if (options.toast !== false && !toastSuppression && !outcomeQueued) {
+    if ((options.toast !== false || outcomeQueued) && !toastSuppression) {
       FB.fx.push({
         kind: 'toast',
         message: entry.msg || null,

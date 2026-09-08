@@ -59,6 +59,8 @@ for (const touch of [false, true]) {
         await ready(page);
         await option.click();
         await ready(page);
+        // Touch boots need no desktop tooltip node. The outcome must still open.
+        if (touch) expect(await page.locator('#tooltip').count()).toBe(0);
         await page.locator('#war-peace-confirm').click();
         expect(await page.evaluate(function () { return FB.state.player.war; })).toBeNull();
         expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(before.gold + terms.gold);
@@ -110,6 +112,9 @@ test('category automation shows voluntary peace while Resolve everything may res
     await expect(page.locator('#eventmodal')).toBeVisible();
     await ready(page);
     await page.locator('#ev-options .evopt').nth(1).click();
+    await expect(page.locator('#outcome-continue')).toHaveCount(0);
+    await expect(page.locator('#eventmodal')).toBeHidden();
+    expect(await page.evaluate(function () { return !!FB.state.player.war; })).toBe(true);
     await page.evaluate(function () {
       FB.game.setPaused(true);
       FB.game.auto.all = true;

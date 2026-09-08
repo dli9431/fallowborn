@@ -159,8 +159,8 @@ FBDATA.events.push(
   text:'You stand before your liege’s seat and ask, with every courtesy, for greater lands and title.',
   options:[
     { label:'Make your case.', desc:'The liege’s ear is open; his hand is another matter.', chance:'liege_grant',
-      success:{ text:'The liege nods slowly. “It is earned.” New lands are added to your charge — and a rich gift to the liege’s chest seals the grant.', effects:{ custom:'liege_land_grant', prestige:25, opinionLiege:-15, gold:-50, log:'Won new lands from the liege.' } },
-      failure:{ text:'“In time,” says the liege, meaning never. Courtiers hide their smiles.', effects:{ prestige:-5, opinionLiege:-8 } } }
+      success:{ text:'Your liege grants you new lands in return for your payment.', effects:{ custom:'liege_land_grant', prestige:25, opinionLiege:-15, gold:-50, log:'Won new lands from the liege.' } },
+      failure:{ text:'Your liege refuses to grant you more land.', effects:{ prestige:-5, opinionLiege:-8 } } }
   ]},
 { id:'rank_elevation_offer', title:'A Higher Dignity',
   trigger:{ never:true }, contextValidator:'rank_elevation_context_valid',
@@ -195,8 +195,8 @@ FBDATA.events.push(
   text:'You kneel before your liege with a recital of the lord of {cname}’s failures — some real, some invented — and humbly suggest the fief would serve the realm better in your hand.',
   options:[
     { label:'Press the suit.', desc:'A neighbor’s fief hangs on the liege’s mood.', chance:'county_petition',
-      success:{ text:'The liege’s jaw tightens at the name. “That fief was wasted on him.” The patent is drawn — {cname} is yours, and the court sees exactly whose star is rising.', effects:{ custom:'county_petition_grant', opinionLiege:-20, prestige:10, log:'Won a neighbor’s fief by petition.' } },
-      failure:{ text:'“You ask much,” the liege says coldly, and turns to other petitioners. The courtiers’ smiles follow you out.', effects:{ prestige:-5, opinionLiege:-8 } } }
+      success:{ text:'Your liege grants you the fief of {cname}.', effects:{ custom:'county_petition_grant', opinionLiege:-20, prestige:10, log:'Won a neighbor’s fief by petition.' } },
+      failure:{ text:'Your liege refuses your claim to {cname}.', effects:{ prestige:-5, opinionLiege:-8 } } }
   ]},
 { id:'spouse_council', title:'A Voice Behind the Throne',
   trigger:{ tierMin:3, married:true, chance:0.15 }, weight:5, cooldown:10,
@@ -426,8 +426,8 @@ FBDATA.events.push(
   text:'Fire in the night, from one end of your lands to the other. The league marches under a harvest-king of its own making, and your garrisons yield their towers rather than fight their neighbors. This is no riot — it is a war for your seat.',
   options:[
     { label:'Fight for your seat.', desc:'Everything you hold rides on one field.', chance:'battle',
-      success:{ text:'Their harvest-king falls in the first press and the host melts back to its plows. You are merciless in victory, and no one sings that song again.', effects:{ clearFlag:'df_unrest', clearFlag2:'df_league', prestige:15, popularOpinion:-10, log:'Crushed the great rising of the commons.' } },
-      failure:{ text:'Your line breaks — and when it breaks, everything breaks. You ride from the field with a dozen men and the clothes you stand in.', effects:{ custom:'df_fall', log:'Cast down by a rising of the commons.' } } },
+      success:{ text:'You defeat the uprising and retain your lands.', effects:{ clearFlag:'df_unrest', clearFlag2:'df_league', prestige:15, popularOpinion:-10, log:'Crushed the great rising of the commons.' } },
+      failure:{ text:'The uprising defeats your host, and you flee without your lands or title.', effects:{ custom:'df_fall', log:'Cast down by a rising of the commons.' } } },
     { label:'Abdicate and slip away.', desc:'Yield the lands and flee abroad with what you can carry.',
       effects:{ custom:'df_fall_flee', log:'Fled a rising of the commons.' } },
     { label:'Beg your liege’s aid. ({money:20})', require:{ isVassal:true, goldMin:20 }, desc:'His swords end it — and his price follows.',
@@ -459,8 +459,8 @@ FBDATA.events.push(
   text:'{rival} has raised a banner, and half the countryside flocks to it — the malcontents, the bought, the bored. Riders in your own colors are seen changing cloaks at the crossroads. There is no more law in this, only spears — or surrender.',
   options:[
     { label:'Meet them in the field.', desc:'One battle decides whose name the gate bears.', chance:'battle',
-      success:{ text:'The pretender’s host breaks like rotten wood, and the pretender hangs from the gate they would have entered in triumph.', effects:{ clearFlag:'df_claim', clearFlag2:'df_claim2', killRole:'rival', kinslayer:true, prestige:20, log:'Destroyed a pretender in open war.' } },
-      failure:{ text:'Your men would not stand — some would not even draw. You watch your own banner come down from the gate tower.', effects:{ custom:'df_fall', log:'Overthrown by a rival claimant.' } } },
+      success:{ text:'You defeat the pretender and secure your rule.', effects:{ clearFlag:'df_claim', clearFlag2:'df_claim2', killRole:'rival', kinslayer:true, prestige:20, log:'Destroyed a pretender in open war.' } },
+      failure:{ text:'Your army abandons you, and the rival claimant takes your lands and title.', effects:{ custom:'df_fall', log:'Overthrown by a rival claimant.' } } },
     { label:'Yield and beg terms.', desc:'Surrender the lands for your lives and your strongboxes.',
       effects:{ custom:'df_fall_flee', log:'Yielded everything to a rival claimant.' } }
   ]},
@@ -490,8 +490,8 @@ FBDATA.events.push(
   text:'You wake with a hand over your mouth and steel already moving. There are three of them, and they know the room — someone drew them a map. {god} help you, the guards are not coming.',
   options:[
     { label:'Fight for your life.', desc:'Three knives in the dark, and only your own arm.', chance:'battle',
-      success:{ text:'You take a blade through the arm and give better than you get — two flee, one dies on the floorboards, and the conspiracy dies with him. You rule from a sickbed for a season, but you rule.', effects:{ clearFlag:'df_doom', health:-2, addTrait:'scarred', prestige:10, log:'Survived the great conspiracy.' } },
-      failure:{ text:'Steel finds you again and again, and the world goes white, then strange. You wake to a physician’s face and impossible news: in the confusion your enemies have taken the seat, the keys, everything but your life.', effects:{ health:-5, addTrait:'scarred', custom:'df_fall', log:'Left for dead; the house was cast down in the night.' } } },
+      success:{ text:'You survive the conspiracy wounded, but keep your lands and title.', effects:{ clearFlag:'df_doom', health:-2, addTrait:'scarred', prestige:10, log:'Survived the great conspiracy.' } },
+      failure:{ text:'You survive the attack, but your enemies seize your lands and title.', effects:{ health:-5, addTrait:'scarred', custom:'df_fall', log:'Left for dead; the house was cast down in the night.' } } },
     { label:'Beg sanctuary of the {temple}.', desc:'Throw yourself on the mercy of {god} — and flee.',
       effects:{ piety:-10, custom:'df_fall_flee', log:'Fled into sanctuary; the lands were seized behind you.' } }
   ]}

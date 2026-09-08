@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.6';
+FB.VERSION = '1.176.7';
 FB.CHANGELOG = [
+  { v: '1.176.7', date: '2026-09-07', changes: [
+    'Significant outcomes keep their toasts and use shorter result text. Freedom purchases earn family gratitude, with clearer portraits and guidance to local intermediaries.'
+  ] },
   { v: '1.176.6', date: '2026-09-07', changes: [
     'Station and freedom brings lawful release into one deed with shorter terms and outcomes. Osric joins Quick Start with a distinctive portrait.'
   ] },

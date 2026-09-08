@@ -360,10 +360,10 @@ FBDATA.events.push(
   options:[
     { label:'Fight in the melee.', desc:'Prize and glory for the winner; bruises for the rest.', chance:'battle',
       success:{ text:'You unhorse two men and yield to none. The prize purse and the glory are yours.', effects:{ gold:12, prestige:15, skills:{mar:1}, opinion:{role:'lord', amt:8} } },
-      failure:{ text:'A mace you never saw ends your day early.', effects:{ health:-2, prestige:2 } } },
+      failure:{ text:'An injury ends your melee; the surgeon tends your wounds.', effects:{ health:-2, prestige:2 } } },
     { label:'Wager on the champion.', require:{ goldMin:5 }, desc:'{money:5} says another man bleeds for you.', chance:0.5,
-      success:{ text:'Your man carries the field.', effects:{ gold:8 } },
-      failure:{ text:'Your man eats mud in the first pass.', effects:{ gold:-5 } } }
+      success:{ text:'Your chosen champion wins, and your wager pays out.', effects:{ gold:8 } },
+      failure:{ text:'Your chosen champion loses, and so does your wager.', effects:{ gold:-5 } } }
   ]},
 { id:'hunt_with_lord', title:'The Lord’s Hunt',
   trigger:{ tierMin:2, tierMax:2, chance:0.25, professions:['noble'], religionGroups:['christian','pagan','jewish'] }, weight:8, cooldown:6,

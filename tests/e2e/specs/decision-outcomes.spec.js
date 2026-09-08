@@ -2,7 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'css/style.css', 'data/events_common.js', 'data/events_peasant.js',
-  'data/events_paths.js', 'data/events_noble.js', 'data/events_war.js',
+  'data/events_tournament.js', 'data/events_lifepaths.js', 'data/events_council.js',
+  'data/events_parliament.js', 'data/events_politics.js', 'data/events_paths.js', 'data/events_noble.js', 'data/events_war.js',
   'data/economy.js', 'data/map_data.js', 'js/main.js',
   'js/events.js', 'js/messages.js', 'js/actions.js', 'js/world.js',
   'js/ui_misc.js', 'js/ui_modals.js', 'js/keys.js', 'js/portrait.js', 'js/save.js'
@@ -65,7 +66,7 @@ for (const success of [true, false]) {
       await expect(page.locator('#ev-title')).toHaveText(success ? 'The fever breaks' : 'A child lost');
       await expect(page.locator('#ev-text')).toContainText(success ? 'The child will live' : 'The child is gone');
       await expect(page.locator('canvas.pface[data-cid="' + childId + '"]').first()).toBeVisible();
-      await expect(page.locator('.event-receipt-toast')).toHaveCount(0);
+      await expect(page.locator('.event-receipt-toast')).toBeVisible();
       const before = await page.evaluate(function (childId) {
         return { gold:FB.state.player.gold, dead:!!FB.state.chars[childId].dead,
           rng:FB.getRngState(), choices:FB.state.log.filter(function (e) { return !!e.receipt; }).length };
@@ -132,8 +133,9 @@ test('freedom service acceptance and completion have separate truthful outcomes'
     expect(completion.actual).toBe(completion.gold);
     expect(completion.tier).toBe(1);
     await expect(page.locator('#ev-title')).toHaveText('Freedom gained');
+    await expect(page.locator('#toasts .toast').first()).toBeVisible();
     await expect(page.locator('.decision-outcome-summary')).toHaveCount(1);
-    await expect(page.locator('#ev-text')).toContainText('Serf → Freeholder');
+    await expect(page.locator('#ev-text')).toContainText('rises from Serf to Freeholder');
     await expect(page.locator('#ev-text')).toContainText('Freed household head');
     await expect(page.locator('#ev-text')).toContainText('Former lord');
   });
@@ -156,6 +158,7 @@ test('purchase queues freedom while automated event decisions do not queue dupli
     });
     expect(purchase).toEqual({ resolved:true, count:1 });
     await expect(page.locator('#ev-title')).toHaveText('Freedom gained');
+    await expect(page.locator('#toasts .toast').first()).toBeVisible();
     await expect(page.locator('.decision-outcome-summary')).toHaveCount(1);
     await ready(page);
     await page.locator('#outcome-continue').click();
@@ -237,7 +240,9 @@ test('a final downfall confirms land and station lost even when it also ends a w
     await ready(page);
     await page.locator('#ev-options .evopt').first().click();
     await expect(page.locator('#ev-title')).toHaveText('Station lost');
-    await expect(page.locator('.decision-outcome-changes')).toContainText('Gentry');
+    await expect(page.locator('.decision-outcome-summary').first()).toHaveText(
+      'The uprising defeats your host, and you flee without your lands or title.');
+    await expect(page.locator('.decision-outcome-changes')).toContainText('Gentlewoman');
     expect(await page.evaluate(function () {
       return { tier:FB.state.player.tier, lands:FB.state.player.provs.length,
         duplicates:FB.state.eventQueue.filter(function (e) { return e.id === 'decision_outcome'; }).length };
@@ -283,7 +288,7 @@ test('a delayed acknowledgement does not consume a seasonal story slot or its ra
       FB.state.slotDays = [FB.state.date.day];
       const saved = JSON.parse(FB.save.serialize());
       function select(withOutcome) {
-        FB.save.restore(saved);
+        FB.save.restore(JSON.parse(JSON.stringify(saved)));
         FB.setRngState(12345678);
         if (withOutcome) FB.queueEvent(FB.state, 'decision_outcome', {
           receipt:{ schema:1, eventId:'decision_outcome', characterIds:[], impacts:[] },
@@ -301,3 +306,76 @@ test('a delayed acknowledgement does not consume a seasonal story slot or its ra
     expect(result.notified.slots).toEqual(result.baseline.slots);
     expect(result.notified.rng).toEqual(result.baseline.rng);
   });
+
+
+test('a significant manual decision retains its toast beside Continue', async function ({ page }, testInfo) {
+  await start(page, testInfo);
+  await fever(page, true);
+  await ready(page);
+  await page.locator('#ev-options .evopt').first().click();
+  await expect(page.locator('#outcome-continue')).toBeVisible();
+  await expect(page.locator('.event-receipt-toast')).toBeVisible();
+});
+
+
+test('Resolve everything still announces delayed freedom by toast', async function ({ page }, testInfo) {
+  await start(page, testInfo);
+  await page.evaluate(function () {
+    const s = FB.state;
+    FB.setPlayerTier(s, 0, { tenureFormationReason:'rank_change' });
+    FB.ensureSerfTenure(s, 'outcome_toast');
+    FB.getRole(s, 'lord', true);
+    s.player.gold = 10000;
+    s.eventQueue = [];
+    FB.game.auto.all = true;
+    FB.resolveSerfFreedom(s, { route:'purchase' }, {});
+    const queued = s.eventQueue.slice();
+    s.eventQueue = [];
+    FB.ui.runEvents(queued);
+    FB.ui.refresh();
+  });
+  await expect(page.locator('#eventmodal')).toBeHidden();
+  await expect(page.locator('#toasts')).toContainText('bought lawful freedom');
+});
+
+
+for (const success of [true, false]) {
+  test('melee outcome uses concise prose and preserves its actual consequences: ' + success, async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    await page.evaluate(function (success) {
+      const s = FB.state;
+      s.player.gold = 100;
+      s.chars[s.player.charId].health = 8;
+      const ev = FB.eventById('tournament_invitation');
+      ev.options[1].chance = success ? 1 : 0;
+      FB.ui.runEvents([{ id:ev.id, ctx:FB.eventContext(s, {}) }]);
+    }, success);
+    await ready(page);
+    await page.locator('#ev-options .evopt').nth(1).click();
+    await expect(page.locator('.decision-outcome-summary')).toHaveText(success
+      ? 'You win the melee and earn the captains’ respect.'
+      : 'An injury ends your melee; the surgeon tends your wounds.');
+    expect(await page.evaluate(function () {
+      return { gold:FB.state.player.gold, health:FB.state.chars[FB.state.player.charId].health };
+    })).toEqual({ gold:success ? 108 : 100, health:success ? 8 : 7 });
+    await expect(page.locator('.event-receipt-toast')).toBeVisible();
+  });
+}
+
+test('an outcome without authored prose shows consequences without repeating the instruction', async function ({ page }, testInfo) {
+  await start(page, testInfo);
+  await page.evaluate(function () {
+    const s = FB.state;
+    const ev = FB.eventById('tournament_invitation');
+    ev.options[1].chance = 0;
+    delete ev.options[1].failure.text;
+    s.chars[s.player.charId].health = 8;
+    FB.ui.runEvents([{ id:ev.id, ctx:FB.eventContext(s, {}) }]);
+  });
+  await ready(page);
+  await page.locator('#ev-options .evopt').nth(1).click();
+  await expect(page.locator('#outcome-continue')).toBeVisible();
+  await expect(page.locator('#ev-text')).not.toContainText('Resolved:');
+  await expect(page.locator('#ev-text')).not.toContainText('It goes poorly.');
+  await expect(page.locator('.decision-outcome-changes')).toBeVisible();
+});

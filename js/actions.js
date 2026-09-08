@@ -2776,6 +2776,7 @@ window.FB = window.FB || {};
     state.player.gold -= status.price;
     status.character.station = 1;
     delete status.character.unfree;
+    FB.adjustStanding(state, { kind:'character', id:characterId }, 20, 'freedom:purchased');
     status.character.manumission = {
       turn:state.turn || 0, year:state.date.year,
       sponsorId:state.player.charId,

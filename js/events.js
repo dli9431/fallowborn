@@ -8221,6 +8221,11 @@ window.FB = window.FB || {};
     if (Object.freeze) Object.freeze(frozen.memberIds);
     if (Object.freeze) Object.freeze(frozen);
 
+    const gratefulIds = frozen.memberIds.filter(function (id) {
+      const member = state.chars[id];
+      return id !== state.player.charId && member && !member.dead &&
+        FB.isUnfreeCharacter(state, member);
+    });
     if (status.price) state.player.gold -= status.price;
     const activeOffer = state.player.freedomOffer;
     if (status.route === 'manumission' && activeOffer === offer) {
@@ -8254,6 +8259,11 @@ window.FB = window.FB || {};
     if (status.route === 'purchase' || status.route === 'manumission') {
       state.player.prestige += 15;
       state.player.piety += 5;
+    }
+    if (status.route === 'purchase' || status.route === 'manumission') {
+      gratefulIds.forEach(function (id) {
+        FB.adjustStanding(state, { kind:'character', id:id }, 20, 'freedom:purchased');
+      });
     }
     writeFamilyFreedom(state, frozen);
     freedomChronicle(state, frozen);
@@ -11641,7 +11651,8 @@ window.FB = window.FB || {};
     const fx = option.effects || {};
     const customs = typeof fx.custom === 'string' ? fx.custom : '';
     if (/decline|clear$|plot_end$/.test(customs) ||
-        customs === 'intrigue_captive_ransom_refuse') return false;
+        customs === 'intrigue_captive_ransom_refuse' ||
+        customs === 'war_press_on') return false;
     return impacts.some(function (r) {
       return ['rank','land','holding','item','profession','faith','home','relationship','system'].indexOf(r.type) >= 0;
     }) || !!(fx.marry || fx.setFlag || fx.serfFreedom || fx.addTrait === 'pilgrim' ||
@@ -11841,7 +11852,8 @@ window.FB = window.FB || {};
       [titleBeforeEffects, optionBeforeEffects, outcomeMessage, capture.messages]).forEach(function (id) {
         if (receipt.characterIds.indexOf(id) < 0) receipt.characterIds.push(id);
       });
-    if (receipt.showOutcome && !receipt.outcome && capture.messages.length) {
+    if (receipt.showOutcome && (!receipt.outcome ||
+        (branch && !branch.text)) && capture.messages.length) {
       receipt.outcome = capture.messages[capture.messages.length - 1];
     }
     /* Reuse the established autoresolve descriptor as the ordinary-message

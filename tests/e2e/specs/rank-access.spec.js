@@ -3,6 +3,9 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
+  'js/events.js',
+  'js/ui_misc.js',
+  'css/style.css',
   'js/model.js',
   'js/ui_modals.js'
 ]);
@@ -191,3 +194,29 @@ test('a lowborn household reaches its lord through a warm intermediary ladder',
       strangerReady:false
     });
   });
+
+
+test('a serf can follow the visible Freeholder introduction and cultivate the priest', async function ({ page }) {
+  const ids = await page.evaluate(function () {
+    const s = FB.state;
+    FB.setPlayerTier(s, 0, { tenureFormationReason:'rank_change' });
+    s.player.friendContacts = {};
+    s.player.socialAttention = {};
+    s.player.courtingId = null;
+    s.player.war = null;
+    const steward = FB.getRole(s, 'steward', true);
+    const priest = FB.getRole(s, 'priest', true);
+    FB.ui.showCharModal(steward.id);
+    return { priest:priest.id, steward:steward.id };
+  });
+  await expect(page.locator('[data-social-access-route]')).toContainText('Freeholder');
+  const introduction = page.locator('[data-social-intermediary="' + ids.priest + '"]');
+  await expect(introduction.locator('canvas')).toBeVisible();
+  await introduction.click();
+  const cultivate = page.locator('[data-interaction-action="relationship.attention.assign"]');
+  await expect(cultivate).toBeEnabled();
+  await cultivate.click();
+  expect(await page.evaluate(function (id) {
+    return !!FB.state.player.socialAttention[id];
+  }, ids.priest)).toBe(true);
+});

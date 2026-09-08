@@ -1061,3 +1061,8 @@ contract. Starting children and later collateral births use its dynasty-source p
 The founder's chosen house is preserved by identifying the permitting maternal ancestor
 with that house at initial generation. Existing saved children and old backfilled ancestor
 records are not migrated. See [marriage.md](marriage.md) for the cultural agreement rules.
+
+Social-access guidance preserves the station ladder: Serfs can cultivate Freeholders
+directly, then use Warm contacts to reach Gentry and their lord. A blocked character
+sheet links an existing local priest, steward, or notable at the missing station when
+that person is reachable. This only exposes existing cultivation, with no new gate.
