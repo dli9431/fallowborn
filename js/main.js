@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.3';
+FB.VERSION = '1.176.4';
 FB.CHANGELOG = [
+  { v: '1.176.4', date: '2026-09-07', changes: [
+    'Dismissing an event leaves time paused by default. Automatically resume after events remains available in Settings, and saved preferences are preserved.'
+  ] },
   { v: '1.176.3', date: '2026-09-07', changes: [
     'Holy-war armies cross coalition and neutral forts and keep their campaign objectives. Campaign leadership updates after withdrawal, and the campaign sheet wraps cleanly on narrow screens.'
   ] },
@@ -3547,7 +3550,7 @@ FB.CHANGELOG = [
     hideBeginnerHints:false,
     hideTips:false,
     eventToastOpensChronicle:false,
-    autoResumeAfterEvents:true,
+    autoResumeAfterEvents:false,
     tipsSeen:{},
     tipsGrandfathered:false,
     onboardingStarted:false,
@@ -3594,7 +3597,7 @@ FB.CHANGELOG = [
       G.uiPrefs.hideTips = !!storedUiPrefs.hideTips;
       G.uiPrefs.eventToastOpensChronicle =
         !!storedUiPrefs.eventToastOpensChronicle;
-      G.uiPrefs.autoResumeAfterEvents = storedUiPrefs.autoResumeAfterEvents !== false;
+      G.uiPrefs.autoResumeAfterEvents = storedUiPrefs.autoResumeAfterEvents === true;
       if (storedUiPrefs.tipsSeen && typeof storedUiPrefs.tipsSeen === 'object') {
         G.uiPrefs.tipsSeen = storedUiPrefs.tipsSeen;
       }

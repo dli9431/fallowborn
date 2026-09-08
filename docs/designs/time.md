@@ -133,11 +133,12 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 `FB.worldTick` + mortality. Days auto-advance on an adjustable interval (`G.SPEEDS` /
 `G.setSpeed`, +/- keys or menu → Settings) while unpaused (`G.paused` / `G.togglePause`); death, succession,
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
-modals/dialogs. A visible event is a temporary interruption: resolving its final modal
-automatically resumes time regardless of whether normal flow, fast-forward, or a manual pause
-reached it. The browser-local Settings switch **Automatically resume after events**
-(`uiPrefs.autoResumeAfterEvents`, stored in `fb_ui`) defaults to enabled. Disabling it
-leaves time paused after the final choice until the player uses Play; the first-event
+modals/dialogs. Resolving a visible event's final modal leaves time paused by default
+until the player uses Play. The browser-local Settings switch **Automatically resume after events**
+(`uiPrefs.autoResumeAfterEvents`, stored in `fb_ui`) defaults to disabled, including
+older preferences without this setting; explicitly saved choices are preserved.
+Enabling it resumes time regardless of whether normal flow, fast-forward, or a manual pause
+reached the event; the first-event
 hint reflects this preference. An autoresolved batch opens no modal and preserves its caller's pause state.
 `G.skipAhead` fast-forwards until an event/season/death.
 Starting a fast-forward counts as letting the days flow for first-life guidance, even when

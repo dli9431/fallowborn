@@ -450,12 +450,12 @@ test('siege Chronicle progress keeps ledger precision but displays whole steps',
     expect(result.text).not.toMatch(/\d+\.\d+/);
   });
 
-for (const autoResume of [true, false]) {
+for (const autoResume of [undefined, true, false]) {
 test('event dismissal respects automatic resume ' + autoResume + ' and defers an unread batch',
   async function ({ page }) {
     await page.evaluate(function (enabled) {
       const s = FB.state;
-      FB.game.uiPrefs.autoResumeAfterEvents = enabled;
+      if (enabled !== undefined) FB.game.uiPrefs.autoResumeAfterEvents = enabled;
       s.eventQueue = [];
       FB.game.auto.all = false;
       FB.game.auto.war = false;
@@ -485,25 +485,42 @@ test('event dismissal respects automatic resume ' + autoResume + ' and defers an
   });
 }
 
-test('automatic event resume defaults on and its Settings toggle persists across reloads',
+test('automatic event resume defaults off and its Settings toggle persists across reloads',
   async function ({ page }, testInfo) {
     await page.evaluate(function () { FB.ui.showSettings(); });
     const toggle = page.locator('#set-auto-resume-events');
-    await expect(toggle).toBeChecked();
+    await expect(toggle).not.toBeChecked();
     await toggle.focus();
     await page.keyboard.press('Space');
-    await expect(toggle).not.toBeChecked();
+    await expect(toggle).toBeChecked();
+    expect(await page.evaluate(function () {
+      return JSON.parse(localStorage.getItem('fb_ui')).autoResumeAfterEvents;
+    })).toBe(true);
+    await openGame(page, testInfo);
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await expect(toggle).toBeChecked();
+    await toggle.uncheck();
     expect(await page.evaluate(function () {
       return JSON.parse(localStorage.getItem('fb_ui')).autoResumeAfterEvents;
     })).toBe(false);
     await openGame(page, testInfo);
     await page.evaluate(function () { FB.ui.showSettings(); });
     await expect(toggle).not.toBeChecked();
-    await toggle.check();
+  });
+
+test('older UI preferences without automatic event resume default to staying paused',
+  async function ({ page }, testInfo) {
+    await page.evaluate(function () {
+      const prefs = JSON.parse(localStorage.getItem('fb_ui') || '{}');
+      delete prefs.autoResumeAfterEvents;
+      localStorage.setItem('fb_ui', JSON.stringify(prefs));
+    });
+    await openGame(page, testInfo);
     expect(await page.evaluate(function () {
-      return FB.game.uiPrefs.autoResumeAfterEvents &&
-        JSON.parse(localStorage.getItem('fb_ui')).autoResumeAfterEvents;
-    })).toBe(true);
+      return FB.game.uiPrefs.autoResumeAfterEvents;
+    })).toBe(false);
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await expect(page.locator('#set-auto-resume-events')).not.toBeChecked();
   });
 
 test('detachment battles score the campaign without personal event or capture spam',
