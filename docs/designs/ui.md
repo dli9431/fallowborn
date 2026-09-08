@@ -1120,6 +1120,8 @@ The modal is centered on desktop
 and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
 Its compact heading explicitly centers its flex content and stacks the character's full
 name above **Equipment**, keeping both lines visually centered on tablet and mobile layouts.
+Self skill labels stay on one line, reserving room for the full name while the bars
+shrink to fit the narrow sidebar. Numeric values retain their own space.
 The Self overview places its skill bars beside the compact portrait; both the portrait and
 the narrow button directly beneath it open the equipment sheet. Traits sit below the
 overview, before the full identity and household details. Self and full character sheets

@@ -310,6 +310,8 @@ threshold takes precedence, followed by meeting the Mercantile threshold;
 only otherwise unaligned houses choose their strongest Magnate affinity or
 remain Independent.
 
+Network labels its Governance shortcut **Open political blocs**.
+
 Only the allegiance is durable. An annual review retains an ordinary
 affiliation unless its basis disappears or another valid interest exceeds it
 by at least 25 points. Voluntary realignment waits while any motion is

@@ -858,6 +858,7 @@ test('Network, Governance, and Estates share blocs without state or RNG drift',
         'Redress of the Aid:');
     await expect(page.locator(
       '[data-network-political-bloc]').first()).toContainText('Scutage:');
+    await expect(page.locator('#network-politics')).toHaveText('🏛 Open political blocs');
     await page.locator('#network-politics').click();
     await expect(page.locator('#governance-blocs')).toBeVisible();
     await expect(page.locator('#governance-blocs')).toContainText(

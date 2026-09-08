@@ -4796,7 +4796,7 @@ window.FB = window.FB || {};
             : FB.T('No motion is pending; current allegiances and influence are shown below.')) +
             '</div>') + networkActionHtml('politics',
           'id="network-politics" data-network-action',
-          '🏛 ' + esc(FB.T('Open political blocs in Governance…')),
+          '🏛 ' + esc(FB.T('Open political blocs')),
           esc(FB.T(
             'Review leaders, member houses, interests, influence, and any pending vote forecast.')));
       const displayedBlocs = politics.motion

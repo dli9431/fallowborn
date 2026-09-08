@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.8';
+FB.VERSION = '1.176.9';
 FB.CHANGELOG = [
+  { v: '1.176.9', date: '2026-09-08', changes: [
+    'Self skill names stay on one line in the sidebar. The Network shortcut now reads Open political blocs.'
+  ] },
   { v: '1.176.8', date: '2026-09-08', changes: [
     'Panels and dialogs share consistent labels, readable stats, and simpler collapsible sections. Self, Network, Land, and royal policy cards have clearer alignment and details.'
   ] },
