@@ -1,5 +1,36 @@
 # Events are data
 
+## Post-decision outcomes
+
+The shared resolver marks significant manual receipts for acknowledgement after
+the single effect transaction. Its allowlist covers freedom and failed flight;
+loss of land/station and bondage; peace and captivity; marriage, annulment and child
+fever; grants and offices; constitutional, diplomatic and religious settlements;
+legendary items, property/debt settlements, major plot endings, career milestones,
+long undertakings, tournament competition and multi-chapter finales. Actual rank,
+land, death, faith, home and marriage changes also qualify. Declines and ordinary
+work remain lightweight. Existing dedicated result events are excluded.
+
+Receipt metadata additively carries character ids, milestone message descriptors,
+an optional war report id and the presentation decision. Exact participants are
+captured before effects can clear courtship, relocate the household or kill someone.
+The screen uses actual impact records and authored result text; acknowledging it
+never invokes the resolver again. Custom handlers' Chronicle messages provide
+settled prose where an option has no authored result text. Automation still commits
+one ordinary receipt without an extra acknowledgement.
+
+Selected delayed Chronicle milestones queue a presentation-only `decision_outcome`
+event: freedom purchase/final service, player title lapse, war conclusion/release,
+bishop appointment/refusal, trade settlement and frontier establishment. Messages
+inside an event transaction instead join its receipt, preventing duplicate screens.
+Adjacent delayed milestones on the same day share an acknowledgement. Freedom
+terms with remaining service explicitly report the remaining days; only actual
+release celebrates Serf to Freeholder. No gameplay eligibility, research gate,
+random draw or save-format version changes are introduced by this presentation.
+Acknowledgements are removed before daily story selection, then prepended to its
+unchanged result. They consume no story slot and never delay a gameplay decision
+to a later simulated day.
+
 ## Persistent Serf Tenure & Customary Obligations
 
 Tier 0 serf households participate in a structured customary tenure model. Ten ordinary serf

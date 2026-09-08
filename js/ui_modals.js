@@ -189,7 +189,12 @@ window.FB = window.FB || {};
   }, true);
   UI.eventInputGuarded = eventInputGuarded;
   let cancelWarConfirmation = null;
+  let dismissOutcome = null;
   UI.cancelEventConfirmation = function () {
+    if (dismissOutcome) {
+      if (!eventInputGuarded()) dismissOutcome();
+      return true;
+    }
     if (!cancelWarConfirmation) return false;
     cancelWarConfirmation();
     return true;
@@ -525,6 +530,14 @@ window.FB = window.FB || {};
       const ev = FB.eventById(item.id);
       if (!ev) continue;
       item.ctx = item.ctx || {};
+      if (item.id === 'decision_outcome') {
+        const protagonist = s.chars[s.player.charId];
+        if (s.player.dead || !protagonist || protagonist.health <= 0 ||
+            item.ctx.protagonistId !== s.player.charId ||
+            !item.ctx.receipt || (FB.game.auto && FB.game.auto.all)) continue;
+        showDecisionOutcome(item.ctx.receipt);
+        return true;
+      }
       if (FB.ensureEventParticipants &&
           !FB.ensureEventParticipants(s, ev, item.ctx)) continue;
       if (FB.eventContextStillValid &&
@@ -535,6 +548,8 @@ window.FB = window.FB || {};
     }
     const dismissedEventModal = eventOpen;
     eventOpen = false;
+    dismissOutcome = null;
+    $('eventmodal').classList.remove('decision-outcome-modal');
     $('eventmodal').classList.add('hidden');
     const openAuction = auctionOpenAfterEvents;
     auctionOpenAfterEvents = false;
@@ -588,6 +603,7 @@ window.FB = window.FB || {};
     let h = '';
     let cardCount = Object.keys(carded).length;
     function participantLabel(slot) {
+      if (ev.outcome && ev.outcomeLabels && ev.outcomeLabels[slot]) return ev.outcomeLabels[slot];
       const labels = {
         lord:'Local lord', officer:'Steward', neighbor:'Neighbor',
         witness:'Witness', confidant:'Confidant', priest:'Priest',
@@ -626,7 +642,7 @@ window.FB = window.FB || {};
         detailsId + '">' + UI.charCardHtml(s, c) + '</div></div>';
     }
     function addCharacter(c, participant, allowDead) {
-      if (!c || (c.dead && !allowDead) || carded[c.id] || cardCount >= 4) return;
+      if (!c || (c.dead && !allowDead) || carded[c.id] || (!ev.outcome && cardCount >= 4)) return;
       carded[c.id] = 1;
       cardCount++;
       if (participant) {
@@ -867,6 +883,8 @@ window.FB = window.FB || {};
 
   function showEvent(ev, ctx) {
     const s = FB.state;
+    dismissOutcome = null;
+    $('eventmodal').classList.remove('decision-outcome-modal');
     eventOpen = true;
     FB.markFired(s, ev);
     $('eventmodal').classList.remove('hidden');
@@ -1122,6 +1140,125 @@ window.FB = window.FB || {};
     $('eventmodal').focus();
   }
 
+  function showDecisionOutcome(receipt) {
+    const s = FB.state;
+    eventOpen = true;
+    const modal = $('eventmodal');
+    $('tooltip').classList.add('hidden');
+    const oldToast = document.querySelector('.event-receipt-toast');
+    if (oldToast && oldToast.parentNode) oldToast.parentNode.removeChild(oldToast);
+    modal.classList.remove('hidden');
+    modal.classList.add('decision-outcome-modal');
+    const context = { state:s, viewer:s.player.charId };
+    const milestones = receipt.milestones || [];
+    const freedom = milestones.some(function (msg) {
+      return /^news\.freedom\.(purchase|manumission|manumission_service|old_custom|flight)$/.test(msg.key);
+    });
+    const report = receipt.reportId && FB.hostileReport(s, receipt.reportId);
+    const rankLoss = (receipt.impacts || []).some(function (r) {
+      return r.type === 'rank' && r.action === 'changed' && r.after < r.before;
+    });
+    let title = freedom ? FB.T('Freedom gained') :
+      (receipt.result === 'success' ? FB.T('Success') :
+        (receipt.result === 'failure' ? FB.T('Failure') : FB.T('Decision resolved')));
+    if (receipt.eventId === 'child_fever') title = receipt.result === 'success'
+      ? FB.T('The fever breaks') : FB.T('A child lost');
+    if (receipt.eventId === 'proposal_made' || receipt.eventId === 'sibling_proposal_made') {
+      title = receipt.result === 'success' ? FB.T('Wedding vows') : FB.T('Proposal refused');
+    }
+    if (receipt.eventId === 'flee_serfdom' && receipt.result === 'failure') title = FB.T('Escape failed');
+    if (report) title = hostileWarResultName(report.result, false);
+    if (rankLoss) title = FB.T('Station lost');
+    $('ev-title').textContent = title;
+    let h = '<div class="decision-outcome" data-outcome-event="' + esc(receipt.eventId) + '">';
+    if (receipt.eventId !== 'decision_outcome') {
+      h += '<p class="decision-outcome-source">' + esc(FB.renderMessage(receipt.title, context)) + '</p>';
+    }
+    const messages = [];
+    if (receipt.outcome) messages.push(receipt.outcome);
+    milestones.forEach(function (msg) {
+      if (!messages.some(function (existing) { return existing.key === msg.key; })) messages.push(msg);
+    });
+    messages.forEach(function (msg) {
+      h += '<p class="decision-outcome-summary">' + esc(FB.renderMessage(msg, context)) + '</p>';
+    });
+    if (!messages.length && receipt.option) {
+      h += '<p>' + esc(FB.T('Resolved: {choice}', {
+        choice:FB.renderMessage(receipt.option, context)
+      })) + '</p>';
+    }
+    if (freedom) h += '<p class="decision-outcome-summary">' + esc(FB.T(
+      'Serf → Freeholder. The household’s serf duties have ended.')) + '</p>';
+    const primary = [], secondary = [];
+    (receipt.impacts || []).forEach(function (r) {
+      if (FB.eventImpactVisible && !FB.eventImpactVisible(r)) return;
+      const important = ['gold','rank','land','landPlot','holding','item','health','death',
+        'home','faith','profession','relationship','system'].indexOf(r.type) >= 0;
+      (important ? primary : secondary).push(r);
+    });
+    if (primary.length) {
+      h += '<div class="event-impact-chips full decision-outcome-changes">';
+      primary.forEach(function (r) { h += consequenceChipHtml(s, r, 'resolved'); });
+      h += '</div>';
+    }
+    let details = '';
+    secondary.forEach(function (r) { details += consequenceChipHtml(s, r, 'resolved'); });
+    if (freedom) details += '<p>' + esc(FB.T(
+      'Freeholders may pursue free livelihoods and acquire land. Family landmarks records the route to freedom.')) + '</p>';
+    if (report) details += '<p>' + esc(FB.T('{wins} victories · {losses} defeats · {seasons} seasons', {
+      wins:report.wins || 0, losses:report.losses || 0, seasons:report.seasons || 0
+    })) + '</p>';
+    if (details) h += '<div class="settcard decision-outcome-details"><div class="settcard-head" tabindex="0">' +
+      '<b>' + esc(FB.T('Details')) + '</b><span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="outcome-details" ' +
+      'aria-label="' + esc(FB.T('Outcome details')) + '">?</button></span></div>' +
+      '<div id="outcome-details" class="settcard-details hidden">' + details + '</div></div>';
+    const participants = [], participantIds = {}, slots = [], labels = {};
+    (receipt.characterIds || []).forEach(function (id, i) {
+      if (!s.chars[id]) return;
+      const slot = 'person' + i;
+      participants.push({ slot:slot, allowDead:true });
+      participantIds[slot] = id;
+      slots.push(slot);
+      const role = receipt.characterRoles && receipt.characterRoles[id];
+      labels[slot] = role === 'freed'
+        ? (id === s.player.charId ? FB.T('Freed household head') : FB.T('Freed family member'))
+        : (role === 'lord' ? FB.T('Former lord') :
+          (id === s.player.charId ? FB.T('Household head') :
+            (s.chars[id].dead ? FB.T('Deceased') : FB.T('Named participant'))));
+    });
+    h += '<div class="decision-outcome-people">' + eventCharCards(s, {
+      outcome:true, outcomeLabels:labels, participants:participants, participantCards:slots
+    }, { participants:participantIds }, {}) + '</div></div>';
+    $('ev-text').innerHTML = h;
+    FB.paintFaces($('ev-text'), s);
+    bindCardInfoToggles($('ev-text'));
+    $('ev-text').querySelectorAll('[data-event-character]').forEach(function (button) {
+      button.onclick = function () {
+        const card = modal.querySelector('.modalcard');
+        UI.showCharModal(button.dataset.eventCharacter, {
+          view:'event', scrollTop:card ? card.scrollTop : 0,
+          focusCharacterId:button.dataset.eventCharacter
+        });
+      };
+    });
+    $('ev-options').innerHTML = '<button type="button" class="evopt" id="outcome-continue">' +
+      hintFor(0) + esc(FB.T('Continue')) + '</button>';
+    let acknowledged = false;
+    dismissOutcome = function () {
+      if (acknowledged || eventInputGuarded()) return;
+      acknowledged = true;
+      dismissOutcome = null;
+      nextEvent();
+      if (UI.maybeFirstEventResultTip) UI.maybeFirstEventResultTip();
+    };
+    $('outcome-continue').onclick = dismissOutcome;
+    modal.querySelector('.modalcard').scrollTop = 0;
+    armEventGuard();
+    modal.focus();
+    if (FB.game.setPaused) FB.game.setPaused(true);
+  }
+
   function chooseOption(ev, opt, ctx) {
     const s = FB.state;
     if (!FB.eventContextStillValid(s, ev, ctx)) return false;
@@ -1139,7 +1276,7 @@ window.FB = window.FB || {};
     }
     const receipt = FB.resolveEventOption(s, ev, opt, ctx, { automated:false });
     if (!receipt) return false;
-    if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
+    if (!receipt.showOutcome && UI.eventReceiptToast) UI.eventReceiptToast(receipt);
     /* A daily pick normally contains one event, but callers and restored UI
        state can still supply a batch. If the event was reached while paused,
        put the unread tail back on the authoritative queue. Closing this modal
@@ -1147,6 +1284,11 @@ window.FB = window.FB || {};
     if (FB.game && FB.game.paused && pendingEvents.length) {
       s.eventQueue = pendingEvents.concat(s.eventQueue || []);
       pendingEvents = [];
+    }
+    const me = s.chars[s.player.charId];
+    if (receipt.showOutcome && !s.player.dead && me && me.health > 0) {
+      showDecisionOutcome(receipt);
+      return true;
     }
     nextEvent();
     if (UI.maybeFirstEventResultTip) {
@@ -9910,7 +10052,7 @@ window.FB = window.FB || {};
         ? '[data-event-character="' + returnContext.focusCharacterId + '"]'
         : '.event-character-sheet';
       const control = $('eventmodal').querySelector(selector);
-      if (control) control.focus();
+      if (control) control.focus({ preventScroll:true });
     } else if (returnContext.view === 'rank-details') {
       UI.showRankDetails();
       const focusId = returnContext.focusCharacterId;

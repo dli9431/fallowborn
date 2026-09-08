@@ -1219,3 +1219,9 @@ pledges, and pregnancy fields retain historical inheritance; restore and renderi
 backfill them, and no existing child's dynasty is rewritten.
 
 Ordinary-war truces are additive format-3 state: `state.truces[JSON.stringify([realmA, realmB].sort())] = expiryTurn`. Normal settlements set 720-day protection for actual opponents, independent of ruler generation and voluntary pacts. War repair initializes missing ledgers without RNG and preserves concurrent personal-vassal and unrelated liege campaigns. Per-host `lowSupplyWarned` survives saves and clears after supply recovery.
+Post-decision outcome metadata is additive save-format-3 data. A queued
+`decision_outcome` holds a receipt, semantic character ids, message descriptors,
+optional hostile report id, protagonist id and outcome turn in its ordinary event
+context. It contains no HTML or rendered prose. Stale protagonist acknowledgements
+are discarded; Continue never reapplies the originating decision. Old saves need
+no migration, and Chronicle choice receipts remain the durable decision record.

@@ -18,7 +18,10 @@ window.FB = window.FB || {};
   const PAN = 48; // screen px per keypress
 
   function gameVisible() { return !$('game').classList.contains('hidden'); }
-  function eventOpen() { return !$('eventmodal').classList.contains('hidden'); }
+  function eventOpen() {
+    // A character sheet opened from an event owns keyboard input until Back.
+    return !$('eventmodal').classList.contains('hidden') && !genOpen();
+  }
   function genOpen() { return !$('genmodal').classList.contains('hidden'); }
   function travelOpen() {
     return FB.ui && FB.ui.travelPickerOpen && FB.ui.travelPickerOpen();

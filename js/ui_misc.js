@@ -1618,7 +1618,8 @@ window.FB = window.FB || {};
   function mobileNavSyncBackControls() {
     const layer = mobileNavLayers[mobileNavDepth];
     const eventModal = $('eventmodal');
-    const eventBlocking = eventModal && !eventModal.classList.contains('hidden');
+    const eventBlocking = eventModal && !eventModal.classList.contains('hidden') &&
+      $('genmodal').classList.contains('hidden');
     const canUse = mobileNavEmbedded && mobileLayoutNow() && mobileNavReady &&
       mobileNavDepth > 0 && !mobileNavPendingBack && !eventBlocking &&
       mobileNavCanBack(layer);

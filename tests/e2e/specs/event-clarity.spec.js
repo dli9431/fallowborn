@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'css/style.css',
   'js/events.js',
+  'js/messages.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'data/events_common.js',
@@ -287,6 +288,8 @@ test('wedding receipts retain the named suitor after marriage clears courtship',
           viewer:p.charId
         }),
         suitorParam:receipt.outcome.params.suitor,
+        showsOutcome:receipt.showOutcome,
+        keepsSuitorPortrait:receipt.characterIds.indexOf(suitor.id) >= 0,
         courtingId:p.courtingId,
         spouseLinked:suitor.spouseId === me.id
       };
@@ -295,6 +298,8 @@ test('wedding receipts retain the named suitor after marriage clears courtship',
     expect(result.rendered).toContain('Aelfred Ash');
     expect(result.rendered).not.toContain('fx.param.');
     expect(result.suitorParam).toBe('Aelfred Ash');
+    expect(result.showsOutcome).toBe(true);
+    expect(result.keepsSuitorPortrait).toBe(true);
     expect(result.courtingId).toBeNull();
     expect(result.spouseLinked).toBe(true);
   });
@@ -422,17 +427,14 @@ test('desktop choices keep side tooltips visible and separate from resolution',
     await resolveButton.click();
     await expect(dialog).toBeHidden();
     await expect(resolveButton).toBeHidden();
-    await expect(page.locator('#ev-options .evopt', { hasText:'Continue' }))
-      .toHaveCount(0);
-    var toast = page.locator('.event-receipt-toast');
-    await expect(toast).toHaveCount(1);
-    await expect(toast).toContainText('A Child Burns With Fever');
-    await toast.click();
-    await expect(page.locator('[data-chronicle-filter="choices"]'))
-      .toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#tab-log .choice-entry')).toHaveCount(1);
-    await expect(page.locator('#tab-log .choice-entry')).toContainText(
-      'Pay for a physician.');
+    await expect(page.locator('#outcome-continue')).toBeVisible();
+    await expect(page.locator('#ev-text')).toContainText('A Child Burns With Fever');
+    await expect(page.locator('.event-receipt-toast')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return FB.state.log.filter(function (entry) {
+        return entry.receipt && entry.receipt.eventId === 'child_fever';
+      }).length;
+    })).toBe(1);
   });
 
 test('touch choices use a full-size question-mark Details control without inline chips',
@@ -476,7 +478,7 @@ test('touch choices use a full-size question-mark Details control without inline
     })).toBeVisible();
   });
 
-test('event result toasts stay in the bottom-left map toast region',
+test('ordinary event result toasts stay in the bottom-left map toast region',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:740 });
     await startGame(page, testInfo);
@@ -486,8 +488,12 @@ test('event result toasts stay in the bottom-left map toast region',
     expect(await page.locator('#mapwrap').evaluate(function (map) {
       return map.getBoundingClientRect().height;
     })).toBeGreaterThanOrEqual(189);
-    await openChildFever(page);
-
+    await page.evaluate(function () {
+      FB.ui.runEvents([{ id:'good_omen', ctx:FB.eventContext(FB.state, {}) }]);
+    });
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
     await page.locator('#ev-options .event-choice .evopt').first().click();
     var toast = page.locator('.event-receipt-toast');
     await expect(toast).toHaveCount(1);

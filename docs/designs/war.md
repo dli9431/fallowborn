@@ -1,5 +1,12 @@
 # Wars
 
+Player war conclusions use the shared post-decision outcome acknowledgement.
+Peace decisions combine their settled receipt with the final campaign result;
+automatic campaign endings queue the same presentation from Chronicle milestones.
+Conquest and loss identify the actual county, and the existing report supplies
+the field record. Battle result events remain their own acknowledgement, without
+a second screen. Resolve everything skips the additional presentation.
+
 ## Causes and defensive alliances
 
 Player offensive wars require a semantic cause. `FB.warCauses(state)` returns cause

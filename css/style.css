@@ -5645,3 +5645,13 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 @media (pointer:coarse), (max-width:820px), (max-height:520px) {
   .raid-target-toolbar-extra select { font-size:16px; }
 }
+/* Outcome acknowledgements retain the event sheet and shared card disclosure. */
+.decision-outcome-source { color:#e0c060; font-weight:bold; margin:0 0 8px; }
+.decision-outcome-summary { margin:8px 0; }
+.decision-outcome-changes { margin:12px 0; }
+.decision-outcome-details { margin:12px 0; }
+.decision-outcome-people { display:grid; gap:8px; margin-top:12px; min-width:0; }
+.decision-outcome-people .event-participant-card { margin:0; min-width:0; }
+.decision-outcome-modal .event-participant-identity { min-width:0; overflow-wrap:break-word; }
+.decision-outcome-modal .event-participant-identity > b { white-space:normal; }
+.decision-outcome-modal #outcome-continue { width:100%; min-height:44px; }

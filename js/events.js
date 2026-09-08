@@ -5602,7 +5602,7 @@ window.FB = window.FB || {};
     return child ? randomEventPools.childhood : randomEventPools.ordinary;
   }
 
-  FB.pickDailyEvents = function (state) {
+  function pickDailyDecision(state) {
     const out = [];
     FB.queueStationFarewellIfReady(state);
     /* One blocking decision per simulated day. Invalid entries may be skipped
@@ -5712,6 +5712,18 @@ window.FB = window.FB || {};
       out.push({ id: chosen.id, ctx: ctx, rnd: true }); // rnd marks an everyday (slot-day) event for autoresolve
     }
     return out;
+  };
+
+  FB.pickDailyEvents = function (state) {
+    const outcomes = [];
+    state.eventQueue = (state.eventQueue || []).filter(function (item) {
+      if (item.id !== 'decision_outcome') return true;
+      outcomes.push(item);
+      return false;
+    });
+    // Acknowledgements must not consume a story slot or postpone a queued
+    // gameplay choice. Selection sees exactly the same queue as before.
+    return outcomes.concat(pickDailyDecision(state));
   };
 
   /* id → event index, built on first use. Mod merges explicitly invalidate it
@@ -8172,7 +8184,14 @@ window.FB = window.FB || {};
           protagonist:protagonist, home:home
         });
     }
-    FB.news(state, message);
+    const characterRoles = {};
+    frozen.memberIds.forEach(function (id) { characterRoles[id] = 'freed'; });
+    if (frozen.lordId) characterRoles[frozen.lordId] = 'lord';
+    FB.news(state, message, {
+      outcomeCharacterIds:frozen.memberIds.concat([frozen.lordId]),
+      outcomeCharacterRoles:characterRoles,
+      outcomeImpacts:[impact('rank', { action:'changed', before:0, after:1, permanent:true })]
+    });
   }
 
   function lawfulFreedomNotice(state, frozen) {
@@ -8180,14 +8199,7 @@ window.FB = window.FB || {};
     state.player.flags = state.player.flags || {};
     if (state.player.flags.hint_serf_freed) return;
     state.player.flags.hint_serf_freed = 1;
-    if (FB.fx && FB.fx.push) {
-      FB.fx.push({
-        kind:'toast', bypassSuppression:true,
-        message:FB.msg('fx.freedom.first_lawful',
-          'Lawful freedom ends the household’s serf tenure: scheduled serf duties and serf-only restrictions no longer apply. As Freeholders, the family may pursue free livelihoods and acquire land; the first lawful freedom is recorded in Family landmarks.', {}),
-        legacyText:null
-      });
-    }
+    // The outcome screen owns this explanation and its compact disclosure.
   }
 
   FB.resolveSerfFreedom = function (state, spec, ctx) {
@@ -11535,6 +11547,156 @@ window.FB = window.FB || {};
     return changed ? FB.message(message.key, params) : message;
   }
 
+  /* Outcome presentation is additive receipt metadata, never a second effect.
+     Explicit finales also cover failed attempts that leave no lasting change. */
+  const OUTCOME_EVENTS = (
+    'manumission flee_serfdom old_custom_end attainder_sentence df_revolt df_usurp df_knife ' +
+    'manor_forfeit bondage_sentence debt_labor_sentence historic_raid_captive devastation_protection ' +
+    'war_tribute_offer war_submission_offer war_negotiated_withdrawal prison_ransom ' +
+    'intrigue_captive_ransom intrigue_hearing proposal_made sibling_proposal_made ' +
+    'sibling_courtship_approach ruler_marriage_offer polly_reunion annulment_plea child_fever ' +
+    'title_request county_petition house_claim military_barony_victory bishops_mitre ' +
+    'independence_offer vassal_revoke vassal_revolt council_charter collective_privilege_demand ' +
+    'parliament_aid_hike serf_tenure_review artifact_trial artifact_coveted artifact_found ' +
+    'guild_entry town_elder sergeant become_merchant diplomacy_warm_opening ' +
+    'diplomacy_pact_renewal diplomacy_alliance_concession diplomacy_succession_compact ' +
+    'conversion_pressure papal_absolution_petition distraint_writ distraint_seizure ' +
+    'devastation_raiders widow_settlement guild_monopoly_petition travel_capstone_trade ' +
+    'travel_capstone_pilgrimage travel_merc_contract_complete physician_book_of_remedies ' +
+    'astronomer_star_tables author_commission travel_capstone_expedition ' +
+    'tournament_invitation tournament_invitation_lord bench_mark testament_challenge'
+  ).split(' ');
+  const OUTCOME_NEWS = (
+    'news.freedom.purchase news.freedom.manumission news.freedom.manumission_service ' +
+    'news.freedom.old_custom news.freedom.flight news.freedom.family_manumission news.freedom.service_accepted ' +
+    'news.war.conquest news.war.crown_restored news.war.tribute_without_prize news.war.province_lost news.war.landless ' +
+    'news.war.reparations news.war.captured news.war.tribute news.war.peace_bought ' +
+    'news.war.submission news.war.submission_tribute news.war.negotiated_withdrawal ' +
+    'news.war.record_concluded news.war.prison_released news.war.prison_escaped ' +
+    'news.war.prison_ransomed news.war.prison_ceded ' +
+    'news.world.title_lapsed news.world.cast_down news.religion.bishop_refused ' +
+    'news.religion.bishop_appointed news.finance.trade_venture_matured ' +
+    'news.travel.trade_return_cargo_settled news.travel.frontier_settled'
+  ).split(' ');
+  let outcomeCapture = null;
+
+  function outcomeCharacterIds(state, ev, option, ctx, messages) {
+    const ids = [];
+    function id(value) {
+      if (typeof value === 'string' && state.chars[value] && ids.indexOf(value) < 0) ids.push(value);
+    }
+    id(state.player.charId);
+    function context(value) {
+      if (!value) return;
+      if (typeof value === 'string') id(value);
+      else if (typeof value === 'object') for (const key in value) context(value[key]);
+    }
+    context(ctx);
+    const raw = JSON.stringify([ev && ev.title, ev && ev.text, option]);
+    for (const role of RECEIPT_ROLE_PARAMS) {
+      if (raw.indexOf('{' + role + '}') < 0) continue;
+      const c = FB.getRole(state, role, false);
+      if (c) id(c.id);
+    }
+    // Message descriptors freeze names before marriage, death, or flight can
+    // clear a role. Match those exact names without materializing new people.
+    const names = Object.create(null);
+    function params(value) {
+      if (typeof value === 'string') names[value] = true;
+      else if (value && typeof value === 'object') for (const key in value) params(value[key]);
+    }
+    params(messages);
+    if (messages) {
+      const matches = Object.create(null);
+      for (const cid in state.chars) {
+        const c = state.chars[cid];
+        const full = FB.fullName(c);
+        [c.name, full].forEach(function (name) {
+          if (!names[name]) return;
+          if (matches[name] === undefined) matches[name] = cid;
+          else if (matches[name] !== cid) matches[name] = null;
+        });
+      }
+      for (const name in matches) id(matches[name]);
+    }
+    return ids;
+  }
+
+  FB.eventNeedsOutcome = function (ev, option, receipt) {
+    if (!ev || !receipt || receipt.automated || ev.id === 'decision_outcome' ||
+        ev.id === 'wardeath_friend' || ev.id === 'child_born_flavor' ||
+        /^rank_elevation_|^field_battle_|^ghw_field_battle_/.test(ev.id) ||
+        ev.contextValidator === 'parliament_motion_context_valid') return false;
+    if (receipt.milestones && receipt.milestones.length) return true;
+    const impacts = receipt.impacts || [];
+    if (impacts.some(function (r) {
+      return r.type === 'rank' || r.type === 'land' || r.type === 'death' ||
+        r.type === 'faith' || r.type === 'home' ||
+        (r.type === 'relationship' && r.action === 'spouse_changed');
+    })) return true;
+    if (OUTCOME_EVENTS.indexOf(ev.id) < 0 && !/^plot_/.test(ev.id)) return false;
+    // Declines and chapter preparation are not milestones. Chance finales
+    // remain visible on failure, even when there is no numeric consequence.
+    if (option.chance !== undefined) return true;
+    const fx = option.effects || {};
+    const customs = typeof fx.custom === 'string' ? fx.custom : '';
+    if (/decline|clear$|plot_end$/.test(customs) ||
+        customs === 'intrigue_captive_ransom_refuse') return false;
+    return impacts.some(function (r) {
+      return ['rank','land','holding','item','profession','faith','home','relationship','system'].indexOf(r.type) >= 0;
+    }) || !!(fx.marry || fx.setFlag || fx.serfFreedom || fx.addTrait === 'pilgrim' ||
+      customs && !/travel_capstone_done/.test(customs));
+  };
+
+  FB.noteOutcomeNews = function (state, entry, options) {
+    if (!entry.msg || !state.player || state.player.dead) return;
+    if (outcomeCapture && outcomeCapture.state === state) {
+      if (!entry.receipt) outcomeCapture.messages.push(entry.msg);
+      if (OUTCOME_NEWS.indexOf(entry.msg.key) >= 0) {
+        outcomeCapture.milestones.push(entry.msg);
+        if (options.hostileReportId) outcomeCapture.reportId = options.hostileReportId;
+        (options.outcomeCharacterIds || []).forEach(function (id) {
+          if (outcomeCapture.characterIds.indexOf(id) < 0) outcomeCapture.characterIds.push(id);
+        });
+        const roles = options.outcomeCharacterRoles || {};
+        for (const id in roles) outcomeCapture.characterRoles[id] = roles[id];
+      }
+      return;
+    }
+    if (OUTCOME_NEWS.indexOf(entry.msg.key) < 0 || !FB.eventById('decision_outcome')) return;
+    const ids = outcomeCharacterIds(state, null, null, {}, [entry.msg]);
+    (options.outcomeCharacterIds || []).forEach(function (id) {
+      if (state.chars[id] && ids.indexOf(id) < 0) ids.push(id);
+    });
+    const receipt = {
+      schema:1, eventId:'decision_outcome', result:'none', automated:false,
+      title:FB.msg('fx.outcome.title', 'Outcome', {}), outcome:entry.msg,
+      option:null, impacts:options.outcomeImpacts || [], characterIds:ids, milestones:[entry.msg],
+      characterRoles:options.outcomeCharacterRoles || {},
+      reportId:options.hostileReportId || null
+    };
+    // A peace may release a captive and end the war in the same transaction.
+    // Keep one acknowledgement for adjacent milestones on the same day.
+    const queue = state.eventQueue || [];
+    const last = queue[queue.length - 1];
+    if (last && last.id === 'decision_outcome' && last.ctx.outcomeTurn === state.turn &&
+        last.ctx.protagonistId === state.player.charId) {
+      const previous = last.ctx.receipt;
+      previous.milestones.push(entry.msg);
+      previous.outcome = entry.msg;
+      previous.reportId = receipt.reportId || previous.reportId;
+      previous.impacts = previous.impacts.concat(receipt.impacts);
+      previous.characterRoles = previous.characterRoles || {};
+      for (const id in receipt.characterRoles) previous.characterRoles[id] = receipt.characterRoles[id];
+      ids.forEach(function (id) {
+        if (previous.characterIds.indexOf(id) < 0) previous.characterIds.push(id);
+      });
+    } else {
+      FB.queueEvent(state, 'decision_outcome', { receipt:receipt, outcomeTurn:state.turn });
+    }
+    return true;
+  };
+
   /* One roll, one effect order, one durable receipt. Manual event buttons and
      autoresolve both call this function; callers only decide how to present
      the returned receipt and when to advance to the next queued dialog. */
@@ -11568,6 +11730,10 @@ window.FB = window.FB || {};
       ? FB.eventMessage(state, state.player.charId, ev,
         'options.' + optionIndex + '.label', ctx)
       : FB.msg('fx.event.autoresolve.default_choice', 'So it goes.', {});
+    const previousCapture = outcomeCapture;
+    const capture = { state:state, messages:[], milestones:[], reportId:null, characterRoles:{},
+      characterIds:outcomeCharacterIds(state, ev, option, ctx, null) };
+    outcomeCapture = capture;
     if (FB.suppressNewsToasts) FB.suppressNewsToasts(true);
     const oldUiSuppression = FB.ui && FB.ui.suppressEventEffectToasts;
     if (FB.ui) FB.ui.suppressEventEffectToasts = true;
@@ -11592,6 +11758,7 @@ window.FB = window.FB || {};
         ledgers.push(FB.applyEffects(state, branch.effects, ctx, ev));
       }
     } finally {
+      outcomeCapture = previousCapture;
       if (FB.ui) FB.ui.suppressEventEffectToasts = oldUiSuppression;
       if (FB.suppressNewsToasts) FB.suppressNewsToasts(false);
     }
@@ -11665,6 +11832,18 @@ window.FB = window.FB || {};
       outcome:outcomeMessage,
       impacts:FB.mergeEventImpacts(ledgers)
     };
+    receipt.characterIds = capture.characterIds;
+    receipt.characterRoles = capture.characterRoles;
+    receipt.milestones = capture.milestones;
+    receipt.reportId = capture.reportId;
+    receipt.showOutcome = FB.eventNeedsOutcome(ev, option, receipt);
+    if (receipt.showOutcome) outcomeCharacterIds(state, null, null, {},
+      [titleBeforeEffects, optionBeforeEffects, outcomeMessage, capture.messages]).forEach(function (id) {
+        if (receipt.characterIds.indexOf(id) < 0) receipt.characterIds.push(id);
+      });
+    if (receipt.showOutcome && !receipt.outcome && capture.messages.length) {
+      receipt.outcome = capture.messages[capture.messages.length - 1];
+    }
     /* Reuse the established autoresolve descriptor as the ordinary-message
        fallback. Older builds know this key and ignore the additive metadata. */
     const fallback = FB.msg('news.event.autoresolved', {

@@ -2664,6 +2664,11 @@ window.FB = window.FB || {};
     record.acceptedTurn = acceptedTurn;
     record.paidPrice = record.price;
     record.serviceEndTurn = acceptedTurn + record.serviceDays;
+    FB.news(state, FB.msg('news.freedom.service_accepted',
+      'Freedom agreement accepted. {days} days of final service remain before the household becomes free.', {
+        days:record.serviceDays
+      }), { outcomeCharacterIds:record.memberIds || [],
+        outcomeImpacts:[{ type:'gold', amount:-record.price }] });
     return record;
   };
 

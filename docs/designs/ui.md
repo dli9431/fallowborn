@@ -21,6 +21,27 @@ contract automatically; regression coverage compares field styles across screens
 
 ## Required navigation and decision presentation
 
+Whenever a UI references a specific character, show that character's portrait
+with their identity in the same visible surface. This applies to events, outcomes,
+cards, lists, dialogs, and tooltips, including deceased characters. A named person
+must not be represented by text alone. Reuse the shared portrait and character
+summary/disclosure pattern; do not generate a replacement person for a missing
+historical identity. Repeated references within one surface may share one portrait.
+
+Significant decisions retain the event sheet for a post-decision outcome with one
+**Continue** action. The result and important actual costs, losses, gains, and status
+changes remain visible. Supporting skill/Standing changes and background rules use
+the standard desktop hover/focus tooltip or compact 44px question-mark disclosure.
+Character portraits open their sheets and return to the mounted outcome with its
+scroll position and originating focus intact. Deceased participants remain visible.
+Continue, Escape, and the first event number key acknowledge the same settled result;
+none repeat its choice or effects. The input guard restarts on this transition.
+Time remains paused until acknowledgement, then follows the existing auto-resume
+preference. Automatically resolved choices retain Chronicle receipts without an
+extra outcome interruption; Resolve everything also skips delayed acknowledgements.
+Existing investiture, battle, birth, death/succession, and Estates result screens
+are not followed by duplicate result screens.
+
 Every list -> scroll -> detail/modal -> Back journey must preserve the originating
 list position, filters, sort, pagination, expanded controls, and originating focus.
 This applies to visible Back, Escape, and browser/mobile Back. Prefer retained

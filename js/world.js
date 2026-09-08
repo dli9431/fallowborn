@@ -7318,7 +7318,9 @@ window.FB = window.FB || {};
       FB.damageCountyDevelopment(state, pid);
       if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
       FB.news(state, FB.msg('news.war.conquest',
-        '🏰 {province} is yours by conquest!', { province: FB.world.byId[pid].name }));
+        '🏰 {province} is yours by conquest!', { province: FB.world.byId[pid].name }), {
+          outcomeImpacts:[{ type:'land', action:'gain', pid:pid }]
+        });
       p.prestige += FB.warPrestigeReward(w, 'conquest');
       FB.endPlayerWar(state);
       FB.checkTierPromotions(state);
@@ -7377,7 +7379,9 @@ window.FB = window.FB || {};
       if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, lost, 'war_loss');
       FB.transferProvince(state, lost, w.enemy);
       FB.news(state, FB.msg('news.war.province_lost',
-        '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));
+        '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }), {
+          outcomeImpacts:[{ type:'land', action:'lose', pid:lost }]
+        });
       if (!p.provs.length) {
         FB.setPlayerTier(state, 2);
         FB.changePlayerLiege(state, null, 'war:landless');
@@ -7397,7 +7401,9 @@ window.FB = window.FB || {};
       }
       p.gold -= 30;
       FB.news(state, FB.msg('news.war.reparations',
-        '🕊 A humiliating peace. Reparations drain your coffers.', {}));
+        '🕊 A humiliating peace. Reparations drain your coffers.', {}), {
+          outcomeImpacts:[{ type:'gold', amount:-30 }]
+        });
       p.prestige = Math.max(0, p.prestige - 20);
       FB.endPlayerWar(state);
       return true;
@@ -7584,7 +7590,9 @@ window.FB = window.FB || {};
     p.gold -= ransom;
     delete p.flags.in_prison;
     FB.news(state, FB.msg('news.war.prison_ransomed',
-      '⛓ The ransom is counted out — you ride home poorer, and free.', {}));
+      '⛓ The ransom is counted out — you ride home poorer, and free.', {}), {
+        outcomeImpacts:[{ type:'gold', amount:-ransom }]
+      });
   };
   FB.fns.prison_can_cede = function (state) {
     const p = state.player;
@@ -8202,7 +8210,9 @@ window.FB = window.FB || {};
     p.prestige += FB.warPrestigeReward(w, 'tribute');
     p.gold += 25;
     FB.news(state, FB.msg('news.war.tribute',
-      '🕊 Bled white in the field, the enemy buys peace with tribute.', {}));
+      '🕊 Bled white in the field, the enemy buys peace with tribute.', {}), {
+        outcomeImpacts:[{ type:'gold', amount:25 }]
+      });
     FB.endPlayerWar(state);
   };
   /* tribute refused: remember it for the rest of THIS war, so the envoys
@@ -8886,7 +8896,10 @@ window.FB = window.FB || {};
             FB.foundPlayerRealm(state); // restyle at the lower dignity
             FB.news(state, FB.msg('news.world.title_lapsed',
               '⬇ The style of {title} rings hollow — the world now names you one rung lower.',
-              { title: { $title: oldTitle } }));
+              { title: { $title: oldTitle } }), {
+                outcomeImpacts:[{ type:'rank', action:'changed', before:fallenTo + 1,
+                  after:fallenTo, permanent:true }]
+              });
             FB.invalidateRealmCache();
           } else if (lapsedDays >= (B.titleLapseWarnDays || 180) && !p.titleLapse.warned) {
             p.titleLapse.warned = 1;

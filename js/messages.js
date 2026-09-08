@@ -210,13 +210,18 @@ window.FB = window.FB || {};
       chroniclePackMessage(archive, receipt.title),
       chroniclePackMessage(archive, receipt.option),
       chroniclePackMessage(archive, receipt.outcome),
-      Array.isArray(receipt.impacts) ? receipt.impacts : []
+      Array.isArray(receipt.impacts) ? receipt.impacts : [],
+      receipt.characterIds ? {
+        characterIds:receipt.characterIds, milestones:receipt.milestones || [],
+        characterRoles:receipt.characterRoles || {},
+        reportId:receipt.reportId || null, showOutcome:!!receipt.showOutcome
+      } : null
     ];
   }
 
   function chronicleUnpackReceipt(archive, packed) {
     if (!Array.isArray(packed)) return null;
-    return {
+    const receipt = {
       schema:Number(packed[0]) || 1,
       eventId:packed[1] || '',
       optionIndex:packed[2] === undefined ? -1 : packed[2],
@@ -227,6 +232,14 @@ window.FB = window.FB || {};
       outcome:chronicleUnpackMessage(archive, packed[7]),
       impacts:Array.isArray(packed[8]) ? packed[8] : []
     };
+    if (packed[9] && typeof packed[9] === 'object') {
+      receipt.characterIds = packed[9].characterIds || [];
+      receipt.characterRoles = packed[9].characterRoles || {};
+      receipt.milestones = packed[9].milestones || [];
+      receipt.reportId = packed[9].reportId || null;
+      receipt.showOutcome = !!packed[9].showOutcome;
+    }
+    return receipt;
   }
 
   function chronicleCategory(entry) {
@@ -479,7 +492,8 @@ window.FB = window.FB || {};
     }
     state.log.push(entry);
     if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
-    if (options.toast !== false && !toastSuppression) {
+    const outcomeQueued = FB.noteOutcomeNews && FB.noteOutcomeNews(state, entry, options);
+    if (options.toast !== false && !toastSuppression && !outcomeQueued) {
       FB.fx.push({
         kind: 'toast',
         message: entry.msg || null,

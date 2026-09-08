@@ -1,5 +1,11 @@
 # Time, focuses & automation
 
+Post-decision acknowledgements pause the existing event sheet until Continue or
+Escape. Delayed acknowledgements are separated from the gameplay queue before
+daily selection and do not consume seasonal story slots or postpone decisions.
+Acknowledging a result consumes no day and no random draw; event auto-resume
+preferences apply after the final visible acknowledgement or decision.
+
 ## Daily time, focuses, and deeds
 
 **Time is daily** (`G.passDay` in main.js): 90-day seasons, 360-day years; `state.turn`

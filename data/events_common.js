@@ -15,6 +15,10 @@ FBDATA.events = FBDATA.events || [];
 
 FBDATA.events.push(
 
+/* Saved presentation only; the originating decision has already resolved. */
+{ id:'decision_outcome', title:'Outcome', trigger:{ never:true },
+  text:'The decision is settled.', options:[] },
+
 /* ---------- courtship & marriage ---------- */
 { id:'meet_suitor', title:'A Possible Match', charCard:'suitor',
   text:'Through kin and gossip you are introduced to {suitor}. There is a certain promise in the meeting — and marriage is how fortunes are made.',

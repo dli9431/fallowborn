@@ -2,7 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/events_war.js', 'js/events.js', 'js/world.js', 'js/armies.js',
-  'js/ui_modals.js', 'js/ui_misc.js', 'js/keys.js'
+  'js/ui_modals.js', 'js/ui_misc.js', 'js/keys.js',
+  'js/messages.js', 'js/portrait.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
@@ -63,6 +64,19 @@ for (const touch of [false, true]) {
         expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(before.gold + terms.gold);
         expect(await page.evaluate(function () { return FB.state.player.prestige; })).toBe(before.prestige + terms.prestige);
         expect(await page.evaluate(function () { return Object.keys(FB.state.truces).length; })).toBe(1);
+        await expect(page.locator('#outcome-continue')).toBeVisible();
+        await expect(page.locator('#ev-text')).toContainText('war');
+        await expect(page.locator('#ev-text canvas.pface').first()).toBeVisible();
+        const settled = await page.evaluate(function () {
+          return { gold:FB.state.player.gold, prestige:FB.state.player.prestige,
+            choices:FB.state.log.filter(function (e) { return !!e.receipt; }).length };
+        });
+        await ready(page);
+        await page.locator('#outcome-continue').click();
+        expect(await page.evaluate(function () {
+          return { gold:FB.state.player.gold, prestige:FB.state.player.prestige,
+            choices:FB.state.log.filter(function (e) { return !!e.receipt; }).length };
+        })).toEqual(settled);
       });
     }
   });

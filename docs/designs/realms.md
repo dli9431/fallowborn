@@ -1,5 +1,10 @@
 # Realms, the liege hierarchy & tiers
 
+Actual player title lapse queues the shared outcome acknowledgement with the
+previous and resulting rank. The earlier Hollow Crown warning remains a decision,
+not a claim that the title has already lapsed. Explicit investiture result events
+continue to serve as their own acknowledgement.
+
 ## Serf home authority
 
 A tier-0 household can answer to three different identities: the exact local manor lord
