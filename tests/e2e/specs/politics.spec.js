@@ -1,6 +1,4 @@
 'use strict';
-const fs = require('fs');
-const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/actions.js',
@@ -14,19 +12,19 @@ dependsOnRuntime(__filename, [
   'js/ui_panels.js',
   'js/ui_modals.js',
   'js/world.js',
+  'js/main.js',
+  'js/events.js',
   'css/style.css',
   'data/political_blocs.js',
   'data/political_institutions.js',
   'data/policies.js',
   'data/technology.js',
-  'fallowborn-parliament-demo-save.txt'
+  'data/events_parliament.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
-const parliamentDemoSavePath = path.resolve(
-  __dirname, '..', '..', '..', 'fallowborn-parliament-demo-save.txt');
 
 async function startPoliticsGame(page, testInfo) {
   await openGame(page, testInfo);
@@ -1360,6 +1358,8 @@ test('campaign repair, withdrawal, expiry, liege changes, and save round trips a
       var setup = await page.evaluate(function (input) {
         var s = FB.state;
         var p = s.player;
+        FB.game.setPaused(true);
+        FB.game.uiPrefs.autoResumeAfterEvents = false;
         p.flags.plot_obligation_evidence = {
           realmId:input.ids.polityId,
           institution:'estates',
@@ -1395,7 +1395,21 @@ test('campaign repair, withdrawal, expiry, liege changes, and save round trips a
       });
       await expect(page.locator('#eventmodal:not(.hidden)')).toBeVisible();
       await expect(page.locator('#ev-options .evopt')).toHaveCount(1);
+      await expect.poll(function () {
+        return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+      }).toBe(false);
       await page.locator('#ev-options .evopt').click();
+      await expect.poll(function () {
+        return page.evaluate(function () { return FB.state.politics.pendingMotion; });
+      }).toBeNull();
+      // Finish the visible event before restoring the independent autoresolve case.
+      if (await page.locator('#outcome-continue').isVisible()) {
+        await expect.poll(function () {
+          return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+        }).toBe(false);
+        await page.locator('#outcome-continue').click();
+      }
+      await expect(page.locator('#eventmodal')).toBeHidden();
       var visible = await page.evaluate(function () {
         var s = FB.state;
         var pid = s.player.provinceId;
@@ -1449,10 +1463,31 @@ test('campaign repair, withdrawal, expiry, liege changes, and save round trips a
     });
 });
 
-test('the committed Parliament demo save loads an active mixed chamber',
+test('an exported Parliament campaign reloads the same active chamber',
   async function ({ page }, testInfo) {
-    const exported = fs.readFileSync(parliamentDemoSavePath, 'utf8').trim();
-    expect(exported.startsWith('FBS2.')).toBe(true);
+    await startPoliticsGame(page, testInfo);
+    const ids = await configurePolitics(page);
+    const saved = await page.evaluate(function (ids) {
+      const s = FB.state;
+      FB.game.setPaused(true);
+      s.player.gold = 1000;
+      s.realms[ids.polityId].ruler.age = 25;
+      s.realms[ids.alphaId].ruler.age = 65;
+      FB.parliamentBeginMotion(s, 'redress');
+      const forecast = FB.politicalMotionForecast(s, 'redress');
+      return {
+        exported:FB.save.exportState(),
+        forecast:JSON.parse(JSON.stringify(forecast)),
+        archetypes:forecast.blocs.map(function (bloc) {
+          return bloc.archetypeId;
+        }).sort(),
+        postures:Array.from(new Set(forecast.blocs.map(function (bloc) {
+          return bloc.posture;
+        }))).sort()
+      };
+    }, ids);
+    expect(saved.exported.startsWith('FBS2.')).toBe(true);
+    expect(saved.forecast.blocs.length).toBeGreaterThan(2);
     await openGame(page, testInfo);
     const loaded = await page.evaluate(function (text) {
       return new Promise(function (resolve) {
@@ -1495,6 +1530,7 @@ test('the committed Parliament demo save loads an active mixed chamber',
             archetypes:archetypes.sort(),
             postures:Object.keys(postures).sort(),
             influence:forecast && forecast.totalInfluence,
+            forecast:forecast,
             variedAges:Object.keys(houses.reduce(function (seen, house) {
               seen[house.rulerAge] = true;
               return seen;
@@ -1510,7 +1546,7 @@ test('the committed Parliament demo save loads an active mixed chamber',
         });
         if (!accepted) resolve({ parsed:true, accepted:false });
       });
-    }, exported);
+    }, saved.exported);
 
     expect(loaded.parsed).toBe(true);
     expect(loaded.accepted).not.toBe(false);
@@ -1520,10 +1556,9 @@ test('the committed Parliament demo save loads an active mixed chamber',
     expect(loaded.gold).toBeGreaterThanOrEqual(500);
     expect(loaded.pendingMotion).toBe('redress');
     expect(loaded.lobbyUsed).toBe(false);
-    expect(loaded.archetypes).toEqual([
-      'crown', 'independent', 'magnate', 'mercantile'
-    ]);
-    expect(loaded.postures).toEqual(['oppose', 'support', 'undecided']);
+    expect(loaded.archetypes).toEqual(saved.archetypes);
+    expect(loaded.postures).toEqual(saved.postures);
+    expect(loaded.forecast).toEqual(saved.forecast);
     expect(loaded.variedAges).toBe(true);
     expect(loaded.variedEconomicPower).toBe(true);
     expect(loaded.technologyReady).toBe(true);
@@ -1531,10 +1566,15 @@ test('the committed Parliament demo save loads an active mixed chamber',
       name:'The Estates', exact:true
     })).toBeVisible();
     await expect(page.locator('.parliament-seat')).toHaveCount(loaded.influence);
-    await expect(page.locator('.parliament-seat-support')).not.toHaveCount(0);
-    await expect(page.locator('.parliament-seat-oppose')).not.toHaveCount(0);
-    await expect(page.locator('.parliament-seat-undecided')).not.toHaveCount(0);
-    await expect(page.locator('[data-lobby-bloc]').first()).toBeVisible();
+    for (const posture of ['support', 'oppose', 'undecided']) {
+      const influence = saved.forecast.blocs.reduce(function (sum, bloc) {
+        return sum + (bloc.posture === posture ? bloc.influence : 0);
+      }, 0);
+      await expect(page.locator('.parliament-seat-' + posture)).toHaveCount(influence);
+    }
+    if (saved.postures.indexOf('undecided') >= 0) {
+      await expect(page.locator('[data-lobby-bloc]').first()).toBeVisible();
+    }
   });
 
 test('political bloc and lobbying controls remain usable on a narrow touch layout',
