@@ -605,7 +605,7 @@ window.FB = window.FB || {};
     marks.sort(function (a, b) { return String(a.id).localeCompare(String(b.id)); });
     return {sickness:sickness,marks:marks};
   }
-  function generatedHair(spec, profile, identity) {
+  function generatedHair(spec, profile, identity, naturalColor) {
     var family, fair = saltedUnit(identity,'identity-hair',1);
     var red = saltedUnit(identity,'identity-hair',2);
     var roll = saltedUnit(identity,'identity-hair',3);
@@ -620,6 +620,7 @@ window.FB = window.FB || {};
       ? (roll < .67 ? HAIR_RGB.black : HAIR_RGB.darkBrown)
       : (roll < .25 ? HAIR_RGB.black : roll < .55 ? HAIR_RGB.darkBrown
         : roll < .82 ? HAIR_RGB.brown : HAIR_RGB.chestnut);
+    if (naturalColor && HAIR_RGB[naturalColor]) family = HAIR_RGB[naturalColor];
     var gray = smoothV2(44,74,spec.age +
       (saltedUnit(identity,'identity-gray',0)*2-1)*9);
     var hair = rgbMixV2(family,[216,212,202],gray);
@@ -748,7 +749,10 @@ window.FB = window.FB || {};
       : (hp <= 4 || ailments.sickness || legacyIll ? 'sick' : 'hale');
     var expressionClass = hasTrait(c,'cruel') || hasTrait(c,'wrathful')
       ? 'guarded' : (hasTrait(c,'kind') || hasTrait(c,'generous') ? 'warm' : 'neutral');
-    var identity = hashOf((c.id || '') + '|' + (c.name || ''));
+    var authored = c.portraitProfile && FBDATA.portraitProfiles &&
+      Object.prototype.hasOwnProperty.call(FBDATA.portraitProfiles,c.portraitProfile)
+      ? FBDATA.portraitProfiles[c.portraitProfile] : null;
+    var identity = hashOf(authored ? authored.identity : (c.id || '') + '|' + (c.name || ''));
     var source = opts.loadout !== undefined ? opts.loadout
       : (state && FB.loadoutReadOnly ? FB.loadoutReadOnly(state,c.id) : {});
     var loadout = {}, slots = frame === 'figure' ? VISIBLE_SLOTS : BUST_SLOTS;
@@ -761,6 +765,7 @@ window.FB = window.FB || {};
     }
     var pigment = clampV2(profile.tone +
       (saltedUnit(identity,'identity-skin',0)-.5)*.9,0,4);
+    if (authored && typeof authored.pigment === 'number') pigment = clampV2(authored.pigment,0,4);
     var eyeRoll = saltedUnit(identity,'identity-eye',0);
     var eyeKey = pigment < 1.4
       ? (eyeRoll < .3 ? 'blue' : eyeRoll < .45 ? 'green'
@@ -809,7 +814,17 @@ window.FB = window.FB || {};
       cultureHue:hashOf(culture)%360,skin:skinColors({tone:pigment},health),
       cloth:clothColors(tier,profession,saltedUnit(identity,'wardrobe-cloth',0)*2-1)
     };
-    spec.hair = generatedHair(spec,profile,identity);
+    if (authored) {
+      ['faceWidth','jaw','chin','cheek','eyeSize','eyeSpacing','browWeight',
+        'noseW','noseLen','mouthW','lipFull','yaw','bgHue'].forEach(function (key) {
+        if (typeof authored[key] === 'number' && isFinite(authored[key])) spec[key] = authored[key];
+      });
+      if (EYE_RGB[authored.eyeColor]) {
+        spec.eyeKey = authored.eyeColor;
+        spec.eye = EYE_RGB[authored.eyeColor];
+      }
+    }
+    spec.hair = generatedHair(spec,profile,identity,authored && authored.hairColor);
     spec.background={top:'hsl('+spec.bgHue+',24%,29%)',
       bottom:'hsl('+((spec.bgHue+22)%360)+',27%,12%)'};
     spec.cloth.culture='hsl('+spec.cultureHue+',28%,54%)';
@@ -835,6 +850,14 @@ window.FB = window.FB || {};
     }
     var appearanceSource = Object.prototype.hasOwnProperty.call(opts,'appearance')
       ? opts.appearance : c.appearance;
+    if (authored && authored.appearance) {
+      var baselineAppearance = normalizedAppearance(spec,authored.appearance);
+      if (baselineAppearance.hairStyle) spec.hairStyle = baselineAppearance.hairStyle;
+      if (baselineAppearance.beardKind) {
+        spec.beardKind = baselineAppearance.beardKind;
+        spec.beardCut = APPEARANCE_BEARD_RENDER[baselineAppearance.beardCut] || 'full';
+      }
+    }
     var appearance = normalizedAppearance(spec,appearanceSource);
     if (appearance.hairStyle) spec.hairStyle = appearance.hairStyle;
     if (appearance.beardKind) {
@@ -847,6 +870,8 @@ window.FB = window.FB || {};
     spec.hwTrim = clampV2(.2+saltedUnit(identity,'wardrobe-hw-trim',0)*.6+
       (tier >= 4 ? .2 : 0),0,1);
     spec.headwear = generatedHeadwear(spec,identity);
+    if (authored && authored.bareheadedSerf && tier === 0 &&
+        (profession === 'farmer' || profession === 'none')) spec.headwear = 'none';
     if (opts.suppressHeadwear) spec.headwear = 'none';
     var hwVariants = HEADWEAR_VARIANTS[spec.headwear];
     spec.headwearVariant = hwVariants
@@ -864,6 +889,7 @@ window.FB = window.FB || {};
       equipmentKeys.join(','),opts.transparent?'transparent':'opaque',
       opts.suppressEquipment?'no-equipment':'equipment',
       opts.suppressHeadwear?'no-headwear':'headwear'];
+    if (authored) parts.push(keyToken(c.portraitProfile),JSON.stringify(authored));
     return {key:parts.join('|'),frame:frame,spec:spec,loadout:loadout,
       transparent:!!opts.transparent,suppressEquipment:!!opts.suppressEquipment};
   }

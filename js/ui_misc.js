@@ -3029,10 +3029,10 @@ window.FB = window.FB || {};
   UI.maybeMakingLandTip = function () {
     const s = FB.state;
     const needsFreedom = s && s.player && s.player.tier === 0;
-    const deed = needsFreedom ? 'buy_freedom' : 'buy_land';
+    const deed = needsFreedom ? 'review_serf_tenure' : 'buy_land';
     const exposed = UI.revealDeedAction && UI.revealDeedAction(deed);
     const text = needsFreedom
-      ? '💡 Land comes after freedom. In Rank & Realm, petition for exact terms or save to Buy freedom outright; once free, Buy a plot of land appears in the same section.'
+      ? '💡 Land comes after freedom. In Rank & Realm, open Review station & freedom to arrange your release; once free, Buy a plot of land appears in the same section.'
       : '💡 In Rank & Realm, use Buy a plot of land to purchase your first plot. Plots held together in one settlement are more productive.';
     return UI.maybeTip('making-land', text,
       exposed ? '#tab-actions [data-action-id="' + deed + '"]' :

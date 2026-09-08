@@ -464,8 +464,8 @@ test('purchase selection and a character sheet can manumit exact relatives',
     await expect(page.locator('[data-freedom-purchase-sheet]'))
       .toContainText('Benefits');
     await page.locator('[data-freedom-relative="' + ids.parent + '"]').check();
-    await expect(page.locator('[data-freedom-family-price]'))
-      .toContainText('Selected parent or sibling shares 1 x');
+    await expect(page.locator('[data-freedom-family-price]')).toHaveCount(0);
+    await expect(page.locator('[data-freedom-live-price]')).not.toBeEmpty();
     await page.locator('#freedom-purchase-confirm').click();
     await waitForUiRefresh(page);
 
@@ -990,8 +990,7 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     await page.locator('#rank-petition-freedom').click();
     await expect(page.getByRole('heading', { name:'Terms of freedom' }))
       .toBeVisible();
-    await expect(page.locator('[data-freedom-offer-family-price]'))
-      .toContainText('spouse shares 1 × 125');
+    await expect(page.locator('[data-freedom-offer-family-price]')).toHaveCount(0);
     await expect(page.locator('#freedom-offer-accept')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('heading', { name:'Station & home' }))
@@ -1151,8 +1150,9 @@ test('the petition sheet discloses optional advocacy before creation and preserv
       '[data-freedom-advocate-preview="' + expected.stewardId + '"]');
     await expect(preview).toBeVisible();
     await expect(preview).toContainText(expected.stewardName);
-    await expect(preview).toContainText('effective lord Standing 44');
-    await expect(preview).toContainText('Changes the offered term band');
+    await expect(preview).toContainText('Secures better terms.');
+    await expect(preview.locator('canvas')).toHaveCount(1);
+    await expect(preview).not.toContainText('effective lord Standing');
     await expect(page.locator('#freedom-petition-create'))
       .toContainText('without a supporter');
     const choose = page.locator(
@@ -1163,5 +1163,35 @@ test('the petition sheet discloses optional advocacy before creation and preserv
     await expect(page.locator('[data-freedom-offer-advocacy]'))
       .toContainText(expected.stewardName);
     await expect(page.locator('[data-freedom-offer-advocacy]'))
-      .toContainText('Lord 34 + advocate 10 = effective 44');
+      .not.toContainText('effective');
+    await expect(page.locator('[data-freedom-offer-family-price]')).toHaveCount(0);
+    await expect(page.locator('[data-freedom-offer-advocacy] canvas')).toHaveCount(1);
   });
+
+
+test('station and freedom is the single deed for both lawful routes', async function ({ page }) {
+  await page.evaluate(function () {
+    FB.state.player.gold = 10000;
+    const lord = FB.getRole(FB.state, 'lord', true);
+    const target = { kind:'character', id:lord.id };
+    FB.adjustStanding(FB.state, target, 40 - FB.standingOf(FB.state, target), 'test:freedom_routes');
+    FB.runInstant(FB.state, 'review_serf_tenure');
+  });
+  const ids = await page.evaluate(function () {
+    return FB.listInstants(FB.state).map(function (row) { return row.a.id; });
+  });
+  expect(ids).toContain('review_serf_tenure');
+  expect(ids).not.toContain('petition_freedom');
+  expect(ids).not.toContain('buy_freedom');
+  await page.locator('#rank-buy-freedom').click();
+  await expect(page.locator('[data-freedom-purchase-sheet]')).toBeVisible();
+  await expect(page.locator('[data-freedom-family-price]')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await page.locator('#rank-petition-freedom').click();
+  await page.locator('#freedom-petition-create').click();
+  await expect(page.locator('[data-freedom-offer-price]')).toBeVisible();
+  await expect(page.locator('[data-freedom-offer-service]')).toBeVisible();
+  await expect(page.locator('[data-freedom-offer-expiry]')).toBeVisible();
+  await expect(page.locator('[data-freedom-offer-family-price]')).toHaveCount(0);
+  await expect(page.locator('[data-freedom-routes]')).not.toContainText('Petition threshold');
+});

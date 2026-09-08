@@ -3083,6 +3083,7 @@ window.FB = window.FB || {};
         h += kv('Current lord', view.lordId
           ? '<button type="button" class="panel-inline-link tenure-character-link" ' +
             'data-tenure-character="' + esc(view.lordId) + '">' +
+            (s.chars[view.lordId] ? FB.faceTag(s.chars[view.lordId], 44, 50) : '') +
             esc(view.lordName) + '</button>'
           : esc(view.lordName));
       } else {
@@ -3156,10 +3157,12 @@ window.FB = window.FB || {};
             })) + '</div>';
           }
         }
-        h += '<button type="button" class="btn" id="rank-petition-freedom"' +
-          (petition && petition.ready ? '' : ' disabled') + '>' +
+        h += '<div class="gm-list"><button type="button" class="actionbtn" id="rank-buy-freedom">' +
+          esc(FB.T('Purchase freedom')) + '</button>' +
+          '<button type="button" class="actionbtn" id="rank-petition-freedom"' +
+          (offer || (petition && petition.ready) ? '' : ' disabled') + '>' +
           esc(offer ? FB.T('Review freedom terms…') :
-            FB.T('Petition for terms of freedom…')) + '</button>' +
+            FB.T('Ask for terms')) + '</button></div>' +
           (petition && !petition.ready
             ? '<p class="adesc" data-freedom-petition-reason>' +
               esc(petitionReason) + '</p>' : '') + '</div>';
@@ -3180,6 +3183,11 @@ window.FB = window.FB || {};
       replacing ? { replaceView:true, noFocus:true } : undefined);
     rankDetailsSignature = FB.serfTenurePresentationSignature
       ? FB.serfTenurePresentationSignature(s) : null;
+    FB.paintFaces($('gm-body'), s);
+    const freedomPurchase = $('rank-buy-freedom');
+    if (freedomPurchase) freedomPurchase.addEventListener('click', function () {
+      UI.showFreedomPurchase();
+    });
     const freedomPetition = $('rank-petition-freedom');
     if (freedomPetition) freedomPetition.addEventListener('click', function () {
       if (UI.showFreedomPetition) UI.showFreedomPetition();

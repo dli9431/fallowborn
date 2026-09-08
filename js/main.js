@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.5';
+FB.VERSION = '1.176.6';
 FB.CHANGELOG = [
+  { v: '1.176.6', date: '2026-09-07', changes: [
+    'Station and freedom brings lawful release into one deed with shorter terms and outcomes. Osric joins Quick Start with a distinctive portrait.'
+  ] },
   { v: '1.176.5', date: '2026-09-07', changes: [
     'Significant decisions now show their outcomes with character portraits and clear consequences. Freedom, war endings, and other lasting milestones remain visible until acknowledged.'
   ] },
@@ -2325,6 +2328,7 @@ FB.CHANGELOG = [
     canvas.height = Math.round(170 * ratio);
     FB.paintPortrait(canvas, {
       id:'quick-start-' + definition.id,
+      portraitProfile:definition.portraitProfile,
       name:definition.characterName,
       sex:definition.sex,
       culture:details.community.culture,
@@ -2953,6 +2957,20 @@ FB.CHANGELOG = [
       station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
     });
     me.health = 8;
+    /* Match ordinary start-code choices too, so replay preserves the face
+       without introducing a second code format or touching the seeded stream. */
+    for (const definition of (FBDATA.quickStarts || [])) {
+      if (definition.portraitProfile && definition.bookmarkId === bookmark.id &&
+          sc.id === 'serf' && preset.id === 'standard' &&
+          definition.provinceId === provId && definition.characterName === name &&
+          definition.sex === sex && definition.culture === cultureId &&
+          definition.religion === religionId &&
+          pr.settlements && pr.settlements[settIdx] &&
+          pr.settlements[settIdx].site === definition.settlementSite) {
+        me.portraitProfile = definition.portraitProfile;
+        break;
+      }
+    }
     me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex);
     for (const skill in (startEffects.skills || {})) {
       if (Object.prototype.hasOwnProperty.call(startEffects.skills, skill)) {

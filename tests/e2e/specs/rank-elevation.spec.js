@@ -151,6 +151,8 @@ test('rank launchers defer every eligibility scan until their sheet opens',
     const result = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
+      FB.setPlayerTier(s, 0, { tenureFormationReason:'rank_change' });
+      FB.ensureSerfTenure(s, 'rank_launcher_test');
       const originalRankStatus = FB.rankElevationStatus;
       const originalPetitionStatus = FB.freedomPetitionStatus;
       const originalPurchaseStatus = FB.freedomPurchaseStatus;
@@ -173,7 +175,7 @@ test('rank launchers defer every eligibility scan until their sheet opens',
         return originalPurchaseQuote.apply(FB, arguments);
       };
       const ranks = [
-        { tier:0, ids:['petition_freedom', 'buy_freedom'] },
+        { tier:0, ids:['review_serf_tenure'] },
         { tier:1, ids:['declare_manor'] },
         { tier:2, ids:['petition_barony'] },
         { tier:3, ids:['petition_liege'] },
@@ -225,10 +227,8 @@ test('rank launchers defer every eligibility scan until their sheet opens',
     });
 
     expect(result.launcherStatuses).toEqual([
-      { id:'petition_freedom', shown:true, can:true,
-        desc:'Review a lawful petition from Serf to Freeholder.' },
-      { id:'buy_freedom', shown:true, can:true,
-        desc:'Review a family charter from Serf to Freeholder.' },
+      { id:'review_serf_tenure', shown:true, can:true,
+        desc:'Review your station, home, current lord, and lawful routes to freedom.' },
       { id:'declare_manor', shown:true, can:true,
         desc:'Review recognition from Freeholder to Gentry.' },
       { id:'petition_barony', shown:true, can:true,
@@ -242,7 +242,7 @@ test('rank launchers defer every eligibility scan until their sheet opens',
       rank:0, petition:0, purchase:0, quote:0
     });
     expect(result.travelLaunchers).toEqual([
-      true, true, true, true, true, true
+      true, true, true, true, true
     ]);
     expect(result.afterOpen.rank).toBeGreaterThan(0);
     expect(result.afterOpen.petition).toBe(0);

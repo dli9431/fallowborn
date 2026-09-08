@@ -112,7 +112,8 @@ them relevant to a player decision.
 
 Rank & Realm exposes this sheet through the read-only **Review station & freedom** action.
 The Freedom section shows the current household purchase price without its calculation,
-plus one petition/review control. A disabled petition gets a short actionable reason rather
+plus purchase and petition/review controls. This is the only freedom Deed; neither
+route has a separate launcher in the Deeds list. A disabled petition gets a short actionable reason rather
 than a numeric Standing threshold. A current offer retains only its price, service, expiry,
 acceptance blocker, or active-service completion date; current gold, affordability rows,
 family-share arithmetic, issuer metadata, and tenure revision are omitted. The stable
@@ -150,9 +151,12 @@ creating terms changes only the saved offer, Back returns to the explanation, an
 Escape, or Not now leaves terms unchanged. Native controls retain keyboard activation and
 44-pixel touch height at a 390-CSS-pixel viewport.
 Before creating an offer, eligible already-known stewards and priests appear in stable
-role order as optional advocates. Each preview discloses +10 effective Standing and says
-whether it changes the offered term band; choosing no supporter remains explicit. A saved
-supported offer names the advocate and shows the actual-plus-bonus Standing snapshot.
+role order as optional advocates with portraits. Each preview says only whether support
+improves the terms. Terms and purchase screens show the exact price and commitment,
+without family-share arithmetic or Standing calculations. The saved offer shows its
+supporter's portrait and identity. Freedom acknowledgements use one concise release
+sentence, actual consequences, and portraits; full messages remain in the Chronicle.
+
 
 Events render every living bound participant named by their selected prose or explicit
 card list exactly once. A compact participant strip keeps portrait, identity, story role,
@@ -743,12 +747,15 @@ the persistent, localized **New version available** status banner. Its **Save an
 writes the current playable life synchronously before reloading. First worker installation,
 `file://`, localhost, mirrors, and itch never reveal the banner.
 
-New Game opens with six one-click **Quick Start** lives above the ordinary setup path. Every
+New Game opens with seven one-click **Quick Start** lives above the ordinary setup path. Every
 quick life is a Serf with an authored name, sex, county, exact settlement-site birthplace,
-standard young family, and exact county community. The first three cover Christian, pagan, and
-Muslim lives in 867; the next three do the same in 1066. Each native-button card shows a
+standard young family, and exact county community. Osric of Barcelona leads four 867 cards
+covering Christian, pagan, and Muslim lives; the next three cover those faith groups in 1066.
+Each native-button card shows a
 procedural portrait followed by name, one `Serf | county` line, an explicit `Home: settlement`
-line, culture and faith, and date. **OR** and a ruled divider
+line, culture and faith, and date. A named start's optional portrait profile is used by
+both its preview and campaign character, so Osric retains his defining facial features
+after selection. **OR** and a ruled divider
 keep these shortcuts visually and semantically separate from **Choose a Starting Date**.
 Selecting a card activates its bookmark, feeds those choices through the ordinary campaign
 constructor, and reaches the normal story introduction without exposing the intervening setup

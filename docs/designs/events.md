@@ -184,13 +184,14 @@ history. Autoresolve scores `serfFreedom` and the exact-offer acceptance handler
 positive rank transitions, but can select acceptance only while the saved context and
 price remain valid.
 
-The Petition for Freedom and Buy Freedom Deeds are always-enabled, tier-0 launchers with
-static descriptions. They do not calculate a lord, Standing, family quote, or affordability
-during a retained Deeds refresh. Opening their existing sheets derives those live terms on
-request, shows Serf → Freeholder, price, and benefits, and rechecks before any offer or
-purchase mutates state. The direct-purchase sheet keeps its exact ready or blocked reason
-visible beside the greyed or available confirmation instead of relying on a pointer-only
-browser title.
+Review station & freedom is the single tier-0 Deed for lawful release. Its station
+sheet opens either a direct purchase or negotiated terms; neither route has a separate
+Deed. The land coachmark points to this same entry. Opening the purchase or terms sheet
+derives the live quote and rechecks it before payment. Price, service, expiry, and any
+blocker stay visible; family-share and Standing calculations do not appear in these
+screens. Freedom outcomes use one release sentence plus actual consequence chips and
+participant portraits, with the complete durable messages retained in the Chronicle.
+This is presentation only and changes no eligibility or technology requirements.
 
 Purchase prices cover the living family that receives the rank change, rather than
 charging the same amount to a lone serf and a large family. The household head costs

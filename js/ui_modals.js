@@ -1171,18 +1171,19 @@ window.FB = window.FB || {};
     if (rankLoss) title = FB.T('Station lost');
     $('ev-title').textContent = title;
     let h = '<div class="decision-outcome" data-outcome-event="' + esc(receipt.eventId) + '">';
-    if (receipt.eventId !== 'decision_outcome') {
+    if (receipt.eventId !== 'decision_outcome' && !freedom) {
       h += '<p class="decision-outcome-source">' + esc(FB.renderMessage(receipt.title, context)) + '</p>';
     }
     const messages = [];
-    if (receipt.outcome) messages.push(receipt.outcome);
+    if (receipt.outcome && !freedom) messages.push(receipt.outcome);
     milestones.forEach(function (msg) {
+      if (freedom && /^news\.freedom\./.test(msg.key)) return;
       if (!messages.some(function (existing) { return existing.key === msg.key; })) messages.push(msg);
     });
     messages.forEach(function (msg) {
       h += '<p class="decision-outcome-summary">' + esc(FB.renderMessage(msg, context)) + '</p>';
     });
-    if (!messages.length && receipt.option) {
+    if (!messages.length && receipt.option && !freedom) {
       h += '<p>' + esc(FB.T('Resolved: {choice}', {
         choice:FB.renderMessage(receipt.option, context)
       })) + '</p>';
@@ -2323,14 +2324,15 @@ window.FB = window.FB || {};
     let h = '<div class="panelh">' +
       esc(FB.T('Add relatives to this charter')) + '</div><p class="adesc">' +
       esc(FB.T(
-        'Spouses and descendants are already included. Parents and siblings remain serfs unless you select them here or manumit them later from their character sheet.')) +
+        'Spouses and descendants are included. Add any parents or siblings below.')) +
       '</p><div data-freedom-relative-choices>';
     for (let i = 0; i < relatives.length; i++) {
       const relative = relatives[i];
       const relation = relative.kind === 'parent'
         ? FB.T('Parent') : FB.T('Sibling');
       h += '<label class="autorow"><input type="checkbox" ' +
-        'data-freedom-relative="' + esc(relative.id) + '"> <b>' +
+        'data-freedom-relative="' + esc(relative.id) + '"> ' +
+        (s.chars[relative.id] ? FB.faceTag(s.chars[relative.id], 44, 50) : '') + '<b>' +
         esc(relative.name) + '</b><span class="adesc">' +
         esc(FB.T('{relation} · adds {money:price}', {
           relation:relation, price:relative.cost
@@ -2354,14 +2356,11 @@ window.FB = window.FB || {};
     function refreshQuote() {
       const quote = FB.freedomPurchaseQuote(s, selectedFreedomRelatives(root));
       const price = root.querySelector('[data-freedom-live-price]');
-      const breakdown = root.querySelector('[data-freedom-family-price]');
       const purchase = root.querySelector('#freedom-purchase-confirm');
       const statusNote = root.querySelector('[data-freedom-purchase-status]');
       if (price) price.textContent = FB.T('{money:price}', {
         price:quote.price
       });
-      if (breakdown) breakdown.textContent =
-        FB.freedomPurchaseBreakdown(s, quote);
       if (purchase) {
         const status = FB.freedomPurchaseStatus(
           s, selectedFreedomRelatives(root));
@@ -2407,8 +2406,6 @@ window.FB = window.FB || {};
       '</span><b data-freedom-live-price>' +
       esc(FB.T('{money:price}', { price:quote.price })) + '</b></div>' +
       freedomBenefitHtml() +
-      '<p class="adesc" data-freedom-family-price>' +
-      esc(FB.freedomPurchaseBreakdown(s, quote)) + '</p>' +
       freedomRelativeChoicesHtml(s) +
       '<p class="progressnote" data-freedom-purchase-status></p>' +
       '</div><div class="gm-list">' +
@@ -2420,6 +2417,7 @@ window.FB = window.FB || {};
       historyView:true, historyBack:true
     });
     const root = $('gm-body');
+    FB.paintFaces(root, s);
     bindFreedomRelativeChoices(s, root);
     $('freedom-purchase-confirm').addEventListener('click', function () {
       const additionalIds = selectedFreedomRelatives(root);
@@ -2434,7 +2432,7 @@ window.FB = window.FB || {};
         route:'purchase', additionalIds:additionalIds
       }, {});
       if (!result) return;
-      if (FB.noteDeedCompleted) FB.noteDeedCompleted(s, 'buy_freedom');
+      if (FB.noteDeedCompleted) FB.noteDeedCompleted(s, 'review_serf_tenure');
       FB.game.passDay({ skipFocus:true });
     });
     $('freedom-purchase-close').addEventListener('click', UI.closeModal);
@@ -2453,26 +2451,15 @@ window.FB = window.FB || {};
     const showReview = !!view && !options.intro;
     const advocates = !showReview && petition.ready && FB.freedomAdvocates
       ? FB.freedomAdvocates(s) : [];
-    const purchaseQuote = FB.freedomPurchaseQuote(s);
     let h = '<div class="gm-body-text" data-freedom-routes>' +
       rankTransitionHtml(FB.T('Serf'), FB.T('Freeholder')) +
-      '<p>' + esc(FB.T(
-        'A petition asks the current lord for one exact, saved offer. It spends no day and uses no chance roll.')) + '</p>' +
+      (lord ? FB.faceTag(lord, 44, 50) : '') +
       kv('Current lord', esc(lordName)) +
-      kv('Standing', esc(String(petition.standing))) +
-      kv('Petition threshold', esc(FB.T('+{standing}', {
-        standing:petition.threshold
-      }))) +
-      kv('Buy freedom outright', '<span data-freedom-live-price>' +
-        esc(FB.T('{money:price}', { price:purchaseQuote.price })) + '</span>') +
-      freedomBenefitHtml() +
-      '<p class="adesc" data-freedom-family-price>' +
-        esc(FB.freedomPurchaseBreakdown(s, purchaseQuote)) + '</p>';
+      (!showReview ? '<p>' + esc(FB.T('Ask for a price and any final service.')) + '</p>' +
+        freedomBenefitHtml() : '');
 
     if (!showReview) {
       h += freedomRelativeChoicesHtml(s);
-      h += '<p class="adesc">' + esc(FB.T(
-        'Standing +20 offers the standard price; +40 offers a lower cash price; +60 offers the lowest cash price followed by final service.')) + '</p>';
       if (petition.invitation) {
         h += '<p class="progressnote">' + esc(FB.T(
           'The lord’s invitation guarantees favorable terms for this petition.')) + '</p>';
@@ -2483,30 +2470,20 @@ window.FB = window.FB || {};
       if (advocates.length) {
         h += '<div class="panelh">' + esc(FB.T('Optional advocate')) + '</div>' +
           '<p class="adesc">' + esc(FB.T(
-            'A local officer or priest with at least +40 Standing may add +10 to this petition. Their support is rechecked when you accept.')) + '</p>';
+            'A supporter may secure better terms.')) + '</p>';
         for (let advocateIndex = 0; advocateIndex < advocates.length;
              advocateIndex++) {
           const advocate = advocates[advocateIndex];
           const preview = FB.freedomAdvocacyPreview(s, advocate.id);
           const bandText = preview && preview.changesTerm
-            ? FB.T('Changes the offered term band from +{fromMin}–{fromMax} to +{toMin}–{toMax}.', {
-              fromMin:preview.unassistedMinStanding,
-              fromMax:preview.unassistedMaxStanding,
-              toMin:preview.termMinStanding,
-              toMax:preview.termMaxStanding
-            })
-            : FB.T('The +10 support does not improve the offered term band.');
+            ? FB.T('Secures better terms.') : FB.T('No better terms available.');
           h += '<div class="progressnote freedom-advocate-preview" ' +
-            'data-freedom-advocate-preview="' + esc(advocate.id) + '"><b>' +
+            'data-freedom-advocate-preview="' + esc(advocate.id) + '">' +
+            FB.faceTag(s.chars[advocate.id], 44, 50) + '<b>' +
             esc(FB.T('{name}, {role}', {
               name:advocate.name,
               role:advocate.role === 'steward' ? FB.T('Steward') : FB.T('Priest')
-            })) + '</b><p class="hint">' + esc(FB.T(
-              'Standing {standing}; effective lord Standing {effective}. {result}', {
-                standing:advocate.standing,
-                effective:preview ? preview.effectiveStanding : petition.standing,
-                result:bandText
-              })) + '</p></div>';
+            })) + '</b><p class="hint">' + esc(bandText) + '</p></div>';
         }
       }
       h += '</div><div class="gm-list"><button type="button" class="actionbtn" ' +
@@ -2529,6 +2506,7 @@ window.FB = window.FB || {};
       openModal(FB.T('Petition for terms of freedom'), h, {
         historyView:true, historyBack:true
       });
+      FB.paintFaces($('gm-body'), s);
       const freedomRoot = $('gm-body');
       bindFreedomRelativeChoices(s, freedomRoot);
       const create = $('freedom-petition-create');
@@ -2568,26 +2546,18 @@ window.FB = window.FB || {};
       : FB.T('No final service; freedom is immediate');
     h += '<div data-freedom-offer>' +
       '<div class="panelh">' + esc(FB.T('Saved offer')) + '</div>' +
-      kv('Lord', esc(view.lordName)) +
       '<div data-freedom-offer-price>' +
-        kv('Exact cash price', esc(FB.T('{money:price}', { price:view.price }))) +
+        kv(view.status === 'service' ? 'Paid' : 'Price', esc(FB.T('{money:price}', { price:view.price }))) +
       '</div>' +
-      (view.familyPricing
-        ? '<p class="adesc" data-freedom-offer-family-price>' +
-          esc(FB.T(
-            'Standing terms were applied to this saved family base. {breakdown}', {
-              breakdown:FB.freedomPurchaseBreakdown(s, view.familyPricing)
-            })) + '</p>'
-        : '') +
       '<div data-freedom-offer-service>' +
         kv('Continued service', esc(serviceText)) +
-      '</div><div data-freedom-offer-expiry>' +
-        kv('Offer expires', esc(view.expiryLabel)) +
       '</div>' +
-      '<p class="adesc">' + esc(view.serviceDays
-        ? FB.T('Acceptance pays the exact price now. Freedom follows only when final service ends; ordinary customary duties may still fall due.')
-        : FB.T('Acceptance pays the exact price and grants lawful freedom immediately.')) +
-      '</p>';
+      (view.status === 'offered'
+        ? '<div data-freedom-offer-expiry>' +
+          kv('Offer expires', esc(view.expiryLabel)) + '</div>' +
+          '<p class="adesc">' + esc(view.serviceDays
+            ? FB.T('Pay now; freedom follows final service. Customary duties continue until then.')
+            : FB.T('Pay now for immediate freedom.')) + '</p>' : '');
     if (view.advocacy) {
       h += '<div data-freedom-offer-advocacy>' +
         kv('Advocate', esc(FB.T('{name}, {role}', {
@@ -2595,16 +2565,9 @@ window.FB = window.FB || {};
           role:view.advocacy.role === 'steward'
             ? FB.T('Steward') : FB.T('Priest')
         }))) +
-        kv('Saved Standing support', esc(FB.T(
-          'Lord {actual} + advocate {bonus} = effective {effective}', {
-            actual:view.advocacy.actualLordStanding,
-            bonus:view.advocacy.bonus,
-            effective:view.advocacy.effectiveStanding
-          }))) +
-        '<p class="adesc">' + esc(view.advocacy.changedTerm
-          ? FB.T('The advocate’s +10 support improved the saved term band.')
-          : FB.T('The advocate’s +10 support did not improve the saved term band.')) +
-        '</p></div>';
+        (s.chars[view.advocacy.characterId]
+          ? FB.faceTag(s.chars[view.advocacy.characterId], 44, 50) : '') +
+        '</div>';
     }
     if (view.status === 'service') {
       h += '<div class="progressnote" data-freedom-service-progress>' +
@@ -2637,6 +2600,7 @@ window.FB = window.FB || {};
     openModal(FB.T('Terms of freedom'), h, {
       historyView:true, historyBack:true
     });
+    FB.paintFaces($('gm-body'), s);
     const accept = $('freedom-offer-accept');
     if (accept) accept.addEventListener('click', function () {
       UI.closeModal();

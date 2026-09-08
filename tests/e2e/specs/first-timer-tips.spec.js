@@ -273,7 +273,7 @@ test('the map sequence comes first and Making a living waits for Family & legacy
     await expect(land).toBeVisible();
     await expect(page.locator('[data-action-group="realm"]'))
       .toHaveAttribute('aria-expanded', 'true');
-    await expect(page.locator('[data-action-id="buy_freedom"]'))
+    await expect(page.locator('[data-action-id="review_serf_tenure"]'))
       .toHaveClass(/coachmark-lit/);
     await land.getByRole('button', { name:'Got it', exact:true }).click();
     await expect(page.locator('.coachmark')).toHaveCount(0);

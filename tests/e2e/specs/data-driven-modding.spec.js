@@ -1024,7 +1024,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 81]);
+    expect(result.counts).toEqual([28, 79]);
     expect(result.validation).toEqual([]);
     expect(result.focusMetadata).toBe(true);
     expect(result.deedMetadata).toBe(true);

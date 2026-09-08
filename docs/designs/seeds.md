@@ -14,12 +14,19 @@ suggestions, name rerolls) cannot desync two players — identical seed + identi
 identical start, every time, and a second run in the same browser session reproduces the
 first.
 
-The starting-date screen's six **Quick Start** cards use the fresh world seed already rolled
+The starting-date screen's seven **Quick Start** cards use the fresh world seed already rolled
 for that New Game attempt, then supply an authored Serf scenario, bookmark, exact settlement-site
 birthplace, culture/faith community, sex, name, and `standard` family preset. The cards name both
 the home settlement and its county. They still run
 through `G.start()` and store its ordinary full start code. A quick life can therefore be shared
 and replayed like any manually assembled life; Quick Start fixes the choices, not the world seed.
+Osric leads the 867 cards as an Iberian Catholic Serf in Barcelona's town settlement.
+He uses the ordinary young-family age, Serf resources, and seeded character generation.
+His authored `portraitProfile` supplies a stable visual identity without changing stats or
+RNG consumption. The normal campaign constructor recognizes his exact bookmark, Serf
+scenario, standard family, settlement, name, sex, and community choices, so replaying the
+ordinary start code retains that same face without a new code field. Other combinations
+continue to use their generated portraits.
 
 ## Formats
 

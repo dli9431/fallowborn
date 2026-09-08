@@ -101,6 +101,17 @@ dates in the family tree, but no posthumous character sheet. Records are spent o
 the player can see and touch. See [realms.md](realms.md) for the court's structure and
 the consort.
 
+Named starts may attach an optional `portraitProfile` id to the character record.
+`FBDATA.portraitProfiles` in `data/starts.js` supplies that identity's fixed facial
+proportions, natural hair and eye colors, and baseline grooming. Osric uses long black
+hair, a full beard, brown eyes, and a bare head while working as a Serf. The profile
+stabilizes his face across the Quick Start preview and different world seeds without
+adding RNG draws or changing stats. Saves retain the id; unknown ids fall back to ordinary
+generation. Age, greying, wounds, expression, station clothing, and equipped items remain
+live. Player `appearance` choices override the profile's grooming. Profile contents are
+part of the portrait cache key so changing a profile cannot reuse stale artwork.
+This is presentation only and requires no technology-impact ledger entry.
+
 The current protagonist may replace the deterministic hairstyle and, once an adult man,
 facial-hair family and family-specific style through **Visit Barber…** on the Equipment sheet.
 The families are clean-shaven, stubble, moustache, beard, beard with moustache, goatee,

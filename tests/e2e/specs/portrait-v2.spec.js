@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/starts.js',
   'js/portrait.js',
   'js/ui_modals.js',
   'js/ui_topbar.js',
@@ -16,6 +17,50 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
 });
+
+test('Osric authored face is stable while aging, equipment and barber styles remain live',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, year = s.date.year;
+      const c = { id:'osric-preview', name:'Osric', sex:'m', born:year - 24,
+        culture:'iberian', religion:'catholic', dyn:'of Barcelona',
+        health:8, traits:[], station:0, role:'farmer', portraitProfile:'osric' };
+      const before = JSON.stringify(s), rng = JSON.stringify(FB.getRngState());
+      function look(person, at, opts) {
+        return FB.characterLook(person, at, s, Object.assign({loadout:{}},opts));
+      }
+      const first = look(c, year);
+      const other = Object.assign({},c,{id:'different-world-character',name:'Renamed'});
+      const second = look(other, year);
+      const old = look(c, year + 50);
+      const barber = look(c, year, {appearance:{hairStyle:'crop',beardKind:'none',beardCut:'natural'}});
+      const crowned = look(c, year, {tier:6});
+      const injured = look(Object.assign({},c,{health:2,traits:['scarred']}),year);
+      const ordinary = Object.assign({},c);
+      delete ordinary.portraitProfile;
+      const unknown = Object.assign({},ordinary,{portraitProfile:'missing-profile'});
+      const faceKeys = ['identity','faceWidth','jaw','chin','eyeSpacing','noseLen','hairStyle','beardKind','beardCut','headwear'];
+      return {
+        face:faceKeys.reduce(function (out,key) {out[key]=first[key];return out;},{}),
+        sameIdentity:faceKeys.every(function (key) {return first[key]===second[key];}),
+        sameHair:JSON.stringify(first.hair)===JSON.stringify(second.hair),
+        eye:first.eyeKey, hair:first.hair.base,
+        older:old.hair.gray > first.hair.gray && old.elder > first.elder,
+        barber:{hair:barber.hairStyle,beard:barber.beardKind},
+        crown:crowned.headwear, wounded:injured.scarred && injured.health==='dying',
+        profileInvalidates:FB.characterVisualKey(s,c)!==FB.characterVisualKey(s,ordinary),
+        unknownFallsBack:FB.characterVisualKey(s,unknown)===FB.characterVisualKey(s,ordinary),
+        pure:before===JSON.stringify(s) && rng===JSON.stringify(FB.getRngState())
+      };
+    });
+    expect(result.face).toMatchObject({hairStyle:'longLoose',beardKind:'full',
+      beardCut:'full',headwear:'none',faceWidth:0.96,jaw:0.94});
+    expect(result.eye).toBe('brown');
+    expect(Math.max.apply(null,result.hair)).toBeLessThan(70);
+    expect(result).toMatchObject({sameIdentity:true,sameHair:true,older:true,
+      barber:{hair:'crop',beard:'none'},crown:'crown',wounded:true,
+      profileInvalidates:true,unknownFallsBack:true,pure:true});
+  });
 
 test('portrait descriptor keys are normalized, deterministic, and state-pure',
   async function ({ page }) {

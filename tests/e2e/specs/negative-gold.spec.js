@@ -145,7 +145,7 @@ test('cash-gated choices stay blocked while zero-cost choices remain available',
       FB.adjustStanding(s, { kind:'character', id:lord.id },
         -FB.standingOf(s, { kind:'character', id:lord.id }),
         'test:negative_gold_freedom');
-      const freedomLauncher = FB.instantStatus(s, 'buy_freedom');
+      const freedomLauncher = FB.instantStatus(s, 'review_serf_tenure');
       const freedom = FB.freedomPurchaseStatus(s);
       FB.ui.showFreedomPurchase();
 

@@ -610,15 +610,16 @@ test('serfs see neither the commitments ledger nor deeds they cannot use',
       return FB.listInstants(FB.state).map(function (item) { return item.a.id; });
     });
     expect(deedIds).toContain('livelihoods');
-    expect(deedIds).toContain('petition_freedom');
-    expect(deedIds).toContain('buy_freedom');
+    expect(deedIds).toContain('review_serf_tenure');
+    expect(deedIds).not.toContain('petition_freedom');
+    expect(deedIds).not.toContain('buy_freedom');
     expect(deedIds).toContain('coin_credit');
     expect(deedIds).not.toContain('adopt_tech');
     await expect(page.locator('[data-action-id="coin_credit"]')).toBeVisible();
     await expect(page.locator('[data-action-id="livelihoods"]')).toBeVisible();
     await page.locator('[data-action-group="realm"]').click();
-    await expect(page.locator('[data-action-id="petition_freedom"]')).toBeVisible();
-    await expect(page.locator('[data-action-id="buy_freedom"]')).toBeVisible();
+    await expect(page.locator('[data-action-id="review_serf_tenure"]')).toBeVisible();
+    await expect(page.locator('[data-action-id="buy_freedom"]')).toHaveCount(0);
     await expect(page.locator('[data-action-id="adopt_tech"]')).toHaveCount(0);
 
     // Self offers the livelihood summary as a direct management route.

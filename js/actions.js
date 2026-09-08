@@ -3660,25 +3660,6 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showRankDetails) FB.ui.showRankDetails();
     } },
 
-  { id:'petition_freedom', opensChoices:true, noConsume:true,
-    desc:function () {
-      return FB.T('Review a lawful petition from Serf to Freeholder.');
-    },
-    show:function (s) {
-      return s.player.tier === 0;
-    },
-    run:function () {
-      if (FB.ui && FB.ui.showFreedomPetition) FB.ui.showFreedomPetition();
-    } },
-
-  { id: 'buy_freedom', opensChoices:true, noConsume:true,
-    desc: function () {
-      return FB.T('Review a family charter from Serf to Freeholder.');
-    },
-    show: function (s) { return s.player.tier === 0; },
-    run: function () {
-      if (FB.ui && FB.ui.showFreedomPurchase) FB.ui.showFreedomPurchase();
-    } },
   { id: 'buy_land', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
       return FB.T('{money:gold} per plot. Land held together in one settlement is more productive.',
@@ -12004,8 +11985,7 @@ window.FB = window.FB || {};
     for (const a of FB.instants) {
       if (state.player.travel &&
         ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
-          'travel_settle_here', 'frontier_settle_here', 'petition_freedom',
-          'buy_freedom', 'declare_manor', 'petition_barony',
+          'travel_settle_here', 'frontier_settle_here', 'review_serf_tenure', 'declare_manor', 'petition_barony',
           'petition_liege', 'claim_higher_title'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;
       const shown = !!a.show(state);

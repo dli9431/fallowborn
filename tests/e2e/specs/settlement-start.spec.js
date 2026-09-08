@@ -31,7 +31,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await unlockStartTier(page, 1);
 });
 
-test('New Game offers six quick starts above the dated custom-start path',
+test('New Game offers seven quick starts above the dated custom-start path',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
     await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
@@ -43,27 +43,33 @@ test('New Game offers six quick starts above the dated custom-start path',
     })).toBeVisible();
     await expect(page.locator('#quickstart-divider')).toHaveText('OR');
     const quickStarts = page.locator('#quickstartlist .quickstart-card');
-    await expect(quickStarts).toHaveCount(6);
-    await expect(quickStarts.nth(0)).toContainText('Aed');
-    await expect(quickStarts.nth(0)).toContainText('Gaelic · Latin Christianity');
-    await expect(quickStarts.nth(2)).toContainText('Berber · Islam (Sunni)');
-    await expect(quickStarts.nth(4)).toContainText('Sámi · Norse Paganism');
-    await expect(quickStarts.nth(5)).toContainText('Arab · Islam (Shia)');
+    await expect(quickStarts).toHaveCount(7);
+    await expect(quickStarts.nth(0)).toContainText('Osric');
+    await expect(quickStarts.nth(0)).toContainText('Iberian · Latin Christianity');
+    await expect(quickStarts.nth(1)).toContainText('Aed');
+    await expect(quickStarts.nth(1)).toContainText('Gaelic · Latin Christianity');
+    await expect(quickStarts.nth(3)).toContainText('Berber · Islam (Sunni)');
+    await expect(quickStarts.nth(5)).toContainText('Sámi · Norse Paganism');
+    await expect(quickStarts.nth(6)).toContainText('Arab · Islam (Shia)');
     expect(await quickStarts.locator('.quickstart-title-location').allTextContents())
       .toEqual([
-        'Serf | Galway', 'Serf | Uppsala', 'Serf | Tunis',
+        'Serf | Barcelona', 'Serf | Galway', 'Serf | Uppsala', 'Serf | Tunis',
         'Serf | Ulaid', 'Serf | Norrland', 'Serf | Fustat'
       ]);
     expect(await quickStarts.locator('.quickstart-home').allTextContents())
       .toEqual([
-        'Home: Rathcroghan', 'Home: Uppsala', 'Home: Tunis',
+        'Home: Barcelona', 'Home: Rathcroghan', 'Home: Uppsala', 'Home: Tunis',
         'Home: Downpatrick', 'Home: Norrland', 'Home: Fustat'
       ]);
     await expect(quickStarts.nth(0)).toHaveAccessibleName(
+      /Quick Start as Osric, Serf in Barcelona, Barcelona/);
+    await expect(quickStarts.nth(1)).toHaveAccessibleName(
       /Serf in Rathcroghan, Galway/);
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       await expect(quickStarts.nth(i).locator('.quickstart-date')).toContainText('867');
-      await expect(quickStarts.nth(i + 3).locator('.quickstart-date')).toContainText('1066');
+    }
+    for (let i = 4; i < 7; i++) {
+      await expect(quickStarts.nth(i).locator('.quickstart-date')).toContainText('1066');
     }
     expect(await quickStarts.locator('canvas').first().evaluate(function (canvas) {
       const pixels = canvas.getContext('2d').getImageData(
@@ -91,6 +97,70 @@ test('New Game offers six quick starts above the dated custom-start path',
     await page.getByRole('button', { name:'Cancel', exact:true }).click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
+  });
+
+test('Osric quick start creates an ordinary Barcelona Serf with a shareable origin',
+  async function ({ page }) {
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('[data-quick-start="osric_867"]').click();
+    await expect(page.getByRole('heading', {
+      name:'Your Story Begins', exact:true
+    })).toBeVisible({ timeout:30 * 1000 });
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const serf = FBDATA.startScenarios.filter(function (sc) {
+        return sc.id === 'serf';
+      })[0];
+      return {
+        bookmark:s.start.id, year:s.date.year, tier:s.player.tier,
+        province:s.player.provinceId, homeSettlement:s.player.homeSettlement,
+        site:FB.settlementsOf(s, s.player.provinceId)[s.player.homeSettlement].site,
+        name:me.name, sex:me.sex, culture:me.culture, religion:me.religion,
+        age:s.date.year - me.born, expectedAge:FBDATA.balance.startAge,
+        gold:s.player.gold, expectedGold:serf.gold, health:me.health,
+        founder:s.player.houseFounderId === me.id,
+        parentCount:FB.parentsOf(s, me).length,
+        quickStart:s.telemetry.quickStart, seed:s.seed,
+        portraitProfile:me.portraitProfile
+      };
+    });
+    expect(result).toMatchObject({
+      bookmark:'867', year:867, tier:0, province:'barcelona',
+      homeSettlement:0, site:'barcelona', name:'Osric', sex:'m',
+      culture:'iberian', religion:'catholic', health:8,
+      founder:true, parentCount:2, quickStart:'osric_867', portraitProfile:'osric',
+      seed:expect.stringMatching(/^[A-Z0-9]+-867-serf-barcelona-m-Osric$/)
+    });
+    expect(result.age).toBe(result.expectedAge);
+    expect(result.gold).toBe(result.expectedGold);
+  });
+
+test('Osric start-code replay and save restore retain his authored portrait',
+  async function ({ page }) {
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.getByRole('button', { name:'Use a Seed or Start Code', exact:true }).click();
+    await page.locator('#ng-seed').fill('OSRICFACE-867-serf-barcelona-m-Osric');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await expect(page.getByRole('heading', { name:'Your Story Begins', exact:true }))
+      .toBeVisible({ timeout:30 * 1000 });
+    const saved = await page.evaluate(function () {
+      const me = FB.state.chars[FB.state.player.charId];
+      return {profile:me.portraitProfile, json:FB.save.serialize()};
+    });
+    expect(saved.profile).toBe('osric');
+    await page.evaluate(function (json) {
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(JSON.parse(json), resolve)) reject(new Error('Osric save rejected'));
+      });
+    }, saved.json);
+    expect(await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId];
+      const look = FB.characterLook(me, s.date.year, s);
+      return {profile:me.portraitProfile,hair:look.hairStyle,beard:look.beardKind,headwear:look.headwear};
+    })).toEqual({profile:'osric',hair:'longLoose',beard:'full',headwear:'none'});
   });
 
 test('a quick start creates its authored Serf life in one selection',

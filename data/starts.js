@@ -58,10 +58,14 @@ window.FBDATA = window.FBDATA || {};
   /* Curated one-click Serf lives. Each one names an exact physical settlement
      site, which the start screen resolves to that bookmark's stable slot and
      proper name. Names are generated-person proper names; every other label
-     resolves from the selected bookmark's live data. The first three belong
+     resolves from the selected bookmark's live data. The first four belong
      to 867 and the next three to 1066 so their visual order also makes the
      date split legible without another control. */
   FBDATA.quickStarts = [
+    { id:'osric_867', bookmarkId:'867', provinceId:'barcelona',
+      settlementSite:'barcelona',
+      culture:'iberian', religion:'catholic', sex:'m', characterName:'Osric',
+      portraitProfile:'osric' },
     { id:'aed_867', bookmarkId:'867', provinceId:'galway',
       settlementSite:'rathcroghan',
       culture:'gaelic', religion:'catholic', sex:'m', characterName:'Aed' },
@@ -81,6 +85,18 @@ window.FBDATA = window.FBDATA || {};
       settlementSite:'fustat',
       culture:'arabic', religion:'shia', sex:'m', characterName:'Ahmad' }
   ];
+
+  /* Authored visual identities change no campaign stats or random draws. */
+  FBDATA.portraitProfiles = {
+    osric:{
+      identity:'osric', hairColor:'black', eyeColor:'brown', pigment:1.05,
+      faceWidth:.96, jaw:.94, chin:1.03, cheek:.48,
+      eyeSize:.97, eyeSpacing:.98, browWeight:.9,
+      noseW:.98, noseLen:1.08, mouthW:.96, lipFull:.9,
+      yaw:0, bgHue:164, bareheadedSerf:true,
+      appearance:{ hairStyle:'longLoose', beardKind:'full', beardCut:'natural' }
+    }
+  };
 
   /* `standard` is the historical no-extra-draw family. Its zero age means
      FBDATA.balance.startAge; every other preset authors an exact adult age. */

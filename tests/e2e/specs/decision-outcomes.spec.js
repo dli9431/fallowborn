@@ -132,6 +132,7 @@ test('freedom service acceptance and completion have separate truthful outcomes'
     expect(completion.actual).toBe(completion.gold);
     expect(completion.tier).toBe(1);
     await expect(page.locator('#ev-title')).toHaveText('Freedom gained');
+    await expect(page.locator('.decision-outcome-summary')).toHaveCount(1);
     await expect(page.locator('#ev-text')).toContainText('Serf → Freeholder');
     await expect(page.locator('#ev-text')).toContainText('Freed household head');
     await expect(page.locator('#ev-text')).toContainText('Former lord');
@@ -155,6 +156,7 @@ test('purchase queues freedom while automated event decisions do not queue dupli
     });
     expect(purchase).toEqual({ resolved:true, count:1 });
     await expect(page.locator('#ev-title')).toHaveText('Freedom gained');
+    await expect(page.locator('.decision-outcome-summary')).toHaveCount(1);
     await ready(page);
     await page.locator('#outcome-continue').click();
     await page.evaluate(function () { FB.game.auto.all = true; });
