@@ -9,6 +9,10 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
+// Each case owns a fresh context and world; no state crosses test boundaries.
+// Distribute the many independent starts across the configured worker pool.
+test.describe.configure({ mode:'parallel' });
+
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);

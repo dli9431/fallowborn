@@ -390,3 +390,16 @@ browser executable is missing, run `npx playwright install chromium firefox webk
 The served project uses port `4173`. Local runs may reuse an available server already listening
 there; CI never does. If startup reports that the port is already in use, stop the unrelated local
 process and rerun the test.
+
+### Commons test scheduling and modal acknowledgement
+
+`commons-uprisings.spec.js` opts into file-local parallel scheduling. Its cases
+create independent browser contexts and deterministic worlds in `beforeEach`, so
+world startup can use the configured worker pool without sharing mutable saves or
+changing the universal fixture. The worker limit still applies; a one-worker run
+remains sequential. Parallel scheduling reduces the serial file bottleneck, not
+the aggregate work required to build each world.
+
+Generic modals retain their DOM after closing. Acknowledgement regressions assert
+that the result is hidden, rather than that its node was removed. Synchronous
+input-guard checks use rendered visibility and retain the one-time payment checks.

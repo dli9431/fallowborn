@@ -427,7 +427,7 @@ test('Bishop appointment retains a success result until acknowledged', async fun
   await expect(page.locator('[data-religious-office-result]')).toBeVisible();
   await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await page.locator('#office-result-continue').click();
-  await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+  await expect(page.locator('[data-religious-office-result]')).toBeHidden();
   await expect(page.locator('#genmodal')).toBeHidden();
 });
 
@@ -477,7 +477,7 @@ test('choosing a Papal name shows the successful accession', async function ({ p
   expect(await page.evaluate(function () { return !!FB.playerPope(FB.state); })).toBe(true);
   await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await page.locator('#office-result-continue').click();
-  await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+  await expect(page.locator('[data-religious-office-result]')).toBeHidden();
 });
 
 
@@ -522,7 +522,7 @@ for (const rank of [0, 2]) {
     await expect(page.locator('[data-religious-office-result]')).toContainText('Congratulations');
     await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
     await page.locator('#office-result-continue').click();
-    await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+    await expect(page.locator('[data-religious-office-result]')).toBeHidden();
   });
 }
 
@@ -535,7 +535,11 @@ test('promotion acknowledgement rejects transition input and held shortcuts', as
     function key(type, repeat) {
       document.dispatchEvent(new KeyboardEvent(type, { key:'1', code:'Digit1', repeat:!!repeat, bubbles:true }));
     }
-    function visible() { return !!document.querySelector('[data-religious-office-result]'); }
+    function visible() {
+      const result = document.querySelector('[data-religious-office-result]');
+      // Closed generic modals retain their markup for navigation restoration.
+      return !!(result && result.getClientRects().length);
+    }
     try {
       FB.ui.showBishopric();
       // An activation key and pointer are already down when the result appears.
@@ -562,6 +566,7 @@ test('promotion acknowledgement rejects transition input and held shortcuts', as
     } finally { Date.now = realNow; }
   });
   expect(result).toEqual({ immediate:true, held:true, inFlight:true, acknowledged:true, chargedOnce:true });
+  await expect(page.locator('#genmodal')).toBeHidden();
 });
 
 test('refused bishop appointment shows its cost receipt and exits to the game', async function ({ page }) {
