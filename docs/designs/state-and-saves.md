@@ -1225,3 +1225,15 @@ optional hostile report id, protagonist id and outcome turn in its ordinary even
 context. It contains no HTML or rendered prose. Stale protagonist acknowledgements
 are discarded; Continue never reapplies the originating decision. Old saves need
 no migration, and Chronicle choice receipts remain the durable decision record.
+
+
+Local commons uprisings use optional save-format-3 fields under `collectiveDemands`:
+`uprising` is null or `{id,stage,scopeId,privilegeId,protagonistId,liegeId,startedTurn,dueTurn?}`;
+`uprisingCooldownUntil` is an absolute turn. `petition` awaits the final warning's
+answer; `warning` has a grace deadline; `active` awaits a response to the uprising;
+`aftermath` retains the original disruption expiry after an unsuccessful or deferred
+response. Missing fields leave old saves unchanged. Invalid identity or lost direct
+county control clears the incident and its county modifier, preserving ordinary wars.
+Load restoration requeues a missing unanswered petition or active-uprising event once,
+including when an autosave captured it after the UI consumed the original queue entry.
+Repeated repair does not extend deadlines or create duplicate modifiers or events.

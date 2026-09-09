@@ -247,3 +247,15 @@ ordinary `FB.addModifier` API for 720 days with `tax:-0.12`, `levy:-0.12`, and
 the shared daily modifier tick; intrigue has no parallel county timer or cleanup path.
 The existing Land chips, tax/levy consumers, event-tag scaling, save repair, and mod
 replacement rules therefore apply unchanged.
+
+
+`commons_uprising` is an institutions-owned county modifier lasting 180 days, with
+a live tax and levy reduction: 25% at effective Popular support -20, rising
+linearly to 100% at -100. The penalty is applied after other county modifiers
+through `FB.modBonus`; `FB.modifierEffects` supplies matching display values.
+Support recovery eases the penalty without extending its deadline. No severity
+value is saved. It has no Popular support penalty, upkeep, or autonomous
+army. The local uprising lifecycle removes it early after a concession, successful
+suppression, or loss of the originating ruler's control. Unlike ordinary historical
+county burdens, this incident ends on transfer or succession rather than transferring
+the old ruler's dispute. Its fixed expiry is never extended after a failed response.

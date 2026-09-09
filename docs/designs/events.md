@@ -376,7 +376,14 @@ ids. `contextValidator:'collective_demand_valid'` prevents a stale audience from
 or refusing a different demand. Grant and negotiated settlement create the privilege
 through its owning API; refusal lowers political support and adds bounded constituency
 opposition, which increases that constituency's later demand pressure after the cooldown.
-None of the choices creates an autonomous realm or starts a revolt directly.
+None of the choices creates an autonomous realm or starts a revolt directly. A
+refused commons demand at low Popular support can queue `commons_uprising_warning`
+for a directly held county; its acknowledged 90-day grace period can later queue
+`commons_uprising_begins`. Both use `commons_uprising_valid` to bind every option
+to the exact incident, stage, county, privilege, protagonist, and liege. Paid choices
+recheck affordability at resolution. Concession, suppression, and enduring disruption
+have explicit impact adapters; ordinary resource deltas remain declarative.
+See [parliament.md](parliament.md#local-commons-uprisings) for the lifecycle.
 
 Debt enforcement uses that code-queued boundary for its last claim. Once distraint
 exhausts seizable property, `js/economy.js` queues exactly one station-specific event:

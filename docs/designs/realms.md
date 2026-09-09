@@ -940,6 +940,11 @@ Each normalized incoming or outgoing record also carries a deterministic `contra
 derived from slot, start turn, and profession. Political plots use that id to distinguish
 the exact charter they began against from a later replacement in the same slot.
 
+Local commons uprisings are separate bounded county disruptions, described in
+[parliament.md](parliament.md#local-commons-uprisings). An active local incident
+or its cooldown prevents the commons downfall chain from starting; existing
+downfall flags prevent a new local incident.
+
 **Tiers can fall as well as rise.** The downfall chains (`df_*` in `data/events_noble.js`)
 give rulers three slow cascades — a commons' revolt (tier 4+, low popular opinion), a
 rival's claim, and a murder conspiracy (tier 3+, a rival with deep hatred) — each three

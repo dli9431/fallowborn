@@ -10271,8 +10271,9 @@ window.FB = window.FB || {};
      only adverse terms are numeric; favorable terms are named without giving
      away their magnitude. Direction differs by field (lower construction cost
      is good, for example), so sign alone is not sufficient. */
-  function eventModifierPreviewText(def) {
-    const fx = def && def.fx || {};
+  function eventModifierPreviewText(def, state) {
+    const fx = def === FBDATA.modifiers.commons_uprising && FB.modifierEffects
+      ? FB.modifierEffects(state, 'commons_uprising') : def && def.fx || {};
     const benefits = [], costs = [];
     function note(value, positiveIsCost, benefit, cost) {
       if (!value) return;
@@ -10339,6 +10340,14 @@ window.FB = window.FB || {};
       if (record.band === 'even') return FB.T('Even');
       if (record.band === 'risky') return FB.T('Risky');
       return FB.T('Long shot');
+    }
+    if (record.type === 'commonsUprising') {
+      if (record.action === 'defer') return FB.T('Final warning: {days} days to resolve the grievance.', {
+        days:FBDATA.balance.commonsUprisingWarningDays
+      });
+      if (record.action === 'concede') return FB.T('Settle the local grievance and end its disruption.');
+      if (record.action === 'suppress') return FB.T('End the local uprising by force.');
+      return FB.T('County tax and levy remain reduced until the original expiry.');
     }
     if (record.type === 'none') return FB.T('No direct mechanical change');
     if (record.type === 'queue') {
@@ -10485,7 +10494,7 @@ window.FB = window.FB || {};
       const upkeep = def && def.upkeep && def.upkeep.gold
         ? FB.T('{money:amount} each season', { amount:def.upkeep.gold })
         : FB.T('No seasonal upkeep');
-      const effectText = !resolved ? eventModifierPreviewText(def) :
+      const effectText = !resolved ? eventModifierPreviewText(def, state) :
         (FB.ui && FB.ui._shared && FB.ui._shared.modifierEffectText
           ? FB.ui._shared.modifierEffectText(state, record.id) : '');
       const transfer = def && def.scope === 'county'
@@ -11719,6 +11728,7 @@ window.FB = window.FB || {};
     if (FB.eventOptionStatus) {
       const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);
       if (optionStatus.techLocked ||
+          (ev && ev.contextValidator === 'commons_uprising_valid' && !optionStatus.ready) ||
           (option.effects &&
             (option.effects.custom === 'freedom_accept_offer' ||
              option.effects.custom === 'rank_elevation_claim') &&

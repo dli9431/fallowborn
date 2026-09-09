@@ -244,3 +244,35 @@ replaces it with Market Charter or Custom Confirmed; sanctuary choices grant rel
 leave a Settlement Grudge. Only the trade-redress success needs a custom handler,
 because it moves the authoritative aid one ordinary step. No event creates a second
 obligation or institution state.
+
+
+## Local commons uprisings
+
+Technology impact `local_commons_uprisings` is `none`: responding to local grievances
+is baseline rule and recovery. Previously demanded privileges retain their approved
+terms regardless of later research changes.
+
+A refused commons demand at effective Popular support -20 or lower may start one
+local warning, only for a county directly held by a tier-4+ protagonist. Guild,
+faith, and magnate demands retain their existing consequences. The warning identifies
+the refused privilege and county. Granting it settles the grievance; deferring gives
+90 days to grant it elsewhere or recover Popular support above -10. Unresolved
+warnings become one county uprising, with tax and levy reduced by 25% to 100% for at most 180 days.
+The reduction follows current effective Popular support, linearly from 25% at -20
+to 100% at -100, clamped at both ends. It multiplies output after ordinary county
+modifier bonuses, so bonuses cannot offset a complete shutdown.
+The ordinary event review offers the original concession, paid Diplomacy negotiation,
+paid suppression (65% success), or enduring the disruption. Failed negotiation or
+suppression leaves the fixed remaining disruption, never another forced roll.
+Suppression success costs 8 Popular support; failure costs 12. No land, army, realm,
+or war record is created or changed.
+
+The single optional `collectiveDemands.uprising` record contains stable identity,
+county, privilege, protagonist, liege, stage, and deadlines. Each context is bound to
+the exact record and stage. Succession, loss of direct control, demotion, death, or
+liege change clears the incident and its modifier; load repair is idempotent. A
+three-year realm-wide cooldown begins when an incident ends, including cleanup.
+New warnings cannot overlap the existing commons downfall flags or queued downfall
+events; that chain cannot begin while a local incident or its cooldown is present.
+The incident is visible in Privileges & opposition, and its active modifier appears
+through the existing Land and Governance county effects.

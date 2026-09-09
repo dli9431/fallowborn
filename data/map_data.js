@@ -1326,6 +1326,12 @@ FBDATA.currency = {
 
 /* Game balance knobs — modders welcome */
 FBDATA.balance = {
+  commonsUprisingWarningDays:90,
+  commonsUprisingCooldownDays:1080,
+  commonsUprisingSupportThreshold:-20,
+  commonsUprisingRecoverySupport:-10,
+  commonsUprisingMinReduction:0.25,
+  commonsUprisingFullReductionSupport:-100,
   startYear: 867, startSeason: 0, startAge: 16,
   freedomCost: 250, freedomSpouseFactor: 0.50,
   freedomDescendantFactor: 0.25, freedomRelativeFactor: 0.50,

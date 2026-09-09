@@ -1330,6 +1330,7 @@ window.FB = window.FB || {};
     if (FB.ensureInstitutions) {
       restoreRepair('institutions', function () {
         FB.ensureInstitutions(FB.state, { silent:true });
+        if (FB.restoreCommonsUprising) FB.restoreCommonsUprising(FB.state);
       });
     }
     if (FB.ensureLocalGovernment) {

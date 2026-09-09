@@ -198,7 +198,7 @@ window.FB = window.FB || {};
     const def = FBDATA.modifiers && FBDATA.modifiers[id];
     if (!def) return '';
     scale = scale === undefined ? 1 : Math.max(0, Number(scale) || 0);
-    const fx = def.fx || {}, parts = [];
+    const fx = FB.modifierEffects ? FB.modifierEffects(s, id) : def.fx || {}, parts = [];
     if (fx.tax) parts.push(FB.T('{amount}% county tax', {
       amount:signedPercent(fx.tax * scale)
     }));

@@ -75,6 +75,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      local_commons_uprisings:{
+        mode:'none',
+        rationale:'Local grievances and their concession, negotiation, or suppression are baseline ruler responsibilities. Recovery remains available without research; a previously demanded privilege retains its approved terms.'
+      },
       equipment_mail_chausses:{
         mode:'hard', tech:['mail_hauberks'],
         fallback:'Turnshoe Boots and Nasal Helm remain available without technology.',

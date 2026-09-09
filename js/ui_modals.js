@@ -13213,6 +13213,24 @@ window.FB = window.FB || {};
           privilege:privilegeDisplayName(s, demands.pending.privilegeId)
         })) + '</div>';
     }
+    const uprising = FB.commonsUprisingSummary && FB.commonsUprisingSummary(s);
+    if (uprising) {
+      const county = FB.world.byId[uprising.scopeId];
+      const relief = FBDATA.privileges[uprising.privilegeId].effect.id;
+      h += '<div class="progressnote warnote" id="commons-uprising-status">' +
+        esc(uprising.stage === 'petition' || uprising.stage === 'warning'
+          ? FB.T('{county}: final commons warning. Grant {privilege} or restore Popular support above {support}; {days} days to act. The countdown starts when you answer the petition.', {
+            county:county.name, privilege:privilegeDisplayName(s, uprising.privilegeId),
+            support:FBDATA.balance.commonsUprisingRecoverySupport, days:uprising.days
+          })
+          : FB.T('{county}: local commons uprising. County tax and levy are currently reduced by {reduction}% for up to {days} more days. The penalty follows Popular support.', {
+            county:county.name, days:uprising.days, reduction:uprising.reduction
+          })) + '<p>' + esc(FB.T('Concession: {effects} for {days} days; +6 Popular support, -2 prestige.', {
+            effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
+          })) + '</p><button type="button" class="btn" id="commons-uprising-concede">' +
+          esc(FB.T('Grant {privilege}', { privilege:privilegeDisplayName(s, uprising.privilegeId) })) +
+          '</button></div>';
+    }
     if (!demands.opposition.length) {
       h += '<div class="hint">' + esc(FB.T(
         'No group is currently organizing around a refused or revoked privilege.')) +
@@ -13272,6 +13290,23 @@ window.FB = window.FB || {};
             returnView);
         });
       });
+    const concedeUprising = $('commons-uprising-concede');
+    if (concedeUprising) concedeUprising.addEventListener('click', function () {
+      const body = $('gm-body'), scroll = body.scrollTop;
+      const opened = Array.from(body.querySelectorAll('.settcard-info[aria-expanded="true"]'))
+        .map(function (button) { return button.getAttribute('aria-controls'); });
+      if (!FB.concedeCommonsUprising(s, uprising.id)) return;
+      UI.showPrivileges(returnView, true);
+      opened.forEach(function (id) {
+        const button = $('gm-body').querySelector('[aria-controls="' + id + '"]');
+        if (button) button.click();
+      });
+      setTimeout(function () {
+        if (!$('privileges-back') || $('genmodal').classList.contains('hidden')) return;
+        $('privileges-back').focus({ preventScroll:true });
+        $('gm-body').scrollTop = scroll;
+      }, 0);
+    });
     $('privileges-back').addEventListener('click', function () {
       if (returnView === 'governance') {
         modalHistoryBack(function () { UI.showGovernance('institution'); });

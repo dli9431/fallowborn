@@ -4349,3 +4349,23 @@ base/rates/caps, heir multiplier, and refusal penalty. Culture price and cooldow
 ### Voluntary ordinary-war peace confirmation
 
 An event option may set `confirm:'war_end'` for the built-in `war_accept_tribute`, `war_terms`, `war_negotiated_withdrawal`, `war_submit`, or `war_submission_tribute` custom effect. The blocking confirmation quotes current terms and revalidates the same war/option before resolution. Cancel or Escape returns to the same event. Category automation shows events with this metadata; explicit Resolve everything may resolve them. IDs and confirmation metadata are semantic, not translated display fields.
+
+
+## Local commons uprisings
+
+A refused `commons` collective demand may start the bounded local-uprising lifecycle
+for a tier-4+ protagonist's directly held county. `balance.commonsUprisingSupportThreshold`
+(default -20), `commonsUprisingRecoverySupport` (-10, strictly exceeded),
+`commonsUprisingWarningDays` (90), and `commonsUprisingCooldownDays` (1080) control its
+entry, recovery, grace, and repeat timing. `modifiers.commons_uprising` supplies the
+180-day county tax/levy disruption. `commonsUprisingMinReduction` (0.25)
+and `commonsUprisingFullReductionSupport` (-100) set the live linear severity
+range, starting at `commonsUprisingSupportThreshold`. The penalty multiplies
+output after other county modifier bonuses; severity is derived rather than saved. The original demanded privilege must wrap a known
+county modifier; its already-approved concession is grandfathered against later tech loss.
+The registered `commons_uprising_valid` context validator and `commons_uprising_defer`,
+`commons_uprising_concede`, `commons_uprising_suppress`, and `commons_uprising_endure`
+custom handlers only act on the matching saved incident. `commons_downfall_available`
+keeps the old commons downfall chain from beginning during this incident or cooldown.
+The optional record and replay-safe restore behavior are documented in
+[State and saves](designs/state-and-saves.md). No save-format bump is required.

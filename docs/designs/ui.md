@@ -2511,3 +2511,15 @@ during the brief input guard; committing and acknowledging choices stay guarded.
 Outcome sheets do not suppress or remove result toasts. Freedom uses one sentence describing the new station and opportunities; exact consequences remain in the impact summary.
 
 Outcome screens omit the generic "Resolved: [choice]" line and empty "It goes well/poorly" prose. Authored aftermaths lead with the settled result; shared chips retain exact consequences. The neutral heading is "Outcome".
+
+
+## Local commons uprising presentation
+
+The final petition names the county, refused privilege, recovery threshold, and 90-day
+grace period. The rising event keeps the county's support-scaled 25-100% tax and levy penalties and
+180-day maximum disruption visible. Paid negotiation and suppression show their costs
+and success/failure consequences through the ordinary event renderer and impact ledger.
+Privileges & collective demands retains the incident's countdown, exact concession
+effects and duration, and an inline Grant concession action. That action uses the event
+resolver, revalidates live identity, and preserves scroll and disclosures while updating
+the roll. Land and Governance show the active disruption through ordinary modifier chips.

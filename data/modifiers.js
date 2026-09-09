@@ -36,6 +36,13 @@ FBDATA.modifiers = {
     fx:{ tax:-0.12, levy:-0.12, unrest:0.25,
       marketProduction:-0.15, marketFlow:-0.10 }
   },
+  commons_uprising: {
+    name:'Local Commons Uprising', icon:'✊',
+    desc:'The commons disrupt collection and muster. The reduction follows Popular support, from 25% at -20 to 100% at -100, until their resistance ends.',
+    scope:'county', days:180,
+    // Base presentation; modBonus and modifierEffects derive live severity.
+    fx:{ tax:-0.25, levy:-0.25 }
+  },
   levy_exemption: {
     name:'Levy Exemption', icon:'🕊',
     desc:'A witnessed concession shelters this county from the full muster.',

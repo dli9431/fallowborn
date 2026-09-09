@@ -323,17 +323,40 @@ window.FB = window.FB || {};
     return false;
   };
 
+  /* Live support scales local resistance without adding saved state. */
+  FB.commonsUprisingReduction = function (state) {
+    const support = FB.popEffective ? FB.popEffective(state) : state.player.pop || 0;
+    const balance = FBDATA.balance;
+    const minimum = FB.clamp(balance.commonsUprisingMinReduction, 0, 1);
+    const start = balance.commonsUprisingSupportThreshold;
+    const full = balance.commonsUprisingFullReductionSupport;
+    return minimum + (1 - minimum) * FB.clamp((start - support) / Math.max(1, start - full), 0, 1);
+  };
+
+  FB.modifierEffects = function (state, id) {
+    const def = definition(id);
+    if (id !== 'commons_uprising') return def && def.fx || {};
+    const reduction = FB.commonsUprisingReduction(state);
+    return Object.assign({}, def && def.fx || {}, { tax:-reduction, levy:-reduction });
+  };
+
   FB.modBonus = function (state, key, pid) {
-    let sum = 0;
+    let sum = 0, uprising = false;
     const list = FB.countyModifierRecords(state, pid);
     for (let i = 0; i < list.length; i++) {
       const def = definition(list[i].id, 'county');
+      if (list[i].id === 'commons_uprising' && (key === 'tax' || key === 'levy')) {
+        uprising = true;
+        continue;
+      }
       if (def && def.fx && typeof def.fx[key] === 'number') sum += def.fx[key];
     }
     if (FB.settlementCommunityProjectModifierBonus) {
       sum += FB.settlementCommunityProjectModifierBonus(state, pid, key);
     }
-    return sum;
+    // Apply resistance after ordinary county bonuses so complete refusal
+    // cannot be offset by another positive modifier.
+    return uprising ? Math.max(0, 1 + sum) * (1 - FB.commonsUprisingReduction(state)) - 1 : sum;
   };
 
   FB.campaignModifierApplies = function (state) {

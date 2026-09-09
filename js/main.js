@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.11';
+FB.VERSION = '1.177.0';
 FB.CHANGELOG = [
+  { v: '1.177.0', date: '2026-09-08', changes: [
+    'Refused commons demands can lead to local uprisings after a final warning. Popular support determines the county tax and levy disruption, with concessions, negotiation, and suppression available to resolve it.'
+  ] },
   { v: '1.176.11', date: '2026-09-08', changes: [
     'Popular support now names the stat measuring how ordinary people view you. Labels, event text, and help use the clearer wording.'
   ] },

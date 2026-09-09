@@ -401,7 +401,7 @@ FBDATA.events.push(
    failure calls FB.loseAllLand (df_fall / df_fall_flee) — the family keeps
    its gold, treasures, holdings and name, but not an acre. */
 { id:'df_murmurs', title:'Murmurs in the Villages',
-  trigger:{ tierMin:4, popularOpinionBelow:-15, notFlags:['df_unrest'], chance:0.12 }, weight:6, cooldown:10,
+  trigger:{ tierMin:4, popularOpinionBelow:-15, notFlags:['df_unrest'], custom:'commons_downfall_available', chance:0.12 }, weight:6, cooldown:10,
   text:'The reeves report it carefully, eyes down: the villages are sullen, the tax carts need armed escorts, and an old song about kinder lords is sung again in the taverns of {province}.',
   options:[
     { label:'Feast and gift the worst parishes. ({money:15})', require:{ goldMin:15 }, desc:'A full belly sings no rebel songs.', effects:{ gold:-15, popularOpinion:15 } },
