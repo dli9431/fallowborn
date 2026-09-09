@@ -888,6 +888,10 @@ window.FB = window.FB || {};
       esc(FB.eventImpactText(s, record, mode)) + '</span>';
   }
 
+  function compactImpactChip(text, tone) {
+    return '<span class="event-impact-chip ' + (tone || 'neutral') + '">' + esc(text) + '</span>';
+  }
+
   function consequenceDetailsHtml(s, preview) {
     let h = '';
     if (preview.chance) {
@@ -902,8 +906,50 @@ window.FB = window.FB || {};
         (section.id === 'success' ? FB.T('If successful') : FB.T('If failed'));
       h += '<section class="event-consequence-section"><b>' + esc(heading) +
         '</b><div class="event-impact-chips full">';
+      // County-wide concessions share one set of terms; retain the semantic ledger.
+      const commons = section.impacts.some(function (record) {
+        return record.type === 'commonsUprising' && record.action === 'concede';
+      });
+      const grouped = {};
       for (let j = 0; j < section.impacts.length; j++) {
-        h += consequenceChipHtml(s, section.impacts[j], 'preview');
+        const record = section.impacts[j];
+        if (commons && record.type === 'modifier' && record.action === 'add') {
+          if (grouped[record.id]) continue;
+          grouped[record.id] = true;
+          const counties = section.impacts.filter(function (other) {
+            return other.type === 'modifier' && other.action === 'add' && other.id === record.id;
+          }).map(function (other) {
+            const province = FB.world.byId[other.pid];
+            return province ? province.name : other.pid;
+          });
+          const def = FBDATA.modifiers[record.id];
+          h += '<div class="event-impact-chips event-concession-terms">' +
+            compactImpactChip(FB.T('{count} affected counties', { count:counties.length })) +
+            compactImpactChip(FB.T('{days} days', { days:def.days }));
+          FB.eventModifierPreviewChips(s, record.id).forEach(function (chip) {
+            h += compactImpactChip(chip.text, chip.tone);
+          });
+          if (def.upkeep && def.upkeep.gold) h += compactImpactChip(
+            FB.T('{money:amount} each season', { amount:def.upkeep.gold }), 'cost');
+          h += compactImpactChip(FB.T('Retained after county transfer')) + '</div>';
+        } else if (record.type === 'commonsUprising' &&
+            (record.action === 'defer' || record.action === 'spread_defer')) {
+          h += compactImpactChip(FB.T('{days}-day grace period', {
+            days:FBDATA.balance.commonsUprisingWarningDays })) +
+            compactImpactChip(FB.T('Resolve: concession or support above {support}', {
+              support:FBDATA.balance.commonsUprisingRecoverySupport })) +
+            compactImpactChip(FB.T('If unresolved: tax and levies -25% to -100%'), 'cost') +
+            compactImpactChip(FB.T('Disruption: up to {days} days', {
+              days:FBDATA.modifiers.commons_uprising.days }), 'cost');
+        } else if (record.type === 'commonsUprising' && record.action === 'concede') {
+          h += compactImpactChip(FB.T('Grievance settled'), 'gain');
+        } else if (record.type === 'commonsUprising' && record.action === 'suppress') {
+          h += compactImpactChip(FB.T('Uprising ended'), 'gain');
+        } else if (record.type === 'commonsUprising' && record.action === 'endure') {
+          h += compactImpactChip(FB.T('Disruption continues'), 'cost') +
+            compactImpactChip(FB.T('Original deadlines unchanged')) +
+            compactImpactChip(FB.T('Low support: unrest may spread'), 'cost');
+        } else h += consequenceChipHtml(s, record, 'preview');
       }
       h += '</div></section>';
     }
@@ -1269,6 +1315,15 @@ window.FB = window.FB || {};
     $('eventmodal').focus();
   }
 
+  function outcomeDetailsHtml(details, id) {
+    if (!details) return '';
+    return '<div class="settcard decision-outcome-details"><div class="settcard-head" tabindex="0">' +
+      '<b>' + esc(FB.T('Details')) + '</b><span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="' + esc(id) + '" ' +
+      'aria-label="' + esc(FB.T('Outcome details')) + '">?</button></span></div>' +
+      '<div id="' + esc(id) + '" class="settcard-details hidden">' + details + '</div></div>';
+  }
+
   function showDecisionOutcome(receipt) {
     const s = FB.state;
     eventOpen = true;
@@ -1291,6 +1346,9 @@ window.FB = window.FB || {};
     let title = freedom ? FB.T('Freedom gained') :
       (receipt.result === 'success' ? FB.T('Success') :
         (receipt.result === 'failure' ? FB.T('Failure') : FB.T('Outcome')));
+    if (receipt.outcome && receipt.outcome.key === 'news.religion.bishop_refused') {
+      title = FB.T('Appointment refused');
+    }
     if (receipt.eventId === 'child_fever') title = receipt.result === 'success'
       ? FB.T('The fever breaks') : FB.T('A child lost');
     if (receipt.eventId === 'proposal_made' || receipt.eventId === 'sibling_proposal_made') {
@@ -1317,30 +1375,19 @@ window.FB = window.FB || {};
     });
     if (freedom) h += '<p class="decision-outcome-summary">' + esc(FB.T(
       'Your household rises from Serf to Freeholder, free of customary service and able to travel, pursue free livelihoods, and own lasting property.')) + '</p>';
-    const primary = [], secondary = [];
+    let changes = '';
     (receipt.impacts || []).forEach(function (r) {
       if (FB.eventImpactVisible && !FB.eventImpactVisible(r)) return;
-      const important = ['gold','rank','land','landPlot','holding','item','health','death',
-        'home','faith','profession','relationship','system'].indexOf(r.type) >= 0;
-      (important ? primary : secondary).push(r);
+      changes += consequenceChipHtml(s, r, 'resolved');
     });
-    if (primary.length) {
-      h += '<div class="event-impact-chips full decision-outcome-changes">';
-      primary.forEach(function (r) { h += consequenceChipHtml(s, r, 'resolved'); });
-      h += '</div>';
-    }
-    let details = '';
-    secondary.forEach(function (r) { details += consequenceChipHtml(s, r, 'resolved'); });
+    let details = changes ? '<div class="event-impact-chips full decision-outcome-changes">' +
+      changes + '</div>' : '';
     if (freedom) details += '<p>' + esc(FB.T(
       'Freeholders may pursue free livelihoods and acquire land. Family landmarks records the route to freedom.')) + '</p>';
     if (report) details += '<p>' + esc(FB.T('{wins} victories · {losses} defeats · {seasons} seasons', {
       wins:report.wins || 0, losses:report.losses || 0, seasons:report.seasons || 0
     })) + '</p>';
-    if (details) h += '<div class="settcard decision-outcome-details"><div class="settcard-head" tabindex="0">' +
-      '<b>' + esc(FB.T('Details')) + '</b><span class="settcard-actions"><button type="button" ' +
-      'class="btn small settcard-info" aria-expanded="false" aria-controls="outcome-details" ' +
-      'aria-label="' + esc(FB.T('Outcome details')) + '">?</button></span></div>' +
-      '<div id="outcome-details" class="settcard-details hidden">' + details + '</div></div>';
+    h += outcomeDetailsHtml(details, 'outcome-details');
     const participants = [], participantIds = {}, slots = [], labels = {};
     (receipt.characterIds || []).forEach(function (id, i) {
       if (!s.chars[id]) return;
@@ -13492,11 +13539,15 @@ window.FB = window.FB || {};
         let resultHtml = '<div data-uprising-result data-guarded-outcome><p>' +
           esc(receipt.outcome ? FB.renderMessage(receipt.outcome, { state:s }) :
             FB.T('The demanded concession ends resistance in the affected counties.')) +
-          '</p><div class="event-impact-chips full">';
+          '</p>';
+        let resultDetails = '';
         (receipt.impacts || []).forEach(function (record) {
-          resultHtml += consequenceChipHtml(s, record, 'resolved');
+          if (!FB.eventImpactVisible || FB.eventImpactVisible(record)) {
+            resultDetails += consequenceChipHtml(s, record, 'resolved');
+          }
         });
-        resultHtml += '</div></div><div class="gm-footer"><button type="button" class="actionbtn" id="uprising-continue">' +
+        resultHtml += outcomeDetailsHtml(resultDetails ? '<div class="event-impact-chips full">' +
+          resultDetails + '</div>' : '', 'uprising-result-details') + '</div><div class="gm-footer"><button type="button" class="actionbtn" id="uprising-continue">' +
           esc(FB.T('Continue')) + '</button></div>';
         let acknowledged = false;
         openModal(receipt.result === 'failure' ? FB.T('Negotiation failed') : FB.T('Grievance settled'), resultHtml, {
@@ -17988,7 +18039,7 @@ window.FB = window.FB || {};
         if (result.passed) religiousOfficeSuccess(c, FB.T('Qualification gained'), FB.T(
           'Congratulations, {name}! You are now {rank}.', {
             name:c.name, rank:FB.careerTitle(s, c)
-          }), FB.T('Your new qualification opens work and services that require this professional rank.'), finish, before);
+          }), FB.T('Your new qualification opens work and services that require this professional rank.'), finish, before, true);
         else { UI.closeModal(); finish(); }
       });
     });
@@ -18125,16 +18176,18 @@ window.FB = window.FB || {};
   function promotionResources(s) {
     return { gold:s.player.gold, prestige:s.player.prestige, piety:s.player.piety };
   }
-  function promotionReceipt(before) {
+  function promotionReceipt(before, omitMoney) {
     if (!before) return '';
     const s = FB.state, impacts = [];
     ['gold', 'prestige', 'piety'].forEach(function (key) {
+      if (omitMoney && key === 'gold') return;
       const amount = s.player[key] - before[key];
       if (amount) impacts.push({ type:key, amount:amount, resolved:true });
     });
-    return '<div class="event-impact-chips full" data-promotion-receipt>' + impacts.map(function (record) {
+    if (!impacts.length) return '';
+    return outcomeDetailsHtml('<div class="event-impact-chips full" data-promotion-receipt>' + impacts.map(function (record) {
       return consequenceChipHtml(s, record, 'resolved');
-    }).join('') + '</div>';
+    }).join('') + '</div>', 'promotion-result-details');
   }
 
   function religiousRankResult(c, finish, before) {
@@ -18149,7 +18202,7 @@ window.FB = window.FB || {};
       }), finish, before);
   }
 
-  function religiousOfficeSuccess(c, title, summary, benefits, onContinue, before) {
+  function religiousOfficeSuccess(c, title, summary, benefits, onContinue, before, omitMoney) {
     let acknowledged = false;
     function acknowledge() {
       if (acknowledged) return;
@@ -18162,7 +18215,7 @@ window.FB = window.FB || {};
       '<button type="button" class="linklike" id="office-result-person">' +
       esc(FB.papalDisplayName(FB.state, c)) + '</button>' +
       '<p class="religious-office-benefits">' + esc(benefits) + '</p>' +
-      '</div></div>' + promotionReceipt(before) + '</div><button class="btn primary actionbtn" id="office-result-continue">' +
+      '</div></div>' + promotionReceipt(before, omitMoney) + '</div><button class="btn primary actionbtn" id="office-result-continue">' +
       esc(FB.T('Continue')) + '</button>';
     openModal(title, h, { onDismiss:acknowledge, noFocus:true });
     armEventGuard();
@@ -18184,17 +18237,15 @@ window.FB = window.FB || {};
     const result = FB.petitionForCardinal(s, c);
     if (!result) return;
     UI.refresh();
+    UI.closeModal();
     if (result.accepted) {
       religiousOfficeSuccess(c, FB.T('Appointed Cardinal'), FB.T(
         '{name} is appointed to the College of Cardinals.',
-        { name:c.name }), FB.T('The office grants station 4 and 3.5 piety each season.'), function () {
-          if (returnContext === 'bishopric') UI.showBishopric();
-          else finishHouseholdPlanReturn(returnContext, UI.closeModal);
-        }, before);
+        { name:c.name }), FB.T('The office grants station 4 and 3.5 piety each season.'), null, before);
     } else {
-      UI.toast(FB.T('Rome refuses the petition.'));
-      if (returnContext === 'bishopric') UI.showBishopric();
-      else finishHouseholdPlanReturn(returnContext, UI.closeModal);
+      religiousOfficeSuccess(c, FB.T('Petition refused'), FB.T(
+        'Rome refuses the petition for {name}.', { name:c.name }), FB.T(
+        'Another petition may be made in two years.'), null);
     }
   }
 
@@ -18234,7 +18285,7 @@ window.FB = window.FB || {};
         requirements:status.missing.join('; ')
       })) + '</div>';
     }
-    h += '<div class="modal-actions">' +
+    h += '<div class="bishop-appointment-actions">' +
       '<button class="btn primary" id="bishop-merit"' +
       (status.ready ? '' : ' disabled') + '>' +
       esc(FB.T('Petition on merit — {chance}%', {
@@ -18259,16 +18310,13 @@ window.FB = window.FB || {};
       UI.closeModal();
       function finish() {
         FB.game.passDay({ skipFocus:true });
-        resumeManagementAfterDay(returnContext, function () {
-          UI.showCareerPicker(cid, returnContext);
-        });
       }
       if (result && result.accepted) {
         religiousOfficeSuccess(c, FB.T('Invested as Bishop'), FB.T(
           '{name} is invested as a Bishop.', { name:c.name }), FB.T(
           'The see provides seasonal revenue and an episcopal household and returns to the Church on death.'), finish, before);
       } else {
-        UI.toast(FB.T('The appointment is refused; another petition may be made in two years.'));
+        // The refusal news already queued the standard outcome and its receipt.
         finish();
       }
     }

@@ -377,5 +377,41 @@ test('an outcome without authored prose shows consequences without repeating the
   await expect(page.locator('#outcome-continue')).toBeVisible();
   await expect(page.locator('#ev-text')).not.toContainText('Resolved:');
   await expect(page.locator('#ev-text')).not.toContainText('It goes poorly.');
-  await expect(page.locator('.decision-outcome-changes')).toBeVisible();
+  await expect(page.locator('.decision-outcome-changes')).toBeHidden();
 });
+
+for (const width of [390, 1280]) {
+  test('outcome chips stay in accessible details at ' + width, async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:width, height:844 });
+    await start(page, testInfo);
+    await fever(page, true);
+    await ready(page);
+    await page.locator('#ev-options .evopt').first().click();
+    await expect(page.locator('#outcome-continue')).toBeVisible();
+    const details = page.locator('#outcome-details');
+    await expect(details).toBeHidden();
+    expect(await page.locator('#eventmodal .event-impact-chip').count()).toBeGreaterThan(0);
+    expect(await page.locator('#eventmodal .event-impact-chip').evaluateAll(function (chips) {
+      return chips.every(function (chip) { return !!chip.closest('.settcard-details'); });
+    })).toBe(true);
+    const before = await page.evaluate(function () { return FB.state.player.gold; });
+    if (width === 390) {
+      const toggle = page.locator('[aria-controls="outcome-details"]');
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(details).toBeVisible();
+      await expect(details.locator('.event-impact-chip').first()).toBeVisible();
+      await toggle.click();
+      await expect(details).toBeHidden();
+    } else {
+      await page.locator('.decision-outcome-details .settcard-head').focus();
+      await expect(page.locator('#tooltip')).toBeVisible();
+      await expect(page.locator('#tooltip .event-impact-chip').first()).toBeVisible();
+      await expect(details).toBeHidden();
+    }
+    expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(before);
+    await ready(page);
+    await page.locator('#outcome-continue').click();
+    await expect(page.locator('#eventmodal')).toBeHidden();
+  });
+}

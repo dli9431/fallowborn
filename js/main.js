@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.178.2';
+FB.VERSION = '1.178.3';
 FB.CHANGELOG = [
+  { v: '1.178.3', date: '2026-09-09', changes: [
+    'Commons events use shorter text and compact tooltip chips. Appointment and promotion results close their parent menus, and result chips stay in Details disclosures.'
+  ] },
   { v: '1.178.2', date: '2026-09-09', changes: [
     'Historical ambition detail buttons follow the shared desktop and mobile card layout.'
   ] },

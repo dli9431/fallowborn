@@ -197,8 +197,8 @@ sheet opens either a direct purchase or negotiated terms; neither route has a se
 Deed. The land coachmark points to this same entry. Opening the purchase or terms sheet
 derives the live quote and rechecks it before payment. Price, service, expiry, and any
 blocker stay visible; family-share and Standing calculations do not appear in these
-screens. Freedom outcomes use one release sentence plus actual consequence chips and
-participant portraits, with the complete durable messages retained in the Chronicle.
+screens. Freedom outcomes use one release sentence and participant portraits, with
+actual consequence chips in the shared Details tooltip/disclosure, with the complete durable messages retained in the Chronicle.
 This is presentation only and changes no eligibility or technology requirements.
 
 Purchase prices cover the living family that receives the rank change, rather than
@@ -940,4 +940,12 @@ outcome. Outcome rendering tolerates touch boots without a desktop tooltip eleme
 
 Significant decisions keep their result toast alongside the Continue screen; delayed milestones also retain their ordinary news toast, including under autoresolve. Purchasing lawful freedom grants +20 Standing from each newly freed family member, including separately purchased relatives, once at actual release.
 
-Outcome aftermaths state the result in one concise sentence for downfall, tournaments, grants, political negotiations, and commissioned works. Specific custom-handler prose replaces generic chance text when available; otherwise actual consequence chips carry the result without repeating the chosen instruction. This changes presentation only.
+Outcome aftermaths state the result in one concise sentence for downfall, tournaments, grants, political negotiations, and commissioned works. Specific custom-handler prose replaces generic chance text when available; otherwise actual consequence chips in Details carry the result without repeating the chosen instruction. This changes presentation only.
+
+Commons petition and outbreak prose keeps deadlines and material risk concise. Shared concession terms are grouped only for display in option disclosures; resolution and receipts retain every county impact.
+
+Commons option disclosures use short, separate consequence chips for settlement, county scope, duration, modifier benefits/costs, and transfer persistence. The deferral uses four chips for grace, recovery, conditional loss, and disruption duration; zero upkeep and repeated narrative are omitted.
+
+Negotiation uses the same concession chips in its success section. Suppression success has an uprising-ended chip; failure and endurance separate continued disruption, unchanged deadlines, and spread risk into three chips. Chance, payment, and support impacts retain their ordinary sections.
+
+All event and outcome modal result chips stay inside the shared tooltip/compact disclosure. Standard decision outcomes, promotion results, and inline commons settlements use the same Details renderer; disclosures start collapsed and never apply effects again. Chronicle entries and receipt toasts retain their existing chip summaries.

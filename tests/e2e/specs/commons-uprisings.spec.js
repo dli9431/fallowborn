@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/keys.js','js/institutions.js', 'js/events.js', 'js/modifiers.js',
+  'css/style.css', 'js/keys.js','js/institutions.js', 'js/events.js', 'js/modifiers.js',
   'js/world.js', 'js/actions.js', 'js/main.js', 'js/save.js', 'js/ui_modals.js', 'js/ui_misc.js',
   'data/political_institutions.js', 'data/modifiers.js', 'data/events_politics.js',
   'data/events_noble.js', 'data/map_data.js', 'data/technology.js']);
@@ -257,6 +257,22 @@ for (const width of [390, 1280]) {
     });
     await expect(page.locator('#ev-text')).toContainText('90 days');
     await expect(page.locator('#ev-text')).toContainText('Popular support above -10');
+    await expect(page.locator('#ev-title')).toHaveText('A final petition');
+    await expect(page.locator('#ev-text')).toContainText('25 to 100%');
+    await expect(page.locator('#ev-text')).toContainText('180 days');
+    await expect(page.locator('#event-choice-details-0 .event-concession-terms')).toHaveCount(1);
+    await expect(page.locator('#event-choice-details-1 .event-impact-chip')).toHaveCount(4);
+    await expect(page.locator('#event-choice-details-1')).toContainText('If unresolved: tax and levies -25% to -100%');
+    await expect(page.locator('#event-choice-details-0 .event-concession-terms > :not(.event-impact-chip)')).toHaveCount(0);
+    await expect(page.locator('#event-choice-details-0')).not.toContainText('No seasonal upkeep');
+    await expect(page.locator('#event-choice-details-0')).toContainText('Grievance settled');
+    if (width === 390) {
+      const details = page.locator('.event-choice').first().locator('.event-details-button');
+      await details.click();
+      await expect(details).toHaveAttribute('aria-expanded', 'true');
+      await expect(page.locator('#event-choice-details-0')).toBeVisible();
+      await details.click();
+    }
     await expect.poll(function () {
       return page.evaluate(function () { return !FB.ui.eventInputGuarded(); });
     }).toBe(true);
@@ -269,6 +285,17 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#commons-uprising-status')).toContainText('+6 Popular support, -2 prestige');
     await page.locator('#commons-uprising-concede').click();
     await expect(page.locator('[data-uprising-result]')).toContainText('Prestige -2');
+    await expect(page.locator('#uprising-result-details')).toBeHidden();
+    expect(await page.locator('[data-uprising-result] .event-impact-chip').evaluateAll(function (chips) {
+      return chips.length > 0 && chips.every(function (chip) { return !!chip.closest('.settcard-details'); });
+    })).toBe(true);
+    if (width === 390) {
+      await page.locator('[aria-controls="uprising-result-details"]').click();
+      await expect(page.locator('#uprising-result-details')).toBeVisible();
+    } else {
+      await page.locator('[data-uprising-result] .settcard-head').focus();
+      await expect(page.locator('#tooltip .event-impact-chip').first()).toBeVisible();
+    }
     await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
     await page.locator('#uprising-continue').click();
     await expect(page.locator('#commons-uprising-status')).toHaveCount(0);
@@ -973,5 +1000,30 @@ for (const acknowledgement of ['Continue', 'Escape']) {
       return Math.abs(body.scrollTop - Math.min(window.uprisingReturnScroll, body.scrollHeight - body.clientHeight));
     }); }).toBeLessThanOrEqual(1);
     expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(80);
+  });
+}
+
+for (const width of [390, 1280]) {
+  test('uprising terms group identical county concessions at ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:844 });
+    await page.evaluate(function () {
+      const item = window.beginCommons();
+      FB.state.eventQueue = [];
+      FB.ui.runEvents([item]);
+    });
+    await expect(page.locator('#ev-title')).toHaveText('The commons rise');
+    await expect(page.locator('#ev-text')).toContainText('Unrest can spread every 30 days');
+    await expect(page.locator('#ev-text')).toContainText('180 days');
+    await expect(page.locator('#event-choice-details-0 .event-concession-terms')).toHaveCount(1);
+    await expect(page.locator('#event-choice-details-0')).toContainText('1080 days');
+    await expect(page.locator('#event-choice-details-0')).toContainText('-8% county tax');
+    await expect(page.locator('#event-choice-details-1 .event-concession-terms')).toHaveCount(1);
+    await expect(page.locator('#event-choice-details-1')).toContainText('Grievance settled');
+    await expect(page.locator('#event-choice-details-1')).toContainText('Disruption continues');
+    await expect(page.locator('#event-choice-details-1')).not.toContainText('Active counties keep their own');
+    await expect(page.locator('#event-choice-details-2')).toContainText('Uprising ended');
+    await expect(page.locator('#event-choice-details-2')).toContainText('Original deadlines unchanged');
+    await expect(page.locator('#event-choice-details-3 .event-impact-chip')).toHaveCount(3);
+    await expect(page.locator('#event-choice-details-3')).toContainText('Low support: unrest may spread');
   });
 }

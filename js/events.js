@@ -10271,7 +10271,7 @@ window.FB = window.FB || {};
      only adverse terms are numeric; favorable terms are named without giving
      away their magnitude. Direction differs by field (lower construction cost
      is good, for example), so sign alone is not sufficient. */
-  function eventModifierPreviewText(def, state) {
+  function eventModifierPreviewText(def, state, chips) {
     const fx = def === FBDATA.modifiers.commons_uprising && FB.modifierEffects
       ? FB.modifierEffects(state, 'commons_uprising') : def && def.fx || {};
     const benefits = [], costs = [];
@@ -10321,6 +10321,9 @@ window.FB = window.FB || {};
         amount:Math.round(value * 100)
       });
     });
+    if (chips) return benefits.map(function (label) {
+      return { text:FB.T('Improved {benefit}', { benefit:label }), tone:'gain' };
+    }).concat(costs.map(function (label) { return { text:label, tone:'cost' }; }));
     const parts = [];
     if (benefits.length) parts.push(FB.T('Benefits: {effects}', {
       effects:benefits.join(', ')
@@ -10328,6 +10331,10 @@ window.FB = window.FB || {};
     for (let i = 0; i < costs.length; i++) parts.push(costs[i]);
     return parts.join(' · ');
   }
+
+  FB.eventModifierPreviewChips = function (state, id) {
+    return eventModifierPreviewText(FBDATA.modifiers[id], state, true);
+  };
 
   FB.eventImpactText = function (state, record, mode) {
     mode = mode || 'preview';
@@ -10344,7 +10351,8 @@ window.FB = window.FB || {};
     if (record.type === 'commonsUprising') {
       if (record.action === 'local_settle') return FB.T('Grant the demanded privilege and end resistance only in your affected directly held counties.');
       if (record.action === 'local_failed') return FB.T('Local talks are spent for this uprising; existing county deadlines remain unchanged.');
-      if ((record.action === 'defer' || record.action === 'spread_defer')) return FB.T('Final warning: {days} days to resolve the grievance.', {
+      if ((record.action === 'defer' || record.action === 'spread_defer')) return FB.T('Grant the concession or restore Popular support above {support} within {days} days. Unresolved counties lose 25 to 100% tax and levies for up to {duration} days; the loss scales with support, reaching 100% at -100.', {
+        support:FBDATA.balance.commonsUprisingRecoverySupport, duration:FBDATA.modifiers.commons_uprising.days,
         days:FBDATA.balance.commonsUprisingWarningDays
       });
       if (record.action === 'concede') return FB.T('Settle the local grievance and end its disruption.');

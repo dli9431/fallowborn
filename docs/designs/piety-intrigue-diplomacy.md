@@ -255,3 +255,13 @@ current commitments, including blocked offers, costs, Standing, odds, estimated
 defensive aid, and family ties. Envoy entry points use the same list. Each court
 links to its marriage candidates. Technology review `dynastic_alliance_negotiation`
 is `none`: family-based diplomacy has no credible research dependency.
+
+The bishop appointment sheet stacks merit, endowment, and Back controls at full width with consistent spacing; cost and success chance remain in each petition label.
+
+Submitting a bishop petition closes the management modal history and shows a success or refusal receipt. Acknowledgement spends the day and returns to the game without reopening Work; cancelling before submission retains the normal Back route.
+
+Successful Cardinal promotion closes the Bishopric/management history before opening its result; acknowledgement returns to the game. Refused Cardinal petitions also close the Bishopric and show a Petition refused result with the two-year cooldown. The refusal omits the money chip because the petition button already states the fee; the fee is charged only once. Continue returns to the game; reopening the Bishopric shows the disabled petition.
+
+A refused bishop petition uses only the standard news outcome, titled Appointment refused, with its candidate portrait and any paid endowment in the receipt. It does not precede that outcome with a separate religious-office result.
+
+Promotion result resource chips use the shared Details tooltip on desktop and compact tap disclosure. The result title, identity, and benefit summary remain visible; previously omitted petition/examination fee chips remain omitted.

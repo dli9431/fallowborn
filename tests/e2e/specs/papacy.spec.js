@@ -409,7 +409,14 @@ test('Self links the recognized Pope to the character sheet', async function ({ 
 
 test('Bishop appointment retains a success result until acknowledged', async function ({ page }) {
   await prepareReligiousCareer(page, false);
-  await page.evaluate(function () { FB.ui.showBishopAppointment(FB.state.player.charId); });
+  await page.evaluate(function () {
+    FB.ui.showCareerPicker(FB.state.player.charId);
+    FB.ui.showBishopAppointment(FB.state.player.charId);
+  });
+  const merit = await page.locator('#bishop-merit').boundingBox();
+  const endow = await page.locator('#bishop-endow').boundingBox();
+  expect(endow.y).toBeGreaterThanOrEqual(merit.y + merit.height + 7);
+  expect(Math.abs(endow.width - merit.width)).toBeLessThan(2);
   await page.locator('#bishop-endow').click();
   await expect(page.locator('#gm-title')).toHaveText('Invested as Bishop');
   await expect(page.locator('[data-religious-office-result]')).toContainText('episcopal household');
@@ -421,9 +428,11 @@ test('Bishop appointment retains a success result until acknowledged', async fun
   await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await page.locator('#office-result-continue').click();
   await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+  await expect(page.locator('#genmodal')).toBeHidden();
 });
 
 test('Bishopric petitions immediately and acknowledges Cardinal success once', async function ({ page }) {
+  await page.setViewportSize({ width:1280, height:844 });
   const person = await prepareReligiousCareer(page, true);
   const cost = await page.evaluate(function () {
     FB.ui.showBishopric();
@@ -435,6 +444,9 @@ test('Bishopric petitions immediately and acknowledges Cardinal success once', a
   await expect(page.locator('.religious-office-benefits')).toHaveText('The office grants station 4 and 3.5 piety each season.');
   await expect(page.locator('[data-promotion-receipt]')).toContainText(
     await page.evaluate(function (cost) { return FB.T('Money {change}', { change:'−' + FB.money(cost) }); }, cost));
+  await expect(page.locator('[data-promotion-receipt]')).toBeHidden();
+  await page.locator('[data-religious-office-result] .settcard-head').focus();
+  await expect(page.locator('#tooltip .event-impact-chip').first()).toBeVisible();
   const nameBox = await page.locator('#office-result-person').boundingBox();
   const benefitsBox = await page.locator('.religious-office-benefits').boundingBox();
   expect(benefitsBox.y).toBeGreaterThanOrEqual(nameBox.y + nameBox.height);
@@ -442,9 +454,8 @@ test('Bishopric petitions immediately and acknowledges Cardinal success once', a
   await expect(page.locator('#papal-petition')).toHaveCount(0);
   expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(person.gold - cost);
   await page.keyboard.press('Escape');
-  await expect(page.locator('#gm-title')).toHaveText('The Bishopric');
+  await expect(page.locator('#genmodal')).toBeHidden();
   expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(person.gold - cost);
-  await expect(page.locator('#bishop-cardinal')).toHaveCount(0);
 });
 
 test('choosing a Papal name shows the successful accession', async function ({ page }) {
@@ -470,7 +481,7 @@ test('choosing a Papal name shows the successful accession', async function ({ p
 });
 
 
-test('a refused direct red-hat petition refreshes its cooldown without a success screen', async function ({ page }) {
+test('a refused direct red-hat petition closes the Bishopric and shows one result', async function ({ page }) {
   const person = await prepareReligiousCareer(page, true);
   const cost = await page.evaluate(function () {
     FB.chance = function () { return false; };
@@ -478,11 +489,18 @@ test('a refused direct red-hat petition refreshes its cooldown without a success
     return FB.cardinalPetitionStatus(FB.state, FB.state.player.charId).cost;
   });
   await page.locator('#bishop-cardinal').click();
-  await expect(page.locator('#gm-title')).toHaveText('The Bishopric');
-  await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+  await expect(page.locator('#gm-title')).toHaveText('Petition refused');
+  await expect(page.locator('[data-religious-office-result]')).toContainText('two years');
+  await expect(page.locator('[data-promotion-receipt]')).toHaveCount(0);
+  await expect(page.locator('#bishop-cardinal')).toHaveCount(0);
+  expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(person.gold - cost);
+  await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
+  await page.locator('#office-result-continue').click();
+  await expect(page.locator('#genmodal')).toBeHidden();
+  expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(person.gold - cost);
+  await page.evaluate(function () { FB.ui.showBishopric(); });
   await expect(page.locator('#bishop-cardinal')).toBeDisabled();
   await expect(page.locator('#bishop-cardinal')).toContainText('cooldown');
-  expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(person.gold - cost);
 });
 
 
@@ -544,4 +562,30 @@ test('promotion acknowledgement rejects transition input and held shortcuts', as
     } finally { Date.now = realNow; }
   });
   expect(result).toEqual({ immediate:true, held:true, inFlight:true, acknowledged:true, chargedOnce:true });
+});
+
+test('refused bishop appointment shows its cost receipt and exits to the game', async function ({ page }) {
+  await prepareReligiousCareer(page, false);
+  await page.setViewportSize({ width:390, height:844 });
+  await page.evaluate(function () {
+    FB.chance = function () { return false; };
+    FB.ui.showCareerPicker(FB.state.player.charId);
+    FB.ui.showBishopAppointment(FB.state.player.charId);
+  });
+  const merit = await page.locator('#bishop-merit').boundingBox();
+  const endow = await page.locator('#bishop-endow').boundingBox();
+  expect(endow.y).toBeGreaterThanOrEqual(merit.y + merit.height + 7);
+  expect(Math.abs(merit.x - endow.x)).toBeLessThan(2);
+  await page.locator('#bishop-endow').click();
+  await expect(page.locator('#ev-title')).toHaveText('Appointment refused');
+  await expect(page.locator('.decision-outcome')).toContainText('Money');
+  await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
+  await page.locator('#outcome-continue').click();
+  await expect(page.locator('#genmodal')).toBeHidden();
+  await expect(page.locator('#eventmodal')).toBeHidden();
+  expect(await page.evaluate(function () {
+    return FB.state.eventQueue.filter(function (item) {
+      return item.id === 'decision_outcome' && item.ctx.receipt.outcome.key === 'news.religion.bishop_refused';
+    }).length;
+  })).toBe(0);
 });

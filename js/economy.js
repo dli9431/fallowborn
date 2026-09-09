@@ -1264,7 +1264,10 @@ window.FB = window.FB || {};
       }
       FB.news(state, FB.msg('news.religion.bishop_refused',
         '⛪ The appointment of {name} is refused; another petition may be made in two years.',
-        { name:FB.fullName(c) }));
+        { name:FB.fullName(c) }), {
+        outcomeCharacterIds:[c.id],
+        outcomeImpacts:endowed ? [{ type:'gold', amount:-status.endowmentGold }] : []
+      });
       return { accepted:false, chance:chance, simony:simony };
     }
     delete c.bishopPetitionRefusedTurn;

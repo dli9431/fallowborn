@@ -8,9 +8,9 @@ FBDATA.events = FBDATA.events || [];
 
 FBDATA.events.push(
 
-{ id:'commons_uprising_warning', title:'A Final Petition from {county}',
+{ id:'commons_uprising_warning', title:'A final petition',
   trigger:{ never:true }, contextValidator:'commons_uprising_valid',
-  text:'Affected counties: {county}. Their commons have not accepted your refusal of {privilege}. Their delegates warn that collection and muster will stop if you leave the grievance unanswered. Grant the concession now, or take {warningDays} days to grant it or restore Popular support above {recoverySupport}. Continued neglect will reduce tax and levy output in every listed county by 25% to 100% for up to {uprisingDays} days, depending on Popular support. At -100 support, collection and muster stop completely.',
+  text:'The commons of {county} demand {privilege}. You have {warningDays} days to grant it or restore Popular support above {recoverySupport}. Otherwise, county tax and levies fall by 25 to 100% for up to {uprisingDays} days.',
   options:[
     { label:'Grant {privilege} in every affected county.',
       effects:{ custom:'commons_uprising_concede', popularOpinion:6, prestige:-2 } },
@@ -40,9 +40,9 @@ FBDATA.events.push(
         effects:{ custom:'commons_uprising_local_failed' } } }
   ]},
 
-{ id:'commons_uprising_begins', title:'The Commons Rise in {county}',
+{ id:'commons_uprising_begins', title:'The commons rise',
   trigger:{ never:true }, contextValidator:'commons_uprising_valid',
-  text:'Affected counties: {county}. The refused petition for {privilege} has become open resistance across these holdings. Tax carts stand empty and the muster rolls go unanswered. The latest report puts the county tax and levy reduction at {reduction}%. The penalty follows current Popular support, from 25% at -20 support to 100% at -100, for up to {uprisingDays} days. At sustained low Popular support, resistance can spread to one neighboring county every {spreadDays} days, including subordinate lands. Each new county receives its own warning and deadline. A successful response settles all listed counties. Concessions apply in each county; money, prestige, and Popular support changes are charged once.',
+  text:'The commons of {county} resist your refusal of {privilege}. County tax and levies are down {reduction}% for up to {uprisingDays} days. Unrest can spread every {spreadDays} days. Concessions or successful suppression settle all affected counties.',
   options:[
     { label:'Grant {privilege} in every affected county.',
       effects:{ custom:'commons_uprising_concede', popularOpinion:6, prestige:-2 } },

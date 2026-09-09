@@ -5880,3 +5880,7 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 .marriage-lineage-review p { margin: 0; }
 .marriage-lineage-field { display: grid; gap: 8px; min-width: 0; }
 .marriage-lineage-field select { width: 100%; min-width: 0; }
+
+/* Episcopal petitions keep long cost/chance labels aligned at every width. */
+.bishop-appointment-actions { display:grid; grid-template-columns:minmax(0, 1fr); gap:8px; margin-top:16px; }
+.bishop-appointment-actions > .btn { width:100%; min-height:44px; white-space:normal; }
