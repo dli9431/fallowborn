@@ -1066,3 +1066,6 @@ Social-access guidance preserves the station ladder: Serfs can cultivate Freehol
 directly, then use Warm contacts to reach Gentry and their lord. A blocked character
 sheet links an existing local priest, steward, or notable at the missing station when
 that person is reachable. This only exposes existing cultivation, with no new gate.
+
+
+Successful professional examinations show a qualification result before returning to career management. Completed apprenticeships and automatic non-guild mastery queue ordinary outcome acknowledgements; automatic resolution retains the normal no-interruption policy.

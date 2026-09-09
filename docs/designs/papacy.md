@@ -70,6 +70,18 @@ node. If its holder later inherits secular land, both offices coexist. Cardinals
 their bishopric; a Pope vacates it. Death likewise returns the see to the Church, and a
 see-only dynasty successor continues as gentry with the family's private property.
 
+Successful Bishop appointments, Cardinal petitions, and the player's Papal name choice
+show an acknowledgement sheet with the appointed character's portrait aligned beside
+the linked name and office consequences below the name, plus one Continue action.
+The result omits the already-paid fee to avoid implying a second charge. Returning from the character sheet
+retains the result; acknowledgement never repeats the appointment or fee. Bishop
+petitions finish their existing one-day management flow after acknowledgement.
+Self aligns the recognized Pope's portrait beside the linked name, with authority and
+status on a separate, unlinked line.
+The Bishopric submits its red-hat petition directly, with the fee, office benefit,
+and two-year refusal risk visible beside the action; no second confirmation is needed.
+These presentation changes do not alter eligibility or technology dependencies.
+
 ## Cardinals
 
 A living Catholic man who is unmarried or widowed, not betrothed, already holds a
@@ -243,3 +255,6 @@ The yearly Papacy path likewise trusts a complete saved shape and synchronizes s
 once. During realm AI, the territorial claimant lookup runs only for the realm holding the
 Roman office and reads that normalized shape directly; it does not repeat the sovereign-wide
 repair for every non-Roman realm rejected by the lookup.
+
+
+Abbot and Abbess elections and ordinary religious rank advances also show congratulations, current social station, and seasonal office piety before returning to career management.

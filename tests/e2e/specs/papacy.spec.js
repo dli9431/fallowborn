@@ -3,6 +3,9 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'css/style.css',
   'js/model.js',
+  'js/economy.js',
+  'js/ui_panels.js',
+  'data/economy.js',
   'js/papacy.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -344,3 +347,148 @@ test('Papacy sheet groups the saved ballot and moves supporting detail to toolti
     await voter.locator('.settcard-info').click();
     await expect(voter.locator('.papacy-ballot-voter-details')).toBeVisible();
   });
+
+
+async function prepareReligiousCareer(page, bishop) {
+  return page.evaluate(function (hasSee) {
+    const s = FB.state, p = s.player, c = s.chars[p.charId];
+    p.tier = 2;
+    p.provs = [];
+    p.provinceId = 'london';
+    p.profession = 'priest';
+    p.piety = 1000;
+    p.prestige = 1000;
+    p.gold = 1000;
+    c.sex = 'm';
+    c.religion = 'catholic';
+    c.born = s.date.year - 45;
+    c.spouseId = null;
+    c.betrothedId = null;
+    for (const id in s.chars) {
+      if (s.chars[id].spouseId === c.id) s.chars[id].spouseId = null;
+    }
+    c.traits = c.traits.filter(function (id) { return id !== 'excommunicated'; });
+    c.skills.lea = 25;
+    c.career = { profession:'priest', rank:'master', experience:20,
+      startedYear:s.date.year - 20, guildRank:'none', guildStanding:0, chosen:true };
+    c.religiousRanks = { catholic_clerical:4 };
+    delete c.bishopric;
+    delete c.bishopricVacatedTurn;
+    delete c.bishopPetitionRefusedTurn;
+    const papacy = FB.ensurePapacy(s);
+    const obedience = papacy.obediences[papacy.romanObedience];
+    papacy.relationships[obedience.claimantId + ':' + c.id] = 100;
+    if (hasSee) FB.installBishopric(s, c, FB.bishopAppointmentStatus(s, c));
+    // Control only the appointment roll; all eligibility, costs and office effects stay real.
+    FB.chance = function () { return true; };
+    FB.ui.refresh();
+    return { id:c.id, popeId:obedience.claimantId, gold:p.gold };
+  }, bishop);
+}
+
+test('Self links the recognized Pope to the character sheet', async function ({ page }) {
+  const person = await prepareReligiousCareer(page, false);
+  await page.evaluate(function () { FB.ui.showTab('char'); });
+  const link = page.locator('#tab-char [data-pope-character]');
+  await expect(link).toHaveAttribute('data-pope-character', person.popeId);
+  await expect(page.locator('#tab-char .religious-head-identity canvas')).toHaveAttribute('data-cid', person.popeId);
+  await expect(link).not.toContainText('authority');
+  await expect(page.locator('#tab-char .religious-head-standing')).toContainText('authority');
+  await link.click();
+  await expect(page.locator('#genmodal')).toBeVisible();
+  await expect(page.locator('#gm-body canvas[data-cid="' + person.popeId + '"]').first()).toBeVisible();
+});
+
+test('Bishop appointment retains a success result until acknowledged', async function ({ page }) {
+  await prepareReligiousCareer(page, false);
+  await page.evaluate(function () { FB.ui.showBishopAppointment(FB.state.player.charId); });
+  await page.locator('#bishop-endow').click();
+  await expect(page.locator('#gm-title')).toHaveText('Invested as Bishop');
+  await expect(page.locator('[data-religious-office-result]')).toContainText('episcopal household');
+  expect(await page.evaluate(function () { return !!FB.state.chars[FB.state.player.charId].bishopric; })).toBe(true);
+  await page.locator('#office-result-person').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-religious-office-result]')).toBeVisible();
+  await page.locator('#office-result-continue').click();
+  await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+});
+
+test('Bishopric petitions immediately and acknowledges Cardinal success once', async function ({ page }) {
+  const person = await prepareReligiousCareer(page, true);
+  const cost = await page.evaluate(function () {
+    FB.ui.showBishopric();
+    return FB.cardinalPetitionStatus(FB.state, FB.state.player.charId).cost;
+  });
+  await page.locator('#bishop-cardinal').click();
+  await expect(page.locator('#gm-title')).toHaveText('Appointed Cardinal');
+  await expect(page.locator('.religious-office-benefits')).toHaveText('The office grants station 4 and 3.5 piety each season.');
+  await expect(page.locator('[data-religious-office-result]')).not.toContainText('Cost');
+  const nameBox = await page.locator('#office-result-person').boundingBox();
+  const benefitsBox = await page.locator('.religious-office-benefits').boundingBox();
+  expect(benefitsBox.y).toBeGreaterThanOrEqual(nameBox.y + nameBox.height);
+  expect(Math.abs(benefitsBox.x - nameBox.x)).toBeLessThan(2);
+  await expect(page.locator('#papal-petition')).toHaveCount(0);
+  expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(person.gold - cost);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#gm-title')).toHaveText('The Bishopric');
+  expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(person.gold - cost);
+  await expect(page.locator('#bishop-cardinal')).toHaveCount(0);
+});
+
+test('choosing a Papal name shows the successful accession', async function ({ page }) {
+  await prepareReligiousCareer(page, true);
+  await page.evaluate(function () {
+    const s = FB.state, papacy = FB.ensurePapacy(s);
+    const oid = papacy.romanObedience;
+    FB.appointCardinal(s, s.chars[s.player.charId], oid, papacy.obediences[oid].claimantId);
+    FB.startPapalElection(s, oid, 'death');
+    const election = papacy.elections[oid];
+    election.phase = 'name';
+    election.winnerId = s.player.charId;
+    FB.ui.showPapacy(oid);
+  });
+  await page.locator('[data-papal-name]').first().click();
+  await expect(page.locator('#gm-title')).toHaveText('Elected Pope');
+  await expect(page.locator('[data-religious-office-result]')).toContainText('family property enters custody');
+  expect(await page.evaluate(function () { return !!FB.playerPope(FB.state); })).toBe(true);
+  await page.locator('#office-result-continue').click();
+  await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+});
+
+
+test('a refused direct red-hat petition refreshes its cooldown without a success screen', async function ({ page }) {
+  const person = await prepareReligiousCareer(page, true);
+  const cost = await page.evaluate(function () {
+    FB.chance = function () { return false; };
+    FB.ui.showBishopric();
+    return FB.cardinalPetitionStatus(FB.state, FB.state.player.charId).cost;
+  });
+  await page.locator('#bishop-cardinal').click();
+  await expect(page.locator('#gm-title')).toHaveText('The Bishopric');
+  await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+  await expect(page.locator('#bishop-cardinal')).toBeDisabled();
+  await expect(page.locator('#bishop-cardinal')).toContainText('cooldown');
+  expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(person.gold - cost);
+});
+
+
+for (const rank of [0, 2]) {
+  test('monastic advancement from rank ' + rank + ' retains its success screen', async function ({ page }) {
+    await prepareReligiousCareer(page, false);
+    await page.evaluate(function (index) {
+      const s = FB.state, c = s.chars[s.player.charId];
+      s.player.profession = 'monk';
+      c.career.profession = 'monk';
+      c.religiousRanks = { catholic_monastic:index };
+      if (index === 2) FB.ui.showAbbotElection(c.id);
+      else FB.ui.showCareerPicker(c.id);
+    }, rank);
+    await page.locator(rank === 2 ? '#abbot-election' : '#career-religious').click();
+    await expect(page.locator('#gm-title')).toHaveText('Religious rank gained');
+    await expect(page.locator('.religious-office-benefits')).toContainText(
+      rank === 2 ? '1.5 piety each season' : '0.5 piety each season');
+    await expect(page.locator('[data-religious-office-result]')).toContainText('Congratulations');
+    await page.locator('#office-result-continue').click();
+    await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+  });
+}

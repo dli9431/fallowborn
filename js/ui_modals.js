@@ -1290,6 +1290,21 @@ window.FB = window.FB || {};
     }
     const receipt = FB.resolveEventOption(s, ev, opt, ctx, { automated:false });
     if (!receipt) return false;
+    // Investiture already owns a result event: show it in this interaction,
+    // instead of leaving it in the daily queue after its offer closes.
+    if (ev.id === 'rank_elevation_offer') {
+      const queue = s.eventQueue || [];
+      const resultIndex = queue.findIndex(function (item) {
+        return item.id === 'rank_elevation_result' && item.ctx &&
+          item.ctx.protagonistId === s.player.charId;
+      });
+      if (resultIndex >= 0) {
+        const result = queue.splice(resultIndex, 1)[0];
+        showEvent(FB.eventById(result.id), result.ctx);
+        UI.refresh();
+        return true;
+      }
+    }
     if (!receipt.showOutcome && UI.eventReceiptToast) UI.eventReceiptToast(receipt);
     /* A daily pick normally contains one event, but callers and restored UI
        state can still supply a batch. If the event was reached while paused,
@@ -13010,6 +13025,19 @@ window.FB = window.FB || {};
     });
   };
 
+  function guildRankBenefits(c) {
+    const career = FB.careerOf(FB.state, c);
+    const bonus = Math.round((FB.guildIncomeMultiplier(career) - 1) * 100);
+    const benefits = [FB.T('Guild commissions are available by spending Guild Standing.')];
+    if (bonus) benefits.push(FB.T(
+      'Your guild rank now gives a {percent}% enterprise income bonus.', { percent:bonus }));
+    if (career.guildRank === 'master') benefits.push(FB.T(
+      'Your career advances to master, with the master wage rate.'));
+    if (career.guildRank === 'guildmaster') benefits.push(FB.T(
+      'You may pursue a guild specialty and monopoly charter when their other requirements are met.'));
+    return benefits.join(' ');
+  }
+
   UI.showElectionResult = function (result, returnContext) {
     const s = FB.state;
     const def = FBDATA.elections[result.definitionId] || {};
@@ -13050,6 +13078,14 @@ window.FB = window.FB || {};
         '</span><b>' + esc(result.outcomes[electorate.id] === 'support'
           ? FB.T('Supported the candidate') : FB.T('Opposed the candidate')) +
         '</b></div>';
+    }
+    if (result.kind === 'guild' && result.passed && s.chars[result.candidateId]) {
+      const promoted = s.chars[result.candidateId];
+      h = '<div data-guild-rank-result><p>' + esc(FB.T(
+        'Congratulations, {name}! You are now a {rank}.', {
+          name:promoted.name, rank:FB.guildTitle(FB.careerOf(s, promoted))
+        })) + '</p><p class="guild-rank-benefits">' +
+        esc(guildRankBenefits(promoted)) + '</p></div>' + h;
     }
     h += '<div class="gm-footer"><button type="button" class="btn primary" ' +
       'id="election-result-back">' + esc(FB.T('Back')) +
@@ -17803,12 +17839,19 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-career-exam]').forEach(function (b) {
       b.addEventListener('click', function () {
-        if (!FB.takeCareerExam(s, c, b.dataset.careerExam)) return;
-        UI.closeModal();
-        FB.game.passDay({ skipFocus:true });
-        resumeManagementAfterDay(returnContext, function () {
-          UI.showCareerPicker(cid, returnContext);
-        });
+        const result = FB.takeCareerExam(s, c, b.dataset.careerExam);
+        if (!result) return;
+        function finish() {
+          FB.game.passDay({ skipFocus:true });
+          resumeManagementAfterDay(returnContext, function () {
+            UI.showCareerPicker(cid, returnContext);
+          });
+        }
+        if (result.passed) religiousOfficeSuccess(c, FB.T('Qualification gained'), FB.T(
+          'Congratulations, {name}! You are now {rank}.', {
+            name:c.name, rank:FB.careerTitle(s, c)
+          }), FB.T('Your new qualification opens work and services that require this professional rank.'), finish);
+        else { UI.closeModal(); finish(); }
       });
     });
     document.querySelectorAll('[data-career-specialization]').forEach(function (b) {
@@ -17825,15 +17868,29 @@ window.FB = window.FB || {};
     if (guild) guild.addEventListener('click', function () {
       const result = FB.takeGuildStep(s, c);
       if (!result) return;
-      UI.closeModal();
-      FB.game.passDay({ skipFocus:true });
-      resumeManagementAfterDay(returnContext, function () {
-        if (result && result.kind === 'guild') {
-          UI.showElection({
-            view:'career', cid:cid, returnContext:returnContext
-          });
-        } else UI.showCareerPicker(cid, returnContext);
-      });
+      function finish() {
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          if (result && result.kind === 'guild') {
+            UI.showElection({
+              view:'career', cid:cid, returnContext:returnContext
+            });
+          } else UI.showCareerPicker(cid, returnContext);
+        });
+      }
+      if (result.kind === 'guild') finish();
+      else {
+        const career = FB.careerOf(s, c);
+        religiousOfficeSuccess(c, FB.T('Guild rank gained'), FB.T(
+          'Congratulations, {name}! You are now a {rank}.', {
+            name:c.name, rank:FB.guildTitle(career)
+          }), FB.T('+{standing} Guild Standing; +{prestige} prestige. {benefits}', {
+            standing:career.guildRank === 'member' ? 20 : 25,
+            prestige:career.guildRank === 'guildmaster' ? 20 : 8,
+            benefits:guildRankBenefits(c)
+          }), finish);
+      }
     });
     const election = $('career-election');
     if (election) election.addEventListener('click', function () {
@@ -17856,10 +17913,11 @@ window.FB = window.FB || {};
         return;
       }
       if (!FB.takeReligiousStep(s, c)) return;
-      UI.closeModal();
-      FB.game.passDay({ skipFocus:true });
-      resumeManagementAfterDay(returnContext, function () {
-        UI.showCareerPicker(cid, returnContext);
+      religiousRankResult(c, function () {
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          UI.showCareerPicker(cid, returnContext);
+        });
       });
     });
     const cardinal = $('career-cardinal');
@@ -17903,16 +17961,19 @@ window.FB = window.FB || {};
     const election = $('abbot-election');
     if (election) election.addEventListener('click', function () {
       const result = FB.seekAbbotAppointment(s, c);
-      UI.closeModal();
-      UI.toast(result && result.accepted
-        ? FB.T('{name} is elected to lead the religious house.', {
-          name:c.name
-        })
-        : FB.T('The community elects another candidate.'));
-      FB.game.passDay({ skipFocus:true });
-      resumeManagementAfterDay(returnContext, function () {
-        UI.showCareerPicker(cid, returnContext);
-      });
+      if (!result) return;
+      function finish() {
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          UI.showCareerPicker(cid, returnContext);
+        });
+      }
+      if (result.accepted) religiousRankResult(c, finish);
+      else {
+        UI.closeModal();
+        UI.toast(FB.T('The community elects another candidate.'));
+        finish();
+      }
     });
     $('gm-cancel').addEventListener('click', function () {
       finishHouseholdPlanReturn(returnContext, function () {
@@ -17920,6 +17981,64 @@ window.FB = window.FB || {};
       });
     });
   };
+
+  function religiousRankResult(c, finish) {
+    const s = FB.state;
+    const path = FB.religiousPathOf(s, c);
+    const step = path.step;
+    religiousOfficeSuccess(c, FB.T('Religious rank gained'), FB.T(
+      'Congratulations, {name}! You are now {rank}.', {
+        name:c.name, rank:FB.religiousRankTitle(s, c, path)
+      }), FB.T('Social station {station}. The office provides {piety} piety each season.', {
+        station:FB.stationOf(c), piety:step.pietyYield || 0
+      }), finish);
+  }
+
+  function religiousOfficeSuccess(c, title, summary, benefits, onContinue) {
+    let acknowledged = false;
+    function acknowledge() {
+      if (acknowledged) return;
+      acknowledged = true;
+      if (onContinue) onContinue();
+    }
+    const h = '<div data-religious-office-result><p class="gm-body-text">' +
+      esc(summary) + '</p><div class="religious-office-identity">' +
+      FB.faceTag(c, 64, 72) + '<div class="religious-office-copy">' +
+      '<button type="button" class="linklike" id="office-result-person">' +
+      esc(FB.papalDisplayName(FB.state, c)) + '</button>' +
+      '<p class="religious-office-benefits">' + esc(benefits) + '</p>' +
+      '</div></div></div><button class="btn primary actionbtn" id="office-result-continue">' +
+      esc(FB.T('Continue')) + '</button>';
+    openModal(title, h, { onDismiss:acknowledge });
+    FB.paintFaces($('gm-body'), FB.state);
+    $('office-result-person').addEventListener('click', function () {
+      UI.showCharModal(c.id, { view:'religious-office-result' });
+    });
+    $('office-result-continue').addEventListener('click', function () {
+      UI.closeModal();
+      acknowledge();
+    });
+    UI.refresh();
+  }
+
+  function submitCardinalPetition(c, returnContext) {
+    const s = FB.state;
+    const result = FB.petitionForCardinal(s, c);
+    if (!result) return;
+    UI.refresh();
+    if (result.accepted) {
+      religiousOfficeSuccess(c, FB.T('Appointed Cardinal'), FB.T(
+        '{name} is appointed to the College of Cardinals.',
+        { name:c.name }), FB.T('The office grants station 4 and 3.5 piety each season.'), function () {
+          if (returnContext === 'bishopric') UI.showBishopric();
+          else finishHouseholdPlanReturn(returnContext, UI.closeModal);
+        });
+    } else {
+      UI.toast(FB.T('Rome refuses the petition.'));
+      if (returnContext === 'bishopric') UI.showBishopric();
+      else finishHouseholdPlanReturn(returnContext, UI.closeModal);
+    }
+  }
 
   UI.showBishopAppointment = function (cid, returnContext) {
     const s = FB.state;
@@ -17979,13 +18098,20 @@ window.FB = window.FB || {};
     function petition(endowed) {
       const result = FB.seekBishopAppointment(s, c, endowed);
       UI.closeModal();
-      UI.toast(result && result.accepted
-        ? FB.T('{name} is invested as a Bishop.', { name:c.name })
-        : FB.T('The appointment is refused; another petition may be made in two years.'));
-      FB.game.passDay({ skipFocus:true });
-      resumeManagementAfterDay(returnContext, function () {
-        UI.showCareerPicker(cid, returnContext);
-      });
+      function finish() {
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          UI.showCareerPicker(cid, returnContext);
+        });
+      }
+      if (result && result.accepted) {
+        religiousOfficeSuccess(c, FB.T('Invested as Bishop'), FB.T(
+          '{name} is invested as a Bishop.', { name:c.name }), FB.T(
+          'The see provides seasonal revenue and an episcopal household and returns to the Church on death.'), finish);
+      } else {
+        UI.toast(FB.T('The appointment is refused; another petition may be made in two years.'));
+        finish();
+      }
     }
     const merit = $('bishop-merit');
     if (merit) merit.addEventListener('click', function () { petition(false); });
@@ -18099,7 +18225,7 @@ window.FB = window.FB || {};
         esc(FB.T('Petition for the red hat · {money:gold}', {
           gold:cardinal.cost
         })) + '<span class="adesc">' + esc(cardinal.ready
-          ? FB.T('All appointment requirements are met.')
+          ? FB.T('Gain station 4 and 3.5 piety each season. Refusal spends the fee and delays another petition for two years.')
           : FB.T('Unmet: {requirements}', {
             requirements:cardinal.missing.join('; ')
           })) + '</span></button>';
@@ -18118,7 +18244,7 @@ window.FB = window.FB || {};
     });
     const cardinalButton = $('bishop-cardinal');
     if (cardinalButton) cardinalButton.addEventListener('click', function () {
-      UI.showCardinalPetition(me.id, 'bishopric');
+      submitCardinalPetition(me, 'bishopric');
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
@@ -18149,19 +18275,7 @@ window.FB = window.FB || {};
     openModal(FB.T('Petition for the red hat'), h, historyOptions);
     const petition = $('papal-petition');
     if (petition) petition.addEventListener('click', function () {
-      const result = FB.petitionForCardinal(s, c);
-      if (returnsToHouseholdPlan(returnContext)) {
-        UI.refresh();
-        finishHouseholdPlanReturn(returnContext, UI.closeModal);
-      } else {
-        UI.closeModal();
-        UI.refresh();
-      }
-      UI.toast(result && result.accepted
-        ? FB.T('{name} is appointed to the College of Cardinals.', {
-          name:c.name
-        })
-        : FB.T('Rome refuses the petition.'));
+      submitCardinalPetition(c, returnContext);
     });
     $('gm-cancel').addEventListener('click', function () {
       if (returnContext === 'bishopric') UI.showBishopric();
@@ -18720,8 +18834,12 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-papal-name]').forEach(function (b) {
       b.addEventListener('click', function () {
-        FB.choosePapalName(s, obedience.id, b.dataset.papalName);
-        UI.showPapacy(obedience.id);
+        const pope = FB.choosePapalName(s, obedience.id, b.dataset.papalName);
+        if (pope) religiousOfficeSuccess(pope, FB.T('Elected Pope'), FB.T(
+          '{name} takes the Papal office.', { name:FB.papalDisplayName(s, pope) }), FB.T(
+          'Your personal bishopric returns to the Church; secular titles pass to your lawful heir and family property enters custody.'), function () {
+            UI.showPapacy(obedience.id);
+          });
       });
     });
     document.querySelectorAll('[data-investiture-answer]').forEach(function (b) {
@@ -22090,7 +22208,8 @@ window.FB = window.FB || {};
       modalClass:'fullsheet-modal interaction-modal character-interaction-modal',
       historyView:!!returnContext && !royalCourt,
       replaceView:!!replaceView,
-      historyBackRender:returnContext && returnContext.view === 'marriage-finder'
+      historyBackRender:returnContext && (returnContext.view === 'marriage-finder' ||
+        returnContext.view === 'religious-office-result')
         ? null : function () {
         interactionReturn(returnContext);
       }

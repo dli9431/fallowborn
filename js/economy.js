@@ -5166,6 +5166,11 @@ window.FB = window.FB || {};
           !def.learned &&
           FB.skillOf(c, def.skill) >= 8 && !def.guild) {
           career.rank = 'master';
+          FB.news(state, FB.msg('news.career.mastered',
+            'Congratulations, {name}! You are now {rank}, with access to the master wage rate.', {
+              name:c.name,
+              rank:FB.dataParam('career', career.profession, 'ranks.master')
+            }));
         }
       }
     }

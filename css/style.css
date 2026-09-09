@@ -5835,3 +5835,26 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
   .actionbtn, .evopt, .ui-control-row .autorow { font-size: 16px; }
   .gm-body-text { font-size: 16px; }
 }
+
+
+.religious-head-identity, .religious-office-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+.religious-head-copy, .religious-office-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.religious-head-copy > .linklike, .religious-office-copy > .linklike {
+  text-align: left;
+  white-space: normal;
+}
+.religious-head-standing { display: block; }
+.religious-office-identity { gap: 12px; margin: 12px 0; }
+.religious-office-benefits { margin: 0; font-weight: normal; }

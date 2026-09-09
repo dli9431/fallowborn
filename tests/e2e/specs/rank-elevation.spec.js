@@ -639,3 +639,40 @@ test('legacy event promotions are retired and inheritance cannot bypass rank rev
       inheritancePaid:true
     });
   });
+
+
+test('accepting a higher dignity shows Baron investiture immediately, exactly once', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, p = s.player;
+    FB.game.setPaused(true);
+    FB.game.uiPrefs.autoResumeAfterEvents = false;
+    FB.game.auto.all = false;
+    FB.game.auto.major = false;
+    p.tier = 2;
+    p.lineDepth = Math.max(1, p.lineDepth || 1);
+    p.gentryGeneration = p.lineDepth - 1;
+    p.gold = 500;
+    p.prestige = 400;
+    p.piety = 0;
+    p.liegeGrants = 0;
+    const lord = FB.getRole(s, 'lord', true);
+    FB.adjustStanding(s, { kind:'character', id:lord.id },
+      100 - FB.standingOf(s, { kind:'character', id:lord.id }), 'test:rank_result');
+    s.eventQueue = [];
+    const offer = FB.queueRankElevationOffer(s, 'barony');
+    s.eventQueue = [];
+    FB.ui.runEvents([offer]);
+  });
+  await expect.poll(function () { return page.evaluate(function () { return FB.ui.eventInputGuarded(); }); }).toBe(false);
+  await page.locator('#ev-options .evopt').first().click();
+  await expect(page.locator('#ev-title')).toHaveText('Investiture Complete');
+  const granted = await page.evaluate(function () {
+    return { tier:FB.state.player.tier, gold:FB.state.player.gold,
+      queued:FB.state.eventQueue.filter(function (item) { return item.id === 'rank_elevation_result'; }).length };
+  });
+  expect(granted).toEqual({ tier:3, gold:0, queued:0 });
+  await expect.poll(function () { return page.evaluate(function () { return FB.ui.eventInputGuarded(); }); }).toBe(false);
+  await page.locator('#ev-options .evopt').first().click();
+  await expect(page.locator('#eventmodal')).toBeHidden();
+  expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(0);
+});

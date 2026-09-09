@@ -163,6 +163,14 @@ commenda, qirad, or trade partnership as appropriate. There is no passive
 interest-bearing savings account. These records are explicitly presented as backing
 another merchant and retain their independent three-partnership capacity.
 
+Direct guild advancement shows a congratulations result with the new rank, Guild
+Standing and prestige gained, and the enterprise bonus for that rank and opportunities.
+The paid fee is omitted. Continue completes the existing one-day career flow;
+opening the character sheet retains the result without repeating advancement.
+Successful officer and guildmaster elections include congratulations and rank benefits
+in their existing recorded result, without a second acknowledgement screen.
+This presentation change does not alter eligibility or technology dependencies.
+
 Guild rank above master is political rather than a purchase. Membership and master rank
 retain their direct advancement gates, but officer and guildmaster require a vacant office,
 an eligible current rank, nomination expense, and a vote defined in

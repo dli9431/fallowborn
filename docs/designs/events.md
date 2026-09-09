@@ -309,7 +309,9 @@ investiture only on success and applying their stated penalty and cooldown on re
 confirmed attempt spends one day and queues the appropriate result event. Opening,
 cancelling, or activating a blocked confirmation spends nothing. The older
 `rank_elevation_offer` plus `rank_elevation_context_valid` and `rank_elevation_claim`
-transaction remains for authored-event and saved compatibility paths.
+transaction remains for authored-event and saved compatibility paths. Its accepted
+offer opens the queued investiture result immediately in the same interaction,
+removing that result from the daily queue so it cannot appear twice.
 
 Phase 4C declarative mod deeds may name one effective event to queue instead of applying
 their small scalar effect map. The deed validates that reference, including a same-mod

@@ -1062,3 +1062,6 @@ designated heirs may, with +80 Standing and halved odds capped at 25%. The invit
 transaction rechecks reigning authority before spending or rolling.
 
 Personal vassal campaigns occupy the vassal and its named enemy, independently of the liege. Concurrent unrelated liege wars survive repair and have separate hostility/notices. Household exposure to an inherited realm war remains distinct from personal participation. Technology impact is none (`personal_vassal_campaigns`); no autonomous AI vassal conquest generation is introduced.
+
+
+Accepted legacy higher-dignity offers immediately show their queued investiture result in the same interaction, without waiting for another day or replaying the grant.

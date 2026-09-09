@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.177.2';
+FB.VERSION = '1.177.3';
 FB.CHANGELOG = [
+  { v: '1.177.3', date: '2026-09-08', changes: [
+    'Religious, guild, and career promotions show clearer results, and higher-dignity investitures appear immediately. The Self tab links the Pope by name, and Bishopric petitions no longer need a second confirmation.'
+  ] },
   { v: '1.177.2', date: '2026-09-08', changes: [
     'Commons uprisings can spread into neighboring counties under your authority, each with its own warning. Local negotiations let you and your vassals settle grievances in directly held counties.'
   ] },

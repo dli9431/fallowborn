@@ -11588,6 +11588,7 @@ window.FB = window.FB || {};
     'tournament_invitation tournament_invitation_lord bench_mark testament_challenge'
   ).split(' ');
   const OUTCOME_NEWS = (
+    'news.career.comes_of_age news.career.mastered ' +
     'news.freedom.purchase news.freedom.manumission news.freedom.manumission_service ' +
     'news.freedom.old_custom news.freedom.flight news.freedom.family_manumission news.freedom.service_accepted ' +
     'news.war.conquest news.war.crown_restored news.war.tribute_without_prize news.war.province_lost news.war.landless ' +

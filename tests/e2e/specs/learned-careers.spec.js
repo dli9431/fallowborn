@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/events.js',
+  'js/ui_misc.js',
   'data/actions.js',
   'js/actions.js',
   'js/economy.js',
@@ -575,3 +577,57 @@ test('guild paths require induction, restore with their career, and gate tagged 
     expect(result.resumed).toBe(true);
     expect(result.restored).toBe('smith');
   });
+
+
+test('automatic apprenticeship and mastery gains queue an acknowledgement', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, c = s.chars[s.player.charId];
+    s.player.tier = 1;
+    s.player.profession = 'farmer';
+    c.born = s.date.year - 20;
+    c.skills.ste = 20;
+    c.career = { profession:'farmer', rank:'apprentice', experience:0,
+      startedYear:s.date.year - 5, guildRank:'none', guildStanding:0, chosen:true };
+    s.eventQueue = [];
+    FB.livelihoodYearly(s);
+    const apprentice = s.eventQueue.some(function (item) {
+      return item.id === 'decision_outcome' && item.ctx.receipt.milestones.some(function (msg) {
+        return msg.key === 'news.career.comes_of_age';
+      });
+    });
+    c.career.experience = 8;
+    s.eventQueue = [];
+    FB.livelihoodYearly(s);
+    const master = s.eventQueue.some(function (item) {
+      return item.id === 'decision_outcome' && item.ctx.receipt.milestones.some(function (msg) {
+        return msg.key === 'news.career.mastered';
+      });
+    });
+    return { apprentice:apprentice, master:master, rank:c.career.rank };
+  });
+  expect(result).toEqual({ apprentice:true, master:true, rank:'master' });
+});
+
+test('a passed professional examination shows the qualification result', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, c = s.chars[s.player.charId];
+    s.player.tier = 1;
+    s.player.gold = 1000;
+    s.player.profession = 'administration';
+    c.born = s.date.year - 35;
+    c.skills.lea = 30;
+    c.skills.ste = 30;
+    FB.addTrait(c, 'literate');
+    c.career = { profession:'administration', rank:'apprentice', experience:20,
+      startedYear:s.date.year - 20, guildRank:'none', guildStanding:0, chosen:true };
+    const record = FB.realmTechRecord(s, FB.techRealmId(s));
+    record.completed.push('bureaucratic_offices');
+    FB.chance = function () { return true; };
+    FB.ui.showCareerPicker(c.id);
+  });
+  await page.locator('[data-career-exam]').first().click();
+  await expect(page.locator('#gm-title')).toHaveText('Qualification gained');
+  await expect(page.locator('[data-religious-office-result]')).toContainText('Congratulations');
+  await page.locator('#office-result-continue').click();
+  await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+});

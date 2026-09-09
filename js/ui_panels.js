@@ -2303,16 +2303,17 @@ window.FB = window.FB || {};
             authorityBand, 'name')
         })
         : '';
-      const office = pope
-        ? FB.T('{pope} · {standing}', {
-          pope:FB.papalDisplayName(s, pope), standing:standing
-        })
-        : FB.T('Vacant · {standing}{ballot}', {
-          standing:standing,
-          ballot:election && election.phase !== 'resolved'
-            ? FB.T(' · ballot {round}', { round:election.round || 0 }) : ''
-        });
-      return kv('Religious head', esc(office));
+      const office = FB.T('Vacant · {standing}{ballot}', {
+        standing:standing,
+        ballot:election && election.phase !== 'resolved'
+          ? FB.T(' · ballot {round}', { round:election.round || 0 }) : ''
+      });
+      return kv('Religious head', pope
+        ? '<span class="religious-head-identity">' + FB.faceTag(pope, 32, 36) +
+          '<span class="religious-head-copy"><button type="button" class="linklike" data-pope-character="' +
+          esc(pope.id) + '">' + esc(FB.papalDisplayName(s, pope)) +
+          '</button><span class="religious-head-standing">' + esc(standing) +
+          '</span></span></span>' : esc(office));
     }
     const title = FB.religiousHeadTitle(s, religionId);
     const head = FB.religiousHeadOf(s, religionId);
@@ -2387,6 +2388,11 @@ window.FB = window.FB || {};
   }
 
   function bindFaithDetails(root) {
+    root.querySelectorAll('[data-pope-character]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showCharModal(button.dataset.popeCharacter);
+      });
+    });
     const buttons = root.querySelectorAll('[data-faith-details]');
     for (let i = 0; i < buttons.length; i++) {
       buttons[i].addEventListener('click', function () {

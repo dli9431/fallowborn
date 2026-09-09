@@ -1,12 +1,16 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'css/style.css',
+  'js/ui_misc.js',
+  'js/institutions.js',
   'data/actions.js',
   'js/actions.js',
   'js/economy.js',
   'js/items.js',
   'js/market.js',
   'js/ui_modals.js',
+  'data/political_institutions.js',
   'data/economy.js'
 ]);
 
@@ -481,3 +485,63 @@ test('guild routes use balanced technology gates and interactive invitations sta
       manualOnly:true, automated:false, unchanged:true
     });
   });
+
+
+for (const previousRank of ['none', 'member']) {
+  test('guild advancement from ' + previousRank + ' shows congratulations and benefits once', async function ({ page }) {
+    await page.evaluate(function (rank) {
+      const s = FB.state, c = s.chars[s.player.charId];
+      s.player.tier = 1;
+      s.player.provs = [];
+      s.player.profession = 'craftsman';
+      s.player.gold = 1000;
+      delete s.player.flags.guild_member;
+      c.born = s.date.year - 35;
+      c.skills.ste = 20;
+      c.career = { profession:'craftsman', rank:'journeyman', experience:10,
+        startedYear:s.date.year - 10, guildRank:rank, guildStanding:0, chosen:true };
+      FB.ui.showCareerPicker(c.id);
+    }, previousRank);
+    await page.locator('#career-guild').click();
+    await expect(page.locator('#gm-title')).toHaveText('Guild rank gained');
+    await expect(page.locator('[data-religious-office-result]')).toContainText('Congratulations');
+    await expect(page.locator('.religious-office-benefits')).toContainText('Guild Standing');
+    if (previousRank === 'member') {
+      await expect(page.locator('.religious-office-benefits')).toContainText('10% enterprise income bonus');
+    }
+    const before = await page.evaluate(function () {
+      const s = FB.state;
+      return { gold:s.player.gold, rank:s.chars[s.player.charId].career.guildRank };
+    });
+    expect(before.gold).toBe(previousRank === 'none' ? 985 : 960);
+    await page.locator('#office-result-person').click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#gm-title')).toHaveText('Guild rank gained');
+    await page.locator('#office-result-continue').click();
+    await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return FB.state.chars[FB.state.player.charId].career.guildRank;
+    })).toBe(before.rank);
+  });
+}
+
+
+for (const office of ['officer', 'guildmaster']) {
+  test('successful ' + office + ' election includes congratulations and rank benefits', async function ({ page }) {
+    await page.evaluate(function (rank) {
+      const s = FB.state, c = s.chars[s.player.charId];
+      s.player.profession = 'craftsman';
+      c.career = { profession:'craftsman', rank:'master', experience:20,
+        startedYear:s.date.year - 20, guildRank:rank, guildStanding:80, chosen:true };
+      FB.ui.showElectionResult({ kind:'guild', passed:true,
+        definitionId:rank === 'officer' ? 'guild_officer' : 'guildmaster',
+        candidateId:c.id, winnerId:c.id, supportWeight:100, totalWeight:100,
+        majority:51, outcomes:{} });
+    }, office);
+    await expect(page.locator('[data-guild-rank-result]')).toContainText('Congratulations');
+    await expect(page.locator('.guild-rank-benefits')).toContainText(
+      office === 'officer' ? '15% enterprise income bonus' : '25% enterprise income bonus');
+    await expect(page.locator('#election-result-back')).toBeVisible();
+    await expect(page.locator('#office-result-continue')).toHaveCount(0);
+  });
+}
