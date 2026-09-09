@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/institutions.js', 'js/events.js', 'js/modifiers.js',
+dependsOnRuntime(__filename, [
+  'js/keys.js','js/institutions.js', 'js/events.js', 'js/modifiers.js',
   'js/world.js', 'js/actions.js', 'js/main.js', 'js/save.js', 'js/ui_modals.js', 'js/ui_misc.js',
   'data/political_institutions.js', 'data/modifiers.js', 'data/events_politics.js',
   'data/events_noble.js', 'data/map_data.js', 'data/technology.js']);
@@ -261,6 +262,9 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#commons-uprising-status')).toContainText('90 days to grant the concession');
     await expect(page.locator('#commons-uprising-status')).toContainText('+6 Popular support, -2 prestige');
     await page.locator('#commons-uprising-concede').click();
+    await expect(page.locator('[data-uprising-result]')).toContainText('Prestige -2');
+    await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
+    await page.locator('#uprising-continue').click();
     await expect(page.locator('#commons-uprising-status')).toHaveCount(0);
     await expect(page.locator('#gm-body')).toContainText('Tax Concession');
     await expect(page.locator('#privileges-back')).toBeFocused();
@@ -866,6 +870,12 @@ for (const width of [1280, 390]) {
     });
     await page.locator('#commons-uprising-negotiate-local').click();
     await page.evaluate(function () { FB.rng = window.localRng; });
+    await expect(page.locator('#gm-title')).toHaveText('Negotiation failed');
+    await expect(page.locator('[data-uprising-result]')).toContainText(await page.evaluate(function () {
+      return FB.T('Money {change}', { change:'−' + FB.money(20) });
+    }));
+    await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
+    await page.locator('#uprising-continue').click();
     await expect(page.locator('#commons-uprising-local')).toContainText('attempt has been used');
     await expect(page.locator('#commons-uprising-negotiate-local')).toBeDisabled();
     await expect(page.locator('#privileges-back')).toBeFocused();
@@ -926,3 +936,36 @@ test('a vassal can end active local disruption without ending its liege’s upri
   }, setup);
   expect(result).toEqual({ activeBefore:true, localActive:false, settled:true, homeActive:true, homeDue:true, attempt:true });
 });
+
+for (const acknowledgement of ['Continue', 'Escape']) {
+  test('successful local talks retain a receipt and return through ' + acknowledgement, async function ({ page }) {
+    await page.setViewportSize({ width:390, height:520 });
+    await prepareLocalNegotiation(page);
+    await page.evaluate(function () {
+      FB.state.player.gold = 100;
+      FB.ui.showPrivileges();
+      window.localRng = FB.rng;
+      FB.rng = function () { return 0; };
+      document.getElementById('commons-uprising-negotiate-local').addEventListener('click', function () {
+        window.uprisingReturnScroll = document.getElementById('gm-body').scrollTop;
+      }, true);
+    });
+    await page.locator('#commons-uprising-negotiate-local').click();
+    await page.evaluate(function () { FB.rng = window.localRng; });
+    await expect(page.locator('#gm-title')).toHaveText('Grievance settled');
+    await expect(page.locator('[data-uprising-result]')).toContainText('end resistance');
+    await expect(page.locator('[data-uprising-result]')).toContainText(await page.evaluate(function () {
+      return FB.T('Money {change}', { change:'−' + FB.money(20) });
+    }));
+    expect(await page.evaluate(function () { return window.uprisingReturnScroll; })).toBeGreaterThan(0);
+    await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
+    if (acknowledgement === 'Escape') await page.keyboard.press('Escape');
+    else await page.locator('#uprising-continue').click();
+    await expect(page.locator('#privileges-back')).toBeFocused();
+    await expect.poll(function () { return page.evaluate(function () {
+      const body = document.getElementById('gm-body');
+      return Math.abs(body.scrollTop - Math.min(window.uprisingReturnScroll, body.scrollHeight - body.clientHeight));
+    }); }).toBeLessThanOrEqual(1);
+    expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(80);
+  });
+}

@@ -24,16 +24,23 @@ window.FB = window.FB || {};
     const protagonist = s.player.charId;
     const resume = view ? view.resume : !FB.game.paused;
     FB.game.setPaused(true);
-    let h = '<div class="historical-ambitions" data-ambition-list><p>' +
-      esc(FB.T('Foundations have no historical deadline. Regional bonuses apply only while your realm controls the county.')) + '</p>';
+    let h = '<div class="historical-ambitions" data-ambition-list>';
     let count = 0;
     (FBDATA.historicalAmbitions || []).forEach(function (d) {
       if (!FB.historicalAmbitionRelevant(s, d.id)) return;
       count++;
       const status = FB.historicalAmbitionStatus(s, d.id);
       h += '<section class="settcard ambition-card" data-ambition-card="' + esc(d.id) +
-        '" tabindex="-1"><h3>' + esc(ambitionText(d, 'name')) + '</h3><p>' +
-        esc(ambitionText(d, 'desc')) + '</p>';
+        '" tabindex="-1"><div class="settcard-head" tabindex="0"><h3>' + esc(ambitionText(d, 'name')) +
+        '</h3><button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="ambition-details-' +
+        esc(d.id) + '" aria-label="' + esc(FB.T('Foundation details')) + '">?</button></div>' +
+        '<div class="settcard-details hidden" id="ambition-details-' + esc(d.id) + '"><p>' +
+        esc(ambitionText(d, 'desc')) + '</p><ul>';
+      status.checks.forEach(function (check) {
+        h += '<li>' + esc(check.met ? FB.T('Met: {requirement}', { requirement:check.label }) :
+          FB.T('Needed: {requirement}', { requirement:check.label })) + '</li>';
+      });
+      h += '</ul></div>';
       if (status.completed) {
         h += '<p>' + esc(status.completed.established
           ? FB.T('Already established at the start of this campaign.')
@@ -47,6 +54,7 @@ window.FB = window.FB || {};
       } else {
         h += '<ul class="ambition-requirements">';
         status.checks.forEach(function (check) {
+          if (check.met && !check.progress) return;
           h += '<li>' + esc(check.met
             ? FB.T('Met: {requirement}', { requirement:check.label })
             : FB.T('Needed: {requirement}', { requirement:check.label })) + '</li>';
@@ -65,6 +73,7 @@ window.FB = window.FB || {};
     h += '</div><div class="gm-footer"><button type="button" class="btn" id="ambitions-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Historical ambitions'), h, { modalClass:'fullsheet-modal', noFocus:true,
+      titleDetailsHtml:'<p>' + esc(FB.T('Foundations have no historical deadline. Regional bonuses apply only while your realm controls the county.')) + '</p>',
       onDismiss:function () {
         if (resume && FB.state === s && !s.player.dead && FB.game.uiPrefs.autoResumeAfterEvents !== false) FB.game.setPaused(false);
       } });
@@ -75,6 +84,8 @@ window.FB = window.FB || {};
         if (button.disabled) return;
         if (s !== FB.state || protagonist !== s.player.charId) { UI.showHistoricalAmbitions(); return; }
         const position = { scrollTop:$('gm-body').scrollTop, id:button.dataset.ambitionComplete, resume:resume };
+        position.opened = Array.from($('genmodal').querySelectorAll('.settcard-info[aria-expanded="true"]'))
+          .map(function (info) { return info.getAttribute('aria-controls'); });
         button.disabled = true;
         const result = FB.completeHistoricalAmbition(s, position.id);
         if (!result) { UI.showHistoricalAmbitions(position); return; }
@@ -97,6 +108,10 @@ window.FB = window.FB || {};
     });
     if (view) setTimeout(function () {
       if ($('gm-body').querySelector('[data-ambition-list]') !== list) return;
+      (view.opened || []).forEach(function (id) {
+        const info = $('genmodal').querySelector('[aria-controls="' + id + '"]');
+        if (info && info.getAttribute('aria-expanded') !== 'true') info.click();
+      });
       const card = list.querySelector('[data-ambition-card="' + view.id + '"]');
       if (card) card.focus({ preventScroll:true });
       $('gm-body').scrollTop = view.scrollTop;
@@ -267,6 +282,10 @@ window.FB = window.FB || {};
   let eventGuardUntil = 0;
   function armEventGuard() { eventGuardUntil = Date.now() + EVENT_INPUT_GUARD_MS; UI.eventInputEpoch = (UI.eventInputEpoch || 0) + 1; }
   function eventInputGuarded() { return Date.now() < eventGuardUntil; }
+  UI.guardedOutcomeOpen = function () {
+    return !$('genmodal').classList.contains('hidden') && !!$('gm-body').querySelector('[data-guarded-outcome]');
+  };
+  UI.genericOutcomeGuarded = function () { return UI.guardedOutcomeOpen() && eventInputGuarded(); };
 
   let pointerEventEpoch = null;
   ['pointerdown', 'mousedown', 'touchstart'].forEach(function (name) {
@@ -275,7 +294,8 @@ window.FB = window.FB || {};
     }, true);
   });
   document.addEventListener('click', function (e) {
-    if (!$('eventmodal').contains(e.target)) return;
+    if (!$('eventmodal').contains(e.target) &&
+        !(UI.guardedOutcomeOpen() && $('genmodal').contains(e.target))) return;
     // Read-only disclosures do not commit or acknowledge a decision.
     if (e.target.closest('.event-details-button, .settcard-info')) return;
     if (eventInputGuarded() || (e.detail > 0 && pointerEventEpoch !== null &&
@@ -13457,16 +13477,39 @@ window.FB = window.FB || {};
           ? FB.concedeCommonsUprising(s, uprising.id)
           : FB.negotiateCommonsUprisingLocal(s, localUprisingCtx);
         if (!receipt) return;
-        UI.showPrivileges(returnView, true);
-        opened.forEach(function (key) {
-          const info = $('gm-body').querySelector('[aria-controls="' + key + '"]');
-          if (info) info.click();
+        function restore() {
+          UI.showPrivileges(returnView, true);
+          opened.forEach(function (key) {
+            const info = $('gm-body').querySelector('[aria-controls="' + key + '"]');
+            if (info) info.click();
+          });
+          setTimeout(function () {
+            if (!$('privileges-back') || $('genmodal').classList.contains('hidden')) return;
+            $('privileges-back').focus({ preventScroll:true });
+            $('gm-body').scrollTop = scroll;
+          }, 0);
+        }
+        let resultHtml = '<div data-uprising-result data-guarded-outcome><p>' +
+          esc(receipt.outcome ? FB.renderMessage(receipt.outcome, { state:s }) :
+            FB.T('The demanded concession ends resistance in the affected counties.')) +
+          '</p><div class="event-impact-chips full">';
+        (receipt.impacts || []).forEach(function (record) {
+          resultHtml += consequenceChipHtml(s, record, 'resolved');
         });
-        setTimeout(function () {
-          if (!$('privileges-back') || $('genmodal').classList.contains('hidden')) return;
-          $('privileges-back').focus({ preventScroll:true });
-          $('gm-body').scrollTop = scroll;
-        }, 0);
+        resultHtml += '</div></div><div class="gm-footer"><button type="button" class="actionbtn" id="uprising-continue">' +
+          esc(FB.T('Continue')) + '</button></div>';
+        let acknowledged = false;
+        openModal(receipt.result === 'failure' ? FB.T('Negotiation failed') : FB.T('Grievance settled'), resultHtml, {
+          noFocus:true, onDismiss:function () {
+            if (acknowledged) return;
+            acknowledged = true;
+            restore();
+          }
+        });
+        armEventGuard();
+        $('uprising-continue').onclick = function () {
+          if (!eventInputGuarded()) UI.closeModal();
+        };
       });
     });
     $('privileges-back').addEventListener('click', function () {
@@ -17933,6 +17976,7 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-career-exam]').forEach(function (b) {
       b.addEventListener('click', function () {
+        const before = promotionResources(s);
         const result = FB.takeCareerExam(s, c, b.dataset.careerExam);
         if (!result) return;
         function finish() {
@@ -17944,7 +17988,7 @@ window.FB = window.FB || {};
         if (result.passed) religiousOfficeSuccess(c, FB.T('Qualification gained'), FB.T(
           'Congratulations, {name}! You are now {rank}.', {
             name:c.name, rank:FB.careerTitle(s, c)
-          }), FB.T('Your new qualification opens work and services that require this professional rank.'), finish);
+          }), FB.T('Your new qualification opens work and services that require this professional rank.'), finish, before);
         else { UI.closeModal(); finish(); }
       });
     });
@@ -17960,6 +18004,7 @@ window.FB = window.FB || {};
     });
     const guild = $('career-guild');
     if (guild) guild.addEventListener('click', function () {
+      const before = promotionResources(s);
       const result = FB.takeGuildStep(s, c);
       if (!result) return;
       function finish() {
@@ -17979,11 +18024,10 @@ window.FB = window.FB || {};
         religiousOfficeSuccess(c, FB.T('Guild rank gained'), FB.T(
           'Congratulations, {name}! You are now a {rank}.', {
             name:c.name, rank:FB.guildTitle(career)
-          }), FB.T('+{standing} Guild Standing; +{prestige} prestige. {benefits}', {
+          }), FB.T('+{standing} Guild Standing. {benefits}', {
             standing:career.guildRank === 'member' ? 20 : 25,
-            prestige:career.guildRank === 'guildmaster' ? 20 : 8,
             benefits:guildRankBenefits(c)
-          }), finish);
+          }), finish, before);
       }
     });
     const election = $('career-election');
@@ -18006,13 +18050,14 @@ window.FB = window.FB || {};
         UI.showBishopAppointment(c.id, returnContext);
         return;
       }
+      const before = promotionResources(s);
       if (!FB.takeReligiousStep(s, c)) return;
       religiousRankResult(c, function () {
         FB.game.passDay({ skipFocus:true });
         resumeManagementAfterDay(returnContext, function () {
           UI.showCareerPicker(cid, returnContext);
         });
-      });
+      }, before);
     });
     const cardinal = $('career-cardinal');
     if (cardinal) cardinal.addEventListener('click', function () {
@@ -18054,6 +18099,7 @@ window.FB = window.FB || {};
     openModal(FB.T('Election of the religious superior'), h, historyOptions);
     const election = $('abbot-election');
     if (election) election.addEventListener('click', function () {
+      const before = promotionResources(s);
       const result = FB.seekAbbotAppointment(s, c);
       if (!result) return;
       function finish() {
@@ -18062,7 +18108,7 @@ window.FB = window.FB || {};
           UI.showCareerPicker(cid, returnContext);
         });
       }
-      if (result.accepted) religiousRankResult(c, finish);
+      if (result.accepted) religiousRankResult(c, finish, before);
       else {
         UI.closeModal();
         UI.toast(FB.T('The community elects another candidate.'));
@@ -18076,7 +18122,22 @@ window.FB = window.FB || {};
     });
   };
 
-  function religiousRankResult(c, finish) {
+  function promotionResources(s) {
+    return { gold:s.player.gold, prestige:s.player.prestige, piety:s.player.piety };
+  }
+  function promotionReceipt(before) {
+    if (!before) return '';
+    const s = FB.state, impacts = [];
+    ['gold', 'prestige', 'piety'].forEach(function (key) {
+      const amount = s.player[key] - before[key];
+      if (amount) impacts.push({ type:key, amount:amount, resolved:true });
+    });
+    return '<div class="event-impact-chips full" data-promotion-receipt>' + impacts.map(function (record) {
+      return consequenceChipHtml(s, record, 'resolved');
+    }).join('') + '</div>';
+  }
+
+  function religiousRankResult(c, finish, before) {
     const s = FB.state;
     const path = FB.religiousPathOf(s, c);
     const step = path.step;
@@ -18085,30 +18146,32 @@ window.FB = window.FB || {};
         name:c.name, rank:FB.religiousRankTitle(s, c, path)
       }), FB.T('Social station {station}. The office provides {piety} piety each season.', {
         station:FB.stationOf(c), piety:step.pietyYield || 0
-      }), finish);
+      }), finish, before);
   }
 
-  function religiousOfficeSuccess(c, title, summary, benefits, onContinue) {
+  function religiousOfficeSuccess(c, title, summary, benefits, onContinue, before) {
     let acknowledged = false;
     function acknowledge() {
       if (acknowledged) return;
       acknowledged = true;
       if (onContinue) onContinue();
     }
-    const h = '<div data-religious-office-result><p class="gm-body-text">' +
+    const h = '<div data-religious-office-result data-guarded-outcome><p class="gm-body-text">' +
       esc(summary) + '</p><div class="religious-office-identity">' +
       FB.faceTag(c, 64, 72) + '<div class="religious-office-copy">' +
       '<button type="button" class="linklike" id="office-result-person">' +
       esc(FB.papalDisplayName(FB.state, c)) + '</button>' +
       '<p class="religious-office-benefits">' + esc(benefits) + '</p>' +
-      '</div></div></div><button class="btn primary actionbtn" id="office-result-continue">' +
+      '</div></div>' + promotionReceipt(before) + '</div><button class="btn primary actionbtn" id="office-result-continue">' +
       esc(FB.T('Continue')) + '</button>';
-    openModal(title, h, { onDismiss:acknowledge });
+    openModal(title, h, { onDismiss:acknowledge, noFocus:true });
+    armEventGuard();
     FB.paintFaces($('gm-body'), FB.state);
     $('office-result-person').addEventListener('click', function () {
       UI.showCharModal(c.id, { view:'religious-office-result' });
     });
     $('office-result-continue').addEventListener('click', function () {
+      if (eventInputGuarded()) return;
       UI.closeModal();
       acknowledge();
     });
@@ -18117,6 +18180,7 @@ window.FB = window.FB || {};
 
   function submitCardinalPetition(c, returnContext) {
     const s = FB.state;
+    const before = promotionResources(s);
     const result = FB.petitionForCardinal(s, c);
     if (!result) return;
     UI.refresh();
@@ -18126,7 +18190,7 @@ window.FB = window.FB || {};
         { name:c.name }), FB.T('The office grants station 4 and 3.5 piety each season.'), function () {
           if (returnContext === 'bishopric') UI.showBishopric();
           else finishHouseholdPlanReturn(returnContext, UI.closeModal);
-        });
+        }, before);
     } else {
       UI.toast(FB.T('Rome refuses the petition.'));
       if (returnContext === 'bishopric') UI.showBishopric();
@@ -18190,6 +18254,7 @@ window.FB = window.FB || {};
     }
     openModal(FB.T('Appointment to a bishopric'), h, historyOptions);
     function petition(endowed) {
+      const before = promotionResources(s);
       const result = FB.seekBishopAppointment(s, c, endowed);
       UI.closeModal();
       function finish() {
@@ -18201,7 +18266,7 @@ window.FB = window.FB || {};
       if (result && result.accepted) {
         religiousOfficeSuccess(c, FB.T('Invested as Bishop'), FB.T(
           '{name} is invested as a Bishop.', { name:c.name }), FB.T(
-          'The see provides seasonal revenue and an episcopal household and returns to the Church on death.'), finish);
+          'The see provides seasonal revenue and an episcopal household and returns to the Church on death.'), finish, before);
       } else {
         UI.toast(FB.T('The appointment is refused; another petition may be made in two years.'));
         finish();
@@ -18928,12 +18993,13 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-papal-name]').forEach(function (b) {
       b.addEventListener('click', function () {
+        const before = promotionResources(s);
         const pope = FB.choosePapalName(s, obedience.id, b.dataset.papalName);
         if (pope) religiousOfficeSuccess(pope, FB.T('Elected Pope'), FB.T(
           '{name} takes the Papal office.', { name:FB.papalDisplayName(s, pope) }), FB.T(
           'Your personal bishopric returns to the Church; secular titles pass to your lawful heir and family property enters custody.'), function () {
             UI.showPapacy(obedience.id);
-          });
+          }, before);
       });
     });
     document.querySelectorAll('[data-investiture-answer]').forEach(function (b) {

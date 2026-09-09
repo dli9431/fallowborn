@@ -1069,3 +1069,6 @@ that person is reachable. This only exposes existing cultivation, with no new ga
 
 
 Successful professional examinations show a qualification result before returning to career management. Completed apprenticeships and automatic non-guild mastery queue ordinary outcome acknowledgements; automatic resolution retains the normal no-interruption policy.
+
+Professional qualification results retain actual examination spending and prestige
+gains in receipt chips. Guarded acknowledgement spends the committed day once.

@@ -73,7 +73,7 @@ see-only dynasty successor continues as gentry with the family's private propert
 Successful Bishop appointments, Cardinal petitions, and the player's Papal name choice
 show an acknowledgement sheet with the appointed character's portrait aligned beside
 the linked name and office consequences below the name, plus one Continue action.
-The result omits the already-paid fee to avoid implying a second charge. Returning from the character sheet
+The result retains the actual money, prestige, and piety changes as settled receipt chips. Returning from the character sheet
 retains the result; acknowledgement never repeats the appointment or fee. Bishop
 petitions finish their existing one-day management flow after acknowledgement.
 Self aligns the recognized Pope's portrait beside the linked name, with authority and
@@ -258,3 +258,7 @@ repair for every non-Roman realm rejected by the lookup.
 
 
 Abbot and Abbess elections and ordinary religious rank advances also show congratulations, current social station, and seasonal office piety before returning to career management.
+
+Promotion result dialogs guard acknowledgement for 350 ms and reject held shortcuts
+and in-flight pointer activation. Character-sheet returns retain the existing receipt.
+Money, prestige, and piety receipts use before/after transaction values.

@@ -11,7 +11,10 @@ disabled action. Completion opens one settled success sheet. Continue, Escape,
 and mobile Back restore list scroll and focus to the completed card. Closing the
 list returns to Deeds through the shared modal navigation. Full eligibility is
 evaluated only on opening/refresh and activation; no background readiness badge
-is maintained. See [historical-ambitions.md](historical-ambitions.md).
+is maintained. Descriptions and satisfied prerequisite checks use shared card
+disclosures; county progress and unmet requirements remain visible. Title details
+explain deadline and bonus-scope rules. Expanded disclosures survive completion.
+See [historical-ambitions.md](historical-ambitions.md).
 
 ## Shared visual and content standard
 
@@ -2557,3 +2560,10 @@ explained beside a disabled button. The existing wider concession remains availa
 Resolution preserves sheet scroll/disclosures and returns keyboard focus to Back,
 using the same redraw path as a wider concession. Local successes and failures appear
 in the Chronicle; AI negotiations describe counties rather than naming an unseen person.
+
+Generic promotion and inline uprising results use the same 350 ms acknowledgement
+guard as event outcomes, including held number keys and pointer input begun before
+the transition. Initial focus stays on the dialog. Continue, Escape, and mobile Back
+acknowledge once; nested character reviews retain the mounted promotion receipt.
+Actual money, prestige, and piety changes remain visible as settled consequence chips.
+Inline uprising results return to the privilege list with scroll and disclosures intact.

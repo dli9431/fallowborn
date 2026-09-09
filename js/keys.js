@@ -147,10 +147,13 @@ window.FB = window.FB || {};
   }
 
   const heldEventKeys = {};
+  function guardedOutcomeOpen() {
+    return FB.ui.guardedOutcomeOpen && FB.ui.guardedOutcomeOpen();
+  }
   document.addEventListener('keyup', function (e) {
     const epoch = heldEventKeys[e.code || e.key];
     delete heldEventKeys[e.code || e.key];
-    if (eventOpen() && epoch !== undefined && epoch !== (FB.ui.eventInputEpoch || 0)) {
+    if ((eventOpen() || guardedOutcomeOpen()) && epoch !== undefined && epoch !== (FB.ui.eventInputEpoch || 0)) {
       e.preventDefault(); e.stopImmediatePropagation();
     }
   }, true);
@@ -168,7 +171,7 @@ window.FB = window.FB || {};
     else if (e.code && e.code.length === 7 && e.code.indexOf('Numpad') === 0) digit = +e.code.charAt(6) || 0;
     if (!digit && k >= '1' && k <= '9') digit = +k;
     const slot = digit ? digit - 1 + (e.shiftKey ? 9 : 0) : -1;
-    if (eventOpen() && (digit || k === 'Enter' || k === ' ')) {
+    if ((eventOpen() || guardedOutcomeOpen()) && (digit || k === 'Enter' || k === ' ')) {
       if (e.repeat || heldEventKeys[keyId] !== (FB.ui.eventInputEpoch || 0) || (FB.ui.eventInputGuarded && FB.ui.eventInputGuarded())) {
         e.preventDefault(); return;
       }

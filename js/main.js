@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.178.0';
+FB.VERSION = '1.178.1';
 FB.CHANGELOG = [
+  { v: '1.178.1', date: '2026-09-09', changes: [
+    'Promotion and uprising results retain actual costs and gains and guard against accidental dismissal. Historical ambitions move background rules into tooltips and compact details.'
+  ] },
   { v: '1.178.0', date: '2026-09-09', changes: [
     'Historical ambitions let rulers establish Normandy, Norway, England, and Sicily from the Deeds tab, with rewards and Chronicle announcements naming their founders.',
     'Wartime Deeds and marriage terms have clearer spacing. Marriage terms appear only when lineage can be chosen, and truce deadlines show dates without turn numbers.'

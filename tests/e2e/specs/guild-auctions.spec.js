@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/keys.js',
+  'js/events.js',
   'css/style.css',
   'js/ui_misc.js',
   'js/institutions.js',
@@ -514,9 +516,15 @@ for (const previousRank of ['none', 'member']) {
       return { gold:s.player.gold, rank:s.chars[s.player.charId].career.guildRank };
     });
     expect(before.gold).toBe(previousRank === 'none' ? 985 : 960);
+    await expect(page.locator('[data-promotion-receipt]')).toContainText('Prestige +8');
+    await expect(page.locator('[data-promotion-receipt]')).toContainText(await page.evaluate(function (gold) {
+      return FB.T('Money {change}', { change:'−' + FB.money(1000 - gold) });
+    }, before.gold));
+    await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
     await page.locator('#office-result-person').click();
     await page.keyboard.press('Escape');
     await expect(page.locator('#gm-title')).toHaveText('Guild rank gained');
+    await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
     await page.locator('#office-result-continue').click();
     await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
     expect(await page.evaluate(function () {

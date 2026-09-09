@@ -385,3 +385,36 @@ test('compact cards and success Back preserve a nonzero list position and focus'
   expect(await page.locator('#gm-body').evaluate(function (el) { return el.scrollWidth <= el.clientWidth; })).toBe(true);
   await expect(page.locator('[data-ambition-complete="sicily"]')).toBeDisabled();
 });
+
+for (const width of [1280, 390]) {
+  test('ambitions disclose background while keeping decision facts visible at ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:900 });
+    await ruler(page, ['d_normandy']);
+    await page.evaluate(function () { FB.ui.showHistoricalAmbitions(); });
+    const card = page.locator('[data-ambition-card="normandy"]');
+    const details = card.locator('.settcard-details');
+    await expect(details).toBeHidden();
+    await expect(card.locator('.ambition-requirements')).toContainText('Regional counties');
+    await expect(card.locator('.ambition-requirements')).not.toContainText('Adult ruler');
+    await expect(card.locator('.ambition-benefits')).toBeVisible();
+    const info = card.locator('.settcard-info');
+    if (width === 390) {
+      await expect(info).toBeVisible();
+      const box = await info.boundingBox();
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      await info.click();
+      await expect(details).toBeVisible();
+      await expect(details).toContainText('Adult ruler');
+      await expect(page.locator('#tooltip')).toBeHidden();
+      await card.locator('[data-ambition-complete]').click();
+      await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
+      await page.locator('#ambition-continue').click();
+      await expect(info).toHaveAttribute('aria-expanded', 'true');
+    } else {
+      await expect(info).toBeHidden();
+      await card.locator('.settcard-head').focus();
+      await expect(page.locator('#tooltip')).toContainText('Adult ruler');
+      await expect(details).toBeHidden();
+    }
+  });
+}

@@ -9,6 +9,8 @@ dependsOnRuntime(__filename, [
   'js/papacy.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'js/keys.js',
+  'js/events.js',
   'data/papacy.js'
 ]);
 
@@ -406,9 +408,11 @@ test('Bishop appointment retains a success result until acknowledged', async fun
   await expect(page.locator('#gm-title')).toHaveText('Invested as Bishop');
   await expect(page.locator('[data-religious-office-result]')).toContainText('episcopal household');
   expect(await page.evaluate(function () { return !!FB.state.chars[FB.state.player.charId].bishopric; })).toBe(true);
+  await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await page.locator('#office-result-person').click();
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-religious-office-result]')).toBeVisible();
+  await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await page.locator('#office-result-continue').click();
   await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
 });
@@ -421,8 +425,10 @@ test('Bishopric petitions immediately and acknowledges Cardinal success once', a
   });
   await page.locator('#bishop-cardinal').click();
   await expect(page.locator('#gm-title')).toHaveText('Appointed Cardinal');
+  await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await expect(page.locator('.religious-office-benefits')).toHaveText('The office grants station 4 and 3.5 piety each season.');
-  await expect(page.locator('[data-religious-office-result]')).not.toContainText('Cost');
+  await expect(page.locator('[data-promotion-receipt]')).toContainText(
+    await page.evaluate(function (cost) { return FB.T('Money {change}', { change:'−' + FB.money(cost) }); }, cost));
   const nameBox = await page.locator('#office-result-person').boundingBox();
   const benefitsBox = await page.locator('.religious-office-benefits').boundingBox();
   expect(benefitsBox.y).toBeGreaterThanOrEqual(nameBox.y + nameBox.height);
@@ -449,8 +455,10 @@ test('choosing a Papal name shows the successful accession', async function ({ p
   });
   await page.locator('[data-papal-name]').first().click();
   await expect(page.locator('#gm-title')).toHaveText('Elected Pope');
+  await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await expect(page.locator('[data-religious-office-result]')).toContainText('family property enters custody');
   expect(await page.evaluate(function () { return !!FB.playerPope(FB.state); })).toBe(true);
+  await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await page.locator('#office-result-continue').click();
   await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
 });
@@ -488,7 +496,46 @@ for (const rank of [0, 2]) {
     await expect(page.locator('.religious-office-benefits')).toContainText(
       rank === 2 ? '1.5 piety each season' : '0.5 piety each season');
     await expect(page.locator('[data-religious-office-result]')).toContainText('Congratulations');
+    await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
     await page.locator('#office-result-continue').click();
     await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
   });
 }
+
+test('promotion acknowledgement rejects transition input and held shortcuts', async function ({ page }) {
+  await prepareReligiousCareer(page, true);
+  const result = await page.evaluate(function () {
+    const realNow = Date.now;
+    let now = realNow();
+    Date.now = function () { return now; };
+    function key(type, repeat) {
+      document.dispatchEvent(new KeyboardEvent(type, { key:'1', code:'Digit1', repeat:!!repeat, bubbles:true }));
+    }
+    function visible() { return !!document.querySelector('[data-religious-office-result]'); }
+    try {
+      FB.ui.showBishopric();
+      // An activation key and pointer are already down when the result appears.
+      const input = document.createElement('input');
+      document.getElementById('gm-body').appendChild(input);
+      input.dispatchEvent(new KeyboardEvent('keydown', { key:'1', code:'Digit1', bubbles:true }));
+      document.dispatchEvent(new MouseEvent('mousedown', { bubbles:true }));
+      document.getElementById('bishop-cardinal').click();
+      const gold = FB.state.player.gold;
+      document.getElementById('office-result-continue').click();
+      FB.ui.backModal();
+      const immediate = visible();
+      now += 400;
+      key('keydown', true);
+      key('keydown', false);
+      const held = visible();
+      document.getElementById('office-result-continue').dispatchEvent(new MouseEvent('click', { bubbles:true, detail:1 }));
+      const inFlight = visible();
+      key('keyup');
+      key('keydown');
+      key('keyup');
+      return { immediate:immediate, held:held, inFlight:inFlight, acknowledged:!visible(),
+        chargedOnce:FB.state.player.gold === gold };
+    } finally { Date.now = realNow; }
+  });
+  expect(result).toEqual({ immediate:true, held:true, inFlight:true, acknowledged:true, chargedOnce:true });
+});

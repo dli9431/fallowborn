@@ -199,12 +199,15 @@ test('Settings can group Deeds into direct, personal, and ruler action types',
     const direct = page.locator(
       '#tab-actions [data-action-group-body="deeds"]');
     for (const id of [
-      'poach', 'seek_blessing', 'give_alms', 'raid_expedition'
+      'seek_blessing', 'give_alms', 'raid_expedition'
     ]) {
       await expect(direct.locator('[data-action-id="' + id + '"]'))
         .toBeVisible();
     }
     await page.locator('#tab-actions [data-action-group="personal"]').click();
+    await expect(page.locator(
+      '#tab-actions [data-action-group-body="personal"] ' +
+      '[data-action-id="poach"]')).toBeVisible();
     await expect(page.locator(
       '#tab-actions [data-action-group-body="personal"] ' +
       '[data-action-id="go_to_town"]')).toBeVisible();

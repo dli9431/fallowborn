@@ -279,3 +279,7 @@ directly held counties and enters seasonal settlement, `FB.reliableGoldIncome`, 
 line. See [modifiers.md](modifiers.md).
 
 Historical military equipment extends item lots to Masterwork repeatable gear. Fresh lots inherit the item technology, date, and regional production gates; open lots remain grandfathered. Seasonal shops and peddlers carry Plain and Well-made versions. See [items.md](items.md).
+
+Guild promotion results retain actual money and prestige changes beside the rank
+and Guild Standing gain. Acknowledgement and character-sheet returns cannot repeat
+the transaction.

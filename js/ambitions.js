@@ -80,18 +80,18 @@ window.FB = window.FB || {};
     const have = counties.filter(function (pid) { return holds(state, rid, pid); }).length;
     const need = Math.max(d.tier === 5 ? 2 : 1, Math.ceil(counties.length * d.share));
     const checks = [];
-    function check(label, met) { checks.push({ label:label, met:!!met }); }
+    function check(label, met, progress) { checks.push({ label:label, met:!!met, progress:!!progress }); }
     check(FB.T('Count rank or higher'), tier >= 4);
     if (d.culture) check(FB.T('Norse ruler'), culture(state, rid) === d.culture);
     check(FB.T('Regional counties: {have}/{need}', { have:have, need:need }),
-      counties.length > 0 && have >= need);
+      counties.length > 0 && have >= need, true);
     if (d.capital) check(FB.T('Control Rouen'), holds(state, rid, d.capital));
     if (d.island) {
       const island = FB.duchyCounties(d.island);
       const islandHave = island.filter(function (pid) { return holds(state, rid, pid); }).length;
       const islandNeed = Math.max(1, Math.ceil(island.length / 2));
       check(FB.T('Island counties: {have}/{need}', { have:islandHave, need:islandNeed }),
-        islandHave >= islandNeed);
+        islandHave >= islandNeed, true);
       check(FB.T('Control a county in Apulia or Calabria'), d.mainland.some(function (did) {
         return FB.duchyCounties(did).some(function (pid) { return holds(state, rid, pid); });
       }));

@@ -3697,6 +3697,7 @@ window.FB = window.FB || {};
       mobileNavPush('generic-modal', closeGenericModalRaw, reopenGenericModalRaw,
         function () { return !$('genmodal').classList.contains('hidden'); },
         function () {
+          if (UI.genericOutcomeGuarded && UI.genericOutcomeGuarded()) return false;
           return UI._gmDismiss ||
             (genericNavSnapshot && genericNavSnapshot.historyBack);
         });
@@ -3740,6 +3741,7 @@ window.FB = window.FB || {};
   SH.modalHotkeyClose = modalHotkeyClose;
 
   UI.closeModal = function () {
+    if (UI.genericOutcomeGuarded && UI.genericOutcomeGuarded()) return;
     const equipmentPicker = $('equip-picker-overlay');
     if (equipmentPicker) {
       closeEquipmentPickerRaw(equipmentPicker, true);
@@ -3754,6 +3756,7 @@ window.FB = window.FB || {};
     }, 0);
   };
   UI.backModal = function () {
+    if (UI.genericOutcomeGuarded && UI.genericOutcomeGuarded()) return;
     const historyBackRender = genericNavSnapshot &&
       genericNavSnapshot.historyBackRender;
     modalHistoryBack(historyBackRender || UI.closeModal);

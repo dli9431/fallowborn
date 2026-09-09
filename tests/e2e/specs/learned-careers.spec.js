@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/keys.js',
   'js/events.js',
   'js/ui_misc.js',
   'data/actions.js',
@@ -625,9 +626,16 @@ test('a passed professional examination shows the qualification result', async f
     FB.chance = function () { return true; };
     FB.ui.showCareerPicker(c.id);
   });
+  const before = await page.evaluate(function () { return { gold:FB.state.player.gold, prestige:FB.state.player.prestige }; });
   await page.locator('[data-career-exam]').first().click();
   await expect(page.locator('#gm-title')).toHaveText('Qualification gained');
+  const expected = await page.evaluate(function (before) {
+    return [FB.T('Money {change}', { change:'−' + FB.money(before.gold - FB.state.player.gold) }),
+      FB.T('Prestige {change}', { change:'+' + (FB.state.player.prestige - before.prestige) })];
+  }, before);
+  for (const text of expected) await expect(page.locator('[data-promotion-receipt]')).toContainText(text);
   await expect(page.locator('[data-religious-office-result]')).toContainText('Congratulations');
+  await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await page.locator('#office-result-continue').click();
   await expect(page.locator('[data-religious-office-result]')).toHaveCount(0);
 });

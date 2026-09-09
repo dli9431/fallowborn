@@ -317,3 +317,8 @@ player's money. A saved `localNegotiations` map records attempts, preventing rep
 rolls on ticks, reloads, or failed player choices. Settled counties stay visited and
 cannot rejoin. Contexts capture the negotiator's identity and exact direct county list;
 a changed holder, stale incident, or spent attempt invalidates a choice before cost/RNG.
+
+Inline concessions and local talks show a settled result before returning to the
+privilege roll. Actual costs and effects, including a failed negotiation fee, remain
+visible. Continue, Escape, and mobile Back acknowledge once and restore the roll
+scroll and expanded disclosures; the outcome shares the event input guard.

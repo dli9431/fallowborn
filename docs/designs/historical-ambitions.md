@@ -13,8 +13,11 @@ requires Norse culture. Superior lieges' unrelated lands never count. Completed
 player foundations remain visible after land or culture changes while the player
 remains Count or higher; other completed foundations appear when regionally relevant.
 
-Cards show a short description, current/required county counts, all essential
-blockers, recognition costs, title change, prestige reward, and regional bonus.
+Cards show current/required county counts, unmet blockers, recognition costs, title
+change, prestige reward, and regional bonus. Descriptions and the full prerequisite
+audit use the shared desktop hover/focus tooltip and compact question-mark disclosure.
+The title disclosure explains deadlines and bonus scope. Expanded card details survive
+completion and acknowledgement alongside scroll and focus.
 The named action is disabled until ready. Opening the list is free. Completion is
 immediate, consumes no day, and requires a living adult player at home and outside
 captivity. All foundations require peace, including the sovereign's wars and holy
