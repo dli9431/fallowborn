@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'css/style.css',
   'js/model.js',
+  'js/actions.js',
   'js/economy.js',
   'js/ui_panels.js',
   'data/economy.js',
@@ -379,11 +380,16 @@ async function prepareReligiousCareer(page, bishop) {
     delete c.bishopPetitionRefusedTurn;
     const papacy = FB.ensurePapacy(s);
     const obedience = papacy.obediences[papacy.romanObedience];
-    papacy.relationships[obedience.claimantId + ':' + c.id] = 100;
+    FB.adjustPapalOpinionOfCandidate(s, c,
+      100 - FB.papalOpinionOfCandidate(s, c, obedience.id), obedience.id);
     if (hasSee) FB.installBishopric(s, c, FB.bishopAppointmentStatus(s, c));
     // Control only the appointment roll; all eligibility, costs and office effects stay real.
     FB.chance = function () { return true; };
     FB.ui.refresh();
+    if (hasSee) {
+      const status = FB.cardinalPetitionStatus(s, c);
+      if (!status.ready) throw new Error('Cardinal fixture is blocked: ' + status.missing.join('; '));
+    }
     return { id:c.id, popeId:obedience.claimantId, gold:p.gold };
   }, bishop);
 }

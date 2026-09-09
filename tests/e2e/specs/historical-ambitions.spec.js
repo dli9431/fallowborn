@@ -397,7 +397,7 @@ for (const width of [1280, 390]) {
     await expect(card.locator('.ambition-requirements')).toContainText('Regional counties');
     await expect(card.locator('.ambition-requirements')).not.toContainText('Adult ruler');
     await expect(card.locator('.ambition-benefits')).toBeVisible();
-    const info = card.locator('.settcard-info');
+    const info = card.locator('.settcard-actions .settcard-info');
     if (width === 390) {
       await expect(info).toBeVisible();
       const box = await info.boundingBox();

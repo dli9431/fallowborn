@@ -32,8 +32,8 @@ window.FB = window.FB || {};
       const status = FB.historicalAmbitionStatus(s, d.id);
       h += '<section class="settcard ambition-card" data-ambition-card="' + esc(d.id) +
         '" tabindex="-1"><div class="settcard-head" tabindex="0"><h3>' + esc(ambitionText(d, 'name')) +
-        '</h3><button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="ambition-details-' +
-        esc(d.id) + '" aria-label="' + esc(FB.T('Foundation details')) + '">?</button></div>' +
+        '</h3><span class="settcard-actions"><button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="ambition-details-' +
+        esc(d.id) + '" aria-label="' + esc(FB.T('Foundation details')) + '">?</button></span></div>' +
         '<div class="settcard-details hidden" id="ambition-details-' + esc(d.id) + '"><p>' +
         esc(ambitionText(d, 'desc')) + '</p><ul>';
       status.checks.forEach(function (check) {

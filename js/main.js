@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.178.1';
+FB.VERSION = '1.178.2';
 FB.CHANGELOG = [
+  { v: '1.178.2', date: '2026-09-09', changes: [
+    'Historical ambition detail buttons follow the shared desktop and mobile card layout.'
+  ] },
   { v: '1.178.1', date: '2026-09-09', changes: [
     'Promotion and uprising results retain actual costs and gains and guard against accidental dismissal. Historical ambitions move background rules into tooltips and compact details.'
   ] },

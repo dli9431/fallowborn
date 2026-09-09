@@ -257,7 +257,13 @@ for (const width of [390, 1280]) {
     });
     await expect(page.locator('#ev-text')).toContainText('90 days');
     await expect(page.locator('#ev-text')).toContainText('Popular support above -10');
+    await expect.poll(function () {
+      return page.evaluate(function () { return !FB.ui.eventInputGuarded(); });
+    }).toBe(true);
     await page.locator('#ev-options button').filter({ hasText:'Take time to address' }).click();
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.state.collectiveDemands.uprising.stage; });
+    }).toBe('warning');
     await page.evaluate(function () { FB.ui.showPrivileges(); });
     await expect(page.locator('#commons-uprising-status')).toContainText('90 days to grant the concession');
     await expect(page.locator('#commons-uprising-status')).toContainText('+6 Popular support, -2 prestige');

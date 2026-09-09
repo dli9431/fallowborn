@@ -18,6 +18,8 @@ change, prestige reward, and regional bonus. Descriptions and the full prerequis
 audit use the shared desktop hover/focus tooltip and compact question-mark disclosure.
 The title disclosure explains deadlines and bonus scope. Expanded card details survive
 completion and acknowledgement alongside scroll and focus.
+The disclosure button sits inside the shared `settcard-actions` wrapper so desktop
+visibility and compact touch sizing follow the standard card rules.
 The named action is disabled until ready. Opening the list is free. Completion is
 immediate, consumes no day, and requires a living adult player at home and outside
 captivity. All foundations require peace, including the sovereign's wars and holy
