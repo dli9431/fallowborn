@@ -2458,7 +2458,9 @@ choosing local matchmaking invokes the existing search and cooldown. The separat
 Deeds finder button is removed. Descendant shortcuts remain available; Kin has no
 standalone finder button above the family list.
 The finder keeps **Marriage for** visible and groups the other inputs beneath a
-native **Filters** disclosure, collapsed on opening. Initial focus stays on the
+native **Filters & sorting** disclosure, collapsed on opening. A labeled native Sort
+select offers Recommended, Claims (more and higher titles), and Alliance power
+(realm levies); the selection survives nested reviews with the other preferences. Initial focus stays on the
 dialog, avoiding the mobile keyboard. Candidate cards use procedural portraits,
 including read-only previews of compact court members. Standing requirements, travel, and dowry terms appear directly on each card
 alongside availability reasons. The card tooltip / compact question-mark

@@ -8465,7 +8465,7 @@ window.FB = window.FB || {};
       h += '<option value="' + esc(c.id) + '">' + esc(c.id === s.player.charId
         ? FB.T('Yourself') : FB.fullName(c)) + '</option>';
     });
-    h += '</select></label><details id="finder-filters"><summary>' + esc(FB.T('Filters')) +
+    h += '</select></label><details id="finder-filters"><summary>' + esc(FB.T('Filters & sorting')) +
       '</summary><label>' + esc(FB.T('Court scope')) +
       '<select id="finder-scope"><option value="near">' + esc(FB.T('Your realm and neighbors')) +
       '</option><option value="all">' + esc(FB.T('All courts')) + '</option></select></label>' +
@@ -8487,12 +8487,15 @@ window.FB = window.FB || {};
     h += '</select></label><label>' + esc(FB.T('Court rank')) + '<select id="finder-rank"><option value="">' + esc(FB.T('All ranks')) + '</option>';
     [1, 2, 3, 4].forEach(function (rank) { h += '<option value="' + rank + '">' + esc(marriageFinderRankLabel(rank)) + '</option>'; });
     h += '</select></label><label>' + esc(FB.T('Availability')) + '<select id="finder-availability"><option value="free">' + esc(FB.T('Uncommitted')) + '</option><option value="all">' + esc(FB.T('Everyone')) + '</option></select></label>' +
+      '<label>' + esc(FB.T('Sort')) + '<select id="finder-sort"><option value="recommended">' + esc(FB.T('Recommended')) +
+      '</option><option value="claims">' + esc(FB.T('Claims (more and higher titles)')) +
+      '</option><option value="alliance">' + esc(FB.T('Alliance power (realm levies)')) + '</option></select></label>' +
       '<label><input type="checkbox" id="finder-heirs"> ' + esc(FB.T('Designated heirs only')) + '</label>' +
       '<button class="btn" id="finder-clear-court">' + esc(FB.T('Clear court filter')) + '</button>' +
       '</details><div id="finder-results" class="gm-list"></div></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Find a marriage…'), h, { historyView:true, noFocus:true,
       titleDetailsHtml:'<p>' + esc(FB.T('Succession follows the designated heir. Family weddings may improve alliance negotiations; they do not automatically create an alliance.')) + '</p>' });
-    const fields = { subject:'subjectId', scope:'scope', search:'search', minAge:'minAge', maxAge:'maxAge', faith:'faith', rank:'rank', availability:'availability', heirs:'heirs' };
+    const fields = { subject:'subjectId', scope:'scope', search:'search', minAge:'minAge', maxAge:'maxAge', faith:'faith', rank:'rank', availability:'availability', heirs:'heirs', sort:'sort' };
     function render() {
       let rows = '';
       const previewFaces = [];

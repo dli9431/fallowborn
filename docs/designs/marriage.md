@@ -414,7 +414,15 @@ realm, age, faith, court rank, heir, and availability filters only affect discov
 Each fresh general opening resets court scope to realm and neighbors; returning
 from a review preserves the chosen scope. Opening a specific court may use all-court
 scope to include a distant court, but clearing that court filter restores nearby scope.
-Actionable pairs sort first; blocked pairs retain their authoritative explanation.
+Recommended sorting puts actionable pairs first. **Claims (more and higher titles)**
+sums the ranks of distinct living hereditary realms where the candidate is the ruler
+or appears in the recorded succession order (count 1, duke 2, king 3, emperor 4).
+More title prospects break equal scores; consorts, dead records, and elective Papal
+offices do not count. These are succession prospects, not immediate land transfers.
+**Alliance power (realm levies)** sorts by the candidate court's current musterable
+levy from `FB.realmHostAvailability`, largest first. Both explicit sorts use readiness,
+name, and stable candidate key to break remaining ties. Blocked pairs retain their
+explanation. Sorting remains read-only and the selection survives review returns.
 
 `FB.marriageCandidateQuery` reads existing bounded court-family and ruler snapshots.
 It never ensures succession, creates characters, consumes RNG, or spends time or

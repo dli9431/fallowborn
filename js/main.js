@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.9';
+FB.VERSION = '1.176.10';
 FB.CHANGELOG = [
+  { v: '1.176.10', date: '2026-09-08', changes: [
+    'Dynastic marriage searches can sort by title prospects or realm levy strength. Your chosen sorting stays in place when you return from a review.'
+  ] },
   { v: '1.176.9', date: '2026-09-08', changes: [
     'Self skill names stay on one line in the sidebar. The Network shortcut now reads Open political blocs.'
   ] },

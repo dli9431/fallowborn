@@ -759,6 +759,29 @@ window.FB = window.FB || {};
     })[0];
     if (!subject) return out;
     const home = FB.playerRealmId(state);
+    const claims = {}, levyByRealm = {};
+    // Count each living hereditary title once, even when a character has
+    // compact records in several courts. Discovery must never repair them.
+    if (o.sort === 'claims') {
+      for (const rid in state.realms) {
+        const realm = state.realms[rid], succession = realm.succession;
+        if (!realm.alive || !succession || succession.papalElective || !succession.members) continue;
+        const counted = {};
+        const ids = [succession.rulerMemberId].concat(succession.order || []);
+        for (const id of ids) {
+          const member = succession.members[id];
+          const character = member && member.charId && state.chars[member.charId];
+          if (!member || member.alive === false || member.role === 'consort' ||
+              (member.charId && (!character || character.dead))) continue;
+          const key = character ? character.id : rid + ':' + member.id;
+          if (counted[key]) continue;
+          counted[key] = true;
+          if (!claims[key]) claims[key] = { score:0, count:0 };
+          claims[key].score += Number(realm.rank) || 0;
+          claims[key].count++;
+        }
+      }
+    }
     for (const rid in state.realms) {
       const r = state.realms[rid];
       if (!r.alive || rid === 'player' || (o.realmId && rid !== o.realmId)) continue;
@@ -811,8 +834,23 @@ window.FB = window.FB || {};
           terms:c ? (subject.id === state.player.charId ? FB.courtshipTerms(state, c, false) : FB.marriageTerms(state, subject, c)) : null });
       }
     }
+    if (o.sort === 'alliance') {
+      out.forEach(function (row) {
+        if (levyByRealm[row.realmId] === undefined) {
+          levyByRealm[row.realmId] = FB.realmHostAvailability(state, row.realmId).current;
+        }
+      });
+    }
     return out.sort(function (a, b) {
-      return Number(b.status.ready) - Number(a.status.ready) ||
+      let priority = 0;
+      if (o.sort === 'claims') {
+        const ac = claims[a.key] || { score:0, count:0 };
+        const bc = claims[b.key] || { score:0, count:0 };
+        priority = bc.score - ac.score || bc.count - ac.count;
+      } else if (o.sort === 'alliance') {
+        priority = levyByRealm[b.realmId] - levyByRealm[a.realmId];
+      }
+      return priority || Number(b.status.ready) - Number(a.status.ready) ||
         String(a.name).localeCompare(String(b.name)) || a.key.localeCompare(b.key);
     });
   };

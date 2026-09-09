@@ -429,3 +429,77 @@ test('realm levy tooltip always shows both current and maximum men', async funct
   });
   await expect(page.locator('.finder-realm-stats').first()).toHaveText('Realm levies: 1200/1200 men');
 });
+
+test('dynastic sorting weighs multiple titles and current realm levies without mutations', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    const template = s.realms[Object.keys(s.realms).find(function (id) { return s.realms[id].alive && id !== 'player'; })];
+    const people = {};
+    ['Many', 'High', 'Low', 'None'].forEach(function (name) {
+      people[name] = FB.makeCharacter(s, { name:'Sortfixture ' + name,
+        sex:me.sex === 'm' ? 'f' : 'm', born:s.date.year - 20,
+        culture:me.culture, religion:me.religion });
+    });
+    function court(id, rank, names, order, elective) {
+      const members = {};
+      names.forEach(function (name) {
+        const c = people[name];
+        members[name] = { id:name, charId:c.id, name:c.name, sex:c.sex,
+          born:c.born, alive:true, parentId:null };
+      });
+      s.realms[id] = Object.assign({}, template, { id:id, rank:rank, liege:null,
+        succession:{ members:members, order:order, heirId:order[0],
+          rulerMemberId:null, papalElective:!!elective } });
+    }
+    court('sort-a', 2, ['Many'], ['Many', 'Many']);
+    court('sort-b', 2, ['Many'], ['Many']);
+    court('sort-c', 3, ['High'], ['High']);
+    court('sort-d', 1, ['Low'], ['Low']);
+    court('sort-e', 4, ['None'], ['None'], true);
+    FB.courtshipStatus = function () { return { ready:false, reason:'Fixture' }; };
+    const originalLevies = FB.realmHostAvailability;
+    FB.realmHostAvailability = function (state, rid) {
+      const values = { 'sort-a':100, 'sort-b':100, 'sort-c':300, 'sort-d':200, 'sort-e':0 };
+      return values[rid] === undefined ? originalLevies(state, rid)
+        : { current:values[rid], maximum:1000 - values[rid] };
+    };
+    const before = JSON.stringify(s), rng = FB.getRngState();
+    function query(sort) {
+      return FB.marriageCandidateQuery(s, { scope:'all', availability:'all', search:'Sortfixture', sort:sort })
+        .map(function (row) { return row.characterId; });
+    }
+    const claims = query('claims'), alliance = query('alliance');
+    return { claims:claims, alliance:alliance,
+      expectedClaims:['Many', 'High', 'Low', 'None'].map(function (name) { return people[name].id; }),
+      expectedAlliance:['High', 'Low', 'Many', 'None'].map(function (name) { return people[name].id; }),
+      unchanged:before === JSON.stringify(s), rngSame:rng === FB.getRngState() };
+  });
+  expect(result.claims).toEqual(result.expectedClaims);
+  expect(result.alliance).toEqual(result.expectedAlliance);
+  expect(result.unchanged).toBe(true);
+  expect(result.rngSame).toBe(true);
+});
+
+for (const sort of ['claims', 'alliance']) {
+  test('dynastic ' + sort + ' sort follows the query and survives court review', async function ({ page }) {
+    await page.evaluate(function () { FB.ui.showMarriageFinder(); });
+    await page.locator('#finder-filters > summary').click();
+    await page.locator('#finder-scope').selectOption('all');
+    await page.locator('#finder-sort').selectOption(sort);
+    const expected = await page.evaluate(function (sort) {
+      return FB.marriageCandidateQuery(FB.state, { scope:'all', sort:sort }).map(function (row) { return row.key; });
+    }, sort);
+    expect(await page.locator('[data-finder-review]').evaluateAll(function (buttons) {
+      return buttons.map(function (button) { return button.dataset.finderReview; });
+    })).toEqual(expected);
+    const button = page.locator('[data-finder-court]').nth(8);
+    await button.scrollIntoViewIfNeeded();
+    await button.focus();
+    const scroll = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+    await button.press('Enter');
+    await page.locator('#cm-close').click();
+    await expect(page.locator('#finder-sort')).toHaveValue(sort);
+    await expect(button).toBeFocused();
+    expect(await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; })).toBe(scroll);
+  });
+}
