@@ -257,5 +257,5 @@ Support recovery eases the penalty without extending its deadline. No severity
 value is saved. It has no Popular support penalty, upkeep, or autonomous
 army. The local uprising lifecycle removes it early after a concession, successful
 suppression, or loss of the originating ruler's control. Unlike ordinary historical
-county burdens, this incident ends on transfer or succession rather than transferring
-the old ruler's dispute. Its fixed expiry is never extended after a failed response.
+county burdens, the transferred county leaves the incident and loses its modifier;
+other participating counties continue. Succession ends the entire incident. Its fixed expiry is never extended after a failed response.

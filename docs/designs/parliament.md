@@ -253,11 +253,14 @@ is baseline rule and recovery. Previously demanded privileges retain their appro
 terms regardless of later research changes.
 
 A refused commons demand at effective Popular support -20 or lower may start one
-local warning, only for a county directly held by a tier-4+ protagonist. Guild,
+local warning for up to three counties directly held by a tier-4+ protagonist.
+The originating county comes first; other unprotected direct holdings follow in
+stable county-id order. The roster is fixed when the warning is created. Guild,
 faith, and magnate demands retain their existing consequences. The warning identifies
-the refused privilege and county. Granting it settles the grievance; deferring gives
+the refused privilege and every participating county. Granting it in each county
+settles the grievance; deferring gives
 90 days to grant it elsewhere or recover Popular support above -10. Unresolved
-warnings become one county uprising, with tax and levy reduced by 25% to 100% for at most 180 days.
+warnings become one coordinated uprising, with tax and levy reduced by 25% to 100% for at most 180 days.
 The reduction follows current effective Popular support, linearly from 25% at -20
 to 100% at -100, clamped at both ends. It multiplies output after ordinary county
 modifier bonuses, so bonuses cannot offset a complete shutdown.
@@ -268,11 +271,16 @@ Suppression success costs 8 Popular support; failure costs 12. No land, army, re
 or war record is created or changed.
 
 The single optional `collectiveDemands.uprising` record contains stable identity,
-county, privilege, protagonist, liege, stage, and deadlines. Each context is bound to
-the exact record and stage. Succession, loss of direct control, demotion, death, or
-liege change clears the incident and its modifier; load repair is idempotent. A
+county list, original scope, privilege, protagonist, liege, stage, and deadlines. Each context is bound to
+the exact record and stage. Loss of direct control or a separately granted concession removes only that county
+and its modifier. Succession, demotion, death, or liege change clears all counties; load repair is idempotent. A
 three-year realm-wide cooldown begins when an incident ends, including cleanup.
 New warnings cannot overlap the existing commons downfall flags or queued downfall
 events; that chain cannot begin while a local incident or its cooldown is present.
 The incident is visible in Privileges & opposition, and its active modifier appears
 through the existing Land and Governance county effects.
+
+All participating counties share one response and deadline. Money, prestige, and
+stored Popular support changes apply once, while concessions and uprising modifiers
+apply to each listed county. A changed roster invalidates old choices and refreshes
+an unanswered event without extending its deadline. Newly acquired counties do not join.

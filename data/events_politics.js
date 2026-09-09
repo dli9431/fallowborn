@@ -10,9 +10,9 @@ FBDATA.events.push(
 
 { id:'commons_uprising_warning', title:'A Final Petition from {county}',
   trigger:{ never:true }, contextValidator:'commons_uprising_valid',
-  text:'The commons of {county} have not accepted your refusal of {privilege}. Their delegates warn that collection and muster will stop if you leave the grievance unanswered. Grant the concession now, or take {warningDays} days to grant it or restore Popular support above {recoverySupport}. Continued neglect will reduce county tax and levy output by 25% to 100% for up to {uprisingDays} days, depending on Popular support. At -100 support, collection and muster stop completely.',
+  text:'Affected counties: {county}. Their commons have not accepted your refusal of {privilege}. Their delegates warn that collection and muster will stop if you leave the grievance unanswered. Grant the concession now, or take {warningDays} days to grant it or restore Popular support above {recoverySupport}. Continued neglect will reduce tax and levy output in every listed county by 25% to 100% for up to {uprisingDays} days, depending on Popular support. At -100 support, collection and muster stop completely.',
   options:[
-    { label:'Grant {privilege}.',
+    { label:'Grant {privilege} in every affected county.',
       effects:{ custom:'commons_uprising_concede', popularOpinion:6, prestige:-2 } },
     { label:'Take time to address the grievance.',
       effects:{ custom:'commons_uprising_defer' } }
@@ -20,9 +20,9 @@ FBDATA.events.push(
 
 { id:'commons_uprising_begins', title:'The Commons Rise in {county}',
   trigger:{ never:true }, contextValidator:'commons_uprising_valid',
-  text:'The refused petition for {privilege} has become open resistance in {county}. Tax carts stand empty and the muster rolls go unanswered. The latest report puts the county tax and levy reduction at {reduction}%. The penalty follows current Popular support, from 25% at -20 support to 100% at -100, for up to {uprisingDays} days. The dispute can still be settled without losing the county.',
+  text:'Affected counties: {county}. The refused petition for {privilege} has become open resistance across these holdings. Tax carts stand empty and the muster rolls go unanswered. The latest report puts the county tax and levy reduction at {reduction}%. The penalty follows current Popular support, from 25% at -20 support to 100% at -100, for up to {uprisingDays} days. One response settles all listed counties. Concessions apply in each county; money, prestige, and Popular support changes are charged once.',
   options:[
-    { label:'Grant {privilege}.',
+    { label:'Grant {privilege} in every affected county.',
       effects:{ custom:'commons_uprising_concede', popularOpinion:6, prestige:-2 } },
     { label:'Negotiate a settlement. ({money:20})', require:{ goldMin:20 },
       desc:'Diplomacy may secure the demanded concession. Failure leaves the county disruption until its original end date.',
@@ -32,7 +32,7 @@ FBDATA.events.push(
       failure:{ text:'The delegates reject the talks. Collection and muster remain disrupted until the rising disperses.',
         effects:{ custom:'commons_uprising_endure' } } },
     { label:'Send the county officers. ({money:20})', require:{ goldMin:20 },
-      desc:'Suppression has a 65% chance of ending the uprising. Popular support falls by 8 on success or 12 on failure; failure leaves the original disruption in place.',
+      desc:'Suppression has a 65% chance of ending the uprising. Popular support falls by 8 on success or 12 on failure; failure leaves the original disruption in every affected county.',
       effects:{ gold:-20 }, chance:0.65,
       success:{ text:'The officers reopen the roads and scatter the gatherings. The commons remember the force used.',
         effects:{ custom:'commons_uprising_suppress', popularOpinion:-8 } },

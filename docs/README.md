@@ -530,11 +530,11 @@ play, mod, and share noncommercially.
 ### Local commons uprisings
 
 As a count or higher ruler, refusing a commons demand at low Popular support can bring
-a final petition from one directly held county. Grant the demanded concession, or take
+a final petition involving up to three directly held counties, listed together. Grant the demanded concession, or take
 90 days to resolve it or recover Popular support above -10. Privileges & collective
 demands shows the remaining time and lets you grant the concession later.
 
-If the warning expires unresolved, that county loses 25-100% of tax and levy output for
+If the warning expires unresolved, each participating county loses 25-100% of tax and levy output for
 up to 180 days. The penalty follows current Popular support: 25% at -20,
 62.5% at -60, and 100% at -100. Improving support eases the disruption.
 Other county bonuses cannot offset a complete shutdown. You may concede, pay 20 gold to negotiate through Diplomacy, pay 20 gold
@@ -542,3 +542,8 @@ for a 65% suppression attempt, or endure the disruption. Failed attempts keep th
 original expiry. Suppression costs 8 Popular support on success or 12 on failure.
 Only one local uprising can be active, followed by a three-year cooldown. It does not
 create a war or take the county away.
+
+A single response covers every listed county. Concessions apply separately to each,
+while money, prestige, and stored Popular support changes apply once. If a county
+leaves your control or receives its concession separately, the remaining counties
+continue with the same deadline. Newly acquired counties do not join an existing rising.

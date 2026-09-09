@@ -392,3 +392,149 @@ test('effective support scales resistance after county bonuses and recovery pres
   expect(result.recovering.levy).toBeCloseTo(1.15 * 0.375 - 1);
   expect(result.sameDeadline).toBe(true);
 });
+
+async function addCommonsCounties(page, count) {
+  return page.evaluate(function (count) {
+    const s = FB.state;
+    const ids = FB.world.provs.filter(function (province) {
+      return !province.wasteland && s.player.provs.indexOf(province.id) < 0;
+    }).slice(0, count).map(function (province) { return province.id; });
+    ids.forEach(function (pid) {
+      s.player.provs.push(pid);
+      s.owner[pid] = 'player';
+      s.holder[pid] = 'player';
+    });
+    FB.invalidateRealmCache();
+    return ids;
+  }, count);
+}
+
+test('the initial roster is bounded, deterministic, and excludes protected or indirect counties', async function ({ page }) {
+  const ids = await addCommonsCounties(page, 5);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state;
+    FB.grantPrivilege(s, 'tax_concession', { scopeId:ids[0], grandfathered:true });
+    s.holder[ids[1]] = 'other';
+    window.refuseCommons();
+    const row = s.collectiveDemands.uprising;
+    const before = JSON.stringify(s), rng = FB.getRngState();
+    const summary = FB.commonsUprisingSummary(s);
+    return { counties:row.countyIds, summary:summary.countyIds,
+      expected:[s.player.provinceId].concat(ids.slice(2).sort().slice(0, 2)),
+      pure:before === JSON.stringify(s) && rng === FB.getRngState() };
+  }, ids);
+  expect(result.counties).toEqual(result.expected);
+  expect(result.summary).toEqual(result.expected);
+  expect(result.pure).toBe(true);
+});
+
+test('one uprising and concession cover the roster with resource changes charged once', async function ({ page }) {
+  await addCommonsCounties(page, 3);
+  const result = await page.evaluate(function () {
+    window.beginCommons();
+    const s = FB.state, row = s.collectiveDemands.uprising;
+    const affected = row.countyIds.slice();
+    const unrest = affected.map(function (pid) { return FB.hasModifier(s, 'commons_uprising', pid); });
+    const excluded = s.player.provs.filter(function (pid) { return affected.indexOf(pid) < 0; });
+    const gold = s.player.gold, prestige = s.player.prestige, pop = s.player.pop;
+    const receipt = FB.concedeCommonsUprising(s, row.id);
+    return { count:affected.length, unrest:unrest,
+      excludedClear:excluded.every(function (pid) { return !FB.hasModifier(s, 'commons_uprising', pid); }),
+      granted:affected.every(function (pid) { return FB.hasPrivilege(s, 'tax_concession', pid); }),
+      clear:affected.every(function (pid) { return !FB.hasModifier(s, 'commons_uprising', pid); }),
+      gold:s.player.gold - gold, prestige:s.player.prestige - prestige, pop:s.player.pop - pop,
+      receipt:!!receipt, finished:!s.collectiveDemands.uprising };
+  });
+  expect(result).toEqual({ count:3, unrest:[true, true, true], excludedClear:true,
+    granted:true, clear:true, gold:0, prestige:-2, pop:6, receipt:true, finished:true });
+});
+
+for (const change of ['transfer', 'separate_concession']) {
+  test(change + ' removes only one county and refreshes the unanswered response', async function ({ page }) {
+    await addCommonsCounties(page, 2);
+    const result = await page.evaluate(function (change) {
+      const old = window.beginCommons(), s = FB.state;
+      const row = s.collectiveDemands.uprising;
+      const lost = row.scopeId, beforeIds = row.countyIds.slice(), due = row.dueTurn;
+      if (change === 'transfer') {
+        s.holder[lost] = 'other';
+        s.owner[lost] = 'other';
+        s.player.provs = s.player.provs.filter(function (pid) { return pid !== lost; });
+      } else FB.grantPrivilege(s, row.privilegeId, { scopeId:lost, grandfathered:true });
+      const ev = FB.eventById(old.id), before = JSON.stringify(s), rng = FB.getRngState();
+      const stale = FB.resolveEventOption(s, ev, ev.options[2], old.ctx);
+      const safe = stale === false && before === JSON.stringify(s) && rng === FB.getRngState();
+      FB.commonsUprisingDay(s);
+      FB.commonsUprisingDay(s);
+      const fresh = s.eventQueue.filter(function (item) {
+        return item.id === old.id && FB.eventContextStillValid(s, ev, item.ctx);
+      });
+      return { safe:safe, counties:s.collectiveDemands.uprising.countyIds,
+        expected:beforeIds.filter(function (pid) { return pid !== lost; }),
+        originalRemoved:!FB.hasModifier(s, 'commons_uprising', lost),
+        othersActive:s.collectiveDemands.uprising.countyIds.every(function (pid) {
+          return FB.hasModifier(s, 'commons_uprising', pid);
+        }), sameDeadline:s.collectiveDemands.uprising.dueTurn === due,
+        events:fresh.length, eventCounties:fresh[0].ctx.countyIds };
+    }, change);
+    expect(result.safe).toBe(true);
+    expect(result.counties).toEqual(result.expected);
+    expect(result.eventCounties).toEqual(result.expected);
+    expect(result.originalRemoved).toBe(true);
+    expect(result.othersActive).toBe(true);
+    expect(result.sameDeadline).toBe(true);
+    expect(result.events).toBe(1);
+  });
+}
+
+test('new holdings do not join an existing roster and expiry clears every original county', async function ({ page }) {
+  await addCommonsCounties(page, 1);
+  await page.evaluate(function () { window.beginCommons(); });
+  const added = await addCommonsCounties(page, 2);
+  const result = await page.evaluate(function (added) {
+    const s = FB.state, row = s.collectiveDemands.uprising, ids = row.countyIds.slice();
+    FB.commonsUprisingDay(s);
+    const unchanged = JSON.stringify(row.countyIds) === JSON.stringify(ids);
+    s.turn = row.dueTurn;
+    FB.commonsUprisingDay(s);
+    return { unchanged:unchanged, count:ids.length, finished:!s.collectiveDemands.uprising,
+      clear:ids.concat(added).every(function (pid) { return !FB.hasModifier(s, 'commons_uprising', pid); }) };
+  }, added);
+  expect(result).toEqual({ unchanged:true, count:2, finished:true, clear:true });
+});
+
+test('legacy single-county incidents migrate without expanding or losing their decision', async function ({ page }) {
+  await page.evaluate(function () { window.beginCommons(); });
+  await addCommonsCounties(page, 2);
+  const result = await page.evaluate(function () {
+    const s = FB.state, row = s.collectiveDemands.uprising, due = row.dueTurn;
+    delete row.countyIds;
+    s.eventQueue.forEach(function (item) { if (item.ctx) delete item.ctx.countyIds; });
+    const saved = JSON.parse(FB.save.serialize());
+    FB.save.restore(saved);
+    const restored = FB.state;
+    const valid = restored.eventQueue.filter(function (item) {
+      return item.id === 'commons_uprising_begins' &&
+        FB.eventContextStillValid(restored, FB.eventById(item.id), item.ctx);
+    });
+    return { ids:restored.collectiveDemands.uprising.countyIds,
+      expected:[row.scopeId], due:restored.collectiveDemands.uprising.dueTurn,
+      expectedDue:due, count:valid.length };
+  });
+  expect(result.ids).toEqual(result.expected);
+  expect(result.due).toBe(result.expectedDue);
+  expect(result.count).toBe(1);
+});
+
+test('the privilege roll names every county and states concession effects per county', async function ({ page }) {
+  await addCommonsCounties(page, 2);
+  const names = await page.evaluate(function () {
+    window.beginCommons();
+    const names = FB.state.collectiveDemands.uprising.countyIds.map(function (pid) { return FB.world.byId[pid].name; });
+    FB.ui.showPrivileges();
+    return names;
+  });
+  for (const name of names) await expect(page.locator('#commons-uprising-status')).toContainText(name);
+  await expect(page.locator('#commons-uprising-status')).toContainText('Concession in every listed county');
+  await expect(page.locator('#commons-uprising-status')).toContainText('-2 prestige once');
+});

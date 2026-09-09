@@ -378,9 +378,12 @@ through its owning API; refusal lowers political support and adds bounded consti
 opposition, which increases that constituency's later demand pressure after the cooldown.
 None of the choices creates an autonomous realm or starts a revolt directly. A
 refused commons demand at low Popular support can queue `commons_uprising_warning`
-for a directly held county; its acknowledged 90-day grace period can later queue
+for a bounded roster of directly held counties; its acknowledged 90-day grace period can later queue
 `commons_uprising_begins`. Both use `commons_uprising_valid` to bind every option
-to the exact incident, stage, county, privilege, protagonist, and liege. Paid choices
+to the exact incident, stage, county roster, privilege, protagonist, and liege.
+A partial transfer or separate concession invalidates the old roster and refreshes
+an unanswered audience. Resource effects occur once; the custom concession grants
+the approved privilege separately in every remaining county. Paid choices
 recheck affordability at resolution. Concession, suppression, and enduring disruption
 have explicit impact adapters; ordinary resource deltas remain declarative.
 See [parliament.md](parliament.md#local-commons-uprisings) for the lifecycle.

@@ -4354,7 +4354,9 @@ An event option may set `confirm:'war_end'` for the built-in `war_accept_tribute
 ## Local commons uprisings
 
 A refused `commons` collective demand may start the bounded local-uprising lifecycle
-for a tier-4+ protagonist's directly held county. `balance.commonsUprisingSupportThreshold`
+for a tier-4+ protagonist's directly held counties. `commonsUprisingMaxCounties`
+(default 3) bounds the initial roster, with the demand's county first and other
+unprotected direct holdings in stable id order. Existing rosters never expand. `balance.commonsUprisingSupportThreshold`
 (default -20), `commonsUprisingRecoverySupport` (-10, strictly exceeded),
 `commonsUprisingWarningDays` (90), and `commonsUprisingCooldownDays` (1080) control its
 entry, recovery, grace, and repeat timing. `modifiers.commons_uprising` supplies the

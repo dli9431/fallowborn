@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.177.0';
+FB.VERSION = '1.177.1';
 FB.CHANGELOG = [
+  { v: '1.177.1', date: '2026-09-08', changes: [
+    'Local commons uprisings can involve up to three directly held counties with one shared warning and response. Counties that leave your control or receive concessions separately drop out while the remaining uprising continues.'
+  ] },
   { v: '1.177.0', date: '2026-09-08', changes: [
     'Refused commons demands can lead to local uprisings after a final warning. Popular support determines the county tax and levy disruption, with concessions, negotiation, and suppression available to resolve it.'
   ] },

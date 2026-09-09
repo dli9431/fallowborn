@@ -13215,7 +13215,7 @@ window.FB = window.FB || {};
     }
     const uprising = FB.commonsUprisingSummary && FB.commonsUprisingSummary(s);
     if (uprising) {
-      const county = FB.world.byId[uprising.scopeId];
+      const county = { name:uprising.countyIds.map(function (pid) { return FB.world.byId[pid].name; }).join(', ') };
       const relief = FBDATA.privileges[uprising.privilegeId].effect.id;
       h += '<div class="progressnote warnote" id="commons-uprising-status">' +
         esc(uprising.stage === 'petition' || uprising.stage === 'warning'
@@ -13225,7 +13225,7 @@ window.FB = window.FB || {};
           })
           : FB.T('{county}: local commons uprising. County tax and levy are currently reduced by {reduction}% for up to {days} more days. The penalty follows Popular support.', {
             county:county.name, days:uprising.days, reduction:uprising.reduction
-          })) + '<p>' + esc(FB.T('Concession: {effects} for {days} days; +6 Popular support, -2 prestige.', {
+          })) + '<p>' + esc(FB.T('Concession in every listed county: {effects} for {days} days; +6 Popular support, -2 prestige once.', {
             effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
           })) + '</p><button type="button" class="btn" id="commons-uprising-concede">' +
           esc(FB.T('Grant {privilege}', { privilege:privilegeDisplayName(s, uprising.privilegeId) })) +

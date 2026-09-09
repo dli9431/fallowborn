@@ -2523,3 +2523,8 @@ Privileges & collective demands retains the incident's countdown, exact concessi
 effects and duration, and an inline Grant concession action. That action uses the event
 resolver, revalidates live identity, and preserves scroll and disclosures while updating
 the roll. Land and Governance show the active disruption through ordinary modifier chips.
+
+Coordinated commons uprisings list all participating counties in both event notices
+and the privilege roll. The inline concession identifies effects as applying to every
+listed county and global resource changes as occurring once. The shared deadline and
+response survive individual counties leaving the incident.

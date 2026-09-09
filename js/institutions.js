@@ -1779,7 +1779,7 @@ window.FB = window.FB || {};
     return refuseDemand(state, ctx, true);
   };
 
-  /* One local incident, attached to an exact refused demand and county. */
+  /* One local incident, attached to a refused demand and a bounded county list. */
   function uprisingBalance(key, fallback) {
     return finite(FBDATA.balance[key], fallback);
   }
@@ -1791,13 +1791,24 @@ window.FB = window.FB || {};
       state.player.provs && state.player.provs.indexOf(pid) >= 0);
   }
 
+  function uprisingCounties(row) {
+    return row && Array.isArray(row.countyIds) ? row.countyIds :
+      row && typeof row.scopeId === 'string' ? [row.scopeId] : [];
+  }
+
+  function uprisingCountyNames(row) {
+    return uprisingCounties(row).map(function (pid) {
+      return (FB.world.byId[pid] || {}).name || pid;
+    }).join(', ');
+  }
+
   function uprisingValid(state, row) {
     var def = row && privilegeDef(row.privilegeId);
     return !!(row && typeof row.id === 'string' &&
       ['petition', 'warning', 'active', 'aftermath'].indexOf(row.stage) >= 0 &&
       row.protagonistId === state.player.charId &&
       row.liegeId === (state.player.liege || null) &&
-      uprisingHeld(state, row.scopeId) && def && def.effect &&
+      uprisingCounties(row).some(function (pid) { return uprisingHeld(state, pid); }) && def && def.effect &&
       def.effect.kind === 'modifier' && FBDATA.modifiers[def.effect.id] &&
       Number.isFinite(row.startedTurn) && row.startedTurn <= state.turn &&
       (row.stage === 'petition' || (Number.isFinite(row.dueTurn) && row.dueTurn >= row.startedTurn)));
@@ -1806,7 +1817,9 @@ window.FB = window.FB || {};
   function endUprising(state, reason) {
     var store = demandStore(state, false), row = store && store.uprising;
     if (!row) return false;
-    FB.removeModifier(state, 'commons_uprising', row.scopeId, { notice:false });
+    uprisingCounties(row).forEach(function (pid) {
+      FB.removeModifier(state, 'commons_uprising', pid, { notice:false });
+    });
     store.uprising = null;
     store.uprisingCooldownUntil = state.turn + uprisingBalance('commonsUprisingCooldownDays', 1080);
     if (reason) FB.news(state, FB.msg('news.commons_uprising.ended', {
@@ -1817,33 +1830,56 @@ window.FB = window.FB || {};
         expired:'The local uprising in {county} disperses; collection and muster resume.',
         other:'The local uprising in {county} ends.'
       } }
-    }, { reason:reason, county:(FB.world.byId[row.scopeId] || {}).name || row.scopeId }));
+    }, { reason:reason, county:uprisingCountyNames(row) }));
     return true;
   }
 
   function repairUprising(state) {
     var store = demandStore(state, false);
     if (!store) return;
-    if (store.uprising && !uprisingValid(state, store.uprising)) endUprising(state, null);
+    var row = store.uprising;
+    if (row && !uprisingValid(state, row)) endUprising(state, null);
+    else if (row) {
+      var before = uprisingCounties(row);
+      var kept = before.filter(function (pid, index) {
+        if (before.indexOf(pid) !== index) return false;
+        var keep = uprisingHeld(state, pid) &&
+          !FB.hasPrivilege(state, row.privilegeId, pid);
+        if (!keep) FB.removeModifier(state, 'commons_uprising', pid, { notice:false });
+        return keep;
+      });
+      if (!kept.length) {
+        delete store.opposition.commons;
+        endUprising(state, 'concession');
+      } else {
+        row.countyIds = kept;
+        if (before.join('|') !== kept.join('|')) row.refreshEvent = true;
+      }
+    }
     if (store.uprisingCooldownUntil !== undefined &&
         !Number.isFinite(store.uprisingCooldownUntil)) delete store.uprisingCooldownUntil;
   }
 
   function uprisingContext(state, row) {
     return { uprisingId:row.id, uprisingStage:row.stage, locationId:row.scopeId,
+      countyIds:uprisingCounties(row).slice(),
       privilegeId:row.privilegeId,
       privilege:FB.dataParam('privilege', row.privilegeId, 'name'),
       warningDays:uprisingBalance('commonsUprisingWarningDays', 90),
       recoverySupport:uprisingBalance('commonsUprisingRecoverySupport', -10),
       uprisingDays:FBDATA.modifiers.commons_uprising.days,
       reduction:Math.round(FB.commonsUprisingReduction(state) * 100),
-      county:(FB.world.byId[row.scopeId] || {}).name || row.scopeId };
+      county:uprisingCountyNames(row) };
   }
 
   FB.commonsUprisingSummary = function (state) {
     var store = demandStore(state, false), row = store && store.uprising;
     if (!uprisingValid(state, row)) return null;
-    return { id:row.id, stage:row.stage, scopeId:row.scopeId,
+    var counties = uprisingCounties(row).filter(function (pid) {
+      return uprisingHeld(state, pid) && !FB.hasPrivilege(state, row.privilegeId, pid);
+    });
+    if (!counties.length) return null;
+    return { id:row.id, stage:row.stage, scopeId:row.scopeId, countyIds:counties,
       privilegeId:row.privilegeId,
       reduction:Math.round(FB.commonsUprisingReduction(state) * 100),
       days:row.stage === 'petition' ? uprisingBalance('commonsUprisingWarningDays', 90)
@@ -1866,6 +1902,11 @@ window.FB = window.FB || {};
         })) return false;
     var row = { id:'uprising:' + pending.id, stage:'petition',
       scopeId:pending.scopeId, privilegeId:pending.privilegeId,
+      countyIds:[pending.scopeId].concat(state.player.provs.filter(function (pid) {
+        return pid !== pending.scopeId && uprisingHeld(state, pid) &&
+          !FB.hasPrivilege(state, pending.privilegeId, pid);
+      }).sort(compareId)).filter(function (pid, index, ids) { return ids.indexOf(pid) === index; })
+        .slice(0, Math.max(1, Math.floor(uprisingBalance('commonsUprisingMaxCounties', 3)))),
       protagonistId:state.player.charId, liegeId:state.player.liege || null,
       startedTurn:state.turn };
     if (!uprisingValid(state, row)) return false;
@@ -1879,6 +1920,11 @@ window.FB = window.FB || {};
     return !!(uprisingValid(state, row) && ctx && row.id === ctx.uprisingId &&
       row.stage === ctx.uprisingStage && row.scopeId === ctx.locationId &&
       row.privilegeId === ctx.privilegeId &&
+      uprisingCounties(row).every(function (pid) {
+        return uprisingHeld(state, pid) && !FB.hasPrivilege(state, row.privilegeId, pid);
+      }) &&
+      (Array.isArray(ctx.countyIds) ? ctx.countyIds.join('|') === uprisingCounties(row).join('|')
+        : uprisingCounties(row).length === 1 && uprisingCounties(row)[0] === ctx.locationId) &&
       (row.stage === 'petition' || state.turn < row.dueTurn));
   };
 
@@ -1897,19 +1943,19 @@ window.FB = window.FB || {};
     var id = row.stage === 'petition' ? 'commons_uprising_warning' : 'commons_uprising_begins';
     var queued = (state.eventQueue || []).some(function (item) {
       return item.id === id && item.ctx && item.ctx.uprisingId === row.id &&
-        item.ctx.uprisingStage === row.stage;
+        item.ctx.uprisingStage === row.stage && FB.fns.commons_uprising_valid(state, item.ctx);
     });
     if (!queued) FB.queueEvent(state, id, uprisingContext(state, row));
+    delete row.refreshEvent;
   };
 
   FB.commonsUprisingDay = function (state) {
     repairUprising(state);
     var store = demandStore(state, false), row = store && store.uprising;
     if (!row) return;
-    if (FB.hasPrivilege(state, row.privilegeId, row.scopeId)) {
-      delete store.opposition.commons;
-      endUprising(state, 'concession');
-      return;
+    if (row.refreshEvent) {
+      delete row.refreshEvent;
+      FB.restoreCommonsUprising(state);
     }
     if (row.stage === 'petition') return;
     if (row.stage === 'warning') {
@@ -1921,12 +1967,14 @@ window.FB = window.FB || {};
       if (state.turn < row.dueTurn) return;
       row.stage = 'active';
       row.dueTurn = state.turn + FBDATA.modifiers.commons_uprising.days;
-      FB.addModifier(state, 'commons_uprising', row.scopeId,
-        { sourceEventId:'commons_uprising_begins' });
+      uprisingCounties(row).forEach(function (pid) {
+        FB.addModifier(state, 'commons_uprising', pid,
+          { sourceEventId:'commons_uprising_begins' });
+      });
       FB.queueEvent(state, 'commons_uprising_begins', uprisingContext(state, row));
       FB.news(state, FB.msg('news.commons_uprising.begins',
         'The commons of {county} refuse collection and muster after their demand goes unanswered.',
-        { county:(FB.world.byId[row.scopeId] || {}).name || row.scopeId }));
+        { county:uprisingCountyNames(row) }));
     } else if (state.turn >= row.dueTurn) endUprising(state, 'expired');
   };
 
@@ -1941,11 +1989,14 @@ window.FB = window.FB || {};
   FB.fns.commons_uprising_concede = function (state, ctx) {
     if (!FB.fns.commons_uprising_valid(state, ctx)) return false;
     var row = state.collectiveDemands.uprising;
-    if (!FB.grantPrivilege(state, row.privilegeId, {
-      scopeId:row.scopeId, holderType:'county', holderId:row.scopeId,
-      grantor:{ type:'realm', id:'player' }, sourceType:'demand', sourceId:row.id,
-      grandfathered:true
-    })) return false;
+    var counties = uprisingCounties(row);
+    for (var i = 0; i < counties.length; i++) {
+      if (!FB.grantPrivilege(state, row.privilegeId, {
+        scopeId:counties[i], holderType:'county', holderId:counties[i],
+        grantor:{ type:'realm', id:'player' }, sourceType:'demand', sourceId:row.id,
+        grandfathered:true
+      })) return false;
+    }
     delete state.collectiveDemands.opposition.commons;
     return endUprising(state, 'concession');
   };
@@ -1967,8 +2018,10 @@ window.FB = window.FB || {};
         if (!FB.fns.commons_uprising_valid(state, ctx)) return [];
         var out = [{ type:'commonsUprising', action:action }];
         if (action === 'concede') {
-          out.push({ type:'modifier', action:'add',
-            id:privilegeDef(ctx.privilegeId).effect.id, pid:ctx.locationId });
+          uprisingCounties(state.collectiveDemands.uprising).forEach(function (pid) {
+            out.push({ type:'modifier', action:'add',
+              id:privilegeDef(ctx.privilegeId).effect.id, pid:pid });
+          });
         }
         return out;
       },
