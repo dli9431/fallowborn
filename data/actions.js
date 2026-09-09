@@ -71,7 +71,7 @@ FBDATA.focuses = [
   { id:'scheming', label:'🕸 Advance the plot', order:23,
     handler:'scheming' },
   { id:'shepherd_diocese', label:'🕯 Shepherd the diocese', order:24,
-    desc:'Visit, teach, correct, and reconcile. (+piety, +Common Voice, +Learning over time)', handler:'shepherd_diocese' },
+    desc:'Visit, teach, correct, and reconcile. (+piety, +Popular support, +Learning over time)', handler:'shepherd_diocese' },
   { id:'administer_temporalities', label:'🔑 Administer the temporalities', order:25,
     desc:'Oversee episcopal rents, officers, and obligations. (+income, +liege Standing, +Stewardship over time)', handler:'administer_temporalities' },
   { id:'govern', label:'🏛 Govern the demesne', order:26,

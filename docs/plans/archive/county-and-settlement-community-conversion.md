@@ -412,7 +412,7 @@ Steps:
    material consequences without promising an exact completion date when inputs can
    change.
 5. Add project start/change/stop controls only where the player's rank and authority make
-   them credible. Preview piety, prestige, Standing, Common Voice, unrest, and relationship
+   them credible. Preview piety, prestige, Standing, Popular support, unrest, and relationship
    costs before confirmation.
 6. Keep the Self-tab Faith and Culture details sheets character-centered. Each may link to
    its existing personal conversion picker, but neither provides county navigation or

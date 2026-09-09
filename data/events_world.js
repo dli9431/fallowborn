@@ -405,7 +405,7 @@ FBDATA.events.push(
       desc:'Preserve the pact’s spirit at a domestic cost.',
       effects:{ standingRealm:12, popularOpinion:-4, prestige:3 } },
     { label:'Offer asylum.',
-      desc:'Gain Common Voice and a useful defector while straining the pact.',
+      desc:'Gain Popular support and a useful defector while straining the pact.',
       effects:{ standingRealm:-14, popularOpinion:6, skills:{int:1} } },
     { label:'Send the officer onward, quietly.',
       desc:'Avoid the sharpest choice and satisfy neither side.',
@@ -449,7 +449,7 @@ FBDATA.events.push(
   text:'Merchants of {rname} ask privileged access to your harbor and invoke the alliance at every sentence. The concession would please {rulername} and anger domestic traders.',
   options:[
     { label:'Grant the privilege.',
-      desc:'Warm the alliance at a domestic Common Voice cost.',
+      desc:'Warm the alliance at a domestic Popular support cost.',
       effects:{ standingRealm:14, popularOpinion:-8, gold:8 } },
     { label:'Offer equal treatment, not privilege.',
       desc:'Diplomacy may preserve both the alliance and domestic support.',

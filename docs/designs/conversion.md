@@ -102,7 +102,7 @@ The pure `FB.countyCommunityProjectPreview` evaluates an unopened proposal throu
 same pressure/resistance calculation as an active project, without temporarily writing it
 to state. Starting or changing a baseline project has no immediate piety, prestige,
 Standing, or relationship charge; the confirmation says so explicitly and presents the
-actual Common Voice, unrest, economic, and migration consequences of its policy. The Self
+actual Popular support, unrest, economic, and migration consequences of its policy. The Self
 Faith and Culture sheets remain character-centered. Their general conversion actions never
 own or silently target a territorial project. A campaign branch that the player currently
 follows additionally shows its home-settlement following and an explicit **Spread to your
@@ -136,7 +136,7 @@ cards say only that no project is active and offer the start action; their discl
 explains scope and timing. Because the surrounding sheet already supplies the settlement
 context, these actions use concise Start/Change/Stop project labels.
 
-Tax, levy, Common Voice, unrest, and market flow are county aggregates rather than
+Tax, levy, Popular support, unrest, and market flow are county aggregates rather than
 separate settlement ledgers. A local coercive project therefore contributes its policy
 effects dynamically in proportion to that settlement's share of county population; it
 does not create the full `community_coercion` county modifier. The settlement picker and
@@ -182,9 +182,9 @@ cost:
 - **Vassals**: a realm faith conversion costs −35 Standing with every vassal realm; a
   household culture conversion by a landed ruler costs −25 Standing with every vassal realm.
 - **Zealot & Cultural unrest**: the `zealot_unrest` county modifier (1440 days: unrest +0.35,
-  common voice −12, tax −8%, levy −5%) is applied to the home county on a household
+  popular support −12, tax −8%, levy −5%) is applied to the home county on a household
   faith conversion, and to **every player-held county** on a realm faith conversion.
-  The `cultural_unrest` county modifier (1440 days: unrest +0.35, common voice −12, tax −8%,
+  The `cultural_unrest` county modifier (1440 days: unrest +0.35, popular support −12, tax −8%,
   levy −5%) is applied to the home county and player-held counties that do not share the new
   culture on a household culture conversion. This ongoing unrest depresses popular opinion
   and raises the long-term risk of traditionalist rebellions and peasant revolts
@@ -305,7 +305,7 @@ ignoring a different county never retargets the queued context.
 
 Doctrine reform choices reuse `FB.conversionTargetEncountered`: only an encountered
 identity can supply a new doctrine option. Current and parent options remain known.
-Reform additionally charges escalating Common Voice backlash and saves per-ruler
+Reform additionally charges escalating Popular support backlash and saves per-ruler
 cost/recovery history; personal conversion does not reset that history. See
 [doctrines.md](doctrines.md).
 

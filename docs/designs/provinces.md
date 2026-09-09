@@ -298,7 +298,7 @@ transfer, scaled county consequences, scope, and timing move behind its shared t
 touch disclosure. Empty cards keep only the inactive state and Start project action
 visible, while the disclosure explains what starting a local project changes.
 
-Where a settlement policy affects county-level tax, levy, Common Voice, unrest, or
+Where a settlement policy affects county-level tax, levy, Popular support, unrest, or
 market flow, its contribution is weighted by that settlement's share of the county
 population. It is shown on the settlement sheet and never appears as the full-strength
 county modifier. Community breakdown cards use an auto-fitting grid so narrow Land

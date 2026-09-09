@@ -104,7 +104,7 @@ safely fall back to English.
 
 **Money** belongs to the playable household and pays its costs, upkeep, wages, gifts, and
 contracts. **Prestige** supports social and political advancement, while **piety** supports
-religious acts and offices. **Common Voice** measures popular support.
+religious acts and offices. **Popular support** measures popular support.
 
 **Standing** always belongs to a particular relationship. A person, realm, lord, Pope,
 guild, or institution can each hold a different opinion of the current protagonist. Guild
@@ -383,7 +383,7 @@ character conversion picker and to each named Land county.
 
 Once you are a **count or higher**, your directly held counties can also become the
 family's seat. Select one in the **Land** tab and choose **🏰 Move capital here…**.
-Moving the capital and permanent household home costs 200 prestige, lowers Common Voice
+Moving the capital and permanent household home costs 200 prestige, lowers Popular support
 by 15, and lowers Standing with every direct vassal by 15. Each ruler may choose only
 once, never while travelling or personally serving in a war; the next protagonist
 receives a new choice. Land, titles, buildings, and property stay in their counties.
@@ -414,11 +414,11 @@ that county is captured. Pacts and alliances remain absolute declaration blocks.
 
 Where neither recognized right applies, the picker names the alternative plainly as a
 **War of Aggression** and shows its target, siege objective, and political costs before
-opening a required confirmation. It costs prestige and Common Voice, lowers Standing
+opening a required confirmation. It costs prestige and Popular support, lowers Standing
 with direct vassals and foreign sovereigns, and becomes harsher when the current ruler
 has declared other recent aggressive wars. It grants none of the normal automatic
 offensive-war prestige. Victory burdens the county for six years with **Conquered Without
-Right**, reducing tax and levy while worsening Common Voice and unrest; repeated aggression
+Right**, reducing tax and levy while worsening Popular support and unrest; repeated aggression
 also makes poorly disposed vassals more likely to break away.
 
 A displaced king or emperor whose intact crowned realm was handed to a usurper keeps one

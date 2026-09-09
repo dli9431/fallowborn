@@ -175,7 +175,7 @@ test('county controls retain context, preview consequences, and start change and
     await expect(page.locator('#gm-body'))
       .toContainText('Standing and relationships: No immediate change.');
     await expect(page.locator('#gm-body'))
-      .toContainText('County Common Voice and unrest:');
+      .toContainText('County Popular support and unrest:');
     await expect(page.locator('#county-project-confirm'))
       .toContainText(setup.county);
     const reviewed = await page.evaluate(function (pid) {
@@ -211,7 +211,7 @@ test('county controls retain context, preview consequences, and start change and
       '.community-project-control').click();
     await page.locator('[data-county-project-target="norse_pagan"]').click();
     await page.locator('[data-county-project-policy="coercive"]').click();
-    await expect(page.locator('#gm-body')).toContainText('Common Voice');
+    await expect(page.locator('#gm-body')).toContainText('Popular support');
     await expect(page.locator('#gm-body')).toContainText('unrest');
     await expect(page.locator('#gm-body')).toContainText('migration pressure');
     await page.locator('#county-project-confirm').click();

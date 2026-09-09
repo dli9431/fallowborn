@@ -224,7 +224,7 @@ exact applied `dev` amount as
 `devGranted`, including zero when the county was already at its ceiling. Demolition reverses
 only that recorded development. After the bounded legacy repair below, any building record
 still missing the additive field is grandfathered at zero rather than inventing a loss.
-One-time Common Voice and prestige are not reversed.
+One-time Popular support and prestige are not reversed.
 
 Related: [tech.md](tech.md) for the development cap (`FB.devCap`), [war.md](war.md) for
 fort movement, battles, and sieges.

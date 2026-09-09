@@ -34,7 +34,7 @@ population simulation:
   deliberately bounded, so this is a political cast rather than a census.
 - A county's `communities` list is an ordered, static list of culture and religion pairs.
   It records presence, not population shares, conversion, migration, or birth rates.
-- `state.player.pop` and building `pop` effects mean Common Voice or popular opinion. They
+- `state.player.pop` and building `pop` effects mean Popular support or popular opinion. They
   must not be reused for population.
 - Economic development is deliberately an economic-development score, not a population
   estimate. Taxes, levies, markets, settlement visibility, and realm strength currently
@@ -212,7 +212,7 @@ All mutating entry points validate finite numbers, round to integer people, clam
 county floor, and return the actual applied change. No caller edits `count` directly.
 
 Use `population...` in all new schema keys. Never abbreviate population as `pop`, because
-that word already means Common Voice throughout the game.
+that word already means Popular support throughout the game.
 
 ## Annual simulation
 
@@ -546,7 +546,7 @@ Do not replay one population tick per elapsed year. Old saves do not contain the
 war, famine, migration, and building history, and replay would be slow and misleading.
 
 The migration must consume no RNG, must not change current development, ownership,
-buildings, taxes already booked, Common Voice, or named characters, and must produce the
+buildings, taxes already booked, Popular support, or named characters, and must produce the
 same result after save and reload.
 
 New games initialize population after world, bookmark, development, and building state are
@@ -674,7 +674,7 @@ Steps:
 Exit criteria:
 
 - county totals and projected settlement totals reconcile exactly;
-- the UI distinguishes population from development and Common Voice;
+- the UI distinguishes population from development and Popular support;
 - a player can identify why a county grew, declined, or remained constrained.
 
 ### Milestone 4: economy and military adapters

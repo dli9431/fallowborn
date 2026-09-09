@@ -2125,7 +2125,7 @@ window.FB = window.FB || {};
     var record = store[policyId];
     var oldLevel = realmPolicyLevelDef(def, record.level);
     /* Withdrawing a protected charter before its term mirrors the unlawful
-       privilege-revocation path: Common Voice falls, the mistreatment roll
+       privilege-revocation path: Popular support falls, the mistreatment roll
        records it, and the faith constituency organizes. */
     if (oldLevel && oldLevel.protectedTerm &&
         state.turn < Number(record.setTurn) + realmPolicyProtectedDays()) {

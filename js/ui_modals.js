@@ -4045,7 +4045,7 @@ window.FB = window.FB || {};
           esc(FB.T('Prestige:')) + '</b> 0</p>' +
         '<p><b>' + esc(FB.T('Standing and relationships:')) + '</b> ' +
           esc(FB.T('No immediate change.')) + '</p>' +
-        '<p><b>' + esc(FB.T('County Common Voice and unrest:')) + '</b> ' +
+        '<p><b>' + esc(FB.T('County Popular support and unrest:')) + '</b> ' +
           esc(policyEffectText(policyId, preview)) + '</p>' +
         (active ? '<p>' + esc(FB.T('This replaces the county’s current {kind} project.', {
             kind:kind === 'faith' ? FB.T('faith') : FB.T('culture')
@@ -4999,7 +4999,7 @@ window.FB = window.FB || {};
     if (preview.aggression) {
       const consequence = preview.aggression;
       return FB.T(
-        'Immediate: {prestige} prestige, {voice} Common Voice, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right.{enemyStanding}', {
+        'Immediate: {prestige} prestige, {voice} Popular support, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right.{enemyStanding}', {
           prestige:signedNumber(consequence.prestigeChange),
           voice:signedNumber(consequence.commonVoiceChange),
           vassal:standingChangeRange(consequence.vassals),
@@ -5020,7 +5020,7 @@ window.FB = window.FB || {};
     for (const item of preview.opposition) {
       if (item.kind === 'commons') {
         parts.push(FB.T(
-          'The commons in your demesne ({change} Common Voice)', {
+          'The commons in your demesne ({change} Popular support)', {
             change:signedNumber(item.projectedChange)
           }));
       } else if (item.kind === 'bloc') {
@@ -5636,7 +5636,7 @@ window.FB = window.FB || {};
         kv('War reason', esc(warCauseName(s, cause))) +
         kv('Siege', esc(siegeSummary)) +
         kv('Immediate cost', esc(FB.T(
-          '{prestige} prestige · {voice} Common Voice', {
+          '{prestige} prestige · {voice} Popular support', {
             prestige:signedNumber(consequence.prestigeChange),
             voice:signedNumber(consequence.commonVoiceChange)
           }))) +
@@ -12429,7 +12429,7 @@ window.FB = window.FB || {};
         '</div></div>';
     }
     h += '<div class="hint">' + esc(FB.T(
-      'These are the same county records shown in Land. County effects survive transfer; Common Voice, upkeep, tax and levy count for you while you hold the county directly, or, if you hold none, while it remains your seat.')) +
+      'These are the same county records shown in Land. County effects survive transfer; Popular support, upkeep, tax and levy count for you while you hold the county directly, or, if you hold none, while it remains your seat.')) +
       '</div>';
     return h;
   }
@@ -13295,7 +13295,7 @@ window.FB = window.FB || {};
         amount:politicalSigned(enact.prestige) }));
     }
     if (enact.pop) {
-      parts.push(FB.T('{amount} Common Voice', {
+      parts.push(FB.T('{amount} Popular support', {
         amount:politicalSigned(enact.pop) }));
     }
     if (enact.authority) {
@@ -13399,7 +13399,7 @@ window.FB = window.FB || {};
       : FB.T('All directly held counties')));
     const enact = level.onEnact || {};
     const labels = {
-      piety:FB.T('Piety'), prestige:FB.T('Prestige'), pop:FB.T('Common Voice'),
+      piety:FB.T('Piety'), prestige:FB.T('Prestige'), pop:FB.T('Popular support'),
       authority:FB.T('Crown Authority'), headFaith:FB.T('Religious-head Standing'),
       sameFold:FB.T('Same-faith foreign Standing'), otherFold:FB.T('Other-faith foreign Standing'),
       vassalSameFaith:FB.T('Same-faith vassal Standing'),
@@ -13539,7 +13539,7 @@ window.FB = window.FB || {};
     const remainingDays = isFinite(Number(status.record.endTurn))
       ? Math.max(0, Math.ceil(status.record.endTurn - s.turn)) : 0;
     const h = '<div class="progressnote warnote">' + esc(FB.T(
-      'This revocation breaks the protected term. Common Voice falls, mistreatment is recorded, and the affected constituency organizes opposition.')) +
+      'This revocation breaks the protected term. Popular support falls, mistreatment is recorded, and the affected constituency organizes opposition.')) +
       '</div>' + kv('Privilege', esc(dt(s, 'privilege', status.record.defId,
         def, 'name'))) + kv('Protected duration', esc(FB.T(
         '{days} days remain', { days:remainingDays }))) +
@@ -20719,7 +20719,7 @@ window.FB = window.FB || {};
       ? FB.T('A recognized close-kin wedding costs {piety} piety and {money:gold}. It creates no dowry, royal compact, or alliance.', {
         piety:status.piety, gold:status.gold
       })
-      : FB.T('An irregular wedding costs {piety} piety and {prestige} prestige, lowers Common Voice by {voice} and liege Standing by {standing}, and gives both spouses Scandalous Union. It creates no dowry, royal compact, or alliance.', {
+      : FB.T('An irregular wedding costs {piety} piety and {prestige} prestige, lowers Popular support by {voice} and liege Standing by {standing}, and gives both spouses Scandalous Union. It creates no dowry, royal compact, or alliance.', {
         piety:status.piety,
         prestige:status.prestige,
         voice:status.commonVoice,
@@ -24428,7 +24428,7 @@ window.FB = window.FB || {};
       })) + '</p><p>' + esc(FB.T(
       'The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory.')) +
       '</p><p>' + esc(FB.T(
-      'Personal prestige, piety, and Common Voice are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end.')) +
+      'Personal prestige, piety, and Popular support are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end.')) +
       '</p><p>' + esc(FB.T(
       '{name} remains in your family at home as a retired elder — still visible in Kin, but no longer under your control.', {
         name: FB.fullName(me)
@@ -26932,7 +26932,7 @@ window.FB = window.FB || {};
       {
         title:FB.T('Serf'),
         summary:FB.T('Your household survives under another lord’s authority.'),
-        resources:FB.T('Money, Common Voice, and Standing with your lord measure your immediate room to act.'),
+        resources:FB.T('Money, Popular support, and Standing with your lord measure your immediate room to act.'),
         duties:FB.T('Seasonal subsistence and obligations leave little margin; a livelihood keeps the household viable.'),
         actions:[FB.T('Choose a daily focus.'), FB.T('Review Work & Enterprises.'), FB.T('Use Deeds to build money, reputation, and a route to freedom.')]
       },
@@ -27080,14 +27080,14 @@ window.FB = window.FB || {};
       FB.T('Money pays; prestige legitimizes; piety supports faith; Standing belongs to a relationship.'),
       guideBody([
         FB.T('Money belongs to the playable household and pays costs, upkeep, wages, gifts, and contracts. Prestige supports social and political advancement. Piety supports religious acts and offices.'),
-        FB.T('Standing is scoped: a person, realm, lord, Pope, guild, or institution can each hold a different opinion. Common Voice is popular support. Guild Standing belongs to an active vocational guild record.'),
-        s ? FB.T('Current household: {money:gold}; prestige {prestige}; piety {piety}; Common Voice {voice}.', {
+        FB.T('Standing is scoped: a person, realm, lord, Pope, guild, or institution can each hold a different opinion. Popular support measures how favorably ordinary people view you. Guild Standing belongs to an active vocational guild record.'),
+        s ? FB.T('Current household: {money:gold}; prestige {prestige}; piety {piety}; Popular support {voice}.', {
           gold:Math.floor(s.player.gold),
           prestige:Math.floor(s.player.prestige),
           piety:Math.floor(s.player.piety),
           voice:Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)
         }) : FB.T('Start a life to see current resource values here.')
-      ]), 'gold wealth coin prestige piety standing opinion common voice guild research');
+      ]), 'gold wealth coin prestige piety standing opinion popular support guild research');
 
     add('roles', 'roles', FB.T('Social and religious roles'),
       FB.T('Rank changes authority and duties; vocations and offices can sit beside it.'),
@@ -27145,7 +27145,7 @@ window.FB = window.FB || {};
     add('family-scopes', 'family', FB.T('Family, house, and household scope'),
       FB.T('Visible kin, a dynasty, the managed household, and the playable line are different sets.'),
       guideBody([], [
-        FB.T('Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Common Voice are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life.'),
+        FB.T('Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Popular support are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life.'),
         FB.T('House or dynasty: characters sharing the house identity. A chosen relative joins the playable house at succession; house membership by itself does not make someone controllable or resident.'),
         FB.T('Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow. Unwed, unlanded, unvowed siblings living at the household home can also be put to work, though they never join the household itself; marriage, land, vows, or moving away ends that.'),
         FB.T('Visible family: the broader family tree, including dead kin and relatives living elsewhere. Visibility is not control.'),
@@ -27184,7 +27184,7 @@ window.FB = window.FB || {};
         FB.T('The player needs a net trait score of +1: Lustful +2; Cynical or Deceitful +1; Chaste −2; Honest −1; Ambitious +1 only when succession or title interests make the match dynastically relevant; Zealous +1 under an authorizing rite but −2 otherwise; Lettered +1 under that rite.'),
         FB.T('The sibling then makes an independent response roll. Their Standing contributes up to +30 percentage points. Lustful, Ambitious, Cynical, Deceitful, Zealous, Chaste, Content, and Honest alter consent according to the route and dynastic stakes. Without any receptive target trait, an illicit response chance cannot exceed 10%. A refusal is permanent.'),
         FB.T('An accepted suit uses ordinary personal attention and needs +80 Standing before proposal. A rejected proposal is permanent; breaking off an accepted suit prevents renewal for five years. No sibling match ever creates a dowry, royal compact, or alliance.'),
-        FB.T('A couple sharing a faith with the xwēdōdah doctrine may use its recognized rite for 75 piety and {money:25}. Otherwise an illicit courtship risks exposure each season, and an irregular wedding costs 75 piety and 25 prestige, lowers Common Voice and liege Standing, and gives both spouses Scandalous Union.'),
+        FB.T('A couple sharing a faith with the xwēdōdah doctrine may use its recognized rite for 75 piety and {money:25}. Otherwise an illicit courtship risks exposure each season, and an irregular wedding costs 75 piety and 25 prestige, lowers Popular support and liege Standing, and gives both spouses Scandalous Union.'),
         FB.T('Children of full siblings receive a 20% close-kin health-risk roll; children of half siblings receive 10%. Each parent already born of close kin adds five percentage points, to a maximum of 35%. The roll may add Frail, add Sickly, or reduce health by one.')
       ]), 'sibling brother sister courtship incest forbidden xwedodah scandal traits consent exposure child health');
 
@@ -27244,7 +27244,7 @@ window.FB = window.FB || {};
       FB.T('Recognized rights avoid aggression penalties; land changes hands only through siege.'),
       guideBody([
         FB.T('Barons and higher rulers compare available conquests through Declare war. A bordering de jure right, a fabricated claim, or a crown-restoration right is recognized; pacts and defensive alliances can still block the declaration.'),
-        FB.T('When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Common Voice, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed.'),
+        FB.T('When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Popular support, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed.'),
         FB.T('Recent aggressive declarations by the same ruler multiply those political costs and increase breakaway pressure. A conquered county receives Conquered Without Right, reducing tax and levy while increasing unrest for its listed duration.'),
         FB.T('A declaration must still be won on the map. March the host to the named prize and hold it — the works advance each season the host stands there. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves.')
       ]), 'war warfare aggression aggressive casus belli claim fabricated de jure conquest siege host peace breakaway conquered without right');

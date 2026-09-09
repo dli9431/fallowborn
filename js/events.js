@@ -10289,8 +10289,8 @@ window.FB = window.FB || {};
     note(fx.buildingCost, true, FB.T('construction costs'), function (value) {
       return FB.T('{amount}% construction cost', { amount:eventSignedPercent(value) });
     });
-    note(fx.commonVoice, false, FB.T('Common Voice'), function (value) {
-      return FB.T('{amount} Common Voice', {
+    note(fx.commonVoice, false, FB.T('Popular support'), function (value) {
+      return FB.T('{amount} Popular support', {
         amount:(value > 0 ? '+' : '') + value
       });
     });
@@ -10369,8 +10369,8 @@ window.FB = window.FB || {};
       return FB.T('Health {change}', { change:numberText(amount) });
     }
     if (record.type === 'commonVoice') {
-      if (concealedGain) return FB.T('Common Voice may improve');
-      return FB.T('Common Voice {change}', { change:numberText(amount) });
+      if (concealedGain) return FB.T('Popular support may improve');
+      return FB.T('Popular support {change}', { change:numberText(amount) });
     }
     if (record.type === 'warService') {
       if (concealedGain) return FB.T('War service may increase');

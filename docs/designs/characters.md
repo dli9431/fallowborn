@@ -362,7 +362,7 @@ display under Other. There is no trait cap.
 Root skill, health, fertility, and general-Standing fields retain their existing
 `FB.traitAgg` behavior. System-specific numeric effects live under named groups and are
 read with `FB.traitBonus(character, group, key)`. The first consumers are assembly
-votes/Common Voice, travel leg time/road incidents, direct levy, direct rent, and
+votes/Popular support, travel leg time/road incidents, direct levy, direct rent, and
 family Standing. Trait surfaces describe exceptional-courtship modifiers as quiet
 character tendencies such as private affection, dynastic duty, sanctioned custom, and
 discretion; exact kinship and probabilities remain in the dedicated courtship review
@@ -902,7 +902,7 @@ review, including distant or removed cousins even when a child lives.
 great holy war host, any other wartime duty, an active journey, and the absence
 of an adult successor each block with their own reason. The transition reuses
 `FB.game.succeedTo` with `livingAbdication`, so money passes in full (no death
-dues) while personal prestige, piety, and Common Voice shrink by the ordinary
+dues) while personal prestige, piety, and Popular support shrink by the ordinary
 succession rule, a personal bishopric returns to the Church, and courtship,
 plots, and personal standings end. The predecessor stays alive as family:
 `character.retired` marks them as a retired elder, their residence pins to the

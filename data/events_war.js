@@ -301,8 +301,8 @@ FBDATA.events.push(
   text:'Four seasons and more have passed. At home, rents arrive late, fields go short of hands, and every household tally seems to count someone beneath your banner.',
   options:[
     { label:'Send relief home. ({money:8})', require:{ goldMin:8 }, desc:'Public patience and abstract supply recover; live troops remain.', effects:{ gold:-8, popularOpinion:5, custom:'war_supply' } },
-    { label:'Demand one more effort.', desc:'Discipline rises while Common Voice falls.', effects:{ custom:'war_discipline', popularOpinion:-7, prestige:2 } },
-    { label:'Acknowledge the cost in public.', desc:'Common Voice recovers, but thin ranks lower abstract condition.', effects:{ popularOpinion:3, custom:'war_thin', prestige:-2 } }
+    { label:'Demand one more effort.', desc:'Discipline rises while Popular support falls.', effects:{ custom:'war_discipline', popularOpinion:-7, prestige:2 } },
+    { label:'Acknowledge the cost in public.', desc:'Popular support recovers, but thin ranks lower abstract condition.', effects:{ popularOpinion:3, custom:'war_thin', prestige:-2 } }
   ]},
 { id:'war_occupation_policy', title:'Under Your Banner',
   trigger:{ never:true }, wartime:true, warStatus:true,

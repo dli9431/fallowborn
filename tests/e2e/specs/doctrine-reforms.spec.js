@@ -33,7 +33,7 @@ test('doctrine buttons label spending and learning tooltips explain timing and a
     await expect(details).toContainText('Later widespread adoption (examples)');
     await expect(details).toContainText('instead of');
     await expect(details).toContainText('Cost: 300 prestige');
-    await expect(details).toContainText('Common Voice: -5');
+    await expect(details).toContainText('Popular support: -5');
     await expect(details).toContainText('Requires local dominance');
     await expect(details).toContainText('Vassals use sovereign traditions');
     const copy = await details.textContent();
@@ -103,7 +103,7 @@ for (const kind of ['faith', 'culture']) {
       const choiceCopy = await choiceDetails.textContent();
       expect(choiceCopy.trim().split(/\s+/).length).toBeLessThanOrEqual(100);
       await choice.click();
-      await expect(page.locator('#gm-body')).toContainText('Common Voice: -5');
+      await expect(page.locator('#gm-body')).toContainText('Popular support: -5');
       await expect(page.locator('#gm-body')).toContainText('Next reform in 360 days');
       const result = await page.evaluate(function (args) {
         var s = FB.state, p = s.player;

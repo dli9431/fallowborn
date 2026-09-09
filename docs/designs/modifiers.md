@@ -63,15 +63,15 @@ its lord-funded stores are active, and `covert_sabotage` now reduces all product
   upkeep plus 15% market-flow capacity for 1,440 days;
 - `contested_tolls` — −10% county tax and +25% harmful `unrest` exposure for
   720 days, with 20% less market-flow capacity;
-- `levy_exemption` — −12% county levy and +6 effective Common Voice for
+- `levy_exemption` — −12% county levy and +6 effective Popular support for
   1,080 days;
-- `muster_burden` — +15% county levy, −6 effective Common Voice, and +15%
+- `muster_burden` — +15% county levy, −6 effective Popular support, and +15%
   harmful `unrest` exposure for 540 days;
 - `roads_patrolled` — +4% county tax, −20% harmful `unrest` exposure, 12% more
   market-flow capacity, and 1 gold seasonal upkeep for 720 days;
-- `settlement_grudge` — −7 effective Common Voice and +25% harmful `unrest`
+- `settlement_grudge` — −7 effective Popular support and +25% harmful `unrest`
   exposure for 900 days.
-- `tax_concession` — −8% county tax, +6 effective Common Voice, and −10%
+- `tax_concession` — −8% county tax, +6 effective Popular support, and −10%
   harmful `unrest` exposure for 1,080 days.
 
 Council and Estates choices grant the original six; a settled collective demand for
@@ -82,20 +82,20 @@ dispute with a positive charter; natural expiry remains the fallback.
 
 Ordinary aggressive conquest supplies one additional core county definition:
 `conquered_without_right` lasts 2,160 days and applies −15% county tax, −20% county
-levy, −8 effective Common Voice, and +40% harmful `unrest` exposure. It is granted only
+levy, −8 effective Popular support, and +40% harmful `unrest` exposure. It is granted only
 when the player captures the objective of a saved `aggression` war cause. Like every
 county record, it remains attached to the county after a transfer and expires through
 the normal daily modifier tick.
 
 Deliberate conversion (see [conversion.md](conversion.md)) supplies `zealot_unrest`
 and `cultural_unrest`: 1,440 days of +35% harmful `unrest` exposure, −12 effective
-Common Voice, −8% county tax, and −5% county levy. A household faith conversion grants
+Popular support, −8% county tax, and −5% county levy. A household faith conversion grants
 `zealot_unrest` to the home county; a realm faith conversion grants it to every county the
 player holds. A household culture conversion grants `cultural_unrest` to the home county
 and any player-held counties that do not share the newly adopted culture.
 
 County community projects add `community_coercion`: 720 days of +40% harmful `unrest`
-exposure, −8 effective Common Voice, −5% county tax, −8% county levy, and −10% market
+exposure, −8 effective Popular support, −5% county tax, −8% county levy, and −10% market
 flow. Starting a controlled coercive project grants it immediately, and each controlled
 annual resolution refreshes it. If the sponsor loses control or the project stops, the
 county keeps the political aftermath only until the ordinary timed record expires.
@@ -103,10 +103,10 @@ county keeps the political aftermath only until the ordinary timed record expire
 Royal religious-tolerance and settlement policy (see
 [council.md](council.md)) adds five standing definitions without `days` — they have no
 calendar expiry because the policy, not the clock, ends them: `persecuted_minorities`
-(+5% county tax, −10% levy, −10 Common Voice, +30% `unrest` exposure, −15% market flow),
-`tolerated_minorities` (−10% `unrest` exposure, +4 Common Voice, +5% market flow),
-`protected_worship` (−15% `unrest` exposure, +6 Common Voice, +2% tax, +10% market
-flow), `closed_settlement` (+4 Common Voice, −10% market flow, −4% tax), and
+(+5% county tax, −10% levy, −10 Popular support, +30% `unrest` exposure, −15% market flow),
+`tolerated_minorities` (−10% `unrest` exposure, +4 Popular support, +5% market flow),
+`protected_worship` (−15% `unrest` exposure, +6 Popular support, +2% tax, +10% market
+flow), `closed_settlement` (+4 Popular support, −10% market flow, −4% tax), and
 `encouraged_settlement` (−3% tax, +10% market flow, 1 gold seasonal upkeep per county).
 `FB.realmPolicySync` in js/institutions.js is their only writer and remover: it applies
 them to the sovereign player's directly held counties (minority-faith counties for the
@@ -132,7 +132,7 @@ or the crown lapses.
 - `FB.popEffective(state)` adds `commonVoice` from active modifiers in
   `FB.modifierCounties` to stored `player.pop`.
 
-Callers do not write effective Common Voice back into state. Existing gains, losses, and
+Callers do not write effective Popular support back into state. Existing gains, losses, and
 yearly decay continue to change the stored value alone.
 
 ## County effects
@@ -147,15 +147,15 @@ Supported county keys are:
 - `marketProduction`: fractional adjustment to every basket produced in the county.
 - `marketProvisions`: fractional adjustment to provisions production only.
 - `marketFlow`: fractional adjustment to the county side of each adjacent market edge.
-- `commonVoice`: flat effective Common Voice while the county is one of
+- `commonVoice`: flat effective Popular support while the county is one of
   `FB.modifierCounties`.
 - Event tags such as `famine` and `unrest`: fractional scaling of harmful tagged-event
   outcomes in the event's snapshotted county.
 
 County upkeep is charged only while the county is one of `FB.modifierCounties`. It feeds
 seasonal settlement, reliable income, and the localized income ledger. County-local
-effects and the Land-panel chip continue after a transfer even though player-wide Common
-Voice and upkeep stop.
+effects and the Land-panel chip continue after a transfer even though player-wide Popular
+support and upkeep stop.
 
 ## Whose counties a county modifier acts on
 
@@ -167,8 +167,8 @@ chosen by reading that seat, so the seat is where they act. `FB.modifierSeat(sta
 names that substituted county, and returns `null` for a ruler who holds counties of
 their own.
 
-Upkeep, Common Voice, county tax, county levy, and the Governance projection all read
-this rule. They did not always: upkeep and Common Voice went through `FB.demesne`, which
+Upkeep, Popular support, county tax, county levy, and the Governance projection all read
+this rule. They did not always: upkeep and Popular support went through `FB.demesne`, which
 substitutes the seat, while tax, levy, and Governance read `player.provs`, which is empty
 at tier 3. A baron therefore paid for a Market Charter that returned no tax, was granted
 a Levy Exemption that changed no muster, and could find neither record in Governance.

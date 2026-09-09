@@ -1169,7 +1169,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `participantStandingAbove` / `participantStandingBelow` | option-only `{participant, value}` check against the exact bound participant; random top-level triggers may not depend on participants |
 | `participantKind` | option-only `{participant, values:[...]}` check; normalized values are `lord steward priest friend rival notable kin contact` |
 | `rivalHeatMin` / `rivalHeatMax` | active rivalry heat at or above/below the number (0–100) |
-| `popularOpinionBelow` | effective Common Voice (stored popular opinion plus directly held county modifiers) |
+| `popularOpinionBelow` | effective Popular support (stored popular opinion plus directly held county modifiers) |
 | `hasModifier` | modifier id string, or `{id,pid?}`; county lookup uses explicit `pid`, then the queued event location, then the player's home province |
 | `chance` | final random gate 0–1 |
 | `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`, and the artifact gates `artifact_trial_valid` / `artifact_can_afford` / `artifact_is_sacred`, and the life-path gates `lifepath_realm_at_peace` / `merc_contract_ongoing`) |
@@ -1428,7 +1428,7 @@ gold, piety, and prestige for an annulment outcome; failure may use
 spent `blessed_crops` blessing) ·
 `opinion: {role, amt}` · `opinionLiege`, `popularOpinion` ·
 (`opinion` and `opinionLiege` retain their compatibility names but adjust personal or
-realm Standing; `popularOpinion` remains the distinct Common Voice population score) ·
+realm Standing; `popularOpinion` remains the distinct Popular support population score) ·
 `guildStanding: n` (adjust active guild-career Standing, clamped 0–100; no-op for a non-guild calling) ·
 `standingRealm: n` (adjust Standing with the exact living realm in
 `ctx.realmId`, with legacy `ctx.rid` accepted; no pairwise AI opinion is created) ·
@@ -1919,7 +1919,7 @@ forecasts, and both Estates sheets) skips these defs. Such a def uses
 - `repeal: "proclamation"` means proclaiming another level replaces the
   standing one. A level with `protectedTerm: true` protects its charter for
   `balance.realmPolicyProtectedWorshipDays` (1440): leaving it early mirrors
-  the unlawful privilege-revocation path (Common Voice −10, a recorded
+  the unlawful privilege-revocation path (Popular support −10, a recorded
   `unlawful_privilege_revocation` mistreatment note, and organized faith
   opposition through `FB.addCollectiveOpposition`).
 - Level fields, all optional: `name`/`icon`/`desc` (structured display
@@ -1937,7 +1937,7 @@ forecasts, and both Estates sheets) skips these defs. Such a def uses
   `balance.realmPolicySettlementDevChance` odds of +1 development to the
   least-developed held county below its cap).
 - `onEnact` declares one-proclamation reactions: `piety`, `prestige`, `pop`
-  (Common Voice), `authority` (Crown Authority), `headFaith` (Standing with
+  (Popular support), `authority` (Crown Authority), `headFaith` (Standing with
   the realm religion's head realm), `sameFold`/`otherFold` (foreign Standing
   with every living sovereign realm, split by fold), `vassalSameFaith`/
   `vassalOtherFaith` (direct-vassal Standing by fold), and `mistreatment`
@@ -3258,7 +3258,7 @@ unmarried children:
   gates `artifact_trial_valid`, `artifact_can_afford`, and `artifact_is_sacred`.
   `balance.artifactOfferingRatio` scales the trial's gold offering against the artifact's
   value. Selling or gifting away a `sacred` artifact of the player's own faith costs piety
-  and Common Voice (`FB.artifactDeparted`).
+  and Popular support (`FB.artifactDeparted`).
 - `offer_item` stock is banded by `balance.peddlerStockBands` (societal role →
   `common`/`fine`/`famed` class weights): the roll picks a rarity class first, then a
   definition inside it, so collecting uniques never shrinks a class until it is empty.
@@ -3683,7 +3683,7 @@ query root effects through `FB.traitAgg(character)`, grouped numeric effects thr
 The first grouped effect consumers are:
 
 - `assembly.voteChance`: additive vote probability; `assembly.popularOpinion`: a rate
-  applied only to positive Common Voice event gains.
+  applied only to positive Popular support event gains.
 - `travel.legDays`: days added to the departure-time county-leg snapshot after transport
   standards, with a minimum of one; `travel.roadIncident`: a multiplicative rate applied
   only to the ordinary 38% road-incident roll.

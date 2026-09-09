@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.176.10';
+FB.VERSION = '1.176.11';
 FB.CHANGELOG = [
+  { v: '1.176.11', date: '2026-09-08', changes: [
+    'Popular support now names the stat measuring how ordinary people view you. Labels, event text, and help use the clearer wording.'
+  ] },
   { v: '1.176.10', date: '2026-09-08', changes: [
     'Dynastic marriage searches can sort by title prospects or realm levy strength. Your chosen sorting stays in place when you return from a review.'
   ] },
@@ -374,7 +377,7 @@ FB.CHANGELOG = [
       'Serf households now live under persistent customary tenure, with culture- and faith-aware service cycles, recognized customary rights, and obligation details in Station & home.'
     ] },
     { v: '1.154.1', date: '2026-08-24', changes: [
-      'The Self panel now keeps Age, Health, and Common Voice current while time is flowing or fast-forwarding.',
+      'The Self panel now keeps Age, Health, and Popular support current while time is flowing or fast-forwarding.',
       'Fast-forward yields more often and reuses unchanged army supply routes to keep the interface responsive.',
       'Wedding and marriage-ending outcomes retain the named partner after relationship state changes.',
       'Household standards now use inline −/+ controls, with desktop tooltips and compact ? disclosures replacing separate sheets.',

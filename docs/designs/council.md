@@ -111,8 +111,8 @@ county's faith, moves an invented population total, or erases local identity:
   calendar ends it) is maintained on the player's directly held counties by
   `FB.realmPolicySync` in the daily institution pass — on every held county,
   or only minority-faith ones (`modifierScope:'minority'`, meaning anything
-  short of `same`/`in_fold` against the realm religion). Tax, levy, Common
-  Voice, unrest-event harm, and market flow follow the ordinary modifier
+  short of `same`/`in_fold` against the realm religion). Tax, levy, Popular
+  support, unrest-event harm, and market flow follow the ordinary modifier
   consumers. Losing a county, changing level, or losing the crown removes the
   records; the proclamation itself carries the one Chronicle notice.
 - `seasonPiety` trickles piety each season; `researchFactor` scales the
@@ -122,7 +122,7 @@ county's faith, moves an invented population total, or erases local identity:
   the least-developed held county's development.
 - Proclamation pays `balance.realmPolicyChangeCost`, is limited to one change
   per family per calendar year, and applies the level's one-time `onEnact`
-  reactions: piety, prestige, Common Voice, Crown Authority, Standing with
+  reactions: piety, prestige, Popular support, Crown Authority, Standing with
   the realm religion's head realm, foreign Standing with every living
   sovereign realm split by fold, and direct-vassal Standing by fold.
 - Persecution is recorded through the existing mistreatment machinery
@@ -132,7 +132,7 @@ county's faith, moves an invented population total, or erases local identity:
   records a durable faith privilege per minority county
   (`duration:'policy'`, `revocation:'policy_change'`); proclaiming another
   level within `balance.realmPolicyProtectedWorshipDays` is an unlawful
-  revocation — Common Voice falls, mistreatment is recorded, and the faith
+  revocation — Popular support falls, mistreatment is recorded, and the faith
   constituency organizes.
 
 Three gated slot-day stories (`data/events_politics.js`) add pressure on top

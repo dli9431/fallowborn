@@ -143,7 +143,7 @@ raid, seizure, loan default — never re-enters any pool. Every artifact carries
 double-edged `fx` profile (negative values are supported end to end and render in the
 item card), and the generic `artifact_coveted` event periodically pressures a holder to
 yield a legend or risk having it taken. Selling or gifting away a `sacred` artifact of
-the player's own faith additionally costs piety and Common Voice through
+the player's own faith additionally costs piety and Popular support through
 `FB.artifactDeparted`, wired into the deliberate exit doors rather than
 `FB.transferItem` (which also serves intra-household moves). Technology impact:
 `legendary_artifacts` is recorded `none` in `FBDATA.techImpactReviews` — mythic and

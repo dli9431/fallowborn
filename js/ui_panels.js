@@ -2440,7 +2440,7 @@ window.FB = window.FB || {};
   }
 
   function doctrineFalloutText(status) {
-    return FB.T('Common Voice: {amount}. Next reform in {days} days.', {
+    return FB.T('Popular support: {amount}. Next reform in {days} days.', {
       amount:status.popularOpinion || 0, days:status.cooldownDays
     });
   }
@@ -2663,7 +2663,7 @@ window.FB = window.FB || {};
     const definitions = FB.doctrineDefinitions(kind);
     let h = '<p class="progressnote">' + esc(FB.T(
       'The first reform creates a branch and changes only your identity. Later reforms change that branch’s doctrines for all its existing followers. Communities outside the branch join only through conversion projects.')) +
-      '</p><p class="progressnote">' + esc(FB.T('Choices come from encountered traditions. Departures cost Common Voice; each reform increases later costs and recovery time for this ruler. Restoring a parent doctrine causes no new backlash.')) +
+      '</p><p class="progressnote">' + esc(FB.T('Choices come from encountered traditions. Departures cost Popular support; each reform increases later costs and recovery time for this ruler. Restoring a parent doctrine causes no new backlash.')) +
       '</p>' + doctrineBranchStatusHtml(s, kind, identityId) +
       '<div class="gm-list">';
     for (let i = 0; i < definitions.length; i++) {
@@ -3320,7 +3320,7 @@ window.FB = window.FB || {};
       selfLiveValueRow('health', 'Health',
         Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
-      selfLiveValueRow('voice', 'Common Voice',
+      selfLiveValueRow('voice', 'Popular support',
         Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)) +
       (s.player.liege ? kv('Standing with your liege',
         standingSpan(FB.standingOf(s, {

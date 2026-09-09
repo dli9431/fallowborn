@@ -20,7 +20,7 @@ const { startDeterministicGame } = require('../support/game/start');
    surface; claiming one stamps state.artifacts once per save; loss is derived
    from FB.itemOwner so a departed artifact never re-enters a pool. Every
    artifact carries a double-edged fx profile, and alienating a sacred
-   artifact of the player's own faith costs piety and Common Voice. */
+   artifact of the player's own faith costs piety and Popular support. */
 
 test('gates each artifact by faith, culture, and de jure region',
   async function ({ page }, testInfo) {

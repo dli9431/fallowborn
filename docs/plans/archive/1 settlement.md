@@ -125,7 +125,7 @@ consults them.
 | vow | kept vow terms: seasons served vs promised, muster honored, and whether the named desire matches this asset | See "Vows deepened" below |
 | occupation | for a county asset, `occupations[pid].occupiedBy === claimant`; for crown/duchy assets, the fraction of member counties the claimant occupied | Turns the already-tracked `occupiedBy` field from trivia into a claim |
 | right | existing rights on the asset: a `fabricatedClaim` inside it, a `restorationRight`, or prior possession by a same-faith ruler (the confirmation case below) | Reuses the war-cause checks |
-| support | local acceptance: culture and religion match between claimant and the asset's counties, development-weighted | Can later incorporate richer Common Voice components when those exist |
+| support | local acceptance: culture and religion match between claimant and the asset's counties, development-weighted | Can later incorporate richer Popular support components when those exist |
 | office | religious standing: the head's blessing (a session move), piety rank, and service mode (`host` beats `expedition`) | The head is a seat, not a claimant, for land assets |
 
 ### Resolution: the settlement session

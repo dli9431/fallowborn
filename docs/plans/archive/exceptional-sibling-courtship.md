@@ -220,7 +220,7 @@ is illicit. Once per season it makes one bounded exposure roll, initially 12%:
 
 Exposure queues one event, never repeated notices in the same season. The player
 may end the courtship, deny it through an Intrigue chance, or openly persist.
-Persistence costs piety, prestige, Common Voice, and liege Standing but does not
+Persistence costs piety, prestige, Popular support, and liege Standing but does not
 force the sibling to marry. These are consequences for defying the surrounding
 institution, not a universal moral penalty attached to the characters in all
 faiths.
@@ -254,7 +254,7 @@ dispensation. If the player confirms and the sibling accepts the final proposal:
 
 - use the ordinary spouse-link and family mechanics so the relationship is not a
   stateless affair;
-- charge 75 piety, 25 prestige, −15 Common Voice, and −20 liege Standing;
+- charge 75 piety, 25 prestige, −15 Popular support, and −20 liege Standing;
 - add a non-inherited `scandalous_union` reputation to both partners;
 - apply faith-specific authority consequences: Papal Standing and possible
   excommunication for a Catholic, and equivalent condemnation text and Standing

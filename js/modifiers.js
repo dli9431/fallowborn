@@ -367,7 +367,7 @@ window.FB = window.FB || {};
      hold directly. A baron holds none: their seat is the liege's county. But
      the estates that grant these modifiers sit from tier 3, and the agenda
      that grants them is chosen by reading that seat, so the seat is where
-     they act. Upkeep, Common Voice, tax, levy, and the Governance projection
+     they act. Upkeep, Popular support, tax, levy, and the Governance projection
      all read this, so a player cannot pay for a record that gives them
      nothing and does not appear anywhere they can look. */
   FB.modifierCounties = function (state) {

@@ -2380,7 +2380,7 @@ test('a baron pays for, receives, and can see the modifiers on their seat',
         ruleIsSeatOnly:FB.modifierCounties(s).join(',') === seat,
         seatIsRule:FB.modifierSeat(s) === seat,
         /* Market Charter is +8% tax and 1 gold upkeep; Levy Exemption is
-           -12% levy and +6 Common Voice. Each must land, not just the ones
+           -12% levy and +6 Popular support. Each must land, not just the ones
            that happened to read the seat before. */
         chargedUpkeep:after.upkeep > before.upkeep,
         taxRose:after.tax > before.tax,

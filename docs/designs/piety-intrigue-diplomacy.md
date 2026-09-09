@@ -91,7 +91,7 @@ The five targeted additions use existing state rather than a parallel intrigue m
   costs coin, prestige, and Standing.
 - `guild_monopoly` targets one instance-stamped `contractId`. It may end that exact charter
   through the monopoly invalidation API, preserve it for compensation, or defend it for
-  guild support at a Common Voice cost.
+  guild support at a Popular support cost.
 - `council_counter` targets one seated, cold-Standing schemer. Exposure, leniency, and a
   manufactured charge all resolve through existing seats, Standing, and authority.
 - `diplomatic_correspondence` targets one living sovereign court already reachable through
@@ -113,7 +113,7 @@ Diplomatic slot-day stories use reusable context selectors for Improve, Provoke,
 pacts, and active alliances. Twelve stories cover arbitration, safe conduct, concrete
 compact offers, insults, tolls, deniable riders, bounded pact/alliance requests, renewal,
 domestic concessions, and counterpart succession. Their ordinary effects expose gold,
-prestige, piety, Common Voice, and skill tradeoffs; `standingRealm` changes only the
+prestige, piety, Popular support, and skill tradeoffs; `standingRealm` changes only the
 player-relative score for the selected `realmId`. They never create pairwise AI opinion.
 
 Counterpart succession queues an occasional first-embassy or compact-review story only

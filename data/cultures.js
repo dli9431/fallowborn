@@ -139,7 +139,7 @@ FBDATA.doctrineCatalogs = {
     charity:{ name:'Religious charity', path:'doctrines.charity', order:7,
       defaultValue:0, options:{
         personal:{ name:'Personal alms', desc:'No automatic seasonal alms.', value:0, cost:{ piety:150 } },
-        organized:{ name:'Organized alms', desc:'Spend 1 gold per season for +1 Common Voice; skipped if unaffordable.', value:1, cost:{ piety:250 } }
+        organized:{ name:'Organized alms', desc:'Spend 1 gold per season for +1 Popular support; skipped if unaffordable.', value:1, cost:{ piety:250 } }
       } },
     marriage_form:{ name:'Marriage form', path:'marriage.spouseLimit', order:1,
       options:{

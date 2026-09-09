@@ -77,7 +77,7 @@ Possible outcomes:
 
 - expose abuse and end or weaken the charter through an existing invalidation path;
 - extract compensation while preserving it;
-- defend it and gain guild support at a Common Voice or Standing cost;
+- defend it and gain guild support at a Popular support or Standing cost;
 - discovery benefits the opposing grantor, guild, or public.
 
 The plot must not create a second monopoly slot or generic guild-opinion meter.

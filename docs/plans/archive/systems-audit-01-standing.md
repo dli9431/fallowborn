@@ -155,7 +155,7 @@ Estates, gift, and diplomatic views show the same score.
 
 Do not merge the following into Standing:
 
-- Common Voice or Popular Opinion, which represents a population;
+- Popular support or Popular Opinion, which represents a population;
 - Crown Authority, which represents institutional power;
 - religious vocation standing and guild rank, which are progression tracks;
 - callable guild favors or exceptional-levy promises, which are discrete benefits;

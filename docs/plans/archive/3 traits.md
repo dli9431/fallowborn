@@ -121,10 +121,10 @@ history).
 | Trait | Class | Ships when | Depth hook |
 | --- | --- | --- | --- |
 | Oathfast | reputation | with or right after the settlement arc | vow claim basis +15%, broken-vow penalties +50% ([settlement plan](1%20settlement.md)) |
-| Moot-Speaker | reputation | any time | `FB.parliamentVoteChance` bonus, Common Voice gain scaling |
+| Moot-Speaker | reputation | any time | `FB.parliamentVoteChance` bonus, Popular support gain scaling |
 | Roadwise | formation | any time | `travelLegDays` -10%, encounter danger -15% |
 | Muster-Bred | formation | any time | levy rate term in the composition ledger |
-| Rent-Shrewd | reputation | any time | direct-rent term in `FB.playerTax`, Common Voice -5 |
+| Rent-Shrewd | reputation | any time | direct-rent term in `FB.playerTax`, Popular support -5 |
 | Hearth-Steady | disposition | any time | spouse/close-kin opinion, household crisis events |
 | Scarcity-Hardened | condition | after the modifier arc | famine tag scaling ([modifier plan](2%20modifiers.md)); earned by surviving a serious dearth |
 | Fieldwise | formation | after the modifier arc | famine tag scaling; survey effects wait for Counted Ploughlands content |

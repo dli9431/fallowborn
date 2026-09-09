@@ -58,7 +58,7 @@ prestige. Core option costs live with their options. Global pacing lives in
 - `doctrineReformCooldownDays` is a base 360 days per identity kind;
 - `doctrineReformEscalation` raises option costs and subsequent recovery by 25 percent
   per previous reform by this ruler, with existing departures as a legacy minimum;
-- `doctrineReformPopularPenalty` costs 5 Common Voice per projected departure or next
+- `doctrineReformPopularPenalty` costs 5 Popular support per projected departure or next
   reform number, whichever is greater. Restoring a parent doctrine causes no new
   backlash but still spends resources and counts as a reform;
 - `faithDoctrineSchismThreshold` is three departures;
@@ -140,7 +140,7 @@ including restoring a parent no longer present locally. Unencountered options ar
 hidden; both preview and transaction reject them, including stale confirmations.
 Previously created branches and followers remain valid without new contacts.
 
-The first departure costs 5 Common Voice and requires 360 days of recovery; a
+The first departure costs 5 Popular support and requires 360 days of recovery; a
 second costs at least 10 and requires 450 days. `player.doctrineReforms[kind]`
 saves `{charId,count,cooldownDays}`. Costs and recovery do not reset when the ruler
 returns to the parent or converts to another identity. Faith and culture have
@@ -153,7 +153,7 @@ These are personal or household practices, not instant territorial bonuses:
 
 - **Communal worship** adds 2 seasonal piety for the player. Christian identities
   supply the initial authored source; other identities have a neutral default.
-- **Organized alms** spends 1 gold for 1 Common Voice each season only if funds
+- **Organized alms** spends 1 gold for 1 Popular support each season only if funds
   suffice after household wages. It appears in the livelihood expense ledger and
   uses the ordinary popular-opinion effect, including trait modifiers. Islamic
   identities supply the initial source. Personal alms has no automatic expense.
@@ -189,7 +189,7 @@ Both desktop hover/focus and compact disclosures share this concise copy.
 
 `marriage_lineage` resolves `doctrines.matrilinealMarriage`, default false. Paternal-only
 reform costs 175 prestige and maternal-permitted reform costs 300, under the existing
-escalation, Common Voice, and recovery rules. Maternal permission requires actual contact
+escalation, Popular support, and recovery rules. Maternal permission requires actual contact
 with practitioners, or durably learned knowledge of the custom. Neither shared African
 affinity, a neighboring county alone, opening a sheet, a generated culture's existence,
 nor a parent identity alone supplies this knowledge. Current practitioners qualify.

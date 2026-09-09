@@ -58,7 +58,7 @@ the live justification set and revalidates diplomacy before declaring. The techn
 impact is **none** (`war_justification_selection`): choosing among rights already held is
 core declaration judgment, while each right keeps its existing eligibility.
 
-The core first-declaration costs are 20 prestige, 8 Common Voice, 10 Standing with every
+The core first-declaration costs are 20 prestige, 8 Popular support, 10 Standing with every
 direct vassal, and 5 Standing with every foreign sovereign. Each earlier aggressive
 declaration by the current ruler within 2,880 days adds 50% to all four costs. The values
 and window use the `warAggression*` balance keys. `player.aggressiveWars` stores only
@@ -70,7 +70,7 @@ the later inheritable house-notoriety concept.
 Aggression earns none of the ordinary automatic offensive-war prestige at declaration,
 county capture, a slipped-prize settlement, or accepted tribute. A captured objective
 instead receives **Conquered Without Right** for 2,160 days: −15% county tax, −20% county
-levy, −8 effective Common Voice while it counts as the player's modifier county, and
+levy, −8 effective Popular support while it counts as the player's modifier county, and
 +40% harmful `unrest` exposure. The record belongs to the county and survives later
 ownership changes. Recent aggression also multiplies the existing yearly breakaway chance
 for vassals under the player's crown; negative personal Standing compounds that multiplier.

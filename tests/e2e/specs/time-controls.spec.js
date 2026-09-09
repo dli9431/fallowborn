@@ -465,6 +465,8 @@ test('natural ticks retain Self and Network trees while updating visible player 
     });
     await waitForUiRefresh(page);
 
+    await expect(page.locator('[data-self-value="voice"] > span')).toHaveText('Popular support');
+
     const liveValues = await page.evaluate(function () {
       const selfSentinel = document.createElement('i');
       selfSentinel.id = 'self-live-tick-sentinel';

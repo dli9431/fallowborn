@@ -89,7 +89,7 @@ that use separate UI-only calculations.
 Political calculations should build on:
 
 - typed Standing between rulers;
-- Common Voice in directly held counties;
+- Popular support in directly held counties;
 - aid, scutage, motions, and annual Estates sessions;
 - Crown Authority, Council offices, and charters;
 - guild membership, monopolies, and trade relationships;
@@ -192,7 +192,7 @@ The first version should remain bounded:
 The declaration preview should compare every available cause and disclose:
 
 - target and war objective;
-- prestige, Common Voice, direct-vassal Standing, and foreign Standing changes;
+- prestige, Popular support, direct-vassal Standing, and foreign Standing changes;
 - expected occupied-county unrest, tax, and levy penalties;
 - the escalating penalty for recent aggressive wars;
 - the groups or blocs most likely to oppose the war.
@@ -393,8 +393,8 @@ Council appointment remains the default; sealing the charter (or granting its re
 privilege) makes Treasurer and Constable nominations require confirmation and protects
 the successful holder through a fixed term. Durable privilege records wrap existing
 modifier, monopoly, obligation, and Council ledgers without duplicating their arithmetic.
-Annual pressure gates can queue one semantic collective demand from Standing, Common
-Voice, extraordinary tax, revocation, persecution, local burdens, Crown Authority, or
+Annual pressure gates can queue one semantic collective demand from Standing, Popular
+support, extraordinary tax, revocation, persecution, local burdens, Crown Authority, or
 recent aggressive wars. Refusal creates bounded organized opposition rather than a realm.
 
 Implement elections in increasing order of political risk.
@@ -439,7 +439,7 @@ Initial privileges should reuse current concepts: guild monopoly, market charter
 confirmed custom, levy exemption, sanctuary, tax concession, and office
 confirmation.
 
-Low Standing, poor Common Voice, coercive taxation, unlawful revocation, religious
+Low Standing, poor Popular support, coercive taxation, unlawful revocation, religious
 persecution, and repeated aggressive wars may cause a bloc or constituency to demand
 a privilege. Refusal raises organized opposition; it does not immediately create a
 fully autonomous new realm.
@@ -466,7 +466,7 @@ Settlement:
 - encouraged settlement.
 
 Effects should use systems that exist: piety, clergy and bloc support, foreign
-Standing, Common Voice, tax, trade, research, development, unrest events, and county
+Standing, Popular support, tax, trade, research, development, unrest events, and county
 modifiers.
 
 County faith remains distinct from realm faith. A policy must not silently convert a
@@ -919,7 +919,7 @@ must not run the repository test harness.
 - guild elections require a vacancy or term and valid candidates;
 - appointment remains the default where no elective charter exists;
 - privileges survive valid transfer where their scope requires it and expire cleanly;
-- mistreatment demands use real Standing, Common Voice, and law state.
+- mistreatment demands use real Standing, Popular support, and law state.
 
 ### Careers
 

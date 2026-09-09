@@ -20,7 +20,7 @@
    on the player realm’s research rate, a `migrationAttraction` shift for
    player-owned counties, `developmentGrowth` (a seasonal chance to raise one
    held county’s development), and one-proclamation `onEnact` reactions
-   (piety, prestige, authority, Common Voice, religious-head and foreign
+   (piety, prestige, authority, Popular support, religious-head and foreign
    Standing, vassal Standing by faith, and a mistreatment note). The engine
    is js/institutions.js; the Estates machinery below ignores these defs. */
 window.FBDATA = window.FBDATA || {};

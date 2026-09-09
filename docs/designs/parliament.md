@@ -170,7 +170,7 @@ three wins award the reputation and write its localized Chronicle notice. A fail
 contested vote removes an existing Moot-Speaker and resets its progress. Because
 event-driven progress resets only when removal actually occurred, failures before the
 first award do not erase accumulated wins. Moot-Speaker also multiplies only positive
-`popularOpinion` event effects by 1.2; losses and non-event Common Voice changes remain
+`popularOpinion` event effects by 1.2; losses and non-event Popular support changes remain
 unchanged.
 
 ## Technology gates
@@ -204,14 +204,14 @@ would let `FB.travelLocation` aim a New Year session at whatever county the play
 happened to be visiting, and carry its modifier effects there with it.
 
 A successful player motion for redress also grants `Custom Confirmed` to the event's
-snapshotted home county for 3,600 days. Its Common Voice is demesne-wide only while that
+snapshotted home county for 3,600 days. Its Popular support is demesne-wide only while that
 county is one of `FB.modifierCounties`, which is the county itself for a baron who holds
 none directly; the levy and unrest effects remain attached to the county.
 See [modifiers.md](modifiers.md).
 
 Estates laws and story grants also participate in the shared privilege roll.
 `market_charter`, `custom_confirmed`, and `levy_exemption` modifier records remain the
-sole mechanical source of tax, construction, Common Voice, and levy arithmetic; the
+sole mechanical source of tax, construction, Popular support, and levy arithmetic; the
 parallel `state.privileges` entry records holder, grantor, territorial scope, rights,
 exemptions, obligations, protected duration, revocation rule, and semantic source.
 `obl.revocationConsent` likewise remains the authoritative law while its privilege record

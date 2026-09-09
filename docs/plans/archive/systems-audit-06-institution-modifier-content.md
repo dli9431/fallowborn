@@ -81,7 +81,7 @@ Council examples:
 
 - Constable demands a heavier muster;
 - vassals seek a temporary levy exemption;
-- wartime logistics force a choice between supply and Common Voice.
+- wartime logistics force a choice between supply and Popular support.
 
 Estates examples:
 
@@ -110,7 +110,7 @@ from an ordinary event option without an explicit named confirmation.
 
 ### 4. Faith and public legitimacy
 
-Use current religious head, piety, excommunication, Bishop/Papal state, Common Voice,
+Use current religious head, piety, excommunication, Bishop/Papal state, Popular support,
 and institution authority.
 
 Council examples:
@@ -147,13 +147,13 @@ should cover these durable circumstances using currently supported keys.
 
 ### Levy Exemption
 
-- Intended effects: lower county levy, higher effective Common Voice.
+- Intended effects: lower county levy, higher effective Popular support.
 - Sources: Estates bargain, rewarded service, or Council concession.
 - Must remain county-bound through ownership changes.
 
 ### Muster Burden
 
-- Intended effects: higher levy with worse Common Voice or harmful `unrest` exposure.
+- Intended effects: higher levy with worse Popular support or harmful `unrest` exposure.
 - Sources: wartime Council/Estates demand.
 - Duration must be bounded and visible before the choice.
 
@@ -167,11 +167,11 @@ should cover these durable circumstances using currently supported keys.
 
 ### Settlement Grudge
 
-- Intended effects: lower Common Voice and increased harmful `unrest` exposure.
+- Intended effects: lower Popular support and increased harmful `unrest` exposure.
 - Sources: coercive grant/revocation, failed redress, discovered political plot.
 - Resolution: event settlement, ownership-independent expiry, or explicit removal.
 
-Do not overload one modifier with tax, levy, building, Common Voice, and event-tag
+Do not overload one modifier with tax, levy, building, Popular support, and event-tag
 effects merely to make it important. Each modifier needs a legible story and a small
 mechanical identity.
 
@@ -181,7 +181,7 @@ County modifiers:
 
 - belong to the county, not its current holder;
 - survive ownership changes;
-- contribute player-wide Common Voice/upkeep only while directly held;
+- contribute player-wide Popular support/upkeep only while directly held;
 - use only supported `tax`, `levy`, `buildingCost`, `commonVoice`, and event-tag keys.
 
 Campaign modifiers:
@@ -199,7 +199,7 @@ that the existing scopes cannot express the required story.
 Prefer declarative effects:
 
 - `addModifier` and `hasModifier`;
-- Standing, Common Voice, gold, prestige, piety, and authority adjustments;
+- Standing, Popular support, gold, prestige, piety, and authority adjustments;
 - existing Council/Estates custom handlers;
 - event `tags` for mitigation or aggravation;
 - queued follow-up events for settlements.
@@ -296,7 +296,7 @@ Unknown/removed modifier ids continue through existing save repair.
 3. Author the Estates content family and required narrow handlers.
 4. Connect plot/diplomacy outcomes to at least two modifiers.
 5. Add Governance/Land summaries without a management loop.
-6. Tune cadence and effects against existing tax, levy, Common Voice, and event scales.
+6. Tune cadence and effects against existing tax, levy, Popular support, and event scales.
 7. Update Council, Parliament, modifiers, events, UI, and MODDING documentation.
 
 ## Tests to author
@@ -308,7 +308,7 @@ Add focused browser/data coverage without running it as an AI coding agent:
 - every core modifier has a reachable grant path;
 - duplicate grants refresh instead of stack;
 - expiry, removal, transfer, upkeep, and save/restore follow existing contracts;
-- modifier tax/levy/building/Common Voice/tag effects match the authoritative ledgers;
+- modifier tax/levy/building/Popular support/tag effects match the authoritative ledgers;
 - Council and Estates remain separate and no event creates the wrong institution state;
 - Land and Governance show identical active records and remaining duration;
 - localized durable notices preserve semantic ids and parameters.

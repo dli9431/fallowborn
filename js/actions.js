@@ -10283,7 +10283,7 @@ window.FB = window.FB || {};
     }
     if (FB.recordAggressiveWar) FB.recordAggressiveWar(state, cause);
     FB.news(state, FB.msg('news.action.war_aggression_cost',
-      '⚔ The War of Aggression stains your rule: prestige {prestige}, Common Voice {voice}, and condemnation from direct vassals and foreign courts.', {
+      '⚔ The War of Aggression stains your rule: prestige {prestige}, Popular support {voice}, and condemnation from direct vassals and foreign courts.', {
         prestige:consequence.prestigeChange,
         voice:consequence.commonVoiceChange
       }));

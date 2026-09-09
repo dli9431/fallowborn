@@ -208,7 +208,7 @@ window.FB = window.FB || {};
     if (fx.buildingCost) parts.push(FB.T('{amount}% construction cost', {
       amount:signedPercent(fx.buildingCost * scale)
     }));
-    if (fx.commonVoice) parts.push(FB.T('{amount} Common Voice', {
+    if (fx.commonVoice) parts.push(FB.T('{amount} Popular support', {
       amount:signedEffectNumber(fx.commonVoice * scale)
     }));
     if (fx.famine) parts.push(FB.T('{amount}% famine harm', {
@@ -245,7 +245,7 @@ window.FB = window.FB || {};
     const policy = FBDATA.countyCommunityPolicies &&
       FBDATA.countyCommunityPolicies[policyId];
     if (!policy || !policy.modifier) {
-      return FB.T('No immediate Common Voice or unrest change.');
+      return FB.T('No immediate Popular support or unrest change.');
     }
     const modifier = FBDATA.modifiers && FBDATA.modifiers[policy.modifier];
     const mechanics = FBDATA.balance &&
@@ -4668,7 +4668,7 @@ window.FB = window.FB || {};
             amount:signedTraitEffect(value * 100)
           });
         } else if (id === 'assembly.popularOpinion') {
-          label = 'Positive Common Voice gains';
+          label = 'Positive Popular support gains';
           shown = FB.T('{amount}%', { amount:signedTraitEffect(value * 100) });
         } else if (id === 'travel.legDays') {
           label = 'Days per county leg';

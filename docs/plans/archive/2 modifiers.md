@@ -45,7 +45,7 @@ There is no timed-modifier framework. What exists, and what the framework builds
   travel leg time and overhead (`js/travel.js:145-160`).
 - **Gaps in the current implementation.** Desertion does not exist (no attrition code
   anywhere; only battle rout and home refill). Famine and harvest are not durable
-  mechanics, only one-shot event content. Common Voice is the single scalar
+  mechanics, only one-shot event content. Popular support is the single scalar
   `state.player.pop`, moved by `fx.popularOpinion` (`js/events.js:2228`) and decaying
   15% yearly (`js/main.js:1504`). Revolt pressure has no meter. The design below
   handles each honestly rather than pretending a hook exists.
@@ -151,7 +151,7 @@ The framework only ships keys that have a consumer. The wiring, key by key:
 
 Deliberately absent until their systems exist: harvest and survey keys beyond the
 tag convention (no durable harvest mechanic), route keys (route scope later), and
-anything reading Common Voice components (still a single scalar).
+anything reading Popular support components (still a single scalar).
 
 ### UI
 

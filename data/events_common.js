@@ -795,7 +795,7 @@ FBDATA.events.push(
   text:'The duplicate accounts are finally in your hands. Fees vanish, weights change after dusk, and the monopoly’s public promises lead to private purses. The charter can be broken, milked, or defended.',
   options:[
     { label:'Publish the accounts and break the charter.', chance:'plot',
-      desc:'End this exact monopoly, gain Common Voice, and make enemies of those it favored.',
+      desc:'End this exact monopoly, gain Popular support, and make enemies of those it favored.',
       success:{ text:'The figures survive every challenge. The charter is struck down before a jeering hall.',
         effects:{ custom:'plot_guild_expose', skills:{int:1}, prestige:3 } },
       failure:{ text:'A missing leaf turns proof into insinuation. The charter’s defenders name you a liar.',
@@ -804,7 +804,7 @@ FBDATA.events.push(
       desc:'The monopoly survives. Coin buys your silence, while the public pays the price.',
       effects:{ custom:'plot_guild_compensation' } },
     { label:'Defend the privilege before the guild.',
-      desc:'Preserve the charter and gain guild support at the Common Voice’s expense.',
+      desc:'Preserve the charter and gain guild support at the expense of popular support.',
       effects:{ custom:'plot_guild_defend' } },
     { label:'Burn the duplicate accounts.', desc:'Leave the charter and its enemies untouched.',
       effects:{ custom:'plot_end' } }

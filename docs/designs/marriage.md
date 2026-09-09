@@ -32,7 +32,7 @@ can end, deny, or openly persist in the relationship.
 
 Exact shared faith with `marriage.kinship.siblingRite:'xwedodah'` authorizes a
 recognized rite costing 75 piety and 25 gold. Every other route is an
-irregular union costing 75 piety, 25 prestige, 15 Common Voice, and 20 liege
+irregular union costing 75 piety, 25 prestige, 15 Popular support, and 20 liege
 Standing; both spouses gain the non-inherited `scandalous_union` reputation,
 and the relevant faith authority receives a consequence. Neither route pays
 a dowry, forms a royal compact, or creates an alliance. Full-sibling children

@@ -61,6 +61,11 @@ A pending restoration does nothing if the policy view has been replaced or close
 
 ## Label and value rows
 
+The population-opinion stat is labeled **Popular support** throughout the UI,
+event effects, and help text. It measures how favorably ordinary people view the
+protagonist. Internal `pop`, `popularOpinion`, and `commonVoice` keys retain their
+existing meaning and save compatibility.
+
 Shared `.kv` rows reserve readable space for both fields and an explicit column
 gap. They wrap whole fields onto separate lines when the containing card is too
 narrow, including desktop card grids and tooltips; long names and translated prose
@@ -633,7 +638,7 @@ repeated there, so the button never changes width as the days flow.
 Natural clock ticks and the completion handoff from fast-forward use a low-priority
 `UI.refresh({ liveTick:true })`: the lightweight topbar and date remain current, while the retained Self, Kin, Deeds, Land, and Network trees
 stay mounted. The visible retained Self tree patches every player skill, Age, Health, and
-Common Voice on every live tick. Its retained protagonist portrait also checks the complete
+Popular support on every live tick. Its retained protagonist portrait also checks the complete
 live visual key and repaints synchronously when age, health, ailments, appearance, equipment,
 profession, or rank changes. The visible Kin tree likewise patches spouse and child ages,
 so those changing personal values remain exact without rebuilding sections or listeners.
@@ -1613,7 +1618,7 @@ migration. Active faith and culture projects name their target and policy, show 
 direction, last annual transfer, resistance, and material effects, but promise no finish
 date. Start/change/stop controls appear only for a living count-or-higher direct holder.
 Their final review repeats the county, estimated current rate, resistance, zero immediate
-piety/prestige/Standing/relationship charge, and any Common Voice, unrest, tax, levy,
+piety/prestige/Standing/relationship charge, and any Popular support, unrest, tax, levy,
 market, or migration-pressure consequences before it revalidates the order.
 Faith & Community contains the contextual absolution, Papal-restoration, and
 Caliphate-claim deeds. Their resource/land consequences use ordinary focusable
@@ -1624,7 +1629,7 @@ and uses its own second confirmation; no penalty is applied until that final but
 A county with no recognized right is instead labeled **War of Aggression**, never as a
 claim. Its war-picker row contrasts the political and victory consequences with lawful
 causes. Selecting it opens a dedicated confirmation naming the target and siege
-objective, exact immediate prestige/Common Voice/Standing costs, recent-war escalation,
+objective, exact immediate prestige/Popular support/Standing costs, recent-war escalation,
 continuing vassal breakaway pressure, the full Conquered Without Right duration/effects,
 and the most likely commons, bloc, vassal, and foreign opposition. The final button
 revalidates the cause; cancel and browser/modal Back return without mutation or RNG use.
@@ -1786,7 +1791,7 @@ keeps identity, holder, territorial scope, exact effect, remaining or indefinite
 current revocation availability, and any revocation action on its face. Grantor provenance,
 the full legal rule and reason, rights, exemptions, and obligations use the shared desktop
 hover/focus tooltip or compact-layout `?` disclosure. A deliberate confirmation sheet
-precedes unlawful early revocation and states the Common Voice, mistreatment, and organized
+precedes unlawful early revocation and states the Popular support, mistreatment, and organized
 opposition consequences. Pending demands remain prominent. The **Organized grievances**
 roll uses human group names and the privilege around which each group is organizing; it does
 not expose internal constituency ids or an unexplained `1/5` scale. The card tooltip or
@@ -1804,7 +1809,7 @@ guildmaster; its locked description exposes the exact missing technology, guild 
 Standing with the grantor, grantor, cooldown, or occupied-slot condition. Rank & Realm includes
 **Grant a guild monopoly…** for every baron and greater ruler. Its numbered,
 keyboard-focusable profession picker previews Craft and Trade with the current
-tier-scaled fee, tax, enterprise, duration, and Common Voice terms, then repeats all effects
+tier-scaled fee, tax, enterprise, duration, and Popular support terms, then repeats all effects
 in a confirmation sheet before spending the day. While Guild Charters is missing, its
 technology-detail control stays inside the deed's shared desktop hover/focus tooltip or
 compact-layout `?` disclosure instead of occupying a separate Deeds row.
@@ -2416,7 +2421,7 @@ contexts keep ids and numbers only.
   from the same projection rather than having to open a declaration flow.
 
 Doctrine option sheets hide unencountered choices using the same encounter rules as
-conversion. Option disclosures and confirmations show the exact Common Voice
+conversion. Option disclosures and confirmations show the exact Popular support
 penalty and recovery duration alongside costs and parent divergence. The overview
 explains escalating per-ruler costs and that restoring a parent doctrine incurs
 no new backlash.
