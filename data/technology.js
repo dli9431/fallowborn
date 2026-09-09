@@ -77,7 +77,11 @@ window.FBDATA = window.FBDATA || {};
     features:{
       local_commons_uprisings:{
         mode:'none',
-        rationale:'Coordinated local grievances across directly held counties and their concession, negotiation, or suppression are baseline ruler responsibilities. Recovery remains available without research; a previously demanded privilege retains its approved terms.'
+        rationale:'Local grievances, their spread through subordinate counties, and overlord-backed concession, negotiation, or suppression are baseline ruler responsibilities. Recovery remains available without research; a previously demanded privilege retains its approved terms.'
+      },
+      local_commons_settlements:{
+        mode:'none',
+        rationale:'A direct holder can negotiate customary relief in their own counties without an overlord or research gate. Local recovery keeps the original demanded privilege available and does not bind other holders.'
       },
       equipment_mail_chausses:{
         mode:'hard', tech:['mail_hauberks'],

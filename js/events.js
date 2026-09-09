@@ -10342,12 +10342,14 @@ window.FB = window.FB || {};
       return FB.T('Long shot');
     }
     if (record.type === 'commonsUprising') {
-      if (record.action === 'defer') return FB.T('Final warning: {days} days to resolve the grievance.', {
+      if (record.action === 'local_settle') return FB.T('Grant the demanded privilege and end resistance only in your affected directly held counties.');
+      if (record.action === 'local_failed') return FB.T('Local talks are spent for this uprising; existing county deadlines remain unchanged.');
+      if ((record.action === 'defer' || record.action === 'spread_defer')) return FB.T('Final warning: {days} days to resolve the grievance.', {
         days:FBDATA.balance.commonsUprisingWarningDays
       });
       if (record.action === 'concede') return FB.T('Settle the local grievance and end its disruption.');
       if (record.action === 'suppress') return FB.T('End the local uprising by force.');
-      return FB.T('County tax and levy remain reduced until the original expiry.');
+      return FB.T('Active counties keep their own disruption deadlines; unrest can continue spreading at low Popular support.');
     }
     if (record.type === 'none') return FB.T('No direct mechanical change');
     if (record.type === 'queue') {
@@ -11728,7 +11730,7 @@ window.FB = window.FB || {};
     if (FB.eventOptionStatus) {
       const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);
       if (optionStatus.techLocked ||
-          (ev && ev.contextValidator === 'commons_uprising_valid' && !optionStatus.ready) ||
+          (ev && ['commons_uprising_valid', 'commons_uprising_local_valid'].indexOf(ev.contextValidator) >= 0 && !optionStatus.ready) ||
           (option.effects &&
             (option.effects.custom === 'freedom_accept_offer' ||
              option.effects.custom === 'rank_elevation_claim') &&

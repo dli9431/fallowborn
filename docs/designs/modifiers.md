@@ -256,6 +256,6 @@ through `FB.modBonus`; `FB.modifierEffects` supplies matching display values.
 Support recovery eases the penalty without extending its deadline. No severity
 value is saved. It has no Popular support penalty, upkeep, or autonomous
 army. The local uprising lifecycle removes it early after a concession, successful
-suppression, or loss of the originating ruler's control. Unlike ordinary historical
-county burdens, the transferred county leaves the incident and loses its modifier;
+suppression, or exit from the originating ruler's subrealm. Internal vassal transfers
+preserve disruption and its expiry. A county transferred outside that authority loses its modifier;
 other participating counties continue. Succession ends the entire incident. Its fixed expiry is never extended after a failed response.

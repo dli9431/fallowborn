@@ -2526,5 +2526,19 @@ the roll. Land and Governance show the active disruption through ordinary modifi
 
 Coordinated commons uprisings list all participating counties in both event notices
 and the privilege roll. The inline concession identifies effects as applying to every
-listed county and global resource changes as occurring once. The shared deadline and
-response survive individual counties leaving the incident.
+listed county (including subordinate lands) and global resource changes as occurring once.
+Each county shows its own awaiting-answer, warning, or active phase and remaining days.
+The roll explains the support threshold and spread interval, shows the next spread check
+or paused status, and retains one concession button for the current roster. Spread
+petitions identify the newly threatened county and explain that acknowledging starts
+its full grace period. Existing county deadlines remain unchanged.
+
+
+The uprising section also offers **Negotiate in my counties** when the player directly
+holds affected counties. Its local block names exactly those counties and shows the
+20-gold cost, Diplomacy success percentage, demanded privilege effects and duration,
+failure consequence, and one-attempt limit. Insufficient funds or a spent attempt is
+explained beside a disabled button. The existing wider concession remains available.
+Resolution preserves sheet scroll/disclosures and returns keyboard focus to Back,
+using the same redraw path as a wider concession. Local successes and failures appear
+in the Chronicle; AI negotiations describe counties rather than naming an unseen person.

@@ -1327,6 +1327,8 @@ FBDATA.currency = {
 /* Game balance knobs — modders welcome */
 FBDATA.balance = {
   commonsUprisingMaxCounties:3,
+  commonsUprisingSpreadDays:30,
+  commonsUprisingLocalNegotiationDays:30,
   commonsUprisingWarningDays:90,
   commonsUprisingCooldownDays:1080,
   commonsUprisingSupportThreshold:-20,

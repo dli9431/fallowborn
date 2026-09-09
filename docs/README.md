@@ -546,4 +546,21 @@ create a war or take the county away.
 A single response covers every listed county. Concessions apply separately to each,
 while money, prestige, and stored Popular support changes apply once. If a county
 leaves your control or receives its concession separately, the remaining counties
-continue with the same deadline. Newly acquired counties do not join an existing rising.
+keep their own deadlines. Every 30 consecutive days with Popular support at -20 or
+lower, active resistance can threaten one neighboring eligible county. Spread includes
+vassal counties under your authority, but cannot cross into another realm or a sibling
+vassal's territory. Each new county gets its own 90-day warning after you answer its
+petition, then up to 180 days of disruption. Support above -10 clears pending warnings;
+active disruptions run their course. Settled or expired counties cannot rejoin the same
+incident. Connected counties throughout your realm can eventually participate, provided
+unrest remains active and support stays low. Disconnected lands cannot be reached.
+
+
+Local rulers can also negotiate a settlement for their own affected directly held
+counties. In Privileges & collective demands, **Negotiate in my counties** costs 20
+gold and uses Diplomacy. Success grants the demanded privilege only there; failure
+keeps existing deadlines. Each ruler gets one local attempt per incident. These talks
+leave stored Popular support and prestige unchanged (the privilege retains its county effects), and the wider revolt continues
+in other holders' counties. AI vassals attempt local talks after 30 days of involvement,
+using their own ruler's Diplomacy and granting their own concessions. They do not spend
+your treasury. The existing wider settlement and suppression options still work.

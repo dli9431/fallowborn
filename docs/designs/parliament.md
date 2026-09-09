@@ -248,39 +248,72 @@ obligation or institution state.
 
 ## Local commons uprisings
 
-Technology impact `local_commons_uprisings` is `none`: responding to local grievances
-is baseline rule and recovery. Previously demanded privileges retain their approved
-terms regardless of later research changes.
+Technology impact `local_commons_uprisings` remains `none`: local resistance, its
+spread, and an overlord-backed settlement are baseline rule and recovery. An
+uprising settlement guarantees the demanded county privilege across the ruler's
+own holdings and subordinate vassals without changing ownership, fealty, or offices.
+The original approved terms remain available after research changes.
 
-A refused commons demand at effective Popular support -20 or lower may start one
-local warning for up to three counties directly held by a tier-4+ protagonist.
-The originating county comes first; other unprotected direct holdings follow in
-stable county-id order. The roster is fixed when the warning is created. Guild,
-faith, and magnate demands retain their existing consequences. The warning identifies
-the refused privilege and every participating county. Granting it in each county
-settles the grievance; deferring gives
-90 days to grant it elsewhere or recover Popular support above -10. Unresolved
-warnings become one coordinated uprising, with tax and levy reduced by 25% to 100% for at most 180 days.
-The reduction follows current effective Popular support, linearly from 25% at -20
-to 100% at -100, clamped at both ends. It multiplies output after ordinary county
-modifier bonuses, so bonuses cannot offset a complete shutdown.
-The ordinary event review offers the original concession, paid Diplomacy negotiation,
-paid suppression (65% success), or enduring the disruption. Failed negotiation or
-suppression leaves the fixed remaining disruption, never another forced roll.
-Suppression success costs 8 Popular support; failure costs 12. No land, army, realm,
-or war record is created or changed.
+A refused commons demand at effective Popular support -20 or lower starts a final
+petition involving up to three directly held counties. Deferring gives those counties
+90 days to receive the concession or recover support above -10. Each unresolved
+county then suffers 180 days of tax and levy disruption, scaling live from 25% at
+-20 support to 100% at -100. Bonuses cannot offset a complete shutdown.
 
-The single optional `collectiveDemands.uprising` record contains stable identity,
-county list, original scope, privilege, protagonist, liege, stage, and deadlines. Each context is bound to
-the exact record and stage. Loss of direct control or a separately granted concession removes only that county
-and its modifier. Succession, demotion, death, or liege change clears all counties; load repair is idempotent. A
-three-year realm-wide cooldown begins when an incident ends, including cleanup.
-New warnings cannot overlap the existing commons downfall flags or queued downfall
-events; that chain cannot begin while a local incident or its cooldown is present.
-The incident is visible in Privileges & opposition, and its active modifier appears
-through the existing Land and Governance county effects.
+After an outbreak, 30 consecutive days at support -20 or lower may threaten one
+neighbor of an active county, selected in stable id order. Land/strait adjacency
+uses `FB.world.adj`. Direct and vassal-held counties under the player's authority
+are eligible; an independent ruler can reach the entire connected sovereign realm,
+while a vassal ruler cannot spread a personal incident into their liege's or sibling
+vassals' lands. No foreign county or already protected county is eligible. Each
+county joins at most once per incident, so settled or expired counties never cycle
+back in. Each new county receives its own queued warning. Its 90-day grace starts
+only when that warning is answered, then its 180-day disruption starts at outbreak.
+Support above -20 resets the spread timer; support above -10 cancels outstanding
+warnings. Existing active penalties continue to follow support until resolved or expired.
 
-All participating counties share one response and deadline. Money, prestige, and
-stored Popular support changes apply once, while concessions and uprising modifiers
-apply to each listed county. A changed roster invalidates old choices and refreshes
-an unanswered event without extending its deadline. Newly acquired counties do not join.
+The original outbreak offers concession, paid Diplomacy negotiation, paid suppression
+(65%), or enduring the disruption. Money, prestige, and stored Popular support changes
+occur once; the concession or suppression covers every pending and active county.
+Failed responses do not extend any county deadline. The privilege roll offers a later
+concession covering the current roster. No army or war record is created or changed.
+
+Internal grants and transfers between subordinate vassals preserve county stages and
+deadlines. Leaving the player's authority/sovereign realm or receiving an individual
+concession removes only that county. Succession, demotion, death, or a change of the
+player's liege/sovereign clears the incident. One shared three-year cooldown starts
+when no counties remain. Existing commons downfall flags prevent a new local incident;
+the local incident and its cooldown prevent that downfall chain from starting.
+
+Saved per-county phases and deadlines, visited county ids, and the next spread turn
+are additive to save format 3. Legacy shared-deadline incidents migrate without
+changing their remaining time or adding counties. Stale event contexts cannot act
+on a changed roster or phase. Load repair requeues missing unanswered warnings once.
+Privileges & collective demands lists each county's phase and next deadline, with
+the spread countdown or the reason spreading is paused. Land shows active modifiers.
+
+
+### Local settlements within a spreading uprising
+
+Technology impact: **none** (`local_commons_settlements`). A direct holder can negotiate
+customary relief in their own counties without their overlord's permission or research.
+The incident still originates in the player's refused demand; this adds local responses
+by the player and subordinate AI rulers, not a separate AI demand-generation system.
+
+One local negotiation per lordship per incident covers its currently affected directly
+held counties, including warnings. The player pays 20 gold, with the existing Diplomacy
+chance (30% plus 4 percentage points per skill, clamped to 10-90%). Success grants the
+original demanded privilege with the local ruler as grantor and removes only those
+counties from the incident. Failure preserves their existing phases and deadlines.
+Neither result directly changes stored Popular support, prestige, ownership, or fealty.
+The granted privilege retains its ordinary county effects, including support modifiers.
+The overlord's existing realm-wide responses remain available on their original terms.
+
+AI direct holders attempt these talks after their earliest affected county has been in
+the incident for 30 days, in stable holder-id order. Their chance uses their actual
+ruler's Diplomacy. AI realms have no gold treasury; their settlement cost is represented
+by the demanded county privilege's ordinary economic burden. They never spend the
+player's money. A saved `localNegotiations` map records attempts, preventing repeated
+rolls on ticks, reloads, or failed player choices. Settled counties stay visited and
+cannot rejoin. Contexts capture the negotiator's identity and exact direct county list;
+a changed holder, stale incident, or spent attempt invalidates a choice before cost/RNG.

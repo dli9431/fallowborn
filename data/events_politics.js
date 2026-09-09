@@ -18,9 +18,31 @@ FBDATA.events.push(
       effects:{ custom:'commons_uprising_defer' } }
   ]},
 
+{ id:'commons_uprising_spread', title:'Unrest Reaches {spreadCounty}',
+  trigger:{ never:true }, contextValidator:'commons_uprising_valid',
+  text:'The commons of {spreadCounty} join the demand for {privilege}. They have not stopped collection or muster yet. Answer this warning to begin their {warningDays}-day grace period, or settle every affected county now. Restoring Popular support above {recoverySupport} clears outstanding warnings. Existing uprisings keep their own deadlines. Concessions bind your own and subordinate counties; prestige and Popular support change once.',
+  options:[
+    { label:'Grant {privilege} in every affected county.',
+      effects:{ custom:'commons_uprising_concede', popularOpinion:6, prestige:-2 } },
+    { label:'Take time to address this county’s grievance.',
+      effects:{ custom:'commons_uprising_spread_defer' } }
+  ]},
+
+{ id:'commons_uprising_local_negotiation', title:'Local Talks in {localCounty}',
+  trigger:{ never:true }, contextValidator:'commons_uprising_local_valid',
+  text:'Negotiate {privilege} in your affected directly held counties: {localCounty}. Success ends their resistance and grants the demanded privilege there. Other holders remain responsible for their counties. Failure leaves your existing warning and disruption deadlines unchanged. This is your one local negotiation attempt for this uprising.',
+  options:[
+    { label:'Negotiate in my directly held counties. ({money:20})', require:{ goldMin:20 },
+      effects:{ gold:-20 }, chance:'skill_dip',
+      success:{ text:'The delegates accept local terms and end resistance in your directly held counties.',
+        effects:{ custom:'commons_uprising_local_settle' } },
+      failure:{ text:'Local talks fail. The county deadlines remain unchanged.',
+        effects:{ custom:'commons_uprising_local_failed' } } }
+  ]},
+
 { id:'commons_uprising_begins', title:'The Commons Rise in {county}',
   trigger:{ never:true }, contextValidator:'commons_uprising_valid',
-  text:'Affected counties: {county}. The refused petition for {privilege} has become open resistance across these holdings. Tax carts stand empty and the muster rolls go unanswered. The latest report puts the county tax and levy reduction at {reduction}%. The penalty follows current Popular support, from 25% at -20 support to 100% at -100, for up to {uprisingDays} days. One response settles all listed counties. Concessions apply in each county; money, prestige, and Popular support changes are charged once.',
+  text:'Affected counties: {county}. The refused petition for {privilege} has become open resistance across these holdings. Tax carts stand empty and the muster rolls go unanswered. The latest report puts the county tax and levy reduction at {reduction}%. The penalty follows current Popular support, from 25% at -20 support to 100% at -100, for up to {uprisingDays} days. At sustained low Popular support, resistance can spread to one neighboring county every {spreadDays} days, including subordinate lands. Each new county receives its own warning and deadline. A successful response settles all listed counties. Concessions apply in each county; money, prestige, and Popular support changes are charged once.',
   options:[
     { label:'Grant {privilege} in every affected county.',
       effects:{ custom:'commons_uprising_concede', popularOpinion:6, prestige:-2 } },

@@ -13214,22 +13214,48 @@ window.FB = window.FB || {};
         })) + '</div>';
     }
     const uprising = FB.commonsUprisingSummary && FB.commonsUprisingSummary(s);
+    const localUprising = uprising && FB.commonsUprisingLocalTerms(s, 'player');
+    const localUprisingCtx = localUprising && FB.commonsUprisingLocalContext(s);
     if (uprising) {
-      const county = { name:uprising.countyIds.map(function (pid) { return FB.world.byId[pid].name; }).join(', ') };
       const relief = FBDATA.privileges[uprising.privilegeId].effect.id;
-      h += '<div class="progressnote warnote" id="commons-uprising-status">' +
-        esc(uprising.stage === 'petition' || uprising.stage === 'warning'
-          ? FB.T('{county}: final commons warning. Grant {privilege} or restore Popular support above {support}; {days} days to act. The countdown starts when you answer the petition.', {
-            county:county.name, privilege:privilegeDisplayName(s, uprising.privilegeId),
-            support:FBDATA.balance.commonsUprisingRecoverySupport, days:uprising.days
-          })
-          : FB.T('{county}: local commons uprising. County tax and levy are currently reduced by {reduction}% for up to {days} more days. The penalty follows Popular support.', {
-            county:county.name, days:uprising.days, reduction:uprising.reduction
-          })) + '<p>' + esc(FB.T('Concession in every listed county: {effects} for {days} days; +6 Popular support, -2 prestige once.', {
-            effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
-          })) + '</p><button type="button" class="btn" id="commons-uprising-concede">' +
+      h += '<div class="progressnote warnote" id="commons-uprising-status">';
+      uprising.counties.forEach(function (entry) {
+        const name = FB.world.byId[entry.id].name;
+        h += '<p>' + esc(entry.phase === 'active'
+          ? FB.T('{county}: tax and levy reduced by {reduction}%; {days} days of disruption remain.', {
+            county:name, reduction:uprising.reduction, days:entry.days
+          }) : entry.phase === 'petition'
+            ? FB.T('{county}: awaiting your answer. A {days}-day warning starts when you answer the petition.', {
+              county:name, days:entry.days
+            }) : FB.T('{county}: warning, {days} days to grant the concession or restore Popular support above {support}.', {
+              county:name, days:entry.days, support:FBDATA.balance.commonsUprisingRecoverySupport
+            })) + '</p>';
+      });
+      h += '<p>' + esc(FB.T('At Popular support of {support} or lower, active resistance can threaten one neighboring county every {days} days, including vassal lands under your authority.', {
+        support:FBDATA.balance.commonsUprisingSupportThreshold, days:FBDATA.balance.commonsUprisingSpreadDays
+      })) + '</p>';
+      if (uprising.spreadPaused) h += '<p>' + esc(FB.T('Spread is paused while Popular support is above the spread threshold.')) + '</p>';
+      else if (uprising.spreadDays !== null) h += '<p>' + esc(FB.T('Next spread check in {days} days.', { days:uprising.spreadDays })) + '</p>';
+      h += '<p>' + esc(FB.T('Concession in every listed county, including subordinate lands: {effects} for {days} days; +6 Popular support, -2 prestige once.', {
+        effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
+      })) + '</p><button type="button" class="btn" id="commons-uprising-concede">' +
           esc(FB.T('Grant {privilege}', { privilege:privilegeDisplayName(s, uprising.privilegeId) })) +
-          '</button></div>';
+          '</button>';
+      if (localUprising) {
+        h += '<div id="commons-uprising-local"><p>' + esc(FB.T('Local talks cover only your directly held counties: {counties}.', {
+          counties:localUprising.countyIds.map(function (pid) { return FB.world.byId[pid].name; }).join(', ')
+        })) + '</p><p>' + esc(FB.T('Costs {money:cost}; {chance}% chance to grant {privilege} here and end local resistance. Concession: {effects} for {days} days. Failure preserves current deadlines. One local attempt per uprising.', {
+          cost:localUprising.cost, chance:Math.round(localUprising.chance * 100),
+          privilege:privilegeDisplayName(s, uprising.privilegeId),
+          effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
+        })) + '</p>';
+        if (localUprising.attempted) h += '<p>' + esc(FB.T('Your local negotiation attempt has been used. The wider settlement remains available.')) + '</p>';
+        else if (!localUprising.affordable) h += '<p>' + esc(FB.T('You need {money:cost} for local talks.', { cost:localUprising.cost })) + '</p>';
+        h += '<button type="button" class="btn" id="commons-uprising-negotiate-local"' +
+          (!localUprising.eligible || !localUprising.affordable ? ' disabled' : '') + '>' +
+          esc(FB.T('Negotiate in my counties')) + '</button></div>';
+      }
+      h += '</div>';
     }
     if (!demands.opposition.length) {
       h += '<div class="hint">' + esc(FB.T(
@@ -13290,22 +13316,28 @@ window.FB = window.FB || {};
             returnView);
         });
       });
-    const concedeUprising = $('commons-uprising-concede');
-    if (concedeUprising) concedeUprising.addEventListener('click', function () {
-      const body = $('gm-body'), scroll = body.scrollTop;
-      const opened = Array.from(body.querySelectorAll('.settcard-info[aria-expanded="true"]'))
-        .map(function (button) { return button.getAttribute('aria-controls'); });
-      if (!FB.concedeCommonsUprising(s, uprising.id)) return;
-      UI.showPrivileges(returnView, true);
-      opened.forEach(function (id) {
-        const button = $('gm-body').querySelector('[aria-controls="' + id + '"]');
-        if (button) button.click();
+    ['commons-uprising-concede', 'commons-uprising-negotiate-local'].forEach(function (id) {
+      const button = $(id);
+      if (!button) return;
+      button.addEventListener('click', function () {
+        const body = $('gm-body'), scroll = body.scrollTop;
+        const opened = Array.from(body.querySelectorAll('.settcard-info[aria-expanded="true"]'))
+          .map(function (item) { return item.getAttribute('aria-controls'); });
+        const receipt = id === 'commons-uprising-concede'
+          ? FB.concedeCommonsUprising(s, uprising.id)
+          : FB.negotiateCommonsUprisingLocal(s, localUprisingCtx);
+        if (!receipt) return;
+        UI.showPrivileges(returnView, true);
+        opened.forEach(function (key) {
+          const info = $('gm-body').querySelector('[aria-controls="' + key + '"]');
+          if (info) info.click();
+        });
+        setTimeout(function () {
+          if (!$('privileges-back') || $('genmodal').classList.contains('hidden')) return;
+          $('privileges-back').focus({ preventScroll:true });
+          $('gm-body').scrollTop = scroll;
+        }, 0);
       });
-      setTimeout(function () {
-        if (!$('privileges-back') || $('genmodal').classList.contains('hidden')) return;
-        $('privileges-back').focus({ preventScroll:true });
-        $('gm-body').scrollTop = scroll;
-      }, 0);
     });
     $('privileges-back').addEventListener('click', function () {
       if (returnView === 'governance') {

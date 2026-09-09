@@ -241,7 +241,7 @@ for (const blocker of ['baron', 'healthy_support', 'downfall', 'queued_downfall'
         warnings:s.eventQueue.filter(function (entry) { return entry.id === 'commons_uprising_warning'; }).length };
     }, blocker);
     expect(result.after).toBe(result.before);
-    expect(result.warnings).toBe(blocker === 'active' ? 1 : 0);
+    expect(result.warnings).toBe(0);
   });
 }
 
@@ -258,7 +258,7 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#ev-text')).toContainText('Popular support above -10');
     await page.locator('#ev-options button').filter({ hasText:'Take time to address' }).click();
     await page.evaluate(function () { FB.ui.showPrivileges(); });
-    await expect(page.locator('#commons-uprising-status')).toContainText('90 days to act');
+    await expect(page.locator('#commons-uprising-status')).toContainText('90 days to grant the concession');
     await expect(page.locator('#commons-uprising-status')).toContainText('+6 Popular support, -2 prestige');
     await page.locator('#commons-uprising-concede').click();
     await expect(page.locator('#commons-uprising-status')).toHaveCount(0);
@@ -487,7 +487,7 @@ for (const change of ['transfer', 'separate_concession']) {
   });
 }
 
-test('new holdings do not join an existing roster and expiry clears every original county', async function ({ page }) {
+test('new holdings do not join immediately and skipped ticks do not backfill expired spread', async function ({ page }) {
   await addCommonsCounties(page, 1);
   await page.evaluate(function () { window.beginCommons(); });
   const added = await addCommonsCounties(page, 2);
@@ -509,6 +509,10 @@ test('legacy single-county incidents migrate without expanding or losing their d
   const result = await page.evaluate(function () {
     const s = FB.state, row = s.collectiveDemands.uprising, due = row.dueTurn;
     delete row.countyIds;
+    delete row.countyStates;
+    delete row.visitedCountyIds;
+    delete row.sovereignId;
+    delete row.nextSpreadTurn;
     s.eventQueue.forEach(function (item) { if (item.ctx) delete item.ctx.countyIds; });
     const saved = JSON.parse(FB.save.serialize());
     FB.save.restore(saved);
@@ -537,4 +541,388 @@ test('the privilege roll names every county and states concession effects per co
   for (const name of names) await expect(page.locator('#commons-uprising-status')).toContainText(name);
   await expect(page.locator('#commons-uprising-status')).toContainText('Concession in every listed county');
   await expect(page.locator('#commons-uprising-status')).toContainText('-2 prestige once');
+});
+
+async function prepareSpreadChain(page) {
+  const ids = await addCommonsCounties(page, 4);
+  return page.evaluate(function (ids) {
+    const s = FB.state, home = s.player.provinceId;
+    // A controlled chain isolates reachability from the bookmark's geography.
+    s.player.provs = [home];
+    s.realms.commonsTestVassal = Object.assign({}, s.realms.player, {
+      id:'commonsTestVassal', alive:true, tier:3, liege:'player', provs:ids.slice(), capital:ids[0]
+    });
+    ids.forEach(function (pid) { s.holder[pid] = 'commonsTestVassal'; });
+    const chain = [home].concat(ids);
+    FB.world.adj = {};
+    chain.forEach(function (pid, index) {
+      FB.world.adj[pid] = {};
+      if (index) FB.world.adj[pid][chain[index - 1]] = 1;
+      if (index + 1 < chain.length) FB.world.adj[pid][chain[index + 1]] = 1;
+    });
+    FB.invalidateRealmCache();
+    window.beginCommons();
+    // Spread-only scenarios isolate the frontier from independent local settlements.
+    s.collectiveDemands.uprising.localNegotiations = { commonsTestVassal:{ turn:s.turn, success:false, countyIds:[] } };
+    const item = window.uprisingEvent('commons_uprising_begins');
+    FB.resolveEventOption(s, FB.eventById(item.id), FB.eventById(item.id).options[3], item.ctx);
+    window.advanceCommons = function (days) {
+      for (let i = 0; i < days; i++) { FB.state.turn++; FB.commonsUprisingDay(FB.state); }
+    };
+    window.answerSpread = function () {
+      const item = FB.state.eventQueue.find(function (item) {
+        return item.id === 'commons_uprising_spread' && FB.fns.commons_uprising_valid(FB.state, item.ctx);
+      });
+      return FB.resolveEventOption(FB.state, FB.eventById(item.id), FB.eventById(item.id).options[1], item.ctx);
+    };
+    return chain;
+  }, ids);
+}
+
+test('spread traverses every connected subordinate county with independent warnings and expiries', async function ({ page }) {
+  const chain = await prepareSpreadChain(page);
+  const result = await page.evaluate(function (chain) {
+    const s = FB.state, start = s.turn, firstDue = s.collectiveDemands.uprising.countyStates[chain[0]].dueTurn;
+    window.advanceCommons(29);
+    const early = s.collectiveDemands.uprising.countyIds.length;
+    window.advanceCommons(1);
+    const first = s.collectiveDemands.uprising.countyStates[chain[1]];
+    const petition = first.phase;
+    window.advanceCommons(10);
+    window.answerSpread();
+    const ownGrace = first.dueTurn - s.turn;
+    window.advanceCommons(89);
+    const before = FB.hasModifier(s, 'commons_uprising', chain[1]);
+    window.advanceCommons(1);
+    const after = FB.hasModifier(s, 'commons_uprising', chain[1]);
+    const independent = first.dueTurn === start + 130 + 180 &&
+      s.collectiveDemands.uprising.countyStates[chain[0]].dueTurn === firstDue;
+    // Answer each subsequent petition and keep checking through all county expiries.
+    for (let i = 0; i < 700 && s.collectiveDemands.uprising; i++) {
+      if (s.eventQueue.some(function (item) {
+        return item.id === 'commons_uprising_spread' && FB.fns.commons_uprising_valid(s, item.ctx);
+      })) window.answerSpread();
+      window.advanceCommons(1);
+    }
+    return { early:early, petition:petition, ownGrace:ownGrace, before:before, after:after,
+      independent:independent, finished:!s.collectiveDemands.uprising,
+      clear:chain.every(function (pid) { return !FB.hasModifier(s, 'commons_uprising', pid); }),
+      outbreaks:s.log.filter(function (item) {
+        return JSON.stringify(item).indexOf('news.commons_uprising.begins') >= 0;
+      }).length };
+  }, chain);
+  expect(result).toMatchObject({ early:1, petition:'petition', ownGrace:90, before:false,
+    after:true, independent:true, finished:true, clear:true });
+  expect(result.outbreaks).toBe(chain.length);
+});
+
+test('support pauses spread, resets its interval, and clears warnings without resetting active expiry', async function ({ page }) {
+  const chain = await prepareSpreadChain(page);
+  const result = await page.evaluate(function (chain) {
+    const s = FB.state, due = s.collectiveDemands.uprising.countyStates[chain[0]].dueTurn;
+    window.advanceCommons(20);
+    s.player.pop = -15;
+    window.advanceCommons(30);
+    const paused = !s.collectiveDemands.uprising.nextSpreadTurn;
+    s.player.pop = -60;
+    window.advanceCommons(30);
+    const early = s.collectiveDemands.uprising.countyIds.length;
+    window.advanceCommons(1);
+    const joined = s.collectiveDemands.uprising.countyIds.length;
+    s.player.pop = 50;
+    window.advanceCommons(1);
+    return { paused:paused, early:early, joined:joined,
+      counties:s.collectiveDemands.uprising.countyIds,
+      sameDue:s.collectiveDemands.uprising.countyStates[chain[0]].dueTurn === due,
+      active:FB.hasModifier(s, 'commons_uprising', chain[0]) };
+  }, chain);
+  expect(result).toEqual({ paused:true, early:1, joined:2, counties:[chain[0]], sameDue:true, active:true });
+});
+
+test('spread save restoration preserves distinct deadlines and replaces stale decisions', async function ({ page }) {
+  const chain = await prepareSpreadChain(page);
+  const result = await page.evaluate(function (chain) {
+    window.advanceCommons(30);
+    const s = FB.state, stale = window.uprisingEvent('commons_uprising_spread');
+    const old = JSON.parse(JSON.stringify(stale.ctx));
+    window.answerSpread();
+    const before = JSON.stringify(s), rng = FB.getRngState();
+    const ev = FB.eventById(stale.id);
+    const rejected = FB.resolveEventOption(s, ev, ev.options[0], old) === false;
+    const safe = before === JSON.stringify(s) && rng === FB.getRngState();
+    const counties = JSON.stringify(s.collectiveDemands.uprising.countyStates);
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    FB.restoreCommonsUprising(FB.state);
+    return { rejected:rejected, safe:safe,
+      deadlines:JSON.stringify(FB.state.collectiveDemands.uprising.countyStates) === counties,
+      phase:FB.state.collectiveDemands.uprising.countyStates[chain[1]].phase };
+  }, chain);
+  expect(result).toEqual({ rejected:true, safe:true, deadlines:true, phase:'warning' });
+});
+
+for (const boundary of ['foreign', 'sibling', 'protected', 'disconnected']) {
+  test('spread excludes ' + boundary + ' counties', async function ({ page }) {
+    const chain = await prepareSpreadChain(page);
+    const result = await page.evaluate(function (args) {
+      const s = FB.state, chain = args.chain;
+      if (args.boundary === 'disconnected') FB.world.adj[chain[0]] = {};
+      if (args.boundary === 'foreign') s.owner[chain[1]] = 'elsewhere';
+      if (args.boundary === 'protected') FB.grantPrivilege(s, 'tax_concession', { scopeId:chain[1], grandfathered:true });
+      if (args.boundary === 'sibling') {
+        s.realms.commonsTestSovereign = { alive:true, liege:null };
+        s.realms.player.liege = 'commonsTestSovereign';
+        s.player.liege = 'commonsTestSovereign';
+        s.realms.commonsTestVassal.liege = 'commonsTestSovereign';
+        chain.forEach(function (pid) { s.owner[pid] = 'commonsTestSovereign'; });
+        s.collectiveDemands.uprising.liegeId = 'commonsTestSovereign';
+        s.collectiveDemands.uprising.sovereignId = 'commonsTestSovereign';
+      }
+      window.advanceCommons(60);
+      return s.collectiveDemands.uprising.countyIds;
+    }, { chain:chain, boundary:boundary });
+    expect(result).toEqual([chain[0]]);
+  });
+}
+
+test('internal vassal transfers retain disruption and one concession settles both holder types', async function ({ page }) {
+  const chain = await prepareSpreadChain(page);
+  const result = await page.evaluate(function (chain) {
+    const s = FB.state;
+    window.advanceCommons(30);
+    s.holder[chain[0]] = 'commonsTestVassal';
+    s.player.provs = [];
+    FB.commonsUprisingDay(s);
+    const retained = FB.hasModifier(s, 'commons_uprising', chain[0]);
+    const territory = JSON.stringify({ owner:s.owner, holder:s.holder, liege:s.realms.commonsTestVassal.liege });
+    const pop = s.player.pop, prestige = s.player.prestige;
+    FB.concedeCommonsUprising(s, s.collectiveDemands.uprising.id);
+    return { retained:retained, granted:chain.slice(0, 2).every(function (pid) {
+      return FB.hasPrivilege(s, 'tax_concession', pid);
+    }), pop:s.player.pop - pop, prestige:s.player.prestige - prestige,
+      territory:territory === JSON.stringify({ owner:s.owner, holder:s.holder, liege:s.realms.commonsTestVassal.liege }),
+      finished:!s.collectiveDemands.uprising };
+  }, chain);
+  expect(result).toEqual({ retained:true, granted:true, pop:6, prestige:-2, territory:true, finished:true });
+});
+
+test('a consumed spread petition restores once and starts its full grace only when answered', async function ({ page }) {
+  const chain = await prepareSpreadChain(page);
+  const result = await page.evaluate(function (chain) {
+    window.advanceCommons(30);
+    FB.state.eventQueue = [];
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    FB.restoreCommonsUprising(FB.state);
+    FB.restoreCommonsUprising(FB.state);
+    const s = FB.state;
+    const events = s.eventQueue.filter(function (item) { return item.id === 'commons_uprising_spread'; });
+    window.advanceCommons(100);
+    const waiting = s.collectiveDemands.uprising.countyStates[chain[1]].phase;
+    const originalDue = s.collectiveDemands.uprising.countyStates[chain[0]].dueTurn;
+    window.answerSpread();
+    FB.ui.showPrivileges();
+    return { count:events.length, waiting:waiting,
+      grace:s.collectiveDemands.uprising.countyStates[chain[1]].dueTurn - s.turn,
+      originalDue:s.collectiveDemands.uprising.countyStates[chain[0]].dueTurn === originalDue };
+  }, chain);
+  expect(result).toEqual({ count:1, waiting:'petition', grace:90, originalDue:true });
+  await expect(page.locator('#commons-uprising-status')).toContainText('90 days to grant the concession');
+  await expect(page.locator('#commons-uprising-status')).toContainText('days of disruption remain');
+  await expect(page.locator('#commons-uprising-status')).toContainText('Next spread check');
+});
+
+async function prepareLocalNegotiation(page) {
+  const chain = await prepareSpreadChain(page);
+  return page.evaluate(function (chain) {
+    const s = FB.state;
+    const rid = Object.keys(s.realms).find(function (id) {
+      return id !== 'player' && id !== 'commonsTestVassal' && FB.realmRulerCharacterSnapshot(s, id);
+    });
+    s.realms[rid].liege = 'player';
+    s.realms[rid].provs = chain.slice(1);
+    chain.slice(1).forEach(function (pid) { s.holder[pid] = rid; });
+    FB.invalidateRealmCache();
+    window.advanceCommons(30);
+    return { chain:chain, vassal:rid };
+  }, chain);
+}
+
+for (const success of [true, false]) {
+  test('player local talks success=' + success + ' affect only direct counties and consume one attempt', async function ({ page }) {
+    const setup = await prepareLocalNegotiation(page);
+    const result = await page.evaluate(function (args) {
+      const s = FB.state, row = s.collectiveDemands.uprising, home = args.setup.chain[0];
+      const other = args.setup.chain[1], otherState = JSON.stringify(row.countyStates[other]);
+      const globalStage = row.stage, deadline = row.countyStates[home].dueTurn;
+      const ctx = FB.commonsUprisingLocalContext(s);
+      const snapshot = JSON.stringify(s), rngState = FB.getRngState();
+      const terms = FB.commonsUprisingLocalTerms(s, 'player');
+      const pure = snapshot === JSON.stringify(s) && rngState === FB.getRngState();
+      const beforeGold = s.player.gold, beforePop = s.player.pop, beforePrestige = s.player.prestige;
+      const territory = JSON.stringify([s.owner, s.holder, s.player.provs, s.player.war]);
+      const rng = FB.rng;
+      FB.rng = function () { return args.success ? 0 : 0.999999; };
+      let receipt;
+      try { receipt = FB.negotiateCommonsUprisingLocal(s, ctx); }
+      finally { FB.rng = rng; }
+      const after = JSON.stringify(s), afterRng = FB.getRngState();
+      const rejected = FB.negotiateCommonsUprisingLocal(s, ctx) === false;
+      return { receipt:!!receipt, pure:pure, direct:terms.countyIds, spent:beforeGold - s.player.gold,
+        pop:s.player.pop - beforePop, prestige:s.player.prestige - beforePrestige,
+        replaySafe:rejected && after === JSON.stringify(s) && afterRng === FB.getRngState(),
+        granted:FB.hasPrivilege(s, row.privilegeId, home),
+        active:FB.hasModifier(s, 'commons_uprising', home),
+        otherUnchanged:otherState === JSON.stringify(row.countyStates[other]) && !FB.hasPrivilege(s, row.privilegeId, other),
+        stageUnchanged:row.stage === globalStage,
+        deadlineUnchanged:args.success || row.countyStates[home].dueTurn === deadline,
+        visited:row.visitedCountyIds.indexOf(home) >= 0,
+        territory:territory === JSON.stringify([s.owner, s.holder, s.player.provs, s.player.war]),
+        grantor:FB.privilegeSummary(s).filter(function (r) { return r.scopeId === home && r.defId === row.privilegeId; }).map(function (r) { return r.grantorId; }) };
+    }, { setup:setup, success:success });
+    expect(result).toMatchObject({ receipt:true, pure:true, direct:[setup.chain[0]], spent:20,
+      pop:0, prestige:0, replaySafe:true, granted:success, active:!success,
+      otherUnchanged:true, stageUnchanged:true, deadlineUnchanged:true, visited:true, territory:true });
+    expect(result.grantor).toEqual(success ? ['player'] : []);
+  });
+}
+
+for (const success of [true, false]) {
+  test('a vassal independently negotiates spread from its liege success=' + success, async function ({ page }) {
+    const setup = await prepareLocalNegotiation(page);
+    const result = await page.evaluate(function (args) {
+      const s = FB.state, row = s.collectiveDemands.uprising;
+      const home = args.setup.chain[0], local = args.setup.chain[1], rid = args.setup.vassal;
+      const localBefore = JSON.stringify(row.countyStates[local]), homeBefore = JSON.stringify(row.countyStates[home]);
+      const money = s.player.gold, pop = s.player.pop, prestige = s.player.prestige;
+      const territory = JSON.stringify([s.owner, s.holder, s.player.provs, s.player.war]);
+      window.advanceCommons(29);
+      const early = !!(row.localNegotiations && row.localNegotiations[rid]);
+      const rng = FB.rng;
+      let rolls = 0;
+      FB.rng = function () { rolls++; return args.success ? 0 : 0.999999; };
+      try { window.advanceCommons(1); FB.commonsUprisingDay(s); FB.commonsUprisingDay(s); }
+      finally { FB.rng = rng; }
+      const attempt = JSON.parse(JSON.stringify(row.localNegotiations[rid]));
+      const grantors = FB.privilegeSummary(s).filter(function (r) {
+        return r.scopeId === local && r.defId === row.privilegeId;
+      }).map(function (r) { return r.grantorId; });
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      const restored = FB.state;
+      const afterRestore = FB.getRngState();
+      FB.commonsUprisingDay(restored);
+      return { early:early, rolls:rolls, result:attempt.success, affected:attempt.countyIds,
+        homeUnchanged:homeBefore === JSON.stringify(restored.collectiveDemands.uprising.countyStates[home]),
+        localUnchanged:args.success || localBefore === JSON.stringify(restored.collectiveDemands.uprising.countyStates[local]),
+        localRemoved:restored.collectiveDemands.uprising.countyIds.indexOf(local) < 0,
+        grantors:grantors, playerUncharged:money === s.player.gold && pop === s.player.pop && prestige === s.player.prestige,
+        territory:territory === JSON.stringify([s.owner, s.holder, s.player.provs, s.player.war]),
+        savedAttempt:JSON.stringify(restored.collectiveDemands.uprising.localNegotiations[rid]) === JSON.stringify(attempt),
+        noReroll:afterRestore === FB.getRngState() };
+    }, { setup:setup, success:success });
+    expect(result).toMatchObject({ early:false, rolls:1, result:success, affected:[setup.chain[1]],
+      homeUnchanged:true, localUnchanged:true, localRemoved:success, playerUncharged:true,
+      territory:true, savedAttempt:true, noReroll:true });
+    expect(result.grantors).toEqual(success ? [setup.vassal] : []);
+  });
+}
+
+for (const change of ['funds', 'holder', 'ruler', 'incident', 'spent', 'missing_scope']) {
+  test('stale local talks reject ' + change + ' changes before costs or RNG', async function ({ page }) {
+    const setup = await prepareLocalNegotiation(page);
+    const result = await page.evaluate(function (args) {
+      const s = FB.state, ctx = FB.commonsUprisingLocalContext(s), row = s.collectiveDemands.uprising;
+      if (args.change === 'funds') s.player.gold = 0;
+      if (args.change === 'holder') s.holder[args.setup.chain[0]] = args.setup.vassal;
+      if (args.change === 'ruler') ctx.localRulerCharId = 'former_ruler';
+      if (args.change === 'incident') ctx.uprisingId = 'earlier_uprising';
+      if (args.change === 'missing_scope') delete ctx.localCountyIds;
+      if (args.change === 'spent') row.localNegotiations = { player:{ turn:s.turn, success:false } };
+      const before = JSON.stringify(s), rng = FB.getRngState();
+      return { rejected:FB.negotiateCommonsUprisingLocal(s, ctx) === false,
+        unchanged:before === JSON.stringify(s), rng:rng === FB.getRngState() };
+    }, { setup:setup, change:change });
+    expect(result).toEqual({ rejected:true, unchanged:true, rng:true });
+  });
+}
+
+for (const width of [1280, 390]) {
+  test('local negotiation terms and affordability are visible at ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:844 });
+    const setup = await prepareLocalNegotiation(page);
+    const names = await page.evaluate(function (setup) {
+      FB.state.player.gold = 19;
+      FB.ui.showPrivileges();
+      return setup.chain.slice(0, 2).map(function (pid) { return FB.world.byId[pid].name; });
+    }, setup);
+    const local = page.locator('#commons-uprising-local');
+    await expect(local).toContainText(names[0]);
+    await expect(local).not.toContainText(names[1]);
+    await expect(local).toContainText('One local attempt per uprising');
+    await expect(page.locator('#commons-uprising-negotiate-local')).toBeDisabled();
+    await page.evaluate(function () {
+      FB.state.player.gold = 20;
+      FB.ui.showPrivileges();
+      window.localRng = FB.rng;
+      FB.rng = function () { return 0.999999; };
+    });
+    await page.locator('#commons-uprising-negotiate-local').click();
+    await page.evaluate(function () { FB.rng = window.localRng; });
+    await expect(page.locator('#commons-uprising-local')).toContainText('attempt has been used');
+    await expect(page.locator('#commons-uprising-negotiate-local')).toBeDisabled();
+    await expect(page.locator('#privileges-back')).toBeFocused();
+    expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(0);
+  });
+}
+
+test('local talks settle all direct holdings together while preserving a subordinate county', async function ({ page }) {
+  await addCommonsCounties(page, 2);
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    window.beginCommons();
+    const row = s.collectiveDemands.uprising;
+    const indirect = row.countyIds[2], direct = row.countyIds.slice(0, 2);
+    const rid = Object.keys(s.realms).find(function (id) {
+      return id !== 'player' && FB.realmRulerCharacterSnapshot(s, id);
+    });
+    s.realms[rid].liege = 'player';
+    s.holder[indirect] = rid;
+    s.player.provs = direct.slice();
+    const due = row.countyStates[indirect].dueTurn;
+    const ctx = FB.commonsUprisingLocalContext(s), gold = s.player.gold;
+    const rng = FB.rng;
+    FB.rng = function () { return 0; };
+    try { FB.negotiateCommonsUprisingLocal(s, ctx); }
+    finally { FB.rng = rng; }
+    return { scope:ctx.localCountyIds, expected:direct, remaining:row.countyIds,
+      expectedRemaining:[indirect], spent:gold - s.player.gold,
+      active:FB.hasModifier(s, 'commons_uprising', indirect),
+      due:row.countyStates[indirect].dueTurn === due,
+      settled:direct.every(function (pid) {
+        return FB.hasPrivilege(s, row.privilegeId, pid) && !FB.hasModifier(s, 'commons_uprising', pid);
+      }), globalResponse:row.stage };
+  });
+  expect(result.scope).toEqual(result.expected);
+  expect(result.remaining).toEqual(result.expectedRemaining);
+  expect(result).toMatchObject({ spent:20, active:true, due:true, settled:true, globalResponse:'active' });
+});
+
+test('a vassal can end active local disruption without ending its liege’s uprising', async function ({ page }) {
+  const setup = await prepareLocalNegotiation(page);
+  const result = await page.evaluate(function (setup) {
+    const s = FB.state, local = setup.chain[1], home = setup.chain[0];
+    FBDATA.balance.commonsUprisingLocalNegotiationDays = 120;
+    window.answerSpread();
+    window.advanceCommons(90);
+    const activeBefore = FB.hasModifier(s, 'commons_uprising', local);
+    const due = s.collectiveDemands.uprising.countyStates[home].dueTurn;
+    const rng = FB.rng;
+    FB.rng = function () { return 0; };
+    try { window.advanceCommons(30); }
+    finally { FB.rng = rng; }
+    return { activeBefore:activeBefore, localActive:FB.hasModifier(s, 'commons_uprising', local),
+      settled:FB.hasPrivilege(s, 'tax_concession', local),
+      homeActive:FB.hasModifier(s, 'commons_uprising', home),
+      homeDue:s.collectiveDemands.uprising.countyStates[home].dueTurn === due,
+      attempt:s.collectiveDemands.uprising.localNegotiations[setup.vassal].success };
+  }, setup);
+  expect(result).toEqual({ activeBefore:true, localActive:false, settled:true, homeActive:true, homeDue:true, attempt:true });
 });

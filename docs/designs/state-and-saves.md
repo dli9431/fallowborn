@@ -1227,17 +1227,33 @@ are discarded; Continue never reapplies the originating decision. Old saves need
 no migration, and Chronicle choice receipts remain the durable decision record.
 
 
-Local commons uprisings use optional save-format-3 fields under `collectiveDemands`:
-`uprising` is null or `{id,stage,scopeId,countyIds,privilegeId,protagonistId,liegeId,startedTurn,dueTurn?,refreshEvent?}`;
-`uprisingCooldownUntil` is an absolute turn. `petition` awaits the final warning's
-answer; `warning` has a grace deadline; `active` awaits a response to the uprising;
-`aftermath` retains the original disruption expiry after an unsuccessful or deferred
-response. Missing fields leave old saves unchanged. Invalid protagonist or liege identity clears the entire incident. Lost direct county
-control or an individual concession removes only that county and its modifier.
-`scopeId` retains the original audience location; `countyIds` is the active roster.
-Legacy incidents without `countyIds` migrate to `[scopeId]` without adding counties.
-Roster changes mark `refreshEvent` until an unanswered decision is refreshed; queued
-contexts snapshot the roster so stale choices cannot affect a different set of holdings.
-Load restoration requeues a missing unanswered petition or active-uprising event once,
-including when an autosave captured it after the UI consumed the original queue entry.
-Repeated repair does not extend deadlines or create duplicate modifiers or events.
+Local commons uprisings use optional save-format-3 fields under `collectiveDemands`.
+`uprising` retains identity, protagonist, original audience `scopeId`, privilege, liege,
+started turn, global response `stage`, and current `countyIds`. It also stores
+`sovereignId`, `countyStates` keyed by county (`phase`, `joinedTurn`, optional `dueTurn`),
+`visitedCountyIds`, and optional `nextSpreadTurn`. Global `dueTurn` is the earliest
+county deadline for compatibility. Global `active` awaits the shared response;
+`aftermath` records that this response was spent. Individual phases are `petition`,
+`warning`, and `active`. Each acknowledged warning and actual outbreak sets its own
+90-day and 180-day deadline respectively. Visited counties cannot rejoin this incident.
+`uprisingCooldownUntil` is an absolute turn after the last county leaves.
+
+Legacy records derive county phases and deadlines from their original global fields;
+missing `countyIds` becomes `[scopeId]`. Migration never extends existing deadlines.
+Invalid protagonist, liege, sovereign, rank, or death clears the incident. Transfers
+within the player's subrealm preserve county entries; exits and individual concessions
+remove only that county. Queue contexts snapshot roster, phases, and deadlines, and
+spread petitions identify `spreadCountyId`. Changed terms invalidate old choices before
+costs or RNG. Restoration replaces missing unanswered initial, active, and spread
+decisions without duplicates or modifier extensions. Save format remains 3.
+
+
+Optional `uprising.localNegotiations` maps direct-holder realm ids to
+`{turn,rulerCharId,countyIds,success}`. It records one local attempt per lordship per
+incident; absent maps mean no attempts yet. It survives load and ordinary holder
+changes without permitting rerolls. Local choice contexts also carry `localRulerId`,
+`localRulerCharId`, and `localCountyIds`; these are checked against the current direct
+holders and ruler before costs or RNG. Partial local success grants county privileges
+with the local holder as grantor, then uses normal incident repair. Other county stages,
+deadlines, and the global response stage remain unchanged. Settled counties remain in
+`visitedCountyIds`. No save-format bump or AI treasury field is needed.

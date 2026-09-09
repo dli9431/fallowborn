@@ -4356,7 +4356,12 @@ An event option may set `confirm:'war_end'` for the built-in `war_accept_tribute
 A refused `commons` collective demand may start the bounded local-uprising lifecycle
 for a tier-4+ protagonist's directly held counties. `commonsUprisingMaxCounties`
 (default 3) bounds the initial roster, with the demand's county first and other
-unprotected direct holdings in stable id order. Existing rosters never expand. `balance.commonsUprisingSupportThreshold`
+unprotected direct holdings in stable id order. The cap applies only at inception.
+`commonsUprisingSpreadDays` (30) controls gradual spread: one unvisited eligible neighbor
+of an active county after each sustained low-support interval. Direct and subordinate
+counties in the player subrealm qualify; foreign and sibling-vassal lands do not. Each
+new county has its own acknowledged warning and disruption deadline.
+`balance.commonsUprisingSupportThreshold`
 (default -20), `commonsUprisingRecoverySupport` (-10, strictly exceeded),
 `commonsUprisingWarningDays` (90), and `commonsUprisingCooldownDays` (1080) control its
 entry, recovery, grace, and repeat timing. `modifiers.commons_uprising` supplies the
@@ -4366,8 +4371,22 @@ range, starting at `commonsUprisingSupportThreshold`. The penalty multiplies
 output after other county modifier bonuses; severity is derived rather than saved. The original demanded privilege must wrap a known
 county modifier; its already-approved concession is grandfathered against later tech loss.
 The registered `commons_uprising_valid` context validator and `commons_uprising_defer`,
-`commons_uprising_concede`, `commons_uprising_suppress`, and `commons_uprising_endure`
+`commons_uprising_spread_defer`, `commons_uprising_concede`, `commons_uprising_suppress`, and `commons_uprising_endure`
 custom handlers only act on the matching saved incident. `commons_downfall_available`
 keeps the old commons downfall chain from beginning during this incident or cooldown.
 The optional record and replay-safe restore behavior are documented in
 [State and saves](designs/state-and-saves.md). No save-format bump is required.
+
+
+Local holder negotiation uses `commons_uprising_local_negotiation`, with the
+`commons_uprising_local_valid` extension of the shared uprising validator and `commons_uprising_local_settle` /
+`commons_uprising_local_failed` custom outcomes. Player talks cost 20 gold and use
+`skill_dip`; success grants the demanded privilege only in the player's participating
+direct holdings, without direct stored support/prestige changes. The pure
+`FB.commonsUprisingLocalTerms(state, rulerId)` supplies exact scope, eligibility, cost,
+and chance. `FB.commonsUprisingLocalContext(state)` captures player terms and
+`FB.negotiateCommonsUprisingLocal(state, context)` uses the shared event resolver.
+`commonsUprisingLocalNegotiationDays` (30) delays autonomous AI-holder negotiations
+from their first county's involvement. AI uses actual ruler Diplomacy, the same
+concession burden, and no player treasury debit. One saved attempt per holder prevents
+repeated daily or reload rolls. Technology impact is `local_commons_settlements: none`.

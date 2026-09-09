@@ -379,13 +379,20 @@ opposition, which increases that constituency's later demand pressure after the 
 None of the choices creates an autonomous realm or starts a revolt directly. A
 refused commons demand at low Popular support can queue `commons_uprising_warning`
 for a bounded roster of directly held counties; its acknowledged 90-day grace period can later queue
-`commons_uprising_begins`. Both use `commons_uprising_valid` to bind every option
-to the exact incident, stage, county roster, privilege, protagonist, and liege.
+`commons_uprising_begins`. Neighbor spread queues `commons_uprising_spread` with its own
+acknowledgement and grace period. All three use `commons_uprising_valid` to bind every
+option to the exact incident, global stage, county roster, per-county phases and deadlines,
+privilege, protagonist, liege, and sovereign.
 A partial transfer or separate concession invalidates the old roster and refreshes
 an unanswered audience. Resource effects occur once; the custom concession grants
 the approved privilege separately in every remaining county. Paid choices
 recheck affordability at resolution. Concession, suppression, and enduring disruption
-have explicit impact adapters; ordinary resource deltas remain declarative.
+have explicit impact adapters. `commons_uprising_local_negotiation` adds a player-only
+20-gold Diplomacy response through `commons_uprising_local_valid`, which extends the
+shared uprising validator. Its context additionally binds
+the current ruler and exact directly held counties; its local success/failure adapters
+grant only those counties or preserve their deadlines and consume the local attempt.
+The global response is independent; ordinary resource deltas remain declarative.
 See [parliament.md](parliament.md#local-commons-uprisings) for the lifecycle.
 
 Debt enforcement uses that code-queued boundary for its last claim. Once distraint

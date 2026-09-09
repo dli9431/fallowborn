@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.177.1';
+FB.VERSION = '1.177.2';
 FB.CHANGELOG = [
+  { v: '1.177.2', date: '2026-09-08', changes: [
+    'Commons uprisings can spread into neighboring counties under your authority, each with its own warning. Local negotiations let you and your vassals settle grievances in directly held counties.'
+  ] },
   { v: '1.177.1', date: '2026-09-08', changes: [
     'Local commons uprisings can involve up to three directly held counties with one shared warning and response. Counties that leave your control or receive concessions separately drop out while the remaining uprising continues.'
   ] },
