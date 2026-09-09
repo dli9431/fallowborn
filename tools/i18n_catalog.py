@@ -664,6 +664,18 @@ def extract_structured(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]),
                         )
 
+    ambition_path = ROOT / "data" / "ambitions.js"
+    for item_node in node_array(find_assignment(ambition_path, "FBDATA", "historicalAmbitions")) or []:
+        item = node_object(item_node) or {}
+        item_id = node_string(item.get("id"))
+        if not item_id:
+            continue
+        for field in ("name", "desc"):
+            for branch, record, line in branch_records(item.get(field)):
+                inv.add(f"ambition.{item_id}.{field}.{branch}", record,
+                        f"data/ambitions.js:{line}", f"Historical ambition {item_id}, {field}.",
+                        TOKEN_RE.findall(record["text"]))
+
     for data_name, namespace in STRUCTURED_DATA.items():
         if data_name == "tech":
             rel = TECHNOLOGY_FILE.relative_to(ROOT).as_posix()

@@ -35,6 +35,67 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
 });
 
+[
+  { name:'desktop', width:1505, height:900 },
+  { name:'mobile', width:390, height:844 }
+].forEach(function (viewport) {
+  test('wartime Deeds facts retain content-sized heights on ' + viewport.name,
+    async function ({ page }) {
+      await page.setViewportSize({ width:viewport.width, height:viewport.height });
+      await startDeterministicGame(page);
+      await page.evaluate(function () {
+        const s = FB.state;
+        const home = s.player.provinceId;
+        const enemy = Object.keys(s.realms).filter(function (rid) {
+          const realm = s.realms[rid];
+          return rid !== 'player' && realm && realm.alive && !realm.liege;
+        })[0];
+        FB.game.setPaused(true);
+        s.player.war = {
+          enemy:enemy, target:null, wins:0, losses:0, seasons:0,
+          defending:true, strength:1
+        };
+        const host = {
+          id:'compact_war_host', realm:'player', men:500, size:500,
+          units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
+          at:home, from:home, moveLeft:0, path:[], goal:null, supply:82
+        };
+        s.armies = [host];
+        FB.selectArmy(host.id);
+        FB.ui.showTab('actions');
+        FB.ui.refresh();
+      });
+      await waitForUiRefresh(page);
+      const card = page.locator('#deeds-war-card');
+      await expect(card).toBeVisible();
+      await expect(card.locator(':scope > .land-kv')).toHaveCount(3);
+      const facts = await card.locator(':scope > .land-kv').evaluateAll(function (rows) {
+        return rows.map(function (row) {
+          const label = row.querySelector(':scope > span');
+          const value = row.querySelector(':scope > b');
+          function excessHeight(node) {
+            const text = document.createRange();
+            text.selectNodeContents(node);
+            return node.getBoundingClientRect().height - text.getBoundingClientRect().height;
+          }
+          return {
+            labelSpace:excessHeight(label), valueSpace:excessHeight(value),
+            gap:value.getBoundingClientRect().top - label.getBoundingClientRect().bottom,
+            wraps:row.scrollWidth <= row.clientWidth + 1
+          };
+        });
+      });
+      for (const fact of facts) {
+        // Allow font line-box leading, but not inherited 9em/12em flex heights.
+        expect(fact.labelSpace).toBeLessThan(12);
+        expect(fact.valueSpace).toBeLessThan(12);
+        expect(fact.gap).toBeGreaterThanOrEqual(0);
+        expect(fact.gap).toBeLessThanOrEqual(6);
+        expect(fact.wraps).toBe(true);
+      }
+    });
+});
+
 test('game speed defaults to fastest and persists as a bounded browser preference',
   async function ({ page }) {
     expect(await page.evaluate(function () {

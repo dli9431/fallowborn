@@ -75,6 +75,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      historical_normandy:{ mode:'none', rationale:'Recognizing a Norse territorial foundation is baseline political progression, not a researched capability.' },
+      historical_norway:{ mode:'none', rationale:'Recognizing Norwegian unification is baseline political progression, not a researched capability.' },
+      historical_england:{ mode:'none', rationale:'Recognizing English unification is baseline political progression, not a researched capability.' },
+      historical_sicily:{ mode:'none', rationale:'Recognizing a Sicilian island and mainland crown is baseline political progression, not a researched capability.' },
       local_commons_uprisings:{
         mode:'none',
         rationale:'Local grievances, their spread through subordinate counties, and overlord-backed concession, negotiation, or suppression are baseline ruler responsibilities. Recovery remains available without research; a previously demanded privilege retains its approved terms.'

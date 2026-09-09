@@ -1,5 +1,8 @@
 # Time, focuses & automation
 
+Player-facing deadlines use calendar dates, never internal turn numbers. Truce
+expiry uses the shared date formatter; turn indexes remain simulation/save data only.
+
 Automation follows the shared UI typography and spacing contract. Each checkbox
 keeps its selected state and action visible; its explanation uses the shared
 desktop hover/focus tooltip or compact `?` disclosure. The everything option

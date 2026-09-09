@@ -1945,6 +1945,8 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .war-card .land-kv:last-of-type {
   border-bottom: none;
 }
+/* These rows stack vertically; horizontal .kv bases would become tall gaps. */
+.war-card .land-kv > * { flex: 0 1 auto; }
 .war-card .land-kv > span {
   color: var(--ui-accent-color);
   font-size: var(--ui-label-size);
@@ -5858,3 +5860,23 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 .religious-head-standing { display: block; }
 .religious-office-identity { gap: 12px; margin: 12px 0; }
 .religious-office-benefits { margin: 0; font-weight: normal; }
+
+/* Historical ambition cards share the standard modal controls and surfaces. */
+.historical-ambitions { display: grid; gap: 12px; }
+.ambition-card {
+  padding: 12px; min-width: 0; background: var(--ui-card-color);
+  border: 1px solid var(--ui-border-color); border-radius: 8px;
+  font-size: 14px; line-height: 1.4; overflow-wrap: break-word;
+}
+.ambition-card h3 { color: var(--ui-accent-color); font-size: 16px; margin: 0 0 8px; }
+.ambition-card p { margin: 8px 0; }
+.ambition-requirements { margin: 8px 0; padding-left: 20px; }
+.ambition-requirements li { margin: 4px 0; }
+.ambition-benefits { color: var(--ui-positive-color); }
+.ambition-card .actionbtn { width: 100%; white-space: normal; }
+.ambition-card .actionbtn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.marriage-lineage-review { display: grid; gap: 16px; line-height: 1.5; }
+.marriage-lineage-review p { margin: 0; }
+.marriage-lineage-field { display: grid; gap: 8px; min-width: 0; }
+.marriage-lineage-field select { width: 100%; min-width: 0; }

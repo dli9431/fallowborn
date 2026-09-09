@@ -1,5 +1,18 @@
 # UI: keyboard & mobile
 
+Show calendar dates for deadlines; do not append internal turn indexes to game UI.
+
+## Historical ambitions
+
+The Count-or-higher Historical ambitions deed opens a paused card list. Relevant
+but unmet foundations remain visible with current/required counts, essential
+blockers, exact recognition costs, title changes, and timed rewards beside the
+disabled action. Completion opens one settled success sheet. Continue, Escape,
+and mobile Back restore list scroll and focus to the completed card. Closing the
+list returns to Deeds through the shared modal navigation. Full eligibility is
+evaluated only on opening/refresh and activation; no background readiness badge
+is maintained. See [historical-ambitions.md](historical-ambitions.md).
+
 ## Shared visual and content standard
 
 This contract applies to every title/setup screen, retained panel, card, picker,
@@ -77,6 +90,8 @@ Ordinary rows use smaller, sentence-case helper-colored labels above or beside b
 with six pixels of vertical padding per row. This keeps each fact visually grouped
 when fields stack, instead of making the card read as a continuous paragraph.
 Specialized compact summaries and tooltip rows retain their own spacing.
+Wartime cards stack fact labels above values with content-sized flex children;
+the shared horizontal `.kv` bases must not become vertical row heights.
 Label typography applies only to the label itself, never nested standing or other
 value spans. Summary cards share this hierarchy across Church, household, and
 governance surfaces while retaining their responsive layouts.

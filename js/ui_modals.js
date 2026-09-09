@@ -9,6 +9,100 @@ window.FB = window.FB || {};
   const UI = FB.ui;
   const SH = UI._shared;
   const $ = SH.$;
+  function ambitionText(d, field) {
+    return FB.dataText(FB.state, FB.state.player.charId, 'ambition', d.id, d, field, {});
+  }
+  function ambitionBenefits(d) {
+    return FB.T('+{prestige} prestige', { prestige:d.prestige }) + ' · ' +
+      (d.bonus === 'tax'
+        ? FB.T('+{percent}% county tax income for {years} years', { percent:d.amount * 100, years:d.days / 360 })
+        : FB.T('+{percent}% county levy capacity for {years} years', { percent:d.amount * 100, years:d.days / 360 }));
+  }
+  UI.showHistoricalAmbitions = function (view) {
+    const s = FB.state;
+    if (!s || s.player.tier < 4) { UI.closeModal(); return; }
+    const protagonist = s.player.charId;
+    const resume = view ? view.resume : !FB.game.paused;
+    FB.game.setPaused(true);
+    let h = '<div class="historical-ambitions" data-ambition-list><p>' +
+      esc(FB.T('Foundations have no historical deadline. Regional bonuses apply only while your realm controls the county.')) + '</p>';
+    let count = 0;
+    (FBDATA.historicalAmbitions || []).forEach(function (d) {
+      if (!FB.historicalAmbitionRelevant(s, d.id)) return;
+      count++;
+      const status = FB.historicalAmbitionStatus(s, d.id);
+      h += '<section class="settcard ambition-card" data-ambition-card="' + esc(d.id) +
+        '" tabindex="-1"><h3>' + esc(ambitionText(d, 'name')) + '</h3><p>' +
+        esc(ambitionText(d, 'desc')) + '</p>';
+      if (status.completed) {
+        h += '<p>' + esc(status.completed.established
+          ? FB.T('Already established at the start of this campaign.')
+          : FB.T('Completed — this foundation can be claimed only once per campaign.')) + '</p>';
+        if (status.completed.realmId === 'player') {
+          h += '<p>' + esc(FB.T('Awarded: {benefits}', { benefits:ambitionBenefits(d) })) + '</p>';
+          const days = Math.max(0, status.completed.endTurn - s.turn);
+          h += '<p>' + esc(days > 0 ? FB.T('Regional bonus: {days} days remaining.', { days:days }) :
+            FB.T('The regional bonus has expired.')) + '</p>';
+        }
+      } else {
+        h += '<ul class="ambition-requirements">';
+        status.checks.forEach(function (check) {
+          h += '<li>' + esc(check.met
+            ? FB.T('Met: {requirement}', { requirement:check.label })
+            : FB.T('Needed: {requirement}', { requirement:check.label })) + '</li>';
+        });
+        h += '</ul><p class="ambition-benefits">' + esc(ambitionBenefits(d)) + '</p>';
+        if (status.elevation) {
+          h += '<p>' + esc(FB.T('Title: {title}', { title:FB.renderTitleSnapshot(status.elevation.titleData) })) +
+            '</p><p>' + esc(FB.T('Recognition cost: {cost}', { cost:FB.rankElevationCostText(status.cost) })) + '</p>';
+        } else h += '<p>' + esc(FB.T('No recognition cost; your current rank is retained.')) + '</p>';
+      }
+      h += '<button type="button" class="actionbtn" data-ambition-complete="' + esc(d.id) + '"' +
+        (status.ready ? '' : ' disabled') + '>' + esc(status.completed ? FB.T('Completed') : ambitionText(d, 'name')) +
+        '</button></section>';
+    });
+    if (!count) h += '<p>' + esc(FB.T('No historical ambitions relate to your current lands and culture.')) + '</p>';
+    h += '</div><div class="gm-footer"><button type="button" class="btn" id="ambitions-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Historical ambitions'), h, { modalClass:'fullsheet-modal', noFocus:true,
+      onDismiss:function () {
+        if (resume && FB.state === s && !s.player.dead && FB.game.uiPrefs.autoResumeAfterEvents !== false) FB.game.setPaused(false);
+      } });
+    $('ambitions-close').onclick = UI.closeModal;
+    const list = $('gm-body').querySelector('[data-ambition-list]');
+    list.querySelectorAll('[data-ambition-complete]').forEach(function (button) {
+      button.onclick = function () {
+        if (button.disabled) return;
+        if (s !== FB.state || protagonist !== s.player.charId) { UI.showHistoricalAmbitions(); return; }
+        const position = { scrollTop:$('gm-body').scrollTop, id:button.dataset.ambitionComplete, resume:resume };
+        button.disabled = true;
+        const result = FB.completeHistoricalAmbition(s, position.id);
+        if (!result) { UI.showHistoricalAmbitions(position); return; }
+        markActionsDirty();
+        const d = FBDATA.historicalAmbitions.filter(function (item) { return item.id === position.id; })[0];
+        function back() { UI.showHistoricalAmbitions(position); }
+        const body = '<p>' + esc(FB.T('Your foundation is established.')) + '</p><p>' +
+          esc(ambitionBenefits(d)) + '</p><p>' +
+          esc(FB.T('Paid: {cost}', { cost:FB.rankElevationCostText(result.cost) })) + '</p><p>' +
+          esc(FB.T('Title: {title}', { title:FB.renderTitleSnapshot(FB.titleSnapshot(s)) })) + '</p>' +
+          '<div class="gm-footer"><button type="button" class="actionbtn" id="ambition-continue">' +
+          esc(FB.T('Continue')) + '</button></div>';
+        openModal(ambitionText(d, 'name'), body, { modalClass:'fullsheet-modal',
+          historyView:true, historyBack:true, historyBackRender:back, dismissable:false, noFocus:true });
+        armEventGuard();
+        $('ambition-continue').onclick = function () {
+          if (!eventInputGuarded()) modalHistoryBack(back);
+        };
+      };
+    });
+    if (view) setTimeout(function () {
+      if ($('gm-body').querySelector('[data-ambition-list]') !== list) return;
+      const card = list.querySelector('[data-ambition-card="' + view.id + '"]');
+      if (card) card.focus({ preventScroll:true });
+      $('gm-body').scrollTop = view.scrollTop;
+    }, 0);
+  };
+
   const COMMUNITY_URL = 'https://discord.gg/G8E67hY2pj';
   const ITCH_GAME_URL = 'https://dli9431.itch.io/fallowborn';
   const ITCH_RATE_URL = ITCH_GAME_URL + '/rate';
@@ -23222,28 +23316,31 @@ window.FB = window.FB || {};
     const s = FB.state, partner = s.chars[partnerId], target = s.chars[targetId];
     if (!partner || !target) return;
     const status = FB.marriageLineageStatus(s, partner, target);
-    const invitation = FB.marriageCulturePersuasionStatus(s, target, partner, matchOptions);
+    if (!status.ok) return;
+    if (!status.maternalAllowed || status.frozen) {
+      confirm(status.lineage);
+      return;
+    }
     const dowry = matchOptions && matchOptions.noDowry ? { amount:0 } : partner.id === s.player.charId
       ? FB.courtshipTerms(s, target, false)
       : FB.marriageTerms(s, partner, target,
         target.dowryAsk !== undefined ? target.dowryAsk : target.dowryDue);
-    const h = '<p>' + esc(FB.T('Marriage between {first} and {second}.', {
+    const h = '<div class="marriage-lineage-review"><p>' + esc(FB.T('Marriage between {first} and {second}.', {
       first:FB.fullName(partner), second:FB.fullName(target)
     })) + '</p><p>' + esc(dowry.amount ? FB.T('{payer}’s house provides {money:gold}.', {
       payer:dowry.subjectPays ? partner.name : target.name, gold:dowry.amount
     }) : FB.T('No dowry will change hands.')) + '</p>' +
-      '<label for="marriage-lineage">' + esc(FB.T('Marriage lineage')) +
+      '<div class="marriage-lineage-field"><label for="marriage-lineage">' + esc(FB.T('Marriage lineage')) +
       '</label><select id="marriage-lineage"><option value="paternal">' +
       esc(FB.T('Paternal: children join their father’s house')) +
-      '</option><option value="maternal"' + (status.maternalAllowed ? '' : ' disabled') + '>' +
-      esc(FB.T('Maternal: children join their mother’s house')) + '</option></select>' +
-      '<p>' + esc(FB.T('Both partners must permit maternal marriage. Accepted terms survive later conversion and accession. Title succession and blood claims are unchanged.')) +
-      '</p><p id="marriage-lineage-preview"></p>' +
-      '<button class="actionbtn" id="marriage-culture-invitation"' + (invitation.ready ? '' : ' disabled') + '>' +
-      esc(FB.T('Invite to adopt your culture')) + '</button><p class="muted">' + esc(invitation.reason) +
-      '</p><button class="actionbtn" id="marriage-lineage-confirm">' + esc(FB.T('Propose these terms')) +
-      '</button><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Marriage terms'), h, { historyView:true });
+      '</option><option value="maternal">' +
+      esc(FB.T('Maternal: children join their mother’s house')) + '</option></select></div>' +
+      '<p id="marriage-lineage-preview"></p>' +
+      '<button class="actionbtn" id="marriage-lineage-confirm">' + esc(FB.T('Propose these terms')) +
+      '</button></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Marriage terms'), h, { historyView:true,
+      titleDetailsHtml:'<p>' + esc(FB.T('Both partners must permit maternal marriage. Accepted terms survive later conversion and accession. Title succession and blood claims are unchanged.')) + '</p>'
+    });
     function preview() {
       const identity = FB.childIdentityPreview(s, partner, target,
         partner.id === s.player.charId, $('marriage-lineage').value);
@@ -23256,13 +23353,10 @@ window.FB = window.FB || {};
     $('marriage-lineage-confirm').addEventListener('click', function () {
       const lineage = $('marriage-lineage').value;
       if (!FB.marriageLineageStatus(s, partner, target, lineage).ok) {
-        UI.showMarriageLineageReview(partnerId, targetId, confirm, matchOptions);
+        modalHistoryBack();
         return;
       }
       confirm(lineage);
-    });
-    $('marriage-culture-invitation').addEventListener('click', function () {
-      UI.showMarriageCultureInvitation(targetId, partnerId, matchOptions);
     });
     $('gm-cancel').addEventListener('click', function () { modalHistoryBack(); });
   };

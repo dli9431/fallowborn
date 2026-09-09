@@ -1,5 +1,13 @@
 # Events are data
 
+Historical ambitions are on-demand ruler decisions, separate from dated scripted
+conquests and random story selection. They complete through one validated
+transaction and a dedicated success sheet, suppressing duplicate rank-investiture
+results when promotion is included. Durable Chronicle descriptors preserve the
+foundation and actual player costs and rewards. The four initial territorial
+foundations have technology impact **none**; see
+[historical-ambitions.md](historical-ambitions.md).
+
 ## Post-decision outcomes
 
 The shared resolver marks significant manual receipts for acknowledgement after

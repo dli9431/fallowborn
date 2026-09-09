@@ -1,5 +1,10 @@
 # Wars
 
+The Deeds war card keeps host, supply/upkeep, and battle-odds facts compact.
+Labels and values stack with content-sized heights on desktop and mobile; shared
+horizontal fact-row flex bases do not apply to these vertical children. Longer
+campaign explanations remain in the existing tooltip/disclosure.
+
 Player war conclusions use the shared post-decision outcome acknowledgement.
 Peace decisions combine their settled receipt with the final campaign result;
 automatic campaign endings queue the same presentation from Chronicle milestones.

@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.177.3';
+FB.VERSION = '1.178.0';
 FB.CHANGELOG = [
+  { v: '1.178.0', date: '2026-09-09', changes: [
+    'Historical ambitions let rulers establish Normandy, Norway, England, and Sicily from the Deeds tab, with rewards and Chronicle announcements naming their founders.',
+    'Wartime Deeds and marriage terms have clearer spacing. Marriage terms appear only when lineage can be chosen, and truce deadlines show dates without turn numbers.'
+  ] },
   { v: '1.177.3', date: '2026-09-08', changes: [
     'Religious, guild, and career promotions show clearer results, and higher-dignity investitures appear immediately. The Self tab links the Pope by name, and Bishopric petitions no longer need a second confirmation.'
   ] },
@@ -2971,6 +2975,7 @@ FB.CHANGELOG = [
       },
       seasonMark: { gold: sc.gold, prestige: sc.prestige, piety: sc.piety }, seasonNet: null
     };
+    if (FB.ensureHistoricalAmbitions) FB.ensureHistoricalAmbitions(state);
     FB.state = state;
     FB.initPolitics(state);
     if (FB.repairForts) FB.repairForts(state);
@@ -3265,6 +3270,7 @@ FB.CHANGELOG = [
       pregnant: null, peakTier: 0, peakTitleData: null,
       seasonMark: { gold: 0, prestige: 0, piety: 0 }, seasonNet: null
     };
+    if (FB.ensureHistoricalAmbitions) FB.ensureHistoricalAmbitions(state);
     FB.state = state;
     FB.initPolitics(state);
     if (FB.repairForts) FB.repairForts(state);
@@ -3367,6 +3373,7 @@ FB.CHANGELOG = [
     }
     if (FB.localGovernmentDay) FB.localGovernmentDay(s);
     FB.scriptedTick(s);
+    if (seasonBoundary && FB.historicalAmbitionsSeason) FB.historicalAmbitionsSeason(s);
     if (FB.fortificationDay) FB.fortificationDay(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
     if (FB.papacyDay) FB.papacyDay(s);

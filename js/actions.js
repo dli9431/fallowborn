@@ -3269,6 +3269,9 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showAbsolution) FB.ui.showAbsolution();
     } },
+  { id:'historical_ambitions', opensChoices:true, noConsume:true,
+    show:function (s) { return s.player.tier >= 4; },
+    run:function () { if (FB.ui && FB.ui.showHistoricalAmbitions) FB.ui.showHistoricalAmbitions(); } },
   { id: 'papacy', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
       return FB.T('Review the Pope, College, authority, investiture, sanctions, elections, and any rival obedience.');
@@ -9216,9 +9219,18 @@ window.FB = window.FB || {};
     let route = options.route || '';
     if (!route) route = p.tier >= 4 ? 'higher' :
       (p.tier === 3 ? 'county' : (p.tier === 2 ? 'barony' : 'manor'));
-    const expectedTarget = route === 'higher'
-      ? highestRankElevationTarget(state)
+    let expectedTarget = route === 'higher'
+      ? (options.region ? null : highestRankElevationTarget(state))
       : ({ manor:2, barony:3, county:4 })[route];
+    if (route === 'higher' && options.region) {
+      const duchy = FBDATA.duchies[options.region], kingdom = FBDATA.kingdoms[options.region];
+      const progress = duchy ? FB.duchyProgress(state, options.region) :
+        kingdom ? FB.kingdomProgress(state, options.region) : null;
+      const liege = p.liege && state.realms[p.liege];
+      expectedTarget = p.tier >= 4 && p.tier < 7 && progress && progress.total && progress.have >= progress.need &&
+        (duchy ? progress.titled && (!liege || !liege.alive || liege.rank >= 3) : FB.isPlayerSovereign(state))
+        ? (duchy ? 5 : 6) : null;
+    }
     const target = targetTier === undefined || targetTier === null
       ? (expectedTarget || (route === 'higher' && p.tier >= 4 && p.tier < 7
         ? p.tier + 1 : null))
@@ -9311,7 +9323,11 @@ window.FB = window.FB || {};
       route:route,
       fromTier:p.tier,
       targetTier:target || null,
-      titleData:target ? rankElevationTitleData(state, target) : null,
+      region:options.region || null,
+      titleData:target && options.region && (FBDATA.duchies[options.region] || FBDATA.kingdoms[options.region])
+        ? FB.rankTitleSnapshot(state, target,
+          (FBDATA.duchies[options.region] || FBDATA.kingdoms[options.region]).name) :
+        target ? rankElevationTitleData(state, target) : null,
       cost:cost,
       site:site,
       liegeId:p.liege || null,
@@ -9323,6 +9339,7 @@ window.FB = window.FB || {};
     return {
       protagonistId:state.player.charId,
       route:status.route,
+      region:status.region || null,
       fromTier:status.fromTier,
       targetTier:status.targetTier,
       titleData:status.titleData,
@@ -9342,7 +9359,7 @@ window.FB = window.FB || {};
         ctx.fromTier !== state.player.tier ||
         ctx.liegeId !== (state.player.liege || null)) return null;
     const status = FB.rankElevationStatus(state, ctx.targetTier, {
-      route:ctx.route
+      route:ctx.route, region:ctx.region || null
     });
     if (!status.eligible || status.cost.gold !== ctx.goldCost ||
         status.cost.prestige !== ctx.prestigeCost ||
@@ -9363,7 +9380,9 @@ window.FB = window.FB || {};
       rankElevationContext(state, status));
   };
 
-  FB.claimRankElevation = function (state, ctx) {
+  FB.rankElevationContext = rankElevationContext;
+
+  FB.claimRankElevation = function (state, ctx, options) {
     const status = FB.rankElevationContextStatus(state, ctx);
     if (!status || !status.ready) return false;
     const p = state.player;
@@ -9383,6 +9402,11 @@ window.FB = window.FB || {};
     } else if (status.route === 'higher') {
       FB.setPlayerTier(state, status.targetTier, { attachLiege:false });
       FB.foundPlayerRealm(state);
+      if (status.region) {
+        state.realms.player.ambitionTitleRegion = status.region;
+        state.realms.player.name = (status.targetTier === 5 ? 'Duchy of ' : 'Kingdom of ') +
+          (FBDATA.duchies[status.region] || FBDATA.kingdoms[status.region]).name;
+      }
       if (status.targetTier >= 6 && FB.councilEnsure) FB.councilEnsure(state);
     }
     const titleData = FB.titleSnapshot(state);
@@ -9403,7 +9427,7 @@ window.FB = window.FB || {};
       : FB.msg('news.world.rank_claimed',
         '👑 The household commits {money:gold} and {prestige} prestige to be recognized as {title}.', params),
     { kind:'rank' });
-    FB.queueEvent(state, 'rank_elevation_result', {
+    if (!(options && options.combinedResult)) FB.queueEvent(state, 'rank_elevation_result', {
       protagonistId:p.charId,
       titleData:titleData,
       usesPiety:status.cost.piety ? 'yes' : 'other'

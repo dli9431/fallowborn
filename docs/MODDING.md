@@ -1104,6 +1104,26 @@ when both its `year` and its `realm` match; otherwise it is added alongside—se
 realms may act in the same year. Script arrays inside atomic bookmark replacements are
 complete and do not merge.
 
+### Historical ambition definitions
+
+The bundled `data/ambitions.js` defines `FBDATA.historicalAmbitions`, an ordered
+array. Each record has a stable `id`, localizable `name`/`desc`, de jure `region`,
+target player `tier` (5 duchy, 6 kingdom), `share` of counties required, one-time
+`prestige`, `bonus` (`tax` or `levy`), fractional `amount`, duration `days`, and
+`established` bookmark IDs. Optional `culture`, `capital`, `island` duchy, and
+`mainland` duchy IDs add requirements. These are bundled source definitions, not
+a new JSON-mod merge surface. Adding a new foundation also requires its semantic
+Chronicle message and technology-impact review; do not rename saved IDs.
+
+`FB.historicalAmbitionRelevant(state,id,realmId)` is the inexpensive list filter.
+`FB.historicalAmbitionStatus(state,id,realmId)` returns requirements, recognition
+costs, completion status, and readiness without changing gameplay state.
+`FB.completeHistoricalAmbition(state,id,realmId)` revalidates and returns the saved
+completion record, or `null` without charging on rejection. Realm defaults to
+`player`. `FB.historicalAmbitionBonus(state,countyId,key)` reads active rewards;
+it never tests unfinished ambitions. See
+[Historical ambitions](designs/historical-ambitions.md) for lifecycle and AI rules.
+
 ### Coastlines (advanced)
 
 `land` is a list of polygons (`[lon,lat, lon,lat, ...]` flattened); `seas` are polygons carved

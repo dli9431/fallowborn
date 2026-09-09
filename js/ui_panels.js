@@ -3925,6 +3925,10 @@ window.FB = window.FB || {};
   }
 
   function networkLevyLabel(s, entry) {
+    if (entry.kind === 'historical_ambition') {
+      const county = FB.world.byId[entry.pid];
+      return FB.T('Historical ambition — {county}', { county:county ? county.name : entry.pid });
+    }
     if (entry.kind === 'county') {
       const pr = FB.world.byId[entry.pid];
       return FB.T('County levy — {county}', { county:pr ? pr.name : entry.pid });

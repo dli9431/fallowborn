@@ -1,5 +1,14 @@
 # Realms, the liege hierarchy & tiers
 
+Historical ambitions add explicit regional recognition for Normandy, Norway,
+England, and Sicily. They reuse normal promotion thresholds and prices, retain
+higher ranks, and never transfer unheld counties. The primary region chosen by an
+ambition takes preference only while it remains qualified. Each foundation has
+technology impact **none**: this is baseline political recognition. Regional
+bonuses follow the founding realm through succession, including dynastic absorption
+into the player realm; dissolution expires them without resetting completion.
+Full rules: [historical-ambitions.md](historical-ambitions.md).
+
 Actual player title lapse queues the shared outcome acknowledgement with the
 previous and resulting rank. The earlier Hollow Crown warning remains a decision,
 not a claim that the title has already lapsed. Explicit investiture result events

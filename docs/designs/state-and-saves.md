@@ -1,5 +1,17 @@
 # Game state & saves
 
+Historical ambitions add `state.historicalAmbitions`, keyed by stable definition
+ID. Each entry is either `{established:true}` for a bookmark foundation or
+`{realmId,turn,endTurn,cost:{gold,prestige,piety},prestige}` for a completed action.
+The seasonal AI guard is `state.historicalAmbitionSeason`; realm records may carry
+`ambitionTitleRegion` for qualified primary-title preference. All are additive
+save-format-3 fields. Initialization uses `state.start.id` (legacy default 867),
+not the current year, and never grants retroactive rewards. Existing completion
+records survive succession and reload. Dynastic absorption transfers the realm
+identity; dissolution shortens the reward deadline without removing completion.
+Queries never initialize records or consume RNG. See
+[historical-ambitions.md](historical-ambitions.md).
+
 Campaign telemetry provenance is additive save-format-3 state. Fresh playable campaigns carry
 `state.telemetry:{version:1,quickStart,firstDayAdvanced,firstEventResolved}`. `quickStart` is the
 stable curated-start id or `custom`; the two numeric booleans prevent campaign-once activation

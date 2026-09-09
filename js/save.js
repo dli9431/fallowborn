@@ -1287,6 +1287,9 @@ window.FB = window.FB || {};
         FB.repairCompleteDuchyRanks(FB.state);
       });
     }
+    if (FB.ensureHistoricalAmbitions) restoreRepair('historical ambitions', function () {
+      FB.ensureHistoricalAmbitions(FB.state);
+    });
     if (FB.ensureModifiers) restoreRepair('modifiers', function () {
       FB.ensureModifiers(FB.state);
     });

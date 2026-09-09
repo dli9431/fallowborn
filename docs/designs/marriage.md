@@ -1,5 +1,12 @@
 # Marriage & child matches
 
+Marriage terms appear only when both partners can choose maternal lineage. Otherwise
+the proposal proceeds with paternal lineage, or preserves an already accepted contract.
+The choice sheet spaces the match, dowry, lineage field, house preview, and proposal
+action separately. Maternal rules use the shared title tooltip / compact disclosure;
+culture invitations remain available through their separate character action. Back
+preserves the parent list position. Eligibility is checked again before confirmation.
+
 ## Exceptional sibling courtship
 
 Close-kin prohibition remains the default and the AI rule. Parent/child,

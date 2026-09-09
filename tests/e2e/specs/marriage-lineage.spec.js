@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'js/localfolk.js', 'data/cultures.js', 'data/counties.js', 'data/bookmarks.js', 'data/map_data.js',
   'data/technology.js', 'js/model.js', 'js/events.js', 'js/actions.js',
   'js/main.js', 'js/world.js', 'js/agency.js', 'js/save.js', 'js/travel.js',
-  'js/ui_modals.js', 'js/ui_misc.js', 'js/population.js'
+  'js/ui_modals.js', 'js/ui_misc.js', 'js/population.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -119,6 +119,42 @@ test('paternal conception snapshots survive remarriage, a new protagonist, and s
   expect(result.baby).toEqual({ dyn:'Father House', culture:'nubian', motherId:result.motherId });
 });
 
+test('marriage review skips unavailable choices and preserves accepted maternal terms', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, head = s.chars[s.player.charId];
+    head.sex = 'f'; head.culture = 'nubian';
+    const target = FB.makeCharacter(s, { sex:'m', culture:'coptic', religion:head.religion,
+      born:s.date.year - 25, traitsN:0 });
+    const choices = [];
+    FB.ui.showMarriageLineageReview(head.id, target.id, function (lineage) { choices.push(lineage); });
+    target.culture = 'nubian';
+    FB.sealMarriageLineage(s, head, target, 'maternal');
+    head.betrothedId = target.id; target.betrothedId = head.id;
+    target.culture = 'coptic';
+    FB.ui.showMarriageLineageReview(head.id, target.id, function (lineage) { choices.push(lineage); });
+    return choices;
+  });
+  expect(result).toEqual(['paternal', 'maternal']);
+  await expect(page.locator('#marriage-lineage')).toHaveCount(0);
+});
+
+test('losing maternal eligibility cannot silently propose paternal terms', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, head = s.chars[s.player.charId];
+    head.sex = 'f'; head.culture = 'nubian';
+    const target = FB.makeCharacter(s, { sex:'m', culture:'nubian', religion:head.religion,
+      born:s.date.year - 25, traitsN:0 });
+    window.lineageConfirmations = [];
+    FB.ui.showMarriageLineageReview(head.id, target.id, function (lineage) {
+      window.lineageConfirmations.push(lineage);
+    });
+    document.getElementById('marriage-lineage').value = 'maternal';
+    target.culture = 'coptic';
+  });
+  await page.locator('#marriage-lineage-confirm').click();
+  expect(await page.evaluate(function () { return window.lineageConfirmations; })).toEqual([]);
+});
+
 test('maternal selection is keyboard accessible and shows the exact house on compact screens', async function ({ page }) {
   await page.setViewportSize({ width:390, height:844 });
   await page.evaluate(function () {
@@ -137,7 +173,16 @@ test('maternal selection is keyboard accessible and shows the exact house on com
   await page.keyboard.press('ArrowDown');
   await expect(terms).toHaveValue('maternal');
   await expect(page.locator('#marriage-lineage-preview')).toContainText('Mother House');
-  await expect(page.locator('#gm-body')).toContainText('Title succession and blood claims are unchanged');
+  await expect(page.locator('#gm-title-details')).toBeHidden();
+  await page.locator('[aria-controls="gm-title-details"]').click();
+  await expect(page.locator('#gm-title-details')).toBeVisible();
+  await expect(page.locator('#gm-title-details')).toContainText('Title succession and blood claims are unchanged');
+  await page.locator('[aria-controls="gm-title-details"]').click();
+  const spacing = await page.locator('.marriage-lineage-field').evaluate(function (field) {
+    return field.querySelector('select').getBoundingClientRect().top -
+      field.querySelector('label').getBoundingClientRect().bottom;
+  });
+  expect(spacing).toBeGreaterThanOrEqual(8);
   await page.locator('#marriage-lineage-confirm').focus();
   await page.keyboard.press('Enter');
   expect(await page.evaluate(function () {

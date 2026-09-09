@@ -89,6 +89,8 @@ test('normal settlements protect both directions for exactly 720 days across ser
       const reverse = FB.truceExpiry(s, ids.enemy, 'player');
       const declaration = FB.startPlayerWar(s, cause);
       const text = FB.truceText(s, 'player', ids.enemy);
+      const date = FB.dateAtTurn(s, expiry);
+      const expectedText = 'Truce until ' + FB.seasonName(date.season) + ' ' + date.day + ', ' + date.year + '.';
       s.realms[ids.enemy].generation = (s.realms[ids.enemy].generation || 0) + 1;
       const restored = JSON.parse(JSON.stringify(s));
       FB.repairWars(restored);
@@ -102,13 +104,14 @@ test('normal settlements protect both directions for exactly 720 days across ser
       const invalid = { enemy:ids.other };
       FB.concludeOrdinaryWar(s, ids.enemy, invalid, true);
       return { start:start, expiry:expiry, reverse:reverse, declaration:declaration,
-        text:text, afterLoad:afterLoad, beforeExpiry:beforeExpiry, atExpiry:atExpiry,
+        text:text, expectedText:expectedText, afterLoad:afterLoad, beforeExpiry:beforeExpiry, atExpiry:atExpiry,
         ai:ai, invalid:FB.truceExpiry(s, ids.enemy, ids.other) };
     }, ids);
     expect(result.expiry).toBe(result.start + 720);
     expect(result.reverse).toBe(result.expiry);
     expect(result.declaration).toBe(false);
-    expect(result.text).toContain('turn ' + result.expiry);
+    expect(result.text).toBe(result.expectedText);
+    expect(result.text).not.toMatch(/\bturn\b/i);
     expect(result.afterLoad).toBe(result.expiry);
     expect(result.beforeExpiry).toBe(result.expiry);
     expect(result.atExpiry).toBe(0);

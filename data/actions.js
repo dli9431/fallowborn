@@ -238,5 +238,8 @@ FBDATA.deeds = [
   { id:'debase_coinage', label:'💰 Debase the coinage…', order:77,
     desc:'Emergency silver for an independent crown — at the price of confidence, standing, and rising prices.', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'debase_coinage' },
   { id:'royal_council', label:'🏛 The Royal Council…', order:78,
-    desc:'Your great officers of the crown — their offices, their tempers, and the weight they throw around.', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'royal_council' }
+    desc:'Your great officers of the crown — their offices, their tempers, and the weight they throw around.', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'royal_council' },
+  { id:'historical_ambitions', label:'📜 Historical ambitions…', order:79,
+    desc:'Establish regional foundations and claim their rewards.',
+    group:'realm', flow:'choices', handler:'historical_ambitions' }
 ];

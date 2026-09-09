@@ -354,6 +354,7 @@ window.FB = window.FB || {};
     if (FB.settlementCommunityProjectModifierBonus) {
       sum += FB.settlementCommunityProjectModifierBonus(state, pid, key);
     }
+    if (FB.historicalAmbitionBonus) sum += FB.historicalAmbitionBonus(state, pid, key);
     // Apply resistance after ordinary county bonuses so complete refusal
     // cannot be offset by another positive modifier.
     return uprising ? Math.max(0, 1 + sum) * (1 - FB.commonsUprisingReduction(state)) - 1 : sum;

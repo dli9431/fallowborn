@@ -52,6 +52,12 @@ though the game still *runs*.
   and historical `desc` live in `data/technology.js` and render through `FB.dataText`;
   domain and tradition labels are id-keyed structured data too; cost explanations remain
   UI chrome and use explicit `FB.T` keys.
+- **Historical ambitions:** `data/ambitions.js` owns structured `name` and `desc`
+  fields, extracted as `ambition.<id>.<field>.default`. Render them with
+  `FB.dataText(state, viewer, 'ambition', id, definition, field, {})`. Requirement
+  labels and numeric previews use `FB.T`; completed foundations and actual rewards
+  use `news.ambition.*` descriptors. Preserve stable definition and message IDs.
+
 - **Durable / shared messages (chronicle, `FB.news`, `FB.fx`, anything stored in state):** emit an
   opaque descriptor, never rendered prose. From shared sim code: `FB.news(state,
   FB.msg('news.war.tribute', '🕊 English fallback.', params))`. The opaque key (`news.*`, `fx.*`)

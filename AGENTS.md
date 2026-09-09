@@ -192,7 +192,8 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   jure empires/kingdoms/duchies, realms, straits, scripted history, `FBDATA.balance`),
   `data/counties.js` (the ~460-county table, expanding itself into `FBDATA.provinces`),
   `data/cultures.js`, `data/technology.js`, `data/actions.js` (the baseline focus/deed
-  metadata projected through private handlers in `js/actions.js`), `data/units.js` (the unit-class table:
+  metadata projected through private handlers in `js/actions.js`), `data/ambitions.js`
+  (regional historical foundations), `data/units.js` (the unit-class table:
   composition quality, upkeep, casualty order, counters, and tech/culture gates),
   `data/bookmarks.js` (the atomic 867/1066 world
   definitions), `data/settlements.js` (the shared physical-site table plus the per-bookmark
@@ -205,7 +206,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   `events_intrigue.js` after tournament events and before ruler-agency events).
 - Engine second, all writing to `window.FB`: `util → messages → i18n →
   model → music → portrait → siteart → world → settlement → fortifications → holywar → population → modifiers →
-  economy → market → papacy → armies → travel → mapview → events → items → actions → intrigue →
+  economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue →
   technology → council → agency → politics → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar) → keys → save → mods → main`. The generated English
   catalog is absent from an ordinary English boot; a translated boot dynamically loads it
@@ -240,6 +241,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/state-and-saves.md` — one serializable state object; save versioning.
 - `docs/designs/seeds.md` — shareable start seeds.
 - `docs/designs/events.md` — events are declarative data; interpreter rules.
+- `docs/designs/historical-ambitions.md` — regional foundations, recognition, timed rewards, and seasonal AI.
 - `docs/designs/descent.md` — the way down: title lapse, submission, attainder, capture & ransom, distraint & bondage, devastation.
 - `docs/designs/time.md` — daily tick, seasons, focuses/instants, slot days, automation mode.
 - `docs/designs/war.md` — field armies on the map, battles, sieges, mercs, wartime event flow.

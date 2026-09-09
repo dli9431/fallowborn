@@ -4027,7 +4027,11 @@ window.FB = window.FB || {};
       FB.intrigueRealmRulerCaptive(state, rid) ? 0.8 : 1;
     const territory = FB.recruitmentTerritory ? FB.recruitmentTerritory(state, rid) : null;
     if (territory && !territory.rally) return 0;
-    const strength = territory ? territory.development * (FB.papacyRealmStrengthMultiplier
+    const ambitionDevelopment = territory && FB.historicalAmbitionBonus
+      ? territory.eligible.reduce(function (sum, pid) {
+        return sum + (state.dev[pid] || 1) * FB.historicalAmbitionBonus(state, pid, 'levy');
+      }, 0) : 0;
+    const strength = territory ? (territory.development + ambitionDevelopment) * (FB.papacyRealmStrengthMultiplier
       ? FB.papacyRealmStrengthMultiplier(state, rid) : 1) : FB.realmStrength(state, rid);
     const base = Math.max(territory && territory.blocked.length ? 0 : 60, Math.round(strength *
       FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
@@ -5453,8 +5457,8 @@ window.FB = window.FB || {};
     const until = FB.truceExpiry(state, a, b);
     if (!until) return '';
     const date = FB.dateAtTurn(state, until);
-    return FB.T('Truce until {season} {day}, {year} (turn {turn}).', {
-      season:FB.seasonName(date.season), day:date.day, year:date.year, turn:until
+    return FB.T('Truce until {season} {day}, {year}.', {
+      season:FB.seasonName(date.season), day:date.day, year:date.year
     });
   };
   FB.concludeOrdinaryWar = function (state, owner, war, invalid) {
@@ -6618,6 +6622,10 @@ window.FB = window.FB || {};
         const popFactor = (baseline || !FB.countyPopulationFactor) ? 1 : FB.countyPopulationFactor(state, pid);
         const countyLevy = (state.dev[pid] || 1) * popFactor * B.levyPerDev;
         add('levy', 'county', countyLevy, { pid:pid });
+        const ambitionRate = FB.historicalAmbitionBonus
+          ? FB.historicalAmbitionBonus(state, pid, 'levy') : 0;
+        if (ambitionRate) add('levy', 'historical_ambition', countyLevy * ambitionRate,
+          { pid:pid, rate:ambitionRate });
         if (FB.enterpriseUpgradeEffect) {
           add('levy', 'enterprise',
             FB.enterpriseUpgradeEffect(state, 'levy', pid), { pid:pid });
@@ -8376,7 +8384,11 @@ window.FB = window.FB || {};
     const generation = old && old.ruler && old.ruler.generation !== undefined
       ? old.ruler.generation : 1;
     const r = old || { id: 'player', color: '#f0c840', aggression: 0, war: null, op: 0 };
-    r.name = nm;
+    r.name = p.tier === 5 && old && FBDATA.duchies[old.ambitionTitleRegion] &&
+      FB.playerDuchy(state) === old.ambitionTitleRegion
+      ? 'Duchy of ' + FBDATA.duchies[old.ambitionTitleRegion].name
+      : p.tier === 6 && old && k === old.ambitionTitleRegion && FBDATA.kingdoms[k]
+        ? 'Kingdom of ' + FBDATA.kingdoms[k].name : nm;
     r.capital = (p.provs && p.provs[0]) || p.provinceId;
     r.religion = me.religion;
     r.alive = true;
@@ -8580,6 +8592,7 @@ window.FB = window.FB || {};
         other.war = null;
       }
     }
+    if (FB.historicalAmbitionRealmInherited) FB.historicalAmbitionRealmInherited(state, rid, 'player');
     FB.markRealmDead(state, rid);
     /* The realm's temporal inheritance is separate from any religious office:
        markRealmDead leaves the latter explicitly vacant for recovery. */
@@ -8589,6 +8602,7 @@ window.FB = window.FB || {};
     FB.setPlayerTier(state, Math.max(p.tier, mine.rank + 3), { attachLiege:false });
     if ((inherited.rank || 0) >= oldRank) {
       mine.name = inherited.name;
+      mine.ambitionTitleRegion = inherited.ambitionTitleRegion || null;
       mine.color = inherited.color || mine.color;
       mine.capital = inherited.capital || mine.capital;
     }
@@ -8694,8 +8708,16 @@ window.FB = window.FB || {};
     }
     return out;
   };
-  FB.playerDuchy = function (state) { return FB.playerDuchies(state)[0] || null; };
-  FB.playerKingdom = function (state) { return FB.playerKingdoms(state)[0] || null; };
+  FB.playerDuchy = function (state) {
+    const ids = FB.playerDuchies(state);
+    const preferred = state.realms.player && state.realms.player.ambitionTitleRegion;
+    return ids.indexOf(preferred) >= 0 ? preferred : ids[0] || null;
+  };
+  FB.playerKingdom = function (state) {
+    const ids = FB.playerKingdoms(state);
+    const preferred = state.realms.player && state.realms.player.ambitionTitleRegion;
+    return ids.indexOf(preferred) >= 0 ? preferred : ids[0] || null;
+  };
   FB.playerEmpire = function (state) { return FB.playerEmpires(state)[0] || null; };
 
   /* every title the player holds, highest dignity first — for the Self tab.
