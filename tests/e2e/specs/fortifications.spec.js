@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js',
   'js/fortifications.js',
+  'js/wars.js',
+  'js/world.js',
   'js/ui_modals.js',
   'data/map_data.js',
   'data/technology.js'
@@ -23,6 +25,35 @@ test.use({
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
+});
+
+test('garrison burden checks recruitment only for the charged holders forts', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive; });
+    const buildings = s.buildings, holders = s.holder, blocked = FB.recruitmentCountyBlocked;
+    const calls = [];
+    s.buildings = {}; s.holder = {};
+    for (let i = 0; i < 100; i++) {
+      const pid = 'foreign_fort_' + i;
+      s.buildings[pid] = [{ id:'walls', level:1 }]; s.holder[pid] = 'foreign_holder';
+    }
+    s.buildings.own_fort = [{ id:'walls', level:1 }]; s.holder.own_fort = rid;
+    FB.invalidateFortIndex();
+    let occupied = false, charged, withheld;
+    FB.recruitmentCountyBlocked = function (state, realm, pid) { calls.push(pid); return occupied; };
+    try {
+      charged = FB.fortGarrisonBurden(s, rid, rid);
+      occupied = true;
+      withheld = FB.fortGarrisonBurden(s, rid, rid);
+    } finally {
+      s.buildings = buildings; s.holder = holders; FB.recruitmentCountyBlocked = blocked;
+      FB.invalidateFortIndex();
+    }
+    return { charged:charged, expected:FB.fortLevelDef(1).garrison, withheld:withheld, calls:calls };
+  });
+  expect(result.charged).toBe(result.expected);
+  expect(result.withheld).toBe(0);
+  expect(result.calls).toEqual(['own_fort', 'own_fort']);
 });
 
 test('projects pay upfront, upgrade sequentially, transfer, and repair legacy Walls',

@@ -49,6 +49,37 @@ test('connected lawful claims combine while aggression and duplicate objectives 
   expect(result).toEqual({ legal:true, unjust:false, duplicate:false, readonly:true, rngSame:true });
 });
 
+test('claim packages inspect only defender territory and compute each county right once', async function ({ page }, testInfo) {
+  const ids = await claimSetup(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state;
+    const expected = Object.keys(FB.world.byId).sort().filter(function (pid) {
+      return FB.warTargetDefender(s, 'player', pid) === ids.enemy;
+    }).map(function (pid) {
+      return { target:pid, enemy:ids.enemy, justifications:FB.territorialWarRights(s, 'player', pid) };
+    }).filter(function (entry) { return entry.justifications.length; });
+    const before = JSON.stringify(s), rng = FB.getRngState();
+    const keys = Object.keys, rights = FB.territorialWarRights, calls = {};
+    let worldScans = 0, actual;
+    Object.keys = function (o) { if (o === FB.world.byId) worldScans++; return keys(o); };
+    FB.territorialWarRights = function (state, rid, pid) {
+      calls[pid] = (calls[pid] || 0) + 1;
+      return rights(state, rid, pid);
+    };
+    try { actual = FB.claimPackageCandidates(s, 'player', ids.enemy); }
+    finally { Object.keys = keys; FB.territorialWarRights = rights; }
+    return { actual:actual, expected:expected, worldScans:worldScans,
+      singleReads:Object.keys(calls).every(function (pid) { return calls[pid] === 1; }),
+      readonly:before === JSON.stringify(s), rngSame:rng === FB.getRngState() };
+  }, ids);
+  expect(result.actual).toEqual(result.expected);
+  expect(result.actual).toHaveLength(2);
+  expect(result.worldScans).toBe(0);
+  expect(result.singleReads).toBe(true);
+  expect(result.readonly).toBe(true);
+  expect(result.rngSame).toBe(true);
+});
+
 test('partial occupation grants no land and completing the package transfers both counties', async function ({ page }, testInfo) {
   const ids = await claimSetup(page, testInfo);
   const result = await page.evaluate(function (ids) {

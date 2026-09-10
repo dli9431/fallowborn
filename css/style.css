@@ -2420,13 +2420,20 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .bldsummary .bldmiss { color: var(--helper-text-color); opacity: .35; }
 .bldsummary .bldcnt { font-size: var(--ui-label-size); vertical-align: super; color: var(--ui-accent-color); margin-left: 1px; }
 .warnote { border-color: #8a4030; }
+.character-war-campaign {
+  min-width: 0; margin-top: 12px; padding: 12px;
+  border: 1px solid var(--ui-border-color); border-radius: 8px;
+  background: var(--ui-card-color); overflow-wrap: break-word;
+}
+.character-war-campaign h4 {
+  margin: 0 0 8px; color: var(--ui-accent-color); font-size: 16px;
+}
 .character-war-goals {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px; margin-top: 8px;
 }
 .character-war-goal {
-  min-width: 0; padding: 6px 8px; border: 1px solid rgba(138,64,48,.65);
-  border-radius: 8px; background: rgba(16,11,8,.28);
+  min-width: 0; padding: 0;
 }
 .character-war-goal b {
   display: block; margin-bottom: 2px; color: var(--ui-accent-color); font-size: var(--ui-label-size);

@@ -5217,7 +5217,7 @@ window.FB = window.FB || {};
     /* computed only when a def actually asks for it: popEffective walks the
        county modifier records, and nearly every def lacks this trigger */
     if (tg.popularOpinionBelow !== undefined) {
-      const popularOpinion = FB.popEffective ? FB.popEffective(state) : p.pop;
+      const popularOpinion = FB.countyPopularSupport(state, ctx && ctx.locationId || state.player.provinceId);
       if (popularOpinion > tg.popularOpinionBelow) return false;
     }
     if (tg.custom && FB.fns[tg.custom] &&
@@ -9834,6 +9834,15 @@ window.FB = window.FB || {};
     return fx.gold === undefined || typeof fx.gold === 'number';
   }
 
+  // Conservative post-event invalidation: custom effects and named chance
+  // handlers keep the full reconciliation path, including unchosen branches.
+  FB.eventOptionHouseholdLocal = function (state, option) {
+    if (!option || (option.chance !== undefined && typeof option.chance !== 'number')) return false;
+    return localImpactOnly(state, option.effects || {}) &&
+      localImpactOnly(state, option.success && option.success.effects || {}) &&
+      localImpactOnly(state, option.failure && option.failure.effects || {});
+  };
+
   function impactSnapshot(state, ctx, localOnly) {
     const p = state.player;
     const me = state.chars[p.charId];
@@ -9881,7 +9890,7 @@ window.FB = window.FB || {};
       gold:Number(p.gold) || 0,
       prestige:Number(p.prestige) || 0,
       piety:Number(p.piety) || 0,
-      commonVoice:Number(p.pop) || 0,
+      commonVoice:FB.countyPopularSupport(state, ctx && ctx.locationId || state.player.provinceId),
       warService:Number(p.warService) || 0,
       health:me.health === undefined ? 8 : Number(me.health),
       tier:p.tier,
@@ -11066,7 +11075,7 @@ window.FB = window.FB || {};
       if (amount > 0 && FB.traitBonus) {
         amount = amount * (1 + FB.traitBonus(me, 'assembly', 'popularOpinion'));
       }
-      p.pop = FB.clamp(p.pop + amount, -100, 100);
+      FB.adjustCountySupport(state, ctx && ctx.locationId || state.player.provinceId, amount);
     }
     if (fx.profession) {
       if (!p.professionBack && p.profession !== 'soldier') p.professionBack = p.profession;
@@ -12236,8 +12245,8 @@ window.FB = window.FB || {};
           }));
       }
     } else {
-      state.player.pop = FB.clamp(state.player.pop - status.commonVoice,
-        -100, 100);
+      FB.setCountySupport(state, state.player.provinceId, FB.clamp(FB.countySupportBase(state, state.player.provinceId) - status.commonVoice,
+        -100, 100));
       if (state.player.liege) {
         adjustRealmStanding(state, state.player.liege,
           -status.liegeStanding, 'marriage:scandalous_union');

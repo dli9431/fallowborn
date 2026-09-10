@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['data/cultures.js', 'js/agency.js', 'js/model.js', 'js/events.js',
   'js/world.js', 'js/travel.js', 'js/items.js', 'js/economy.js', 'js/actions.js',
-  'js/ui_modals.js', 'js/ui_misc.js', 'js/population.js', 'js/ui_panels.js', 'js/portrait.js', 'css/style.css']);
+  'js/ui_modals.js', 'js/ui_misc.js', 'js/keys.js', 'js/population.js', 'js/ui_panels.js', 'js/portrait.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
@@ -20,6 +20,30 @@ test.beforeEach(async function ({ page }, testInfo) {
     FB.touchFamily();
     window.discoveryChildId = child.id;
   });
+});
+
+test('match choices expose 1 and 2 shortcuts for local and dynastic searches', async function ({ page }) {
+  await page.evaluate(function () {
+    FB.game.setPaused(true);
+    window.matchShortcutCalls = [];
+    window.matchOriginalInstant = FB.runInstant;
+    FB.runInstant = function (state, id, options) {
+      window.matchShortcutCalls.push({ id:id, localMatch:options.localMatch });
+      return false;
+    };
+    FB.ui.showMatchChoices();
+  });
+  try {
+    await expect(page.locator('#match-local .keyhint')).toHaveText('1');
+    await expect(page.locator('#match-dynastic .keyhint')).toHaveText('2');
+    await page.keyboard.press('Digit1');
+    expect(await page.evaluate(function () { return window.matchShortcutCalls; }))
+      .toEqual([{ id:'seek_match', localMatch:true }]);
+  } finally {
+    await page.evaluate(function () { FB.runInstant = window.matchOriginalInstant; });
+  }
+  await page.keyboard.press('Digit2');
+  await expect(page.locator('#finder-scope')).toHaveValue('near');
 });
 
 test('both subjects browse scopes and filters without writing state or consuming RNG', async function ({ page }) {

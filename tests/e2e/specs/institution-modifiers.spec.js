@@ -73,7 +73,7 @@ async function configureCrownedRealm(page) {
     p.gold = 500;
     p.prestige = 500;
     p.piety = 100;
-    p.pop = 10;
+    FB.setCountySupport(FB.state, p.provinceId, 10);
     p.war = null;
     p.flags = p.flags || {};
     delete p.flags.with_liege_host;
@@ -534,9 +534,9 @@ test('county modifier ledgers refresh, persist, transfer, remove, and expire aut
     expect(result.refreshSource).toBe('strange_bounty');
     expect(result.restoredSource).toBe('strange_bounty');
     expect(result.transfer.present).toBe(true);
-    expect(result.transfer.taxBonus).toBeCloseTo(0.08);
+    expect(result.transfer.taxBonus).toBeCloseTo(1.08 * (1 + result.after.voice / 100) - 1);
     expect(result.transfer.upkeep).toBe(0);
-    expect(result.transfer.voice).toBe(result.before.voice);
+    expect(result.transfer.voice).toBe(result.after.voice);
     expect(result.gainMessage).toEqual({
       key:'news.modifier.county_gained',
       modifier:{
@@ -632,7 +632,7 @@ test('Land, Governance, detail, previews, and autoresolve share the same records
       var s = FB.state;
       return {
         gold:s.player.gold,
-        pop:s.player.pop,
+        pop:FB.countySupportBase(s, s.player.provinceId),
         authority:s.council.authority,
         standing:FB.standingOf(s, {
           kind:'realm',
@@ -660,7 +660,7 @@ test('Land, Governance, detail, previews, and autoresolve share the same records
       var s = FB.state;
       var result = {
         gold:s.player.gold,
-        pop:s.player.pop,
+        pop:FB.countySupportBase(s, s.player.provinceId),
         authority:s.council.authority,
         standing:FB.standingOf(s, {
           kind:'realm',

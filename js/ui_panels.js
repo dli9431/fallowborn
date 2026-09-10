@@ -1921,12 +1921,9 @@ window.FB = window.FB || {};
     }
     const age = panel.querySelector('[data-self-value="age"] b');
     const health = panel.querySelector('[data-self-value="health"] b');
-    const voice = panel.querySelector('[data-self-value="voice"] b');
     if (age) age.textContent = FB.ageOf(me, s.date.year);
     if (health) health.textContent = Math.round(me.health) + ' / 10 ' +
       String.fromCharCode(183) + ' ' + healthWord(me.health);
-    if (voice) voice.textContent = Math.round(
-      FB.popEffective ? FB.popEffective(s) : s.player.pop);
     const soft = FBDATA.balance.skillSoftCap || 20;
     for (const key of FB.SKILLS) {
       const row = panel.querySelector('[data-self-skill="' + key + '"]');
@@ -3329,8 +3326,6 @@ window.FB = window.FB || {};
       selfLiveValueRow('health', 'Health',
         Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
-      selfLiveValueRow('voice', 'Popular support',
-        Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)) +
       (s.player.liege ? kv('Standing with your liege',
         standingSpan(FB.standingOf(s, {
           kind:'realm', id:s.player.liege
@@ -3928,6 +3923,10 @@ window.FB = window.FB || {};
   }
 
   function networkLevyLabel(s, entry) {
+    if (entry.kind === 'popular_support') {
+      const county = FB.world.byId[entry.pid];
+      return FB.T('Popular support — {county}', { county:county ? county.name : entry.pid });
+    }
     if (entry.kind === 'historical_ambition') {
       const county = FB.world.byId[entry.pid];
       return FB.T('Historical ambition — {county}', { county:county ? county.name : entry.pid });
@@ -5457,6 +5456,7 @@ window.FB = window.FB || {};
     const s = FB.state, me = s.chars[s.player.charId];
     const byId = FB.kinOf(s).byId;
     const drawn = {};
+    const drawnParentLinks = {};
     let branchSerial = 0;
 
     const heirs = FB.heirsOf ? FB.heirsOf(s) : [];
@@ -5622,7 +5622,8 @@ window.FB = window.FB || {};
       drawn[c.id] = 1;
       let couple = c.id === me.id ? chip(c, 'You', ' me') :
         chip(c, c.id === founder.id ? 'House founder' : null);
-      for (const sp of matesOf(c)) {
+      const mates = matesOf(c);
+      for (const sp of mates) {
         couple += chip(sp, byId[sp.id] || (sp.sex === 'f' ? 'Wife' : 'Husband'),
           drawn[sp.id] ? ' dup' : '');
         drawn[sp.id] = 1;
@@ -5637,7 +5638,14 @@ window.FB = window.FB || {};
           '"><span aria-hidden="true">−</span><span>' + esc(FB.T(
             'Collapse {name}’s branch', { name:c.name })) + '</span></button>' +
           '<div class="ftstem"></div><div class="ftkids" id="' + branchId + '">';
-        for (const k of kids) h += unit(k);
+        for (const k of kids) {
+          const links = drawnParentLinks[k.id] || (drawnParentLinks[k.id] = {});
+          links[c.id] = true;
+          for (const sp of mates) {
+            if (k.fatherId === sp.id || k.motherId === sp.id) links[sp.id] = true;
+          }
+          h += unit(k);
+        }
         h += '</div>';
       }
       return h + '</div>';
@@ -5777,6 +5785,11 @@ window.FB = window.FB || {};
         const parentIds = [child.fatherId, child.motherId].filter(function (id) {
           return !!(id && id !== me.id && s.chars[id]);
         }).sort();
+        // A supplemental branch must add a child or a recorded parent link.
+        // Missing parent records do not justify duplicating an existing child
+        // beneath an invented earlier household.
+        const links = drawnParentLinks[child.id] || {};
+        if (drawn[child.id] && parentIds.every(function (id) { return links[id]; })) continue;
         const key = parentIds.join('|') || child.id;
         if (!stepGroups[key]) {
           stepGroups[key] = { parents:parentIds, children:[] };
@@ -7239,6 +7252,8 @@ window.FB = window.FB || {};
         })), true) : '') +
         landKv('Culture', esc(cultureName(s, countyCulture))) +
         landKv('Faith', faithDetailsLink(s, countyReligion)) +
+        landKv('Popular support', '<span data-county-popular-support="' + esc(pid) + '">' +
+          esc(signedNumber(FB.countyPopularSupport(s, pid))) + '</span>') +
         landKv('Terrain', esc(terrainName(pr.terrain)) +
           (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         landKv('County levy (gross)', '~' + esc(menText(s, Math.round(

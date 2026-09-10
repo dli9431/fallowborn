@@ -98,15 +98,15 @@ test('applies a self faith conversion with cost, opinion hit, and cooldown',
     me.born = state.date.year - 35;
     player.piety = 500;
     player.prestige = 100;
-    player.pop = 20;
-    const before = { piety:player.piety, pop:player.pop };
+    FB.setCountySupport(state, player.provinceId, 20);
+    const before = { piety:player.piety, pop:FB.countySupportBase(state, player.provinceId) };
     const ok = FB.applyConversion(state, 'faith', 'orthodox', 'self');
     const again = FB.conversionStatus(state, 'faith', 'sunni', 'self');
     return {
       ok:ok,
       religion:me.religion,
       pietySpent:before.piety - player.piety,
-      popDelta:player.pop - before.pop,
+      popDelta:FB.countySupportBase(state, player.provinceId) - before.pop,
       cooldown:player.cooldowns['convert_faith:self'],
       againOk:again.ok,
       againReason:again.reason,
@@ -134,7 +134,7 @@ test('converts the household and stirs zealot unrest at home',
     me.born = state.date.year - 35;
     player.piety = 1000;
     player.prestige = 1000;
-    player.pop = 0;
+    FB.setCountySupport(state, player.provinceId, 0);
     const household = FB.householdMembers(state);
     const ids = household.map(function (c) { return c.id; });
     const before = { piety:player.piety, prestige:player.prestige };
@@ -150,7 +150,7 @@ test('converts the household and stirs zealot unrest at home',
       religions:ids.map(function (id) { return state.chars[id].religion; }),
       pietySpent:before.piety - player.piety,
       prestigeSpent:before.prestige - player.prestige,
-      pop:player.pop,
+      pop:FB.countySupportBase(state, player.provinceId),
       modifiers:modifiers,
       deedCan:deedStatus.can,
       deedReason:deedStatus.reason,

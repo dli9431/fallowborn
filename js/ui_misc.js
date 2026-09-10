@@ -194,11 +194,11 @@ window.FB = window.FB || {};
     if (Math.abs(rounded) < 0.05) rounded = 0;
     return (rounded > 0 ? '+' : '') + rounded;
   }
-  function modifierEffectText(s, id, scale, partsOnly) {
+  function modifierEffectText(s, id, scale, partsOnly, record, pid) {
     const def = FBDATA.modifiers && FBDATA.modifiers[id];
     if (!def) return partsOnly ? [] : '';
     scale = scale === undefined ? 1 : Math.max(0, Number(scale) || 0);
-    const fx = FB.modifierEffects ? FB.modifierEffects(s, id) : def.fx || {}, parts = [];
+    const fx = FB.modifierEffects ? FB.modifierEffects(s, id, record, pid) : def.fx || {}, parts = [];
     if (fx.tax) parts.push(FB.T('{amount}% county tax', {
       amount:signedPercent(fx.tax * scale)
     }));
@@ -4468,7 +4468,7 @@ window.FB = window.FB || {};
           const def = FBDATA.modifiers && FBDATA.modifiers[id];
           const record = FB.state && modifierRecord(FB.state, id, scope, pid);
           if (!def || !record) { scheduleHideTip(); return; }
-          const effects = modifierEffectText(FB.state, id);
+          const effects = modifierEffectText(FB.state, id, 1, false, record, pid);
           const upkeep = def.upkeep && def.upkeep.gold
             ? assetSeasonalMoneyCost(def.upkeep.gold) : '';
           tip.innerHTML = simpleTooltipHtml(

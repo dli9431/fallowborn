@@ -4,6 +4,8 @@ dependsOnRuntime(__filename, [
   'js/wars.js', 'js/ui_wars.js',
   'css/style.css',
   'data/actions.js',
+  'data/modifiers.js',
+  'js/modifiers.js',
   'js/actions.js',
   'js/armies.js',
   'js/holywar.js',
@@ -87,7 +89,7 @@ async function configureAggressionWar(page) {
     p.fabricatedClaim = null;
     p.aggressiveWars = [];
     p.prestige = 200;
-    p.pop = 30;
+    FB.setCountySupport(s, p.provinceId, 30);
     p.gold = 500;
     p.liegeOp = 0;
     p.liegeOps = {};
@@ -252,7 +254,7 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
       })[0];
       var preview = FB.warCausePreview(s, cause);
       var prestigeBefore = p.prestige;
-      var voiceBefore = p.pop;
+      var voiceBefore = FB.countyPopularSupport(s, p.provinceId);
       var standingsBefore = {};
       preview.aggression.vassals.concat(
         preview.aggression.foreign).forEach(function (entry) {
@@ -303,7 +305,7 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
         victoryReward:preview.victoryPrestige,
         prestigeChange:p.prestige - prestigeBefore,
         expectedPrestige:preview.aggression.prestigeChange,
-        voiceChange:p.pop - voiceBefore,
+        voiceChange:FB.countyPopularSupport(s, p.provinceId) - voiceBefore,
         expectedVoice:preview.aggression.commonVoiceChange,
         exactStandings:exactStandings,
         enemyStanding:FB.standingOf(s, {
@@ -458,6 +460,49 @@ test('war status names every opposing realm', async function ({ page }, testInfo
   expect(result.holyWarLock).toBe(result.holyWarStatus);
 });
 
+for (const width of [1100, 390]) {
+  test('ruler campaigns keep opposing goals grouped at width ' + width, async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:width, height:844 });
+    await startWarGame(page, testInfo);
+    const ids = await configureAggressionWar(page);
+    const campaigns = await page.evaluate(function (ids) {
+      const s = FB.state, subject = ids.foreignId;
+      const others = Object.keys(s.realms).filter(function (id) {
+        return id !== 'player' && id !== subject && id !== ids.enemyId &&
+          s.realms[id].alive && !s.realms[id].liege;
+      }).slice(0, 2);
+      const pairs = [[subject, ids.enemyId], [subject, others[0]], [others[1], subject]];
+      const rows = pairs.map(function (pair) {
+        const target = s.realms[pair[1]].capital;
+        const war = FB.registerOrdinaryWar(s, pair[0], {
+          enemy:pair[1], target:target, casus:{ type:'aggression' }
+        });
+        return { id:war.id, target:FB.world.byId[target].name,
+          attacker:s.realms[pair[0]].name, defender:s.realms[pair[1]].name };
+      });
+      FB.ui.showLiegeModal(subject);
+      return rows;
+    }, ids);
+    const notice = page.locator('[data-current-war="' + ids.foreignId + '"]');
+    await expect(notice.locator('.character-war-campaign')).toHaveCount(3);
+    for (const war of campaigns) {
+      const section = notice.locator('[data-war-campaign="' + war.id + '"]');
+      await expect(section.locator('h4')).toHaveText('War over ' + war.target);
+      await expect(section.locator('.character-war-goal')).toHaveCount(2);
+      await expect(section.locator('.character-war-goal').nth(0)).toContainText('Attacker: ' + war.attacker);
+      await expect(section.locator('.character-war-goal').nth(1)).toContainText('Defender: ' + war.defender);
+      const layout = await section.evaluate(function (el) {
+        const goals = el.querySelectorAll('.character-war-goal');
+        const a = goals[0].getBoundingClientRect(), b = goals[1].getBoundingClientRect();
+        return { stacked:b.top >= a.bottom, overflow:el.scrollWidth > el.clientWidth + 1 };
+      });
+      expect(layout.stacked).toBe(width === 390);
+      expect(layout.overflow).toBe(false);
+    }
+    await expect(notice.locator('[data-war-realm="' + ids.enemyId + '"]')).toHaveCount(1);
+  });
+}
+
 test('war notices lead unified ruler sheets and the Land tab',
   async function ({ page }, testInfo) {
     await startWarGame(page, testInfo);
@@ -494,20 +539,20 @@ test('war notices lead unified ruler sheets and the Land tab',
       '#gm-body > .charcard + [data-current-war]')).toBeVisible();
     await expect(sheet.locator('.character-war-goal')).toHaveCount(2);
     await expect(sheet.locator('.character-war-goal').nth(0))
-      .toContainText('Goal: Blue Crown');
+      .toContainText('Attacker: Blue Crown');
     await expect(sheet.locator('.character-war-goal').nth(0))
       .toContainText('Seize border territory from Red March.');
     await expect(sheet.locator('.character-war-goal').nth(1))
-      .toContainText('Goal: Red March');
+      .toContainText('Defender: Red March');
     await expect(sheet.locator('.character-war-goal').nth(1))
       .toContainText('Repel Blue Crown and hold the border.');
     await sheet.locator('[data-war-realm="' + ids.enemyId + '"]').click();
     await expect(sheet.locator('.realm-ruler-card .ccname')).toContainText(
       setup.enemyRuler);
     await expect(sheet.locator('.character-war-goal').nth(0))
-      .toContainText('Goal: Blue Crown');
+      .toContainText('Attacker: Blue Crown');
     await expect(sheet.locator('.character-war-goal').nth(1))
-      .toContainText('Goal: Red March');
+      .toContainText('Defender: Red March');
 
     await page.evaluate(function (data) {
       FB.ui.closeModal();
@@ -573,6 +618,7 @@ test('aggressive conquest grants no victory prestige and burdens the county',
       var expectedEnd = s.turn +
         FBDATA.modifiers.conquered_without_right.days;
       var endTurn = record && record.endTurn;
+      var duration = endTurn - s.turn;
       s.turn = endTurn;
       FB.modifierTick(s);
       return {
@@ -583,6 +629,7 @@ test('aggressive conquest grants no victory prestige and burdens the county',
         recordId:record && record.id,
         endTurn:endTurn,
         expectedEnd:expectedEnd,
+        duration:duration,
         effects:effects,
         expired:!FB.hasModifier(
           s, 'conquered_without_right', setup.targetId)
@@ -595,10 +642,11 @@ test('aggressive conquest grants no victory prestige and burdens the county',
     expect(result.victoryPrestige).toBe(0);
     expect(result.recordId).toBe('conquered_without_right');
     expect(result.endTurn).toBe(result.expectedEnd);
+    expect(result.duration).toBe(4320);
     expect(result.effects).toEqual({
-      tax:-0.15,
-      levy:-0.20,
-      commonVoice:-8,
+      tax:-0.49,
+      levy:-0.52,
+      commonVoice:-40,
       unrest:0.40
     });
     expect(result.expired).toBe(true);

@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'index.html',
   'js/events.js',
   'js/main.js',
+  'js/music.js',
   'js/portrait.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -65,6 +66,8 @@ test('telemetry accepts only the exact official play origin and stays silent loc
     await startDeterministicGame(page);
     expect(await page.evaluate(function () {
       FB.telemetry.track('local-probe', { synthetic:true });
+      FB.music.setEnabled(false, 'boot-choice');
+      FB.trackTelemetry('sound-changed', { sound_source:'settings' });
       return window.__umamiCalls;
     })).toEqual([]);
   });

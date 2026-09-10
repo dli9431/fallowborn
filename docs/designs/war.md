@@ -1,9 +1,48 @@
 # Wars
 
+Seasonal AI retains strength, frontier, and territorial-right projections only
+within one ruler's candidate evaluation. The next ruler and next season read
+fresh inputs; declaration order and random draws remain unchanged. Claim-package
+discovery visits the defender's territory in county-id order and evaluates each
+county's rights once. Daily army discovery derives its roster from active
+campaign endpoints and holy-war participants, retaining realm insertion order
+for musters without polling peaceful counts and dukes each day.
+
+Army regrouping first tries a safe, reachable capital. If home is unavailable,
+one weighted search finds the nearest friendly county the host can safely enter;
+equal travel times choose the first county id. Hostile forts, arrival-edge exit
+restrictions, and current occupation control remain authoritative. A search is
+local to one decision, so changes to hosts or control are immediately visible.
+Garrison burden checks recruitment restrictions only for forts charged to the
+requested holder, avoiding campaign scans for unrelated foreign forts.
+
+Daily orders share hostility by realm, enemy lists in original host order, and
+pursuit results by host and destination. County buckets limit defensive-strength
+checks to hosts at that destination. These projections are discarded before
+marching, reinforcement, supply losses, or battles; public queries outside that
+phase always read live state. Internal primary-host lookups avoid save repair
+where the tick has already validated the roster. Recruitment capacity accepts
+the territory projection already calculated by its caller, and detachment checks
+reject routed or undersized hosts before calculating recruitment capacity.
+
+Supply-distance maps distinguish realm and campaign, and expire on campaign or
+occupation changes as well as realm and alliance changes. Within one map build,
+controller relationship checks are shared across counties; occupation and direct
+player ownership are still checked county by county. Retreats retain capital
+priority and their original breadth-first candidate order, using one legal
+reachability traversal instead of a weighted route search per fallback county.
+
 The Deeds war card keeps host, supply/upkeep, and battle-odds facts compact.
 Labels and values stack with content-sized heights on desktop and mobile; shared
 horizontal fact-row flex bases do not apply to these vertical children. Longer
 campaign explanations remain in the existing tooltip/disclosure.
+
+Ruler-sheet war notices group each ordinary campaign in a separate bordered
+section headed by its territorial objectives (or its attacking and defending
+realms for nonterritorial wars). Explicit Attacker and Defender labels accompany
+the two goals. Mobile stacks those goals within their campaign; concurrent
+offensive and defensive wars never share an ungrouped goal grid. Holy-war
+participation has its own section, and the summary retains ruler navigation.
 
 Player war conclusions use the shared post-decision outcome acknowledgement.
 Peace decisions combine their settled receipt with the final campaign result;
@@ -63,9 +102,9 @@ the live justification set and revalidates diplomacy before declaring. The techn
 impact is **none** (`war_justification_selection`): choosing among rights already held is
 core declaration judgment, while each right keeps its existing eligibility.
 
-The core first-declaration costs are 20 prestige, 8 Popular support, 10 Standing with every
+The core first-declaration costs are 20 prestige, 10 Standing with every
 direct vassal, and 5 Standing with every foreign sovereign. Each earlier aggressive
-declaration by the current ruler within 2,880 days adds 50% to all four costs. The values
+declaration by the current ruler within 2,880 days adds 50% to these political costs. The values
 and window use the `warAggression*` balance keys. `player.aggressiveWars` stores only
 semantic `{turn,charId,enemy,target}` records; read-only history filtering ignores
 malformed, expired, future, and previous-ruler rows, while the next declaration compacts
@@ -74,13 +113,27 @@ the later inheritable house-notoriety concept.
 
 Aggression earns none of the ordinary automatic offensive-war prestige at declaration,
 county capture, a slipped-prize settlement, or accepted tribute. A captured objective
-instead receives **Conquered Without Right** for 2,160 days: −15% county tax, −20% county
-levy, −8 effective Popular support while it counts as the player's modifier county, and
+instead receives **Conquered Without Right** for 4,320 days: −15% county tax, −20% county
+levy, initially -40 county Popular support, and
 +40% harmful `unrest` exposure. The record belongs to the county and survives later
 ownership changes. Recent aggression also multiplies the existing yearly breakaway chance
 for vassals under the player's crown; negative personal Standing compounds that multiplier.
 With no recent aggression the old `breakawayChance` is unchanged, and even one declaration
 only raises pressure rather than forcing a revolt.
+
+No-claim declarations accumulate a realm-wide count, independent of the player's
+recent political-cost history. The first declaration immediately adds -20 Popular
+support to every currently ruled county, including vassal counties. Subsequent
+hits are -30, -40, and so on, added to each county's remaining declaration debt.
+Conquered objectives instead receive -40, -50, -60, and so on according to the
+campaign's declaration order. Outside counties receive no declaration penalty.
+Both debts recover by one twelfth per completed 360-day year over 4,320 days.
+Another unjust declaration preserves the remaining debt, adds the new hit, and
+restarts recovery for both unjust-war effects in the currently ruled counties.
+These county effects survive transfers and succession; there is no additional
+personal support cost. AI and player declarations share the same writer and
+idempotent campaign marker. Failed wars still count; previews and save repair
+never charge declarations or replay historical wars.
 
 The exceptional `restoration` cause belongs to one displaced rightful crowned
 protagonist. It ignores adjacency, follows the usurper realm's current capital through

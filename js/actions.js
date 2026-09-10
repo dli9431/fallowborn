@@ -364,7 +364,7 @@ window.FB = window.FB || {};
     tick: function (s) {
       s.player.piety += 4 / D;
       s.player.prestige += 2 / D;
-      s.player.pop = FB.clamp(s.player.pop + 2 / D, -100, 100);
+      FB.setCountySupport(s, s.player.provinceId, FB.clamp(FB.countySupportBase(s, s.player.provinceId) + 2 / D, -100, 100));
     },
     gain: function () { return { piety: 4, prestige: 2 }; } },
 
@@ -506,7 +506,7 @@ window.FB = window.FB || {};
     },
     tick: function (s) {
       s.player.piety += 4 / D;
-      s.player.pop = FB.clamp(s.player.pop + 2 / D, -100, 100);
+      FB.setCountySupport(s, s.player.provinceId, FB.clamp(FB.countySupportBase(s, s.player.provinceId) + 2 / D, -100, 100));
       if (skillDch(0.35)) skillUp(s, 'lea');
     },
     gain: function () { return { piety:4 }; } },
@@ -530,7 +530,7 @@ window.FB = window.FB || {};
     },
     tick: function (s) {
       s.player.gold += FB.playerTax(s) * 0.15 / D;
-      s.player.pop = FB.clamp(s.player.pop + 3 / D, -100, 100);
+      FB.setCountySupport(s, s.player.provinceId, FB.clamp(FB.countySupportBase(s, s.player.provinceId) + 3 / D, -100, 100));
       if (skillDch(0.25)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold: FB.playerTax(s) * 0.15 }; } },
@@ -5486,7 +5486,7 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     const skills = me ? FB.skillOf(me, 'dip') + FB.skillOf(me, 'ste') : 0;
     return FB.clamp(0.50 + 0.02 * (skills - 10) +
-      0.002 * (Number(state.player.pop) || 0), 0.20, 0.90);
+      0.002 * FB.countyPopularSupport(state, state.player.provinceId), 0.20, 0.90);
   };
 
   FB.localCouncilMotionStatus = function (state) {
@@ -6100,7 +6100,12 @@ window.FB = window.FB || {};
     for (const vid of FB.playerVassals(state)) {
       dues += FB.vassalTaxContribution(state, vid);
     }
-    const tolls = FB.buildingBonus(state, 'tax');
+    let tolls = 0;
+    for (const pid of FB.demesne(state)) {
+      let factor = FB.countySupportFactor(state, pid);
+      if (FB.hasModifier(state, 'commons_uprising', pid)) factor *= 1 - FB.commonsUprisingReduction(state, pid);
+      tolls += FB.buildingBonusIn(state, pid, 'tax') * factor;
+    }
     const taxable = rents + dues + tolls;
     const national = taxable * FB.techBonus(state, 'tax');
     const council = taxable * (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
@@ -10199,9 +10204,6 @@ window.FB = window.FB || {};
     const intendedPrestige = aggressionScaled(
       B.warAggressionPrestige === undefined ? -20 :
         B.warAggressionPrestige, multiplier);
-    const intendedVoice = aggressionScaled(
-      B.warAggressionCommonVoice === undefined ? -8 :
-        B.warAggressionCommonVoice, multiplier);
     const intendedVassal = aggressionScaled(
       B.warAggressionVassalStanding === undefined ? -10 :
         B.warAggressionVassalStanding, multiplier);
@@ -10210,8 +10212,6 @@ window.FB = window.FB || {};
         B.warAggressionForeignStanding, multiplier);
     const prestigeAfter = Math.max(0,
       (Number(state.player.prestige) || 0) + intendedPrestige);
-    const voiceAfter = FB.clamp(
-      (Number(state.player.pop) || 0) + intendedVoice, -100, 100);
     const vassalIds = FB.playerVassals(state).slice().sort();
     const vassals = aggressionStandingEntries(
       state, vassalIds, intendedVassal);
@@ -10219,28 +10219,32 @@ window.FB = window.FB || {};
       state, aggressionForeignRealms(state), intendedForeign);
     const modifier = FBDATA.modifiers &&
       FBDATA.modifiers.conquered_without_right;
+    const supportStacks = FB.aggressionDeclarationCount ? FB.aggressionDeclarationCount(state, 'player') : 0;
+    const realmBurden = FBDATA.modifiers && FBDATA.modifiers.aggressive_rule;
     out.declarationPrestige = 0;
     out.victoryPrestige = 0;
     out.aggression = {
       recentCount:recent.length,
+      realmSupportChange:realmBurden ? (realmBurden.fx.commonVoice || 0) + (realmBurden.supportPerStack || 0) * supportStacks : 0,
+      realmSupportDays:realmBurden ? realmBurden.days : 4320,
       escalationMultiplier:multiplier,
       prestigeChange:prestigeAfter -
         (Number(state.player.prestige) || 0),
-      commonVoiceChange:voiceAfter -
-        (Number(state.player.pop) || 0),
+      commonVoiceChange:realmBurden ? (realmBurden.fx.commonVoice || 0) + (realmBurden.supportPerStack || 0) * supportStacks : 0,
       intendedVassalStanding:intendedVassal,
       intendedForeignStanding:intendedForeign,
       vassals:vassals,
       foreign:foreign,
       opposition:aggressionOpposition(
-        state, voiceAfter - (Number(state.player.pop) || 0),
+        state, realmBurden ? (realmBurden.fx.commonVoice || 0) + (realmBurden.supportPerStack || 0) * supportStacks : 0,
         vassals, foreign),
       breakawayMultiplier:FB.aggressiveWarBreakawayMultiplier
         ? FB.aggressiveWarBreakawayMultiplier(state, 1) : 1,
       modifier:modifier ? {
         id:'conquered_without_right',
         days:modifier.days,
-        fx:modifier.fx || {}
+        supportStacks:supportStacks,
+        fx:FB.modifierEffects ? FB.modifierEffects(state, 'conquered_without_right', { supportStacks:supportStacks }) : modifier.fx || {}
       } : null
     };
     let enemyStanding = FB.standingOf(state, {
@@ -10263,8 +10267,7 @@ window.FB = window.FB || {};
     if (!consequence) return false;
     const p = state.player;
     p.prestige += consequence.prestigeChange;
-    p.pop = FB.clamp((Number(p.pop) || 0) +
-      consequence.commonVoiceChange, -100, 100);
+    // The campaign declaration applies county support penalties once.
     for (let i = 0; i < consequence.vassals.length; i++) {
       const entry = consequence.vassals[i];
       FB.adjustStanding(state, { kind:'realm', id:entry.realmId },
@@ -10277,7 +10280,7 @@ window.FB = window.FB || {};
     }
     if (FB.recordAggressiveWar) FB.recordAggressiveWar(state, cause);
     FB.news(state, FB.msg('news.action.war_aggression_cost',
-      '⚔ The War of Aggression stains your rule: prestige {prestige}, Popular support {voice}, and condemnation from direct vassals and foreign courts.', {
+      '⚔ The War of Aggression stains your rule: prestige {prestige}, Popular support {voice} in every currently ruled county, and condemnation from direct vassals and foreign courts.', {
         prestige:consequence.prestigeChange,
         voice:consequence.commonVoiceChange
       }));

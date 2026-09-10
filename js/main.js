@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.2';
+FB.VERSION = '1.179.3';
 FB.CHANGELOG = [
+  { v: '1.179.3', date: '2026-09-10', changes: [
+    'Popular support belongs to counties, affects taxes and levies, and guides local revolt spread. Unjust wars impose stacking penalties that recover annually.',
+    'Fast-forward reuses army calculations, family trees avoid duplicate branches, and ruler sheets separate concurrent campaigns.'
+  ] },
   { v: '1.179.2', date: '2026-09-09', changes: [
     'Fast-forward and conquest previews reuse calculations, and modifier receipts use shorter chips. War declarations and peace demands identify the correct campaign, and peace outcomes show the imposed terms.'
   ] },
@@ -1600,6 +1604,9 @@ FB.CHANGELOG = [
       game_version:FB.VERSION,
       locale:FB.locale || 'en'
     };
+    if (FB.music && FB.music.telemetryState) {
+      data.sound_state = FB.music.telemetryState();
+    }
     if (s && s.player) {
       data.player_tier = Number(s.player.tier) || 0;
       data.dynasty_generation = Number(s.generation) || 1;
@@ -2978,7 +2985,7 @@ FB.CHANGELOG = [
         charId: null, houseFounderId:null,
         tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
-        provinceId: provId, homeSettlement: settIdx, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        provinceId: provId, homeSettlement: settIdx, liege: null, liegeOp: 0, liegeOps: {},
         familyParentMigration:1,
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
@@ -3283,7 +3290,7 @@ FB.CHANGELOG = [
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
-        provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {},
         faithStandingMigration:0, realmStandingFaithBases:{},
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         developmentBaselineMigration: 1,
@@ -3544,7 +3551,7 @@ FB.CHANGELOG = [
     if (events.length) {
       // runEvents reports whether a modal actually opened; autoresolved
       // events pass silently and the day keeps flowing
-      if (FB.ui.runEvents(events)) return 'event';
+      if (FB.ui.runEvents(events, { syncRulers:seasonBoundary })) return 'event';
       /* runEvents closes its queue through afterEvents, including the mortal
          and promotion checks. Do not repeat that whole post-event pass. */
       return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
@@ -4534,7 +4541,7 @@ FB.CHANGELOG = [
     if (FB.schoolingYearEvents) FB.schoolingYearEvents(s, schoolingAnnual);
 
     // popular opinion drifts toward 0
-    p.pop = Math.round(p.pop * 0.85);
+    FB.countySupportYear(s);
     const standingRealms = p.liegeOps ? Object.keys(p.liegeOps) : [];
     if (p.liege && standingRealms.indexOf(p.liege) < 0) {
       standingRealms.push(p.liege);
@@ -5422,7 +5429,7 @@ FB.CHANGELOG = [
     p.travelHistory = [];
     p.travelSettlement = null;
     p.capitalRelocation = null;
-    p.pop = Math.round(p.pop * 0.5);
+    // County support survives succession.
     // transition costs and standing cuts must not read as a season's losses
     s.seasonMark = { gold: p.gold, prestige: p.prestige, piety: p.piety };
     s.seasonNet = null;

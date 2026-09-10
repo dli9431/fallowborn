@@ -61,6 +61,21 @@ window.FB = window.FB || {};
     return !!(p && p.musicChoice === 'on');
   }
 
+  M.telemetryState = function () {
+    const p = prefs();
+    if (!supported || !M.hasCatalog()) return 'unavailable';
+    if (!p || !p.musicChoice) return 'unknown';
+    return !enabled() || p.musicVolume === 0 || titlePaused ||
+      (mode === 'game' && playbackPaused) ? 'silent' : 'on';
+  };
+
+  function trackSound(name, source) {
+    if (FB.trackTelemetry) FB.trackTelemetry(name, {
+      sound_source:source,
+      music_choice:enabled() ? 'on' : 'off'
+    });
+  }
+
   function backgroundPlaybackEnabled() {
     const p = prefs();
     return !!(p && p.musicBackgroundPlayback);
@@ -537,12 +552,12 @@ window.FB = window.FB || {};
     choice.classList.remove('hidden');
     play.onclick = function () {
       choice.classList.add('hidden');
-      M.setEnabled(true);
+      M.setEnabled(true, 'boot-choice');
       done();
     };
     silent.onclick = function () {
       choice.classList.add('hidden');
-      M.setEnabled(false);
+      M.setEnabled(false, 'boot-choice');
       done();
     };
     return true;
@@ -684,21 +699,27 @@ window.FB = window.FB || {};
     updateMediaSession(null);
   }
 
-  M.setEnabled = function (value) {
+  M.setEnabled = function (value, source) {
     const p = prefs();
     if (!p) return;
+    const previousChoice = p.musicChoice;
+    const previousSound = M.telemetryState();
     titlePaused = false;
     p.musicChoice = value ? 'on' : 'off';
     savePrefs();
     updateTitleToggle();
     if (!value) {
       stopAudio();
-      return;
+    } else if (supported && M.hasCatalog()) {
+      signature = '';
+      if (FB.state) M.sync(FB.state, true);
+      else M.showTitle(true);
     }
-    if (!supported || !M.hasCatalog()) return;
-    signature = '';
-    if (FB.state) M.sync(FB.state, true);
-    else M.showTitle(true);
+    if (source === 'boot-choice') {
+      trackSound('sound-choice', 'boot-choice');
+    } else if (previousChoice !== p.musicChoice || previousSound !== M.telemetryState()) {
+      trackSound('sound-changed', 'settings');
+    }
   };
 
   M.toggleTitlePlayback = function () {
@@ -721,6 +742,7 @@ window.FB = window.FB || {};
         signature = '';
         M.showTitle(true);
       }
+      trackSound('sound-changed', 'title-control');
       return true;
     }
     titlePaused = true;
@@ -729,6 +751,7 @@ window.FB = window.FB || {};
     if (activeAudio >= 0) audio[activeAudio].pause();
     setMediaSessionState('paused');
     updateTitleToggle();
+    trackSound('sound-changed', 'title-control');
     return true;
   };
 
@@ -736,6 +759,7 @@ window.FB = window.FB || {};
     if (!initialized) M.init();
     if (mode !== 'game' || !enabled() || !currentTrack) return false;
     playbackPaused = !playbackPaused;
+    trackSound('sound-changed', 'playback-control');
     if (playbackPaused) {
       for (let i = 0; i < audio.length; i++) {
         if (audio[i].src) audio[i].pause();
@@ -767,9 +791,11 @@ window.FB = window.FB || {};
   M.setVolume = function (value) {
     const p = prefs();
     if (!p) return;
+    const previousSound = M.telemetryState();
     p.musicVolume = FB.clamp(Number(value) || 0, 0, 1);
     savePrefs();
     if (activeAudio >= 0) audio[activeAudio].volume = p.musicVolume;
+    if (previousSound !== M.telemetryState()) trackSound('sound-changed', 'volume');
   };
 
   function fadeTo(nextIndex, oldIndex, token) {

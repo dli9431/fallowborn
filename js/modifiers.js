@@ -43,9 +43,12 @@ window.FB = window.FB || {};
       if (!raw || typeof raw !== 'object' || Array.isArray(raw) ||
           typeof raw.id !== 'string' || !definition(raw.id, scope) ||
           !validEnd(raw) || seenIds[raw.id]) { canonical = false; break; }
+      if (own(raw, 'supportStacks') && (!Number.isSafeInteger(raw.supportStacks) || raw.supportStacks < 0)) { canonical = false; break; }
+      if ((own(raw, 'supportDebt') && (typeof raw.supportDebt !== 'number' || !isFinite(raw.supportDebt) || raw.supportDebt < 0)) ||
+          (own(raw, 'supportSince') && (typeof raw.supportSince !== 'number' || !isFinite(raw.supportSince)))) { canonical = false; break; }
       seenIds[raw.id] = true;
       for (const key in raw) {
-        if (key !== 'id' && key !== 'endTurn' && key !== 'sourceEventId') {
+        if (key !== 'id' && key !== 'endTurn' && key !== 'sourceEventId' && key !== 'supportStacks' && key !== 'supportDebt' && key !== 'supportSince') {
           canonical = false;
           break;
         }
@@ -65,6 +68,9 @@ window.FB = window.FB || {};
           typeof raw.id !== 'string' || !definition(raw.id, scope) ||
           !validEnd(raw)) continue;
       const next = { id:raw.id };
+      if (Number.isSafeInteger(raw.supportStacks) && raw.supportStacks >= 0) next.supportStacks = raw.supportStacks;
+      if (typeof raw.supportDebt === 'number' && isFinite(raw.supportDebt) && raw.supportDebt >= 0) next.supportDebt = raw.supportDebt;
+      if (typeof raw.supportSince === 'number' && isFinite(raw.supportSince)) next.supportSince = raw.supportSince;
       if (own(raw, 'endTurn')) next.endTurn = raw.endTurn;
       if (typeof raw.sourceEventId === 'string' && raw.sourceEventId) {
         next.sourceEventId = raw.sourceEventId;
@@ -77,6 +83,9 @@ window.FB = window.FB || {};
       } else if (next.endTurn > byId[raw.id].endTurn) {
         byId[raw.id].endTurn = next.endTurn;
       }
+      if (next.supportStacks !== undefined) byId[raw.id].supportStacks = Math.max(byId[raw.id].supportStacks || 0, next.supportStacks);
+      if (next.supportDebt !== undefined) byId[raw.id].supportDebt = Math.max(byId[raw.id].supportDebt || 0, next.supportDebt);
+      if (next.supportSince !== undefined) byId[raw.id].supportSince = Math.max(byId[raw.id].supportSince === undefined ? -Infinity : byId[raw.id].supportSince, next.supportSince);
       if (next.sourceEventId) {
         byId[raw.id].sourceEventId = next.sourceEventId;
       }
@@ -140,6 +149,12 @@ window.FB = window.FB || {};
       for (let i = 0; i < list.length; i++) {
         if (own(list[i], 'endTurn') && list[i].endTurn < tickNextExpiry) {
           tickNextExpiry = list[i].endTurn;
+        }
+        const def = definition(list[i].id);
+        if (def && def.recoverSupport && own(list[i], 'endTurn') && state.turn < list[i].endTurn) {
+          const since = list[i].supportSince === undefined ? list[i].endTurn - def.days : list[i].supportSince;
+          const nextYear = since + (Math.max(0, Math.floor((state.turn - since) / 360)) + 1) * 360;
+          tickNextExpiry = Math.min(tickNextExpiry, nextYear);
         }
       }
     }
@@ -247,6 +262,8 @@ window.FB = window.FB || {};
     const endTurn = def.days === undefined ? null :
       state.turn + Math.max(0, Math.floor(Number(def.days) || 0));
     if (record) {
+      if (options && Number.isSafeInteger(options.supportStacks) && options.supportStacks >= 0) record.supportStacks = options.supportStacks;
+      if (options && typeof options.supportDebt === 'number' && isFinite(options.supportDebt) && options.supportDebt >= 0) { record.supportDebt = options.supportDebt; record.supportSince = state.turn; }
       if (endTurn === null) delete record.endTurn;
       else record.endTurn = endTurn;
       if (options && typeof options.sourceEventId === 'string' &&
@@ -264,6 +281,8 @@ window.FB = window.FB || {};
       return true;
     }
     record = { id:id };
+    if (options && typeof options.supportDebt === 'number' && isFinite(options.supportDebt) && options.supportDebt >= 0) { record.supportDebt = options.supportDebt; record.supportSince = state.turn; }
+    if (options && Number.isSafeInteger(options.supportStacks) && options.supportStacks >= 0) record.supportStacks = options.supportStacks;
     if (endTurn !== null) record.endTurn = endTurn;
     if (options && typeof options.sourceEventId === 'string' &&
         options.sourceEventId) {
@@ -324,8 +343,8 @@ window.FB = window.FB || {};
   };
 
   /* Live support scales local resistance without adding saved state. */
-  FB.commonsUprisingReduction = function (state) {
-    const support = FB.popEffective ? FB.popEffective(state) : state.player.pop || 0;
+  FB.commonsUprisingReduction = function (state, pid) {
+    const support = FB.countyPopularSupport(state, pid || state.player.provinceId);
     const balance = FBDATA.balance;
     const minimum = FB.clamp(balance.commonsUprisingMinReduction, 0, 1);
     const start = balance.commonsUprisingSupportThreshold;
@@ -333,10 +352,23 @@ window.FB = window.FB || {};
     return minimum + (1 - minimum) * FB.clamp((start - support) / Math.max(1, start - full), 0, 1);
   };
 
-  FB.modifierEffects = function (state, id) {
+  FB.modifierEffects = function (state, id, record, pid) {
     const def = definition(id);
+    if (def && def.recoverSupport) {
+      let support = (def.fx.commonVoice || 0) + (def.supportPerStack || 0) * (record && record.supportStacks || 0);
+      if (record && record.supportDebt !== undefined) support = -record.supportDebt;
+      if (record && record.endTurn !== undefined) {
+        const since = record.supportSince === undefined ? record.endTurn - def.days : record.supportSince;
+        const years = Math.max(0, Math.floor((state.turn - since) / 360));
+        support *= Math.max(0, 1 - years * 360 / Math.max(1, def.days));
+      }
+      return Object.assign({}, def.fx, { commonVoice:support });
+    }
+    if (def && def.supportPerStack && record && record.supportStacks) {
+      return Object.assign({}, def.fx, { commonVoice:(def.fx.commonVoice || 0) + def.supportPerStack * record.supportStacks });
+    }
     if (id !== 'commons_uprising') return def && def.fx || {};
-    const reduction = FB.commonsUprisingReduction(state);
+    const reduction = FB.commonsUprisingReduction(state, pid);
     return Object.assign({}, def && def.fx || {}, { tax:-reduction, levy:-reduction });
   };
 
@@ -349,15 +381,21 @@ window.FB = window.FB || {};
         uprising = true;
         continue;
       }
-      if (def && def.fx && typeof def.fx[key] === 'number') sum += def.fx[key];
+      if (key === 'commonVoice' && def && def.fx && (def.fx.commonVoice || def.supportPerStack || def.recoverSupport)) sum += Number(FB.modifierEffects(state, list[i].id, list[i]).commonVoice) || 0;
+      else if (def && def.fx && typeof def.fx[key] === 'number') sum += def.fx[key];
     }
     if (FB.settlementCommunityProjectModifierBonus) {
       sum += FB.settlementCommunityProjectModifierBonus(state, pid, key);
     }
     if (FB.historicalAmbitionBonus) sum += FB.historicalAmbitionBonus(state, pid, key);
+    if (key === 'tax' || key === 'levy') sum = Math.max(0, 1 + sum) * FB.countySupportFactor(state, pid) - 1;
     // Apply resistance after ordinary county bonuses so complete refusal
     // cannot be offset by another positive modifier.
-    return uprising ? Math.max(0, 1 + sum) * (1 - FB.commonsUprisingReduction(state)) - 1 : sum;
+    return uprising ? Math.max(0, 1 + sum) * (1 - FB.commonsUprisingReduction(state, pid)) - 1 : sum;
+  };
+
+  FB.countySupportFactor = function (state, pid) {
+    return FB.clamp(1 + FB.countyPopularSupport(state, pid) / 100, 0, 2);
   };
 
   FB.campaignModifierApplies = function (state) {
@@ -439,13 +477,47 @@ window.FB = window.FB || {};
     return Math.max(0, Math.ceil(record.endTurn - state.turn));
   };
 
-  FB.popEffective = function (state) {
-    let value = Number(state.player.pop) || 0;
-    const demesne = FB.modifierCounties(state);
-    for (let i = 0; i < demesne.length; i++) {
-      value += FB.modBonus(state, 'commonVoice', demesne[i]);
+  FB.countySupportBase = function (state, pid) {
+    const value = state.countySupport && state.countySupport[pid];
+    return typeof value === 'number' && isFinite(value) ? value : 0;
+  };
+  FB.setCountySupport = function (state, pid, value) {
+    if (!pid || !FB.world.byId[pid] || !isFinite(Number(value))) return false;
+    if (!state.countySupport) state.countySupport = {};
+    const next = FB.clamp(Number(value), -100, 100);
+    if (state.countySupport[pid] === next) return true;
+    state.countySupport[pid] = next;
+    noteModifierMutation();
+    return true;
+  };
+  FB.adjustCountySupport = function (state, pid, amount) {
+    return FB.setCountySupport(state, pid, FB.countySupportBase(state, pid) + amount);
+  };
+  FB.countyPopularSupport = function (state, pid) {
+    pid = pid || state.player.provinceId;
+    return FB.countySupportBase(state, pid) + FB.modBonus(state, 'commonVoice', pid);
+  };
+  // Compatibility query for older mods; there is no personal support record.
+  FB.popEffective = function (state) { return FB.countyPopularSupport(state, state.player.provinceId); };
+  FB.ensureCountySupport = function (state) {
+    if (!state.countySupport || typeof state.countySupport !== 'object' || Array.isArray(state.countySupport)) state.countySupport = {};
+    for (const pid in state.countySupport) {
+      const value = state.countySupport[pid];
+      if (!FB.world.byId[pid] || typeof value !== 'number' || !isFinite(value)) delete state.countySupport[pid];
+      else state.countySupport[pid] = FB.clamp(value, -100, 100);
     }
-    return value;
+    if (Object.prototype.hasOwnProperty.call(state.player, 'pop')) {
+      const legacy = Number(state.player.pop) || 0;
+      for (const pid of FB.modifierCounties(state)) {
+        if (state.countySupport[pid] === undefined && legacy) state.countySupport[pid] = FB.clamp(legacy, -100, 100);
+      }
+      delete state.player.pop;
+    }
+  };
+  FB.countySupportYear = function (state) {
+    FB.ensureCountySupport(state);
+    for (const pid in state.countySupport) state.countySupport[pid] = Math.sign(state.countySupport[pid]) * Math.floor(Math.abs(state.countySupport[pid]) * 0.85);
+    noteModifierMutation();
   };
 
   FB.eventTagBonus = function (state, tag, pid) {
@@ -510,6 +582,7 @@ window.FB = window.FB || {};
 
   FB.ensureModifiers = function (state) {
     if (!state) return null;
+    FB.ensureCountySupport(state);
     const storage = repairStorage(state);
     FB.syncGreatHolyWarModifiers(state, null, true);
     rememberTickState(state);
@@ -518,9 +591,10 @@ window.FB = window.FB || {};
 
   FB.modifierTick = function (state) {
     if (tickCacheCurrent(state) && state.turn < tickNextExpiry) return;
+    const recoveryDue = tickCacheCurrent(state) && state.turn >= tickNextExpiry;
     FB.ensureModifiers(state);
     const county = state.modifiers.county;
-    let changed = false;
+    let changed = recoveryDue;
     for (const pid in county) {
       if (!own(county, pid)) continue;
       const list = county[pid];

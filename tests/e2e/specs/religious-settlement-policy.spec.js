@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'js/institutions.js',
   'js/parliament.js',
   'js/politics.js',
@@ -76,7 +77,7 @@ async function configureCrown(page) {
     p.gold = 500;
     p.prestige = 200;
     p.piety = 100;
-    p.pop = 0;
+    FB.setCountySupport(FB.state, p.provinceId, 0);
     p.liege = null;
     p.war = null;
     p.travel = null;
@@ -338,12 +339,12 @@ test('protected worship records faith privileges and early repeal is unlawful',
       s.date.year++;
       const status = FB.realmPolicyStatus(
         s, 'religious_tolerance', 'confessional_preference');
-      const popBefore = p.pop;
+      const popBefore = FB.countySupportBase(FB.state, p.provinceId);
       const repealed = FB.realmPolicyProclaim(
         s, 'religious_tolerance', 'confessional_preference');
       /* read the unlawful-repeal cost now, before the lawful sequence below
          re-proclaims and pays its own onEnact pop */
-      const popAfterRepeal = p.pop;
+      const popAfterRepeal = FB.countySupportBase(FB.state, p.provinceId);
       const demands = FB.collectiveDemandSummary(s);
       const mistreatment = (s.collectiveDemands.mistreatment || [])
         .filter(function (row) {

@@ -1439,7 +1439,7 @@ FBDATA.balance = {
   /* unjustified player wars: the current ruler's recent declarations make
      each new political cost harsher and keep vassal breakaway pressure high */
   warAggressionMemoryDays: 2880,
-  warAggressionPrestige: -20, warAggressionCommonVoice: -8,
+  warAggressionPrestige: -20,
   warAggressionVassalStanding: -10, warAggressionForeignStanding: -5,
   warAggressionEscalationPerRecent: 0.5,
   warAggressionBreakawayPerRecent: 0.5,

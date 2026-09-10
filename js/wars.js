@@ -465,12 +465,21 @@
     }
     return out;
   };
-  FB.claimPackageCandidates = function (state, rid, enemy) {
-    return Object.keys(FB.world.byId).sort().filter(function (pid) {
-      return FB.warTargetDefender(state, rid, pid) === enemy && FB.territorialWarRights(state, rid, pid).length;
-    }).map(function (pid) {
-      return { target:pid, enemy:enemy, justifications:FB.territorialWarRights(state, rid, pid) };
+  function territorialRightsForInspection(state, rid, pid, inspection) {
+    if (!inspection) return FB.territorialWarRights(state, rid, pid);
+    if (!own(inspection.rights, pid)) {
+      inspection.rights[pid] = FB.territorialWarRights(state, rid, pid);
+    }
+    return inspection.rights[pid];
+  }
+  FB.claimPackageCandidates = function (state, rid, enemy, inspection) {
+    const candidates = [];
+    FB.realmTerritory(state, enemy).slice().sort().forEach(function (pid) {
+      if (FB.warTargetDefender(state, rid, pid) !== enemy) return;
+      const rights = territorialRightsForInspection(state, rid, pid, inspection);
+      if (rights.length) candidates.push({ target:pid, enemy:enemy, justifications:rights });
     });
+    return candidates;
   };
   function packageKey(attacker, causes) {
     return JSON.stringify([attacker, causes[0] && causes[0].enemy,
@@ -486,7 +495,7 @@
     return { sovereign:sovereign, liege:liegeOf(state, rid) || null,
       family:family, level:record && record.level || 'customary' };
   };
-  FB.warDeclarationPreview = function (state, rid, causes) {
+  FB.warDeclarationPreview = function (state, rid, causes, inspection) {
     const out = { valid:false, reason:'', unlawful:false, law:null, key:null };
     function fail(text) { out.reason = text; return out; }
     const realm = state.realms[rid];
@@ -508,14 +517,14 @@
       if (causes[0].type === 'caliphate' && !FB.caliphateWarClaimantEligible(state)) return fail(FB.T('You are not eligible to claim this office.'));
       if (['independence', 'defection', 'enforcement'].indexOf(causes[0].type) >= 0) return fail(FB.T('Use the dedicated political action for this campaign.'));
     }
-    const selected = {}, frontier = FB.realmTerritory(state, rid), starts = [];
+    const selected = {}, frontier = inspection ? inspection.frontier : FB.realmTerritory(state, rid), starts = [];
     for (const cause of causes) {
       if (cause.enemy !== enemy || selected[cause.target]) return fail(FB.T('Choose distinct objectives against one defender.'));
       if (causes.length > 1 && ['dejure', 'fabricated'].indexOf(cause.type) < 0) return fail(FB.T('Only lawful territorial claims can be combined.'));
       if (special && causes.length > 1) return fail(FB.T('This campaign has one distinct outcome.'));
       if (!special) {
         if (FB.warTargetDefender(state, rid, cause.target) !== enemy) return fail(FB.T('An objective is no longer held by that defender.'));
-        if (cause.type !== 'aggression' && !FB.territorialWarRights(state, rid, cause.target).some(function (right) {
+        if (cause.type !== 'aggression' && !territorialRightsForInspection(state, rid, cause.target, inspection).some(function (right) {
           return right.type === cause.type && (right.titleKind || '') === (cause.titleKind || '') && (right.titleId || '') === (cause.titleId || '');
         })) return fail(FB.T('You no longer hold that territorial right.'));
       }
@@ -593,7 +602,47 @@
     }
     return out;
   };
+  FB.aggressionDeclarationCount = function (state, rid) {
+    const realm = state.realms && state.realms[rid];
+    const count = realm && realm.aggressionDeclarations;
+    return Number.isSafeInteger(count) && count > 0 ? count : 0;
+  };
+  FB.applyAggressionConquest = function (state, war, pid) {
+    const sequence = Number.isSafeInteger(war.aggressionSequence) && war.aggressionSequence > 0
+      ? war.aggressionSequence : 1;
+    const def = FBDATA.modifiers.conquered_without_right;
+    const support = (def.fx.commonVoice || 0) + (def.supportPerStack || 0) * (sequence - 1);
+    FB.addModifier(state, 'conquered_without_right', pid, {
+      supportStacks:sequence - 1, supportDebt:Math.max(0, -support)
+    });
+  };
+  function recordAggressionDeclaration(state, war) {
+    if (war.aggressionSequence || !(war.objectives || []).some(function (o) { return o.type === 'aggression'; })) return;
+    const realm = state.realms[war.attacker];
+    if (!realm) return;
+    const sequence = FB.aggressionDeclarationCount(state, war.attacker) + 1;
+    realm.aggressionDeclarations = sequence;
+    war.aggressionSequence = sequence;
+    const burden = FBDATA.modifiers.aggressive_rule;
+    const hit = Math.max(0, -(burden.fx.commonVoice || 0) - (burden.supportPerStack || 0) * (sequence - 1));
+    for (const pid of FB.realmTerritory(state, war.attacker)) {
+      const records = FB.countyModifierRecords(state, pid);
+      const existing = records.filter(function (record) { return record.id === 'aggressive_rule'; })[0];
+      const remaining = existing ? Math.max(0, -FB.modifierEffects(state, existing.id, existing).commonVoice) : 0;
+      FB.addModifier(state, 'aggressive_rule', pid, {
+        supportDebt:remaining + hit, silent:true
+      });
+      const conquered = records.filter(function (record) { return record.id === 'conquered_without_right'; })[0];
+      if (conquered) FB.addModifier(state, conquered.id, pid, {
+        supportDebt:Math.max(0, -FB.modifierEffects(state, conquered.id, conquered).commonVoice), silent:true
+      });
+    }
+    FB.news(state, FB.msg('news.war.aggressive_rule',
+      'A war without right gives {realm} {support} Popular support in every county it currently rules. The penalty recovers yearly over {days} days without another unjust declaration.',
+      { realm:realm.name, support:-hit, days:burden.days }));
+  }
   FB.recordWarDeclaration = function (state, war, preview) {
+    recordAggressionDeclaration(state, war);
     war.unlawful = !!preview.unlawful;
     if (state.warPermissions && preview.key) delete state.warPermissions[preview.key];
     if (!war.unlawful) return;
@@ -688,7 +737,7 @@
         } else if ((state.player.provs || []).indexOf(o.target) >= 0) {
           state.player.provs = state.player.provs.filter(function (pid) { return pid !== o.target; });
         }
-        if (o.type === 'aggression' && FB.addModifier) FB.addModifier(state, 'conquered_without_right', o.target);
+        if (o.type === 'aggression' && FB.addModifier) FB.applyAggressionConquest(state, w, o.target);
         FB.damageCountyDevelopment(state, o.target);
         if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, o.target, 'conquest');
         FB.news(state, FB.msg('news.war.objective_awarded', '{realm} gains {province} in the peace settlement.', {
@@ -782,16 +831,24 @@
       const commitments = FB.realmWars(state, rid).filter(function (w) { return w.attacker === rid; }).length + (holyCommitment ? 1 : 0);
       if (commitments >= 2 || !FB.chance(r.ruler.personality === 'bellicose' ? 0.08 : 0.025)) return;
       const seen = {}, candidates = [];
-      FB.realmTerritory(state, rid).forEach(function (pid) {
+      // One ruler's read-only candidate pass; discard before another ruler can
+      // declare, change Standing, or otherwise alter military projections.
+      const inspection = { frontier:FB.realmTerritory(state, rid), rights:Object.create(null) };
+      const strengths = Object.create(null);
+      function strength(id) {
+        if (!own(strengths, id)) strengths[id] = FB.realmStrength(state, id);
+        return strengths[id];
+      }
+      inspection.frontier.forEach(function (pid) {
         Object.keys(FB.world.adj[pid] || {}).sort().forEach(function (nb) {
           if (seen[nb]) return;
           seen[nb] = 1;
           const enemy = FB.warTargetDefender(state, rid, nb);
-          if (!enemy || FB.realmStrength(state, rid) < FB.realmStrength(state, enemy) * 1.2) return;
-          const rights = FB.territorialWarRights(state, rid, nb);
+          if (!enemy || strength(rid) < strength(enemy) * 1.2) return;
+          const rights = territorialRightsForInspection(state, rid, nb, inspection);
           const cause = Object.assign({ enemy:enemy }, rights[0] || { type:'aggression', target:nb });
           if (FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, rid), enemy, nb)) return;
-          const preview = FB.warDeclarationPreview(state, rid, [cause]);
+          const preview = FB.warDeclarationPreview(state, rid, [cause], inspection);
           if (preview.valid) candidates.push({ cause:cause, preview:preview });
         });
       });
@@ -800,7 +857,7 @@
       const picked = candidates[0], cause = picked.cause;
       const causes = [cause];
       if (cause.type !== 'aggression') {
-        const rights = FB.claimPackageCandidates(state, rid, cause.enemy), reached = {};
+        const rights = FB.claimPackageCandidates(state, rid, cause.enemy, inspection), reached = {};
         reached[cause.target] = 1;
         let changed = true;
         while (changed) {
@@ -811,7 +868,7 @@
             causes.push(Object.assign({ enemy:cause.enemy }, entry.justifications[0]));
           });
         }
-        picked.preview = FB.warDeclarationPreview(state, rid, causes);
+        picked.preview = FB.warDeclarationPreview(state, rid, causes, inspection);
         if (!picked.preview.valid) return;
       }
       if (picked.preview.unlawful && picked.preview.law.level === 'permission') {
@@ -950,12 +1007,20 @@
     return result;
   };
   const friendly = FB.armyFriendlyProvince;
-  FB.armyFriendlyProvince = function (state, army, pid) {
+  FB.armyFriendlyProvince = function (state, army, pid, relations) {
     const holder = (state.holder || {})[pid] || (state.owner || {})[pid];
     const occupation = FB.ordinaryOccupationControl(state, army, pid);
     if (occupation !== null) return occupation;
-    if (holder && FB.armiesHostile(state, army, { realm:holder })) return false;
-    return friendly(state, army, pid);
+    if (holder) {
+      let hostile;
+      if (relations && own(relations.hostile, holder)) hostile = relations.hostile[holder];
+      else {
+        hostile = FB.armiesHostile(state, army, { realm:holder });
+        if (relations) relations.hostile[holder] = hostile;
+      }
+      if (hostile) return false;
+    }
+    return friendly(state, army, pid, relations);
   };
   FB.ordinaryOccupationControl = function (state, army, pid) {
     const w = FB.ordinaryWarById(state, army.warId);

@@ -96,8 +96,15 @@ FBDATA.modifiers = {
   conquered_without_right: {
     name:'Conquered Without Right', icon:'⚔',
     desc:'The county was taken without claim or de jure right. Its people resist the new rule and its obligations.',
-    scope:'county', days:2160,
-    fx:{ tax:-0.15, levy:-0.20, commonVoice:-8, unrest:0.40 }
+    scope:'county', days:4320,
+    supportPerStack:-10, recoverSupport:true,
+    fx:{ tax:-0.15, levy:-0.20, commonVoice:-40, unrest:0.40 }
+  },
+  aggressive_rule: {
+    name:'Wars Without Right', icon:'⚔',
+    desc:'Wars without a recognized right erode county support. Each further declaration adds to the penalty and restarts twelve years of annual recovery.',
+    scope:'county', days:4320, supportPerStack:-10, recoverSupport:true,
+    fx:{ commonVoice:-20 }
   },
   /* Royal-policy modifiers (data/policies.js, institution 'crown') carry no
      `days`: they stand while the proclaimed level stands, and the policy sync

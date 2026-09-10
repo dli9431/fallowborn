@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'js/council.js',
   'js/institutions.js',
   'js/parliament.js',
@@ -281,7 +282,7 @@ test('mistreatment creates bounded demands and refusal organizes opposition',
     const result = await page.evaluate(function () {
       const s = FB.state;
       s.player.tier = 3;
-      s.player.pop = -60;
+      FB.setCountySupport(s, s.player.provinceId, -60);
       s.player.war = null;
       s.collectiveDemands = null;
       s.privileges = [];

@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'data/actions.js',
   'data/events_noble.js',
   'data/map_data.js',
@@ -62,7 +63,7 @@ async function startGame(page, testInfo) {
         p.gold = 100;
         p.prestige = 500;
         p.piety = 0;
-        p.pop = 30;
+        FB.setCountySupport(FB.state, p.provinceId, 30);
         p.flags = {};
         delete p.titleLapse;
         delete p.liegeGrants;

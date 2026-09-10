@@ -520,6 +520,7 @@ window.FB = window.FB || {};
         if (v > best) { best = v; pick = o; }
       }
     }
+    const householdLocal = FB.eventOptionHouseholdLocal && FB.eventOptionHouseholdLocal(s, pick);
     let receipt;
     try {
       receipt = FB.resolveEventOption(s, ev, pick, ctx, { automated:true });
@@ -527,6 +528,7 @@ window.FB = window.FB || {};
       UI.autoResolving = false;
     }
     if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
+    return householdLocal;
   }
 
   UI.showAutoResolve = function (options) {
@@ -643,7 +645,12 @@ window.FB = window.FB || {};
   /* ================= event modal ================= */
   /* Returns true if a modal actually opened (so fast-forward stops);
      autoresolved events pass through silently. */
-  UI.runEvents = function (list) {
+  let eventBatchNeedsSync = true;
+  UI.runEvents = function (list, options) {
+    // Non-tick callers may have changed world state before queuing an event.
+    const needsSync = !options || options.syncRulers !== false;
+    if (!eventOpen && !pendingEvents.length) eventBatchNeedsSync = needsSync;
+    else if (needsSync) eventBatchNeedsSync = true;
     pendingEvents = pendingEvents.concat(list);
     if (!eventOpen) return nextEvent();
     return true;
@@ -664,6 +671,7 @@ window.FB = window.FB || {};
         if (s.player.dead || !protagonist || protagonist.health <= 0 ||
             item.ctx.protagonistId !== s.player.charId ||
             !item.ctx.receipt || (FB.game.auto && FB.game.auto.all)) continue;
+        eventBatchNeedsSync = true;
         showDecisionOutcome(item.ctx.receipt);
         return true;
       }
@@ -671,7 +679,11 @@ window.FB = window.FB || {};
           !FB.ensureEventParticipants(s, ev, item.ctx)) continue;
       if (FB.eventContextStillValid &&
           !FB.eventContextStillValid(s, ev, item.ctx)) continue;
-      if (autoWants(ev, item)) { autoResolve(ev, item); continue; }
+      if (autoWants(ev, item)) {
+        if (!autoResolve(ev, item)) eventBatchNeedsSync = true;
+        continue;
+      }
+      eventBatchNeedsSync = true;
       showEvent(ev, item.ctx || {});
       return true;
     }
@@ -686,8 +698,8 @@ window.FB = window.FB || {};
     itemShopOpenAfterEvents = null;
     UI.refresh();
     if (FB.game && FB.game.afterEvents) FB.game.afterEvents({
-      syncRulers:true,
-      forcePromotionCheck:true
+      syncRulers:eventBatchNeedsSync,
+      forcePromotionCheck:eventBatchNeedsSync
     });
     /* A visible event is the interruption, not a new persistent pause state.
        When enabled in Settings, resume after its final answer even when reached by fast-forward
@@ -5177,7 +5189,7 @@ window.FB = window.FB || {};
     if (preview.aggression) {
       const consequence = preview.aggression;
       return FB.T(
-        'Immediate: {prestige} prestige, {voice} Popular support, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right.{enemyStanding}', {
+        'Immediate: {prestige} prestige, {voice} Popular support in every currently ruled county, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right.{enemyStanding}', {
           prestige:signedNumber(consequence.prestigeChange),
           voice:signedNumber(consequence.commonVoiceChange),
           vassal:standingChangeRange(consequence.vassals),
@@ -5980,7 +5992,7 @@ window.FB = window.FB || {};
               modifier:modifierName,
               days:modifier ? modifier.days : 0,
               effects:modifier
-                ? modifierEffectText(s, modifier.id)
+                ? modifierEffectText(s, modifier.id, 1, false, modifier)
                 : FB.T('the unjust-conquest county burden')
             })) + '</p><p><b>' + esc(FB.T('Most likely opposition')) +
           '</b><br>' + esc(aggressionOppositionText(s, consequence)) + '</p>';
@@ -6020,7 +6032,7 @@ window.FB = window.FB || {};
         kv('War reason', esc(warCauseName(s, cause))) +
         kv('Siege', esc(siegeSummary)) +
         kv('Immediate cost', esc(FB.T(
-          '{prestige} prestige · {voice} Popular support', {
+          '{prestige} prestige · {voice} Popular support in every currently ruled county', {
             prestige:signedNumber(consequence.prestigeChange),
             voice:signedNumber(consequence.commonVoiceChange)
           }))) +
@@ -6032,9 +6044,13 @@ window.FB = window.FB || {};
         kv('Breakaway pressure', esc(FB.T('×{multiplier} while recent', {
           multiplier:Math.round(consequence.breakawayMultiplier * 100) / 100
         }))) +
+        (consequence.realmSupportChange ? kv('Realm-wide support', esc(FB.T(
+          '{amount} Popular support in every county you currently rule. This adds to the remaining penalty and restarts yearly recovery over {days} days.', {
+            amount:consequence.realmSupportChange, days:consequence.realmSupportDays
+          }))) : '') +
         kv('Victory burden', esc(modifier
-          ? FB.T('{modifier} · {days} days', {
-            modifier:modifierName, days:modifier.days
+          ? FB.T('{modifier} · {support} Popular support · {days} days', {
+            modifier:modifierName, support:modifier.fx.commonVoice, days:modifier.days
           })
           : FB.T('Unjust-conquest county burden')));
     } else {
@@ -8869,10 +8885,10 @@ window.FB = window.FB || {};
   UI.showMatchChoices = function () {
     if (!FB.state || UI.eventsBusy()) return;
     openModal(FB.T('Seek a match'),
-      '<div class="gm-list"><button class="btn" id="match-local">' +
+      '<div class="gm-list"><button class="btn actionbtn" id="match-local">' +
       esc(FB.T('Seek a match')) + '</button><p class="hint">' +
       esc(FB.T('Meet three or four local prospects.')) +
-      '</p><button class="btn" id="match-dynastic">' +
+      '</p><button class="btn actionbtn" id="match-dynastic">' +
       esc(FB.T('Find a dynastic match')) + '</button><p class="hint">' +
       esc(FB.T('Browse courts for yourself or your family.')) +
       '</p></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>',
@@ -13559,7 +13575,7 @@ window.FB = window.FB || {};
 
   function privilegeEffectDescription(s, record, def) {
     if (record.effectKind === 'modifier') {
-      return modifierEffectText(s, record.effectId) ||
+      return modifierEffectText(s, record.effectId, 1, false, modifierRecord(s, record.effectId, 'county', record.scopeId), record.scopeId) ||
         dt(s, 'privilege', record.defId, def, 'desc');
     }
     if (record.effectKind === 'guild_monopoly') {
@@ -13697,7 +13713,7 @@ window.FB = window.FB || {};
         const name = FB.world.byId[entry.id].name;
         h += '<p>' + esc(entry.phase === 'active'
           ? FB.T('{county}: tax and levy reduced by {reduction}%; {days} days of disruption remain.', {
-            county:name, reduction:uprising.reduction, days:entry.days
+            county:name, reduction:entry.reduction, days:entry.days
           }) : entry.phase === 'petition'
             ? FB.T('{county}: awaiting your answer. A {days}-day warning starts when you answer the petition.', {
               county:name, days:entry.days
@@ -22516,18 +22532,29 @@ window.FB = window.FB || {};
     for (const war of campaigns) {
       const context = { war:war, attacker:war.attacker, defender:war.defender };
       const attacker = s.realms[war.attacker], defender = s.realms[war.defender];
-      h += '<div class="character-war-goals"><div class="character-war-goal"><b>' +
-        esc(FB.T('Goal: {realm}', { realm:attacker ? attacker.name : war.attacker })) + '</b><span>' +
+      const targets = (war.objectives && war.objectives.length ? war.objectives :
+        (war.target ? [{ target:war.target }] : [])).map(function (objective) {
+        const province = FB.world.byId[objective.target];
+        return province ? province.name : null;
+      }).filter(function (name, index, names) { return name && names.indexOf(name) === index; });
+      const title = targets.length ? FB.T('War over {counties}', { counties:targets.join(', ') }) :
+        FB.T('{attacker} attacks {defender}', {
+          attacker:attacker ? attacker.name : war.attacker,
+          defender:defender ? defender.name : war.defender });
+      h += '<section class="character-war-campaign" data-war-campaign="' + esc(war.id) +
+        '" aria-label="' + esc(title) + '"><h4>' + esc(title) + '</h4>' +
+        '<div class="character-war-goals"><div class="character-war-goal"><b>' +
+        esc(FB.T('Attacker: {realm}', { realm:attacker ? attacker.name : war.attacker })) + '</b><span>' +
         esc(ordinaryWarGoalText(s, context, true)) + '</span></div><div class="character-war-goal"><b>' +
-        esc(FB.T('Goal: {realm}', { realm:defender ? defender.name : war.defender })) + '</b><span>' +
-        esc(ordinaryWarGoalText(s, context, false)) + '</span></div></div>';
+        esc(FB.T('Defender: {realm}', { realm:defender ? defender.name : war.defender })) + '</b><span>' +
+        esc(ordinaryWarGoalText(s, context, false)) + '</span></div></div></section>';
     }
     const campaign = s.greatHolyWar;
     const camp = FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, rid);
     if (campaign && camp) {
       const kingdom = FBDATA.kingdoms[campaign.targetKingdom];
-      h += '<div class="character-war-goals"><b>' + esc(FB.T('Holy war')) + '</b><span>' +
-        esc(FB.T('Contest control of {kingdom}.', { kingdom:kingdom ? kingdom.name : campaign.targetKingdom })) + '</span></div>';
+      h += '<section class="character-war-campaign"><h4>' + esc(FB.T('Holy war')) + '</h4><span>' +
+        esc(FB.T('Contest control of {kingdom}.', { kingdom:kingdom ? kingdom.name : campaign.targetKingdom })) + '</span></section>';
     }
     return h;
   }
@@ -22538,7 +22565,7 @@ window.FB = window.FB || {};
     if (!FB.isRealmAtWar(s, rid)) return truce ? '<div class="progressnote">' + esc(truce) + '</div>' : '';
     return '<div class="progressnote warnote character-current-war" ' +
       'data-current-war="' + esc(rid) + '"><b>' +
-      esc(FB.T('Current war')) + '</b><br>⚔ ' +
+      esc(FB.T('Current wars')) + '</b><br>⚔ ' +
       FB.warStatusLinkHtml(s, rid) + realmWarGoalsHtml(s, rid) +
       (truce ? '<p>' + esc(truce) + '</p>' : '') + '</div>';
   }
@@ -25182,7 +25209,7 @@ window.FB = window.FB || {};
     if (!record) return;
     const name = dt(s, 'modifier', id, def, 'name');
     const desc = dt(s, 'modifier', id, def, 'desc');
-    const effects = modifierEffectText(s, id);
+    const effects = modifierEffectText(s, id, 1, false, record, pid);
     const duration = modifierDurationText(s, record, scope);
     const source = modifierSourceText(s, record, scope);
     let effectScope, transfer;
@@ -27751,12 +27778,11 @@ window.FB = window.FB || {};
       FB.T('Money pays; prestige legitimizes; piety supports faith; Standing belongs to a relationship.'),
       guideBody([
         FB.T('Money belongs to the playable household and pays costs, upkeep, wages, gifts, and contracts. Prestige supports social and political advancement. Piety supports religious acts and offices.'),
-        FB.T('Standing is scoped: a person, realm, lord, Pope, guild, or institution can each hold a different opinion. Popular support measures how favorably ordinary people view you. Guild Standing belongs to an active vocational guild record.'),
-        s ? FB.T('Current household: {money:gold}; prestige {prestige}; piety {piety}; Popular support {voice}.', {
+        FB.T('Standing is scoped: a person, realm, lord, Pope, guild, or institution can each hold a different opinion. Popular support belongs to each county and affects its taxes, levies, and unrest. View it on the Land tab. Guild Standing belongs to an active vocational guild record.'),
+        s ? FB.T('Current household: {money:gold}; prestige {prestige}; piety {piety}.', {
           gold:Math.floor(s.player.gold),
           prestige:Math.floor(s.player.prestige),
-          piety:Math.floor(s.player.piety),
-          voice:Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)
+          piety:Math.floor(s.player.piety)
         }) : FB.T('Start a life to see current resource values here.')
       ]), 'gold wealth coin prestige piety standing opinion popular support guild research');
 

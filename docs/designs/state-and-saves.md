@@ -1,5 +1,12 @@
 # Game state & saves
 
+No-claim escalation adds `realm.aggressionDeclarations` and each declared war's
+`aggressionSequence`. They are positive integer counters, independent of ruler
+generation; old saves default to no counted declarations. County modifier records
+may carry nonnegative integer `supportStacks`; definitions with `supportPerStack`
+use it for the Popular support effect. These additive fields use the existing
+save format. Loads preserve them without replaying declaration penalties.
+
 Historical ambitions add `state.historicalAmbitions`, keyed by stable definition
 ID. Each entry is either `{established:true}` for a bookmark foundation or
 `{realmId,turn,endTurn,cost:{gold,prestige,piety},prestige}` for a completed action.
@@ -1291,3 +1298,12 @@ without consuming randomness. Existing holy-war IDs, data and wrapper version 3
 remain compatible. See [war.md](war.md).
 
 Concluded war reports may carry additive peaceTerms metadata containing settlement deltas and identifiers. It is compatible with save format 3. Transient settlement snapshots are never serialized, and older reports lacking terms remain readable without retroactive estimates.
+
+## County support migration
+
+`state.countySupport` stores base support by county id, defaulting to zero. Load
+repair copies an old `player.pop` into directly held counties (or the current
+county for a landless household) only where no county value exists, then deletes
+`player.pop`. Repair is idempotent and does not overwrite newer county values.
+Temporary support debt remains in county modifier records as `supportDebt`,
+`supportSince`, and `endTurn`; it survives transfers and succession.

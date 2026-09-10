@@ -547,7 +547,7 @@ test('natural ticks retain Self and Network trees while updating visible player 
       for (let i = 0; i < FB.SKILLS.length; i++) {
         me.skills[FB.SKILLS[i]] += i + 1;
       }
-      s.player.pop = 73;
+      FB.setCountySupport(s, s.player.provinceId, 73);
       s.player.gold = 123;
       s.player.prestige = 456;
       s.player.piety = 789;
@@ -555,7 +555,6 @@ test('natural ticks retain Self and Network trees while updating visible player 
       FB.ui.refresh({ liveTick:true });
       return {
         age:String(FB.ageOf(me, s.date.year)),
-        voice:String(Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop)),
         skills:FB.SKILLS.reduce(function (values, key) {
           values[key] = String(FB.skillOf(me, key));
           return values;
@@ -573,7 +572,7 @@ test('natural ticks retain Self and Network trees while updating visible player 
     await expect(page.locator('#tab-char [data-self-value="health"] b'))
       .toHaveText('4 / 10 ' + String.fromCharCode(183) + ' Grievously wounded');
     await expect(page.locator('#tab-char [data-self-value="voice"] b'))
-      .toHaveText(liveValues.voice);
+      .toHaveCount(0);
     for (const key of Object.keys(liveValues.skills)) {
       await expect(page.locator('#tab-char [data-self-skill="' + key + '"] .num'))
         .toHaveText(liveValues.skills[key]);

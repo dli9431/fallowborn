@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/economy.js', 'js/politics.js', 'js/institutions.js', 'js/events.js',
   'js/travel.js', 'js/market.js', 'js/ui_modals.js', 'js/wars.js',
-  'js/modifiers.js', 'js/model.js', 'js/armies.js', 'js/world.js',
+  'js/modifiers.js', 'js/model.js', 'js/armies.js', 'js/world.js', 'js/main.js',
   'data/economy.js', 'data/markets.js', 'data/political_institutions.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -218,4 +218,120 @@ test('conquest rows reuse force projections and rebuild them when reopened', asy
     return { rows:rows, levyCalls:levyCalls, defenseCalls:defenseCalls, updated:first !== second };
   });
   expect(result).toEqual({ rows:3, levyCalls:2, defenseCalls:2, updated:true });
+});
+
+test('seasonal AI reuses border projections and refreshes them for the next decision', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    const realms = Object.keys(s.realms).filter(function (id) {
+      return id !== 'player' && s.realms[id].alive && !s.realms[id].liege;
+    }).sort();
+    const attacker = realms[0], enemy = realms[1], quiet = realms[2];
+    let targets;
+    const home = Object.keys(FB.world.byId).sort().find(function (pid) {
+      const duchy = FB.dejureOf(pid).duchy;
+      if (!duchy || FB.world.byId[pid].wasteland) return false;
+      const neighbors = Object.keys(FB.world.adj[pid] || {}).filter(function (nb) {
+        return !FB.world.byId[nb].wasteland && FB.dejureOf(nb).duchy === duchy;
+      }).sort();
+      for (const first of neighbors) {
+        const second = neighbors.find(function (nb) { return nb !== first && !!FB.world.adj[first][nb]; });
+        if (second) { targets = [first, second].sort(); return true; }
+      }
+      return false;
+    });
+    if (!home) throw new Error('AI fixture needs two connected border counties in the same duchy.');
+    Object.keys(s.realms).forEach(function (id) { s.realms[id].rank = 0; });
+    Object.keys(s.owner).forEach(function (pid) { s.owner[pid] = quiet; s.holder[pid] = quiet; });
+    s.owner[home] = attacker; s.holder[home] = attacker;
+    targets.forEach(function (pid) { s.owner[pid] = enemy; s.holder[pid] = enemy; });
+    s.realms[attacker].rank = 2; s.realms[attacker].capital = home;
+    s.realms[enemy].capital = targets[0];
+    s.wars = {}; s.truces = {}; s.warLaws = {}; s.warAISeason = -1;
+    FB.invalidateRealmCache(); FB.repairWars(s);
+    const names = ['realmStrength', 'territorialWarRights', 'chance', 'sameFaithHeadWarPolicy', 'areAlliedSnapshot'];
+    const saved = {}, strengthReads = {}, rightsReads = {};
+    names.forEach(function (name) { saved[name] = FB[name]; });
+    let enemyStrength = 10, rolls = 0;
+    FB.realmStrength = function (state, id) {
+      strengthReads[id] = (strengthReads[id] || 0) + 1;
+      return id === attacker ? 1000 : id === enemy ? enemyStrength : 100000;
+    };
+    FB.territorialWarRights = function (state, rid, pid) {
+      rightsReads[pid] = (rightsReads[pid] || 0) + 1;
+      return saved.territorialWarRights(state, rid, pid);
+    };
+    FB.chance = function (p) { rolls++; saved.chance(p); return true; };
+    FB.sameFaithHeadWarPolicy = function () { return null; };
+    FB.areAlliedSnapshot = function () { return false; };
+    let objectives, firstStrengthReads, firstRightsReads, nextWars;
+    try {
+      FB.generateVassalCampaigns(s);
+      const war = FB.realmWars(s, attacker)[0];
+      objectives = war && war.objectives.map(function (o) { return o.target; }).sort();
+      firstStrengthReads = Object.assign({}, strengthReads);
+      firstRightsReads = Object.assign({}, rightsReads);
+      FB.generateVassalCampaigns(s); // same-turn guard must not roll again
+      if (war) FB.settleOrdinaryWar(s, war.id, 'invalid');
+      enemyStrength = 100000;
+      s.turn += 90;
+      FB.generateVassalCampaigns(s);
+      nextWars = FB.realmWars(s, attacker).length;
+    } finally { names.forEach(function (name) { FB[name] = saved[name]; }); }
+    return { objectives:objectives, expected:targets, strengths:Object.values(firstStrengthReads),
+      rights:Object.values(firstRightsReads), attackerReads:strengthReads[attacker],
+      enemyReads:strengthReads[enemy], rolls:rolls, nextWars:nextWars };
+  });
+  expect(result.objectives).toEqual(result.expected);
+  expect(result.strengths.every(function (n) { return n === 1; })).toBe(true);
+  expect(result.rights).toEqual([1, 1]);
+  expect(result.attackerReads).toBe(2);
+  expect(result.enemyReads).toBe(2);
+  expect(result.rolls).toBe(2);
+  expect(result.nextWars).toBe(0);
+});
+
+test('local autoresolve skips global reconciliation while custom effects and season boundaries retain it', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player;
+    FB.game.auto.all = true; FB.game.auto.style = 'first';
+    const local = { id:'perf_local_event', title:'Local work', text:'A quiet day.',
+      options:[{ label:'Work', effects:{ gold:2 } }] };
+    const custom = { id:'perf_custom_event', title:'Court business', text:'A distant ruler changes.',
+      options:[{ label:'Continue', effects:{ custom:'perf_ruler_change' } }] };
+    const rid = Object.keys(s.realms).find(function (id) {
+      return id !== 'player' && !!FB.realmRulerCharacterSnapshot(s, id);
+    });
+    const ruler = FB.realmRulerCharacterSnapshot(s, rid);
+    const names = ['eventById', 'syncMaterializedRealmRulers', 'checkTierPromotions'];
+    const saved = {}; names.forEach(function (name) { saved[name] = FB[name]; });
+    let syncs = 0, promotions = 0;
+    FB.eventById = function (id) { return id === local.id ? local : id === custom.id ? custom : saved.eventById(id); };
+    FB.syncMaterializedRealmRulers = function (state) { syncs++; return saved.syncMaterializedRealmRulers(state); };
+    FB.checkTierPromotions = function (state) { promotions++; return saved.checkTierPromotions(state); };
+    FB.fns.perf_ruler_change = function () { ruler.opinion = 17; };
+    let quiet, changed, boundary, defaultCaller, gold;
+    try {
+      FB.game.afterEvents({ syncRulers:true }); // establish ordinary daily baseline
+      syncs = 0; promotions = 0;
+      gold = p.gold;
+      FB.ui.runEvents([{ id:local.id, ctx:{} }, { id:local.id, ctx:{} }], { syncRulers:false });
+      quiet = { syncs:syncs, promotions:promotions, gold:p.gold - gold,
+        modal:!document.getElementById('eventmodal').classList.contains('hidden') };
+      FB.ui.runEvents([{ id:local.id, ctx:{} }, { id:custom.id, ctx:{} }], { syncRulers:false });
+      changed = { syncs:syncs, standing:s.realms[rid].favor };
+      FB.ui.runEvents([{ id:local.id, ctx:{} }], { syncRulers:true });
+      boundary = syncs;
+      FB.ui.runEvents([{ id:local.id, ctx:{} }]);
+      defaultCaller = syncs;
+    } finally {
+      names.forEach(function (name) { FB[name] = saved[name]; });
+      delete FB.fns.perf_ruler_change;
+    }
+    return { quiet:quiet, changed:changed, boundary:boundary, defaultCaller:defaultCaller };
+  });
+  expect(result.quiet).toEqual({ syncs:0, promotions:0, gold:4, modal:false });
+  expect(result.changed).toEqual({ syncs:1, standing:17 });
+  expect(result.boundary).toBe(2);
+  expect(result.defaultCaller).toBe(3);
 });

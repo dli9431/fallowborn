@@ -71,6 +71,21 @@ player action or campaign transition directly:
 | `campaign-ended-no-heir` | The campaign ended because no playable heir remained. |
 | `community-cta-clicked` | A Discord community link was activated. Carries only the bounded `cta_surface`: `menu`, `saga`, or `report`. |
 | `rating-cta-clicked` | The direct itch.io rating link was activated. Carries only the bounded `cta_surface`: `menu` or `saga`. |
+| `sound-choice` | The first boot music prompt was answered. `music_choice` is `on` or `off`; `sound_source` is `boot-choice`. |
+| `sound-changed` | A later manual sound change. `sound_source` is `settings`, `title-control`, `playback-control`, or `volume`; `music_choice` is the saved `on`/`off` preference. |
+
+Every event also carries `sound_state`: `on`, `silent`, `unknown`, or `unavailable`.
+Silent includes manual playback pause and zero game volume as well as the saved off
+preference. Automatic background pauses do not change this classification. These values
+describe in-game intent, not OS/browser muting or whether a track actually played.
+
+For the initial silent-choice percentage, divide `sound-choice` events with
+`music_choice=off` by all `sound-choice` events and multiply by 100. For ongoing play,
+break down `campaign-started` and `campaign-resumed` by `sound_state`; divide silent
+entries by on plus silent entries, excluding unknown/unavailable. This second measure
+is a percentage of campaign entries, not distinct people. Use visitor counts for a
+visitor-based comparison and expect overlap when the same visitor changes sound state.
+Do not use toggle-event totals as the denominator: frequent togglers would skew it.
 
 Every event carries `telemetry_schema`, `game_version`, and `locale`. When available, the shared
 campaign properties are `start_bookmark`, `quick_start`, `player_tier`, and `dynasty_generation`; lifecycle

@@ -2157,7 +2157,7 @@ window.FB = window.FB || {};
     }
     if (!matches) return false;
     state.player.piety = Math.max(0, (Number(state.player.piety) || 0) - 8);
-    state.player.pop = FB.clamp((Number(state.player.pop) || 0) - 4, -100, 100);
+    FB.setCountySupport(state, state.player.provinceId, FB.clamp((Number(FB.countySupportBase(state, state.player.provinceId)) || 0) - 4, -100, 100));
     FB.news(state, FB.msg('news.item.sacred_departed',
       '🕯 The devout mutter: {item} has left a faithful house. (Piety {piety})',
       { item:FB.itemParam(state, ref, true), piety:-8 }));

@@ -2216,10 +2216,20 @@ malformed records are removed by additive save repair. Core definitions and the 
 lifecycle are documented in `docs/designs/modifiers.md`.
 
 Core ordinary-war content includes `conquered_without_right`, a timed county modifier
-granted when the player captures the objective of a saved `aggression` cause. Mods may
+granted when an attacker captures the objective of a saved `aggression` cause. Mods may
 replace its complete definition like any other modifier, but should preserve county
 scope because capture passes the conquered province id and the declaration preview reads
 its duration and effects directly.
+
+`conquered_without_right` starts at −20 Popular support for 4,320 days. Its optional
+`supportPerStack:-10` combines with the instance's nonnegative integer
+`supportStacks` to increase only the support penalty. `aggressive_rule` uses the
+same duration and per-stack amount with zero base support. Repeat no-claim
+declarations add a stack in every county then ruled by the aggressor and refresh
+the local expiry. `FB.modifierEffects(state,id,record)` projects the instance;
+omitting the record projects base effects. `FB.addModifier` accepts an absolute
+`options.supportStacks` value. War records retain `aggressionSequence` and realm
+records retain `aggressionDeclarations`, so escalation survives history trimming.
 
 ## Buildings
 
@@ -4108,8 +4118,10 @@ leaves a count controlling the complete de jure duchy promotes the realm to rank
 restyles it as that duchy; individual grants do not change rank. Existing saves receive
 the same recognition once during restore, and later province transfers check only the
 receiving count, so the rule adds no realm-wide work to daily or yearly fast-forward.
-War-of-Aggression tuning uses `warAggressionMemoryDays` (2,880),
-`warAggressionPrestige` (-20), `warAggressionCommonVoice` (-8),
+County support costs are defined by `aggressive_rule` and `conquered_without_right`
+in `data/modifiers.js`; the former personal `warAggressionCommonVoice` key is no
+longer used. War-of-Aggression political tuning uses `warAggressionMemoryDays` (2,880),
+`warAggressionPrestige` (-20),
 `warAggressionVassalStanding` (-10), `warAggressionForeignStanding` (-5),
 `warAggressionEscalationPerRecent` (0.5), and
 `warAggressionBreakawayPerRecent` (0.5). Signed political changes scale by
@@ -4445,3 +4457,18 @@ Its context carries `warId`, `demandLiege`, and `demandDeadline`; the validator
 rejects ended wars, answered or expired demands, and changed lieges. Pending
 legacy demands queue once on the next campaign day. Campaign withdrawal remains
 an independent action. No new event trigger or effect keys are introduced.
+
+### County Popular support
+
+`state.countySupport[provinceId]` is the sole stored base support score (-100 to
+100, default zero). `FB.countyPopularSupport(state,pid)` adds local temporary
+effects. `FB.setCountySupport` and `FB.adjustCountySupport` invalidate derived
+views. Event `popularOpinion` effects and `popularOpinionBelow` checks use the
+context location, falling back to the household current county. `player.pop` is
+legacy-only and removed during load repair.
+
+Modifier definitions can use `recoverSupport:true` and `supportPerStack` for
+unjust-war support effects. Instances persist optional nonnegative `supportDebt`,
+`supportStacks`, and numeric `supportSince`; support debt recovers in annual
+steps until `endTurn`. County taxes and levies multiply ordinary effects by
+`clamp(1 + countyPopularSupport / 100, 0, 2)`, then local uprising resistance.

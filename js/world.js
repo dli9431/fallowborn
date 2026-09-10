@@ -4022,18 +4022,23 @@ window.FB = window.FB || {};
     });
   };
 
-  FB.aiBaseHost = function (state, rid) {
+  FB.aiBaseHost = function (state, rid, recruitment) {
     const captivePenalty = FB.intrigueRealmRulerCaptive &&
       FB.intrigueRealmRulerCaptive(state, rid) ? 0.8 : 1;
-    const territory = FB.recruitmentTerritory ? FB.recruitmentTerritory(state, rid) : null;
+    const territory = recruitment || (FB.recruitmentTerritory ? FB.recruitmentTerritory(state, rid) : null);
     if (territory && !territory.rally) return 0;
-    const ambitionDevelopment = territory && FB.historicalAmbitionBonus
-      ? territory.eligible.reduce(function (sum, pid) {
-        return sum + (state.dev[pid] || 1) * FB.historicalAmbitionBonus(state, pid, 'levy');
-      }, 0) : 0;
-    const strength = territory ? (territory.development + ambitionDevelopment) * (FB.papacyRealmStrengthMultiplier
+    let supportDevelopment = 0;
+    const levyDevelopment = territory ? territory.eligible.reduce(function (sum, pid) {
+      const development = state.dev[pid] || 1;
+      const support = FB.countySupportFactor ? FB.countySupportFactor(state, pid) : 1;
+      supportDevelopment += development * support;
+      const local = FB.modBonus ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : support;
+      return sum + development * local;
+    }, 0) : 0;
+    const strength = territory ? levyDevelopment * (FB.papacyRealmStrengthMultiplier
       ? FB.papacyRealmStrengthMultiplier(state, rid) : 1) : FB.realmStrength(state, rid);
-    const base = Math.max(territory && territory.blocked.length ? 0 : 60, Math.round(strength *
+    const minimum = territory ? 60 * Math.min(1, supportDevelopment / Math.max(1, territory.development)) : 60;
+    const base = Math.max(territory && territory.blocked.length ? 0 : minimum, Math.round(strength *
       FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
       (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
     const burden = FB.fortGarrisonBurden
@@ -4702,8 +4707,8 @@ window.FB = window.FB || {};
     var destination = FB.world.byId[destinationId];
 
     p.prestige -= status.prestigeCost;
-    p.pop = FB.clamp((Number(p.pop) || 0) + status.popularOpinion,
-      -100, 100);
+    FB.setCountySupport(state, state.player.provinceId, FB.clamp((Number(FB.countySupportBase(state, state.player.provinceId)) || 0) + status.popularOpinion,
+      -100, 100));
     for (var i = 0; i < status.vassalIds.length; i++) {
       var rid = status.vassalIds[i];
       if (FB.adjustStanding) {
@@ -6408,6 +6413,7 @@ window.FB = window.FB || {};
       for (const pid of p.provs) {
         if (FB.recruitmentCountyBlocked && FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
         const popFactor = (baseline || !FB.countyPopulationFactor) ? 1 : FB.countyPopulationFactor(state, pid);
+        const levyBeforeCounty = comp.levy;
         const countyLevy = (state.dev[pid] || 1) * popFactor * B.levyPerDev;
         add('levy', 'county', countyLevy, { pid:pid });
         const ambitionRate = FB.historicalAmbitionBonus
@@ -6423,7 +6429,7 @@ window.FB = window.FB || {};
         if (FB.countyModifierRecords) {
           for (const record of FB.countyModifierRecords(state, pid)) {
             const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
-            const rate = def && def.fx && Number(def.fx.levy);
+            const rate = record.id === 'commons_uprising' ? 0 : def && def.fx && Number(def.fx.levy);
             if (isFinite(rate) && rate) {
               add('levy', 'modifier', countyLevy * rate, {
                 modifierId:record.id, pid:pid, rate:rate
@@ -6431,6 +6437,10 @@ window.FB = window.FB || {};
             }
           }
         }
+        let supportFactor = FB.countySupportFactor ? FB.countySupportFactor(state, pid) : 1;
+        if (FB.hasModifier && FB.hasModifier(state, 'commons_uprising', pid)) supportFactor *= 1 - FB.commonsUprisingReduction(state, pid);
+        if (supportFactor !== 1) add('levy', 'popular_support',
+          (comp.levy - levyBeforeCounty) * (supportFactor - 1), { pid:pid, rate:supportFactor - 1 });
       }
     } else if (p.tier >= 3 &&
         !(FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId]))) {
@@ -6450,7 +6460,7 @@ window.FB = window.FB || {};
       if (seat && FB.countyModifierRecords) {
         for (const record of FB.countyModifierRecords(state, seat)) {
           const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
-          const rate = def && def.fx && Number(def.fx.levy);
+          const rate = record.id === 'commons_uprising' ? 0 : def && def.fx && Number(def.fx.levy);
           if (isFinite(rate) && rate) {
             add('ret', 'modifier', retinue * rate, {
               modifierId:record.id, pid:seat, rate:rate
@@ -6458,6 +6468,10 @@ window.FB = window.FB || {};
           }
         }
       }
+      let supportFactor = seat && FB.countySupportFactor ? FB.countySupportFactor(state, seat) : 1;
+      if (seat && FB.hasModifier && FB.hasModifier(state, 'commons_uprising', seat)) supportFactor *= 1 - FB.commonsUprisingReduction(state, seat);
+      if (supportFactor !== 1) add('ret', 'popular_support',
+        comp.ret * (supportFactor - 1), { pid:seat, rate:supportFactor - 1 });
     }
     if (FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId])) {
       add('ret', 'episcopal_household',
@@ -6472,6 +6486,14 @@ window.FB = window.FB || {};
 
     if (p.tier >= 3) {
       buildingEntries('levy', 'levy');
+      for (const pid of FB.demesne(state)) {
+        if (FB.recruitmentCountyBlocked && FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
+        const levy = FB.buildingBonusIn(state, pid, 'levy');
+        if (!levy) continue;
+        let factor = FB.countySupportFactor(state, pid);
+        if (FB.hasModifier(state, 'commons_uprising', pid)) factor *= 1 - FB.commonsUprisingReduction(state, pid);
+        add('levy', 'popular_support', levy * (factor - 1), { pid:pid, rate:factor - 1 });
+      }
       buildingEntries('retinue', 'ret');
       buildingEntries('archers', 'arch');
       const techUnits = FB.techUnits ? FB.techUnits(state) :
@@ -7119,7 +7141,8 @@ window.FB = window.FB || {};
         if (claim && (claim.pid || claim) === pid) p.fabricatedClaim = null;
       }
       if (w.casus && w.casus.type === 'aggression' && FB.addModifier) {
-        FB.addModifier(state, 'conquered_without_right', pid);
+        if (FB.applyAggressionConquest) FB.applyAggressionConquest(state, w, pid);
+        else FB.addModifier(state, 'conquered_without_right', pid);
       }
       FB.damageCountyDevelopment(state, pid);
       if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
@@ -7303,7 +7326,7 @@ window.FB = window.FB || {};
     FB.changePlayerLiege(state, null, 'realm:cast_down');
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (!opts.papalTransition) {
-      p.pop = 0;
+      // Loss of rank does not erase county support.
       p.prestige = Math.round(p.prestige * (opts.flee ? 0.6 : 0.4));
     }
     FB.invalidateRealmCache();

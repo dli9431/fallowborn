@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'data/traits.js',
   'js/model.js',
   'js/ui_misc.js',
@@ -619,7 +620,7 @@ test('an irregular sibling union applies public costs and no dowry or compact',
       s.player.piety = 100;
       s.player.gold = 100;
       s.player.prestige = 100;
-      s.player.pop = 50;
+      FB.setCountySupport(s, s.player.provinceId, 50);
       const beforeTerms = FB.courtshipTerms(s, sibling, false);
       const married = FB.fns.sibling_marriage_success(s, {});
       return {
@@ -628,7 +629,7 @@ test('an irregular sibling union applies public costs and no dowry or compact',
         gold:s.player.gold,
         piety:s.player.piety,
         prestige:s.player.prestige,
-        voice:s.player.pop,
+        voice:FB.countySupportBase(s, s.player.provinceId),
         playerScandal:me.traits.indexOf('scandalous_union') >= 0,
         targetScandal:sibling.traits.indexOf('scandalous_union') >= 0,
         compact:s.player.royalCompact,

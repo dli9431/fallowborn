@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'data/cultures.js', 'data/economy.js', 'data/map_data.js', 'data/technology.js',
   'js/actions.js', 'js/model.js', 'js/economy.js', 'js/events.js',
   'js/save.js', 'js/technology.js', 'js/ui_panels.js', 'js/ui_misc.js', 'js/ui_modals.js', 'js/i18n.js', 'js/mods.js'
@@ -122,26 +123,26 @@ for (const kind of ['faith', 'culture']) {
       const result = await page.evaluate(function (kind) {
         var s = FB.state, p = s.player, me = s.chars[p.charId];
         me.religion = 'catholic'; me.culture = 'german';
-        p.piety = 20000; p.prestige = 20000; p.pop = 50;
+        p.piety = 20000; p.prestige = 20000; FB.setCountySupport(FB.state, p.provinceId, 50);
         p.war = null; p.cooldowns = {};
         var first = kind === 'faith' ? ['close_kin', 'sanctioned'] : ['raiding', 'practiced'];
         var second = kind === 'faith' ? ['marriage_form', 'plural'] : ['military', 'huscarl'];
         var restore = kind === 'faith' ? 'monogamy' : 'levy';
         var firstStatus = FB.doctrineReformStatus(s, kind, first[0], first[1]);
         var branch = FB.applyDoctrineReform(s, kind, first[0], first[1]);
-        var pop1 = p.pop;
+        var pop1 = FB.countySupportBase(FB.state, p.provinceId);
         var immediate = FB.doctrineReformStatus(s, kind, second[0], second[1]);
         s.turn += firstStatus.cooldownDays;
         var secondStatus = FB.doctrineReformStatus(s, kind, second[0], second[1]);
         FB.applyDoctrineReform(s, kind, second[0], second[1]);
-        var pop2 = p.pop;
+        var pop2 = FB.countySupportBase(FB.state, p.provinceId);
         FB.save.restore(JSON.parse(FB.save.serialize()));
         s = FB.state; p = s.player;
         var history = JSON.parse(JSON.stringify(p.doctrineReforms[kind]));
         s.turn += secondStatus.cooldownDays;
         var restoring = FB.doctrineReformStatus(s, kind, second[0], restore);
         FB.applyDoctrineReform(s, kind, second[0], restore);
-        var pop3 = p.pop;
+        var pop3 = FB.countySupportBase(FB.state, p.provinceId);
         s.turn += restoring.cooldownDays;
         var finalRestore = FB.doctrineReformStatus(s, kind, first[0], 'forbidden');
         FB.applyDoctrineReform(s, kind, first[0], 'forbidden');
@@ -174,7 +175,7 @@ test('doctrine benefits reach seasonal ledgers and resident followers without ho
   async function ({ page }) {
     const result = await page.evaluate(function () {
       var s = FB.state, p = s.player, me = s.chars[p.charId];
-      p.tier = 1; p.travel = null; p.pop = 0; me.traits = [];
+      p.tier = 1; p.travel = null; FB.setCountySupport(FB.state, p.provinceId, 0); me.traits = [];
       for (var member of FB.householdMembers(s)) {
         member.culture = 'german'; member.religion = 'norse_pagan';
         member.career = { profession:'farmer', rank:'journeyman', chosen:true,
@@ -196,7 +197,7 @@ test('doctrine benefits reach seasonal ledgers and resident followers without ho
       var lines = FB.livelihoodBreakdown(s);
       var expectedGold = p.gold + lines.reduce(function (sum, line) { return sum + line.amount; }, 0);
       FB.livelihoodSeason(s);
-      var gold = p.gold, pop = p.pop;
+      var gold = p.gold, pop = FB.countySupportBase(FB.state, p.provinceId);
       p.gold = -10000;
       var brokeAlms = FB.livelihoodBreakdown(s).filter(function (line) { return line.doctrineAlms; });
       var spouse = FB.makeCharacter(s, { name:'Craft worker', sex:'m', culture:'german',

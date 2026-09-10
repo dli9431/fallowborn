@@ -189,3 +189,13 @@ peace cannot release that campaign's prisoner. Older saves bind captivity to the
 existing player campaign without consuming randomness. Health, authority, and
 escape checks run once per season, regardless of the number of concurrent wars.
 See [war.md](war.md).
+
+## County support and revolt spread
+
+Commons demands select the least supportive directly held county. Refusal starts
+one local warning, rather than inventing warnings in other held counties. Each
+county uses its own support for warning recovery and tax/levy resistance. Active
+resistance keeps its existing expiry, but spreads only from a county at or below
+-20 support to an adjacent realm county also at or below -20. Every newly joined
+county retains its separate petition, warning, and expiry. Healthy neighbors
+interrupt spread without erasing unrest elsewhere.

@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'data/actions.js',
   'js/actions.js',
   'js/mapview.js',
@@ -23,7 +24,7 @@ async function startCapitalRealm(page, testInfo, options) {
     p.tier = 4;
     p.prestige = setupOptions && setupOptions.prestige !== undefined
       ? setupOptions.prestige : 500;
-    p.pop = 20;
+    FB.setCountySupport(FB.state, p.provinceId, 20);
     p.liege = null;
     p.provs = counties.slice();
     p.capitalRelocation = null;
@@ -208,7 +209,7 @@ test('valid capital relocation applies exact consequences without moving land or
         home:p.provinceId,
         capital:s.realms.player.capital,
         prestige:p.prestige,
-        pop:p.pop,
+        pop:FB.countySupportBase(FB.state, p.provinceId),
         favorA:FB.realmOpinionOf(s, 'test_vassal_a'),
         favorB:FB.realmOpinionOf(s, 'test_vassal_b'),
         marker:p.capitalRelocation,
@@ -452,7 +453,7 @@ test('losing the capital forces a free synchronized fallback without changing th
       p.capitalRelocation = JSON.parse(JSON.stringify(marker));
       var before = {
         prestige:p.prestige,
-        pop:p.pop,
+        pop:FB.countySupportBase(FB.state, p.provinceId),
         favorA:FB.realmOpinionOf(s, 'test_vassal_a'),
         favorB:FB.realmOpinionOf(s, 'test_vassal_b')
       };
@@ -467,7 +468,7 @@ test('losing the capital forces a free synchronized fallback without changing th
         before:before,
         after:{
           prestige:p.prestige,
-          pop:p.pop,
+          pop:FB.countySupportBase(FB.state, p.provinceId),
           favorA:FB.realmOpinionOf(s, 'test_vassal_a'),
           favorB:FB.realmOpinionOf(s, 'test_vassal_b')
         }

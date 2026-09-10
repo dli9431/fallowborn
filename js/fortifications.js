@@ -419,15 +419,18 @@ window.FB = window.FB || {};
     for (var i = 0; i < forts.length; i++) {
       var item = forts[i], fort = item.record;
       if (fort.ruined || !fort.level) continue;
-      if (recruitmentRealm && FB.recruitmentCountyBlocked &&
-          FB.recruitmentCountyBlocked(state, recruitmentRealm, item.pid)) continue;
       var include = false;
       if (!subject || subject === 'player') include = playerHolds(state, item.pid);
       else if (state.realms && state.realms[subject]) {
         include = ((state.holder && state.holder[item.pid]) ||
           state.owner[item.pid]) === subject;
       } else include = item.pid === subject;
-      if (include) total += levelDef(fort.level).garrison;
+      if (!include) continue;
+      // Recruitment restrictions matter only for forts charged to this holder.
+      // Checking every foreign fort first multiplied campaign scans per muster.
+      if (recruitmentRealm && FB.recruitmentCountyBlocked &&
+          FB.recruitmentCountyBlocked(state, recruitmentRealm, item.pid)) continue;
+      total += levelDef(fort.level).garrison;
     }
     return total;
   };
@@ -469,14 +472,21 @@ window.FB = window.FB || {};
     return !!(FB.areAllied && (FB.areAllied(state, realmId, controller) || (topA && topB && FB.areAllied(state, topA, topB))));
   }
 
-  FB.armyFriendlyProvince = function (state, army, pid) {
+  FB.armyFriendlyProvince = function (state, army, pid, relations) {
     if (!state || !army || !pid) return false;
+    function friendlyController(controller) {
+      if (!relations) return realmFriendlyTo(state, army.realm, controller);
+      if (!Object.prototype.hasOwnProperty.call(relations.friendly, controller)) {
+        relations.friendly[controller] = realmFriendlyTo(state, army.realm, controller);
+      }
+      return relations.friendly[controller];
+    }
     if (army.realm === 'player' && playerHolds(state, pid)) return true;
     var holder = state.holder && state.holder[pid];
     if (holder === army.realm) return true;
-    if (holder && realmFriendlyTo(state, army.realm, holder)) return true;
+    if (holder && friendlyController(holder)) return true;
     var owner = state.owner && state.owner[pid];
-    if (owner && realmFriendlyTo(state, army.realm, owner)) return true;
+    if (owner && friendlyController(owner)) return true;
     return false;
   };
 

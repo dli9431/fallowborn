@@ -1,5 +1,13 @@
 # Events are data
 
+For post-event reconciliation, the resolver exposes a conservative classification
+of household-only options: numeric gold, prestige, piety, health, skills, Popular
+support, and log effects. Every possible branch must qualify, and travel or a
+named chance handler requires full reconciliation. Daily autoresolve uses this
+classification to avoid synchronizing unrelated rulers after local work; custom
+and unknown effect keys always retain the full path. Receipt contents and effect
+execution order are unchanged.
+
 Historical ambitions are on-demand ruler decisions, separate from dated scripted
 conquests and random story selection. They complete through one validated
 transaction and a dedicated success sheet, suppressing duplicate rank-investiture

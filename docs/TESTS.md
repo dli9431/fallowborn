@@ -382,6 +382,35 @@ Automated browser tests do not replace release testing by a person. Continue man
 The owner chooses when to run the fast Chromium suite and when to run the Firefox and WebKit
 matrix.
 
+## Profiling a reported save
+
+`save-season-profile.spec.js` is an opt-in Chromium diagnostic. It imports the
+file named by `FB_PROFILE_SAVE` through the game's ordinary save loader, then
+profiles one real fast-forward. It attaches a Chrome CPU profile and JSON with
+daily durations, inclusive subsystem timings, and animation-frame gaps. Loading
+is excluded; completion rendering and the deferred autosave write are included.
+There is no machine-dependent performance threshold. Sampling and timing wrappers
+add overhead, so compare profiles under the same conditions.
+The timing report also hashes the complete resulting serialized save, including
+RNG state. Set `FB_PROFILE_REGROUP_REFERENCE=1` to compare with the previous
+county-by-county regroup algorithm; leave it unset to profile the current game.
+Use separate `--output` directories to retain both sets of measurements.
+
+For an owner-initiated run in PowerShell from `tests/e2e/`:
+
+```powershell
+$env:FB_PROFILE_SAVE = (Resolve-Path ../../fallowborn-save.txt).Path
+npx.cmd playwright test specs/save-season-profile.spec.js --project=chromium-served --workers=1
+Remove-Item Env:FB_PROFILE_SAVE
+```
+
+The diagnostic uses a fresh browser context with all events autoresolved using
+the first available option, manual player-host orders, and automatic construction
+and research disabled. These browser preferences are not present in an exported
+save. The source save is read only; it is neither modified nor copied into test
+fixtures. Without the environment variable the diagnostic is skipped. Ordinary
+agent test-execution restrictions apply to this diagnostic too.
+
 ## Common problems
 
 If `playwright` is not recognized, run `npm ci` from `tests/e2e/`. If Playwright reports that the

@@ -1,5 +1,11 @@
 # Provinces & the map
 
+The Land tab's County card shows the selected county's Popular support: its saved
+base plus active local effects, including foreign counties. There is no personal
+support score or Self-tab support row. Taxes and levies respond to this local
+total at one percent per point, with output bounded between zero and double.
+Support stays with the county through conquest, relocation, and succession.
+
 **Provinces have no drawn borders — and each is one county.** `js/world.js` rasterizes
 the map at boot: scanline-fills the land polygons (Mercator projection from `js/util.js`),
 then assigns every land pixel to the nearest county seed on the same authored land

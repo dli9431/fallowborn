@@ -5787,8 +5787,8 @@ window.FB = window.FB || {};
       route:typed && typed.route
     });
     state.player.gold += status.terms.rulerFee;
-    state.player.pop = FB.clamp((state.player.pop || 0) +
-      status.terms.popularOpinion, -100, 100);
+    FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) +
+      status.terms.popularOpinion, -100, 100));
     FB.news(state, FB.msg('news.guild_monopoly.outgoing_granted',
       '📜 You grant the local {profession} guild a {years}-year monopoly; its fee adds {money:fee} to the treasury.',
       {
@@ -5910,7 +5910,7 @@ window.FB = window.FB || {};
     }
     FB.endGuildMonopoly(state, target.record.contractId, 'exposed');
     state.player.prestige += 6;
-    state.player.pop = FB.clamp((state.player.pop || 0) + 10, -100, 100);
+    FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) + 10, -100, 100));
     FB.fns.plot_end(state);
     return true;
   };
@@ -5924,7 +5924,7 @@ window.FB = window.FB || {};
       return false;
     }
     state.player.gold += target.slot === 'incoming' ? 16 : 12;
-    state.player.pop = FB.clamp((state.player.pop || 0) - 6, -100, 100);
+    FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) - 6, -100, 100));
     guildPlotGrantorStanding(state, target, -6, 'compensation');
     FB.fns.plot_end(state);
     return true;
@@ -5943,7 +5943,7 @@ window.FB = window.FB || {};
       career.guildStanding = FB.clamp((career.guildStanding || 0) + 10, 0, 100);
     }
     state.player.prestige += 4;
-    state.player.pop = FB.clamp((state.player.pop || 0) - 8, -100, 100);
+    FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) - 8, -100, 100));
     guildPlotGrantorStanding(state, target, 5, 'defended');
     FB.fns.plot_end(state);
     return true;
@@ -5953,7 +5953,7 @@ window.FB = window.FB || {};
     const target = guildPlotTarget(state, ctx);
     if (target) {
       if (!guildPlotGrantorStanding(state, target, -8, 'failure')) {
-        state.player.pop = FB.clamp((state.player.pop || 0) - 10, -100, 100);
+        FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) - 10, -100, 100));
       }
     }
     FB.fns.plot_end(state);
@@ -5964,7 +5964,7 @@ window.FB = window.FB || {};
     const target = guildPlotTarget(state, ctx);
     if (target) {
       if (!guildPlotGrantorStanding(state, target, -5, 'discovery')) {
-        state.player.pop = FB.clamp((state.player.pop || 0) - 6, -100, 100);
+        FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) - 6, -100, 100));
       }
     }
     FB.fns.plot_end(state);
@@ -7608,7 +7608,7 @@ window.FB = window.FB || {};
     e.lastDebasementTurn = state.turn;
     state.player.gold += preview.gold;
     state.player.prestige = Math.max(0, state.player.prestige - 35 - e.debasements * 5);
-    state.player.pop = FB.clamp((state.player.pop || 0) - 10 - e.debasements * 2, -100, 100);
+    FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) - 10 - e.debasements * 2, -100, 100));
     FB.addPricePressure(state, preview.pressure, preview.years, 'debasement');
     if (FB.councilAuthority) FB.councilAuthority(state, 5);
     if (FB.councilMembers) {

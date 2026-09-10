@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'js/travel.js',
   'js/economy.js',
   'js/events.js',
@@ -534,7 +535,7 @@ test('visible and autoresolved life-path choices apply equivalent effects',
         return {
           gold:s.player.gold,
           prestige:s.player.prestige,
-          pop:s.player.pop,
+          pop:FB.countySupportBase(s, s.player.provinceId),
           health:s.chars[s.player.charId].health
         };
       }

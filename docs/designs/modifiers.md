@@ -80,12 +80,19 @@ border response, and a foreign merchant compact provide cross-system sources.
 `parliament_local_redress` can end Contested Tolls or Settlement Grudge and replace the
 dispute with a positive charter; natural expiry remains the fallback.
 
-Ordinary aggressive conquest supplies one additional core county definition:
-`conquered_without_right` lasts 2,160 days and applies −15% county tax, −20% county
-levy, −8 effective Popular support, and +40% harmful `unrest` exposure. It is granted only
-when the player captures the objective of a saved `aggression` war cause. Like every
-county record, it remains attached to the county after a transfer and expires through
-the normal daily modifier tick.
+Ordinary aggressive conquest grants `conquered_without_right` for 4,320 days:
+-15% county tax, -20% levy, -40 Popular support initially, and +40% harmful unrest.
+Every unjust declaration also grants `aggressive_rule` to all currently ruled
+counties, initially -20 support. Each subsequent declaration increases the new
+hit and conquest penalty by 10 points. See [war.md](war.md) for stacking rules.
+
+Recovering definitions use `recoverSupport:true` and `supportPerStack:-10`.
+Instances may retain `supportStacks`, `supportDebt`, and `supportSince` alongside
+`id`, `endTurn`, and `sourceEventId`. Debt is positive; its remaining negative
+support effect falls by one twelfth each completed year. A refreshed declaration
+rebases remaining debt and restarts the twelve-year clock. Other modifier effects
+last until expiry. The daily cache schedules annual recovery boundaries as well
+as expiries, keeping derived output and UI caches current.
 
 Deliberate conversion (see [conversion.md](conversion.md)) supplies `zealot_unrest`
 and `cultural_unrest`: 1,440 days of +35% harmful `unrest` exposure, −12 effective
@@ -129,11 +136,15 @@ or the crown lapses.
   from `FB.modifierCounties` (see *Whose counties* below).
 - `FB.modifierRemainingDays(state,record)` returns an integer or `null` for an untimed
   record.
-- `FB.popEffective(state)` adds `commonVoice` from active modifiers in
-  `FB.modifierCounties` to stored `player.pop`.
+- `FB.countyPopularSupport(state,pid)` adds that county's active `commonVoice`
+  effects to `state.countySupport[pid]` (default zero). `FB.popEffective` remains
+  a compatibility query for the current county, with no personal score.
 
 Callers do not write effective Popular support back into state. Existing gains, losses, and
-yearly decay continue to change the stored value alone.
+yearly decay change only the county base. Base support is bounded to -100..100;
+temporary debts can take the displayed total below -100. Tax and levy output use
+`clamp(1 + total / 100, 0, 2)` after ordinary county modifiers. Uprising resistance
+then multiplies the remaining output, using that same county's support.
 
 ## County effects
 
@@ -147,15 +158,15 @@ Supported county keys are:
 - `marketProduction`: fractional adjustment to every basket produced in the county.
 - `marketProvisions`: fractional adjustment to provisions production only.
 - `marketFlow`: fractional adjustment to the county side of each adjacent market edge.
-- `commonVoice`: flat effective Popular support while the county is one of
-  `FB.modifierCounties`.
+- `commonVoice`: flat Popular support belonging to the affected county, regardless
+  of whether its ruler is the player or AI.
 - Event tags such as `famine` and `unrest`: fractional scaling of harmful tagged-event
   outcomes in the event's snapshotted county.
 
 County upkeep is charged only while the county is one of `FB.modifierCounties`. It feeds
 seasonal settlement, reliable income, and the localized income ledger. County-local
-effects and the Land-panel chip continue after a transfer even though player-wide Popular
-support and upkeep stop.
+effects, support, and the Land-panel chip continue after a transfer; only the
+former holder's upkeep stops.
 
 ## Whose counties a county modifier acts on
 
@@ -167,8 +178,8 @@ chosen by reading that seat, so the seat is where they act. `FB.modifierSeat(sta
 names that substituted county, and returns `null` for a ruler who holds counties of
 their own.
 
-Upkeep, Popular support, county tax, county levy, and the Governance projection all read
-this rule. They did not always: upkeep and Popular support went through `FB.demesne`, which
+Upkeep, county tax, county levy, and the Governance projection read this ownership
+rule. Support itself belongs to each county regardless of ownership. They did not always: upkeep and Popular support went through `FB.demesne`, which
 substitutes the seat, while tax, levy, and Governance read `player.provs`, which is empty
 at tier 3. A baron therefore paid for a Market Charter that returned no tax, was granted
 a Levy Exemption that changed no muster, and could find neither record in Governance.

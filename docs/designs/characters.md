@@ -815,9 +815,13 @@ parents and siblings and retains those branches after succession instead of begi
 the downward-only founder node. Every other recorded maternal and paternal ancestor line,
 its collateral descendants, and stepfamily branches join that canvas instead of opening
 as separate family trees. Repeated connector cards are dimmed rather than rewriting
-parentage. Search indexes that rendered scope,
-branch controls hide or reveal biological descendant subtrees without rewriting
-parentage, and jump controls target the protagonist, first eligible successor, spouse,
+parentage.
+Stepfamily supplements appear only when they add an unseen child or a recorded
+parent-child connection not already drawn. An already visible stepchild with no
+additional recorded parent does not create an earlier-household placeholder.
+Search indexes that rendered scope, branch controls hide or reveal biological
+descendant subtrees without rewriting parentage, and jump controls target the
+protagonist, first eligible successor, spouse,
 and house founder.
 
 The compact tree cards keep names and relationships scannable; their portrait tooltip

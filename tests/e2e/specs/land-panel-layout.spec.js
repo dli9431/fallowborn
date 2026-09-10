@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html',
   'js/armies.js',
+  'js/modifiers.js',
+  'data/modifiers.js',
   'js/economy.js',
   'js/population.js',
   'js/ui_misc.js',
@@ -26,6 +28,38 @@ test.beforeEach(async function ({ page }, testInfo) {
     FB.ui.selectProvince(FB.state.player.provinceId);
   });
   await waitForUiRefresh(page);
+});
+
+test('County card shows selected local support including foreign aggression stacks', async function ({ page }) {
+  const ids = await page.evaluate(function () {
+    const s = FB.state, home = s.player.provinceId;
+    const foreign = FB.world.provs.find(function (pr) {
+      return !pr.wasteland && pr.id !== home && s.owner[pr.id] !== 'player';
+    }).id;
+    FB.setCountySupport(s, home, 73);
+    FB.addModifier(s, 'conquered_without_right', foreign, { supportStacks:1, silent:true });
+    FB.addModifier(s, 'aggressive_rule', foreign, { supportStacks:1, silent:true });
+    FB.ui.selectProvince(foreign);
+    return { home:home, foreign:foreign };
+  });
+  await waitForUiRefresh(page);
+  const value = page.locator('[data-county-popular-support]');
+  await expect(value).toHaveText('-80');
+  await expect(value).toHaveAttribute('data-county-popular-support', ids.foreign);
+  await expect(page.locator('.land-section').filter({
+    has:page.getByRole('heading', { name:'County', exact:true })
+  }).locator('[data-county-popular-support]')).toHaveCount(1);
+  await page.setViewportSize({ width:390, height:740 });
+  await waitForUiRefresh(page);
+  await expect(value).toHaveText('-80');
+  const expected = await page.evaluate(function (ids) {
+    const s = FB.state;
+    FB.ui.selectProvince(ids.home);
+    return FB.ui._shared.signedNumber(FB.countyPopularSupport(s, ids.home));
+  }, ids);
+  await waitForUiRefresh(page);
+  await expect(value).toHaveAttribute('data-county-popular-support', ids.home);
+  await expect(value).toHaveText(expected);
 });
 
 test('Land facts share a left-aligned stack on desktop and compact layouts',

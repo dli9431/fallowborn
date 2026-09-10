@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'data/actions.js',
   'js/actions.js',
   'js/technology.js',
@@ -391,7 +392,7 @@ test('formal privileges reject new grants, filter demands, and preserve records'
         rngBefore === FB.getRngState();
 
       p.tier = 3;
-      p.pop = -60;
+      FB.setCountySupport(FB.state, p.provinceId, -60);
       p.war = null;
       s.collectiveDemands = null;
       FB.ensureInstitutions(s, { silent:true });

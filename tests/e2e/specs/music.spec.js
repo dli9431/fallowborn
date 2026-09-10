@@ -175,6 +175,18 @@ test('first soundtrack boot, title pause, and background playback preserve state
     await expect(page.locator('#music-choice:not(.hidden)')).toBeVisible();
     await expect(page.locator('#music-choice-copy')).toContainText('average song');
     await expect(page.locator('#music-choice-copy')).toContainText('complete soundtrack');
+    await page.evaluate(function () {
+      window.__soundEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          if (name === 'sound-choice' || name === 'sound-changed') {
+            window.__soundEvents.push([name, data.sound_source, data.music_choice, data.sound_state]);
+          }
+          return true;
+        }
+      };
+    });
     const bootChoiceLayout = await page.locator('#title').evaluate(function (title) {
       function insideViewport(element) {
         const box = element.getBoundingClientRect();
@@ -377,6 +389,13 @@ test('first soundtrack boot, title pause, and background playback preserve state
     expect(await page.evaluate(function () {
       return JSON.parse(localStorage.getItem('fb_ui')).musicChoice;
     })).toBe('off');
+    expect(await page.evaluate(function () { return window.__soundEvents; })).toEqual([
+      ['sound-choice', 'boot-choice', 'off', 'silent'],
+      ['sound-changed', 'title-control', 'on', 'on'],
+      ['sound-changed', 'title-control', 'off', 'silent'],
+      ['sound-changed', 'title-control', 'on', 'on'],
+      ['sound-changed', 'title-control', 'off', 'silent']
+    ]);
     await page.reload({ waitUntil:'domcontentloaded' });
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
     await expect(page.locator('#music-choice')).toHaveClass(/hidden/);
@@ -388,6 +407,33 @@ test('first soundtrack boot, title pause, and background playback preserve state
         playing:window.__musicAudio.some(function (item) { return item.src && !item.paused; })
       };
     })).toEqual({ choice:'off', stored:'off', playing:false });
+
+    expect(await page.evaluate(function () {
+      const events = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          events.push([name, data.sound_source || null, data.sound_state]);
+          return true;
+        }
+      };
+      FB.trackTelemetry('campaign-resumed');
+      FB.music.setEnabled(false);
+      FB.music.setEnabled(true);
+      FB.music.setVolume(0);
+      FB.music.setVolume(0);
+      FB.music.setVolume(0.4);
+      FB.music.setVolume(0.55);
+      FB.music.setEnabled(false);
+      FB.music.setEnabled(false);
+      return events;
+    })).toEqual([
+      ['campaign-resumed', null, 'silent'],
+      ['sound-changed', 'settings', 'on'],
+      ['sound-changed', 'volume', 'silent'],
+      ['sound-changed', 'volume', 'on'],
+      ['sound-changed', 'settings', 'silent']
+    ]);
 
     await page.locator('#btn-newgame').click();
     await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
@@ -416,6 +462,23 @@ test('first soundtrack boot, title pause, and background playback preserve state
     await page.setViewportSize({ width:390, height:740 });
     await page.locator('#btn-settings').click();
     await expect(page.locator('#set-shortcuts')).toHaveCount(0);
+    await page.locator('#gm-back').click();
+    await page.evaluate(function () {
+      FB.game.uiPrefs.musicChoice = null;
+      window.__bootPlayEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          window.__bootPlayEvents.push([name, data.music_choice, data.sound_state]);
+          return true;
+        }
+      };
+      FB.music.offerBootChoice(function () {});
+    });
+    await page.locator('#music-choice-play').click();
+    expect(await page.evaluate(function () { return window.__bootPlayEvents; })).toEqual([
+      ['sound-choice', 'on', 'on']
+    ]);
   });
 
 test('context banks, playback controls, and listening history stay consistent',
@@ -619,6 +682,18 @@ test('context banks, playback controls, and listening history stay consistent',
       mediaTitle:expect.any(String)
     });
 
+    await page.evaluate(function () {
+      window.__playbackSoundEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          if (name === 'sound-changed') {
+            window.__playbackSoundEvents.push([data.sound_source, data.sound_state, data.music_choice]);
+          }
+          return true;
+        }
+      };
+    });
     await quickToggle.click();
     await expect(quickToggle).toHaveText('▶ Play');
     await expect(quickToggle).toHaveAttribute('aria-pressed', 'false');
@@ -634,6 +709,10 @@ test('context banks, playback controls, and listening history stay consistent',
 
     await quickToggle.click();
     await expect(quickToggle).toHaveText('⏸ Pause');
+    expect(await page.evaluate(function () { return window.__playbackSoundEvents; })).toEqual([
+      ['playback-control', 'silent', 'on'],
+      ['playback-control', 'on', 'on']
+    ]);
 
     // Clicking anywhere else in the UI closes the music overlay — aim at the
     // map's center: the open overlay occupies the map's top-left corner and

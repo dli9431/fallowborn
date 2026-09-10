@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'js/politics.js',
   'js/world.js',
   'js/ui_misc.js',
@@ -34,13 +35,13 @@ test('town council seats are local, retryable, and apply each bounded ordinance'
       delete p.localCouncil;
       me.skills.dip = 8;
       me.skills.ste = 7;
-      p.pop = 25;
+      FB.setCountySupport(FB.state, p.provinceId, 25);
       var legacy = FB.localCouncilValidate(s, true);
       var legacyAvailable = legacy.nextMotionTurn === s.turn;
       var chance = FB.localCouncilMotionChance(s);
       var expectedChance = FB.clamp(0.50 + 0.02 *
         (FB.skillOf(me, 'dip') + FB.skillOf(me, 'ste') - 10) +
-        0.002 * p.pop, 0.20, 0.90);
+        0.002 * FB.countySupportBase(FB.state, p.provinceId), 0.20, 0.90);
       var oldChance = FB.chance;
       var effects = {};
       FB.chance = function () { return true; };

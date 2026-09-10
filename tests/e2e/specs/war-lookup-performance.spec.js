@@ -15,9 +15,20 @@ test('daily army and hostility queries reuse the campaign registry with retained
     FB.repairWars(s);
     const expected = s.player.war.id;
     // Prevent new musters so this measures daily discovery, not army creation.
+    s.armies = []; // startWarSafety already mustered the player's host.
     for (const rid in s.realms) s.armyDown[rid] = s.turn;
     const originalKeys = Object.keys, originalLists = FB.realmWars;
-    let scans = 0, lists = 0, correct = true;
+    let scans = 0, lists = 0, correct = true, peacefulReads = 0;
+    const peaceful = [];
+    for (const rid in s.realms) {
+      if (rid === 'player' || FB.realmWars(s, rid).length) continue;
+      const realm = s.realms[rid], descriptor = Object.getOwnPropertyDescriptor(realm, 'war');
+      if (!descriptor || !descriptor.get) continue;
+      peaceful.push({ realm:realm, descriptor:descriptor });
+      Object.defineProperty(realm, 'war', Object.assign({}, descriptor, {
+        get:function () { peacefulReads++; return descriptor.get.call(this); }
+      }));
+    }
     Object.keys = function (value) {
       if (value === s.wars) scans++;
       return originalKeys(value);
@@ -43,9 +54,12 @@ test('daily army and hostility queries reuse the campaign registry with retained
       } finally { Object.defineProperty(war, 'attacker', attacker); }
       lists = 0;
       for (let i = 0; i < 3; i++) { s.turn++; FB.armyTick(s); }
-    } finally { Object.keys = originalKeys; FB.realmWars = originalLists; }
+    } finally {
+      Object.keys = originalKeys; FB.realmWars = originalLists;
+      peaceful.forEach(function (entry) { Object.defineProperty(entry.realm, 'war', entry.descriptor); });
+    }
     return { scans:scans, lists:lists, hostilityReads:hostilityReads,
-      correct:correct, pure:pure, armies:s.armies.length };
+      correct:correct, pure:pure, armies:s.armies.length, peacefulReads:peacefulReads };
   }, ids);
   expect(result.correct).toBe(true);
   expect(result.pure).toBe(true);
@@ -53,6 +67,44 @@ test('daily army and hostility queries reuse the campaign registry with retained
   expect(result.lists).toBeLessThan(20);
   expect(result.hostilityReads).toBeLessThan(4);
   expect(result.armies).toBe(0);
+  expect(result.peacefulReads).toBe(0);
+});
+
+test('active campaign musters retain realm order including vassals and update after peace', async function ({ page }, testInfo) {
+  const ids = await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state;
+    FB.endPlayerWar(s, true);
+    s.armies = []; s.armyDown = {}; s.greatHolyWar = null;
+    FB.armyTick(s); // retain realm order before registering the new campaigns
+    const vassals = Object.keys(s.realms).filter(function (id) {
+      return id !== 'player' && s.realms[id].alive && s.realms[id].liege &&
+        FB.recruitmentTerritory(s, id).rally;
+    });
+    const first = FB.registerOrdinaryWar(s, vassals[1], {
+      enemy:vassals[0], target:s.realms[vassals[0]].capital
+    });
+    const second = FB.registerOrdinaryWar(s, ids.other, {
+      enemy:ids.liege, target:s.realms[ids.liege].capital
+    });
+    const members = [first.attacker, first.defender, second.attacker, second.defender];
+    const expected = Object.keys(s.realms).filter(function (id) { return members.indexOf(id) >= 0; });
+    const base = FB.aiBaseHost, allies = FB.alliedReinforcement, calls = [];
+    FB.aiBaseHost = function (state, id) { calls.push(id); return 0; };
+    FB.alliedReinforcement = function () { return { ally:null, men:0 }; };
+    let initial, after;
+    try {
+      FB.armyTick(s);
+      initial = calls.slice(); calls.length = 0;
+      FB.settleOrdinaryWar(s, first.id, 'invalid');
+      FB.armyTick(s);
+      after = calls.slice();
+    } finally { FB.aiBaseHost = base; FB.alliedReinforcement = allies; }
+    return { initial:initial, expected:expected, after:after,
+      remaining:expected.filter(function (id) { return id === second.attacker || id === second.defender; }) };
+  }, ids);
+  expect(result.initial).toEqual(result.expected);
+  expect(result.after).toEqual(result.remaining);
 });
 
 test('same-day registration, legacy replacement, peace and remapping refresh war queries', async function ({ page }, testInfo) {

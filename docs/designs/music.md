@@ -106,6 +106,21 @@ breakdowns in analytics without creating a separate event name for every song. R
 affect shuffle weight. The modal's center Play/Pause control retains the current track position
 without changing the saved **Play music** preference.
 
+## Sound telemetry
+
+On the official play origin, `sound-choice` records the first boot answer and
+`sound-changed` records later Settings, title-control, manual playback, or zero-volume
+changes. Repeated identical Settings values and volume adjustments within the audible
+range do not emit changes. Automatic background pauses and playback recovery emit none.
+Events use the existing telemetry boundary and add only bounded `sound_source` and
+`music_choice` (`on` or `off`) properties.
+
+All gameplay events also carry `sound_state`: `on`, `silent`, `unknown` (no choice yet),
+or `unavailable` (no supported soundtrack). `silent` includes disabled music, manual
+pause, and zero game volume. This measures the player's in-game intent, not browser/OS
+muting, autoplay rejection, or successful audio decoding. Campaign starts and resumes
+include remembered preferences, so returning silent players are represented too.
+
 ## Caching and offline play
 
 Online playback fetches a complete track, verifies the response, stores it in the stable

@@ -557,11 +557,16 @@ window.FB = window.FB || {};
      muster, de-muster, and single-host legacy callers key on. A realm with
      no host in the field still reads null. */
   FB.hostOf = function (state, rid) {
-    const hosts = FB.hostsOf(state, rid);
-    let best = null;
-    for (const a of hosts) if (!best || a.men > best.men) best = a;
-    return best;
+    FB.armiesEnsure(state);
+    return primaryHost(state, rid);
   };
+  function primaryHost(state, rid) {
+    let best = null;
+    for (const a of state.armies || []) {
+      if (a.realm === rid && (!best || a.men > best.men)) best = a;
+    }
+    return best;
+  }
   FB.playerHost = function (state) { return FB.hostOf(state, 'player'); };
 
   /* A newly gentle founder may earn one extraordinary personal elevation by
@@ -1317,27 +1322,33 @@ window.FB = window.FB || {};
      stay independent of campaign registration order. */
   let sovereignIndexState = null;
   let sovereignIndexRevision = -1;
-  let sovereignIndexIds = [];
-  function sovereignRealmIds(state) {
+  let sovereignIndexOrder = Object.create(null);
+  function realmMusterOrder(state) {
     const revision = FB.realmStateRevision
       ? FB.realmStateRevision() : state.turn;
     if (sovereignIndexState === state &&
-        sovereignIndexRevision === revision) return sovereignIndexIds;
-    const ids = [];
+        sovereignIndexRevision === revision) return sovereignIndexOrder;
+    const order = Object.create(null);
+    let next = 0;
     for (const id in state.realms) {
       const realm = state.realms[id];
-      if (id !== 'player' && realm && realm.alive) ids.push(id);
+      if (id !== 'player' && realm && realm.alive) order[id] = next++;
     }
     sovereignIndexState = state;
     sovereignIndexRevision = revision;
-    sovereignIndexIds = ids;
-    return ids;
+    sovereignIndexOrder = order;
+    return order;
+  }
+  function activeRealmIds(warring, order) {
+    return Object.keys(warring).filter(function (id) {
+      return order[id] !== undefined;
+    }).sort(function (a, b) { return order[a] - order[b]; });
   }
 
   /* Who fights whom, built once per tick from the active campaign index.
      Legacy declaration precedence uses constant-time compatibility reads;
      it must not scan/sort the campaign registry once per generated vassal. */
-  function warringMap(state, sovereignIds) {
+  function warringMap(state, order) {
     const m = {};
     if (FB.ordinaryWars) {
       for (const war of FB.ordinaryWars(state)) {
@@ -1349,6 +1360,9 @@ window.FB = window.FB || {};
     }
     const pw = state.player.war;
     if (pw && pw.enemy) { m['player'] = pw.enemy; m[pw.enemy] = 'player'; }
+    // Compatibility declarations belong to active campaign endpoints. Quiet
+    // counts and dukes do not need their war getters polled every day.
+    const sovereignIds = FB.ordinaryWars ? activeRealmIds(m, order) : Object.keys(order);
     for (let sovereignIndex = 0; sovereignIndex < sovereignIds.length;
         sovereignIndex++) {
       const id = sovereignIds[sovereignIndex];
@@ -2373,8 +2387,31 @@ window.FB = window.FB || {};
     }
     const adj = (FB.world && FB.world.adj) || {};
     if (!adj[army.at]) return null;
+    // Retreat priority is graph distance, then the existing sorted frontier
+    // order. Reachability needs no travel-time ranking: every legal leg has
+    // a positive, finite cost. Search legal exits once instead of routing to
+    // every candidate separately.
+    pathComponents();
+    const reachable = Object.create(null), pending = [army.at];
+    reachable[army.at] = true;
+    const pinned = FB.fortBlocksArmy && FB.fortBlocksArmy(state, army.at, army);
+    for (let i = 0; i < pending.length; i++) {
+      const from = pending[i];
+      for (const pid of sortedNeighbors(adj, from)) {
+        if (reachable[pid]) continue;
+        const province = FB.world.byId[pid];
+        if (province && province.wasteland) continue;
+        if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, pid, army)) continue;
+        if (from === army.at && pinned && pid !== army.from &&
+            !FB.armyFriendlyProvince(state, army, pid)) continue;
+        reachable[pid] = true;
+        pending.push(pid);
+      }
+    }
     const visited = {}; visited[army.at] = true;
+    const queued = {}; queued[army.at] = true;
     let frontier = sortedNeighbors(adj, army.at).slice();
+    for (const pid of frontier) queued[pid] = true;
     while (frontier.length) {
       for (const pid of frontier) {
         if (visited[pid]) continue;
@@ -2382,13 +2419,12 @@ window.FB = window.FB || {};
         if (!(FB.armyFriendlyProvince &&
               FB.armyFriendlyProvince(state, army, pid))) continue;
         if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, pid, army)) continue;
-        const route = findArmyPathFrom(state, army, army.at, pid);
-        if (route && !route.blockedByFort) return pid;
+        if (reachable[pid]) return pid;
       }
       const next = [];
       for (const pid of frontier) {
         for (const nb of sortedNeighbors(adj, pid)) {
-          if (!visited[nb]) next.push(nb);
+          if (!queued[nb]) { queued[nb] = true; next.push(nb); }
         }
       }
       frontier = next;
@@ -2417,6 +2453,30 @@ window.FB = window.FB || {};
      seat for legacy wars). A detachment (any host but the realm's primary)
      leaves the hunting to the main body and makes for that territorial or
      holy-war goal — screening and besieging while the main host fights. */
+  // Orders read fixed positions and strength. Discard before marching or fighting.
+  let orderQueries = null;
+  function orderHostile(state, army, other) {
+    if (!orderQueries || orderQueries.state !== state) return FB.armiesHostile(state, army, other);
+    // Campaign selection may depend on warId; whether realms are hostile
+    // does not. This table lives only until today's orders are complete.
+    const row = orderQueries.hostility[army.realm] ||
+      (orderQueries.hostility[army.realm] = Object.create(null));
+    if (!Object.prototype.hasOwnProperty.call(row, other.realm)) {
+      row[other.realm] = FB.armiesHostile(state, army, other);
+    }
+    return row[other.realm];
+  }
+  function orderEnemies(state, army) {
+    if (!orderQueries || orderQueries.state !== state) return state.armies || [];
+    const key = JSON.stringify([army.realm, army.warId || null]);
+    if (!orderQueries.enemies[key]) {
+      orderQueries.enemies[key] = (state.armies || []).filter(function (other) {
+        return orderHostile(state, army, other);
+      });
+    }
+    return orderQueries.enemies[key];
+  }
+
   function aiGoal(state, army, warring, primaryByRealm) {
     const r = state.realms[army.realm];
     if (!r) return army.at;
@@ -2443,8 +2503,8 @@ window.FB = window.FB || {};
     if (!detachment) {
       let best = null, bd = Infinity;
       const pa = FB.world.byId[army.at];
-      for (const o of state.armies) {
-        if (o === army || !FB.armiesHostile(state, army, o)) continue;
+      for (const o of orderEnemies(state, army)) {
+        if (o === army || (!orderQueries && !FB.armiesHostile(state, army, o))) continue;
         const pb = FB.world.byId[o.at];
         if (!pa || !pb) continue;
         const d = (pa.cx - pb.cx) * (pa.cx - pb.cx) + (pa.cy - pb.cy) * (pa.cy - pb.cy);
@@ -2575,30 +2635,78 @@ window.FB = window.FB || {};
 
   /* Use the battle's location and roles, including every hostile banner. */
   FB.armyCanPursue = function (state, army, pid) {
+    const queries = orderQueries && orderQueries.state === state ? orderQueries : null;
+    let cached = queries && queries.pursuit.get(army);
+    if (cached && Object.prototype.hasOwnProperty.call(cached, pid)) return cached[pid];
     let defending = 0;
-    for (const other of state.armies || []) {
-      if (other.at === pid && other.men > 0 && FB.armiesHostile(state, army, other)) {
+    const hosts = queries ? (queries.byCounty[pid] || []) : (state.armies || []);
+    for (const other of hosts) {
+      if (other.at === pid && other.men > 0 && orderHostile(state, army, other)) {
         defending += battlePower(state, other, pid, 'defense');
       }
     }
-    return !defending || battlePower(state, army, pid, 'attack') >= defending * 1.1;
+    const result = !defending || battlePower(state, army, pid, 'attack') >= defending * 1.1;
+    if (queries) {
+      if (!cached) { cached = Object.create(null); queries.pursuit.set(army, cached); }
+      cached[pid] = result;
+    }
+    return result;
   };
 
   FB.armyRegroupGoal = function (state, army) {
     const home = army.realm === 'player' ? playerHome(state) :
       (state.realms[army.realm] || {}).capital;
-    const candidates = Object.keys((FB.world || {}).byId || {}).sort();
-    if (home) candidates.unshift(home);
-    let best = null, days = Infinity;
-    for (const pid of candidates) {
-      if (!FB.armyFriendlyProvince(state, army, pid) ||
-          !FB.armyCanPursue(state, army, pid)) continue;
-      const route = findArmyPathFrom(state, army, army.at, pid);
-      if (!route || route.blockedByFort) continue;
-      if (pid === home) return pid;
-      if (route.totalDays < days) { best = pid; days = route.totalDays; }
+    function safe(pid) {
+      return FB.armyFriendlyProvince(state, army, pid) &&
+        FB.armyCanPursue(state, army, pid);
     }
-    return best;
+    // Home has priority even when another safe county is nearer.
+    if (home && safe(home)) {
+      const homeRoute = findArmyPathFrom(state, army, army.at, home);
+      if (homeRoute && !homeRoute.blockedByFort) return home;
+    }
+    const world = FB.world, adj = world && world.adj;
+    if (!adj || !adj[army.at]) return null;
+    if (world.byId[army.at] && safe(army.at)) return army.at;
+    pathComponents(); // reset shared neighbor lists when the world changes
+    const memo = legQuoteMemo(state, army), blocked = Object.create(null);
+    function fortBlocks(pid) {
+      if (blocked[pid] === undefined) {
+        blocked[pid] = !!(FB.fortBlocksArmy && FB.fortBlocksArmy(state, pid, army));
+      }
+      return blocked[pid];
+    }
+    // One weighted search replaces a complete route search per friendly county.
+    // Equal travel times still choose the lexically first county, independently
+    // of the route's leg count or the heap's order among equal-cost routes.
+    const start = { pid:army.at, path:[], totalDays:0, legs:0 };
+    const frontier = [], best = Object.create(null);
+    best[army.at] = start;
+    frontierPush(frontier, start);
+    let goal = null;
+    while (frontier.length) {
+      const current = frontierPop(frontier);
+      if (best[current.pid] !== current) continue;
+      if (goal && current.totalDays > goal.totalDays) break;
+      if (world.byId[current.pid] && safe(current.pid)) {
+        if (!goal || current.pid < goal.pid) goal = current;
+        continue; // positive leg costs cannot improve this nearest safe goal
+      }
+      for (const neighbor of sortedNeighbors(adj, current.pid)) {
+        if (world.byId[neighbor] && world.byId[neighbor].wasteland) continue;
+        if (current.pid === army.at && fortBlocks(army.at) &&
+            neighbor !== army.from && !FB.armyFriendlyProvince(state, army, neighbor)) continue;
+        if (fortBlocks(neighbor)) continue; // regrouping cannot stop at a hostile fort
+        const candidate = { pid:neighbor, path:current.path.concat([neighbor]),
+          totalDays:current.totalDays + quoteFromMemo(memo, current.pid, neighbor).totalDays,
+          legs:current.legs + 1 };
+        if (!best[neighbor] || routeCompare(candidate, best[neighbor]) < 0) {
+          best[neighbor] = candidate;
+          frontierPush(frontier, candidate);
+        }
+      }
+    }
+    return goal ? goal.pid : null;
   };
 
   /* role: 'defense' for the camp holding the ground, 'attack' otherwise
@@ -3052,6 +3160,12 @@ window.FB = window.FB || {};
         alliance.bGen || 0
       ].join(':'));
     }
+    for (const war of (FB.ordinaryWars ? FB.ordinaryWars(state) : [])) {
+      parts.push(war.id, war.attacker, war.defender);
+      for (const pid of Object.keys(war.occupations || {}).sort()) {
+        parts.push(pid, war.occupations[pid].occupied ? '1' : '0');
+      }
+    }
     return parts.join('|');
   }
 
@@ -3070,16 +3184,18 @@ window.FB = window.FB || {};
     return supplyCacheMaps;
   }
 
-  /* counties-from-friendly-land for the host's realm; one retained map per
-     realm, shared by every same-realm host */
+  /* Campaign occupation can distinguish two hosts of the same realm.
+     Relationship lookups are shared only during this map's construction. */
   function supplyDistanceMap(state, army, distCache) {
     const adj = (FB.world && FB.world.adj) || {};
-    let map = distCache[army.realm];
+    const key = JSON.stringify([army.realm, army.warId || null]);
+    let map = distCache[key];
     if (map) return map;
-    map = distCache[army.realm] = {};
+    map = distCache[key] = {};
+    const relations = { friendly:Object.create(null), hostile:Object.create(null) };
     const frontier = [];
     for (const pid in adj) {
-      if (FB.armyFriendlyProvince && FB.armyFriendlyProvince(state, army, pid)) {
+      if (FB.armyFriendlyProvince && FB.armyFriendlyProvince(state, army, pid, relations)) {
         map[pid] = 0;
         frontier.push(pid);
       }
@@ -3161,7 +3277,7 @@ window.FB = window.FB || {};
     }
     if (army.supply > 0) return;
     if (army.men > 0) {
-      const wasPrimary = FB.hostOf(state, army.realm) === army;
+      const wasPrimary = primaryHost(state, army.realm) === army;
       const rate = bal.supplyAttritionPerDay === undefined
         ? 0.0025 : bal.supplyAttritionPerDay;
       const losses = FB.applyHostLosses(army,
@@ -3224,8 +3340,9 @@ window.FB = window.FB || {};
       militaryCommand = FB.activeMilitaryCommand(state);
       if (!militaryCommand) FB.endMilitaryCommand(state);
     }
-    const sovereignIds = sovereignRealmIds(state);
-    const warring = warringMap(state, sovereignIds);
+    const musterOrder = realmMusterOrder(state);
+    const warring = warringMap(state, musterOrder);
+    const sovereignIds = activeRealmIds(warring, musterOrder);
     /* read once per tick: nothing in the raise/disband/order steps below
        mutates the pledge, the campaign, or the player's sovereignty */
     const playerGhwHost = !!(FB.playerGreatHolyWarHostActive &&
@@ -3299,11 +3416,11 @@ window.FB = window.FB || {};
       const detachDown = (state.armyDetachmentDown || {})[id];
       if (detachDown !== undefined &&
           state.turn - detachDown < detachmentRearm) continue;
-      if (FB.aiBaseHost(state, id) < multiStrength) continue;
       const primary = hosts[0];
       if (primary.broken !== undefined) continue; // a routed host does not divide
       const target = Math.round(primary.men * detachmentFrac);
       if (target < minMen || primary.men - target < minMen) continue;
+      if (FB.aiBaseHost(state, id) < multiStrength) continue;
       const detachment = splitOffHost(state, primary, target);
       hosts.push(detachment);
       if (state.player.war && state.player.war.enemy === id) {
@@ -3354,52 +3471,60 @@ window.FB = window.FB || {};
        banner processed after the player could see the county the player had
        just entered, retarget across one adjacent leg, and join a battle in
        that same tick. */
-    for (const a of state.armies) {
-      if (a.path && a.path.length && FB.fortBlocksArmy &&
-          FB.fortBlocksArmy(state, a.at, a) &&
-          a.path[0] !== a.from &&
-          !(FB.armyFriendlyProvince &&
-            FB.armyFriendlyProvince(state, a, a.path[0]))) {
-        /* Save repair or a control change can make a once-valid onward leg
-           stale while the host is already standing inside the fort. */
-        a.path = [];
-        a.goal = null;
-        a.moveLeft = 0;
-      }
-      const commandedByPlayer = !!(militaryCommand &&
-        a.realm === militaryCommand.sovereignRealmId &&
-        (!militaryCommand.hostId || a.id === militaryCommand.hostId));
-      if (a.realm !== 'player' && !commandedByPlayer) {
-        let goal = aiGoal(state, a, warring, primaryByRealm);
-        if (!(a.broken !== undefined && state.turn - a.broken < 40) &&
-            !(FB.fortPinnedStatus && FB.fortPinnedStatus(state, a)) &&
-            !FB.armyCanPursue(state, a, goal)) {
-          goal = FB.armyRegroupGoal(state, a) || a.at;
-        }
-        if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
-          FB.orderArmy(state, a, goal);
-        }
-      } else if (a.realm === 'player' && autoHosts &&
-          autoHosts !== 'manual') {
-        /* automated command: the stance steers only an idle host — a route
-           tapped by hand (a.manual) plays out untouched, a hand-halted host
-           (a.holdManual) holds, and the council's hunt is superseded */
-        a.huntPrey = null;
-        if (a.manual && !(a.path && a.path.length) && a.moveLeft <= 0) a.manual = 0;
-        if (!a.holdManual && !a.manual) {
-          const pgoal = playerGoal(state, a, autoHosts);
-          if (pgoal !== a.goal || ((!a.path || !a.path.length) && pgoal !== a.at && a.moveLeft <= 0)) {
-            if (FB.orderArmy(state, a, pgoal)) a.automatedOrder = 1;
-          }
-        }
-      } else if (a.huntPrey) {
-        // a hunting host tracks its prey day by day, not where it was —
-        // looked up live, since the disband loop above may have removed it
-        const prey = FB.hostOf(state, a.huntPrey);
-        if (!prey || !FB.armiesHostile(state, a, prey)) a.huntPrey = null;
-        else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
-      }
+    const previousQueries = orderQueries;
+    orderQueries = { state:state, enemies:Object.create(null), pursuit:new WeakMap(),
+      hostility:Object.create(null), byCounty:Object.create(null) };
+    for (const army of state.armies) {
+      (orderQueries.byCounty[army.at] || (orderQueries.byCounty[army.at] = [])).push(army);
     }
+    try {
+      for (const a of state.armies) {
+        if (a.path && a.path.length && FB.fortBlocksArmy &&
+            FB.fortBlocksArmy(state, a.at, a) &&
+            a.path[0] !== a.from &&
+            !(FB.armyFriendlyProvince &&
+              FB.armyFriendlyProvince(state, a, a.path[0]))) {
+          /* Save repair or a control change can make a once-valid onward leg
+             stale while the host is already standing inside the fort. */
+          a.path = [];
+          a.goal = null;
+          a.moveLeft = 0;
+        }
+        const commandedByPlayer = !!(militaryCommand &&
+          a.realm === militaryCommand.sovereignRealmId &&
+          (!militaryCommand.hostId || a.id === militaryCommand.hostId));
+        if (a.realm !== 'player' && !commandedByPlayer) {
+          let goal = aiGoal(state, a, warring, primaryByRealm);
+          if (!(a.broken !== undefined && state.turn - a.broken < 40) &&
+              !(FB.fortPinnedStatus && FB.fortPinnedStatus(state, a)) &&
+              !FB.armyCanPursue(state, a, goal)) {
+            goal = FB.armyRegroupGoal(state, a) || a.at;
+          }
+          if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
+            FB.orderArmy(state, a, goal);
+          }
+        } else if (a.realm === 'player' && autoHosts &&
+            autoHosts !== 'manual') {
+          /* automated command: the stance steers only an idle host — a route
+             tapped by hand (a.manual) plays out untouched, a hand-halted host
+             (a.holdManual) holds, and the council's hunt is superseded */
+          a.huntPrey = null;
+          if (a.manual && !(a.path && a.path.length) && a.moveLeft <= 0) a.manual = 0;
+          if (!a.holdManual && !a.manual) {
+            const pgoal = playerGoal(state, a, autoHosts);
+            if (pgoal !== a.goal || ((!a.path || !a.path.length) && pgoal !== a.at && a.moveLeft <= 0)) {
+              if (FB.orderArmy(state, a, pgoal)) a.automatedOrder = 1;
+            }
+          }
+        } else if (a.huntPrey) {
+          // a hunting host tracks its prey day by day, not where it was —
+          // looked up live, since the disband loop above may have removed it
+          const prey = primaryByRealm[a.huntPrey];
+          if (!prey || !FB.armiesHostile(state, a, prey)) a.huntPrey = null;
+          else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
+        }
+      }
+    } finally { orderQueries = previousQueries; }
     /* Only after all orders are fixed do hosts advance. The battle scan below
        therefore sees genuine end-of-day co-location; adjacency alone never
        creates contact. */
@@ -3407,7 +3532,7 @@ window.FB = window.FB || {};
 
     /* Campaign desertion is expressed as a seasonal fraction but resolved
        daily. Fractional expected losses use the saved RNG stream. */
-    const playerHost = FB.playerHost(state);
+    const playerHost = primaryHost(state, 'player');
     const desertion = playerHost && playerHost.warId === 'holy' && FB.campaignHostModBonus
       ? Math.max(0, FB.campaignHostModBonus(state, 'desertion')) : 0;
     if (playerHost && playerHost.men > 0 && desertion) {
@@ -3445,7 +3570,7 @@ window.FB = window.FB || {};
         if (recruitRoom[a.realm] === undefined) {
           const territory = FB.recruitmentTerritory(state, a.realm);
           const plan = a.realm === 'player' ? playerMusterPlan(state) : null;
-          let capacity = a.realm === 'player' ? (plan ? plan.men : 0) : FB.aiBaseHost(state, a.realm);
+          let capacity = a.realm === 'player' ? (plan ? plan.men : 0) : FB.aiBaseHost(state, a.realm, territory);
           let serving = 0;
           for (const host of state.armies) {
             if (host.realm !== a.realm) continue;

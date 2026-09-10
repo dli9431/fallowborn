@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/modifiers.js',
   'js/items.js',
   'data/actions.js',
   'js/actions.js',
@@ -216,23 +217,23 @@ test('selling a sacred artifact of your own faith costs the devout',
         return FB.dejureOf(p.id).empire === 'e_francia';
       })[0].id;
       s.player.piety = 50;
-      s.player.pop = 0;
+      FB.setCountySupport(s, s.player.provinceId, 0);
       FB.fns.artifact_grant(s, { artifact:'durendal' });
       FB.sellItem(s, 'durendal');
       const out = {
         piety:s.player.piety,
-        pop:s.player.pop
+        pop:FB.countySupportBase(s, s.player.provinceId)
       };
       /* a non-sacred legend parts without the muttering */
       s.player.provinceId = FB.world.provs.filter(function (p) {
         return FB.dejureOf(p.id).empire === 'e_britannia';
       })[0].id;
       s.player.piety = 50;
-      s.player.pop = 0;
+      FB.setCountySupport(s, s.player.provinceId, 0);
       FB.fns.artifact_grant(s, { artifact:'excalibur' });
       FB.sellItem(s, 'excalibur');
       out.pietyAfterMundane = s.player.piety;
-      out.popAfterMundane = s.player.pop;
+      out.popAfterMundane = FB.countySupportBase(s, s.player.provinceId);
       return out;
     });
 

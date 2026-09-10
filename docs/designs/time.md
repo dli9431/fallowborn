@@ -158,6 +158,11 @@ older preferences without this setting; explicitly saved choices are preserved.
 Enabling it resumes time regardless of whether normal flow, fast-forward, or a manual pause
 reached the event; the first-event
 hint reflects this preference. An autoresolved batch opens no modal and preserves its caller's pause state.
+An ordinary daily batch containing only household resource effects reuses the
+normal revision/signature-based promotion check and skips global ruler
+synchronization. Season boundaries, visible decisions, custom or unknown effects,
+named chance handlers, travel, and non-tick callers retain full reconciliation.
+Death and pending marriage handling still run after every completed batch.
 `G.skipAhead` fast-forwards until an event/season/death.
 Starting a fast-forward counts as letting the days flow for first-life guidance, even when
 the player has not previously used Play.
@@ -463,3 +468,10 @@ and apprentice costs unchanged. See [doctrines.md](doctrines.md) for discovery,
 inheritance, and the four explicit ungated technology reviews.
 
 Institution daily repair tracks transient revisions for the owned policy, election, privilege, and demand stores, plus their identities and the next exact expiry. Mutating institution APIs invalidate that revision; external career, council, monopoly, faith, and realm inputs remain checked. Bulk saved histories are not serialized on quiet days. Code that edits institution records directly must call `FB.ensureInstitutions` afterward; replacing an entire store is detected automatically. These caches never enter saves.
+
+## County support recovery
+
+The annual tick moves every stored county support base 15% toward neutral.
+Unjust-war debt separately recovers in twelve equal annual steps, measured in
+360-day years from its latest declaration refresh. There is no personal score
+to decay or halve on succession.

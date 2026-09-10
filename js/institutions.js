@@ -1407,7 +1407,7 @@ window.FB = window.FB || {};
     if (!FB.removeModifier(state, record.effectId, record.scopeId,
         { notice:true })) return false;
     FB.removePrivilegeForModifier(state, record.effectId, record.scopeId);
-    state.player.pop = FB.clamp((state.player.pop || 0) - 10, -100, 100);
+    FB.adjustCountySupport(state, record.scopeId || state.player.provinceId, -10);
     FB.notePoliticalMistreatment(state, 'unlawful_privilege_revocation', {
       privilegeId:record.defId, scopeId:record.scopeId
     });
@@ -1498,8 +1498,11 @@ window.FB = window.FB || {};
 
   FB.fns = FB.fns || {};
   FB.fns.collective_demand_commons = function (state) {
-    var pid = state.player.provinceId;
-    var voice = FB.popEffective ? FB.popEffective(state) : state.player.pop || 0;
+    var counties = (state.player.provs || []).filter(function (pid) {
+      return uprisingHeld(state, pid) && !FB.hasPrivilege(state, 'confirmed_custom', pid);
+    }).sort(function (a, b) { return FB.countyPopularSupport(state, a) - FB.countyPopularSupport(state, b) || compareId(a, b); });
+    var pid = counties[0] || state.player.provinceId;
+    var voice = FB.countyPopularSupport(state, pid);
     if (!pid || voice > -20 || FB.hasPrivilege(state, 'confirmed_custom', pid)) {
       return false;
     }
@@ -1513,7 +1516,7 @@ window.FB = window.FB || {};
     if (!pid || !taxes.length || FB.hasPrivilege(state, 'tax_concession', pid)) {
       return false;
     }
-    var voice = FB.popEffective ? FB.popEffective(state) : state.player.pop || 0;
+    var voice = FB.countyPopularSupport(state, pid);
     return demandResult(35 + taxes.length * 12 + Math.max(0, -voice), pid,
       [{ id:'extraordinary_tax', value:taxes.length },
        { id:'common_voice', value:voice }]);
@@ -1523,7 +1526,7 @@ window.FB = window.FB || {};
     var pid = state.player.provinceId;
     if (!pid || !FB.hasModifier || !FB.hasModifier(state, 'contested_tolls', pid) ||
         FB.hasPrivilege(state, 'market_charter', pid)) return false;
-    return demandResult(45 + Math.max(0, -(state.player.pop || 0)), pid,
+    return demandResult(45 + Math.max(0, -FB.countyPopularSupport(state, pid)), pid,
       [{ id:'contested_tolls', value:1 }]);
   };
 
@@ -1537,7 +1540,7 @@ window.FB = window.FB || {};
         FB.hasPrivilege(state, 'sanctuary', pid) ||
         FB.hasPrivilege(state, 'levy_exemption', pid)) return false;
     return demandResult(38 + persecution.length * 15 +
-      Math.max(0, -(state.player.pop || 0)), pid,
+      Math.max(0, -FB.countyPopularSupport(state, pid)), pid,
       [{ id:'coercive_local_burden', value:burden ? 1 : 0 },
        { id:'religious_persecution', value:persecution.length }]);
   };
@@ -1733,7 +1736,7 @@ window.FB = window.FB || {};
       grandfathered:pending.technologyApproved !== false
     });
     if (!granted) return false;
-    state.player.pop = FB.clamp((state.player.pop || 0) + 6, -100, 100);
+    FB.adjustCountySupport(state, pending.scopeId || state.player.provinceId, 6);
     if (pending.constituency === 'magnates') {
       var vassals = FB.playerVassals(state);
       for (var i = 0; i < vassals.length; i++) {
@@ -1753,7 +1756,7 @@ window.FB = window.FB || {};
     var pending = store.pending;
     if (!FB.fns.collective_demand_valid(state, ctx)) return false;
     var loss = softened ? 4 : 8;
-    state.player.pop = FB.clamp((state.player.pop || 0) - loss, -100, 100);
+    FB.adjustCountySupport(state, pending.scopeId || state.player.provinceId, -loss);
     if (pending.constituency === 'magnates') {
       var vassals = FB.playerVassals(state);
       for (var i = 0; i < vassals.length; i++) {
@@ -1923,7 +1926,7 @@ window.FB = window.FB || {};
       recoverySupport:uprisingBalance('commonsUprisingRecoverySupport', -10),
       uprisingDays:FBDATA.modifiers.commons_uprising.days,
       spreadDays:uprisingBalance('commonsUprisingSpreadDays', 30),
-      reduction:Math.round(FB.commonsUprisingReduction(state) * 100),
+      reduction:Math.round(FB.commonsUprisingReduction(state, row.scopeId) * 100),
       county:uprisingCountyNames(row) };
   }
 
@@ -1937,15 +1940,18 @@ window.FB = window.FB || {};
     var countyDetails = counties.map(function (pid) {
       var entry = uprisingCountyState(row, pid);
       return { id:pid, phase:entry.phase,
+        support:FB.countyPopularSupport(state, pid),
+        reduction:Math.round(FB.commonsUprisingReduction(state, pid) * 100),
         days:entry.phase === 'petition' ? uprisingBalance('commonsUprisingWarningDays', 90)
           : Math.max(0, entry.dueTurn - state.turn) };
     });
     return { id:row.id, stage:row.stage, scopeId:row.scopeId, countyIds:counties,
       counties:countyDetails,
       spreadDays:Number.isFinite(row.nextSpreadTurn) ? Math.max(0, row.nextSpreadTurn - state.turn) : null,
-      spreadPaused:(FB.popEffective(state) > uprisingBalance('commonsUprisingSupportThreshold', -20)),
+      spreadPaused:!counties.some(function (pid) { return uprisingCountyState(row, pid).phase === 'active' &&
+        FB.countyPopularSupport(state, pid) <= uprisingBalance('commonsUprisingSupportThreshold', -20); }),
       privilegeId:row.privilegeId,
-      reduction:Math.round(FB.commonsUprisingReduction(state) * 100),
+      reduction:Math.round(FB.commonsUprisingReduction(state, row.scopeId) * 100),
       days:row.stage === 'petition' ? uprisingBalance('commonsUprisingWarningDays', 90)
         : Math.max(0, (uprisingNextDue(row) || state.turn) - state.turn) };
   };
@@ -1957,7 +1963,7 @@ window.FB = window.FB || {};
 
   function startUprisingWarning(state, pending) {
     var store = demandStore(state, true), flags = state.player.flags || {};
-    var support = FB.popEffective ? FB.popEffective(state) : state.player.pop || 0;
+    var support = FB.countyPopularSupport(state, pending.scopeId);
     if (pending.constituency !== 'commons' || !uprisingHeld(state, pending.scopeId) ||
         support > uprisingBalance('commonsUprisingSupportThreshold', -20) ||
         !FB.fns.commons_downfall_available(state) || flags.df_unrest || flags.df_league ||
@@ -1966,11 +1972,7 @@ window.FB = window.FB || {};
         })) return false;
     var row = { id:'uprising:' + pending.id, stage:'petition',
       scopeId:pending.scopeId, privilegeId:pending.privilegeId,
-      countyIds:[pending.scopeId].concat(state.player.provs.filter(function (pid) {
-        return pid !== pending.scopeId && uprisingHeld(state, pid) &&
-          !FB.hasPrivilege(state, pending.privilegeId, pid);
-      }).sort(compareId)).filter(function (pid, index, ids) { return ids.indexOf(pid) === index; })
-        .slice(0, Math.max(1, Math.floor(uprisingBalance('commonsUprisingMaxCounties', 3)))),
+      countyIds:[pending.scopeId],
       protagonistId:state.player.charId, liegeId:state.player.liege || null,
       startedTurn:state.turn };
     if (!uprisingValid(state, row)) return false;
@@ -2160,12 +2162,12 @@ window.FB = window.FB || {};
     repairUprising(state);
     var store = demandStore(state, false), row = store && store.uprising;
     if (!row) return;
-    var support = FB.popEffective(state), began = [], beforeCounties = row.countyIds.slice();
-    var recovered = support > uprisingBalance('commonsUprisingRecoverySupport', -10);
+    var began = [], beforeCounties = row.countyIds.slice(), recovered = false;
     row.countyIds = uprisingCounties(row).filter(function (pid) {
       var entry = row.countyStates[pid];
-      if ((entry.phase !== 'active' && recovered) ||
-          (entry.phase === 'active' && state.turn >= entry.dueTurn)) {
+      var countyRecovered = FB.countyPopularSupport(state, pid) > uprisingBalance('commonsUprisingRecoverySupport', -10);
+      if ((entry.phase !== 'active' && countyRecovered) || (entry.phase === 'active' && state.turn >= entry.dueTurn)) {
+        recovered = recovered || countyRecovered;
         FB.removeModifier(state, 'commons_uprising', pid, { notice:false });
         delete row.countyStates[pid];
         return false;
@@ -2189,9 +2191,9 @@ window.FB = window.FB || {};
       { county:uprisingCountyNames({ countyIds:began }) }));
     localUprisingAIDay(state);
     if (!store.uprising) return;
-    support = FB.popEffective(state);
-    var active = row.countyIds.filter(function (pid) { return row.countyStates[pid].phase === 'active'; });
-    if (!active.length || support > uprisingBalance('commonsUprisingSupportThreshold', -20)) {
+    var active = row.countyIds.filter(function (pid) { return row.countyStates[pid].phase === 'active' &&
+      FB.countyPopularSupport(state, pid) <= uprisingBalance('commonsUprisingSupportThreshold', -20); });
+    if (!active.length) {
       delete row.nextSpreadTurn;
     } else if (!Number.isFinite(row.nextSpreadTurn)) {
       row.nextSpreadTurn = state.turn + uprisingBalance('commonsUprisingSpreadDays', 30);
@@ -2200,7 +2202,8 @@ window.FB = window.FB || {};
       active.forEach(function (pid) {
         Object.keys(FB.world.adj[pid] || {}).forEach(function (neighbor) {
           if (candidates.indexOf(neighbor) < 0 && row.visitedCountyIds.indexOf(neighbor) < 0 &&
-              uprisingInRealm(state, neighbor) && !FB.hasPrivilege(state, row.privilegeId, neighbor)) {
+              uprisingInRealm(state, neighbor) && !FB.hasPrivilege(state, row.privilegeId, neighbor) &&
+              FB.countyPopularSupport(state, neighbor) <= uprisingBalance('commonsUprisingSupportThreshold', -20)) {
             candidates.push(neighbor);
           }
         });
@@ -2638,7 +2641,7 @@ window.FB = window.FB || {};
        records it, and the faith constituency organizes. */
     if (oldLevel && oldLevel.protectedTerm &&
         state.turn < Number(record.setTurn) + realmPolicyProtectedDays()) {
-      state.player.pop = FB.clamp((state.player.pop || 0) - 10, -100, 100);
+      FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) - 10, -100, 100));
       FB.notePoliticalMistreatment(state, 'unlawful_privilege_revocation', {
         policyId:policyId, levelId:record.level
       });
@@ -2653,8 +2656,8 @@ window.FB = window.FB || {};
     }
     if (enact.prestige) state.player.prestige += enact.prestige;
     if (enact.pop) {
-      state.player.pop = FB.clamp((state.player.pop || 0) + enact.pop,
-        -100, 100);
+      FB.setCountySupport(state, state.player.provinceId, FB.clamp((FB.countySupportBase(state, state.player.provinceId) || 0) + enact.pop,
+        -100, 100));
     }
     if (enact.authority && FB.councilAuthority) {
       FB.councilAuthority(state, enact.authority);
