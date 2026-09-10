@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.0';
+FB.VERSION = '1.179.1';
 FB.CHANGELOG = [
+  { v: '1.179.1', date: '2026-09-09', changes: [
+    'Fast-forward reuses campaign and army hostility lookups instead of repeatedly scanning war records.'
+  ] },
   { v: '1.179.0', date: '2026-09-09', changes: [
     'Fight concurrent campaigns, combine territorial claims in the map and list pickers, and govern vassal warfare through realm laws and permissions. Campaign and law sheets show compact terms with details on demand.'
   ] },

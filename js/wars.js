@@ -5,6 +5,10 @@
   const launches = new WeakMap();
   const initialized = new WeakSet();
   const bindingRevisions = new WeakMap();
+  // Derived only: registry mutations invalidate immediately, even within a tick.
+  // Raw save/mod repairs enter through repairWars; replacing the table also heals.
+  const warIndexes = new WeakMap();
+  function invalidateWars(state) { warIndexes.delete(state); }
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   function context(state) {
     for (let i = contexts.length - 1; i >= 0; i--) {
@@ -12,14 +16,30 @@
     }
     return null;
   }
-  function rows(state) {
-    return Object.keys(state.wars || {}).sort().map(function (id) {
+  function warIndex(state) {
+    let index = warIndexes.get(state);
+    if (index && index.table === state.wars) return index;
+    const active = Object.keys(state.wars || {}).map(function (id) {
       return state.wars[id];
     }).filter(function (w) { return w && w.status === 'active'; }).sort(function (a, b) {
       return (a.startedTurn || 0) - (b.startedTurn || 0) ||
         (Number(String(a.id).slice(4)) || 0) - (Number(String(b.id).slice(4)) || 0) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
     });
+    index = { table:state.wars, active:active, realms:Object.create(null),
+      owners:Object.create(null), order:Object.create(null), revision:-1 };
+    active.forEach(function (w, i) {
+      index.order[w.id] = i;
+      for (const rid of [w.attacker, w.defender]) {
+        (index.realms[rid] || (index.realms[rid] = [])).push(w);
+      }
+      if (!index.owners[w.legacyOwner]) index.owners[w.legacyOwner] = w;
+    });
+    warIndexes.set(state, index);
+    return index;
   }
+  function rows(state) { return warIndex(state).active; }
+  // Return fresh arrays so query callers cannot mutate the retained indexes.
+  FB.ordinaryWars = function (state) { return rows(state).slice(); };
   function endpoint(w, rid) { return w.attacker === rid || w.defender === rid; }
   function current(state, rid) {
     const c = context(state);
@@ -27,10 +47,8 @@
       const w = state.wars && state.wars[c.id];
       return w && w.status === 'active' && endpoint(w, rid) ? w : null;
     }
-    const list = rows(state).filter(function (w) {
-      return rid === 'player' ? endpoint(w, rid) : w.legacyOwner === rid;
-    });
-    return list[0] || null;
+    const index = warIndex(state);
+    return rid === 'player' ? (index.realms.player || [])[0] || null : index.owners[rid] || null;
   }
   function bind(state, record, rid) {
     if (!record) return;
@@ -46,6 +64,7 @@
           if (previous && previous.enemy === value.enemy && previous !== value &&
               (context(state) || FB.realmWars(state, rid).length === 1)) {
             previous.status = 'ended'; previous.endedTurn = state.turn; previous.occupations = {};
+            invalidateWars(state);
           }
           const created = FB.registerOrdinaryWar(state, rid, value);
           if (created && endpoint(created, 'player')) launches.set(state, created.id);
@@ -57,6 +76,7 @@
         if (w && (context(state) || candidates.length === 1)) {
           w.status = 'ended';
           w.endedTurn = state.turn;
+          invalidateWars(state);
         }
       }
     });
@@ -87,14 +107,16 @@
     bindingRevisions.set(state, FB.realmStateRevision ? FB.realmStateRevision() : Object.keys(state.realms).length);
   };
   FB.realmWars = function (state, rid) {
-    return rows(state).filter(function (w) { return endpoint(w, rid); });
+    return (warIndex(state).realms[rid] || []).slice();
   };
   FB.ordinaryWarById = function (state, id) {
     const w = state.wars && state.wars[id];
     return w && w.status === 'active' ? w : null;
   };
   FB.ordinaryWarBetween = function (state, a, b) {
-    return rows(state).filter(function (w) { return endpoint(w, a) && endpoint(w, b); })[0] || null;
+    const list = warIndex(state).realms[a] || [];
+    for (const w of list) if (endpoint(w, b)) return w;
+    return null;
   };
   FB.withOrdinaryWar = function (state, id, fn) {
     FB.ensureWars(state);
@@ -137,6 +159,7 @@
       if (!war.occupations[pid]) war.occupations[pid] = Object.assign({ occupied:false }, war.fortSieges[pid]);
     });
     state.wars[id] = war;
+    invalidateWars(state);
     return war;
   };
   FB.ordinaryWarParticipants = function (state, owner, war) {
@@ -174,6 +197,7 @@
     return FB.topRealm(state, attacker) === state.owner[pid] ? holder : state.owner[pid];
   };
   FB.repairWars = function (state) {
+    invalidateWars(state);
     FB.ensureWars(state);
     if (!state || !state.player) return;
     state.truces = state.truces || {};
@@ -183,7 +207,7 @@
     rows(state).forEach(function (w) {
       const a = state.realms[w.attacker], b = state.realms[w.defender];
       if (!a || !a.alive || !b || !b.alive || w.attacker === w.defender) {
-        w.status = 'ended'; w.endedTurn = state.turn; return;
+        w.status = 'ended'; w.endedTurn = state.turn; invalidateWars(state); return;
       }
       w.occupations = w.occupations || {};
       if (endpoint(w, 'player')) FB.withOrdinaryWar(state, w.id, function () {
@@ -226,11 +250,46 @@
     return enemy && enemy.capital;
   };
   FB.battleOrdinaryWar = function (state, a, b) {
-    const list = rows(state).filter(function (w) {
-      return (FB.warRealmContains(state, w.attacker, a.realm) && FB.warRealmContains(state, w.defender, b.realm)) ||
-        (FB.warRealmContains(state, w.defender, a.realm) && FB.warRealmContains(state, w.attacker, b.realm));
-    });
-    return list.filter(function (w) { return w.id === a.warId || w.id === b.warId; })[0] || list[0] || null;
+    const index = warIndex(state);
+    const revision = FB.realmStateRevision ? FB.realmStateRevision() : state.turn;
+    if (index.revision !== revision || index.hierarchy !== state.realms ||
+        index.playerLiege !== state.player.liege) {
+      index.revision = revision;
+      index.hierarchy = state.realms;
+      index.playerLiege = state.player.liege;
+      index.ancestors = Object.create(null);
+      index.pairs = Object.create(null);
+    }
+    function ancestors(rid) {
+      if (index.ancestors[rid]) return index.ancestors[rid];
+      const found = Object.create(null), original = rid;
+      while (rid && !found[rid]) {
+        found[rid] = true;
+        rid = rid === 'player' ? state.player.liege : state.realms[rid] && state.realms[rid].liege;
+      }
+      index.ancestors[original] = found;
+      return found;
+    }
+    const pairs = index.pairs[a.realm] || (index.pairs[a.realm] = Object.create(null));
+    let list = pairs[b.realm];
+    if (!list) {
+      const left = ancestors(a.realm), right = ancestors(b.realm), seen = Object.create(null);
+      list = [];
+      for (const rid in left) {
+        for (const w of (index.realms[rid] || [])) {
+          if (!seen[w.id] && ((left[w.attacker] && right[w.defender]) ||
+              (left[w.defender] && right[w.attacker]))) {
+            seen[w.id] = true;
+            list.push(w);
+          }
+        }
+      }
+      list.sort(function (x, y) { return index.order[x.id] - index.order[y.id]; });
+      pairs[b.realm] = list;
+      (index.pairs[b.realm] || (index.pairs[b.realm] = Object.create(null)))[a.realm] = list;
+    }
+    for (const w of list) if (w.id === a.warId || w.id === b.warId) return w;
+    return list[0] || null;
   };
   FB.armiesHostile = function (state, a, b) {
     if (a.realm === b.realm) return false;
@@ -324,6 +383,7 @@
     else {
       FB.concludeOrdinaryWar(state, w.attacker, w, result === 'invalid');
       w.status = 'ended'; w.endedTurn = state.turn;
+      invalidateWars(state);
     }
     w.occupations = {};
     (state.armies || []).forEach(function (a) {
@@ -897,6 +957,7 @@
       w.enemy = endpoint(w, 'player') ? (w.attacker === 'player' ? w.defender : w.attacker) : w.defender;
       bindMilitary(state, w);
       if (w.attacker === w.defender) { w.status = 'ended'; w.occupations = {}; }
+      invalidateWars(state);
     });
     (state.armies || []).forEach(function (a) { if (a.realm === from) a.realm = to; });
     if (state.warLaws && state.warLaws[from]) { state.warLaws[to] = state.warLaws[to] || state.warLaws[from]; delete state.warLaws[from]; }

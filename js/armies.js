@@ -1312,10 +1312,9 @@ window.FB = window.FB || {};
     return false;
   };
 
-  /* Vassals cannot own a foreign war or raise a sovereign host. Keep that
-     derived subset until a realm death or hierarchy mutation advances the
-     shared realm revision; a mature world has hundreds of vassal records but
-     only dozens of sovereigns. */
+  /* Vassals can own campaigns too. Retain living realm order until a death
+     or hierarchy mutation advances the shared revision; muster order must
+     stay independent of campaign registration order. */
   let sovereignIndexState = null;
   let sovereignIndexRevision = -1;
   let sovereignIndexIds = [];
@@ -1335,17 +1334,17 @@ window.FB = window.FB || {};
     return ids;
   }
 
-  /* who fights whom, built once per tick: realmId → enemyId, both directions,
-     plus the player's personal war ('player' ↔ its enemy). Reading only the
-     retained sovereign subset keeps the daily path O(sovereigns + armies)
-     rather than revisiting every generated vassal. */
+  /* Who fights whom, built once per tick from the active campaign index.
+     Legacy declaration precedence uses constant-time compatibility reads;
+     it must not scan/sort the campaign registry once per generated vassal. */
   function warringMap(state, sovereignIds) {
     const m = {};
-    if (FB.realmWars) {
-      for (const rid of ['player'].concat(sovereignIds)) {
-        const campaigns = FB.realmWars(state, rid);
-        if (campaigns.length) m[rid] = campaigns[0].attacker === rid
-          ? campaigns[0].defender : campaigns[0].attacker;
+    if (FB.ordinaryWars) {
+      for (const war of FB.ordinaryWars(state)) {
+        for (const rid of [war.attacker, war.defender]) {
+          if (rid !== 'player' && (!state.realms[rid] || !state.realms[rid].alive)) continue;
+          if (!m[rid]) m[rid] = war.attacker === rid ? war.defender : war.attacker;
+        }
       }
     }
     const pw = state.player.war;

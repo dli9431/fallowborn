@@ -167,6 +167,19 @@ to an exact campaign; it never reads UI selection. Non-enumerable `player.war` a
 realm `war` compatibility views are not second saved stores. Ambiguous legacy peace
 mutations fail closed. New callers use an explicit war ID.
 
+Ordinary-war queries share an unsaved index of active campaigns, endpoint lists,
+legacy owners, and stable campaign order. Registration, legacy replacement/end,
+settlement, realm remapping, and repair invalidate it immediately; replacing the
+registry also rebuilds it. Raw registry edits must pass through `FB.repairWars`.
+Daily army processing builds its participant map from `FB.ordinaryWars` once,
+rather than filtering and sorting all campaigns for each generated vassal.
+Hostility queries consider only campaigns attached to the probing realm's ancestors
+and retain the matching realm-pair list. Realm revision, hierarchy replacement,
+and player-liege changes clear those ancestry and pair projections. Campaign
+assignment remains a live tie-breaker, so reassigning a host or ending a war during
+a daily tick immediately changes the selected battle campaign. These indexes never
+enter saves or change RNG consumption, campaign ordering, or fast-forward budgets.
+
 The player can fight different opponents concurrently. One ordinary campaign is
 allowed per opposing pair, and its objectives cannot grow after declaration. AI
 rulers consider campaigns seasonally, with at most two offensive commitments including
