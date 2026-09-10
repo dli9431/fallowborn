@@ -583,6 +583,25 @@
       corridors:corridorBonusIndex(state)
     };
     const techByRealm = Object.create(null);
+    const shockIndex = Object.create(null);
+    for (const pid of pids) {
+      const goods = shockIndex[pid] = Object.create(null);
+      for (const id of ids) goods[id] = { production:0, demand:0, flow:0, severe:false, records:[] };
+    }
+    // Distribute in saved order, preserving floating-point sums and report order.
+    for (const shock of state.market.shocks) {
+      const counties = shock.provinceId ? [shock.provinceId] : pids;
+      const goods = shock.goodId ? [shock.goodId] : ids;
+      for (const pid of counties) for (const id of goods) {
+        const out = shockIndex[pid] && shockIndex[pid][id];
+        if (!out) continue;
+        out.production += shock.production || 0;
+        out.demand += shock.demand || 0;
+        out.flow += shock.flow || 0;
+        out.severe = out.severe || shock.severe;
+        out.records.push(shock);
+      }
+    }
     for (let p = 0; p < pids.length; p++) {
       const pid = pids[p];
       const owner = state.owner && state.owner[pid];
@@ -594,15 +613,11 @@
           ? Math.max(0, Number(FB.techBonus(state, 'trade', realmId)) || 0)
           : 0;
       }
-      const shocks = Object.create(null);
-      for (let g = 0; g < ids.length; g++) {
-        shocks[ids[g]] = shocksFor(state, pid, ids[g]);
-      }
       context.counties[pid] = {
         base:countyBase(state, pid),
         endowments:FB.marketEndowments(state, pid),
         tradeTech:techByRealm[techKey],
-        shocks:shocks
+        shocks:shockIndex[pid]
       };
     }
     return context;

@@ -343,3 +343,5 @@ enters `phase:'arrived'`. Intermediate road counties expose no roster and cannot
 local activity. Arrival creates the destination’s deterministic bounded cast and prunes
 unconnected casts outside home and the new location; return performs the same cleanup at
 home. This does not add a new travel purpose in the first release.
+
+A daily courier batch normalizes the delivery list once, records completed deliveries in a transient set, and removes them together at the end. Returning cash and items still settle in original delivery order, and pending-delivery queries exclude completed records during the batch. The removal set is cleared even when an effect throws and is never saved.

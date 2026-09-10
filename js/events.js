@@ -9827,7 +9827,14 @@ window.FB = window.FB || {};
     return out;
   }
 
-  function impactSnapshot(state, ctx) {
+  function localImpactOnly(state, fx) {
+    if (state.player.travel) return false; // travelValidate can settle a journey
+    const localKeys = ['gold', 'prestige', 'piety', 'health', 'skills', 'popularOpinion', 'log'];
+    for (const key in fx) if (localKeys.indexOf(key) < 0) return false;
+    return fx.gold === undefined || typeof fx.gold === 'number';
+  }
+
+  function impactSnapshot(state, ctx, localOnly) {
     const p = state.player;
     const me = state.chars[p.charId];
     const opinions = {};
@@ -9854,10 +9861,12 @@ window.FB = window.FB || {};
       const c = state.chars[charId];
       if (c) opinions[charId] = Number(c.opinion) || 0;
     }
-    let host = FB.playerHost ? FB.playerHost(state) : null;
+    let host = !localOnly && FB.playerHost ? FB.playerHost(state) : null;
     const deadCharacters = {};
-    for (const snapshotCharId in state.chars) {
-      deadCharacters[snapshotCharId] = !!state.chars[snapshotCharId].dead;
+    if (!localOnly) {
+      for (const snapshotCharId in state.chars) {
+        deadCharacters[snapshotCharId] = !!state.chars[snapshotCharId].dead;
+      }
     }
     const itemDefs = {};
     const playerItems = p.items || [];
@@ -9900,17 +9909,17 @@ window.FB = window.FB || {};
       itemDefs:itemDefs,
       provinces:(p.provs || []).slice(),
       landPlots:(p.landPlots || []).length,
-      characters:Object.keys(state.chars),
+      characters:localOnly ? [] : Object.keys(state.chars),
       deadCharacters:deadCharacters,
       opinions:opinions,
       realmStanding:copyNumberMap(p.liegeOps),
       liegeStanding:Number(p.liegeOp) || 0,
-      modifiers:modifierImpactSnapshot(state),
+      modifiers:localOnly ? [] : modifierImpactSnapshot(state),
       queue:(state.eventQueue || []).map(function (queued) { return queued.id; }),
       flags:Object.keys(p.flags || {}).sort(),
-      dev:copyNumberMap(state.dev),
-      pacts:JSON.stringify(state.pacts || {}),
-      alliances:JSON.stringify(state.alliances || []),
+      dev:localOnly ? {} : copyNumberMap(state.dev),
+      pacts:localOnly ? '' : JSON.stringify(state.pacts || {}),
+      alliances:localOnly ? '' : JSON.stringify(state.alliances || []),
       warStrength:p.war ? Number(p.war.strength) || 0 : null,
       warSiege:p.war ? Number(p.war.siege) || 0 : null,
       hostMen:host ? Number(host.men) || 0 : null,
@@ -10334,6 +10343,26 @@ window.FB = window.FB || {};
 
   FB.eventModifierPreviewChips = function (state, id) {
     return eventModifierPreviewText(FBDATA.modifiers[id], state, true);
+  };
+
+  FB.eventImpactChipTexts = function (state, record, mode) {
+    if (record.type !== 'modifier') return [FB.eventImpactText(state, record, mode)];
+    const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
+    const name = def ? FB.dataText(state, state.player.charId,
+      'modifier', record.id, def, 'name', {}) : record.id;
+    const parts = [record.action === 'remove'
+      ? FB.T('End {modifier}', { modifier:name }) : name];
+    const province = record.pid && FB.world.byId[record.pid];
+    if (province) parts.push(province.name);
+    if (record.action === 'remove' || !def) return parts;
+    parts.push(def.days !== undefined ? FB.T('{days} days', { days:def.days }) : FB.T('No fixed end'));
+    if (def.upkeep && def.upkeep.gold) parts.push(FB.T('{money:amount} each season', { amount:def.upkeep.gold }));
+    const shared = FB.ui && FB.ui._shared;
+    const effects = mode === 'resolved' && shared && shared.modifierEffectParts
+      ? shared.modifierEffectParts(state, record.id)
+      : FB.eventModifierPreviewChips(state, record.id).map(function (chip) { return chip.text; });
+    if (def.scope === 'county') parts.push(FB.T('Stays with county'));
+    return parts.concat(effects);
   };
 
   FB.eventImpactText = function (state, record, mode) {
@@ -10803,7 +10832,8 @@ window.FB = window.FB || {};
       });
       if (!freedomStatus.ready) return [];
     }
-    const beforeImpact = impactSnapshot(state, ctx);
+    const localImpact = localImpactOnly(state, fx);
+    const beforeImpact = impactSnapshot(state, ctx, localImpact);
     const customAdapter = fx.custom && FB.eventImpactAdapters[fx.custom];
     const customBefore = customAdapter && typeof customAdapter.capture === 'function'
       ? customAdapter.capture(state, ctx, ev, fx) : null;
@@ -11396,7 +11426,7 @@ window.FB = window.FB || {};
       delete p.pendingDeathProvenance;
     }
 
-    const afterImpact = impactSnapshot(state, ctx);
+    const afterImpact = impactSnapshot(state, ctx, localImpact);
     const ledger = diffImpactSnapshots(state, beforeImpact, afterImpact);
     if (appliedResearch) ledger.push(impact('research', {
       amount:appliedResearch, resolved:true

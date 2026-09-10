@@ -283,3 +283,5 @@ Historical military equipment extends item lots to Masterwork repeatable gear. F
 Guild promotion results retain actual money and prestige changes beside the rank
 and Guild Standing gain. Acknowledgement and character-sheet returns cannot repeat
 the transaction.
+
+Daily finance and political trade counts share a transient investment schedule. It scans retained history once, then checks only live commitments until creation, resolution, list replacement, or explicit `FB.ensureEconomy` repair. Venture deadlines and resolution order are unchanged. Direct edits that reactivate settled historical records must call `FB.ensureEconomy` afterward; no cache metadata is serialized.

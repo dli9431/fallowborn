@@ -90,12 +90,6 @@
       '<p>' + esc(FB.T('No land changes hands.')) + '</p>' +
       button('campaign-peace', w.defending ? FB.T('Buy peace') : FB.T('Withdraw')),
       '<p>' + esc(FB.T('Ends this campaign only. Other campaigns and their assigned hosts continue.')) + '</p>');
-    if (w.peaceDemand && w.attacker === 'player' && w.peaceDemand.status === 'pending') {
-      const deadline = FB.dateAtTurn(s, w.peaceDemand.deadline);
-      h += '<p>' + esc(FB.T('The liege demands peace by {season} {day}, {year}. Refusal permits an enforcement war.', {
-        season:FB.seasonName(deadline.season), day:deadline.day, year:deadline.year })) + '</p>' +
-        button('campaign-comply', FB.T('Comply: end this war')) + button('campaign-defy', FB.T('Refuse the demand'));
-    }
     h += button('campaign-back', FB.T('Back')) + '</div>';
     SH.openModal(FB.T('Campaign'), h, { historyView:true, modalClass:'war-sheet-modal' });
     document.querySelectorAll('[data-host-campaign]').forEach(function (el) {
@@ -112,8 +106,6 @@
       FB.withOrdinaryWar(s, id, function () { FB.fns.war_terms(s); });
       UI.closeModal(); UI.refresh();
     });
-    bind('campaign-comply', function () { FB.answerPeaceDemand(s, id, true); UI.closeModal(); UI.refresh(); });
-    bind('campaign-defy', function () { FB.answerPeaceDemand(s, id, false); UI.closeModal(); UI.refresh(); });
     bind('campaign-back', back);
   };
   UI.showWarLaws = function (view) {

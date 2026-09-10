@@ -4436,3 +4436,12 @@ with proclamation stamps; definition names/descriptions are localized policy dat
 Operational event contexts include `warId`, `warEventId`, and `warEnemyId`. Use
 `FB.queueWarEvent` inside an explicit `FB.withOrdinaryWar` scope. Saved prose
 remains message descriptors. There are no new event effect or trigger keys.
+
+The liege's demand for peace uses the dedicated `war_peace_demand` event, with
+Comply and Refuse choices, rather than campaign-sheet buttons beside Withdraw.
+Compliance ends only the demanded war, without withdrawal prestige cost; refusal
+retains the war and permits enforcement. The event shows the calendar deadline.
+Its context carries `warId`, `demandLiege`, and `demandDeadline`; the validator
+rejects ended wars, answered or expired demands, and changed lieges. Pending
+legacy demands queue once on the next campaign day. Campaign withdrawal remains
+an independent action. No new event trigger or effect keys are introduced.

@@ -884,8 +884,9 @@ window.FB = window.FB || {};
 
   function consequenceChipHtml(s, record, mode) {
     if (FB.eventImpactVisible && !FB.eventImpactVisible(record)) return '';
-    return '<span class="event-impact-chip ' + consequenceTone(record) + '">' +
-      esc(FB.eventImpactText(s, record, mode)) + '</span>';
+    return FB.eventImpactChipTexts(s, record, mode).map(function (text) {
+      return '<span class="event-impact-chip ' + consequenceTone(record) + '">' + esc(text) + '</span>';
+    }).join('');
   }
 
   function compactImpactChip(text, tone) {
@@ -1373,6 +1374,7 @@ window.FB = window.FB || {};
     messages.forEach(function (msg) {
       h += '<p class="decision-outcome-summary">' + esc(FB.renderMessage(msg, context)) + '</p>';
     });
+    if (report) h += warPeaceTermsHtml(s, report);
     if (freedom) h += '<p class="decision-outcome-summary">' + esc(FB.T(
       'Your household rises from Serf to Freeholder, free of customary service and able to travel, pursue free livelihoods, and own lasting property.')) + '</p>';
     let changes = '';
@@ -5374,6 +5376,8 @@ window.FB = window.FB || {};
     const models = [];
     const combinable = combinableWarClaims(s, targets);
     const mapTargets = [];
+    const playerMen = targets.length ? FB.playerLevy(s) : 0;
+    const realmPreviews = Object.create(null);
     const titleDetails = '<p>' + esc(FB.T(
       'Compare available territorial targets before choosing. The final review selects the exact justification. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.')) +
       '</p><p>' + esc(FB.T(
@@ -5397,7 +5401,21 @@ window.FB = window.FB || {};
       const pr = FB.world.byId[pid];
       const rid = cause.enemy || s.owner[pid];
       const realm = s.realms[rid];
-      const enMen = FB.realmDefensiveStrength(s, rid);
+      let realmPreview = realmPreviews[rid];
+      if (!realmPreview) {
+        const ruler = FB.realmRulerCharacterSnapshot
+          ? FB.realmRulerCharacterSnapshot(s, rid) : null;
+        const provinces = FB.realmProvinces(s, rid);
+        realmPreview = realmPreviews[rid] = {
+          defense:FB.realmDefensiveStrength(s, rid),
+          support:FB.alliedReinforcement(s, rid),
+          rulerName:ruler ? FB.fullName(ruler) :
+            (realm && realm.ruler && realm.ruler.name ? realm.ruler.name : FB.T('unknown ruler')),
+          countyCount:provinces.length,
+          territory:provinces.map(function (id) { return FB.world.byId[id] ? FB.world.byId[id].name : id; })
+        };
+      }
+      const enMen = realmPreview.defense;
       const causeText = justifications.length === 1
         ? warCauseName(s, cause)
         : FB.T('{count} available justifications', {
@@ -5407,15 +5425,9 @@ window.FB = window.FB || {};
         ? FB.warCausePreview(s, cause) : null;
       const targetSiege = FB.fortSiegeStatus
         ? FB.fortSiegeStatus(s, pid, {}, 0) : null;
-      const support = FB.alliedReinforcement(s, rid);
-      const ruler = FB.realmRulerCharacterSnapshot
-        ? FB.realmRulerCharacterSnapshot(s, rid) : null;
-      const rulerName = ruler ? FB.fullName(ruler) :
-        (realm && realm.ruler && realm.ruler.name
-          ? realm.ruler.name : FB.T('unknown ruler'));
-      const territory = FB.realmProvinces(s, rid).map(function (id) {
-        return FB.world.byId[id] ? FB.world.byId[id].name : id;
-      });
+      const support = realmPreview.support;
+      const rulerName = realmPreview.rulerName;
+      const territory = realmPreview.territory;
       const adjacent = warCauseIsAdjacent(s, cause);
       const rank = realm ? realm.rank || 0 : 0;
       const blockedReason = FB.warCauseBlockedReason(s, cause);
@@ -5456,10 +5468,10 @@ window.FB = window.FB || {};
           realm:realm ? realm.name : '?',
           rank:realm ? FB.realmRankTitle(s, realm) : FB.T('Realm'),
           ruler:rulerName,
-          counties:countyCountText(s, FB.realmProvinces(s, rid).length)
+          counties:countyCountText(s, realmPreview.countyCount)
         })) + '</p><p><b>' + esc(FB.T('Campaign strength')) + '</b><br>' +
         esc(FB.T('Expected defense: ~{theirs} against your ~{yours}.{support}', {
-          theirs:menText(s, enMen), yours:menText(s, FB.playerLevy(s)),
+          theirs:menText(s, enMen), yours:menText(s, playerMen),
           support:supportText
         })) + '</p><p><b>' + esc(FB.T('Cause and consequences')) + '</b><br>' +
         esc(justifications.length === 1
@@ -5509,7 +5521,7 @@ window.FB = window.FB || {};
           cause:causeText, realm:realm ? realm.name : '?'
         })) + '</span><span class="adesc">' + esc(FB.T(
           'Your force ~{yours} · enemy defense ~{theirs}', {
-            yours:menText(s, FB.playerLevy(s)), theirs:menText(s, enMen)
+            yours:menText(s, playerMen), theirs:menText(s, enMen)
           })) + '</span>' + criticalFort +
         (cause.blocked ? '<span class="adesc warnote">' + esc(blockedReason) +
           '</span>' : '') + criticalSacrilege + '</button>' +
@@ -6938,6 +6950,37 @@ window.FB = window.FB || {};
     $('hostile-report-close').addEventListener('click', UI.closeModal);
   }
 
+  function warPeaceTermsHtml(s, report) {
+    const terms = report && report.peaceTerms;
+    if (!terms) return '';
+    const rows = [];
+    if (terms.gold < 0) rows.push(FB.T('Tribute paid: {money:amount}', { amount:-terms.gold }));
+    if (terms.gold > 0) rows.push(FB.T('Tribute received: {money:amount}', { amount:terms.gold }));
+    if (terms.prestige) rows.push(FB.T('Prestige {change}', { change:signedNumber(terms.prestige) }));
+    if (terms.piety) rows.push(FB.T('Piety {change}', { change:signedNumber(terms.piety) }));
+    function counties(ids) {
+      return (ids || []).map(function (id) { return FB.world.byId[id] ? FB.world.byId[id].name : id; }).join(', ');
+    }
+    if ((terms.lost || []).length) rows.push(FB.T('Land ceded: {counties}', { counties:counties(terms.lost) }));
+    if ((terms.gained || []).length) rows.push(FB.T('Land gained: {counties}', { counties:counties(terms.gained) }));
+    if (!(terms.lost || []).length && !(terms.gained || []).length) rows.push(FB.T('No land changes hands.'));
+    if (terms.enforcedCampaign) rows.push(FB.T('The unlawful campaign is ended.'));
+    if (terms.oldLiege !== terms.newLiege) {
+      const liege = s.realms[terms.newLiege];
+      rows.push(terms.newLiege ? FB.T('Liege becomes {realm}', { realm:liege ? liege.name : terms.newLiege })
+        : FB.T('Become independent'));
+    }
+    if (terms.oldTier !== terms.newTier) rows.push(FB.T('New station: {title}', { title:FB.titleWordFor(s, terms.newTier) }));
+    if (terms.truceUntil) {
+      const date = FB.dateAtTurn(s, terms.truceUntil);
+      rows.push(FB.T('Truce until {season} {day}, {year}', {
+        season:FB.seasonName(date.season), day:date.day, year:date.year
+      }));
+    }
+    return '<section class="war-peace-terms"><h4>' + esc(FB.T('Peace terms')) + '</h4><ul>' +
+      rows.map(function (row) { return '<li>' + esc(row) + '</li>'; }).join('') + '</ul></section>';
+  }
+
   function showWarHostileReport(report) {
     const s = FB.state;
     const enemy = report.enemyId && s.realms[report.enemyId];
@@ -6945,7 +6988,15 @@ window.FB = window.FB || {};
     const active = report.status === 'active';
     const result = hostileWarResultName(report.result, active);
     const cause = hostileWarCauseName(s, report);
-    const action = report.defending
+    const action = report.causeType === 'enforcement'
+      ? (report.defending
+        ? FB.T('{enemy} declared war after you refused the demand to end an unlawful campaign.', {
+          enemy:enemy ? enemy.name : report.enemyId
+        })
+        : FB.T('You declared war to enforce the peace against {enemy}.', {
+          enemy:enemy ? enemy.name : report.enemyId
+        }))
+      : report.defending
       ? FB.T('{enemy} brought war against your realm.', {
         enemy:enemy ? enemy.name : report.enemyId
       })
@@ -6967,6 +7018,7 @@ window.FB = window.FB || {};
         seasons:report.seasons || 0
       })) +
       hostileFact(FB.T('Result'), result) + '</div>';
+    h += warPeaceTermsHtml(s, report);
     const battles = (FB.hostileHistory ? FB.hostileHistory(s) : []).filter(
       function (item) {
         return item && item.kind === 'battle' && item.warReportId === report.id;
@@ -9949,6 +10001,8 @@ window.FB = window.FB || {};
   }
 
   function warCauseName(s, cause) {
+    if (cause.type === 'enforcement') return FB.T('Enforcement of the liege’s peace demand');
+    if (cause.type === 'claims') return FB.T('Combined territorial claims');
     if (cause.type === 'aggression') return FB.T('War of Aggression');
     if (cause.type === 'fabricated') return FB.T('Fabricated county claim');
     if (cause.type === 'restoration') {
@@ -9966,6 +10020,7 @@ window.FB = window.FB || {};
       : (cause.titleKind === 'kingdom'
         ? FBDATA.kingdoms[cause.titleId]
         : FBDATA.empires[cause.titleId]);
+    if (!def && !cause.titleId) return FB.T('Territorial war');
     return FB.T('De jure right through {title}', {
       title:def ? def.name : cause.titleId
     });
@@ -22373,7 +22428,7 @@ window.FB = window.FB || {};
     }
     if (type === 'enforcement') return attackerGoal
       ? FB.T('Enforce the peace: stop the unlawful campaign and impose a 50-prestige penalty.')
-      : FB.T('Resist the liege?s armed enforcement.');
+      : FB.T('Resist the liege’s armed enforcement.');
 
     const attackerRealm = s.realms[context.attacker];
     const defenderRealm = s.realms[context.defender];

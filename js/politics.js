@@ -757,16 +757,7 @@ window.FB = window.FB || {};
     var me = state.chars && state.chars[p.charId];
     var career = me && me.career || {};
     var monopolies = p.guildMonopolies || {};
-    var investments = state.economy && Array.isArray(state.economy.investments)
-      ? state.economy.investments : [];
-    var activeTrade = 0;
-    for (var investmentIndex = 0; investmentIndex < investments.length;
-        investmentIndex++) {
-      var investment = investments[investmentIndex];
-      if (investment && investment.status === 'active' &&
-          (!investment.kind || investment.kind === 'trade_partnership' ||
-           investment.kind === 'trade_venture')) activeTrade++;
-    }
+    var activeTrade = FB.financeInvestmentSchedule(state).activeTrade;
     /* Central relationship mutations advance a transient revision. This avoids
        serializing every peer relation and scanning every realm's favor here. */
     return [

@@ -291,3 +291,5 @@ timber/metalworking, and luxuries from entrepôts and fine vineyards. Successful
 severe 4-season `market_shock` (`FB.addMarketShock`), reducing local production (−35% on a deep
 sack, −20% on a skirmish) and restricting inter-county flows (−25%), resulting in immediate local
 scarcity, hardship, and price surges in the victim province.
+
+The seasonal calculation distributes shocks into county/good buckets once, in saved order. County-only, good-only, and global shocks retain the same additive arithmetic and report ordering. These buckets exist only during that seasonal calculation.

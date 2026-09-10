@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.1';
+FB.VERSION = '1.179.2';
 FB.CHANGELOG = [
+  { v: '1.179.2', date: '2026-09-09', changes: [
+    'Fast-forward and conquest previews reuse calculations, and modifier receipts use shorter chips. War declarations and peace demands identify the correct campaign, and peace outcomes show the imposed terms.'
+  ] },
   { v: '1.179.1', date: '2026-09-09', changes: [
     'Fast-forward reuses campaign and army hostility lookups instead of repeatedly scanning war records.'
   ] },

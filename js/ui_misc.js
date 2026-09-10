@@ -194,9 +194,9 @@ window.FB = window.FB || {};
     if (Math.abs(rounded) < 0.05) rounded = 0;
     return (rounded > 0 ? '+' : '') + rounded;
   }
-  function modifierEffectText(s, id, scale) {
+  function modifierEffectText(s, id, scale, partsOnly) {
     const def = FBDATA.modifiers && FBDATA.modifiers[id];
-    if (!def) return '';
+    if (!def) return partsOnly ? [] : '';
     scale = scale === undefined ? 1 : Math.max(0, Number(scale) || 0);
     const fx = FB.modifierEffects ? FB.modifierEffects(s, id) : def.fx || {}, parts = [];
     if (fx.tax) parts.push(FB.T('{amount}% county tax', {
@@ -238,7 +238,7 @@ window.FB = window.FB || {};
     if (fx.desertion) parts.push(FB.T('{amount}% desertion per season', {
       amount:Math.round(fx.desertion * scale * 100)
     }));
-    return parts.join(' · ');
+    return partsOnly ? parts : parts.join(' · ');
   }
   function countyProjectPolicyEffectText(s, policyId, options) {
     options = options || {};
@@ -2064,8 +2064,9 @@ window.FB = window.FB || {};
         else if (record.amount < 0 || record.action === 'remove' ||
             record.action === 'lose') tone = 'cost';
         else if (record.amount > 0 || record.action === 'add') tone = 'gain';
-        h += '<span class="event-impact-chip ' + tone + '">' +
-          esc(FB.eventImpactText(FB.state, record, 'resolved')) + '</span>';
+        h += FB.eventImpactChipTexts(FB.state, record, 'resolved').map(function (text) {
+          return '<span class="event-impact-chip ' + tone + '">' + esc(text) + '</span>';
+        }).join('');
       }
       if (impacts.length > shown) h += '<span class="event-impact-more">' +
         esc(FB.T('+{count} more', { count:impacts.length - shown })) + '</span>';
@@ -4767,6 +4768,7 @@ window.FB = window.FB || {};
   SH.modifierChips = modifierChips;
   SH.modifierDurationText = modifierDurationText;
   SH.modifierEffectText = modifierEffectText;
+  SH.modifierEffectParts = function (s, id) { return modifierEffectText(s, id, 1, true); };
   SH.modifierRecord = modifierRecord;
   SH.modifierSourceText = modifierSourceText;
   SH.normalizeModalFooter = normalizeModalFooter;

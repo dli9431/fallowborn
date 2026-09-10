@@ -401,8 +401,10 @@ window.FB = window.FB || {};
     const p = state.player;
     if (!Array.isArray(p.giftDeliveries)) p.giftDeliveries = [];
     const kept = [];
+    const removed = deliveryTickRemovals.get(state);
     for (let i = 0; i < p.giftDeliveries.length; i++) {
       const d = p.giftDeliveries[i];
+      if (removed && removed.has(d)) continue;
       if (!d || (d.recipientKind !== 'ruler' &&
           d.recipientKind !== 'character') ||
           (d.giftKind !== 'cash' && d.giftKind !== 'item') ||
@@ -423,7 +425,9 @@ window.FB = window.FB || {};
   function giftDeliverySnapshot(state) {
     const source = state && state.player && state.player.giftDeliveries;
     if (!Array.isArray(source)) return [];
+    const removed = deliveryTickRemovals.get(state);
     return source.filter(function (d) {
+      if (removed && removed.has(d)) return false;
       return !!(d && (d.recipientKind === 'ruler' ||
         d.recipientKind === 'character') &&
         (d.giftKind === 'cash' || d.giftKind === 'item') &&
@@ -625,7 +629,10 @@ window.FB = window.FB || {};
     return residence === d.destinationId ? null : 'moved';
   }
 
+  const deliveryTickRemovals = new WeakMap();
   function removeDelivery(state, delivery) {
+    const removed = deliveryTickRemovals.get(state);
+    if (removed) { removed.add(delivery); return; }
     const deliveries = FB.giftDeliveryEnsure(state);
     const at = deliveries.indexOf(delivery);
     if (at >= 0) deliveries.splice(at, 1);
@@ -778,32 +785,41 @@ window.FB = window.FB || {};
     const list = FB.giftDeliveryEnsure(state);
     if (!list.length) return; // no copy, no loop — the ensure above still repairs
     const deliveries = list.slice();
-    for (let i = 0; i < deliveries.length; i++) {
-      const d = deliveries[i];
-      if (FB.giftDeliveryEnsure(state).indexOf(d) < 0) continue;
-      if (d.phase === 'outbound' && !d.failedReason) {
-        d.failedReason = deliveryFailureReason(state, d);
-      } else if (d.phase === 'return') {
-        rerouteGiftReturn(state, d);
-        if (FB.giftDeliveryEnsure(state).indexOf(d) < 0) continue;
-      }
-      if (!d.remainingRoute.length) {
-        if (d.phase === 'outbound') giftDeliveryArrive(state, d);
-        else if (d.currentId === state.player.provinceId) {
-          finishGiftReturn(state, d);
+    const removed = new Set();
+    deliveryTickRemovals.set(state, removed);
+    try {
+      for (let i = 0; i < deliveries.length; i++) {
+        const d = deliveries[i];
+        if (removed.has(d)) continue;
+        if (d.phase === 'outbound' && !d.failedReason) {
+          d.failedReason = deliveryFailureReason(state, d);
+        } else if (d.phase === 'return') {
+          rerouteGiftReturn(state, d);
+          if (removed.has(d)) continue;
         }
-        continue;
-      }
-      d.legDaysLeft--;
-      if (d.legDaysLeft > 0) continue;
-      d.currentId = d.remainingRoute.shift();
-      d.legDaysLeft = d.remainingRoute.length ? d.legDays : 0;
-      if (!d.remainingRoute.length) {
-        if (d.phase === 'outbound') giftDeliveryArrive(state, d);
-        else if (d.currentId === state.player.provinceId) {
-          finishGiftReturn(state, d);
+        if (!d.remainingRoute.length) {
+          if (d.phase === 'outbound') giftDeliveryArrive(state, d);
+          else if (d.currentId === state.player.provinceId) {
+            finishGiftReturn(state, d);
+          }
+          continue;
+        }
+        d.legDaysLeft--;
+        if (d.legDaysLeft > 0) continue;
+        d.currentId = d.remainingRoute.shift();
+        d.legDaysLeft = d.remainingRoute.length ? d.legDays : 0;
+        if (!d.remainingRoute.length) {
+          if (d.phase === 'outbound') giftDeliveryArrive(state, d);
+          else if (d.currentId === state.player.provinceId) {
+            finishGiftReturn(state, d);
+          }
         }
       }
+    } finally {
+      deliveryTickRemovals.delete(state);
+      if (removed.size) state.player.giftDeliveries = state.player.giftDeliveries.filter(function (d) {
+        return !removed.has(d);
+      });
     }
   };
 

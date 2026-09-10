@@ -1289,3 +1289,5 @@ mercenary contracts, mass levy and demuster limits shared by ordinary campaigns.
 Hosts save an assignment `warId` (ordinary ID or `holy`). Restore binds adapters
 without consuming randomness. Existing holy-war IDs, data and wrapper version 3
 remain compatible. See [war.md](war.md).
+
+Concluded war reports may carry additive peaceTerms metadata containing settlement deltas and identifiers. It is compatible with save format 3. Transient settlement snapshots are never serialized, and older reports lacking terms remain readable without retroactive estimates.

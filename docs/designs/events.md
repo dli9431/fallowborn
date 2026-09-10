@@ -949,3 +949,18 @@ Commons option disclosures use short, separate consequence chips for settlement,
 Negotiation uses the same concession chips in its success section. Suppression success has an uprising-ended chip; failure and endurance separate continued disruption, unchanged deadlines, and spread risk into three chips. Chance, payment, and support impacts retain their ordinary sections.
 
 All event and outcome modal result chips stay inside the shared tooltip/compact disclosure. Standard decision outcomes, promotion results, and inline commons settlements use the same Details renderer; disclosures start collapsed and never apply effects again. Chronicle entries and receipt toasts retain their existing chip summaries.
+
+The liege's demand for peace uses the dedicated `war_peace_demand` event, with
+Comply and Refuse choices, rather than campaign-sheet buttons beside Withdraw.
+Compliance ends only the demanded war, without withdrawal prestige cost; refusal
+retains the war and permits enforcement. The event shows the calendar deadline.
+Its context carries `warId`, `demandLiege`, and `demandDeadline`; the validator
+rejects ended wars, answered or expired demands, and changed lieges. Pending
+legacy demands queue once on the next campaign day. Campaign withdrawal remains
+an independent action. No new event trigger or effect keys are introduced.
+
+Receipt capture uses a conservative local path for numeric gold, prestige, piety, health, skills, Popular support, and log-only effects when no player journey is active. It retains household deltas while avoiding snapshots of every character, county development, modifier, and pact. Unknown keys, custom effects, and active journeys retain full snapshots so indirect consequences remain visible. Effect order and seeded randomness are unchanged.
+
+Modifier receipts render separate short chips for the modifier, county, duration, paid upkeep, transfer persistence, and each effect. Resolved receipts retain exact numerical effects; previews retain their existing concealed-gain rules. Zero upkeep is omitted, while the complete prose formatter remains available for detailed explanations.
+
+War outcome acknowledgements show recorded peace terms directly above Details. The same recorded terms appear in the archived war report; later household resource changes do not alter the amounts displayed.

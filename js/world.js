@@ -6294,7 +6294,7 @@ window.FB = window.FB || {};
             defending: true, casus: { type: 'independence' } };
           yearWars.addPlayerWar(state.player.war);
           FB.warFooting(state);
-          FB.queueWarEvent(state, 'war_defense_muster', {});
+          FB.announcePlayerDefense(state);
           if (FB.ui && FB.ui.maybeTip) {
             FB.ui.maybeTip('war-declared',
               '💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe.',
@@ -8165,7 +8165,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.world.attainder_resist',
       '⚔ You deny the judgment and raise your banner — felony is answered with rebellion.', {}));
     FB.warFooting(state);
-    FB.queueWarEvent(state, 'war_defense_muster', {});
+    FB.announcePlayerDefense(state);
     FB.checkTierPromotions(state);
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
   };

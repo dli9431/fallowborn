@@ -7539,8 +7539,10 @@ window.FB = window.FB || {};
     if (impacts.length) {
       h += '<div class="event-impact-chips chronicle">';
       for (let i = 0; i < impacts.length; i++) {
-        h += '<span class="event-impact-chip ' + receiptImpactClass(impacts[i]) + '">' +
-          esc(FB.eventImpactText(s, impacts[i], 'resolved')) + '</span>';
+        const tone = receiptImpactClass(impacts[i]);
+        h += FB.eventImpactChipTexts(s, impacts[i], 'resolved').map(function (text) {
+          return '<span class="event-impact-chip ' + tone + '">' + esc(text) + '</span>';
+        }).join('');
       }
       h += '</div>';
     }

@@ -6023,7 +6023,39 @@ window.FB = window.FB || {};
       status === 'settled' || status === 'resolved';
   }
 
+  const investmentIndexes = new WeakMap();
+  /* History stays in saves; only live commitments belong on the daily path.
+     Creation/resolution and explicit economy repair invalidate immediately. */
+  FB.financeInvestmentSchedule = function (state) {
+    const e = state.economy, list = e && e.investments;
+    if (!Array.isArray(list)) return { activeTrade:0, nextDue:Infinity };
+    let cached = investmentIndexes.get(state);
+    if (cached && cached.economy === e && cached.list === list && cached.length === list.length) {
+      let unchanged = true;
+      for (const row of cached.live) {
+        const inv = row.record;
+        if (list[row.index] !== inv || inv.status !== row.status ||
+            inv.kind !== row.kind || inv.dueTurn !== row.dueTurn) {
+          unchanged = false; break;
+        }
+      }
+      if (unchanged) return cached;
+    }
+    cached = { economy:e, list:list, length:list.length, live:[], activeTrade:0, nextDue:Infinity };
+    for (let index = 0; index < list.length; index++) {
+      const inv = list[index];
+      if (!inv || inv.status !== 'active') continue;
+      cached.live.push({ index:index, record:inv, status:inv.status, kind:inv.kind, dueTurn:inv.dueTurn });
+      if (!inv.kind || inv.kind === 'trade_partnership' || inv.kind === 'trade_venture') cached.activeTrade++;
+      if (inv.kind === 'trade_venture') cached.nextDue = Math.min(cached.nextDue,
+        isNaN(Number(inv.dueTurn)) ? Infinity : Number(inv.dueTurn));
+    }
+    investmentIndexes.set(state, cached);
+    return cached;
+  };
+
   FB.ensureEconomy = function (state) {
+    investmentIndexes.delete(state);
     const e = state.economy = state.economy || {};
     if (!(e.price > 0)) e.price = 1;
     if (e.lastRate === undefined) e.lastRate = 0;
@@ -7382,6 +7414,7 @@ window.FB = window.FB || {};
     inv.outcome = outcome;
     inv.payout = payout;
     inv.status = 'resolved';
+    investmentIndexes.delete(state);
     inv.resolvedTurn = state.turn;
     state.player.gold += payout;
     const me = state.chars[state.player.charId];
@@ -7440,6 +7473,7 @@ window.FB = window.FB || {};
     inv.multiplier = outcomeMultiplier;
     inv.payout = payout;
     inv.status = 'resolved';
+    investmentIndexes.delete(state);
     inv.resolvedTurn = state.turn;
     state.player.gold += payout;
     const destination = FB.world.byId[inv.destinationId];
@@ -7466,16 +7500,7 @@ window.FB = window.FB || {};
        overwhelmingly common no-investment day has no finance work to do, so
        do not rescan loan and investment ids ninety times per skipped season. */
     if (state.economy && Array.isArray(state.economy.investments)) {
-      let due = false;
-      for (let i = 0; i < state.economy.investments.length; i++) {
-        const saved = state.economy.investments[i];
-        if (saved && saved.status === 'active' &&
-            saved.kind === 'trade_venture' && saved.dueTurn <= state.turn) {
-          due = true;
-          break;
-        }
-      }
-      if (!due) return;
+      if (state.turn < FB.financeInvestmentSchedule(state).nextDue) return;
     }
     const e = FB.ensureEconomy(state);
     if (!e.investments.length) return; // nothing to build, nothing falls due

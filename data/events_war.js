@@ -10,6 +10,17 @@ FBDATA.events = FBDATA.events || [];
 FBDATA.events.push(
 
 /* ---------- the ruler’s war (tier 4+, own banner) ---------- */
+{ id:'war_peace_demand', title:'The liege demands peace', trigger:{ never:true }, wartime:true,
+  contextValidator:'war_peace_demand_valid',
+  text:'Your liege orders you to end the war against {enemy} by {peaceDeadline}. Refusal allows the liege to enforce the peace by war.',
+  options:[
+    { label:'Comply', require:{ custom:'war_peace_demand_valid' },
+      desc:'End this campaign. No land changes hands; no withdrawal prestige cost. Other campaigns continue.',
+      effects:{ custom:'war_peace_demand_comply' } },
+    { label:'Refuse', require:{ custom:'war_peace_demand_valid' },
+      desc:'Continue this campaign. The liege may wage an enforcement war against you.',
+      effects:{ custom:'war_peace_demand_refuse' } }
+  ]},
 { id:'war_muster', title:'The Banners Rise', trigger:{ never:true }, wartime:true,
   contextValidator:'war_event_context_valid',
   text:'War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls, season by season, until the works are done.',
@@ -19,6 +30,12 @@ FBDATA.events.push(
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to war.' } },
     { label:'March with what you have.', desc:'Trust the spears that answered the first call.', effects:{ prestige:3, custom:'war_raise' } }
+  ]},
+{ id:'war_enforcement_defense', title:'The Liege Enforces the Peace', trigger:{ never:true }, wartime:true,
+  contextValidator:'war_event_context_valid',
+  text:'{enemy} declares war after your refusal to end an unlawful campaign. The liege marches on {target} to enforce the peace. Defeat ends the offending campaign and costs you 50 prestige; it does not revoke your lands.',
+  options:[
+    { label:'Stand ready.', desc:'Your host musters to resist the liege.', effects:{ custom:'war_raise' } }
   ]},
 { id:'war_defense_muster', title:'War Comes to You', trigger:{ never:true }, wartime:true,
   contextValidator:'war_event_context_valid',

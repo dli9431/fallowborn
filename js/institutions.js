@@ -80,6 +80,7 @@ window.FB = window.FB || {};
   }
 
   function electionStore(state, create) {
+    if (create) invalidateInstitutionInputs(state);
     var store = state && state.elections;
     if ((!store || typeof store !== 'object' || Array.isArray(store)) && create) {
       store = state.elections = {};
@@ -750,6 +751,7 @@ window.FB = window.FB || {};
     var status = FB.electionTacticStatus(state, tacticId);
     var active = FB.activeElection(state);
     if (!active || !status.ready) return false;
+    invalidateInstitutionInputs(state);
     state.player.gold -= status.gold;
     if (status.guildStanding) {
       var career = FB.careerOf(state, state.chars[active.candidateId]);
@@ -1014,6 +1016,7 @@ window.FB = window.FB || {};
   };
 
   function privilegeStore(state, create) {
+    if (create) invalidateInstitutionInputs(state);
     var records = state && state.privileges;
     if (!Array.isArray(records) && create) records = state.privileges = [];
     return Array.isArray(records) ? records : [];
@@ -1422,6 +1425,7 @@ window.FB = window.FB || {};
   };
 
   function demandStore(state, create) {
+    if (create) invalidateInstitutionInputs(state);
     var store = state && state.collectiveDemands;
     if ((!store || typeof store !== 'object' || Array.isArray(store)) && create) {
       store = state.collectiveDemands = {};
@@ -2333,6 +2337,7 @@ window.FB = window.FB || {};
   }
 
   function realmPolicyStore(state, create) {
+    if (create) invalidateInstitutionInputs(state);
     var store = state && state.realmPolicies;
     if ((!store || typeof store !== 'object' || Array.isArray(store)) &&
         create) {
@@ -2858,6 +2863,16 @@ window.FB = window.FB || {};
   var dailyRepairState = null;
   var dailyRepairSignature = '';
   var dailyRepairNextDue = -Infinity;
+  var dailyRepairStores = [];
+  var institutionRevisions = new WeakMap();
+
+  function invalidateInstitutionInputs(state) {
+    if (state) institutionRevisions.set(state, (institutionRevisions.get(state) || 0) + 1);
+  }
+
+  function institutionStores(state) {
+    return [state.realmPolicies, state.elections, state.privileges, state.collectiveDemands];
+  }
 
   function institutionInputSignature(state) {
     var p = state.player;
@@ -2879,10 +2894,7 @@ window.FB = window.FB || {};
       provs.join(','), countyFaiths.join(','),
       me && me.religion || '', me && me.culture || '',
       JSON.stringify(me && me.career || null),
-      JSON.stringify(state.realmPolicies || null),
-      JSON.stringify(state.elections || null),
-      JSON.stringify(state.privileges || null),
-      JSON.stringify(state.collectiveDemands || null),
+      institutionRevisions.get(state) || 0,
       JSON.stringify(p.guildMonopolies || null),
       JSON.stringify(state.council || null),
       JSON.stringify(liege && liege.obl || null)
@@ -2947,8 +2959,12 @@ window.FB = window.FB || {};
   FB.institutionsDay = function (state) {
     FB.commonsUprisingDay(state);
     var signature = institutionInputSignature(state);
+    var stores = institutionStores(state);
+    var sameStores = stores.every(function (store, index) {
+      return store === dailyRepairStores[index];
+    });
     if (dailyRepairState === state && dailyRepairSignature === signature &&
-        state.turn < dailyRepairNextDue) {
+        sameStores && state.turn < dailyRepairNextDue) {
       return {
         elections:state.elections,
         privileges:state.privileges,
@@ -2961,6 +2977,7 @@ window.FB = window.FB || {};
     });
     dailyRepairState = state;
     dailyRepairSignature = institutionInputSignature(state);
+    dailyRepairStores = institutionStores(state);
     dailyRepairNextDue = institutionNextDueTurn(state);
     return result;
   };

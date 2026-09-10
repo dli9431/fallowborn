@@ -1193,3 +1193,23 @@ read-only view. Law alternatives and campaign background use shared desktop
 hover/focus tooltips and compact question-mark disclosures. Proclamation retains
 scroll and expanded disclosures and focuses the changed law section. Nested Back
 restores the prior sheet and its disclosures.
+
+The liege's demand for peace uses the dedicated `war_peace_demand` event, with
+Comply and Refuse choices, rather than campaign-sheet buttons beside Withdraw.
+Compliance ends only the demanded war, without withdrawal prestige cost; refusal
+retains the war and permits enforcement. The event shows the calendar deadline.
+Its context carries `warId`, `demandLiege`, and `demandDeadline`; the validator
+rejects ended wars, answered or expired demands, and changed lieges. Pending
+legacy demands queue once on the next campaign day. Campaign withdrawal remains
+an independent action. No new event trigger or effect keys are introduced.
+
+The conquest picker computes the player force once per rendering and shares enemy force, allied support, ruler, and territory projections across targets belonging to the same realm. County and justification details remain specific to each row. Reopening the picker rebuilds these projections from current state.
+
+Incoming ordinary wars announce once with a Chronicle-backed toast and a campaign-bound defender event. Peace enforcement has its own declaration event explaining the refused demand, the offending campaign, and the 50-prestige penalty without land revocation. Enforcement and combined-claim reports use explicit cause labels, including archived reports; missing title metadata never exposes a placeholder.
+
+War-event text and durable message parameters resolve inside the queued campaign's
+`warId` context (or its legacy `warEventId`). Concurrent campaigns cannot substitute
+their opponent or objective into a defender notice. An expired campaign uses neutral
+war-token fallbacks instead of selecting another active war.
+
+Concluded player war reports retain peaceTerms with actual settlement resource changes, ceded/gained counties, changed liege/station, truce expiry, and a campaign ended by enforcement. Capture surrounds only the settlement transaction, so upkeep and earlier battles are not counted as peace costs. Nested settlement calls share the outer capture, and each concurrent campaign keeps its own report. Old reports without this metadata do not invent terms.

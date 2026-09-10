@@ -166,8 +166,8 @@ repair work is retained between relevant mutations. Political courts key off
 the realm revision plus compact Standing, commerce, council, relationship, and
 modifier inputs, so an eligible landed court is not rebuilt, territorially
 rescanned, and adjacency-rescored on every unchanged day. Institutions
-fingerprint their small saved policy, election, privilege, demand, council, and
-guild records, then wake at the exact next term, cooldown, privilege, or
+track revisions of their owned stores and fingerprint external council and
+guild inputs, then wake at the exact next term, cooldown, privilege, or
 mistreatment deadline. Stable Papal and religious offices bypass their full
 repair until an election or vacancy is due, while idle great-holy-war
 eligibility sleeps until its next authored date or restored-head deadline and
@@ -461,3 +461,5 @@ only when funds after wages cover it. Shared craft knowledge raises positive wag
 of household workers who follow that culture by 10%, leaving enterprise revenue
 and apprentice costs unchanged. See [doctrines.md](doctrines.md) for discovery,
 inheritance, and the four explicit ungated technology reviews.
+
+Institution daily repair tracks transient revisions for the owned policy, election, privilege, and demand stores, plus their identities and the next exact expiry. Mutating institution APIs invalidate that revision; external career, council, monopoly, faith, and realm inputs remain checked. Bulk saved histories are not serialized on quiet days. Code that edits institution records directly must call `FB.ensureInstitutions` afterward; replacing an entire store is detected automatically. These caches never enter saves.

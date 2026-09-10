@@ -313,22 +313,25 @@
         (ctx.warEnemyId === undefined || ctx.warEnemyId === w.enemy);
     });
   };
-  function contextual(name, ctxIndex) {
+  function contextual(name, ctxIndex, emptyCampaign) {
     const original = FB[name];
     if (!original) return;
     FB[name] = function () {
       const args = arguments, state = args[0], ctx = args[ctxIndex];
-      if (!ctx || (ctx.warId === undefined && ctx.warEventId === undefined)) return original.apply(FB, args);
+      if (!state || !ctx || (ctx.warId === undefined && ctx.warEventId === undefined)) return original.apply(FB, args);
       const w = FB.realmWars(state, 'player').filter(function (entry) {
         return ctx.warId !== undefined ? entry.id === ctx.warId : entry.eventId === ctx.warEventId;
       })[0];
-      if (!w) return false;
-      return FB.withOrdinaryWar(state, w.id, function () { return original.apply(FB, args); });
+      if (!w && !emptyCampaign) return false;
+      return FB.withOrdinaryWar(state, w ? w.id : null, function () { return original.apply(FB, args); });
     };
   }
   contextual('checkTrigger', 2);
   contextual('applyEffects', 2);
   contextual('resolveEventOption', 3);
+  // Modal text and durable event messages must use the same campaign as effects.
+  // A stale campaign renders neutral war tokens, never another active opponent.
+  contextual('textParams', 3, true);
   const footing = FB.warFooting;
   FB.warFooting = function (state) {
     FB.ensureWars(state);
@@ -350,6 +353,29 @@
     return queue(state, id, ctx, extra);
   };
   const oldEnd = FB.endPlayerWar;
+  const peaceCaptures = new WeakSet();
+  function withPeaceReceipt(state, war, fn) {
+    if (!war || !endpoint(war, 'player') || peaceCaptures.has(war)) return fn();
+    const p = state.player;
+    const before = { gold:p.gold, prestige:p.prestige, piety:p.piety,
+      provs:(p.provs || []).slice(), liege:p.liege || null, tier:p.tier };
+    peaceCaptures.add(war);
+    try { return fn(); }
+    finally {
+      peaceCaptures.delete(war);
+      if (war.status === 'ended' && war.hostileReportId) {
+        FB.updateHostileEvent(state, war.hostileReportId, { peaceTerms:{
+          gold:p.gold - before.gold, prestige:p.prestige - before.prestige,
+          piety:p.piety - before.piety,
+          lost:before.provs.filter(function (pid) { return (p.provs || []).indexOf(pid) < 0; }),
+          gained:(p.provs || []).filter(function (pid) { return before.provs.indexOf(pid) < 0; }),
+          oldLiege:before.liege, newLiege:p.liege || null, oldTier:before.tier, newTier:p.tier,
+          truceUntil:FB.truceExpiry(state, 'player', war.enemy) || null,
+          enforcedCampaign:war.enforcementOf && war.result === 'victory' ? war.enforcementOf : null
+        } });
+      }
+    }
+  }
   FB.endPlayerWar = function (state, invalid, warId) {
     FB.ensureWars(state);
     const c = context(state), list = FB.realmWars(state, 'player');
@@ -538,6 +564,35 @@
     state.warPermissions[key] = { liege:request.liege, turn:state.turn };
     return true;
   };
+  FB.fns.war_peace_demand_valid = function (state, ctx) {
+    const w = ctx && FB.ordinaryWarById(state, ctx.warId), d = w && w.peaceDemand;
+    return !!(w && w.attacker === 'player' && d && d.status === 'pending' &&
+      d.liege === ctx.demandLiege && d.deadline === ctx.demandDeadline &&
+      d.liege === liegeOf(state, 'player') && state.realms[d.liege] && state.realms[d.liege].alive && state.turn < d.deadline);
+  };
+  FB.fns.war_peace_demand_comply = function (state, ctx) {
+    return FB.fns.war_peace_demand_valid(state, ctx) && FB.answerPeaceDemand(state, ctx.warId, true);
+  };
+  FB.fns.war_peace_demand_refuse = function (state, ctx) {
+    return FB.fns.war_peace_demand_valid(state, ctx) && FB.answerPeaceDemand(state, ctx.warId, false);
+  };
+  FB.queuePeaceDemand = function (state, w) {
+    const d = w && w.peaceDemand;
+    if (!d || d.eventQueued || w.attacker !== 'player') return;
+    const ctx = { warId:w.id, demandLiege:d.liege, demandDeadline:d.deadline };
+    if (!FB.fns.war_peace_demand_valid(state, ctx)) return;
+    const item = FB.withOrdinaryWar(state, w.id, function () { return FB.queueWarEvent(state, 'war_peace_demand', ctx); });
+    if (item) d.eventQueued = true;
+  };
+  const demandTextParams = FB.textParams;
+  FB.textParams = function (state, viewer, source, ctx, semantic) {
+    const out = demandTextParams(state, viewer, source, ctx, semantic);
+    if (state && ctx && ctx.demandDeadline !== undefined) {
+      const date = FB.dateAtTurn(state, ctx.demandDeadline);
+      out.peaceDeadline = FB.T('{season} {day}, {year}', { season:FB.seasonName(date.season), day:date.day, year:date.year });
+    }
+    return out;
+  };
   FB.recordWarDeclaration = function (state, war, preview) {
     war.unlawful = !!preview.unlawful;
     if (state.warPermissions && preview.key) delete state.warPermissions[preview.key];
@@ -548,10 +603,12 @@
     else state.realms[war.attacker].favor = FB.clamp((Number(state.realms[war.attacker].favor) || 0) - 20, -100, 100);
     FB.news(state, FB.msg('news.war.unlawful', '{realm} breaks the sovereign peace. The liege demands an end to the campaign within 90 days.', {
       realm:state.realms[war.attacker].name }));
+    FB.queuePeaceDemand(state, war);
   };
   FB.answerPeaceDemand = function (state, id, comply) {
     const w = FB.ordinaryWarById(state, id);
-    if (!w || !w.peaceDemand || w.peaceDemand.status !== 'pending') return false;
+    if (!w || !w.peaceDemand || w.peaceDemand.status !== 'pending' ||
+        state.turn >= w.peaceDemand.deadline || w.peaceDemand.liege !== liegeOf(state, w.attacker)) return false;
     w.peaceDemand.status = comply ? 'complied' : 'refused';
     if (comply) FB.settleOrdinaryWar(state, id, 'white_peace');
     return true;
@@ -565,8 +622,27 @@
     const w = FB.registerOrdinaryWar(state, demand.liege, { enemy:unlawful.attacker,
       target:target, legacy:false, casus:{ type:'enforcement', target:target },
       objectives:[{ target:target, type:'enforcement' }], enforcementOf:id });
-    if (endpoint(w, 'player')) FB.withOrdinaryWar(state, w.id, function () { FB.warFooting(state); });
+    if (endpoint(w, 'player')) FB.withOrdinaryWar(state, w.id, function () {
+      FB.warFooting(state);
+      FB.announcePlayerDefense(state, w);
+    });
     return !!w;
+  };
+  FB.announcePlayerDefense = function (state, war) {
+    war = war || FB.ordinaryWarById(state, launches.get(state)) || current(state, 'player');
+    if (!war || war.defender !== 'player' || war.defenseAnnounced) return;
+    if (launches.get(state) === war.id) launches.delete(state);
+    war.defenseAnnounced = true;
+    const realm = state.realms[war.attacker];
+    FB.news(state, war.enforcementOf
+      ? FB.msg('news.war.enforcement_declared',
+        '{realm} declares war to enforce the peace after your refusal to end an unlawful campaign.',
+        { realm:realm ? realm.name : war.attacker })
+      : FB.msg('news.war.defense_declared', '{realm} has declared war on you.',
+        { realm:realm ? realm.name : war.attacker }));
+    FB.withOrdinaryWar(state, war.id, function () {
+      FB.queueWarEvent(state, war.enforcementOf ? 'war_enforcement_defense' : 'war_defense_muster', {});
+    });
   };
   FB.startClaimPackageWar = function (state, causes, options) {
     FB.ensureWars(state);
@@ -591,6 +667,9 @@
 
   function territorial(w) { return ['claims', 'dejure', 'fabricated', 'aggression', 'border', 'consolidation', 'enforcement'].indexOf(w.casus && w.casus.type || 'border') >= 0; }
   function finishObjectives(state, w) {
+    return withPeaceReceipt(state, w, function () { return finishObjectivesApply(state, w); });
+  }
+  function finishObjectivesApply(state, w) {
     if (!w.objectives.length || !w.objectives.every(function (o) { return w.occupations[o.target] && w.occupations[o.target].occupied; })) return false;
     if (w.enforcementOf) {
       FB.settleOrdinaryWar(state, w.enforcementOf, 'white_peace', w.id);
@@ -746,7 +825,7 @@
         defending:owner === 'player', target:cause.target, casus:causes.length > 1 ? { type:'claims', target:cause.target } : cause, legacy:false,
         objectives:causes });
       FB.recordWarDeclaration(state, w, picked.preview);
-      if (owner === 'player') FB.withOrdinaryWar(state, w.id, function () { FB.warFooting(state); FB.queueWarEvent(state, 'war_defense_muster', {}); });
+      if (owner === 'player') FB.withOrdinaryWar(state, w.id, function () { FB.warFooting(state); FB.announcePlayerDefense(state, w); });
     });
   };
 
@@ -939,13 +1018,24 @@
       if (!ctx || (ctx.warId === undefined && ctx.warEventId === undefined)) {
         if (!context(state) && FB.realmWars(state, 'player').length > 1 &&
             ['war_terms', 'war_accept_tribute', 'war_negotiated_withdrawal', 'war_submit', 'war_submission_tribute', 'war_press_on'].indexOf(key) >= 0) return false;
-        return original.apply(FB.fns, args);
+        return withPeaceReceipt(state, current(state, 'player'), function () { return original.apply(FB.fns, args); });
       }
       const w = FB.realmWars(state, 'player').filter(function (entry) {
         return ctx.warId !== undefined ? entry.id === ctx.warId : entry.eventId === ctx.warEventId;
       })[0];
       if (!w) return false;
-      return FB.withOrdinaryWar(state, w.id, function () { return original.apply(FB.fns, args); });
+      return FB.withOrdinaryWar(state, w.id, function () {
+        return withPeaceReceipt(state, w, function () { return original.apply(FB.fns, args); });
+      });
+    };
+  });
+  ['warOutcome', 'warCapture', 'warLoseProvince', 'settleOrdinaryWar'].forEach(function (name) {
+    const original = FB[name];
+    if (!original) return;
+    FB[name] = function (state, id) {
+      const args = arguments;
+      const war = name === 'settleOrdinaryWar' ? FB.ordinaryWarById(state, id) : current(state, 'player');
+      return withPeaceReceipt(state, war, function () { return original.apply(FB, args); });
     };
   });
   FB.remapWarRealm = function (state, from, to) {
@@ -974,6 +1064,7 @@
       if (!d) return;
       if (d.liege !== liegeOf(state, w.attacker)) { delete w.peaceDemand; return; }
       if (d.status === 'pending' && state.turn >= d.deadline) d.status = 'refused';
+      if (d.status === 'pending') FB.queuePeaceDemand(state, w);
       if (d.status === 'refused' && d.liege !== 'player' &&
           !FB.ordinaryWarBetween(state, d.liege, w.attacker) &&
           FB.realmStrength(state, d.liege) >= FB.realmStrength(state, w.attacker) * 1.2) FB.startPeaceEnforcement(state, w.id);

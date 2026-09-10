@@ -2629,3 +2629,16 @@ read-only view. Law alternatives and campaign background use shared desktop
 hover/focus tooltips and compact question-mark disclosures. Proclamation retains
 scroll and expanded disclosures and focuses the changed law section. Nested Back
 restores the prior sheet and its disclosures.
+
+The liege's demand for peace uses the dedicated `war_peace_demand` event, with
+Comply and Refuse choices, rather than campaign-sheet buttons beside Withdraw.
+Compliance ends only the demanded war, without withdrawal prestige cost; refusal
+retains the war and permits enforcement. The event shows the calendar deadline.
+Its context carries `warId`, `demandLiege`, and `demandDeadline`; the validator
+rejects ended wars, answered or expired demands, and changed lieges. Pending
+legacy demands queue once on the next campaign day. Campaign withdrawal remains
+an independent action. No new event trigger or effect keys are introduced.
+
+County-modifier outcome and Chronicle chips contain one short fact apiece, sized for a single line in ordinary narrow cards. Wrap whole chips between rows; do not turn one pill into a paragraph or truncate numerical effects. Separate the name, county, duration, upkeep when nonzero, transfer persistence, and individual effects.
+
+Peace terms are primary outcome content, visible without opening Details. Show actual tribute and prestige changes, transferred land, imposed allegiance/station, truce expiry, and any campaign ended by enforcement. Zero land transfer is explicit; supplementary battle statistics remain in Details.
