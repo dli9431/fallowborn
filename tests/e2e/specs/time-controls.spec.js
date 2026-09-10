@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/events_tutorial.js',
   'js/main.js',
+  'js/wars.js',
+  'js/ui_wars.js',
   'data/actions.js',
   'js/actions.js',
   'js/armies.js',
@@ -39,7 +41,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   { name:'desktop', width:1505, height:900 },
   { name:'mobile', width:390, height:844 }
 ].forEach(function (viewport) {
-  test('wartime Deeds facts retain content-sized heights on ' + viewport.name,
+  test('campaign facts retain content-sized heights on ' + viewport.name,
     async function ({ page }) {
       await page.setViewportSize({ width:viewport.width, height:viewport.height });
       await startDeterministicGame(page);
@@ -51,10 +53,16 @@ test.beforeEach(async function ({ page }, testInfo) {
           return rid !== 'player' && realm && realm.alive && !realm.liege;
         })[0];
         FB.game.setPaused(true);
-        s.player.war = {
-          enemy:enemy, target:null, wins:0, losses:0, seasons:0,
+        s.player.tier = 4;
+        s.player.provs = [home];
+        s.owner[home] = 'player'; s.holder[home] = 'player';
+        FB.foundPlayerRealm(s);
+        FB.invalidateRealmCache();
+        FB.registerOrdinaryWar(s, 'player', {
+          enemy:enemy, target:home, wins:0, losses:0, seasons:0,
           defending:true, strength:1
-        };
+        });
+        if (FB.realmWars(s, 'player').length !== 1) throw new Error('Expected one registered panel campaign.');
         const host = {
           id:'compact_war_host', realm:'player', men:500, size:500,
           units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
@@ -66,10 +74,11 @@ test.beforeEach(async function ({ page }, testInfo) {
         FB.ui.refresh();
       });
       await waitForUiRefresh(page);
-      const card = page.locator('#deeds-war-card');
+      await page.locator('#tab-actions [data-campaign-open]').click();
+      const card = page.locator('[data-campaign-detail]');
       await expect(card).toBeVisible();
-      await expect(card.locator(':scope > .land-kv')).toHaveCount(3);
-      const facts = await card.locator(':scope > .land-kv').evaluateAll(function (rows) {
+      await expect(card.locator('.kv').first()).toBeVisible();
+      const facts = await card.locator('.kv').evaluateAll(function (rows) {
         return rows.map(function (row) {
           const label = row.querySelector(':scope > span');
           const value = row.querySelector(':scope > b');
@@ -80,7 +89,7 @@ test.beforeEach(async function ({ page }, testInfo) {
           }
           return {
             labelSpace:excessHeight(label), valueSpace:excessHeight(value),
-            gap:value.getBoundingClientRect().top - label.getBoundingClientRect().bottom,
+            height:row.getBoundingClientRect().height,
             wraps:row.scrollWidth <= row.clientWidth + 1
           };
         });
@@ -89,8 +98,7 @@ test.beforeEach(async function ({ page }, testInfo) {
         // Allow font line-box leading, but not inherited 9em/12em flex heights.
         expect(fact.labelSpace).toBeLessThan(12);
         expect(fact.valueSpace).toBeLessThan(12);
-        expect(fact.gap).toBeGreaterThanOrEqual(0);
-        expect(fact.gap).toBeLessThanOrEqual(6);
+        expect(fact.height).toBeLessThan(120);
         expect(fact.wraps).toBe(true);
       }
     });
@@ -315,10 +323,16 @@ test('map interaction defers exact Deeds and Land war-card rebuilds until releas
         return rid !== 'player' && realm && realm.alive && !realm.liege;
       })[0];
       FB.game.setPaused(true);
-      s.player.war = {
-        enemy:enemy, target:null, wins:0, losses:0, seasons:0,
+      s.player.tier = 4;
+      s.player.provs = [home];
+      s.owner[home] = 'player'; s.holder[home] = 'player';
+      FB.foundPlayerRealm(s);
+      FB.invalidateRealmCache();
+      FB.registerOrdinaryWar(s, 'player', {
+        enemy:enemy, target:home, wins:0, losses:0, seasons:0,
         defending:true, strength:1
-      };
+      });
+      if (FB.realmWars(s, 'player').length !== 1) throw new Error('Expected one registered panel campaign.');
       const host = {
         id:'panel_drag_host', realm:'player', men:500, size:500,
         units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
@@ -334,7 +348,7 @@ test('map interaction defers exact Deeds and Land war-card rebuilds until releas
         requestAnimationFrame(function () { requestAnimationFrame(resolve); });
       });
     });
-    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+    await expect(page.locator('#tab-actions [data-campaign-open]')).toContainText('0/1');
 
     await page.evaluate(function () {
       const sentinel = document.createElement('i');
@@ -342,6 +356,8 @@ test('map interaction defers exact Deeds and Land war-card rebuilds until releas
       document.getElementById('tab-actions').appendChild(sentinel);
       FB.map.pointers.panel_drag = [0, 0];
       FB.playerHost(FB.state).supply = 81;
+      const war = FB.realmWars(FB.state, 'player')[0];
+      war.occupations[war.target] = { occupied:true };
       FB.ui.refresh();
     });
     await page.evaluate(function () {
@@ -350,14 +366,14 @@ test('map interaction defers exact Deeds and Land war-card rebuilds until releas
       });
     });
     await expect(page.locator('#deeds-drag-sentinel')).toHaveCount(1);
-    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+    await expect(page.locator('#tab-actions [data-campaign-open]')).toContainText('0/1');
 
     await page.evaluate(function () {
       delete FB.map.pointers.panel_drag;
       FB.ui.flushMapInteractionRefresh();
     });
     await expect(page.locator('#deeds-drag-sentinel')).toHaveCount(0);
-    await expect(page.locator('#deeds-war-card')).toContainText('81%');
+    await expect(page.locator('#tab-actions [data-campaign-open]')).toContainText('1/1');
 
     await page.evaluate(function () { FB.ui.showTab('prov'); });
     await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('500');
@@ -396,10 +412,16 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
         return rid !== 'player' && realm && realm.alive && !realm.liege;
       })[0];
       FB.game.setPaused(true);
-      s.player.war = {
-        enemy:enemy, target:null, wins:0, losses:0, seasons:0,
+      s.player.tier = 4;
+      s.player.provs = [home];
+      s.owner[home] = 'player'; s.holder[home] = 'player';
+      FB.foundPlayerRealm(s);
+      FB.invalidateRealmCache();
+      FB.registerOrdinaryWar(s, 'player', {
+        enemy:enemy, target:home, wins:0, losses:0, seasons:0,
         defending:true, strength:1
-      };
+      });
+      if (FB.realmWars(s, 'player').length !== 1) throw new Error('Expected one registered panel campaign.');
       s.armies = [{
         id:'live_panel_host', realm:'player', men:500, size:500,
         units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
@@ -417,7 +439,7 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
         requestAnimationFrame(function () { requestAnimationFrame(resolve); });
       });
     });
-    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+    await expect(page.locator('#tab-actions [data-campaign-open]')).toContainText('0/1');
     await expect(page.locator('#deed-details-go_to_town'))
       .toContainText('Ready in 30 days');
 
@@ -426,6 +448,8 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
       sentinel.id = 'deeds-live-tick-sentinel';
       document.getElementById('tab-actions').appendChild(sentinel);
       FB.playerHost(FB.state).supply = 81;
+      const war = FB.realmWars(FB.state, 'player')[0];
+      war.occupations[war.target] = { occupied:true };
       FB.state.turn++;
       FB.ui.refresh({ liveTick:true });
     });
@@ -435,12 +459,12 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
       });
     });
     await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(1);
-    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+    await expect(page.locator('#tab-actions [data-campaign-open]')).toContainText('1/1');
     await expect(page.locator('#deed-details-go_to_town'))
       .toContainText('Ready in 30 days');
 
     /* A bounded live pass updates visible deed eligibility without triggering
-       the all-or-nothing Deeds renderer merely because supply changed. */
+       the all-or-nothing Deeds renderer while campaign progress updates in place. */
     await page.evaluate(function () {
       FB.state.turn += 20;
       FB.ui.refresh({ liveTick:true });
@@ -451,13 +475,13 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
       });
     });
     await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(1);
-    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+    await expect(page.locator('#tab-actions [data-campaign-open]')).toContainText('1/1');
     await expect(page.locator('#deed-details-go_to_town'))
       .toContainText('Ready in 9 days');
 
     await page.evaluate(function () { FB.ui.refresh(); });
     await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(0);
-    await expect(page.locator('#deeds-war-card')).toContainText('81%');
+    await expect(page.locator('#tab-actions [data-campaign-open]')).toContainText('1/1');
 
     await page.evaluate(function () {
       FB.ui.showTab('prov');
@@ -529,7 +553,8 @@ test('natural ticks retain Self and Network trees while updating visible player 
     });
     await waitForUiRefresh(page);
 
-    await expect(page.locator('[data-self-value="voice"] > span')).toHaveText('Popular support');
+    // Popular support belongs to counties, not the personal Self panel.
+    await expect(page.locator('#tab-char [data-self-value="voice"]')).toHaveCount(0);
 
     const liveValues = await page.evaluate(function () {
       const selfSentinel = document.createElement('i');
@@ -1134,6 +1159,8 @@ test('fast-forward matches individual days and avoids invariant repair loops',
         institutionPolicies:0,
         papacy:0,
         religiousHeads:0,
+        headRecoveryTicks:0,
+        headRecoveryRepairs:0,
         modifiers:0,
         economy:0,
         rulerSync:0,
@@ -1145,18 +1172,24 @@ test('fast-forward matches individual days and avoids invariant repair loops',
         ['realmPolicySync', 'institutionPolicies'],
         ['ensurePapacy', 'papacy'],
         ['ensureReligiousHeads', 'religiousHeads'],
+        ['religiousHeadRecoveryTick', 'headRecoveryTicks'],
         ['ensureModifiers', 'modifiers'],
         ['ensureEconomy', 'economy'],
         ['syncMaterializedRealmRulers', 'rulerSync'],
         ['checkTierPromotions', 'promotions']
       ];
       const originals = {};
+      let inHeadRecovery = false;
       for (let i = 0; i < wrapped.length; i++) {
         const name = wrapped[i][0], count = wrapped[i][1];
         originals[name] = FB[name];
         FB[name] = function () {
           counts[count]++;
-          return originals[name].apply(this, arguments);
+          if (count === 'religiousHeads' && inHeadRecovery) counts.headRecoveryRepairs++;
+          const previous = inHeadRecovery;
+          if (count === 'headRecoveryTicks') inHeadRecovery = true;
+          try { return originals[name].apply(this, arguments); }
+          finally { inHeadRecovery = previous; }
         };
       }
 
@@ -1221,7 +1254,11 @@ test('fast-forward matches individual days and avoids invariant repair loops',
     expect(result.counts.politicalCourt).toBe(0);
     expect(result.counts.institutionPolicies).toBeLessThanOrEqual(2);
     expect(result.counts.papacy).toBeLessThanOrEqual(5);
-    expect(result.counts.religiousHeads).toBeLessThanOrEqual(5);
+    // A fresh game's vacancies are not due in this first season. Daily recovery
+    // must skip repair, while occasional UI/seasonal readers may normalize heads.
+    expect(result.counts.headRecoveryTicks).toBe(result.days);
+    expect(result.counts.headRecoveryRepairs).toBe(0);
+    expect(result.counts.religiousHeads).toBeLessThan(result.days);
     expect(result.counts.modifiers).toBeLessThanOrEqual(2);
     /* Seasonal settlement, an adjacent annual price tick, and post-skip Coin
        & Credit eligibility each reuse their normalized record. */
@@ -1310,6 +1347,7 @@ test('quiet army ticks retain the sovereign realm index', async function ({ page
         return Reflect.ownKeys(target);
       }
     });
+    // Both campaign bindings and muster order rebuild for this revision.
     FB.invalidateRealmCache();
 
     FB.armyTick(state);
@@ -1326,9 +1364,9 @@ test('quiet army ticks retain the sovereign realm index', async function ({ page
       invalidationScans:scans
     };
   })).toEqual({
-    initialScans:1,
-    quietDayScans:1,
-    invalidationScans:2
+    initialScans:2,
+    quietDayScans:2,
+    invalidationScans:4
   });
 });
 
@@ -1704,6 +1742,56 @@ test('fast-forward uses eight-millisecond slices and stops immediately at a boun
 });
 
 
+test('regular days and fast-forward never activate the profiler by default', async function ({ page }) {
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const g = FB.game, timing = g.fastForwardTiming;
+    const original = { army:FB.armyTick, day:g.passDay, world:FB.worldTick,
+      population:FB.populationYear, save:FB.save.serialize,
+      finish:FB.ui.fastForwardFinished, frame:window.requestAnimationFrame,
+      coach:FB.ui.coachmarkOpen, log:console.log, auto:g.auto.all };
+    const callbacks = [];
+    let normalCalls = 0, burstCalls = 0, activeRecorder = false, wrapped = false, reports = 0;
+    function armyProbe() {
+      if (g.fastForwarding) burstCalls++; else normalCalls++;
+      activeRecorder = activeRecorder || Object.prototype.hasOwnProperty.call(g, '_fastForwardTiming');
+      wrapped = wrapped || g.passDay !== original.day || FB.armyTick !== armyProbe ||
+        FB.worldTick !== original.world || FB.populationYear !== original.population ||
+        FB.save.serialize !== original.save || FB.ui.fastForwardFinished !== original.finish;
+      return original.army.apply(this, arguments);
+    }
+    const defaults = !timing.isEnabled() && timing.last === null;
+    FB.armyTick = armyProbe;
+    window.requestAnimationFrame = function (fn) { callbacks.push(fn); return callbacks.length; };
+    FB.ui.coachmarkOpen = function () { return false; };
+    console.log = function () {
+      if (arguments[0] === 'Fast-forward timing') reports++;
+      return original.log.apply(console, arguments);
+    };
+    g.auto.all = true;
+    FB.state.player.flags.tut_unpause = 1;
+    try {
+      // Run the real simulation, not a replacement passDay, without ever enabling timing.
+      g.passDay({ liveTick:true });
+      g.skipAhead();
+      let frames = 0;
+      while (callbacks.length && g.fastForwarding && frames++ < 200) callbacks.shift()();
+      return { defaults:defaults, normalCalls:normalCalls, burstCalls:burstCalls,
+        completed:!g.fastForwarding, activeRecorder:activeRecorder, wrapped:wrapped,
+        enabled:timing.isEnabled(), report:timing.last, reports:reports,
+        recorderPresent:Object.prototype.hasOwnProperty.call(g, '_fastForwardTiming') };
+    } finally {
+      g.fastForwarding = false; g.paused = true; g.auto.all = original.auto;
+      FB.armyTick = original.army; window.requestAnimationFrame = original.frame;
+      FB.ui.coachmarkOpen = original.coach; console.log = original.log;
+    }
+  });
+  expect(result.normalCalls).toBeGreaterThan(0);
+  expect(result.burstCalls).toBeGreaterThan(0);
+  expect(result).toMatchObject({ defaults:true, completed:true, activeRecorder:false,
+    wrapped:false, enabled:false, report:null, reports:0, recorderPresent:false });
+});
+
 test('local fast-forward timing is opt-in, separates nested work and restores functions', async function ({ page }) {
   await startDeterministicGame(page);
   const result = await page.evaluate(function () {
@@ -1759,20 +1847,45 @@ test('local fast-forward timing is opt-in, separates nested work and restores fu
 });
 
 
-test('hosted origins cannot enable fast-forward diagnostics', async function ({ page }) {
+test('hosted origins cannot enable fast-forward diagnostics', async function ({ page, browser }) {
   const local = new URL(page.url());
   test.skip(local.protocol === 'file:', 'Origin denial uses the served fixture.');
-  await page.route('http://timing-denied.invalid/**', async function (route) {
-    const requested = new URL(route.request().url());
-    const response = await route.fetch({ url:local.origin + requested.pathname + requested.search });
-    await route.fulfill({ response:response });
-  });
-  await page.goto('http://timing-denied.invalid' + local.pathname + local.search);
-  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-  expect(await page.evaluate(function () {
-    const timing = FB.game.fastForwardTiming;
-    return { enabled:timing.enable(true), active:timing.isEnabled(), last:timing.last };
-  })).toEqual({ enabled:false, active:false, last:null });
+  // The universal page guard intentionally rejects remote origins. Keep this
+  // simulated origin in its own context and allow only routed local game assets.
+  const { runtimePathAllowed } = require('../support/page-contract');
+  const context = await browser.newContext({ serviceWorkers:'block' });
+  const faults = [];
+  try {
+    await context.route('**/*', async function (route) {
+      const requested = new URL(route.request().url());
+      if (requested.origin !== 'http://timing-denied.invalid' ||
+          !runtimePathAllowed(requested.pathname)) {
+        faults.push('Unexpected request: ' + requested.href);
+        await route.abort();
+        return;
+      }
+      const response = await route.fetch({ url:local.origin + requested.pathname + requested.search });
+      await route.fulfill({ response:response });
+    });
+    const hosted = await context.newPage();
+    hosted.on('pageerror', function (error) { faults.push(error.message); });
+    hosted.on('console', function (message) {
+      if (message.type() === 'error') faults.push(message.text());
+    });
+    hosted.on('response', function (response) {
+      if (response.status() >= 400) faults.push('HTTP ' + response.status() + ': ' + response.url());
+    });
+    await hosted.goto('http://timing-denied.invalid' + local.pathname + local.search);
+    await hosted.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+    expect(await hosted.evaluate(function () {
+      const timing = FB.game.fastForwardTiming;
+      return { enabled:timing.enable(true), active:timing.isEnabled(), last:timing.last,
+        recorderPresent:Object.prototype.hasOwnProperty.call(FB.game, '_fastForwardTiming') };
+    })).toEqual({ enabled:false, active:false, last:null, recorderPresent:false });
+    expect(faults).toEqual([]);
+  } finally {
+    await context.close();
+  }
 });
 
 

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.3';
+FB.VERSION = '1.179.4';
 FB.CHANGELOG = [
+  { v: '1.179.4', date: '2026-09-10', changes: [
+    'Preview translations cover recent campaign, enterprise, and county support changes.'
+  ] },
   { v: '1.179.3', date: '2026-09-10', changes: [
     'Popular support belongs to counties, affects taxes and levies, and guides local revolt spread. Unjust wars impose stacking penalties that recover annually.',
     'Fast-forward reuses army calculations, family trees avoid duplicate branches, and ruler sheets separate concurrent campaigns.'
