@@ -181,7 +181,7 @@ next due date, and materialized ruler synchronization reuses each ruler
 projection within a pass. These retained paths never batch RNG-bearing
 mechanics or move expiry boundaries; focus, travel, armies, events, and dated
 transitions keep their ordinary per-day order. The player-facing skip is
-frame-sliced to a four-millisecond budget (and at most six days per frame as a
+frame-sliced to an eight-millisecond budget (and at most six days per frame as a
 coarse-timer safeguard), with per-day UI refresh requests,
 political-map base
 rebuilds, canvas renders, transient Chronicle-news toasts, and the replaceable
@@ -475,3 +475,8 @@ The annual tick moves every stored county support base 15% toward neutral.
 Unjust-war debt separately recovers in twelve equal annual steps, measured in
 360-day years from its latest declaration refresh. There is no personal score
 to decay or halve on succession.
+
+Fast-forward retains the six-day coarse-timer cap and yields after eight milliseconds
+of daily work. It checks events, death, pause and season boundaries after each day;
+only the amount of work before the next animation frame changes. A single expensive
+day can exceed that budget because the authoritative tick remains synchronous.

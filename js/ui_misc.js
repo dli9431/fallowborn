@@ -1377,8 +1377,8 @@ window.FB = window.FB || {};
     const rows = opts.rows || [];
     const detailsId = opts.detailsId ||
       'person-assignment-details-' + (++personAssignmentCardSeq);
-    const faceState = selected ? FB.T('Currently assigned') :
-      (eligible ? FB.T('Eligible') : FB.T('Unavailable'));
+    const faceState = opts.faceState || (selected ? FB.T('Currently assigned') :
+      (eligible ? FB.T('Eligible') : FB.T('Unavailable')));
     let attrs = '';
     for (const key in data) {
       if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
@@ -1417,7 +1417,7 @@ window.FB = window.FB || {};
       '<span class="person-assignment-choice" aria-hidden="true">' +
       (selected ? '◉' : '○') + '</span>' + art +
       '<span class="person-assignment-name">' + esc(name) + '</span>' +
-      '<span class="person-assignment-state">' + esc(faceState) + '</span>' +
+      '<span class="person-assignment-state' + (opts.working ? ' working' : '') + '">' + esc(faceState) + '</span>' +
       '</span></button><span class="settcard-actions person-assignment-actions">' +
       '<button type="button" class="btn small settcard-info" aria-expanded="false" ' +
       'aria-controls="' + esc(detailsId) + '" title="' + esc(FB.T('Details')) +
@@ -3496,7 +3496,7 @@ window.FB = window.FB || {};
           label === FB.T('Close')) return 2;
       return 1;
     }
-    ordered.sort(function (a, b) {
+    if (!footer.hasAttribute('data-primary-first')) ordered.sort(function (a, b) {
       return rank(a) - rank(b) || a.index - b.index;
     });
     for (let i = 0; i < ordered.length; i++) {

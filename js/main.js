@@ -1830,10 +1830,11 @@ FB.CHANGELOG = [
       /* An older deferred autosave must land before the current synchronous
          snapshot, or pagehide could overwrite the newer state during reload. */
       if (FB.save.flushPending) FB.save.flushPending();
-      if (!FB.save.toSlot('auto')) {
-        if (button) button.disabled = false;
-        return false;
-      }
+      FB.save.toSlot('auto', function (ok) {
+        if (ok) window.location.reload();
+        else if (button) button.disabled = false;
+      });
+      return true;
     }
     window.location.reload();
     return true;
@@ -2172,7 +2173,7 @@ FB.CHANGELOG = [
               $('title-boot-status').textContent = styleError.message;
               return;
             }
-            readyTitleShell();
+            FB.save.initStorage(readyTitleShell);
           });
         });
       }, 0);
@@ -3567,7 +3568,9 @@ FB.CHANGELOG = [
   /* Fast-forward until something happens: an event, a new season, or death.
      The simulation remains one authoritative day at a time, but a whole
      autoresolved season must not monopolize the browser's main thread. */
-  const FAST_FORWARD_FRAME_BUDGET = 4;
+  // Leave room for input and paint without forcing a five-millisecond day
+  // to occupy an entire animation frame by itself.
+  const FAST_FORWARD_FRAME_BUDGET = 8;
   /* The time budget is the primary responsiveness guard. A two-day cap added
      a 45-frame floor to a quiet season, so retain a modest coarse-timer cap
      without forcing cheap days to wait for dozens of paints. */

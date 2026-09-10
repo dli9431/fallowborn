@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js', 'js/fortifications.js', 'js/wars.js', 'js/world.js',
-  'js/technology.js', 'data/map_data.js', 'data/units.js'
+  'js/technology.js', 'js/rebellions.js', 'data/map_data.js', 'data/units.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -142,5 +142,72 @@ test('retreat fallback keeps breadth-first priority while searching legal reacha
   expect(result.cases).toEqual([['near','near'], ['far','far'], [null,null],
     ['far','far'], [null,null], [null,null], [null,null]]);
   expect(result.quotes).toBe(0);
+  expect(result.rngStable).toBe(true);
+});
+
+
+test('unchanged regroup and rebel-defense routes avoid searches but live forts invalidate access', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, world = FB.world, armies = s.armies;
+    const rid = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive; });
+    const capital = s.realms[rid].capital;
+    const names = ['armyFriendlyProvince', 'armyCanPursue', 'fortBlocksArmy', 'armyMarchDays',
+      'realmHasRebellion', 'rebellionById', 'findArmyPath'];
+    const originals = {}; names.forEach(function (name) { originals[name] = FB[name]; });
+    let forts = {}, checks = {}, quotes = 0, searches = 0;
+    FB.world = { adj:{ start:{ bridge:1 }, bridge:{ start:1, home:1 }, home:{ bridge:1 } },
+      byId:{ start:{}, bridge:{}, home:{} } };
+    FB.armyFriendlyProvince = function (state, army, pid) { return pid === 'home'; };
+    FB.armyCanPursue = function () { return true; };
+    FB.fortBlocksArmy = function (state, pid) { checks[pid] = (checks[pid] || 0) + 1; return !!forts[pid]; };
+    FB.armyMarchDays = function () { quotes++; return 4; };
+    FB.realmHasRebellion = function () { return true; };
+    FB.rebellionById = function () { return { target:rid, counties:{ home:{} } }; };
+    FB.findArmyPath = function () { searches++; return originals.findArmyPath.apply(this, arguments); };
+    s.realms[rid].capital = 'home';
+    const host = { realm:rid, at:'start', from:'bridge', goal:'home', path:['bridge', 'home'],
+      moveLeft:3, men:100, units:{ levy:100 } };
+    s.armies = [host, { realm:'rebels', rebellionId:'probe', at:'home', men:50 }];
+    const rng = FB.getRngState();
+    try {
+      const goals = [];
+      for (let i = 0; i < 10; i++) {
+        goals.push(FB.armyRegroupGoal(s, host), FB.rebellionDefenseGoal(s, host));
+        s.turn++;
+      }
+      const idleQuotes = quotes, idleSearches = searches;
+      forts.bridge = true;
+      const invalidated = !FB.armyHasRouteTo(s, host, 'home');
+      const blockedGoal = FB.armyRegroupGoal(s, host);
+      checks = {};
+      const route = FB.findArmyPath(s, host, 'home');
+      const maxFortChecks = Math.max.apply(null, Object.keys(checks).map(function (pid) { return checks[pid]; }));
+      forts = { start:true }; host.from = 'other';
+      const pinned = FB.armyHasRouteTo(s, host, 'home');
+      host.from = 'bridge';
+      const arrivalExit = FB.armyHasRouteTo(s, host, 'home');
+      FB.world.byId.bridge.wasteland = true;
+      const wasteland = FB.armyHasRouteTo(s, host, 'home');
+      return { goals:goals, idleQuotes:idleQuotes, idleSearches:idleSearches,
+        invalidated:invalidated, blockedGoal:blockedGoal, blockedBy:route.blockedByFort,
+        maxFortChecks:maxFortChecks, pinned:pinned, arrivalExit:arrivalExit,
+        wasteland:wasteland, rngStable:rng === FB.getRngState() };
+    } finally {
+      FB.world = world; s.armies = armies; s.realms[rid].capital = capital;
+      names.forEach(function (name) { FB[name] = originals[name]; });
+    }
+  });
+  expect(result.goals).toEqual(Array(20).fill('home'));
+  expect(result.idleQuotes).toBe(0);
+  expect(result.idleSearches).toBe(0);
+  expect(result.invalidated).toBe(true);
+  expect(result.blockedGoal).toBe(null);
+  expect(result.blockedBy).toBe('bridge');
+  expect(result.maxFortChecks).toBe(1);
+  expect(result.pinned).toBe(false);
+  expect(result.arrivalExit).toBe(true);
+  expect(result.wasteland).toBe(false);
   expect(result.rngStable).toBe(true);
 });

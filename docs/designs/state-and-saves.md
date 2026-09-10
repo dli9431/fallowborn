@@ -1332,3 +1332,47 @@ Chronicle packed entries may append an audience bitmask at index 10 (family=1,
 realm=2, world=4); old ten-field entries remain readable. Recent log entries carry
 the same optional `audience` field. Notification preferences live in `fb_ui`, not
 in the game save. Visibility never deletes or truncates the durable archive.
+
+Packed Chronicle rows are deeply immutable snapshots, detached from recent-log
+receipts and caller parameters when appended or restored. Saves retain a transient
+WeakMap of encoded immutable rows, encoding only newly encountered rows. They still
+assemble the complete JSON snapshot synchronously before mortality, and always
+serialize the current string table, head metadata and other state. Replacing a row,
+array or archive is supported; mutable rows supplied directly by mods are encoded
+fresh until archive normalization. No cache or format change enters the save.
+
+## Browser save storage and routine-history retention
+
+Save slots prefer IndexedDB (`fallowborn-saves`, version 1, `slots` store) with
+callback-based transactions. Boot hydrates the synchronous read cache before
+Continue becomes available. Legacy localStorage slots and page-close recovery
+copies migrate copy-first and are removed only after a successful transaction,
+and only if the local bytes still match. A local recovery copy takes precedence
+on the next boot. No save wrapper version changes.
+
+IndexedDB stores the synchronous JSON snapshot without main-thread compression.
+Manual save success and hosted-update reload wait for transaction completion.
+Unsupported or denied IndexedDB and failed writes retain verified localStorage
+fallbacks. Pagehide attempts a synchronous recovery write for pending saves;
+as before, this fallback can fail if localStorage is unavailable or full. Already
+committed IndexedDB saves remain intact. UI preferences stay in localStorage.
+
+At most once per campaign year, save serialization removes unrelated routine
+county-modifier expiry, rebellion warning and AI settlement notices older than
+the preceding five complete calendar years. Family/realm audience bits and all
+decisions protect entries; other event types remain permanent. Older unclassified
+rows use conservative current-audience inference. Notification visibility never
+controls retention. `chronicle.retention:{years:5,removed}` discloses the cumulative
+pruned count in exports and the viewer. `complete` is false when entries were
+pruned; export and save keep all remaining records. User backup files are never
+rewritten. Cached serialized rows remain transient and collectible after pruning.
+
+Slot deletion removes both the IndexedDB entry and its localStorage recovery copy.
+An epoch invalidates earlier write callbacks, and deletion transactions follow older
+writes so they cannot resurrect deleted data. Deleting Autosave cancels its queued
+snapshot and compression worker. New writes wait until deletion finishes; continued
+play may create a later autosave. Delete-all clears save slots only, preserving
+preferences and progression. Deletion failure reports incomplete removal.
+`storageUsage` reads stored keys and values without decoding or changing saves and
+reports UTF-16 payload estimates separately for game-prefixed localStorage and the
+save database; it does not represent total physical disk use or offline media.

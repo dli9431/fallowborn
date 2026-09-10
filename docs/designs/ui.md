@@ -2651,7 +2651,8 @@ includes world news. The filters apply to ordinary news toasts, automatic event
 receipts, the retained Chronicle panel, and the full Chronicle viewer. They never
 suppress decisions, simulation effects, save errors, or other direct UI feedback.
 Existing visible news toasts are removed when their audience is disabled. Hidden
-entries stay in saves and complete Chronicle exports, and reappear when enabled.
+entries reappear when enabled while retained. The separate routine-world-history
+policy below bounds old low-significance notices regardless of these checkboxes.
 
 News records retain their family/realm/world audience at creation, using stable
 ids and the existing proper-name parameters for old emitters. Personal decisions
@@ -2661,3 +2662,35 @@ the current family and realm; past relevance cannot be reconstructed exactly.
 Toast flushes insert their retained notices before one rail layout. Chronicle
 updates find the previous tail by identity even at the 300-entry retention cap;
 missing overlap or a visibility change triggers a complete bounded rebuild.
+
+The Chronicle viewer discloses the cumulative number of pruned routine world
+notices. Family/realm events, decisions and major outcomes stay permanent; unrelated
+modifier expiries, rebellion warnings and AI settlement notices retain five complete
+calendar years. This is a storage rule, not a visibility toggle.
+Save-slot buttons remain pending until storage commits; success feedback and
+hosted-update reload occur only afterward. Returning or closing a save sheet cannot
+make its eventual callback close a different sheet.
+
+## Deleting save slots
+
+Save and Load sheets include a labeled Autosave row (Continue uses it) and separate
+Delete buttons for Autosave and slots 1-3. Settings offers Delete all saves. Each
+opens a confirmation showing estimated UTF-16 game localStorage and save IndexedDB
+payload sizes, excluding database overhead and offline downloads. Unavailable stores
+are identified rather than reported as empty. Settings and downloaded files remain.
+The dialog explains that continued play can create a new autosave.
+
+Confirm delete is authored first, left of Cancel on desktop and above it on mobile.
+`data-primary-first` on a shared modal footer preserves authored button order instead
+of the usual exit-first sorting. Cancel receives initial focus; automatic number
+shortcuts are disabled for this destructive confirmation. Cancel, Escape and Back
+restore the source sheet and scroll position. Success returns to fresh slot metadata
+and updates Continue; failures remain in the dialog with an error.
+
+Played lives in the family tree have a blue border and a Played/Playing label.
+The existing ancestry connectors are tinted the same blue along the route between
+consecutive recorded protagonists, including intervening ancestors for collateral
+succession. No separate succession line or explanatory toolbar text is added.
+Prospective heirs are not marked. Missing records or collapsed played cards break
+the highlight. Connector colors refresh after branch changes and resizing; ordinary
+ancestry layout, keyboard navigation and saved tree position remain intact.

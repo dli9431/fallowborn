@@ -461,3 +461,11 @@ The explanation distinguishes cultural timing from the sovereign realm?s effecti
 traditions, preserves completed research, and identifies the local-adoption condition.
 
 Historical equipment adds one hard review per item (`equipment_<id>`). Item requirements are validated and reverse-discovered in technology details. See the historical military equipment table in [items.md](items.md) for gates, regional/date floors, ungated fallbacks, and grandfathering.
+
+Scalar technology effects and sea-transport capacity share a transient combined
+projection per completed-tech array. A list signature detects additions, removals
+and same-length replacements; caps remain live. Replacing the definition table
+invalidates automatically, and runtime mod application calls `FB.invalidateTechBonuses`
+for in-place technology edits. Custom code that edits nested technology effects must
+call that same API. Summation order, caps, effective-sovereign selection and seeded
+research outcomes are unchanged. This internal optimization adds no technology gate.

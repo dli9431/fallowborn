@@ -5447,6 +5447,79 @@ window.FB = window.FB || {};
     return html + '</div>';
   };
 
+  function drawPlayedFamilyPath() {
+    const tree = document.querySelector('.family-tree-primary .fttree');
+    if (!tree) return;
+    tree.querySelectorAll('.ftplayed-drop, .ftplayed-stem, .ftplayed-rail').forEach(function (node) {
+      node.classList.remove('ftplayed-drop', 'ftplayed-stem', 'ftplayed-rail');
+      node.style.removeProperty('--played-rail-start'); node.style.removeProperty('--played-rail-end');
+    });
+    const cards = {}, rails = new Map();
+    tree.querySelectorAll('.ftchip[data-played-order]:not(.dup)').forEach(function (card) {
+      if (card.getClientRects().length) cards[card.getAttribute('data-played-order')] = card;
+    });
+    function lineage(card) {
+      const nodes = [];
+      let node = card.closest('.ftnode');
+      while (node && tree.contains(node)) {
+        nodes.push(node);
+        node = node.parentElement.closest('.ftnode');
+      }
+      return nodes;
+    }
+    function point(kids, x) {
+      const range = rails.get(kids);
+      if (range) { range[0] = Math.min(range[0], x); range[1] = Math.max(range[1], x); }
+      else rails.set(kids, [x, x]);
+    }
+    function trace(nodes, common, throughParent) {
+      for (let i = 0; nodes[i] !== common; i++) {
+        const node = nodes[i], kids = node.parentElement, parent = nodes[i + 1];
+        if (!kids.classList.contains('ftkids')) continue;
+        const rect = node.getBoundingClientRect();
+        node.classList.add('ftplayed-drop');
+        point(kids, rect.left + rect.width / 2);
+        if (parent !== common || throughParent) {
+          const box = kids.getBoundingClientRect();
+          point(kids, box.left + box.width / 2);
+          Array.prototype.forEach.call(parent.children, function (child) {
+            if (child.classList.contains('ftstem')) child.classList.add('ftplayed-stem');
+          });
+        }
+      }
+    }
+    Object.keys(cards).forEach(function (order) {
+      const from = cards[order], to = cards[Number(order) + 1];
+      if (!to) return; // do not bridge a missing or collapsed played life
+      const a = lineage(from), b = lineage(to);
+      const common = a.filter(function (node) { return b.indexOf(node) >= 0; })[0];
+      if (!common) return;
+      const throughParent = common === a[0] || common === b[0];
+      trace(a, common, throughParent); trace(b, common, throughParent);
+    });
+    // Tint only the used portion of each existing sibling rail, including rails
+    // above unplayed siblings between the two branches. No new line is drawn.
+    rails.forEach(function (range, kids) {
+      Array.prototype.forEach.call(kids.children, function (node, index) {
+        const rect = node.getBoundingClientRect();
+        const left = rect.left + (index === 0 ? rect.width / 2 : 0);
+        const right = rect.right - (index === kids.children.length - 1 ? rect.width / 2 : 0);
+        const start = Math.max(left, range[0]), end = Math.min(right, range[1]);
+        if (end <= start) return;
+        node.classList.add('ftplayed-rail');
+        node.style.setProperty('--played-rail-start', (start - left) + 'px');
+        node.style.setProperty('--played-rail-end', (end - left) + 'px');
+      });
+    });
+  }
+  let playedPathFrame = null;
+  function requestPlayedFamilyPath() {
+    if (!document.querySelector('.family-tree-primary')) return;
+    if (playedPathFrame !== null) return;
+    playedPathFrame = requestAnimationFrame(function () { playedPathFrame = null; drawPlayedFamilyPath(); });
+  }
+  window.addEventListener('resize', requestPlayedFamilyPath);
+
   UI.showFamilyTree = function (restoreView) {
     if (!FB.state || UI.eventsBusy()) return;
     /* The Kin button used to pass its click event into this optional state
@@ -5473,6 +5546,14 @@ window.FB = window.FB || {};
       }
     }
     if (!founder) founder = me;
+    const playedSequence = [], playedOrder = Object.create(null);
+    function addPlayed(id) {
+      if (!id || playedOrder[id] !== undefined) return;
+      playedOrder[id] = playedSequence.length; playedSequence.push(id);
+    }
+    addPlayed(s.player.houseFounderId);
+    (s.legends || []).forEach(function (legend) { if (legend) addPlayed(legend.id); });
+    addPlayed(me.id);
     const playerAncestorDepth = ancestorDistances(me);
     const extendedRelationCache = {};
 
@@ -5586,12 +5667,15 @@ window.FB = window.FB || {};
       const meta = c.dead ? '†' : FB.T('age {age}', { age: FB.ageOf(c, s.date.year) });
       const again = cls && cls.indexOf('dup') >= 0;
       const founderClass = c.id === founder.id ? ' founder' : '';
-      return '<button class="ftchip' + (cls || '') + founderClass +
+      const played = playedOrder[c.id] !== undefined;
+      return '<button class="ftchip' + (played ? ' ftplayed' : '') + (cls || '') + founderClass +
         (c.dead ? ' dead' : '') +
-        '" data-cid="' + c.id + '" title="' + esc(FB.fullName(c)) +
+        '"' + (played ? ' data-played-order="' + playedOrder[c.id] + '"' : '') +
+        ' data-cid="' + c.id + '" title="' + esc(FB.fullName(c)) +
         (label ? ' — ' + esc(label) : '') + '">' + FB.faceTag(c, 50, 57) +
         '<span class="fname">' + esc(c.name) + '</span>' +
         '<span class="frel">' + esc(label ? label + ' · ' + meta : meta) + '</span>' +
+        (played ? '<span class="ftplayed-label">' + esc(FB.T(c.id === me.id ? 'Playing' : 'Played')) + '</span>' : '') +
         (again ? '<span class="frel">' +
           esc(FB.T('also elsewhere in this tree')) + '</span>' : '') + '</button>';
     }
@@ -5823,6 +5907,10 @@ window.FB = window.FB || {};
         tree += branch + '</div></div>';
       }
     }
+    // Retain recorded played lives even if adoption or damaged old links detached them.
+    playedSequence.forEach(function (id) {
+      if (s.chars[id] && !drawn[id]) tree += unit(s.chars[id]);
+    });
     /* Maternal, paternal, collateral, and stepfamily roots may be separate
        genealogical components at their oldest recorded generation. They
        still belong to one displayed family tree: a single neutral root rail
@@ -5833,6 +5921,7 @@ window.FB = window.FB || {};
       '</div></div></div></div>';
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">' + esc(FB.T('Close')) + '</button>';
     openModal('The Family Tree', h, { modalClass:'family-tree-modal' });
+    requestPlayedFamilyPath();
     $('gm-cancel').addEventListener('click', UI.closeModal);
     const treeHeading = $('gm-title').parentNode;
     const treeInfoButton = document.createElement('button');
@@ -5918,6 +6007,7 @@ window.FB = window.FB || {};
       if (!kids || !kids.classList.contains('ftkids')) return;
       kids.hidden = !open;
       stem.hidden = !open;
+      requestPlayedFamilyPath();
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       toggle.children[0].textContent = open ? '−' : '+';
       const c = s.chars[toggle.getAttribute('data-ft-toggle')];

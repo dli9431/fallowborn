@@ -419,12 +419,29 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
       .toContainText('each currently works another enterprise');
     const candidate = page.locator(
       '[data-enterprise-worker="' + fixture.workerId + '"]');
-    await expect(candidate).toContainText('Eligible');
+    await expect(candidate.locator('.person-assignment-state')).toContainText('Working at ');
+    await expect(candidate.locator('.person-assignment-state')).toHaveClass(/working/);
+    const workColor = await candidate.locator('.person-assignment-state').evaluate(function (node) {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--ui-danger-color)'; node.appendChild(probe);
+      const result = { actual:getComputedStyle(node).color, expected:getComputedStyle(probe).color };
+      probe.remove(); return result;
+    });
+    expect(workColor.actual).toBe(workColor.expected);
     await expect(candidate.locator('.person-assignment-eligibility'))
       .toHaveCount(0);
     await candidate.locator('..').hover();
     await expect(page.locator('#tooltip')).toContainText('Current assignment');
     await expect(page.locator('#tooltip')).toContainText('Expected yield');
+    await page.evaluate(function (uid) {
+      FB.state.player.enterprises.forEach(function (entry) {
+        entry.workerId = null; entry.workerIds = [];
+      });
+      FB.ui.showEnterpriseManage(uid, undefined, true);
+    }, fixture.uid);
+    await expect(candidate.locator('.person-assignment-state')).toHaveText('Available');
+    await expect(candidate.locator('.person-assignment-state')).not.toHaveClass(/working/);
+
   });
 
 test('enterprise statuses explain purchase and staffing blockers without mutation',

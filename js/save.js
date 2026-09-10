@@ -618,8 +618,33 @@ window.FB = window.FB || {};
     FB.ui.toast('⚠ This browser is blocking save storage. Lives won’t persist here, so use Menu → 💾 Save game → 💾 Download save file.');
   };
 
+  // Immutable packed rows are encoded once. Live strings, heads and other archive
+  // fields are always serialized afresh; replacement or mutable mod rows stay live.
+  const encodedChronicleEntries = new WeakMap();
+  function serializeChronicle(archive) {
+    if (!archive || !Array.isArray(archive.entries)) return JSON.stringify(archive, saveReplacer);
+    const parts = [];
+    for (let i = 0; i < archive.entries.length; i++) {
+      const entry = archive.entries[i];
+      const immutable = FB.chronicleEntryIsImmutable && FB.chronicleEntryIsImmutable(entry);
+      if (immutable && encodedChronicleEntries.has(entry)) {
+        parts.push(encodedChronicleEntries.get(entry));
+        continue;
+      }
+      const json = JSON.stringify(entry, saveReplacer);
+      if (immutable) encodedChronicleEntries.set(entry, json);
+      parts.push(json === undefined ? 'null' : json);
+    }
+    const header = JSON.stringify(archive, function (key, value) {
+      return this === archive && key === 'entries' ? undefined : saveReplacer.call(this, key, value);
+    });
+    return header.slice(0, -1) + (header.length > 2 ? ',' : '') +
+      '"entries":[' + parts.join(',') + ']}';
+  }
+
   S.serialize = function () {
     const s = FB.state;
+    if (FB.pruneChronicle) FB.pruneChronicle(s);
     serializingBuildingRecords = new WeakSet();
     const buildings = s.buildings || {};
     for (const pid in buildings) {
@@ -632,19 +657,20 @@ window.FB = window.FB || {};
       }
     }
     try {
-      return JSON.stringify({
-        v: 3,
-        rng: FB.getRngState(),
-        uid: FB.getUidCounter(),
-        mods: FB.mods.sig(), // which world this life belongs to
-        state: s,
-        meta: {
-          name: FB.fullName(s.chars[s.player.charId]),
-          titleData: FB.titleSnapshot(s),
-          year: s.date.year,
-          season: s.date.season
-        }
+      const header = JSON.stringify({ v:3, rng:FB.getRngState(),
+        uid:FB.getUidCounter(), mods:FB.mods.sig() });
+      const meta = JSON.stringify({
+        name:FB.fullName(s.chars[s.player.charId]), titleData:FB.titleSnapshot(s),
+        year:s.date.year, season:s.date.season
       }, saveReplacer);
+      let stateJson = JSON.stringify(s, function (key, value) {
+        return this === s && key === 'chronicle' ? undefined : saveReplacer.call(this, key, value);
+      });
+      if (Object.prototype.hasOwnProperty.call(s, 'chronicle') && s.chronicle !== undefined) {
+        stateJson = stateJson.slice(0, -1) + (stateJson.length > 2 ? ',' : '') +
+          '"chronicle":' + serializeChronicle(s.chronicle) + '}';
+      }
+      return header.slice(0, -1) + ',"state":' + stateJson + ',"meta":' + meta + '}';
     } finally {
       serializingBuildingRecords = null;
     }
@@ -667,14 +693,201 @@ window.FB = window.FB || {};
     else FB.ui.toast('⚠ This browser is blocking save storage. Use 💾 Download save file in Menu → 💾 Save game.');
   }
 
-  S.toSlot = function (slot) {
-    try {
-      localStorage.setItem(key(slot), encodeStored(S.serialize()));
-      return true;
-    } catch (e) {
-      reportSaveError(e);
-      return false;
+  let saveDatabase = null;
+  const databaseSlots = Object.create(null), databaseWrites = Object.create(null);
+  let storageInitialized = false, deletionBusy = false;
+  const slotEpochs = Object.create(null);
+  function savedSlotKey(name) { return name === key('auto') || /^fb_slot[0-9]+$/.test(name); }
+  function localSlot(name) {
+    try { return localStorage.getItem(name); } catch (error) { return null; }
+  }
+  function databaseWrite(name, json, done) {
+    const job = { json:json, legacy:localSlot(name), epoch:slotEpochs[name] || 0 };
+    databaseWrites[name] = job;
+    let transaction;
+    function failed(error) {
+      const superseded = databaseWrites[name] !== job || job.epoch !== (slotEpochs[name] || 0);
+      if (!superseded) delete databaseWrites[name];
+      done(false, error, superseded);
     }
+    try {
+      transaction = saveDatabase.transaction('slots', 'readwrite');
+      transaction.objectStore('slots').put(json, name);
+      transaction.oncomplete = function () {
+        if (job.epoch !== (slotEpochs[name] || 0)) { done(false, null, true); return; }
+        databaseSlots[name] = json;
+        if (databaseWrites[name] === job) delete databaseWrites[name];
+        // A new local recovery snapshot must never be removed by an older write.
+        try {
+          if (job.legacy !== null && localStorage.getItem(name) === job.legacy) localStorage.removeItem(name);
+        } catch (error) { /* the committed database copy remains authoritative */ }
+        done(true);
+      };
+      transaction.onabort = function () { failed(transaction.error || new Error('Save transaction aborted.')); };
+      transaction.onerror = function () { /* request errors abort the transaction */ };
+    } catch (error) { failed(error); }
+  }
+  S.initStorage = function (done) {
+    if (storageInitialized) { done(); return; }
+    storageInitialized = true;
+    let finished = false, request;
+    function finish(database) {
+      if (finished) { if (database && database !== saveDatabase) database.close(); return; }
+      finished = true;
+      clearTimeout(timeout);
+      saveDatabase = database || null;
+      if (database) {
+        S.available = true;
+        database.onversionchange = function () { database.close(); saveDatabase = null; };
+      }
+      done();
+    }
+    const timeout = setTimeout(function () { finish(null); }, 5000);
+    try {
+      if (!window.indexedDB) { finish(null); return; }
+      request = indexedDB.open('fallowborn-saves', 1);
+      request.onupgradeneeded = function () {
+        if (!request.result.objectStoreNames.contains('slots')) request.result.createObjectStore('slots');
+      };
+      request.onerror = function () { finish(null); };
+      request.onblocked = function () { finish(null); };
+      request.onsuccess = function () {
+        const database = request.result;
+        if (finished) { database.close(); return; }
+        const transaction = database.transaction('slots', 'readonly');
+        const cursor = transaction.objectStore('slots').openCursor();
+        cursor.onsuccess = function () {
+          const row = cursor.result;
+          if (row) {
+            if (savedSlotKey(row.key) && typeof row.value === 'string') databaseSlots[row.key] = row.value;
+            row.continue();
+          }
+        };
+        transaction.onabort = function () { database.close(); finish(null); };
+        transaction.oncomplete = function () {
+          if (finished) { database.close(); return; }
+          saveDatabase = database;
+          // Copy first, remove only after commit. Local recovery copies win on boot.
+          try {
+            const legacy = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const name = localStorage.key(i);
+              if (savedSlotKey(name)) legacy.push(name);
+            }
+            legacy.forEach(function (name) {
+              const raw = localSlot(name);
+              if (!raw) return;
+              let data;
+              try { data = JSON.parse(decodeStored(raw)); } catch (error) { return; }
+              if (!data || data.v !== 3) return;
+              databaseWrite(name, raw, function () {});
+            });
+          } catch (error) { /* legacy storage may be blocked independently */ }
+          finish(database);
+        };
+      };
+    } catch (error) { finish(null); }
+  };
+  S.hasSlot = function (slot) {
+    const name = key(slot);
+    return !!(databaseWrites[name] || databaseSlots[name] || localSlot(name) ||
+      (slot === 'auto' && pendingAuto));
+  };
+  // UTF-16 payload estimates, excluding database indexes and browser overhead.
+  S.storageUsage = function (done) {
+    const usage = { localStorage:null, indexedDB:saveDatabase ? null : 0 };
+    try {
+      usage.localStorage = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const name = localStorage.key(i);
+        if (name && name.indexOf(PREFIX) === 0) usage.localStorage +=
+          2 * (name.length + (localStorage.getItem(name) || '').length);
+      }
+    } catch (error) { usage.localStorage = null; }
+    if (!saveDatabase) {
+      try { if (window.indexedDB) usage.indexedDB = null; } catch (error) { usage.indexedDB = null; }
+      done(usage); return;
+    }
+    try {
+      const transaction = saveDatabase.transaction('slots', 'readonly');
+      let bytes = 0;
+      const request = transaction.objectStore('slots').openCursor();
+      request.onsuccess = function () {
+        const row = request.result;
+        if (row) { bytes += 2 * (String(row.key).length + String(row.value).length); row.continue(); }
+      };
+      transaction.oncomplete = function () { usage.indexedDB = bytes; done(usage); };
+      transaction.onabort = function () { done(usage); };
+    } catch (error) { done(usage); }
+  };
+  S.deleteSaves = function (slot, done) {
+    if (deletionBusy) { done(false); return; }
+    const all = slot === 'all', names = Object.create(null);
+    if (all) {
+      ['auto', 1, 2, 3].forEach(function (id) { names[key(id)] = true; });
+      [databaseSlots, databaseWrites].forEach(function (rows) {
+        Object.keys(rows).forEach(function (name) { names[name] = true; });
+      });
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const name = localStorage.key(i);
+          if (savedSlotKey(name)) names[name] = true;
+        }
+      } catch (error) { /* removal below reports blocked storage */ }
+    } else if (slot === 'auto' || (Number.isInteger(slot) && slot >= 1 && slot <= 3)) names[key(slot)] = true;
+    else { done(false); return; }
+    deletionBusy = true;
+    Object.keys(names).forEach(function (name) {
+      slotEpochs[name] = (slotEpochs[name] || 0) + 1;
+      delete databaseWrites[name];
+    });
+    if (names[key('auto')]) { stopAutoCodec(); pendingAuto = null; }
+    function finish(databaseDeleted) {
+      let ok = databaseDeleted;
+      Object.keys(names).forEach(function (name) {
+        if (databaseDeleted) delete databaseSlots[name];
+        try { localStorage.removeItem(name); }
+        catch (error) { ok = false; }
+      });
+      deletionBusy = false;
+      done(ok);
+    }
+    if (!saveDatabase) {
+      let accessible = true;
+      try { accessible = !window.indexedDB; } catch (error) { accessible = false; }
+      finish(accessible); return;
+    }
+    try {
+      // This transaction follows any older writes, so no pending save resurrects a slot.
+      const transaction = saveDatabase.transaction('slots', 'readwrite');
+      const slots = transaction.objectStore('slots');
+      if (all) slots.clear();
+      else slots.delete(key(slot));
+      transaction.oncomplete = function () { finish(true); };
+      transaction.onabort = function () { finish(false); };
+    } catch (error) { finish(false); }
+  };
+  S.storageBackend = function () { return saveDatabase ? 'indexeddb' : 'localstorage'; };
+  S.toSlot = function (slot, done) {
+    if (deletionBusy) { if (done) done(false); return false; }
+    function fallback(json) {
+      try {
+        localStorage.setItem(key(slot), encodeStored(json));
+        if (done) done(true);
+        return true;
+      } catch (error) { reportSaveError(error); if (done) done(false); return false; }
+    }
+    try {
+      const json = S.serialize();
+      if (slot === 'auto') { stopAutoCodec(); pendingAuto = null; }
+      if (!saveDatabase) return fallback(json);
+      databaseWrite(key(slot), json, function (ok, error, superseded) {
+        if (ok) { if (done) done(true); }
+        else if (!superseded) fallback(json);
+        else if (done) done(false);
+      });
+      return true; // accepted; UI confirmation waits for the transaction callback
+    } catch (error) { reportSaveError(error); if (done) done(false); return false; }
   };
 
   /* Autosaving splits so a season boundary does not stall the day loop: the
@@ -740,6 +953,16 @@ window.FB = window.FB || {};
     const job = pendingAuto;
     if (!job) return;
     if (force === true) stopAutoCodec();
+    if (force !== true && saveDatabase) {
+      if (job.writing) return;
+      job.writing = true;
+      databaseWrite(key('auto'), job.json, function (ok) {
+        if (pendingAuto !== job) return;
+        if (ok) pendingAuto = null;
+        else { job.writing = false; compressAuto(job); }
+      });
+      return;
+    }
     if (!autoNeedsCompression) {
       try {
         localStorage.setItem(key('auto'), job.json);
@@ -754,11 +977,23 @@ window.FB = window.FB || {};
     else compressAuto(job);
   }
   // A closing page cannot wait for a worker; persist the newest snapshot now.
-  S.flushPending = function () { if (pendingAuto) flushAutosave(true); };
+  S.flushPending = function () {
+    // A closing page cannot await an outstanding manual transaction either.
+    for (const name in databaseWrites) {
+      if (name === key('auto') && pendingAuto) continue;
+      try {
+        const raw = databaseWrites[name].json;
+        localStorage.setItem(name, raw.indexOf(CPRE) === 0 ? raw : encodeStored(raw));
+      }
+      catch (error) { reportSaveError(error); }
+    }
+    if (pendingAuto) flushAutosave(true);
+  };
   window.addEventListener('pagehide', S.flushPending);
 
   /* an observe session is never saved — it must not bury a real life */
   S.autosave = function () {
+    if (deletionBusy) return;
     if (!FB.state || FB.state.player.dead || (FB.game && FB.game.observe)) return;
     try {
       const json = S.serialize();
@@ -910,7 +1145,8 @@ window.FB = window.FB || {};
       format:'fallowborn-chronicle',
       version:1,
       gameVersion:FB.VERSION || '',
-      complete:!archive.partial,
+      complete:!archive.partial && !(archive.retention && archive.retention.removed),
+      retention:archive.retention || null,
       campaign:{
         dynasty:current && current.dyn || heads.length && heads[0].dynasty || '',
         seed:state.seed || '',
@@ -993,7 +1229,9 @@ window.FB = window.FB || {};
 
   S.read = function (slot) {
     try {
-      const raw = decodeStored(localStorage.getItem(key(slot)));
+      const name = key(slot);
+      const raw = decodeStored(databaseWrites[name] ? databaseWrites[name].json :
+        (localSlot(name) || databaseSlots[name] || null));
       const d = raw ? JSON.parse(raw) : null;
       // saves from before the county-map & liege-hierarchy rework are unreadable
       return d && d.v === 3 ? d : null;
@@ -1019,6 +1257,7 @@ window.FB = window.FB || {};
   /* existence probe for callers that must not pay for a decode (the first-time
      tips upgrade path): true when the autosave or any manual slot holds bytes */
   S.hasAnySave = function () {
+    if (Object.keys(databaseSlots).length || Object.keys(databaseWrites).length) return true;
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);

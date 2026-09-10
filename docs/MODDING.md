@@ -4497,3 +4497,23 @@ Bits may combine. Without it, the message key and semantic ids/proper-name
 parameters supply a compatibility classification. New scoped emitters should
 supply the audience explicitly when the subject is not present in their message
 parameters. Audience controls presentation only: every entry remains archived.
+
+Packed `state.chronicle.entries` rows created by the engine or normalized on restore
+are deeply frozen historical snapshots. To correct an archived entry, replace its
+whole row with a JSON-safe copy; do not mutate nested packed message or receipt data.
+The array remains mutable. Replacement rows are saved immediately, while unchanged
+immutable rows reuse their encoded representation. Recent-log records remain mutable.
+
+Call `FB.invalidateTechBonuses()` after directly changing nested `FBDATA.tech[id].fx`
+values. Normal `FB.mods.apply` technology patches do this automatically. Completed
+research-list edits and table replacement are detected by bonus readers themselves.
+Routine world Chronicle retention is independent of notification settings; the
+archive's optional `retention` record reports its five-calendar-year window and
+cumulative pruned count. Explicit family/realm audience bits protect relevant news.
+
+`FB.save.toSlot(slot, callback)` accepts a synchronous snapshot and reports durable
+success through `callback(ok)` after IndexedDB commits or localStorage fallback
+succeeds. Its boolean return now means the request was accepted, not that an
+asynchronous write has committed. Callers must wait for the callback before reload
+or success confirmation. `FB.save.read` reads the hydrated or pending snapshot;
+boot calls `FB.save.initStorage` before exposing save controls.

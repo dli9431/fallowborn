@@ -336,7 +336,7 @@ test('the title Chronicle viewer opens recent, slot, Chronicle-file, and save-fi
     await expect(page.getByRole('heading', { name:'Chronicle Library', exact:true }))
       .toBeVisible();
     const beforeSlotRuntime = await page.evaluate(function () {
-      window.__chronicleSlotBytes = localStorage.getItem('fb_slot1');
+      window.__chronicleSlotBytes = JSON.stringify(FB.save.read(1));
       return { rng:FB.getRngState(), uid:FB.getUidCounter() };
     });
     await page.getByRole('button', { name:/Open slot 1 Chronicle/ }).click();
@@ -346,7 +346,7 @@ test('the title Chronicle viewer opens recent, slot, Chronicle-file, and save-fi
         stateNull:FB.state === null,
         rng:FB.getRngState(),
         uid:FB.getUidCounter(),
-        slotUnchanged:localStorage.getItem('fb_slot1') === window.__chronicleSlotBytes
+        slotUnchanged:JSON.stringify(FB.save.read(1)) === window.__chronicleSlotBytes
       };
     })).toEqual({
       stateNull:true,

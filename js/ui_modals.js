@@ -20123,6 +20123,10 @@ window.FB = window.FB || {};
       h += personAssignmentCard({
         person:c,
         selected:selected,
+        faceState:current ? FB.T('Working at {location}', {
+          location:enterprisePlace(s, current)
+        }) : FB.T('Available'),
+        working:!!current,
         disabled:!!hiredIds[c.id] || (!selected && !canAdd),
         eligibility:selected
           ? (hiredIds[c.id]
@@ -20137,8 +20141,8 @@ window.FB = window.FB || {};
                 ? FB.T('Only another child worker can fill the remaining half position.')
                 : FB.T('All staffing positions are filled; remove a worker first'))
               : (workerStaff < 1
-                ? FB.T('Eligible child worker · half a staffing position')
-                : FB.T('Eligible worker')))),
+                ? FB.T('Available child worker · half a staffing position')
+                : FB.T('Available worker')))),
         data:{ enterpriseWorker:c.id },
         rows:[
           { label:'Expected yield', value:FB.T('About {money:amount} each season', {
@@ -26572,6 +26576,48 @@ window.FB = window.FB || {};
   }
 
   /* ================= settings ================= */
+  UI.showDeleteSaves = function (slot, back) {
+    const name = slot === 'all' ? FB.T('All save slots, including Autosave') :
+      slot === 'auto' ? FB.T('Autosave (used by Continue)') : FB.T('Save slot {slot}', { slot:slot });
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T('Delete {save}? This cannot be undone.', { save:name })) +
+      '</p><p>' + esc(FB.T('Settings and downloaded files are kept. If you keep playing, a later autosave can create Autosave again.')) +
+      '</p><p id="save-storage-usage" role="status">' + esc(FB.T('Measuring browser storage...')) +
+      '</p><p class="hint">' + esc(FB.T('Estimated data stored by this game, excluding browser overhead and offline downloads.')) +
+      '</p><p id="save-delete-error" role="alert"></p></div>' +
+      '<div class="gm-footer save-delete-actions" data-primary-first="true"><button type="button" class="btn danger" id="save-delete-confirm" disabled>' +
+      esc(FB.T('Confirm delete')) + '</button><button type="button" class="btn" id="save-delete-cancel">' +
+      esc(FB.T('Cancel')) + '</button></div>';
+    openModal(FB.T('Delete save data'), h, { historyView:true, historyBackRender:back, noHotkeys:true, noFocus:true });
+    const confirm = $('save-delete-confirm'), cancel = $('save-delete-cancel'), usage = $('save-storage-usage');
+    setTimeout(function () { if (document.body.contains(cancel)) cancel.focus(); }, 0);
+    confirm.addEventListener('keydown', function (event) {
+      if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
+    });
+    FB.save.storageUsage(function (sizes) {
+      if (!document.body.contains(usage)) return;
+      function size(bytes) { return bytes === null ? FB.T('Unavailable') : FB.T('{size} MiB', { size:(bytes / 1048576).toFixed(2) }); }
+      usage.textContent = FB.T('localStorage: {local}; IndexedDB: {database}', {
+        local:size(sizes.localStorage), database:size(sizes.indexedDB)
+      });
+      confirm.disabled = false;
+    });
+    cancel.addEventListener('click', function () { modalHistoryBack(back); });
+    confirm.addEventListener('click', function () {
+      if (confirm.disabled) return;
+      confirm.disabled = true; cancel.disabled = true;
+      FB.save.deleteSaves(slot, function (ok) {
+        const continueButton = $('btn-continue');
+        if (continueButton) continueButton.classList.toggle('hidden', !FB.save.hasAuto());
+        if (!document.body.contains(confirm)) return;
+        if (ok) { UI.toast('Save data deleted.'); modalHistoryBack(back); }
+        else {
+          $('save-delete-error').textContent = FB.T('Some save data could not be deleted. Browser storage may be unavailable. Try again.');
+          confirm.disabled = false; cancel.disabled = false;
+        }
+      });
+    });
+  };
+
   UI.showResetStartProgression = function () {
     const h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'This browser will return to Serf-only beginnings. Loading a life that genuinely rose above its starting station will restore the ranks it earned.')) +
@@ -26743,6 +26789,9 @@ window.FB = window.FB || {};
       esc(FB.T('Disable first-time tips')) + '</b><span class="adesc">' +
       esc(FB.T('Stop the short action-first and situational tips shown to brand-new players. The guide-hints switch above also silences them.')) +
       '</span></label>';
+    h += '<div class="gm-body-text" style="margin-top:8px"><p>' + esc(FB.T('Save data')) +
+      '</p></div><button type="button" class="btn danger" id="set-delete-saves">' +
+      esc(FB.T('Delete all saves...')) + '</button>';
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Beginnings')) + '</p></div><div class="autorow"><b>' +
       esc(startProgress.highestStartTier > 0
@@ -26947,6 +26996,12 @@ window.FB = window.FB || {};
         G.saveUiPrefs();
       });
     }
+    $('set-delete-saves').addEventListener('click', function () {
+      const scroll = $('gm-body').scrollTop;
+      UI.showDeleteSaves('all', function () {
+        UI.showSettings(); $('gm-body').scrollTop = scroll; $('set-delete-saves').focus({ preventScroll:true });
+      });
+    });
     if ($('set-reset-starts')) {
       $('set-reset-starts').addEventListener('click', UI.showResetStartProgression);
     }
@@ -27153,13 +27208,17 @@ window.FB = window.FB || {};
       '<div class="chronicle-viewer-actions"><button type="button" ' +
       'class="btn primary" id="chronicle-download">' +
       esc(FB.T('Download Chronicle')) + '</button></div>';
-    if (!data.complete) {
+    if (data.retention && data.retention.removed) {
+      h += '<div class="chronicle-archive-warning">' + esc(FB.T(
+        'Unrelated routine notices are kept for five years. {count} older notices have been removed; family events, decisions and major outcomes are retained.',
+        { count:data.retention.removed })) + '</div>';
+    } else if (!data.complete) {
       h += '<div class="chronicle-archive-warning">' + esc(FB.T(
         'This Chronicle was recovered from an older save. It contains every entry that save still held, but lines discarded by earlier versions cannot be restored.')) + '</div>';
     }
     h += chronicleHeadsHtml(data) +
       '<section class="chronicle-viewer-section chronicle-viewer-timeline"><h4>' +
-      esc(FB.T('Complete timeline')) + '</h4>' + chronicleControlsHtml(data) +
+      esc(FB.T('Timeline')) + '</h4>' + chronicleControlsHtml(data) +
       '<div class="chronicle-viewer-count">' + esc(FB.T('{count} matching entries', {
         count:filtered.length
       })) + '</div><div class="chronicle-viewer-entries">';
@@ -27324,6 +27383,12 @@ window.FB = window.FB || {};
 
   UI.showSaveLoad = function (saving) {
     let h = '<div class="gm-list">';
+    h += '<div class="save-slot-row"><div class="actionbtn save-slot-summary"><b>' +
+      esc(FB.T('Autosave (used by Continue)')) + '</b><span class="adesc">' +
+      esc(FB.save.slotMeta('auto') || FB.T('Empty')) + '</span></div>' +
+      '<button type="button" class="btn danger" data-delete-slot="auto"' +
+      (FB.save.hasSlot('auto') ? '' : ' disabled') + ' aria-label="' + esc(FB.T('Delete Autosave')) + '">' +
+      esc(FB.T('Delete')) + '</button></div>';
     for (let i = 1; i <= 3; i++) {
       const d = FB.save.read(i); // one parse per slot: late saves are large
       const meta = FB.save.metaOf(d);
@@ -27332,16 +27397,19 @@ window.FB = window.FB || {};
         ? FB.T('{save} · 🧩 another world — its mods are not the ones active now',
           { save: meta })
         : (meta || FB.T('Empty'));
-      h += '<button class="actionbtn" data-slot="' + i + '">' +
+      h += '<div class="save-slot-row"><button class="actionbtn" data-slot="' + i + '">' +
         esc(FB.T(saving ? '💾 Save to slot {slot}' : '📂 Load slot {slot}', { slot: i })) +
-        '<span class="adesc">' + esc(description) + '</span></button>';
+         '<span class="adesc">' + esc(description) + '</span></button>' +
+        '<button type="button" class="btn danger" data-delete-slot="' + i + '"' +
+        (FB.save.hasSlot(i) ? '' : ' disabled') + ' aria-label="' + esc(FB.T('Delete save slot {slot}', { slot:i })) + '">' +
+        esc(FB.T('Delete')) + '</button></div>';
     }
     // a downloaded life outlives a browser that forgets its storage
     h += saving ?
       '<button class="actionbtn" id="sl-export">💾 Download save file' +
       '<span class="adesc">keep a .txt backup if this browser wipes its saves, or move it to another device</span></button>' +
       '<button class="actionbtn" id="sl-chronicle-export">📜 Download Chronicle' +
-      '<span class="adesc">a complete JSON history for the Chronicle viewer</span></button>' :
+      '<span class="adesc">the retained JSON history for the Chronicle viewer</span></button>' :
       '<button class="actionbtn" id="sl-import">📂 Load save file' +
       '<span class="adesc">choose an exported .txt file, or paste older save text</span></button>';
     h += '</div>';
@@ -27350,11 +27418,30 @@ window.FB = window.FB || {};
     }
     h += '<button class="btn" id="gm-back">Back</button>';
     openModal(saving ? 'Save Game' : 'Load Game', h, { historyView:true });
+    document.querySelectorAll('[data-delete-slot]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const id = button.getAttribute('data-delete-slot'), slot = id === 'auto' ? 'auto' : Number(id);
+        const scroll = $('gm-body').scrollTop;
+        UI.showDeleteSaves(slot, function () {
+          UI.showSaveLoad(saving); $('gm-body').scrollTop = scroll;
+          const restored = document.querySelector('[data-delete-slot="' + id + '"]');
+          if (restored && !restored.disabled) restored.focus({ preventScroll:true });
+          else $('gm-back').focus({ preventScroll:true });
+        });
+      });
+    });
     document.querySelectorAll('[data-slot]').forEach(function (b) {
       b.addEventListener('click', function () {
         const n = parseInt(b.dataset.slot, 10);
         if (saving) {
-          if (FB.save.toSlot(n)) { UI.toast('Saved to slot {slot}.', { slot: n }); UI.closeModal(); }
+          b.disabled = true;
+          FB.save.toSlot(n, function (ok) {
+            b.disabled = false;
+            if (ok) {
+              UI.toast('Saved to slot {slot}.', { slot:n });
+              if (document.body.contains(b)) UI.closeModal();
+            }
+          });
         }
         else {
           if (FB.save.slotMeta(n)) { UI.closeModal(); FB.game.loadSlot(n); }

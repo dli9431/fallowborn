@@ -1076,3 +1076,11 @@ Successful professional examinations show a qualification result before returnin
 
 Professional qualification results retain actual examination spending and prestige
 gains in receipt chips. Guarded acknowledgement spends the committed day once.
+
+Played lives in the family tree have a blue border and a Played/Playing label.
+The existing ancestry connectors are tinted the same blue along the route between
+consecutive recorded protagonists, including intervening ancestors for collateral
+succession. No separate succession line or explanatory toolbar text is added.
+Prospective heirs are not marked. Missing records or collapsed played cards break
+the highlight. Connector colors refresh after branch changes and resizing; ordinary
+ancestry layout, keyboard navigation and saved tree position remain intact.

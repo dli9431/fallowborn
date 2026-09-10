@@ -27,6 +27,14 @@ const { openGame } = require('../support/game/navigation');
 const { START_CODE, startDeterministicGame } = require('../support/game/start');
 const COMPLETE_SAVE_BUDGET = 1.8 * 1024 * 1024;
 
+// These cases exercise the legacy localStorage codec, quotas and failure paths.
+// IndexedDB persistence and migration have their own focused specification.
+test.beforeEach(async function ({ page }) {
+  await page.addInitScript(function () {
+    Object.defineProperty(window, 'indexedDB', { configurable:true, value:undefined });
+  });
+});
+
 test('restore repairs an empty technology record for a landed player realm',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
@@ -1229,4 +1237,53 @@ test('a browser blocking workers retains a readable verified quota autosave', as
     } finally { Storage.prototype.setItem = originalSet; window.Worker = OriginalWorker; }
   });
   expect(result).toBe(8765);
+});
+
+
+test('autosave serialization reuses immutable history and preserves replacement rows and live metadata', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    FB.news(s, FB.msg('news.test.archive_snapshot', 'Archive {value}', { value:17 }), { toast:false });
+    const archive = s.chronicle, index = archive.entries.length - 1, row = archive.entries[index];
+    const stringify = JSON.stringify;
+    let encodes = 0;
+    JSON.stringify = function (value) {
+      if (value === row) encodes++;
+      return stringify.apply(this, arguments);
+    };
+    const rng = FB.getRngState();
+    try {
+      const first = JSON.parse(FB.save.serialize());
+      const firstEncodes = encodes;
+      s.log[s.log.length - 1].msg.params.value = 99;
+      const second = JSON.parse(FB.save.serialize());
+      const repeatedEncodes = encodes - firstEncodes;
+      FB.news(s, FB.msg('news.test.archive_append', 'Next {value}', { value:18 }), { toast:false });
+      archive.heads[0][2] = 'Updated head';
+      const appended = JSON.parse(FB.save.serialize());
+      const replacement = JSON.parse(stringify(row));
+      archive.entries[index] = replacement;
+      replacement[3][1].value = 21;
+      const replaced = JSON.parse(FB.save.serialize());
+      replacement[3][1].value = 22;
+      const mutated = JSON.parse(FB.save.serialize());
+      const loaded = JSON.parse(stringify(archive));
+      s.chronicle = loaded;
+      FB.ensureChronicle(s);
+      const restored = JSON.parse(FB.save.serialize());
+      return { firstEncodes:firstEncodes, repeatedEncodes:repeatedEncodes,
+        stable:stringify(first.state.chronicle) === stringify(second.state.chronicle),
+        count:appended.state.chronicle.entries.length - first.state.chronicle.entries.length,
+        head:appended.state.chronicle.heads[0][2],
+        replaced:replaced.state.chronicle.entries[index][3][1].value,
+        mutated:mutated.state.chronicle.entries[index][3][1].value,
+        restored:restored.state.chronicle.entries[index][3][1].value,
+        frozen:FB.chronicleEntryIsImmutable(loaded.entries[index]) && Object.isFrozen(loaded.entries[index][3][1]),
+        rngStable:FB.getRngState() === rng };
+    } finally { JSON.stringify = stringify; }
+  });
+  expect(result).toEqual({ firstEncodes:1, repeatedEncodes:0, stable:true, count:1,
+    head:'Updated head', replaced:21, mutated:22, restored:22, frozen:true, rngStable:true });
 });

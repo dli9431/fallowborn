@@ -1399,6 +1399,7 @@ window.FBMODS = window.FBMODS || [];
       }
       if (FB.invalidateFortIndex) FB.invalidateFortIndex();
     }
+    if ((mod.tech || mod.techCaps) && FB.invalidateTechBonuses) FB.invalidateTechBonuses();
     if (mod.tech) for (const k in mod.tech) FBDATA.tech[k] = mod.tech[k];
     if (mod.techDomains) mergeTable(FBDATA.techDomains, mod.techDomains);
     if (mod.techTraditions) mergeTable(FBDATA.techTraditions, mod.techTraditions);

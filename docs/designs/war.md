@@ -1285,3 +1285,14 @@ between hosts of the same realm. No recruitment projection survives into another
 day. County support is read once per county in an AI levy projection and reused
 for both the levy multiplier and uprising resistance. Occupation still overrides
 the result immediately, including when support was supplied by the caller.
+
+Regrouping and rebel reachability checks reuse an existing march only when every
+remaining edge, wasteland flag, fort and pinned departure is still legal. New targets
+retain normal weighted routing. Searches within one orders phase reuse identical
+host/from/target queries; their results are discarded before marching. Each route
+search checks a county's fort control once, sharing those answers with its fallback.
+Daily goal selection, danger checks, movement, siege and battle timing are unchanged.
+
+A fully supplied host on non-draining ground clears its low-supply warning without
+calculating recovery bonuses. Friendly-control checks still run after movement;
+partly supplied, foreign, starving and rebel hosts retain their ordinary rules.

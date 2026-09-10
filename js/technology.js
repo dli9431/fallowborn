@@ -747,29 +747,39 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.techBonus = function (state, key, realmId) {
-    var sum = 0, list = FB.techList(state, realmId);
-    for (var i = 0; i < list.length; i++) {
-      var def = FBDATA.tech[list[i]];
-      if (def && def.fx && def.fx[key]) sum += Number(def.fx[key]) || 0;
-    }
-    var caps = FBDATA.techCaps || {};
-    var cap = caps[key];
-    return cap === undefined ? sum : FB.clamp(sum, -Math.abs(cap), Math.abs(cap));
-  };
-
-  FB.techSeaTransportCapacity = function (state, realmId) {
-    var capacity = null, list = FB.techList(state, realmId);
+  var bonusCache = new WeakMap();
+  FB.invalidateTechBonuses = function () { bonusCache = new WeakMap(); };
+  function combinedBonuses(state, realmId) {
+    var list = FB.techList(state, realmId), signature = JSON.stringify(list);
+    var cached = bonusCache.get(list);
+    if (cached && cached.signature === signature && cached.definitions === FBDATA.tech) return cached;
+    cached = { signature:signature, definitions:FBDATA.tech, sums:Object.create(null), capacity:null };
     for (var i = 0; i < list.length; i++) {
       var fx = FBDATA.tech[list[i]] && FBDATA.tech[list[i]].fx;
-      var value = fx && fx.seaTransport;
-      if (typeof value === 'number' && isFinite(value) && value > 0 &&
-          Math.floor(value) === value &&
-          (capacity === null || value > capacity)) capacity = value;
+      if (!fx) continue;
+      for (var key in fx) {
+        if (own(fx, key) && typeof fx[key] !== 'object') {
+          cached.sums[key] = (cached.sums[key] || 0) + (Number(fx[key]) || 0);
+        }
+      }
+      var transport = fx.seaTransport;
+      if (typeof transport === 'number' && isFinite(transport) && transport > 0 &&
+          Math.floor(transport) === transport && (cached.capacity === null || transport > cached.capacity)) {
+        cached.capacity = transport;
+      }
     }
+    bonusCache.set(list, cached);
+    return cached;
+  }
+  FB.techBonus = function (state, key, realmId) {
+    var sum = combinedBonuses(state, realmId).sums[key] || 0;
+    var cap = (FBDATA.techCaps || {})[key];
+    return cap === undefined ? sum : FB.clamp(sum, -Math.abs(cap), Math.abs(cap));
+  };
+  FB.techSeaTransportCapacity = function (state, realmId) {
+    var capacity = combinedBonuses(state, realmId).capacity;
     return capacity === null
-      ? Math.max(1, Math.round(Number(FBDATA.balance.armySeaTransportBase) || 250))
-      : capacity;
+      ? Math.max(1, Math.round(Number(FBDATA.balance.armySeaTransportBase) || 250)) : capacity;
   };
 
   FB.techCostModifier = function (state, category, realmId) {

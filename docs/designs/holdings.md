@@ -353,3 +353,8 @@ event. Items remain sacred in both paths — only `loseAllLand`'s rule applies t
 everywhere: the family always keeps its treasures.
 
 Related: [finance.md](finance.md) for credit, default, and trade partnerships.
+
+Enterprise staffing candidate cards show Available when unassigned, or Working at
+{location} in the shared danger color when already assigned, including to the viewed
+enterprise. The location uses the existing settlement/county label. Selection and
+reassignment eligibility remain independent of this visible work status.

@@ -386,7 +386,7 @@ window.FB = window.FB || {};
     var targets = Object.keys(group.counties).filter(function (pid) { return !group.counties[pid].occupied; }).sort(function (a, b) {
       if (a === army.homeCounty) return -1; if (b === army.homeCounty) return 1; return a < b ? -1 : a > b ? 1 : 0;
     });
-    for (var i = 0; i < targets.length; i++) if (FB.findArmyPath(state, army, targets[i])) return targets[i];
+    for (var i = 0; i < targets.length; i++) if (FB.armyHasRouteTo(state, army, targets[i]) || FB.findArmyPath(state, army, targets[i])) return targets[i];
     return army.at;
   };
   FB.rebellionDefenseGoal = function (state, army) {
@@ -395,7 +395,7 @@ window.FB = window.FB || {};
       var row = a.rebellionId && FB.rebellionById(state, a.rebellionId);
       return row && (row.target === army.realm || Object.keys(row.counties).some(function (pid) { return state.holder[pid] === army.realm || state.owner[pid] === army.realm; }));
     }).sort(function (a, b) { return a.men - b.men || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0); });
-    for (var i = 0; i < targets.length; i++) if (FB.findArmyPath(state, army, targets[i].at)) return targets[i].at;
+    for (var i = 0; i < targets.length; i++) if (FB.armyHasRouteTo(state, army, targets[i].at) || FB.findArmyPath(state, army, targets[i].at)) return targets[i].at;
     return null;
   };
 

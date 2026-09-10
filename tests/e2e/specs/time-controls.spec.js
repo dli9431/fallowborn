@@ -1667,3 +1667,38 @@ test('desktop play button fits its full label and keyhint without truncation',
     expect(fits.skipW).toBeGreaterThan(0);
     expect(fits.autoW).toBeGreaterThan(0);
   });
+
+
+test('fast-forward uses eight-millisecond slices and stops immediately at a boundary', async function ({ page }) {
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const game = FB.game, originalDay = game.passDay, originalFrame = window.requestAnimationFrame;
+    const originalFinished = FB.ui.fastForwardFinished, originalCoachmark = FB.ui.coachmarkOpen;
+    const originalNow = Object.getOwnPropertyDescriptor(performance, 'now');
+    const callbacks = [], slices = [], options = [];
+    let clock = 0, days = 0, finished = 0;
+    Object.defineProperty(performance, 'now', { configurable:true, value:function () { return clock; } });
+    window.requestAnimationFrame = function (callback) { callbacks.push(callback); return callbacks.length; };
+    FB.ui.coachmarkOpen = function () { return false; };
+    FB.ui.fastForwardFinished = function () { finished++; };
+    game.passDay = function (opts) { options.push(opts); clock += 5; days++; return days === 5 ? 'season' : 'day'; };
+    try {
+      game.skipAhead();
+      while (callbacks.length && slices.length < 10) {
+        const before = days; callbacks.shift()(); slices.push(days - before);
+      }
+      return { slices:slices, finished:finished, paused:game.paused,
+        running:game.fastForwarding, options:options };
+    } finally {
+      game.passDay = originalDay; window.requestAnimationFrame = originalFrame;
+      FB.ui.fastForwardFinished = originalFinished; FB.ui.coachmarkOpen = originalCoachmark;
+      if (originalNow) Object.defineProperty(performance, 'now', originalNow); else delete performance.now;
+      game.fastForwarding = false; game.paused = true;
+    }
+  });
+  expect(result.slices).toEqual([2, 2, 1]);
+  expect(result.finished).toBe(1);
+  expect(result.paused).toBe(true);
+  expect(result.running).toBe(false);
+  expect(result.options).toEqual(Array.from({ length:5 }, function () { return { liveTick:true, deferUi:true }; }));
+});

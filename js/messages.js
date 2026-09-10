@@ -172,6 +172,23 @@ window.FB = window.FB || {};
      beyond the former 300-entry window and cannot be reconstructed. */
   FB.CHRONICLE_ARCHIVE_SCHEMA = CHRONICLE_ARCHIVE_SCHEMA;
 
+  const immutableChronicleEntries = new WeakSet();
+  const normalizedChronicleArrays = new WeakSet();
+  function freezeChronicleValue(value) {
+    if (!value || typeof value !== 'object') return value;
+    Object.keys(value).forEach(function (key) { freezeChronicleValue(value[key]); });
+    return Object.freeze(value);
+  }
+  function immutableChronicleEntry(entry) {
+    // Own the archive snapshot: recent-log receipts and caller params stay mutable.
+    const snapshot = entry === undefined ? null : freezeChronicleValue(JSON.parse(JSON.stringify(entry)));
+    if (snapshot && typeof snapshot === 'object') immutableChronicleEntries.add(snapshot);
+    return snapshot;
+  }
+  FB.chronicleEntryIsImmutable = function (entry) {
+    return !!entry && typeof entry === 'object' && immutableChronicleEntries.has(entry);
+  };
+
   function chronicleArchiveValid(archive) {
     return !!(archive && archive.v === CHRONICLE_ARCHIVE_SCHEMA &&
       Array.isArray(archive.strings) && Array.isArray(archive.entries) &&
@@ -270,7 +287,7 @@ window.FB = window.FB || {};
     const body = entry && entry.msg
       ? chroniclePackMessage(archive, entry.msg)
       : String(entry && entry.t || '');
-    return [
+    return immutableChronicleEntry([
       Number(entry && entry.y) || Number(state.date && state.date.year) || 0,
       Number(entry && entry.s) || 0,
       Number(entry && entry.d) || 0,
@@ -283,7 +300,7 @@ window.FB = window.FB || {};
       legacy ? chronicleLegacyGeneration(state, entry && entry.y) :
         Math.max(1, Number(state.generation) || 1),
       entry && entry.audience !== undefined ? entry.audience : null
-    ];
+    ]);
   }
 
   function chronicleHeadSnapshot(state) {
@@ -336,7 +353,18 @@ window.FB = window.FB || {};
   FB.ensureChronicle = function (state, options) {
     if (!state) return null;
     if (!Array.isArray(state.log)) state.log = [];
-    if (chronicleArchiveValid(state.chronicle)) return state.chronicle;
+    if (chronicleArchiveValid(state.chronicle)) {
+      const archive = state.chronicle;
+      if (!normalizedChronicleArrays.has(archive.entries)) {
+        for (let i = 0; i < archive.entries.length; i++) {
+          if (!FB.chronicleEntryIsImmutable(archive.entries[i])) {
+            archive.entries[i] = immutableChronicleEntry(archive.entries[i]);
+          }
+        }
+        normalizedChronicleArrays.add(archive.entries);
+      }
+      return archive;
+    }
     const legacy = !!(options && options.legacy);
     const archive = {
       v:CHRONICLE_ARCHIVE_SCHEMA,
@@ -344,6 +372,7 @@ window.FB = window.FB || {};
       strings:[], entries:[], heads:[]
     };
     state.chronicle = archive;
+    normalizedChronicleArrays.add(archive.entries);
     const legends = Array.isArray(state.legends) ? state.legends : [];
     for (let i = 0; i < legends.length; i++) {
       const legend = legends[i] || {};
@@ -370,6 +399,34 @@ window.FB = window.FB || {};
       if (!represented) archive.heads.push(snapshot);
     }
     return archive;
+  };
+
+  const retentionChecks = new WeakMap();
+  const routineWorldNews = {
+    'news.modifier.county_expired':1,
+    'news.rebellion.warning':1,
+    'news.rebellion.ai_settlement':1
+  };
+  FB.pruneChronicle = function (state) {
+    const archive = FB.ensureChronicle(state);
+    if (!archive || !state.date) return;
+    const year = state.date.year;
+    const prior = retentionChecks.get(archive);
+    if (prior && prior.year === year && prior.entries === archive.entries) return;
+    const cutoff = year - 5;
+    let removed = 0;
+    archive.entries = archive.entries.filter(function (packed) {
+      if (!Array.isArray(packed) || packed[0] >= cutoff || packed[4] === 1 ||
+          !Array.isArray(packed[3]) || !routineWorldNews[archive.strings[packed[3][0]]]) return true;
+      const entry = FB.chronicleEntry(archive, packed);
+      if (FB.newsAudience(state, entry) & 3) return true;
+      removed++;
+      return false;
+    });
+    normalizedChronicleArrays.add(archive.entries);
+    if (removed) archive.retention = { years:5, removed:removed +
+      (archive.retention && Number(archive.retention.removed) || 0) };
+    retentionChecks.set(archive, { year:year, entries:archive.entries });
   };
 
   FB.chronicleEntry = function (archive, packed) {

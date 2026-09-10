@@ -2076,12 +2076,32 @@ window.FB = window.FB || {};
   }
 
   function findArmyPathFrom(state, army, fromPid, toPid, memo) {
+    const queries = orderQueries && orderQueries.state === state ? orderQueries : null;
+    if (!queries) return searchArmyPathFrom(state, army, fromPid, toPid, memo);
+    let routes = queries.routes.get(army);
+    if (!routes) { routes = Object.create(null); queries.routes.set(army, routes); }
+    const key = JSON.stringify([fromPid, toPid, army.from, army.realm, army.warId, army.men]);
+    if (!Object.prototype.hasOwnProperty.call(routes, key)) {
+      routes[key] = searchArmyPathFrom(state, army, fromPid, toPid, memo);
+    }
+    return routes[key];
+  }
+
+  function searchArmyPathFrom(state, army, fromPid, toPid, memo) {
     if (!FB.world || !FB.world.adj || !FB.world.adj[fromPid] ||
         !FB.world.adj[toPid]) return null;
     if (fromPid === toPid) return { path:[], totalDays:0, waterLegs:0 };
     const comp = pathComponents();
     if (comp[fromPid] !== comp[toPid]) return null;
     memo = memo || legQuoteMemo(state, army);
+    // Fort control is constant during a synchronous search, including fallback.
+    const blockedForts = Object.create(null);
+    function fortBlocks(pid) {
+      if (blockedForts[pid] === undefined) {
+        blockedForts[pid] = !!(FB.fortBlocksArmy && FB.fortBlocksArmy(state, pid, army));
+      }
+      return blockedForts[pid];
+    }
     const adj = FB.world.adj;
     const start = {
       pid:fromPid, path:[], totalDays:0, legs:0, waterLegs:0
@@ -2103,7 +2123,7 @@ window.FB = window.FB || {};
           totalDays:current.totalDays,
           waterLegs:current.waterLegs
         };
-        if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, toPid, army)) {
+        if (fortBlocks(toPid)) {
           reached.blockedByFort = toPid;
         } else if (around.length) {
           reached.routedAroundForts = around;
@@ -2122,8 +2142,7 @@ window.FB = window.FB || {};
         /* A host already pinned inside a hostile fortified county may leave
            only by its arrival edge or directly into friendly-controlled
            ground. Once clear, ordinary routing resumes. */
-        if (current.pid === fromPid && FB.fortBlocksArmy &&
-            FB.fortBlocksArmy(state, fromPid, army) &&
+        if (current.pid === fromPid && fortBlocks(fromPid) &&
             neighbor !== army.from &&
             !(FB.armyFriendlyProvince &&
               FB.armyFriendlyProvince(state, army, neighbor))) continue;
@@ -2139,8 +2158,7 @@ window.FB = window.FB || {};
            node. Remember the best encountered obstacle so a route with no
            bypass ends at the fort instead of pretending no march is
            possible. */
-        if (neighbor !== toPid && FB.fortBlocksArmy &&
-            FB.fortBlocksArmy(state, neighbor, army)) {
+        if (neighbor !== toPid && fortBlocks(neighbor)) {
           candidate.blockedByFort = neighbor;
           blocked.push(candidate);
           continue;
@@ -2180,8 +2198,7 @@ window.FB = window.FB || {};
         const neighbors = sortedNeighbors(adj, current.pid);
         for (let i = 0; i < neighbors.length; i++) {
           const neighbor = neighbors[i];
-          if (current.pid === fromPid && FB.fortBlocksArmy &&
-              FB.fortBlocksArmy(state, fromPid, army) &&
+          if (current.pid === fromPid && fortBlocks(fromPid) &&
               neighbor !== army.from &&
               !(FB.armyFriendlyProvince &&
                 FB.armyFriendlyProvince(state, army, neighbor))) continue;
@@ -2197,8 +2214,7 @@ window.FB = window.FB || {};
             firstFortDays:current.firstFortDays,
             firstFortWaterLegs:current.firstFortWaterLegs
           };
-          if (!candidate.firstFort && FB.fortBlocksArmy &&
-              FB.fortBlocksArmy(state, neighbor, army)) {
+          if (!candidate.firstFort && fortBlocks(neighbor)) {
             candidate.firstFort = neighbor;
             candidate.firstFortLength = candidate.path.length;
             candidate.firstFortDays = candidate.totalDays;
@@ -2214,6 +2230,24 @@ window.FB = window.FB || {};
     }
     return null;
   }
+
+  /* Reachability checks can reuse a march already in progress. Validate every
+     live edge and fort; this proves access only, never replaces a new route quote. */
+  FB.armyHasRouteTo = function (state, army, pid) {
+    const path = army && army.path, world = FB.world;
+    if (!world || !world.adj || !path || !path.length ||
+        army.goal !== pid || path[path.length - 1] !== pid) return false;
+    let from = army.at;
+    for (let i = 0; i < path.length; i++) {
+      const next = path[i], province = world.byId[next];
+      if (!world.adj[from] || !world.adj[from][next] || !province || province.wasteland ||
+          (FB.fortBlocksArmy && FB.fortBlocksArmy(state, next, army))) return false;
+      if (i === 0 && FB.fortBlocksArmy && FB.fortBlocksArmy(state, from, army) &&
+          next !== army.from && !FB.armyFriendlyProvince(state, army, next)) return false;
+      from = next;
+    }
+    return true;
+  };
 
   FB.findArmyPath = function (state, army, toPid) {
     if (!army || !army.at || !toPid) return null;
@@ -2667,6 +2701,7 @@ window.FB = window.FB || {};
     }
     // Home has priority even when another safe county is nearer.
     if (home && safe(home)) {
+      if (FB.armyHasRouteTo(state, army, home)) return home;
       const homeRoute = findArmyPathFrom(state, army, army.at, home);
       if (homeRoute && !homeRoute.blockedByFort) return home;
     }
@@ -3272,7 +3307,7 @@ window.FB = window.FB || {};
     const wasStarving = FB.hostSupply(army) <= 0;
     const drain = supplyDrainPerDay(state, army, distCache);
     if (drain <= 0) {
-      army.supply = Math.min(100, army.supply + supplyRecoverPerDay(state, army));
+      if (army.supply < 100) army.supply = Math.min(100, army.supply + supplyRecoverPerDay(state, army));
       if (army.supply >= (bal.supplyLowThreshold === undefined ? 30 : bal.supplyLowThreshold)) delete army.lowSupplyWarned;
       return;
     }
@@ -3494,7 +3529,7 @@ window.FB = window.FB || {};
        just entered, retarget across one adjacent leg, and join a battle in
        that same tick. */
     const previousQueries = orderQueries;
-    orderQueries = { state:state, enemies:Object.create(null), pursuit:new WeakMap(),
+    orderQueries = { state:state, enemies:Object.create(null), pursuit:new WeakMap(), routes:new WeakMap(),
       hostility:Object.create(null), byCounty:Object.create(null) };
     for (const army of state.armies) {
       (orderQueries.byCounty[army.at] || (orderQueries.byCounty[army.at] = [])).push(army);

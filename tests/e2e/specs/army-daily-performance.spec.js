@@ -158,3 +158,33 @@ test('retained supply maps distinguish concurrent campaigns and refresh after oc
   expect(result[0].expected[0]).toBeLessThan(result[0].expected[1]);
   expect(result[1].expected[0]).toBe(result[1].expected[1]);
 });
+
+
+test('full friendly supply skips recovery bonuses while damaged and foreign supply stay live', async function ({ page }, testInfo) {
+  const ids = await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state, bonus = FB.techBonus;
+    for (const id in s.realms) s.armyDown[id] = s.turn;
+    const host = { id:'supply-probe', realm:'player', warId:s.player.war.id, men:100, size:100,
+      units:{ levy:100 }, at:ids.home, from:ids.home, path:[], goal:null, moveLeft:0,
+      holdManual:true, supply:100, lowSupplyWarned:true };
+    s.armies = [host];
+    let reads = 0;
+    FB.techBonus = function (state, key, realm) {
+      if (key === 'supply') reads++;
+      return bonus(state, key, realm);
+    };
+    try {
+      FB.armyTick(s);
+      const full = { supply:host.supply, reads:reads, warned:!!host.lowSupplyWarned };
+      host.supply = 50; reads = 0; FB.armyTick(s);
+      const recovered = { supply:host.supply, reads:reads };
+      host.at = s.realms[ids.enemy].capital; host.supply = 50; FB.armyTick(s);
+      return { full:full, recovered:recovered, abroad:host.supply };
+    } finally { FB.techBonus = bonus; }
+  }, ids);
+  expect(result.full).toEqual({ supply:100, reads:0, warned:false });
+  expect(result.recovered.supply).toBeGreaterThan(50);
+  expect(result.recovered.reads).toBeGreaterThan(0);
+  expect(result.abroad).toBeLessThan(50);
+});
