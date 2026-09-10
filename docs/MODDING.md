@@ -4410,3 +4410,29 @@ and chance. `FB.commonsUprisingLocalContext(state)` captures player terms and
 from their first county's involvement. AI uses actual ruler Diplomacy, the same
 concession burden, and no player treasury debit. One saved attempt per holder prevents
 repeated daily or reload rolls. Technology impact is `local_commons_settlements: none`.
+
+## Ordinary campaigns and sovereign war laws
+
+`state.wars[id]` stores `{id, attacker, defender, legacyOwner, enemy, defending,
+status, startedTurn, objectives, occupations, casus}` plus campaign counters and
+event/history fields. `attacker`/`defender` are authoritative; `enemy`/`defending`
+are compatibility projections from the player's side where participating. An
+objective has `target`, `type`, and optional `titleKind`/`titleId`. Occupations are
+keyed by county and hold `occupied`, `progress`, and a fort-level snapshot.
+Do not add duplicate wars by writing to multiple realms. Use
+`FB.registerOrdinaryWar(state, ownerId, record)` and explicit IDs for settlement.
+
+Read-only interfaces: `FB.realmWars(state, realmId)`,
+`FB.ordinaryWarById(state, warId)`, `FB.ordinaryWarBetween(state, a, b)`,
+`FB.warDeclarationPreview(state, attacker, causes)`, and
+`FB.claimPackageCandidates(state, attacker, defender)`.
+`FB.startClaimPackageWar(state, causes, options)` accepts player-owned connected
+rights; `confirmUnlawful` and `confirmSacrilege` must be explicitly confirmed where
+applicable. `FB.assignHostCampaign(state, hostId, warId)` preserves men and supplies.
+
+Policies `internal_peace` and `external_campaigns` have `customary`, `permission`,
+and `prohibited` levels. Actual levels live in `state.warLaws[sovereign][policy]`,
+with proclamation stamps; definition names/descriptions are localized policy data.
+Operational event contexts include `warId`, `warEventId`, and `warEnemyId`. Use
+`FB.queueWarEvent` inside an explicit `FB.withOrdinaryWar` scope. Saved prose
+remains message descriptors. There are no new event effect or trigger keys.

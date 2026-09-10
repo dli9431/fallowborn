@@ -12718,8 +12718,8 @@ window.FB = window.FB || {};
     const p = state.player;
     if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
-    if (p.war || (oldLiege && (FB.isRealmAtWar(state, oldLiege) ||
-        FB.truceExpiry(state, 'player', oldLiege)))) return false;
+    if (oldLiege && (FB.ordinaryWarBetween(state, 'player', oldLiege) ||
+        FB.truceExpiry(state, 'player', oldLiege))) return false;
     if (!p.provs || !p.provs.length) {
       // a baron who renounces his lord seizes the home county he was
       // enfeoffed in — transferProvince buries the old holder if landless

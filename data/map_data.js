@@ -1566,7 +1566,7 @@ FBDATA.balance = {
      player's own demesne, an AI realm's whole bloc); a succession war won
      by siege awards religiousHeadClaimWarPrestige */
   religiousHeadClaimMinRealm: 6, religiousHeadClaimWarPrestige: 100,
-  /* great holy wars (js/holywar.js): one global two-camp campaign */
+  /* holy wars (js/holywar.js): one global two-camp campaign */
   greatHolyWarPreparationDays: 180, greatHolyWarCooldownDays: 6480,
   greatHolyWarCollapseCooldownDays: 2880, greatHolyWarDeadlineDays: 2880,
   greatHolyWarVolunteersPerCamp: 8,

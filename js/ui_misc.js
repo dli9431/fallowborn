@@ -322,7 +322,7 @@ window.FB = window.FB || {};
             }));
         } else {
           parts.push(FB.T(
-            'Adds or refreshes {modifier} {duration}: {effects}; {upkeep}. It applies only to this great holy war.', {
+            'Adds or refreshes {modifier} {duration}: {effects}; {upkeep}. It applies only to this holy war.', {
               modifier:name,
               duration:duration,
               effects:effect || FB.T('no mechanical effect'),
@@ -347,7 +347,7 @@ window.FB = window.FB || {};
             }));
         } else {
           parts.push(FB.T(
-            'Ends {modifier} for this great holy war.', {
+            'Ends {modifier} for this holy war.', {
               modifier:name
             }));
         }
@@ -706,7 +706,7 @@ window.FB = window.FB || {};
     const stance = FB.foreignPolicyStance(s, rid);
     const text = stance > 0 ? FB.T('Improve relations')
       : (stance < 0 ? FB.T('Provoke') : FB.T('Neutral'));
-    if (stance && s.player.war && s.player.war.enemy === rid) {
+    if (stance && FB.ordinaryWarBetween(s, 'player', rid)) {
       return FB.T('{stance} — suspended during war', { stance: text });
     }
     return text;
@@ -767,7 +767,7 @@ window.FB = window.FB || {};
   function foreignPolicyStatusText(s, rid) {
     const truce = FB.truceText && FB.truceText(s, 'player', rid);
     if (truce) return truce;
-    if (s.player.war && s.player.war.enemy === rid) {
+    if (FB.ordinaryWarBetween(s, 'player', rid)) {
       const realm = s.realms[rid];
       return FB.T('At war with {realm} — policy is suspended', {
         realm:realm ? realm.name : rid

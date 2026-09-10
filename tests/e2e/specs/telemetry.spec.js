@@ -193,6 +193,8 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     })).toEqual({
       version:1,
       quickStart:'custom',
+      startingLocation:'london', startingCulture:'english',
+      startingReligion:'catholic', scenario:'farmer', familyPreset:'standard',
       firstDayAdvanced:0,
       firstEventResolved:0
     });
@@ -237,7 +239,9 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
       active_seconds:3600,
       checkpoint_reason:'page-hide',
       game_year:867,
-      quick_start:'custom'
+      quick_start:'custom',
+      starting_location:'london', starting_culture:'english',
+      starting_religion:'catholic', scenario:'farmer', family_preset:'standard'
     }));
     expect(events.filter(function (event) {
       return event.name === 'first-event-resolved';
@@ -276,7 +280,9 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
         start_bookmark:'867',
         game_year:867,
         entry_type:'resumed-campaign',
-        quick_start:'custom'
+        quick_start:'custom',
+        starting_location:'london', starting_culture:'english',
+        starting_religion:'catholic', scenario:'farmer', family_preset:'standard'
       })
     });
 
@@ -386,6 +392,8 @@ test('campaign telemetry identifies the selected quick start',
     })).toEqual({
       version:1,
       quickStart:'biera_1066',
+      startingLocation:'norrland', startingCulture:'sami',
+      startingReligion:'norse_pagan', scenario:'serf', familyPreset:'standard',
       firstDayAdvanced:0,
       firstEventResolved:0
     });
@@ -396,6 +404,9 @@ test('campaign telemetry identifies the selected quick start',
     ]);
 
     const resumed = await page.evaluate(function () {
+      FB.state.player.culture = 'english';
+      FB.state.player.religion = 'catholic';
+      FB.state.generation = 7;
       const saved = JSON.parse(FB.save.serialize());
       FB.game.passDay({ deferUi:true });
       return new Promise(function (resolve, reject) {
@@ -415,63 +426,95 @@ test('campaign telemetry identifies the selected quick start',
     expect(resumed.record).toEqual({
       version:1,
       quickStart:'biera_1066',
+      startingLocation:'norrland', startingCulture:'sami',
+      startingReligion:'norse_pagan', scenario:'serf', familyPreset:'standard',
       firstDayAdvanced:0,
       firstEventResolved:0
     });
     expect(resumed.resumeEvent.data).toEqual(expect.objectContaining({
       entry_type:'resumed-campaign',
-      quick_start:'biera_1066'
+      quick_start:'biera_1066',
+      starting_location:'norrland', starting_culture:'sami',
+      starting_religion:'norse_pagan', scenario:'serf', family_preset:'standard'
     }));
     expect(resumed.firstDayEvent.data).toEqual(expect.objectContaining({
       entry_type:'new-campaign',
-      quick_start:'biera_1066'
+      quick_start:'biera_1066',
+      starting_location:'norrland', starting_culture:'sami',
+      starting_religion:'norse_pagan', scenario:'serf', family_preset:'standard'
     }));
   });
 
-test('legacy saves do not invent campaign activation telemetry',
-  async function ({ page }, testInfo) {
-    await openGame(page, testInfo);
-    await page.evaluate(function () {
-      window.__telemetryEvents = [];
-      FB.telemetry = {
-        enabled:function () { return true; },
-        track:function (name, data) {
-          window.__telemetryEvents.push({ name:name, data:data });
-          return true;
-        }
-      };
-    });
-    await startDeterministicGame(page);
-
-    const result = await page.evaluate(function () {
-      const saved = JSON.parse(FB.save.serialize());
-      delete saved.state.telemetry;
-      window.__telemetryEvents = [];
-      return new Promise(function (resolve, reject) {
-        if (!FB.game.loadData(saved, function () {
-          FB.game.passDay({ deferUi:true });
-          const ev = FB.eventById('tut_welcome');
-          FB.resolveEventOption(FB.state, ev, ev.options[0],
-            FB.eventContext(FB.state, {}), { automated:false });
-          resolve({
-            record:FB.state.telemetry,
-            events:window.__telemetryEvents
-          });
-        })) reject(new Error('Synthetic legacy save was rejected'));
+for (const legacyOrigin of ['missing', 'unknown', 'invalid-code']) {
+  test('legacy telemetry recovers original setup without inventing activation: ' + legacyOrigin,
+    async function ({ page }, testInfo) {
+      await openGame(page, testInfo);
+      await page.evaluate(function () {
+        window.__telemetryEvents = [];
+        FB.telemetry = {
+          enabled:function () { return true; },
+          track:function (name, data) {
+            window.__telemetryEvents.push({ name:name, data:data });
+            return true;
+          }
+        };
       });
+      await startDeterministicGame(page);
+
+      const result = await page.evaluate(function (originMode) {
+        const saved = JSON.parse(FB.save.serialize());
+        delete saved.state.telemetry;
+        if (originMode === 'unknown') {
+          saved.state.telemetry = { version:1, quickStart:'unknown',
+            firstDayAdvanced:1, firstEventResolved:1 };
+        }
+        if (originMode === 'invalid-code') saved.state.seed = 'invalid-start-code';
+        saved.state.generation = 7;
+        saved.state.player.culture = 'sami';
+        saved.state.player.religion = 'norse_pagan';
+        window.__telemetryEvents = [];
+        return new Promise(function (resolve, reject) {
+          if (!FB.game.loadData(saved, function () {
+            FB.game.passDay({ deferUi:true });
+            const ev = FB.eventById('tut_welcome');
+            FB.resolveEventOption(FB.state, ev, ev.options[0],
+              FB.eventContext(FB.state, {}), { automated:false });
+            resolve({
+              record:FB.state.telemetry,
+              events:window.__telemetryEvents
+            });
+          })) reject(new Error('Synthetic legacy save was rejected'));
+        });
+      }, legacyOrigin);
+      if (legacyOrigin === 'invalid-code') {
+        expect(result.record.quickStart).toBe('unknown');
+        expect(result.record.startingLocation).toBeUndefined();
+        expect(result.events.map(function (event) { return event.name; }))
+          .toEqual(['campaign-resumed']);
+        expect(result.events[0].data.starting_location).toBeUndefined();
+        expect(result.events[0].data.starting_culture).toBeUndefined();
+        expect(result.events[0].data.starting_religion).toBeUndefined();
+        return;
+      }
+      expect(result.record).toEqual({
+        version:1,
+        quickStart:'unknown',
+        startingLocation:'london', startingCulture:'english',
+        startingReligion:'catholic', scenario:'farmer', familyPreset:'standard',
+        firstDayAdvanced:1,
+        firstEventResolved:1
+      });
+      expect(result.events.map(function (event) { return event.name; }))
+        .toEqual(['campaign-resumed']);
+      expect(result.events[0].data).toEqual(expect.objectContaining({
+        quick_start:'unknown',
+        starting_location:'london', starting_culture:'english',
+        starting_religion:'catholic', scenario:'farmer', family_preset:'standard'
+      }));
+      expect(JSON.stringify(result.events)).not.toContain(START_CODE);
     });
-    expect(result.record).toEqual({
-      version:1,
-      quickStart:'unknown',
-      firstDayAdvanced:1,
-      firstEventResolved:1
-    });
-    expect(result.events.map(function (event) { return event.name; }))
-      .toEqual(['campaign-resumed']);
-    expect(result.events[0].data).toEqual(expect.objectContaining({
-      quick_start:'unknown'
-    }));
-  });
+
+}
 
 test('visibility checkpoints require meaningful new active time',
   async function ({ page }, testInfo) {

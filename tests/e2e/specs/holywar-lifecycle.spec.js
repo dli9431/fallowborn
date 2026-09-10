@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/wars.js', 'js/ui_wars.js',
   'js/holywar.js',
   'js/armies.js',
   'js/fortifications.js',
@@ -24,6 +25,31 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
   await injectHolyWarHarness(page);
+});
+
+test('holy-war participation preserves an unrelated ordinary campaign and its host assignment', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    FB.ensureWars(s);
+    const campaign = FBTEST.makeGreatHolyWar({ phase:'active', capturedCounties:[],
+      attackers:[{ realm:'west_francia', mustered:false }, { realm:'italy', mustered:false }] });
+    const other = Object.keys(s.realms).filter(function (rid) {
+      return rid !== 'player' && s.realms[rid].alive && !s.realms[rid].liege &&
+        !FB.greatHolyWarCamp(s, rid);
+    }).sort()[0];
+    const w = FB.registerOrdinaryWar(s, 'west_francia', { enemy:other, target:s.realms[other].capital });
+    FB.armyTick(s);
+    const host = FB.hostOf(s, 'west_francia');
+    FB.assignHostCampaign(s, host.id, w.id);
+    const before = host.men;
+    const enrolled = !!FB.greatHolyWarCamp(s, 'west_francia');
+    FB.repairWars(s);
+    FB.settleOrdinaryWar(s, w.id, 'white_peace');
+    FB.repairWars(s);
+    return { enrolled:enrolled, sameCampaign:s.greatHolyWar.id === campaign.id,
+      retained:!!FB.hostOf(s, 'west_francia'), conserved:host.men === before, reassigned:host.warId === 'holy' };
+  });
+  expect(result).toEqual({ enrolled:true, sameCampaign:true, retained:true, conserved:true, reassigned:true });
 });
 
 test('active holy-war leaders and participants muster and remuster without ordinary wars',

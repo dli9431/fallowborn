@@ -75,6 +75,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      concurrent_campaigns:{ mode:'none', rationale:'Independent campaigns share existing troops and logistics; coordinating commitments is baseline military play.' },
+      lawful_claim_packages:{ mode:'none', rationale:'Pressing several existing territorial rights is baseline diplomacy; each acquisition method retains its own eligibility.' },
+      vassal_war_laws:{ mode:'none', rationale:'Sovereign peace, permission and deliberate defiance are political relationships rather than researched capabilities.' },
+      peace_enforcement:{ mode:'none', rationale:'A liege can enforce the peace through ordinary military resources without a technology dependency.' },
       historical_normandy:{ mode:'none', rationale:'Recognizing a Norse territorial foundation is baseline political progression, not a researched capability.' },
       historical_norway:{ mode:'none', rationale:'Recognizing Norwegian unification is baseline political progression, not a researched capability.' },
       historical_england:{ mode:'none', rationale:'Recognizing English unification is baseline political progression, not a researched capability.' },

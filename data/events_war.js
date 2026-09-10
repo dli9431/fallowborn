@@ -347,7 +347,7 @@ FBDATA.events.push(
       deathProvenance:{ kind:'battle', province:'context', enemy:'war' } } }
   ]},
 
-/* ---------- great holy wars: field offers and queued campaign reports ---------- */
+/* ---------- holy wars: field offers and queued campaign reports ---------- */
 { id:'ghw_pilgrims_under_arms', title:'Pilgrims Under Arms',
   trigger:{ custom:'ghw_has_field_host', chance:0.01 },
   wartime:true, weight:2, cooldown:36,
@@ -367,7 +367,7 @@ FBDATA.events.push(
       require:{ goldMin:15 },
       desc:'150 mercenaries join the current host; their contract adds {money:4} to seasonal logistics.',
       effects:{ gold:-15, custom:'ghw_recruit_mercenaries',
-        log:'Hired a mercenary company for the great holy war.' } },
+        log:'Hired a mercenary company for the holy war.' } },
     { label:{
         default:'Take the landless knights into service. ({money:20})',
         muslim:'Take the landless horsemen into service. ({money:20})',
@@ -377,15 +377,15 @@ FBDATA.events.push(
       desc:'75 seasoned cavalry join the current host, adding about {money:1.5} to seasonal logistics.',
       effects:{ gold:-20, custom:'ghw_recruit_knights',
         log:{
-          default:'Took landless knights into service for the great holy war.',
-          muslim:'Took landless horsemen into service for the great holy war.',
-          pagan:'Took landless champions into service for the great holy war.'
+          default:'Took landless knights into service for the holy war.',
+          muslim:'Took landless horsemen into service for the holy war.',
+          pagan:'Took landless champions into service for the holy war.'
         } } },
     { label:'Take on the adventurers. ({money:25})',
       require:{ goldMin:25 },
       desc:'100 men-at-arms join the current host, adding about {money:2} to seasonal logistics.',
       effects:{ gold:-25, custom:'ghw_recruit_adventurers',
-        log:'Took a band of adventurers into service for the great holy war.' } },
+        log:'Took a band of adventurers into service for the holy war.' } },
     { label:'Send them in search of another banner.',
       desc:'Keep your coin and the host you already have.',
       effects:{} }
@@ -394,13 +394,13 @@ FBDATA.events.push(
   title:{ forms:{ select:'value', param:'campaignType', cases:{
     crusade:'The Pope Calls a Crusade',
     jihad:'The Caliph Calls a Jihad',
-    other:'A Great Holy War Is Called'
+    other:'A Holy War Is Called'
   }}},
   trigger:{ never:true }, wartime:true,
   text:{ forms:{ select:'value', param:'campaignType', cases:{
     crusade:'The Pope calls Christendom to a Crusade for {kingdom}. Across the Latin realms, preachers carry the summons and rulers take the cross. The banners have 180 days to gather.',
     jihad:'The Caliph calls the faithful to Jihad for {kingdom}. Across the Muslim realms, preachers carry the summons and rulers take the vow. The armies have 180 days to gather.',
-    other:'{caller} calls the faithful to a great holy war for {kingdom}. Preachers carry the summons from court to court, and the armies have 180 days to gather.'
+    other:'{caller} calls the faithful to a holy war for {kingdom}. Preachers carry the summons from court to court, and the armies have 180 days to gather.'
   }}},
   options:[
     { label:'The summons is heard.',
@@ -411,7 +411,7 @@ FBDATA.events.push(
   title:{ forms:{ select:'value', param:'campaignType', cases:{
     crusade:'The Crusade Begins',
     jihad:'The Jihad Begins',
-    other:'The Great Holy War Begins'
+    other:'The Holy War Begins'
   }}},
   trigger:{ never:true }, wartime:true,
   text:{ forms:{ select:'value', param:'campaignType', cases:{

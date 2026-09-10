@@ -616,12 +616,25 @@ window.FB = window.FB || {};
     const targets = map.warTargets || [];
     if (!targets.length) return;
 
+    // Connections show which claim markers belong to the same available package.
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 220, 125, 0.9)';
+    ctx.lineWidth = 2 * dpr;
+    ctx.setLineDash([5 * dpr, 4 * dpr]);
+    (map.warClaimLinks || []).forEach(function (link) {
+      const a = FB.world.byId[link[0]], b = FB.world.byId[link[1]];
+      if (!a || !b) return;
+      const start = toScreen(a.cx, a.cy), end = toScreen(b.cx, b.cy);
+      ctx.beginPath(); ctx.moveTo(start[0], start[1]); ctx.lineTo(end[0], end[1]); ctx.stroke();
+    });
+    ctx.restore();
+
     for (let i = 0; i < targets.length; i++) {
       const pid = targets[i];
       const pr = FB.world.byId[pid];
       if (!pr) continue;
       const point = toScreen(pr.cx, pr.cy);
-      const selected = pid === map.warSelected;
+      const selected = pid === map.warSelected || (map.warClaimSelected || []).indexOf(pid) >= 0;
       const radius = (selected ? 12 : 5) * dpr;
       ctx.beginPath();
       ctx.arc(point[0], point[1], radius, 0, Math.PI * 2);

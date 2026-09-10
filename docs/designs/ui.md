@@ -77,6 +77,14 @@ A pending restoration does nothing if the policy view has been replaced or close
 
 ## Label and value rows
 
+Omit a label/value row when its value is absent or blank. Do not render an orphan
+label, an empty value cell, or an empty section header. Hide the associated spacing
+and divider as well. Zero and meaningful negative or false values are not empty;
+retain explicit empty-state messages when they explain an actionable situation.
+Action-group headings are valid when they introduce visible controls or content.
+Use one divider at a boundary: a section beside the shared modal footer must not
+add a second trailing divider.
+
 The population-opinion stat is labeled **Popular support** throughout the UI,
 event effects, and help text. It measures how favorably ordinary people view the
 protagonist. Internal `pop`, `popularOpinion`, and `commonVoice` keys retain their
@@ -2576,3 +2584,48 @@ Final petitions and uprising notices name affected counties once, retain the res
 Commons option disclosures use short, separate consequence chips for settlement, county scope, duration, modifier benefits/costs, and transfer persistence. The deferral uses four chips for grace, recovery, conditional loss, and disruption duration; zero upkeep and repeated narrative are omitted.
 
 Qualification success disclosures retain prestige and other non-money rewards but omit the examination fee chip; the examination action already quotes the payment.
+
+## Concurrent campaign navigation
+
+Deeds lists the player's ordinary campaigns with opponent and occupied-objective
+counts. Each opens an exact campaign sheet with its stakes, peace terms and native
+host-assignment controls. The list also exposes War laws & permissions. The existing
+conquest list places a native claim checkbox beside targets that can be combined. Checking
+a claim highlights compatible additions with a gold border. Labels under the
+checkboxes read **Multi** only when the county belongs to a currently valid
+connected package of at least two lawful claims against one defender. Other targets
+have no checkbox or Single label and use the full row width;
+incompatible and single-objective causes cannot be checked. Selected
+counties share one package between the existing list and Select on Map views.
+On the map, clicking or tapping a county toggles it directly: multiple compatible
+claims stay highlighted, and clicking a selected county removes its highlight.
+Available additions use small markers connected by dashed gold lines when their
+counties are adjacent lawful objectives in the same available package; lines never
+join different defenders or unclaimed targets. There is no map checkbox. An empty selection
+disables review.
+The existing War Justification sheet reviews every selected objective, with no
+separate package modal. List filters, scroll, disclosures, checkbox/basis selections,
+and return focus survive map and review navigation. Unlawful declaration
+requires an explicit confirmation showing the Standing cost, 90-day demand and
+enforcement risk. Law proclamations replace the current modal view while retaining
+scroll; they must not add duplicate Back entries. Holy-war display terminology is
+Holy war, without changing semantic save IDs.
+
+The Claims filter offers All targets, Multiple claims, and Single targets.
+Multiple claims first sorts by available connected package size, largest first,
+then the existing stable realm/territory order. Filtering and sorting retain checks.
+
+In the war map picker, clicking an available target outside the selected package
+replaces the current selection, even when several claims were selected. Clicking
+a compatible claim still adds it, and clicking a selected county removes it.
+Other independently valid targets keep their markers visible for switching.
+A county that cannot begin a valid campaign does not clear the existing selection.
+
+Campaign and war-law sheets use shared label/value rows and quiet section dividers.
+Opponent, objective status, victory condition, upkeep, peace costs, current laws,
+and actionable proclamation costs/Standing changes stay visible. A ruler eligibility
+blocker appears once above the laws; unavailable ruler controls are omitted in this
+read-only view. Law alternatives and campaign background use shared desktop
+hover/focus tooltips and compact question-mark disclosures. Proclamation retains
+scroll and expanded disclosures and focuses the changed law section. Nested Back
+restores the prior sheet and its disclosures.

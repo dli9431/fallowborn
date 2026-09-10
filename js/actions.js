@@ -416,7 +416,7 @@ window.FB = window.FB || {};
     desc: function (s) {
       return s.player.war ? 'Command your men in the field. (steadies the host for the next field battle)'
         : (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))
-          ? 'Command your host in the great holy war. (+martial over time)'
+          ? 'Command your host in the holy war. (+martial over time)'
         : (FB.activeMilitaryCommand && FB.activeMilitaryCommand(s))
           ? 'Lead your ruler’s contingent. A field victory may win a barony. (+Martial, +ruler Standing)'
         : 'Serve in your liege’s host. (+liege Standing)';
@@ -4144,15 +4144,6 @@ window.FB = window.FB || {};
         (s.player.tier >= 3 || !!(me && me.restorationRight));
     },
     can: function (s) {
-      /* Full cause discovery belongs to the conquest picker. Keep only the
-         active-war locks here so panel refreshes do not build every target,
-         justification, and diplomatic block for an unopened sheet. */
-      const playerRealm = 'player';
-      if (s.player.war ||
-          (FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, 'player')) ||
-          (playerRealm && FB.isRealmAtWar(s, playerRealm))) {
-        return FB.warLockedReason(s);
-      }
       return true;
     },
     run: function (s, options) {
@@ -4198,7 +4189,7 @@ window.FB = window.FB || {};
     desc: function (s) {
       const claim = FB.fabricatedClaimOf(s);
       const pr = claim && FB.world.byId[claim.pid];
-      return pr ? FB.T('Renounce your claim to {province}; the slot becomes free for another plot.',
+      return pr ? FB.T('Renounce your claim to {province}.',
         { province: pr.name }) : FB.T('Renounce the claim.');
     },
     show: function (s) { return !!FB.fabricatedClaimOf(s); },
@@ -4211,13 +4202,13 @@ window.FB = window.FB || {};
         : FB.T('Renounce your liege and raise your own banner — it means war.');
     },
     show: function (s) {
-      return s.player.tier >= 3 && !!s.player.liege && !s.player.war &&
+      return s.player.tier >= 3 && !!s.player.liege &&
         !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
     },
     can: function (s) {
       const sovereign = FB.topRealm(s, s.player.liege);
       if (FB.truceExpiry(s, 'player', sovereign)) return FB.truceText(s, 'player', sovereign);
-      if (sovereign && FB.isRealmAtWar(s, sovereign)) return activeWarReason(s, sovereign);
+      if (sovereign && FB.ordinaryWarBetween(s, 'player', sovereign)) return activeWarReason(s, sovereign);
       return s.player.prestige >= 200 ? true
         : FB.T('You need at least 200 prestige to rally men to your banner (now {current}).',
           { current: Math.round(s.player.prestige) });
@@ -10006,31 +9997,10 @@ window.FB = window.FB || {};
   }
 
   function fabricatedClaimRecord(state, repair) {
-    const p = state.player;
-    let claim = p.fabricatedClaim;
-    if (typeof claim === 'string') {
-      claim = { pid:claim };
-      if (repair) p.fabricatedClaim = claim;
-    }
-    if (!claim) return null;
-    const pr = FB.world.byId[claim.pid];
-    const owner = state.owner[claim.pid];
-    const mySovereign = FB.playerRealmId(state);
-    const landedRealm = state.realms.player && state.realms.player.alive;
-    const territory = landedRealm
-      ? FB.realmTerritory(state, 'player') : (p.provs || []);
-    if (!pr || pr.wasteland || territory.indexOf(claim.pid) >= 0 ||
-        (state.holder && state.holder[claim.pid] === 'player') ||
-        !owner || owner === 'player' || (landedRealm && owner === mySovereign) ||
-        !state.realms[owner] || !state.realms[owner].alive) {
-      if (repair) p.fabricatedClaim = null;
-      return null;
-    }
-    return claim;
+    return FB.fabricatedClaimsOf(state)[0] || null;
   }
-
   FB.fabricatedClaimOf = function (state) {
-    return fabricatedClaimRecord(state, true);
+    return fabricatedClaimRecord(state, false);
   };
 
   /* The one religious succession war: a sovereign Sunni king or emperor may
@@ -10062,7 +10032,7 @@ window.FB = window.FB || {};
 
   function diplomacyBlocksWar(state, enemy, readOnly) {
     if (FB.truceExpiry(state, 'player', enemy)) return 'truce';
-    if (FB.isRealmAtWar(state, enemy)) return 'war';
+    if (FB.ordinaryWarBetween && FB.ordinaryWarBetween(state, 'player', enemy)) return 'war';
     if (state.pacts && state.pacts[enemy] > state.turn) return 'pact';
     if ((readOnly && FB.areAlliedSnapshot
       ? FB.areAlliedSnapshot(state, 'player', enemy)
@@ -10318,9 +10288,7 @@ window.FB = window.FB || {};
      keeps diplomatically blocked causes so the UI can explain the exact lock. */
   FB.warCauses = function (state, includeBlocked, readOnly) {
     const p = state.player, out = [], seen = {};
-    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) return out;
     const playerRealm = 'player';
-    if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return out;
     const me = state.chars[p.charId];
     const restoration = me && me.restorationRight;
     if (restoration) {
@@ -10356,10 +10324,10 @@ window.FB = window.FB || {};
     for (const pid of mine) {
       for (const nb in (FB.world.adj[pid] || {})) {
         if (seen[nb]) continue;
-        const pr = FB.world.byId[nb], enemy = state.owner[nb];
-        if (!pr || pr.wasteland || !enemy || enemy === mySovereign || enemy === 'player') continue;
+        const pr = FB.world.byId[nb], enemy = FB.warTargetDefender(state, 'player', nb);
+        if (!pr || pr.wasteland || !enemy || enemy === 'player') continue;
         let cause = deJureCause(state, nb, titles);
-        if (!cause && claim && claim.pid === nb) cause = { type: 'fabricated', target: nb };
+        if (!cause && FB.fabricatedClaimsOf(state).some(function (entry) { return entry.pid === nb; })) cause = { type: 'fabricated', target: nb };
         if (!cause) cause = { type: 'aggression', target: nb };
         cause.enemy = enemy;
         cause.blocked = diplomacyBlocksWar(state, enemy, readOnly);
@@ -10367,6 +10335,23 @@ window.FB = window.FB || {};
         seen[nb] = 1;
         if (!cause.blocked || includeBlocked) out.push(cause);
       }
+    }
+    // A package can extend beyond the current frontier through other lawful
+    // objectives against the same defender. Do not grow aggression this way.
+    const connected = out.filter(function (cause) { return cause.type === 'dejure' || cause.type === 'fabricated'; });
+    for (let i = 0; i < connected.length; i++) {
+      const previous = connected[i];
+      Object.keys(FB.world.adj[previous.target] || {}).sort().forEach(function (pid) {
+        if (seen[pid] || FB.warTargetDefender(state, 'player', pid) !== previous.enemy) return;
+        let cause = deJureCause(state, pid, titles);
+        if (!cause && FB.fabricatedClaimsOf(state).some(function (entry) { return entry.pid === pid; })) cause = { type:'fabricated', target:pid };
+        if (!cause) return;
+        cause.enemy = previous.enemy;
+        cause.blocked = diplomacyBlocksWar(state, cause.enemy, readOnly);
+        annotateReligiousWarCause(state, cause, readOnly);
+        seen[pid] = 1;
+        if (!cause.blocked || includeBlocked) { out.push(cause); connected.push(cause); }
+      });
     }
     return out;
   };
@@ -10412,7 +10397,7 @@ window.FB = window.FB || {};
         add(cause);
       }
     }
-    const claim = fabricatedClaimRecord(state, false);
+    const claim = FB.fabricatedClaimsOf(state).filter(function (c) { return c.pid === target; })[0];
     if (claim && claim.pid === target && out.some(function (cause) {
       return cause.type === 'dejure';
     })) {
@@ -10466,14 +10451,6 @@ window.FB = window.FB || {};
   };
 
   FB.warLockedReason = function (state) {
-    if (state.player.war) return activeWarReason(state, 'player');
-    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) {
-      return activeWarReason(state, 'player');
-    }
-    const playerRealm = 'player';
-    if (playerRealm && FB.isRealmAtWar(state, playerRealm)) {
-      return activeWarReason(state, playerRealm);
-    }
     const all = FB.warCauses(state, true);
     let allianceBlocked = false, pactBlocked = false;
     for (const cause of all) {
@@ -10508,14 +10485,14 @@ window.FB = window.FB || {};
 
   FB.claimCandidates = function (state) {
     const out = [], seen = {};
-    if (state.player.tier < 4 || FB.fabricatedClaimOf(state)) return out;
+    if (state.player.tier < 4) return out;
     const mine = playerBorderLands(state), mySovereign = FB.playerRealmId(state);
     const titles = heldTitleSets(state);
     for (const pid of mine) {
       for (const nb in (FB.world.adj[pid] || {})) {
-        if (seen[nb]) continue;
-        const pr = FB.world.byId[nb], enemy = state.owner[nb];
-        if (!pr || pr.wasteland || !enemy || enemy === mySovereign || enemy === 'player') continue;
+        if (seen[nb] || FB.fabricatedClaimsOf(state).some(function (c) { return c.pid === nb; })) continue;
+        const pr = FB.world.byId[nb], enemy = FB.warTargetDefender(state, 'player', nb);
+        if (!pr || pr.wasteland || !enemy || enemy === 'player') continue;
         if (deJureCause(state, nb, titles)) continue;
         seen[nb] = 1;
         out.push(nb);
@@ -10528,7 +10505,7 @@ window.FB = window.FB || {};
     const claim = FB.fabricatedClaimOf(state);
     if (!claim) return false;
     const pr = FB.world.byId[claim.pid];
-    state.player.fabricatedClaim = null;
+    FB.consumeFabricatedClaim(state, claim.pid);
     FB.news(state, FB.msg('news.action.claim_abandoned',
       '📜 You abandon the claim to {province}.', { province: pr ? pr.name : '' }));
     return true;
@@ -11493,9 +11470,9 @@ window.FB = window.FB || {};
 
   FB.fns.fabricate_claim_success = function (state, ctx) {
     const pid = ctx && ctx.pid;
-    if (pid && FB.world.byId[pid] && !FB.fabricatedClaimOf(state) &&
+    if (pid && FB.world.byId[pid] &&
         FB.claimCandidates(state).indexOf(pid) >= 0) {
-      state.player.fabricatedClaim = { pid: pid, madeTurn: state.turn };
+      FB.saveFabricatedClaim(state, pid);
       FB.news(state, FB.msg('news.action.claim_fabricated',
         '📜 Witnesses and ink establish your claim to {province}.',
         { province: FB.world.byId[pid].name }));
@@ -11506,7 +11483,7 @@ window.FB = window.FB || {};
   FB.fns.fabricate_claim_failure = function (state) {
     state.player.prestige = Math.max(0, state.player.prestige - 5);
     FB.news(state, FB.msg('news.action.claim_failed',
-      '📜 The false witnesses unravel. No claim remains, and your name suffers.', {}));
+      '📜 The false witnesses unravel. This attempt establishes no claim, and your name suffers.', {}));
     FB.fns.plot_end(state);
   };
 
@@ -11783,12 +11760,10 @@ window.FB = window.FB || {};
   };
 
   FB.startPlayerWar = function (state, causeOrTarget, opts) {
-    if (state.player.war) return false;
+    FB.ensureWars(state);
     if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
-    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) return false;
     opts = opts || {};
     const playerRealm = 'player';
-    if (playerRealm && FB.isRealmAtWar(state, playerRealm)) return false;
     let cause = causeOrTarget && typeof causeOrTarget === 'object' ? causeOrTarget : null;
     if (!cause) {
       const target = String(causeOrTarget || '');
@@ -11821,7 +11796,9 @@ window.FB = window.FB || {};
     const sameFaithPolicy = c && FB.sameFaithHeadWarPolicy
       ? FB.sameFaithHeadWarPolicy(state, c.religion, enemy, cause.target) : null;
     if (sameFaithPolicy === 'sacrilege' && !opts.confirmSacrilege) return false;
-    state.player.war = {
+    const declaration = FB.warDeclarationPreview(state, 'player', [cause]);
+    if (!declaration.valid || (declaration.unlawful && !opts.confirmUnlawful)) return false;
+    const newWar = { legacy:false,
       enemy: enemy, target: cause.target, wins: 0, losses: 0, seasons: 0,
       defending: false,
       casus: {
@@ -11854,8 +11831,15 @@ window.FB = window.FB || {};
       state.player.prestige += FB.warPrestigeReward
         ? FB.warPrestigeReward(cause, 'declaration') : 5;
     }
-    FB.warFooting(state);
-    FB.queueWarEvent(state, 'war_muster', {});
+    const registered = FB.registerOrdinaryWar(state, 'player', newWar);
+    registered.legacy = false;
+    registered.objectives = [{ target:cause.target, type:cause.type,
+      titleKind:cause.titleKind || null, titleId:cause.titleId || null }];
+    FB.recordWarDeclaration(state, registered, declaration);
+    FB.withOrdinaryWar(state, registered.id, function () {
+      FB.warFooting(state);
+      FB.queueWarEvent(state, 'war_muster', {});
+    });
     return true;
   };
 

@@ -443,7 +443,7 @@ host out of your lands, because only a completed breach can take a fortified bor
 county. Fortified works extend the normal eight-season exhaustion limit by their tier.
 Wars bleed gold and men throughout.
 
-Great holy wars are separate global campaigns with many sovereign hosts on two camps.
+Holy wars are separate global campaigns with many sovereign hosts on two camps.
 Catholic Crusades may be called from late 1095 when Jerusalem is outside Christian rule;
 Sunni Jihads may be called from 1105 when Jerusalem, Baghdad, Mecca, or Medina is outside
 Muslim rule. An active Pope or Caliph makes the call, then banners gather for 180 days.

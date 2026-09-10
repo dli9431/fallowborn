@@ -1074,3 +1074,14 @@ Personal vassal campaigns occupy the vassal and its named enemy, independently o
 
 
 Accepted legacy higher-dignity offers immediately show their queued investiture result in the same interaction, without waiting for another day or replaying the grant.
+
+## Concurrent vassal campaigns and war law
+
+Player and AI vassals can fight internal or external campaigns. External defenders
+are sovereign realms; internal opponents are distinct vassal subtrees. The attacking
+liege is not automatically a participant. The sovereign sets Internal peace and
+External campaigns for the whole hierarchy; immediate lieges grant exact campaign
+permissions and enforce refusal of a peace demand. Acquisitions retain sovereign
+ownership while assigning the victorious vassal as holder. Inheritance remaps war
+endpoints rather than discarding unrelated commitments. See [war.md](war.md).
+Technology impact: none for concurrent campaigns, war laws and enforcement.

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.178.3';
+FB.VERSION = '1.179.0';
 FB.CHANGELOG = [
+  { v: '1.179.0', date: '2026-09-09', changes: [
+    'Fight concurrent campaigns, combine territorial claims in the map and list pickers, and govern vassal warfare through realm laws and permissions. Campaign and law sheets show compact terms with details on demand.'
+  ] },
   { v: '1.178.3', date: '2026-09-09', changes: [
     'Commons events use shorter text and compact tooltip chips. Appointment and promotion results close their parent menus, and result chips stay in Details disclosures.'
   ] },
@@ -1558,7 +1561,6 @@ FB.CHANGELOG = [
         firstEventResolved:fresh ? 0 : 1
       };
       s.telemetry = record;
-      return record;
     }
     record.version = 1;
     record.quickStart = normalizedQuickStartTelemetry(record.quickStart);
@@ -1567,6 +1569,20 @@ FB.CHANGELOG = [
     }
     if (record.firstEventResolved !== 0 && record.firstEventResolved !== 1) {
       record.firstEventResolved = 1;
+    }
+    /* Start codes retain original choices across moves, conversions and heirs.
+       They cannot prove whether the player clicked a curated card. Copy only
+       bounded setup IDs, never the seed or character name. */
+    if (!record.startingLocation && typeof s.seed === 'string') {
+      const origin = parseSeedInput(s.seed);
+      if (!origin.error && origin.provinceId &&
+          (!s.start || !s.start.id || origin.bookmarkId === String(s.start.id))) {
+        record.startingLocation = origin.provinceId;
+        record.startingCulture = origin.culture;
+        record.startingReligion = origin.religion;
+        record.scenario = origin.scenario.id;
+        record.familyPreset = origin.familyPreset;
+      }
     }
     return record;
   }
@@ -1584,6 +1600,17 @@ FB.CHANGELOG = [
       if (s.telemetry && typeof s.telemetry === 'object') {
         data.quick_start = normalizedQuickStartTelemetry(
           s.telemetry.quickStart);
+        const originFields = {
+          starting_location:'startingLocation', starting_culture:'startingCulture',
+          starting_religion:'startingReligion', scenario:'scenario',
+          family_preset:'familyPreset'
+        };
+        for (const key in originFields) {
+          const value = s.telemetry[originFields[key]];
+          if (typeof value === 'string' && /^[a-z0-9_]{1,64}$/.test(value)) {
+            data[key] = value;
+          }
+        }
       }
     }
     if (extra) {
@@ -2918,6 +2945,8 @@ FB.CHANGELOG = [
         settIdx, cultureId, religionId, pr),
       telemetry: {
         version:1, quickStart:normalizedQuickStartTelemetry(quickStartId),
+        startingLocation:provId, startingCulture:cultureId,
+        startingReligion:religionId, scenario:sc.id, familyPreset:preset.id,
         firstDayAdvanced:0, firstEventResolved:0
       },
       start: start,

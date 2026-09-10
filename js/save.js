@@ -1268,7 +1268,7 @@ window.FB = window.FB || {};
     else if (FB.ensureGuildMonopolies) restoreRepair('guild monopolies', function () {
       FB.ensureGuildMonopolies(FB.state);
     });
-    if (FB.repairGreatHolyWar) restoreRepair('great holy war', function () {
+    if (FB.repairGreatHolyWar) restoreRepair('holy war', function () {
       FB.repairGreatHolyWar(FB.state);
     });
     if (FB.repairWars) restoreRepair('wars', function () {

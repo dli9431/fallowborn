@@ -322,3 +322,11 @@ Inline concessions and local talks show a settled result before returning to the
 privilege roll. Actual costs and effects, including a failed negotiation fee, remain
 visible. Continue, Escape, and mobile Back acknowledge once and restore the roll
 scroll and expanded disclosures; the outcome shares the event input guard.
+
+## Sovereign peace and vassal campaigns
+
+Internal peace and External campaigns are sovereign policies, separate from Estates
+voting and outgoing service charters. A vassal can seek immediate-liege permission
+for a specific campaign or deliberately declare unlawfully. The latter produces a
+90-day demand and potential armed enforcement. Ordinary independence remains a
+separate political path. See [war.md](war.md); technology impact is none.

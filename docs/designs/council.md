@@ -224,3 +224,29 @@ AI realms are not simulated this deep.
 
 Related: [realms.md](realms.md) for vassals and Standing, [events.md](events.md) for the
 interpreter, [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md) for plots.
+
+## War laws
+
+The policy catalog also contains Internal peace and External campaigns. These
+sovereign laws apply throughout the realm and are available to independent dukes
+as well as crowned sovereigns. Each permits customary warfare, requires permission
+for the exact campaign, or prohibits it. They share the policy cost and yearly
+change cadence, with ?10 direct-vassal Standing when tightened and +10 when loosened.
+Existing campaigns continue on their declaration terms. War laws & permissions in
+Deeds exposes proclamation, incoming requests and armed enforcement; the crown
+policy sheet uses the same status and proclamation APIs. These capabilities have
+technology impact none; see [war.md](war.md).
+
+Campaign and war-law sheets use shared label/value rows and quiet section dividers.
+Opponent, objective status, victory condition, upkeep, peace costs, current laws,
+and actionable proclamation costs/Standing changes stay visible. A ruler eligibility
+blocker appears once above the laws; unavailable ruler controls are omitted in this
+read-only view. Law alternatives and campaign background use shared desktop
+hover/focus tooltips and compact question-mark disclosures. Proclamation retains
+scroll and expanded disclosures and focuses the changed law section. Nested Back
+restores the prior sheet and its disclosures.
+
+In read-only war-law views, only the current level appears as a label/value row.
+Alternative levels remain in the details disclosure, without empty status rows.
+For eligible rulers, alternatives head their visible proclamation controls.
+The shared footer supplies the final divider.

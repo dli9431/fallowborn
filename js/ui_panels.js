@@ -921,6 +921,7 @@ window.FB = window.FB || {};
   }
 
   function renderDeedsWarCard(s) {
+    if (UI.campaignsHtml) return UI.campaignsHtml(s);
     const w = s.player && s.player.war;
     if (!w) return '';
     const en = s.realms[w.enemy];
@@ -1091,6 +1092,7 @@ window.FB = window.FB || {};
   }
 
   function refreshLiveWarValues() {
+    if (UI.refreshCampaigns) UI.refreshCampaigns();
     const s = FB.state;
     document.querySelectorAll('[data-war-siege]').forEach(function (node) {
       node.innerHTML = siegeFeedbackHtml(s, node.getAttribute('data-war-siege') || null);
@@ -1133,7 +1135,7 @@ window.FB = window.FB || {};
       h += tutorialCardHtml(s);
     }
     h += ongoingCommitmentsHtml(s);
-    if (s.player.war) {
+    if (s.player.tier >= 3) {
       h += renderDeedsWarCard(s);
     }
     if (s.greatHolyWar && FB.playerGreatHolyWarCamp(s)) {
@@ -1141,7 +1143,7 @@ window.FB = window.FB || {};
       const greatReligion = FB.religionOf(great.callingReligion, s);
       const greatName = greatReligion
         ? dt(s, 'religion', great.callingReligion, greatReligion,
-          'head.greatHolyWar.name') : FB.T('great holy war');
+          'head.greatHolyWar.name') : FB.T('holy war');
       const greatKingdom = FBDATA.kingdoms[great.targetKingdom];
       let greatStatus;
       if (great.phase === 'preparation') {
@@ -1640,6 +1642,7 @@ window.FB = window.FB || {};
           }
         });
       });
+    if (UI.bindCampaigns) UI.bindCampaigns(box);
     box.querySelectorAll('[data-war-enemy]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const enemyRid = btn.getAttribute('data-war-enemy');

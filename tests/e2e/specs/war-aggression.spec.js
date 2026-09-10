@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/wars.js', 'js/ui_wars.js',
   'css/style.css',
   'data/actions.js',
   'js/actions.js',
@@ -557,6 +558,7 @@ test('aggressive conquest grants no victory prestige and burdens the county',
       var strongpoint = FB.fortSiegeStatus(s, setup.targetId, {}, 0);
       p.war.siegeFortLevel = strongpoint.level;
       p.war.siege = strongpoint.required;
+      p.war.occupations[p.war.target] = { occupied:true, progress:0 };
       FB.warCapture(s);
       var records = FB.countyModifierRecords(s, setup.targetId);
       var record = records.filter(function (item) {

@@ -387,7 +387,7 @@ window.FB = window.FB || {};
       }
     }
 
-    /* Great holy wars are optional head metadata. Their ids must resolve
+    /* Holy wars are optional head metadata. Their ids must resolve
        against this exact bookmark so a mod cannot install a campaign whose
        sacred counties or target kingdoms disappear at activation. */
     var ghwReligionIds = FB.religionIds ? FB.religionIds(null, false) :
@@ -6025,14 +6025,11 @@ window.FB = window.FB || {};
     }
     function rebuild() {
       counts = Object.create(null);
-      const realms = state.realms || {};
-      for (const rid in realms) {
-        const realm = realms[rid];
-        if (realm && realm.alive && realm.war) recordWar(rid, realm.war);
-      }
-      const playerWar = state.player && state.player.war;
-      if (playerWar) {
-        recordWar('player', playerWar);
+      if (FB.realmWars) {
+        for (const warId in (state.wars || {})) {
+          const war = state.wars[warId];
+          if (war && war.status === 'active') recordWar(war.attacker, war);
+        }
       }
       const campaign = state.greatHolyWar;
       if (campaign && (campaign.phase === 'preparation' ||
@@ -6262,216 +6259,7 @@ window.FB = window.FB || {};
         if (!r.alive) continue; // the new ruler was the protagonist and joined the realms
       }
       if (r.liege) continue; // vassals make no foreign policy of their own
-      // war resolution
-      if (r.war) {
-        const war = r.war;
-        const enemy = state.realms[war.enemy];
-        if (!enemy || !enemy.alive) {
-          r.war = null;
-          yearWars.rebuild();
-          continue;
-        }
-        const sa = FB.realmStrength(state, id) *
-          (1 + (FB.techBonus ? FB.techBonus(state, 'levy', id) : 0)) *
-          FB.aiFieldHostRatio(state, id) *
-          (FB.aiHostQuality ? FB.aiHostQuality(state, id) : 1) *
-          (1 + (FB.techBonus ? FB.techBonus(state, 'battle', id) : 0)) *
-          (1 + r.ruler.mar / 30) * FB.rf(0.7, 1.3) *
-          (1 + 0.12 * ((war.fw || 0) - (war.fl || 0))); // field wins tilt the war
-        const enemyGarrisons = FB.fortGarrisonBurden
-          ? FB.fortGarrisonBurden(state, war.enemy) : 0;
-        const defenseRatio = yearDefensiveStrength(war.enemy) /
-          Math.max(1, FB.aiBaseHost(state, war.enemy) + enemyGarrisons);
-        const sd = FB.realmStrength(state, war.enemy) *
-          (1 + (FB.techBonus ? FB.techBonus(state, 'levy', war.enemy) : 0)) *
-          defenseRatio *
-          (FB.aiHostQuality ? FB.aiHostQuality(state, war.enemy) : 1) *
-          (1 + (FB.techBonus ? FB.techBonus(state, 'battle', war.enemy) : 0)) *
-          (1 + enemy.ruler.mar / 30) * FB.rf(0.7, 1.3) *
-          (1 + 0.12 * ((war.fl || 0) - (war.fw || 0)));
-        const winner = sa > sd ? id : war.enemy;
-        const loser = winner === id ? war.enemy : id;
-        const winnerReligion = FB.realmReligionId(state, winner);
-        /* the host pressing the siege claims the county: any of the winner's
-           hosts pinned on the loser's fortified ground, not just the main
-           body */
-        const winnerHosts = FB.hostsOf ? FB.hostsOf(state, winner) : [];
-        let taken = null;
-        for (const winnerHost of winnerHosts) {
-          if (state.owner[winnerHost.at] === loser && FB.fortBlocksArmy &&
-              FB.fortBlocksArmy(state, winnerHost.at, winnerHost) &&
-              (winner !== id || aiExpansionObjectiveAllows(
-                war, winnerHost.at))) {
-            taken = winnerHost.at;
-            break;
-          }
-        }
-        if (taken && FB.sameFaithHeadWarPolicy(
-            state, winnerReligion, loser, taken)) taken = null;
-        if (!taken) taken = FB.aiExpansionProvince(
-          state, winner, loser, function (pid) {
-            return !FB.sameFaithHeadWarPolicy(
-              state, winnerReligion, loser, pid) &&
-              (winner !== id || aiExpansionObjectiveAllows(war, pid));
-          });
-        let fortDelay = 0;
-        const takenFort = taken && FB.fortAt ? FB.fortAt(state, taken) : null;
-        if (takenFort && (Number(takenFort.level) || 0) > 0) {
-          const fortStatus = FB.advanceAIYearlyFortSiege
-            ? FB.advanceAIYearlyFortSiege(state, war, taken, winner) : null;
-          fortDelay = fortStatus ? fortStatus.delay : 0;
-          if (!fortStatus || !fortStatus.breached) taken = null;
-          if (FB.decayAIYearlyFortSieges) {
-            FB.decayAIYearlyFortSieges(war, fortStatus ? fortStatus.pid : null);
-          }
-        } else if (FB.decayAIYearlyFortSieges) {
-          FB.decayAIYearlyFortSieges(war, null);
-        }
-        if (war.fortSieges) for (const siegePid in war.fortSieges) {
-          const siegeDef = FB.fortLevelDef
-            ? FB.fortLevelDef(war.fortSieges[siegePid].fortLevel) : null;
-          fortDelay = Math.max(fortDelay,
-            siegeDef ? Number(siegeDef.siegeDelay) || 0 : 0);
-        }
-        let objectiveOpen = false;
-        let objectiveCompleted = false;
-        if (taken) {
-          if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, taken);
-          if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, taken, 'ai_conquest');
-          FB.transferProvince(state, taken, winner);
-          yearWars.rebuild();
-          yearAlliances.rebuild();
-          war.captures = (war.captures || 0) + 1;
-          if (winner === id && war.casus &&
-              war.casus.type === 'consolidation' &&
-              state.realms[war.enemy] && state.realms[war.enemy].alive) {
-            war.target = FB.aiExpansionProvince(
-              state, id, war.enemy, function (pid) {
-                return aiExpansionObjectiveAllows(war, pid) &&
-                  !FB.sameFaithHeadWarPolicy(
-                    state, winnerReligion, war.enemy, pid);
-              });
-            objectiveOpen = !!war.target;
-            objectiveCompleted = !objectiveOpen;
-          }
-          const pv = FB.world.byId[taken];
-          if (FB.game.observe) { // the watcher hears of every fall, far or near
-            FB.news(state, FB.msg('news.world.province_falls',
-              '⚔ {province} has fallen to {winner}.', {
-                province: pv.name,
-                winner: state.realms[winner] ? state.realms[winner].name : winner
-              }));
-          } else if (taken === state.player.provinceId) {
-            FB.news(state, FB.msg('news.world.home_conquered',
-              '⚔ {winner} has conquered {province} — your home! New masters rule here now.', {
-                winner: state.realms[winner] ? state.realms[winner].name : winner,
-                province: pv.name
-              }));
-          } else if (FB.world.adj[state.player.provinceId] && FB.world.adj[state.player.provinceId][taken]) {
-            FB.news(state, FB.msg('news.world.province_falls',
-              '⚔ {province} has fallen to {winner}.', {
-                province: pv.name,
-                winner: state.realms[winner] ? state.realms[winner].name : winner
-              }));
-          }
-        }
-        war.years++;
-        if (!state.realms[loser].alive) {
-          if (FB.papacyDecisiveWarLost) {
-            FB.papacyDecisiveWarLost(state, loser);
-          }
-          FB.concludeOrdinaryWar(state, id, war);
-          r.war = null;
-          yearWars.rebuild();
-          yearAlliances.rebuild();
-        }
-        else if (objectiveCompleted || (!objectiveOpen &&
-                 (war.years >= 3 + fortDelay || FB.chance(0.35) ||
-                   (war.captures || 0) >= 2))) {
-          if (FB.papacyDecisiveWarLost) {
-            FB.papacyDecisiveWarLost(state, loser);
-          }
-          FB.concludeOrdinaryWar(state, id, war);
-          r.war = null; // peace
-          yearWars.rebuild();
-        }
-        if (!r.alive) continue;
-      } else if (!yearWars.has(id) &&
-                 !(FB.intrigueRealmRulerCaptive &&
-                   FB.intrigueRealmRulerCaptive(state, id)) &&
-                 FB.chance(B.aiWarChance * (0.5 + 0.5 * r.aggression))) {
-        // pick a neighboring realm to attack
-        const targets = [];
-        for (const id2 in state.realms) {
-          if (id2 === id) continue;
-          const r2 = state.realms[id2];
-          if (!r2.alive || r2.liege || yearWars.has(id2) ||
-              yearAlliances.paired(id, id2) || FB.truceExpiry(state, id, id2)) continue; // peaceful sovereigns only
-          if (id2 === 'player') continue; // wars vs player handled below
-          if (FB.sameFaithHeadWarPolicy(state,
-              FB.realmReligionId(state, id), id2, null)) continue;
-          if (FB.realmsAdjacent(state, id, id2)) targets.push(id2);
-        }
-        if (targets.length) {
-          const expansion = FB.aiExpansionTarget(
-            state, id, targets, yearDefensiveStrength);
-          if (expansion) {
-            const t = expansion.realmId;
-            r.war = { enemy:t, target:expansion.pid, years:0, captures:0,
-              casus:aiExpansionCasus(expansion.priority) };
-            yearWars.addWar(id, r.war);
-            const homeRealm = state.owner[state.player.provinceId];
-            if (FB.game.observe || id === homeRealm || t === homeRealm) {
-              FB.news(state, FB.msg('news.world.ai_war',
-                '🔥 War! {attacker} marches against {defender}.',
-                { attacker: r.name, defender: state.realms[t].name }));
-            }
-          }
-        }
-      }
-      // AI may attack an independent player realm — the cheap guards run
-      // first: relationMult and deterrence (the player's full levy breakdown)
-      // are only computed when a declaration is actually possible, and the
-      // FB.chance roll still fires under exactly the same conditions
-      if (FB.isPlayerSovereign(state) && !state.player.war &&
-        !yearWars.has(id) &&
-        !(FB.intrigueRealmRulerCaptive &&
-          FB.intrigueRealmRulerCaptive(state, id)) &&
-        !(state.pacts && state.pacts[id] > state.turn) &&
-        !FB.truceExpiry(state, 'player', id) &&
-        !yearAlliances.paired(id, 'player') &&
-        !FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, id), 'player', null)) {
-        const relationMult = FB.clamp(
-          1 - FB.standingOf(state, { kind:'realm', id:id }) / 100,
-          B.foreignOpinionAttackMin,
-          B.foreignOpinionAttackMax
-        );
-        const deterrence = FB.clamp(FB.aiBaseHost(state, id) /
-          Math.max(1, yearDefensiveStrength('player')), 0.25, 1.25);
-        if (FB.chance(0.04 * r.aggression * relationMult * deterrence) &&
-          FB.realmsAdjacent(state, id, 'player')) {
-          const playerTarget = FB.aiExpansionProvince(
-            state, id, 'player', function (pid) {
-              return state.player.provs &&
-                state.player.provs.indexOf(pid) >= 0;
-            });
-          const playerPriority = playerTarget &&
-            FB.aiExpansionPriority(state, id, playerTarget);
-          state.player.war = { enemy:id, target:playerTarget,
-            wins:0, losses:0, seasons:0, defending:true,
-            casus:aiExpansionCasus(playerPriority) };
-          yearWars.addPlayerWar(state.player.war);
-          FB.news(state, FB.msg('news.world.war_declared_on_player',
-            '🔥 {realm} declares war upon YOU!', { realm: r.name }));
-          FB.warFooting(state);
-          FB.queueWarEvent(state, 'war_defense_muster', {});
-          if (FB.ui && FB.ui.maybeTip) {
-            FB.ui.maybeTip('war-declared',
-              '💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe.',
-              '#mapwrap');
-          }
-        }
-      }
+      // Ordinary campaigns resolve through the shared seasonal registry.
       if (!r.war && !yearWars.has(id) && FB.aiRaidTick) {
         FB.aiRaidTick(state, id, r, B, true);
       }
@@ -6984,6 +6772,29 @@ window.FB = window.FB || {};
     FB.endPlayerWar(state, true);
   }
 
+  FB.warCaptivityTick = function (state) {
+    const p = state.player, w = p.war;
+    if (!w || !p.flags || !p.flags.in_prison ||
+        (p.captiveWarId && p.captiveWarId !== w.id) || p.captivitySeasonTurn === state.turn) return;
+    p.captivitySeasonTurn = state.turn;
+    const enemy = state.realms[w.enemy];
+    const me = state.chars[p.charId];
+    if (me && !me.dead && FB.chance(0.3)) me.health = Math.max(1, me.health - 1);
+    if (state.council && state.council.authority !== undefined) {
+      state.council.authority = Math.max(0, state.council.authority - 2);
+    }
+    const relChance = Math.min(0.5,
+      (FBDATA.balance.ransomSeasonReleaseChance || 0.2) +
+      (me ? FB.skillOf(me, 'int') : 0) / 200);
+    if (FB.chance(relChance)) {
+      delete p.flags.in_prison;
+      FB.news(state, FB.msg('news.war.prison_escaped',
+        '⛓ A bribed gaoler, a moonless night, a swift horse — you are free of {enemy}.',
+        { enemy: enemy ? enemy.name : '' }));
+    }
+    if (!p.flags.in_prison) delete p.captiveWarId;
+  };
+
   FB.playerWarTick = function (state) {
     const p = state.player;
     const w = p.war;
@@ -7104,20 +6915,7 @@ window.FB = window.FB || {};
        stands — the war drifts without orders while health, authority, and
        fortune decide how long the captivity lasts (docs/designs/descent.md) */
     if (p.flags && p.flags.in_prison) {
-      const me = state.chars[p.charId];
-      if (me && !me.dead && FB.chance(0.3)) me.health = Math.max(1, me.health - 1);
-      if (state.council && state.council.authority !== undefined) {
-        state.council.authority = Math.max(0, state.council.authority - 2);
-      }
-      const relChance = Math.min(0.5,
-        (FBDATA.balance.ransomSeasonReleaseChance || 0.2) +
-        (me ? FB.skillOf(me, 'int') : 0) / 200);
-      if (FB.chance(relChance)) {
-        delete p.flags.in_prison;
-        FB.news(state, FB.msg('news.war.prison_escaped',
-          '⛓ A bribed gaoler, a moonless night, a swift horse — you are free of {enemy}.',
-          { enemy: enemy ? enemy.name : '' }));
-      }
+      FB.warCaptivityTick(state);
       return;
     }
     FB.queueWarEvent(state, 'war_council', {});
@@ -7427,7 +7225,7 @@ window.FB = window.FB || {};
   FB.loseAllLand = function (state, opts) {
     opts = opts || {};
     const p = state.player;
-    if (p.war) FB.endPlayerWar(state);
+    if (FB.realmWars) FB.realmWars(state, 'player').forEach(function (w) { FB.endPlayerWar(state, true, w.id); });
     // the slide is over, one way or another — none of it follows the heir
     for (const df of ['df_unrest', 'df_league', 'df_claim', 'df_claim2', 'df_marked', 'df_doom']) delete p.flags[df];
     if (p.provs && p.provs.length) {
@@ -8352,7 +8150,7 @@ window.FB = window.FB || {};
     const oldTop = p.liege ? FB.topRealm(state, p.liege) : null;
     delete p.flags.felony_mark;
     delete p.flags.felony_doom;
-    if (!oldTop || !state.realms[oldTop] || !state.realms[oldTop].alive || p.war) return;
+    if (!oldTop || !state.realms[oldTop] || !state.realms[oldTop].alive || FB.ordinaryWarBetween(state, 'player', oldTop)) return;
     if (p.tier === 3 && (!p.provs || !p.provs.length)) {
       // a baron holds his tower against the lord: the home county is the stake
       p.provs = [p.provinceId];
@@ -8515,8 +8313,8 @@ window.FB = window.FB || {};
       const other = state.realms[otherId];
       if (!other || otherId === 'player') continue;
       if (other.liege === 'player') other.liege = rid;
-      if (other.war && other.war.enemy === 'player') other.war.enemy = rid;
     }
+    if (FB.remapWarRealm) FB.remapWarRealm(state, 'player', rid);
     for (const officeId in (state.religiousHeads || {})) {
       if (state.religiousHeads[officeId] === 'player') {
         state.religiousHeads[officeId] = rid;
@@ -8583,15 +8381,7 @@ window.FB = window.FB || {};
       if (vid !== 'player' && state.realms[vid].liege === rid) state.realms[vid].liege = 'player';
     }
     if (FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', rid);
-    FB.concludeOrdinaryWar(state, rid, inherited.war);
-    inherited.war = null;
-    for (const otherId in state.realms) {
-      const other = state.realms[otherId];
-      if (other && other.war && other.war.enemy === rid) {
-        FB.concludeOrdinaryWar(state, otherId, other.war);
-        other.war = null;
-      }
-    }
+    if (FB.remapWarRealm) FB.remapWarRealm(state, rid, 'player');
     if (FB.historicalAmbitionRealmInherited) FB.historicalAmbitionRealmInherited(state, rid, 'player');
     FB.markRealmDead(state, rid);
     /* The realm's temporal inheritance is separate from any religious office:

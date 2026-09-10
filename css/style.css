@@ -5884,3 +5884,67 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 /* Episcopal petitions keep long cost/chance labels aligned at every width. */
 .bishop-appointment-actions { display:grid; grid-template-columns:minmax(0, 1fr); gap:8px; margin-top:16px; }
 .bishop-appointment-actions > .btn { width:100%; min-height:44px; white-space:normal; }
+
+/* Native campaign controls follow the shared field and touch-target skin. */
+.war-host-assignment, .war-claim-row, .war-law-row {
+  display: block;
+  margin: 12px 0;
+}
+.war-host-assignment select, .war-claim-row select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+[data-claim-package] > label {
+  display: block;
+  margin: 12px 0;
+  min-height: 44px;
+}
+.war-claim-row > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+/* Claims use the existing conquest rows and map controls. */
+.war-target-card { display: grid; grid-template-columns: 100px minmax(0, 1fr); }
+.war-target-claim, .war-map-claim {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px;
+  font-size: var(--ui-label-size); color: var(--helper-text-color);
+}
+.war-target-claim { flex-direction: column; justify-content: center; text-align: center; }
+.war-target-claim input, .war-map-claim input { width: 20px; height: 20px; flex-shrink: 0; }
+.war-target-card .war-target-details { grid-column: 1 / -1; }
+.war-target-card.claim-compatible { border-color: var(--ui-accent-color); background: #302719; }
+.war-target-card.claim-selected { border-color: var(--ui-accent-color); background: #3b301b; }
+.war-target-card.claim-compatible .war-target-claim,
+.war-target-card.claim-selected .war-target-claim { color: var(--ui-accent-color); }
+@media (max-width: 600px) {
+  .war-target-card { grid-template-columns: 76px minmax(0, 1fr); }
+  .war-target-claim { font-size: 14px; }
+}
+
+.war-target-card [data-war-claim-basis] { grid-column: 2; min-width: 0; max-width: 100%; min-height: 44px; margin: 8px; }
+.war-target-card [data-war-claim-basis][hidden] { display: none; }
+
+.war-target-claim[hidden] { display: none; }
+.war-target-card.single-target { grid-template-columns: minmax(0, 1fr); }
+
+/* Campaign and war-law sheets use shared facts and responsive disclosures. */
+.war-sheet > .war-sheet-section {
+  margin: 16px 0; padding: 0 0 12px; border: 0;
+  border-bottom: 1px solid var(--ui-border-color); border-radius: 0; background: transparent;
+}
+.war-sheet-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.war-sheet-heading h3 { margin: 0; font-size: 16px; }
+.war-sheet-heading .settcard-actions { position: static; flex-shrink: 0; }
+.war-sheet p { margin: 8px 0; }
+.war-sheet .war-law-option + .war-law-option { margin-top: 12px; }
+.war-sheet .war-host-assignment { color: var(--helper-text-color); font-size: var(--ui-label-size); }
+.war-sheet .settcard-details p + p { margin-top: 12px; }
+.war-sheet .settcard-details { margin-top: 8px; }
+
+/* The shared footer supplies the final divider. */
+.war-sheet > .war-sheet-section:last-of-type { border-bottom: 0; padding-bottom: 0; }
+.war-sheet .war-law-option h4 { margin: 0 0 8px; font-size: var(--ui-label-size); color: var(--helper-text-color); font-weight: normal; }

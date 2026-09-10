@@ -17,10 +17,10 @@ a second screen. Resolve everything skips the additional presentation.
 Player offensive wars require a semantic cause. `FB.warCauses(state)` returns cause
 records rather than unrestricted adjacent county ids. A new county war prefers a
 bordering county inside a de jure duchy, kingdom, or empire the player actually holds
-(the most specific title wins), or the player's one fabricated county claim. When
+(the most specific title wins), or one of the player's fabricated county claims. When
 neither right applies, that same reachable neighboring county is offered explicitly as
 an `aggression` cause. It is never labeled or saved as a fabricated or de jure right.
-Active wars, peace pacts, and alliances remain hard declaration blocks.
+An existing ordinary campaign against the same opponent, peace pacts, truces, and alliances remain declaration blocks. Unrelated wars do not prevent a declaration.
 `FB.warTargets` and string calls to
 `FB.startPlayerWar` remain compatibility surfaces, while a new war stores the selected
 record in `player.war.casus`. Old in-progress wars without that field keep their legacy
@@ -86,27 +86,20 @@ The exceptional `restoration` cause belongs to one displaced rightful crowned
 protagonist. It ignores adjacency, follows the usurper realm's current capital through
 the usual field campaign and three-step siege, and on victory absorbs the current realm
 and its vassal hierarchy intact. Defeat does not consume the right. Independence remains
-its existing dedicated action and cause. AI wars do not maintain claim ledgers; they
-store only a descriptive `border` cause.
+its existing dedicated action and cause. AI houses derive territorial rights from their recognized principal dignity; they do not fabricate personal claim ledgers.
 
 Ruler sheets summarize both sides beneath the linked **Current war** notice. Player wars
 name the saved semantic objective where one exists, while AI border wars describe the
 attacker’s territorial aim and the defender’s goal of holding the border. Independence,
-defection, restoration, Caliphate succession, and great holy wars receive cause-specific
+defection, restoration, Caliphate succession, and holy wars receive cause-specific
 two-sided summaries. These are read-only projections of the live war record and never
 add a second objective store.
 
-AI territorial wars select and save one consolidation objective. The ordering is a partial
-de jure duchy first, then a partial kingdom, then a partial empire, followed by a new de
-jure frontier and finally non-de-jure land. Compact shared borders and the capital's title
-region break strategic ties before enemy weakness. The primary host hunts an enemy army as
-before, but otherwise it and its siege detachment march on the saved objective county rather
-than automatically cutting toward the enemy capital. A winning yearly resolution takes only
-counties inside that objective and keeps the war open while the same enemy has another
-adjacent objective county; completing the available package ends the campaign. A defending
-winner chooses its counter-capture through the same consolidation preference. This prevents
-unrelated border picks from creating long one-county tendrils while allowing later wars to
-continue from duchy to kingdom and kingdom to empire.
+AI territorial campaigns prefer lawful rights inside the ruler's principal title
+region. They freeze a connected package against one defender, or one aggressive
+border county when no lawful right is available. Their hosts fight and occupy through
+the same seasonal objective system as player territorial campaigns. There is no
+independent annual county-transfer shortcut.
 
 Every ordinary war involving the protagonist makes the enemy ruler immediately Hostile:
 the shared Standing score is capped at `warEnemyStandingCeiling` (−60 by default) when
@@ -125,14 +118,14 @@ realm survives. The seasonal and capture paths both re-check the sovereign holde
 the player's Sunni sovereign eligibility. If either has changed, the war ends with
 nothing gained; capture never falls through to ordinary county conquest. The tribute
 offer after three field wins remains a
-legitimate exit (take the gold and go home), and an in-preparation great holy war of
+legitimate exit (take the gold and go home), and an in-preparation holy war of
 the deposed holder collapses as a vacancy when the office moves. The AI never declares
 this war.
 
 ## War against a religious head
 
 During a Catholic schism, sanctions and commands are scoped through the realm's saved
-obedience. No new Catholic great holy war may be called, and forming the rival obedience
+obedience. No new Catholic holy war may be called, and forming the rival obedience
 cancels a campaign still gathering; a campaign already launched completes from its saved
 `callerClaimantId` / `callerObedienceId` snapshot. Capturing Rome transfers the Roman
 territorial office to the claimant recognized by the conqueror without automatically
@@ -163,31 +156,94 @@ even the last county creates an explicit office vacancy through the realm-death
 boundary and never grants the religious office or defeated crown. The single exception
 is the player-only `caliphate` succession war above, whose whole stake is the office.
 
-Each actual participant may occupy only one ordinary war. The shared
-`FB.ordinaryWarParticipants` lookup returns the declaring realm and its enemy; a
-personal player war always belongs to `player` and the saved enemy, including under
-a liege. A personal foreign conquest neither occupies nor mobilizes that liege.
-Declaration gates, yearly indexes, hostility, repair, and ruler notices use these
-actual identities. An independence war still includes the liege as its named enemy.
-Great holy wars keep their separate camp participation rules. This does not add AI
-vassal foreign-war generation or expand foreign conquest eligibility.
+## Independent campaigns and the sovereign peace
 
-`FB.repairWars` preserves a valid personal war first, then non-overlapping AI wars
-in stable realm-id order, without reserving the personal player's sovereign.
-`FB.playerRealmAtWar` deliberately includes both personal participation and inherited
-sovereign war exposure for household economics; inherited exposure is not a second
-personal campaign. `FB.warOpponents` names the actual opponents in notices.
+`state.wars` is the authoritative ordinary-war registry. Each active record has a
+stable `id`, `attacker`, `defender`, frozen `objectives`, `occupations`, and independent
+campaign/event progress. `FB.realmWars`, `FB.ordinaryWarById`, and
+`FB.ordinaryWarBetween` are read-only queries. The synchronous
+`FB.withOrdinaryWar(state, id, callback)` adapter binds existing field/event handlers
+to an exact campaign; it never reads UI selection. Non-enumerable `player.war` and
+realm `war` compatibility views are not second saved stores. Ambiguous legacy peace
+mutations fail closed. New callers use an explicit war ID.
 
-Normal ordinary settlements pass through `FB.concludeOrdinaryWar` (including player
-settlements through `FB.endPlayerWar`) and protect both actual opponents for 720 days.
-`state.truces` maps a JSON-encoded, sorted pair of realm IDs to its expiry turn.
-Protection ends exactly at that turn, survives ruler succession, and is separate
-from voluntary peace pacts. Declaration previews and notices show the date and turn.
-Invalid-war cleanup and mandatory great-holy-war transitions create no truce.
-Old saves receive an empty ledger during war repair without RNG or a format bump.
-The technology decisions are **none** for `ordinary_war_truces` and
-`personal_vassal_campaigns`: baseline diplomacy and political participation do not
-require research.
+The player can fight different opponents concurrently. One ordinary campaign is
+allowed per opposing pair, and its objectives cannot grow after declaration. AI
+rulers consider campaigns seasonally, with at most two offensive commitments including
+holy-war participation. Personal player and AI vassal campaigns do not mobilize their
+attacking liege. Foreign land is defended by its sovereign; internal wars involve the
+opposing vassal subtrees. Ancestor/descendant conquest is excluded; independence and
+peace enforcement retain dedicated political actions.
+
+A sovereign's **Internal peace** and **External campaigns** laws apply throughout
+its realm, including independent duchies. Each defaults to **Customary freedom**,
+with **Permission required** and **Prohibited** alternatives. Proclamation uses the
+ordinary royal-policy cost and annual family cooldown. Tightening costs 10 Standing
+with direct vassals; loosening grants 10. Existing wars are grandfathered.
+Permission from the immediate liege authorizes one exact package and is consumed on
+declaration. The player answers their vassals' requests in War laws & permissions.
+
+Vassals can explicitly declare unlawfully. This costs 20 Standing with the enforcing
+liege and produces a demand to stop within 90 days. Compliance ends that campaign in
+white peace. Refusal permits **Enforce the peace** while the offending campaign and
+liege relationship remain active. Enforcement victory occupies the offender's seat,
+ends the named campaign, and costs the offender 50 prestige without revoking land.
+A truce or existing campaign between those opponents prevents a second enforcement war.
+
+The existing conquest list provides a checkbox beside each target button. Checking
+one lawful claim highlights the other currently compatible claims against the same
+defender; selected counties must remain connected to the player's frontier. Each
+selected county retains its chosen lawful basis. Multi labels require an available
+connected package of at least two lawful claims against the same defender; a
+lawful claim with no such partner has no checkbox or Single label. The Claims
+filter can isolate multi-claim or single targets; Multiple claims first sorts larger
+available packages ahead of smaller packages and single objectives. The same selection is available
+in Select on Map: clicking a county toggles its selection directly, with no map
+checkbox. Selected counties are highlighted; compatible additions retain small
+markers. Dashed gold lines join adjacent markers in the same lawful package,
+including before selection. Removing the final county clears the highlight and disables review. Review selected claims uses the existing War Justification sheet.
+The catalogue follows connected lawful claims beyond the current frontier, while
+continuing to reject unclaimed counties and objectives against another defender.
+Opening the map centers the selected claim, then an available lawful claim or
+other target when none is selected, before falling back to a realm capital or home.
+There is no separate claim-package modal. Unchecking a connecting county retains
+other selections and explains any connectivity blocker before declaration.
+
+Several own fabricated or held de jure rights can form one connected claim package
+against one defender, touching the attacker's frontier. Aggression remains exactly
+one county. Fabrication can establish successive county claims; a failed attempt
+never erases earlier claims. Acquiring a right retains its existing technology gate.
+Ordinary territorial sieges create temporary occupation without changing owner/holder.
+All selected objectives must remain occupied together to win; recapture removes
+occupation. Victory transfers the package and consumes successfully pressed fabricated
+claims. White peace and withdrawal grant no counties. Third-party losses remove the
+unavailable objective without compensation. Campaigns exhaust into white peace after
+32 seasons. Nonterritorial causes retain their specialized settlement handlers.
+
+Hosts share realm recruitment, casualties, reinforcements, mercenaries and upkeep.
+Their `warId` selects an ordinary campaign or `holy`; changing assignment cancels the
+route but preserves location, composition and supply. Vassal recruitment excludes its
+counties from a simultaneously mobilized ancestor, recalling the overlapping share
+from existing ancestor hosts. Host splitting retains assignment. Neutral armies do
+not join a battle merely because they are not hostile to one side.
+
+Holy wars retain their calling, vow, occupation, contribution and settlement systems.
+They coexist with ordinary wars using the same military resources. Hosts work on the
+objectives of their assigned campaign; a battle credits one eligible campaign, preferring
+an assigned ordinary campaign where hostility overlaps. Holy-war semantic IDs and save
+keys retain their previous spelling; authored player-facing text says **Holy war**.
+
+Peace protects the two actual ordinary opponents for 720 days through the canonical
+sorted-pair `state.truces` ledger. Cleanup of invalid campaigns creates no truce.
+Ending one campaign preserves unrelated wars and hosts, and releases only that war's
+prisoner. Operational events carry `warId` plus the legacy serial/enemy stamps, so a
+stale decision cannot apply to another campaign. Realm inheritance remaps campaign
+identities; self-conflicts close without territorial awards. Save format remains 3.
+
+Technology impact is **none** for `concurrent_campaigns`, `lawful_claim_packages`,
+`vassal_war_laws`, and `peace_enforcement`: these are baseline military coordination,
+existing rights, and political authority, with no credible research dependency.
+The existing `personal_vassal_campaigns` and `ordinary_war_truces` decisions remain none.
 
 Alliances are defensive abstractions, not extra war parties. `state.alliances` stores
 canonical realm pairs with their source and both ruler-generation stamps, and each realm
@@ -230,7 +286,7 @@ it disperses where it stands and only part of it returns to the muster rolls —
 `balance.armyDemusterKeepOwn` (all, by default) on the player's own county,
 `balance.armyDemusterKeepRealm` (half) elsewhere in the player's sovereign realm,
 `balance.armyDemusterKeepOther` (nothing) anywhere else. The returned men are kept on
-the war as `state.player.war.musterPool` and cap each own class of the war's next
+the shared military ledger as `state.military.player.musterPool` and cap each own class of the war's next
 muster after levy modifiers are calculated; hired companies and allied reinforcements
 are raised fresh. The ordinary `armyMinMen` floor does not create replacements after
 a de-muster: if the preserved men plus fresh mercenaries/allies remain below it, the
@@ -240,14 +296,11 @@ disabled with the live blocker while a host is already fielded, the rearm wait r
 or too few men can answer, rather than disappearing from the wartime controls. The
 de-muster itself starts the same rearm wait as a shattering — so a beaten player cannot
 de-muster and immediately
-re-raise a full levy. Great-holy-war hosts are vow-bound and cannot de-muster. Hosts exist only while their sovereign
-is at war — the daily `FB.armyTick` (called from `G.passDay`) disbands any whose war has
-ended, which covers every peace path with one rule. War relationships are folded into a
-single `warring` map (and hosts into a `hostsByRealm` lookup) once per tick. The eligible
-sovereign-realm ids are an unsaved derived index retained until realm death or hierarchy
-mutation advances the shared realm revision. Daily war discovery and host raising thus
-visit the dozens of sovereigns rather than every generated count and duke, keeping the
-hot path O(sovereigns + armies) even with dozens of hosts on the map. When that
+re-raise a full levy. Great-holy-war hosts are vow-bound and cannot de-muster. Hosts remain while their actual realm has a military commitment. The daily
+`FB.armyTick` disbands hosts only after the last relevant campaign ends. A retained
+realm-ID index includes landed vassals as well as sovereigns. The daily `warring`
+lookup tracks whether each realm must keep its hosts; exact hostility and goals read
+the campaign registry and host assignment. When that
 warring lookup is empty and no hosts are fielded, the daily tick matures any
 pending professional-replacement cohorts and exits before order, reinforcement,
 supply, province-camp, and battle work.
@@ -354,7 +407,7 @@ A missing host returns all zeroes, so a shattered or disbanded host costs nothin
 it is raised again. The season boundary charges the same bill for ordinary and sovereign
 great holy-war hosts and clamps an underfunded purse to zero without disbanding the host.
 `campaignModifier` is zero for ordinary-war-only hosts and records the signed supply
-adjustment for a player host serving in a great holy war.
+adjustment for a player host serving in a holy war.
 
 Every field army adds local provisions demand to the quarterly county market. A hostile
 host also refreshes a saved severe shock that lowers local production and adjacency-flow
@@ -567,13 +620,12 @@ While a host is selected, a tap resolved to a different province always issues a
 destination order even when the host marker's hit radius overlaps that province at
 low zoom; only a second tap in the host's current province halts it.
 
-**A battle fires when hostile hosts share a province** (`FB.armiesHostile`: the two
-sovereigns hold a war object on each other, or one side is the player's war enemy).
+**A battle fires when hostile hosts share a province** (`FB.armiesHostile` reads opposing ordinary subtrees or holy-war camps).
 The battle scan runs only after the day's separately planned marches and groups hosts by
 the exact `army.at` province id; neighboring province ids never fight one another.
-One clash per province per day: hosts that are not mutually hostile fold into one side
-(the same folding the allied reinforcement rule applies), the two strongest sides meet,
-and everyone else stands clear. A side's power is the sum of its hosts' terrain-aware
+One clash occurs per province per day. Hosts of the same realm or a shared holy-war
+camp form a side only when mutually nonhostile. The strongest eligible opposing pair
+fights; neutral third-party armies stand clear. A side's power is the sum of its hosts' terrain-aware
 battle power, counter edges read the pooled compositions, and casualties spread across
 the side in proportion to each host's men (`spreadLosses`).
 Power is men × composition quality × martial factor (player
@@ -1113,3 +1165,18 @@ existing soldiers are never removed because a county becomes blocked. The primar
 60-day and detachment 25-day rearm clocks remain unchanged and are shown alongside
 territorial blockers. `territorial_recruitment_eligibility` has technology impact
 **none**: access and relief are core military constraints, not researched capabilities.
+
+In the war map picker, clicking an available target outside the selected package
+replaces the current selection, even when several claims were selected. Clicking
+a compatible claim still adds it, and clicking a selected county removes it.
+Other independently valid targets keep their markers visible for switching.
+A county that cannot begin a valid campaign does not clear the existing selection.
+
+Campaign and war-law sheets use shared label/value rows and quiet section dividers.
+Opponent, objective status, victory condition, upkeep, peace costs, current laws,
+and actionable proclamation costs/Standing changes stay visible. A ruler eligibility
+blocker appears once above the laws; unavailable ruler controls are omitted in this
+read-only view. Law alternatives and campaign background use shared desktop
+hover/focus tooltips and compact question-mark disclosures. Proclamation retains
+scroll and expanded disclosures and focuses the changed law section. Nested Back
+restores the prior sheet and its disclosures.

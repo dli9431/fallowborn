@@ -77,15 +77,18 @@ campaign properties are `start_bookmark`, `quick_start`, `player_tier`, and `dyn
 events add only bounded context such as `entry_type`, `scenario`, `family_preset`,
 `quick_start`, `starting_location`, `starting_culture`, `starting_religion`, `active_seconds`, `game_year`, or
 checkpoint reason. Engagement calls to action add only the fixed `cta_surface` values documented
-above. The three `starting_*` properties appear only on `campaign-started`, use
-stable internal IDs, and describe the character's committed start. Player and dynasty names,
+above. The three `starting_*` properties, `scenario`, and `family_preset` accompany campaign events
+when known, use stable internal IDs, and describe the original committed start even after
+moves, conversions, or succession. Player and dynasty names,
 world seeds, later locations, rendered death text, and save contents must never be sent. Do Not
 Track remains respected by the Umami loader. Older event names remain only as historical schema-1
 rows in Umami.
 Fresh campaigns save the bounded `quick_start` origin so engagement, resume, and lifecycle
 events can be compared between `custom` and each curated start. Saves created before that field
 existed report `unknown` after load and are grandfathered past the two campaign-once activation
-events rather than producing false first-day or first-event records.
+events rather than producing false first-day or first-event records. Original setup details
+are recovered from valid saved start codes where available, without sending the code itself or
+guessing that missing quick-start provenance means custom.
 Once campaign state exists, every event carrying `start_bookmark` also carries the current
 `game_year`. The pre-campaign New Game screen events are the deliberate exception: they may name
 the selected bookmark before any campaign date exists.

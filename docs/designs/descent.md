@@ -176,3 +176,16 @@ defaults), [holdings.md](holdings.md) (commoner property),
 [events.md](events.md) (the chain template).
 
 Final downfall aftermaths briefly distinguish retaining rule, fleeing after defeat, and surviving an attack while losing the seat; exact land and station losses remain in the outcome chips.
+
+## Breaking the sovereign peace
+
+An unlawful vassal campaign costs 20 Standing with the enforcing liege and creates
+one demand to stop within 90 days. Compliance ends only that campaign. Refusal
+permits an enforcement war: occupying the defiant ruler's seat ends the offending
+campaign and costs the offender 50 prestige, without automatic forfeiture. When
+the underlying campaign ends, enforcement loses its cause. This capability has
+technology impact none. Captivity now carries `player.captiveWarId`; unrelated
+peace cannot release that campaign's prisoner. Older saves bind captivity to their
+existing player campaign without consuming randomness. Health, authority, and
+escape checks run once per season, regardless of the number of concurrent wars.
+See [war.md](war.md).

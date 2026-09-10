@@ -1,7 +1,7 @@
 /* Fallowborn — temporary county and player-participation campaign modifiers.
    Records are small JSON-safe {id,endTurn?,sourceEventId?} values. County
    records stay with their province; campaign records live on the active
-   great holy war. */
+   holy war. */
 window.FB = window.FB || {};
 
 (function () {

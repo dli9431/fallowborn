@@ -1,4 +1,4 @@
-/* Fallowborn — great holy wars.
+/* Fallowborn — holy wars.
    One global, two-camp campaign may prepare or fight alongside the ordinary
    bilateral-war model. Religious heads call; sovereign volunteers field one
    ordinary host each; objective counties are occupied temporarily and change
@@ -553,7 +553,7 @@ window.FB = window.FB || {};
     var candidates = [];
     for (var rid in state.realms) {
       if (rid === 'player' || !livingSovereign(state, rid) ||
-          participantOf(campaign, 'defenders', rid) || ordinaryWarInvolves(state, rid)) continue;
+          participantOf(campaign, 'defenders', rid)) continue;
       var faith = FB.realmReligionId(state, rid);
       if (!faith ||
           !opposedToCall(state, faith, campaign.callingReligion)) continue;
@@ -667,9 +667,6 @@ window.FB = window.FB || {};
       var top = FB.playerRealmId(state);
       var mode = sovereign ? 'host'
         : (top && participantOf(campaign, camp, top) ? 'liege' : 'expedition');
-      if (camp === 'defenders' && sovereign && ordinaryWarInvolves(state, 'player')) {
-        return false;
-      }
       state.player.greatHolyWar = {
         campaignId:campaign.id, camp:camp, mode:mode, vow:true,
         mandatory:!!participantOf(campaign, camp, 'player'),
@@ -715,8 +712,7 @@ window.FB = window.FB || {};
         !FB.faithInFold(state, campaign.callingReligion, realmReligion)) return false;
     if (camp === 'defenders' &&
         (!realmReligion || !opposedToCall(state, realmReligion,
-          campaign.callingReligion) ||
-         ordinaryWarInvolves(state, realmId))) return false;
+          campaign.callingReligion))) return false;
     if (camp !== 'attackers' && camp !== 'defenders') return false;
     if (voluntaryCount(campaign, camp) >= B('greatHolyWarVolunteersPerCamp', 8)) return false;
     var joiningRecord = {
@@ -947,23 +943,6 @@ window.FB = window.FB || {};
     return opposing > 0;
   }
 
-  function endOrdinaryWars(state, rid) {
-    var top = sovereignRealm(state, rid);
-    var pw = state.player.war;
-    if (pw) {
-      var playerTop = FB.playerRealmId(state), enemyTop = sovereignRealm(state, pw.enemy);
-      if (top === playerTop || top === enemyTop || rid === 'player') {
-        if (FB.endPlayerWar) FB.endPlayerWar(state, true);
-        else state.player.war = null;
-      }
-    }
-    for (var id in state.realms) {
-      var realm = state.realms[id];
-      if (!realm || !realm.war) continue;
-      if (sovereignRealm(state, id) === top ||
-          sovereignRealm(state, realm.war.enemy) === top) realm.war = null;
-    }
-  }
 
   function breakCrossCampTies(state, campaign) {
     var campByRealm = {};
@@ -993,10 +972,10 @@ window.FB = window.FB || {};
       if (!part.sovereign || !participantRealmValid(state, part)) continue;
       /* fielded strength counts every host the realm has out — the main
          body and any detachment */
-      var hosts = current && FB.hostsOf ? FB.hostsOf(state, part.realm) : [];
+      var hosts = current && FB.hostsOf ? FB.hostsOf(state, part.realm).filter(function (host) { return !host.warId || host.warId === 'holy'; }) : [];
       if (hosts.length) {
         for (var h = 0; h < hosts.length; h++) total += hosts[h].men;
-      } else {
+      } else if (!current) {
         total += paperStrength(state, part.realm) *
           (FB.rearmScale ? FB.rearmScale(state, part.realm) : 1);
       }
@@ -1055,22 +1034,7 @@ window.FB = window.FB || {};
 
   function launch(state, campaign) {
     pruneParticipants(state, campaign);
-    var attackers = campaign.participants.attackers, kept = [];
-    for (var i = 0; i < attackers.length; i++) {
-      if (attackers[i].voluntary && ordinaryWarInvolves(state, attackers[i].realm)) {
-        if (attackers[i].realm === 'player' && state.player.greatHolyWar) {
-          state.player.greatHolyWar.withdrawn = true;
-          state.player.greatHolyWar.landEligible = false;
-        }
-        continue;
-      }
-      kept.push(attackers[i]);
-    }
-    campaign.participants.attackers = kept;
-    var defenders = campaign.participants.defenders;
-    for (var j = 0; j < defenders.length; j++) {
-      if (defenders[j].mandatory) endOrdinaryWars(state, defenders[j].realm);
-    }
+    // Ordinary commitments coexist; neither camp cancels another campaign.
     pruneParticipants(state, campaign);
     var sovereignAttackers = [];
     for (var k = 0; k < campaign.participants.attackers.length; k++) {
@@ -1174,6 +1138,7 @@ window.FB = window.FB || {};
     var out = { attackers:[], defenders:[], attackersMen:0, defendersMen:0 };
     var hosts = FB.armiesAt ? FB.armiesAt(state, pid) : [];
     for (var i = 0; i < hosts.length; i++) {
+      if (hosts[i].warId && hosts[i].warId !== 'holy') continue;
       var camp = FB.greatHolyWarCamp(state, hosts[i].realm);
       if (!camp) continue;
       out[camp].push(hosts[i]);
@@ -1319,16 +1284,16 @@ window.FB = window.FB || {};
     } else if (playerInvolved) {
       FB.news(state, playerWon
         ? FB.msg('news.holywar.detachment_victory',
-          '⚔ Your detached banner helps win the field at {province} in the great holy war.', {
+          '⚔ Your detached banner helps win the field at {province} in the holy war.', {
             province:FB.world.byId[pid] ? FB.world.byId[pid].name : ''
           })
         : FB.msg('news.holywar.detachment_defeat',
-          '⚔ Your detached banner is driven from the field at {province} in the great holy war.', {
+          '⚔ Your detached banner is driven from the field at {province} in the holy war.', {
             province:FB.world.byId[pid] ? FB.world.byId[pid].name : ''
           }));
     } else if (FB.game.observe) {
       FB.news(state, FB.msg('news.holywar.battle',
-        '⚔ Battle at {province}: {winner} breaks {loser} in the great holy war.', {
+        '⚔ Battle at {province}: {winner} breaks {loser} in the holy war.', {
           province:FB.world.byId[pid] ? FB.world.byId[pid].name : '',
           winner:realmName(state, winner.realm),
           loser:realmName(state, loser.realm)

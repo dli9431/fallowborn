@@ -3426,7 +3426,7 @@ window.FB = window.FB || {};
     }
 
     if (rel.properties && rel.properties.head && rel.properties.head.greatHolyWar) {
-      const ghwName = dt(s, 'religion', fid, rel, 'head.greatHolyWar.name') || FB.T('Great holy war');
+      const ghwName = dt(s, 'religion', fid, rel, 'head.greatHolyWar.name') || FB.T('Holy war');
       lines.push('<b>' + esc(FB.T('Holy War')) + ':</b> ' + esc(ghwName));
     }
 
@@ -3845,7 +3845,7 @@ window.FB = window.FB || {};
       }
       if (kind === 'faith' && scope === 'realm' && st.oldFoldRealmIds.length) {
         lines.push(FB.T(
-          'Your realm becomes a lawful target for the great holy wars of your old faith.'));
+          'Your realm becomes a lawful target for the holy wars of your old faith.'));
       }
       let h = '<div class="gm-body-text"><p>' + esc(lead) + '</p><p>' +
         esc(returning
@@ -4329,7 +4329,7 @@ window.FB = window.FB || {};
     return religion
       ? dt(s, 'religion', campaign.callingReligion, religion,
         'head.greatHolyWar.name')
-      : FB.T('Great holy war');
+      : FB.T('Holy war');
   }
 
   function greatHolyWarParticipantNames(s, campaign, camp) {
@@ -4446,7 +4446,7 @@ window.FB = window.FB || {};
       '</div>';
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Not now')) + '</button>';
-    openModal(FB.T('Call great holy war'), h);
+    openModal(FB.T('Call holy war'), h);
     document.querySelectorAll('[data-ghw-kingdom]').forEach(function (button) {
       button.addEventListener('click', function () {
         FB.callGreatHolyWar(FB.state, button.dataset.ghwReligion,
@@ -5224,7 +5224,7 @@ window.FB = window.FB || {};
 
   const warTargetView = {
     stateRef:null, search:'', basis:'all', adjacency:'all', rank:'all',
-    diplomacy:'all', sort:'recommended', focusRealmId:null
+    diplomacy:'all', package:'all', sort:'recommended', focusRealmId:null
   };
 
   function warCauseIsAdjacent(s, cause) {
@@ -5276,12 +5276,61 @@ window.FB = window.FB || {};
       option('all', FB.T('Available and blocked'), warTargetView.diplomacy) +
       option('available', FB.T('Available now'), warTargetView.diplomacy) +
       option('blocked', FB.T('Blocked now'), warTargetView.diplomacy)) + select(
+      'war-target-package', FB.T('Claims'),
+      option('all', FB.T('All targets'), warTargetView.package) +
+      option('multi', FB.T('Multiple claims'), warTargetView.package) +
+      option('single', FB.T('Single targets'), warTargetView.package)) + select(
       'war-target-sort', FB.T('Sort'),
       option('recommended', FB.T('Recommended'), warTargetView.sort) +
+      option('multi', FB.T('Multiple claims first'), warTargetView.sort) +
       option('realm', FB.T('Realm name'), warTargetView.sort) +
       option('territory', FB.T('Territory name'), warTargetView.sort) +
       option('rank', FB.T('Enemy rank'), warTargetView.sort) +
       option('defense', FB.T('Defense strength'), warTargetView.sort)) + '</div>';
+  }
+
+  function selectedWarClaims() { return warTargetView.claims || []; }
+  function packageClaim(causes) {
+    return (causes || []).filter(function (c) {
+      return !c.blocked && (c.type === 'dejure' || c.type === 'fabricated');
+    })[0] || null;
+  }
+  function claimSelected(cause) {
+    return !!cause && selectedWarClaims().some(function (c) {
+      return c.target === cause.target && c.enemy === cause.enemy;
+    });
+  }
+  function claimCanJoin(cause) {
+    return !!cause && !claimSelected(cause) && FB.warDeclarationPreview(FB.state, 'player',
+      selectedWarClaims().concat([cause])).valid;
+  }
+  function toggleWarClaim(cause) {
+    if (claimSelected(cause)) {
+      warTargetView.claims = selectedWarClaims().filter(function (c) { return c.target !== cause.target || c.enemy !== cause.enemy; });
+    } else if (claimCanJoin(cause)) warTargetView.claims = selectedWarClaims().concat([cause]);
+  }
+  function combinableWarClaims(state, targets) {
+    const byTarget = {}, visited = {}, result = {};
+    targets.forEach(function (causes) {
+      const cause = packageClaim(causes);
+      if (cause) byTarget[cause.target] = cause;
+    });
+    Object.keys(byTarget).forEach(function (pid) {
+      if (visited[pid]) return;
+      const group = [], queue = [pid], enemy = byTarget[pid].enemy;
+      while (queue.length) {
+        const next = queue.shift();
+        if (visited[next]) continue;
+        visited[next] = true; group.push(byTarget[next]);
+        Object.keys(FB.world.adj[next] || {}).forEach(function (nb) {
+          if (!visited[nb] && byTarget[nb] && byTarget[nb].enemy === enemy) queue.push(nb);
+        });
+      }
+      if (group.length > 1 && FB.warDeclarationPreview(state, 'player', group).valid) {
+        group.forEach(function (cause) { result[cause.target] = group.length; });
+      }
+    });
+    return result;
   }
 
   UI.showWarTargets = function (focusRealmId, returnContext) {
@@ -5295,7 +5344,12 @@ window.FB = window.FB || {};
       warTargetView.adjacency = 'all';
       warTargetView.rank = 'all';
       warTargetView.diplomacy = 'all';
+      warTargetView.package = 'all';
       warTargetView.sort = 'recommended';
+      warTargetView.claims = [];
+      warTargetView.scroll = 0;
+      warTargetView.filtersOpen = false;
+      warTargetView.expanded = [];
     }
     const includeBlocked = !focusRealmId;
     const sourceCauses = focusRealmId && FB.realmWarCauses
@@ -5318,6 +5372,7 @@ window.FB = window.FB || {};
     const playerRank = s.realms.player && s.realms.player.alive
       ? s.realms.player.rank : s.player.tier;
     const models = [];
+    const combinable = combinableWarClaims(s, targets);
     const mapTargets = [];
     const titleDetails = '<p>' + esc(FB.T(
       'Compare available territorial targets before choosing. The final review selects the exact justification. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.')) +
@@ -5331,6 +5386,8 @@ window.FB = window.FB || {};
       '</button></div><details class="war-target-filters" ' +
       'id="war-target-filters"><summary>' + esc(FB.T('Filters & sorting')) +
       '</summary>' + warTargetToolbarHtml() + '</details>' +
+      '<p id="war-claims-status" role="status"></p>' +
+      '<button type="button" class="btn" id="war-claims-review" hidden>' + esc(FB.T('Review selected claims')) + '</button>' +
       '<div class="gm-list war-target-list" ' +
       'id="war-target-list">';
     for (let ci = 0; ci < targets.length; ci++) {
@@ -5436,7 +5493,9 @@ window.FB = window.FB || {};
           '⛓ Sacrilege · all piety lost · excommunication')) + '</span>' : '';
       h += '<div class="war-target-card settcard' +
         (cause.type === 'aggression' ? ' aggression' : '') +
-        (cause.blocked ? ' blocked' : '') + '"><button class="actionbtn war-target-row" ' +
+        (cause.blocked ? ' blocked' : '') + '"><label class="war-target-claim"><input type="checkbox" data-war-claim="' + ci +
+        '" aria-label="' + esc(FB.T('Include {province} in this war', { province:pr.name })) + '">' +
+        '<span data-war-claim-status="' + ci + '"></span></label><button class="actionbtn war-target-row" ' +
         'data-war-cause="' + ci + '" data-war-cause-type="' + esc(cause.type) +
         '" data-war-cause-target="' + esc(cause.target) +
         '" data-war-target-realm="' + esc(rid) +
@@ -5478,6 +5537,72 @@ window.FB = window.FB || {};
       }
     });
     const list = $('war-target-list');
+    function refreshClaims() {
+      const selected = selectedWarClaims(), preview = FB.warDeclarationPreview(s, 'player', selected);
+      models.forEach(function (model) {
+        const c = packageClaim(targets[model.index]);
+        const check = list.querySelector('[data-war-claim="' + model.index + '"]');
+        check.checked = claimSelected(c);
+        const multi = !!(c && combinable[c.target]);
+        check.parentNode.hidden = !multi;
+        check.closest('.war-target-card').classList.toggle('single-target', !multi);
+        check.disabled = !check.checked && (!multi || !claimCanJoin(c));
+        const card = check.closest('.war-target-card');
+        card.classList.toggle('claim-selected', check.checked);
+        card.classList.toggle('claim-compatible', !!selected.length && claimCanJoin(c));
+        list.querySelector('[data-war-claim-status="' + model.index + '"]').textContent = multi ? FB.T('Multi') : FB.T('Single');
+        let basis = card.querySelector('[data-war-claim-basis]');
+        const rights = targets[model.index].filter(function (cause) { return !cause.blocked && (cause.type === 'dejure' || cause.type === 'fabricated'); });
+        if (!basis && rights.length > 1) {
+          basis = document.createElement('select'); basis.dataset.warClaimBasis = model.index;
+          basis.setAttribute('aria-label', FB.T('Claim justification for {province}', { province:model.territoryName }));
+          rights.forEach(function (right, i) { const option = document.createElement('option'); option.value = i; option.textContent = warCauseName(s, right); basis.appendChild(option); });
+          card.appendChild(basis);
+          basis.addEventListener('change', function () {
+            warTargetView.claims = selectedWarClaims().map(function (right) { return right.target === c.target && right.enemy === c.enemy ? rights[Number(basis.value)] : right; });
+            refreshClaims();
+          });
+        }
+        if (basis) {
+          basis.hidden = !check.checked;
+          const chosen = selected.filter(function (right) { return right.target === c.target && right.enemy === c.enemy; })[0];
+          const index = rights.findIndex(function (right) { return sameWarJustification(right, chosen); });
+          basis.value = Math.max(0, index);
+        }
+
+      });
+      $('war-claims-status').textContent = selected.length
+        ? (selected.length === 1 ? FB.T('1 claim selected. Highlighted claims can join this war.') : FB.T('{count} claims selected. Highlighted claims can join this war.', { count:selected.length })) +
+          (preview.valid ? '' : ' ' + preview.reason)
+        : FB.T('Check a claim to highlight the other claims that can be combined with it.');
+      $('war-claims-review').hidden = !selected.length;
+      $('war-claims-review').disabled = !preview.valid;
+    }
+    list.querySelectorAll('[data-war-claim]').forEach(function (check) {
+      check.addEventListener('change', function () {
+        toggleWarClaim(packageClaim(targets[Number(check.dataset.warClaim)])); refreshClaims();
+      });
+    });
+    $('war-claims-review').addEventListener('click', function () {
+      UI.showWarJustification(selectedWarClaims().slice(), {
+        focusRealmId:focusRealmId, returnContext:returnContext, claimPackage:true
+      });
+    });
+    refreshClaims();
+    if (warTargetView.filtersOpen || warTargetView.scroll || (warTargetView.expanded || []).length) {
+      const body = $('gm-body');
+      requestAnimationFrame(function () {
+        if (body !== $('gm-body')) return;
+        $('war-target-filters').open = !!warTargetView.filtersOpen;
+        (warTargetView.expanded || []).forEach(function (pid) {
+          const row = list.querySelector('[data-war-cause-target="' + pid + '"]');
+          const details = row && row.closest('.war-target-card').querySelector('.settcard-info');
+          if (details && details.getAttribute('aria-expanded') !== 'true') details.click();
+        });
+        $('war-pick-map').focus({ preventScroll:true });
+        body.scrollTop = warTargetView.scroll || 0;
+      });
+    }
     function compareWarTargets(a, b) {
       let result = 0;
       if (warTargetView.sort === 'recommended') {
@@ -5486,6 +5611,8 @@ window.FB = window.FB || {};
             (b.aggressionOnly ? 1 : 0) ||
           Number(!a.adjacent) - Number(!b.adjacent) ||
           a.defense - b.defense;
+      } else if (warTargetView.sort === 'multi') {
+        result = (combinable[b.cause.target] || 0) - (combinable[a.cause.target] || 0);
       } else if (warTargetView.sort === 'realm') {
         result = a.realmName.localeCompare(b.realmName);
       } else if (warTargetView.sort === 'territory') {
@@ -5505,6 +5632,7 @@ window.FB = window.FB || {};
       warTargetView.adjacency = $('war-target-adjacency').value;
       warTargetView.rank = $('war-target-rank').value;
       warTargetView.diplomacy = $('war-target-diplomacy').value;
+      warTargetView.package = $('war-target-package').value;
       warTargetView.sort = $('war-target-sort').value;
       const query = warTargetView.search.toLocaleLowerCase();
       const ordered = models.slice().sort(compareWarTargets);
@@ -5517,7 +5645,9 @@ window.FB = window.FB || {};
           (warTargetView.rank === 'lower' && model.rank < playerRank) ||
           (warTargetView.rank === 'peer' && model.rank === playerRank) ||
           (warTargetView.rank === 'higher' && model.rank > playerRank);
-        const show = (!query || model.search.indexOf(query) >= 0) &&
+        const show = (warTargetView.package === 'all' ||
+          (warTargetView.package === 'multi') === !!combinable[model.cause.target]) &&
+          (!query || model.search.indexOf(query) >= 0) &&
           (warTargetView.basis === 'all' ||
             model.bases.indexOf(warTargetView.basis) >= 0) &&
           (warTargetView.adjacency === 'all' ||
@@ -5550,6 +5680,11 @@ window.FB = window.FB || {};
     if (pickMapBtn) {
       pickMapBtn.disabled = !mapTargets.length;
       pickMapBtn.addEventListener('click', function () {
+        warTargetView.scroll = $('gm-body').scrollTop;
+        warTargetView.filtersOpen = $('war-target-filters').open;
+        warTargetView.expanded = Array.from(list.querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (button) {
+          return button.closest('.war-target-card').querySelector('[data-war-cause]').dataset.warCauseTarget;
+        });
         UI.openWarMapPicker(focusRealmId, returnContext, mapTargets);
       });
     }
@@ -5580,6 +5715,8 @@ window.FB = window.FB || {};
       FB.map.warTargets = null;
       FB.map.warSelected = null;
       FB.map.warTargetMap = null;
+      FB.map.warClaimSelected = null;
+      FB.map.warClaimLinks = null;
       FB.map.select(null);
       FB.map.request();
     }
@@ -5589,6 +5726,49 @@ window.FB = window.FB || {};
     }
     mobileNavClosed('war-picker', !!discard);
   };
+
+  function refreshWarMapClaims() {
+    const selected = selectedWarClaims(), map = FB.map;
+    if (!map) return;
+    const item = map.warTargetMap && map.warTargetMap[map.warSelected];
+    let controls = $('war-picker-claims');
+    if (!controls) {
+      controls = document.createElement('div'); controls.id = 'war-picker-claims';
+      $('war-picker-summary').insertAdjacentElement('afterend', controls);
+    }
+    const preview = selected.length ? FB.warDeclarationPreview(FB.state, 'player', selected) : null;
+    controls.innerHTML = '<p role="status">' + esc(selected.length
+      ? (selected.length === 1 ? FB.T('1 claim selected. Click it again to remove it; click a compatible county marker to add another.') : FB.T('{count} claims selected. Click a selected county to remove it; click a compatible county marker to add it.', { count:selected.length }))
+      : FB.T('Click a county to highlight it. Click it again to remove it. Compatible claims can be selected together.')) +
+      (preview && !preview.valid ? ' ' + esc(preview.reason) : '') + '</p><p>' +
+      esc(FB.T('Click a different target to switch wars. Compatible claims add to your selection.')) + '</p>';
+    map.warTargets = (warMapTargets || []).filter(function (entry) {
+      const c = packageClaim(entry.justifications);
+      return !selected.length || claimSelected(c) || claimCanJoin(c) ||
+        FB.warDeclarationPreview(FB.state, 'player', [c || entry.justifications[0]]).valid;
+    }).map(function (entry) { return entry.pid; });
+    const visible = {}, available = warMapTargets || [];
+    map.warTargets.forEach(function (pid) { visible[pid] = true; });
+    const combinable = combinableWarClaims(FB.state, available.map(function (entry) { return entry.justifications; }));
+    const rights = {};
+    available.forEach(function (entry) { const c = packageClaim(entry.justifications); if (c) rights[entry.pid] = c; });
+    map.warClaimLinks = [];
+    Object.keys(rights).sort().forEach(function (pid) {
+      if (!visible[pid] || !combinable[pid]) return;
+      Object.keys(FB.world.adj[pid] || {}).sort().forEach(function (nb) {
+        if (pid < nb && visible[nb] && combinable[nb] && rights[nb] && rights[nb].enemy === rights[pid].enemy) map.warClaimLinks.push([pid, nb]);
+      });
+    });
+    map.warClaimSelected = selected.map(function (c) { return c.target; });
+    const selectedSet = {};
+    map.warClaimSelected.forEach(function (pid) { selectedSet[pid] = true; });
+    if (!selected.length && map.warSelected) selectedSet[map.warSelected] = true;
+    map.select(map.warSelected, function (pid) { return selectedSet[pid] ? 'war_target' : null; }, '#ef9b55');
+    map.request();
+    const review = $('war-picker-review');
+    review.disabled = selected.length ? !FB.warDeclarationPreview(FB.state, 'player', selected).valid : !item;
+    review.textContent = selected.length ? FB.T('Review selected claims') : FB.T('Review War');
+  }
 
   UI.openWarMapPicker = function (focusRealmId, returnContext, targets) {
     const s = FB.state;
@@ -5622,13 +5802,18 @@ window.FB = window.FB || {};
     if (FB.map) {
       FB.map.warTargets = targetPids;
       FB.map.warTargetMap = targetMap;
-      FB.map.warSelected = null;
+      const selected = selectedWarClaims();
+      FB.map.warSelected = selected.length ? selected[selected.length - 1].target : null;
       FB.map.select(homePid, function (pid) {
         return targetSet[pid] || pid === homePid ? 'war_target' : null;
       }, '#ef9b55');
       const focusRealm = focusRealmId && s.realms[focusRealmId];
-      const centerPid = focusRealm && focusRealm.capital
-        ? focusRealm.capital : homePid;
+      const firstClaim = available.filter(function (entry) {
+        const cause = packageClaim(entry.justifications);
+        return cause && FB.warDeclarationPreview(s, 'player', [cause]).valid;
+      })[0];
+      const centerPid = FB.map.warSelected || (firstClaim && firstClaim.pid) || targetPids[0] ||
+        (focusRealm && focusRealm.capital) || homePid;
       if (centerPid) FB.map.centerOn(centerPid, FB.map.zoom);
       FB.map.request();
     }
@@ -5639,12 +5824,13 @@ window.FB = window.FB || {};
     const summary = $('war-picker-summary');
     if (summary) {
       summary.textContent = FB.T(
-        'Tap any highlighted county on the map to choose a war target ({count} available).', {
+        'Click a county marker to select a war target ({count} available).', {
           count:targetPids.length
         });
     }
     const review = $('war-picker-review');
     if (review) review.disabled = true;
+    refreshWarMapClaims();
 
     mobileNavPush('war-picker',
       function () { UI.closeWarMapPicker(true); },
@@ -5665,20 +5851,25 @@ window.FB = window.FB || {};
     }
 
     const s = FB.state;
-    const homePid = s.player.provinceId ||
-      (s.player.provs && s.player.provs[0]);
-    if (FB.map) {
-      FB.map.warSelected = pid;
-      const targetSet = {};
-      for (let i = 0; i < (FB.map.warTargets || []).length; i++) {
-        targetSet[FB.map.warTargets[i]] = true;
-      }
-      FB.map.select(pid, function (id) {
-        return targetSet[id] || id === homePid ? 'war_target' : null;
-      }, '#ef9b55');
-      if (center) FB.map.centerOn(pid, FB.map.zoom);
-      FB.map.request();
+    const cause = packageClaim(item.justifications);
+    let removed = false;
+    if (cause) {
+      removed = claimSelected(cause);
+      if (!removed && !claimCanJoin(cause)) {
+        const replacement = FB.warDeclarationPreview(s, 'player', [cause]);
+        if (!replacement.valid) { UI.toast(replacement.reason); return false; }
+        warTargetView.claims = [cause];
+      } else toggleWarClaim(cause);
+      const selected = selectedWarClaims();
+      FB.map.warSelected = selected.length ? selected[selected.length - 1].target : null;
+    } else {
+      const replacement = FB.warDeclarationPreview(s, 'player', [item.justifications[0]]);
+      if (!replacement.valid) { UI.toast(replacement.reason); return false; }
+      removed = !selectedWarClaims().length && FB.map.warSelected === pid;
+      warTargetView.claims = [];
+      FB.map.warSelected = removed ? null : pid;
     }
+    if (center) FB.map.centerOn(pid, FB.map.zoom);
 
     const province = FB.world.byId[pid];
     const type = item.optionCount > 1
@@ -5687,7 +5878,9 @@ window.FB = window.FB || {};
         count:item.optionCount
       }) : item.warType;
     const summary = $('war-picker-summary');
-    if (summary) {
+    if (summary && removed) {
+      summary.textContent = FB.T('{province} removed from the selection.', { province:province ? province.name : pid });
+    } else if (summary) {
       summary.innerHTML = '<strong>' + esc(province ? province.name : pid) +
         (item.realmName ? ' (' + esc(item.realmName) + ')' : '') +
         '</strong> &middot; ' + esc(FB.T('Enemy army: ~{men}', {
@@ -5696,6 +5889,7 @@ window.FB = window.FB || {};
     }
     const review = $('war-picker-review');
     if (review) review.disabled = false;
+    refreshWarMapClaims();
     return true;
   };
 
@@ -5709,15 +5903,17 @@ window.FB = window.FB || {};
   };
 
   UI.reviewWarFromMap = function () {
-    if (!FB.map || !FB.map.warSelected || !warMapPickerContext) return;
+    if (!FB.map || (!FB.map.warSelected && !selectedWarClaims().length) || !warMapPickerContext) return;
     const item = FB.map.warTargetMap &&
       FB.map.warTargetMap[FB.map.warSelected];
-    if (!item) return;
+    if (!item && !selectedWarClaims().length) return;
+    const packageCauses = selectedWarClaims().slice();
     const context = warMapPickerContext;
     UI.closeWarMapPicker(false);
     warMapTargets = null;
     warMapPickerContext = null;
-    UI.showWarJustification(item.justifications, {
+    UI.showWarJustification(packageCauses.length ? packageCauses : item.justifications, {
+      claimPackage:!!packageCauses.length,
       focusRealmId:context.focusRealmId,
       returnContext:context.returnContext
     });
@@ -5781,7 +5977,7 @@ window.FB = window.FB || {};
     return h;
   }
 
-  function warJustificationPanelHtml(s, cause, index) {
+  function warJustificationPanelHtml(s, cause, index, isPackage) {
     const preview = FB.warCausePreview ? FB.warCausePreview(s, cause) : null;
     const consequence = preview && preview.aggression;
     const realm = s.realms[cause.enemy];
@@ -5796,7 +5992,7 @@ window.FB = window.FB || {};
       : FB.T('{steps} siege steps', { steps:siege.required });
     let h = '<div class="war-justification-critical aggression-confirm-critical" ' +
       'data-war-justification-panel="' + index + '"' +
-      (index ? ' hidden' : '') + '>';
+      (index && !isPackage ? ' hidden' : '') + '>';
     if (consequence) {
       const modifier = consequence.modifier;
       const modifierDef = modifier && FBDATA.modifiers[modifier.id];
@@ -5838,9 +6034,9 @@ window.FB = window.FB || {};
         }))) +
         kv('War reason', esc(warCauseName(s, cause))) +
         kv('Siege', esc(siegeSummary)) +
-        kv('Declaration reward', esc(FB.T('{prestige} prestige', {
+        (isPackage ? '' : kv('Declaration reward', esc(FB.T('{prestige} prestige', {
           prestige:signedNumber(preview ? preview.declarationPrestige : 0)
-        }))) +
+        })))) +
         kv('Victory reward', esc(FB.T('{prestige} prestige', {
           prestige:signedNumber(preview ? preview.victoryPrestige : 0)
         }))) +
@@ -5865,8 +6061,9 @@ window.FB = window.FB || {};
     const s = FB.state;
     causes = (causes || []).filter(function (cause) { return !!cause; });
     if (!causes.length) return;
+    const isPackage = !!(returnContext && returnContext.claimPackage);
     let h = '';
-    if (causes.length > 1) {
+    if (causes.length > 1 && !isPackage) {
       h += '<div class="war-target-toolbar war-justification-toolbar"><label>' +
         '<span>' + esc(FB.T('War reason')) + '</span>' +
         '<span class="war-target-select-wrap"><select ' +
@@ -5878,7 +6075,15 @@ window.FB = window.FB || {};
       h += '</select></span></label></div>';
     }
     for (let pi = 0; pi < causes.length; pi++) {
-      h += warJustificationPanelHtml(s, causes[pi], pi);
+      h += warJustificationPanelHtml(s, causes[pi], pi, isPackage);
+    }
+    if (isPackage) h += '<p>' + esc(FB.T('Occupy every selected county to win the package. Declaration: +5 prestige; victory: +{prestige} prestige.', { prestige:50 * causes.length })) + '</p>';
+    const legalPreview = FB.warDeclarationPreview(s, 'player', isPackage ? causes : [causes[0]]);
+    if (legalPreview.law && legalPreview.law.liege) {
+      h += '<p>' + esc(FB.T('Governing realm: {realm}. Permission follows its internal or external war law.', {
+        realm:s.realms[legalPreview.law.sovereign].name })) + '</p>';
+      if (legalPreview.law.level === 'permission') h += '<button type="button" class="actionbtn" id="war-request-permission">' + esc(FB.T('Request permission')) + '</button>';
+      if (legalPreview.law.level !== 'customary') h += '<label><input type="checkbox" id="war-confirm-unlawful"> ' + esc(FB.T('Break the peace: −20 Standing with the liege, a demand to stop within 90 days, and possible armed enforcement.')) + '</label>';
     }
     h += '<div class="gm-list"><button type="button" class="actionbtn" ' +
       'id="war-justification-confirm">⚔ ' + esc(FB.T('Declare war')) +
@@ -5899,6 +6104,11 @@ window.FB = window.FB || {};
       historyBackRender:restoreTargets
     });
     const reason = $('war-justification-reason');
+    const permissionButton = $('war-request-permission');
+    if (permissionButton) permissionButton.addEventListener('click', function () {
+      const granted = FB.requestWarPermission(s, 'player', isPackage ? causes : [causes[reason ? Number(reason.value) : 0]]);
+      permissionButton.textContent = granted ? FB.T('Permission granted') : FB.T('Permission denied');
+    });
     if (reason) {
       reason.addEventListener('change', function () {
         const panels = document.querySelectorAll(
@@ -5909,6 +6119,17 @@ window.FB = window.FB || {};
       });
     }
     $('war-justification-confirm').addEventListener('click', function () {
+      if (isPackage) {
+        if (!FB.startClaimPackageWar(FB.state, causes, {
+          confirmUnlawful:!!($('war-confirm-unlawful') && $('war-confirm-unlawful').checked),
+          confirmSacrilege:causes.some(function (c) { return !!c.sacrilegious; })
+        })) { UI.toast(FB.T('These claims can no longer be declared together.')); restoreTargets(); return; }
+        warTargetView.claims = [];
+        UI.refresh();
+        if (returnContext.returnContext) interactionReturn(returnContext.returnContext);
+        else UI.closeModal();
+        mobileNavClosedAll('modal-view', true); return;
+      }
       const chosen = causes[reason ? Number(reason.value) : 0];
       const live = FB.warJustifications
         ? FB.warJustifications(FB.state, chosen.target, chosen.enemy, true)
@@ -5923,6 +6144,7 @@ window.FB = window.FB || {};
       if (!confirmed || confirmed.blocked || !FB.startPlayerWar(FB.state,
           confirmed, {
             confirmAggression:confirmed.type === 'aggression',
+            confirmUnlawful:!!($('war-confirm-unlawful') && $('war-confirm-unlawful').checked),
             confirmSacrilege:!!confirmed.sacrilegious
           })) {
         UI.toast(FB.T(
@@ -18687,7 +18909,7 @@ window.FB = window.FB || {};
       'This sheet follows the Papal obedience recognized by your character. Rival obediences retain separate claimants, Colleges, authority, supporters, sanctions, and elections.')) +
       '</p><p><b>' + esc(FB.T('Authority gates')) + '</b><br>' +
       esc(FB.T(
-        '{sanctions} enables justified sanctions and investiture demands; {arbitrary} enables arbitrary sanctions and Catholic great holy wars; {council} enables a general council.', {
+        '{sanctions} enables justified sanctions and investiture demands; {arbitrary} enables arbitrary sanctions and Catholic holy wars; {council} enables a general council.', {
           sanctions:FBDATA.papacy.authority.gates.sanctions,
           arbitrary:FBDATA.papacy.authority.gates.arbitrarySanction,
           council:FBDATA.papacy.authority.gates.council
@@ -18769,7 +18991,7 @@ window.FB = window.FB || {};
       h += '<section class="papacy-alert" role="status">' +
         panelh('A rival claimant seeks your backing') +
         '<p>' + esc(FB.T(
-          '{name} asks your realm to sponsor a rival obedience. This will divide the Church and cancel any gathering Catholic great holy war.', {
+          '{name} asks your realm to sponsor a rival obedience. This will divide the Church and cancel any gathering Catholic holy war.', {
             name:rival ? FB.fullName(rival) : FB.T('The runner-up')
           })) + '</p><div class="modal-actions">' +
         '<button class="btn danger" data-schism-sponsor="yes">' +
@@ -18956,8 +19178,8 @@ window.FB = window.FB || {};
           'Choose a ruler and review justified or arbitrary sentences, their recorded grounds, piety cost, authority requirement, and cooldown.'),
         obedience.authority < FBDATA.papacy.authority.gates.sanctions);
       h += papalActionCardHtml('papal-great-holy-war', '📯',
-        FB.T('Call a Catholic great holy war'), FB.T(
-          'Open the Catholic great holy war target review. Authority, schism, faith, campaign, and target eligibility are checked before the call.'),
+        FB.T('Call a Catholic holy war'), FB.T(
+          'Open the Catholic holy war target review. Authority, schism, faith, campaign, and target eligibility are checked before the call.'),
         !FB.canCallGreatHolyWar(s, 'catholic', null, 'player'));
       if (FB.papacyInSchism(s)) {
         h += papalActionCardHtml('papal-council', '🕊',
@@ -22142,6 +22364,17 @@ window.FB = window.FB || {};
     const war = context.war || {};
     const casus = war.casus || {};
     const type = casus.type || '';
+    if (type === 'claims') {
+      const objectives = (war.objectives || []).map(function (o) {
+        return FB.world.byId[o.target] ? FB.world.byId[o.target].name : o.target;
+      }).join(', ');
+      return attackerGoal ? FB.T('Occupy every selected claim and gain the package at peace: {objectives}.', { objectives:objectives })
+        : FB.T('Defend and recapture the claimed counties: {objectives}.', { objectives:objectives });
+    }
+    if (type === 'enforcement') return attackerGoal
+      ? FB.T('Enforce the peace: stop the unlawful campaign and impose a 50-prestige penalty.')
+      : FB.T('Resist the liege?s armed enforcement.');
+
     const attackerRealm = s.realms[context.attacker];
     const defenderRealm = s.realms[context.defender];
     const attacker = attackerRealm ? attackerRealm.name : context.attacker;
@@ -22223,36 +22456,25 @@ window.FB = window.FB || {};
   }
 
   function realmWarGoalsHtml(s, rid) {
+    let h = '';
+    const campaigns = FB.realmWars(s, rid);
+    for (const war of campaigns) {
+      const context = { war:war, attacker:war.attacker, defender:war.defender };
+      const attacker = s.realms[war.attacker], defender = s.realms[war.defender];
+      h += '<div class="character-war-goals"><div class="character-war-goal"><b>' +
+        esc(FB.T('Goal: {realm}', { realm:attacker ? attacker.name : war.attacker })) + '</b><span>' +
+        esc(ordinaryWarGoalText(s, context, true)) + '</span></div><div class="character-war-goal"><b>' +
+        esc(FB.T('Goal: {realm}', { realm:defender ? defender.name : war.defender })) + '</b><span>' +
+        esc(ordinaryWarGoalText(s, context, false)) + '</span></div></div>';
+    }
     const campaign = s.greatHolyWar;
     const camp = FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, rid);
     if (campaign && camp) {
       const kingdom = FBDATA.kingdoms[campaign.targetKingdom];
-      const target = kingdom ? kingdom.name : campaign.targetKingdom;
-      return '<div class="character-war-goals">' +
-        '<div class="character-war-goal"><b>' +
-        esc(FB.T('Attackers’ goal')) + '</b><span>' +
-        esc(FB.T('Take control of {kingdom} for the attacking coalition.', {
-          kingdom:target
-        })) + '</span></div>' +
-        '<div class="character-war-goal"><b>' +
-        esc(FB.T('Defenders’ goal')) + '</b><span>' +
-        esc(FB.T('Hold {kingdom} against the attacking coalition.', {
-          kingdom:target
-        })) + '</span></div></div>';
+      h += '<div class="character-war-goals"><b>' + esc(FB.T('Holy war')) + '</b><span>' +
+        esc(FB.T('Contest control of {kingdom}.', { kingdom:kingdom ? kingdom.name : campaign.targetKingdom })) + '</span></div>';
     }
-    const context = ordinaryWarContext(s, rid);
-    if (!context) return '';
-    const attackerRealm = s.realms[context.attacker];
-    const defenderRealm = s.realms[context.defender];
-    const attacker = attackerRealm ? attackerRealm.name : context.attacker;
-    const defender = defenderRealm ? defenderRealm.name : context.defender;
-    return '<div class="character-war-goals">' +
-      '<div class="character-war-goal"><b>' +
-      esc(FB.T('Goal: {realm}', { realm:attacker })) + '</b><span>' +
-      esc(ordinaryWarGoalText(s, context, true)) + '</span></div>' +
-      '<div class="character-war-goal"><b>' +
-      esc(FB.T('Goal: {realm}', { realm:defender })) + '</b><span>' +
-      esc(ordinaryWarGoalText(s, context, false)) + '</span></div></div>';
+    return h;
   }
 
   function realmWarNoticeHtml(s, rid) {
@@ -24913,7 +25135,7 @@ window.FB = window.FB || {};
       effectScope = FB.T('County economy, levies, and local events');
       transfer = FB.T('Stays with the county when political control changes');
     } else {
-      effectScope = FB.T('Your participation in this great holy war');
+      effectScope = FB.T('Your participation in this holy war');
       transfer = FB.T('Does not transfer to another campaign');
     }
     const h = '<div class="gm-body-text"><p><i>' + esc(desc) + '</i></p>' +
@@ -27867,7 +28089,7 @@ window.FB = window.FB || {};
       esc(FB.T('Land is taken only by siege:')) + '</b> ' +
       esc(FB.T('Stand your host on the prize — the works advance each season it holds the ground. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps.')) + '</p>' +
       '<p>' + esc(FB.T('Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised.')) + '</p>' +
-      '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
+      '<p><b>Holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–5</b> select a section and use the same letter grid for management actions only · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +

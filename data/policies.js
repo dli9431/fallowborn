@@ -249,5 +249,23 @@ FBDATA.policies = {
         migrationAttraction:2, developmentGrowth:true, researchFactor:0.05,
         onEnact:{ pop:2, prestige:4, authority:-1, otherFold:2 } }
     ]
+  },
+  internal_peace: {
+    name:'Internal peace', desc:'The sovereign governs private wars between vassals. A defiant ruler may break the peace and face armed enforcement.',
+    institution:'crown', family:'internal_peace', order:80, defaultLevel:'customary',
+    levels:[
+      { id:'customary', name:'Customary freedom', desc:'Vassals may wage internal wars under ordinary diplomatic rules.' },
+      { id:'permission', name:'Permission required', desc:'The immediate liege must authorize the exact campaign. Declaring without permission breaks the peace.' },
+      { id:'prohibited', name:'Prohibited', desc:'Internal conquest is unlawful. Existing campaigns retain their original terms.' }
+    ]
+  },
+  external_campaigns: {
+    name:'External campaigns', desc:'The sovereign governs vassal expeditions abroad. The attacking vassal supplies its own host; the foreign sovereign defends its lands.',
+    institution:'crown', family:'external_campaigns', order:81, defaultLevel:'customary',
+    levels:[
+      { id:'customary', name:'Customary freedom', desc:'Vassals may campaign abroad under ordinary diplomatic rules.' },
+      { id:'permission', name:'Permission required', desc:'The immediate liege must authorize the exact campaign. Declaring without permission breaks the peace.' },
+      { id:'prohibited', name:'Prohibited', desc:'Foreign vassal conquest is unlawful. Existing campaigns retain their original terms.' }
+    ]
   }
 };

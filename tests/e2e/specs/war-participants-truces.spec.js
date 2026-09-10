@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/world.js', 'js/actions.js', 'js/armies.js', 'js/save.js', 'js/ui_misc.js',
+  'js/wars.js', 'js/world.js', 'js/actions.js', 'js/armies.js', 'js/save.js', 'js/ui_misc.js',
   'js/ui_modals.js', 'js/events.js', 'data/technology.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -176,15 +176,15 @@ test('voluntary independence respects the truce with the actual liege',
     expect(result).toEqual({ result:false, liege:ids.enemy, war:null, rngStable:true });
   });
 
-test('yearly AI peace records a truce through the normal conclusion boundary',
+test('seasonal AI peace records a truce through the normal conclusion boundary',
   async function ({ page }, testInfo) {
     const ids = await startWarSafety(page, testInfo);
     const result = await page.evaluate(function (ids) {
       const s = FB.state, chance = FB.chance;
-      s.realms[ids.liege].war = { enemy:ids.other, years:99, captures:0 };
+      s.realms[ids.liege].war = { enemy:ids.other, target:s.realms[ids.other].capital, seasons:32, captures:0 };
       // Suppress incidental mortality and new declarations around the deterministic deadline.
       FB.chance = function () { return false; };
-      FB.worldTick(s);
+      FB.playerWarTick(s);
       FB.chance = chance;
       return { war:s.realms[ids.liege].war,
         expiry:FB.truceExpiry(s, ids.liege, ids.other), turn:s.turn };
