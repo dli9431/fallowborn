@@ -15,6 +15,7 @@ dependsOnRuntime(__filename, [
   'js/politics.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
   'js/world.js',
   'data/events_war.js',
   'data/map_data.js',
@@ -167,6 +168,8 @@ test('aggression is explicit, read-only to review, and subordinate to real claim
       var rngAfter = FB.getRngState();
       var rejected = FB.startPlayerWar(s, cause);
       var afterRejected = JSON.stringify(s);
+      var reviewBefore = JSON.parse(before), reviewAfter = JSON.parse(reviewed);
+      var rejectionAfter = JSON.parse(afterRejected);
 
       s.pacts[setup.enemyId] = s.turn + 90;
       var pactCause = FB.warCauses(s, true, true).filter(function (item) {
@@ -202,6 +205,12 @@ test('aggression is explicit, read-only to review, and subordinate to real claim
         previewType:preview && preview.type,
         previewAggression:!!(preview && preview.aggression),
         stateStable:before === reviewed && before === afterRejected,
+        changedReviewKeys:Object.keys(Object.assign({}, reviewBefore, reviewAfter)).filter(function (key) {
+          return JSON.stringify(reviewBefore[key]) !== JSON.stringify(reviewAfter[key]);
+        }),
+        changedRejectionKeys:Object.keys(Object.assign({}, reviewAfter, rejectionAfter)).filter(function (key) {
+          return JSON.stringify(reviewAfter[key]) !== JSON.stringify(rejectionAfter[key]);
+        }),
         rngStable:rngBefore === rngAfter,
         rejected:rejected,
         pactBlocked:pactCause && pactCause.blocked,
@@ -226,6 +235,8 @@ test('aggression is explicit, read-only to review, and subordinate to real claim
       previewType:'aggression',
       previewAggression:true,
       stateStable:true,
+      changedReviewKeys:[],
+      changedRejectionKeys:[],
       rngStable:true,
       rejected:false,
       pactBlocked:'pact',
@@ -273,6 +284,8 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
         });
       var startedCasus = p.war && p.war.casus.type;
       FB.endPlayerWar(s);
+      // Isolate escalation from the peace truce that correctly blocks redeclaration.
+      s.truces = {};
 
       p.aggressiveWars.push({
         turn:s.turn - FBDATA.balance.warAggressionMemoryDays,
@@ -443,7 +456,8 @@ test('war status names every opposing realm', async function ({ page }, testInfo
       foreignStatus:foreignStatus,
       holyWarOpponents:holyWarOpponents,
       holyWarStatus:holyWarStatus,
-      holyWarLock:holyWarLock
+      holyWarLock:holyWarLock,
+      truceReason:FB.truceText(s, 'player', setup.enemyId)
     };
   }, ids);
 
@@ -457,7 +471,7 @@ test('war status names every opposing realm', async function ({ page }, testInfo
   expect(result.holyWarOpponents).toEqual([ids.enemyId, ids.foreignId]);
   expect(result.holyWarStatus).toBe(result.playerRealmName +
     ' is at war with Red March, Blue Crown.');
-  expect(result.holyWarLock).toBe(result.holyWarStatus);
+  expect(result.holyWarLock).toBe(result.truceReason);
 });
 
 for (const width of [1100, 390]) {
@@ -567,7 +581,7 @@ test('war notices lead unified ruler sheets and the Land tab',
 
     await expect(page.locator('#tab-prov [data-war-realm]')).toHaveCount(2);
     await expect(page.locator(
-      '#tab-prov > .panelh + .land-current-war')).toBeVisible();
+      '#tab-prov > .land-current-war')).toBeVisible();
     await page.locator(
       '#tab-prov [data-war-realm="' + ids.foreignId + '"]').click();
     await expect(page.locator(
@@ -870,7 +884,7 @@ test('war targets can be selected on the map and reviewed with compact campaign 
       open:true,
       target:true,
       selected:null,
-      focused:true,
+      focused:false,
       reviewDisabled:true
     });
 

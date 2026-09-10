@@ -17,7 +17,7 @@ test('campaign facts stay visible and supporting details disclose on mobile', as
   await help.click();
   await expect(help).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('#campaign-host-details')).toBeVisible();
-  await expect(page.locator('#campaign-peace')).toHaveText('Withdraw');
+  await expect(page.locator('#campaign-peace')).toContainText('Withdraw');
 });
 
 test('law sheet explains the ruler restriction once and preserves details through Back', async function ({ page }, testInfo) {

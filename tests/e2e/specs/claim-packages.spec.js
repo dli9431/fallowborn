@@ -189,7 +189,19 @@ test('a claim beyond the current frontier is available through its connecting cl
 test('a checked claim leaves other opponents outside the package', async function ({ page }, testInfo) {
   const ids = await claimSetup(page, testInfo);
   await page.evaluate(function (ids) {
-    FB.saveFabricatedClaim(FB.state, FB.state.realms[ids.other].capital);
+    const s = FB.state;
+    // A remote capital is not necessarily reachable. Give the other opponent
+    // an independent frontier claim, outside the first opponent's package.
+    const pid = FB.realmTerritory(s, 'player').flatMap(function (home) {
+      return Object.keys(FB.world.adj[home] || {});
+    }).filter(function (pid) {
+      return !FB.world.byId[pid].wasteland && ids.targets.indexOf(pid) < 0 &&
+        FB.realmTerritory(s, 'player').indexOf(pid) < 0;
+    }).sort()[0];
+    if (!pid) throw new Error('Claim fixture needs a separate frontier county.');
+    s.owner[pid] = ids.other; s.holder[pid] = ids.other;
+    FB.invalidateRealmCache();
+    FB.saveFabricatedClaim(s, pid);
     FB.ui.showWarTargets();
   }, ids);
   const first = page.locator('.war-target-card').filter({ has:page.locator('[data-war-cause-target="' + ids.targets[0] + '"]') });

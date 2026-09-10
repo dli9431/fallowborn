@@ -1369,3 +1369,18 @@ county membership still rebuilds distances when the source set changes.
 Order-phase battle power is shared per host, location and role and discarded before
 movement, supply and battles. New profiler counters report retained/rebuilt county
 inputs, reused/evaluated supply controller answers, and battle-power cache hits.
+
+AI unjust-war selection evaluates next-sequence declaration and conquest support
+penalties against live county support. It refuses aggression while its realm has
+an open rebellion, or when the declaration would put any owned county, or conquest
+would put the target, at the armed-revolt threshold. Otherwise willingness is
+1 / (1 + declaration-hit * duration-years / 200 + conquest-hit * duration-years / 400),
+with a 1.5 multiplier for bellicose rulers (capped at 1). This is an additional
+acceptance roll after the ordinary seasonal opportunity and candidate checks.
+Penalties and durations come from the actual modifiers, including escalation.
+Claim-backed wars retain their existing behavior; player declaration rules and
+existing campaigns are unchanged. Assessment runs only for a chosen unjust target.
+
+Unconfirmed aggression requests return before campaign-state repair, preserving
+the read-only review contract. After a law is proclaimed, the law sheet restores
+its disclosure, scroll position, and section focus after modal autofocus.

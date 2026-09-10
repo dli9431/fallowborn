@@ -818,6 +818,35 @@
     ended.sort(function (a, b) { return (state.wars[b].endedTurn || 0) - (state.wars[a].endedTurn || 0) || (a < b ? -1 : 1); });
     ended.slice(64).forEach(function (id) { delete state.wars[id]; });
   };
+  /* AI willingness uses the same next declaration sequence and modifier data
+     as the actual penalties. No declarations or support records are changed. */
+  FB.aiAggressionAssessment = function (state, rid, target, territory) {
+    const sequence = FB.aggressionDeclarationCount(state, rid) + 1;
+    const declaration = FBDATA.modifiers.aggressive_rule;
+    const conquest = FBDATA.modifiers.conquered_without_right;
+    const hit = Math.max(0, -(declaration.fx.commonVoice || 0) - (declaration.supportPerStack || 0) * (sequence - 1));
+    const conquestHit = Math.max(0, -(conquest.fx.commonVoice || 0) - (conquest.supportPerStack || 0) * (sequence - 1));
+    const threshold = FBDATA.balance.revoltArmedSupport === undefined ? -50 : FBDATA.balance.revoltArmedSupport;
+    const counties = territory || FB.realmTerritory(state, rid);
+    let worst = Infinity;
+    for (const pid of counties) worst = Math.min(worst, FB.countyPopularSupport(state, pid) - hit);
+    const previousConquest = FB.countyModifierRecords(state, target).filter(function (record) {
+      return record.id === 'conquered_without_right';
+    })[0];
+    const replacedSupport = previousConquest ? FB.modifierEffects(state, previousConquest.id, previousConquest).commonVoice || 0 : 0;
+    const targetSupport = FB.countyPopularSupport(state, target) - replacedSupport - conquestHit;
+    const rebellion = FB.realmHasRebellion && FB.realmHasRebellion(state, rid);
+    const allowed = counties.length > 0 && !rebellion && worst > threshold && targetSupport > threshold;
+    // Penalize both the immediate realm-wide loss and a long-lived burden on
+    // the prize. Bellicose rulers tolerate more cost, never an imminent revolt.
+    const burden = hit * Math.max(0, declaration.days || 0) / 360 / 200 +
+      conquestHit * Math.max(0, conquest.days || 0) / 360 / 400;
+    const realm = state.realms[rid];
+    const appetite = realm && realm.ruler && realm.ruler.personality === 'bellicose' ? 1.5 : 1;
+    return { allowed:allowed, chance:allowed ? Math.min(1, appetite / (1 + burden)) : 0,
+      declarationHit:hit, conquestHit:conquestHit, worstOwnedSupport:worst, targetSupport:targetSupport };
+  };
+
   FB.generateVassalCampaigns = function (state) {
     if (state.warAISeason === state.turn) return;
     state.warAISeason = state.turn;
@@ -855,6 +884,10 @@
       candidates.sort(function (a, b) { return (a.cause.type === 'aggression') - (b.cause.type === 'aggression') || (a.cause.target < b.cause.target ? -1 : a.cause.target > b.cause.target ? 1 : 0); });
       if (!candidates.length) return;
       const picked = candidates[0], cause = picked.cause;
+      if (cause.type === 'aggression') {
+        const risk = FB.aiAggressionAssessment(state, rid, cause.target, inspection.frontier);
+        if (!risk.allowed || !FB.chance(risk.chance)) return;
+      }
       const causes = [cause];
       if (cause.type !== 'aggression') {
         const rights = FB.claimPackageCandidates(state, rid, cause.enemy, inspection), reached = {};

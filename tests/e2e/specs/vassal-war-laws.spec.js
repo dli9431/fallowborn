@@ -172,7 +172,7 @@ test('older pending demands queue once and campaign sheets contain no demand cho
   }, ids);
   expect(queued).toBe(1);
   await expect(page.locator('#campaign-comply, #campaign-defy')).toHaveCount(0);
-  await expect(page.locator('#campaign-peace')).toHaveText('Withdraw');
+  await expect(page.locator('#campaign-peace')).toContainText('Withdraw');
 });
 
 

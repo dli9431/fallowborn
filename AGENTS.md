@@ -70,6 +70,57 @@ launch ad hoc shell browsers or servers outside this harness. Keep tests determi
 and isolated in fresh browser contexts. Manual testing remains required for appearance, touch
 behavior, itch.io iframe behavior, real mobile browsers, and subjective game feel.
 
+### Local fast-forward profiler
+
+The built-in profiler in `js/main.js` is disabled by default and available only
+from `file://` or HTTP(S) on `localhost`, `127.0.0.1`, or IPv6 loopback. It is
+session-only: nothing is stored in saves, preferences, or telemetry.
+
+For an owner-controlled measurement, pause the game and use the browser console:
+
+```js
+FB.game.fastForwardTiming.enable(true);
+```
+
+Fast-forward a season using the normal game control, then inspect or copy:
+
+```js
+FB.game.fastForwardTiming.last
+JSON.stringify(FB.game.fastForwardTiming.last, null, 2)
+```
+
+Disable with `FB.game.fastForwardTiming.enable(false)`. Changing the setting during
+an active fast-forward returns `false`; enable it before starting the burst.
+Each completed burst replaces `last` and prints its report and tables to the console.
+
+Reports include elapsed time, simulated days, batch count, simulation time, time
+between batches, operation rows, and work counters. Row `totalMs` includes timed
+children; `selfMs` excludes them. Do not add parent and child totals together.
+`maxMs` is the slowest individual call, not the whole season. Between-batch time
+includes browser work; deferred paint and IndexedDB completion are not measured.
+Save serialization, autosave scheduling, and the final UI refresh have separate
+rows. Instrumentation itself has overhead.
+
+Army phases and operations cover muster/disband, orders, movement, reinforcement,
+supply, battles, and sieges/rebellions. Counters expose repeated projections,
+failed musters, cache hits, source scans, and invalidations. Annual `worldTick`
+rows break down population, rulers, succession, religion, diplomacy, and building
+work. Population rows include capacity/attraction, enterprise upgrade snapshots,
+migration, settlement changes, and community projects. Annual rows appear only
+when the burst crosses the year boundary; confirm `worldTick.calls` is present
+before comparing annual work with an ordinary season.
+
+Compare the same starting save and season with comparable browser conditions;
+changing war counts, annual work, or a warmed cache can change the workload.
+Use counters and self time to identify repeated work before optimizing. Preserve
+simulation ordering, seeded RNG, and cache invalidation behavior. New timers must
+remain opt-in and transient, balance enter/leave in `finally`, and restore wrapped
+functions after the burst, including errors. Relevant coverage lives in
+`tests/e2e/specs/time-controls.spec.js`, `annual-world-profiling.spec.js`, and
+`army-daily-performance.spec.js`. Agents may inspect owner-provided reports and
+saved traces, but must not run profiling or the harness themselves under the
+owner-controlled testing policy above.
+
 Deployment: zip the folder (`index.html` at the zip root) to itch.io as an HTML5 project, or in
 practice the owner runs `notes/deploy.cmd` (butler push). It ships to **two independent targets** —
 itch and `play.fallowborn.com` (a separate Coolify origin that auto-deploys on every push to

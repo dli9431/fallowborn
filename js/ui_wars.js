@@ -166,7 +166,14 @@
         const restored = control && next.querySelector('[data-proclaim-war-law="' + control + '"]');
         const target = restored && !restored.disabled ? restored :
           control ? document.getElementById('war-law-details-' + control.split(':')[0] + '-section') : next.querySelector('#war-laws-back');
-        if (target) target.focus({ preventScroll:true });
+        // openModal schedules container focus; restore this section after it.
+        setTimeout(function () {
+          if (target && next.contains(target) &&
+              !document.getElementById('genmodal').classList.contains('hidden')) {
+            target.focus({ preventScroll:true });
+            next.scrollTop = scroll || 0;
+          }
+        }, 0);
         next.scrollTop = scroll || 0;
       }
       UI.refresh();

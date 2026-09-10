@@ -99,10 +99,12 @@ test('held activation keys cannot cross a confirmation and stale wars cannot res
     await page.evaluate(function () {
       FB.state.player.war = Object.assign({}, FB.state.player.war, { wins:0 });
     });
-    await page.keyboard.press('Tab');
+    // Target the stale confirmation explicitly; disclosure controls also participate in Tab order.
+    await page.locator('#war-peace-confirm').focus();
     await page.keyboard.press('Enter');
     expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(500);
-    await expect(page.locator('#war-peace-confirm')).toHaveCount(0);
+    await expect(page.locator('#war-peace-confirm')).toBeHidden();
+    expect(await page.evaluate(function () { return FB.state.player.war.wins; })).toBe(0);
   });
 
 test('category automation shows voluntary peace while Resolve everything may resolve it',

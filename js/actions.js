@@ -11763,6 +11763,9 @@ window.FB = window.FB || {};
   };
 
   FB.startPlayerWar = function (state, causeOrTarget, opts) {
+    // Reject an unconfirmed review without repairing campaign save records.
+    if (causeOrTarget && causeOrTarget.type === 'aggression' &&
+        !(opts && opts.confirmAggression)) return false;
     FB.ensureWars(state);
     if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
     opts = opts || {};

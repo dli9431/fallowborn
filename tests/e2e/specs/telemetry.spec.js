@@ -706,7 +706,7 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
     await page.getByRole('button', { name:'Begin', exact:true }).click();
 
     for (const text of ['map is yours to explore', 'Use Home to recenter',
-      'Use Map filters']) {
+      'Open Map filters']) {
       const opening = page.locator('.coachmark', { hasText:text });
       await expect(opening).toBeVisible();
       await opening.getByRole('button', { name:'Got it', exact:true }).click();
