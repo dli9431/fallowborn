@@ -199,3 +199,66 @@ resistance keeps its existing expiry, but spreads only from a county at or below
 -20 support to an adjacent realm county also at or below -20. Every newly joined
 county retains its separate petition, warning, and expiry. Healthy neighbors
 interrupt spread without erasing unrest elsewhere.
+
+
+## Armed county revolts and scaled settlements
+
+At -50 support or worse after the 90-day warning, a county musters half its
+potential population levy; the fraction rises linearly to the whole potential
+levy at -100. Potential levy excludes support and occupation penalties so
+complete refusal cannot make the rebel muster zero. Buildings supplying levies
+are included. Each county raises once per uprising, with no passive replacements.
+
+AI counties discover grievances at -20 monthly and receive the same warning.
+Each holder attempts local talks after 30 days; failed talks leave the warning
+running. At severe support, the warning becomes an armed rebellion. AI rulers
+can also attempt a costly response to an armed uprising. No player event choices
+or player funds are consumed for an unrelated AI realm. Player-subject revolts
+appear in the player's existing grievance sheet. The player's own subtree is a
+response jurisdiction even when the player serves a higher sovereign; other AI
+counties group by sovereign. Sovereigns and direct holders muster to defend.
+
+Unarmed resistance still has its ordinary expiry. Armed revolts persist until
+settlement, military defeat, or independence. Hosts share a faction within their
+uprising, merge when stationary together, and are hostile to all other factions.
+They ignore supply drain and receive no passive reinforcement. The shared fort
+siege checks and garrison casualties apply on 30-day pulses. Rebel home counties
+are the first targets; an occupied county opens adjacent negative-support
+counties in the same jurisdiction as additional targets. Those counties join the
+territorial uprising, but cannot raise their own host until a 90-day warning has
+elapsed and support is at most -50. Occupied counties contribute no tax or levy.
+Other armies can recover occupations using the same siege checks.
+
+When every joined county is occupied, each connected component becomes an
+independent realm under a newly generated ruler: one county is a count, multiple
+counties a duke. Existing transfer helpers handle titles, lost player land,
+capitals, and technology inheritance. When the last rebel host is destroyed,
+occupation ends and affected counties receive a two-year revolt cooldown.
+Support does not change from military defeat; unjust-war debt remains.
+
+Response severity is summed over affected counties: 1 unit at -20, 3 at -60,
+5 at -100, continuing above 5 for deeper resentment. Concessions cost 180 gold
+per unit, talks 120, and suppression 150, plus 20% of current gold and 10% of
+current positive prestige once per response. Costs remain spent on failure.
+Talks use Diplomacy with a five-percentage-point penalty per average severity
+unit above one. Suppression starts at 65% with the same severity penalty; both
+have a 10% floor. Successful suppression lowers each county's support by 20;
+failure lowers it by 30. A battlefield victory has no such additional penalty.
+
+Settlements preserve the demanded privilege and impose five years of -25% tax,
+-25% levy, and +10 support in every affected county. They do not erase unjust-war
+debt. Partial local talks cannot dissolve a merged armed uprising; military peace
+must cover its complete roster. AI fiscal responses, since AI has no treasury,
+apply -35% county tax and -15% levy for one severity-year per county (1.5 for a
+concession), capped at ten years, in addition to settlement concessions.
+
+Technology impact: `local_commons_uprisings` remains **none**. Armed resistance,
+AI participation, and political independence are baseline consequences of rule;
+research does not prevent warning, revolt, or settlement. Existing privileges
+retain their approved terms. `local_commons_settlements` remains ungated.
+
+County modifier queries repair only their requested list; full-store repair stays
+at load and modifier-tick boundaries. Expiry and annual unjust-war recovery remain
+live reads. Boolean privilege eligibility scans active records directly without
+building or sorting the display summary, so expiration and revocation take effect
+immediately during revolt discovery.

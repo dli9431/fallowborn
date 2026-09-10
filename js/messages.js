@@ -281,7 +281,8 @@ window.FB = window.FB || {};
       entry && entry.hostileReportKind || '',
       chronicleCategory(entry),
       legacy ? chronicleLegacyGeneration(state, entry && entry.y) :
-        Math.max(1, Number(state.generation) || 1)
+        Math.max(1, Number(state.generation) || 1),
+      entry && entry.audience !== undefined ? entry.audience : null
     ];
   }
 
@@ -383,6 +384,7 @@ window.FB = window.FB || {};
     if (packed[7]) entry.hostileReportKind = packed[7];
     entry.chronicleCategory = CHRONICLE_CATEGORIES[packed[8]] || 'news';
     entry.generation = Math.max(1, Number(packed[9]) || 1);
+    if (typeof packed[10] === 'number') entry.audience = packed[10];
     return entry;
   };
 
@@ -458,6 +460,83 @@ window.FB = window.FB || {};
     return saved;
   };
 
+  // Audience bits are captured when news is recorded, before realms change.
+  // Old entries without a bitmask use a read-only best-effort classification.
+  let audienceState = null, audienceTurn = null, audienceRevision = null, audienceSubject = null;
+  let audienceFamily = null, audienceRealm = null;
+  function newsAudienceNames(state) {
+    const revision = FB.realmStateRevision ? FB.realmStateRevision() : 0;
+    const subject = [state.player.charId, state.player.provinceId, state.player.liege].join('|');
+    if (audienceState === state && audienceTurn === state.turn && audienceRevision === revision && audienceSubject === subject) return;
+    audienceState = state; audienceTurn = state.turn; audienceRevision = revision;
+    audienceSubject = subject;
+    audienceFamily = Object.create(null); audienceRealm = Object.create(null);
+    const player = state.player, chars = state.chars || {}, me = chars[player.charId];
+    if (!me) return;
+    const relatives = [player.charId, me.spouseId, me.fatherId, me.motherId].concat(me.childrenIds || []);
+    for (const id in chars) {
+      const character = chars[id];
+      if (!character) continue;
+      if (relatives.indexOf(id) < 0 && character.spouseId !== player.charId &&
+          !(me.fatherId && character.fatherId === me.fatherId) &&
+          !(me.motherId && character.motherId === me.motherId) &&
+          !(me.dyn && character.dyn === me.dyn)) continue;
+      audienceFamily[id] = true;
+      if (character.name) audienceFamily[character.name] = true;
+      if (FB.fullName) audienceFamily[FB.fullName(character)] = true;
+    }
+    const owners = state.owner || {}, holders = state.holder || {}, realms = state.realms || {};
+    const rulingRealm = realms.player && realms.player.alive && player.tier >= 4 ? 'player' : player.liege;
+    const sovereign = (rulingRealm && FB.topRealm && FB.topRealm(state, rulingRealm)) || owners[player.provinceId] || 'player';
+    for (const id in realms) {
+      if (id !== 'player' && id !== sovereign && (!FB.topRealm || FB.topRealm(state, id) !== sovereign)) continue;
+      audienceRealm[id] = true;
+      if (realms[id].name) audienceRealm[realms[id].name] = true;
+    }
+    for (const pid in owners) {
+      if (pid !== player.provinceId && owners[pid] !== sovereign && holders[pid] !== 'player') continue;
+      audienceRealm[pid] = true;
+      const province = FB.world && FB.world.byId[pid];
+      if (province) audienceRealm[province.name] = true;
+    }
+  }
+  FB.newsAudience = function (state, entry) {
+    if (entry && typeof entry.audience === 'number') return entry.audience;
+    if (!state || !state.player || !entry) return 1;
+    if (entry.kind === 'choice' || entry.receipt) return 1;
+    const message = entry.msg;
+    if (!message) return 1; // Legacy personal prose has no reliable scope ids.
+    newsAudienceNames(state);
+    let mask = 0;
+    function inspect(value, depth) {
+      if (depth > 5 || value == null) return;
+      if (typeof value === 'string') {
+        if (audienceFamily[value]) mask |= 1;
+        if (audienceRealm[value]) mask |= 2;
+        // Older notices sometimes contain a list of county names.
+        if (value.indexOf(', ') >= 0) value.split(', ').forEach(function (part) { if (audienceRealm[part]) mask |= 2; });
+      } else if (typeof value === 'object') {
+        for (const key in value) inspect(value[key], depth + 1);
+      }
+    }
+    inspect(message.params, 0);
+    // Ordinary player campaign notices name the opponent, not the player.
+    // Shared world-war emissions are the exceptions; never infer relevance
+    // from hostileReportId, which older logs attach to unrelated war news too.
+    if (/^news\.war\./.test(message.key || '') &&
+        !/^news\.war\.(aggressive_rule|unlawful|objective_awarded|occupation_changed|law_proclaimed)$/.test(message.key)) return mask | 3;
+    if (mask) return mask;
+    // World simulation messages without a household/realm match are global.
+    const global = /^news\.(war|army|realm|world|ai|rebellion|modifier|papacy|holywar|population|technology|history)\./.test(message.key || '');
+    return global ? 4 : 1;
+  };
+  FB.newsVisible = function (state, entry) {
+    const prefs = FB.game && FB.game.uiPrefs || {};
+    if (prefs.newsAll === true) return true;
+    const mask = FB.newsAudience(state, entry);
+    return !!((prefs.newsFamily !== false && (mask & 1)) || (prefs.newsRealm !== false && (mask & 2)));
+  };
+
   /* New entries carry a descriptor and can be rendered in any locale. Legacy
      strings remain supported so old saves need no migration. Optional entry
      metadata is additive: old builds ignore it and still render msg/t. */
@@ -485,6 +564,8 @@ window.FB = window.FB || {};
       const report = FB.hostileReport(state, entry.hostileReportId);
       if (report) entry.hostileReportKind = report.kind;
     }
+    entry.audience = Number.isInteger(options.audience) && options.audience >= 1 && options.audience <= 7
+      ? options.audience : FB.newsAudience(state, entry);
     const archive = FB.ensureChronicle(state);
     if (archive) {
       FB.chronicleNoteHead(state);
@@ -496,6 +577,7 @@ window.FB = window.FB || {};
     if ((options.toast !== false || outcomeQueued) && !toastSuppression) {
       FB.fx.push({
         kind: 'toast',
+        audience:entry.audience,
         message: entry.msg || null,
         legacyText: entry.msg ? null : entry.t
       });

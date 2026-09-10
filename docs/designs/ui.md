@@ -2642,3 +2642,22 @@ an independent action. No new event trigger or effect keys are introduced.
 County-modifier outcome and Chronicle chips contain one short fact apiece, sized for a single line in ordinary narrow cards. Wrap whole chips between rows; do not turn one pill into a paragraph or truncate numerical effects. Separate the name, county, duration, upkeep when nonzero, transfer persistence, and individual effects.
 
 Peace terms are primary outcome content, visible without opening Details. Show actual tribute and prestige changes, transferred land, imposed allegiance/station, truce expiry, and any campaign ended by enforcement. Zero land transfer is explicit; supplementary battle statistics remain in Details.
+
+## News visibility
+
+Settings > Notifications has three additive checkboxes: Family-relevant events
+and Realm-relevant events default on; All significant events defaults off and
+includes world news. The filters apply to ordinary news toasts, automatic event
+receipts, the retained Chronicle panel, and the full Chronicle viewer. They never
+suppress decisions, simulation effects, save errors, or other direct UI feedback.
+Existing visible news toasts are removed when their audience is disabled. Hidden
+entries stay in saves and complete Chronicle exports, and reappear when enabled.
+
+News records retain their family/realm/world audience at creation, using stable
+ids and the existing proper-name parameters for old emitters. Personal decisions
+are family news; realm scope includes the home sovereign's counties and vassals.
+Older entries without audience metadata use a conservative classification against
+the current family and realm; past relevance cannot be reconstructed exactly.
+Toast flushes insert their retained notices before one rail layout. Chronicle
+updates find the previous tail by identity even at the 300-entry retention cap;
+missing overlap or a visibility change triggers a complete bounded rebuild.

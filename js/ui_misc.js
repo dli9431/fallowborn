@@ -1981,10 +1981,15 @@ window.FB = window.FB || {};
   UI.toastMessage = function (message, legacyText, options) {
     if (UI.suppressEventEffectToasts &&
         !(options && options.bypassSuppression)) return;
+    if (FB.newsVisible && !FB.newsVisible(FB.state, {
+      audience:options && options.audience, msg:message, t:legacyText
+    })) return;
     const box = $('toasts');
     if (!box) return;
     const el = document.createElement('div');
     el.className = 'toast';
+    el.dataset.newsAudience = String(options && options.audience !== undefined
+      ? options.audience : FB.newsAudience(FB.state, { msg:message, t:legacyText }));
     el.textContent = message ? FB.renderMessage(message, {
       state: FB.state,
       viewer: FB.state && FB.state.player ? FB.state.player.charId : null
@@ -1995,7 +2000,7 @@ window.FB = window.FB || {};
     });
     box.appendChild(el);
     while (box.children.length > 5) box.removeChild(box.firstChild);
-    UI.layoutMapToasts(true);
+    if (!(options && options.deferLayout)) UI.layoutMapToasts(true);
     setTimeout(function () { removeToastElement(el); }, 6000);
   };
 
@@ -2003,6 +2008,7 @@ window.FB = window.FB || {};
   const fastForwardNewsToasts = [];
   function deferFastForwardNewsToast(intent) {
     fastForwardNewsToasts.push({
+      audience:intent.audience,
       message:intent.message || null,
       legacyText:intent.legacyText || null,
       bypassSuppression:!!intent.bypassSuppression
@@ -2019,11 +2025,14 @@ window.FB = window.FB || {};
       fastForwardNewsToasts.length);
     for (const intent of pending) {
       UI.toastMessage(intent.message, intent.legacyText, {
-        bypassSuppression:!!intent.bypassSuppression
+        bypassSuppression:!!intent.bypassSuppression,
+        audience:intent.audience, deferLayout:true
       });
     }
+    if (pending.length) UI.layoutMapToasts(true);
   }
   UI.eventReceiptToast = function (receipt) {
+    if (FB.newsVisible && !FB.newsVisible(FB.state, { audience:1 })) return;
     /* Each autoresolved receipt is already durable in the Chronicle, and the
        toast replaces its predecessor. During a frame-sliced skip retain only
        that eventual final toast instead of rebuilding DOM between days. */
@@ -2045,6 +2054,7 @@ window.FB = window.FB || {};
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'toast event-receipt-toast';
+    el.dataset.newsAudience = '1';
     el.title = FB.T(FB.game && FB.game.uiPrefs &&
       FB.game.uiPrefs.eventToastOpensChronicle
       ? 'Open Choices in the Chronicle' : 'Dismiss');
@@ -3973,12 +3983,13 @@ window.FB = window.FB || {};
     FB.fx.on(function (intent) {
       if (intent.kind !== 'toast') return;
       if (FB.game.observe && FB.game.obsQuiet) return;
+      if (FB.newsVisible && !FB.newsVisible(FB.state, { audience:intent.audience, msg:intent.message, t:intent.legacyText })) return;
       if (FB.game && FB.game.fastForwarding) {
         deferFastForwardNewsToast(intent);
         return;
       }
       UI.toastMessage(intent.message, intent.legacyText, {
-        bypassSuppression:!!intent.bypassSuppression
+        bypassSuppression:!!intent.bypassSuppression, audience:intent.audience
       });
     });
     document.querySelectorAll('#sidetabs .tab[data-tab], #lefttabs .tab[data-tab]').forEach(function (t) {

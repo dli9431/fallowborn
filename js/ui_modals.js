@@ -13711,7 +13711,9 @@ window.FB = window.FB || {};
       h += '<div class="progressnote warnote" id="commons-uprising-status">';
       uprising.counties.forEach(function (entry) {
         const name = FB.world.byId[entry.id].name;
-        h += '<p>' + esc(entry.phase === 'active'
+        h += '<p>' + esc(FB.countyInOpenRevolt && FB.countyInOpenRevolt(s, entry.id)
+          ? FB.T('{county}: armed revolt. Defeat the rebel hosts or settle the uprising; it will not expire on its own.', { county:name })
+          : entry.phase === 'active'
           ? FB.T('{county}: tax and levy reduced by {reduction}%; {days} days of disruption remain.', {
             county:name, reduction:entry.reduction, days:entry.days
           }) : entry.phase === 'petition'
@@ -13726,16 +13728,17 @@ window.FB = window.FB || {};
       })) + '</p>';
       if (uprising.spreadPaused) h += '<p>' + esc(FB.T('Spread is paused while Popular support is above the spread threshold.')) + '</p>';
       else if (uprising.spreadDays !== null) h += '<p>' + esc(FB.T('Next spread check in {days} days.', { days:uprising.spreadDays })) + '</p>';
-      h += '<p>' + esc(FB.T('Concession in every listed county, including subordinate lands: {effects} for {days} days; +6 Popular support, -2 prestige once.', {
-        effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
-      })) + '</p><button type="button" class="btn" id="commons-uprising-concede">' +
-          esc(FB.T('Grant {privilege}', { privilege:privilegeDisplayName(s, uprising.privilegeId) })) +
-          '</button>';
+      const revoltQuote = FB.revoltResponseTerms(s, uprising.countyIds, 'player');
+      h += '<p>' + esc(FB.T('Settle every listed county: {money:cost} and {prestige} prestige. Five-year concessions reduce county taxes and levies by 25% and grant +10 Popular support. Unjust-war penalties remain.', {
+        cost:revoltQuote.concede, prestige:revoltQuote.prestige
+      })) + '</p><button type="button" class="btn" id="commons-uprising-concede"' +
+        (s.player.gold < revoltQuote.concede ? ' disabled' : '') + '>' +
+        esc(FB.T('Grant {privilege}', { privilege:privilegeDisplayName(s, uprising.privilegeId) })) + '</button>';
       if (localUprising) {
         h += '<div id="commons-uprising-local"><p>' + esc(FB.T('Local talks cover only your directly held counties: {counties}.', {
           counties:localUprising.countyIds.map(function (pid) { return FB.world.byId[pid].name; }).join(', ')
-        })) + '</p><p>' + esc(FB.T('Costs {money:cost}; {chance}% chance to grant {privilege} here and end local resistance. Concession: {effects} for {days} days. Failure preserves current deadlines. One local attempt per uprising.', {
-          cost:localUprising.cost, chance:Math.round(localUprising.chance * 100),
+        })) + '</p><p>' + esc(FB.T('Costs {money:cost} and {prestige} prestige; {chance}% chance to grant {privilege} here, with five years of reduced tax and levy. Failure preserves current deadlines. One local attempt per uprising. A merged armed uprising requires a full settlement.', {
+          cost:localUprising.cost, prestige:localUprising.prestige, chance:Math.round(localUprising.chance * 100),
           privilege:privilegeDisplayName(s, uprising.privilegeId),
           effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
         })) + '</p>';
@@ -26716,6 +26719,12 @@ window.FB = window.FB || {};
         'Open Chronicle when dismissing event toasts',
         'Automatic event results are always recorded in the Chronicle. Enable this to switch to Chronicle Choices when their popup is dismissed.',
         G.uiPrefs.eventToastOpensChronicle);
+    h += settingsDetailToggle('set-news-family', 'Family-relevant events',
+      'Show your personal decisions and family news in toasts and the Chronicle.', G.uiPrefs.newsFamily !== false) +
+      settingsDetailToggle('set-news-realm', 'Realm-relevant events',
+        'Show news about your realm and its counties, including wars involving your ruler or liege.', G.uiPrefs.newsRealm !== false) +
+      settingsDetailToggle('set-news-all', 'All significant events',
+        'Also show news from other realms. These settings combine; hidden entries remain saved and can be shown again.', G.uiPrefs.newsAll === true);
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Deeds')) + '</p></div>' + settingsDetailToggle(
         'set-group-deeds-by-action-type',
@@ -26887,6 +26896,17 @@ window.FB = window.FB || {};
         $('set-event-toast-opens-chronicle').checked;
       G.saveUiPrefs();
     });
+    [['set-news-family', 'newsFamily'], ['set-news-realm', 'newsRealm'], ['set-news-all', 'newsAll']].forEach(function (setting) {
+      $(setting[0]).addEventListener('change', function () {
+        G.uiPrefs[setting[1]] = $(setting[0]).checked;
+        G.saveUiPrefs();
+        document.querySelectorAll('#toasts [data-news-audience]').forEach(function (toast) {
+          if (!FB.newsVisible(FB.state, { audience:Number(toast.dataset.newsAudience) })) toast.remove();
+        });
+        UI.layoutMapToasts(false);
+        if (FB.state) UI.refresh({ liveTick:true });
+      });
+    });
     $('set-group-deeds-by-action-type').addEventListener('change', function () {
       G.uiPrefs.groupDeedsByActionType =
         $('set-group-deeds-by-action-type').checked;
@@ -27041,6 +27061,7 @@ window.FB = window.FB || {};
   function chronicleFilteredEntries(data) {
     const search = chronicleViewer.search.toLocaleLowerCase();
     return (data.entries || []).filter(function (entry) {
+      if (FB.newsVisible && !FB.newsVisible(FB.state, { audience:entry.audience, msg:entry.message, kind:entry.choice ? 'choice' : null })) return false;
       if (chronicleViewer.category !== 'all' &&
           entry.category !== chronicleViewer.category) return false;
       if (chronicleViewer.generation !== 'all' &&

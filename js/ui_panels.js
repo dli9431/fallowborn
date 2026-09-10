@@ -7259,6 +7259,12 @@ window.FB = window.FB || {};
         landKv('County levy (gross)', '~' + esc(menText(s, Math.round(
           (s.dev[pid] || 1) * (FB.countyPopulationFactor ? FB.countyPopulationFactor(s, pid) : 1) * B.levyPerDev *
           (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pid)) : 1)))));
+      const revolt = FB.countyRevoltStatus && FB.countyRevoltStatus(s, pid);
+      if (revolt) h += landKv('Revolt', esc(revolt.phase === 'occupied'
+        ? FB.T('Rebel occupation; no taxes or levies')
+        : revolt.phase === 'armed' ? FB.T('Armed rebellion; siege {progress}/{required}', { progress:revolt.progress, required:revolt.required })
+        : revolt.phase === 'warning' ? FB.T('Warning: {days} days remaining', { days:revolt.days })
+        : FB.T('Commons resistance: {days} days remaining', { days:revolt.days })));
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
         // every settlement is a button: it opens that settlement's sheet
@@ -7589,6 +7595,7 @@ window.FB = window.FB || {};
       body + '</div>';
   }
   function logMatches(e, filter) {
+    if (FB.newsVisible && !FB.newsVisible(FB.state, e)) return false;
     if (filter === 'choices') return !!(e && e.kind === 'choice');
     if (filter === 'news') return !(e && e.kind === 'choice');
     return true;
@@ -7683,6 +7690,8 @@ window.FB = window.FB || {};
   function renderLog() {
     const s = FB.state;
     const tail = s.log.length ? s.log[s.log.length - 1] : null;
+    const prefs = FB.game.uiPrefs;
+    const audienceKey = [prefs.newsFamily !== false, prefs.newsRealm !== false, prefs.newsAll === true].join('|');
     const header = '<div class="panelh">' + esc(FB.game && FB.game.observe
       ? FB.T('Chronicle of the realms')
       : FB.T('Chronicle of {dynasty}', { dynasty: s.chars[s.player.charId].dyn || FB.T('your line') })) +
@@ -7725,24 +7734,27 @@ window.FB = window.FB || {};
       return;
     }
     if (tail === SH.logRenderedTail && s.log.length === SH.logRenderedLen &&
-        SH.logFilter === SH.logRenderedFilter) return;
+        audienceKey === SH.logRenderedAudience && SH.logFilter === SH.logRenderedFilter) return;
     /* The log grows by appends (truncation only bites far above the visible
        window), so fresh entries are prepended and the overflow trimmed — the
        DOM ends identical to a full rebuild without reparsing 80 nodes. Any
        other shape (a load, a dynasty rename, a locale switch, truncation
        reaching the window) falls back to the rebuild. */
+    const priorTailIndex = SH.logRenderedTail ? s.log.indexOf(SH.logRenderedTail) : -1;
     const canAppend = tail !== SH.logRenderedTail &&
-      SH.logRenderedTail && s.log.length > SH.logRenderedLen &&
+      priorTailIndex >= 0 && audienceKey === SH.logRenderedAudience &&
+      (SH.logRenderedEntries || []).every(function (entry) { return s.log.indexOf(entry) >= 0; }) &&
       header === SH.logRenderedHeader && FB.locale === SH.logRenderedLocale &&
       SH.logFilter === SH.logRenderedFilter &&
-      s.log[SH.logRenderedLen - 1] === SH.logRenderedTail &&
       box.querySelector('.chronicle-entries');
     if (canAppend) {
-      const from = SH.logRenderedLen, to = s.log.length;
+      const from = priorTailIndex + 1, to = s.log.length;
       let add = '';
+      const addedEntries = [];
       for (let i = to - 1; i >= from; i--) {
-        if (logMatches(s.log[i], SH.logFilter)) add += logEntryHtml(s, s.log[i]);
+        if (logMatches(s.log[i], SH.logFilter)) { add += logEntryHtml(s, s.log[i]); addedEntries.push(s.log[i]); }
       }
+      SH.logRenderedEntries = addedEntries.concat(SH.logRenderedEntries || []).slice(0, 80);
       const entries = box.querySelector('.chronicle-entries');
       if (add) entries.insertAdjacentHTML('afterbegin', add);
       while (entries.querySelectorAll('.logentry').length > 80) {
@@ -7754,13 +7766,16 @@ window.FB = window.FB || {};
       return;
     }
     SH.logRenderedTail = tail; SH.logRenderedLen = s.log.length;
+    SH.logRenderedAudience = audienceKey;
     SH.logRenderedHeader = header; SH.logRenderedLocale = FB.locale;
     SH.logRenderedFilter = SH.logFilter;
     let h = header + logControlsHtml() + '<div class="chronicle-entries">';
     let rendered = 0;
+    SH.logRenderedEntries = [];
     for (let i = s.log.length - 1; i >= 0 && rendered < 80; i--) {
       if (!logMatches(s.log[i], SH.logFilter)) continue;
       h += logEntryHtml(s, s.log[i]);
+      SH.logRenderedEntries.push(s.log[i]);
       rendered++;
     }
     h += '</div>';

@@ -4030,9 +4030,10 @@ window.FB = window.FB || {};
     let supportDevelopment = 0;
     const levyDevelopment = territory ? territory.eligible.reduce(function (sum, pid) {
       const development = state.dev[pid] || 1;
-      const support = FB.countySupportFactor ? FB.countySupportFactor(state, pid) : 1;
+      const voice = FB.countyPopularSupport ? FB.countyPopularSupport(state, pid) : 0;
+      const support = FB.clamp(1 + voice / 100, 0, 2);
       supportDevelopment += development * support;
-      const local = FB.modBonus ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : support;
+      const local = FB.modBonus ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid, voice)) : support;
       return sum + development * local;
     }, 0) : 0;
     const strength = territory ? levyDevelopment * (FB.papacyRealmStrengthMultiplier

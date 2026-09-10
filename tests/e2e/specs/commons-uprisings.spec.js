@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'css/style.css', 'js/keys.js','js/institutions.js', 'js/events.js', 'js/modifiers.js',
+  'js/rebellions.js', 'css/style.css', 'js/keys.js','js/institutions.js', 'js/events.js', 'js/modifiers.js',
   'js/world.js', 'js/actions.js', 'js/main.js', 'js/save.js', 'js/ui_modals.js', 'js/ui_misc.js',
   'data/political_institutions.js', 'data/modifiers.js', 'data/events_politics.js',
   'data/events_noble.js', 'data/map_data.js', 'data/technology.js']);
@@ -22,7 +22,9 @@ test.beforeEach(async function ({ page }, testInfo) {
     p.liege = null;
     p.provs = [pid];
     FB.setCountySupport(s, s.player.provinceId, -50);
-    p.gold = 100;
+    p.gold = 10000;
+    // These cases cover unarmed resistance; armed escalation has its own spec.
+    FBDATA.balance.revoltArmedSupport = -1000;
     p.prestige = 100;
     p.war = null;
     p.flags = {};
@@ -128,7 +130,7 @@ test('concession is available without research, clears opposition, and cannot re
       unchanged:snapshot === JSON.stringify(s), rngSame:rng === FB.getRngState(),
       technology:FBDATA.techImpactReviews.features.local_commons_uprisings.mode };
   });
-  expect(result).toMatchObject({ first:true, second:false, support:6,
+  expect(result).toMatchObject({ first:true, second:false, support:0,
     privilege:true, cleared:true, unchanged:true, rngSame:true, technology:'none' });
 });
 
@@ -160,6 +162,8 @@ for (const response of [1, 2, 3]) {
         const territory = JSON.stringify([s.owner, s.holder, s.player.provs, s.player.war, Object.keys(s.realms)]);
         const end = s.collectiveDemands.uprising.dueTurn;
         const beforeGold = s.player.gold;
+        const quote = FB.revoltResponseTerms(s, s.collectiveDemands.uprising.countyIds, 'player');
+        const expectedSpent = args.response === 3 ? 0 : args.response === 1 ? quote.negotiate : quote.suppress;
         const beforePop = FB.countySupportBase(s, s.player.provinceId);
         const rng = FB.rng;
         FB.rng = function () { return args.success ? 0 : 0.999999; };
@@ -174,18 +178,18 @@ for (const response of [1, 2, 3]) {
         s.turn = end;
         FB.institutionsDay(s);
         return { receipt:!!receipt, replaySafe:replaySafe, active:active,
-          spent:beforeGold - s.player.gold, support:support,
+          spent:beforeGold - s.player.gold, expectedSpent:expectedSpent, support:support,
           expired:!FB.hasModifier(s, 'commons_uprising', s.player.provinceId) && !s.collectiveDemands.uprising,
           territorySame:territory === JSON.stringify([s.owner, s.holder, s.player.provs, s.player.war, Object.keys(s.realms)]) };
       }, { response:response, success:success });
       expect(result.receipt).toBe(true);
       expect(result.replaySafe).toBe(true);
-      expect(result.spent).toBe(response === 3 ? 0 : 20);
+      expect(result.spent).toBe(result.expectedSpent);
       expect(result.territorySame).toBe(true);
       expect(result.expired).toBe(true);
       if (success) expect(result.active).toBeNull();
       else expect(result.active).toMatchObject({ stage:'aftermath', days:180 });
-      if (response === 2) expect(result.support).toBe(success ? -8 : -12);
+      if (response === 2) expect(result.support).toBe(success ? -20 : -30);
     });
   }
 }
@@ -273,7 +277,7 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#ev-title')).toHaveText('A final petition');
     await expect(page.locator('#ev-text')).toContainText('25 to 100%');
     await expect(page.locator('#ev-text')).toContainText('180 days');
-    await expect(page.locator('#event-choice-details-0 .event-concession-terms')).toHaveCount(1);
+    await expect(page.locator('#event-choice-details-0 .event-concession-terms')).toHaveCount(2);
     await expect(page.locator('#event-choice-details-1 .event-impact-chip')).toHaveCount(4);
     await expect(page.locator('#event-choice-details-1')).toContainText('If unresolved: tax and levies -25% to -100%');
     await expect(page.locator('#event-choice-details-0 .event-concession-terms > :not(.event-impact-chip)')).toHaveCount(0);
@@ -295,7 +299,7 @@ for (const width of [390, 1280]) {
     }).toBe('warning');
     await page.evaluate(function () { FB.ui.showPrivileges(); });
     await expect(page.locator('#commons-uprising-status')).toContainText('90 days to grant the concession');
-    await expect(page.locator('#commons-uprising-status')).toContainText('+6 Popular support, -2 prestige');
+    await expect(page.locator('#commons-uprising-status')).toContainText('Five-year concessions');
     await page.locator('#commons-uprising-concede').click();
     await expect(page.locator('[data-uprising-result]')).toContainText('Prestige -2');
     await expect(page.locator('#uprising-result-details')).toBeHidden();
@@ -496,7 +500,7 @@ test('one uprising and concession cover the roster with resource changes charged
       receipt:!!receipt, finished:!s.collectiveDemands.uprising };
   });
   expect(result).toEqual({ count:3, unrest:[true, true, true], excludedClear:true,
-    granted:true, clear:true, gold:0, prestige:-2, pop:6, receipt:true, finished:true });
+    granted:true, clear:true, gold:-3566, prestige:-10, pop:0, receipt:true, finished:true });
 });
 
 for (const change of ['transfer', 'separate_concession']) {
@@ -589,8 +593,8 @@ test('the privilege roll names every county and states concession effects per co
     return names;
   });
   for (const name of names) await expect(page.locator('#commons-uprising-status')).toContainText(name);
-  await expect(page.locator('#commons-uprising-status')).toContainText('Concession in every listed county');
-  await expect(page.locator('#commons-uprising-status')).toContainText('-2 prestige once');
+  await expect(page.locator('#commons-uprising-status')).toContainText('Settle every listed county');
+  await expect(page.locator('#commons-uprising-status')).toContainText('prestige');
 });
 
 async function prepareSpreadChain(page) {
@@ -753,7 +757,7 @@ test('internal vassal transfers retain disruption and one concession settles bot
       territory:territory === JSON.stringify({ owner:s.owner, holder:s.holder, liege:s.realms.commonsTestVassal.liege }),
       finished:!s.collectiveDemands.uprising };
   }, chain);
-  expect(result).toEqual({ retained:true, granted:true, pop:6, prestige:-2, territory:true, finished:true });
+  expect(result).toEqual({ retained:true, granted:true, pop:0, prestige:-10, territory:true, finished:true });
 });
 
 test('a consumed spread petition restores once and starts its full grace only when answered', async function ({ page }) {
@@ -829,8 +833,8 @@ for (const success of [true, false]) {
         territory:territory === JSON.stringify([s.owner, s.holder, s.player.provs, s.player.war]),
         grantor:FB.privilegeSummary(s).filter(function (r) { return r.scopeId === home && r.defId === row.privilegeId; }).map(function (r) { return r.grantorId; }) };
     }, { setup:setup, success:success });
-    expect(result).toMatchObject({ receipt:true, pure:true, direct:[setup.chain[0]], spent:20,
-      pop:0, prestige:0, replaySafe:true, granted:success, active:!success,
+    expect(result).toMatchObject({ receipt:true, pure:true, direct:[setup.chain[0]], spent:2408,
+      pop:0, prestige:-10, replaySafe:true, granted:success, active:!success,
       otherUnchanged:true, stageUnchanged:true, deadlineUnchanged:true, visited:true, territory:true });
     expect(result.grantor).toEqual(success ? ['player'] : []);
   });
@@ -910,7 +914,8 @@ for (const width of [1280, 390]) {
     await expect(local).toContainText('One local attempt per uprising');
     await expect(page.locator('#commons-uprising-negotiate-local')).toBeDisabled();
     await page.evaluate(function () {
-      FB.state.player.gold = 20;
+      FB.state.player.gold = 10000;
+      window.localCost = FB.commonsUprisingLocalTerms(FB.state, 'player').cost;
       FB.ui.showPrivileges();
       window.localRng = FB.rng;
       FB.rng = function () { return 0.999999; };
@@ -919,14 +924,14 @@ for (const width of [1280, 390]) {
     await page.evaluate(function () { FB.rng = window.localRng; });
     await expect(page.locator('#gm-title')).toHaveText('Negotiation failed');
     await expect(page.locator('[data-uprising-result]')).toContainText(await page.evaluate(function () {
-      return FB.T('Money {change}', { change:'−' + FB.money(20) });
+      return FB.T('Money {change}', { change:'−' + FB.money(window.localCost) });
     }));
     await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
     await page.locator('#uprising-continue').click();
     await expect(page.locator('#commons-uprising-local')).toContainText('attempt has been used');
     await expect(page.locator('#commons-uprising-negotiate-local')).toBeDisabled();
     await expect(page.locator('#privileges-back')).toBeFocused();
-    expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(0);
+    expect(await page.evaluate(function () { return FB.state.player.gold + window.localCost; })).toBe(10000);
   });
 }
 
@@ -934,7 +939,7 @@ test('local talks settle all direct holdings together while preserving a subordi
   await addCommonsCounties(page, 2);
   const result = await page.evaluate(function () {
     const s = FB.state;
-    window.beginCommons();
+    window.beginCommons(3);
     const row = s.collectiveDemands.uprising;
     const indirect = row.countyIds[2], direct = row.countyIds.slice(0, 2);
     const rid = Object.keys(s.realms).find(function (id) {
@@ -959,7 +964,7 @@ test('local talks settle all direct holdings together while preserving a subordi
   });
   expect(result.scope).toEqual(result.expected);
   expect(result.remaining).toEqual(result.expectedRemaining);
-  expect(result).toMatchObject({ spent:20, active:true, due:true, settled:true, globalResponse:'active' });
+  expect(result).toMatchObject({ spent:2696, active:true, due:true, settled:true, globalResponse:'active' });
 });
 
 test('a vassal can end active local disruption without ending its liege’s uprising', async function ({ page }) {
@@ -989,7 +994,8 @@ for (const acknowledgement of ['Continue', 'Escape']) {
     await page.setViewportSize({ width:390, height:520 });
     await prepareLocalNegotiation(page);
     await page.evaluate(function () {
-      FB.state.player.gold = 100;
+      FB.state.player.gold = 10000;
+      window.localCost = FB.commonsUprisingLocalTerms(FB.state, 'player').cost;
       FB.ui.showPrivileges();
       window.localRng = FB.rng;
       FB.rng = function () { return 0; };
@@ -1002,7 +1008,7 @@ for (const acknowledgement of ['Continue', 'Escape']) {
     await expect(page.locator('#gm-title')).toHaveText('Grievance settled');
     await expect(page.locator('[data-uprising-result]')).toContainText('end resistance');
     await expect(page.locator('[data-uprising-result]')).toContainText(await page.evaluate(function () {
-      return FB.T('Money {change}', { change:'−' + FB.money(20) });
+      return FB.T('Money {change}', { change:'−' + FB.money(window.localCost) });
     }));
     expect(await page.evaluate(function () { return window.uprisingReturnScroll; })).toBeGreaterThan(0);
     await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
@@ -1013,7 +1019,7 @@ for (const acknowledgement of ['Continue', 'Escape']) {
       const body = document.getElementById('gm-body');
       return Math.abs(body.scrollTop - Math.min(window.uprisingReturnScroll, body.scrollHeight - body.clientHeight));
     }); }).toBeLessThanOrEqual(1);
-    expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(80);
+    expect(await page.evaluate(function () { return FB.state.player.gold + window.localCost; })).toBe(10000);
   });
 }
 
@@ -1028,10 +1034,10 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#ev-title')).toHaveText('The commons rise');
     await expect(page.locator('#ev-text')).toContainText('Unrest can spread every 30 days');
     await expect(page.locator('#ev-text')).toContainText('180 days');
-    await expect(page.locator('#event-choice-details-0 .event-concession-terms')).toHaveCount(1);
+    await expect(page.locator('#event-choice-details-0 .event-concession-terms')).toHaveCount(2);
     await expect(page.locator('#event-choice-details-0')).toContainText('1080 days');
     await expect(page.locator('#event-choice-details-0')).toContainText('-8% county tax');
-    await expect(page.locator('#event-choice-details-1 .event-concession-terms')).toHaveCount(1);
+    await expect(page.locator('#event-choice-details-1 .event-concession-terms')).toHaveCount(2);
     await expect(page.locator('#event-choice-details-1')).toContainText('Grievance settled');
     await expect(page.locator('#event-choice-details-1')).toContainText('Disruption continues');
     await expect(page.locator('#event-choice-details-1')).not.toContainText('Active counties keep their own');

@@ -36,6 +36,16 @@ FBDATA.modifiers = {
     fx:{ tax:-0.12, levy:-0.12, unrest:0.25,
       marketProduction:-0.15, marketFlow:-0.10 }
   },
+  uprising_settlement: {
+    name:'Revolt Settlement', icon:'📜',
+    desc:'Five years of concessions settle the rising. Unjust-war grievances still recover on their own timetable.',
+    scope:'county', days:1800, fx:{ tax:-0.25, levy:-0.25, commonVoice:10 }
+  },
+  uprising_response_cost: {
+    name:'Cost of Restoring Order', icon:'⚖',
+    desc:'The ruler diverts county revenue and levy service into resolving unrest. Deeper resentment prolongs the expense.',
+    scope:'county', days:360, fx:{ tax:-0.35, levy:-0.15 }
+  },
   commons_uprising: {
     name:'Local Commons Uprising', icon:'✊',
     desc:'The commons disrupt collection and muster. The reduction follows Popular support, from 25% at -20 to 100% at -100, until their resistance ends.',

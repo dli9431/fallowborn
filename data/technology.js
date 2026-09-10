@@ -85,7 +85,7 @@ window.FBDATA = window.FBDATA || {};
       historical_sicily:{ mode:'none', rationale:'Recognizing a Sicilian island and mainland crown is baseline political progression, not a researched capability.' },
       local_commons_uprisings:{
         mode:'none',
-        rationale:'Local grievances, their spread through subordinate counties, and overlord-backed concession, negotiation, or suppression are baseline ruler responsibilities. Recovery remains available without research; a previously demanded privilege retains its approved terms.'
+        rationale:'Local grievances, armed county revolts, rebel independence, AI responses, and overlord-backed concession, negotiation, or suppression are baseline ruler responsibilities. Recovery remains available without research; a previously demanded privilege retains its approved terms.'
       },
       local_commons_settlements:{
         mode:'none',

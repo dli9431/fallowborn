@@ -1291,10 +1291,12 @@ window.FB = window.FB || {};
   };
 
   FB.hasPrivilege = function (state, defId, scopeId) {
-    var summary = FB.privilegeSummary(state);
-    for (var i = 0; i < summary.length; i++) {
-      if (summary[i].defId === defId &&
-          (!scopeId || summary[i].scopeId === scopeId)) return true;
+    var records = privilegeStore(state, false);
+    for (var i = 0; i < records.length; i++) {
+      var record = records[i];
+      if (record && record.defId === defId && privilegeDef(record.defId) &&
+          (!scopeId || record.scopeId === scopeId) &&
+          (!isFinite(Number(record.endTurn)) || state.turn < record.endTurn)) return true;
     }
     return false;
   };
@@ -1898,7 +1900,7 @@ window.FB = window.FB || {};
       var kept = before.filter(function (pid, index) {
         if (before.indexOf(pid) !== index) return false;
         var keep = uprisingInRealm(state, pid) &&
-          !FB.hasPrivilege(state, row.privilegeId, pid);
+          (!FB.hasPrivilege(state, row.privilegeId, pid) || (FB.countyInOpenRevolt && FB.countyInOpenRevolt(state, pid)));
         if (!keep) {
           FB.removeModifier(state, 'commons_uprising', pid, { notice:false });
           delete row.countyStates[pid];
@@ -1934,7 +1936,7 @@ window.FB = window.FB || {};
     var store = demandStore(state, false), row = store && store.uprising;
     if (!uprisingValid(state, row)) return null;
     var counties = uprisingCounties(row).filter(function (pid) {
-      return uprisingInRealm(state, pid) && !FB.hasPrivilege(state, row.privilegeId, pid);
+      return uprisingInRealm(state, pid) && (!FB.hasPrivilege(state, row.privilegeId, pid) || (FB.countyInOpenRevolt && FB.countyInOpenRevolt(state, pid)));
     });
     if (!counties.length) return null;
     var countyDetails = counties.map(function (pid) {
@@ -1989,7 +1991,7 @@ window.FB = window.FB || {};
       row.privilegeId === ctx.privilegeId &&
       (!ctx.localRulerId || (ctx.localRulerId === 'player' && localUprisingContextValid(state, ctx))) &&
       uprisingCounties(row).every(function (pid) {
-        return uprisingInRealm(state, pid) && !FB.hasPrivilege(state, row.privilegeId, pid);
+        return uprisingInRealm(state, pid) && (!FB.hasPrivilege(state, row.privilegeId, pid) || (FB.countyInOpenRevolt && FB.countyInOpenRevolt(state, pid)));
       }) &&
       (Array.isArray(ctx.countyIds) ? ctx.countyIds.join('|') === uprisingCounties(row).join('|')
         : uprisingCounties(row).length === 1 && uprisingCounties(row)[0] === ctx.locationId) &&
@@ -1998,7 +2000,7 @@ window.FB = window.FB || {};
         row.countyStates[ctx.spreadCountyId].phase === 'petition')) &&
       uprisingCounties(row).every(function (pid) {
         var entry = uprisingCountyState(row, pid);
-        return entry.phase === 'petition' || state.turn < entry.dueTurn;
+        return entry.phase === 'petition' || state.turn < entry.dueTurn || (FB.countyInOpenRevolt && !!FB.countyInOpenRevolt(state, pid));
       }));
   };
 
@@ -2013,15 +2015,17 @@ window.FB = window.FB || {};
       var entry = uprisingCountyState(row, pid);
       return state.holder[pid] === rid && uprisingInRealm(state, pid) &&
         !FB.hasPrivilege(state, row.privilegeId, pid) &&
-        (entry.phase === 'petition' || state.turn < entry.dueTurn);
+        (entry.phase === 'petition' || state.turn < entry.dueTurn || (FB.countyInOpenRevolt && !!FB.countyInOpenRevolt(state, pid)));
     });
     if (!counties.length) return null;
     var attempted = !!(row.localNegotiations && row.localNegotiations[rid]);
+    var quote = FB.revoltResponseTerms && FB.revoltResponseTerms(state, counties, rid);
+    var allowed = !FB.localRevoltResponseAllowed || FB.localRevoltResponseAllowed(state, counties);
     var diplomacy = FB.skillSnapshot ? FB.skillSnapshot(state, ruler, 'dip') : FB.skillOf(ruler, 'dip');
     return { uprisingId:row.id, rulerId:rid, rulerCharId:ruler.id, countyIds:counties,
-      attempted:attempted, chance:FB.clamp(0.30 + diplomacy * 0.04, 0.1, 0.9),
-      cost:rid === 'player' ? 20 : 0,
-      eligible:!attempted, affordable:rid !== 'player' || state.player.gold >= 20 };
+      attempted:attempted, chance:quote ? quote.negotiationChance : FB.clamp(0.30 + diplomacy * 0.04, 0.1, 0.9),
+      cost:quote ? quote.negotiate : 20, prestige:quote ? quote.prestige : 0,
+      eligible:!attempted && allowed, affordable:rid !== 'player' || state.player.gold >= (quote ? quote.negotiate : 20) };
   }
   FB.commonsUprisingLocalTerms = localUprisingTerms;
 
@@ -2067,6 +2071,7 @@ window.FB = window.FB || {};
       });
       repairUprising(state);
     }
+    if (FB.applyRevoltLocalSettlement) FB.applyRevoltLocalSettlement(state, rid, terms.countyIds, success);
     FB.news(state, FB.msg('news.commons_uprising.local_negotiation', {
       forms:{ select:'value', param:'result', cases:{
         success:'A local settlement grants {privilege} in {county}. Resistance ends in those counties; other holders must resolve their own grievances.',
@@ -2166,7 +2171,7 @@ window.FB = window.FB || {};
     row.countyIds = uprisingCounties(row).filter(function (pid) {
       var entry = row.countyStates[pid];
       var countyRecovered = FB.countyPopularSupport(state, pid) > uprisingBalance('commonsUprisingRecoverySupport', -10);
-      if ((entry.phase !== 'active' && countyRecovered) || (entry.phase === 'active' && state.turn >= entry.dueTurn)) {
+      if ((entry.phase !== 'active' && countyRecovered) || (entry.phase === 'active' && state.turn >= entry.dueTurn && !(FB.countyInOpenRevolt && FB.countyInOpenRevolt(state, pid)))) {
         recovered = recovered || countyRecovered;
         FB.removeModifier(state, 'commons_uprising', pid, { notice:false });
         delete row.countyStates[pid];
@@ -2961,6 +2966,7 @@ window.FB = window.FB || {};
 
   FB.institutionsDay = function (state) {
     FB.commonsUprisingDay(state);
+    if (FB.rebellionsDay) FB.rebellionsDay(state);
     var signature = institutionInputSignature(state);
     var stores = institutionStores(state);
     var sameStores = stores.every(function (store, index) {

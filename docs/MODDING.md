@@ -4472,3 +4472,28 @@ unjust-war support effects. Instances persist optional nonnegative `supportDebt`
 `supportStacks`, and numeric `supportSince`; support debt recovers in annual
 steps until `endTurn`. County taxes and levies multiply ordinary effects by
 `clamp(1 + countyPopularSupport / 100, 0, 2)`, then local uprising resistance.
+
+### Armed revolt balance
+
+`revoltConcessionGold` (180), `revoltNegotiationGold` (120), and
+`revoltSuppressionGold` (150) are fixed gold per summed severity unit.
+`revoltGoldShare` (0.20) and `revoltPrestigeShare` (0.10) charge current resources
+once per response. `FB.revoltResponseTerms(state,counties,rulerId)` supplies
+quotes; uprising event text receives `revoltConcessionGold`,
+`revoltNegotiationGold`, `revoltSuppressionGold`, `revoltPrestige`,
+`revoltNegotiationChance`, and `revoltSuppressionChance`. The named chances are
+`revolt_negotiation` and `revolt_suppression`. New custom effects are
+`commons_uprising_buy_concession`, `commons_uprising_pay_negotiation`,
+`commons_uprising_pay_suppression`, and `commons_uprising_suppression_failed`.
+`uprising_settlement` and `uprising_response_cost` are county modifiers; their
+records use the existing modifier schema. See designs/descent.md for formulas.
+
+
+### News audience
+
+`FB.news(state, message, options)` accepts an optional numeric `audience` bitmask:
+1 for family/personal news, 2 for the player's realm, 4 for wider world news.
+Bits may combine. Without it, the message key and semantic ids/proper-name
+parameters supply a compatibility classification. New scoped emitters should
+supply the audience explicitly when the subject is not present in their message
+parameters. Audience controls presentation only: every entry remains archived.

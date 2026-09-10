@@ -1164,3 +1164,69 @@ test('save slot export and import preserves full customary tenure structure and 
       fullStructureMatch: true
     });
   });
+
+
+test('quota autosaves verify in a worker and supersede an in-flight snapshot safely', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(async function () {
+    FB.game.setPaused(true);
+    FB.save.flushPending();
+    const originalSet = Storage.prototype.setItem, OriginalWorker = window.Worker;
+    let workers = 0, plainAttempts = 0;
+    window.Worker = function (url) { workers++; return new OriginalWorker(url); };
+    Storage.prototype.setItem = function (key, value) {
+      if (key === 'fb_auto' && String(value).charAt(0) === '{') {
+        plainAttempts++;
+        throw new DOMException('quota probe', 'QuotaExceededError');
+      }
+      return originalSet.call(this, key, value);
+    };
+    try {
+      FB.state.player.gold = 1234;
+      FB.save.autosave();
+      await new Promise(function (resolve) { setTimeout(resolve, 0); });
+      FB.state.player.gold = 5678;
+      FB.save.autosave();
+      const expected = FB.save.serialize();
+      FB.state.player.gold = 9999; // Must not leak into the pending snapshot.
+      let saved = null;
+      for (let i = 0; i < 200; i++) {
+        await new Promise(function (resolve) { setTimeout(resolve, 25); });
+        saved = FB.save.read('auto');
+        if (saved && saved.state.player.gold === 5678) break;
+      }
+      const correct = saved && saved.state.player.gold === 5678;
+      const seedKept = saved && saved.rng === JSON.parse(expected).rng;
+      const compressed = localStorage.getItem('fb_auto').indexOf('FBC1.') === 0;
+      FB.state.player.gold = 2468;
+      FB.save.autosave();
+      window.dispatchEvent(new Event('pagehide'));
+      const flushed = FB.save.read('auto');
+      return { workers:workers, plainAttempts:plainAttempts, correct:correct, seedKept:seedKept,
+        compressed:compressed, flushed:flushed.state.player.gold };
+    } finally { Storage.prototype.setItem = originalSet; window.Worker = OriginalWorker; }
+  });
+  expect(result.workers).toBeGreaterThanOrEqual(2);
+  expect(result).toMatchObject({ plainAttempts:1, correct:true, seedKept:true, compressed:true, flushed:2468 });
+});
+
+test('a browser blocking workers retains a readable verified quota autosave', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(async function () {
+    FB.game.setPaused(true); FB.save.flushPending();
+    const originalSet = Storage.prototype.setItem, OriginalWorker = window.Worker;
+    window.Worker = function () { throw new Error('worker blocked'); };
+    Storage.prototype.setItem = function (key, value) {
+      if (key === 'fb_auto' && String(value).charAt(0) === '{') throw new DOMException('quota probe', 'QuotaExceededError');
+      return originalSet.call(this, key, value);
+    };
+    try {
+      FB.state.player.gold = 8765; FB.save.autosave();
+      await new Promise(function (resolve) { setTimeout(resolve, 0); });
+      return FB.save.read('auto').state.player.gold;
+    } finally { Storage.prototype.setItem = originalSet; window.Worker = OriginalWorker; }
+  });
+  expect(result).toBe(8765);
+});

@@ -1266,3 +1266,22 @@ their opponent or objective into a defender notice. An expired campaign uses neu
 war-token fallbacks instead of selecting another active war.
 
 Concluded player war reports retain peaceTerms with actual settlement resource changes, ceded/gained counties, changed liege/station, truce expiry, and a campaign ended by enforcement. Capture surrounds only the settlement transaction, so upkeep and earlier battles are not counted as peace costs. Nested settlement calls share the outer capture, and each concurrent campaign keeps its own report. Old reports without this metadata do not invent terms.
+
+## Rebel hosts
+
+`army.rebellionId` binds a host to `state.rebellions.groups`. Rebel factions
+are map identities with `rebelFaction:true` and `alive:false`, excluded from
+ordinary diplomacy and sovereign AI. They remain in the army pipeline without
+an ordinary campaign and cannot score wins or losses in an unrelated war.
+Rebel hostility takes precedence over alliances. Supply is always 100 and
+passive reinforcement is disabled. Home-fort movement restrictions do not stop
+rebels assembling; fort strength still gates every siege. Occupation blocks
+recruitment and tax collection. See descent.md for warnings and independence.
+
+AI muster shares its territory and strength projection with the same phase's
+detachment check. These projections are discarded before orders and movement;
+reinforcement calculates fresh capacity after movement and shares available room
+between hosts of the same realm. No recruitment projection survives into another
+day. County support is read once per county in an AI levy projection and reused
+for both the levy multiplier and uprising resistance. Occupation still overrides
+the result immediately, including when support was supplied by the caller.

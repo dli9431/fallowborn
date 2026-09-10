@@ -972,3 +972,11 @@ Receipt capture uses a conservative local path for numeric gold, prestige, piety
 Modifier receipts render separate short chips for the modifier, county, duration, paid upkeep, transfer persistence, and each effect. Resolved receipts retain exact numerical effects; previews retain their existing concealed-gain rules. Zero upkeep is omitted, while the complete prose formatter remains available for detailed explanations.
 
 War outcome acknowledgements show recorded peace terms directly above Details. The same recorded terms appear in the archived war report; later household resource changes do not alter the amounts displayed.
+
+## Revolt response quotes
+
+The revolt module supplies live text parameters, named chances, affordability,
+custom payment effects and impact previews for the existing uprising choices.
+Manual and automated choices share the same resolver and recheck funds before
+rolling. Gold/prestige charges precede conditional outcomes and apply even on
+failure. No event catalog record is mutated to store a rendered quote.

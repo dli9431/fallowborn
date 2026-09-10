@@ -1326,6 +1326,9 @@ FBDATA.currency = {
 
 /* Game balance knobs — modders welcome */
 FBDATA.balance = {
+  revoltArmedSupport:-50,
+  revoltConcessionGold:180, revoltNegotiationGold:120, revoltSuppressionGold:150,
+  revoltGoldShare:0.20, revoltPrestigeShare:0.10,
   commonsUprisingMaxCounties:3,
   commonsUprisingSpreadDays:30,
   commonsUprisingLocalNegotiationDays:30,

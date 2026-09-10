@@ -686,34 +686,84 @@ window.FB = window.FB || {};
      still-pending one; only the autosave slot is written this way — manual
      saves stay fully synchronous. */
   let pendingAuto = null;
-  function flushAutosave() {
-    const job = pendingAuto;
-    pendingAuto = null;
-    if (!job) return;
+  let autoCodec = null;
+  let autoCodecJob = null;
+  let autoNeedsCompression = false;
+  function stopAutoCodec() {
+    if (autoCodec) autoCodec.terminate();
+    autoCodec = null; autoCodecJob = null;
+  }
+  function writeAuto(job, packed) {
+    if (pendingAuto !== job) return;
     try {
-      localStorage.setItem(key('auto'), job.json);
-    } catch (e) {
-      if (!isQuotaError(e)) {
-        reportSaveError(e);
-        return;
-      }
-      try {
-        localStorage.setItem(key('auto'), encodeStored(job.json));
-      } catch (compactError) {
-        reportSaveError(compactError);
-      }
+      localStorage.setItem(key('auto'), packed);
+      pendingAuto = null;
+    } catch (error) {
+      // Keep the pending snapshot available for the pagehide safety flush.
+      reportSaveError(error);
     }
   }
-  /* a hidden or closing page may never run another timer — land the pending
-     write instead of losing it */
-  S.flushPending = function () { if (pendingAuto) flushAutosave(); };
+  function compressAuto(job) {
+    if (autoCodecJob === job) return;
+    stopAutoCodec();
+    try {
+      // Blob workers also work from file://; no remote assets or game state
+      // enter the worker. It receives the immutable pre-mortality snapshot.
+      const source = [lzCompress.toString(), lzDecompress.toString(),
+        compressToStored.toString(), decompressFromStored.toString(),
+        'onmessage = function (event) { try { var json = event.data; var packed = compressToStored(json); postMessage({ packed:decompressFromStored(packed) === json ? packed : null }); } catch (error) { postMessage({ packed:null }); } };'].join('\n');
+      const url = URL.createObjectURL(new Blob([source], { type:'text/javascript' }));
+      try { autoCodec = new Worker(url); }
+      finally { URL.revokeObjectURL(url); }
+      autoCodecJob = job;
+      autoCodec.onmessage = function (event) {
+        if (pendingAuto !== job || autoCodecJob !== job) return;
+        const packed = event.data && event.data.packed;
+        stopAutoCodec();
+        if (typeof packed === 'string') writeAuto(job, CPRE + packed);
+        else writeAuto(job, encodeStored(job.json));
+      };
+      autoCodec.onerror = function (event) {
+        if (event.preventDefault) event.preventDefault();
+        if (pendingAuto !== job || autoCodecJob !== job) return;
+        stopAutoCodec();
+        writeAuto(job, encodeStored(job.json));
+      };
+      autoCodec.postMessage(job.json);
+    } catch (error) {
+      stopAutoCodec();
+      // Restricted browsers retain the existing verified synchronous codec.
+      writeAuto(job, encodeStored(job.json));
+    }
+  }
+  function flushAutosave(force) {
+    const job = pendingAuto;
+    if (!job) return;
+    if (force === true) stopAutoCodec();
+    if (!autoNeedsCompression) {
+      try {
+        localStorage.setItem(key('auto'), job.json);
+        pendingAuto = null;
+        return;
+      } catch (error) {
+        if (!isQuotaError(error)) { reportSaveError(error); return; }
+        autoNeedsCompression = true;
+      }
+    }
+    if (force === true) writeAuto(job, encodeStored(job.json));
+    else compressAuto(job);
+  }
+  // A closing page cannot wait for a worker; persist the newest snapshot now.
+  S.flushPending = function () { if (pendingAuto) flushAutosave(true); };
   window.addEventListener('pagehide', S.flushPending);
 
   /* an observe session is never saved — it must not bury a real life */
   S.autosave = function () {
     if (!FB.state || FB.state.player.dead || (FB.game && FB.game.observe)) return;
     try {
-      pendingAuto = { json: S.serialize() };
+      const json = S.serialize();
+      stopAutoCodec();
+      pendingAuto = { json:json };
     } catch (e) {
       reportSaveError(e);
       return;
@@ -820,6 +870,7 @@ window.FB = window.FB || {};
       if (!entry) continue;
       const exported = {
         id:i + 1,
+        audience:FB.newsAudience ? FB.newsAudience(state, entry) : 1,
         year:Number(entry.y) || 0,
         season:Number(entry.s) || 0,
         day:Number(entry.d) || 0,
@@ -1333,6 +1384,7 @@ window.FB = window.FB || {};
     if (FB.repairPolitics) restoreRepair('politics', function () {
       FB.repairPolitics(FB.state);
     });
+    if (FB.ensureRebellions) restoreRepair('rebellions', function () { FB.ensureRebellions(FB.state); });
     if (FB.ensureInstitutions) {
       restoreRepair('institutions', function () {
         FB.ensureInstitutions(FB.state, { silent:true });

@@ -1307,3 +1307,28 @@ county for a landless household) only where no county value exists, then deletes
 `player.pop`. Repair is idempotent and does not overwrite newer county values.
 Temporary support debt remains in county modifier records as `supportDebt`,
 `supportSince`, and `endTurn`; it survives transfers and succession.
+
+## Armed rebellion records
+
+`state.rebellions` contains `groups`, county `warnings`, county `cooldowns`,
+and monthly scan/response deadlines. Each group stores its id, faction, target
+jurisdiction, start turn, county membership and one-time muster flags, siege
+progress, occupation, and any recovery siege. Army records carry `rebellionId`
+and `homeCounty`. These additive format-3 fields survive reload; repair never
+rolls, musters, charges a response, or awards independence. Transient county and
+defender indexes invalidate on group membership and realm revisions. Finished
+factions and their military ledgers are removed.
+
+
+Autosave snapshots remain synchronous and precede mortality rolls. After a plain
+storage write exceeds quota, a local Blob worker compresses and verifies the
+immutable JSON snapshot before replacing the slot. Subsequent autosaves reuse
+that storage strategy. A newer snapshot terminates the old worker; stale results
+cannot overwrite it. Pagehide and explicit flush synchronously verify and store
+the latest pending snapshot. Browsers blocking workers retain the verified
+synchronous codec fallback. No worker mutates simulation state or consumes RNG.
+
+Chronicle packed entries may append an audience bitmask at index 10 (family=1,
+realm=2, world=4); old ten-field entries remain readable. Recent log entries carry
+the same optional `audience` field. Notification preferences live in `fb_ui`, not
+in the game save. Visibility never deletes or truncates the durable archive.

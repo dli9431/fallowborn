@@ -3656,6 +3656,7 @@ FB.CHANGELOG = [
     hideBeginnerHints:false,
     hideTips:false,
     eventToastOpensChronicle:false,
+    newsFamily:true, newsRealm:true, newsAll:false,
     autoResumeAfterEvents:false,
     tipsSeen:{},
     tipsGrandfathered:false,
@@ -3703,6 +3704,9 @@ FB.CHANGELOG = [
       G.uiPrefs.hideTips = !!storedUiPrefs.hideTips;
       G.uiPrefs.eventToastOpensChronicle =
         !!storedUiPrefs.eventToastOpensChronicle;
+      G.uiPrefs.newsFamily = storedUiPrefs.newsFamily !== false;
+      G.uiPrefs.newsRealm = storedUiPrefs.newsRealm !== false;
+      G.uiPrefs.newsAll = storedUiPrefs.newsAll === true;
       G.uiPrefs.autoResumeAfterEvents = storedUiPrefs.autoResumeAfterEvents === true;
       if (storedUiPrefs.tipsSeen && typeof storedUiPrefs.tipsSeen === 'object') {
         G.uiPrefs.tipsSeen = storedUiPrefs.tipsSeen;

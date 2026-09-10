@@ -176,18 +176,23 @@ window.FB = window.FB || {};
   }
 
   function listFor(state, scope, pid, create) {
-    repairStorage(state);
+    // Full-store repair belongs to load/tick boundaries. A local query must
+    // never walk unrelated counties, even when another county is malformed.
+    if (!state.modifiers || typeof state.modifiers !== 'object' || Array.isArray(state.modifiers)) state.modifiers = {};
+    if (!state.modifiers.county || typeof state.modifiers.county !== 'object' || Array.isArray(state.modifiers.county)) state.modifiers.county = {};
     if (scope === 'county') {
       if (!pid || !FB.world.byId[pid]) return null;
-      if (!state.modifiers.county[pid] && create) state.modifiers.county[pid] = [];
-      return state.modifiers.county[pid] || [];
+      const county = state.modifiers.county;
+      if (!own(county, pid) && !create) return [];
+      county[pid] = repairList(county[pid], 'county');
+      return county[pid];
     }
     if (scope === 'campaign') {
       const campaign = state.greatHolyWar;
       if (!campaign || (campaign.phase !== 'preparation' &&
           campaign.phase !== 'active' && campaign.phase !== 'settlement')) return null;
-      if (!Array.isArray(campaign.modifiers) && create) campaign.modifiers = [];
-      return campaign.modifiers || [];
+      campaign.modifiers = repairList(campaign.modifiers, 'campaign');
+      return campaign.modifiers;
     }
     return null;
   }
@@ -343,8 +348,8 @@ window.FB = window.FB || {};
   };
 
   /* Live support scales local resistance without adding saved state. */
-  FB.commonsUprisingReduction = function (state, pid) {
-    const support = FB.countyPopularSupport(state, pid || state.player.provinceId);
+  FB.commonsUprisingReduction = function (state, pid, support) {
+    if (support === undefined) support = FB.countyPopularSupport(state, pid || state.player.provinceId);
     const balance = FBDATA.balance;
     const minimum = FB.clamp(balance.commonsUprisingMinReduction, 0, 1);
     const start = balance.commonsUprisingSupportThreshold;
@@ -372,7 +377,7 @@ window.FB = window.FB || {};
     return Object.assign({}, def && def.fx || {}, { tax:-reduction, levy:-reduction });
   };
 
-  FB.modBonus = function (state, key, pid) {
+  FB.modBonus = function (state, key, pid, support) {
     let sum = 0, uprising = false;
     const list = FB.countyModifierRecords(state, pid);
     for (let i = 0; i < list.length; i++) {
@@ -388,10 +393,13 @@ window.FB = window.FB || {};
       sum += FB.settlementCommunityProjectModifierBonus(state, pid, key);
     }
     if (FB.historicalAmbitionBonus) sum += FB.historicalAmbitionBonus(state, pid, key);
-    if (key === 'tax' || key === 'levy') sum = Math.max(0, 1 + sum) * FB.countySupportFactor(state, pid) - 1;
+    if (key === 'tax' || key === 'levy') {
+      if (support === undefined) support = FB.countyPopularSupport(state, pid);
+      sum = Math.max(0, 1 + sum) * FB.clamp(1 + support / 100, 0, 2) - 1;
+    }
     // Apply resistance after ordinary county bonuses so complete refusal
     // cannot be offset by another positive modifier.
-    return uprising ? Math.max(0, 1 + sum) * (1 - FB.commonsUprisingReduction(state, pid)) - 1 : sum;
+    return uprising ? Math.max(0, 1 + sum) * (1 - FB.commonsUprisingReduction(state, pid, support)) - 1 : sum;
   };
 
   FB.countySupportFactor = function (state, pid) {
