@@ -856,7 +856,7 @@ window.FB = window.FB || {};
       section:section.title,
       action:state.collapsed ? FB.T('Expand') : FB.T('Collapse')
     });
-    let h = '<section class="large-list-section" data-list-section="' +
+    let h = (section.beforeHtml || '') + '<section class="large-list-section" data-list-section="' +
       esc(section.id) + '" data-list-title="' + esc(section.title) +
       '">' +
       '<div class="large-list-section-heading settcard">' +
@@ -887,14 +887,15 @@ window.FB = window.FB || {};
     if (section.summary) {
       h += '<div class="large-list-section-summary">' + section.summary + '</div>';
     }
-    h += '<div class="large-list-rows">';
+    h += (section.contentHtml || '') + '<div class="large-list-rows">';
     for (const row of rows) h += row.html;
     h += '</div>' +
       (section.footer
         ? '<div class="large-list-section-footer">' + section.footer + '</div>'
         : '') +
       '<div class="hint large-list-empty"' +
-      (rows.length ? ' hidden' : '') + '>' +
+      (section.contentHtml ? ' data-list-content-only="true"' : '') +
+      (rows.length || section.contentHtml ? ' hidden' : '') + '>' +
       esc(section.empty || FB.T('Nothing is recorded in this section.')) +
       '</div><div class="hint large-list-no-results" hidden>' +
       esc(FB.T('No entries match the current search and filter.')) +
@@ -1030,6 +1031,7 @@ window.FB = window.FB || {};
         }
       }
     }
+    if (UI._gmNoHotkeys) return;
     let visibleIndex = 0;
     for (let i = 0; i < buttons.length; i++) {
       if (!visibleLargeListAction(buttons[i])) continue;
@@ -1089,6 +1091,7 @@ window.FB = window.FB || {};
         if (show) {
           matched++;
           if (large && view.filter === 'all' && !query && !attention &&
+              !(surface === 'work' && states.indexOf(' enterprise ') >= 0) &&
               !state.showAll) {
             if (routineShown >= LARGE_LIST_ROUTINE_BUDGET) {
               show = false;
@@ -1105,7 +1108,7 @@ window.FB = window.FB || {};
       const empty = section.querySelector('.large-list-empty');
       const noResults = section.querySelector('.large-list-no-results');
       const showAll = section.querySelector('[data-list-show-all]');
-      if (empty) empty.hidden = rows.length !== 0;
+      if (empty) empty.hidden = rows.length !== 0 || empty.hasAttribute('data-list-content-only');
       if (noResults) noResults.hidden = rows.length === 0 || matched !== 0;
       if (showAll) showAll.hidden = !truncated || state.collapsed;
     }

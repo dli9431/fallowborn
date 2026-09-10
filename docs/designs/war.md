@@ -1296,3 +1296,76 @@ Daily goal selection, danger checks, movement, siege and battle timing are uncha
 A fully supplied host on non-draining ground clears its low-supply warning without
 calculating recovery bonuses. Friendly-control checks still run after movement;
 partly supplied, foreign, starving and rebel hosts retain their ordinary rules.
+
+Local fast-forward diagnostics split the army tick into campaign setup, muster and
+disband, orders, movement, reinforcement/cohorts, supply, battles, and sieges/rebellions.
+Nested operation rows include AI goal choice, actual path searches, recruitment,
+pursuit/regrouping, cohort replacements and battle resolution. Religious rows expose
+head normalization, claim/restore eligibility, holy-war targets and sacred-control
+tracking. Missing rows mean the operation was not reached during that run. Timed
+phases close on early return and exceptions; the recorder exists only during an
+enabled local burst. These diagnostics do not change military or religious rules.
+
+Muster projections include their complete county list. AI garrison costs use the
+fort index by county and reuse that projection's blocking decisions; no-rally
+projections skip capacity calculation. Projections remain scoped to the current
+muster phase, so later movement, sieges and support changes remain authoritative.
+Supply-distance cache validity uses actual ownership/holder, hierarchy, player
+holdings, alliance/campaign and rebel occupation inputs rather than the broad
+realm revision. Development-only invalidation no longer discards friendly-depot
+distances; recovery still reads live development each day. Diagnostics include
+supply cache validation and distance lookup/build, plus garrison burden.
+
+The local profiler's counters distinguish muster projection requests for new hosts
+and detachments, per-realm projection builds, failed raises, capacity-rejected
+splits and created detachments. Nested muster rows cover war/realm lookup, allied
+troop refresh, new-host checks, detachment checks and peace/disband checks.
+Supply counters distinguish cache hits from actual builds, map counts discarded,
+state/world/control/alliance-campaign invalidations, and per-realm/campaign rebuilds.
+Control-change diagnostics further separate ownership, hierarchy, player holdings
+and rebel occupations. Several invalidation reasons can apply to the same reset;
+reason counters must not be summed as a reset count. The first observed validation
+has no prior diagnostic control snapshot. Friendly-source scanning and distance
+propagation have separate timing rows. Diagnostic snapshots and counters add some
+overhead only while profiling; comparison runs should use the same instrumentation.
+
+Muster reads share a county host index and county levy/support inputs within the
+new-host and detachment phase. Successful raises and splits update the host index
+and clear territory projections so later realms see the changed blockade forces.
+A single defender lookup replaces repeated scans through every realm. Capacity,
+allies, support recovery and blocking are still checked each day; failed attempts
+are not retained across days with potentially stale eligibility.
+
+Supply sources are indexed by holder/owner, with player holdings and ordinary-war
+or rebel occupation counties kept separate. After a control change, each cached
+realm/campaign map checks its source set: unchanged sources retain their distance
+map, while changed sources rebuild it. State/world/adjacency replacement clears
+all maps. The profiler reports source groups checked and maps retained after a
+control change; source scans can therefore outnumber distance builds.
+
+Allied troop refresh now participates in the same phase-local recruitment cache
+as new hosts and detachments. Withdrawals clear territory projections because
+changed troop strength can change blockades. Alliance availability is still
+checked on each query, before requesting any capacities. Each county capacity
+calculation reads its active modifier records once for both support and levy;
+these records do not survive the synchronous calculation.
+Supply validation compares flat primitive control snapshots instead of serializing
+nested county/realm arrays and additional diagnostic JSON each day. It still
+observes in-place ownership, hierarchy, holding and occupation changes. Source
+queries use a once-validated alliance lookup, avoiding repeated whole-alliance
+repair for each controller. Standalone friendliness queries retain their normal
+live alliance validation.
+
+County support/levy inputs can persist across days when their exact inputs agree:
+development, base support, active modifier effects (including annual debt recovery),
+uprising balance and rebel occupation. Recruitment blocking, garrison burden,
+technology, captivity and religious multipliers remain live. Counties with community
+projects, active historical ambition rewards, or replacement support/modifier hooks
+use live calculations. Cache ownership is state-specific and never serialized.
+Supply source answers retain controller-chain dependencies per realm/campaign.
+Unchanged controller chains and diplomacy reuse answers after unrelated control
+changes; exceptional occupation/player counties are always reevaluated. Changed
+county membership still rebuilds distances when the source set changes.
+Order-phase battle power is shared per host, location and role and discarded before
+movement, supply and battles. New profiler counters report retained/rebuilt county
+inputs, reused/evaluated supply controller answers, and battle-power cache hits.

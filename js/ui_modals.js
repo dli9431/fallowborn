@@ -17931,9 +17931,10 @@ window.FB = window.FB || {};
       kv('Blocked from staffing', esc(String(blockedEnterprises))) +
       kv('Approximate current seasonal yield',
         esc(FB.money(Math.round(enterpriseGold * 10) / 10)));
+    let staffingAction = '';
     let enterpriseFooter = '';
     if (idleEnterprises) {
-      enterpriseFooter += '<button class="actionbtn" id="enterprise-staffing-preview">⚙ ' +
+      staffingAction += '<button class="actionbtn" id="enterprise-staffing-preview">⚙ ' +
         esc(FB.T('Staff all idle enterprises…')) +
         '<span class="adesc">' + esc(FB.T(
           'Review a maximum-yield assignment across every unlocked enterprise. Applying it spends no day or money.')) +
@@ -17942,6 +17943,8 @@ window.FB = window.FB || {};
       enterpriseFooter += '<div class="hint enterprise-staffing-hint">' +
         esc(FB.T('All family enterprises are staffed.')) + '</div>';
     }
+    const staffedHint = enterpriseFooter;
+    enterpriseFooter = '';
     const settlements = FB.settlementsOf(s, s.player.provinceId);
     for (let i = 0; i < settlements.length; i++) {
       const catalogue = FB.enterpriseCatalogue(s, s.player.provinceId, i);
@@ -17960,7 +17963,7 @@ window.FB = window.FB || {};
     if (groupMode === 'none' || !enterpriseModels.length) {
       enterpriseSections.push({
         id:'family-enterprises', title:FB.T('Family enterprises'),
-        rows:enterpriseModels, footer:enterpriseFooter,
+        rows:enterpriseModels,
         empty:FB.T('No enterprise yet. Open one in a settlement below.')
       });
     } else {
@@ -17978,8 +17981,14 @@ window.FB = window.FB || {};
         groups[key].rows.push(model);
       }
       for (const key of groupOrder) enterpriseSections.push(groups[key]);
-      enterpriseSections[enterpriseSections.length - 1].footer = enterpriseFooter;
+
     }
+    enterpriseSections[0].beforeHtml = staffingAction;
+    enterpriseSections[enterpriseSections.length - 1].footer = staffedHint;
+    enterpriseSections.push({
+      id:'new-enterprises', title:FB.T('New enterprises'),
+      rows:[], contentHtml:enterpriseFooter
+    });
     const workSections = [{
       id:'household-work',
       title:FB.T('Work & Enterprises'),
@@ -18001,6 +18010,7 @@ window.FB = window.FB || {};
       esc(FB.T('Close')) + '</button></div>';
     const modalOptions = householdPlanHistoryOptions(returnContext) || {};
     modalOptions.modalClass = 'large-list-modal work-list-modal';
+    modalOptions.noHotkeys = true;
     modalOptions.replaceView = !!replaceView;
     modalOptions.guide = guideModalOption('work-guide', 'family-scopes',
       'Guide: work and family scope');
@@ -19915,11 +19925,17 @@ window.FB = window.FB || {};
           UI.showEnterpriseMarket(settlement, returnContext, true);
           return;
         }
+        const scrollTop = $('gm-body').scrollTop;
+        const purchasedType = b.dataset.enterpriseBuy;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
-        resumeManagementAfterDay(returnContext, function () {
-          UI.showLivelihoods(returnContext);
-        });
+        UI.showEnterpriseMarket(settlement, returnContext);
+        const marketBody = $('gm-body');
+        setTimeout(function () {
+          const row = marketBody.querySelector('[data-enterprise-explain="' + purchasedType + '"]');
+          if (row) row.focus({ preventScroll:true });
+          marketBody.scrollTop = scrollTop;
+        }, 0);
       });
     });
     document.querySelectorAll('[data-enterprise-explain]').forEach(function (b) {
@@ -20123,7 +20139,10 @@ window.FB = window.FB || {};
       h += personAssignmentCard({
         person:c,
         selected:selected,
-        faceState:current ? FB.T('Working at {location}', {
+        faceState:current ? FB.T('Working at {enterprise} in {location}', {
+          enterprise:FBDATA.enterprises[current.type]
+            ? dt(s, 'enterprise', current.type, FBDATA.enterprises[current.type], 'name')
+            : FB.T('Unknown enterprise'),
           location:enterprisePlace(s, current)
         }) : FB.T('Available'),
         working:!!current,
@@ -20486,6 +20505,26 @@ window.FB = window.FB || {};
       function (button) {
         button.addEventListener('click', function () {
           const uid = button.dataset.enterpriseStaffingHire;
+          const scrollTop = $('gm-body').scrollTop;
+          const expanded = [];
+          $('gm-body').querySelectorAll('.settcard-info[aria-expanded="true"]').forEach(function (info) {
+            expanded.push(info.getAttribute('aria-controls'));
+          });
+          function redraw(notice) {
+            UI.showEnterpriseStaffingPreview(returnContext, notice);
+            const body = $('gm-body');
+            setTimeout(function () {
+              expanded.forEach(function (id) {
+                const info = body.querySelector('[aria-controls="' + id + '"]');
+                if (info && info.getAttribute('aria-expanded') !== 'true') info.click();
+              });
+              const row = body.querySelector('[data-enterprise-staffing-uid="' + uid + '"]');
+              const focus = row && (row.querySelector('[data-enterprise-staffing-hire]:not(:disabled)') ||
+                row.querySelector('.settcard-info'));
+              if (focus) focus.focus({ preventScroll:true });
+              body.scrollTop = scrollTop;
+            }, 0);
+          }
           let enterprise = null;
           for (const item of FB.enterpriseList(s)) {
             if (item.uid === uid) enterprise = item;
@@ -20494,14 +20533,14 @@ window.FB = window.FB || {};
             ? FB.canHireEnterpriseWorker(s, uid)
             : FB.T('This enterprise is not recognized.');
           if (status !== true || !FB.hireEnterpriseWorker(s, uid)) {
-            UI.showEnterpriseStaffingPreview(returnContext,
+            redraw(
               status === true
                 ? FB.T('Household staffing changed after this review. A fresh plan is shown; review it before applying.')
                 : status);
             return;
           }
           UI.refresh();
-          UI.showEnterpriseStaffingPreview(returnContext, FB.T(
+          redraw(FB.T(
             'A local worker was hired. Review the refreshed staffing plan.'));
         });
       });

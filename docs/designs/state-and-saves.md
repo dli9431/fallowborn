@@ -1376,3 +1376,9 @@ preferences and progression. Deletion failure reports incomplete removal.
 `storageUsage` reads stored keys and values without decoding or changing saves and
 reports UTF-16 payload estimates separately for game-prefixed localStorage and the
 save database; it does not represent total physical disk use or offline media.
+
+Snapshot compaction builds one completed-technology set per record instead of
+searching the completed list for every exposure. The temporary indexes are discarded
+after each serialization, including failures. Exposure order and the synchronous
+pre-mortality snapshot boundary remain unchanged; this reduces compaction work,
+not the requirement to serialize the remaining live state on the main thread.

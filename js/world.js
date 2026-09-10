@@ -1958,12 +1958,15 @@ window.FB = window.FB || {};
   };
 
   FB.canClaimReligiousHead = function (state, religionId, rid) {
+    return canClaimReligiousHead(state, religionId, rid);
+  };
+  function canClaimReligiousHead(state, religionId, rid, knownVacancy) {
     const rel = FB.religionOf(religionId, state);
     const meta = rel && rel.head;
     const realm = state && state.realms && state.realms[rid];
     if (!meta || meta.recovery !== 'claim' ||
-        !FB.religiousHeadVacancy(state, religionId) ||
         !realm || !realm.alive || realm.liege ||
+        (knownVacancy === undefined ? !FB.religiousHeadVacancy(state, religionId) : !knownVacancy) ||
         !(FB.religiousHeadHolderEligible &&
           FB.religiousHeadHolderEligible(state, religionId, rid)) ||
         !FB.faithInFold(state, FB.realmReligionId(state, rid), religionId) ||
@@ -2050,7 +2053,10 @@ window.FB = window.FB || {};
       } else if (meta.recovery === 'claim') {
         const candidates = [];
         for (const rid in state.realms) {
-          if (rid !== 'player' && FB.canClaimReligiousHead(state, religionId, rid)) {
+          if (rid !== 'player' && state.realms[rid] && state.realms[rid].alive &&
+              !state.realms[rid].liege && state.realms[rid].rank >= 3 &&
+              FB.faithInFold(state, FB.realmReligionId(state, rid), religionId) &&
+              canClaimReligiousHead(state, religionId, rid, vacancy)) {
             candidates.push(rid);
           }
         }
@@ -2789,7 +2795,15 @@ window.FB = window.FB || {};
      dies: the player's mortality pass leaves court characters alone unless the
      player has a tie to one, so nobody is rolled twice and nobody is immortal.
      A materialized member is rolled here exactly as a compact one is. */
-  function tickRoyalFamily(state, rid, familyLinks, preparedSuccession,
+  function tickRoyalFamily(state, rid, familyLinks, preparedSuccession, annualContext) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return tickRoyalFamilyUntimed(state, rid, familyLinks, preparedSuccession, annualContext);
+    const entry = timing.enter('World annual operation: royal family');
+    timing.count('World annual: royal families processed');
+    try { return tickRoyalFamilyUntimed(state, rid, familyLinks, preparedSuccession, annualContext); }
+    finally { timing.leave(entry); }
+  }
+  function tickRoyalFamilyUntimed(state, rid, familyLinks, preparedSuccession,
       annualContext) {
     const s = preparedSuccession || FB.ensureRealmSuccession(state, rid);
     if (!s) return;
@@ -4022,19 +4036,62 @@ window.FB = window.FB || {};
     });
   };
 
-  FB.aiBaseHost = function (state, rid, recruitment) {
+  let militaryCountyState = null, militaryCountyCache = Object.create(null);
+  function militaryCountyInput(state, pid) {
+    if (militaryCountyState !== state) { militaryCountyState = state; militaryCountyCache = Object.create(null); }
+    const records = FB.countyModifierRecords ? FB.countyModifierRecords(state, pid) : null;
+    const population = state.population && state.population.counties && state.population.counties[pid];
+    let reusable = !!(FB.countyPopularSupport && FB.countyPopularSupport.militaryCacheSafe &&
+      FB.modBonus && FB.modBonus.militaryCacheSafe) && !(population && population.settlementCommunityProjects && Object.keys(population.settlementCommunityProjects).length);
+    // These optional effects depend on wider political/population state. Keep
+    // their canonical live reader until they expose a complete revision contract.
+    for (const id in state.historicalAmbitions || {}) {
+      const rec = state.historicalAmbitions[id];
+      if (rec && !rec.established && state.turn < rec.endTurn) { reusable = false; break; }
+    }
+    let signature = null;
+    if (reusable) {
+      const revolt = FB.countyInOpenRevolt && FB.countyInOpenRevolt(state, pid);
+      const parts = [state.dev[pid] || 1, FB.countySupportBase(state, pid),
+        !!(revolt && revolt.counties[pid].occupied), FBDATA.balance.commonsUprisingMinReduction,
+        FBDATA.balance.commonsUprisingSupportThreshold, FBDATA.balance.commonsUprisingFullReductionSupport];
+      for (const record of records || []) {
+        const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
+        parts.push(record.id, def && def.fx,
+          def && (def.recoverSupport || def.supportPerStack) ? FB.modifierEffects(state, record.id, record).commonVoice : null);
+      }
+      signature = JSON.stringify(parts);
+      const previous = militaryCountyCache[pid];
+      if (previous && previous.signature === signature && previous.support === FB.countyPopularSupport && previous.modifier === FB.modBonus) {
+        if (FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster county inputs retained');
+        return previous.input;
+      }
+    }
+    const development = state.dev[pid] || 1;
+    const voice = FB.countyPopularSupport ? FB.countyPopularSupport(state, pid, records) : 0;
+    const support = FB.clamp(1 + voice / 100, 0, 2);
+    const local = FB.modBonus ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid, voice, records)) : support;
+    const input = { support:development * support, levy:development * local };
+    if (reusable) militaryCountyCache[pid] = { signature:signature, input:input,
+      support:FB.countyPopularSupport, modifier:FB.modBonus };
+    else delete militaryCountyCache[pid];
+    if (FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster county inputs rebuilt');
+    return input;
+  }
+  FB.aiBaseHost = function (state, rid, recruitment, countyInputs) {
     const captivePenalty = FB.intrigueRealmRulerCaptive &&
       FB.intrigueRealmRulerCaptive(state, rid) ? 0.8 : 1;
     const territory = recruitment || (FB.recruitmentTerritory ? FB.recruitmentTerritory(state, rid) : null);
     if (territory && !territory.rally) return 0;
     let supportDevelopment = 0;
     const levyDevelopment = territory ? territory.eligible.reduce(function (sum, pid) {
-      const development = state.dev[pid] || 1;
-      const voice = FB.countyPopularSupport ? FB.countyPopularSupport(state, pid) : 0;
-      const support = FB.clamp(1 + voice / 100, 0, 2);
-      supportDevelopment += development * support;
-      const local = FB.modBonus ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid, voice)) : support;
-      return sum + development * local;
+      let input = countyInputs && countyInputs[pid];
+      if (!input) {
+        input = militaryCountyInput(state, pid);
+        if (countyInputs) countyInputs[pid] = input;
+      }
+      supportDevelopment += input.support;
+      return sum + input.levy;
     }, 0) : 0;
     const strength = territory ? levyDevelopment * (FB.papacyRealmStrengthMultiplier
       ? FB.papacyRealmStrengthMultiplier(state, rid) : 1) : FB.realmStrength(state, rid);
@@ -4043,7 +4100,7 @@ window.FB = window.FB || {};
       FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
       (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
     const burden = FB.fortGarrisonBurden
-      ? FB.fortGarrisonBurden(state, rid, rid) : 0;
+      ? FB.fortGarrisonBurden(state, rid, rid, territory) : 0;
     return Math.max(0, Math.round(base * captivePenalty) - burden);
   };
 
@@ -4079,20 +4136,22 @@ window.FB = window.FB || {};
     return field / Math.max(1, field + burden);
   };
 
-  function alliedReinforcement(state, defenderId, readOnly) {
+  function alliedReinforcement(state, defenderId, readOnly, capacity) {
     const alliance = readOnly ? FB.allianceSnapshot(state, defenderId) : null;
     const allyId = readOnly
       ? (alliance
         ? (alliance.a === defenderId ? alliance.b : alliance.a) : null)
       : FB.alliedRealm(state, defenderId);
     if (!allyId || FB.isRealmAtWar(state, allyId)) return { ally: null, men: 0 };
-    const defenderBase = defenderId === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, defenderId);
-    const allyBase = allyId === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, allyId);
+    const defenderBase = capacity ? capacity(defenderId) :
+      (defenderId === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, defenderId));
+    const allyBase = capacity ? capacity(allyId) :
+      (allyId === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, allyId));
     return { ally: allyId, men: Math.max(0, Math.round(Math.min(allyBase * 0.25, defenderBase * 0.5))) };
   }
 
-  FB.alliedReinforcement = function (state, defenderId) {
-    return alliedReinforcement(state, defenderId, false);
+  FB.alliedReinforcement = function (state, defenderId, capacity) {
+    return alliedReinforcement(state, defenderId, false, capacity);
   };
 
   FB.alliedReinforcementSnapshot = function (state, defenderId) {
@@ -6133,233 +6192,249 @@ window.FB = window.FB || {};
   }
 
   FB.worldTick = function (state) {
-    const B = FBDATA.balance;
-    FB.ensureDynasticState(state, { yearly:true });
-    FB.checkAllCrownRecognition(state);
-    if (FB.fortAIYear) FB.fortAIYear(state);
-    if (FB.populationYear) FB.populationYear(state);
-    if (FB.papacyYearly) FB.papacyYearly(state);
-    if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
-    /* Family deaths invalidate the live index. This read-only snapshot stays
-       valid for retention and reverse-link cleanup for the rest of this
-       mortality pass, avoiding one full character rebuild per corpse. */
-    const familyLinks = FB.familyLinksSnapshot
-      ? FB.familyLinksSnapshot(state) : null;
-    const yearWars = worldYearWarIndex(state);
-    const yearAlliances = worldYearAllianceIndex(state);
-    const yearDefensiveStrength = worldYearDefensiveStrengthReader(
-      state, yearWars, yearAlliances);
-    const papalTerritorial = FB.religiousHeadSnapshot &&
-      FB.religiousHeadSnapshot(state, 'catholic');
-    const papalTerritorialId = papalTerritorial && papalTerritorial.id;
-    const annualContext = {
-      courtMortalityHandled:Object.create(null)
-    };
+    const timing = FB.game && FB.game._fastForwardTiming;
+    let phase = timing && timing.enter('World annual phase: preparation');
+    try {
+      const B = FBDATA.balance;
+      FB.ensureDynasticState(state, { yearly:true });
+      FB.checkAllCrownRecognition(state);
+      if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: fortifications and population'); }
+      if (FB.fortAIYear) FB.fortAIYear(state);
+      if (FB.populationYear) FB.populationYear(state);
+      if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: religion'); }
+      if (FB.papacyYearly) FB.papacyYearly(state);
+      if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
+      if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: indexes and family links'); }
+      /* Family deaths invalidate the live index. This read-only snapshot stays
+         valid for retention and reverse-link cleanup for the rest of this
+         mortality pass, avoiding one full character rebuild per corpse. */
+      const familyLinks = FB.familyLinksSnapshot
+        ? FB.familyLinksSnapshot(state) : null;
+      const yearWars = worldYearWarIndex(state);
+      const yearAlliances = worldYearAllianceIndex(state);
+      const yearDefensiveStrength = worldYearDefensiveStrengthReader(
+        state, yearWars, yearAlliances);
+      const papalTerritorial = FB.religiousHeadSnapshot &&
+        FB.religiousHeadSnapshot(state, 'catholic');
+      const papalTerritorialId = papalTerritorial && papalTerritorial.id;
+      const annualContext = {
+        courtMortalityHandled:Object.create(null)
+      };
 
-    // realm AI
-    for (const id in state.realms) {
-      const r = state.realms[id];
-      if (!r.alive || id === 'player') continue;
-      const papalTerritorialRealm = papalTerritorialId
-        ? id === papalTerritorialId
-        : (FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(state, id));
-      const papalClaimantId = papalTerritorialRealm &&
-        FB.papacyClaimantForRealm &&
-        FB.papacyClaimantForRealm(state, id);
-      if (!papalTerritorialRealm) {
-        tickRoyalFamily(state, id, familyLinks, r.succession, annualContext);
-      }
-      // a vassal house's standing at its liege's court drifts with the years
-      if (r.liege) {
-        r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
-        if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
-      }
-      // ruler ages & dies
-      r.ruler.age++;
-      const q = Math.max(0, (r.ruler.age > 70 ? 0.18 : r.ruler.age > 55 ? 0.07 : 0.02) -
-        (FB.techBonus ? FB.techBonus(state, 'health', id) : 0));
-      if ((!papalTerritorialRealm || papalClaimantId) &&
-          papalClaimantId !== state.player.charId && FB.chance(q)) {
-        const appointedTenureEnds = FB.feudalTenureEndsAtDeath &&
-          FB.feudalTenureEndsAtDeath(state, id);
-        const appointedTenure = appointedTenureEnds && FB.feudalContractOf
-          ? FB.feudalContractOf(state, id).tenure : null;
-        const succession = papalClaimantId ? r.succession :
-          FB.refreshRealmSuccession(state, id);
-        // Escheat is now the last resort for a genuinely exhausted count line.
-        if (!appointedTenureEnds && !papalClaimantId && r.liege && r.rank === 1 &&
-            (!succession || !succession.heirId) &&
-            FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) {
-          yearAlliances.rebuild();
-          yearWars.rebuild();
-          continue;
+      if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: realm families and rulers'); }
+      // realm AI
+      for (const id in state.realms) {
+        const r = state.realms[id];
+        if (!r.alive || id === 'player') continue;
+        if (timing) timing.count('World annual: realms processed');
+        const papalTerritorialRealm = papalTerritorialId
+          ? id === papalTerritorialId
+          : (FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(state, id));
+        const papalClaimantId = papalTerritorialRealm &&
+          FB.papacyClaimantForRealm &&
+          FB.papacyClaimantForRealm(state, id);
+        if (!papalTerritorialRealm) {
+          tickRoyalFamily(state, id, familyLinks, r.succession, annualContext);
         }
-        const oldGeneration = r.ruler.generation;
-        const rulerMember = succession && succession.members[succession.rulerMemberId];
-        const rulerChar = papalClaimantId
-          ? state.chars[papalClaimantId]
-          : rulerMember && rulerMember.charId && state.chars[rulerMember.charId];
-        if (rulerChar && !rulerChar.dead && FB.killChar) {
-          const playerChar = state.chars[state.player.charId];
-          const wasPlayerSpouse = playerChar &&
-            (playerChar.spouseId === rulerChar.id ||
-              rulerChar.spouseId === playerChar.id);
-          /* Every reigning ruler is a full record now, and every reigning
-             ruler eventually dies. Read retention before FB.killChar severs
-             the links the predicate consults, then compact once the crown has
-             moved on - otherwise a long campaign accumulates one dead ruler
-             per realm per generation and stops being bound by the map. */
-          const compactRuler = !papalClaimantId && rulerMember &&
-            rulerMember.charId === rulerChar.id && FB.courtRecordRetained &&
-            !FB.courtRecordRetained(state, rulerChar,
-              familyLinks && familyLinks.kinById, familyLinks);
-          // A courted royal remains a full character after taking the throne.
-          // Use the normal death path so marriage and role links also close;
-          // royalCharDied advances the realm exactly once.
-          FB.killChar(state, rulerChar, { familyLinks:familyLinks });
-          if (compactRuler && FB.compactCourtRecord) {
-            rulerMember.alive = false;
-            FB.compactCourtRecord(state, rulerMember, rulerChar, {
-              retentionChecked:true,
-              kinById:familyLinks && familyLinks.kinById
-            });
+        // a vassal house's standing at its liege's court drifts with the years
+        if (r.liege) {
+          r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
+          if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
+        }
+        // ruler ages & dies
+        r.ruler.age++;
+        const q = Math.max(0, (r.ruler.age > 70 ? 0.18 : r.ruler.age > 55 ? 0.07 : 0.02) -
+          (FB.techBonus ? FB.techBonus(state, 'health', id) : 0));
+        if ((!papalTerritorialRealm || papalClaimantId) &&
+            papalClaimantId !== state.player.charId && FB.chance(q)) {
+          if (timing) timing.count('World annual: ruler deaths');
+          const appointedTenureEnds = FB.feudalTenureEndsAtDeath &&
+            FB.feudalTenureEndsAtDeath(state, id);
+          const appointedTenure = appointedTenureEnds && FB.feudalContractOf
+            ? FB.feudalContractOf(state, id).tenure : null;
+          const succession = papalClaimantId ? r.succession :
+            FB.refreshRealmSuccession(state, id);
+          // Escheat is now the last resort for a genuinely exhausted count line.
+          if (!appointedTenureEnds && !papalClaimantId && r.liege && r.rank === 1 &&
+              (!succession || !succession.heirId) &&
+              FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) {
+            yearAlliances.rebuild();
+            yearWars.rebuild();
+            continue;
           }
-          if (wasPlayerSpouse) {
-            FB.news(state, FB.msg('news.life.spouse_died',
-              '🕯 Your spouse {name} has died. The house is quieter, and colder.',
-              { name:rulerChar.name }));
-            if (FB.spouseDied) FB.spouseDied(state, rulerChar);
-            if (FB.promoteSpouse) FB.promoteSpouse(state);
-          }
-        } else {
-          if (papalClaimantId && FB.startPapalElection) {
-            FB.startPapalElection(state, null, 'death');
+          const oldGeneration = r.ruler.generation;
+          const rulerMember = succession && succession.members[succession.rulerMemberId];
+          const rulerChar = papalClaimantId
+            ? state.chars[papalClaimantId]
+            : rulerMember && rulerMember.charId && state.chars[rulerMember.charId];
+          if (rulerChar && !rulerChar.dead && FB.killChar) {
+            const playerChar = state.chars[state.player.charId];
+            const wasPlayerSpouse = playerChar &&
+              (playerChar.spouseId === rulerChar.id ||
+                rulerChar.spouseId === playerChar.id);
+            /* Every reigning ruler is a full record now, and every reigning
+               ruler eventually dies. Read retention before FB.killChar severs
+               the links the predicate consults, then compact once the crown has
+               moved on - otherwise a long campaign accumulates one dead ruler
+               per realm per generation and stops being bound by the map. */
+            const compactRuler = !papalClaimantId && rulerMember &&
+              rulerMember.charId === rulerChar.id && FB.courtRecordRetained &&
+              !FB.courtRecordRetained(state, rulerChar,
+                familyLinks && familyLinks.kinById, familyLinks);
+            // A courted royal remains a full character after taking the throne.
+            // Use the normal death path so marriage and role links also close;
+            // royalCharDied advances the realm exactly once.
+            FB.killChar(state, rulerChar, { familyLinks:familyLinks });
+            if (compactRuler && FB.compactCourtRecord) {
+              rulerMember.alive = false;
+              FB.compactCourtRecord(state, rulerMember, rulerChar, {
+                retentionChecked:true,
+                kinById:familyLinks && familyLinks.kinById
+              });
+            }
+            if (wasPlayerSpouse) {
+              FB.news(state, FB.msg('news.life.spouse_died',
+                '🕯 Your spouse {name} has died. The house is quieter, and colder.',
+                { name:rulerChar.name }));
+              if (FB.spouseDied) FB.spouseDied(state, rulerChar);
+              if (FB.promoteSpouse) FB.promoteSpouse(state);
+            }
           } else {
-            if (rulerMember) rulerMember.alive = false;
-            FB.advanceRealmSuccession(state, id);
-          }
-        }
-        // Defensive repair for malformed saves whose materialized ruler was
-        // already dead but had not advanced the compact succession record.
-        if (!papalClaimantId && r.alive && r.ruler.generation === oldGeneration) {
-          FB.advanceRealmSuccession(state, id);
-        }
-        /* Succession can end an alliance, absorb a realm, or otherwise
-           change which sovereign owns a live conflict. Refresh the annual
-           indexes once for that actual mutation, not on every query. */
-        yearAlliances.rebuild();
-        yearWars.rebuild();
-        if (appointedTenureEnds && r.alive && FB.revertFeudalRealm &&
-            FB.revertFeudalRealm(state, id, appointedTenure)) {
-          yearAlliances.rebuild();
-          yearWars.rebuild();
-          continue;
-        }
-        if (!papalClaimantId &&
-            (FB.game.observe || id === FB.playerRealmId(state) ||
-              id === state.player.liege)) {
-          FB.news(state, FB.msg('news.world.ruler_succeeds',
-            '👑 The ruler of {realm} is dead. {ruler} rises in their place.',
-            { realm: r.name, ruler: r.ruler.name }));
-        }
-        if (!r.alive) continue; // the new ruler was the protagonist and joined the realms
-      }
-      if (r.liege) continue; // vassals make no foreign policy of their own
-      // Ordinary campaigns resolve through the shared seasonal registry.
-      if (!r.war && !yearWars.has(id) && FB.aiRaidTick) {
-        FB.aiRaidTick(state, id, r, B, true);
-      }
-    }
-
-    // vassal breakaways: a strong duke or subject king may renounce his
-    // liege and stand alone; the old sovereign marches to take him back
-    for (const id in state.realms) {
-      const r = state.realms[id];
-      if (!r.alive || !r.liege || id === 'player') continue;
-      if (FB.intrigueRealmRulerCaptive &&
-          FB.intrigueRealmRulerCaptive(state, id)) continue;
-      const top = FB.topRealm(state, id);
-      if (top === id || yearWars.has(top)) continue;
-      // the 1.5% gate first: realmTerritory walks the whole realm table, and
-      // ~98.5% of that work was thrown away when the roll failed
-      if (!FB.chance(FB.vassalBreakawayChance(state, id))) continue;
-      const terr = FB.realmTerritory(state, id);
-      if (terr.length < 3) continue;
-      if (FB.realmStrength(state, top) < 8) continue;
-      r.liege = null;
-      for (const pid of terr) state.owner[pid] = id;
-      FB.invalidateRealmCache();
-      if (FB.mergeRealmTech) FB.mergeRealmTech(state, id, top);
-      const tr = state.realms[top];
-      if (top === 'player') {
-        // the player's own vassal rises: fought as a defensive war of the
-        // player's, never as realms.player.war — the AI loop skips the
-        // player, so a war parked there could neither resolve nor be fought
-        if (tr && tr.alive && !state.player.war) {
-          state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
-            defending: true, casus: { type: 'independence' } };
-          yearWars.addPlayerWar(state.player.war);
-          FB.warFooting(state);
-          FB.announcePlayerDefense(state);
-          if (FB.ui && FB.ui.maybeTip) {
-            FB.ui.maybeTip('war-declared',
-              '💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe.',
-              '#mapwrap');
-          }
-        }
-      } else if (tr && tr.alive && !tr.war) {
-        tr.war = { enemy: id, years: 0, captures: 0,
-          casus: { type: 'border', label: 'Breakaway war' } };
-        yearWars.addWar(top, tr.war);
-      }
-      yearWars.rebuild();
-      yearAlliances.rebuild();
-      if (top === FB.playerRealmId(state) || id === state.player.liege || FB.game.observe) {
-        FB.news(state, FB.msg('news.world.breakaway', {
-          forms: {
-            select: 'value', param: 'overlord', cases: {
-              realm: '🔥 {realm} renounces the suzerainty of {liege}!',
-              other: '🔥 {realm} renounces the suzerainty of the crown!'
+            if (papalClaimantId && FB.startPapalElection) {
+              FB.startPapalElection(state, null, 'death');
+            } else {
+              if (rulerMember) rulerMember.alive = false;
+              FB.advanceRealmSuccession(state, id);
             }
           }
-        }, { overlord: tr ? 'realm' : 'other', realm: r.name, liege: tr ? tr.name : '' }));
-      }
-    }
-
-    /* A rare yearly opening between neighboring, peaceful sovereign crowns.
-       The compact is bilateral and defensive; no allied war is created. */
-    const courted = {};
-    for (const id in state.realms) {
-      const r = state.realms[id];
-      if (id === 'player' || !r.alive || r.liege || r.rank < 3 || yearWars.has(id) ||
-          courted[id] || yearAlliances.has(id) || !FB.chance(0.08)) continue;
-      const choices = [];
-      for (const id2 in state.realms) {
-        const r2 = state.realms[id2];
-        if (id2 === id || id2 === 'player' || !r2.alive || r2.liege || r2.rank < 3 ||
-            yearWars.has(id2) || courted[id2] || yearAlliances.has(id2)) continue;
-        if (!FB.realmsAdjacent(state, id, id2)) continue;
-        if (!realmsFaithCompatible(state, id, id2)) continue;
-        choices.push(id2);
-      }
-      if (choices.length) {
-        const partner = FB.pick(choices);
-        if (FB.formAlliance(state, id, partner, 'dynastic')) {
+          // Defensive repair for malformed saves whose materialized ruler was
+          // already dead but had not advanced the compact succession record.
+          if (!papalClaimantId && r.alive && r.ruler.generation === oldGeneration) {
+            FB.advanceRealmSuccession(state, id);
+          }
+          /* Succession can end an alliance, absorb a realm, or otherwise
+             change which sovereign owns a live conflict. Refresh the annual
+             indexes once for that actual mutation, not on every query. */
           yearAlliances.rebuild();
-          courted[id] = courted[partner] = 1;
-          if (FB.game.observe || id === FB.playerRealmId(state) || partner === FB.playerRealmId(state)) {
-            FB.news(state, FB.msg('news.world.alliance_formed',
-              '🤝 {realm} and {ally} bind themselves in a defensive alliance.',
-              { realm: r.name, ally: state.realms[partner].name }));
+          yearWars.rebuild();
+          if (appointedTenureEnds && r.alive && FB.revertFeudalRealm &&
+              FB.revertFeudalRealm(state, id, appointedTenure)) {
+            yearAlliances.rebuild();
+            yearWars.rebuild();
+            continue;
+          }
+          if (!papalClaimantId &&
+              (FB.game.observe || id === FB.playerRealmId(state) ||
+                id === state.player.liege)) {
+            FB.news(state, FB.msg('news.world.ruler_succeeds',
+              '👑 The ruler of {realm} is dead. {ruler} rises in their place.',
+              { realm: r.name, ruler: r.ruler.name }));
+          }
+          if (!r.alive) continue; // the new ruler was the protagonist and joined the realms
+        }
+        if (r.liege) continue; // vassals make no foreign policy of their own
+        // Ordinary campaigns resolve through the shared seasonal registry.
+        if (!r.war && !yearWars.has(id) && FB.aiRaidTick) {
+          FB.aiRaidTick(state, id, r, B, true);
+        }
+      }
+
+      if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: vassal breakaways'); }
+      // vassal breakaways: a strong duke or subject king may renounce his
+      // liege and stand alone; the old sovereign marches to take him back
+      for (const id in state.realms) {
+        const r = state.realms[id];
+        if (!r.alive || !r.liege || id === 'player') continue;
+        if (FB.intrigueRealmRulerCaptive &&
+            FB.intrigueRealmRulerCaptive(state, id)) continue;
+        const top = FB.topRealm(state, id);
+        if (top === id || yearWars.has(top)) continue;
+        // the 1.5% gate first: realmTerritory walks the whole realm table, and
+        // ~98.5% of that work was thrown away when the roll failed
+        if (!FB.chance(FB.vassalBreakawayChance(state, id))) continue;
+        const terr = FB.realmTerritory(state, id);
+        if (terr.length < 3) continue;
+        if (FB.realmStrength(state, top) < 8) continue;
+        if (timing) timing.count('World annual: breakaways');
+        r.liege = null;
+        for (const pid of terr) state.owner[pid] = id;
+        FB.invalidateRealmCache();
+        if (FB.mergeRealmTech) FB.mergeRealmTech(state, id, top);
+        const tr = state.realms[top];
+        if (top === 'player') {
+          // the player's own vassal rises: fought as a defensive war of the
+          // player's, never as realms.player.war — the AI loop skips the
+          // player, so a war parked there could neither resolve nor be fought
+          if (tr && tr.alive && !state.player.war) {
+            state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
+              defending: true, casus: { type: 'independence' } };
+            yearWars.addPlayerWar(state.player.war);
+            FB.warFooting(state);
+            FB.announcePlayerDefense(state);
+            if (FB.ui && FB.ui.maybeTip) {
+              FB.ui.maybeTip('war-declared',
+                '💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe.',
+                '#mapwrap');
+            }
+          }
+        } else if (tr && tr.alive && !tr.war) {
+          tr.war = { enemy: id, years: 0, captures: 0,
+            casus: { type: 'border', label: 'Breakaway war' } };
+          yearWars.addWar(top, tr.war);
+        }
+        yearWars.rebuild();
+        yearAlliances.rebuild();
+        if (top === FB.playerRealmId(state) || id === state.player.liege || FB.game.observe) {
+          FB.news(state, FB.msg('news.world.breakaway', {
+            forms: {
+              select: 'value', param: 'overlord', cases: {
+                realm: '🔥 {realm} renounces the suzerainty of {liege}!',
+                other: '🔥 {realm} renounces the suzerainty of the crown!'
+              }
+            }
+          }, { overlord: tr ? 'realm' : 'other', realm: r.name, liege: tr ? tr.name : '' }));
+        }
+      }
+
+      if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: alliances'); }
+      /* A rare yearly opening between neighboring, peaceful sovereign crowns.
+         The compact is bilateral and defensive; no allied war is created. */
+      const courted = {};
+      for (const id in state.realms) {
+        const r = state.realms[id];
+        if (id === 'player' || !r.alive || r.liege || r.rank < 3 || yearWars.has(id) ||
+            courted[id] || yearAlliances.has(id) || !FB.chance(0.08)) continue;
+        const choices = [];
+        for (const id2 in state.realms) {
+          const r2 = state.realms[id2];
+          if (id2 === id || id2 === 'player' || !r2.alive || r2.liege || r2.rank < 3 ||
+              yearWars.has(id2) || courted[id2] || yearAlliances.has(id2)) continue;
+          if (!FB.realmsAdjacent(state, id, id2)) continue;
+          if (!realmsFaithCompatible(state, id, id2)) continue;
+          choices.push(id2);
+        }
+        if (choices.length) {
+          const partner = FB.pick(choices);
+          if (FB.formAlliance(state, id, partner, 'dynastic')) {
+            if (timing) timing.count('World annual: alliances formed');
+            yearAlliances.rebuild();
+            courted[id] = courted[partner] = 1;
+            if (FB.game.observe || id === FB.playerRealmId(state) || partner === FB.playerRealmId(state)) {
+              FB.news(state, FB.msg('news.world.alliance_formed',
+                '🤝 {realm} and {ally} bind themselves in a defensive alliance.',
+                { realm: r.name, ally: state.realms[partner].name }));
+            }
           }
         }
       }
-    }
 
-    if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state, familyLinks);
+      if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: ruler agency'); }
+      if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state, familyLinks);
 
-    FB.aiBuildingsYear(state);
-    return annualContext;
+      if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: AI buildings'); }
+      FB.aiBuildingsYear(state);
+      return annualContext;
+    } finally { if (timing) timing.leave(phase); }
   };
 
   /* ================= PLAYER WAR (seasonal) ================= */

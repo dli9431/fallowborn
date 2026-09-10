@@ -115,9 +115,11 @@ window.FB = window.FB || {};
     return FB.clamp(bonus, 0, balance('populationMaxFamineProtection', 0.60));
   };
 
-  FB.countyBuildingAttraction = function (state, pid) {
+  FB.countyBuildingAttraction = function (state, pid, enterpriseEffects) {
     var attraction = countyBuildingBonus(state, pid, 'migrationAttraction');
-    if (FB.enterpriseUpgradeEffect) {
+    if (enterpriseEffects) {
+      attraction += enterpriseEffects.migrationAttraction || 0;
+    } else if (FB.enterpriseUpgradeEffect) {
       attraction += FB.enterpriseUpgradeEffect(state, 'migrationAttraction', pid);
     }
     return Math.max(0, attraction);
@@ -134,13 +136,13 @@ window.FB = window.FB || {};
     return fallbackSchedule[fortLevel] || 0;
   };
 
-  FB.countyPopulationCapacity = function (state, pid) {
+  FB.countyPopulationCapacity = function (state, pid, enterpriseEffects) {
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return 0;
     var baseCap = countyBaseCapacity(state, pid);
     var bldgBonus = FB.countyBuildingCapacityBonus(state, pid);
-    var enterpriseBonus = FB.enterpriseUpgradeEffect
-      ? FB.enterpriseUpgradeEffect(state, 'populationCapacity', pid) : 0;
+    var enterpriseBonus = enterpriseEffects ? (enterpriseEffects.populationCapacity || 0) :
+      (FB.enterpriseUpgradeEffect ? FB.enterpriseUpgradeEffect(state, 'populationCapacity', pid) : 0);
     var owner = provinceOwner(state, pid);
     var techBonus = FB.techBonus ? FB.techBonus(state, 'populationCapacity', owner) : 0;
     var maxTech = balance('populationMaxTechCapacityBonus', 0.35);
@@ -180,6 +182,13 @@ window.FB = window.FB || {};
      while annual population and agency scans avoid walking every war once
      per province. */
   function countyConflictSnapshot(state) {
+    var timing = populationTiming;
+    if (!timing) return countyConflictSnapshotUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: conflict snapshot');
+    try { return countyConflictSnapshotUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function countyConflictSnapshotUntimed(state) {
     var result = Object.create(null);
     if (!state) return result;
     function record(table) {
@@ -250,7 +259,7 @@ window.FB = window.FB || {};
       ? yearly.population : FB.countyPopulation(state, pid);
     var cap = yearly && yearly.capacity !== undefined
       ? yearly.capacity : FB.countyPopulationCapacity(state, pid);
-    var bldgAttraction = FB.countyBuildingAttraction(state, pid);
+    var bldgAttraction = FB.countyBuildingAttraction(state, pid, yearly && yearly.enterpriseEffects);
     var owner = provinceOwner(state, pid);
     var techAttraction = FB.techBonus ? FB.techBonus(state, 'migrationAttraction', owner) : 0;
     var maxTechAttraction = balance('populationMaxTechAttraction', 3);
@@ -373,6 +382,13 @@ window.FB = window.FB || {};
   }
 
   function allocatedCommunityCohorts(communities, total, predicate, allowAboveAvailable) {
+    var timing = populationTiming;
+    if (!timing) return allocatedCommunityCohortsUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: allocate community cohorts');
+    try { return allocatedCommunityCohortsUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function allocatedCommunityCohortsUntimed(communities, total, predicate, allowAboveAvailable) {
     var eligible = [];
     for (var i = 0; i < communities.length; i++) {
       if (!predicate || predicate(communities[i])) eligible.push(communities[i]);
@@ -419,6 +435,13 @@ window.FB = window.FB || {};
   /* Meet exact community and edge totals as two ordered integer partitions.
      Each boundary advances once, so distribution is linear in cohorts + edges. */
   function distributeCohortsAcrossEdges(cohorts, edges) {
+    var timing = populationTiming;
+    if (!timing) return distributeCohortsAcrossEdgesUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: distribute migration cohorts');
+    try { return distributeCohortsAcrossEdgesUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function distributeCohortsAcrossEdgesUntimed(cohorts, edges) {
     var distributed = [];
     var cohortIndex = 0;
     var cohortRemaining = cohorts.length ? cohorts[0].count : 0;
@@ -472,6 +495,13 @@ window.FB = window.FB || {};
   }
 
   function applyCommunityDelta(state, communities, amount, options) {
+    var timing = populationTiming;
+    if (!timing) return applyCommunityDeltaUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: natural community allocation');
+    try { return applyCommunityDeltaUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function applyCommunityDeltaUntimed(state, communities, amount, options) {
     var policy = communityPolicy(options);
     if (!policyIsValid(state, policy)) {
       return { communities:copyCommunities(communities), applied:0 };
@@ -692,6 +722,14 @@ window.FB = window.FB || {};
 
   function reconcileSettlementRecord(state, pid, rec, previous,
     allowCompact) {
+    var timing = populationTiming;
+    if (!timing) return reconcileSettlementRecordUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: reconcile settlement records');
+    try { return reconcileSettlementRecordUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function reconcileSettlementRecordUntimed(state, pid, rec, previous,
+    allowCompact) {
     if (!rec || !Array.isArray(rec.communities) || !rec.communities.length ||
         !FB.settlement || !FB.settlement.integerMatrix) return false;
     var rows = settlementPopulationAllocation(state, pid, rec.count);
@@ -731,6 +769,14 @@ window.FB = window.FB || {};
   }
 
   function placeSettlementArrivals(state, pid, rec, cohorts, total,
+    settlementIndex) {
+    var timing = populationTiming;
+    if (!timing) return placeSettlementArrivalsUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: place settlement arrivals');
+    try { return placeSettlementArrivalsUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function placeSettlementArrivalsUntimed(state, pid, rec, cohorts, total,
     settlementIndex) {
     if (!rec || !hasSettlementPartition(rec.communities) ||
         !Array.isArray(cohorts) || !cohorts.length) return;
@@ -903,6 +949,13 @@ window.FB = window.FB || {};
   }
 
   function repairCountyRecord(state, pr, rec, year) {
+    var timing = populationTiming;
+    if (!timing) return repairCountyRecordUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: repair county record');
+    try { return repairCountyRecordUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function repairCountyRecordUntimed(state, pr, rec, year) {
     var savedCommunities = Array.isArray(rec.communities)
       ? rec.communities : [];
     var hadSettlementPartition = hasSettlementPartition(savedCommunities);
@@ -1030,6 +1083,13 @@ window.FB = window.FB || {};
   };
 
   function assertPopulationCommunities(state, provinceIds, context) {
+    var timing = populationTiming;
+    if (!timing) return assertPopulationCommunitiesUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: community invariants');
+    try { return assertPopulationCommunitiesUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function assertPopulationCommunitiesUntimed(state, provinceIds, context) {
     var faults = populationCommunityFaults(state, provinceIds);
     if (faults.length) {
       throw new Error('Population community invariant after ' + context + ': ' + faults.join('; '));
@@ -2268,6 +2328,13 @@ window.FB = window.FB || {};
   };
 
   function resolveCountyCommunityProjects(state, pid, year) {
+    var timing = populationTiming;
+    if (!timing) return resolveCountyCommunityProjectsUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: county community projects');
+    try { return resolveCountyCommunityProjectsUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function resolveCountyCommunityProjectsUntimed(state, pid, year) {
     var rec = state.population && state.population.counties[pid];
     if (!rec || !rec.communityProjects) return [];
     var results = [];
@@ -2333,6 +2400,13 @@ window.FB = window.FB || {};
   };
 
   function resolveSettlementCommunityProjects(state, pid, year) {
+    var timing = populationTiming;
+    if (!timing) return resolveSettlementCommunityProjectsUntimed.apply(this, arguments);
+    var entry = timing.enter('Population annual operation: settlement community projects');
+    try { return resolveSettlementCommunityProjectsUntimed.apply(this, arguments); }
+    finally { timing.leave(entry); }
+  }
+  function resolveSettlementCommunityProjectsUntimed(state, pid, year) {
     var rec = state.population && state.population.counties[pid];
     var all = rec && rec.settlementCommunityProjects;
     if (!all) return [];
@@ -2510,224 +2584,252 @@ window.FB = window.FB || {};
     return result;
   };
 
+  var populationTiming = null;
+
   /* Annual population tick */
   FB.populationYear = function (state) {
     if (!state) return;
-    FB.ensurePopulationState(state);
-    var currentYear = (state.date && isFinite(state.date.year) && state.date.year) ||
-      (state.start && isFinite(state.start.year) && state.start.year) || 867;
+    var previousTiming = populationTiming;
+    var timing = FB.game && FB.game._fastForwardTiming;
+    populationTiming = timing;
+    var phase = timing && timing.enter('Population annual phase: normalization');
+    try {
+      FB.ensurePopulationState(state);
+      var currentYear = (state.date && isFinite(state.date.year) && state.date.year) ||
+        (state.start && isFinite(state.start.year) && state.start.year) || 867;
 
-    if (state.population.lastYear === currentYear) return;
+      if (state.population.lastYear === currentYear) return;
 
-    var provs = provinceList().filter(function (province) {
-      return province && !province.wasteland;
-    }).slice().sort(function (a, b) {
-      return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
-    });
-    var floor = populationFloor();
-    var initialP = {};
-    var naturalDeltas = {};
-    var postNaturalCommunities = {};
-    var postNaturalP = {};
-    var attractions = {};
-    var occupied = {};
-    var ownerAtWar = {};
-    var conflictSnapshot = countyConflictSnapshot(state);
-    var warSnapshot = FB.realmWarSnapshot
-      ? FB.realmWarSnapshot(state) : null;
-    var rGrowth = balance('populationGrowthRate', 0.020);
-
-    /* Stage 1: Natural growth & capacity */
-    for (var i = 0; i < provs.length; i++) {
-      var pr = provs[i];
-      var pid = pr.id;
-      var populationRecord = state.population.counties[pid];
-      var P = populationRecord.count;
-      initialP[pid] = P;
-      var K = FB.countyPopulationCapacity(state, pid);
-      var pressure = FB.clamp(1 - (P / Math.max(1, K)), -0.50, 1.00);
-      var natural = Math.round(P * rGrowth * pressure);
-      natural = FB.clamp(natural, -Math.round(P * 0.01), Math.round(P * 0.02));
-      if (natural < 0) natural = -Math.min(-natural, Math.max(0, P - floor));
-      var naturalResult = applyCommunityDelta(
-        state, populationRecord.communities, natural, null);
-      naturalDeltas[pid] = naturalResult.applied;
-      postNaturalCommunities[pid] = naturalResult.communities;
-      postNaturalP[pid] = P + naturalResult.applied;
-      var owner = provinceOwner(state, pid);
-      if (!own(ownerAtWar, owner)) {
-        ownerAtWar[owner] = warSnapshot
-          ? warSnapshot.has(owner) : realmIsAtWar(state, owner);
-      }
-      occupied[pid] = !!conflictSnapshot[pid];
-      attractions[pid] = FB.countyMigrationAttraction(state, pid, {
-        population:P,
-        capacity:K,
-        occupied:occupied[pid],
-        ownerAtWar:ownerAtWar[owner],
-        severeShock:countySevereMarketShock(state, pid)
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: setup and conflict snapshots'); }
+      var provs = provinceList().filter(function (province) {
+        return province && !province.wasteland;
+      }).slice().sort(function (a, b) {
+        return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
       });
-    }
+      if (timing) timing.count('Population annual: counties', provs.length);
+      var floor = populationFloor();
+      var initialP = {};
+      var naturalDeltas = {};
+      var postNaturalCommunities = {};
+      var postNaturalP = {};
+      var attractions = {};
+      var occupied = {};
+      var ownerAtWar = {};
+      var conflictSnapshot = countyConflictSnapshot(state);
+      var warSnapshot = FB.realmWarSnapshot
+        ? FB.realmWarSnapshot(state) : null;
+      var rGrowth = balance('populationGrowthRate', 0.020);
 
-    /* Stage 2: Conserved Adjacency Migration */
-    var migRate = balance('populationMigrationRate', 0.002);
-    var maxOutflowRate = balance('populationMigrationMaxOutflow', 0.01);
-    var edgeFlows = [];
-    var outgoingEdges = {};
-    var outflowProposed = {};
-
-    for (var j = 0; j < provs.length; j++) {
-      var u = provs[j];
-      var uId = u.id;
-      var adj = (FB.world && FB.world.adj && FB.world.adj[uId]) || {};
-      var adjacentIds = Object.keys(adj).sort();
-      for (var avi = 0; avi < adjacentIds.length; avi++) {
-        var vId = adjacentIds[avi];
-        if (uId >= vId) continue; // process each undirected edge once
-        var v = provinceDef(vId);
-        if (!v || v.wasteland) continue;
-
-        // Block hostile or besieged borders
-        var uOwner = provinceOwner(state, uId);
-        var vOwner = provinceOwner(state, vId);
-        var hostile = false;
-        if (uOwner && vOwner && uOwner !== vOwner && FB.realmsAreHostile && FB.realmsAreHostile(state, uOwner, vOwner)) {
-          hostile = true;
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: enterprise upgrade snapshot'); }
+      var enterpriseEffectsByCounty = FB.enterpriseUpgradeEffectsByCounty
+        ? FB.enterpriseUpgradeEffectsByCounty(state) : null;
+      var noEnterpriseEffects = {};
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: growth capacity and attraction'); }
+      /* Stage 1: Natural growth & capacity */
+      for (var i = 0; i < provs.length; i++) {
+        var pr = provs[i];
+        var pid = pr.id;
+        var populationRecord = state.population.counties[pid];
+        var P = populationRecord.count;
+        initialP[pid] = P;
+        var countyEnterpriseEffects = enterpriseEffectsByCounty ? (enterpriseEffectsByCounty[pid] || noEnterpriseEffects) : null;
+        var K = FB.countyPopulationCapacity(state, pid, countyEnterpriseEffects);
+        var pressure = FB.clamp(1 - (P / Math.max(1, K)), -0.50, 1.00);
+        var natural = Math.round(P * rGrowth * pressure);
+        natural = FB.clamp(natural, -Math.round(P * 0.01), Math.round(P * 0.02));
+        if (natural < 0) natural = -Math.min(-natural, Math.max(0, P - floor));
+        var naturalResult = applyCommunityDelta(
+          state, populationRecord.communities, natural, null);
+        naturalDeltas[pid] = naturalResult.applied;
+        postNaturalCommunities[pid] = naturalResult.communities;
+        postNaturalP[pid] = P + naturalResult.applied;
+        var owner = provinceOwner(state, pid);
+        if (!own(ownerAtWar, owner)) {
+          ownerAtWar[owner] = warSnapshot
+            ? warSnapshot.has(owner) : realmIsAtWar(state, owner);
         }
-        if (occupied[uId] || occupied[vId]) {
-          hostile = true;
-        }
-        if (hostile) continue;
+        occupied[pid] = !!conflictSnapshot[pid];
+        attractions[pid] = FB.countyMigrationAttraction(state, pid, {
+          enterpriseEffects:countyEnterpriseEffects,
+          population:P,
+          capacity:K,
+          occupied:occupied[pid],
+          ownerAtWar:ownerAtWar[owner],
+          severeShock:countySevereMarketShock(state, pid)
+        });
+      }
 
-        var diff = (attractions[vId] || 0) - (attractions[uId] || 0);
-        if (Math.abs(diff) < 2) continue;
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: migration edge proposals'); }
+      /* Stage 2: Conserved Adjacency Migration */
+      var migRate = balance('populationMigrationRate', 0.002);
+      var maxOutflowRate = balance('populationMigrationMaxOutflow', 0.01);
+      var edgeFlows = [];
+      var outgoingEdges = {};
+      var outflowProposed = {};
 
-        var sourceId = diff > 0 ? uId : vId;
-        var targetId = diff > 0 ? vId : uId;
-        var mag = Math.abs(diff);
-        var flow = Math.round(initialP[sourceId] * migRate * Math.min(3, mag - 1));
-        if (flow > 0) {
-          var edge = { from: sourceId, to: targetId, flow: flow };
-          edgeFlows.push(edge);
-          (outgoingEdges[sourceId] = outgoingEdges[sourceId] || []).push(edge);
-          outflowProposed[sourceId] = (outflowProposed[sourceId] || 0) + flow;
+      for (var j = 0; j < provs.length; j++) {
+        var u = provs[j];
+        var uId = u.id;
+        var adj = (FB.world && FB.world.adj && FB.world.adj[uId]) || {};
+        var adjacentIds = Object.keys(adj).sort();
+        for (var avi = 0; avi < adjacentIds.length; avi++) {
+          var vId = adjacentIds[avi];
+          if (timing) timing.count('Population annual: adjacency entries');
+          if (uId >= vId) continue; // process each undirected edge once
+          var v = provinceDef(vId);
+          if (!v || v.wasteland) continue;
+
+          // Block hostile or besieged borders
+          var uOwner = provinceOwner(state, uId);
+          var vOwner = provinceOwner(state, vId);
+          var hostile = false;
+          if (uOwner && vOwner && uOwner !== vOwner && FB.realmsAreHostile && FB.realmsAreHostile(state, uOwner, vOwner)) {
+            hostile = true;
+          }
+          if (occupied[uId] || occupied[vId]) {
+            hostile = true;
+          }
+          if (hostile) continue;
+
+          var diff = (attractions[vId] || 0) - (attractions[uId] || 0);
+          if (Math.abs(diff) < 2) continue;
+
+          var sourceId = diff > 0 ? uId : vId;
+          var targetId = diff > 0 ? vId : uId;
+          var mag = Math.abs(diff);
+          var flow = Math.round(initialP[sourceId] * migRate * Math.min(3, mag - 1));
+          if (flow > 0) {
+            var edge = { from: sourceId, to: targetId, flow: flow };
+            if (timing) timing.count('Population annual: proposed migration edges');
+            edgeFlows.push(edge);
+            (outgoingEdges[sourceId] = outgoingEdges[sourceId] || []).push(edge);
+            outflowProposed[sourceId] = (outflowProposed[sourceId] || 0) + flow;
+          }
         }
       }
-    }
 
-    edgeFlows.sort(function (a, b) {
-      if (a.from !== b.from) return a.from < b.from ? -1 : 1;
-      return a.to < b.to ? -1 : (a.to > b.to ? 1 : 0);
-    });
-    for (var outgoingId in outgoingEdges) {
-      if (!own(outgoingEdges, outgoingId)) continue;
-      outgoingEdges[outgoingId].sort(function (a, b) {
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: migration sorting and outflow limits'); }
+      edgeFlows.sort(function (a, b) {
+        if (a.from !== b.from) return a.from < b.from ? -1 : 1;
         return a.to < b.to ? -1 : (a.to > b.to ? 1 : 0);
       });
-    }
-
-    // Scale down any county exceeding its max allowed outflow
-    var migrationDeltas = {};
-    for (var k = 0; k < provs.length; k++) {
-      migrationDeltas[provs[k].id] = 0;
-    }
-
-    var sourceIds = Object.keys(outflowProposed).sort();
-    for (var sourceIndex = 0; sourceIndex < sourceIds.length; sourceIndex++) {
-      var source = sourceIds[sourceIndex];
-      var proposed = outflowProposed[source];
-      var maxAllowed = Math.min(
-        Math.round(initialP[source] * maxOutflowRate),
-        Math.max(0, postNaturalP[source] - floor)
-      );
-      if (proposed > maxAllowed && proposed > 0) {
-        var outgoing = outgoingEdges[source] || [];
-        var scaled = apportionWeights(maxAllowed, outgoing, function (edge) {
-          return edge.flow;
+      for (var outgoingId in outgoingEdges) {
+        if (!own(outgoingEdges, outgoingId)) continue;
+        outgoingEdges[outgoingId].sort(function (a, b) {
+          return a.to < b.to ? -1 : (a.to > b.to ? 1 : 0);
         });
-        for (var o = 0; o < outgoing.length; o++) {
-          outgoing[o].flow = Math.max(0, Math.min(outgoing[o].flow, scaled[o]));
+      }
+
+      // Scale down any county exceeding its max allowed outflow
+      var migrationDeltas = {};
+      for (var k = 0; k < provs.length; k++) {
+        migrationDeltas[provs[k].id] = 0;
+      }
+
+      var sourceIds = Object.keys(outflowProposed).sort();
+      for (var sourceIndex = 0; sourceIndex < sourceIds.length; sourceIndex++) {
+        var source = sourceIds[sourceIndex];
+        var proposed = outflowProposed[source];
+        var maxAllowed = Math.min(
+          Math.round(initialP[source] * maxOutflowRate),
+          Math.max(0, postNaturalP[source] - floor)
+        );
+        if (proposed > maxAllowed && proposed > 0) {
+          var outgoing = outgoingEdges[source] || [];
+          var scaled = apportionWeights(maxAllowed, outgoing, function (edge) {
+            return edge.flow;
+          });
+          for (var o = 0; o < outgoing.length; o++) {
+            outgoing[o].flow = Math.max(0, Math.min(outgoing[o].flow, scaled[o]));
+          }
         }
       }
-    }
 
-    /* Allocate every source's total outflow once. Edge distribution then
-       divides those exact cohorts in canonical destination order. */
-    var outgoingCohorts = {};
-    var incomingCohorts = {};
-    for (var si = 0; si < sourceIds.length; si++) {
-      var cohortSourceId = sourceIds[si];
-      var sourceEdges = outgoingEdges[cohortSourceId] || [];
-      var sourceOutflow = 0;
-      for (var sei = 0; sei < sourceEdges.length; sei++) {
-        sourceOutflow += sourceEdges[sei].flow;
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: migration cohort distribution'); }
+      /* Allocate every source's total outflow once. Edge distribution then
+         divides those exact cohorts in canonical destination order. */
+      var outgoingCohorts = {};
+      var incomingCohorts = {};
+      for (var si = 0; si < sourceIds.length; si++) {
+        var cohortSourceId = sourceIds[si];
+        var sourceEdges = outgoingEdges[cohortSourceId] || [];
+        var sourceOutflow = 0;
+        for (var sei = 0; sei < sourceEdges.length; sei++) {
+          sourceOutflow += sourceEdges[sei].flow;
+        }
+        var sourceCohorts = allocatedCommunityCohorts(
+          postNaturalCommunities[cohortSourceId], sourceOutflow);
+        outgoingCohorts[cohortSourceId] = sourceCohorts;
+        var distributedCohorts = distributeCohortsAcrossEdges(
+          sourceCohorts, sourceEdges);
+        for (var di = 0; di < sourceEdges.length; di++) {
+          var sourceEdge = sourceEdges[di];
+          incomingCohorts[sourceEdge.to] = mergeCohorts(
+            incomingCohorts[sourceEdge.to] || [], distributedCohorts[di], 1);
+        }
       }
-      var sourceCohorts = allocatedCommunityCohorts(
-        postNaturalCommunities[cohortSourceId], sourceOutflow);
-      outgoingCohorts[cohortSourceId] = sourceCohorts;
-      var distributedCohorts = distributeCohortsAcrossEdges(
-        sourceCohorts, sourceEdges);
-      for (var di = 0; di < sourceEdges.length; di++) {
-        var sourceEdge = sourceEdges[di];
-        incomingCohorts[sourceEdge.to] = mergeCohorts(
-          incomingCohorts[sourceEdge.to] || [], distributedCohorts[di], 1);
+
+      for (var ef = 0; ef < edgeFlows.length; ef++) {
+        var edge = edgeFlows[ef];
+        migrationDeltas[edge.from] -= edge.flow;
+        migrationDeltas[edge.to] += edge.flow;
       }
-    }
 
-    for (var ef = 0; ef < edgeFlows.length; ef++) {
-      var edge = edgeFlows[ef];
-      migrationDeltas[edge.from] -= edge.flow;
-      migrationDeltas[edge.to] += edge.flow;
-    }
-
-    /* Stage 3: Apply & Record */
-    for (var m = 0; m < provs.length; m++) {
-      var pDef = provs[m];
-      var cId = pDef.id;
-      var rec = state.population.counties[cId];
-      if (!rec) continue;
-      var natDelta = naturalDeltas[cId] || 0;
-      var migDelta = migrationDeltas[cId] || 0;
-      var finalCommunities = mergeCohorts(postNaturalCommunities[cId],
-        outgoingCohorts[cId] || [], -1);
-      finalCommunities = mergeCohorts(finalCommunities,
-        incomingCohorts[cId] || [], 1);
-      rec.communities = carrySettlementPartition(
-        rec.communities, finalCommunities);
-      var finalCount = communityTotal(finalCommunities);
-      placeSettlementArrivals(state, cId, rec,
-        incomingCohorts[cId] || [], finalCount, null);
-      rec.count = finalCount;
-      var expectedCount = initialP[cId] + natDelta + migDelta;
-      if (rec.count !== expectedCount) {
-        throw new Error('Population total invariant after annual pass in ' + cId);
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: apply population and settlement changes'); }
+      /* Stage 3: Apply & Record */
+      for (var m = 0; m < provs.length; m++) {
+        var pDef = provs[m];
+        var cId = pDef.id;
+        var rec = state.population.counties[cId];
+        if (!rec) continue;
+        var natDelta = naturalDeltas[cId] || 0;
+        var migDelta = migrationDeltas[cId] || 0;
+        var finalCommunities = mergeCohorts(postNaturalCommunities[cId],
+          outgoingCohorts[cId] || [], -1);
+        finalCommunities = mergeCohorts(finalCommunities,
+          incomingCohorts[cId] || [], 1);
+        rec.communities = carrySettlementPartition(
+          rec.communities, finalCommunities);
+        var finalCount = communityTotal(finalCommunities);
+        placeSettlementArrivals(state, cId, rec,
+          incomingCohorts[cId] || [], finalCount, null);
+        rec.count = finalCount;
+        var expectedCount = initialP[cId] + natDelta + migDelta;
+        if (rec.count !== expectedCount) {
+          throw new Error('Population total invariant after annual pass in ' + cId);
+        }
+        rec.natural = natDelta;
+        rec.migration = migDelta;
+        rec.losses = 0;
+        rec.communityChange = { faithConverted:0, cultureAssimilated:0 };
+        repairCountyRecord(state, pDef, rec, currentYear);
       }
-      rec.natural = natDelta;
-      rec.migration = migDelta;
-      rec.losses = 0;
-      rec.communityChange = { faithConverted:0, cultureAssimilated:0 };
-      repairCountyRecord(state, pDef, rec, currentYear);
-    }
 
-    /* Stage 4: deterministic county faith and culture projects. Projects are
-       explicit saved commitments; ownership and realm conversion never create
-       one as a side effect. */
-    for (var projectIndex = 0; projectIndex < provs.length; projectIndex++) {
-      resolveCountyCommunityProjects(
-        state, provs[projectIndex].id, currentYear);
-      resolveSettlementCommunityProjects(
-        state, provs[projectIndex].id, currentYear);
-    }
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: faith and culture projects'); }
+      /* Stage 4: deterministic county faith and culture projects. Projects are
+         explicit saved commitments; ownership and realm conversion never create
+         one as a side effect. */
+      for (var projectIndex = 0; projectIndex < provs.length; projectIndex++) {
+        resolveCountyCommunityProjects(
+          state, provs[projectIndex].id, currentYear);
+        resolveSettlementCommunityProjects(
+          state, provs[projectIndex].id, currentYear);
+      }
 
-    state.population.lastYear = currentYear;
-    var migrationTotal = 0;
-    for (var mt = 0; mt < provs.length; mt++) {
-      migrationTotal += state.population.counties[provs[mt].id].migration;
+      if (timing) { timing.leave(phase); phase = timing.enter('Population annual phase: final invariants'); }
+      state.population.lastYear = currentYear;
+      var migrationTotal = 0;
+      for (var mt = 0; mt < provs.length; mt++) {
+        migrationTotal += state.population.counties[provs[mt].id].migration;
+      }
+      if (migrationTotal !== 0) {
+        throw new Error('Population migration invariant after annual pass: ' + migrationTotal);
+      }
+      assertPopulationCommunities(state, null, 'annual pass');
+    } finally {
+      if (timing) timing.leave(phase);
+      populationTiming = previousTiming;
     }
-    if (migrationTotal !== 0) {
-      throw new Error('Population migration invariant after annual pass: ' + migrationTotal);
-    }
-    assertPopulationCommunities(state, null, 'annual pass');
   };
 
   /* Display-only on-demand settlement allocation. It deliberately reads the

@@ -1085,3 +1085,10 @@ permissions and enforce refusal of a peace demand. Acquisitions retain sovereign
 ownership while assigning the victorious vassal as holder. Inheritance remaps war
 endpoints rather than discarding unrelated commitments. See [war.md](war.md).
 Technology impact: none for concurrent campaigns, war laws and enforcement.
+
+Daily religious-head recovery normalizes the office table once, then uses its
+known vacancy for candidate checks. Dead realms, vassals, insufficient rank and
+unrelated faiths are rejected before expensive office eligibility reads. The
+selected claimant still uses the canonical committing API and revalidates live
+eligibility; candidate ranking and RNG behavior are unchanged. Candidates remain
+checked daily, so a newly eligible ruler is not delayed by a polling interval.

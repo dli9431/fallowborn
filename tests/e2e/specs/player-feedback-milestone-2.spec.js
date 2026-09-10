@@ -280,6 +280,9 @@ test('enterprise catalogue keeps blocked choices explainable and idle warnings a
       FB.ui.showEnterpriseMarket(0, undefined, true);
     });
     await page.locator('[data-enterprise-buy="idle_purchase_fixture"]').click();
+    await expect(page.locator('#gm-title')).toContainText('Enterprise in');
+    await expect(page.locator('[data-enterprise-explain="idle_purchase_fixture"]')).toBeVisible();
+    await expect(page.locator('[data-enterprise-buy="idle_purchase_fixture"]')).toHaveCount(0);
     await expect.poll(function () {
       return page.evaluate(function () {
         const enterprise = FB.state.player.enterprises.filter(function (entry) {

@@ -363,13 +363,14 @@ window.FB = window.FB || {};
     return buildingBonusIn(state, pid, key);
   };
   var modBonus = FB.modBonus;
-  FB.modBonus = function (state, key, pid, support) {
+  FB.modBonus = function (state, key, pid, support, records) {
     if (key === 'tax' || key === 'levy') {
       var group = FB.countyInOpenRevolt(state, pid);
       if (group && group.counties[pid].occupied) return -1;
     }
-    return modBonus(state, key, pid, support);
+    return modBonus(state, key, pid, support, records);
   };
+  FB.modBonus.militaryCacheSafe = !!modBonus.militaryCacheSafe;
   FB.rebelArmyGoal = function (state, army) {
     var group = FB.rebellionById(state, army.rebellionId);
     if (!group) return army.at;

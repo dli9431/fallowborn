@@ -3359,6 +3359,121 @@ FB.CHANGELOG = [
     trackTelemetry('observer-mode-started', { entry_type:'observer-mode' });
   };
 
+  /* Local, opt-in diagnostics. No storage, telemetry, timers or wrapped functions
+     are added until explicitly enabled in this page's developer console. */
+  function localTimingAllowed() {
+    const host = window.location.hostname;
+    return window.location.protocol === 'file:' ||
+      ((window.location.protocol === 'http:' || window.location.protocol === 'https:') &&
+        (host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1'));
+  }
+  let timingEnabled = false;
+  G.fastForwardTiming = {
+    last:null,
+    enable:function (enabled) {
+      if (G.fastForwarding) return false;
+      timingEnabled = enabled === true && localTimingAllowed();
+      return timingEnabled;
+    },
+    isEnabled:function () { return timingEnabled && localTimingAllowed(); }
+  };
+  function beginFastForwardTiming() {
+    if (!G.fastForwardTiming.isEnabled()) return null;
+    const now = function () { return window.performance.now(); };
+    const started = now(), startTurn = FB.state.turn;
+    const rows = Object.create(null), counters = Object.create(null), restore = [], stack = [];
+    let waitingSince = started, waitingMs = 0, batches = 0, done = false;
+    function enter(label) {
+      const entry = { label:label, started:now(), children:0 };
+      stack.push(entry);
+      return entry;
+    }
+    function leave(entry) {
+      const elapsed = now() - entry.started;
+      stack.pop();
+      if (stack.length) stack[stack.length - 1].children += elapsed;
+      const row = rows[entry.label] || (rows[entry.label] = { calls:0, totalMs:0, selfMs:0, maxMs:0 });
+      row.calls++; row.totalMs += elapsed; row.selfMs += elapsed - entry.children;
+      row.maxMs = Math.max(row.maxMs, elapsed);
+    }
+    G._fastForwardTiming = { enter:enter, leave:leave,
+      count:function (label, amount) {
+        counters[label] = (counters[label] || 0) + (amount === undefined ? 1 : amount);
+      }
+    };
+    restore.push(function () { delete G._fastForwardTiming; });
+    function wrap(owner, key, label, annualOnly) {
+      if (!owner || typeof owner[key] !== 'function') return;
+      const original = owner[key];
+      const wrapper = function () {
+        if (annualOnly && !stack.some(function (entry) { return entry.label === 'worldTick'; })) return original.apply(this, arguments);
+        const entry = enter(label);
+        try { return original.apply(this, arguments); }
+        finally { leave(entry); }
+      };
+      owner[key] = wrapper;
+      restore.push(function () { if (owner[key] === wrapper) owner[key] = original; });
+    }
+    wrap(G, 'passDay', 'Simulation (all days)');
+    wrap(FB, 'armyTick', 'Armies');
+    ['tickFocus', 'tickSocialAttention', 'localGovernmentDay', 'scriptedTick',
+      'fortificationDay', 'religiousHeadRecoveryTick', 'papacyDay', 'guildMonopolyTick',
+      'modifierTick', 'intrigueDay', 'politicsDay', 'institutionsDay', 'financeDay',
+      'greatHolyWarTick', 'travelTick', 'giftDeliveryTick', 'freedomDay', 'tenureDay',
+      'educationStoryDay', 'pickDailyEvents'].forEach(function (key) { wrap(FB, key, key); });
+    ['historicalAmbitionsSeason', 'intrigueSeason', 'marketSeason', 'livelihoodSeason',
+      'enterpriseUpgradeSeason', 'marketSettleHouseholdNecessities', 'papacySeason',
+      'householdStandardsSeason', 'retainerSeason', 'enterpriseLaborSeason', 'educationSeason',
+      'realmPolicySeason', 'techSeason', 'playerWarTick', 'devastationSeason',
+      'greatHolyWarSeason', 'sacredCustodySeason', 'tickForeignPolicy', 'financeSeason',
+      'tickRivalry', 'financeYear', 'worldTick'].forEach(function (key) { wrap(FB, key, key); });
+    ['ensureWars', 'campaignDaily', 'assignCampaignHosts', 'armiesEnsure',
+      'recruitmentTerritory', 'aiBaseHost', 'alliedReinforcement', 'fortGarrisonBurden', 'orderArmy', 'armyRegroupGoal',
+      'armyCanPursue', 'rebellionsAfterArmies', 'maybeQueuePlayerSiegeEvent',
+      'fortSiegeStatus'].forEach(function (key) { wrap(FB, key, 'Army operation: ' + key); });
+    ['ensureReligiousHeads', 'religionIds', 'canRestoreReligiousHead',
+      'canClaimReligiousHead', 'restoreReligiousHead', 'claimReligiousHead',
+      'ensureGreatHolyWar', 'greatHolyWarTargets'].forEach(function (key) {
+      wrap(FB, key, 'Religious operation: ' + key);
+    });
+    ['ensureDynasticState', 'checkAllCrownRecognition', 'fortAIYear', 'populationYear',
+      'papacyYearly', 'greatHolyWarYearly', 'familyLinksSnapshot', 'ensureRealmSuccession',
+      'refreshRealmSuccession', 'advanceRealmSuccession', 'killChar', 'compactCourtRecord',
+      'aiRaidTick', 'vassalBreakawayChance', 'realmsAdjacent', 'formAlliance',
+      'rulerAgencyYearly', 'aiBuildingsYear'].forEach(function (key) {
+      wrap(FB, key, 'World annual operation: ' + key, true);
+    });
+    ['ensurePopulationState', 'enterpriseUpgradeEffectsByCounty', 'countyPopulationCapacity', 'countyMigrationAttraction'].forEach(function (key) {
+      wrap(FB, key, 'Population annual operation: ' + key, true);
+    });
+    wrap(FB.save, 'autosave', 'Autosave scheduling');
+    wrap(FB.save, 'serialize', 'Save serialization');
+    wrap(FB.ui, 'runEvents', 'Event UI');
+    wrap(FB.ui, 'fastForwardFinished', 'Final UI refresh');
+    return {
+      batch:function () { waitingMs += now() - waitingSince; batches++; },
+      wait:function () { waitingSince = now(); },
+      finish:function (reason) {
+        if (done) return;
+        done = true;
+        const elapsed = now() - started;
+        restore.forEach(function (undo) { undo(); });
+        const report = {
+          reason:reason, days:FB.state.turn - startTurn, batches:batches,
+          elapsedMs:elapsed, betweenBatchesMs:waitingMs,
+          simulationMs:rows['Simulation (all days)'] ? rows['Simulation (all days)'].totalMs : 0,
+          rows:rows, counters:counters,
+          note:'Rows are inclusive totals; selfMs excludes timed children. Waiting includes browser work. Deferred paint and IndexedDB completion are not measured.'
+        };
+        G.fastForwardTiming.last = report;
+        if (window.console) {
+          console.log('Fast-forward timing', report);
+          if (console.table) { console.table(rows); console.table(counters); }
+        }
+      }
+    };
+  }
+
   /* ================= daily loop ================= */
   function scheduleSlots(s) {
     // 1-2 random event days this season, mirroring the old per-season pacing;
@@ -3593,49 +3708,61 @@ FB.CHANGELOG = [
     G.paused = false;
     notePlayerTimeStarted();
 
+    const timing = beginFastForwardTiming();
     let daysLeft = 92;
-    function finishFastForward() {
-      G.fastForwarding = false;
-      /* The burst already deferred every intermediate refresh. Ending it with
-         setPaused() promoted that work into an exact panel rebuild, so a
-         large data-driven Deeds catalogue could monopolize the first usable
-         frame after the simulation had actually finished. The live refresh
-         below updates the date, resources, controls, and Chronicle while
-         retaining the same panel trees ordinary flowing time retains. */
-      G.paused = true;
-      if (FB.ui && FB.ui.fastForwardFinished) {
-        FB.ui.fastForwardFinished({ liveTick:true });
-      } else {
-        if (FB.ui && FB.ui.refresh) FB.ui.refresh({ liveTick:true });
-        if (FB.map && FB.map.request) FB.map.request();
-      }
+    function finishFastForward(reason) {
+      try {
+        G.fastForwarding = false;
+        /* The burst already deferred every intermediate refresh. Ending it with
+           setPaused() promoted that work into an exact panel rebuild, so a
+           large data-driven Deeds catalogue could monopolize the first usable
+           frame after the simulation had actually finished. The live refresh
+           below updates the date, resources, controls, and Chronicle while
+           retaining the same panel trees ordinary flowing time retains. */
+        G.paused = true;
+        if (FB.ui && FB.ui.fastForwardFinished) {
+          FB.ui.fastForwardFinished({ liveTick:true });
+        } else {
+          if (FB.ui && FB.ui.refresh) FB.ui.refresh({ liveTick:true });
+          if (FB.map && FB.map.request) FB.map.request();
+        }
+      } finally { if (timing) timing.finish(reason || 'stopped'); }
     }
     function runFastForwardChunk() {
-      if (G.paused || !FB.state || FB.state.player.dead) {
-        finishFastForward();
-        return;
-      }
-      const now = window.performance && window.performance.now
-        ? function () { return window.performance.now(); }
-        : function () { return Date.now(); };
-      const started = now();
-      let daysThisFrame = 0;
-      while (daysLeft > 0) {
-        daysLeft--;
-        daysThisFrame++;
-        const r = G.passDay({ liveTick:true, deferUi:true });
-        if (r !== 'day' || G.paused) {
+      if (timing) timing.batch();
+      try {
+        if (G.paused || !FB.state || FB.state.player.dead) {
           finishFastForward();
           return;
         }
-        if (daysThisFrame >= FAST_FORWARD_MAX_DAYS_PER_FRAME ||
-            now() - started >= FAST_FORWARD_FRAME_BUDGET) break;
+        const now = window.performance && window.performance.now
+          ? function () { return window.performance.now(); }
+          : function () { return Date.now(); };
+        const started = now();
+        let daysThisFrame = 0;
+        while (daysLeft > 0) {
+          daysLeft--;
+          daysThisFrame++;
+          const r = G.passDay({ liveTick:true, deferUi:true });
+          if (r !== 'day' || G.paused) {
+            finishFastForward(r || 'blocked');
+            return;
+          }
+          if (daysThisFrame >= FAST_FORWARD_MAX_DAYS_PER_FRAME ||
+              now() - started >= FAST_FORWARD_FRAME_BUDGET) break;
+        }
+        if (daysLeft <= 0) {
+          finishFastForward();
+          return;
+        }
+        if (timing) timing.wait();
+        requestAnimationFrame(runFastForwardChunk);
+      } catch (error) {
+        if (timing) timing.finish('error');
+        G.fastForwarding = false;
+        G.paused = true;
+        throw error;
       }
-      if (daysLeft <= 0) {
-        finishFastForward();
-        return;
-      }
-      requestAnimationFrame(runFastForwardChunk);
     }
     requestAnimationFrame(runFastForwardChunk);
   };

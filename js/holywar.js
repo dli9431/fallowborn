@@ -2681,6 +2681,13 @@ window.FB = window.FB || {};
   }
 
   function trackSacredLosses(state) {
+    var timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return trackSacredLossesUntimed(state);
+    var entry = timing.enter('Religious operation: sacred control tracking');
+    try { return trackSacredLossesUntimed(state); }
+    finally { timing.leave(entry); }
+  }
+  function trackSacredLossesUntimed(state) {
     var realmRevision = FB.realmStateRevision
       ? FB.realmStateRevision() : state.turn;
     var headStamp = religiousHeadStamp(state);
@@ -2984,7 +2991,10 @@ window.FB = window.FB || {};
         history.unlockChecked[unlockReligionId] = true;
         var unlockConf = config(state, unlockReligionId);
         var unlockHead = FB.religiousHeadOf(state, unlockReligionId);
-        var unlockTargets = FB.greatHolyWarTargets(state, unlockReligionId);
+        var unlockEligible = !(papalFaith(state, unlockReligionId) && FB.playerPope && FB.playerPope(state)) &&
+          unlockHead && unlockHead.id !== 'player' &&
+          (history.cooldownUntil[unlockReligionId] || 0) <= state.turn;
+        var unlockTargets = unlockEligible ? FB.greatHolyWarTargets(state, unlockReligionId) : [];
         var unlockForced = (!history.firstLaunched[unlockReligionId] &&
           unlockConf.firstByYear && state.date.year >= unlockConf.firstByYear) ||
           guaranteedByLoss(state, unlockReligionId, unlockConf);
@@ -3009,7 +3019,11 @@ window.FB = window.FB || {};
           continue;
         }
         var head = FB.religiousHeadOf(state, religionId);
-        var targets = FB.greatHolyWarTargets(state, religionId);
+        var launchEligible = dateReached(state, conf.minDate) &&
+          (history.cooldownUntil[religionId] || 0) <= state.turn &&
+          !(papalFaith(state, religionId) && FB.playerPope && FB.playerPope(state)) &&
+          head && head.id !== 'player';
+        var targets = launchEligible ? FB.greatHolyWarTargets(state, religionId) : [];
         if (!(papalFaith(state, religionId) && FB.playerPope &&
               FB.playerPope(state)) &&
             head && head.id !== 'player' && targets.length &&

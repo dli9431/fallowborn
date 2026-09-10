@@ -1702,3 +1702,110 @@ test('fast-forward uses eight-millisecond slices and stops immediately at a boun
   expect(result.running).toBe(false);
   expect(result.options).toEqual(Array.from({ length:5 }, function () { return { liveTick:true, deferUi:true }; }));
 });
+
+
+test('local fast-forward timing is opt-in, separates nested work and restores functions', async function ({ page }) {
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const g = FB.game, profiler = g.fastForwardTiming;
+    const defaults = !profiler.isEnabled() && profiler.last === null;
+    const original = { day:g.passDay, army:FB.armyTick, finish:FB.ui.fastForwardFinished,
+      frame:window.requestAnimationFrame, coach:FB.ui.coachmarkOpen };
+    const descriptor = Object.getOwnPropertyDescriptor(performance, 'now');
+    let clock = 0;
+    const queue = [];
+    Object.defineProperty(performance, 'now', { configurable:true, value:function () { return clock; } });
+    window.requestAnimationFrame = function (fn) { queue.push(fn); return queue.length; };
+    FB.ui.coachmarkOpen = function () { return false; };
+    FB.armyTick = function () { clock += 3; };
+    const army = FB.armyTick;
+    g.passDay = function () {
+      if (g._fastForwardTiming) {
+        g._fastForwardTiming.count('counter probe');
+        g._fastForwardTiming.count('counter probe', 2);
+      }
+      FB.armyTick(); clock += 2; return 'season';
+    };
+    const day = g.passDay;
+    FB.ui.fastForwardFinished = function () { clock += 4; };
+    FB.state.player.flags.tut_unpause = 1;
+    const state = JSON.stringify(FB.state), rng = FB.getRngState();
+    try {
+      g.skipAhead(); queue.shift()();
+      const silent = profiler.last === null && g.passDay === day;
+      const enabled = profiler.enable(true);
+      g.skipAhead(); clock += 10; queue.shift()();
+      const report = profiler.last;
+      const restored = g.passDay === day && FB.armyTick === army;
+      g.passDay = function () { throw new Error('timing failure probe'); };
+      const failing = g.passDay;
+      g.skipAhead();
+      try { queue.shift()(); } catch (e) {}
+      return { defaults:defaults, silent:silent, enabled:enabled, restored:restored,
+        counter:report.counters['counter probe'], elapsed:report.elapsedMs, wait:report.betweenBatchesMs, simulation:report.simulationMs,
+        self:report.rows['Simulation (all days)'].selfMs, army:report.rows.Armies.totalMs,
+        ui:report.rows['Final UI refresh'].totalMs,
+        errorRestored:g.passDay === failing && FB.armyTick === army && profiler.last.reason === 'error' && !g._fastForwardTiming,
+        unchanged:JSON.stringify(FB.state) === state && FB.getRngState() === rng };
+    } finally {
+      g.fastForwarding = false; g.paused = true; profiler.enable(false);
+      g.passDay = original.day; FB.armyTick = original.army; FB.ui.fastForwardFinished = original.finish;
+      window.requestAnimationFrame = original.frame; FB.ui.coachmarkOpen = original.coach;
+      if (descriptor) Object.defineProperty(performance, 'now', descriptor); else delete performance.now;
+    }
+  });
+  expect(result).toEqual({ defaults:true, silent:true, enabled:true, restored:true,
+    counter:3, elapsed:19, wait:10, simulation:5, self:2, army:3, ui:4, errorRestored:true, unchanged:true });
+});
+
+
+test('hosted origins cannot enable fast-forward diagnostics', async function ({ page }) {
+  const local = new URL(page.url());
+  test.skip(local.protocol === 'file:', 'Origin denial uses the served fixture.');
+  await page.route('http://timing-denied.invalid/**', async function (route) {
+    const requested = new URL(route.request().url());
+    const response = await route.fetch({ url:local.origin + requested.pathname + requested.search });
+    await route.fulfill({ response:response });
+  });
+  await page.goto('http://timing-denied.invalid' + local.pathname + local.search);
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+  expect(await page.evaluate(function () {
+    const timing = FB.game.fastForwardTiming;
+    return { enabled:timing.enable(true), active:timing.isEnabled(), last:timing.last };
+  })).toEqual({ enabled:false, active:false, last:null });
+});
+
+
+test('fast-forward diagnostics expose nested army phases and remove their recorder', async function ({ page }) {
+  await startDeterministicGame(page);
+  const report = await page.evaluate(function () {
+    const g = FB.game, originalDay = g.passDay, originalFinish = FB.ui.fastForwardFinished;
+    const originalFrame = window.requestAnimationFrame, originalCoach = FB.ui.coachmarkOpen;
+    const callbacks = [];
+    window.requestAnimationFrame = function (fn) { callbacks.push(fn); return callbacks.length; };
+    FB.ui.coachmarkOpen = function () { return false; };
+    FB.ui.fastForwardFinished = function () {};
+    g.passDay = function () { FB.armyTick(FB.state); return 'season'; };
+    try {
+      g.fastForwardTiming.enable(true);
+      g.skipAhead();
+      while (callbacks.length && g.fastForwarding) callbacks.shift()();
+      return { rows:g.fastForwardTiming.last.rows, clean:!g._fastForwardTiming };
+    } finally {
+      g.fastForwarding = false; g.paused = true; g.fastForwardTiming.enable(false);
+      g.passDay = originalDay; FB.ui.fastForwardFinished = originalFinish;
+      window.requestAnimationFrame = originalFrame; FB.ui.coachmarkOpen = originalCoach;
+    }
+  });
+  expect(report.clean).toBe(true);
+  expect(report.rows['Army phase: campaign setup'].calls).toBe(1);
+  expect(report.rows['Army phase: muster and disband'].calls).toBe(1);
+  expect(report.rows['Army operation: cohort replacements'].calls).toBe(1);
+  const phaseTime = Object.keys(report.rows).filter(function (key) {
+    return key.indexOf('Army phase: ') === 0;
+  }).reduce(function (sum, key) { return sum + report.rows[key].totalMs; }, 0);
+  expect(phaseTime).toBeLessThanOrEqual(report.rows.Armies.totalMs + 0.01);
+  Object.keys(report.rows).forEach(function (key) {
+    expect(report.rows[key].selfMs).toBeGreaterThanOrEqual(-0.01);
+  });
+});

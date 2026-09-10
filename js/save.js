@@ -194,6 +194,7 @@ window.FB = window.FB || {};
      character ids come from member ids, and completed technology already
      implies exposure. Returning undefined omits only object properties; no
      live object is mutated while a slot or export is written. */
+  let serializingCompletedTech = null;
   function saveReplacer(key, value) {
     const holder = this;
     if (!SAVE_COMPACT_KEYS[key]) return value;
@@ -263,9 +264,12 @@ window.FB = window.FB || {};
       }
     }
     if (key === 'exposed' && Array.isArray(value) && technology) {
-      const remaining = value.filter(function (id) {
-        return holder.completed.indexOf(id) < 0;
-      });
+      let completed = serializingCompletedTech && serializingCompletedTech.get(holder);
+      if (!completed) {
+        completed = new Set(holder.completed);
+        if (serializingCompletedTech) serializingCompletedTech.set(holder, completed);
+      }
+      const remaining = value.filter(function (id) { return !completed.has(id); });
       return remaining.length ? remaining : undefined;
     }
     if (key === 'heirId' && successionRecord(holder) &&
@@ -646,6 +650,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (FB.pruneChronicle) FB.pruneChronicle(s);
     serializingBuildingRecords = new WeakSet();
+    serializingCompletedTech = new WeakMap();
     const buildings = s.buildings || {};
     for (const pid in buildings) {
       const list = buildings[pid];
@@ -673,6 +678,7 @@ window.FB = window.FB || {};
       return header.slice(0, -1) + ',"state":' + stateJson + ',"meta":' + meta + '}';
     } finally {
       serializingBuildingRecords = null;
+      serializingCompletedTech = null;
     }
   };
 

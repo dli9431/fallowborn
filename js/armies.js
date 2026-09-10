@@ -1132,6 +1132,13 @@ window.FB = window.FB || {};
   /* mature due batches into ready; the player hears once per class whose
      drilling finishes today */
   function cohortTick(state) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return cohortTickUntimed(state);
+    const entry = timing.enter('Army operation: cohort replacements');
+    try { return cohortTickUntimed(state); }
+    finally { timing.leave(entry); }
+  }
+  function cohortTickUntimed(state) {
     const ledgers = state.armyCohorts;
     if (!ledgers) return;
     for (const realmId in ledgers) {
@@ -1452,10 +1459,10 @@ window.FB = window.FB || {};
     return false;
   };
 
-  FB.recruitmentTerritory = function (state, realm) {
+  FB.recruitmentTerritory = function (state, realm, countyHostIndex) {
     const p = state.player;
     let counties = FB.realmTerritory(state, realm).slice();
-    const included = Object.create(null), hostsByCounty = Object.create(null);
+    const included = Object.create(null), hostsByCounty = countyHostIndex || Object.create(null);
     for (const pid of counties) included[pid] = true;
     if (realm === 'player') {
       for (const pid of p.provs || []) if (!included[pid]) {
@@ -1464,7 +1471,7 @@ window.FB = window.FB || {};
       if (!counties.length && p.tier >= 3) counties.push(p.provinceId);
     }
     // This projection is synchronous: index once, discard before armies can move.
-    for (const host of state.armies || []) {
+    for (const host of countyHostIndex ? [] : state.armies || []) {
       (hostsByCounty[host.at] || (hostsByCounty[host.at] = [])).push(host);
     }
     const eligible = [], blocked = [];
@@ -1477,7 +1484,7 @@ window.FB = window.FB || {};
       return (state.dev[b] || 1) - (state.dev[a] || 1) || (a < b ? -1 : a > b ? 1 : 0);
     });
     const home = realm === 'player' ? playerHome(state) : (state.realms[realm] || {}).capital;
-    return { eligible:eligible, blocked:blocked, development:development,
+    return { counties:counties, eligible:eligible, blocked:blocked, development:development,
       rally:eligible.indexOf(home) >= 0 ? home : eligible[0] || null };
   };
 
@@ -1596,13 +1603,24 @@ window.FB = window.FB || {};
   };
 
   function raiseAIHost(state, rid, projection) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return raiseAIHostUntimed(state, rid, projection);
+    const entry = timing.enter('Muster: raise host');
+    try { return raiseAIHostUntimed(state, rid, projection); }
+    finally { timing.leave(entry); }
+  }
+  function raiseAIHostUntimed(state, rid, projection) {
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
     const territory = projection ? projection.territory : FB.recruitmentTerritory(state, rid);
-    if (!territory.rally) return null;
+    if (!territory.rally) {
+      if (FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster raise rejected: no rally county');
+      return null;
+    }
     let men = projection ? projection.capacity : FB.aiBaseHost(state, rid, territory);
     let defending = !!(state.player.war && !state.player.war.defending && state.player.war.enemy === rid);
-    if (!defending) {
+    if (projection && projection.defending !== undefined) defending = projection.defending;
+    else if (!defending) {
       for (const id in state.realms) {
         const attacker = state.realms[id];
         if (attacker && attacker.alive && attacker.war && attacker.war.enemy === rid) {
@@ -1613,7 +1631,10 @@ window.FB = window.FB || {};
     const allied = !FB.greatHolyWarCamp(state, rid) && defending && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, rid) : { ally: null, men: 0 };
     men += allied.men;
-    if (men < (B().armyMinMen || 40)) return null;
+    if (men < (B().armyMinMen || 40)) {
+      if (FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster raise rejected: too few men');
+      return null;
+    }
     const f = aiFracs(state, rid);
     const base = men - allied.men;
     const units = emptyUnitCounts();
@@ -1653,6 +1674,13 @@ window.FB = window.FB || {};
   }
 
   function disband(state, army) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return disbandUntimed(state, army);
+    const entry = timing.enter('Muster: disband host');
+    try { return disbandUntimed(state, army); }
+    finally { timing.leave(entry); }
+  }
+  function disbandUntimed(state, army) {
     const i = state.armies.indexOf(army);
     if (i >= 0) state.armies.splice(i, 1);
     if (selId === army.id) selId = null;
@@ -2088,6 +2116,13 @@ window.FB = window.FB || {};
   }
 
   function searchArmyPathFrom(state, army, fromPid, toPid, memo) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return searchArmyPathFromUntimed(state, army, fromPid, toPid, memo);
+    const entry = timing.enter('Army operation: path search');
+    try { return searchArmyPathFromUntimed(state, army, fromPid, toPid, memo); }
+    finally { timing.leave(entry); }
+  }
+  function searchArmyPathFromUntimed(state, army, fromPid, toPid, memo) {
     if (!FB.world || !FB.world.adj || !FB.world.adj[fromPid] ||
         !FB.world.adj[toPid]) return null;
     if (fromPid === toPid) return { path:[], totalDays:0, waterLegs:0 };
@@ -2513,6 +2548,13 @@ window.FB = window.FB || {};
   }
 
   function aiGoal(state, army, warring, primaryByRealm) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return aiGoalUntimed(state, army, warring, primaryByRealm);
+    const entry = timing.enter('Army operation: AI goal selection');
+    try { return aiGoalUntimed(state, army, warring, primaryByRealm); }
+    finally { timing.leave(entry); }
+  }
+  function aiGoalUntimed(state, army, warring, primaryByRealm) {
     const r = state.realms[army.realm];
     if (!r) return army.at;
     if (army.broken !== undefined && state.turn - army.broken < 40) {
@@ -2752,6 +2794,16 @@ window.FB = window.FB || {};
   /* role: 'defense' for the camp holding the ground, 'attack' otherwise
      (the default for neutral previews such as the automation odds check) */
   function battlePower(state, army, pid, role) {
+    const queries = orderQueries && orderQueries.state === state;
+    if (!queries) return battlePowerUncached(state, army, pid, role);
+    let cache = orderQueries.power.get(army);
+    if (!cache) { cache = Object.create(null); orderQueries.power.set(army, cache); }
+    const key = JSON.stringify([pid || null, role || null]);
+    if (!Object.prototype.hasOwnProperty.call(cache, key)) cache[key] = battlePowerUncached(state, army, pid, role);
+    else if (FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Army order battle power cache hits');
+    return cache[key];
+  }
+  function battlePowerUncached(state, army, pid, role) {
     let pw;
     const bal = B();
     /* where the battle is joined, terrain multiplies each class
@@ -2932,6 +2984,13 @@ window.FB = window.FB || {};
      balance.armyMinMen shatters, and one shattered while cut off
      (FB.hostCutOff) is destroyed outright. */
   function resolveBattle(state, pid, sideA, sideB) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return resolveBattleUntimed(state, pid, sideA, sideB);
+    const entry = timing.enter('Army operation: battle resolution');
+    try { return resolveBattleUntimed(state, pid, sideA, sideB); }
+    finally { timing.leave(entry); }
+  }
+  function resolveBattleUntimed(state, pid, sideA, sideB) {
     let campaign = null;
     for (let i = 0; i < sideA.length && !campaign; i++) {
       for (let j = 0; j < sideB.length && !campaign; j++) {
@@ -3179,11 +3238,25 @@ window.FB = window.FB || {};
      of rebuilding the same world-wide distance field for every host realm on
      every day of a fast-forward. */
   let supplyCacheState = null;
-  let supplyCacheRealmRevision = -1;
+  let supplyCacheControlSignature = null;
+  let supplyCacheWorld = null;
   let supplyCacheAllianceSignature = '';
   let supplyCacheMaps = {};
+  let supplySourceGroups = [];
+  let supplyAllies = Object.create(null);
+  let supplyControllers = Object.create(null);
+  let supplyDiplomacy = "";
+  let supplySourceRevision = 0;
+  let supplyCacheAdj = null;
 
   function supplyAllianceSignature(state) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return supplyAllianceSignatureUntimed(state);
+    const entry = timing.enter('Supply: alliance/campaign signature');
+    try { return supplyAllianceSignatureUntimed(state); }
+    finally { timing.leave(entry); }
+  }
+  function supplyAllianceSignatureUntimed(state) {
     if (FB.repairAlliances) FB.repairAlliances(state);
     const alliances = state && Array.isArray(state.alliances)
       ? state.alliances : [];
@@ -3214,16 +3287,114 @@ window.FB = window.FB || {};
   }
 
   function retainedSupplyDistanceMaps(state) {
-    const realmRevision = FB.realmStateRevision
-      ? FB.realmStateRevision() : state.turn;
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return retainedSupplyDistanceMapsUntimed(state);
+    const entry = timing.enter('Army operation: supply cache validation');
+    try { return retainedSupplyDistanceMapsUntimed(state); }
+    finally { timing.leave(entry); }
+  }
+  function retainedSupplyDistanceMapsUntimed(state) {
+    const controlSignature = { ownership:[], hierarchy:[], player:[], rebels:[] };
+    const owners = controlSignature.ownership, hierarchy = controlSignature.hierarchy;
+    for (const pid in state.owner) owners.push(pid, state.owner[pid], (state.holder || {})[pid]);
+    for (const rid in state.realms) {
+      const realm = state.realms[rid];
+      hierarchy.push(rid, realm.liege, realm.alive, realm.rebelFaction);
+    }
+    const player = state.player;
+    controlSignature.player.push(player.liege, player.provinceId, player.tier);
+    for (const pid of player.provs || []) controlSignature.player.push(pid);
+    const groups = state.rebellions && state.rebellions.groups || {};
+    for (const id in groups) {
+      const group = groups[id];
+      for (const pid in group.counties) controlSignature.rebels.push(id, group.faction, pid, group.counties[pid].occupied);
+    }
+    const timing = FB.game && FB.game._fastForwardTiming;
+    let controlChanged = supplyCacheState !== state;
+    for (const key in controlSignature) {
+      const before = supplyCacheControlSignature && supplyCacheControlSignature[key], after = controlSignature[key];
+      let changed = !before || before.length !== after.length;
+      if (!changed) for (let i = 0; i < after.length; i++) {
+        if (before[i] !== after[i]) { changed = true; break; }
+      }
+      if (changed) {
+        controlChanged = true;
+        if (timing && supplyCacheState === state) timing.count('Supply control change: ' + key);
+      }
+    }
     const allianceSignature = supplyAllianceSignature(state);
     if (supplyCacheState !== state ||
-        supplyCacheRealmRevision !== realmRevision ||
+        supplyCacheWorld !== FB.world || supplyCacheAdj !== FB.world.adj ||
+        controlChanged ||
         supplyCacheAllianceSignature !== allianceSignature) {
+      if (timing) {
+        timing.count('Supply cache invalidations');
+        if (supplyCacheState !== state || supplyCacheWorld !== FB.world || supplyCacheAdj !== FB.world.adj) {
+          timing.count('Supply maps discarded', Object.keys(supplyCacheMaps).length);
+        }
+        if (supplyCacheState !== state) timing.count('Supply invalidation: state');
+        if (supplyCacheWorld !== FB.world) timing.count('Supply invalidation: world');
+        if (controlChanged) timing.count('Supply invalidation: control');
+        if (supplyCacheAllianceSignature !== allianceSignature) timing.count('Supply invalidation: alliances/campaigns');
+      }
+      if (supplyCacheState !== state || supplyCacheWorld !== FB.world || supplyCacheAdj !== FB.world.adj) supplyCacheMaps = {};
+      const activeMaps = Object.create(null);
+      for (const host of state.armies || []) activeMaps[JSON.stringify([host.realm, host.warId || null])] = true;
+      for (const key in supplyCacheMaps) if (!activeMaps[key]) delete supplyCacheMaps[key];
+      supplyCacheAdj = FB.world.adj;
+      supplySourceRevision++;
+      supplyAllies = Object.create(null);
+      for (const alliance of state.alliances || []) {
+        supplyAllies[alliance.a] = alliance.b;
+        supplyAllies[alliance.b] = alliance.a;
+      }
+      supplyControllers = Object.create(null);
+      function controllerSignature(rid) {
+        if (Object.prototype.hasOwnProperty.call(supplyControllers, rid)) return supplyControllers[rid];
+        const parts = [], seen = Object.create(null);
+        let cur = rid;
+        while (cur && !seen[cur]) {
+          seen[cur] = true;
+          const realm = state.realms[cur];
+          parts.push(cur, realm && realm.liege, realm && realm.alive, realm && realm.rebelFaction);
+          cur = realm && realm.liege;
+        }
+        if (rid === 'player') {
+          const homeOwner = state.owner[player.provinceId];
+          parts.push(player.liege, player.tier, player.provinceId, homeOwner,
+            player.liege && player.liege !== 'player' ? controllerSignature(player.liege) : null,
+            homeOwner && homeOwner !== 'player' ? controllerSignature(homeOwner) : null);
+        }
+        return (supplyControllers[rid] = JSON.stringify(parts));
+      }
+      for (const rid in state.realms) controllerSignature(rid);
+      controllerSignature('player'); controllerSignature(undefined);
+      const diplomaticParts = [supplyAllies];
+      for (const war of (FB.ordinaryWars ? FB.ordinaryWars(state) : [])) diplomaticParts.push([war.id, war.attacker, war.defender]);
+      const holy = state.greatHolyWar;
+      if (holy && holy.phase === 'active') diplomaticParts.push([holy.id, holy.participants]);
+      supplyDiplomacy = JSON.stringify(diplomaticParts);
+      const special = Object.create(null), grouped = Object.create(null);
+      for (const pid of state.player.provs || []) special[pid] = true;
+      for (const war of (FB.ordinaryWars ? FB.ordinaryWars(state) : [])) {
+        for (const pid in war.occupations || {}) special[pid] = true;
+      }
+      for (const id in groups) for (const pid in groups[id].counties) special[pid] = true;
+      for (const pid in FB.world.adj) {
+        // Exceptional control remains county-specific; ordinary counties with
+        // the same holder/owner share precisely the same friendliness rules.
+        const key = special[pid] ? JSON.stringify(['county', pid]) :
+          JSON.stringify(['controllers', state.holder && state.holder[pid], state.owner && state.owner[pid]]);
+        if (!grouped[key]) grouped[key] = { key:key, counties:[], special:!!special[pid],
+          controllers:JSON.stringify([controllerSignature(state.holder && state.holder[pid]),
+            controllerSignature(state.owner && state.owner[pid])]) };
+        grouped[key].counties.push(pid);
+      }
+      supplySourceGroups = Object.keys(grouped).map(function (key) { return grouped[key]; });
       supplyCacheState = state;
-      supplyCacheRealmRevision = realmRevision;
+      supplyCacheWorld = FB.world;
+      supplyCacheControlSignature = controlSignature;
       supplyCacheAllianceSignature = allianceSignature;
-      supplyCacheMaps = {};
     }
     return supplyCacheMaps;
   }
@@ -3231,25 +3402,74 @@ window.FB = window.FB || {};
   /* Campaign occupation can distinguish two hosts of the same realm.
      Relationship lookups are shared only during this map's construction. */
   function supplyDistanceMap(state, army, distCache) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return supplyDistanceMapUntimed(state, army, distCache);
+    const entry = timing.enter('Army operation: supply distance lookup/build');
+    try { return supplyDistanceMapUntimed(state, army, distCache); }
+    finally { timing.leave(entry); }
+  }
+  function supplyDistanceMapUntimed(state, army, distCache) {
     const adj = (FB.world && FB.world.adj) || {};
     const key = JSON.stringify([army.realm, army.warId || null]);
-    let map = distCache[key];
-    if (map) return map;
-    map = distCache[key] = {};
-    const relations = { friendly:Object.create(null), hostile:Object.create(null) };
+    const retained = distCache === supplyCacheMaps && supplyCacheState === state;
+    let entry = distCache[key];
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (entry && retained && entry.revision === supplySourceRevision) {
+      if (timing) timing.count('Supply distance cache hits');
+      return entry.map;
+    }
+    const relations = { friendly:Object.create(null), hostile:Object.create(null),
+      allies:retained ? supplyAllies : null };
     const frontier = [];
-    for (const pid in adj) {
-      if (FB.armyFriendlyProvince && FB.armyFriendlyProvince(state, army, pid, relations)) {
-        map[pid] = 0;
-        frontier.push(pid);
+    const groups = retained ? supplySourceGroups : Object.keys(adj).map(function (pid) { return { counties:[pid], special:true }; });
+    const answers = Object.create(null), previousAnswers = entry && entry.answers || {};
+    const realmSignature = retained ? JSON.stringify([supplyControllers[army.realm], supplyControllers.player]) : null;
+    const reuseControllers = entry && entry.realmSignature === realmSignature && entry.diplomacy === supplyDiplomacy;
+    let step = timing && timing.enter('Supply build: friendly source scan');
+    try {
+      for (const group of groups) {
+        const previous = reuseControllers && !group.special && previousAnswers[group.key];
+        const signature = group.controllers;
+        let friendly;
+        if (previous && previous.signature === signature) {
+          friendly = previous.friendly;
+          if (timing) timing.count('Supply controller answers reused');
+        } else {
+          friendly = !!(FB.armyFriendlyProvince && FB.armyFriendlyProvince(state, army, group.counties[0], relations));
+          if (timing) timing.count('Supply controller answers evaluated');
+        }
+        if (!group.special) answers[group.key] = { signature:signature, friendly:friendly };
+        if (friendly) for (const pid of group.counties) frontier.push(pid);
       }
+    } finally { if (timing) timing.leave(step); }
+    const sources = frontier.slice().sort().join('|');
+    if (timing) {
+      timing.count('Supply source groups checked', groups.length);
+      timing.count('Supply friendly sources', frontier.length);
     }
-    for (let i = 0; i < frontier.length; i++) {
-      const cur = frontier[i], next = map[cur] + 1;
-      for (const nb in (adj[cur] || {})) {
-        if (map[nb] === undefined) { map[nb] = next; frontier.push(nb); }
+    if (entry && entry.sources === sources) {
+      entry.revision = supplySourceRevision;
+      entry.answers = answers;
+      entry.realmSignature = realmSignature; entry.diplomacy = supplyDiplomacy;
+      if (timing) { timing.count('Supply distance cache hits'); timing.count('Supply maps retained after control change'); }
+      return entry.map;
+    }
+    const map = {};
+    for (const pid of frontier) map[pid] = 0;
+    if (timing) {
+      timing.count('Supply distance maps built');
+      timing.count('Supply rebuild for ' + key);
+      step = timing.enter('Supply build: distance propagation');
+    }
+    try {
+      for (let i = 0; i < frontier.length; i++) {
+        const cur = frontier[i], next = map[cur] + 1;
+        for (const nb in (adj[cur] || {})) {
+          if (map[nb] === undefined) { map[nb] = next; frontier.push(nb); }
+        }
       }
-    }
+    } finally { if (timing) timing.leave(step); }
+    distCache[key] = { map:map, sources:sources, revision:supplySourceRevision, answers:answers, realmSignature:realmSignature, diplomacy:supplyDiplomacy };
     return map;
   }
 
@@ -3262,6 +3482,13 @@ window.FB = window.FB || {};
 
   /* the day's drain on neutral or hostile ground (0 on friendly land) */
   function supplyDrainPerDay(state, army, distCache) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return supplyDrainPerDayUntimed(state, army, distCache);
+    const entry = timing.enter('Supply: drain calculation');
+    try { return supplyDrainPerDayUntimed(state, army, distCache); }
+    finally { timing.leave(entry); }
+  }
+  function supplyDrainPerDayUntimed(state, army, distCache) {
     if (FB.armyFriendlyProvince && FB.armyFriendlyProvince(state, army, army.at)) {
       return 0;
     }
@@ -3281,6 +3508,13 @@ window.FB = window.FB || {};
 
   /* the day's refill on friendly ground */
   function supplyRecoverPerDay(state, army) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (!timing) return supplyRecoverPerDayUntimed(state, army);
+    const entry = timing.enter('Supply: recovery calculation');
+    try { return supplyRecoverPerDayUntimed(state, army); }
+    finally { timing.leave(entry); }
+  }
+  function supplyRecoverPerDayUntimed(state, army) {
     const bal = B();
     let rate = bal.supplyRecoverRate === undefined ? 3 : bal.supplyRecoverRate;
     if (FB.fortAt && FB.fortAt(state, army.at)) {
@@ -3374,362 +3608,405 @@ window.FB = window.FB || {};
   };
 
   FB.armyTick = function (state) {
-    if (FB.ensureWars) FB.ensureWars(state);
-    if (FB.campaignDaily) FB.campaignDaily(state);
-    if (FB.assignCampaignHosts) FB.assignCampaignHosts(state);
-    FB.armiesEnsure(state);
-    const p = state.player;
-    let militaryCommand = null;
-    if (p.militaryCommand) {
-      militaryCommand = FB.activeMilitaryCommand(state);
-      if (!militaryCommand) FB.endMilitaryCommand(state);
-    }
-    const musterOrder = realmMusterOrder(state);
-    const warring = warringMap(state, musterOrder);
-    if (FB.rebellionWarringRealms) FB.rebellionWarringRealms(state, warring);
-    const sovereignIds = activeRealmIds(warring, musterOrder);
-    /* read once per tick: nothing in the raise/disband/order steps below
-       mutates the pledge, the campaign, or the player's sovereignty */
-    const playerGhwHost = !!(FB.playerGreatHolyWarHostActive &&
-      FB.playerGreatHolyWarHostActive(state));
-    let anyWar = false;
-    for (const warringRealm in warring) {
-      if (warring[warringRealm]) { anyWar = true; break; }
-    }
-    /* In peacetime there is no host to raise, order, supply, reinforce, or
-       match for battle. Replacement cohorts still mature on their exact day,
-       but the rest of the field-army pipeline is pure no-op work. */
-    if (!state.armies.length && !anyWar && !playerGhwHost) {
-      cohortTick(state);
-      return;
-    }
-    const hostsByRealm = {};
-    for (const a of state.armies) {
-      (hostsByRealm[a.realm] = hostsByRealm[a.realm] || []).push(a);
-      if (a.allied && a.allied.men) {
-        const current = FB.alliedReinforcement
-          ? FB.alliedReinforcement(state, a.realm) : { ally: null, men: 0 };
-        if (current.ally !== a.allied.ally || !current.men) {
-          FB.hostUnits(a);
-          const gone = Math.min(a.allied.men, a.units.levy || 0, a.men);
-          a.units.levy -= gone;
-          a.men -= gone;
-          a.size = Math.max(a.men, (a.size || a.men) - gone);
-          a.allied = null;
+    const timing = FB.game && FB.game._fastForwardTiming;
+    let phase = timing && timing.enter('Army phase: campaign setup');
+    let musterStep = null;
+    try {
+      if (FB.ensureWars) FB.ensureWars(state);
+      if (FB.campaignDaily) FB.campaignDaily(state);
+      if (FB.assignCampaignHosts) FB.assignCampaignHosts(state);
+      FB.armiesEnsure(state);
+      const p = state.player;
+      let militaryCommand = null;
+      if (p.militaryCommand) {
+        militaryCommand = FB.activeMilitaryCommand(state);
+        if (!militaryCommand) FB.endMilitaryCommand(state);
+      }
+      if (timing) { timing.leave(phase); phase = timing.enter('Army phase: muster and disband'); }
+      if (timing) { if (musterStep) timing.leave(musterStep); musterStep = timing.enter('Muster: war/realm lookup'); }
+      const musterOrder = realmMusterOrder(state);
+      const warring = warringMap(state, musterOrder);
+      if (FB.rebellionWarringRealms) FB.rebellionWarringRealms(state, warring);
+      const sovereignIds = activeRealmIds(warring, musterOrder);
+      /* read once per tick: nothing in the raise/disband/order steps below
+         mutates the pledge, the campaign, or the player's sovereignty */
+      const playerGhwHost = !!(FB.playerGreatHolyWarHostActive &&
+        FB.playerGreatHolyWarHostActive(state));
+      let anyWar = false;
+      for (const warringRealm in warring) {
+        if (warring[warringRealm]) { anyWar = true; break; }
+      }
+      /* In peacetime there is no host to raise, order, supply, reinforce, or
+         match for battle. Replacement cohorts still mature on their exact day,
+         but the rest of the field-army pipeline is pure no-op work. */
+      if (!state.armies.length && !anyWar && !playerGhwHost) {
+        cohortTick(state);
+        return;
+      }
+      // Share projections only within this muster phase. Orders, movement,
+      // battles and the next day always observe fresh recruitment inputs.
+      const musterProjections = Object.create(null), defendingRealms = Object.create(null);
+      const musterCountyInputs = Object.create(null), musterCountyHosts = Object.create(null);
+      for (const host of state.armies) {
+        (musterCountyHosts[host.at] || (musterCountyHosts[host.at] = [])).push(host);
+      }
+      if (p.war && !p.war.defending) defendingRealms[p.war.enemy] = true;
+      for (const rid in state.realms) {
+        const attacker = state.realms[rid];
+        if (attacker && attacker.alive && attacker.war && attacker.war.enemy) defendingRealms[attacker.war.enemy] = true;
+      }
+      function musterProjection(rid, reason) {
+        if (timing) timing.count('Muster projection requests: ' + reason);
+        if (!musterProjections[rid]) {
+          if (timing) timing.count('Muster projections built for ' + rid);
+          const territory = FB.recruitmentTerritory(state, rid, musterCountyHosts);
+          musterProjections[rid] = { territory:territory, defending:!!defendingRealms[rid],
+            capacity:territory.rally ? FB.aiBaseHost(state, rid, territory, musterCountyInputs) : 0 };
+        } else if (timing) timing.count('Muster projection cache hits');
+        return musterProjections[rid];
+      }
+      if (timing) { if (musterStep) timing.leave(musterStep); musterStep = timing.enter('Muster: allied troop refresh'); }
+      const hostsByRealm = {};
+      for (const a of state.armies) {
+        (hostsByRealm[a.realm] = hostsByRealm[a.realm] || []).push(a);
+        if (a.allied && a.allied.men) {
+          const current = FB.alliedReinforcement
+            ? FB.alliedReinforcement(state, a.realm, function (rid) {
+              return rid === 'player' ? FB.playerLevy(state) : musterProjection(rid, 'allied refresh').capacity;
+            }) : { ally: null, men: 0 };
+          if (current.ally !== a.allied.ally || !current.men) {
+            FB.hostUnits(a);
+            const gone = Math.min(a.allied.men, a.units.levy || 0, a.men);
+            a.units.levy -= gone;
+            a.men -= gone;
+            a.size = Math.max(a.men, (a.size || a.men) - gone);
+            a.allied = null;
+            for (const projected in musterProjections) delete musterProjections[projected];
+            requestMap();
+          }
+        }
+      }
+
+      if (timing) { if (musterStep) timing.leave(musterStep); musterStep = timing.enter('Muster: new-host checks'); }
+      // sovereigns at war raise their host (the player musters by deed/event)
+      for (let sovereignIndex = 0; sovereignIndex < sovereignIds.length;
+          sovereignIndex++) {
+        const id = sovereignIds[sovereignIndex];
+        const r = state.realms[id];
+        if (!warring[id] || (hostsByRealm[id] && hostsByRealm[id].length)) continue;
+        const down = state.armyDown[id];
+        if (down !== undefined && state.turn - down < B().armyRearmDays) continue;
+        const raised = raiseAIHost(state, id, musterProjection(id, 'new host'));
+        if (timing) timing.count(raised ? 'Muster new hosts raised' : 'Muster raise attempts failed');
+        if (raised) {
+          hostsByRealm[id] = [raised];
+          (musterCountyHosts[raised.at] || (musterCountyHosts[raised.at] = [])).push(raised);
+          // A newly raised defender can lift a blockade for a later realm.
+          for (const projected in musterProjections) delete musterProjections[projected];
+        }
+      }
+
+      /* strong aggressors divide their strength: a realm whose muster clears
+         balance.aiMultiHostStrength splits off a detachment (capped by
+         balance.aiMaxHosts) while it prosecutes an offensive war — the main
+         host hunts, the second banner screens and besieges. A destroyed
+         detachment re-forms only after balance.detachmentRearmDays. */
+      if (timing) { if (musterStep) timing.leave(musterStep); musterStep = timing.enter('Muster: detachment checks'); }
+      const aiMaxHosts = B().aiMaxHosts === undefined ? 2 : B().aiMaxHosts;
+      const multiStrength = B().aiMultiHostStrength === undefined
+        ? Infinity : B().aiMultiHostStrength;
+      const detachmentFrac = B().aiDetachmentFrac === undefined
+        ? 0.35 : B().aiDetachmentFrac;
+      const detachmentRearm = B().detachmentRearmDays === undefined
+        ? 25 : B().detachmentRearmDays;
+      const minMen = B().armyMinMen || 40;
+      for (let sovereignIndex = 0; sovereignIndex < sovereignIds.length;
+          sovereignIndex++) {
+        const id = sovereignIds[sovereignIndex];
+        const r = state.realms[id];
+        const hosts = hostsByRealm[id];
+        if (!warring[id] || !hosts || hosts.length !== 1 ||
+            hosts.length >= aiMaxHosts ||
+            (militaryCommand &&
+              id === militaryCommand.sovereignRealmId)) continue;
+        const offensive = !!(r.war && r.war.enemy) ||
+          (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, id) === 'attackers');
+        if (!offensive) continue;
+        const detachDown = (state.armyDetachmentDown || {})[id];
+        if (detachDown !== undefined &&
+            state.turn - detachDown < detachmentRearm) continue;
+        const primary = hosts[0];
+        if (primary.broken !== undefined) continue; // a routed host does not divide
+        const target = Math.round(primary.men * detachmentFrac);
+        if (target < minMen || primary.men - target < minMen) continue;
+        if (musterProjection(id, 'detachment').capacity < multiStrength) {
+          if (timing) timing.count('Muster detachment rejected: capacity');
+          continue;
+        }
+        if (timing) timing.count('Muster detachments created');
+        const detachment = splitOffHost(state, primary, target);
+        hosts.push(detachment);
+        (musterCountyHosts[detachment.at] || (musterCountyHosts[detachment.at] = [])).push(detachment);
+        for (const projected in musterProjections) delete musterProjections[projected];
+        if (state.player.war && state.player.war.enemy === id) {
+          FB.news(state, FB.msg('news.army.enemy_divides',
+            '🚩 {realm} divides its strength — a second host takes the field.',
+            { realm: r.name }));
+        }
+      }
+
+      if (timing) { if (musterStep) timing.leave(musterStep); musterStep = timing.enter('Muster: peace/disband checks'); }
+      // peace: hosts go home — this one rule covers every way a war can end
+      for (let i = state.armies.length - 1; i >= 0; i--) {
+        const a = state.armies[i];
+        if (a.realm === 'player') {
+          if (!p.war && !playerGhwHost && !warring.player) {
+            disband(state, a);
+            FB.news(state, FB.msg('news.army.disbands',
+              '🏳 The war is done — the host disbands to hearth and field.', {}));
+          }
+          continue;
+        }
+        if (a.rebellionId && FB.rebellionById && FB.rebellionById(state, a.rebellionId)) continue;
+        const r = state.realms[a.realm];
+        if (!r || !r.alive || !warring[a.realm]) disband(state, a);
+      }
+
+      if (timing) { timing.leave(musterStep); musterStep = null; timing.leave(phase); phase = timing.enter('Army phase: orders'); }
+      // orders & marches
+      const autoHosts = FB.game.auto && FB.game.auto.hosts;
+      if (!autoHosts || autoHosts === 'manual') {
+        FB.enforceManualHostControl(state);
+      }
+      // automated command re-raises a destroyed host once the rearm window passes
+      if (autoHosts && autoHosts !== 'manual' &&
+          (p.war || playerGhwHost || warring.player) &&
+          !(hostsByRealm['player'] && hostsByRealm['player'].length)) {
+        FB.raisePlayerHost(state);
+      }
+      /* One primary lookup table replaces hostOf() per AI banner. hostOf()
+         repairs and scans the complete army list, which made multi-host wars
+         quadratic before the orders phase had even considered a route. */
+      const primaryByRealm = {};
+      for (const army of state.armies) {
+        const primary = primaryByRealm[army.realm];
+        if (!primary || army.men > primary.men) {
+          primaryByRealm[army.realm] = army;
+        }
+      }
+      /* Choose every host's order against the same start-of-day positions.
+         Marching inside this loop made the result depend on array order: an AI
+         banner processed after the player could see the county the player had
+         just entered, retarget across one adjacent leg, and join a battle in
+         that same tick. */
+      const previousQueries = orderQueries;
+      orderQueries = { state:state, enemies:Object.create(null), pursuit:new WeakMap(), routes:new WeakMap(), power:new WeakMap(),
+        hostility:Object.create(null), byCounty:Object.create(null) };
+      for (const army of state.armies) {
+        (orderQueries.byCounty[army.at] || (orderQueries.byCounty[army.at] = [])).push(army);
+      }
+      try {
+        for (const a of state.armies) {
+          if (a.path && a.path.length && FB.fortBlocksArmy &&
+              FB.fortBlocksArmy(state, a.at, a) &&
+              a.path[0] !== a.from &&
+              !(FB.armyFriendlyProvince &&
+                FB.armyFriendlyProvince(state, a, a.path[0]))) {
+            /* Save repair or a control change can make a once-valid onward leg
+               stale while the host is already standing inside the fort. */
+            a.path = [];
+            a.goal = null;
+            a.moveLeft = 0;
+          }
+          const commandedByPlayer = !!(militaryCommand &&
+            a.realm === militaryCommand.sovereignRealmId &&
+            (!militaryCommand.hostId || a.id === militaryCommand.hostId));
+          if (a.rebellionId && FB.rebelArmyGoal) {
+            const goal = FB.rebelArmyGoal(state, a);
+            if (goal && (goal !== a.goal || (!a.path.length && goal !== a.at))) FB.orderArmy(state, a, goal);
+          } else if (a.realm !== 'player' && !commandedByPlayer) {
+            let goal = aiGoal(state, a, warring, primaryByRealm);
+            if (!(a.broken !== undefined && state.turn - a.broken < 40) &&
+                !(FB.fortPinnedStatus && FB.fortPinnedStatus(state, a)) &&
+                !FB.armyCanPursue(state, a, goal)) {
+              goal = FB.armyRegroupGoal(state, a) || a.at;
+            }
+            if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
+              FB.orderArmy(state, a, goal);
+            }
+          } else if (a.realm === 'player' && autoHosts &&
+              autoHosts !== 'manual') {
+            /* automated command: the stance steers only an idle host — a route
+               tapped by hand (a.manual) plays out untouched, a hand-halted host
+               (a.holdManual) holds, and the council's hunt is superseded */
+            a.huntPrey = null;
+            if (a.manual && !(a.path && a.path.length) && a.moveLeft <= 0) a.manual = 0;
+            if (!a.holdManual && !a.manual) {
+              const pgoal = playerGoal(state, a, autoHosts);
+              if (pgoal !== a.goal || ((!a.path || !a.path.length) && pgoal !== a.at && a.moveLeft <= 0)) {
+                if (FB.orderArmy(state, a, pgoal)) a.automatedOrder = 1;
+              }
+            }
+          } else if (a.huntPrey) {
+            // a hunting host tracks its prey day by day, not where it was —
+            // looked up live, since the disband loop above may have removed it
+            const prey = primaryByRealm[a.huntPrey];
+            if (!prey || !FB.armiesHostile(state, a, prey)) a.huntPrey = null;
+            else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
+          }
+        }
+      } finally { orderQueries = previousQueries; }
+      /* Only after all orders are fixed do hosts advance. The battle scan below
+         therefore sees genuine end-of-day co-location; adjacency alone never
+         creates contact. */
+      if (timing) { timing.leave(phase); phase = timing.enter('Army phase: movement'); }
+      for (const a of state.armies) march(state, a);
+
+      if (timing) { timing.leave(phase); phase = timing.enter('Army phase: reinforcement and cohorts'); }
+      /* Campaign desertion is expressed as a seasonal fraction but resolved
+         daily. Fractional expected losses use the saved RNG stream. */
+      const playerHost = primaryHost(state, 'player');
+      const desertion = playerHost && playerHost.warId === 'holy' && FB.campaignHostModBonus
+        ? Math.max(0, FB.campaignHostModBonus(state, 'desertion')) : 0;
+      if (playerHost && playerHost.men > 0 && desertion) {
+        const expected = playerHost.men * desertion / 90;
+        let lost = Math.floor(expected);
+        const fraction = expected - lost;
+        if (fraction > 0 && FB.rng() < fraction) lost++;
+        if (lost > 0) {
+          const deserters = FB.applyHostLosses(playerHost,
+            Math.min(playerHost.men, lost));
+          FB.noteCohortLosses(state, 'player', deserters);
           requestMap();
         }
       }
-    }
 
-    // Share projections only within this muster phase. Orders, movement,
-    // battles and the next day always observe fresh recruitment inputs.
-    const musterProjections = Object.create(null);
-    function musterProjection(rid) {
-      if (!musterProjections[rid]) {
-        const territory = FB.recruitmentTerritory(state, rid);
-        musterProjections[rid] = { territory:territory,
-          capacity:FB.aiBaseHost(state, rid, territory) };
-      }
-      return musterProjections[rid];
-    }
-    // sovereigns at war raise their host (the player musters by deed/event)
-    for (let sovereignIndex = 0; sovereignIndex < sovereignIds.length;
-        sovereignIndex++) {
-      const id = sovereignIds[sovereignIndex];
-      const r = state.realms[id];
-      if (!warring[id] || (hostsByRealm[id] && hostsByRealm[id].length)) continue;
-      const down = state.armyDown[id];
-      if (down !== undefined && state.turn - down < B().armyRearmDays) continue;
-      const raised = raiseAIHost(state, id, musterProjection(id));
-      if (raised) hostsByRealm[id] = [raised];
-    }
-
-    /* strong aggressors divide their strength: a realm whose muster clears
-       balance.aiMultiHostStrength splits off a detachment (capped by
-       balance.aiMaxHosts) while it prosecutes an offensive war — the main
-       host hunts, the second banner screens and besieges. A destroyed
-       detachment re-forms only after balance.detachmentRearmDays. */
-    const aiMaxHosts = B().aiMaxHosts === undefined ? 2 : B().aiMaxHosts;
-    const multiStrength = B().aiMultiHostStrength === undefined
-      ? Infinity : B().aiMultiHostStrength;
-    const detachmentFrac = B().aiDetachmentFrac === undefined
-      ? 0.35 : B().aiDetachmentFrac;
-    const detachmentRearm = B().detachmentRearmDays === undefined
-      ? 25 : B().detachmentRearmDays;
-    const minMen = B().armyMinMen || 40;
-    for (let sovereignIndex = 0; sovereignIndex < sovereignIds.length;
-        sovereignIndex++) {
-      const id = sovereignIds[sovereignIndex];
-      const r = state.realms[id];
-      const hosts = hostsByRealm[id];
-      if (!warring[id] || !hosts || hosts.length !== 1 ||
-          hosts.length >= aiMaxHosts ||
-          (militaryCommand &&
-            id === militaryCommand.sovereignRealmId)) continue;
-      const offensive = !!(r.war && r.war.enemy) ||
-        (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, id) === 'attackers');
-      if (!offensive) continue;
-      const detachDown = (state.armyDetachmentDown || {})[id];
-      if (detachDown !== undefined &&
-          state.turn - detachDown < detachmentRearm) continue;
-      const primary = hosts[0];
-      if (primary.broken !== undefined) continue; // a routed host does not divide
-      const target = Math.round(primary.men * detachmentFrac);
-      if (target < minMen || primary.men - target < minMen) continue;
-      if (musterProjection(id).capacity < multiStrength) continue;
-      const detachment = splitOffHost(state, primary, target);
-      hosts.push(detachment);
-      if (state.player.war && state.player.war.enemy === id) {
-        FB.news(state, FB.msg('news.army.enemy_divides',
-          '🚩 {realm} divides its strength — a second host takes the field.',
-          { realm: r.name }));
-      }
-    }
-
-    // peace: hosts go home — this one rule covers every way a war can end
-    for (let i = state.armies.length - 1; i >= 0; i--) {
-      const a = state.armies[i];
-      if (a.realm === 'player') {
-        if (!p.war && !playerGhwHost && !warring.player) {
-          disband(state, a);
-          FB.news(state, FB.msg('news.army.disbands',
-            '🏳 The war is done — the host disbands to hearth and field.', {}));
-        }
-        continue;
-      }
-      if (a.rebellionId && FB.rebellionById && FB.rebellionById(state, a.rebellionId)) continue;
-      const r = state.realms[a.realm];
-      if (!r || !r.alive || !warring[a.realm]) disband(state, a);
-    }
-
-    // orders & marches
-    const autoHosts = FB.game.auto && FB.game.auto.hosts;
-    if (!autoHosts || autoHosts === 'manual') {
-      FB.enforceManualHostControl(state);
-    }
-    // automated command re-raises a destroyed host once the rearm window passes
-    if (autoHosts && autoHosts !== 'manual' &&
-        (p.war || playerGhwHost || warring.player) &&
-        !(hostsByRealm['player'] && hostsByRealm['player'].length)) {
-      FB.raisePlayerHost(state);
-    }
-    /* One primary lookup table replaces hostOf() per AI banner. hostOf()
-       repairs and scans the complete army list, which made multi-host wars
-       quadratic before the orders phase had even considered a route. */
-    const primaryByRealm = {};
-    for (const army of state.armies) {
-      const primary = primaryByRealm[army.realm];
-      if (!primary || army.men > primary.men) {
-        primaryByRealm[army.realm] = army;
-      }
-    }
-    /* Choose every host's order against the same start-of-day positions.
-       Marching inside this loop made the result depend on array order: an AI
-       banner processed after the player could see the county the player had
-       just entered, retarget across one adjacent leg, and join a battle in
-       that same tick. */
-    const previousQueries = orderQueries;
-    orderQueries = { state:state, enemies:Object.create(null), pursuit:new WeakMap(), routes:new WeakMap(),
-      hostility:Object.create(null), byCounty:Object.create(null) };
-    for (const army of state.armies) {
-      (orderQueries.byCounty[army.at] || (orderQueries.byCounty[army.at] = [])).push(army);
-    }
-    try {
+      // levies trickle back while a host rests on its sovereign's own land —
+      // fresh peasants from the fields; slain professionals return only as
+      // drilled cohort replacements, which claim the room first
+      cohortTick(state);
+      let reinforcementChanged = false;
+      let reinforcementCompleted = false;
+      const recruitRoom = {};
       for (const a of state.armies) {
-        if (a.path && a.path.length && FB.fortBlocksArmy &&
-            FB.fortBlocksArmy(state, a.at, a) &&
-            a.path[0] !== a.from &&
-            !(FB.armyFriendlyProvince &&
-              FB.armyFriendlyProvince(state, a, a.path[0]))) {
-          /* Save repair or a control change can make a once-valid onward leg
-             stale while the host is already standing inside the fort. */
-          a.path = [];
-          a.goal = null;
-          a.moveLeft = 0;
-        }
-        const commandedByPlayer = !!(militaryCommand &&
-          a.realm === militaryCommand.sovereignRealmId &&
-          (!militaryCommand.hostId || a.id === militaryCommand.hostId));
-        if (a.rebellionId && FB.rebelArmyGoal) {
-          const goal = FB.rebelArmyGoal(state, a);
-          if (goal && (goal !== a.goal || (!a.path.length && goal !== a.at))) FB.orderArmy(state, a, goal);
-        } else if (a.realm !== 'player' && !commandedByPlayer) {
-          let goal = aiGoal(state, a, warring, primaryByRealm);
-          if (!(a.broken !== undefined && state.turn - a.broken < 40) &&
-              !(FB.fortPinnedStatus && FB.fortPinnedStatus(state, a)) &&
-              !FB.armyCanPursue(state, a, goal)) {
-            goal = FB.armyRegroupGoal(state, a) || a.at;
-          }
-          if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
-            FB.orderArmy(state, a, goal);
-          }
-        } else if (a.realm === 'player' && autoHosts &&
-            autoHosts !== 'manual') {
-          /* automated command: the stance steers only an idle host — a route
-             tapped by hand (a.manual) plays out untouched, a hand-halted host
-             (a.holdManual) holds, and the council's hunt is superseded */
-          a.huntPrey = null;
-          if (a.manual && !(a.path && a.path.length) && a.moveLeft <= 0) a.manual = 0;
-          if (!a.holdManual && !a.manual) {
-            const pgoal = playerGoal(state, a, autoHosts);
-            if (pgoal !== a.goal || ((!a.path || !a.path.length) && pgoal !== a.at && a.moveLeft <= 0)) {
-              if (FB.orderArmy(state, a, pgoal)) a.automatedOrder = 1;
+        if (a.rebellionId) continue;
+        if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
+        FB.hostUnits(a); // hosts from before levy tiers
+        if (a.men >= a.size || a.moveLeft > 0) continue;
+        // a starving host eats before it fills its ranks
+        if (FB.hostSupply(a) <= 0) continue;
+        const own = FB.armyFriendlyProvince
+          ? FB.armyFriendlyProvince(state, a, a.at)
+          : (a.realm === 'player'
+              ? ((p.provs && p.provs.indexOf(a.at) >= 0) || (state.holder && state.holder[a.at] === 'player'))
+              : state.owner[a.at] === a.realm);
+        if (own && !FB.recruitmentCountyBlocked(state, a.realm, a.at)) {
+          if (recruitRoom[a.realm] === undefined) {
+            const territory = FB.recruitmentTerritory(state, a.realm);
+            const plan = a.realm === 'player' ? playerMusterPlan(state) : null;
+            let capacity = a.realm === 'player' ? (plan ? plan.men : 0) : FB.aiBaseHost(state, a.realm, territory);
+            let serving = 0;
+            for (const host of state.armies) {
+              if (host.realm !== a.realm) continue;
+              serving += host.men;
+              if (a.realm !== 'player' && host.allied) capacity += host.allied.men || 0;
             }
+            recruitRoom[a.realm] = territory.rally ? Math.max(0, Math.floor(capacity - serving)) : 0;
           }
-        } else if (a.huntPrey) {
-          // a hunting host tracks its prey day by day, not where it was —
-          // looked up live, since the disband loop above may have removed it
-          const prey = primaryByRealm[a.huntPrey];
-          if (!prey || !FB.armiesHostile(state, a, prey)) a.huntPrey = null;
-          else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
+          const beforeMen = a.men;
+          const joined = cohortJoinHost(state, a, Math.min(a.size - a.men, recruitRoom[a.realm]));
+          recruitRoom[a.realm] -= joined;
+          const room = Math.min(a.size - a.men, recruitRoom[a.realm]);
+          if (room > 0) {
+            const add = Math.min(room, Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
+            a.units.levy += add;
+            a.men += add;
+            recruitRoom[a.realm] -= add;
+          }
+          if (a.men > beforeMen) {
+            reinforcementChanged = true;
+            if (a.men >= a.size) reinforcementCompleted = true;
+          }
         }
       }
-    } finally { orderQueries = previousQueries; }
-    /* Only after all orders are fixed do hosts advance. The battle scan below
-       therefore sees genuine end-of-day co-location; adjacency alone never
-       creates contact. */
-    for (const a of state.armies) march(state, a);
-
-    /* Campaign desertion is expressed as a seasonal fraction but resolved
-       daily. Fractional expected losses use the saved RNG stream. */
-    const playerHost = primaryHost(state, 'player');
-    const desertion = playerHost && playerHost.warId === 'holy' && FB.campaignHostModBonus
-      ? Math.max(0, FB.campaignHostModBonus(state, 'desertion')) : 0;
-    if (playerHost && playerHost.men > 0 && desertion) {
-      const expected = playerHost.men * desertion / 90;
-      let lost = Math.floor(expected);
-      const fraction = expected - lost;
-      if (fraction > 0 && FB.rng() < fraction) lost++;
-      if (lost > 0) {
-        const deserters = FB.applyHostLosses(playerHost,
-          Math.min(playerHost.men, lost));
-        FB.noteCohortLosses(state, 'player', deserters);
+      /* Exact counts remain live in the daily panels. A stationary host's map
+         label can wait a few days: one global cadence prevents many damaged,
+         staggered hosts from collectively forcing a full canvas paint on every
+         tick. Completion is immediate so the final strength never stays stale. */
+      if (reinforcementChanged &&
+          (reinforcementCompleted ||
+           state.turn % REINFORCEMENT_MAP_INTERVAL_DAYS === 0)) {
         requestMap();
       }
-    }
 
-    // levies trickle back while a host rests on its sovereign's own land —
-    // fresh peasants from the fields; slain professionals return only as
-    // drilled cohort replacements, which claim the room first
-    cohortTick(state);
-    let reinforcementChanged = false;
-    let reinforcementCompleted = false;
-    const recruitRoom = {};
-    for (const a of state.armies) {
-      if (a.rebellionId) continue;
-      if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
-      FB.hostUnits(a); // hosts from before levy tiers
-      if (a.men >= a.size || a.moveLeft > 0) continue;
-      // a starving host eats before it fills its ranks
-      if (FB.hostSupply(a) <= 0) continue;
-      const own = FB.armyFriendlyProvince
-        ? FB.armyFriendlyProvince(state, a, a.at)
-        : (a.realm === 'player'
-            ? ((p.provs && p.provs.indexOf(a.at) >= 0) || (state.holder && state.holder[a.at] === 'player'))
-            : state.owner[a.at] === a.realm);
-      if (own && !FB.recruitmentCountyBlocked(state, a.realm, a.at)) {
-        if (recruitRoom[a.realm] === undefined) {
-          const territory = FB.recruitmentTerritory(state, a.realm);
-          const plan = a.realm === 'player' ? playerMusterPlan(state) : null;
-          let capacity = a.realm === 'player' ? (plan ? plan.men : 0) : FB.aiBaseHost(state, a.realm, territory);
-          let serving = 0;
-          for (const host of state.armies) {
-            if (host.realm !== a.realm) continue;
-            serving += host.men;
-            if (a.realm !== 'player' && host.allied) capacity += host.allied.men || 0;
+      /* supply lines: refill on friendly land, drain and starve abroad. The
+         phase runs after the day's march so the price is paid at the ground
+         the host ends on, and after reinforcement so a host that limped home
+         at 0 supply eats before it fills its ranks; battles below still read
+         today's supply. One friendly-distance map per host realm is retained
+         until borders, hierarchy, development, or alliances change.
+         Starvation can disband a host, so the loop walks a snapshot. */
+      if (timing) { timing.leave(phase); phase = timing.enter('Army phase: supply'); }
+      const supplyDistances = retainedSupplyDistanceMaps(state);
+      for (const a of state.armies.slice()) {
+        if (a.rebellionId) { a.supply = 100; continue; }
+        supplyTickHost(state, a, supplyDistances);
+      }
+
+      /* battles: hostile camps sharing a province (one clash per province per
+         day). Hosts that are not mutually hostile fight as one side — the
+         same folding the allied reinforcement rule applies. */
+      if (timing) { timing.leave(phase); phase = timing.enter('Army phase: battle matching and resolution'); }
+      const byProv = {};
+      for (const a of state.armies) (byProv[a.at] = byProv[a.at] || []).push(a);
+      for (const pid in byProv) {
+        const here = byProv[pid];
+        if (here.length < 2) continue;
+        const sides = [];
+        for (const host of here) {
+          /* rout grace: a freshly broken host is left to limp home — without
+             this, a host beaten on its own capital cannot flee (orderArmy
+             treats home as a halt) and the same battle re-fought daily */
+          if (host.broken !== undefined &&
+              state.turn - host.broken < B().armyRoutDays) continue;
+          let placed = null;
+          for (const side of sides) {
+            const sharedHolyCamp = host.warId === 'holy' && side[0].warId === 'holy' &&
+              FB.greatHolyWarCamp(state, host.realm) === FB.greatHolyWarCamp(state, side[0].realm);
+            if ((side[0].realm === host.realm || sharedHolyCamp) &&
+                side.every(function (other) { return !FB.armiesHostile(state, other, host); })) { placed = side; break; }
           }
-          recruitRoom[a.realm] = territory.rally ? Math.max(0, Math.floor(capacity - serving)) : 0;
+          if (placed) placed.push(host);
+          else sides.push([host]);
         }
-        const beforeMen = a.men;
-        const joined = cohortJoinHost(state, a, Math.min(a.size - a.men, recruitRoom[a.realm]));
-        recruitRoom[a.realm] -= joined;
-        const room = Math.min(a.size - a.men, recruitRoom[a.realm]);
-        if (room > 0) {
-          const add = Math.min(room, Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
-          a.units.levy += add;
-          a.men += add;
-          recruitRoom[a.realm] -= add;
-        }
-        if (a.men > beforeMen) {
-          reinforcementChanged = true;
-          if (a.men >= a.size) reinforcementCompleted = true;
-        }
-      }
-    }
-    /* Exact counts remain live in the daily panels. A stationary host's map
-       label can wait a few days: one global cadence prevents many damaged,
-       staggered hosts from collectively forcing a full canvas paint on every
-       tick. Completion is immediate so the final strength never stays stale. */
-    if (reinforcementChanged &&
-        (reinforcementCompleted ||
-         state.turn % REINFORCEMENT_MAP_INTERVAL_DAYS === 0)) {
-      requestMap();
-    }
-
-    /* supply lines: refill on friendly land, drain and starve abroad. The
-       phase runs after the day's march so the price is paid at the ground
-       the host ends on, and after reinforcement so a host that limped home
-       at 0 supply eats before it fills its ranks; battles below still read
-       today's supply. One friendly-distance map per host realm is retained
-       until borders, hierarchy, development, or alliances change.
-       Starvation can disband a host, so the loop walks a snapshot. */
-    const supplyDistances = retainedSupplyDistanceMaps(state);
-    for (const a of state.armies.slice()) {
-      if (a.rebellionId) { a.supply = 100; continue; }
-      supplyTickHost(state, a, supplyDistances);
-    }
-
-    /* battles: hostile camps sharing a province (one clash per province per
-       day). Hosts that are not mutually hostile fight as one side — the
-       same folding the allied reinforcement rule applies. */
-    const byProv = {};
-    for (const a of state.armies) (byProv[a.at] = byProv[a.at] || []).push(a);
-    for (const pid in byProv) {
-      const here = byProv[pid];
-      if (here.length < 2) continue;
-      const sides = [];
-      for (const host of here) {
-        /* rout grace: a freshly broken host is left to limp home — without
-           this, a host beaten on its own capital cannot flee (orderArmy
-           treats home as a halt) and the same battle re-fought daily */
-        if (host.broken !== undefined &&
-            state.turn - host.broken < B().armyRoutDays) continue;
-        let placed = null;
-        for (const side of sides) {
-          const sharedHolyCamp = host.warId === 'holy' && side[0].warId === 'holy' &&
-            FB.greatHolyWarCamp(state, host.realm) === FB.greatHolyWarCamp(state, side[0].realm);
-          if ((side[0].realm === host.realm || sharedHolyCamp) &&
-              side.every(function (other) { return !FB.armiesHostile(state, other, host); })) { placed = side; break; }
-        }
-        if (placed) placed.push(host);
-        else sides.push([host]);
-      }
-      if (sides.length < 2) continue;
-      /* the two strongest camps meet; the rest stand clear of the fray.
-         Ties break on the lead host's id so the pick is deterministic. */
-      sides.sort(function (x, y) {
-        const byStrength = sideMen(y) - sideMen(x);
-        if (byStrength) return byStrength;
-        const xid = leadHost(x).id, yid = leadHost(y).id;
-        return xid < yid ? -1 : xid > yid ? 1 : 0;
-      });
-      let fought = false;
-      for (let i = 0; i < sides.length && !fought; i++) {
-        for (let j = i + 1; j < sides.length; j++) {
-          if (!sides[i].some(function (a) { return sides[j].some(function (b) { return FB.armiesHostile(state, a, b); }); })) continue;
-          resolveBattle(state, pid, sides[i], sides[j]);
-          fought = true; break;
+        if (sides.length < 2) continue;
+        /* the two strongest camps meet; the rest stand clear of the fray.
+           Ties break on the lead host's id so the pick is deterministic. */
+        sides.sort(function (x, y) {
+          const byStrength = sideMen(y) - sideMen(x);
+          if (byStrength) return byStrength;
+          const xid = leadHost(x).id, yid = leadHost(y).id;
+          return xid < yid ? -1 : xid > yid ? 1 : 0;
+        });
+        let fought = false;
+        for (let i = 0; i < sides.length && !fought; i++) {
+          for (let j = i + 1; j < sides.length; j++) {
+            if (!sides[i].some(function (a) { return sides[j].some(function (b) { return FB.armiesHostile(state, a, b); }); })) continue;
+            resolveBattle(state, pid, sides[i], sides[j]);
+            fought = true; break;
+          }
         }
       }
-    }
 
-    /* Arrival establishes a siege before the next random event slot or
-       seasonal pulse. Queue its one-per-war story only after today's battles
-       have decided whether the ground is genuinely uncontested. */
-    if (FB.rebellionsAfterArmies) FB.rebellionsAfterArmies(state);
-    if (FB.maybeQueuePlayerSiegeEvent) {
-      FB.maybeQueuePlayerSiegeEvent(state);
-    }
+      if (timing) { timing.leave(phase); phase = timing.enter('Army phase: sieges and rebellions'); }
+      /* Arrival establishes a siege before the next random event slot or
+         seasonal pulse. Queue its one-per-war story only after today's battles
+         have decided whether the ground is genuinely uncontested. */
+      if (FB.rebellionsAfterArmies) FB.rebellionsAfterArmies(state);
+      if (FB.maybeQueuePlayerSiegeEvent) {
+        FB.maybeQueuePlayerSiegeEvent(state);
+      }
+    } finally { if (timing) { if (musterStep) timing.leave(musterStep); timing.leave(phase); } }
   };
 
   /* ---------- selection & tap handling ---------- */

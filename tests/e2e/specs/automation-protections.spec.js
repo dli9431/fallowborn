@@ -430,6 +430,8 @@ test('day-spending household managers rebuild their originating view',
       FB.ui.showEnterpriseMarket(0, 'household-plan');
     });
     await page.locator('[data-enterprise-buy]:not([disabled])').first().click();
+    await expect(page.locator('#gm-title')).toContainText('Enterprise in');
+    await page.locator('#gm-cancel').click();
     await expect(page.locator('#gm-title')).toContainText('Household Plan');
     expect(await page.evaluate(function () { return FB.state.turn; }))
       .toBe(setup.startTurn + 3);

@@ -35,7 +35,7 @@ window.FB = window.FB || {};
   }
 
   function rebuildIndex(state) {
-    var next = { byCounty:{}, bySite:{}, forts:[], projects:[] };
+    var next = { byCounty:{}, countyForts:{}, bySite:{}, forts:[], projects:[] };
     var buildings = state && state.buildings || {};
     for (var pid in buildings) {
       if (!Object.prototype.hasOwnProperty.call(buildings, pid)) continue;
@@ -46,6 +46,7 @@ window.FB = window.FB || {};
         if (!record || typeof record !== 'object' || record.id !== 'walls') continue;
         var indexed = { pid:pid, record:record };
         next.forts.push(indexed);
+        (next.countyForts[pid] || (next.countyForts[pid] = [])).push(indexed);
         next.bySite[pid + ':' + (record.s | 0)] = record;
         if (!record.ruined && !next.byCounty[pid]) next.byCounty[pid] = record;
         if (!record.ruined && record.targetLevel) next.projects.push(indexed);
@@ -69,7 +70,11 @@ window.FB = window.FB || {};
      rescan every county once per holder. */
   function syncIndexedRecord(state, pid, record, newRecord, newProject) {
     var current = indexOf(state), projectIndex = -1;
-    if (newRecord) current.forts.push({ pid:pid, record:record });
+    if (newRecord) {
+      var indexed = { pid:pid, record:record };
+      current.forts.push(indexed);
+      (current.countyForts[pid] || (current.countyForts[pid] = [])).push(indexed);
+    }
     current.bySite[pid + ':' + (record.s | 0)] = record;
     if (!record.ruined) current.byCounty[pid] = record;
     else if (current.byCounty[pid] === record) delete current.byCounty[pid];
@@ -413,9 +418,16 @@ window.FB = window.FB || {};
     return total;
   };
 
-  FB.fortGarrisonBurden = function (state, subject, recruitmentRealm) {
+  FB.fortGarrisonBurden = function (state, subject, recruitmentRealm, recruitment) {
     var total = 0;
-    var forts = indexOf(state).forts;
+    var index = indexOf(state), forts = index.forts;
+    if (recruitment && recruitment.counties && subject === recruitmentRealm && subject !== 'player') {
+      forts = [];
+      for (var c = 0; c < recruitment.counties.length; c++) {
+        var county = index.countyForts[recruitment.counties[c]] || [];
+        for (var f = 0; f < county.length; f++) forts.push(county[f]);
+      }
+    }
     for (var i = 0; i < forts.length; i++) {
       var item = forts[i], fort = item.record;
       if (fort.ruined || !fort.level) continue;
@@ -428,8 +440,11 @@ window.FB = window.FB || {};
       if (!include) continue;
       // Recruitment restrictions matter only for forts charged to this holder.
       // Checking every foreign fort first multiplied campaign scans per muster.
-      if (recruitmentRealm && FB.recruitmentCountyBlocked &&
-          FB.recruitmentCountyBlocked(state, recruitmentRealm, item.pid)) continue;
+      if (recruitmentRealm && FB.recruitmentCountyBlocked) {
+        if (recruitment && recruitment.blocked.indexOf(item.pid) >= 0) continue;
+        if ((!recruitment || recruitment.eligible.indexOf(item.pid) < 0) &&
+            FB.recruitmentCountyBlocked(state, recruitmentRealm, item.pid)) continue;
+      }
       total += levelDef(fort.level).garrison;
     }
     return total;
@@ -450,7 +465,7 @@ window.FB = window.FB || {};
     return FB.topRealm ? FB.topRealm(state, realmId) : realmId;
   }
 
-  function realmFriendlyTo(state, realmId, controller) {
+  function realmFriendlyTo(state, realmId, controller, relations) {
     if (!controller || realmId === controller) return true;
     if (FB.armiesHostile && FB.armiesHostile(state, { realm:realmId }, { realm:controller })) return false;
     if (state.greatHolyWar && state.greatHolyWar.phase === 'active' && FB.greatHolyWarCamp) {
@@ -469,6 +484,7 @@ window.FB = window.FB || {};
         cur = state.realms[cur.liege];
       }
     }
+    if (relations && relations.allies) return relations.allies[realmId] === controller || !!(topA && topB && relations.allies[topA] === topB);
     return !!(FB.areAllied && (FB.areAllied(state, realmId, controller) || (topA && topB && FB.areAllied(state, topA, topB))));
   }
 
@@ -477,7 +493,7 @@ window.FB = window.FB || {};
     function friendlyController(controller) {
       if (!relations) return realmFriendlyTo(state, army.realm, controller);
       if (!Object.prototype.hasOwnProperty.call(relations.friendly, controller)) {
-        relations.friendly[controller] = realmFriendlyTo(state, army.realm, controller);
+        relations.friendly[controller] = realmFriendlyTo(state, army.realm, controller, relations);
       }
       return relations.friendly[controller];
     }

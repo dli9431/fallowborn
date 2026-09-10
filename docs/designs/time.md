@@ -480,3 +480,83 @@ Fast-forward retains the six-day coarse-timer cap and yields after eight millise
 of daily work. It checks events, death, pause and season boundaries after each day;
 only the amount of work before the next animation frame changes. A single expensive
 day can exceed that budget because the authoritative tick remains synchronous.
+
+
+## Local fast-forward timing
+
+`FB.game.fastForwardTiming.enable(true)` enables console diagnostics only on
+file://, localhost, 127.0.0.1 or IPv6 loopback. Other hostnames refuse activation.
+It defaults off on every page load and has no save, preference or telemetry field.
+`enable(false)` disables it; changing the setting during a burst is refused.
+Disabled runs install no wrappers and take no diagnostic clock readings.
+
+Each completed burst prints a report and function table; `fastForwardTiming.last`
+retains only the latest report. elapsedMs includes frame waits and synchronous final
+UI refresh. betweenBatchesMs includes browser scheduling and any other browser work
+between batches; it is not necessarily idle CPU time. simulationMs measures passDay.
+Rows report calls, inclusive totalMs, exclusive selfMs and maximum call duration.
+Inclusive rows must not be added together: save serialization, for example, is also
+inside autosave and the enclosing day. Untimed work remains in its parent's selfMs.
+Deferred paint, asynchronous IndexedDB completion and worker compression are outside
+this report. Timing itself adds overhead. Original functions are restored even on
+an exception; simulation results and the scheduling budget remain unchanged.
+
+For comparison, load the same save before each of three runs. Enable diagnostics,
+fast-forward once, then copy `JSON.stringify(FB.game.fastForwardTiming.last, null, 2)`
+from DevTools. Reloading the page requires explicitly enabling diagnostics again.
+
+Local fast-forward diagnostics split the army tick into campaign setup, muster and
+disband, orders, movement, reinforcement/cohorts, supply, battles, and sieges/rebellions.
+Nested operation rows include AI goal choice, actual path searches, recruitment,
+pursuit/regrouping, cohort replacements and battle resolution. Religious rows expose
+head normalization, claim/restore eligibility, holy-war targets and sacred-control
+tracking. Missing rows mean the operation was not reached during that run. Timed
+phases close on early return and exceptions; the recorder exists only during an
+enabled local burst. These diagnostics do not change military or religious rules.
+
+An idle restored-head holy-war check verifies its historical unlock, cooldown,
+AI head and player-Pope restrictions before enumerating target kingdoms. Initial
+unlock checks similarly skip target construction for an ineligible head/cooldown.
+Target checks still precede any random launch roll, preserving the RNG stream.
+
+The local profiler's counters distinguish muster projection requests for new hosts
+and detachments, per-realm projection builds, failed raises, capacity-rejected
+splits and created detachments. Nested muster rows cover war/realm lookup, allied
+troop refresh, new-host checks, detachment checks and peace/disband checks.
+Supply counters distinguish cache hits from actual builds, map counts discarded,
+state/world/control/alliance-campaign invalidations, and per-realm/campaign rebuilds.
+Control-change diagnostics further separate ownership, hierarchy, player holdings
+and rebel occupations. Several invalidation reasons can apply to the same reset;
+reason counters must not be summed as a reset count. The first observed validation
+has no prior diagnostic control snapshot. Friendly-source scanning and distance
+propagation have separate timing rows. Diagnostic snapshots and counters add some
+overhead only while profiling; comparison runs should use the same instrumentation.
+
+Annual world diagnostics split worldTick into preparation, fortifications/population,
+religion, indexes/family links, realm families/rulers, vassal breakaways, alliances,
+ruler agency and AI buildings. Nested operation rows cover dynasty normalization,
+crown recognition, population, royal-family aging, succession, deaths, compacting
+court records, raids and the annual subsystem calls. Public annual-operation rows
+are recorded only within worldTick, so ordinary daily/UI calls do not pollute them.
+Counters report realms and royal families processed, ruler deaths, breakaways and
+alliances formed. Phase timers close on exceptions and do not change RNG or execution
+order. These rows appear on year-boundary fast-forwards; diagnostics remain local-only
+and disabled by default. Inclusive phases and their nested operations must not be
+added together when estimating total annual cost.
+
+Population annual diagnostics further separate normalization, setup/conflict
+snapshots, natural growth/capacity/attraction, migration edge proposals, sorting and
+outflow limits, cohort distribution, population/settlement application, faith/culture
+projects and final invariants. Nested operations measure county repair, community
+allocation, settlement reconciliation and arrivals, project resolution and invariant
+checks. Counters record counties, adjacency entries and proposed migration edges.
+Private population timings are scoped to populationYear and restore their prior
+context on early return or exceptions. Gameplay order and RNG remain unchanged.
+
+Annual population growth builds one detached enterprise-upgrade snapshot grouped by
+county. Enterprise normalization and staffing reads share one synchronous batch;
+capacity and migration attraction reuse the snapshot, including explicit zero
+bonuses in counties without enterprises. Other callers keep live upgrade queries.
+The next annual pass rebuilds the snapshot, so staffing, death, upgrades and relocation
+are observed. Profiling exposes this cost as enterprise upgrade snapshot rather than
+charging repeated enterprise scans to each county's capacity and attraction.

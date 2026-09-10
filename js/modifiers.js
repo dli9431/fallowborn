@@ -377,9 +377,9 @@ window.FB = window.FB || {};
     return Object.assign({}, def && def.fx || {}, { tax:-reduction, levy:-reduction });
   };
 
-  FB.modBonus = function (state, key, pid, support) {
+  FB.modBonus = function (state, key, pid, support, records) {
     let sum = 0, uprising = false;
-    const list = FB.countyModifierRecords(state, pid);
+    const list = records || FB.countyModifierRecords(state, pid);
     for (let i = 0; i < list.length; i++) {
       const def = definition(list[i].id, 'county');
       if (list[i].id === 'commons_uprising' && (key === 'tax' || key === 'levy')) {
@@ -501,10 +501,13 @@ window.FB = window.FB || {};
   FB.adjustCountySupport = function (state, pid, amount) {
     return FB.setCountySupport(state, pid, FB.countySupportBase(state, pid) + amount);
   };
-  FB.countyPopularSupport = function (state, pid) {
+  FB.countyPopularSupport = function (state, pid, records) {
     pid = pid || state.player.provinceId;
-    return FB.countySupportBase(state, pid) + FB.modBonus(state, 'commonVoice', pid);
+    return FB.countySupportBase(state, pid) + FB.modBonus(state, 'commonVoice', pid, undefined, records);
   };
+  // Opt in only canonical readers; replacement mod hooks fall back to live reads.
+  FB.countyPopularSupport.militaryCacheSafe = true;
+  FB.modBonus.militaryCacheSafe = true;
   // Compatibility query for older mods; there is no personal support record.
   FB.popEffective = function (state) { return FB.countyPopularSupport(state, state.player.provinceId); };
   FB.ensureCountySupport = function (state) {

@@ -419,7 +419,12 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
       .toContainText('each currently works another enterprise');
     const candidate = page.locator(
       '[data-enterprise-worker="' + fixture.workerId + '"]');
-    await expect(candidate.locator('.person-assignment-state')).toContainText('Working at ');
+    const expectedWork = await page.evaluate(function (home) {
+      const pr = FB.world.byId[home], settlement = FB.settlementsOf(FB.state, home)[1];
+      return 'Working at ' + FBDATA.enterprises.workshop_business.name + ' in ' +
+        (settlement ? settlement.name + ', ' : '') + pr.name;
+    }, fixture.home);
+    await expect(candidate.locator('.person-assignment-state')).toHaveText(expectedWork);
     await expect(candidate.locator('.person-assignment-state')).toHaveClass(/working/);
     const workColor = await candidate.locator('.person-assignment-state').evaluate(function (node) {
       const probe = document.createElement('span');
@@ -1127,3 +1132,32 @@ test('staffing assistant completes an upgraded crew instead of scattering partia
     expect(result.proposedTotal).toBeGreaterThan(0);
     expect(result.unresolved).toBe(1);
   });
+
+
+test('local hiring retains a scrolled staffing preview and row details', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:650 });
+  await page.evaluate(function () {
+    const s = FB.state;
+    s.player.gold = 10000; s.player.enterpriseMigration = 1;
+    s.player.enterprises = [];
+    for (let i = 0; i < 15; i++) s.player.enterprises.push({
+      uid:'scroll_hire_' + i, type:'field_strip', provinceId:s.player.provinceId,
+      settlement:0, workerId:null
+    });
+    FB.ui.showEnterpriseStaffingPreview();
+  });
+  for (const id of ['scroll_hire_8', 'scroll_hire_9']) {
+    const row = page.locator('[data-enterprise-staffing-uid="' + id + '"]');
+    await row.locator('.settcard-info').click();
+    const hire = row.locator('[data-enterprise-staffing-hire]');
+    await hire.scrollIntoViewIfNeeded();
+    const scroll = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+    expect(scroll).toBeGreaterThan(100);
+    await hire.click();
+    await expect(row.locator('[data-enterprise-staffing-hire]')).toHaveCount(0);
+    await expect(row.locator('.settcard-info')).toBeFocused();
+    await expect(row.locator('.settcard-info')).toHaveAttribute('aria-expanded', 'true');
+    const after = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+    expect(Math.abs(after - scroll)).toBeLessThanOrEqual(2);
+  }
+});

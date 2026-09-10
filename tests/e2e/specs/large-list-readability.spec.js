@@ -340,6 +340,15 @@ test('large Work roster counts choices, orders attention, and preserves exact en
       '[data-list-identity="' + fixture.guildWorkerId + '"]')).toBeVisible();
     await page.locator('[data-list-clear]').click();
     await expect(page.locator('#enterprise-staffing-preview')).toBeVisible();
+    const family = page.locator('[data-list-section="family-enterprises"]');
+    const market = page.locator('[data-list-section="new-enterprises"]');
+    await expect(family.locator('[data-enterprise-settlement]')).toHaveCount(0);
+    await expect(market.locator('[data-enterprise-settlement]').first()).toBeVisible();
+    await expect(market.locator('.large-list-empty')).toBeHidden();
+    expect(await page.locator('#enterprise-staffing-preview').evaluate(function (button) {
+      return !!(button.compareDocumentPosition(document.querySelector('[data-list-section="family-enterprises"]')) & Node.DOCUMENT_POSITION_FOLLOWING);
+    })).toBe(true);
+
     await page.locator('#enterprise-staffing-preview').click();
     const staffingRow = page.locator('.enterprise-staffing-row').first();
     await expect(staffingRow).toBeVisible();
@@ -395,10 +404,8 @@ test('large Work roster counts choices, orders attention, and preserves exact en
       return row.attention === 'false';
     })).toBe(true);
 
-    await page.locator(
-      '[data-list-section="family-enterprises"] [data-list-show-all]').click();
     await expect(page.locator(
-      '[data-list-toggle="family-enterprises"]')).toBeFocused();
+      '[data-list-section="family-enterprises"] [data-list-show-all]')).toBeHidden();
     await expect(page.locator(
       '[data-list-section="family-enterprises"] [data-large-list-row]:visible'))
       .toHaveCount(9);
@@ -796,7 +803,7 @@ test('Work filters and Network navigation do not mutate play state',
     expect(after.bodyScrollWidth).toBeLessThanOrEqual(after.viewportWidth + 1);
   });
 
-test('visible number-key order ignores filtered Work rows and search typing stays local',
+test('Work has no number shortcuts and search typing stays local',
   async function ({ page }, testInfo) {
     await startListGame(page, testInfo);
     await makeLargeListFixture(page);
@@ -818,17 +825,16 @@ test('visible number-key order ignores filtered Work rows and search typing stay
     await page.locator('#work-list-search').fill('Routine Worker 14');
     await page.locator('[data-list-toggle="household-work"]').focus();
     await page.keyboard.press('Digit1');
-    await expect(page.getByRole('heading', {
-      name:/Work of Routine Worker 14/
-    })).toBeVisible();
-    await page.locator('#gm-cancel').click();
+    await expect(page.locator('.work-list-modal')).toBeVisible();
+    await expect(page.locator('.work-list-modal .keyhint')).toHaveCount(0);
     await expect(page.locator('#work-list-search')).toHaveValue(
       'Routine Worker 14');
 
     await page.locator('[data-list-clear]').click();
     await page.getByRole('button', { name:'Idle', exact:true }).click();
     await page.keyboard.press('Digit1');
-    await expect(page.getByRole('heading', {
-      name:/Leased Field/
-    })).toBeVisible();
+    await expect(page.locator('.work-list-modal')).toBeVisible();
+    await expect(page.locator('.work-list-modal .keyhint')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.work-list-modal')).toHaveCount(0);
   });

@@ -258,7 +258,8 @@ save/restore and succession.
 The all-enterprise staffing preview is also an entry point for resolving an idle row. Its
 Assign workers action opens the same owned-enterprise manager and returns to a newly derived
 preview, while Hire a local worker calls the canonical paid-labor mutation directly and
-refreshes the preview in place. Disabled hiring retains the exact wage or affordability
+refreshes the preview in place, preserving scroll and expanded row details. Focus
+returns to the same row after both successful hires and stale/blocked attempts. Disabled hiring retains the exact wage or affordability
 reason in the row's tooltip/touch disclosure; the batch proposal is never silently applied
 by either per-row action.
 
@@ -355,6 +356,34 @@ everywhere: the family always keeps its treasures.
 Related: [finance.md](finance.md) for credit, default, and trade partnerships.
 
 Enterprise staffing candidate cards show Available when unassigned, or Working at
-{location} in the shared danger color when already assigned, including to the viewed
+{enterprise} in {settlement}, {county} in the shared danger color when already assigned, including to the viewed
 enterprise. The location uses the existing settlement/county label. Selection and
 reassignment eligibility remain independent of this visible work status.
+
+The owned enterprise list shows every business by default, including staffed ones;
+the shared five-routine-row preview cap does not apply to enterprise rows. Explicit
+search and staffing filters still apply, including in category and settlement groups.
+
+Buying an enterprise keeps the settlement catalogue open with refreshed prices and
+availability, retained scroll, and focus on the purchased entry. The purchase still
+spends its normal day. Only explicit Back returns to Work or the Household Plan.
+
+Work separates owned businesses under Family enterprises from settlement purchase
+links under New enterprises. The staffing assistant action sits above the owned
+section, outside its disclosure, including when the list is grouped.
+
+Enterprise list normalization, income breakdowns, individual production queries and
+staffing previews use a synchronous read batch. Contract normalization and its
+character index, profession candidates and per-enterprise eligibility are reused
+within that calculation, including recursive production-chain reads. The batch
+ends in a finally block; nothing persists between hiring, death, relocation,
+assignment, load or subsequent calculations. Candidate arrays are returned as
+copies, and production-chain cycle guards retain their existing behavior.
+
+Annual population growth builds one detached enterprise-upgrade snapshot grouped by
+county. Enterprise normalization and staffing reads share one synchronous batch;
+capacity and migration attraction reuse the snapshot, including explicit zero
+bonuses in counties without enterprises. Other callers keep live upgrade queries.
+The next annual pass rebuilds the snapshot, so staffing, death, upgrades and relocation
+are observed. Profiling exposes this cost as enterprise upgrade snapshot rather than
+charging repeated enterprise scans to each county's capacity and attraction.

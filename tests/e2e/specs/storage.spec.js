@@ -1287,3 +1287,25 @@ test('autosave serialization reuses immutable history and preserves replacement 
   expect(result).toEqual({ firstEncodes:1, repeatedEncodes:0, stable:true, count:1,
     head:'Updated head', replaced:21, mutated:22, restored:22, frozen:true, rngStable:true });
 });
+
+
+test('save technology exposure compaction avoids repeated completed-list scans', async function ({ page }, testInfo) {
+  await openGame(page, testInfo); await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, completed = [];
+    for (let i = 0; i < 200; i++) completed.push('snapshot_tech_' + i);
+    const record = { completed:completed, exposed:completed.concat(['still_exposed']),
+      active:[], progress:{}, reserve:0 };
+    s.realmTech.snapshot_probe = record;
+    let scans = 0;
+    completed.indexOf = function (id) { scans++; return Array.prototype.indexOf.call(this, id); };
+    const rng = FB.getRngState();
+    const first = JSON.parse(FB.save.serialize()).state.realmTech.snapshot_probe;
+    completed.pop();
+    const second = JSON.parse(FB.save.serialize()).state.realmTech.snapshot_probe;
+    return { scans:scans, first:first.exposed, second:second.exposed,
+      unchanged:record.exposed.length === 201, rngStable:rng === FB.getRngState() };
+  });
+  expect(result).toEqual({ scans:0, first:['still_exposed'],
+    second:['snapshot_tech_199', 'still_exposed'], unchanged:true, rngStable:true });
+});

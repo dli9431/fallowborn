@@ -16,6 +16,16 @@ window.FB = window.FB || {};
     trade_house:'trade_house_business'
   };
 
+  // Read batches live only for one synchronous calculation, never across mutations.
+  let enterpriseReadBatch = null;
+  function enterpriseRead(state, calculate) {
+    if (enterpriseReadBatch && enterpriseReadBatch.state === state) return calculate(state);
+    const previous = enterpriseReadBatch;
+    enterpriseReadBatch = { state:state, workers:Object.create(null), eligible:new WeakMap(), labor:null, laborById:null, list:null };
+    try { return calculate(state); }
+    finally { enterpriseReadBatch = previous; }
+  }
+
   function playerChar(state) { return state.chars[state.player.charId]; }
   function dependentOfPlayer(state, c) {
     const me = playerChar(state);
@@ -3068,6 +3078,8 @@ window.FB = window.FB || {};
      do not consume household-office capacity and cannot be reassigned to a
      different enterprise without ending the contract. */
   FB.enterpriseLaborRecords = function (state) {
+    const batch = enterpriseReadBatch && enterpriseReadBatch.state === state ? enterpriseReadBatch : null;
+    if (batch && batch.labor) return batch.labor;
     const p = state.player;
     if (!Array.isArray(p.enterpriseLabor)) p.enterpriseLabor = [];
     const out = [], seen = {}, staffCounts = {};
@@ -3099,10 +3111,19 @@ window.FB = window.FB || {};
       out.push(record);
     }
     if (out.length !== p.enterpriseLabor.length) p.enterpriseLabor = out;
+    if (batch) {
+      batch.labor = p.enterpriseLabor;
+      batch.laborById = Object.create(null);
+      for (const record of batch.labor) batch.laborById[record.charId] = record;
+    }
     return p.enterpriseLabor;
   };
 
   FB.enterpriseLaborRecord = function (state, cid) {
+    if (enterpriseReadBatch && enterpriseReadBatch.state === state) {
+      FB.enterpriseLaborRecords(state);
+      return enterpriseReadBatch.laborById[cid] || null;
+    }
     for (const record of FB.enterpriseLaborRecords(state)) {
       if (record.charId === cid) return record;
     }
@@ -3164,6 +3185,10 @@ window.FB = window.FB || {};
   }
 
   FB.enterpriseList = function (state) {
+    return enterpriseRead(state, readEnterpriseList);
+  };
+  function readEnterpriseList(state) {
+    if (enterpriseReadBatch.list) return enterpriseReadBatch.list;
     const p = state.player;
     normalizeEnterpriseCollection(state);
     if (!p.enterpriseMigration) {
@@ -3258,6 +3283,7 @@ window.FB = window.FB || {};
       }
       syncEnterpriseAssignedIds(enterprise, keep);
     }
+    enterpriseReadBatch.list = p.enterprises;
     return p.enterprises;
   };
 
@@ -3361,24 +3387,45 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.enterpriseUpgradeEffects = function (state, provinceId) {
-    const out = {
+  function emptyEnterpriseUpgradeEffects() {
+    return {
       populationCapacity:0, famineProtection:0,
       populationCrisisProtection:0, migrationAttraction:0,
       levy:0, retinue:0, retainers:0, prestige:0
     };
+  }
+  function addEnterpriseUpgradeEffects(out, enterprise) {
+    const level = FB.enterpriseUpgradeLevel(enterprise);
+    for (let i = 1; i <= level; i++) {
+      const upgrade = FB.enterpriseUpgradeDef(enterprise, i);
+      const fx = upgrade && upgrade.fx || {};
+      for (const key in out) out[key] += Number(fx[key]) || 0;
+    }
+  }
+  FB.enterpriseUpgradeEffects = function (state, provinceId) {
+    const out = emptyEnterpriseUpgradeEffects();
     if (!state || !state.player) return out;
     for (const enterprise of FB.enterpriseList(state)) {
       if (provinceId && enterprise.provinceId !== provinceId) continue;
       if (!FB.enterpriseFullyStaffed(state, enterprise)) continue;
-      const level = FB.enterpriseUpgradeLevel(enterprise);
-      for (let i = 1; i <= level; i++) {
-        const upgrade = FB.enterpriseUpgradeDef(enterprise, i);
-        const fx = upgrade && upgrade.fx || {};
-        for (const key in out) out[key] += Number(fx[key]) || 0;
-      }
+      addEnterpriseUpgradeEffects(out, enterprise);
     }
     return out;
+  };
+
+  // A detached snapshot for synchronous county passes. No cache survives its caller.
+  FB.enterpriseUpgradeEffectsByCounty = function (state) {
+    if (!state || !state.player) return Object.create(null);
+    return enterpriseRead(state, function () {
+      const counties = Object.create(null);
+      for (const enterprise of FB.enterpriseList(state)) {
+        if (!FB.enterpriseFullyStaffed(state, enterprise)) continue;
+        const pid = enterprise.provinceId;
+        const out = counties[pid] || (counties[pid] = emptyEnterpriseUpgradeEffects());
+        addEnterpriseUpgradeEffects(out, enterprise);
+      }
+      return counties;
+    });
   };
 
   FB.enterpriseUpgradeEffect = function (state, key, provinceId) {
@@ -3523,6 +3570,8 @@ window.FB = window.FB || {};
   }
 
   FB.enterpriseWorkers = function (state, type) {
+    const batch = enterpriseReadBatch && enterpriseReadBatch.state === state ? enterpriseReadBatch : null;
+    if (batch && batch.workers[type]) return batch.workers[type].slice();
     const def = FBDATA.enterprises[type];
     const out = [], seen = {};
     if (!def) return out;
@@ -3539,16 +3588,21 @@ window.FB = window.FB || {};
         (GUILD_ORDER[def.guildRank] || 0)) continue;
       out.push(c);
     }
+    if (batch) batch.workers[type] = out.slice();
     return out;
   };
 
   FB.enterpriseWorkersFor = function (state, enterprise) {
     if (!enterprise) return [];
-    return FB.enterpriseWorkers(state, enterprise.type).filter(function (c) {
+    const batch = enterpriseReadBatch && enterpriseReadBatch.state === state ? enterpriseReadBatch : null;
+    if (batch && batch.eligible.has(enterprise)) return batch.eligible.get(enterprise).slice();
+    const workers = FB.enterpriseWorkers(state, enterprise.type).filter(function (c) {
       const labor = FB.enterpriseLaborRecord(state, c.id);
       return (!labor || labor.enterpriseUid === enterprise.uid) &&
         FB.characterResidence(state, c) === enterprise.provinceId;
     });
+    if (batch) batch.eligible.set(enterprise, workers.slice());
+    return workers;
   };
 
   function enterpriseDefinitionName(state, type, def) {
@@ -4479,6 +4533,9 @@ window.FB = window.FB || {};
   }
 
   FB.enterpriseYield = function (state, e, chainSeen) {
+    return enterpriseRead(state, function () { return readEnterpriseYield(state, e, chainSeen); });
+  };
+  function readEnterpriseYield(state, e, chainSeen) {
     const operational = FB.enterpriseOperationalWorkerIds(state, e);
     if (enterpriseStaffFromIds(state, operational) + 0.0001 <
         FB.enterpriseStaffRequired(e)) return 0;
@@ -4692,6 +4749,9 @@ window.FB = window.FB || {};
   }
 
   FB.enterpriseStaffingPlan = function (state) {
+    return enterpriseRead(state, readEnterpriseStaffingPlan);
+  };
+  function readEnterpriseStaffingPlan(state) {
     const enterprises = FB.enterpriseList(state).slice();
     enterprises.sort(function (a, b) {
       return staffingIdCompare(a.uid, b.uid);
@@ -4990,6 +5050,9 @@ window.FB = window.FB || {};
   };
 
   FB.livelihoodBreakdown = function (state) {
+    return enterpriseRead(state, readLivelihoodBreakdown);
+  };
+  function readLivelihoodBreakdown(state) {
     const assigned = {};
     const lines = [];
     for (const e of FB.enterpriseList(state)) {

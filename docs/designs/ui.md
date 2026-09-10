@@ -1974,7 +1974,8 @@ never enter a save.
 
 The shared large-list threshold is **12 total rows per surface**. Above it, each section
 initially shows every needs-attention row plus **5 routine rows**. **Show all {count}**
-reveals the remaining routine rows in that section. Work also exposes an explicitly labeled
+reveals the remaining routine rows in that section. Owned enterprise rows are exempt:
+all owned businesses appear by default, including staffed ones and grouped views. Work also exposes an explicitly labeled
 literal local search and All, Needs attention, Assigned, Staffed, Idle, and Unavailable
 filters; search and non-All filters show every match rather than applying the routine
 budget. Network omits this toolbar so its six sections remain the navigation. Work
@@ -2694,3 +2695,11 @@ succession. No separate succession line or explanatory toolbar text is added.
 Prospective heirs are not marked. Missing records or collapsed played cards break
 the highlight. Connector colors refresh after branch changes and resizing; ordinary
 ancestry layout, keyboard navigation and saved tree position remain intact.
+
+Work separates owned businesses under Family enterprises from settlement purchase
+links under New enterprises. The staffing assistant action sits above the owned
+section, outside its disclosure, including when the list is grouped.
+
+The Work & Enterprises overview has no automatic number shortcuts or number badges.
+Tab, Enter/Space, Escape and explicit Back remain available; filtering and returning
+from nested views must not reinstall number hints on this overview.
