@@ -94,7 +94,7 @@ test('New Game offers seven quick starts above the dated custom-start path',
       name:'Use a Seed or Start Code', exact:true
     })).toBeVisible();
     await expect(page.locator('#ng-seed')).toBeVisible();
-    await page.getByRole('button', { name:'Cancel', exact:true }).click();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
   });

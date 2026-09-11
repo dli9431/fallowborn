@@ -415,9 +415,10 @@ test('Governance opens a concise rank review with a focusable blocked confirm',
     await expect(page.locator('#rank-elevation-confirm'))
       .toHaveAttribute('aria-describedby', 'rank-elevation-confirm-details');
     await expect(page.locator('#genmodal .gm-footer .btn').nth(0))
-      .toHaveText('Cancel');
+      .toHaveText('Back');
     await expect(page.locator('#genmodal .gm-footer .btn').nth(1))
-      .toHaveAttribute('id', 'rank-elevation-confirm');
+      .toHaveText('Close');
+    await expect(page.locator('.modal-body-actions #rank-elevation-confirm')).toBeVisible();
     const heading = page.getByRole('heading', {
       name:'Rank elevation', exact:true
     });

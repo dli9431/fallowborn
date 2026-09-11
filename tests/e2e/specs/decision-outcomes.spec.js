@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'index.html',
   'css/style.css', 'data/events_common.js', 'data/events_peasant.js',
   'data/events_tournament.js', 'data/events_lifepaths.js', 'data/events_council.js',
   'data/events_parliament.js', 'data/events_politics.js', 'data/events_paths.js', 'data/events_noble.js', 'data/events_war.js',
@@ -49,6 +50,27 @@ async function fever(page, success) {
     return c.id;
   }, success);
 }
+
+test('event footer protects the decision and closes a settled outcome without repeating it',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    await fever(page, true);
+    await expect(page.locator('#event-nav-back')).toBeDisabled();
+    await expect(page.locator('#event-nav-close')).toBeDisabled();
+    await ready(page);
+    await page.locator('#ev-options .evopt').first().click();
+    await expect(page.locator('#outcome-continue')).toBeVisible();
+    await expect(page.locator('#event-nav-close')).toBeEnabled();
+    const before = await page.evaluate(function () {
+      return { gold:FB.state.player.gold, rng:FB.getRngState(), log:FB.state.log.length };
+    });
+    await ready(page);
+    await page.locator('#event-nav-close').click();
+    await expect(page.locator('#eventmodal')).toBeHidden();
+    expect(await page.evaluate(function () {
+      return { gold:FB.state.player.gold, rng:FB.getRngState(), log:FB.state.log.length };
+    })).toEqual(before);
+  });
 
 for (const success of [true, false]) {
   test('child fever ' + (success ? 'recovery' : 'bereavement') + ' is acknowledged exactly once',

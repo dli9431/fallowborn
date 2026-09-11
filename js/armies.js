@@ -2421,6 +2421,11 @@ window.FB = window.FB || {};
 
   FB.hostCutOff = function (state, army) {
     if (!army || !FB.world || !FB.world.adj) return false;
+    // Local rebels live off their uprising's counties before taking the forts.
+    const uprising = army.rebellionId && FB.rebellionById &&
+      FB.rebellionById(state, army.rebellionId);
+    if (uprising && uprising.faction === army.realm &&
+        uprising.counties && uprising.counties[army.at]) return false;
     const adj = FB.world.adj[army.at];
     if (!adj) return false;
     let sawNeighbor = false;

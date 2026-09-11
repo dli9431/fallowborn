@@ -306,6 +306,12 @@ window.FB = window.FB || {};
   UI.eventInputGuarded = eventInputGuarded;
   let cancelWarConfirmation = null;
   let dismissOutcome = null;
+  $('event-nav-back').addEventListener('click', function () {
+    if (cancelWarConfirmation && !eventInputGuarded()) cancelWarConfirmation();
+  });
+  $('event-nav-close').addEventListener('click', function () {
+    if (dismissOutcome && !eventInputGuarded()) dismissOutcome();
+  });
   UI.cancelEventConfirmation = function () {
     if (dismissOutcome) {
       if (!eventInputGuarded()) dismissOutcome();
@@ -1072,6 +1078,8 @@ window.FB = window.FB || {};
   function showEvent(ev, ctx) {
     const s = FB.state;
     dismissOutcome = null;
+    $('event-nav-close').disabled = true;
+    $('event-nav-back').disabled = true;
     $('eventmodal').classList.remove('decision-outcome-modal');
     eventOpen = true;
     FB.markFired(s, ev);
@@ -1289,6 +1297,7 @@ window.FB = window.FB || {};
       finished = true;
       cancelWarConfirmation = null;
       body.innerHTML = '';
+      $('event-nav-back').disabled = true;
       body.appendChild(originalBody);
       box.innerHTML = '';
       box.appendChild(saved);
@@ -1296,6 +1305,7 @@ window.FB = window.FB || {};
       $('eventmodal').focus();
     }
     cancelWarConfirmation = restore;
+    $('event-nav-back').disabled = false;
     const confirm = document.createElement('button');
     confirm.className = 'evopt';
     confirm.textContent = FB.T('Confirm peace');
@@ -1442,6 +1452,8 @@ window.FB = window.FB || {};
       if (UI.maybeFirstEventResultTip) UI.maybeFirstEventResultTip();
     };
     $('outcome-continue').onclick = dismissOutcome;
+    $('event-nav-back').disabled = true;
+    $('event-nav-close').disabled = false;
     modal.querySelector('.modalcard').scrollTop = 0;
     armEventGuard();
     modal.focus();
@@ -1836,6 +1848,7 @@ window.FB = window.FB || {};
       ? FB.T('Choose a developed market on the map or from the list. The stake and route overhead are charged separately.')
       : FB.T('Tap a marked county or choose it from the list. Routes use settled counties and authored straits.');
     $('travel-picker-continue').disabled = true;
+    $('travel-picker-back').disabled = !opts.cancelAction;
     document.querySelectorAll('[data-travel-destination]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.travelPickProvince(button.getAttribute('data-travel-destination'), true);
@@ -15788,7 +15801,7 @@ window.FB = window.FB || {};
   }
 
   /* ================= freehold land market ================= */
-  UI.showLandMarket = function () {
+  UI.showLandMarket = function (replaceView) {
     const s = FB.state;
     const p = s.player;
     const cost = FB.landPlotCost(s);
@@ -15838,13 +15851,23 @@ window.FB = window.FB || {};
         landPlotDetails(place, cost, !short, before, after, full) + '</div>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
-    openModal(FB.T('🌾 Buy Freehold Land'), h);
+    openModal(FB.T('🌾 Buy Freehold Land'), h, { replaceView:!!replaceView });
     document.querySelectorAll('[data-land-settlement]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (button.getAttribute('aria-disabled') === 'true') return;
-        if (!FB.buyLandPlot(FB.state, parseInt(button.dataset.landSettlement, 10))) return;
+        const settlement = parseInt(button.dataset.landSettlement, 10);
+        const scrollTop = $('gm-body').scrollTop;
+        if (!FB.buyLandPlot(FB.state, settlement)) return;
         UI.refresh();
-        UI.showLandMarket();
+        UI.showLandMarket(true);
+        const body = $('gm-body');
+        const row = body.querySelector('[data-land-settlement="' + settlement + '"]');
+        body.scrollTop = scrollTop;
+        setTimeout(function () {
+          if (!row || !body.contains(row) || $('genmodal').classList.contains('hidden')) return;
+          row.focus({ preventScroll:true });
+          body.scrollTop = scrollTop;
+        }, 0);
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
@@ -20239,7 +20262,7 @@ window.FB = window.FB || {};
       $('enterprise-hire').addEventListener('click', function () {
         if (!FB.hireEnterpriseWorker(s, uid)) return;
         UI.refresh();
-        UI.showEnterpriseManage(uid, returnContext, true);
+        finishLivelihoodsReturn(returnContext);
       });
     }
     document.querySelectorAll('[data-enterprise-dismiss]').forEach(function (button) {
@@ -20263,9 +20286,11 @@ window.FB = window.FB || {};
       b.addEventListener('click', function () {
         const cid = b.dataset.enterpriseWorker;
         if (!cid || hiredIds[cid]) return;
-        FB.setEnterpriseWorker(s, uid, cid, assignedIds.indexOf(cid) < 0);
+        const assigning = assignedIds.indexOf(cid) < 0;
+        if (!FB.setEnterpriseWorker(s, uid, cid, assigning)) return;
         UI.refresh();
-        UI.showEnterpriseManage(uid, returnContext, true);
+        if (assigning) finishLivelihoodsReturn(returnContext);
+        else UI.showEnterpriseManage(uid, returnContext, true);
       });
     });
     if ($('enterprise-clear-household')) {
@@ -20369,6 +20394,12 @@ window.FB = window.FB || {};
   UI.showEnterpriseStaffingPreview = function (returnContext, notice) {
     const s = FB.state;
     const plan = FB.enterpriseStaffingPlan(s);
+    function isIdle(row) {
+      return (row.currentStaff || 0) + 0.0001 < (row.requiredCount || 1);
+    }
+    const displayRows = plan.rows.filter(isIdle).concat(plan.rows.filter(function (row) {
+      return !isIdle(row);
+    }));
     const rowByUid = {};
     for (const row of plan.rows) rowByUid[row.uid] = row;
     const intro = FB.T(
@@ -20388,7 +20419,7 @@ window.FB = window.FB || {};
         '</div>';
     }
     h += '<div class="enterprise-staffing-rows">';
-    for (const row of plan.rows) {
+    for (const row of displayRows) {
       const label = enterpriseStaffingLabel(s, row);
       function workerList(ids, fallback) {
         const names = (ids || []).map(function (id) {
@@ -20410,8 +20441,7 @@ window.FB = window.FB || {};
         ? enterpriseStaffingReason(s, row) : '';
       const change = enterpriseStaffingChange(s, row, rowByUid);
       const detailsId = 'enterprise-staffing-details-' + row.uid;
-      const idle = (row.currentStaff || 0) + 0.0001 <
-        (row.requiredCount || 1);
+      const idle = isIdle(row);
       const hireStatus = idle
         ? (FBDATA.enterprises[row.type]
             ? FB.canHireEnterpriseWorker(s, row.uid)
@@ -23184,10 +23214,10 @@ window.FB = window.FB || {};
       {
         modalClass:modalClass,
         historyView:exitMode === 'character' || householdPlan,
-        historyBackRender:function () {
+        historyBackRender:householdPlan || exitMode === 'character' ? function () {
           if (householdPlan) UI.showHouseholdPlan();
           else UI.showCharModal(cid, returnContext);
-        }
+        } : null
       });
     if (mobileLayoutNow()) {
       $('gm-title').textContent = fullName + '\n' + FB.T('Equipment');
@@ -24495,9 +24525,14 @@ window.FB = window.FB || {};
         esc(FB.T('Back')) + '">&#8592; <span>' + esc(FB.T('Back')) + '</span></button>' +
         '<h3 id="equip-picker-title">' + esc(pickerTitle) +
         '</h3></div><div class="equip-picker-body">' + h + '</div></div>';
-      normalizeModalFooter(overlay.querySelector('.equip-picker-body'));
+      normalizeModalFooter(overlay.querySelector('.equip-picker-body'), {
+        hasBack:true,
+        keepBackHandler:true,
+        canClose:!$('gm-body').querySelector('[data-modal-nav="close"]:disabled')
+      });
       UI._equipPickerReturnFocus = document.activeElement;
       pickerRoot.appendChild(overlay);
+      pickerRoot.classList.add('equipment-picker-open');
       overlay.querySelector('#equip-picker-history-back')
         .addEventListener('click', mobileNavRequestBack);
       const pickerReturnFocus = UI._equipPickerReturnFocus;
@@ -24506,6 +24541,7 @@ window.FB = window.FB || {};
         function () {
           UI._equipPickerReturnFocus = pickerReturnFocus;
           if (!overlay.parentNode) $('gm-body').appendChild(overlay);
+          $('gm-body').classList.add('equipment-picker-open');
           setTimeout(function () {
             const first = overlay.querySelector('.equip-picker-body button:not(:disabled)');
             if (first) first.focus({ preventScroll:true });

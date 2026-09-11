@@ -638,21 +638,17 @@
                 id="travel-destination-list"
                 class="travel-destination-list"
               ></div>
-              <div class="travel-picker-actions">
+              <div class="modal-body-actions">
+                <button class="btn primary" id="travel-picker-continue" disabled data-i18n="Review journey">Review journey</button>
+              </div>
+              <div class="travel-picker-actions modal-navigation">
+                <button class="btn" id="travel-picker-back" disabled data-i18n="Back">Back</button>
                 <button
                   class="btn"
                   id="travel-picker-cancel"
-                  data-i18n="Cancel"
+                  data-i18n="Close"
                 >
-                  Cancel
-                </button>
-                <button
-                  class="btn primary"
-                  id="travel-picker-continue"
-                  disabled
-                  data-i18n="Review journey"
-                >
-                  Review journey
+                  Close
                 </button>
               </div>
             </div>
@@ -674,29 +670,12 @@
                 </div>
               </div>
               <div id="raid-picker-summary" class="hint"></div>
-              <div class="raid-picker-actions">
-                <button
-                  class="btn"
-                  id="raid-picker-cancel"
-                  data-i18n="Cancel"
-                >
-                  Cancel
-                </button>
-                <button
-                  class="btn"
-                  id="raid-picker-list"
-                  data-i18n="List View"
-                >
-                  List View
-                </button>
-                <button
-                  class="btn primary"
-                  id="raid-picker-launch"
-                  disabled
-                  data-i18n="Launch Raid"
-                >
-                  Launch Raid
-                </button>
+              <div class="modal-body-actions">
+                <button class="btn primary" id="raid-picker-launch" disabled data-i18n="Launch Raid">Launch Raid</button>
+              </div>
+              <div class="raid-picker-actions modal-navigation">
+                <button class="btn" id="raid-picker-list" data-i18n="Back">Back</button>
+                <button class="btn" id="raid-picker-cancel" data-i18n="Close">Close</button>
               </div>
             </div>
             <div
@@ -893,6 +872,10 @@
           <h3 id="ev-title" data-i18n="Event">Event</h3>
           <div id="ev-text" class="evtext"></div>
           <div id="ev-options" aria-label="Choices" data-i18n-aria-label="Choices"></div>
+          <div class="gm-footer modal-navigation">
+            <button class="btn" id="event-nav-back" disabled data-i18n="Back">Back</button>
+            <button class="btn" id="event-nav-close" disabled data-i18n="Close">Close</button>
+          </div>
         </div>
       </div>
 

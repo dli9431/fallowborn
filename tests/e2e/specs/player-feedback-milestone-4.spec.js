@@ -93,7 +93,7 @@ test('blocks retirement while imprisoned, at war, traveling, or on campaign',
     expect(result.eligibleAfter).toBe(true);
     await page.evaluate(function () { FB.ui.showRetirement(); });
     await expect(page.locator('#gm-body > .gm-footer > #retire-cancel'))
-      .toHaveText('Cancel');
+      .toHaveText('Close');
   });
 
 test('retirement hands control to an adult heir without death dues',
@@ -1235,9 +1235,9 @@ test.describe('house renaming', function () {
       const input = page.locator('#rename-house-name');
       await expect(input).toHaveValue(oldDyn);
       await expect(page.locator('#gm-body .modal-actions')).toHaveCount(0);
-      await expect(page.locator('#gm-body .gm-footer [data-rename-house="confirm"]'))
+      await expect(page.locator('#gm-body .modal-body-actions [data-rename-house="confirm"]'))
         .toHaveCount(1);
-      await expect(page.locator('#gm-body .gm-footer [data-rename-house="cancel"]'))
+      await expect(page.locator('#gm-body .modal-body-actions [data-rename-house="cancel"]'))
         .toHaveCount(1);
 
       /* an invalid name keeps the dialog open and explains itself */
