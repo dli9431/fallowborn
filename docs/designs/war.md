@@ -1,5 +1,12 @@
 # Wars
 
+Named cash peace terms and battlefield ransoms use paired treasury transfers.
+Unaccepted tribute offers are capped at the enemy's available cash, up to the
+existing 25, and rechecked at acceptance; zero cash still permits peace. Binding
+reparations retain their existing amount and liability behavior. Ending the war
+or clearing captivity prevents a second payment. See the Stage 4 payment audit in
+`../plans/archive/ai-treasury.md`.
+
 The AI treasury foundation accrues each host's non-food standing cost to its realm
 inside the existing supply pass, before starvation or battle can remove the host.
 All hosts contribute before the once-per-turn stamp is set; embedded allied troops

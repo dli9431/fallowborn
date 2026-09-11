@@ -7514,7 +7514,7 @@ window.FB = window.FB || {};
         effect:boost
       });
     }
-    p.gold -= cost;
+    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, rid), cost)) return false;
     const standing = FB.adjustStanding(state, { kind:'realm', id:rid },
       boost, 'gift:cash');
     if (FB.noteRulerGift) FB.noteRulerGift(state, rid);
@@ -8195,7 +8195,7 @@ window.FB = window.FB || {};
     let pick = null;
     for (const c of FB.buyCountyCandidates(state)) if (c.pid === pid) pick = c;
     if (!pick || p.gold < pick.price) return false;
-    p.gold -= pick.price;
+    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, pick.holder), pick.price)) return false;
     const pr = FB.world.byId[pid];
     const old = pick.holder;
     p.provs.push(pid);

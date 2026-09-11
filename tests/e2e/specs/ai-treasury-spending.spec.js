@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html', 'js/treasury.js', 'js/armies.js', 'js/wars.js',
   'js/actions.js', 'js/world.js', 'js/logistics.js', 'js/market.js', 'js/technology.js',
-  'js/ui_modals.js', 'js/ui_misc.js', 'js/i18n.js', 'js/economy.js',
+  'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/i18n.js', 'js/economy.js',
   'data/map_data.js', 'data/units.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
@@ -173,12 +173,20 @@ test('treasury and producer disclosures remain read-only on a narrow screen', as
   await page.setViewportSize({ width:390, height:844 });
   await page.evaluate(function () {
     const s = FB.state;
+    s.realms[treasuryIds.enemy].treasury.gold = -5;
+    s.realms[treasuryIds.enemy].treasury.militaryAccrued = 10;
+    s.realms[treasuryIds.enemy].treasury.lastSummary = null;
     window.accountBefore = JSON.stringify(s.realms[treasuryIds.enemy].treasury);
     FB.ui.showLiegeModal(treasuryIds.enemy);
   });
-  await expect(page.locator('#realm-treasury')).toContainText('Available cash');
-  await page.locator('[aria-controls="realm-treasury-details"]').click();
-  await expect(page.locator('#realm-treasury-details')).toBeVisible();
+  const treasuryLine = page.locator('.realm-ruler-card .realm-ruler-treasury');
+  await expect(treasuryLine).toHaveCount(1);
+  await expect(treasuryLine).toContainText('Available treasury:');
+  await expect(treasuryLine.locator('b.ruler-resource-amount')).toHaveCount(1);
+  await expect(treasuryLine.locator('[aria-hidden="true"]')).toHaveCount(1);
+  await expect(page.locator('.realm-ruler-card .realm-ruler-muster b.ruler-resource-amount')).toHaveCount(1);
+  await expect(treasuryLine).toContainText(await page.evaluate(function () { return FB.money(0); }));
+  await expect(page.locator('#realm-treasury')).toHaveCount(0);
   expect(await page.evaluate(function () {
     return accountBefore === JSON.stringify(FB.state.realms[treasuryIds.enemy].treasury);
   })).toBe(true);
@@ -190,4 +198,35 @@ test('treasury and producer disclosures remain read-only on a narrow screen', as
   await expect(page.locator('#finance-producer')).toContainText('Net household adjustment');
   await page.locator('[aria-controls="finance-producer-details"]').click();
   await expect(page.locator('#finance-producer-details')).toBeVisible();
+  await expect(page.locator('#finance-producer .op-good')).toHaveCount(2);
+  await expect(page.locator('#finance-producer .op-bad')).toHaveCount(1);
+  await expect(page.locator('#finance-producer .op-good').first()).toContainText('+');
+  await expect(page.locator('#finance-producer .op-bad')).toContainText(
+    await page.evaluate(function () { return FB.money(-0.2); }));
+  await expect(page.locator('#finance-credit-details')).toBeHidden();
+  await page.locator('[aria-controls="finance-credit-details"]').click();
+  await expect(page.locator('#finance-credit-details')).toBeVisible();
+  await expect(page.locator('#finance-credit-details')).toContainText('Borrowing limits depend on');
+  await page.evaluate(function () {
+    FB.state.armyLogistics.producerLast = { gain:0, loss:5, period:1 };
+    FB.ui.showFinance();
+  });
+  await expect(page.locator('#finance-producer .op-good')).toHaveCount(0);
+  await expect(page.locator('#finance-producer .op-bad')).toHaveCount(2);
+});
+
+test('serfs can open Finance from Network to inspect settled army trade', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  await page.evaluate(function () {
+    FB.state.player.tier = 0;
+    FB.state.armyLogistics = FB.state.armyLogistics || {};
+    FB.state.armyLogistics.producerLast = { gain:12, loss:5, period:1 };
+    FB.ui.showTab('network', { history:false });
+  });
+  expect(await page.evaluate(function () { return FB.financeUiRelevant(FB.state); })).toBe(true);
+  await page.locator('#network-finance').click();
+  await expect(page.locator('#finance-producer')).toContainText('Net household adjustment');
+  const net = await page.evaluate(function () { return FB.money(7); });
+  await expect(page.locator('#finance-producer')).toContainText(net);
+  expect(await page.evaluate(function () { return FB.state.player.tier; })).toBe(0);
 });

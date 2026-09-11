@@ -630,6 +630,17 @@ window.FB = window.FB || {};
   }
 
   const deliveryTickRemovals = new WeakMap();
+  const deliveryTickBookkeeping = new WeakMap();
+
+  function deliveryNews(state, message) {
+    const batch = deliveryTickBookkeeping.get(state);
+    if (!batch) return FB.news(state, message);
+    if (!batch.archive || batch.archive !== state.chronicle) {
+      FB.chronicleNoteHead(state);
+      batch.archive = state.chronicle;
+    }
+    return FB.news(state, message, { preparedChronicle:batch.archive });
+  }
   function removeDelivery(state, delivery) {
     const removed = deliveryTickRemovals.get(state);
     if (removed) { removed.add(delivery); return; }
@@ -696,7 +707,13 @@ window.FB = window.FB || {};
       const standing = FB.adjustStanding(state,
         { kind:'realm', id:delivery.recipientId }, delivery.effect,
         'gift:courier');
-      if (FB.noteRulerGift) FB.noteRulerGift(state, delivery.recipientId);
+      if (FB.noteRulerGift) {
+        const batch = deliveryTickBookkeeping.get(state);
+        if (batch && (!batch.turns || batch.turns !== state.player.realmGiftTurns)) {
+          batch.turns = FB.realmGiftTurns(state);
+        }
+        FB.noteRulerGift(state, delivery.recipientId, batch && batch.turns);
+      }
       const usesFavor = FB.rulerGiftUsesFavor(state, delivery.recipientId);
       const rulerParams = {
         amount:delivery.amount,
@@ -706,25 +723,29 @@ window.FB = window.FB || {};
         value:Math.round(standing)
       };
       if (delivery.giftKind === 'cash') {
+        if (!delivery.treasuryDelivered) {
+          FB.treasuryTransfer(state, null, FB.treasuryCounterparty(state, delivery.recipientId), delivery.amount, true);
+          delivery.treasuryDelivered = true;
+        }
         if (usesFavor) {
-          FB.news(state, FB.msg(
+          deliveryNews(state, FB.msg(
             'news.gift.courier_delivered_ruler_cash_favor',
             '🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (Standing {value})',
             rulerParams));
         } else {
-          FB.news(state, FB.msg(
+          deliveryNews(state, FB.msg(
             'news.gift.courier_delivered_ruler_cash_opinion',
             '🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (Standing {value})',
             rulerParams));
         }
       } else {
         if (usesFavor) {
-          FB.news(state, FB.msg(
+          deliveryNews(state, FB.msg(
             'news.gift.courier_delivered_ruler_item_favor',
             '🎁 Your courier delivers {item} to {recipient} of {realm}. (Standing {value})',
             rulerParams));
         } else {
-          FB.news(state, FB.msg(
+          deliveryNews(state, FB.msg(
             'news.gift.courier_delivered_ruler_item_opinion',
             '🎁 Your courier delivers {item} to {recipient} of {realm}. (Standing {value})',
             rulerParams));
@@ -744,7 +765,7 @@ window.FB = window.FB || {};
         recipient:FB.fullName(c),
         regard:Math.round(standing)
       };
-      FB.news(state, delivery.giftKind === 'cash'
+      deliveryNews(state, delivery.giftKind === 'cash'
         ? FB.msg('news.gift.courier_delivered_character_cash',
           '🎁 Your courier delivers {money:amount} to {recipient}. (Standing {regard})',
           characterParams)
@@ -787,6 +808,10 @@ window.FB = window.FB || {};
     const deliveries = list.slice();
     const removed = new Set();
     deliveryTickRemovals.set(state, removed);
+    deliveryTickBookkeeping.set(state, {});
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (timing) timing.count('Gifts: pending visits', deliveries.length);
+    const scanEntry = timing && timing.enter('Gifts: checks movement and arrivals');
     try {
       for (let i = 0; i < deliveries.length; i++) {
         const d = deliveries[i];
@@ -816,10 +841,16 @@ window.FB = window.FB || {};
         }
       }
     } finally {
+      if (timing) timing.leave(scanEntry);
+      const removalEntry = timing && timing.enter('Gifts: queue removal');
+      try {
       deliveryTickRemovals.delete(state);
+      deliveryTickBookkeeping.delete(state);
       if (removed.size) state.player.giftDeliveries = state.player.giftDeliveries.filter(function (d) {
         return !removed.has(d);
       });
+      if (timing) timing.count('Gifts: removed', removed.size);
+      } finally { if (timing) timing.leave(removalEntry); }
     }
   };
 

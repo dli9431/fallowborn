@@ -1,5 +1,9 @@
 # Realms, the liege hierarchy & tiers
 
+County purchases credit the direct selling holder before a landless seller retires.
+Retirement keeps the existing bounded disposition of funds; county buyers do not
+inherit the seller's treasury. Local and delivered cash gifts credit the named realm.
+
 AI fiscal accounts belong to Count-and-higher realm institutions, not ruler
 characters. Active accounting preserves balances on succession and
 independence, transfers uncommitted funds on realm creation, and retires signed

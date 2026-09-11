@@ -9,9 +9,9 @@ from logistics_stress_save import decode_export
 
 def main():
     root = Path(__file__).resolve().parent.parent
-    source = root / 'logistics-stress-save.txt'
+    source = root / 'notes' / 'logistics-stress-save.txt'
     original = decode_export(source.read_text(encoding='utf-8-sig'))
-    outputs = [root / ('logistics-stress-save-producer-' + mode + '.txt')
+    outputs = [root / 'notes' / ('logistics-stress-save-producer-' + mode + '.txt')
                for mode in ('purchase', 'requisition')]
     if any(p.exists() or p.with_suffix('.json').exists() for p in outputs):
         raise ValueError('Existing producer exports are never overwritten')

@@ -9,6 +9,7 @@ window.FB = window.FB || {};
 
   const english = {};
   const listeners = [];
+  const ownedMessages = new WeakSet();
   let toastSuppression = 0;
   const HOSTILE_HISTORY_LIMIT = 200;
   const CHRONICLE_ARCHIVE_SCHEMA = 1;
@@ -109,6 +110,7 @@ window.FB = window.FB || {};
     /* Freezing catches accidental caller mutation. JSON serialization naturally
        drops the freeze for saved data, and old engines simply skip it. */
     freezeDeep(msg);
+    if (Object.freeze) ownedMessages.add(msg);
     return msg;
   };
 
@@ -287,7 +289,7 @@ window.FB = window.FB || {};
     const body = entry && entry.msg
       ? chroniclePackMessage(archive, entry.msg)
       : String(entry && entry.t || '');
-    return immutableChronicleEntry([
+    const packed = [
       Number(entry && entry.y) || Number(state.date && state.date.year) || 0,
       Number(entry && entry.s) || 0,
       Number(entry && entry.d) || 0,
@@ -300,7 +302,15 @@ window.FB = window.FB || {};
       legacy ? chronicleLegacyGeneration(state, entry && entry.y) :
         Math.max(1, Number(state.generation) || 1),
       entry && entry.audience !== undefined ? entry.audience : null
-    ]);
+    ];
+    if (entry && ownedMessages.has(entry.msg) && !entry.receipt) {
+      // All nested message data is already owned and deeply frozen. The rest
+      // of this new packed entry is scalar metadata or newly allocated arrays.
+      const snapshot = freezeChronicleValue(packed);
+      immutableChronicleEntries.add(snapshot);
+      return snapshot;
+    }
+    return immutableChronicleEntry(packed);
   }
 
   function chronicleHeadSnapshot(state) {
@@ -601,7 +611,7 @@ window.FB = window.FB || {};
     options = options || {};
     const entry = { y: state.date.year, s: state.date.season, d: state.date.day };
     if (value && typeof value === 'object' && typeof value.key === 'string') {
-      entry.msg = FB.message(value.key, value.params);
+      entry.msg = ownedMessages.has(value) ? value : FB.message(value.key, value.params);
     } else {
       entry.t = String(value === undefined || value === null ? '' : value);
     }
@@ -625,7 +635,9 @@ window.FB = window.FB || {};
       ? options.audience : FB.newsAudience(state, entry);
     const archive = FB.ensureChronicle(state);
     if (archive) {
-      FB.chronicleNoteHead(state);
+      // Courier arrivals cannot change the dynasty head. Their synchronous batch
+      // supplies the exact archive already refreshed before its first receipt.
+      if (options.preparedChronicle !== archive) FB.chronicleNoteHead(state);
       archive.entries.push(chroniclePackEntry(state, archive, entry, false));
     }
     state.log.push(entry);

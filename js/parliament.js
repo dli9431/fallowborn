@@ -607,11 +607,12 @@ window.FB = window.FB || {};
   FB.fns.parliament_scutage_lost = function (state, ctx) {
     finishPendingMotion(state, ctx || {});
   };
-  FB.fns.parliament_subsidy_pay = function (state) {
+  FB.fns.parliament_subsidy_pay = function (state, ctx) {
     const p = state.player;
     const gold = FBDATA.balance.parliamentSubsidyGold || 20;
-    if (p.gold < gold) return;
-    p.gold -= gold;
+    if (p.gold < gold || (ctx && ctx.treasuryPaid)) return false;
+    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, p.liege), gold)) return false;
+    if (ctx) ctx.treasuryPaid = true;
     adjustLiegeStanding(state, 12, 'subsidy_pay');
     FB.news(state, FB.msg('news.parliament.subsidy',
       '💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall.',
@@ -693,7 +694,7 @@ window.FB = window.FB || {};
     finishPendingMotion(state, ctx || {});
   };
   FB.fns.parliament_emergency_subsidy_won = function (state, ctx) {
-    FB.fns.parliament_subsidy_pay(state);
+    FB.fns.parliament_subsidy_pay(state, ctx);
     finishPendingMotion(state, ctx || {});
   };
   FB.fns.parliament_levy_relief_won = function (state, ctx, ev) {

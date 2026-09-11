@@ -3793,8 +3793,10 @@ window.FB = window.FB || {};
       esc(FB.T('Open their sheet and your dealings with them')) + '"' : '') + '>' +
       portrait +
       '<div><div class="ccname">' + esc(displayName) + house + '</div>' +
-      (options.realmMuster ? '<div class="ccmeta realm-ruler-muster">' +
-        esc(options.realmMuster) + '</div>' : '') +
+      (options.realmMusterHtml ? '<div class="ccmeta realm-ruler-muster">' +
+        options.realmMusterHtml + '</div>' : '') +
+      (options.realmTreasuryHtml ? '<div class="ccmeta realm-ruler-treasury">' +
+        options.realmTreasuryHtml + '</div>' : '') +
       '<div class="ccmeta">' + (epithetText(s, c) ? esc(epithetText(s, c)) + ' · ' : '') +
       esc(FB.T('{sex} of {age}', {
         sex: FB.T(c.sex === 'f' ? 'Woman' : 'Man'),

@@ -7271,7 +7271,7 @@ window.FB = window.FB || {};
       return true;
     } else {
       p.prestige += FB.warPrestigeReward(w, 'slipped');
-      p.gold += 25;
+      FB.treasuryTransfer(state, FB.treasuryCounterparty(state, w.enemy), 'player', 25, true);
       FB.news(state, FB.msg('news.war.tribute_without_prize',
         '🕊 The prize has slipped away, but tribute is paid. The war ends in your favor.', {}));
       FB.endPlayerWar(state);
@@ -7343,7 +7343,7 @@ window.FB = window.FB || {};
           '🏰 Field defeat cannot surrender an unbreached fortified county; the invasion continues.', {}));
         return false;
       }
-      p.gold -= 30;
+      FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, w.enemy), 30, true);
       FB.news(state, FB.msg('news.war.reparations',
         '🕊 A humiliating peace. Reparations drain your coffers.', {}), {
           outcomeImpacts:[{ type:'gold', amount:-30 }]
@@ -7531,7 +7531,7 @@ window.FB = window.FB || {};
     const p = state.player;
     const ransom = prisonRansom(state);
     if (!FB.fns.prison_still(state) || p.gold < ransom) return false;
-    p.gold -= ransom;
+    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, p.war.enemy), ransom)) return false;
     delete p.flags.in_prison;
     FB.news(state, FB.msg('news.war.prison_ransomed',
       '⛓ The ransom is counted out — you ride home poorer, and free.', {}), {
@@ -8121,7 +8121,7 @@ window.FB = window.FB || {};
     const terms = { enemy:w.enemy, target:w.target || null, defending:!!w.defending, gold:0, prestige:0,
       liege:p.liege || null, standing:0, cause:w.casus && w.casus.type || null };
     if (custom === 'war_accept_tribute') {
-      terms.gold = 25; terms.prestige = FB.warPrestigeReward(w, 'tribute');
+      terms.gold = FB.treasuryOffer(state, w.enemy, 25); terms.prestige = FB.warPrestigeReward(w, 'tribute');
     } else if (custom === 'war_terms') {
       terms.gold = w.defending ? -(15 + 5 * (w.losses || 0)) : 0;
       terms.prestige = -Math.min(p.prestige, w.defending ? 10 : 8);
@@ -8151,11 +8151,15 @@ window.FB = window.FB || {};
   FB.fns.war_accept_tribute = function (state) {
     const p = state.player;
     const w = p.war; if (!w) return;
+    const amount = FB.treasuryOffer(state, w.enemy, 25);
+    if (!FB.treasuryTransfer(state, FB.treasuryCounterparty(state, w.enemy), 'player', amount)) return false;
     p.prestige += FB.warPrestigeReward(w, 'tribute');
-    p.gold += 25;
-    FB.news(state, FB.msg('news.war.tribute',
+    if (!amount) {
+      FB.news(state, FB.msg('news.war.empty_treasury_peace',
+        'Peace is agreed without a cash payment; the enemy treasury cannot fund tribute.', {}));
+    } else FB.news(state, FB.msg('news.war.tribute',
       '🕊 Bled white in the field, the enemy buys peace with tribute.', {}), {
-        outcomeImpacts:[{ type:'gold', amount:25 }]
+        outcomeImpacts:[{ type:'gold', amount:amount }]
       });
     FB.endPlayerWar(state);
   };
@@ -8173,7 +8177,7 @@ window.FB = window.FB || {};
     const enemy = state.realms[w.enemy];
     if (w.defending) {
       const cost = 15 + 5 * (w.losses || 0);
-      p.gold -= cost;
+      FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, w.enemy), cost, true);
       p.prestige = Math.max(0, p.prestige - 10);
       FB.news(state, FB.msg('news.war.peace_bought', {
         forms: {
@@ -8239,7 +8243,7 @@ window.FB = window.FB || {};
     const enemy = state.realms[w.enemy];
     const price = submissionTributePrice(state);
     if (!FB.fns.war_submission_tribute_affordable(state)) return false;
-    p.gold -= price;
+    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, w.enemy), price)) return false;
     FB.news(state, FB.msg('news.war.submission_tribute',
       '🕊 A conqueror’s tribute buys the peace — {money:price} to {enemy}.',
       { price: price, enemy: enemy ? enemy.name : '' }));
@@ -8265,10 +8269,11 @@ window.FB = window.FB || {};
   FB.fns.attainder_can_pay = function (state) {
     return state.player.gold >= attainderFine(state);
   };
-  FB.fns.attainder_pay = function (state) {
+  FB.fns.attainder_pay = function (state, ctx) {
     const p = state.player;
-    if (!FB.fns.attainder_can_pay(state)) return false;
-    p.gold -= attainderFine(state);
+    if (!FB.fns.attainder_can_pay(state) || (ctx && ctx.treasuryPaid)) return false;
+    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, p.liege), attainderFine(state))) return false;
+    if (ctx) ctx.treasuryPaid = true;
     delete p.flags.felony_mark;
     delete p.flags.felony_doom;
     if (FB.adjustStanding) FB.adjustStanding(state, { kind:'realm', id:p.liege }, 15, 'event:attainder_pay');

@@ -1,5 +1,9 @@
 # The Estates (parliament)
 
+Cash subsidies debit the player and credit the liege's active treasury together.
+The existing affordability gate remains; the saved event context records payment
+to prevent replaying the same subsidy. No new levy or household account is added.
+
 **A sworn lord below the crown (tiers 3–5) does not only pay and serve — he
 sits in the liege's assembly.** `js/parliament.js` is the vassal-side mirror of
 the royal council ([council.md](council.md)): where the council lets the

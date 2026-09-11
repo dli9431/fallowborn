@@ -3542,8 +3542,11 @@ textarea.modjson, textarea.savetext {
 .ccskills-guide { display: flex; align-items: center; gap: 5px; }
 .ccskills-guide > span { min-width: 0; }
 .realm-ruler-card .ccskills { font-size: 14px; line-height: 1.3; }
-.realm-ruler-card .realm-ruler-muster {
-  color: var(--ui-accent-color); font-size: var(--ui-label-size); line-height: 1.35;
+.charcard .realm-ruler-muster, .charcard .realm-ruler-treasury {
+  font-size: var(--ui-label-size); font-weight: normal; line-height: 1.35;
+}
+.charcard .ruler-resource-amount {
+  color: var(--ui-accent-color); font-weight: bold; font-variant-numeric: tabular-nums;
 }
 .realm-ruler-card .character-card-portrait-button {
   position: relative; padding: 4px; border: 1px solid #c6a243; border-radius: 8px;
@@ -5755,7 +5758,7 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 .chronicle-viewer-summary b, .hostile-report-fact > b,
 .self-title-row > b, .education-policy-preview-card dd,
 .succession-review-row > b, .tech-entry-cost,
-.tech-active-project > span, .realm-ruler-card .realm-ruler-muster,
+.tech-active-project > span,
 .charcard .ccskills, .realm-ruler-card .ccskills,
 .settcard-fx, .settcard-meta, .bd-amt, .skillrow .num {
   color: var(--main-text-color); font-size: var(--ui-value-size);

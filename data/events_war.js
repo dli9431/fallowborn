@@ -60,10 +60,10 @@ FBDATA.events.push(
   ]},
 { id:'war_tribute_offer', title:'Envoys Under a White Flag', trigger:{ never:true }, wartime:true, warStatus:true,
   contextValidator:'war_event_context_valid',
-  text:'Beaten in the field again and again, {enemy} sends envoys under a white flag: silver enough to end this war today, if you sheath the sword. But {target} still stands untaken — and its walls will not fall to a purse.',
+  text:'Beaten in the field again and again, {enemy} sends envoys under a white flag, offering peace and whatever tribute the treasury can spare. But {target} still stands untaken — and its walls will not fall to a purse.',
   options:[
-    { label:'Take the tribute.', desc:'Their coin, your glory — the war ends here.',
-      confirm:'war_end', effects:{ custom:'war_accept_tribute', log:'Took the enemy’s tribute and ended the war.' } },
+    { label:'Accept peace.', desc:'Take the available tribute and end the war. An empty treasury means peace without silver.',
+      confirm:'war_end', effects:{ custom:'war_accept_tribute', log:'Accepted peace and ended the war.' } },
     { label:'Press on for {target}.', desc:'Keep your host standing on {target} — the works advance each season it holds the ground. Fortifications may demand more work and a larger host.',
       effects:{ prestige:2, custom:'war_press_on', log:'Refused tribute; the war goes on.' } }
   ]},

@@ -1,12 +1,20 @@
 # UI: keyboard & mobile
 
-AI ruler sheets include a read-only Realm treasury card: available cash, accrued
-military bills, signed balance, last settled income/expenses and recovery status.
+War peace previews show the current affordable tribute, capped at 25 after accrued
+bills. Acceptance rechecks funds. The option explains that an empty enemy treasury
+allows peace without silver; the outcome reports the actual transferred amount.
+
+AI ruler cards show one read-only Available treasury line beneath realm muster.
+Both lines use a contextual icon and bold accent-colored amounts, with normal-weight labels.
+It reports cash after accrued military bills, floored at zero. The full account
+ledger, settlement history and recovery policy are not displayed on ruler sheets.
 Coin & Credit includes the last season's producer gains, requisition losses and net
 adjustment. Essential numbers remain visible; reserve/settlement explanations use
 the shared Details hover/focus and compact question-mark disclosure. Both use
 existing label/value rows, money formatting and modal Back/Close behavior, with no
 new navigation or daily UI work. Reads do not settle, initialize or pay accounts.
+Network > Trade & Guild > Finance remains available to serfs with saved army-trade
+settlement history. Opening that history does not unlock restricted finance actions.
 
 Show calendar dates for deadlines; do not append internal turn indexes to game UI.
 

@@ -2,6 +2,21 @@
 
 ## Active treasury and army producer accounting
 
+Stage 4: `treasuryTransfer(state, payer, recipient, amount, compulsory)` moves finite
+nonnegative coin between realm IDs or `player`. Null denotes an existing external
+household source/sink or prepaid escrow. Missing active accounts reject before any
+mutation. Voluntary payments respect accrued bills; compulsory payments may create
+signed shortfalls. `treasuryCounterparty(state, rid)` resolves an active fiscal realm
+or null; `treasuryCharacterRealm(state, cid)` resolves only a reigning ruler or player.
+`treasuryOffer(state, rid, amount)` caps a voluntary quote at available funds.
+These helpers never initialize accounts; callers own repeat-execution guards.
+
+Numeric event gold may specify `goldCounterparty:'context'`: the live `ctx.realmId`
+or `ctx.rid` pays positive gold or receives negative gold. Negative amounts recheck
+player cash; positive committed awards retain liability. `ctx.treasuryGoldPaid`
+prevents replay after serialization; only one such payment belongs to a context.
+This effect requires full reconciliation and is never inferred from Standing.
+
 Stage 3 helpers: `treasuryMilitaryPolicy(state)` builds a transient active-host
 commitment projection for one decision phase; `treasuryApproveHost(state, host,
 policy, defending, purpose)` reserves a proposed composition within that projection
@@ -4578,4 +4593,4 @@ before changing holders: it transfers each donor's proportional uncommitted cash
 one county pass and prevents confusing sovereign ownership with direct fiscal holding.
 `FB.countyTaxBase(state, provinceId, rate, optionalLocalTaxBonus)` shares the existing
 county tax formula; the optional bonus supports a batched caller's precomputed inputs.
-See `docs/plans/ai-treasury.md` for the required activation and migration contract.
+See `docs/plans/archive/ai-treasury.md` for the required activation and migration contract.

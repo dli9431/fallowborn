@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.5';
+FB.VERSION = '1.179.6';
 FB.CHANGELOG = [
+  { v: '1.179.6', date: '2026-09-11', changes: [
+    'Gifts and political payments use ruler treasuries. Ruler cards show available funds, and Finance shows household army-trade gains and losses.'
+  ] },
   { v: '1.179.5', date: '2026-09-11', changes: [
     'Modal footers separate Back from Close, enterprise staffing returns to the management list, and local rebels are no longer treated as encircled within their uprising counties.'
   ] },
@@ -3471,6 +3474,12 @@ FB.CHANGELOG = [
     }
     wrap(G, 'passDay', 'Simulation (all days)');
     wrap(FB, 'armyTick', 'Armies');
+    // Arrival helpers only: do not time every pending courier's daily check.
+    ['giftDeliveryEnsure', 'adjustStanding', 'noteRulerGift', 'noteSocialGift',
+      'realmGiftTurns', 'chronicleNoteHead',
+      'rulerGiftUsesFavor', 'treasuryTransfer', 'msg', 'news'].forEach(function (key) {
+      wrap(FB, key, 'Gift input: ' + key, 'giftDeliveryTick');
+    });
     ['tickFocus', 'tickSocialAttention', 'localGovernmentDay', 'scriptedTick',
       'fortificationDay', 'religiousHeadRecoveryTick', 'papacyDay', 'guildMonopolyTick',
       'modifierTick', 'intrigueDay', 'politicsDay', 'institutionsDay', 'financeDay',

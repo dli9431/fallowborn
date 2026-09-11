@@ -9974,10 +9974,9 @@ window.FB = window.FB || {};
     return FB.realmFamilySnapshot ? FB.realmFamilySnapshot(s, rid) : [];
   }
 
-  function realmMusterText(s, rid) {
-    return FB.T('Realm muster: ~{troops}', {
-      troops:realmHostText(s, rid).slice(1)
-    });
+  function realmMusterHtml(s, rid) {
+    return '<span aria-hidden="true">⚔️</span> ' + esc(FB.T('Realm muster')) + ': ' +
+      '<b class="ruler-resource-amount">' + esc(realmHostText(s, rid)) + '</b>';
   }
 
   function realmCultivationPreview(s, rid, rulerCharacter) {
@@ -10703,17 +10702,8 @@ window.FB = window.FB || {};
   function realmTreasuryHtml(s, rid) {
     const t = FB.treasurySummary && FB.treasurySummary(s, rid);
     if (!t || t.accountingOnly) return '';
-    let h = '<div class="settcard" id="realm-treasury" tabindex="0"><div class="settcard-head"><h4>' +
-      esc(FB.T('Realm treasury')) + '</h4>' + cardInfoButton('realm-treasury-details') + '</div>' +
-      kv('Available cash', esc(FB.money(t.available))) +
-      kv('Accrued military bills', esc(FB.money(t.accrued))) +
-      kv('Cash balance', esc(FB.money(t.gold))) +
-      kv('Financial policy', esc(t.recovering ? FB.T('Withdrawing to recover funds') :
-        t.gold - t.accrued <= 0 ? FB.T('No uncommitted cash') : FB.T('Maintaining expense reserves')));
-    if (t.last) h += kv('Last settled income', esc(FB.money(t.last.income + t.last.duesIn))) +
-      kv('Last settled expenses', esc(FB.money(t.last.duesOut + t.last.upkeep + t.last.military)));
-    return h + '<div class="settcard-details hidden" id="realm-treasury-details">' +
-      esc(FB.T('Available cash excludes unpaid military bills. Optional construction and recruitment protect projected expenses and army supplies. Food can use those reserves. Last settled expenses exclude food and construction already paid during the season. A cash shortage is separate from an empty food market.')) + '</div></div>';
+    return '<span aria-hidden="true">💰</span> ' + esc(FB.T('Available treasury')) + ': ' +
+      '<b class="ruler-resource-amount">' + esc(FB.money(t.available)) + '</b>';
   }
 
   function showRealmInteractionSheet(rid, returnContext, replaceView) {
@@ -10735,7 +10725,8 @@ window.FB = window.FB || {};
       ? UI.charCardHtml(s, rulerCharacter, false, true, {
         cardClass:'realm-ruler-card',
         namePrefix:FB.realmRankTitle(s, realm),
-        realmMuster:realmMusterText(s, rid),
+        realmMusterHtml:realmMusterHtml(s, rid),
+        realmTreasuryHtml:realmTreasuryHtml(s, rid),
         mapHome:true,
         skillsGuide:true
       })
@@ -10745,10 +10736,12 @@ window.FB = window.FB || {};
           title:FB.realmRankTitle(s, realm),
           name:realm.ruler.name
         })) + '</div><div class="ccmeta realm-ruler-muster">' +
-        esc(realmMusterText(s, rid)) + '</div><div class="ccmeta">' +
+        realmMusterHtml(s, rid) + '</div>' +
+        (realmTreasuryHtml(s, rid) ? '<div class="ccmeta realm-ruler-treasury">' +
+          realmTreasuryHtml(s, rid) + '</div>' : '') + '<div class="ccmeta">' +
         esc(FB.L(realm.name)) +
         '</div></div></div>';
-    let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + realmTreasuryHtml(s, rid) + interactionCardHtml(model) +
+    let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + interactionCardHtml(model) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button>' +
@@ -14223,7 +14216,7 @@ window.FB = window.FB || {};
       ? UI.charCardHtml(s, ruler, false, true, {
         cardClass:'realm-ruler-card',
         namePrefix:FB.realmRankTitle(s, realm),
-        realmMuster:realmMusterText(s, rid)
+        realmMusterHtml:realmMusterHtml(s, rid)
       })
       : UI.realmCardHtml(s, rid);
   }
@@ -15031,6 +15024,10 @@ window.FB = window.FB || {};
   UI.showFinance = function () {
     const s = FB.state;
     const e = FB.ensureEconomy(s);
+    function signedMoney(value) {
+      return '<span class="' + (value > 0 ? 'op-good' : value < 0 ? 'op-bad' : '') + '">' +
+        (value > 0 ? '+' : '') + esc(FB.money(value)) + '</span>';
+    }
     const loans = FB.financeActiveLoans(s).slice().sort(function (a, b) {
       return a.dueTurn - b.dueTurn || a.id - b.id;
     });
@@ -15066,33 +15063,29 @@ window.FB = window.FB || {};
     if (producer) {
       h += '<div class="settcard" id="finance-producer" tabindex="0"><div class="settcard-head"><h4>' +
         esc(FB.T('Last season’s army trade')) + '</h4>' + cardInfoButton('finance-producer-details') + '</div>' +
-        kv('Additional producer income', esc(FB.money(producer.gain))) +
-        kv('Requisition income loss', esc(FB.money(producer.loss))) +
-        kv('Net household adjustment', esc(FB.money(producer.gain - producer.loss))) +
+        kv('Additional producer income', signedMoney(producer.gain)) +
+        kv('Requisition income loss', signedMoney(-producer.loss)) +
+        kv('Net household adjustment', signedMoney(producer.gain - producer.loss)) +
         '<div class="settcard-details hidden" id="finance-producer-details">' +
         esc(FB.T('These adjustments are already settled with household income. Purchases exclude ruler dues and replace the baseline revenue for the attributed output. Gains are capped at 25% of baseline producer income; seizure losses at 50%.')) + '</div></div>';
     }
-    h += panelh('Coin and household means') +
+    h += '<div class="settcard" tabindex="0"><div class="settcard-head">' +
+      panelh('Coin and household means') + cardInfoButton('finance-credit-details') + '</div>' +
       '<div class="gm-body-text">' +
       kv('Purse', esc(FB.T('{money:amount}', { amount:financeAmount(s.player.gold) }))) +
       kv('Price index', esc(financeAmount(e.price))) +
       kv('Last annual movement', esc(FB.T('{rate}%', {
         rate:(e.lastRate > 0 ? '+' : '') + financeAmount(e.lastRate * 100)
       }))) +
-      kv('Coin and prices this year', '<span class="' +
-        (e.lastAdjustment > 0 ? 'op-good' : e.lastAdjustment < 0 ? 'op-bad' : '') + '">' +
-        esc(FB.T('{money:amount}', { amount:financeAmount(e.lastAdjustment) })) + '</span>') +
-      kv('Reliable seasonal net', '<span class="' +
-        (FB.reliableGoldIncome(s) > 0 ? 'op-good' : 'op-bad') + '">' +
-        esc(FB.T('{money:amount}', { amount:financeAmount(FB.reliableGoldIncome(s)) })) +
-        '</span>') +
+      kv('Coin and prices this year', signedMoney(e.lastAdjustment)) +
+      kv('Reliable seasonal net', signedMoney(FB.reliableGoldIncome(s))) +
       kv('Unsecured credit capacity', esc(FB.T('{money:amount}', {
         amount:financeAmount(FB.financeCreditCapacity(s, null, false))
       }))) +
       kv('Defaults remembered', esc(e.defaults)) +
-      '<p class="hint">' + esc(FB.T(
-        'Credit uses reliable income, eligible collateral, standing allowance, and current debt. Pledged credit can use unassigned treasures, eligible permanent holdings, or a complete group of family land plots. Maintained household standards are expenses and cannot be pledged.')) +
-      '</p></div>';
+      '</div><div class="settcard-details hidden" id="finance-credit-details">' + esc(FB.T(
+        'Borrowing limits depend on income, standing, debt and collateral. You can pledge eligible treasures, permanent holdings or complete groups of family plots. Household standards cannot be pledged.')) +
+      '</div></div>';
 
     h += panelh('Loans');
     if (!loans.length) {
@@ -22805,7 +22798,8 @@ window.FB = window.FB || {};
     if (displayRealmId && s.realms[displayRealmId]) {
       const realm = s.realms[displayRealmId];
       cardOptions.namePrefix = FB.realmRankTitle(s, realm);
-      cardOptions.realmMuster = realmMusterText(s, displayRealmId);
+      cardOptions.realmMusterHtml = realmMusterHtml(s, displayRealmId);
+      cardOptions.realmTreasuryHtml = realmTreasuryHtml(s, displayRealmId);
       cardOptions.cardClass = 'realm-ruler-card';
     }
     const courtRealmId = model.realmId || (royalCourt && royalCourt.rid);
@@ -22814,7 +22808,6 @@ window.FB = window.FB || {};
       realmFamily:true
     } : null;
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
-    if (displayRealmId) h += realmTreasuryHtml(s, displayRealmId);
     if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
     h += localFolkSheetHtml(s, c);

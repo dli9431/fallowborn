@@ -1,5 +1,10 @@
 # Testing Fallowborn
 
+`ai-treasury-transfers.spec.js` covers paired balances, accrued-bill protection,
+compulsory shortfalls, live peace quotes, noncash peace, prepaid saved courier gifts,
+serialized payment guards and binding ruler ransom demands. Execution remains
+owner-controlled.
+
 Fallowborn has a development-only Playwright Test harness under `tests/e2e/`. The shipped game
 remains plain static JavaScript with no runtime dependencies or build step. Opening the committed
 `index.html` directly still works without installing Node packages or running a server.
@@ -413,7 +418,7 @@ agent test-execution restrictions apply to this diagnostic too.
 
 ### Army logistics and treasury stress save
 
-`logistics-stress-save.txt` in the repository root is an owner-local FBS1 export,
+`notes/logistics-stress-save.txt` is an owner-local FBS1 export,
 derived from a supplied life. Its adjacent JSON records source/output SHA-256 and
 scenario counts. Both are ignored by Git and excluded by deployment allowlists.
 The prepared winter-949 scenario has 36 attacking and 20 defending sovereigns,
@@ -428,7 +433,7 @@ campaign survival, and timing remain owner-verified through the approved harness
 To regenerate from another suitable owner save without running the game:
 
 ```powershell
-python tools/logistics_stress_save.py "notes/fallowborn-save (5).txt" --output logistics-stress-save-new.txt
+python tools/logistics_stress_save.py "notes/fallowborn-save (5).txt" --output notes/logistics-stress-save-new.txt
 ```
 
 The tool requires at least 15 Catholic and eight Muslim sovereigns, suitable march
@@ -438,7 +443,7 @@ save repair initializes active treasury accounts when importing the fixture.
 For the matched owner measurements, from `tests/e2e/`:
 
 ```powershell
-$env:FB_PROFILE_SAVE = (Resolve-Path ../../logistics-stress-save.txt).Path
+$env:FB_PROFILE_SAVE = (Resolve-Path ../../notes/logistics-stress-save.txt).Path
 npx.cmd playwright test specs/save-season-profile.spec.js --project=chromium-served --workers=1 --output=test-results/treasury-active
 Remove-Item Env:FB_PROFILE_SAVE
 ```
@@ -480,7 +485,7 @@ process and rerun the test.
 ### Stage 3 treasury performance fixture
 
 `python tools/treasury_stage3_save.py` prepares the root
-`logistics-stress-save-stage3.txt` and its JSON metadata from the earlier logistics
+`notes/logistics-stress-save-stage3.txt` and its JSON metadata from the earlier logistics
 fixture. It transforms data only and refuses to overwrite existing outputs.
 The fixture has 53 hosts, 134,100 soldiers, 260 active accounts, three missing
 hosts, damaged hosts and unfunded professional replacements. Rich (5,000),

@@ -1,5 +1,13 @@
 # Time, focuses & automation
 
+Local fast-forward profiling groups courier checks, movement and arrivals into
+one daily row, with a separate queue-removal row and pending-visit/removal counters.
+Gift-scoped helper rows separate queue repair, standing, cooldown bookkeeping,
+favor selection, treasury transfers, message creation and news. The scan row's
+self time excludes these timed children; it does not isolate validity from movement.
+No timer runs per pending courier. Helper wrappers are restored after each burst,
+including errors, and measurements remain transient and opt-in.
+
 Observe mode includes the shared ordinary-war seasonal tick after technology
 and before annual world processing and daily army movement. This advances AI
 campaigns and their peace deadlines while retaining the observer's suppression

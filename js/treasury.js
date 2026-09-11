@@ -51,6 +51,35 @@
     const row = account(state, rid);
     return row ? Math.max(0, numeric(row.gold) - positive(row.militaryAccrued)) : 0;
   };
+  // null denotes an existing non-realm source/sink or prepaid courier escrow.
+  // Callers own once-only lifecycle guards; no growing transaction log is kept.
+  FB.treasuryTransfer = function (state, payer, recipient, amount, compulsory) {
+    if (typeof amount !== 'number' || !isFinite(amount) || amount < 0 || (payer && payer === recipient)) return false;
+    const enabled = state.treasuryAccounting && state.treasuryAccounting.mode === 'active';
+    const from = payer === 'player' ? state.player : enabled && account(state, payer);
+    const to = recipient === 'player' ? state.player : enabled && account(state, recipient);
+    if (enabled && ((payer && payer !== 'player' && !from) ||
+        (recipient && recipient !== 'player' && !to))) return false;
+    const available = payer === 'player' ? Math.max(0, numeric(state.player.gold)) :
+      from ? FB.treasuryAvailable(state, payer) : Infinity;
+    if (!compulsory && amount > available) return false;
+    if (from) from.gold -= amount;
+    if (to) to.gold += amount;
+    count('counterparty transfers');
+    return true;
+  };
+  FB.treasuryCounterparty = function (state, rid) {
+    return rid === 'player' || active(state, rid) ? rid : null;
+  };
+  FB.treasuryCharacterRealm = function (state, cid) {
+    if (cid === state.player.charId) return 'player';
+    const c = state.chars && state.chars[cid];
+    const rid = c && FB.realmIdForRulerCharacter && FB.realmIdForRulerCharacter(state, c);
+    return FB.treasuryCounterparty(state, rid);
+  };
+  FB.treasuryOffer = function (state, rid, amount) {
+    return active(state, rid) ? Math.min(positive(amount), FB.treasuryAvailable(state, rid)) : positive(amount);
+  };
   FB.treasurySummary = function (state, rid) {
     const row = account(state, rid);
     if (!row) return null;

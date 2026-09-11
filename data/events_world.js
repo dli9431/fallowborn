@@ -435,7 +435,7 @@ FBDATA.events.push(
   options:[
     { label:'Send the subsidy. ({money:20})', require:{ goldMin:20 },
       desc:'Support the relationship without adding an alliance-command system.',
-      effects:{ gold:-20, standingRealm:14, prestige:4 } },
+      effects:{ gold:-20, goldCounterparty:'context', standingRealm:14, prestige:4 } },
     { label:'Send arms worth less than coin. ({money:8})', require:{ goldMin:8 },
       desc:'Meet part of the request and preserve goodwill.',
       effects:{ gold:-8, standingRealm:6 } },
@@ -471,7 +471,7 @@ FBDATA.events.push(
   options:[
     { label:'Send a rich first gift. ({money:15})', require:{ goldMin:15 },
       desc:'Buy a strong beginning with the exact new ruler generation.',
-      effects:{ gold:-15, standingRealm:12, prestige:3 } },
+      effects:{ gold:-15, goldCounterparty:'context', standingRealm:12, prestige:3 } },
     { label:'Send a formal embassy.',
       desc:'Build the new reign’s own Standing with courtesy rather than coin.',
       effects:{ standingRealm:6, prestige:2 } },

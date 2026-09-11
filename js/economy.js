@@ -6406,6 +6406,7 @@ window.FB = window.FB || {};
      shortfall, booked obligation, or eligible pledge offer makes it relevant. */
   FB.financeUiRelevant = function (state) {
     if (state.player.tier >= 1) return true;
+    if (state.armyLogistics && state.armyLogistics.producerLast) return true;
     const e = FB.ensureEconomy(state);
     return state.player.gold < -0.0001 || activeLoans(e).length > 0 ||
       FB.financeLoanOffers(state, e).length > 0;

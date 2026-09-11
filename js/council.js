@@ -594,8 +594,11 @@ window.FB = window.FB || {};
     adjustStanding(state, worst, -25, 'defy_fail');
     FB.queueEvent(state, 'vassal_revolt', { rid:worst });
   };
-  FB.fns.council_gift_take = function (state) {
+  FB.fns.council_gift_take = function (state, ctx) {
+    if (ctx && ctx.treasuryPaid) return false;
     const m = sycophant(state) || FB.pick(FB.councilMembers(state));
+    if (!FB.treasuryTransfer(state, m ? FB.treasuryCounterparty(state, m.rid) : null, 'player', 20, true)) return false;
+    if (ctx) ctx.treasuryPaid = true;
     if (m) adjustStanding(state, m.rid, 5, 'gift_take');
   };
   FB.fns.council_gift_wave = function (state) {
@@ -746,7 +749,9 @@ window.FB = window.FB || {};
     const p = state.player;
     const ms = FB.councilMembers(state);
     const gold = 10 * Math.max(1, ms.length);
-    p.gold += gold;
+    if (ms.length) {
+      for (const m of ms) FB.treasuryTransfer(state, FB.treasuryCounterparty(state, m.rid), 'player', 10, true);
+    } else FB.treasuryTransfer(state, null, 'player', gold, true);
     FB.councilAuthority(state, -6);
     for (const m of ms) adjustStanding(state, m.rid, -5, 'war_chest');
     FB.news(state, FB.msg('news.council.war_chest',

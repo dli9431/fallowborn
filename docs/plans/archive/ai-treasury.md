@@ -1,6 +1,6 @@
 # Plan: count-and-higher AI treasuries
 
-Status: Stage 3 implemented and owner-profiled; further optimization paused at owner request. Final balance/UI validation and phases 4–5 remain.
+Status: Archived. Stages 1-5 implementation complete; owner accepted the UI and performance overhead. Regression execution and longer-term balance measurements remain owner follow-up, not unfinished implementation stages.
 Date: 2026-09-11.
 
 ## Next steps and measurement checkpoints
@@ -39,8 +39,7 @@ Ruler sheets disclose cash/bills/settlement/recovery and Coin & Credit shows the
 last settled producer adjustment with shared Details and existing navigation.
 Fort works retain their separate annual policy.
 
-Next implementation stage: the separately deferred named-counterparty transfer
-audit (Stage 4). Further performance optimization is paused at owner request;
+Stages 4 and 5 are complete; retained measurement notes below describe the implementation history. Further performance optimization is paused at owner request;
 the latest measurement is recorded below. The fixture `logistics-stress-save-stage3.txt` starts
 with 53 hosts, 134,100 soldiers and 260 active accounts split among rich,
 constrained and insolvent rulers. It includes missing musters, damaged hosts and
@@ -66,8 +65,8 @@ old accounting-only gameplay hashes are no longer expected to match.
    Inspect nested modifier/settlement reads as well as top-level counters. Stop and
    optimize if median simulation time rises over 5%, or year-boundary time over 10%.
    Thresholds are provisional and require comparison against baseline noise.
-   The prepared root `logistics-stress-save.txt` supplies 56 holy-war hosts and a
-   winter/year-boundary workload. See [the stress-save recipe](../TESTS.md#army-logistics-and-treasury-stress-save)
+   The prepared `notes/logistics-stress-save.txt` supplies 56 holy-war hosts and a
+   winter/year-boundary workload. See [the stress-save recipe](../../TESTS.md#army-logistics-and-treasury-stress-save)
    for matched treasury-disabled/accounting runs and the workload/hash checks.
 2. **Stage 2: implemented; validate logistics and producer receipts.** Replace
    `armyLogistics.purses` with real treasury available-funds queries. Food is paid
@@ -99,8 +98,8 @@ old accounting-only gameplay hashes are no longer expected to match.
    Distinguish insolvency from an empty market. Expose available cash, accrued bills,
    last-period results, and producer adjustments using shared disclosures and the
    Back/Close footer. Owner checks final performance, balance, and mobile appearance.
-4. **Deferred:** audit and connect gifts, tribute, ransom, land sales, and saved
-   negotiated commitments separately. No AI household wallets, new diplomatic
+4. **Stage 4 implemented:** gifts, tribute, ruler ransoms, county sales and cash
+   subsidies use paired transfers, with saved-commitment rules below. No AI household wallets, new diplomatic
    searches, general commodity revenue rework, or new taxes on commoner players.
 
 Agents author the tests and fixtures but do not execute the harness, syntax checks,
@@ -110,18 +109,13 @@ regressions remain owner-controlled; Stage 3 profiling results are recorded belo
 
 ### Remaining work
 
-Two implementation phases remain in the full plan: **4. Real counterparty payments**
-and **5. Read-only UI, balance, and integration**. The staged rollout above groups
-the original accounting phases and logistics activation differently from the detailed
-phase list; these are not additional outstanding accounting stages.
-
-Phase 4 still needs the named-payment audit, paired debit/credit wiring, affordable
-voluntary offers, saved-commitment rules, and duplicate-payment regression coverage.
-Phase 5 is partly implemented: compact ruler treasury and producer-adjustment UI
-already shipped in the working changes for Stage 3. Remaining work is final owner
-balance/UI validation, any resulting adjustments, documentation reconciliation,
-and explicitly authorized integration. Pausing optimization does not establish
-the proposed repeated-sample performance gates or complete those validation tasks.
+No implementation stage remains. Stage 5 completes the existing read-only treasury
+card with unfunded obligations, last-settlement net and an explicit not-yet-settled
+state. No balance constants were changed: the supplied aggregate season runs do
+not establish wealth concentration, insolvency duration or long-term war/building
+rates. Owner regression execution, mobile/Back/Close review and longitudinal balance
+review remain, followed by a separately authorized commit/integration. This plan is
+not fully validated or integrated merely because its implementation stages are done.
 
 ### Stage 1 accounting contract
 
@@ -201,11 +195,11 @@ holds an office or title.
   `js/save.js`: audit realm creation, ruler replacement, absorption, destruction,
   war settlements, independence, and save restoration before attaching money.
 
-Read the owning designs before each phase: [finance](../designs/finance.md),
-[realms](../designs/realms.md), [war](../designs/war.md),
-[development](../designs/development.md), and
-[state and saves](../designs/state-and-saves.md). Presentation also follows
-[UI](../designs/ui.md) and [i18n authoring](../i18n-authoring.md).
+Read the owning designs before each phase: [finance](../../designs/finance.md),
+[realms](../../designs/realms.md), [war](../../designs/war.md),
+[development](../../designs/development.md), and
+[state and saves](../../designs/state-and-saves.md). Presentation also follows
+[UI](../../designs/ui.md) and [i18n authoring](../../i18n-authoring.md).
 
 ## Performance architecture
 
@@ -450,6 +444,8 @@ failed work or permanent collapse from ordinary starting conditions.
 
 ### 4. Real counterparty payments
 
+Implemented; owner validation pending. The audit below defines this pass's boundaries.
+
 - Wire the audited tribute, ruler gift, land-sale, ransom, and equivalent existing
   payment paths through one debit/credit boundary. Do not add new autonomous
   diplomatic searches to make AI spend more money.
@@ -459,6 +455,65 @@ failed work or permanent collapse from ordinary starting conditions.
 
 Exit: named transfers conserve money and cannot be repeated by duplicate events,
 save restoration, or repeated confirmation.
+
+#### Stage 4 payment audit and saved commitments
+
+The owner-local `logistics-stress-save-stage3.txt` includes **4,770 prepaid
+one-gold courier gifts**, scheduled at 53 arrivals per day over 90 days. This
+matches the starting army count and approximates the 4,960 provisioning visits
+in the original season. Recipients cycle through all 260 treasury accounts.
+Preparation replaces the earlier three gifts, refunds their unspent escrow before
+prepaying the replacement, and leaves the player with 230 gold. Recipient balances
+are unchanged at the save boundary.
+
+These synthetic terminal handling legs begin at the recipient capital and use a
+single same-capital waypoint with a staggered countdown. They deliberately exercise
+delivery processing, not geographical routing or normal gift-dispatch eligibility.
+The initial queue has 4,770 records and schedules 217,035 courier visits as it drains;
+standing updates and news generation are included in the measured cost. Expect up
+to `Treasury counterparty transfers: 4770`; ruler deaths or moved capitals can cause
+returns instead. Compare repeated runs of this revised save, not its old financial
+outcomes. Ransom and peace choices still require separate coverage.
+
+The data-only preparation command is
+`python tools/treasury_stage3_save.py --add-counterparty-transfers`; it refuses a
+second application of this revision or mismatched existing payment metadata.
+Runtime verification remains owner-controlled.
+
+| Existing path | Payer → recipient | Timing and duplicate boundary |
+| --- | --- | --- |
+| Local ruler cash gift | Player → ruler | Live gift eligibility and cooldown |
+| Courier ruler cash gift | Player → escrow → ruler | Debit at dispatch, credit at valid arrival; failed delivery returns escrow |
+| County purchase | Player → direct selling holder | Requote, credit before retirement; changed holder prevents repeat purchase |
+| Accepted war tribute | Enemy → player | Live available funds up to 25; war ends once; empty treasury permits noncash peace |
+| Slipped war prize | Enemy → player | Existing compulsory 25 liability; war ends once |
+| Defensive reparations / bought peace | Player → enemy | Existing compulsory costs and shortfalls retained; war ends once |
+| Submission tribute / battlefield ransom | Player → enemy | Existing affordability; war ends or prison flag clears |
+| Intrigue ruler ransom / player ransom | Captive ruler → player, or player → captor ruler | Recorded demand; release removes captive record |
+| Player blackmail of reigning ruler | Target ruler → player | Existing compulsory amount; leverage consumed |
+| Council casket gift | Selected councillor → player | Existing offered 20 remains binding; declarative reward removed; context paid marker |
+| Council war chest | Councillors → player | Existing 10 per member; event resolver owns once-only execution |
+| Agency overture gift | Player → context ruler | Live context/cash gate; declarative debit removed; context paid marker |
+| Ally cash subsidy / succession gift | Player → context ruler | Explicit counterparty effect and serialized paid context |
+| Parliament subsidy / attainder fine | Player → liege | Existing affordability and context paid marker |
+
+Ordinary household dowries (including royal-family matches), personal character gifts,
+anonymous raid captives, loot, merchant concessions, arms purchases, envoy travel and
+ceremony costs retain their existing household/source/sink treatment. They are not
+institutional treasury transfers. No household wallet simulation or new commoner tax
+is introduced. Seasonal vassal dues remain in the shared ledger; extraordinary-tax
+and general narrative income formulas are outside this named-payment pass.
+
+Unaccepted queued war offers are invitations, not signed cash liabilities: preview
+and acceptance both use live funds. Existing ransom demands and casket offers retain
+the full amount, allowing signed AI shortfalls. In-flight courier amounts are already
+debited and never charged again on load or delivery. Personal dowry promises keep
+their existing wedding/refund contract. No historical payments are replayed and no
+migration grant is added. Resolver, war, captivity, holding and courier lifecycles
+own once-only execution; no unbounded transaction history is added.
+
+Technology impact: accounting integration of existing capabilities, with no new
+eligibility or technology gate. Coverage: `ai-treasury-transfers.spec.js`.
 
 ### 5. Read-only UI, balance, and integration
 
@@ -479,7 +534,7 @@ save restoration, or repeated confirmation.
 Agents author or update tests but do not execute them, install dependencies or
 browsers, run syntax/runtime checks, launch servers, or profile the game. All
 execution and visual verification remain owner-controlled under
-[TESTS.md](../TESTS.md) and AGENTS.md. This plan itself is documentation only.
+[TESTS.md](../../TESTS.md) and AGENTS.md. This plan itself is documentation only.
 
 Proposed focused specs:
 
@@ -615,3 +670,56 @@ Poor realms retain a bounded recovery path. Fiscal work stays shared and bounded
 with no AI household simulation, recurring whole-world daily scan, or growing ledger.
 The owner has the authored regressions, profiling fixtures, and measurement criteria
 needed to validate each phase before its integration.
+
+## Stage 4 stress results and Stage 5 handoff
+
+The owner accepted the added workload cost as reasonable. The final 4,770-gift
+sample measured 1,874.3 ms simulation and 1,956 ms elapsed, versus 1,674.1 ms and
+1,752 ms without gifts: about 200 ms added simulation (12%). This includes
+217,035 pending visits, standing and news, not isolated treasury overhead.
+Transfers themselves measured 5.1 ms. All 4,770 transfers/removals occurred.
+
+Batching cooldown cleanup and Chronicle head snapshots reduced gift time from
+511.1 ms to 222.1 ms in the first follow-up (56.5%). The latest sample measured
+229.3 ms. A further immutable-message copy reduction showed no measurable news
+gain: 108.1 to 107.8 ms. Reported workload counters and end-state values matched
+between these gift runs; this does not prove full saved-state or UI equivalence.
+The acceptance applies to this deliberately expanded stress workload and does not
+replace the provisional matched-accounting median gates above.
+
+Stage 5 retains existing reserves, defensive fallback and spending thresholds.
+Remaining owner review: repeated file/served measurements, regression execution,
+mobile disclosures and return navigation, save/load cost, and multi-season wealth,
+shortfall duration, construction and war-length trends. Adjust balance only if that
+evidence warrants it. UI coverage is in ai-treasury-spending.spec.js; transfers,
+news isolation and batching coverage are in ai-treasury-transfers.spec.js.
+No tests were executed by the agent. No commit, version assignment, catalog
+regeneration or deployment is included in this implementation handoff.
+
+### Treasury UI inspection fixture
+
+`python tools/treasury_stage3_save.py --prepare-ui` updates the owner-local
+`logistics-stress-save-stage3.txt` and its metadata with synthetic historical
+display samples. The player remains a serf; all 4,770 pending gifts are preserved.
+Import and inspect while paused. This fixture changes account balances and is a
+different performance baseline from the earlier reports.
+
+Open Network > Trade & Guild > Finance for Last season's army trade: producer
+income 12, requisition loss 5 and net adjustment 7. Open its Details disclosure.
+On the map, select Baghdad, Axum or Kairouan, then open Land and click the
+corresponding realm ruler in the ruler list. Inspect Realm treasury and Details:
+
+| Realm | Available | Accrued | Balance | Unfunded | Policy | Last income / expenses / net |
+| --- | ---: | ---: | ---: | ---: | --- | --- |
+| Abbasid | 4880 | 120 | 5000 | 0 | Maintaining expense reserves | 360 / 160 / 200 |
+| Abyssinia | 0 | 30 | -50 | 80 | Withdrawing to recover funds | 50 / 130 / -80 |
+| Aghlabids | 0 | 50 | 20 | 30 | No uncommitted cash | Not yet settled |
+
+Serf Finance visibility now includes saved producer history; action eligibility
+is unchanged. Coverage: `ai-treasury-spending.spec.js` opens the Network Finance
+button as a serf and inspects the adjustment.
+
+Ruler UI simplification: treasury inspection now shows only Available treasury
+inside the ruler card (Abbasid 4880, Abyssinia 0, Aghlabids 0 in the UI fixture).
+The earlier multi-row ledger and its Details disclosure have been removed; the
+fixture account histories remain available for simulation inspection.

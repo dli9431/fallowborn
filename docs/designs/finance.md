@@ -1,5 +1,13 @@
 # Coin & Credit
 
+Named ruler cash transfers pair the payer debit with the recipient credit.
+Voluntary peace tribute is capped by available funds; compulsory ransom and imposed
+terms retain full liability. County sellers receive payment before retirement.
+Courier gifts credit from prepaid cash on successful delivery. Household dowries,
+personal gifts, anonymous loot and expenditure sinks retain their existing rules.
+See [the Stage 4 audit](../plans/archive/ai-treasury.md#stage-4-payment-audit-and-saved-commitments).
+This accounting integration adds no capability or technology gate.
+
 ## AI treasury accounting foundation
 
 `js/treasury.js` maintains spendable fiscal accounts for active AI
@@ -40,7 +48,7 @@ Military accrual shares unit rates within a supply pass and basket weights withi
 each county's existing price snapshot. Live troop counts remain per host; no cache
 is saved or retained into the next pass. Profiler counters expose military rate
 and basket snapshots separately from host and price reads.
-See [the staged plan](../plans/ai-treasury.md#next-steps-and-measurement-checkpoints)
+See [the staged plan](../plans/archive/ai-treasury.md#next-steps-and-measurement-checkpoints)
 for activation rebasing, producer receipts, affordability, and measurement gates.
 
 Raised hosts pay their provisions component through automatic daily county
@@ -320,6 +328,14 @@ Routine checks remain silent; signing, repayment, arrears, default, inheritance,
 investment resolution, material price movement, debasement, and recoinage use
 durable Chronicle message descriptors. Finance actions and notices use the broadly
 supported money-bag icon rather than the unsupported coin glyph.
+
+Serfs with a saved last-season army producer adjustment can also open Finance to
+inspect that settlement, including a zero adjustment. This visibility rule does
+not change eligibility for loans, investments, coinage or other financial actions.
+Army-trade adjustments and household net income use signed money values: green
+gains, red losses and neutral zero. The household-means Details tooltip briefly
+explains borrowing limits and eligible collateral instead of repeating a paragraph
+in the ledger.
 
 Related: [markets.md](markets.md) for local commodities and tangible-price boundaries,
 [time.md](time.md) for tick order, [state-and-saves.md](state-and-saves.md)

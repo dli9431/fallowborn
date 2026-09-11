@@ -1,5 +1,23 @@
 # Events are data
 
+News reuses deeply frozen descriptors created by the message API. A transient
+WeakSet distinguishes these from loaded or caller-authored objects, which still
+receive defensive copies. Receipt-free Chronicle packing shares immutable message
+parameters instead of serializing them again; receipt-bearing entries retain full
+snapshot copying. No save schema or message order changes.
+
+Courier receipt batches refresh Chronicle head metadata once before the first
+arrival news entry. The internal `preparedChronicle` option identifies that exact
+archive; ordinary news retains its usual head refresh. All individual messages,
+audience masks, archive entries, outcomes and toasts remain ordered and intact.
+
+Named cash payments may explicitly declare `goldCounterparty:'context'` beside
+numeric gold. This pairs the player change with the exact live realm in the context;
+it is not inferred from a Standing change. The serialized context paid marker prevents
+duplicate cash resolution. Such effects use full reconciliation. Council casket and
+agency overture handlers own their transfers, replacing their former declarative
+gold to avoid double payment; their previews retain the same disclosed amounts.
+
 For post-event reconciliation, the resolver exposes a conservative classification
 of household-only options: numeric gold, prestige, piety, health, skills, Popular
 support, and log effects. Every possible branch must qualify, and travel or a

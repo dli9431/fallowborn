@@ -1,5 +1,11 @@
 # Game state & saves
 
+Stage 4 transfers do not replay history or rebase balances. In-flight cash gifts
+remain prepaid; successful delivery credits the ruler and marks `treasuryDelivered`
+before removal. Failed deliveries retain their existing refund. Ransom demands keep
+their saved amounts; unaccepted war invitations reprice against live funds. Event
+contexts may retain `treasuryPaid` or `treasuryGoldPaid` to prevent cash-choice replay.
+
 AI realms add `treasury` version 1: signed `gold`, nonnegative `militaryAccrued`,
 `lastSettledSeason`, `lastRevaluedYear`, one `lastSummary`, and `retired` with an
 optional bounded retirement receipt. `state.treasuryAccounting` records version,

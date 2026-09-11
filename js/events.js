@@ -733,10 +733,12 @@ window.FB = window.FB || {};
     return status;
   };
 
-  FB.noteRulerGift = function (state, rid) {
+  FB.noteRulerGift = function (state, rid, preparedTurns) {
     const r = state.realms && state.realms[rid];
     if (!r || !r.ruler || rid === 'player') return false;
-    FB.realmGiftTurns(state)[rid] = {
+    const turns = preparedTurns && preparedTurns === state.player.realmGiftTurns
+      ? preparedTurns : FB.realmGiftTurns(state);
+    turns[rid] = {
       turn:state.turn,
       generation:r.ruler.generation === undefined ? 1 : r.ruler.generation
     };
@@ -9214,10 +9216,12 @@ window.FB = window.FB || {};
       return [impact('gold', { amount:-FB.warDeserterPayment(state) })];
     }
     if (id === 'war_accept_tribute' && p.war) {
-      return [impact('gold', { amount:25 }),
+      return [impact('gold', { amount:FB.treasuryOffer(state, p.war.enemy, 25) }),
         impact('prestige', { amount:FB.warPrestigeReward(p.war, 'tribute') }),
         impact('system', { system:'war', permanent:true })];
     }
+    if (id === 'council_gift_take') return [impact('gold', { amount:20 })];
+    if (id === 'agency_overture_gift') return [impact('gold', { amount:-8 })];
     if (id === 'war_negotiated_withdrawal') {
       return [impact('prestige', { amount:-Math.min(p.prestige, 4) }),
         impact('system', { system:'war', permanent:true })];
@@ -10900,7 +10904,16 @@ window.FB = window.FB || {};
       if (fx.clearHarvestFlags && p.tier === 0 && FB.serfHarvestQuote) {
         g = FB.serfHarvestQuote(state, g).gold;
       }
-      p.gold += g;
+      if (fx.goldCounterparty === 'context') {
+        if (ctx && ctx.treasuryGoldPaid) return false;
+        const rid = ctx && (ctx.realmId || ctx.rid);
+        const realm = rid && state.realms[rid];
+        if (!realm || !realm.alive) return false;
+        const counterparty = FB.treasuryCounterparty(state, rid);
+        if (!FB.treasuryTransfer(state, g < 0 ? 'player' : counterparty,
+            g < 0 ? counterparty : 'player', Math.abs(g), g >= 0)) return false;
+        if (ctx) ctx.treasuryGoldPaid = true;
+      } else p.gold += g;
     }
     if (fx.pricePressure && FB.addPricePressure) {
       appliedPricePressure = FB.addPricePressure(state, fx.pricePressure,

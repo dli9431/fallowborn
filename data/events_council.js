@@ -21,7 +21,7 @@ FBDATA.events.push(
   trigger:{ tierMin:6, custom:'council_has_sycophant', chance:0.12 }, weight:5, cooldown:8,
   text:'A devoted councillor sends a casket to your chamber: silver, and a letter protesting — at tedious length — that loyalty like his needs no reward. It is, of course, itemized.',
   options:[
-    { label:'Accept with thanks.', desc:'Coin is coin, whatever the motive.', effects:{ gold:20, custom:'council_gift_take' } },
+    { label:'Accept with thanks.', desc:'Accept the offered {money:20}, whatever the motive.', effects:{ custom:'council_gift_take' } },
     { label:'Decline it with honor.', desc:'Some gifts cost more than they pay.', effects:{ prestige:3, custom:'council_gift_wave' } }
   ]},
 { id:'council_petition', title:'A Councillor’s Suit',

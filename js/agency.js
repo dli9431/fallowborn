@@ -1478,6 +1478,8 @@ window.FB = window.FB || {};
 
   FB.fns.agency_overture_gift = function (state, ctx) {
     if (!FB.fns.agency_ruler_context_valid(state, ctx)) return false;
+    if (ctx.treasuryPaid || !FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, ctx.realmId), 8)) return false;
+    ctx.treasuryPaid = true;
     FB.adjustRulerRegard(state, ctx.realmId, 'player', 15,
       'agency:overture_gift');
     return true;

@@ -1,5 +1,10 @@
 # The Royal Council
 
+Council casket gifts debit the selected councillor's treasury and credit the player
+once through the custom effect. The offered 20 remains binding, including when
+the councillor is insolvent. War chests similarly debit each contributing member
+10. These are existing obligations, not new voluntary AI spending searches.
+
 **At tier 6 (King) the player no longer rules alone.** The validated
 `FBDATA.councilSeats` registry in `data/political_institutions.js` defines the royal
 council's offices, while `js/council.js` owns appointments and effects. Core data ships

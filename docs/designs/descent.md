@@ -21,6 +21,11 @@ last voluntary gamble.
 
 ## The hollow crown (tiers 5–7): the title lapse
 
+Ransom, submission tribute, bought peace and attainder fines credit the named enemy
+or liege through the treasury transfer boundary. Existing affordability checks and
+compulsory shortfalls are preserved; releasing the prisoner or ending the war owns
+the once-only payment boundary.
+
 A dignity above count rests on substance: the duke's duchy majority, the
 king's kingdom majority **and his independence**, the emperor's two kingdoms
 — the exact rules `FB.checkTierPromotions` promotes by. The same function

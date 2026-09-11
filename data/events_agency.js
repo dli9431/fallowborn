@@ -12,7 +12,7 @@ FBDATA.events.push(
       effects:{ custom:'agency_overture_welcome', prestige:2 } },
     { label:'Send a fitting gift. ({money:8})', require:{ goldMin:8 },
       desc:'Coin makes the answer harder to mistake.',
-      effects:{ gold:-8, custom:'agency_overture_gift', prestige:3 } },
+      effects:{ custom:'agency_overture_gift', prestige:3 } },
     { label:'Keep this court at a distance.',
       desc:'The refusal will be remembered.',
       effects:{ custom:'agency_overture_rebuff' } }

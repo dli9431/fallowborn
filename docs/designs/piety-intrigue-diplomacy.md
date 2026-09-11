@@ -1,5 +1,21 @@
 # Piety, intrigue & diplomacy
 
+Successful courier arrivals share one ruler-cooldown cleanup per synchronous daily
+batch. Each gift still records its recipient's current ruler generation and turn.
+Direct gifts retain full cleanup; replacing the cooldown table forces fresh cleanup.
+Courier news similarly refreshes the dynasty head once per batch, with the exact
+archive passed through the internal `preparedChronicle` news option. Each receipt
+still receives audience classification, archival packing, log, outcome and toast
+handling in order. Replacing the archive forces a fresh head snapshot. Batch data
+is transient and cleared in `finally`, including errors.
+
+Cash gifts, explicit ally subsidies, succession gifts and ransom payments involving
+reigning rulers now debit and credit their treasury counterparties. Courier cash
+is prepaid and credited only on valid arrival. Saved ransom demands retain their
+amount even when the paying ruler becomes insolvent; release consumes the demand.
+Ordinary household payments retain their existing accounting. See the Stage 4
+payment audit in `../plans/archive/ai-treasury.md` for scope and saved-payment rules.
+
 ## Targeted claims and alliances
 
 Plots may carry a selected target in `player.plot.context`. The landed
