@@ -1,5 +1,10 @@
 # Time, focuses & automation
 
+Observe mode includes the shared ordinary-war seasonal tick after technology
+and before annual world processing and daily army movement. This advances AI
+campaigns and their peace deadlines while retaining the observer's suppression
+of personal events and autosaves.
+
 Player-facing deadlines use calendar dates, never internal turn numbers. Truce
 expiry uses the shared date formatter; turn indexes remain simulation/save data only.
 

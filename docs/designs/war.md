@@ -1,5 +1,10 @@
 # Wars
 
+Observe mode runs the shared ordinary-campaign seasonal resolver before the
+annual world tick and daily army movement, as normal play does. AI campaigns
+advance occupations, settle completed objectives, and reach white peace after
+32 unresolved seasons. Daily battles alone cannot advance these seasonal terms.
+
 Seasonal AI retains strength, frontier, and territorial-right projections only
 within one ruler's candidate evaluation. The next ruler and next season read
 fresh inputs; declaration order and random draws remain unchanged. Claim-package

@@ -3553,12 +3553,14 @@ FB.CHANGELOG = [
     if (FB.politicsDay) FB.politicsDay(s);
 
     /* observe mode: the calendar turns, the realms tick once a year, hosts
-       march daily — and that is all. No focus, upkeep, mortality, births,
-       events, or autosaves; nothing personal ever reaches the watcher. */
+       march daily and ordinary campaigns resolve seasonally. No focus, upkeep,
+       mortality, births, events, or autosaves; nothing personal reaches the watcher. */
     if (G.observe) {
       if (seasonBoundary && FB.marketSeason) FB.marketSeason(s);
       if (seasonBoundary && FB.intrigueSeason) FB.intrigueSeason(s);
       if (seasonBoundary && FB.techSeason) FB.techSeason(s, false);
+      // This resolver owns AI campaigns too, including sieges and exhaustion.
+      if (seasonBoundary) FB.playerWarTick(s);
       if (seasonBoundary && newYear) FB.worldTick(s);
       FB.armyTick(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
