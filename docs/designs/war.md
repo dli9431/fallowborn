@@ -1003,6 +1003,34 @@ the map the hosts march on.
 
 ## Great holy-war campaigns
 
+The inaugural Catholic crusade retains its historical Syria/Jerusalem target.
+After a faith's first launch, AI calls score the existing eligible sacred-site and
+lost-heartland targets instead of always taking the sacred-first list's first row.
+Sacred importance remains a finite bonus: `(1 + 2 * lost sacred sites + lost development
+share) * min(2, attacker/defender strength) / (1 + 2 * recent failures)`.
+An estimated strength ratio below 0.5 defers that target; if none qualify, the AI
+waits for another annual opportunity, even when Syria is the only eligible kingdom.
+Player target eligibility and already-called campaigns are unchanged.
+
+Feasibility estimates use rearm-adjusted base hosts, unique mandatory defending
+sovereigns, and expected volunteer strength in the existing recruitment order and
+with its camp cap (first two attackers certain, later attackers 55%, defenders 30%).
+The caller, player volunteers, and excommunicated attackers are excluded as in AI
+recruitment. This is a military estimate, not route simulation or a victory guarantee.
+Defeats count once, strength-related preparation collapses count half, and each
+penalty fades linearly over 80 years; unrelated faiths, victories, and other
+collapses add no penalty. The existing saved history supplies at most 24 records.
+
+Scoring happens only after an annual call roll/guarantee succeeds, or at the
+one-time unlock opportunity. Each selection projects a realm's strength at most
+once, sorts volunteer pools once, aggregates history once, and reuses sovereign
+owner lookups across targets. No projections survive the selection, no RNG is
+consumed by scoring, and no pathfinding is performed. Ordinary daily ticks,
+eligibility previews, cooldown waits, and failed call rolls do no scoring. The
+restored-head daily retry only precedes a first launch and retains its inaugural
+selection without these checks. This is AI targeting balance, with no new gameplay
+eligibility or technology dependency; no technology-impact ledger entry is needed.
+
 `js/holywar.js` adds one global two-camp campaign beside the bilateral war records.
 An active centralized religious head calls it; participating independent sovereigns
 each retain the same one-host invariant used by ordinary wars, and the strongest

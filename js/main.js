@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.6';
+FB.VERSION = '1.179.7';
 FB.CHANGELOG = [
+  { v: '1.179.7', date: '2026-09-11', changes: [
+    'Later AI holy wars weigh target strength and recent defeats, postponing campaigns with poor prospects. The first historical target is unchanged.'
+  ] },
   { v: '1.179.6', date: '2026-09-11', changes: [
     'Gifts and political payments use ruler treasuries. Ruler cards show available funds, and Finance shows household army-trade gains and losses.'
   ] },
