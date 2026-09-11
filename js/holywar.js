@@ -334,6 +334,100 @@ window.FB = window.FB || {};
     return paperStrength(state, rid) + ((realm && realm.rank) || 1) * 100 + zeal;
   }
 
+  /* Call-time AI policy only: never used by eligibility, UI previews or the
+     active daily campaign tick. All projections live for this selection only. */
+  function chooseAiTarget(state, religionId, targets, callerRealm) {
+    var history = ensureHistory(state);
+    if (!targets.length) return null;
+    if (!history.firstLaunched[religionId]) return targets[0];
+    var strengths = {}, attackers = [], defenders = [], owners = {};
+    function baseStrength(rid) {
+      return Math.max(0, rid === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, rid));
+    }
+    function strength(rid) {
+      if (strengths[rid] === undefined) {
+        strengths[rid] = baseStrength(rid) *
+          (FB.rearmScale ? FB.rearmScale(state, rid) : 1);
+      }
+      return strengths[rid];
+    }
+    for (var rid in state.realms) {
+      if (rid === 'player' || !livingSovereign(state, rid)) continue;
+      var faith = FB.realmReligionId(state, rid);
+      var inFold = FB.faithInFold(state, religionId, faith);
+      if (inFold && rid === callerRealm) continue;
+      if (!inFold && !opposedToCall(state, faith, religionId)) continue;
+      if (inFold) {
+        var ruler = FB.realmRulerCharacter && FB.realmRulerCharacter(state, rid);
+        if (papalFaith(state, faith) && ruler && FB.excommunicationOf &&
+            FB.excommunicationOf(state, ruler.id,
+              FB.papalObedienceForRealm(state, rid))) continue;
+      }
+      var realm = state.realms[rid], base = baseStrength(rid);
+      strengths[rid] = base * (FB.rearmScale ? FB.rearmScale(state, rid) : 1);
+      var row = { id:rid, strength:strengths[rid],
+        score:Math.max(1, base) + (realm.rank || 1) * 100 +
+          (realm.ruler && realm.ruler.trait === 'zealous' ? 200 : 0) };
+      (inFold ? attackers : defenders).push(row);
+    }
+    function byScore(a, b) {
+      return (b.score - a.score) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    }
+    attackers.sort(byScore);
+    defenders.sort(byScore);
+    var cap = B('greatHolyWarVolunteersPerCamp', 8), attack = 0, slots = 0;
+    for (var a = 0; a < attackers.length && slots < cap; a++) {
+      var probability = Math.min(cap - slots, a < 2 ? 1 : 0.55);
+      attack += attackers[a].strength * probability;
+      slots += probability;
+    }
+    /* History is already bounded to 24 campaigns. Aggregate once, with an
+       eighty-year linear decay, so a defeat is neither forgotten at the
+       eighteen-year cooldown nor a permanent prohibition. */
+    var failures = {}, horizon = 80 * 360;
+    for (var h = 0; h < history.campaigns.length; h++) {
+      var past = history.campaigns[h];
+      if (!past || past.religion !== religionId || !isFinite(past.turn)) continue;
+      var age = state.turn - past.turn;
+      if (age < 0 || age >= horizon) continue;
+      var weight = past.outcome === 'defenders' ? 1 :
+        past.outcome === 'collapsed' && past.reason === 'strength' ? 0.5 : 0;
+      failures[past.target] = (failures[past.target] || 0) + weight * (1 - age / horizon);
+    }
+    var best = null, bestScore = -1;
+    for (var t = 0; t < targets.length; t++) {
+      var target = targets[t], mandatory = {}, defense = 0;
+      for (var c = 0; c < target.objectiveCounties.length; c++) {
+        var owner = state.owner[target.objectiveCounties[c]];
+        if (!owner) continue;
+        if (owners[owner] === undefined) owners[owner] = sovereignRealm(state, owner);
+        var sovereign = owners[owner];
+        if (!sovereign || mandatory[sovereign]) continue;
+        mandatory[sovereign] = true;
+        defense += strength(sovereign);
+      }
+      slots = 0;
+      for (var d = 0; d < defenders.length && slots < cap; d++) {
+        if (mandatory[defenders[d].id]) continue;
+        var chance = Math.min(cap - slots, 0.3);
+        defense += defenders[d].strength * chance;
+        slots += chance;
+      }
+      var ratio = attack / Math.max(1, defense);
+      if (ratio < 0.5) continue;
+      var importance = 1 + 2 * target.holyPriority +
+        target.objectiveDevelopment / Math.max(1, target.totalDevelopment);
+      var score = importance * Math.min(2, ratio) /
+        (1 + 2 * (failures[target.kingdomId] || 0));
+      if (score > bestScore || (score === bestScore &&
+          target.kingdomId < best.kingdomId)) {
+        best = target;
+        bestScore = score;
+      }
+    }
+    return best;
+  }
+
   function stableNumber(value) {
     value = String(value || '');
     var out = 0;
@@ -2803,7 +2897,9 @@ window.FB = window.FB || {};
       var forced = (!history.firstLaunched[religionId] && conf.firstByYear &&
         state.date.year >= conf.firstByYear) || guaranteedByLoss(state, religionId, conf);
       if (!forced && !FB.chance(crisisChance(state, religionId, conf))) continue;
-      FB.callGreatHolyWar(state, religionId, targets[0].kingdomId, head.id);
+      var target = chooseAiTarget(state, religionId, targets, head.id);
+      if (!target) continue;
+      FB.callGreatHolyWar(state, religionId, target.kingdomId, head.id);
       return;
     }
   };
@@ -3004,9 +3100,13 @@ window.FB = window.FB || {};
             (history.cooldownUntil[unlockReligionId] || 0) <= state.turn &&
             (unlockForced || FB.chance(crisisChance(
               state, unlockReligionId, unlockConf)))) {
-          FB.callGreatHolyWar(state, unlockReligionId,
-            unlockTargets[0].kingdomId, unlockHead.id);
-          return;
+          var unlockTarget = chooseAiTarget(state, unlockReligionId,
+            unlockTargets, unlockHead.id);
+          if (unlockTarget) {
+            FB.callGreatHolyWar(state, unlockReligionId,
+              unlockTarget.kingdomId, unlockHead.id);
+            return;
+          }
         }
       }
       for (var religionId in history.headState) {
@@ -3029,6 +3129,8 @@ window.FB = window.FB || {};
             head && head.id !== 'player' && targets.length &&
             dateReached(state, conf.minDate) &&
             (history.cooldownUntil[religionId] || 0) <= state.turn) {
+          /* This restored-head path only runs before the first launch, so
+             it retains the inaugural target without feasibility work. */
           FB.callGreatHolyWar(state, religionId, targets[0].kingdomId, head.id);
           return;
         }
