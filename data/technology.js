@@ -570,6 +570,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Automatic requisition in enemy counties is baseline warfare. Existing fort tiers protect stores and limit extraction until occupied; no new technology gates forced provisioning.'
       },
+      public_distributions:{
+        mode:'none',
+        rationale:'Voluntary public distributions are baseline local governance for landed rulers. Player and AI use the same payment and temporary county-support rules without a research prerequisite.'
+      },
       ai_realm_treasury:{
         mode:'none',
         rationale:'Persistent ruler accounts, territorial receipts, expense reserves, affordable levy defense and financial recovery are baseline accounting. Existing technology gates remain on buildings and military classes being funded.'

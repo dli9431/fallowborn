@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/ui_misc.js', 'js/ui_modals.js', 'js/ui_panels.js',
   'js/keys.js', 'js/economy.js', 'js/items.js', 'js/travel.js',
-  'data/economy.js', 'css/style.css'
+  'data/economy.js', 'data/map_data.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -106,9 +106,10 @@ test('management surfaces share a side-by-side navigation-only footer at mobile 
 
 test('Close dismisses the equipment picker and its underlying sheet in one click', async function ({ page }) {
   await page.evaluate(function () {
+    FB.grantItem(FB.state, 'keen_seax', { quality:'plain' });
     FB.ui.showEquipmentModal(FB.state.player.charId);
   });
-  const slot = page.locator('#gm-body [data-equip-slot]').first();
+  const slot = page.locator('#gm-body [data-equip-slot="rightHand"]');
   await slot.click();
   const picker = page.locator('#equip-picker-overlay');
   await expect(picker).toBeVisible();

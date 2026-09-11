@@ -87,16 +87,18 @@ test('daily paid provisioning preserves manual orders and conserves goods and pa
     const s = FB.state, host = s.armies[0], pid = host.at;
     const before = FB.marketProvisionSource(s, pid).stock, gold = s.player.gold;
     const q = FB.armyProvisionQuote(s, host);
+    s.treasuryAccounting.lastMilitaryTurn = s.turn - 1;
+    const field = FB.hostFieldUpkeepParts(s, host).total / 90;
     FB.armyTick(s);
     const row = FB.armyProvisionCounty(s, pid).current;
     return { used:before - FB.marketProvisionSource(s, pid).stock, bought:row.bought,
-      paid:gold - s.player.gold, quote:q.cost, dues:row.dues,
+      paid:gold - s.player.gold, quote:q.cost, field:field, dues:row.dues,
       supply:host.supply, held:host.holdManual, path:host.path, at:host.at, pid:pid,
       shock:s.market.shocks.some(function (x) { return x.provinceId === pid; }) };
   });
   expect(r.used).toBeCloseTo(r.bought, 8);
-  expect(r.paid).toBeCloseTo(r.quote, 8);
-  expect(r.dues).toBeCloseTo(r.paid * 0.1, 8);
+  expect(r.paid).toBeCloseTo(r.quote + r.field, 8);
+  expect(r.dues).toBeCloseTo(r.quote * 0.1, 8);
   expect(r.used).toBeGreaterThan(0);
   expect(r.supply).toBeGreaterThan(50);
   expect(r.held).toBe(true); expect(r.path).toEqual([]); expect(r.at).toBe(r.pid);
@@ -334,12 +336,17 @@ for (const width of [390, 1280]) {
     await expect(toggle).toBeChecked(); await expect(slider).toHaveValue('75');
     await expect(page.locator('[data-provision-controls]')).toContainText('Enemy land: food is requisitioned automatically');
     const details = page.locator('[aria-controls="ar-supply-target-details"]');
-    await details.click();
-    await expect(details).toHaveAttribute('aria-expanded', 'true');
-    await expect(page.locator('#ar-supply-target-details')).toBeVisible();
-    await expect(page.locator('#ar-supply-target-details')).toContainText('Neutral land is never requisitioned');
-    await details.click();
-    await expect(details).toHaveAttribute('aria-expanded', 'false');
+    if (width >= 1000) {
+      await slider.focus();
+      await expect(page.locator('#tooltip')).toContainText('Neutral land is never requisitioned');
+    } else {
+      await details.click();
+      await expect(details).toHaveAttribute('aria-expanded', 'true');
+      await expect(page.locator('#ar-supply-target-details')).toBeVisible();
+      await expect(page.locator('#ar-supply-target-details')).toContainText('Neutral land is never requisitioned');
+      await details.click();
+      await expect(details).toHaveAttribute('aria-expanded', 'false');
+    }
     await slider.focus(); await page.keyboard.press('ArrowRight');
     await expect(slider).toBeFocused(); await expect(slider).toHaveValue('80');
     await expect(page.locator('#ar-supply-value')).toHaveText('80%');

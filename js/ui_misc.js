@@ -1136,6 +1136,7 @@ window.FB = window.FB || {};
        restoration and update view.focusKey through focusin. Keep the semantic
        return target from this render so generic autofocus cannot replace it. */
     const restoreFocusKey = opts.restoreFocus ? view.focusKey : null;
+    const restoreScrollTop = view.scrollTop || 0;
     const search = root.querySelector('[data-list-search]');
     if (search) {
       search.addEventListener('input', function () {
@@ -1213,7 +1214,7 @@ window.FB = window.FB || {};
     }
     applyLargeListView(root);
     setTimeout(function () {
-      if (container) container.scrollTop = view.scrollTop || 0;
+      if (container) container.scrollTop = restoreScrollTop;
       if (!restoreFocusKey) return;
       const focusTargets = root.querySelectorAll('[data-list-focus-key]');
       let focus = null;

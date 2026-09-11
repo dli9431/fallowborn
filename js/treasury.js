@@ -85,8 +85,81 @@
     if (!row) return null;
     return { gold:numeric(row.gold), accrued:positive(row.militaryAccrued),
       available:FB.treasuryAvailable(state, rid), accountingOnly:state.treasuryAccounting.mode !== 'active',
-      necessary:positive(row.necessary), recovering:FB.treasuryRetrenching(state, rid),
+      necessary:positive(row.necessary), reserveTarget:positive(row.reserveTarget),
+      distribution:row.lastDistribution ? Object.assign({}, row.lastDistribution) : null, recovering:FB.treasuryRetrenching(state, rid),
       last:row.lastSummary ? Object.assign({}, row.lastSummary) : null };
+  };
+
+  // Shared public-government expenses; household and military costs stay separate.
+  FB.governmentCostParts = function (revenue, counties, vassals, tier) {
+    const b = FBDATA.balance, r = positive(revenue);
+    if (tier < 3) return { revenue:0, administration:0, court:0, total:0 };
+    const allowances = b.governmentCourtAllowance;
+    const administration = r * b.governmentAdministrationRate + Math.min(
+      r * b.governmentScaleRate, (positive(counties) + positive(vassals)) * b.governmentSeatCost);
+    const court = r * b.governmentCourtRate + Math.min(r * b.governmentScaleRate,
+      allowances[Math.max(0, Math.min(4, tier - 3))]);
+    return { revenue:r, administration:administration, court:court, total:administration + court };
+  };
+  FB.playerGovernmentCosts = function (state, tax) {
+    const p = state.player;
+    if (p.tier < 3) return FB.governmentCostParts(0, 0, 0, p.tier);
+    return FB.governmentCostParts(FB.playerTax(state, tax),
+      (p.provs || []).length, FB.playerVassals(state).length, p.tier);
+  };
+  function governmentCosts(state, rid, fiscal) {
+    return FB.governmentCostParts(numeric(fiscal.income) + numeric(fiscal.duesIn) - numeric(fiscal.duesOut),
+      fiscal.counties, fiscal.vassals, ((state.realms[rid] || {}).rank || 0) + 3);
+  }
+  function necessary(fiscal) {
+    return positive(fiscal.upkeep) + positive(fiscal.duesOut) + positive(fiscal.government);
+  }
+  function civilianReserve(fiscal) {
+    return FBDATA.balance.realmReserveSeasons * Math.max(necessary(fiscal),
+      positive(fiscal.income + (fiscal.duesIn || 0)) * FBDATA.balance.realmReserveRevenueFloor);
+  }
+  function distributionAccount(state, rid) {
+    return rid === 'player' ? state.player : active(state, rid);
+  }
+  FB.publicDistributionQuote = function (state, rid, fiscal) {
+    const payer = distributionAccount(state, rid);
+    const counties = !payer ? [] : rid === 'player' ? (state.player.provs || []).slice() :
+      fiscal && fiscal.countyIds ? fiscal.countyIds.slice() : FB.realmHeldCounties(state, rid).slice();
+    const government = !payer ? { total:0 } : rid === 'player' ? FB.playerGovernmentCosts(state) :
+      fiscal ? governmentCosts(state, rid, fiscal) :
+        governmentCosts(state, rid, FB.treasurySnapshot(state).rows[rid] || {});
+    const next = payer && positive(payer.distributionNextTurn);
+    const eligible = !!(payer && counties.length && (rid !== 'player' || state.player.tier >= 3));
+    return { eligible:eligible, counties:counties,
+      minimum:Math.max(FBDATA.balance.distributionMinimum, government.total),
+      nextTurn:next || 0, ready:eligible && !(next > state.turn),
+      available:rid === 'player' ? positive(state.player.gold) : FB.treasuryAvailable(state, rid) };
+  };
+  FB.publicDistribution = function (state, rid, amount, fiscal) {
+    const q = FB.publicDistributionQuote(state, rid, fiscal);
+    if (!q.ready || typeof amount !== 'number' || !isFinite(amount) || amount < q.minimum || amount > q.available) return false;
+    if (!FB.treasuryTransfer(state, rid, null, amount)) return false;
+    const payer = distributionAccount(state, rid);
+    payer.distributionNextTurn = state.turn + FBDATA.balance.distributionCooldownDays;
+    payer.lastDistribution = { turn:state.turn, amount:amount, counties:q.counties.length };
+    for (const pid of q.counties) FB.addModifier(state, 'public_distribution', pid, { silent:true });
+    if (rid === 'player') FB.news(state, FB.msg('news.finance.public_distribution',
+      'Public distributions cost {money:amount}; Popular support rises temporarily in {count} counties.',
+      { amount:amount, count:q.counties.length }));
+    return true;
+  };
+  FB.treasurySurplusYear = function (state) {
+    if (!state.treasuryAccounting || state.treasuryAccounting.mode !== 'active') return;
+    const snapshot = FB.treasurySnapshot(state), reserves = FB.treasuryConstructionReserves(state, snapshot);
+    for (const rid of Object.keys(snapshot.rows)) {
+      const row = account(state, rid);
+      if (!row) continue;
+      row.reserveTarget = reserves[rid];
+      if (FB.treasuryRetrenching(state, rid)) continue;
+      const excess = Math.max(0, FB.treasuryAvailable(state, rid) - reserves[rid]);
+      const amount = excess * Math.min(1, Math.max(0, FBDATA.balance.distributionSurplusRate));
+      FB.publicDistribution(state, rid, amount, snapshot.rows[rid]);
+    }
   };
 
   // One direct-holder pass. Liege receipts never get taxed recursively.
@@ -98,7 +171,7 @@
       for (const rid of ids) {
         count('realm reads');
         if (!eligible(realms[rid], rid)) continue;
-        rows[rid] = { tax:0, buildings:0, income:0, duesIn:0, duesOut:0, upkeep:0, counties:0 };
+        rows[rid] = { tax:0, buildings:0, income:0, duesIn:0, duesOut:0, upkeep:0, counties:0, countyIds:[], vassals:0 };
       }
       for (const pid of Object.keys(state.owner || {})) {
         count('county reads');
@@ -106,10 +179,14 @@
         const row = rows[rid];
         counties[pid] = rid;
         if (!row) continue;
-        row.counties++;
+        row.counties++; row.countyIds.push(pid);
         count('county tax quotes');
         const records = FB.countyModifierSnapshot(state, pid);
         count('modifier record reads', records.length);
+        for (const record of records) {
+          const def = FBDATA.modifiers[record.id];
+          row.upkeep += positive(def && def.upkeep && def.upkeep.gold);
+        }
         const popular = FB.countyPopularSupport(state, pid, records);
         row.tax += FB.countyTaxBase(state, pid, FBDATA.balance.taxPerDev,
           FB.modBonus(state, 'tax', pid, popular, records));
@@ -152,6 +229,16 @@
         row.duesOut = dues;
         if (rows[liege]) rows[liege].duesIn += dues;
       }
+      for (const rid of ids) {
+        const realm = realms[rid];
+        if (realm && realm.alive && rows[realm.liege]) rows[realm.liege].vassals++;
+      }
+      for (const rid of Object.keys(rows)) {
+        const costs = governmentCosts(state, rid, rows[rid]);
+        rows[rid].administration = costs.administration;
+        rows[rid].court = costs.court;
+        rows[rid].government = costs.total;
+      }
       return { rows:rows, holders:counties };
     });
   };
@@ -164,6 +251,15 @@
       if (initial) state.treasuryAccounting = { version:1, mode:'accounting',
         lastMilitaryTurn:state.turn, pendingPlayer:0 };
       state.treasuryAccounting.pendingPlayer = numeric(state.treasuryAccounting.pendingPlayer);
+      if (state.treasuryAccounting.playerFieldVersion !== 1) {
+        state.treasuryAccounting.playerFieldVersion = 1;
+        state.treasuryAccounting.playerMilitary = 0;
+        state.treasuryAccounting.playerMilitaryLast = 0;
+        state.treasuryAccounting.lastMilitaryTurn = state.turn;
+      }
+      state.treasuryAccounting.playerMilitary = positive(state.treasuryAccounting.playerMilitary);
+      state.treasuryAccounting.playerMilitaryLast = positive(state.treasuryAccounting.playerMilitaryLast);
+      state.player.distributionNextTurn = positive(state.player.distributionNextTurn);
       if (typeof state.treasuryAccounting.lastMilitaryTurn !== 'number' ||
           !isFinite(state.treasuryAccounting.lastMilitaryTurn)) state.treasuryAccounting.lastMilitaryTurn = state.turn;
       for (const rid of Object.keys(snapshot.rows)) {
@@ -172,11 +268,12 @@
         if (saved && saved.version === 1) {
           saved.gold = numeric(saved.gold);
           saved.militaryAccrued = positive(saved.militaryAccrued);
+          saved.distributionNextTurn = positive(saved.distributionNextTurn);
           if (typeof saved.lastSettledSeason !== 'number' || !isFinite(saved.lastSettledSeason)) saved.lastSettledSeason = season(state);
           if (typeof saved.lastRevaluedYear !== 'number' || !isFinite(saved.lastRevaluedYear)) saved.lastRevaluedYear = state.date.year;
           continue;
         }
-        const net = fiscal.income + fiscal.duesIn - fiscal.duesOut - fiscal.upkeep;
+        const net = fiscal.income + fiscal.duesIn - fiscal.duesOut - fiscal.upkeep - positive(fiscal.government);
         // Only explicit initial/legacy initialization grants opening reserves.
         const floors = FBDATA.balance.aiTreasuryOpeningFloor || [0, 10, 20, 30, 40];
         const seasons = FBDATA.balance.aiTreasuryOpeningSeasons;
@@ -191,7 +288,7 @@
         const periods = FBDATA.balance.aiTreasuryOpeningSeasons;
         for (const rid of Object.keys(snapshot.rows)) {
           const fiscal = snapshot.rows[rid], realm = state.realms[rid];
-          const net = fiscal.income + fiscal.duesIn - fiscal.duesOut - fiscal.upkeep;
+          const net = fiscal.income + fiscal.duesIn - fiscal.duesOut - fiscal.upkeep - positive(fiscal.government);
           const opening = Math.max(floors[Math.min(4, realm.rank)] || 0,
             Math.max(0, net) * (periods === undefined ? 2 : positive(periods)));
           realm.treasury = empty(state, Math.max(opening, positive(purses[rid] && purses[rid].gold)));
@@ -203,7 +300,12 @@
       }
       for (const rid of Object.keys(snapshot.rows)) {
         const row = account(state, rid), fiscal = snapshot.rows[rid];
-        if (row) row.necessary = fiscal.upkeep + fiscal.duesOut;
+        if (row) row.necessary = necessary(fiscal);
+      }
+      const reserves = FB.treasuryConstructionReserves(state, snapshot);
+      for (const rid of Object.keys(snapshot.rows)) {
+        const row = account(state, rid);
+        if (row) row.reserveTarget = reserves ? reserves[rid] : civilianReserve(snapshot.rows[rid]);
       }
       retries.delete(state);
       if (state.armyLogistics) delete state.armyLogistics.purses;
@@ -301,12 +403,12 @@
   };
   // Annual optional-spending policy: one fiscal pass and one host pass.
   // This projection never commits accrual or assumes future tax receipts.
-  FB.treasuryConstructionReserves = function (state) {
+  FB.treasuryConstructionReserves = function (state, snapshot) {
     if (!state.treasuryAccounting || state.treasuryAccounting.mode !== 'active') return null;
     return measured('construction reserves', function () {
-      const fiscal = FB.treasurySnapshot(state).rows, reserves = Object.create(null);
+      const fiscal = (snapshot || FB.treasurySnapshot(state)).rows, reserves = Object.create(null);
       const batch = { costs:Object.create(null), prices:Object.create(null), baskets:Object.create(null) };
-      for (const rid of Object.keys(fiscal)) reserves[rid] = fiscal[rid].upkeep + fiscal[rid].duesOut;
+      for (const rid of Object.keys(fiscal)) reserves[rid] = civilianReserve(fiscal[rid]);
       for (const host of state.armies || []) {
         if (host.rebellionId || !account(state, host.realm)) continue;
         accrueHost(state, host, batch);
@@ -343,20 +445,33 @@
       const snapshot = FB.treasurySnapshot(state);
       // Mirror the existing player's liege deduction without changing player cash.
       const liege = state.player && state.player.liege;
-      if (playerTax && snapshot.rows[liege]) snapshot.rows[liege].duesIn += positive(-playerTax.liege);
+      if (playerTax && snapshot.rows[liege]) {
+        const fiscal = snapshot.rows[liege];
+        fiscal.duesIn += positive(-playerTax.liege);
+        const costs = governmentCosts(state, liege, fiscal);
+        fiscal.administration = costs.administration; fiscal.court = costs.court;
+        fiscal.government = costs.total;
+      }
+      const reserves = FB.treasuryConstructionReserves(state, snapshot);
+      if (state.treasuryAccounting.playerMilitary) {
+        state.treasuryAccounting.playerMilitaryLast = state.treasuryAccounting.playerMilitary;
+        state.treasuryAccounting.playerMilitary = 0;
+      } else state.treasuryAccounting.playerMilitaryLast = 0;
       for (const rid of Object.keys(snapshot.rows)) {
         const fiscal = snapshot.rows[rid], realm = state.realms[rid];
         if (!realm.treasury) realm.treasury = empty(state, 0);
         const row = account(state, rid);
         if (!row || row.lastSettledSeason >= period) continue;
         const opening = row.gold, military = positive(row.militaryAccrued);
-        row.gold += fiscal.income + fiscal.duesIn - fiscal.duesOut - fiscal.upkeep - military;
+        row.gold += fiscal.income + fiscal.duesIn - fiscal.duesOut - fiscal.upkeep - positive(fiscal.government) - military;
         row.militaryAccrued = 0;
         row.lastSettledSeason = period;
         row.lastSummary = { period:period, opening:opening, income:fiscal.income,
           duesIn:fiscal.duesIn, duesOut:fiscal.duesOut, upkeep:fiscal.upkeep,
-          military:military, closing:row.gold };
-        row.necessary = fiscal.upkeep + fiscal.duesOut;
+          administration:fiscal.administration, court:fiscal.court,
+          government:fiscal.government, military:military, closing:row.gold };
+        row.necessary = necessary(fiscal);
+        row.reserveTarget = reserves ? reserves[rid] : civilianReserve(fiscal);
         row.shortfallSeasons = row.gold <= 0 && military > 0 ? Math.min(2, positive(row.shortfallSeasons) + 1) : 0;
         if (row.shortfallSeasons >= 2) row.recoverUntil = state.turn + 90;
         count('accounts settled');
@@ -373,13 +488,19 @@
     return { costs:Object.create(null), prices:Object.create(null), baskets:Object.create(null) };
   };
   FB.treasuryAccrueHost = function (state, host, batch) {
-    if (!batch || host.rebellionId || !account(state, host.realm)) return;
+    if (!batch || host.rebellionId || (host.realm !== 'player' && !account(state, host.realm))) return;
     const timing = FB.game && FB.game._fastForwardTiming;
     const entry = timing && timing.enter('Treasury: military host quote');
     try { accrueHost(state, host, batch); }
     finally { if (timing) timing.leave(entry); }
   };
   function accrueHost(state, host, batch) {
+    const parts = FB.hostFieldUpkeepParts(state, host, batch);
+    batch.costs[host.realm] = (batch.costs[host.realm] || 0) + parts.total / 90;
+    if (host.realm === 'player') batch.playerMercs = (batch.playerMercs || 0) + positive(FB.hostUnits(host).mercs);
+  }
+  FB.hostFieldUpkeepParts = function (state, host, batch) {
+    batch = batch || { prices:Object.create(null), baskets:Object.create(null) };
     count('host reads');
     // Definitions stay fixed during the synchronous supply pass; troop counts do not.
     if (!batch.rates) {
@@ -406,15 +527,21 @@
       count('military basket snapshots');
     }
     const baskets = batch.baskets[pid];
-    let cost = quote(parts.base, baskets.base);
+    const out = { base:quote(parts.base, baskets.base), byClass:{}, mercenaries:0, campaignModifier:0 };
+    let cost = out.base;
     for (const id of batch.classes) {
       const value = Math.max(0, Number(units[id]) || 0) / 100 * parts.byClass[id];
-      cost += quote(value, baskets.byClass[id]);
+      out.byClass[id] = quote(value, baskets.byClass[id]);
+      cost += out.byClass[id];
     }
-    cost += (positive(units.mercs) / (FBDATA.balance.mercCompanySize || 150)) *
+    if (host.realm === 'player' && host.warId === 'holy' && FB.campaignHostModBonus) {
+      out.campaignModifier = cost * Math.max(-1, FB.campaignHostModBonus(state, 'supplyUse'));
+    }
+    out.mercenaries = (positive(units.mercs) / (FBDATA.balance.mercCompanySize || 150)) *
       (FBDATA.balance.hostLogisticsMercenaryCompany === undefined ? 4 : FBDATA.balance.hostLogisticsMercenaryCompany);
-    batch.costs[host.realm] = (batch.costs[host.realm] || 0) + cost / 90;
-  }
+    out.total = cost + out.campaignModifier + out.mercenaries;
+    return out;
+  };
   function basketQuote(basket, prices) {
     let total = 0, weight = 0;
     for (const good in basket) {
@@ -433,8 +560,20 @@
     if (!batch || state.treasuryAccounting.lastMilitaryTurn === state.turn) return;
     measured('military accrual', function () {
       for (const rid of Object.keys(batch.costs)) {
-        const row = account(state, rid);
-        if (row) row.militaryAccrued += batch.costs[rid];
+        if (rid === 'player') {
+          // Contracted companies are charged once across all player banners.
+          const men = batch.playerMercs || 0;
+          const size = FBDATA.balance.mercCompanySize || 150;
+          const contracted = state.military && state.military.player && state.military.player.mercCos;
+          const rate = FBDATA.balance.hostLogisticsMercenaryCompany;
+          const adjustment = ((contracted || Math.ceil(men / size)) - men / size) * rate / 90;
+          const cost = batch.costs[rid] + adjustment;
+          state.player.gold -= cost;
+          state.treasuryAccounting.playerMilitary = positive(state.treasuryAccounting.playerMilitary) + cost;
+        } else {
+          const row = account(state, rid);
+          if (row) row.militaryAccrued += batch.costs[rid];
+        }
       }
       state.treasuryAccounting.lastMilitaryTurn = state.turn;
     });

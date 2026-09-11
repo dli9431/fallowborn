@@ -6069,7 +6069,7 @@ window.FB = window.FB || {};
           if (bdef.requiresTech && FB.techRequirementMet &&
               !FB.techRequirementMet(state, bdef.requiresTech, rid)) continue;
           const cost = reserves ? FB.buildCost(state, pid, bid, rid) : 0;
-          if (reserves && cost + reserves[rid] + (bdef.upkeep || 0) > FB.treasuryAvailable(state, rid)) continue;
+          if (reserves && cost + reserves[rid] + (bdef.upkeep || 0) * FBDATA.balance.realmReserveSeasons > FB.treasuryAvailable(state, rid)) continue;
 
           for (let sIdx = 0; sIdx < settlements.length; sIdx++) {
             if (!existingAt[sIdx + ':' + bid]) {
@@ -6082,8 +6082,8 @@ window.FB = window.FB || {};
 
         if (chosen) {
           if (reserves && !FB.treasurySpendOptional(state, rid, chosen.cost,
-              reserves[rid] + (chosen.def.upkeep || 0))) continue;
-          if (reserves) reserves[rid] += chosen.def.upkeep || 0;
+              reserves[rid] + (chosen.def.upkeep || 0) * FBDATA.balance.realmReserveSeasons)) continue;
+          if (reserves) reserves[rid] += (chosen.def.upkeep || 0) * FBDATA.balance.realmReserveSeasons;
           state.buildings = state.buildings || {};
           const list = state.buildings[chosen.pid] = state.buildings[chosen.pid] || [];
           const record = { s: chosen.s, id: chosen.id };
@@ -6472,6 +6472,7 @@ window.FB = window.FB || {};
 
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: AI buildings'); }
       FB.aiBuildingsYear(state);
+      if (FB.treasurySurplusYear) FB.treasurySurplusYear(state);
       return annualContext;
     } finally { if (timing) timing.leave(phase); }
   };

@@ -379,7 +379,7 @@ test('clears remote enterprise staffing and previews relocation impact',
     expect(setup.warning).toContain(setup.impactWorker);
     expect(setup.warning).toContain('will be unassigned');
     await page.getByRole('button', {
-      name:'Keep staying for now',
+      name:'Back',
       exact:true
     }).click();
 
@@ -1069,6 +1069,8 @@ test('enterprise manager exposes upgrades, staffing thresholds, and paid labor c
     await expect(page.getByRole('button', { name:/Hire a local worker/ }))
       .toBeEnabled();
     await page.getByRole('button', { name:/Hire a local worker/ }).click();
+    await expect(page.locator('#gm-title')).toContainText('Work & Enterprises');
+    await page.locator('[data-enterprise="' + uid + '"]').click();
     await page.locator('.enterprise-management-status.staffed').hover();
     await expect(page.locator('#tooltip')).toContainText('Fully staffed');
     await expect(page.getByRole('button', { name:'Dismiss paid worker' }))

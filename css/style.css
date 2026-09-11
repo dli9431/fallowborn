@@ -6017,3 +6017,4 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 .provision-slider { width: 100%; min-height: 44px; accent-color: var(--ui-accent-color); }
 [data-provision-controls] .settcard-head { flex-wrap: wrap; gap: 8px; }
 [data-provision-controls] output { font-weight: bold; font-variant-numeric: tabular-nums; }
+.enterprise-staffing-modal #gm-body { overflow-anchor: none; }

@@ -614,3 +614,11 @@ bonuses in counties without enterprises. Other callers keep live upgrade queries
 The next annual pass rebuilds the snapshot, so staffing, death, upgrades and relocation
 are observed. Profiling exposes this cost as enterprise upgrade snapshot rather than
 charging repeated enterprise scans to each county's capacity and attraction.
+
+
+The daily army supply pass charges player non-food deployment alongside AI accrual,
+using the existing once-per-turn treasury stamp. The seasonal treasury step rolls the
+player's paid total into the last-season record; the later player ledger charges only
+replacement drilling, not live-host deployment again. Government expenses settle with
+landed income. Annual public distributions follow AI construction in both Observe and
+normal play. No extra daily all-realm fiscal scan is introduced.

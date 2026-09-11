@@ -7696,7 +7696,6 @@ window.FB = window.FB || {};
       body + '</div>';
   }
   function logMatches(e, filter) {
-    if (FB.newsVisible && !FB.newsVisible(FB.state, e)) return false;
     if (filter === 'choices') return !!(e && e.kind === 'choice');
     if (filter === 'news') return !(e && e.kind === 'choice');
     return true;

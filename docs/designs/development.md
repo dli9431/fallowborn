@@ -302,3 +302,11 @@ households at that exact site. It is not a building benefit and does not scale w
 development. Worship and hospitality venue labels may acknowledge the settlement kind
 or an existing religious building, but buildings and technology do not gate ordinary
 local meetings.
+
+
+AI building purchases now protect ten seasons of government, existing upkeep and liege
+dues (with a 50%-of-receipts seasonal floor), plus two seasons of active military costs
+and initial food loading. Every new building also reserves ten seasons of its own
+upkeep. Existing construction limits, priorities and technology gates remain; annual
+public distributions run only after construction. Player automation reads government
+expenses through reliable net income but does not enforce the AI savings target.

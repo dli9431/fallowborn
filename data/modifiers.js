@@ -3,6 +3,11 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.modifiers = {
+  public_distribution: {
+    name:'Public distributions', icon:'🎁',
+    desc:'The ruler distributes coin to local households. Further generosity does not stack this benefit.',
+    scope:'county', days:360, fx:{ commonVoice:5 }
+  },
   granaries_opened: {
     name:'Granaries Opened', icon:'🌾',
     desc:'The lord’s stores stand open against the hunger.',

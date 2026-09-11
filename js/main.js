@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.7';
+FB.VERSION = '1.179.8';
 FB.CHANGELOG = [
+  { v: '1.179.8', date: '2026-09-11', changes: [
+    'Rulers pay government and campaign costs, reserve funds for construction, and can distribute surplus wealth. Crusade settlements record their terms in the Chronicle, and news settings control popups only.',
+    'Deleted autosaves stay deleted while paused, staffing lists retain their position, and rebel hosts survive unrelated peace settlements.'
+  ] },
   { v: '1.179.7', date: '2026-09-11', changes: [
     'Later AI holy wars weigh target strength and recent defeats, postponing campaigns with poor prospects. The first historical target is unchanged.'
   ] },
@@ -3672,7 +3676,7 @@ FB.CHANGELOG = [
       /* Income is credited before necessities are settled. This lets family
          wages meet the table and leaves any unfunded share as hardship rather
          than silently discarding which obligation went unpaid. */
-      p.gold += income - buildingUpkeep - modifierUpkeep +
+      p.gold += income - buildingUpkeep - modifierUpkeep - FB.playerGovernmentCosts(s, taxParts).total +
         FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);
@@ -3695,11 +3699,10 @@ FB.CHANGELOG = [
         if (G.auto.build) FB.autoBuild(s);
       }
       if (FB.realmPolicySeason) FB.realmPolicySeason(s); // standing royal policy: piety trickle, settler development
-      /* A raised host costs its live composition once per season, for both
-         ordinary and great holy wars. Shattered/disbanded hosts return zero. */
-      if (FB.playerHostUpkeepParts) {
-        const hostUpkeep = FB.playerHostUpkeepParts(s);
-        p.gold -= hostUpkeep.total;
+      // Field costs were paid daily; replacement drilling remains a seasonal obligation.
+      if (FB.playerReinforcementUpkeepParts) {
+        const drilling = FB.playerReinforcementUpkeepParts(s);
+        p.gold -= drilling.total + drilling.campaignModifier;
       }
       if (FB.techSeason) FB.techSeason(s, G.auto.research);
       FB.playerWarTick(s);
@@ -4437,7 +4440,7 @@ FB.CHANGELOG = [
     // a backgrounded mobile tab may never come back — keep what was played
     // (flush: autosave's storage write is deferred now, and this page may
     // never run another timer)
-    FB.save.autosave();
+    FB.save.autosave({ background:true });
     if (FB.save.flushPending) FB.save.flushPending();
   }
   document.addEventListener('visibilitychange', function () {

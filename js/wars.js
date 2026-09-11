@@ -216,7 +216,11 @@
         if (FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
       });
     });
-    state.armies = (state.armies || []).filter(function (a) { return a && FB.isRealmAtWar(state, a.realm); });
+    state.armies = (state.armies || []).filter(function (a) {
+      if (!a) return false;
+      const uprising = a.rebellionId && FB.rebellionById && FB.rebellionById(state, a.rebellionId);
+      return !!(uprising && uprising.faction === a.realm) || FB.isRealmAtWar(state, a.realm);
+    });
     FB.assignCampaignHosts(state);
   };
   FB.assignCampaignHosts = function (state) {

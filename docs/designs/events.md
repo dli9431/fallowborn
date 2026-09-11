@@ -998,3 +998,6 @@ custom payment effects and impact previews for the existing uprising choices.
 Manual and automated choices share the same resolver and recheck funds before
 rolling. Gold/prestige charges precede conditional outcomes and apply even on
 failure. No event catalog record is mutated to store a rendered quote.
+
+News audience preferences control toast presentation only. Chronicle storage and
+both Chronicle views preserve events independently of those preferences.

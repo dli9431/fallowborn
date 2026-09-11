@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/armies.js', 'js/logistics.js', 'js/market.js',
-  'js/world.js',
+  'js/world.js', 'js/wars.js',
   'js/fortifications.js',
   'js/holywar.js',
   'js/events.js',
@@ -165,6 +165,14 @@ test('merging recombines two co-located hosts into one',
 test('a host shattered while cut off is destroyed outright, with graver capture odds',
   async function ({ page }) {
     const result = await page.evaluate(function () {
+      FB.state.player.tier = 4;
+      FB.state.player.liege = null;
+      FB.state.player.provs = [FB.state.player.provinceId];
+      FB.foundPlayerRealm(FB.state);
+      FB.state.owner[FB.state.player.provinceId] = 'player';
+      FB.state.holder[FB.state.player.provinceId] = 'player';
+      FB.invalidateRealmCache();
+
       const state = FB.state;
       const originalWorld = FB.world;
       const originalHosts = state.armies;
@@ -283,6 +291,14 @@ test('a host shattered while cut off is destroyed outright, with graver capture 
 test('detachments survive a save/load round trip',
   async function ({ page }) {
     const result = await page.evaluate(function () {
+      FB.state.player.tier = 4;
+      FB.state.player.liege = null;
+      FB.state.player.provs = [FB.state.player.provinceId];
+      FB.foundPlayerRealm(FB.state);
+      FB.state.owner[FB.state.player.provinceId] = 'player';
+      FB.state.holder[FB.state.player.provinceId] = 'player';
+      FB.invalidateRealmCache();
+
       const before = FB.save.serialize();
       const home = FB.state.player.provinceId;
       /* peacetime hosts are not a legal persistent state: repairWars drops
@@ -625,6 +641,14 @@ test('Land tab shows war card when selecting a county containing troops without 
 test('Deeds panel renders compact war card with summary and interactive tooltips',
   async function ({ page }) {
     await page.evaluate(function () {
+      FB.state.player.tier = 4;
+      FB.state.player.liege = null;
+      FB.state.player.provs = [FB.state.player.provinceId];
+      FB.foundPlayerRealm(FB.state);
+      FB.state.owner[FB.state.player.provinceId] = 'player';
+      FB.state.holder[FB.state.player.provinceId] = 'player';
+      FB.invalidateRealmCache();
+
       const state = FB.state;
       const home = state.player.provinceId;
       state.player.war = {

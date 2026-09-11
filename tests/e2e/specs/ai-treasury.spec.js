@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'index.html', 'js/treasury.js', 'js/armies.js', 'js/actions.js', 'js/economy.js',
   'js/main.js', 'js/save.js', 'js/model.js', 'js/world.js', 'js/rebellions.js',
   'js/modifiers.js', 'js/fortifications.js', 'js/technology.js', 'js/logistics.js', 'js/market.js',
-  'data/map_data.js', 'data/technology.js', 'data/units.js', 'data/markets.js', 'data/economy.js'
+  'data/map_data.js', 'data/modifiers.js', 'data/technology.js', 'data/units.js', 'data/markets.js', 'data/economy.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
@@ -50,7 +50,7 @@ test('construction reserve projection preserves balances and counts fiscal input
       return { reserve:reserves[rid], calls:calls, unchanged:JSON.stringify(s.realms[rid].treasury) === before };
     } finally { FB.treasurySnapshot = saved; }
   });
-  expect(r).toEqual({ reserve:20, calls:1, unchanged:true });
+  expect(r).toEqual({ reserve:4995, calls:1, unchanged:true });
 });
 
 test('AI building quotes exclude household discounts and use realm technology', async function ({ page }, testInfo) {
@@ -259,7 +259,7 @@ test('direct-holder income and immediate-liege dues settle once without touching
     const settled = s.realms[child].treasury.gold;
     const second = FB.treasurySeason(s);
     return { tax:a.tax, expected:expected, dues:a.duesOut, expectedDues:expected * charter.taxShare,
-      change:settled - balance, expectedChange:a.income + a.duesIn - a.duesOut - a.upkeep - 12,
+      change:settled - balance, expectedChange:a.income + a.duesIn - a.duesOut - a.upkeep - a.government - 12,
       first:first, second:second, unchanged:settled === s.realms[child].treasury.gold,
       playerUnchanged:s.player.gold === playerGold, accrued:s.realms[child].treasury.militaryAccrued };
   });
@@ -269,7 +269,7 @@ test('direct-holder income and immediate-liege dues settle once without touching
   expect(r.playerUnchanged).toBe(true); expect(r.accrued).toBe(0);
 });
 
-test('multiple hosts accrue once, exclude rebels and player hosts, and retain bills after disband', async function ({ page }, testInfo) {
+test('multiple hosts accrue once, exclude rebels, and retain bills after disband', async function ({ page }, testInfo) {
   await setup(page, testInfo);
   const r = await page.evaluate(function () {
     const s = FB.state, rid = window.fiscalIds.enemy;
@@ -281,6 +281,7 @@ test('multiple hosts accrue once, exclude rebels and player hosts, and retain bi
     const single = first.costs[rid];
     FB.treasuryAccrueHost(s, Object.assign({}, host, { id:'fiscal-b' }), first);
     FB.treasuryAccrueHost(s, Object.assign({}, host, { rebellionId:'test' }), first);
+    const playerBefore = s.player.gold;
     FB.treasuryAccrueHost(s, Object.assign({}, host, { realm:'player' }), first);
     FB.treasuryCommitMilitary(s, first);
     FB.treasuryCommitMilitary(s, first);
@@ -288,9 +289,10 @@ test('multiple hosts accrue once, exclude rebels and player hosts, and retain bi
     s.armies = [];
     const clone = JSON.parse(JSON.stringify(s));
     FB.treasuryInitialize(clone);
-    return { single:single, total:total, retained:clone.realms[rid].treasury.militaryAccrued,
+    return { playerCost:playerBefore - s.player.gold, single:single, total:total, retained:clone.realms[rid].treasury.militaryAccrued,
       next:FB.treasuryMilitaryBatch(clone) };
   });
+  expect(r.playerCost).toBeCloseTo(r.single, 10);
   expect(r.single).toBeGreaterThan(0); expect(r.total).toBeCloseTo(r.single * 2, 10);
   expect(r.retained).toBe(r.total); expect(r.next).toBeNull();
 });
@@ -389,10 +391,10 @@ for (const observing of [false, true]) {
       FB.game.passDay({ deferUi:true });
       return { daily:daily, summary:row.lastSummary,
         period:Math.floor(s.turn / 90), observing:FB.game.observe,
-        provisioningUnchanged:!!FB.armyProvisionQuote && s.treasuryAccounting.mode === 'accounting' };
+        activeProvisioning:!!FB.armyProvisionQuote && s.treasuryAccounting.mode === 'active' };
     }, observing);
     expect(r.daily).toBeNull(); expect(r.summary.period).toBe(r.period);
-    expect(r.observing).toBe(observing); expect(r.provisioningUnchanged).toBe(true);
+    expect(r.observing).toBe(observing); expect(r.activeProvisioning).toBe(true);
   });
 }
 

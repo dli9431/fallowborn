@@ -6551,7 +6551,7 @@ window.FB = window.FB || {};
      labels from incomeBreakdown. */
   FB.reliableGoldIncome = function (state, ignoreAssignments, economy) {
     const p = state.player;
-    let total = -FB.householdUpkeep(state);
+    let total = -FB.householdUpkeep(state) - FB.playerGovernmentCosts(state).total;
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
     if (FB.playerHostUpkeepParts) total -= FB.playerHostUpkeepParts(state).total;
     if (FB.playerProvisionEstimate) total -= FB.playerProvisionEstimate(state);
@@ -6726,6 +6726,9 @@ window.FB = window.FB || {};
 
     /* station, resident family, and recurring schooling are separate lines so
        a larger household never hides inside an unexplained flat charge */
+    const government = FB.playerGovernmentCosts(state);
+    add('gold', FB.T('Government administration'), -government.administration);
+    add('gold', FB.T('Official court expenses'), -government.court);
     const upkeep = FB.householdUpkeepParts(state);
     add('gold', FB.T('Household upkeep'), -upkeep.base);
     add('gold', FB.T('Family provisions and quarters'), -upkeep.family);

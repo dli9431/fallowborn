@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js', 'js/logistics.js', 'js/market.js',
-  'js/world.js',
+  'js/world.js', 'js/wars.js',
   'js/fortifications.js',
   'data/map_data.js',
   'data/counties.js',
@@ -183,6 +183,14 @@ test('empty local markets expose terrain and winter consumption without a homela
 test('daily troop replenishment redraws the map on a bounded cadence',
   async function ({ page }) {
     const result = await page.evaluate(function () {
+      FB.state.player.tier = 4;
+      FB.state.player.liege = null;
+      FB.state.player.provs = [FB.state.player.provinceId];
+      FB.foundPlayerRealm(FB.state);
+      FB.state.owner[FB.state.player.provinceId] = 'player';
+      FB.state.holder[FB.state.player.provinceId] = 'player';
+      FB.invalidateRealmCache();
+
       const state = FB.state;
       const originalTurn = state.turn;
       const originalWar = state.player.war;

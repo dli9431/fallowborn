@@ -8804,10 +8804,12 @@
     },
     "event.council_gift.options.0.desc.default": {
       "context": "Event council_gift, authored option 0, desc, branch default.",
-      "glossary": [],
+      "glossary": [
+        "money:20"
+      ],
       "location": "data/events_council.js",
       "source": {
-        "text": "Coin is coin, whatever the motive."
+        "text": "Accept the offered {money:20}, whatever the motive."
       }
     },
     "event.council_gift.options.0.label.default": {
@@ -35093,7 +35095,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Their coin, your glory — the war ends here."
+        "text": "Take the available tribute and end the war. An empty treasury means peace without silver."
       }
     },
     "event.war_tribute_offer.options.0.effects.log.default": {
@@ -35101,7 +35103,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Took the enemy’s tribute and ended the war."
+        "text": "Accepted peace and ended the war."
       }
     },
     "event.war_tribute_offer.options.0.label.default": {
@@ -35109,7 +35111,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Take the tribute."
+        "text": "Accept peace."
       }
     },
     "event.war_tribute_offer.options.1.desc.default": {
@@ -35148,7 +35150,7 @@
       ],
       "location": "data/events_war.js",
       "source": {
-        "text": "Beaten in the field again and again, {enemy} sends envoys under a white flag: silver enough to end this war today, if you sheath the sword. But {target} still stands untaken — and its walls will not fall to a purse."
+        "text": "Beaten in the field again and again, {enemy} sends envoys under a white flag, offering peace and whatever tribute the treasury can spare. But {target} still stands untaken — and its walls will not fall to a purse."
       }
     },
     "event.war_tribute_offer.title.default": {
@@ -41174,6 +41176,22 @@
         "text": "Protected Worship"
       }
     },
+    "modifier.public_distribution.desc.default": {
+      "context": "modifier public_distribution, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "The ruler distributes coin to local households. Further generosity does not stack this benefit."
+      }
+    },
+    "modifier.public_distribution.name.default": {
+      "context": "modifier public_distribution, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Public distributions"
+      }
+    },
     "modifier.roads_patrolled.desc.default": {
       "context": "modifier roads_patrolled, desc, faith branch default.",
       "glossary": [],
@@ -41943,7 +41961,7 @@
       ],
       "location": "js/armies.js",
       "source": {
-        "text": "The host at {province} is low on supplies. Reach friendly ground before starvation."
+        "text": "The host at {province} is low on supplies. Reach a stocked market before starvation."
       }
     },
     "news.army.player_musters": {
@@ -43527,6 +43545,17 @@
         }
       }
     },
+    "news.finance.public_distribution": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "count",
+        "money:amount"
+      ],
+      "location": "js/treasury.js",
+      "source": {
+        "text": "Public distributions cost {money:amount}; Popular support rises temporarily in {count} counties."
+      }
+    },
     "news.finance.recoinage": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -43973,6 +44002,69 @@
       "location": "js/economy.js",
       "source": {
         "text": "📜 The household’s {profession} monopoly ends when it leaves {province}."
+      }
+    },
+    "news.holywar.award_custody": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "kingdom",
+        "realm",
+        "sites"
+      ],
+      "location": "js/holywar.js",
+      "source": {
+        "text": "Settlement of {kingdom}: {realm} receives sacred custody of {sites}."
+      }
+    },
+    "news.holywar.award_declined": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "kingdom",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/holywar.js",
+      "source": {
+        "text": "Settlement of {kingdom}: {ruler} declined personal rule; the land was granted to {realm}."
+      }
+    },
+    "news.holywar.award_independent": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "counties",
+        "kingdom",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/holywar.js",
+      "source": {
+        "text": "Settlement of {kingdom}: {ruler} rules independent {realm}, holding {counties}."
+      }
+    },
+    "news.holywar.award_payment": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "kingdom",
+        "money:amount",
+        "ruler"
+      ],
+      "location": "js/holywar.js",
+      "source": {
+        "text": "Settlement of {kingdom}: {ruler} paid {money:amount} to secure an award in the council."
+      }
+    },
+    "news.holywar.award_vassal": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "counties",
+        "kingdom",
+        "liege",
+        "realm",
+        "ruler"
+      ],
+      "location": "js/holywar.js",
+      "source": {
+        "text": "Settlement of {kingdom}: {ruler} rules {realm}, holding {counties} as a vassal of {liege}."
       }
     },
     "news.holywar.battle": {
@@ -46181,6 +46273,14 @@
       "location": "js/world.js",
       "source": {
         "text": "💰 {money:amount} clears the host’s arrears; the wavering ranks steady."
+      }
+    },
+    "news.war.empty_treasury_peace": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "Peace is agreed without a cash payment; the enemy treasury cannot fund tribute."
       }
     },
     "news.war.enemy_advance": {
@@ -56013,6 +56113,16 @@
         "text": "🕸 A plot is set in motion: {plot}."
       }
     },
+    "src.01201385": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Gifts: queue removal"
+      }
+    },
     "src.0122fe6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56061,6 +56171,16 @@
       ],
       "source": {
         "text": "Continue cultivating this ruler"
+      }
+    },
+    "src.01322029": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: heap pops"
       }
     },
     "src.01332fd7": {
@@ -56914,6 +57034,16 @@
         "text": "Pilgrims and silver — unless the bishop counts sheep bones."
       }
     },
+    "src.02bd58a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: neighbor edges"
+      }
+    },
     "src.02bde596": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56922,16 +57052,6 @@
       ],
       "source": {
         "text": "This castellany is an appointed office inside the home county; no county is held directly in your hand."
-      }
-    },
-    "src.02be31a9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Realm muster: ~{troops}"
       }
     },
     "src.02cc3d14": {
@@ -57024,6 +57144,16 @@
       ],
       "source": {
         "text": "Ten-year"
+      }
+    },
+    "src.030d20ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Deployment is paid daily at each host’s location. Provisions are bought separately; filling carried reserves can cost more than the consumption forecast."
       }
     },
     "src.030edb0f": {
@@ -57415,6 +57545,16 @@
       ],
       "source": {
         "text": "The capital can no longer be moved."
+      }
+    },
+    "src.03e4b014": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Seek markets when supplies run low"
       }
     },
     "src.03e5278e": {
@@ -58651,6 +58791,16 @@
         "text": "their realm"
       }
     },
+    "src.061cf290": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Distribute {money:amount}"
+      }
+    },
     "src.061cf712": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58991,6 +59141,16 @@
         "text": "Uncle"
       }
     },
+    "src.06a16352": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_council.js"
+      ],
+      "source": {
+        "text": "Accept the offered {money:20}, whatever the motive."
+      }
+    },
     "src.06a307c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59259,6 +59419,16 @@
       ],
       "source": {
         "text": "The Succession"
+      }
+    },
+    "src.07128321": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "account repair"
       }
     },
     "src.07129e63": {
@@ -59809,6 +59979,16 @@
         "text": "Let them find their own answer."
       }
     },
+    "src.07eb5e4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/holywar.js"
+      ],
+      "source": {
+        "text": "Settlement of {kingdom}: {realm} receives sacred custody of {sites}."
+      }
+    },
     "src.07f980cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59837,6 +60017,16 @@
       ],
       "source": {
         "text": "Stand your ground, and let the marriage weather it."
+      }
+    },
+    "src.0801d18b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "The ruler distributes coin to local households. Further generosity does not stack this benefit."
       }
     },
     "src.08029894": {
@@ -60009,6 +60199,16 @@
         "text": "Bukhara"
       }
     },
+    "src.08584a67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: returned legs"
+      }
+    },
     "src.08586453": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60097,6 +60297,16 @@
       ],
       "source": {
         "text": "Wants more. Always more."
+      }
+    },
+    "src.0881a7ad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Settled non-food military costs"
       }
     },
     "src.08842914": {
@@ -60297,6 +60507,16 @@
       ],
       "source": {
         "text": "Pay the arbitrary demand in winter strength."
+      }
+    },
+    "src.08c1dcdb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Rows are inclusive totals; selfMs excludes timed children. Workload snapshots run only at burst boundaries. Host-days count daily supply-pass visits. Waiting includes browser work. Deferred paint and IndexedDB completion are not measured."
       }
     },
     "src.08c767fd": {
@@ -61023,6 +61243,16 @@
         "text": "Refused tribute; the war goes on."
       }
     },
+    "src.0a0f2c60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Show popups about your realm and its counties, including wars involving your ruler or liege. All events remain visible in the Chronicle."
+      }
+    },
     "src.0a1aec5f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61303,16 +61533,6 @@
         "text": "Murmurs in the Villages"
       }
     },
-    "src.0a90cbf2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Archer food and supplies"
-      }
-    },
     "src.0a9430ed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61371,6 +61591,17 @@
       ],
       "source": {
         "text": "Duchy of Apulia"
+      }
+    },
+    "src.0aac0190": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Official court expenses"
       }
     },
     "src.0ab1ce9d": {
@@ -63128,6 +63359,16 @@
         "text": "{officer} recognizes the trap and leaves smiling. The next threat will not be private."
       }
     },
+    "src.0d8e7c7e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "annual revaluation"
+      }
+    },
     "src.0d947417": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63508,6 +63749,16 @@
       ],
       "source": {
         "text": "🏛 The Estates…"
+      }
+    },
+    "src.0e537c28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "All your hosts buy local provisions with available coin, even while marching under manual orders. Prices, county stocks and loading capacity limit purchases. Standing upkeep excludes this food."
       }
     },
     "src.0e56975c": {
@@ -64449,6 +64700,16 @@
         "text": "Worth about {money:gold}."
       }
     },
+    "src.1012f500": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Ruler market dues"
+      }
+    },
     "src.1013205a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64871,6 +65132,16 @@
         "text": "🏰 You hold the substance of {duchy}, but only the crown may style you duke."
       }
     },
+    "src.10d52e2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Requisitioning food; fort protection {percent}%. County stocks and Popular support fall."
+      }
+    },
     "src.10d66135": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65099,6 +65370,16 @@
       ],
       "source": {
         "text": "Hear this more"
+      }
+    },
+    "src.115bd494": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: fallback settled edges skipped"
       }
     },
     "src.115cbd65": {
@@ -65802,6 +66083,16 @@
       ],
       "source": {
         "text": "{worker} · {place} · about {money:amount}/season"
+      }
+    },
+    "src.127aae50": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: fort cache hits"
       }
     },
     "src.127b4c82": {
@@ -66805,6 +67096,17 @@
       ],
       "source": {
         "text": "⬇ Landless once more. The banners are folded away."
+      }
+    },
+    "src.140c679c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Government administration"
       }
     },
     "src.1415b705": {
@@ -69695,6 +69997,16 @@
         "text": "Eligibility is calculated when this sheet opens and rechecked on confirmation. Opening or closing it spends no day or resources."
       }
     },
+    "src.18e622f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: heap pushes"
+      }
+    },
     "src.18e78237": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70686,6 +70998,16 @@
         "text": "The Guild Bench"
       }
     },
+    "src.1a7838d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Workload: holy-war host-days"
+      }
+    },
     "src.1a78f578": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70975,6 +71297,16 @@
       ],
       "source": {
         "text": "🚩 The host marches to bring {enemy} to battle."
+      }
+    },
+    "src.1b0ade9d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Last season’s army trade"
       }
     },
     "src.1b0d418e": {
@@ -71679,6 +72011,16 @@
         "text": "Recommend descendant matches"
       }
     },
+    "src.1ca7b806": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Archer equipment and transport"
+      }
+    },
     "src.1ca89959": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71870,6 +72212,16 @@
         "text": "Office"
       }
     },
+    "src.1ce5d1cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Orders: while marching"
+      }
+    },
     "src.1cf076ac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71929,6 +72281,16 @@
       ],
       "source": {
         "text": "Standing falls {amount} with {count} realms of your old culture."
+      }
+    },
+    "src.1d22a65e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Provision quotes: host and county"
       }
     },
     "src.1d277640": {
@@ -74703,6 +75065,16 @@
         "text": "An ox in human form."
       }
     },
+    "src.21a9ae83": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Supply reserve target"
+      }
+    },
     "src.21a9e760": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76902,6 +77274,16 @@
         "text": "references an unknown rank for"
       }
     },
+    "src.25cfae60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Army provisioning this season"
+      }
+    },
     "src.25d18c4e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77172,6 +77554,16 @@
         "text": "intrigue.captiveRansoms"
       }
     },
+    "src.26274508": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Last public distribution"
+      }
+    },
     "src.26325dab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77342,6 +77734,16 @@
       ],
       "source": {
         "text": "Martial"
+      }
+    },
+    "src.26616160": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Net household adjustment"
       }
     },
     "src.2661ab61": {
@@ -77704,6 +78106,16 @@
       ],
       "source": {
         "text": "The garrison and defenders under {realm} resisted the assault and drove off your reaving warband."
+      }
+    },
+    "src.26df78bc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Orders: rejected"
       }
     },
     "src.26e17379": {
@@ -79310,16 +79722,6 @@
         "text": "Let love be stubborn."
       }
     },
-    "src.2a0f8698": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_council.js"
-      ],
-      "source": {
-        "text": "Coin is coin, whatever the motive."
-      }
-    },
     "src.2a14ecc0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80754,16 +81156,6 @@
         "text": "Broke through a raiding line and escaped without loss."
       }
     },
-    "src.2c8bbf25": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "At one week of supply remaining, or after supplies run out, automated hosts retreat to reachable friendly territory and refill before resuming their stance. Manual routes and holds remain yours."
-      }
-    },
     "src.2c8c5fda": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81855,6 +82247,16 @@
         "text": "🕸 A {plot} against {target} fails without revealing its author."
       }
     },
+    "src.2eb81568": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Workload: soldier-days"
+      }
+    },
     "src.2ebcb4a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82255,6 +82657,16 @@
         "text": "Fortify the border farms."
       }
     },
+    "src.2f7621c9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Non-food deployment paid last season"
+      }
+    },
     "src.2f7a41df": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82334,16 +82746,6 @@
       ],
       "source": {
         "text": "Market Stall"
-      }
-    },
-    "src.2fa86fc2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Supplies replenished from friendly territory."
       }
     },
     "src.2fa8f9e5": {
@@ -82767,6 +83169,26 @@
       ],
       "source": {
         "text": "None"
+      }
+    },
+    "src.305a602d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: tie chain legs"
+      }
+    },
+    "src.305aa315": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{bought} / {taken} units"
       }
     },
     "src.3060b95f": {
@@ -83260,6 +83682,17 @@
         "text": "The great officers sit in council on the war: the realm bleeds, they say, and the realm’s silver should bleed with it. They offer a subsidy from their own coffers — for the duration, and not, they make clear, as a precedent. It is absolutely a precedent."
       }
     },
+    "src.31396143": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js",
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Public distributions"
+      }
+    },
     "src.314284f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83523,6 +83956,16 @@
         "text": "The steward cuts the fine to two coins and calls it favor."
       }
     },
+    "src.319b607c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: failed"
+      }
+    },
     "src.31a03846": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83691,6 +84134,16 @@
       ],
       "source": {
         "text": "Make do with what remains."
+      }
+    },
+    "src.31f295f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Levy equipment and transport"
       }
     },
     "src.31f41515": {
@@ -84184,6 +84637,16 @@
       ],
       "source": {
         "text": "Their feud, their funerals."
+      }
+    },
+    "src.32ee3fbd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Automatic provisions: up to {money:cost} today. Reserve target {percent}%."
       }
     },
     "src.32f20590": {
@@ -84867,6 +85330,16 @@
         "text": "Unavailable while traveling"
       }
     },
+    "src.3411e952": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: fallback stale pops"
+      }
+    },
     "src.34169be6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85321,6 +85794,16 @@
         "text": "Varied Board"
       }
     },
+    "src.35034151": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "optional purchases paid"
+      }
+    },
     "src.3510226e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85639,6 +86122,16 @@
       ],
       "source": {
         "text": "Wounded by an assassin."
+      }
+    },
+    "src.35a4010f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Also show popups from other realms. These settings combine and only control popups; the Chronicle keeps all events."
       }
     },
     "src.35a4c40e": {
@@ -86775,6 +87268,16 @@
         "text": "Confirm this elevation under the terms shown above."
       }
     },
+    "src.37a61033": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "liege edges"
+      }
+    },
     "src.37ae1eb5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87570,6 +88073,16 @@
       ],
       "source": {
         "text": " {days} days remain."
+      }
+    },
+    "src.3935863a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Last seasonal landed receipts"
       }
     },
     "src.39363335": {
@@ -88883,6 +89396,16 @@
         "text": "Masterwork {item}"
       }
     },
+    "src.3b39aafb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Gift input:"
+      }
+    },
     "src.3b3ad5e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89725,16 +90248,6 @@
         "text": "Pay the famine price."
       }
     },
-    "src.3d1ed861": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Men-at-arms food and supplies"
-      }
-    },
     "src.3d264184": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90440,6 +90953,16 @@
       ],
       "source": {
         "text": "Corinth"
+      }
+    },
+    "src.3ea7c73a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Workload: starving host-days"
       }
     },
     "src.3eab1dbd": {
@@ -91476,6 +91999,16 @@
       ],
       "source": {
         "text": "Woodland customary tenure"
+      }
+    },
+    "src.4050517c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Goals: evaluated while marching"
       }
     },
     "src.40511a29": {
@@ -93251,16 +93784,6 @@
         "text": "Military Magazines"
       }
     },
-    "src.4335e0b6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Supply at {pct}% — refilling on friendly land."
-      }
-    },
     "src.4339439d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94106,6 +94629,16 @@
         "text": "A warm sleep is its own small treasure."
       }
     },
+    "src.44a4f517": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Gifts: pending visits"
+      }
+    },
     "src.44a5a80c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94487,6 +95020,16 @@
       ],
       "source": {
         "text": "Serve a lord or church office."
+      }
+    },
+    "src.4537f955": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Requisition income loss"
       }
     },
     "src.45381f15": {
@@ -95169,6 +95712,16 @@
       ],
       "source": {
         "text": "Blocked by close kinship."
+      }
+    },
+    "src.4651e26b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: tie comparisons"
       }
     },
     "src.465a9e93": {
@@ -95921,6 +96474,16 @@
       ],
       "source": {
         "text": "The granary fed {province} through the famine."
+      }
+    },
+    "src.47a21600": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "modifier record reads"
       }
     },
     "src.47a308b2": {
@@ -97489,6 +98052,16 @@
         "text": "Rich yeoman’s daughter"
       }
     },
+    "src.4af08663": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Buy supplies automatically"
+      }
+    },
     "src.4af53a3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98191,6 +98764,16 @@
         "text": "Decide nothing today"
       }
     },
+    "src.4c53b05f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/holywar.js"
+      ],
+      "source": {
+        "text": "Settlement of {kingdom}: {ruler} rules independent {realm}, holding {counties}."
+      }
+    },
     "src.4c546834": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98199,6 +98782,16 @@
       ],
       "source": {
         "text": "defensive ally"
+      }
+    },
+    "src.4c551acf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "distinct same day"
       }
     },
     "src.4c58850a": {
@@ -98510,6 +99103,16 @@
       ],
       "source": {
         "text": "Judge the killers in public."
+      }
+    },
+    "src.4ceac2a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/holywar.js"
+      ],
+      "source": {
+        "text": "Settlement of {kingdom}: {ruler} paid {money:amount} to secure an award in the council."
       }
     },
     "src.4cf1bac2": {
@@ -98890,6 +99493,16 @@
       ],
       "source": {
         "text": "The Envoy at the Lower Bench"
+      }
+    },
+    "src.4dc1315e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "military price reads"
       }
     },
     "src.4dc452f3": {
@@ -99657,6 +100270,16 @@
         "text": "All topics"
       }
     },
+    "src.4f0f5fdb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/holywar.js"
+      ],
+      "source": {
+        "text": "Settlement of {kingdom}: {ruler} rules {realm}, holding {counties} as a vassal of {liege}."
+      }
+    },
     "src.4f107a82": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99705,6 +100328,16 @@
       ],
       "source": {
         "text": "That travel purpose is unavailable."
+      }
+    },
+    "src.4f23c467": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: path arrays materialized"
       }
     },
     "src.4f292a60": {
@@ -100739,6 +101372,16 @@
         "text": "Send a formal embassy."
       }
     },
+    "src.510819a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Goals: current county"
+      }
+    },
     "src.510c0ccd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101371,6 +102014,16 @@
       ],
       "source": {
         "text": "Event UI"
+      }
+    },
+    "src.522a2786": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/fortifications.js"
+      ],
+      "source": {
+        "text": "Paths: controller hostility hits"
       }
     },
     "src.522bba25": {
@@ -103316,6 +103969,16 @@
         "text": "📯 Great holy-war objective · {status}"
       }
     },
+    "src.558fc955": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "counterparty transfers"
+      }
+    },
     "src.5599bd14": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103586,6 +104249,16 @@
       ],
       "source": {
         "text": "Peace, or something shaped like it. The host disbands, and the survivors trudge home to their fields, changed."
+      }
+    },
+    "src.561401c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "county tax quotes"
       }
     },
     "src.56154e59": {
@@ -105256,6 +105929,16 @@
         "text": "A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+."
       }
     },
+    "src.589a3e3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Goals: holy objective cache hits"
+      }
+    },
     "src.58a7f866": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105438,6 +106121,16 @@
       ],
       "source": {
         "text": "Success may make {student} Brave and improve Martial; failure costs 1 Martial."
+      }
+    },
+    "src.590050c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Affected counties"
       }
     },
     "src.5900e91d": {
@@ -106757,16 +107450,6 @@
       ],
       "source": {
         "text": "A customary share or service owed for the household’s assigned pasture use."
-      }
-    },
-    "src.5b6c0a24": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Took the enemy’s tribute and ended the war."
       }
     },
     "src.5b6c2095": {
@@ -108500,6 +109183,16 @@
         "text": "Qazvin"
       }
     },
+    "src.5e87855a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Local provisions or loading capacity exhausted."
+      }
+    },
     "src.5e910499": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108940,6 +109633,16 @@
       ],
       "source": {
         "text": "Population: ~{pop}"
+      }
+    },
+    "src.5f4a6bde": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "The host at {province} is low on supplies. Reach a stocked market before starvation."
       }
     },
     "src.5f4c223d": {
@@ -111425,6 +112128,16 @@
         "text": "Let the offense repay the demesne."
       }
     },
+    "src.637a968a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Supply at {pct}% — local provisioning covers consumption."
+      }
+    },
     "src.6380660e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111704,6 +112417,16 @@
       ],
       "source": {
         "text": "Work Beyond the Hall"
+      }
+    },
+    "src.6415fbc5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "optional purchases rejected"
       }
     },
     "src.6416d4ed": {
@@ -112169,6 +112892,16 @@
         "text": "A separate lawful manumission costs {money:price} and spends the day."
       }
     },
+    "src.64d830b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: found"
+      }
+    },
     "src.64da4bd7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112556,6 +113289,16 @@
         "text": "🕯 Lay standing — {rank}"
       }
     },
+    "src.65a00c68": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: fallback frontier pops"
+      }
+    },
     "src.65a0fcbd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112614,6 +113357,16 @@
       ],
       "source": {
         "text": "Enemy outriders find you first. You bring three riders home out of six, and an arrow’s kiss across the ribs."
+      }
+    },
+    "src.65c6c7a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "creation county reads"
       }
     },
     "src.65cdd174": {
@@ -113417,6 +114170,16 @@
         "text": "Reduces yearly household mortality by 0.05 percentage points."
       }
     },
+    "src.6709b545": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "affordability retries skipped"
+      }
+    },
     "src.670d1e06": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113685,6 +114448,16 @@
       ],
       "source": {
         "text": "Helper text color"
+      }
+    },
+    "src.67b2be47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster cache bypass: modifier reader"
       }
     },
     "src.67b3e6b0": {
@@ -114425,7 +115198,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/localfolk.js"
+        "js/localfolk.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Available again in {days} days."
@@ -114851,6 +115625,16 @@
       ],
       "source": {
         "text": "Share your wood with the neighbors."
+      }
+    },
+    "src.69857e67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The target also limits requisition, which continues when purchases are off. Neutral land is never requisitioned. Intact enemy forts protect stores until occupied; exhausted counties cannot feed the host."
       }
     },
     "src.698cb93b": {
@@ -115637,6 +116421,16 @@
       ],
       "source": {
         "text": "Working Library and Copyist’s Instruments"
+      }
+    },
+    "src.6ae50f9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: requests"
       }
     },
     "src.6ae9f2e8": {
@@ -116489,6 +117283,16 @@
         "text": "Refugees Beg the Crown’s Peace"
       }
     },
+    "src.6c75b715": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "military rate snapshots"
+      }
+    },
     "src.6c7c8ee2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116719,6 +117523,16 @@
       ],
       "source": {
         "text": "{lord} proclaims a great tourney and begs the honor of your presence: two days of lances when the spring roads dry, a melee for the young swords, and a champion’s purse of {money:40}. Landless knights and lords’ heirs will ride from three provinces away. Will you enter the lists?"
+      }
+    },
+    "src.6cc7c16e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Property upkeep and liege dues"
       }
     },
     "src.6cc802ec": {
@@ -117140,6 +117954,16 @@
       ],
       "source": {
         "text": "Thin ranks lower abstract campaign condition; live troop totals do not change."
+      }
+    },
+    "src.6d91472e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The distribution could not be paid. Review your funds, counties and cooldown."
       }
     },
     "src.6d919cef": {
@@ -118086,6 +118910,16 @@
         "text": "Supply: drain calculation"
       }
     },
+    "src.6f4aeef3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "military accrual"
+      }
+    },
     "src.6f4edaf3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118788,6 +119622,16 @@
       ],
       "source": {
         "text": "Match details"
+      }
+    },
+    "src.70d8b048": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: primary stale pops"
       }
     },
     "src.70d8ebd0": {
@@ -119692,16 +120536,6 @@
         "text": "Empty loops and one angry goose. There is always tomorrow."
       }
     },
-    "src.728fc738": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/armies.js"
-      ],
-      "source": {
-        "text": "The host at {province} is low on supplies. Reach friendly ground before starvation."
-      }
-    },
     "src.7295039e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120233,6 +121067,16 @@
         "text": "btn small event-details-button"
       }
     },
+    "src.735386f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "Public distributions cost {money:amount}; Popular support rises temporarily in {count} counties."
+      }
+    },
     "src.735a61a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120584,6 +121428,16 @@
         "text": "worship place"
       }
     },
+    "src.73d296fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Gifts: removed"
+      }
+    },
     "src.73d506cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120904,6 +121758,16 @@
       ],
       "source": {
         "text": "Buy the selected charter"
+      }
+    },
+    "src.744008b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take the available tribute and end the war. An empty treasury means peace without silver."
       }
     },
     "src.7445a10a": {
@@ -121577,6 +122441,16 @@
         "text": "Travel to begin courtship…"
       }
     },
+    "src.754fd3cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "accounts settled"
+      }
+    },
     "src.75516fd3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121956,6 +122830,16 @@
       ],
       "source": {
         "text": "The Book of Kells"
+      }
+    },
+    "src.75e1ba91": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Additional producer income"
       }
     },
     "src.75e97e5e": {
@@ -122904,6 +123788,16 @@
         "text": "event:standingRealm_effect"
       }
     },
+    "src.77a68062": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Provisioning input:"
+      }
+    },
     "src.77af4240": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123557,16 +124451,6 @@
         "text": "Adventuring expedition"
       }
     },
-    "src.78ee9f75": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Beaten in the field again and again, {enemy} sends envoys under a white flag: silver enough to end this war today, if you sheath the sword. But {target} still stands untaken — and its walls will not fall to a purse."
-      }
-    },
     "src.78ef955a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123755,6 +124639,16 @@
       ],
       "source": {
         "text": "county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success feudal_renewal_accept feudal_renewal_decline feudal_renewal_valid finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend freedom_accept_offer freedom_lords_notice freedom_offer_accept_ready frontier_go_home frontier_milestone"
+      }
+    },
+    "src.795ecf89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Supplier sales"
       }
     },
     "src.796108bf": {
@@ -124578,6 +125472,16 @@
       ],
       "source": {
         "text": "Santander"
+      }
+    },
+    "src.7ac6e9c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Workload: host-days"
       }
     },
     "src.7accd2db": {
@@ -125447,6 +126351,16 @@
         "text": "Vidin"
       }
     },
+    "src.7c5dbfe6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Actual food withdrawals along army routes. Paid purchases fund suppliers and market dues; requisition pays nothing and harms production and Popular support. Forts protect part of the stores until occupied."
+      }
+    },
     "src.7c6724aa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125585,6 +126499,16 @@
       ],
       "source": {
         "text": "Shibam"
+      }
+    },
+    "src.7cb89a3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Distribute coin to local households for +5 Popular support for one year. Larger gifts provide the same benefit. The benefit never stacks; distributions are available once per year."
       }
     },
     "src.7cba2fb5": {
@@ -125825,6 +126749,16 @@
       ],
       "source": {
         "text": "🏛 The protected term of {ruler} ends; the Constabulary awaits a new nominee."
+      }
+    },
+    "src.7d1ee674": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster cache bypass: active ambition"
       }
     },
     "src.7d248bdf": {
@@ -126407,6 +127341,16 @@
         "text": "A customary share or service owed for seasonal woodland grazing."
       }
     },
+    "src.7df955bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Enemy fort protects remaining supplies."
+      }
+    },
     "src.7dfcfc11": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126896,6 +127840,16 @@
       ],
       "source": {
         "text": "Popular support {change}"
+      }
+    },
+    "src.7eeb0345": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: fallback neighbor edges"
       }
     },
     "src.7eeb2320": {
@@ -127430,6 +128384,16 @@
         "text": "that realm"
       }
     },
+    "src.7faa0008": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cooldown"
+      }
+    },
     "src.7faaf0a0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127589,6 +128553,16 @@
       ],
       "source": {
         "text": "age {age} · ⚔ martial {martial}"
+      }
+    },
+    "src.7fed71ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "host reads"
       }
     },
     "src.7ff8e1fc": {
@@ -129136,6 +130110,16 @@
         "text": "The {holy} Comes Calling"
       }
     },
+    "src.827901b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Orders: accepted"
+      }
+    },
     "src.827dd7ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129810,6 +130794,16 @@
         "text": "Settle the local grievance and end its disruption."
       }
     },
+    "src.8389066b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Army operation: local provisioning"
+      }
+    },
     "src.838a8870": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129908,6 +130902,16 @@
       ],
       "source": {
         "text": "No Iron at Any Price"
+      }
+    },
+    "src.83adc501": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: order cache hits"
       }
     },
     "src.83b412ce": {
@@ -130299,6 +131303,16 @@
       ],
       "source": {
         "text": "Patrols may quiet the songs — or give them a martyr."
+      }
+    },
+    "src.84433d30": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Muster affordable levy defenses"
       }
     },
     "src.844835a1": {
@@ -131950,16 +132964,6 @@
         "text": "has invalid class"
       }
     },
-    "src.870b853c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Show your personal decisions and family news in toasts and the Chronicle."
-      }
-    },
     "src.87143d09": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -132268,6 +133272,16 @@
       ],
       "source": {
         "text": "🤝 Your liege strips the old lord of {province} and invests you with it."
+      }
+    },
+    "src.87903d2f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Projected seasonal provisions"
       }
     },
     "src.8793c3d7": {
@@ -133325,6 +134339,16 @@
         "text": "Scutage — silver may answer the summons"
       }
     },
+    "src.894d29e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "realm tax bonus quotes"
+      }
+    },
     "src.894d7fd7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133728,6 +134752,16 @@
         "text": "Stone raised to heaven lifts the heart with it."
       }
     },
+    "src.89fdbb66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster ambition scans"
+      }
+    },
     "src.8a029f38": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133858,6 +134892,16 @@
       ],
       "source": {
         "text": "Estate Office and Muniments Chest"
+      }
+    },
+    "src.8a46e945": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "construction reserves"
       }
     },
     "src.8a4ac226": {
@@ -134009,6 +135053,16 @@
       ],
       "source": {
         "text": "A Baron Grows Bold"
+      }
+    },
+    "src.8a821a00": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "commitment realms quoted"
       }
     },
     "src.8a831e97": {
@@ -134574,6 +135628,16 @@
         "text": "Target"
       }
     },
+    "src.8b696ba4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster county phase cache hits"
+      }
+    },
     "src.8b69a638": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135135,6 +136199,16 @@
         "text": "Reliable seasonal net"
       }
     },
+    "src.8c271049": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Orders: halt"
+      }
+    },
     "src.8c2dcad4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135203,6 +136277,16 @@
       ],
       "source": {
         "text": "Take compensation and keep the charter."
+      }
+    },
+    "src.8c4c045f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Beaten in the field again and again, {enemy} sends envoys under a white flag, offering peace and whatever tribute the treasury can spare. But {target} still stands untaken — and its walls will not fall to a purse."
       }
     },
     "src.8c4cb6e6": {
@@ -135313,6 +136397,16 @@
       ],
       "source": {
         "text": "Disposition"
+      }
+    },
+    "src.8c73c3cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: water quotes built"
       }
     },
     "src.8c78a244": {
@@ -136419,6 +137513,16 @@
         "text": "🕯 Your spouse {name} has died. The house is quieter, and colder."
       }
     },
+    "src.8e66b412": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "county reads"
+      }
+    },
     "src.8e67bd05": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137436,6 +138540,16 @@
         "text": "⚔ Declare war"
       }
     },
+    "src.9030b240": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: settled edges skipped"
+      }
+    },
     "src.90312dcc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137504,6 +138618,16 @@
       ],
       "source": {
         "text": "The Charter at the Exchequer"
+      }
+    },
+    "src.90562382": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "military commitments rejected"
       }
     },
     "src.90614496": {
@@ -138061,6 +139185,16 @@
         "text": "Starts immediately. No upfront personal cost. Progress resolves annually; no fixed completion date."
       }
     },
+    "src.915a4f06": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Goals: unchanged"
+      }
+    },
     "src.915ce25a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138209,6 +139343,16 @@
       ],
       "source": {
         "text": "🦅 {name}: you rule {share} — {need} and independence qualify you to claim the empire."
+      }
+    },
+    "src.91a8ccee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Supply search: unaffordable quotes skipped"
       }
     },
     "src.91b011a0": {
@@ -139121,6 +140265,26 @@
       ],
       "source": {
         "text": "The unlawful campaign is ended."
+      }
+    },
+    "src.9355977e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster cache miss: changed reader"
+      }
+    },
+    "src.935e04b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Accrued military bills"
       }
     },
     "src.9364394a": {
@@ -140037,6 +141201,16 @@
         "text": "Debts tell stories the grieving cannot."
       }
     },
+    "src.953f1471": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Provisioning coin spent"
+      }
+    },
     "src.9541c8d5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140275,16 +141449,6 @@
       ],
       "source": {
         "text": "No enterprise or office"
-      }
-    },
-    "src.95a991db": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Show news about your realm and its counties, including wars involving your ruler or liege."
       }
     },
     "src.95af077a": {
@@ -140572,6 +141736,16 @@
       ],
       "source": {
         "text": "— Fallowborn v"
+      }
+    },
+    "src.960ea5af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Low on supplies — seek a stocked market before starvation."
       }
     },
     "src.960f12d2": {
@@ -141051,6 +142225,16 @@
         "text": "A captive cannot join local activities."
       }
     },
+    "src.96e4570d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "military basket snapshots"
+      }
+    },
     "src.96e734c0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141179,6 +142363,16 @@
       ],
       "source": {
         "text": "The founder of a gentle house becomes its first landed lord."
+      }
+    },
+    "src.971ade8d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "repeated same day"
       }
     },
     "src.971d1bbe": {
@@ -141763,6 +142957,26 @@
         "text": "⚔ Raiders from {attacker} pillage the settlements of {province}!"
       }
     },
+    "src.9811cbf0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Automated hosts seek reachable, stocked markets and refill toward the reserve target. Manual routes and holds remain yours."
+      }
+    },
+    "src.9817196c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Accepted peace and ended the war."
+      }
+    },
     "src.9819214b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141971,6 +143185,16 @@
       ],
       "source": {
         "text": "💾 Save file downloaded."
+      }
+    },
+    "src.98555d49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Show popups for your personal decisions and family news. All events remain visible in the Chronicle."
       }
     },
     "src.985bb915": {
@@ -142466,16 +143690,6 @@
       ],
       "source": {
         "text": "Captivity blocks travel, marriage, new offices, and plots. Ransom, mercy, and leverage actions always show their terms before they act."
-      }
-    },
-    "src.996524c7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Return automated hosts to friendly land when supplies run low"
       }
     },
     "src.99653e39": {
@@ -143524,6 +144738,16 @@
         "text": "Retire in favor of an adult successor. {name} remains in the family at home as a retired elder."
       }
     },
+    "src.9b0aae5c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/save.js"
+      ],
+      "source": {
+        "text": "AI treasuries"
+      }
+    },
     "src.9b1077d2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143592,6 +144816,16 @@
       ],
       "source": {
         "text": "Earned"
+      }
+    },
+    "src.9b296cd0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "military commitments"
       }
     },
     "src.9b2cbcac": {
@@ -143773,6 +145007,16 @@
       ],
       "source": {
         "text": "The foundation grants {prestige} prestige and +{percent}% county tax income in controlled {region} counties for {days} days. Recognition costs {money:gold}, {paidPrestige} prestige, and {piety} piety."
+      }
+    },
+    "src.9b80bf61": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Field army expenses"
       }
     },
     "src.9b81fdaa": {
@@ -144918,6 +146162,16 @@
         "text": "Chambéry"
       }
     },
+    "src.9d264af7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "No coin for provisions; carried reserves feed the host."
+      }
+    },
     "src.9d29564f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145017,6 +146271,16 @@
       ],
       "source": {
         "text": "Take a vow for the {side} camp of the {campaign}. {service}"
+      }
+    },
+    "src.9d6adabc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster cache bypass: community projects"
       }
     },
     "src.9d6ce32b": {
@@ -145500,6 +146764,16 @@
       ],
       "source": {
         "text": "Your barb lands perfectly. {name} fumes; the crowd laughs."
+      }
+    },
+    "src.9e54640f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: fallback dominated allocations skipped"
       }
     },
     "src.9e5606be": {
@@ -147059,6 +148333,16 @@
         "text": "Unsecured credit capacity"
       }
     },
+    "src.a1079120": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "hierarchy visits"
+      }
+    },
     "src.a10c4f73": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147340,6 +148624,16 @@
       ],
       "source": {
         "text": "One more mouth, one more soul at your hearth."
+      }
+    },
+    "src.a170e3c9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Logistics operation:"
       }
     },
     "src.a171accb": {
@@ -147984,6 +149278,16 @@
       ],
       "source": {
         "text": "A Swarm in the Eaves"
+      }
+    },
+    "src.a26a9220": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "building reads"
       }
     },
     "src.a26e9735": {
@@ -149026,6 +150330,16 @@
       ],
       "source": {
         "text": "Inflated glass permits thin vessels, lamps, and window pieces."
+      }
+    },
+    "src.a43307a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Non-food deployment paid this season"
       }
     },
     "src.a4386587": {
@@ -152963,6 +154277,16 @@
         "text": "Endorse the shrine."
       }
     },
+    "src.ab940709": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Cavalry equipment and transport"
+      }
+    },
     "src.ab950222": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153313,16 +154637,6 @@
         "text": "The first man through finds himself back in the mud. The rest decide another roof is easier."
       }
     },
-    "src.ac0f462e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Rows are inclusive totals; selfMs excludes timed children. Waiting includes browser work. Deferred paint and IndexedDB completion are not measured."
-      }
-    },
     "src.ac0fbfdb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153462,6 +154776,16 @@
       ],
       "source": {
         "text": "Every glance at the high table carries meaning: who sits, who waits, whose cup is filled first. Tonight you are expected to notice all of it and offend no one."
+      }
+    },
+    "src.ac62ab80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: route comparisons"
       }
     },
     "src.ac6e2368": {
@@ -154416,16 +155740,6 @@
       ],
       "source": {
         "text": "Development {development}"
-      }
-    },
-    "src.ae04ecd1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Credit uses reliable income, eligible collateral, standing allowance, and current debt. Pledged credit can use unassigned treasures, eligible permanent holdings, or a complete group of family land plots. Maintained household standards are expenses and cannot be pledged."
       }
     },
     "src.ae061392": {
@@ -156525,6 +157839,16 @@
         "text": "Barter with them."
       }
     },
+    "src.b19f5a58": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Projected seasonal non-food deployment"
+      }
+    },
     "src.b1a1e9ea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -158531,6 +159855,17 @@
         "text": "Forked beard"
       }
     },
+    "src.b4f6869e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js",
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "Treasury:"
+      }
+    },
     "src.b4f749f5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159347,6 +160682,16 @@
         "text": "Only freeholders and gentry may relocate the household this way."
       }
     },
+    "src.b6798fab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster cache miss: cold county"
+      }
+    },
     "src.b67bad1f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -160066,6 +161411,16 @@
       ],
       "source": {
         "text": "{kind} · a day’s outing"
+      }
+    },
+    "src.b7abdda8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Administration follows landed revenue, direct counties and immediate vassals. Official court expenses follow revenue and rank. Household consumption, maintained standards, retainers, buildings and troops are charged separately."
       }
     },
     "src.b7ad8389": {
@@ -161413,6 +162768,16 @@
       ],
       "source": {
         "text": "{completed} completed · {exposed} exposed"
+      }
+    },
+    "src.ba3fe6f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Requires a directly governed county."
       }
     },
     "src.ba43eaf7": {
@@ -163880,6 +165245,16 @@
         "text": "{attacker} attacks {defender}"
       }
     },
+    "src.bf3277b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Provision quotes: realm and county"
+      }
+    },
     "src.bf32dbc2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -164639,6 +166014,16 @@
       ],
       "source": {
         "text": "The liege’s clerks stamp it without a second glance. The difference is yours, this year and after."
+      }
+    },
+    "src.c0a4d229": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: land quotes built"
       }
     },
     "src.c0a6dae1": {
@@ -166033,6 +167418,16 @@
         "text": "Freedom bargaining timings are outside their bounds."
       }
     },
+    "src.c29da2ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/fortifications.js"
+      ],
+      "source": {
+        "text": "Paths: controller hostility builds"
+      }
+    },
     "src.c2a53f8c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -166741,6 +168136,16 @@
       ],
       "source": {
         "text": "Open the purse. ({money:20})"
+      }
+    },
+    "src.c3eea84d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Men-at-arms equipment and transport"
       }
     },
     "src.c3f0ea98": {
@@ -168149,6 +169554,16 @@
         "text": "Sovereign authority above the county has changed from {former} to {current}."
       }
     },
+    "src.c65857bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "These adjustments are already settled with household income. Purchases exclude ruler dues and replace the baseline revenue for the attributed output. Gains are capped at 25% of baseline producer income; seizure losses at 50%."
+      }
+    },
     "src.c663c9cc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -169483,6 +170898,16 @@
         "text": "If carried, the liege’s aid falls one step. Recorded Customary Law also confirms your home county’s custom in writing."
       }
     },
+    "src.c849624b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "accounts initialized"
+      }
+    },
     "src.c84db9f8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -169925,16 +171350,6 @@
         "text": "Sanctuary at the Cathedral Door"
       }
     },
-    "src.c910db7b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Low on supplies — forage before starvation sets in."
-      }
-    },
     "src.c913022f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -170003,6 +171418,16 @@
       ],
       "source": {
         "text": "Choose an action"
+      }
+    },
+    "src.c92f7135": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Seasonal balance before daily purchases"
       }
     },
     "src.c9305449": {
@@ -170133,6 +171558,16 @@
       ],
       "source": {
         "text": "Almería"
+      }
+    },
+    "src.c96b6753": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Orders: idle halt skipped"
       }
     },
     "src.c96cc2a7": {
@@ -171018,16 +172453,6 @@
         "text": "Give thanks where thanks are due."
       }
     },
-    "src.cb265741": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Cavalry fodder and supplies"
-      }
-    },
     "src.cb268a47": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -171086,6 +172511,16 @@
       ],
       "source": {
         "text": "toast event-receipt-toast"
+      }
+    },
+    "src.cb4d7990": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "Treasury"
       }
     },
     "src.cb50a887": {
@@ -172164,6 +173599,16 @@
         "text": "sacred-site custody"
       }
     },
+    "src.ccf02243": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/holywar.js"
+      ],
+      "source": {
+        "text": "Settlement of {kingdom}: {ruler} declined personal rule; the land was granted to {realm}."
+      }
+    },
     "src.ccf38677": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -172395,6 +173840,16 @@
         "text": "Guard the baggage (a basket)."
       }
     },
+    "src.cd4725e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Orders: same destination"
+      }
+    },
     "src.cd4b5c3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -172501,10 +173956,10 @@
       "glossary": [],
       "location": [
         "js/main.js",
-        "js/ui_misc.js",
         "js/ui_modals.js",
         "js/ui_panels.js",
-        "index.html"
+        "index.html",
+        "js/ui_misc.js"
       ],
       "source": {
         "text": "Close"
@@ -172968,6 +174423,16 @@
       ],
       "source": {
         "text": "Pomeranians"
+      }
+    },
+    "src.ce628e0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Accept peace."
       }
     },
     "src.ce65d42e": {
@@ -173621,6 +175086,16 @@
         "text": "Caucasian"
       }
     },
+    "src.cf90e3d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Supply purchases off; carried reserves feed the host."
+      }
+    },
     "src.cf94b3b7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -173880,6 +175355,16 @@
       ],
       "source": {
         "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle."
+      }
+    },
+    "src.d04ff293": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Goals: changed"
       }
     },
     "src.d0522e6c": {
@@ -174403,6 +175888,16 @@
       ],
       "source": {
         "text": "Money belongs to the playable household and pays costs, upkeep, wages, gifts, and contracts. Prestige supports social and political advancement. Piety supports religious acts and offices."
+      }
+    },
+    "src.d168c594": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Army requisition"
       }
     },
     "src.d16b5f36": {
@@ -176227,6 +177722,16 @@
         "text": "{student} turns a distant future into the first piece of a workable plan."
       }
     },
+    "src.d50df20a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Orders: changed destination"
+      }
+    },
     "src.d51a06b0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -176539,6 +178044,16 @@
         "text": "Political terms"
       }
     },
+    "src.d5a3da6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Enemy land: food is requisitioned automatically, harming stocks and Popular support. Forts limit seizure."
+      }
+    },
     "src.d5a430e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -176668,6 +178183,16 @@
       ],
       "source": {
         "text": "The forked blade given to Ali beneath the Prophet’s own banner. Every jurist has an opinion about whose hand may hold it."
+      }
+    },
+    "src.d5d88f4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Provisioning reason:"
       }
     },
     "src.d5db6836": {
@@ -177211,6 +178736,16 @@
         "text": "Skip raid summary"
       }
     },
+    "src.d697772c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "seasonal settlement"
+      }
+    },
     "src.d6980457": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -177392,6 +178927,16 @@
         "text": "No personal audience. Cultivate a {station} intermediary to +{standing} Standing; each warm intermediary opens the next station."
       }
     },
+    "src.d6de9eb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Provisions purchased"
+      }
+    },
     "src.d6e0e6eb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -177420,6 +178965,16 @@
       ],
       "source": {
         "text": "Full barns were built for days like this."
+      }
+    },
+    "src.d6ebab56": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Orders: prepared plan"
       }
     },
     "src.d6f29c48": {
@@ -178022,6 +179577,26 @@
         "text": "Vestments, Vessels and Service Books"
       }
     },
+    "src.d7eeae44": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Reserve target"
+      }
+    },
+    "src.d7f22243": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: dominated allocations skipped"
+      }
+    },
     "src.d7f53d95": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -178220,16 +179795,6 @@
       ],
       "source": {
         "text": "Turning back refunds nothing."
-      }
-    },
-    "src.d846d2e6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Also show news from other realms. These settings combine; hidden entries remain saved and can be shown again."
       }
     },
     "src.d84ab6c3": {
@@ -179275,6 +180840,16 @@
       ],
       "source": {
         "text": "A Shop of Your Own"
+      }
+    },
+    "src.da26fc4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Provisioning shortfall host-days"
       }
     },
     "src.da271c6c": {
@@ -180942,6 +182517,16 @@
         "text": "You need at least {needed} prestige (now {current})."
       }
     },
+    "src.dd7aad3a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: fort fallback"
+      }
+    },
     "src.dd7b96fc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -181785,6 +183370,16 @@
       ],
       "source": {
         "text": "no territorial claim"
+      }
+    },
+    "src.def55234": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: frontier pops"
       }
     },
     "src.def8b0f9": {
@@ -182791,6 +184386,16 @@
         "text": "Manage active election — {office}"
       }
     },
+    "src.e0afee3b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Provisioning hosts"
+      }
+    },
     "src.e0b5a5b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -183161,6 +184766,16 @@
         "text": "Keep the evidence for a motion of redress."
       }
     },
+    "src.e14410f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster county input requests"
+      }
+    },
     "src.e1486267": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -183189,16 +184804,6 @@
       ],
       "source": {
         "text": "Fund the roof handsomely."
-      }
-    },
-    "src.e15fabfb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Their coin, your glory — the war ends here."
       }
     },
     "src.e161a57a": {
@@ -183339,6 +184944,16 @@
       ],
       "source": {
         "text": "Free from captivity"
+      }
+    },
+    "src.e1a293ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "From {money:amount}: +5 Popular support in {count} counties for one year. Once per year."
       }
     },
     "src.e1a5cfe9": {
@@ -183624,6 +185239,16 @@
         "text": "does not own its capital."
       }
     },
+    "src.e212f220": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: endpoint pair"
+      }
+    },
     "src.e2130c10": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -183632,6 +185257,16 @@
       ],
       "source": {
         "text": "◈ {modifier} now shapes your part in the campaign."
+      }
+    },
+    "src.e221f1ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Public distributions…"
       }
     },
     "src.e22bcc2c": {
@@ -184754,6 +186389,16 @@
         "text": "Offer equal treatment, not privilege."
       }
     },
+    "src.e4134f19": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Using carried supplies toward the {percent}% reserve target."
+      }
+    },
     "src.e415d040": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -184832,6 +186477,16 @@
       ],
       "source": {
         "text": "🧭 The venture to {destination} returns {money:payout}."
+      }
+    },
+    "src.e4361af7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Borrowing limits depend on income, standing, debt and collateral. You can pledge eligible treasures, permanent holdings or complete groups of family plots. Household standards cannot be pledged."
       }
     },
     "src.e43dbf62": {
@@ -186648,6 +188303,16 @@
         "text": "A prisoner cannot organize return cargo."
       }
     },
+    "src.e70b45bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "gm-footer modal-navigation"
+      }
+    },
     "src.e70c86da": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -186826,6 +188491,16 @@
       ],
       "source": {
         "text": "Household {profession} monopoly"
+      }
+    },
+    "src.e75ce4d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Workload: marching host-days"
       }
     },
     "src.e7603beb": {
@@ -187581,16 +189256,6 @@
         "text": "Your agent is caught, and talks. Now the claim has a martyr’s righteousness about it — and backers with spears."
       }
     },
-    "src.e86f88df": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Levy food and supplies"
-      }
-    },
     "src.e871049d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -187651,6 +189316,16 @@
         "text": "must be an array of 1 to 20 ranks."
       }
     },
+    "src.e87b915c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Paths: land quote cache hits"
+      }
+    },
     "src.e87ee90b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -187699,6 +189374,16 @@
       ],
       "source": {
         "text": "{money:pay} each season; the first season is paid on entry."
+      }
+    },
+    "src.e8926d35": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "realm reads"
       }
     },
     "src.e8a13ad3": {
@@ -187820,6 +189505,16 @@
       ],
       "source": {
         "text": "He defaults — but the mill pledge makes you whole, and his kin blacken your name through the market."
+      }
+    },
+    "src.e8d94120": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster cache miss: changed inputs"
       }
     },
     "src.e8e9efb0": {
@@ -188143,16 +189838,6 @@
       ],
       "source": {
         "text": "Granddaughter"
-      }
-    },
-    "src.e9b45384": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Take the tribute."
       }
     },
     "src.e9b5de3f": {
@@ -190008,6 +191693,16 @@
         "text": "Riders from over the border have burned two of your hamlets and driven off cattle. Your people look to you for an answer."
       }
     },
+    "src.ed0471f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Muster cache bypass: support reader"
+      }
+    },
     "src.ed0a8c2e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -190762,6 +192457,16 @@
         "text": "royal marriage"
       }
     },
+    "src.ee908869": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "military commitments accepted"
+      }
+    },
     "src.ee93c152": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -191243,6 +192948,16 @@
       ],
       "source": {
         "text": "Border war"
+      }
+    },
+    "src.ef61c3ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Treasury input:"
       }
     },
     "src.ef669416": {
@@ -193631,6 +195346,16 @@
         "text": "One of your sworn men arrives with too many retainers and too few courtesies, demanding lower dues and a seat at your right hand."
       }
     },
+    "src.f3843789": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "Treasury: military host quote"
+      }
+    },
     "src.f3890144": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -193701,6 +195426,16 @@
       ],
       "source": {
         "text": "Bread and coin for the poor at the {temple} gate. ({money:10})"
+      }
+    },
+    "src.f397b2c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Higher reserves cost more to fill. Purchases use available coin only."
       }
     },
     "src.f3a22e0b": {
@@ -195124,6 +196859,16 @@
         "text": "Pass the thorn uphill, and lose a little grace."
       }
     },
+    "src.f5ffaa10": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Government each season"
+      }
+    },
     "src.f6084eb9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -195232,6 +196977,16 @@
       ],
       "source": {
         "text": "tax income"
+      }
+    },
+    "src.f6399830": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/logistics.js"
+      ],
+      "source": {
+        "text": "Provisions requisitioned"
       }
     },
     "src.f63f1615": {
@@ -195807,6 +197562,16 @@
       ],
       "source": {
         "text": "A petition requires 60 guild standing; currently {standing}."
+      }
+    },
+    "src.f759beaa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Realm muster"
       }
     },
     "src.f75ba347": {
@@ -196510,6 +198275,16 @@
         "text": "A friend is rare wealth."
       }
     },
+    "src.f891bd29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/treasury.js"
+      ],
+      "source": {
+        "text": "fiscal snapshot"
+      }
+    },
     "src.f8959cc8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -197162,6 +198937,16 @@
         "text": "invalid settlement site id"
       }
     },
+    "src.f99c78fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Peace is agreed without a cash payment; the enemy treasury cannot fund tribute."
+      }
+    },
     "src.f99f02d5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -197634,6 +199419,16 @@
         "text": "Ailments"
       }
     },
+    "src.fa7978e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Army provisions (estimated consumption)"
+      }
+    },
     "src.fa85f9b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -197934,6 +199729,16 @@
       ],
       "source": {
         "text": "; {cost} per county and season"
+      }
+    },
+    "src.fafbab64": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Food purchased / requisitioned"
       }
     },
     "src.fafc4eef": {
@@ -198447,6 +200252,16 @@
         "text": "No wage; choose one campaign approach before the confirmation vote."
       }
     },
+    "src.fbc14cae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Local provisions feed the host; shortages consume its carried reserve."
+      }
+    },
     "src.fbc76656": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -198638,6 +200453,16 @@
       ],
       "source": {
         "text": "Fully staffed by {count} workers."
+      }
+    },
+    "src.fc5af7f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "Gifts: checks movement and arrivals"
       }
     },
     "src.fc5ff0fa": {
@@ -199603,6 +201428,16 @@
       ],
       "source": {
         "text": "Supplies raise abstract condition; promises burden your reputation."
+      }
+    },
+    "src.fe1f4f45": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Available treasury"
       }
     },
     "src.fe31c53b": {
@@ -208450,6 +210285,14 @@
         "text": "Active war"
       }
     },
+    "ui:Actual food withdrawals along army routes. Paid purchases fund suppliers and market dues; requisition pays nothing and harms production and Popular support. Forts protect part of the stores until occupied.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Actual food withdrawals along army routes. Paid purchases fund suppliers and market dues; requisition pays nothing and harms production and Popular support. Forts protect part of the stores until occupied."
+      }
+    },
     "ui:Add land to this ruler’s existing realm. Their capital, service charter, and tenure do not change; completing a full de jure duchy raises a count to duke.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -208561,6 +210404,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Adjacency"
+      }
+    },
+    "ui:Administration follows landed revenue, direct counties and immediate vassals. Official court expenses follow revenue and rank. Household consumption, maintained standards, retainers, buildings and troops are charged separately.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Administration follows landed revenue, direct counties and immediate vassals. Official court expenses follow revenue and rank. Household consumption, maintained standards, retainers, buildings and troops are charged separately."
       }
     },
     "ui:Administration, Medicine, and Scholarship teach letters during their trainee stage. Licensed practice and permanent specializations require Lettered, Learning, vocational years, technology, fees, and a professional examination whose chance rises with skill.": {
@@ -208902,6 +210753,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "All topics"
+      }
+    },
+    "ui:All your hosts buy local provisions with available coin, even while marching under manual orders. Prices, county stocks and loading capacity limit purchases. Standing upkeep excludes this food.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "All your hosts buy local provisions with available coin, even while marching under manual orders. Prices, county stocks and loading capacity limit purchases. Standing upkeep excludes this food."
       }
     },
     "ui:All {capacity} political-attention assignments are in use. Set another court to Neutral first.": {
@@ -209515,12 +211374,12 @@
         "text": "Arbitrary · {piety} piety"
       }
     },
-    "ui:Archer food and supplies": {
+    "ui:Archer equipment and transport": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
-        "text": "Archer food and supplies"
+        "text": "Archer equipment and transport"
       }
     },
     "ui:Armed rebellion; siege {progress}/{required}": {
@@ -209532,6 +211391,30 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Armed rebellion; siege {progress}/{required}"
+      }
+    },
+    "ui:Army provisioning this season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Army provisioning this season"
+      }
+    },
+    "ui:Army provisions (estimated consumption)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Army provisions (estimated consumption)"
+      }
+    },
+    "ui:Army requisition": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Army requisition"
       }
     },
     "ui:Arrange a family marriage…": {
@@ -210210,12 +212093,31 @@
         "text": "Autobuild"
       }
     },
+    "ui:Automated hosts seek reachable, stocked markets and refill toward the reserve target. Manual routes and holds remain yours.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Automated hosts seek reachable, stocked markets and refill toward the reserve target. Manual routes and holds remain yours."
+      }
+    },
     "ui:Automatic appointment reservations": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Automatic appointment reservations"
+      }
+    },
+    "ui:Automatic provisions: up to {money:cost} today. Reserve target {percent}%.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "percent"
+      ],
+      "location": "js/logistics.js",
+      "source": {
+        "text": "Automatic provisions: up to {money:cost} today. Reserve target {percent}%."
       }
     },
     "ui:Automatic research": {
@@ -210297,7 +212199,7 @@
       "glossary": [
         "days"
       ],
-      "location": "js/localfolk.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Available again in {days} days."
       }
@@ -210388,6 +212290,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Available now: {action}"
+      }
+    },
+    "ui:Available treasury": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Available treasury"
       }
     },
     "ui:Available worker": {
@@ -211119,6 +213029,14 @@
         "text": "Border war"
       }
     },
+    "ui:Borrowing limits depend on income, standing, debt and collateral. You can pledge eligible treasures, permanent holdings or complete groups of family plots. Household standards cannot be pledged.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Borrowing limits depend on income, standing, debt and collateral. You can pledge eligible treasures, permanent holdings or complete groups of family plots. Household standards cannot be pledged."
+      }
+    },
     "ui:Both hands": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -211505,6 +213423,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Buy return cargo…"
+      }
+    },
+    "ui:Buy supplies automatically": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Buy supplies automatically"
       }
     },
     "ui:Buy the selected charter": {
@@ -211995,12 +213921,12 @@
         "text": "Cautious venture to {destination}"
       }
     },
-    "ui:Cavalry fodder and supplies": {
+    "ui:Cavalry equipment and transport": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
-        "text": "Cavalry fodder and supplies"
+        "text": "Cavalry equipment and transport"
       }
     },
     "ui:Celibate": {
@@ -214665,14 +216591,6 @@
         "text": "Creates this vassal’s existing one-year levy promise."
       }
     },
-    "ui:Credit uses reliable income, eligible collateral, standing allowance, and current debt. Pledged credit can use unassigned treasures, eligible permanent holdings, or a complete group of family land plots. Maintained household standards are expenses and cannot be pledged.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Credit uses reliable income, eligible collateral, standing allowance, and current debt. Pledged credit can use unassigned treasures, eligible permanent holdings, or a complete group of family land plots. Maintained household standards are expenses and cannot be pledged."
-      }
-    },
     "ui:Cross border or sea to plunder foreign wealth, livestock, goods, and thralls without a formal war.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -215756,6 +217674,14 @@
         "text": "Departure uses the one personal-attention assignment."
       }
     },
+    "ui:Deployment is paid daily at each host’s location. Provisions are bought separately; filling carried reserves can cost more than the consumption forecast.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Deployment is paid daily at each host’s location. Provisions are bought separately; filling carried reserves can cost more than the consumption forecast."
+      }
+    },
     "ui:Depose all and elect a compromise Pope": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -216222,6 +218148,24 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Distraint is a court order allowing bailiffs to seize household property for an unpaid debt."
+      }
+    },
+    "ui:Distribute coin to local households for +5 Popular support for one year. Larger gifts provide the same benefit. The benefit never stacks; distributions are available once per year.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Distribute coin to local households for +5 Popular support for one year. Larger gifts provide the same benefit. The benefit never stacks; distributions are available once per year."
+      }
+    },
+    "ui:Distribute {money:amount}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Distribute {money:amount}"
       }
     },
     "ui:Divergent from parent": {
@@ -217262,12 +219206,28 @@
         "text": "Enemy casualties"
       }
     },
+    "ui:Enemy fort protects remaining supplies.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/logistics.js",
+      "source": {
+        "text": "Enemy fort protects remaining supplies."
+      }
+    },
     "ui:Enemy host": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Enemy host"
+      }
+    },
+    "ui:Enemy land: food is requisitioned automatically, harming stocks and Popular support. Forts limit seizure.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Enemy land: food is requisitioned automatically, harming stocks and Popular support. Forts limit seizure."
       }
     },
     "ui:Enemy losses": {
@@ -218261,6 +220221,14 @@
         "text": "Fell in battle at {province}."
       }
     },
+    "ui:Field army expenses": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Field army expenses"
+      }
+    },
     "ui:Field battle": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -218878,6 +220846,17 @@
         "text": "French, German, Italian, and Spanish are AI-generated Preview translations and may contain errors."
       }
     },
+    "ui:From {money:amount}: +5 Popular support in {count} counties for one year. Once per year.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "money:amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "From {money:amount}: +5 Popular support in {count} counties for one year. Once per year."
+      }
+    },
     "ui:Full": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -219300,6 +221279,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Government"
+      }
+    },
+    "ui:Government administration": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Government administration"
+      }
+    },
+    "ui:Government each season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Government each season"
       }
     },
     "ui:Government systems": {
@@ -220061,6 +222056,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Higher rank"
+      }
+    },
+    "ui:Higher reserves cost more to fill. Purchases use available coin only.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Higher reserves cost more to fill. Purchases use available coin only."
       }
     },
     "ui:Highest guild rank": {
@@ -221962,6 +223965,14 @@
         "text": "Last raided: {province}"
       }
     },
+    "ui:Last season’s army trade": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Last season’s army trade"
+      }
+    },
     "ui:Last vote": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -222292,12 +224303,12 @@
         "text": "Levy"
       }
     },
-    "ui:Levy food and supplies": {
+    "ui:Levy equipment and transport": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
-        "text": "Levy food and supplies"
+        "text": "Levy equipment and transport"
       }
     },
     "ui:Levy source": {
@@ -222636,6 +224647,22 @@
         "text": "Local ordinance"
       }
     },
+    "ui:Local provisions feed the host; shortages consume its carried reserve.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Local provisions feed the host; shortages consume its carried reserve."
+      }
+    },
+    "ui:Local provisions or loading capacity exhausted.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/logistics.js",
+      "source": {
+        "text": "Local provisions or loading capacity exhausted."
+      }
+    },
     "ui:Local resident": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -222900,12 +224927,12 @@
         "text": "Low"
       }
     },
-    "ui:Low on supplies — forage before starvation sets in.": {
+    "ui:Low on supplies — seek a stocked market before starvation.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "Low on supplies — forage before starvation sets in."
+        "text": "Low on supplies — seek a stocked market before starvation."
       }
     },
     "ui:Low support: unrest may spread": {
@@ -223817,12 +225844,12 @@
         "text": "Members’ relationships with your house"
       }
     },
-    "ui:Men-at-arms food and supplies": {
+    "ui:Men-at-arms equipment and transport": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
-        "text": "Men-at-arms food and supplies"
+        "text": "Men-at-arms equipment and transport"
       }
     },
     "ui:Mercenary company contracts": {
@@ -224925,6 +226952,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No choice recorded"
+      }
+    },
+    "ui:No coin for provisions; carried reserves feed the host.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/logistics.js",
+      "source": {
+        "text": "No coin for provisions; carried reserves feed the host."
       }
     },
     "ui:No compact": {
@@ -226997,6 +229032,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Officers strengthen the crown; a powerful council can restrain it."
+      }
+    },
+    "ui:Official court expenses": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Official court expenses"
       }
     },
     "ui:Offline copy": {
@@ -230343,6 +232386,22 @@
         "text": "Provoke direction"
       }
     },
+    "ui:Public distributions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Public distributions"
+      }
+    },
+    "ui:Public distributions…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Public distributions…"
+      }
+    },
     "ui:Purchase freedom": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -230837,14 +232896,12 @@
         "text": "Realm levies: {current}/{max} men"
       }
     },
-    "ui:Realm muster: ~{troops}": {
+    "ui:Realm muster": {
       "context": "Explicit UI localization call.",
-      "glossary": [
-        "troops"
-      ],
+      "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Realm muster: ~{troops}"
+        "text": "Realm muster"
       }
     },
     "ui:Realm name": {
@@ -231996,6 +234053,14 @@
         "text": "Requires a coastal county."
       }
     },
+    "ui:Requires a directly governed county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Requires a directly governed county."
+      }
+    },
     "ui:Requires a town or city in your home county.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -232441,6 +234506,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Requires: {requirements}. This becomes the vocation’s permanent title."
+      }
+    },
+    "ui:Requisitioning food; fort protection {percent}%. County stocks and Popular support fall.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/logistics.js",
+      "source": {
+        "text": "Requisitioning food; fort protection {percent}%. County stocks and Popular support fall."
       }
     },
     "ui:Research details": {
@@ -234395,6 +236470,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Seek delegated command of the local castle."
+      }
+    },
+    "ui:Seek markets when supplies run low": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Seek markets when supplies run low"
       }
     },
     "ui:Seek the next guild rank — {rank} ({money:gold})": {
@@ -236424,14 +238507,6 @@
         "text": "Sunni law reserves the Caliphate for a male ruler."
       }
     },
-    "ui:Supplies replenished from friendly territory.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Supplies replenished from friendly territory."
-      }
-    },
     "ui:Supply": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -236451,14 +238526,30 @@
         "text": "Supply at {pct}% — about {days} days before hunger bites."
       }
     },
-    "ui:Supply at {pct}% — refilling on friendly land.": {
+    "ui:Supply at {pct}% — local provisioning covers consumption.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "pct"
       ],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "Supply at {pct}% — refilling on friendly land."
+        "text": "Supply at {pct}% — local provisioning covers consumption."
+      }
+    },
+    "ui:Supply purchases off; carried reserves feed the host.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/logistics.js",
+      "source": {
+        "text": "Supply purchases off; carried reserves feed the host."
+      }
+    },
+    "ui:Supply reserve target": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Supply reserve target"
       }
     },
     "ui:Support": {
@@ -238001,6 +240092,14 @@
         "text": "The displayed value is current even when one of these systems is unavailable to this character. Individual events may use the skill in additional checks."
       }
     },
+    "ui:The distribution could not be paid. Review your funds, counties and cooldown.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The distribution could not be paid. Review your funds, counties and cooldown."
+      }
+    },
     "ui:The domain changed after this review. A fresh proposal is shown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -239141,6 +241240,14 @@
         "text": "The successor picker shows the current reason beside every reviewed candidate. Territorial, office, debt, item, and household transfers then follow their own succession rules."
       }
     },
+    "ui:The target also limits requisition, which continues when purchases are off. Neutral land is never requisitioned. Intact enemy forts protect stores until occupied; exhausted counties cannot feed the host.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The target also limits requisition, which continues when purchases are off. Neutral land is never requisitioned. Intact enemy forts protect stores until occupied; exhausted counties cannot feed the host."
+      }
+    },
     "ui:The target crown": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -239396,6 +241503,14 @@
       "location": "js/parliament.js",
       "source": {
         "text": "There is no war for the estates to condemn."
+      }
+    },
+    "ui:These adjustments are already settled with household income. Purchases exclude ruler dues and replace the baseline revenue for the attributed output. Gains are capped at 25% of baseline producer income; seizure losses at 50%.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "These adjustments are already settled with household income. Purchases exclude ruler dues and replace the baseline revenue for the attributed output. Gains are capped at 25% of baseline producer income; seizure losses at 50%."
       }
     },
     "ui:These answers settle today’s due only; none changes the household’s future tenure terms.": {
@@ -241469,6 +243584,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Uses your personal attention. Marriage is not guaranteed."
+      }
+    },
+    "ui:Using carried supplies toward the {percent}% reserve target.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/logistics.js",
+      "source": {
+        "text": "Using carried supplies toward the {percent}% reserve target."
       }
     },
     "ui:Vacancy": {
@@ -247342,6 +249467,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{bloc} starting posture"
+      }
+    },
+    "ui:{bought} / {taken} units": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "bought",
+        "taken"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{bought} / {taken} units"
       }
     },
     "ui:{building} upkeep": {

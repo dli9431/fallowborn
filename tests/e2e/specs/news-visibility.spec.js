@@ -29,7 +29,7 @@ test('family and realm news default on, foreign news remains saved and can be re
     all:true, savedAudience:4, recentSaved:4 });
 });
 
-test('settings persist all three choices and update Chronicle visibility', async function ({ page }, testInfo) {
+test('settings persist toast choices without hiding Chronicle entries', async function ({ page }, testInfo) {
   await startWarSafety(page, testInfo);
   await page.evaluate(function () {
     FB.news(FB.state, FB.msg('news.world.visibility_probe', 'Distant visibility probe', {}));
@@ -40,6 +40,7 @@ test('settings persist all three choices and update Chronicle visibility', async
   await expect(page.locator('#set-news-all')).not.toBeChecked();
   await page.locator('#set-news-family').uncheck();
   await page.locator('#set-news-realm').uncheck();
+  await expect(page.locator('#tab-log')).toContainText('Distant visibility probe');
   await page.locator('#set-news-all').check();
   expect(await page.evaluate(function () {
     const prefs = JSON.parse(localStorage.getItem('fb_ui'));
@@ -95,14 +96,17 @@ test('fast-forward renders only visible news and lays out the retained burst onc
   expect(result).toEqual({ before:0, layouts:1, count:5, hidden:false });
 });
 
-test('the full Chronicle viewer honors visibility without removing exported history', async function ({ page }, testInfo) {
+test('the full Chronicle viewer includes news when every toast category is disabled', async function ({ page }, testInfo) {
   await startWarSafety(page, testInfo);
   await page.evaluate(function () {
+    FB.game.uiPrefs.newsFamily = false;
+    FB.game.uiPrefs.newsRealm = false;
+    FB.game.uiPrefs.newsAll = false;
     FB.news(FB.state, FB.msg('news.world.viewer_hidden', 'Remote viewer probe', {}));
     window.visibilityChronicle = FB.save.chronicleData(FB.state);
     FB.ui.showChronicleViewer(window.visibilityChronicle);
   });
-  await expect(page.locator('#gm-body')).not.toContainText('Remote viewer probe');
+  await expect(page.locator('#gm-body')).toContainText('Remote viewer probe');
   expect(await page.evaluate(function () {
     return window.visibilityChronicle.entries.some(function (entry) { return entry.text === 'Remote viewer probe'; });
   })).toBe(true);
@@ -112,3 +116,29 @@ test('the full Chronicle viewer honors visibility without removing exported hist
   });
   await expect(page.locator('#gm-body')).toContainText('Remote viewer probe');
 });
+
+
+test('all toast categories can be disabled while all audiences remain in both Chronicle views',
+  async function ({ page }, testInfo) {
+    await startWarSafety(page, testInfo);
+    await page.evaluate(function () {
+      FB.game.uiPrefs.newsFamily = false;
+      FB.game.uiPrefs.newsRealm = false;
+      FB.game.uiPrefs.newsAll = false;
+      document.getElementById('toasts').innerHTML = '';
+      [1, 2, 4].forEach(function (audience) {
+        FB.news(FB.state, FB.msg('news.e2e.toast_only', 'Retained audience {n}', { n:audience }),
+          { audience:audience });
+      });
+      FB.ui.showTab('log');
+      FB.ui.refresh();
+    });
+    for (const audience of [1, 2, 4]) {
+      await expect(page.locator('#tab-log')).toContainText('Retained audience ' + audience);
+    }
+    await expect(page.locator('#toasts')).not.toContainText('Retained audience');
+    await page.evaluate(function () { FB.ui.showChronicleViewer(FB.save.chronicleData(FB.state)); });
+    for (const audience of [1, 2, 4]) {
+      await expect(page.locator('#gm-body')).toContainText('Retained audience ' + audience);
+    }
+  });

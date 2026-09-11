@@ -10,8 +10,7 @@ or clearing captivity prevents a second payment. See the Stage 4 payment audit i
 The AI treasury foundation accrues each host's non-food standing cost to its realm
 inside the existing supply pass, before starvation or battle can remove the host.
 All hosts contribute before the once-per-turn stamp is set; embedded allied troops
-are charged once through their host. Rebels and player hosts keep their existing
-rules. Stage 2 pays food from available treasury coin and credits market dues.
+are charged once through their host. Rebels remain excluded; player field costs are paid daily through the same quote. Stage 2 pays food from available treasury coin and credits market dues.
 New AI hosts, detachments and replenishment must fit two seasons of projected
 host costs plus initial food refill and necessary fiscal expenses. Quotes share
 one lazy active-host pass per decision phase, never a daily all-realm fiscal pass.
@@ -1537,3 +1536,29 @@ existing campaigns are unchanged. Assessment runs only for a chosen unjust targe
 Unconfirmed aggression requests return before campaign-state repair, preserving
 the read-only review contract. After a law is proclaimed, the law sheet restores
 its disclosure, scroll position, and section focus after modal autofocus.
+
+## Shared daily field expense accounting
+
+`fieldNonFoodCostMultiplier` defaults to 3 for field camp and unit non-food upkeep.
+It does not multiply physical food use, mercenary contracts or replacement drilling.
+`FB.hostFieldUpkeepParts` quotes each live host at its own county, sharing class rates
+and local non-food basket prices within a pass. Holy-war supply modifiers apply to
+participating player hosts, not ordinary detachments or mercenary contracts.
+
+The existing supply pass quotes costs before starvation can remove a host. AI keeps
+daily accrual and seasonal settlement; players pay incurred non-food costs daily,
+including when that creates a signed shortfall. The once-per-turn treasury stamp guards
+both. Player hired companies are contracted once across banners. Disbanding cannot
+refund paid days and mustering before a season boundary cannot charge a full season.
+Player replacement premiums remain separate seasonal obligations, including their
+existing applicable campaign modifier. Seasonal settlement no longer charges live
+field hosts again. Food stays in daily provisioning and is never charged here.
+Forecasts, AI commitments, replenishment and reserve calculations use the same rates.
+No inactive professional-cohort maintenance is introduced by this change.
+
+Crusade council completion appends durable Chronicle messages for each applied land
+award (actual ruler, realm, counties and liege or independence), sacred custody,
+negotiated payments and declined personal grants. Entries snapshot names at the
+settlement and remain readable after succession or save/load. Only final applied
+awards are reported, once; detail entries suppress popups. Older chronicles retain
+their original summaries and do not invent missing terms.

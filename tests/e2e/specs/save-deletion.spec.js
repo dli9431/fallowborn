@@ -29,6 +29,9 @@ for (const fallback of [false, true]) {
       const usage = await new Promise(function (resolve) { FB.save.storageUsage(resolve); });
       const all = await remove('all');
       FB.save.flushPending();
+      // A lifecycle save must not recreate an explicitly deleted autosave.
+      FB.save.autosave({ background:true });
+      FB.save.flushPending();
       return { one:one, isolated:isolated, auto:auto, autoGone:autoGone, all:all,
         empty:!FB.save.hasAnySave(), pref:localStorage.getItem('fb_deletion_preference'), usage:usage };
     });
@@ -80,4 +83,19 @@ test('Settings offers delete-all confirmation and Escape cancels without deletin
   await page.keyboard.press('Escape');
   await expect(page.locator('#set-delete-saves')).toBeVisible();
   expect(await page.evaluate(function () { return !!FB.save.read(1); })).toBe(true);
+});
+
+test('background saving resumes after play advances beyond an autosave deletion', async function ({ page }, testInfo) {
+  await openGame(page, testInfo); await startDeterministicGame(page);
+  const result = await page.evaluate(async function () {
+    await new Promise(function (resolve) { FB.save.deleteSaves('auto', resolve); });
+    FB.save.autosave({ background:true });
+    FB.save.flushPending();
+    const suppressed = !FB.save.hasAuto();
+    FB.state.turn++;
+    FB.save.autosave({ background:true });
+    FB.save.flushPending();
+    return { suppressed:suppressed, resumed:FB.save.hasAuto() };
+  });
+  expect(result).toEqual({ suppressed:true, resumed:true });
 });

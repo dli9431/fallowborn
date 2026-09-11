@@ -270,3 +270,12 @@ army. The local uprising lifecycle removes it early after a concession, successf
 suppression, or exit from the originating ruler's subrealm. Internal vassal transfers
 preserve disruption and its expiry. A county transferred outside that authority loses its modifier;
 other participating counties continue. Succession ends the entire incident. Its fixed expiry is never extended after a failed response.
+
+## Public distributions
+
+`public_distribution` is a county modifier with +5 `commonVoice` for 360 days and no
+upkeep, production or stock effect. The shared Finance distribution action applies it
+to directly governed counties after payment. AI uses the same action above its reserve
+target. A ruler may pay only once per 360 days; larger sums do not stack or improve the
+modifier. It follows normal county ownership and expiry rules. The owning capability
+has technology impact `none`, as ordinary governance requires no research gate.

@@ -1905,6 +1905,8 @@ test('profiling captures workload changes and scoped fiscal inputs without retai
     s.armies = [host];
     FB.treasurySnapshot(s);
     FB.armyProvisionQuote(s, host);
+    // Starting a burst records the same activation as pressing Play.
+    g.setPaused(false); g.setPaused(true);
     const snapshot = JSON.stringify(s), rng = FB.getRngState();
     const modifier = FB.modBonus;
     let cacheContracts = false;

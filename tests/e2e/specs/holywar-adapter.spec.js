@@ -2,6 +2,9 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/holywar.js',
+  'js/messages.js',
+  'js/save.js',
+  'js/settlement.js',
   'js/population.js',
   'js/world.js',
   'data/events_world.js'
@@ -699,3 +702,86 @@ test('sacred custody under the player grants its seasonal effect',
       campaignId:'ghw_test'
     });
   });
+
+
+test('settlement Chronicle exports name actual rulers, county grants, custody and lieges once',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var captured = ['jerusalem', 'acre', 'damascus', 'homs', 'aleppo'];
+      FBTEST.resolveGreatHolyWar({ includePlayer:false,
+        attackers:[{ realm:'west_francia', contribution:70, desire:{ kind:'crown', id:null } },
+          { realm:'italy', contribution:30, desire:{ kind:'duchy', id:'d_damascus' } }],
+        capturedCounties:captured });
+      function terms() {
+        return FB.save.chronicleData(s).entries.filter(function (entry) {
+          return entry.message && entry.message.key.indexOf('news.holywar.award_') === 0;
+        });
+      }
+      var entries = terms();
+      var grants = captured.map(function (pid) {
+        var realm = s.realms[s.holder[pid]];
+        return { county:FB.world.byId[pid].name, realm:realm.name,
+          ruler:realm.ruler.name, liege:realm.liege ? s.realms[realm.liege].name : null };
+      });
+      FB.resolveGreatHolyWar(s, 'attackers', 'repeat');
+      var serialized = JSON.parse(FB.save.serialize());
+      FB.save.restore(serialized);
+      s = FB.state;
+      return { entries:entries, after:terms(), grants:grants };
+    });
+    expect(result.after).toEqual(result.entries);
+    for (const grant of result.grants) {
+      const entry = result.entries.find(function (e) {
+        return e.message.params.realm === grant.realm && e.message.params.counties &&
+          e.message.params.counties.indexOf(grant.county) >= 0;
+      });
+      expect(entry).toBeTruthy();
+      expect(entry.text).toContain(grant.ruler);
+      if (grant.liege) expect(entry.message.params.liege).toBe(grant.liege);
+      else expect(entry.message.key).toBe('news.holywar.award_independent');
+    }
+    expect(result.entries.some(function (e) {
+      return e.message.key === 'news.holywar.award_custody' &&
+        e.message.params.sites.indexOf('Jerusalem') >= 0;
+    })).toBe(true);
+  });
+
+for (const accept of [true, false]) {
+  test('negotiated payment is recorded with the final personal grant choice: ' + accept,
+    async function ({ page }) {
+      const result = await page.evaluate(function (accept) {
+        var s = FB.state;
+        var campaign = FBTEST.resolveGreatHolyWar({ includePlayer:true,
+          capturedCounties:['acre'], playerContribution:100 }).campaign;
+        var c = campaign.settlement.case;
+        // Bound the proposal weights so the genuine payment negotiation is available.
+        c.claims.forEach(function (claim) {
+          claim.weight = claim.claimant === 'player' ? 0.6 : 0.65;
+          claim.blessing = 0;
+          claim.realmRank = 1;
+        });
+        s.player.gold = 500;
+        var view = FB.settlement.current(c);
+        var before = s.player.gold;
+        var move = FB.greatHolyWarSettlementMove(s, { kind:'terms' });
+        var chosen = FB.greatHolyWarSettlementChoice(s, accept);
+        var entries = FB.save.chronicleData(s).entries.filter(function (e) {
+          return e.message && e.message.key.indexOf('news.holywar.award_') === 0;
+        });
+        return { terms:view.terms, move:move, chosen:chosen, before:before,
+          after:s.player.gold, playerName:s.chars[s.player.charId].name, entries:entries };
+      }, accept);
+      expect(result.terms.kind).toBe('payment');
+      expect(result.chosen).toBe(true);
+      const payment = result.entries.find(function (e) {
+        return e.message.key === 'news.holywar.award_payment';
+      });
+      expect(payment.message.params.amount).toBe(result.terms.gold);
+      expect(payment.message.params.ruler).toBe(result.playerName);
+      expect(result.after).toBe(result.before - result.terms.gold);
+      expect(result.entries.some(function (e) {
+        return e.message.key === 'news.holywar.award_declined';
+      })).toBe(!accept);
+    });
+}

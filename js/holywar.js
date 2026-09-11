@@ -2535,6 +2535,58 @@ window.FB = window.FB || {};
     }
   }
 
+  function recordCouncilTerms(state, campaign, acceptPlayer) {
+    var settlement = campaign.settlement, settlementCase = settlement.case;
+    var kingdom = FBDATA.kingdoms[campaign.targetKingdom];
+    var playerCharacter = state.chars[state.player.charId];
+    var playerName = playerCharacter ? playerCharacter.name : realmName(state, 'player');
+    function countyNames(ids) {
+      return ids.map(function (pid) {
+        return FB.world.byId[pid] ? FB.world.byId[pid].name : pid;
+      }).join(', ');
+    }
+    for (var i = 0; i < settlementCase.awards.length; i++) {
+      var award = settlementCase.awards[i], asset = caseAsset(settlementCase, award.asset);
+      if (!asset) continue;
+      var rid = settlement.awardRealms[asset.id], realm = state.realms[rid];
+      var params = {
+        kingdom:kingdom ? kingdom.name : campaign.targetKingdom,
+        realm:realm ? realm.name : rid,
+        ruler:rid === 'player' ? playerName : realm && realm.ruler && realm.ruler.name
+      };
+      if (realm && asset.land) {
+        params.counties = countyNames(settlement.captured.filter(function (pid) {
+          return ((state.holder && state.holder[pid]) || state.owner[pid]) === rid;
+        }));
+        params.ruler = params.ruler || realm.name;
+        if (realm.liege && state.realms[realm.liege]) {
+          params.liege = state.realms[realm.liege].name;
+          FB.news(state, FB.msg('news.holywar.award_vassal',
+            'Settlement of {kingdom}: {ruler} rules {realm}, holding {counties} as a vassal of {liege}.', params), { toast:false });
+        } else {
+          FB.news(state, FB.msg('news.holywar.award_independent',
+            'Settlement of {kingdom}: {ruler} rules independent {realm}, holding {counties}.', params), { toast:false });
+        }
+      } else if (realm && asset.kind === 'sacred') {
+        params.sites = countyNames(asset.siteIds || asset.ids || []);
+        FB.news(state, FB.msg('news.holywar.award_custody',
+          'Settlement of {kingdom}: {realm} receives sacred custody of {sites}.', params), { toast:false });
+      }
+      if (award.terms && award.terms.kind === 'payment') {
+        FB.news(state, FB.msg('news.holywar.award_payment',
+          'Settlement of {kingdom}: {ruler} paid {money:amount} to secure an award in the council.', {
+            kingdom:params.kingdom, ruler:playerName, amount:award.terms.gold
+          }), { toast:false });
+      }
+      if (asset.land && award.claimant === 'player' && !award.beneficiary && !acceptPlayer) {
+        FB.news(state, FB.msg('news.holywar.award_declined',
+          'Settlement of {kingdom}: {ruler} declined personal rule; the land was granted to {realm}.', {
+            kingdom:params.kingdom, ruler:playerName, realm:params.realm
+          }), { toast:false });
+      }
+    }
+  }
+
   function applyCouncilAwards(state, campaign, acceptPlayer) {
     var settlement = campaign.settlement, settlementCase = settlement.case;
     if (!settlement || settlement.applied || !settlementCase ||
@@ -2681,6 +2733,7 @@ window.FB = window.FB || {};
         campaign:FB.dataParam('religion', campaign.callingReligion,
           'head.greatHolyWar.name')
       }));
+    recordCouncilTerms(state, campaign, acceptPlayer);
     finalize(state, campaign);
     return true;
   }

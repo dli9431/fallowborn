@@ -10702,8 +10702,24 @@ window.FB = window.FB || {};
   function realmTreasuryHtml(s, rid) {
     const t = FB.treasurySummary && FB.treasurySummary(s, rid);
     if (!t || t.accountingOnly) return '';
-    return '<span aria-hidden="true">💰</span> ' + esc(FB.T('Available treasury')) + ': ' +
+    let h = '<span aria-hidden="true">💰</span> ' + esc(FB.T('Available treasury')) + ': ' +
       '<b class="ruler-resource-amount">' + esc(FB.money(t.available)) + '</b>';
+    const last = t.last;
+    h += cardInfoButton('ruler-treasury-details') + '<div class="settcard-details hidden" id="ruler-treasury-details">' +
+      kv('Accrued military bills', esc(FB.money(t.accrued))) +
+      kv('Reserve target', esc(FB.money(t.reserveTarget)));
+    if (last) {
+      const income = last.income + last.duesIn;
+      const expenses = last.duesOut + last.upkeep + (last.government || 0) + last.military;
+      h += kv('Last seasonal landed receipts', esc(FB.money(income))) +
+        kv('Government administration', esc(FB.money(last.administration || 0))) +
+        kv('Official court expenses', esc(FB.money(last.court || 0))) +
+        kv('Property upkeep and liege dues', esc(FB.money(last.upkeep + last.duesOut))) +
+        kv('Settled non-food military costs', esc(FB.money(last.military))) +
+        kv('Seasonal balance before daily purchases', esc(FB.money(income - expenses)));
+    }
+    if (t.distribution) h += kv('Last public distribution', esc(FB.money(t.distribution.amount)));
+    return h + '</div>';
   }
 
   function showRealmInteractionSheet(rid, returnContext, replaceView) {
@@ -15087,6 +15103,32 @@ window.FB = window.FB || {};
         'Borrowing limits depend on income, standing, debt and collateral. You can pledge eligible treasures, permanent holdings or complete groups of family plots. Household standards cannot be pledged.')) +
       '</div></div>';
 
+    if (s.player.tier >= 3) {
+      const government = FB.playerGovernmentCosts(s);
+      const distribution = FB.publicDistributionQuote(s, 'player');
+      h += '<div class="settcard" id="finance-government" tabindex="-1"><div class="settcard-head"><h4>' +
+        esc(FB.T('Government each season')) + '</h4>' + cardInfoButton('finance-government-details') + '</div>' +
+        kv('Government administration', signedMoney(-government.administration)) +
+        kv('Official court expenses', signedMoney(-government.court)) +
+        '<div class="settcard-details hidden" id="finance-government-details">' + esc(FB.T(
+          'Administration follows landed revenue, direct counties and immediate vassals. Official court expenses follow revenue and rank. Household consumption, maintained standards, retainers, buildings and troops are charged separately.')) + '</div>' +
+        '<button class="actionbtn" id="finance-distribution"' +
+        (distribution.ready && distribution.available >= distribution.minimum ? '' : ' disabled') + '>' +
+        esc(FB.T('Public distributions…')) + '<span class="adesc">' +
+        esc(!distribution.eligible ? FB.T('Requires a directly governed county.') :
+          distribution.nextTurn > s.turn ? FB.T('Available again in {days} days.', { days:distribution.nextTurn - s.turn }) :
+          FB.T('From {money:amount}: +5 Popular support in {count} counties for one year. Once per year.',
+            { amount:distribution.minimum, count:distribution.counties.length })) + '</span></button></div>';
+    }
+    const field = FB.playerHostUpkeepParts(s);
+    const accounting = s.treasuryAccounting || {};
+    h += '<div class="settcard" id="finance-field-costs"><h4>' + esc(FB.T('Field army expenses')) + '</h4>' +
+      kv('Projected seasonal non-food deployment', signedMoney(-(field.total - field.reinforcement - FB.playerReinforcementUpkeepParts(s).campaignModifier))) +
+      kv('Projected seasonal provisions', signedMoney(-FB.playerProvisionEstimate(s))) +
+      kv('Non-food deployment paid last season', signedMoney(-(accounting.playerMilitaryLast || 0))) +
+      kv('Non-food deployment paid this season', signedMoney(-(accounting.playerMilitary || 0))) +
+      '<p class="hint">' + esc(FB.T('Deployment is paid daily at each host’s location. Provisions are bought separately; filling carried reserves can cost more than the consumption forecast.')) + '</p></div>';
+
     h += panelh('Loans');
     if (!loans.length) {
       h += '<div class="progressnote">' + esc(FB.T('No active obligations.')) + '</div>';
@@ -15182,6 +15224,8 @@ window.FB = window.FB || {};
       guide:guideModalOption('finance-guide', 'resources', 'Guide: resources and credit')
     });
     $('finance-close').addEventListener('click', UI.closeModal);
+    const distributionButton = $('finance-distribution');
+    if (distributionButton) distributionButton.addEventListener('click', UI.showPublicDistribution);
     const borrow = $('finance-borrow');
     if (borrow) borrow.addEventListener('click', UI.showFinanceBorrow);
     const ownVenture = $('finance-own-venture');
@@ -15204,6 +15248,52 @@ window.FB = window.FB || {};
     if (debase) debase.addEventListener('click', UI.showDebasement);
     const recoin = $('finance-recoin');
     if (recoin) recoin.addEventListener('click', UI.showRecoinage);
+  };
+
+  UI.showPublicDistribution = function () {
+    const s = FB.state, q = FB.publicDistributionQuote(s, 'player');
+    const scroll = $('gm-body').scrollTop;
+    const expanded = Array.prototype.map.call(document.querySelectorAll('#gm-body .settcard-details:not(.hidden)'),
+      function (node) { return node.id; });
+    function returnToFinance() {
+      UI.showFinance();
+      for (const id of expanded) {
+        const detail = $(id);
+        const toggle = document.querySelector('[aria-controls="' + id + '"]');
+        if (detail) detail.classList.remove('hidden');
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', 'true');
+          toggle.title = FB.T('Hide details');
+          toggle.setAttribute('aria-label', FB.T('Hide details'));
+        }
+      }
+      setTimeout(function () {
+        const button = $('finance-distribution');
+        if (button && !button.disabled) button.focus({ preventScroll:true });
+        else if ($('finance-government')) $('finance-government').focus({ preventScroll:true });
+        $('gm-body').scrollTop = scroll;
+      }, 0);
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Distribute coin to local households for +5 Popular support for one year. Larger gifts provide the same benefit. The benefit never stacks; distributions are available once per year.')) + '</p>' +
+      kv('Affected counties', esc(q.counties.map(function (pid) { return FB.world.byId[pid].name; }).join(', '))) +
+      kv('Cooldown', esc(FB.T('{days} days', { days:FBDATA.balance.distributionCooldownDays }))) + '</div><div class="gm-list">';
+    for (const multiple of [1, 2, 4]) {
+      const amount = q.minimum * multiple;
+      h += '<button class="actionbtn" data-public-distribution="' + amount + '"' +
+        (q.ready && q.available >= amount ? '' : ' disabled') + '>' +
+        esc(FB.T('Distribute {money:amount}', { amount:amount })) + '</button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="distribution-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Public distributions'), h, { historyView:true, historyBackRender:returnToFinance });
+    $('distribution-back').addEventListener('click', function () { modalHistoryBack(returnToFinance); });
+    document.querySelectorAll('[data-public-distribution]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (FB.publicDistribution(s, 'player', Number(button.dataset.publicDistribution))) UI.refresh();
+        else UI.toast(FB.T('The distribution could not be paid. Review your funds, counties and cooldown.'));
+        modalHistoryBack(returnToFinance);
+      });
+    });
   };
 
   UI.showFinanceBorrow = function () {
@@ -26898,11 +26988,11 @@ window.FB = window.FB || {};
         'Automatic event results are always recorded in the Chronicle. Enable this to switch to Chronicle Choices when their popup is dismissed.',
         G.uiPrefs.eventToastOpensChronicle);
     h += settingsDetailToggle('set-news-family', 'Family-relevant events',
-      'Show your personal decisions and family news in toasts and the Chronicle.', G.uiPrefs.newsFamily !== false) +
+      'Show popups for your personal decisions and family news. All events remain visible in the Chronicle.', G.uiPrefs.newsFamily !== false) +
       settingsDetailToggle('set-news-realm', 'Realm-relevant events',
-        'Show news about your realm and its counties, including wars involving your ruler or liege.', G.uiPrefs.newsRealm !== false) +
+        'Show popups about your realm and its counties, including wars involving your ruler or liege. All events remain visible in the Chronicle.', G.uiPrefs.newsRealm !== false) +
       settingsDetailToggle('set-news-all', 'All significant events',
-        'Also show news from other realms. These settings combine; hidden entries remain saved and can be shown again.', G.uiPrefs.newsAll === true);
+        'Also show popups from other realms. These settings combine and only control popups; the Chronicle keeps all events.', G.uiPrefs.newsAll === true);
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Deeds')) + '</p></div>' + settingsDetailToggle(
         'set-group-deeds-by-action-type',
@@ -27248,7 +27338,6 @@ window.FB = window.FB || {};
   function chronicleFilteredEntries(data) {
     const search = chronicleViewer.search.toLocaleLowerCase();
     return (data.entries || []).filter(function (entry) {
-      if (FB.newsVisible && !FB.newsVisible(FB.state, { audience:entry.audience, msg:entry.message, kind:entry.choice ? 'choice' : null })) return false;
       if (chronicleViewer.category !== 'all' &&
           entry.category !== chronicleViewer.category) return false;
       if (chronicleViewer.generation !== 'all' &&

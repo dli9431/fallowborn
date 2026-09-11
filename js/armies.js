@@ -743,12 +743,13 @@ window.FB = window.FB || {};
       for (const good in def.basket) weight += Math.max(0, Number(def.basket[good]) || 0);
       if (weight) cost *= 1 - (def.basket.provisions || 0) / weight;
     }
-    return cost;
+    return cost * (B().fieldNonFoodCostMultiplier === undefined ? 1 : B().fieldNonFoodCostMultiplier);
   }
   function hostUpkeepParts(units, mercenaryCompanies) {
     const bal = B();
     const base = (bal.hostLogisticsBase === undefined ? 2 : bal.hostLogisticsBase) *
-      (FB.provisionArmy ? 0.45 : 1); // provisions are purchased daily
+      (FB.provisionArmy ? 0.45 : 1) *
+      (bal.fieldNonFoodCostMultiplier === undefined ? 1 : bal.fieldNonFoodCostMultiplier); // provisions are purchased daily
     const byClass = {};
     let soldiers = 0;
     for (const key of FB.unitClassIds()) {
@@ -776,62 +777,37 @@ window.FB = window.FB || {};
      base, while hired companies are contracted once for the whole war. The
      reinforcement premium is charged while replacement cohorts drill, host
      or no host — the drilling does not pause when the banners come down. */
-  FB.playerHostUpkeepParts = function (state) {
-    const reinforcement = reinforcementParts(state);
-    const hosts = FB.hostsOf(state, 'player');
-    const host = hosts.length ? FB.hostOf(state, 'player') : null;
-    if (!host) {
-      return {
-        base:0, levy:0, archers:0, cavalry:0, retinue:0,
-        mercenaries:0, byClass:{}, campaignModifier:0,
-        reinforcement:reinforcement.total,
-        reinforceByClass:reinforcement.byClass,
-        total:reinforcement.total
-      };
-    }
-    const units = emptyUnitCounts();
-    for (const h of hosts) {
-      const hu = FB.hostUnits(h);
-      for (const key of FB.unitClassIds()) units[key] += hu[key] || 0;
-    }
-    const companySize = B().mercCompanySize || 150;
-    const contracted = state.military && state.military.player && state.military.player.mercCos;
-    const companies = contracted || Math.ceil((units.mercs || 0) / companySize);
-    const parts = hostUpkeepParts(units, companies);
-    parts.base *= hosts.length; // every banner keeps its own camp
-    if (FB.marketCostQuote) {
-      const pid = host.at || state.player.provinceId;
-      parts.base = FB.marketCostQuote(state, parts.base,
-        FB.provisionArmy ? { materials:0.25, transport:0.20 }
-          : { provisions:0.55, materials:0.25, transport:0.20 }, pid);
-      /* each class quotes its own provisions/materials/transport basket */
-      for (const key of FB.unitClassIds()) {
-        const def = unitClassDef(key);
-        let basket = def && def.basket;
-        if (!basket) continue;
-        if (FB.provisionArmy) { basket = Object.assign({}, basket); delete basket.provisions; }
-        parts.byClass[key] = FB.marketCostQuote(state, parts.byClass[key],
-          basket, pid);
-      }
-      parts.levy = parts.byClass.levy || 0;
-      parts.archers = parts.byClass.arch || 0;
-      parts.cavalry = parts.byClass.cav || 0;
-      parts.retinue = parts.byClass.ret || 0;
-      let soldiers = 0;
-      for (const key in parts.byClass) soldiers += parts.byClass[key];
-      parts.total = parts.base + soldiers + parts.mercenaries;
-    }
-    const totalMen = hosts.reduce(function (sum, army) { return sum + army.men; }, 0);
-    const holyMen = hosts.reduce(function (sum, army) { return sum + (army.warId === 'holy' ? army.men : 0); }, 0);
-    const rate = FB.campaignHostModBonus
-      ? FB.campaignHostModBonus(state, 'supplyUse') * holyMen / Math.max(1, totalMen) : 0;
-    parts.reinforcement = reinforcement.total;
-    parts.reinforceByClass = reinforcement.byClass;
-    parts.total += reinforcement.total;
-    const nonContract = parts.total - parts.mercenaries;
-    parts.campaignModifier = nonContract * rate;
-    parts.total = Math.max(0, parts.total + parts.campaignModifier);
+  FB.playerReinforcementUpkeepParts = function (state) {
+    const parts = reinforcementParts(state), hosts = FB.hostsOf(state, 'player');
+    const all = hosts.reduce(function (n, h) { return n + h.men; }, 0);
+    const holy = hosts.reduce(function (n, h) { return n + (h.warId === 'holy' ? h.men : 0); }, 0);
+    const rate = FB.campaignHostModBonus ? FB.campaignHostModBonus(state, 'supplyUse') * holy / Math.max(1, all) : 0;
+    parts.campaignModifier = parts.total * Math.max(-1, rate);
     return parts;
+  };
+  FB.playerHostUpkeepParts = function (state) {
+    const reinforcement = FB.playerReinforcementUpkeepParts(state);
+    const out = { base:0, byClass:{}, mercenaries:0, campaignModifier:reinforcement.campaignModifier,
+      reinforcement:reinforcement.total, reinforceByClass:reinforcement.byClass, total:0 };
+    const hosts = FB.hostsOf(state, 'player');
+    const batch = { prices:Object.create(null), baskets:Object.create(null) };
+    let mercs = 0;
+    for (const host of hosts) {
+      const parts = FB.hostFieldUpkeepParts(state, host, batch);
+      out.base += parts.base;
+      out.campaignModifier += parts.campaignModifier;
+      mercs += FB.hostUnits(host).mercs || 0;
+      for (const key in parts.byClass) out.byClass[key] = (out.byClass[key] || 0) + parts.byClass[key];
+    }
+    if (hosts.length) {
+      const contracted = state.military && state.military.player && state.military.player.mercCos;
+      out.mercenaries = (contracted || Math.ceil(mercs / (B().mercCompanySize || 150))) * B().hostLogisticsMercenaryCompany;
+    }
+    out.levy = out.byClass.levy || 0; out.archers = out.byClass.arch || 0;
+    out.cavalry = out.byClass.cav || 0; out.retinue = out.byClass.ret || 0;
+    out.total = out.base + out.mercenaries + out.reinforcement + out.campaignModifier;
+    for (const key in out.byClass) out.total += out.byClass[key];
+    return out;
   };
 
   /* ---------- ordinary campaign feedback ----------

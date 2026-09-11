@@ -1,5 +1,11 @@
 # Game state & saves
 
+Deleting Autosave (or all slots) suppresses background-only saves for the same
+in-memory life and turn until play advances or a normal autosave resumes saving. Reload or tab hiding cannot
+immediately recreate a deleted slot. This suppression is transient.
+War repair retains hosts belonging to a live rebellion even without an ordinary
+campaign; rebellion repair remains responsible for validating their records.
+
 Stage 4 transfers do not replay history or rebase balances. In-flight cash gifts
 remain prepaid; successful delivery credits the ruler and marks `treasuryDelivered`
 before removal. Failed deliveries retain their existing refund. Ransom demands keep
@@ -1422,3 +1428,17 @@ searching the completed list for every exposure. The temporary indexes are disca
 after each serialization, including failures. Exposure order and the synchronous
 pre-mortality snapshot boundary remain unchanged; this reduces compaction work,
 not the requirement to serialize the remaining live state on the main thread.
+
+## Shared budget additions
+
+`treasuryAccounting.playerFieldVersion:1` marks daily player deployment charging.
+Missing versions initialize `playerMilitary` and `playerMilitaryLast` to zero and the
+shared `lastMilitaryTurn` to the current turn, without retroactive charges. New saves
+retain that stamp and the bounded current/last seasonal totals, so reload cannot replay
+field expenses. AI accrued bills and signed balances remain untouched.
+AI `lastSummary` adds administration, court and total government costs; `necessary`
+includes government expenses and `reserveTarget` holds the latest reserve projection.
+Each payer (player or AI treasury) may retain numeric `distributionNextTurn` and one
+`lastDistribution:{turn,amount,counties}` receipt. They survive succession and repair;
+county effects use the existing modifier records. No new save format, historical
+replay, treasury cap or forced player spending is introduced.

@@ -10,6 +10,13 @@ const { openGame } = require('../support/game/navigation');
 async function startObserverWar(page, testInfo) {
   await openGame(page, testInfo);
   await page.evaluate(function () {
+    return new Promise(function (resolve, reject) {
+      FB.activateBookmark('867', function () {}, function (error) {
+        if (error) reject(error); else resolve();
+      });
+    });
+  });
+  await page.evaluate(function () {
     FB.game.pending = { seed:'OBSERVE-WAR-REGRESSION' };
     FB.game.startObserve();
     FB.game.setPaused(true);

@@ -573,8 +573,10 @@ test.describe('sibling and collateral-household agency', function () {
           staffInLedger:ledger.contains(staff),
           staffOutsideFooter:!footer.contains(staff),
           staffBelowTable:staffRect.top >= lastRowRect.bottom - 1,
-          footerOnlyClose:footer.children.length === 1 &&
-            footer.firstElementChild.id === 'household-plan-close'
+          footerOnlyClose:!!footer.querySelector('#household-plan-close') &&
+            Array.from(footer.querySelectorAll('button')).every(function (button) {
+              return button.textContent.trim() === 'Back' || button.textContent.trim() === 'Close';
+            })
         };
       });
 
@@ -753,47 +755,16 @@ test.describe('sibling and collateral-household agency', function () {
       await expect(page.locator('#tooltip')).toBeVisible();
       await expect(page.locator('#tooltip')).toContainText(
         'The fee cap applies separately to each child');
-      const desktop = await page.evaluate(function () {
-        const backRect = document.querySelector(
-          '#education-policy-back').getBoundingClientRect();
-        const saveRect = document.querySelector(
-          '#education-policy-save').getBoundingClientRect();
-        return {
-          sameRow:Math.abs(backRect.top - saveRect.top) < 2,
-          backLeft:backRect.left < saveRect.left,
-          equalWidth:Math.abs(backRect.width - saveRect.width) < 2,
-          equalHeight:Math.abs(backRect.height - saveRect.height) < 2
-        };
-      });
-      expect(desktop).toEqual({
-        sameRow:true,
-        backLeft:true,
-        equalWidth:true,
-        equalHeight:true
-      });
-
+      await expect(page.locator('.gm-footer #education-policy-save')).toHaveCount(0);
+      await expect(page.locator('.modal-body-actions #education-policy-save')).toBeVisible();
       await page.setViewportSize({ width:390, height:740 });
       const info = details.locator('.settcard-info');
       await expect(info).toBeVisible();
       await info.click();
       await expect(page.locator('#education-policy-preview-details'))
         .toBeVisible();
-      const mobile = await page.evaluate(function () {
-        const backRect = document.querySelector(
-          '#education-policy-back').getBoundingClientRect();
-        const saveRect = document.querySelector(
-          '#education-policy-save').getBoundingClientRect();
-        return {
-          backAbove:backRect.top < saveRect.top,
-          equalWidth:Math.abs(backRect.width - saveRect.width) < 2,
-          equalHeight:Math.abs(backRect.height - saveRect.height) < 2
-        };
-      });
-      expect(mobile).toEqual({
-        backAbove:true,
-        equalWidth:true,
-        equalHeight:true
-      });
+      const saveBox = await save.boundingBox(), backBox = await back.boundingBox();
+      expect(saveBox.y).toBeLessThan(backBox.y);
       await page.locator('#education-policy-focus').selectOption('ste');
       await save.click();
       await expect(page.getByRole('heading', { name:/Household Plan/ }))
@@ -879,7 +850,7 @@ test.describe('starting-family presets', function () {
           const mother = s.chars[c.motherId];
           return {
             age:s.date.year - c.born,
-            houseDyn:c.dyn === me.dyn,
+            houseDyn:c.dyn === FB.childDynastySource(s, me, spouse, true).dyn,
             parents:(c.fatherId === me.id || c.motherId === me.id) &&
               spouse &&
               (c.fatherId === spouse.id || c.motherId === spouse.id),
@@ -1228,7 +1199,7 @@ test.describe('house renaming', function () {
         };
       });
       expect(renameButtonStyle).toEqual({
-        alignItems:'center', border:'1px', display:'inline-flex', justifyContent:'center'
+        alignItems:'center', border:'1px', display:'flex', justifyContent:'center'
       });
       await renameButton.click();
       await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);

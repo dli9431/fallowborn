@@ -1109,3 +1109,12 @@ unrelated faiths are rejected before expensive office eligibility reads. The
 selected claimant still uses the canonical committing API and revalidates live
 eligibility; candidate ranking and RNG behavior are unchanged. Candidates remain
 checked daily, so a newly eligible ruler is not delayed by a polling interval.
+
+
+Public-government costs use direct holdings and immediate vassals with actual landed
+receipts after liege dues. The same rank-based court allowances apply to player and AI
+institutions. Public-distribution cooldown and the last payment belong to the existing
+payer record, so succession cannot reset annual generosity. County support remains a
+temporary county modifier and follows county transfer normally. Treasury balances are
+never confiscated or capped to solve long-term accumulation; AI uses the reserve policy
+in finance.md, while player spending remains voluntary.

@@ -25,7 +25,7 @@ settle once per season, and survive host loss. Accounts allow signed shortfalls;
 positive coin revalues once with the existing finance ratio. Observe settles AI
 accounts but omits player transfers and advances the annual stamp at ratio 1.
 Available funds exclude accrued bills. Annual ordinary construction now also protects
-one season of building upkeep and liege dues, two seasons of existing host costs
+ten seasons of necessary civilian expenses, two seasons of existing host costs
 (food and non-food), and one initial food refill. The annual projection scans fiscal
 inputs and hosts once; it does not commit military accrual. Each successful building
 debits its live canonical realm quote once and reserves its new upkeep. Food remains
@@ -355,3 +355,47 @@ and Guild Standing gain. Acknowledgement and character-sheet returns cannot repe
 the transaction.
 
 Daily finance and political trade counts share a transient investment schedule. It scans retained history once, then checks only live commitments until creation, resolution, list replacement, or explicit `FB.ensureEconomy` repair. Venture deadlines and resolution order are unchanged. Direct edits that reactivate settled historical records must call `FB.ensureEconomy` afterward; no cache metadata is serialized.
+
+## Shared government budgets and public distributions
+
+Landed players (tier 3+) and AI realms use `FB.governmentCostParts` for the same
+public-government costs. `FB.playerGovernmentCosts` supplies actual player landed
+receipts after liege deductions; AI snapshots use income plus immediate dues received
+minus dues paid. Private enterprises, loans, gifts, asset sales and savings are excluded.
+Administration costs 50% of those nonnegative receipts plus the lesser of 5% and
+0.5 gold per directly governed county/immediate vassal. The official court costs 10%
+plus the lesser of 5% and a Baron/Count/Duke/King/Emperor allowance of 1/2/4/8/16 gold.
+No sovereign is charged every indirect vassal's territory. Zero revenue means zero
+new government expense. Household consumption, maintained standards, retainers,
+buildings, fortifications, county modifiers and troops remain separate obligations.
+AI county-modifier upkeep now enters its existing upkeep total as player upkeep does.
+
+Seasonal settlement, reliable income, the gold breakdown, credit capacity and prudent
+player construction share this quote. AI necessary-expense estimates and opening
+reserves include it. Government arithmetic and field-rate changes are balance changes,
+not new technology gates. Initial parameters aim for ordinary peacetime saving of
+25-40% before optional spending; these are calibration targets, not enforced margins.
+
+AI construction protects ten seasons of civilian expenses (government, existing upkeep
+and liege dues), with a minimum seasonal basis of 50% of gross landed receipts, plus
+existing two-season field commitments and initial food refill. New construction also
+reserves ten seasons of added upkeep. After annual construction, solvent AI realms
+outside recovery distribute 10% of uncommitted cash above the target if that exceeds
+one season of government costs or 10 gold, whichever is greater. They may distribute
+only once in 360 days and must directly govern at least one county. Sustained spending
+approaches a reserve-plus-surplus equilibrium; it does not impose a treasury ceiling.
+Existing rich accounts spend down gradually. Player savings are never spent automatically.
+
+`FB.publicDistributionQuote` and `FB.publicDistribution` own the shared eligibility,
+live price, payment and cooldown. Players choose the minimum, twice or four times it
+in Finance, with the same explicitly stated benefit. Money leaves the ruler account
+as transfers to unmodeled local households; it neither mints goods nor credits another
+ruler. Each directly governed county receives +5 temporary Popular support for 360 days
+through `public_distribution`. Extra generosity never increases or stacks the benefit.
+The API rechecks funds and current holdings; signed shortfalls cannot fund distributions.
+Technology impact `public_distributions` is `none`: baseline local governance.
+
+Finance separates projected seasonal deployment/provisions from non-food military
+payments already made. AI treasury details disclose the last recurring settlement,
+accrued military bills, reserve target and last distribution; their displayed seasonal
+balance is explicitly before daily food purchases and other transfers.

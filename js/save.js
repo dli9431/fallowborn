@@ -826,6 +826,8 @@ window.FB = window.FB || {};
       transaction.onabort = function () { done(usage); };
     } catch (error) { done(usage); }
   };
+  let deletedAutoState = null;
+  let deletedAutoTurn = null;
   S.deleteSaves = function (slot, done) {
     if (deletionBusy) { done(false); return; }
     const all = slot === 'all', names = Object.create(null);
@@ -856,6 +858,10 @@ window.FB = window.FB || {};
         catch (error) { ok = false; }
       });
       deletionBusy = false;
+      if (ok && names[key('auto')]) {
+        deletedAutoState = FB.state;
+        deletedAutoTurn = FB.state && FB.state.turn;
+      }
       done(ok);
     }
     if (!saveDatabase) {
@@ -998,9 +1004,12 @@ window.FB = window.FB || {};
   window.addEventListener('pagehide', S.flushPending);
 
   /* an observe session is never saved — it must not bury a real life */
-  S.autosave = function () {
+  S.autosave = function (options) {
     if (deletionBusy) return;
+    if (options && options.background && deletedAutoState === FB.state &&
+        FB.state && deletedAutoTurn === FB.state.turn) return;
     if (!FB.state || FB.state.player.dead || (FB.game && FB.game.observe)) return;
+    deletedAutoState = null;
     try {
       const json = S.serialize();
       stopAutoCodec();

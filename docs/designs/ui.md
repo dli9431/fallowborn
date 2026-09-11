@@ -1,5 +1,9 @@
 # UI: keyboard & mobile
 
+Work-list return rendering captures scroll before deferred focus and scroll events
+can replace it. Staffing-preview redraws manage scroll explicitly and disable
+browser scroll anchoring so removed hiring controls do not shift the restored view.
+
 War peace previews show the current affordable tribute, capped at 25 after accrued
 bills. Acceptance rechecks funds. The option explains that an empty enemy treasury
 allows peace without silver; the outcome reports the actual transferred amount.
@@ -2734,3 +2738,19 @@ section, outside its disclosure, including when the list is grouped.
 The Work & Enterprises overview has no automatic number shortcuts or number badges.
 Tab, Enter/Space, Escape and explicit Back remain available; filtering and returning
 from nested views must not reinstall number hints on this overview.
+
+
+Finance lists government administration and official court expenses separately, with
+the distinction from private household costs behind the shared Details control. Its
+field-expense card separates current seasonal projections from non-food payments made.
+AI ruler treasury Details show recurring settlement components and reserves; seasonal
+net explicitly excludes daily purchases and transfers. All amounts use money helpers.
+The landed public-distribution preview shows exact payment choices, affected counties,
++5 support for one year, and a 360-day cooldown. Larger payments explicitly provide the
+same benefit. Back, Escape and mobile/browser Back restore Finance scroll, disclosures
+and trigger focus; successful payment refreshes funds/cooldown and focuses the government
+card when its trigger becomes disabled. Payment always revalidates live eligibility.
+
+The Family, Realm and All significant events settings filter news popups only.
+Neither the live Chronicle nor the full/exported Chronicle viewer applies these
+preferences; their own Choices/News and other explicit viewer filters still apply.
