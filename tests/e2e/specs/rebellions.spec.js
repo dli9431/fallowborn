@@ -221,6 +221,39 @@ test('daily army processing neither starves nor replenishes rebel troops', async
   expect(result.noCampaign).toBe(true);
 });
 
+test('local rebels are not cut off before occupation but remain encircleable away from their uprising', async function ({ page }, testInfo) {
+  const ids = await setup(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state;
+    FB.setCountySupport(s, ids.home, -80);
+    const group = FB.startOpenRevolt(s, ids.home);
+    const host = s.armies.find(function (a) { return a.rebellionId === group.id; });
+    const adjacent = FB.world.adj;
+    const crossing = FB.waterCrossing;
+    const outside = s.realms[ids.other].capital;
+    // Isolate two land exits, both held by realms hostile to this uprising.
+    FB.world.adj = {};
+    FB.world.adj[ids.home] = {}; FB.world.adj[ids.home][outside] = 1;
+    FB.world.adj[outside] = {}; FB.world.adj[outside][ids.home] = 1;
+    FB.waterCrossing = function () { return false; };
+    try {
+      group.counties[ids.home].occupied = false;
+      host.at = ids.home;
+      const local = FB.hostCutOff(s, host);
+      const ordinary = FB.hostCutOff(s, { realm:host.realm, at:ids.home, men:host.men });
+      host.at = outside;
+      const away = FB.hostCutOff(s, host);
+      host.at = ids.home;
+      delete s.rebellions.groups[group.id];
+      return { local:local, ordinary:ordinary, away:away, expired:FB.hostCutOff(s, host) };
+    } finally {
+      FB.world.adj = adjacent;
+      FB.waterCrossing = crossing;
+    }
+  }, ids);
+  expect(result).toEqual({ local:false, ordinary:true, away:true, expired:true });
+});
+
 test('rebel hosts cooperate, are universally hostile otherwise, and survive save restoration', async function ({ page }, testInfo) {
   const ids = await setup(page, testInfo);
   const result = await page.evaluate(function (ids) {

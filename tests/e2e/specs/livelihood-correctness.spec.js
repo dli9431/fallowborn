@@ -23,6 +23,106 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('staffing preview puts empty and partially staffed enterprises before fully staffed ones',
+  async function ({ page }) {
+    const expected = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.gold = 1000;
+      s.player.enterprises = [
+        { uid:'a_staffed', level:0 },
+        { uid:'b_partial', level:1 },
+        { uid:'c_staffed', level:0 },
+        { uid:'d_empty', level:0 }
+      ].map(function (record) {
+        record.type = 'orchard_business';
+        record.provinceId = s.player.provinceId;
+        record.settlement = 0;
+        record.workerId = null;
+        return record;
+      });
+      ['a_staffed', 'b_partial', 'c_staffed'].forEach(function (uid) {
+        if (!FB.hireEnterpriseWorker(s, uid)) throw new Error('Fixture hire failed');
+      });
+      const rows = FB.enterpriseStaffingPlan(s).rows;
+      const idle = rows.filter(function (row) {
+        return row.uid === 'b_partial' || row.uid === 'd_empty';
+      });
+      const staffed = rows.filter(function (row) {
+        return row.uid === 'a_staffed' || row.uid === 'c_staffed';
+      });
+      FB.ui.showEnterpriseStaffingPreview();
+      return {
+        before:idle.concat(staffed).map(function (row) { return row.uid; }),
+        after:['d_empty'].concat(rows.filter(function (row) {
+          return row.uid !== 'd_empty';
+        }).map(function (row) { return row.uid; }))
+      };
+    });
+    const rows = page.locator('[data-enterprise-staffing-uid]');
+    expect(await rows.evaluateAll(function (nodes) {
+      return nodes.map(function (node) { return node.dataset.enterpriseStaffingUid; });
+    })).toEqual(expected.before);
+    await page.locator('[data-enterprise-staffing-hire="b_partial"]').click();
+    await expect.poll(function () {
+      return rows.evaluateAll(function (nodes) {
+        return nodes.map(function (node) { return node.dataset.enterpriseStaffingUid; });
+      });
+    }).toEqual(expected.after);
+  });
+
+['hire', 'assign'].forEach(function (action) {
+  test('enterprise ' + action + ' returns to the refreshed work list with its position',
+    async function ({ page }) {
+      await page.setViewportSize({ width:1000, height:600 });
+      const fixture = await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId];
+        FB.setCareer(s, me, 'farmer', 'journeyman');
+        s.player.gold = 1000;
+        s.player.enterprises = [];
+        for (let i = 0; i < 16; i++) {
+          s.player.enterprises.push({
+            uid:'staff_return_' + i, type:'orchard_business',
+            provinceId:s.player.provinceId, settlement:0, workerId:null
+          });
+        }
+        FB.ui.showLivelihoods();
+        return { workerId:me.id, turn:s.turn };
+      });
+      const row = page.locator('[data-enterprise]').last();
+      const origin = await row.evaluate(function (node) {
+        node.scrollIntoView({ block:'center' });
+        return {
+          uid:node.dataset.enterprise,
+          scroll:document.getElementById('gm-body').scrollTop
+        };
+      });
+      expect(origin.scroll).toBeGreaterThan(0);
+      await row.click();
+      if (action === 'hire') await page.locator('#enterprise-hire').click();
+      else await page.locator(
+        '[data-enterprise-worker="' + fixture.workerId + '"]').click();
+      await expect(page.locator('#gm-title')).toContainText('Work & Enterprises');
+      const returned = page.locator('[data-enterprise="' + origin.uid + '"]');
+      await expect(returned).toBeFocused();
+      await expect(returned).not.toContainText('Idle');
+      await expect.poll(function () {
+        return page.locator('#gm-body').evaluate(function (body) {
+          return body.scrollTop;
+        });
+      }).toBeGreaterThanOrEqual(origin.scroll - 5);
+      const state = await page.evaluate(function (uid) {
+        const s = FB.state;
+        const enterprise = FB.enterpriseList(s).filter(function (e) {
+          return e.uid === uid;
+        })[0];
+        return { workers:FB.enterpriseWorkerIds(enterprise), turn:s.turn };
+      }, origin.uid);
+      expect(state.workers).toHaveLength(1);
+      if (action === 'assign') expect(state.workers).toEqual([fixture.workerId]);
+      expect(state.turn).toBe(fixture.turn);
+    });
+});
+
 test('archives and restores complete career progress without another fee',
   async function ({ page }) {
     const result = await page.evaluate(function () {

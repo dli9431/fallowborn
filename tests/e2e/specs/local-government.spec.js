@@ -749,7 +749,7 @@ test('grant terms and local council state are visible before and after confirmat
         'aria-pressed', 'true');
     await expect(page.locator(
       '[data-grant-tenure="hereditary"]')).toHaveClass(/focused/);
-    await expect(footer.locator('#grant-terms-confirm')).toBeVisible();
+    await expect(page.locator('.modal-body-actions #grant-terms-confirm')).toBeVisible();
     await expect(footer.locator('#grant-terms-back')).toBeVisible();
     expect(await page.locator('#gm-body button').evaluateAll(function (buttons) {
       return buttons.every(function (button) { return button.type === 'button'; });

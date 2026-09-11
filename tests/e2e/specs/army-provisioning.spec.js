@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/logistics.js', 'js/market.js', 'js/armies.js', 'js/wars.js', 'js/actions.js',
   'js/rebellions.js', 'js/fortifications.js', 'js/holywar.js', 'js/modifiers.js',
-  'js/main.js', 'js/ui_modals.js', 'js/ui_panels.js', 'css/style.css',
+  'js/main.js', 'js/ui_misc.js', 'js/ui_modals.js', 'js/ui_panels.js', 'css/style.css',
   'data/map_data.js', 'data/markets.js', 'data/technology.js', 'data/units.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -307,7 +307,9 @@ for (const width of [390, 1280]) {
     });
     expect(geometry.height).toBeGreaterThanOrEqual(44);
     expect(geometry.right).toBeLessThanOrEqual(geometry.width);
-    await page.locator('#ar-close').click();
+    await expect(page.locator('#gm-body > .gm-footer button')).toHaveText(['Back', 'Close']);
+    await page.locator('#gm-body > .gm-footer [data-modal-nav="close"]').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await page.evaluate(function () { FB.ui.showAutoResolve(); });
     await expect(slider).toHaveValue('80'); await expect(toggle).not.toBeChecked();
   });

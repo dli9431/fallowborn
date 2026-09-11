@@ -88,6 +88,57 @@ test('offers only one-plot purchases without a batch purchase dialog',
     await expect(page.locator('#gm-title')).toContainText('Buy Freehold Land');
   });
 
+['full', 'unaffordable'].forEach(function (ending) {
+  test('land purchase preserves scroll and focus when the settlement becomes ' + ending,
+    async function ({ page }) {
+      await page.setViewportSize({ width:900, height:500 });
+      await openLandMarket(page, 0, 1000);
+      const setup = await page.evaluate(function (ending) {
+        const s = FB.state, p = s.player;
+        const provinces = FB.world.provs.filter(function (province) {
+          return !province.wasteland;
+        });
+        provinces.sort(function (a, b) {
+          return FB.settlementsOf(s, b.id).length - FB.settlementsOf(s, a.id).length;
+        });
+        p.provinceId = provinces[0].id;
+        const target = FB.settlementsOf(s, p.provinceId).length - 1;
+        const max = FBDATA.balance.landPlotMaxSettlement || FBDATA.balance.manorPlotRequirement;
+        const count = ending === 'full' ? max - 1 : 0;
+        p.landPlots = [];
+        for (let i = 0; i < count; i++) {
+          p.landPlots.push({ provinceId:p.provinceId, settlement:target });
+        }
+        const cost = FB.landPlotCost(s);
+        p.gold = ending === 'unaffordable' ? cost : 1000;
+        FB.ui.showLandMarket();
+        return { target:target, count:count, gold:p.gold, cost:cost };
+      }, ending);
+      const row = page.locator('[data-land-settlement="' + setup.target + '"]');
+      await row.scrollIntoViewIfNeeded();
+      const scroll = await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollTop;
+      });
+      expect(scroll).toBeGreaterThan(0);
+      await row.click();
+      await expect(page.locator('#gm-title')).toContainText('Buy Freehold Land');
+      await expect(row).toHaveAttribute('aria-disabled', 'true');
+      await expect(row).toBeFocused();
+      await expect.poll(function () {
+        return page.locator('#gm-body').evaluate(function (body, savedScroll) {
+          return Math.abs(body.scrollTop - savedScroll);
+        }, scroll);
+      }).toBeLessThanOrEqual(5);
+      const result = await page.evaluate(function (target) {
+        return {
+          count:FB.landCountAt(FB.state, FB.state.player.provinceId, target),
+          gold:FB.state.player.gold
+        };
+      }, setup.target);
+      expect(result).toEqual({ count:setup.count + 1, gold:setup.gold - setup.cost });
+    });
+});
+
 test('keeps one-plot rows compact and exposes full terms when unaffordable',
   async function ({ page }) {
     const setup = await openLandMarket(page, 1, 0);

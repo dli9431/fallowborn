@@ -169,6 +169,9 @@ technology impact is **none** (`gentry_freehold_expansion` and
 `rank_elevation_investiture`): ordinary local land purchases and social recognition need
 no credible research gate.
 
+Successful freehold purchases refresh the land market in place, preserving list scroll
+and focus on the purchased settlement, including when it becomes full or unaffordable.
+
 The land market keeps each settlement purchase compact: its action face shows the
 settlement and plot progress plus only the live cost and before/after seasonal yield.
 The full dynastic ownership, exact site, affordability, upkeep, inheritance, and
@@ -255,8 +258,16 @@ and its lock when the worker dies, leaves the managed household, becomes career/
 ineligible, or can no longer work personally after a rank change. Valid locks survive
 save/restore and succession.
 
+Successful hiring or household-worker assignment returns automatically to the refreshed
+Work & Enterprises list, preserving its view state, scroll, and originating focus.
+Managers opened from Household Plan or the staffing preview return to that source instead.
+Failed actions and worker removal keep the enterprise manager open.
+
 The all-enterprise staffing preview is also an entry point for resolving an idle row. Its
-Assign workers action opens the same owned-enterprise manager and returns to a newly derived
+rows place currently understaffed enterprises first, including partially filled businesses,
+while preserving the plan order within the idle and fully staffed groups. Proposed
+assignments do not determine this display order. Its Assign workers action opens the
+same owned-enterprise manager and returns to a newly derived
 preview, while Hire a local worker calls the canonical paid-labor mutation directly and
 refreshes the preview in place, preserving scroll and expanded row details. Focus
 returns to the same row after both successful hires and stale/blocked attempts. Disabled hiring retains the exact wage or affordability

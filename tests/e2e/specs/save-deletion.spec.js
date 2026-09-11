@@ -41,7 +41,7 @@ for (const fallback of [false, true]) {
   });
 }
 
-test('Autosave deletion confirms usage, preserves Cancel, and puts confirm first on desktop and mobile', async function ({ page }, testInfo) {
+test('Autosave deletion confirms usage, keeps confirmation in the body and returns through Back on desktop and mobile', async function ({ page }, testInfo) {
   await page.setViewportSize({ width:1100, height:850 });
   await openGame(page, testInfo); await startDeterministicGame(page);
   await page.evaluate(async function () {
@@ -51,11 +51,12 @@ test('Autosave deletion confirms usage, preserves Cancel, and puts confirm first
   await expect(page.locator('.save-slot-summary')).toContainText('used by Continue');
   await page.getByRole('button', { name:'Delete Autosave', exact:true }).click();
   const confirm = page.getByRole('button', { name:'Confirm delete', exact:true });
-  const cancel = page.getByRole('button', { name:'Cancel', exact:true });
+  const cancel = page.getByRole('button', { name:'Back', exact:true });
   await expect(confirm).toBeEnabled();
   await expect(page.locator('#save-storage-usage')).toContainText('localStorage:');
   await expect(page.locator('#save-storage-usage')).toContainText('IndexedDB:');
-  expect((await confirm.boundingBox()).x).toBeLessThan((await cancel.boundingBox()).x);
+  await expect(page.locator('.gm-footer #save-delete-confirm')).toHaveCount(0);
+  await expect(page.locator('.modal-body-actions #save-delete-confirm')).toBeVisible();
   await page.setViewportSize({ width:390, height:844 });
   expect((await confirm.boundingBox()).y).toBeLessThan((await cancel.boundingBox()).y);
   await cancel.click();

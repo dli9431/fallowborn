@@ -2678,6 +2678,34 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   border-top: 1px solid var(--ui-border-color); background: #221b13;
 }
 .drawer-footer, #btn-closeself { display: none; }
+.modal-body-actions {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch;
+  margin: 12px 0;
+}
+.modal-body-actions > .btn { min-height: 44px; }
+#gm-body.equipment-picker-open > .modal-navigation { visibility: hidden; }
+#genmodal .gm-footer.modal-navigation,
+#eventmodal .gm-footer.modal-navigation,
+.travel-picker-actions.modal-navigation,
+.raid-picker-actions.modal-navigation,
+.equip-picker-body .gm-footer.modal-navigation {
+  display: flex; flex-flow: row nowrap; gap: 10px;
+}
+#genmodal .gm-footer.modal-navigation > .btn,
+#eventmodal .gm-footer.modal-navigation > .btn,
+.travel-picker-actions.modal-navigation > .btn,
+.raid-picker-actions.modal-navigation > .btn,
+.equip-picker-body .gm-footer.modal-navigation > .btn {
+  flex: 0 1 200px; width: 200px; min-width: 0;
+}
+.modal-navigation > .btn:disabled {
+  color: #aaa29a; border-color: #625b54; background: #302b26;
+  cursor: default;
+}
+#eventmodal .gm-footer.modal-navigation {
+  position: sticky; bottom: 0; z-index: 1; padding: 12px 0;
+  border-top: 1px solid var(--ui-border-color); background: #221b13;
+}
 .gm-body-text { font-size: 15px; color: var(--main-text-color); }
 .gm-body-text h4 { color: var(--ui-accent-color); margin: 12px 0 4px; }
 .gm-body-text p, .gm-body-text li { margin-bottom: 6px; }

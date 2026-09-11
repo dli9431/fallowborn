@@ -119,16 +119,14 @@ test('modal footers keep Back before Close and remain the final body row',
       const close = document.querySelector('#placement-close').getBoundingClientRect();
       const footerRect = footer.getBoundingClientRect();
       return {
-        backAbove:back.top < close.top,
-        backCentered:Math.abs((back.left + back.width / 2) -
-          (footerRect.left + footerRect.width / 2)) < 2,
-        closeCentered:Math.abs((close.left + close.width / 2) -
-          (footerRect.left + footerRect.width / 2)) < 2
+        sameRow:Math.abs(back.top - close.top) < 2,
+        backLeft:back.left < close.left,
+        fits:back.left >= footerRect.left && close.right <= footerRect.right + 1
       };
     });
     expect(mobile).toEqual({
-      backAbove:true,
-      backCentered:true,
-      closeCentered:true
+      sameRow:true,
+      backLeft:true,
+      fits:true
     });
   });

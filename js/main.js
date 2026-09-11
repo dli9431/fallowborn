@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.4';
+FB.VERSION = '1.179.5';
 FB.CHANGELOG = [
+  { v: '1.179.5', date: '2026-09-11', changes: [
+    'Modal footers separate Back from Close, enterprise staffing returns to the management list, and local rebels are no longer treated as encircled within their uprising counties.'
+  ] },
   { v: '1.179.4', date: '2026-09-10', changes: [
     'Preview translations cover recent campaign, enterprise, and county support changes.'
   ] },

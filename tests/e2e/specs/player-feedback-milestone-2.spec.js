@@ -560,7 +560,7 @@ test('succession and child identity explanations use the live family rules',
     await expect(page.locator('.succession-review')).toContainText(
       'marriage joins the household');
     await expect(page.locator('#gm-body > .gm-footer > #hp-cancel'))
-      .toHaveText('Cancel');
+      .toHaveText('Close');
   });
 
 test('successor pickers include removed cousins and the full family tree',

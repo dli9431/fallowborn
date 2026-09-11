@@ -1299,7 +1299,10 @@ are map identities with `rebelFaction:true` and `alive:false`, excluded from
 ordinary diplomacy and sovereign AI. They remain in the army pipeline without
 an ordinary campaign and cannot score wins or losses in an unrelated war.
 Rebel hostility takes precedence over alliances. Supply is always 100 and
-passive reinforcement is disabled. Home-fort movement restrictions do not stop
+passive reinforcement is disabled. Hosts in their own active uprising's counties
+are not cut off, even before occupying the local fort: local support sustains them
+without a road to a realm capital. Outside those counties the normal encirclement
+check applies. Home-fort movement restrictions do not stop
 rebels assembling; fort strength still gates every siege. Occupation blocks
 recruitment and tax collection. See descent.md for warnings and independence.
 

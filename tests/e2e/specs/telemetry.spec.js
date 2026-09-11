@@ -90,7 +90,7 @@ test('New Game telemetry reports each setup screen once per attempt',
     await page.getByRole('button', { name:'New Game', exact:true }).click();
     for (let i = 0; i < 2; i++) {
       await page.locator('#btn-bm-seed').click();
-      await page.getByRole('button', { name:'Cancel', exact:true }).click();
+      await page.getByRole('button', { name:'Close', exact:true }).click();
     }
     await page.locator('#bookmarklist .scencard').first().click();
     await page.getByRole('button', { name:/Free Farmer/ }).click();

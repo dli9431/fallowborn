@@ -173,7 +173,7 @@ away from the saved position. Cover a nonzero scroll offset in regression tests.
 Generic `historyView` dialogs retain their previous DOM on desktop as well as mobile.
 Visible Back and Escape restore that view even when browser-history navigation is
 unavailable, including its scroll, focus, and listeners. Explicit `historyBackRender`
-callbacks still own flows requiring refreshed data; a top-level Back closes safely.
+callbacks still own flows requiring refreshed data; root Back is disabled and Close exits safely.
 
 Every new or changed modal, screen, card, and confirmation must make the decision
 clear at a glance: intended benefit, exact immediate cost, duration or minimum
@@ -457,25 +457,31 @@ older saved shortcut.
 (cleared on the next open): the Changelog uses `changelog-modal`, and the Menu, Automation,
 and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see below).
 `modalClass` may contain multiple whitespace-separated classes; open and history-restore
-paths apply and clear each token individually. A dialog
-that dismisses, cancels, goes back, finishes, or begins from a terminal control puts that
-control in a `.gm-footer`. `UI.openModal` consolidates legacy loose or duplicate footers,
-moves that single footer to the final body row, and leaves substantive choices in the
-scrolling body. Labels state navigation precisely: **Close** is the only label for dismissing
-a root or informational modal, **Back** appears only when it restores a real preceding modal
-view, and **Cancel** abandons an uncommitted picker, draft, or confirmation. These labels
-remain exactly **Back**, **Close**, and **Cancel**; the modal title and saved history provide
-the destination context, so variants such as “Back to Household Plan” are not used. Flat
-modals do not gain a redundant Back button, and completed summaries do not use Done as an
-alias for Close.
+paths apply and clear each token individually.
 
-Footer controls use the shared `.btn` and `.btn.primary` vocabulary. Primary emphasis may
-change border and background but never geometry: every footer button is 200 px wide, at least
-52 px high, vertically centered, and stretched to the tallest control on its flex row. Labels
-may wrap for localization without leaving adjacent buttons at mismatched heights. Their
-semantic, visual, and focus order is always Back, Cancel, Close, then commit controls: this
-reads left-to-right when controls share a row and top-to-bottom when they wrap on narrow
-screens. A lone Back or Close remains centered at the bottom.
+Every modal has one bottom navigation footer containing exactly **Back** and **Close**,
+in that order. Back restores one real preceding view or an explicit return context,
+including its scroll, focus, filters, sorting, and expanded details. Without a return
+context it remains visible, disabled, and grey. Close dismisses the entire dismissible
+modal stack in one action, including an equipment picker or travel review, rather than
+requiring repeated Back presses. Closing must not execute a purchase, confirmation,
+assignment, or other decision. Existing required-choice and outcome input guards still
+apply: Close is disabled while a required decision cannot be dismissed. Event outcomes
+may Close through the same once-only acknowledgement as Continue.
+
+`UI.openModal` normalizes older builders into this shared footer, retaining navigation
+node IDs and return callbacks. Former action footers become `.modal-body-actions` in the
+scrolling body. **All non-navigation controls**, including Confirm, Apply, Save, Rename,
+Continue, and Return to title, belong in the body next to their relevant content. Cancel
+or Not now is no longer a footer label: use Back to abandon a draft and return, or Close
+to leave the modal stack. Never add a second footer or a special action-order exception.
+
+Back and Close use the shared `.btn` style, equal widths up to 200 px, and a minimum
+52 px height. They stay side by side at desktop and mobile widths, shrinking equally
+and wrapping translated labels inside their buttons. Disabled navigation is visibly grey.
+The footer stays at the bottom with an opaque background and one top divider. Escape and
+browser/mobile Back retain their single-step return behavior; the explicit Close button
+is the direct exit from a chain of dialogs. Root Escape continues to close the sheet.
 
 The Family Tree uses its own near-viewport sheet instead of the generic narrow dialog, so
 wide generations have the available desktop map area. Names and relationships remain
@@ -515,8 +521,8 @@ instead of consuming vertical canvas space; hover, keyboard focus, and tap all e
 Compact in-panel edits, such as House rename, sit inline beside the value they change as a
 small bordered icon button with an accessible localized name and tooltip; the icon is
 decorative and the button expands to the 44 px touch target on compact layouts. Its modal
-form keeps only Rename/Cancel-style terminal controls in the shared sticky `.gm-footer`,
-never in an ad-hoc action row in the scrolling body.
+form keeps Rename in the body and Back/Close in the shared sticky `.gm-footer`,
+using the shared body-action layout for the form controls.
 
 **Card details follow one tooltip convention per layout — never both.** Any request
 to add a tooltip, including one phrased only as hover behavior, is incomplete until
@@ -598,7 +604,7 @@ tooltip or compact `?` disclosure instead of beneath the button label.
 
 The only mod-authored action route is Phase 4E's generic `resource_choice` sheet. It renders
 one to 12 native choice buttons with exact cost/effect chips and disabled reasons, opens
-without focusing a substantive choice, and keeps Cancel in the normalized footer. Opening
+without focusing a substantive choice, and keeps Back/Close in the normalized footer. Opening
 and closing are state-free. Compact-layout Back closes the same generic-modal layer and
 restores the originating deed control; selecting an enabled choice closes the sheet before
 the engine rechecks and commits it. Mods cannot select a modal implementation or inject
@@ -1750,13 +1756,13 @@ through the original Governance Domain context.
 The generated option preserves the same path used by Domain Cleanup, while a family choice
 is revalidated before mutation and returns to Governance after a successful grant.
 Charter and tenure are labeled native-button groups whose current choices expose
-`aria-pressed` and the standard selected action styling. Confirm and Back share the sticky
-`.gm-footer`; only Confirm may mutate the grant. A technology-locked charter remains in
+`aria-pressed` and the standard selected action styling. Confirm stays in the body above
+the Back/Close `.gm-footer`; only Confirm may mutate the grant. A technology-locked charter remains in
 the group with its exact missing innovation. Tier-3+ players may use that locked row as a
 technology-detail link; confirmation rechecks the same requirement.
 
 The Town Council motion and Castellan petition dialogs likewise keep their substantive,
-number-keyed choices in a scrolling `.gm-list` and **Not now** in the sticky footer. Because
+number-keyed choices in a scrolling `.gm-list` and **Back/Close** in the sticky footer. Because
 choosing a motion or appointment tenure immediately rolls the result and spends the day,
 both sheets initially focus the dialog container instead of preselecting the first action.
 
@@ -2052,7 +2058,7 @@ the person no longer belongs in the plan. Picker cancellation and no-day changes
 the plan, while day-spending career, retainer, enterprise-purchase, religious-office, and
 match choices advance the day and then rebuild the originating plan or person manager beneath
 any queued event. Its bottom-pinned footer is outside the ledger's own scroll pane and owns
-only Close. Whenever an enterprise is idle, the staffing-preview action stays inside the
+only Back/Close, with Back disabled at the root. Whenever an enterprise is idle, the staffing-preview action stays inside the
 scrollable plan beneath the ledger and uses the same tooltip/disclosure treatment as other
 helper copy. A successful no-day apply returns to this authoritative table rather than the
 intermediate Work & Enterprises sheet.
@@ -2063,8 +2069,7 @@ and non-negative number input. The same sheet provides a direct Save action and 
 details card: desktop hover or keyboard focus opens the shared tooltip, while compact and
 touch layouts use the adjacent touch-sized `?` disclosure. Those details name every
 currently affected eligible child and show the proposed focus, instruction, projected
-yearly chance, per-child seasonal fee, and any institutional mortality warning. Back and
-Save use the shared equal-sized footer geometry; there is no intermediate review modal.
+yearly chance, per-child seasonal fee, and any institutional mortality warning. Save stays in the body and Back/Close use the shared navigation footer; there is no intermediate review modal.
 It explicitly states that existing choices stay unchanged, the cap is per child, and no
 coin is reserved. Education and instruction cells label policy choices, manual overrides,
 unrecorded choices, and instruction waiting for a focus. Both detailed pickers retain a
@@ -2692,12 +2697,11 @@ payload sizes, excluding database overhead and offline downloads. Unavailable st
 are identified rather than reported as empty. Settings and downloaded files remain.
 The dialog explains that continued play can create a new autosave.
 
-Confirm delete is authored first, left of Cancel on desktop and above it on mobile.
-`data-primary-first` on a shared modal footer preserves authored button order instead
-of the usual exit-first sorting. Cancel receives initial focus; automatic number
-shortcuts are disabled for this destructive confirmation. Cancel, Escape and Back
-restore the source sheet and scroll position. Success returns to fresh slot metadata
-and updates Continue; failures remain in the dialog with an error.
+Confirm delete stays in the body above the shared Back/Close footer. Back receives
+initial focus; automatic number shortcuts are disabled for this destructive confirmation.
+Back and Escape restore the source sheet and scroll position. Close dismisses the modal
+stack without deleting anything. Success returns to fresh slot metadata and updates
+Continue; failures remain in the dialog with an error.
 
 Played lives in the family tree have a blue border and a Played/Playing label.
 The existing ancestry connectors are tinted the same blue along the route between

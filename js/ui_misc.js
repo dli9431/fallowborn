@@ -1615,22 +1615,12 @@ window.FB = window.FB || {};
     }
   }
 
-  /* Android consumes the physical Back button to leave itch's browser-owned
-     iframe fullscreen before history traversal. Embedded mobile equipment
-     pickers therefore expose the same history action as an in-game control. */
+  /* Equipment navigation lives in the shared footer on every platform. */
   function mobileNavSyncBackControls() {
-    const layer = mobileNavLayers[mobileNavDepth];
-    const eventModal = $('eventmodal');
-    const eventBlocking = eventModal && !eventModal.classList.contains('hidden') &&
-      $('genmodal').classList.contains('hidden');
-    const canUse = mobileNavEmbedded && mobileLayoutNow() && mobileNavReady &&
-      mobileNavDepth > 0 && !mobileNavPendingBack && !eventBlocking &&
-      mobileNavCanBack(layer);
     const equipment = $('equip-picker-history-back');
     const overlay = $('equip-picker-overlay');
-    const showEquipment = !!canUse && !!overlay && layer.kind === 'equipment-picker';
-    if (equipment) equipment.classList.toggle('hidden', !showEquipment);
-    if (overlay) overlay.classList.toggle('embedded-history-back', showEquipment);
+    if (equipment) equipment.classList.add('hidden');
+    if (overlay) overlay.classList.remove('embedded-history-back');
   }
 
   function mobileNavStartNow() {
@@ -3362,6 +3352,7 @@ window.FB = window.FB || {};
 
   function restoreModalView(view) {
     const gm = $('genmodal');
+    $('eventmodal').setAttribute('aria-hidden', 'true');
     const body = $('gm-body');
     while (body.firstChild) body.removeChild(body.firstChild);
     $('gm-title').textContent = view.title;
@@ -3430,80 +3421,88 @@ window.FB = window.FB || {};
     else UI.closeModal();
   }
 
-  /* Dialog builders historically put exit controls in several places:
-     loose after the body, inside an action list, or in a real footer. Gather
-     Back/Cancel/Close and legacy terminal controls into one final footer without
-     making substantive choices (confirm, buy, appoint, etc.) look like exits.
-     Reading order is also visual order: navigation first, Close next, commits last. */
-  function normalizeModalFooter(root) {
+  /* Keep legacy navigation nodes (and their caller-owned listeners), but give
+     every sheet one navigation-only footer. Confirm/Apply/Continue stay in the
+     body, even when an older builder authored them inside a footer. */
+  function modalChainCanClose(view) {
+    for (let current = view; current; current = current.previousView) {
+      if (current.dismiss === false && !current.historyBack) return false;
+    }
+    return true;
+  }
+
+  function normalizeModalFooter(root, options) {
     if (!root) return;
-    const legacy = root.querySelectorAll('button.gm-footer');
-    for (let i = 0; i < legacy.length; i++) {
-      const button = legacy[i];
-      const wrapper = document.createElement('div');
-      wrapper.className = 'gm-footer';
-      button.classList.remove('gm-footer');
-      button.parentNode.insertBefore(wrapper, button);
-      wrapper.appendChild(button);
-    }
-
-    const buttons = root.querySelectorAll(
-      'button[id$="-cancel"], button[id$="-close"], button[id$="-back"], ' +
-      'button[id$="-done"], button[id^="gm-ok"]');
-    const exitButtons = [];
-    for (let i = 0; i < buttons.length; i++) exitButtons.push(buttons[i]);
-
-    let footer = null;
-    const extraFooters = [];
-    for (let i = 0; i < root.children.length; i++) {
-      if (!root.children[i].classList.contains('gm-footer')) continue;
-      if (!footer) footer = root.children[i];
-      else extraFooters.push(root.children[i]);
-    }
-    if (!footer && !buttons.length) return;
-    if (!footer) {
-      footer = document.createElement('div');
-      footer.className = 'gm-footer';
-    }
-    for (let i = 0; i < extraFooters.length; i++) {
-      const extra = extraFooters[i];
-      while (extra.firstChild) footer.appendChild(extra.firstChild);
-      extra.parentNode.removeChild(extra);
-    }
-
-    for (let i = 0; i < buttons.length; i++) {
-      const button = buttons[i];
-      const oldParent = button.parentNode;
-      button.classList.remove('actionbtn');
-      button.classList.remove('gm-footer');
-      button.classList.add('btn');
-      if (oldParent !== footer) footer.appendChild(button);
-      if (oldParent !== root && oldParent !== footer &&
-        !oldParent.children.length && !oldParent.textContent.trim()) {
-        oldParent.parentNode.removeChild(oldParent);
-      }
-    }
-
-    const ordered = [];
-    for (let i = 0; i < footer.children.length; i++) {
-      const child = footer.children[i];
-      if (child.tagName === 'BUTTON') ordered.push({ button:child, index:i });
-    }
-    function rank(item) {
-      const button = item.button;
-      if (exitButtons.indexOf(button) < 0) return 3;
-      const id = button.id || '';
+    options = options || {};
+    const candidates = root.querySelectorAll(
+      'button[id$="-cancel"], button[id$="-close"], button[id$="-back"]');
+    let back = null, close = null;
+    const cancellations = [];
+    for (const button of candidates) {
       const label = button.textContent.trim();
-      if (/-back$/.test(id) || label === FB.T('Back')) return 0;
-      if (/-close$/.test(id) || /-done$/.test(id) || /^gm-ok/.test(id) ||
-          label === FB.T('Close')) return 2;
-      return 1;
+      const isBack = label === 'Back' || label === FB.T('Back') || /-back$/.test(button.id);
+      if (isBack && !back) back = button;
+      else if (!isBack && /-cancel$/.test(button.id)) cancellations.push(button);
+      else if (!close) close = button;
     }
-    if (!footer.hasAttribute('data-primary-first')) ordered.sort(function (a, b) {
-      return rank(a) - rank(b) || a.index - b.index;
-    });
-    for (let i = 0; i < ordered.length; i++) {
-      footer.appendChild(ordered[i].button);
+    // An explicitly authored Back without historyView is a legacy callback
+    // route. historyView sheets require an actual parent or return renderer.
+    const canBack = !!(options.hasBack || (back && !options.historyView));
+    if (!back && canBack && cancellations.length) back = cancellations.shift();
+    if (!close && cancellations.length) close = cancellations.shift();
+    const authoredBack = !!back;
+    function control(label, kind, button) {
+      button = button || document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.removeAttribute('style');
+      button.removeAttribute('aria-describedby');
+      button.removeAttribute('aria-disabled');
+      button.removeAttribute('title');
+      button.textContent = FB.T(label);
+      button.setAttribute('data-i18n', label);
+      button.setAttribute('aria-label', FB.T(label));
+      button.setAttribute('data-modal-nav', kind);
+      return button;
+    }
+    back = control('Back', 'back', back);
+    close = control('Close', 'close', close);
+    back.disabled = !canBack;
+    close.disabled = options.canClose === false;
+    if (!authoredBack || (options.hasBack && !options.keepBackHandler)) {
+      back.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (!back.disabled) UI.backModal();
+      }, true);
+    }
+    // Close must not invoke an old callback that merely opens the parent.
+    close.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (!close.disabled) UI.closeModalStack();
+    }, true);
+    const footer = document.createElement('div');
+    footer.className = 'gm-footer modal-navigation';
+    for (const button of [back, close]) {
+      const parent = button.parentNode;
+      footer.appendChild(button);
+      if (parent && parent !== root && !parent.children.length &&
+          !parent.textContent.trim()) parent.parentNode.removeChild(parent);
+    }
+    // Retain duplicate legacy IDs for builders that wire them after openModal.
+    // They are inert and never introduce another visible navigation action.
+    for (const button of candidates) {
+      if (button === back || button === close) continue;
+      button.classList.add('hidden');
+      button.disabled = true;
+    }
+    const oldFooters = root.querySelectorAll('.gm-footer');
+    for (const old of oldFooters) {
+      old.classList.remove('gm-footer');
+      old.removeAttribute('data-primary-first');
+      if (old.tagName !== 'BUTTON') old.classList.add('modal-body-actions');
+      if (!old.children.length && !old.textContent.trim()) old.parentNode.removeChild(old);
     }
     root.appendChild(footer);
   }
@@ -3534,6 +3533,7 @@ window.FB = window.FB || {};
     UI._gmReturnFocus = genericNavSnapshot.returnFocus;
     UI._gmReturnAction = genericNavSnapshot.returnAction;
     const gm = $('genmodal');
+    $('eventmodal').setAttribute('aria-hidden', 'true');
     setModalClasses(gm, genericNavSnapshot.modalClass);
     gm.classList.remove('hidden');
     if (!genericNavSnapshot.noFocus) focusFirstModalControl();
@@ -3543,6 +3543,7 @@ window.FB = window.FB || {};
   function closeEquipmentPickerRaw(equipmentPicker, restoreFocus) {
     if (!equipmentPicker) return;
     if (equipmentPicker.parentNode) equipmentPicker.parentNode.removeChild(equipmentPicker);
+    $('gm-body').classList.remove('equipment-picker-open');
     const pickerBack = UI._equipPickerReturnFocus;
     UI._equipPickerReturnFocus = null;
     if (restoreFocus !== false && pickerBack &&
@@ -3559,6 +3560,7 @@ window.FB = window.FB || {};
       genericNavSnapshot.mobilePanePosition;
     $('genmodal').classList.add('hidden');
     UI._gmDismiss = true;
+    $('eventmodal').removeAttribute('aria-hidden');
     UI._gmOnDismiss = null;
     UI._gmNoHotkeys = false;
     UI._gmModalKey = null;
@@ -3636,15 +3638,23 @@ window.FB = window.FB || {};
     /* per-dialog modifier class (e.g. the changelog's even-margin sheet) —
        drop the previous one before applying this dialog's */
     setModalClasses(gm, opts && opts.modalClass);
+    $('eventmodal').setAttribute('aria-hidden', 'true');
     $('gm-title').textContent = FB.translateKnown(title);
     FB.localizeTree($('gm-title'));
     const guide = modalGuideConfig(opts && opts.guide);
     setModalGuide(guide);
+    $('gm-body').classList.remove('equipment-picker-open');
     $('gm-body').innerHTML = opts && opts.titleDetailsHtml
       ? '<div class="settcard-details modal-title-details hidden" id="gm-title-details">' +
         opts.titleDetailsHtml + '</div>' + bodyHtml
       : bodyHtml;
-    normalizeModalFooter($('gm-body'));
+    normalizeModalFooter($('gm-body'), {
+      hasBack:!!(previousView || (retainedNavigation && retainedNavigation.previousView) ||
+        (opts && (opts.historyBackRender || opts.historyBack))),
+      historyView:!!(opts && opts.historyView),
+      canClose:(UI._gmDismiss || !!(opts && opts.historyBack)) &&
+        modalChainCanClose(previousView || retainedNavigation)
+    });
     FB.localizeTree($('gm-body'));
     setModalTitleDetails(!!(opts && opts.titleDetailsHtml));
     bindCardInfoToggles($('gm-body'));
@@ -3768,6 +3778,22 @@ window.FB = window.FB || {};
     setTimeout(function () {
       if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
     }, 0);
+  };
+  UI.closeModalStack = function () {
+    if (UI.genericOutcomeGuarded && UI.genericOutcomeGuarded()) return;
+    if (!modalChainCanClose(genericNavSnapshot)) return;
+    const picker = $('equip-picker-overlay');
+    if (picker) {
+      closeEquipmentPickerRaw(picker, false);
+      mobileNavClosed('equipment-picker', true);
+    }
+    if (SH.travelPicker && UI.cancelTravelPicker) UI.cancelTravelPicker(true);
+    if (UI.raidPickerOpen && UI.raidPickerOpen()) UI.closeRaidMapPicker(true);
+    UI.closeModal();
+    // A settled outcome can acknowledge itself on dismissal and redraw its
+    // management sheet. Close that sheet too, but never skip a required choice.
+    if (!$('genmodal').classList.contains('hidden') &&
+        modalChainCanClose(genericNavSnapshot)) UI.closeModal();
   };
   UI.backModal = function () {
     if (UI.genericOutcomeGuarded && UI.genericOutcomeGuarded()) return;
@@ -4102,14 +4128,17 @@ window.FB = window.FB || {};
       }
     });
     $('travel-picker-cancel').addEventListener('click', function () {
-      UI.cancelTravelPicker(false);
+      UI.cancelTravelPicker(true);
+    });
+    $('travel-picker-back').addEventListener('click', function () {
+      if (!$('travel-picker-back').disabled) UI.cancelTravelPicker(false);
     });
     $('travel-picker-continue').addEventListener('click', SH.reviewTravelChoice);
 
     const raidCancel = $('raid-picker-cancel');
     if (raidCancel) {
       raidCancel.addEventListener('click', function () {
-        if (UI.closeRaidMapPicker) UI.closeRaidMapPicker(false);
+        if (UI.closeRaidMapPicker) UI.closeRaidMapPicker(true);
       });
     }
     const raidList = $('raid-picker-list');
