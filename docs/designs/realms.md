@@ -1,5 +1,18 @@
 # Realms, the liege hierarchy & tiers
 
+AI fiscal accounts belong to Count-and-higher realm institutions, not ruler
+characters. Active accounting preserves balances on succession and
+independence, transfers uncommitted funds on realm creation, and retires signed
+balances and military obligations once on extinction. Escheat and dynastic
+inheritance use explicit recipients; county conquest alone does not transfer a
+whole treasury. Player inheritance credits signed net coin once, and
+new AI realms split from player institutions receive no duplicate player purse.
+Rebel placeholders are excluded. Technology impact is `none`: ordinary ruler
+accounting has no research prerequisite. Optional construction, recruitment and
+replacement training respect expense commitments; sustained insolvency triggers
+bounded recovery and existing AI-only seasonal peace decisions. See the staged
+treasury plan and war.md for policy, migration and validation boundaries.
+
 Historical ambitions add explicit regional recognition for Normandy, Norway,
 England, and Sicily. They reuse normal promotion thresholds and prices, retain
 higher ranks, and never transfer unheld counties. The primary region chosen by an

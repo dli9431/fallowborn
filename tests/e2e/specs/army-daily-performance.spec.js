@@ -8,6 +8,180 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
+test('route pruning preserves equal-cost ties and reads fort changes on the next search', async function ({ page }, testInfo) {
+  await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function () {
+    const original = { world:FB.world, fort:FB.fortBlocksArmy, water:FB.waterCrossing,
+      timing:FB.game._fastForwardTiming };
+    const counts = {}, labels = {}, stack = [];
+    FB.world = { adj:{ a:{ c:1,b:1 }, b:{ a:1,c:1,d:1 }, c:{ a:1,b:1,d:1 }, d:{ b:1,c:1 } }, byId:{} };
+    ['a','b','c','d'].forEach(function (id) { FB.world.byId[id] = { id:id, terrain:'plains' }; });
+    FB.waterCrossing = function () { return null; };
+    let blocked = null;
+    FB.fortBlocksArmy = function (state, pid) { return pid === blocked || (blocked === 'both' && (pid === 'b' || pid === 'c')); };
+    FB.game._fastForwardTiming = { enter:function (label) { labels[label] = true; stack.push(label); return label; },
+      leave:function (label) { if (stack.pop() !== label) throw new Error('Unbalanced path timer'); },
+      count:function (key, n) { counts[key] = (counts[key] || 0) + (n === undefined ? 1 : n); } };
+    try {
+      const host = { realm:'player', at:'a', men:100, units:{ levy:100 } };
+      const first = FB.findArmyPath(FB.state, host, 'd');
+      blocked = 'b';
+      const second = FB.findArmyPath(FB.state, host, 'd');
+      blocked = 'both';
+      const fallback = FB.findArmyPath(FB.state, host, 'd');
+      return { first:first.path, second:second.path, fallback:fallback.path, fort:fallback.blockedByFort,
+        balanced:stack.length === 0, labels:Object.keys(labels),
+        fallbackPops:counts['Paths: fallback frontier pops'] || 0,
+        fallbackEdges:counts['Paths: fallback neighbor edges'] || 0,
+        fallbackSkipped:counts['Paths: fallback settled edges skipped'] || 0,
+        ties:counts['Paths: tie comparisons'] || 0,
+        materialized:counts['Paths: path arrays materialized'] || 0,
+        skipped:counts['Paths: settled edges skipped'] || 0 };
+    } finally {
+      FB.world = original.world; FB.fortBlocksArmy = original.fort;
+      FB.waterCrossing = original.water; FB.game._fastForwardTiming = original.timing;
+    }
+  });
+  expect(result.first).toEqual(['b','d']); expect(result.second).toEqual(['c','d']);
+  expect(result.skipped).toBeGreaterThan(0);
+  expect(result.fallback).toEqual(['b']); expect(result.fort).toBe('b');
+  expect(result.materialized).toBeGreaterThan(0);
+  expect(result.balanced).toBe(true);
+  expect(result.fallbackPops).toBeGreaterThan(0); expect(result.fallbackEdges).toBeGreaterThan(0);
+  expect(result.fallbackSkipped).toBeGreaterThan(0);
+  expect(result.ties).toBeGreaterThan(0);
+  expect(result.labels).toEqual(expect.arrayContaining(['Army operation: path search', 'Paths: fort fallback']));
+  ['Paths: heap push', 'Paths: heap pop', 'Paths: leg quotes', 'Paths: tie comparison'].forEach(function (label) {
+    expect(result.labels).not.toContain(label);
+  });
+});
+
+test('route ties prefer the earliest differing county over the final predecessor', async function ({ page }, testInfo) {
+  await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function () {
+    const original = { world:FB.world, fort:FB.fortBlocksArmy, water:FB.waterCrossing };
+    // The preferred route has the larger last predecessor: b,z beats c,e.
+    FB.world = { adj:{ a:{ b:1,c:1 }, b:{ a:1,z:1 }, c:{ a:1,e:1 },
+      z:{ b:1,d:1 }, e:{ c:1,d:1 }, d:{ z:1,e:1 } }, byId:{} };
+    Object.keys(FB.world.adj).forEach(function (id) {
+      FB.world.byId[id] = { id:id, terrain:'plains' };
+    });
+    FB.waterCrossing = function () { return null; };
+    let forts = false;
+    FB.fortBlocksArmy = function (state, pid) { return forts && (pid === 'b' || pid === 'c'); };
+    try {
+      const host = { realm:'player', at:'a', men:100, units:{ levy:100 } };
+      const open = FB.findArmyPath(FB.state, host, 'd');
+      forts = true;
+      const blocked = FB.findArmyPath(FB.state, host, 'd');
+      return { open:open.path, blocked:blocked.path, fort:blocked.blockedByFort };
+    } finally {
+      FB.world = original.world; FB.fortBlocksArmy = original.fort; FB.waterCrossing = original.water;
+    }
+  });
+  expect(result).toEqual({ open:['b','z','d'], blocked:['b'], fort:'b' });
+});
+
+test('fort routing shares controller relations and retains occupation and hook changes', async function ({ page }, testInfo) {
+  const ids = await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state, original = { fort:FB.fortAt, hostile:FB.armiesHostile, camp:FB.greatHolyWarCamp };
+    const canonicalSafe = FB.armiesHostile.militaryCacheSafe === true;
+    const host = { realm:ids.enemy }, relations = { friendly:Object.create(null), hostile:Object.create(null) };
+    let reads = 0, opposed = true;
+    try {
+      s.holder.probeA = s.holder.probeB = ids.other;
+      s.owner.probeA = s.owner.probeB = ids.other;
+      s.greatHolyWar = { phase:'active', occupations:{} };
+      FB.fortAt = function () { return { level:1 }; };
+      FB.greatHolyWarCamp = function (state, rid) { return rid === ids.enemy ? 'attackers' : 'defenders'; };
+      FB.armiesHostile = function () { reads++; return opposed; };
+      FB.armiesHostile.militaryCacheSafe = true;
+      const first = FB.fortBlocksArmy(s, 'probeA', host, relations);
+      const before = reads;
+      const second = FB.fortBlocksArmy(s, 'probeB', host, relations);
+      const reused = reads === before;
+      s.greatHolyWar.occupations.probeB = { occupied:true };
+      const occupied = FB.fortBlocksArmy(s, 'probeB', host, relations);
+      delete FB.armiesHostile.militaryCacheSafe; opposed = false;
+      const changed = FB.fortBlocksArmy(s, 'probeA', host, relations);
+      return { canonicalSafe:canonicalSafe, first:first, second:second, reused:reused, occupied:occupied, changed:changed };
+    } finally { FB.fortAt = original.fort; FB.armiesHostile = original.hostile; FB.greatHolyWarCamp = original.camp; }
+  }, ids);
+  expect(result).toEqual({ canonicalSafe:true, first:true, second:true, reused:true, occupied:false, changed:false });
+});
+
+test('provision quotes read supply technology once and observe later changes', async function ({ page }, testInfo) {
+  const ids = await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state, host = FB.playerHost(s), original = FB.techBonus;
+    host.at = ids.home; host.supply = 50;
+    let reads = 0, bonus = 0.1;
+    FB.techBonus = function (state, key, rid) {
+      if (key === 'supply') { reads++; return bonus; }
+      return original(state, key, rid);
+    };
+    try {
+      const first = FB.armyProvisionQuote(s, host), firstReads = reads;
+      bonus = 0.3;
+      const second = FB.armyProvisionQuote(s, host);
+      return { firstReads:firstReads, reads:reads, first:first.use, second:second.use,
+        expected:FB.armyProvisionUse(s, host) };
+    } finally { FB.techBonus = original; }
+  }, ids);
+  expect(result.firstReads).toBe(1); expect(result.reads).toBe(2);
+  expect(result.second).toBe(result.expected); expect(result.second).toBeLessThan(result.first);
+});
+
+test('already idle halt preserves host state and muster contexts expire explicitly', async function ({ page }, testInfo) {
+  const ids = await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state, host = FB.playerHost(s), previous = FB.game._fastForwardTiming;
+    const counts = {};
+    FB.game._fastForwardTiming = { enter:function () {}, leave:function () {},
+      count:function (key, n) { counts[key] = (counts[key] || 0) + (n === undefined ? 1 : n); } };
+    try {
+      host.path = []; host.goal = null; host.moveLeft = 0;
+      const before = JSON.stringify(host);
+      const ok = FB.orderArmy(s, host, host.at);
+      const territory = FB.recruitmentTerritory(s, ids.enemy), context = {};
+      const expected = FB.aiBaseHost(s, ids.enemy, territory);
+      counts['Muster ambition scans'] = 0;
+      const actual = FB.aiBaseHost(s, ids.enemy, territory, {}, context);
+      FB.aiBaseHost(s, ids.enemy, territory, {}, context);
+      const scans = counts['Muster ambition scans'];
+      s.historicalAmbitions = { probe:{ established:false, endTurn:s.turn + 10 } };
+      FB.aiBaseHost(s, ids.enemy, territory, {}, {});
+      return { ok:ok, unchanged:before === JSON.stringify(host), skipped:counts['Orders: idle halt skipped'],
+        expected:expected, actual:actual, scans:scans, fresh:counts['Muster cache bypass: active ambition'] || 0 };
+    } finally { FB.game._fastForwardTiming = previous; }
+  }, ids);
+  expect(result.ok).toBe(true); expect(result.unchanged).toBe(true); expect(result.skipped).toBe(1);
+  expect(result.actual).toBe(result.expected); expect(result.scans).toBe(1); expect(result.fresh).toBeGreaterThan(0);
+});
+
+test('daily provisioning skips the unused legacy drain calculation', async function ({ page }, testInfo) {
+  await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, previous = FB.game._fastForwardTiming;
+    const rows = {};
+    FB.game._fastForwardTiming = {
+      enter:function (name) { rows[name] = (rows[name] || 0) + 1; return name; },
+      leave:function () {}, count:function (name, amount) {
+        rows[name] = (rows[name] || 0) + (amount === undefined ? 1 : amount);
+      }
+    };
+    try { FB.armyTick(s); return rows; }
+    finally { FB.game._fastForwardTiming = previous; }
+  });
+  expect(result['Army operation: local provisioning']).toBeGreaterThan(0);
+  expect(result['Supply: drain calculation'] || 0).toBe(0);
+  expect((result['Goals: unchanged'] || 0) + (result['Goals: changed'] || 0))
+    .toBe(result['Army operation: AI goal selection'] || 0);
+  expect((result['Paths: found'] || 0) + (result['Paths: failed'] || 0))
+    .toBe(result['Army operation: path search'] || 0);
+});
+
 test('recruitment capacity reuses a supplied projection and fresh calls see blockades', async function ({ page }, testInfo) {
   const ids = await startWarSafety(page, testInfo);
   const result = await page.evaluate(function (ids) {

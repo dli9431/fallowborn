@@ -1,13 +1,55 @@
 # Coin & Credit
 
+## AI treasury accounting foundation
+
+`js/treasury.js` maintains spendable fiscal accounts for active AI
+Count-and-higher realms. One seasonal direct-holder snapshot shares the county
+tax primitive, counts standing buildings/fort upkeep, and transfers immediate
+charter dues without recursively taxing receipts. Normal play reuses its player
+tax breakdown to mirror the liege payment; it does not charge the player twice.
+County support/modifier inputs are shared within each county calculation. AI tax
+technology applies, but personal household, council, guild, bishopric and domain-cap
+modifiers have no AI counterpart. This capability has technology impact `none`.
+
+Food purchases debit available treasury coin immediately; market dues credit the
+holder and sovereign accounts. Non-food active-host costs accrue daily through the existing supply pass,
+settle once per season, and survive host loss. Accounts allow signed shortfalls;
+positive coin revalues once with the existing finance ratio. Observe settles AI
+accounts but omits player transfers and advances the annual stamp at ratio 1.
+Available funds exclude accrued bills. Annual ordinary construction now also protects
+one season of building upkeep and liege dues, two seasons of existing host costs
+(food and non-food), and one initial food refill. The annual projection scans fiscal
+inputs and hosts once; it does not commit military accrual. Each successful building
+debits its live canonical realm quote once and reserves its new upkeep. Food remains
+able to spend below this optional-spending reserve. Recruitment uses the military
+commitment gates described in war.md; fort works retain their existing works budget.
+Ruler sheets show available cash, accrued bills, signed balance, latest seasonal
+income/expenses, and recovery status without recomputing fiscal projections.
+Coin & Credit shows the last settled household producer gain, loss and net adjustment.
+This expands the existing
+`ai_realm_treasury` accounting capability with technology impact `none`; existing
+building technology gates remain in force.
+Activation replaces diagnostic balances with the larger
+of the fiscal opening reserve and saved provisioning purse, clears diagnostic bills
+and pending inheritance, and deletes purses once. Active repairs preserve balances.
+Military decision policies index hosts once per phase and lazily quote only realms
+requesting approval or replacement funding. Standalone policy calls retain eager
+totals; internal callers pass `true` for lazy evaluation. Accepted commitments stay
+shared within the phase. Below-minimum musters return before requesting a policy.
+Military accrual shares unit rates within a supply pass and basket weights within
+each county's existing price snapshot. Live troop counts remain per host; no cache
+is saved or retained into the next pass. Profiler counters expose military rate
+and basket snapshots separately from host and price reads.
+See [the staged plan](../plans/ai-treasury.md#next-steps-and-measurement-checkpoints)
+for activation rebasing, producer receipts, affordability, and measurement gates.
+
 Raised hosts pay their provisions component through automatic daily county
 purchases, limited to actual available gold. Standing host upkeep excludes its
 former food share; camp materials/transport, class non-food costs, mercenary
 contracts and replacement drilling remain. Enemy requisition costs no coin, but
 damages stocks, production and Popular support. Paid sales return a 10% market due
 to county rulers (80% holder, 20% sovereign if distinct). Actual daily cash movements
-participate in the existing seasonal net balance. AI realms use a bounded provisioning
-allowance, not a general treasury. See war.md and markets.md for stock conservation.
+participate in the existing seasonal net balance. See war.md and markets.md for stock conservation.
 The income forecast shows estimated provisions consumption at current local prices
 separately from standing upkeep. Filling depleted reserves can cost more; the estimate
 does not itself charge gold, and switches off with automatic purchases.

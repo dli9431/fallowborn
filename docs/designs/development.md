@@ -244,7 +244,15 @@ grant permanent development, unlock and promote settlements, expand carrying cap
 persist in `state.buildings` across conquest. Unfinished sieges or contested borders block new
 construction.
 The annual builder snapshots every living AI realm's direct holdings before placing the first
-building. Development grants may invalidate realm strength caches, but they cannot change county
+building. With active treasuries, it also takes one shared fiscal/host reserve snapshot,
+skips realms without optional funds, and chooses the first affordable eligible building.
+`FB.buildCost(state, pid, id, realmId)` uses the AI realm's technology, county modifiers,
+repeat-copy growth (including ruins), and market basket; player council and mason-visit
+discounts do not apply to AI. The existing three-argument player quote is unchanged.
+Construction debits once immediately before insertion and protects the new upkeep.
+Fort works retain their separate policy. Technology impact remains `none` for treasury
+accounting, with all existing building unlocks preserved.
+Development grants may invalidate realm strength caches, but they cannot change county
 ownership during this pass; reusing the snapshot prevents each grant from forcing the next realm
 to rebuild the holdings index from the complete map.
 

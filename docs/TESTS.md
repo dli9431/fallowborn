@@ -411,6 +411,63 @@ save. The source save is read only; it is neither modified nor copied into test
 fixtures. Without the environment variable the diagnostic is skipped. Ordinary
 agent test-execution restrictions apply to this diagnostic too.
 
+### Army logistics and treasury stress save
+
+`logistics-stress-save.txt` in the repository root is an owner-local FBS1 export,
+derived from a supplied life. Its adjacent JSON records source/output SHA-256 and
+scenario counts. Both are ignored by Git and excluded by deployment allowlists.
+The prepared winter-949 scenario has 36 attacking and 20 defending sovereigns,
+56 hosts and 141,600 soldiers distributed across 41 counties, with nine Syrian
+objectives and mixed fort levels. It is deliberately synthetic, not a historical
+bookmark. Paths are empty on import; the real AI plans marches on the first day.
+One seasonal skip reaches the year boundary. Reload the original file for every
+comparison; advancing an already-played copy changes the workload.
+
+The export was prepared as data, not by running game logic. Import, route validity,
+campaign survival, and timing remain owner-verified through the approved harness.
+To regenerate from another suitable owner save without running the game:
+
+```powershell
+python tools/logistics_stress_save.py "notes/fallowborn-save (5).txt" --output logistics-stress-save-new.txt
+```
+
+The tool requires at least 15 Catholic and eight Muslim sovereigns, suitable march
+corridors, and opposing control of Antioch. It refuses to overwrite exports. Normal
+save repair initializes active treasury accounts when importing the fixture.
+
+For the matched owner measurements, from `tests/e2e/`:
+
+```powershell
+$env:FB_PROFILE_SAVE = (Resolve-Path ../../logistics-stress-save.txt).Path
+npx.cmd playwright test specs/save-season-profile.spec.js --project=chromium-served --workers=1 --output=test-results/treasury-active
+Remove-Item Env:FB_PROFILE_SAVE
+```
+
+The old reference flag is rejected for active accounts. Active treasury spending
+depends on fiscal settlement, so disabling it is no longer a behavior-preserving
+reference. Use ordinary enabled runs for Stage 2 and compare repeated loads of the
+same source save. Functions are restored after the burst. The
+diagnostic now includes the built-in profiler report in `season-timings.json`, with
+inclusive/self time, scoped treasury input timings, provisioning operations, and
+start/end workload summaries. Its fast-forward timeout is 120 seconds; this bounds
+the diagnostic and is not a performance acceptance threshold.
+
+Compare `sourceSha256` and `gameplayStateSha256` across matched runs. The latter
+excludes treasury fields while retaining RNG and the rest of the save. With active
+spending, treasury changes can also change gameplay; this hash is not an equivalence
+check against the old accounting-only reference. Compare
+`simulationMs`, `worldTick`, `Treasury:` rows, `Logistics operation:` rows, host-days,
+marching host-days, starvation, and final campaign state. Fewer surviving armies or
+less movement does not demonstrate a faster implementation. CPU sampling and extra
+wrappers add overhead to both runs; repeat matched samples for median comparisons.
+
+For a manual local session, import the save, pause, enable
+`FB.game.fastForwardTiming.enable(true)`, and use the normal season skip. Copy
+`JSON.stringify(FB.game.fastForwardTiming.last, null, 2)` afterward. Automatic events
+and other browser-local preferences are not stored in the export; the harness fixes
+them explicitly, including paid provisioning, a 75% player reserve target, and
+automatic low-supply market seeking. No benchmarks have been run by the agent.
+
 ## Common problems
 
 If `playwright` is not recognized, run `npm ci` from `tests/e2e/`. If Playwright reports that the
@@ -419,6 +476,29 @@ browser executable is missing, run `npx playwright install chromium firefox webk
 The served project uses port `4173`. Local runs may reuse an available server already listening
 there; CI never does. If startup reports that the port is already in use, stop the unrelated local
 process and rerun the test.
+
+### Stage 3 treasury performance fixture
+
+`python tools/treasury_stage3_save.py` prepares the root
+`logistics-stress-save-stage3.txt` and its JSON metadata from the earlier logistics
+fixture. It transforms data only and refuses to overwrite existing outputs.
+The fixture has 53 hosts, 134,100 soldiers, 260 active accounts, three missing
+hosts, damaged hosts and unfunded professional replacements. Rich (5,000),
+constrained (80) and insolvent (-50) balances exercise distinct fiscal paths.
+It crosses winter into the annual construction review. Import fresh before each
+measurement, pause, enable `FB.game.fastForwardTiming.enable(true)`, and skip one
+season using the normal control. Copy `JSON.stringify(FB.game.fastForwardTiming.last,
+null, 2)`. Repeat from the same imported save for comparable samples.
+Inspect `Treasury: military commitments`, `Treasury: construction reserves`,
+military commitment accept/reject and retry-skip counters alongside host-days,
+simulation and army totals. Changed starting funds make the old fixture an
+unmatched performance comparison. Continuing a second season exercises sustained
+shortfall recovery, but must be compared to the same second-season workload.
+
+`ai-treasury-spending.spec.js` covers shared commitment affordability, defense,
+replacement funding, recovery, seasonal peace, and narrow-screen disclosures.
+`ai-treasury.spec.js` covers construction prices, reserves and transaction boundaries.
+Execution and appearance checks remain owner-controlled.
 
 ### Commons test scheduling and modal acknowledgement
 

@@ -395,7 +395,7 @@
   FB.marketEnterpriseOutput = function (state, enterprise) {
     const out = { provisions:0, wares:0, materials:0, transport:0, luxuries:0 };
     if (!enterprise || !FB.enterpriseYield) return out;
-    const amount = Math.max(0, Number(FB.enterpriseYield(state, enterprise)) || 0) *
+    const amount = Math.max(0, Number((FB.enterprisePhysicalYield || FB.enterpriseYield)(state, enterprise)) || 0) *
       balance('marketStockScale', 12);
     if (!amount) return out;
     const worker = enterprise.workerId && state.chars[enterprise.workerId];
@@ -933,6 +933,7 @@
     reportState = state;
     reports = reportByPid;
     if (FB.armyProvisionSeason) FB.armyProvisionSeason(state);
+    if (FB.armyProducerSnapshot) FB.armyProducerSnapshot(state, reportByPid);
     return true;
   };
 

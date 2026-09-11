@@ -1641,6 +1641,9 @@ window.FB = window.FB || {};
         FB.ensureLocalGovernment(FB.state, true);
       });
     }
+    if (FB.treasuryInitialize) restoreRepair('AI treasuries', function () {
+      FB.treasuryInitialize(FB.state);
+    });
     return FB.state;
   };
 })();

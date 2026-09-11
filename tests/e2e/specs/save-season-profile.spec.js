@@ -6,7 +6,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js', 'js/save.js', 'js/armies.js', 'js/wars.js', 'js/fortifications.js',
   'js/world.js', 'js/events.js', 'js/actions.js', 'js/ui_topbar.js', 'js/ui_misc.js',
-  'js/ui_modals.js', 'js/mapview.js'
+  'js/ui_modals.js', 'js/mapview.js',
+  'js/treasury.js', 'js/logistics.js', 'js/market.js', 'js/holywar.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -15,7 +16,7 @@ const { openGame } = require('../support/game/navigation');
 test('profile one fast-forward from an exported save', async function ({ page }, testInfo) {
   test.skip(!process.env.FB_PROFILE_SAVE, 'Set FB_PROFILE_SAVE to an exported save path.');
   test.skip(testInfo.project.name !== 'chromium-served', 'CPU sampling requires Chromium.');
-  test.setTimeout(120000);
+  test.setTimeout(180000);
   const source = fs.readFileSync(path.resolve(process.env.FB_PROFILE_SAVE), 'utf8');
   await openGame(page, testInfo);
   await page.evaluate(function (text) {
@@ -41,6 +42,7 @@ test('profile one fast-forward from an exported save', async function ({ page },
     });
   });
   const referenceRegroup = process.env.FB_PROFILE_REGROUP_REFERENCE === '1';
+  const referenceTreasury = process.env.FB_PROFILE_TREASURY_REFERENCE === '1';
   await page.evaluate(function (reference) {
     if (!reference) return;
     // Previous regroup algorithm, retained only for diagnostic comparisons.
@@ -68,9 +70,21 @@ test('profile one fast-forward from an exported save', async function ({ page },
   await session.send('Profiler.start');
   let result;
   try {
-    result = await page.evaluate(function () {
+    result = await page.evaluate(function (referenceTreasury) {
       return new Promise(function (resolve, reject) {
+        if (referenceTreasury && FB.state.treasuryAccounting && FB.state.treasuryAccounting.mode === 'active') {
+          reject(new Error('Active treasuries require settlement for provisioning. Run without FB_PROFILE_TREASURY_REFERENCE.'));
+          return;
+        }
         const stages = {}, originals = [], days = [], frames = [];
+        const profiler = FB.game.fastForwardTiming;
+        const previousTiming = profiler.isEnabled();
+        if (referenceTreasury) Object.keys(FB).forEach(function (name) {
+          if (['treasuryMilitaryBatch', 'treasuryAccrueHost', 'treasuryCommitMilitary',
+            'treasurySeason', 'treasuryRevalue'].indexOf(name) < 0 || typeof FB[name] !== 'function') return;
+          originals.push({ owner:FB, name:name, original:FB[name] });
+          FB[name] = undefined;
+        });
         function wrap(owner, name, label) {
           if (typeof owner[name] !== 'function') return;
           const original = owner[name];
@@ -99,26 +113,37 @@ test('profile one fast-forward from an exported save', async function ({ page },
         wrap(FB.save, 'serialize', 'save.serialize');
         const s = FB.state, startTurn = s.turn;
         const initial = { turn:s.turn, date:Object.assign({}, s.date), tier:s.player.tier,
-          armies:s.armies.length, activeWars:FB.ordinaryWars(s).length };
+          armies:s.armies.length, activeWars:FB.ordinaryWars(s).length,
+          campaignId:s.greatHolyWar && s.greatHolyWar.id };
         // Browser-local preferences are absent from exported saves. Fix their
         // values so story slots do not stop this one-season diagnostic early.
         FB.game.auto.all = true; FB.game.auto.style = 'first'; FB.game.auto.hosts = 'manual';
         FB.game.auto.build = false; FB.game.auto.research = false;
+        FB.game.auto.buySupplies = true; FB.game.auto.supplyTarget = 75;
+        FB.game.auto.hostResupply = true;
+        profiler.enable(true);
         const start = performance.now();
-        let previous = start, skipEnded = null;
+        let previous = start, skipEnded = null, timedOut = false;
         function restore() {
           originals.forEach(function (entry) { entry.owner[entry.name] = entry.original; });
+          profiler.enable(previousTiming);
         }
         const timeout = setTimeout(function () {
+          timedOut = true;
           FB.game.setPaused(true);
-          restore(); reject(new Error('Fast-forward exceeded the 30-second diagnostic limit.'));
-        }, 30000);
+        }, 120000);
         function frame() {
           // rAF's supplied timestamp precedes earlier callbacks in that frame;
           // read the clock here so a costly final day is included in skipMs.
           const now = performance.now();
           frames.push(now - previous); previous = now;
           if (FB.game.fastForwarding) { requestAnimationFrame(frame); return; }
+          if (timedOut) {
+            restore(); reject(new Error('Fast-forward exceeded the 120-second diagnostic limit.')); return;
+          }
+          if (profiler.last && profiler.last.reason === 'error') {
+            clearTimeout(timeout); restore(); reject(new Error('Fast-forward simulation failed; see browser error.')); return;
+          }
           if (skipEnded === null) { skipEnded = now; requestAnimationFrame(frame); return; }
           // Include completion rendering and the deferred autosave write.
           if (now - skipEnded < 100) { requestAnimationFrame(frame); return; }
@@ -128,13 +153,14 @@ test('profile one fast-forward from an exported save', async function ({ page },
             finalDate:FB.state.date, dead:!!FB.state.player.dead,
             skipMs:skipEnded - start, includingCompletionMs:now - start,
             maxFrameGapMs:Math.max.apply(Math, frames), frameGapsMs:frames,
+            fastForwardTiming:profiler.last,
             days:days, stages:stages, automation:{ all:true, style:'first', hosts:'manual' },
             note:'Stage timings are inclusive and overlap; CPU sampling and wrappers add overhead.' });
         }
-        FB.game.skipAhead();
-        requestAnimationFrame(frame);
+        try { FB.game.skipAhead(); requestAnimationFrame(frame); }
+        catch (error) { clearTimeout(timeout); restore(); reject(error); }
       });
-    });
+    }, referenceTreasury);
   } finally {
     const sampled = await session.send('Profiler.stop');
     const cpuPath = testInfo.outputPath('season-cpu.cpuprofile');
@@ -146,7 +172,15 @@ test('profile one fast-forward from an exported save', async function ({ page },
   }
   const snapshot = await page.evaluate(function () { return FB.save.serialize(); });
   result.stateSha256 = crypto.createHash('sha256').update(snapshot).digest('hex');
+  result.sourceSha256 = crypto.createHash('sha256').update(source).digest('hex');
+  // Accounting-only fields intentionally differ in the reference run. Keep a
+  // second hash to expose accidental changes to gameplay or the saved RNG.
+  const gameplay = JSON.parse(snapshot);
+  delete gameplay.state.treasuryAccounting;
+  for (const realm of Object.values(gameplay.state.realms || {})) delete realm.treasury;
+  result.gameplayStateSha256 = crypto.createHash('sha256').update(JSON.stringify(gameplay)).digest('hex');
   result.referenceRegroup = referenceRegroup;
+  result.referenceTreasury = referenceTreasury;
   const timingsPath = testInfo.outputPath('season-timings.json');
   fs.writeFileSync(timingsPath, JSON.stringify(result, null, 2));
   await testInfo.attach('season-timings.json', {
@@ -154,4 +188,11 @@ test('profile one fast-forward from an exported save', async function ({ page },
   });
   expect(result.daysAdvanced).toBeGreaterThan(0);
   expect(result.daysAdvanced).toBeLessThanOrEqual(90);
+  if (result.initial.campaignId === 'ghw_logistics_stress') {
+    const timing = result.fastForwardTiming;
+    expect(timing.workload.start.holyWarArmies).toBeGreaterThanOrEqual(40);
+    expect(timing.counters['Workload: marching host-days']).toBeGreaterThan(0);
+    expect(timing.rows.worldTick.calls).toBe(1);
+    if (!referenceTreasury) expect(timing.rows['Treasury: seasonal settlement'].calls).toBe(1);
+  }
 });

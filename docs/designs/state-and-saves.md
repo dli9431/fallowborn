@@ -1,5 +1,30 @@
 # Game state & saves
 
+AI realms add `treasury` version 1: signed `gold`, nonnegative `militaryAccrued`,
+`lastSettledSeason`, `lastRevaluedYear`, one `lastSummary`, and `retired` with an
+optional bounded retirement receipt. `state.treasuryAccounting` records version,
+`mode:'active'`, once-only batch/season stamps, and legacy diagnostic `pendingPlayer`.
+Initialization occurs at new-game/Observe creation and restore, not from UI reads.
+Old saves receive one opening reserve, not historical revenue; subsequent repairs
+preserve signed balances. Newly formed institutions get transfers, not opening grants.
+No save-format bump is needed. Activation rebases diagnostic accounts from current
+fiscal opening reserves or saved purse coin (whichever is larger), clears accrued
+diagnostic bills and pending inheritance, resets stamps, and deletes old purses.
+Future inheritance transfers signed net coin to the player once.
+
+Stage 3 adds numeric treasury `necessary` (latest fiscal upkeep/dues estimate),
+`shortfallSeasons`, and optional `recoverUntil`. Initialization refreshes the expense
+estimate and preserves recovery and balances; new seasonal settlements replace it.
+Military commitment projections and failed-quote retry records are transient.
+New AI cohort batches add `funded:false` until the training payment succeeds;
+`funded:true` and the new completion deadline then persist. Missing flags on existing
+batches mean grandfathered training, never retroactive charges.
+
+The logistics record adds `producers` (period and frozen uid/county/output/income
+shares plus starting withdrawal offsets), signed `producerPending`, and one
+`producerLast` gain/loss summary. Reload preserves these records; missing snapshots
+start from current withdrawals so old sales are never replayed.
+
 `state.armyLogistics` is additive: shared AI provisioning `purses`, current county
 withdrawals in `counties`, and one completed period in `last`. Purses retain gold,
 allowance and the funded season to prevent reload funding. County records retain

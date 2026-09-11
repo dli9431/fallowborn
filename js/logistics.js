@@ -10,7 +10,7 @@
   function ensure(state) {
     function record(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; }
     const data = state.armyLogistics = record(state.armyLogistics);
-    data.purses = record(data.purses);
+    if (!(state.treasuryAccounting && state.treasuryAccounting.mode === 'active')) data.purses = record(data.purses);
     data.counties = record(data.counties);
     data.last = record(data.last);
     return data;
@@ -29,6 +29,9 @@
   }
   function purseView(state, rid) {
     if (rid === 'player') return { gold:number(state.player.gold) };
+    if (state.treasuryAccounting && state.treasuryAccounting.mode === 'active') {
+      return { gold:FB.treasuryAvailable(state, rid) };
+    }
     const data = state.armyLogistics;
     const saved = data && data.purses && data.purses[rid];
     const season = Math.floor(state.turn / 90);
@@ -40,6 +43,7 @@
   }
   function pay(state, rid, amount) {
     if (rid === 'player') state.player.gold = Math.max(0, state.player.gold - amount);
+    else if (state.treasuryAccounting && state.treasuryAccounting.mode === 'active') FB.treasurySpend(state, rid, amount);
     else {
       const purse = Object.assign({}, purseView(state, rid));
       purse.gold = Math.max(0, purse.gold - amount);
@@ -49,6 +53,7 @@
   function credit(state, rid, amount) {
     if (!rid || amount <= 0) return;
     if (rid === 'player') state.player.gold += amount;
+    else if (state.treasuryAccounting && state.treasuryAccounting.mode === 'active') FB.treasuryCredit(state, rid, amount);
     else if (state.realms[rid] && state.realms[rid].alive) {
       const purse = Object.assign({}, purseView(state, rid));
       purse.gold = Math.min(purse.allowance * 2, purse.gold + amount);
@@ -74,14 +79,19 @@
     return mouths / Math.max(1, B('armyProvisionMenPerUnit', 120)) / 90 /
       Math.max(0.01, B('supplyDrainBase', 1.2));
   }
-  FB.armyProvisionUse = function (state, army, pid) {
+  FB.armyProvisionUse = function (state, army, pid, supplyTech) {
     const pr = FB.world.byId[pid || army.at] || {};
     const terrain = FBDATA.balance.supplyDrainTerrain || {};
     const winter = state.date.season === 3 ? B('supplyWinterDrainMult', 1.5) : 1;
     const campaign = army.realm === 'player' && army.warId === 'holy' && FB.campaignHostModBonus
       ? Math.max(0.1, 1 + FB.campaignHostModBonus(state, 'supplyUse')) : 1;
     return B('supplyDrainBase', 1.2) * (terrain[pr.terrain] || 1) * winter *
-      Math.max(0.1, 1 - FB.techBonus(state, 'supply', army.realm)) * campaign;
+      Math.max(0.1, 1 - (supplyTech === undefined ? FB.techBonus(state, 'supply', army.realm) : supplyTech)) * campaign;
+  };
+  FB.armyProvisionCommitment = function (state, army, seasons) {
+    return unitsPerPoint(army) * (FB.armyProvisionUse(state, army) * 90 * seasons +
+      Math.max(0, FB.armyProvisionTarget(army) - number(army.supply))) *
+      B('armyProvisionPrice', 0.45) * FB.marketPrice(state, army.at, 'provisions');
   };
   FB.playerProvisionEstimate = function (state) {
     let cost = 0;
@@ -92,10 +102,16 @@
     });
     return cost;
   };
-  FB.armyProvisionQuote = function (state, army, pid) {
+  FB.armyProvisionQuote = function (state, army, pid, supplyTech) {
     pid = pid || army.at;
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (timing && timing.repeat) {
+      timing.repeat('Provision quotes: host and county', JSON.stringify([army.id, army.realm, pid]), state.turn);
+      timing.repeat('Provision quotes: realm and county', JSON.stringify([army.realm, pid]), state.turn);
+    }
     const market = FB.marketProvisionSource(state, pid);
-    const use = FB.armyProvisionUse(state, army, pid);
+    const tech = supplyTech === undefined ? FB.techBonus(state, 'supply', army.realm) : supplyTech;
+    const use = FB.armyProvisionUse(state, army, pid, tech);
     const target = FB.armyProvisionTarget(army);
     const result = { mode:'none', units:0, cost:0, points:0, use:use, target:target,
       protection:0, available:0, net:-use, reason:'empty' };
@@ -106,7 +122,6 @@
     if (!rights.hostile && !purchases(army)) { result.reason = 'disabled'; return result; }
     const perPoint = unitsPerPoint(army);
     if (!perPoint) return result;
-    const tech = FB.techBonus(state, 'supply', army.realm);
     const loading = B('supplyRecoverRate', 3) * (1 + tech);
     const desiredPoints = Math.min(use + loading, Math.max(0, target - number(army.supply) + use));
     const data = state.armyLogistics;
@@ -120,7 +135,7 @@
     const affordable = rights.hostile || !price ? Infinity : funds / price;
     result.available = Math.min(available, room);
     result.units = Math.max(0, Math.min(desiredPoints * perPoint, result.available, affordable));
-    result.cost = rights.hostile ? 0 : result.units * price;
+    result.cost = rights.hostile ? 0 : Math.min(funds, result.units * price);
     result.points = result.units / perPoint;
     result.net = result.points - use;
     result.reason = result.units > 0 ? null : !desiredPoints ? 'reserve' : !affordable ? 'coin' : rights.protection ? 'fort' : 'empty';
@@ -171,6 +186,9 @@
     if (timing) {
       timing.count('Provisioning hosts');
       timing.count(q.mode === 'purchase' ? 'Provisions purchased' : 'Provisions requisitioned', q.units);
+      timing.count('Provisioning coin spent', q.cost);
+      if (q.reason) timing.count('Provisioning reason: ' + q.reason);
+      if (q.net < 0) timing.count('Provisioning shortfall host-days');
     }
     return q;
   }
@@ -181,14 +199,82 @@
     });
     return out;
   };
+  function producerAdjustment(producer, counties) {
+    const row = counties[producer.pid] || emptyCounty(), start = producer.start;
+    const bought = Math.max(0, number(row.bought) - start.bought);
+    const taken = Math.max(0, number(row.taken) - start.taken);
+    const receipts = Math.max(0, number(row.paid) - number(row.dues) - start.receipts);
+    const share = producer.output / producer.countyOutput;
+    const scale = Math.min(1, producer.countyOutput / Math.max(0.000001, bought + taken));
+    const allocatedBought = bought * share * scale, allocatedTaken = taken * share * scale;
+    const earned = receipts * share * scale;
+    return { gain:Math.min(producer.income * 0.25, earned,
+      Math.max(0, earned - producer.income * allocatedBought / producer.output)),
+      loss:Math.min(producer.income * 0.5, producer.income * allocatedTaken / producer.output) };
+  }
+  FB.armyProducerCloseMissing = function (state, present) {
+    const data = state.armyLogistics;
+    if (!data || !data.producers) return;
+    const remaining = [];
+    for (const row of data.producers.rows) {
+      if (present[row.uid]) { remaining.push(row); continue; }
+      const adjustment = producerAdjustment(row, data.counties || {});
+      state.player.gold += adjustment.gain - adjustment.loss;
+    }
+    data.producers.rows = remaining;
+  };
   FB.armyProvisionSeason = function (state) {
     if (!state.armyLogistics) return;
     const data = ensure(state);
+    if (data.producers) {
+      let gain = 0, loss = 0;
+      for (const producer of data.producers.rows) {
+        const adjustment = producerAdjustment(producer, data.counties);
+        gain += adjustment.gain; loss += adjustment.loss;
+      }
+      data.producerPending = (isFinite(data.producerPending) ? Number(data.producerPending) : 0) + gain - loss;
+      data.producerLast = { gain:gain, loss:loss, period:data.producers.period };
+      delete data.producers;
+    }
     data.last = data.counties;
     data.counties = {};
-    Object.keys(data.purses).forEach(function (rid) {
+    Object.keys(data.purses || {}).forEach(function (rid) {
       if (!state.realms[rid] || !state.realms[rid].alive) delete data.purses[rid];
     });
+  };
+  FB.armyProducerSnapshot = function (state, reports) {
+    if (!state.treasuryAccounting || state.treasuryAccounting.mode !== 'active') return;
+    const data = ensure(state), period = Math.floor(state.turn / 90);
+    if (data.producers && data.producers.period === period) return;
+    const rows = [], totals = {};
+    for (const enterprise of FB.enterpriseList(state)) {
+      const allOutput = FB.marketEnterpriseOutput(state, enterprise);
+      const output = number(allOutput.provisions);
+      if (!output) continue;
+      const pid = enterprise.provinceId, current = data.counties[pid] || emptyCounty();
+      const income = number(FB.enterprisePhysicalYield(state, enterprise));
+      let totalOutput = 0;
+      for (const good in allOutput) totalOutput += number(allOutput[good]);
+      rows.push({ uid:enterprise.uid, pid:pid, output:output,
+        income:income * output / Math.max(output, totalOutput),
+        start:{ bought:number(current.bought), taken:number(current.taken),
+          receipts:number(current.paid) - number(current.dues) } });
+      totals[pid] = (totals[pid] || 0) + output;
+    }
+    const good = state.market.goods.indexOf('provisions');
+    for (const row of rows) {
+      const report = reports && reports[row.pid];
+      const market = !report && FB.marketProvisionSource(state, row.pid);
+      const source = report ? number(report.production[good]) : number(market && market.demand);
+      row.countyOutput = Math.max(row.output, totals[row.pid], source);
+    }
+    data.producers = { period:period, rows:rows };
+  };
+  FB.armyProducerSettle = function (state) {
+    const data = state.armyLogistics;
+    if (!data || !isFinite(data.producerPending)) return;
+    state.player.gold += data.producerPending;
+    data.producerPending = 0;
   };
   FB.armyProvisionCounty = function (state, pid) {
     const data = state.armyLogistics;
@@ -217,11 +303,29 @@
     const target = FB.armyProvisionTarget(army);
     if (supply >= target - 1) { delete army.autoResupply; return null; }
     if (!army.autoResupply && supply > 15) return null;
-    const local = FB.armyProvisionQuote(state, army);
+    // No purchases or movement occur inside this synchronous search.
+    const quotes = Object.create(null), tech = FB.techBonus(state, 'supply', army.realm);
+    function quote(pid) {
+      if (!quotes[pid]) quotes[pid] = FB.armyProvisionQuote(state, army, pid, tech);
+      return quotes[pid];
+    }
+    const local = quote(army.at);
     if (!army.autoResupply && local.net >= 0) return null;
     army.autoResupply = 1;
+    const funds = purseView(state, army.realm).gold;
     const canRefill = function (pid) {
-      const q = FB.armyProvisionQuote(state, army, pid);
+      // This goal seeks purchases only. With no coin a positive-price market
+      // cannot refill; free markets still need the full quote. Local seizure
+      // and the ordinary retreat fallback remain independent of this shortcut.
+      if (!quotes[pid] && funds <= 0) {
+        const market = FB.marketProvisionSource(state, pid);
+        if (!market || B('armyProvisionPrice', 0.45) * market.price > 0) {
+          const timing = FB.game && FB.game._fastForwardTiming;
+          if (timing) timing.count('Supply search: unaffordable quotes skipped');
+          return false;
+        }
+      }
+      const q = quote(pid);
       return q.mode === 'purchase' && q.net > 0.05 && FB.armyCanPursue(state, army, pid);
     };
     if (canRefill(army.at)) return army.at;

@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'js/logistics.js', 'js/market.js', 'js/armies.js', 'js/wars.js', 'js/actions.js',
+  'index.html', 'js/logistics.js', 'js/treasury.js', 'js/economy.js', 'js/market.js', 'js/armies.js', 'js/wars.js', 'js/actions.js',
   'js/rebellions.js', 'js/fortifications.js', 'js/holywar.js', 'js/modifiers.js',
   'js/main.js', 'js/ui_misc.js', 'js/ui_modals.js', 'js/ui_panels.js', 'css/style.css',
   'data/map_data.js', 'data/markets.js', 'data/technology.js', 'data/units.js'
@@ -35,6 +35,51 @@ async function setup(page, testInfo) {
     }
   }, ids);
 }
+
+test('supply searches reuse local quotes but read fresh inputs on the next call', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0], original = FB.armyProvisionQuote;
+    const retreat = FB.armyRetreatGoal, adj = FB.world.adj;
+    let calls = 0;
+    try {
+      host.supply = 0; host.autoResupply = 1; host.supplyStop = host.at;
+      delete host.supplySearchTurn;
+      FB.world.adj = {}; FB.world.adj[host.at] = {};
+      FB.armyRetreatGoal = function () { return null; };
+      FB.armyProvisionQuote = function () { calls++; return { mode:'purchase', net:-1 }; };
+      const first = FB.armySupplyGoal(s, host), firstCalls = calls;
+      const second = FB.armySupplyGoal(s, host);
+      return { first:first === host.at, second:second === host.at, firstCalls:firstCalls, calls:calls };
+    } finally { FB.armyProvisionQuote = original; FB.armyRetreatGoal = retreat; FB.world.adj = adj; }
+  });
+  expect(result).toEqual({ first:true, second:true, firstCalls:1, calls:2 });
+});
+
+test('cashless searches retain free markets and skip paid candidate quotes', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0], quoted = [];
+    const old = { quote:FB.armyProvisionQuote, source:FB.marketProvisionSource,
+      retreat:FB.armyRetreatGoal, adj:FB.world.adj };
+    try {
+      s.player.gold = 0; host.supply = 0; host.autoResupply = 1;
+      delete host.supplyStop; delete host.supplySearchTurn;
+      FB.world.adj = {}; FB.world.adj[host.at] = { paid:1, free:1 };
+      FB.marketProvisionSource = function (state, pid) { return { price:pid === 'free' ? 0 : 1 }; };
+      FB.armyProvisionQuote = function (state, army, pid) {
+        quoted.push(pid); return { mode:'purchase', net:-1 };
+      };
+      FB.armyRetreatGoal = function () { return host.at; };
+      const goal = FB.armySupplyGoal(s, host);
+      return { paid:quoted.indexOf('paid') >= 0, free:quoted.indexOf('free') >= 0, home:goal === host.at };
+    } finally {
+      FB.armyProvisionQuote = old.quote; FB.marketProvisionSource = old.source;
+      FB.armyRetreatGoal = old.retreat; FB.world.adj = old.adj;
+    }
+  });
+  expect(result).toEqual({ paid:false, free:true, home:true });
+});
 
 test('daily paid provisioning preserves manual orders and conserves goods and payment', async function ({ page }, testInfo) {
   await setup(page, testInfo);
@@ -113,11 +158,13 @@ test('enemy forts protect stores and reduce extraction until occupied or ruined'
   expect(r.occupied).toBeGreaterThan(0); expect(r.ruined).toBeGreaterThan(0);
 });
 
-test('hosts share county loading capacity and AI purses survive save round trips', async function ({ page }, testInfo) {
+test('hosts share county loading capacity and AI treasury payments survive save round trips', async function ({ page }, testInfo) {
   await setup(page, testInfo);
   const r = await page.evaluate(function () {
     const s = FB.state, host = s.armies[0], pid = window.provisionIds.home;
     host.realm = window.provisionIds.other; host.at = pid; host.warId = null;
+    FB.treasuryInitialize(s);
+    s.realms[host.realm].treasury.gold = 100000;
     host.men = host.size = 1000000; host.units = { levy:1000000 };
     const gold = s.player.gold;
     const first = FB.provisionArmy(s, host);
@@ -127,7 +174,7 @@ test('hosts share county loading capacity and AI purses survive save round trips
     const q = FB.armyProvisionQuote(copy, copy.armies[0]);
     return { first:first.units, second:second.units, income:s.player.gold - gold,
       dues:FB.armyProvisionCounty(s, pid).current.dues,
-      purse:s.armyLogistics.purses[host.realm].gold,
+      purse:s.realms[host.realm].treasury.gold,
       stable:JSON.stringify(copy.armyLogistics) === data, rng:rng === FB.getRngState(), quote:q.cost };
   });
   expect(r.first).toBeGreaterThan(0); expect(r.second).toBe(0);

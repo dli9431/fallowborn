@@ -10700,6 +10700,22 @@ window.FB = window.FB || {};
     }
   }
 
+  function realmTreasuryHtml(s, rid) {
+    const t = FB.treasurySummary && FB.treasurySummary(s, rid);
+    if (!t || t.accountingOnly) return '';
+    let h = '<div class="settcard" id="realm-treasury" tabindex="0"><div class="settcard-head"><h4>' +
+      esc(FB.T('Realm treasury')) + '</h4>' + cardInfoButton('realm-treasury-details') + '</div>' +
+      kv('Available cash', esc(FB.money(t.available))) +
+      kv('Accrued military bills', esc(FB.money(t.accrued))) +
+      kv('Cash balance', esc(FB.money(t.gold))) +
+      kv('Financial policy', esc(t.recovering ? FB.T('Withdrawing to recover funds') :
+        t.gold - t.accrued <= 0 ? FB.T('No uncommitted cash') : FB.T('Maintaining expense reserves')));
+    if (t.last) h += kv('Last settled income', esc(FB.money(t.last.income + t.last.duesIn))) +
+      kv('Last settled expenses', esc(FB.money(t.last.duesOut + t.last.upkeep + t.last.military)));
+    return h + '<div class="settcard-details hidden" id="realm-treasury-details">' +
+      esc(FB.T('Available cash excludes unpaid military bills. Optional construction and recruitment protect projected expenses and army supplies. Food can use those reserves. Last settled expenses exclude food and construction already paid during the season. A cash shortage is separate from an empty food market.')) + '</div></div>';
+  }
+
   function showRealmInteractionSheet(rid, returnContext, replaceView) {
     const s = FB.state;
     const realm = s && rid && s.realms[rid];
@@ -10732,7 +10748,7 @@ window.FB = window.FB || {};
         esc(realmMusterText(s, rid)) + '</div><div class="ccmeta">' +
         esc(FB.L(realm.name)) +
         '</div></div></div>';
-    let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + interactionCardHtml(model) +
+    let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + realmTreasuryHtml(s, rid) + interactionCardHtml(model) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button>' +
@@ -15046,6 +15062,16 @@ window.FB = window.FB || {};
       }
     }
 
+    const producer = s.armyLogistics && s.armyLogistics.producerLast;
+    if (producer) {
+      h += '<div class="settcard" id="finance-producer" tabindex="0"><div class="settcard-head"><h4>' +
+        esc(FB.T('Last season’s army trade')) + '</h4>' + cardInfoButton('finance-producer-details') + '</div>' +
+        kv('Additional producer income', esc(FB.money(producer.gain))) +
+        kv('Requisition income loss', esc(FB.money(producer.loss))) +
+        kv('Net household adjustment', esc(FB.money(producer.gain - producer.loss))) +
+        '<div class="settcard-details hidden" id="finance-producer-details">' +
+        esc(FB.T('These adjustments are already settled with household income. Purchases exclude ruler dues and replace the baseline revenue for the attributed output. Gains are capped at 25% of baseline producer income; seizure losses at 50%.')) + '</div></div>';
+    }
     h += panelh('Coin and household means') +
       '<div class="gm-body-text">' +
       kv('Purse', esc(FB.T('{money:amount}', { amount:financeAmount(s.player.gold) }))) +
@@ -22788,6 +22814,7 @@ window.FB = window.FB || {};
       realmFamily:true
     } : null;
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
+    if (displayRealmId) h += realmTreasuryHtml(s, displayRealmId);
     if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
     h += localFolkSheetHtml(s, c);

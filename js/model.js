@@ -1499,6 +1499,7 @@ window.FB = window.FB || {};
     }
     FB.vacateReligiousHeads(state, realmId);
     if (FB.historicalAmbitionRealmEnded) FB.historicalAmbitionRealmEnded(state, realmId);
+    if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, realmId);
     realm.alive = false;
     realm.war = null;
     if (FB.papacyRealmDied) FB.papacyRealmDied(state, realmId);

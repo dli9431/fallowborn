@@ -1,5 +1,46 @@
 # Modding Fallowborn
 
+## Active treasury and army producer accounting
+
+Stage 3 helpers: `treasuryMilitaryPolicy(state)` builds a transient active-host
+commitment projection for one decision phase; `treasuryApproveHost(state, host,
+policy, defending, purpose)` reserves a proposed composition within that projection
+without debiting coin. `treasuryRetryReady(state, realmId, purpose)` bounds failed
+quotes; `aiTreasuryRetryDays` defaults to 7. `treasuryRetrenching(state, realmId)`
+is a pure recovery-state query. `treasuryFundReplacement(state, realmId, classId,
+men, policy)` pays the existing drilling premium; the cohort caller persists its
+funded flag to prevent repeat payments. `armyProvisionCommitment(state, host,
+seasons)` estimates consumption plus one refill at the current local food price.
+These projections are for mutation-boundary decisions, not UI refreshes. Mods
+changing military inputs should invalidate their owning realm/building/fort/tech
+indexes; direct edits without invalidation are reconsidered at the bounded retry.
+
+`treasuryAccounting.mode` is now `active`. Restore rebases legacy diagnostic coin
+once, clears diagnostic bills/inheritance, and deletes `armyLogistics.purses`.
+`FB.treasuryConstructionReserves(state)` returns a transient shared annual expense
+projection (or null outside active accounting). `FB.treasurySpendOptional(state,
+rid, amount, reserve)` protects that numeric reserve in addition to accrued bills.
+`FB.buildCost(state, pid, id, realmId)` optionally quotes AI technology without
+player household discounts; omit realmId for the unchanged player quote.
+
+`FB.treasurySpend(state, rid, amount)` refuses negative/nonfinite amounts or amounts
+above gold less accrued military bills; `treasuryCredit` accepts nonnegative finite
+receipts for live accounts. Food pays immediately; military accrual excludes food.
+
+`armyLogistics.producers` stores a seasonal snapshot of household food producers
+with uid, county, physical output, baseline food income, county output denominator
+and initial withdrawal offsets. `producerPending` is signed unsettled coin;
+`producerLast` retains one gain/loss summary. `armyProducerSnapshot` runs only at
+initialization and market settlement, and `armyProducerSettle` clears pending coin
+after payment. Physical market output uses `enterprisePhysicalYield`; army receipts
+must never be included in that reader. Positive adjustments cap at 25% of baseline
+food income and supplier receipts; requisition losses cap at 50%. Allocated bought
+and seized units jointly cannot exceed frozen output.
+Enterprise-removal integrations call `armyProducerCloseMissing(state, presentUids)`
+at the mutation boundary to settle and remove frozen claims once; display readers
+must never call this payment hook. Existing seasonal settlement also preserves
+frozen claims when records disappear without a removal integration.
+
 ## Targeted plots, war causes, and alliances
 
 A plot definition may add an optional `target` selector. The engine asks the player to
@@ -4517,3 +4558,24 @@ succeeds. Its boolean return now means the request was accepted, not that an
 asynchronous write has committed. Callers must wait for the callback before reload
 or success confirmation. `FB.save.read` reads the hydrated or pending snapshot;
 boot calls `FB.save.initStorage` before exposing save controls.
+
+## AI treasury accounting foundation
+
+`FBDATA.balance.aiTreasuryOpeningSeasons` defaults to 2;
+`aiTreasuryOpeningFloor` is indexed by AI realm rank (0 through 4), defaulting to
+`[0,10,20,30,40]`. These initialize legacy/new-game accounts once.
+Active accounts replace provisioning purses and gate optional spending.
+
+`FB.treasuryAvailable(state, realmId)` and `FB.treasurySummary(state, realmId)` are
+pure reads; the summary identifies active accounts with `accountingOnly:false`. `FB.treasurySnapshot(state)`
+builds the seasonal numeric projection and must not be called from daily UI refreshes.
+`FB.treasuryCreateRealm(state, id, sourceId, share)` transfers a clamped share of
+uncommitted source cash once. `FB.treasuryRetireRealm(state, id, recipientId)` transfers
+signed assets/obligations or retires them; active player inheritance credits net coin once.
+New realm writers must call the creation hook at their existing mutation boundary.
+For territorial creation, prefer `FB.treasuryCreateFromCounties(state, id, countyIds)`
+before changing holders: it transfers each donor's proportional uncommitted cash in
+one county pass and prevents confusing sovereign ownership with direct fiscal holding.
+`FB.countyTaxBase(state, provinceId, rate, optionalLocalTaxBonus)` shares the existing
+county tax formula; the optional bonus supports a batched caller's precomputed inputs.
+See `docs/plans/ai-treasury.md` for the required activation and migration contract.

@@ -1,5 +1,13 @@
 # UI: keyboard & mobile
 
+AI ruler sheets include a read-only Realm treasury card: available cash, accrued
+military bills, signed balance, last settled income/expenses and recovery status.
+Coin & Credit includes the last season's producer gains, requisition losses and net
+adjustment. Essential numbers remain visible; reserve/settlement explanations use
+the shared Details hover/focus and compact question-mark disclosure. Both use
+existing label/value rows, money formatting and modal Back/Close behavior, with no
+new navigation or daily UI work. Reads do not settle, initialize or pay accounts.
+
 Show calendar dates for deadlines; do not append internal turn indexes to game UI.
 
 ## Historical ambitions

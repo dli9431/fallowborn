@@ -1,5 +1,57 @@
 # Wars
 
+The AI treasury foundation accrues each host's non-food standing cost to its realm
+inside the existing supply pass, before starvation or battle can remove the host.
+All hosts contribute before the once-per-turn stamp is set; embedded allied troops
+are charged once through their host. Rebels and player hosts keep their existing
+rules. Stage 2 pays food from available treasury coin and credits market dues.
+New AI hosts, detachments and replenishment must fit two seasons of projected
+host costs plus initial food refill and necessary fiscal expenses. Quotes share
+one lazy active-host pass per decision phase, never a daily all-realm fiscal pass.
+Detachments use a conservative additional levy-host commitment before the capacity
+projection; this protects the extra camp without changing the troop split.
+Failed funding attempts retry after `aiTreasuryRetryDays` (7), enough new funds,
+or realm/building/fort/technology invalidation. Other changed inputs are reconsidered
+by the bounded review date. Retry records are transient and reset on restore.
+Defenders may use at most 12 levy-only halving quotes down to the existing minimum
+host size, waiving the optional fiscal reserve but still covering projected hosts.
+Ready professionals are consumed only by an accepted full muster; fallback defense
+leaves them ready. Existing troop technology, host limits and rearm delays remain.
+
+New AI professional loss batches carry `funded:false`. They start their full drill
+interval only after paying the existing class reinforcement premium for that interval,
+at the capital's market price, while protecting host/fiscal commitments. This is
+a one-time training payment, separate from later standing upkeep; no levy purchase
+fee is added. Existing batches without the field are grandfathered and player
+replacement charging is unchanged. Replacement joins and levy refill also check
+the projected replenished host before consuming men.
+
+Two consecutive seasonal settlements with nonpositive cash and military bills
+start a 90-day recovery interval. Hosts regroup; they disband only while stationary
+in directly held, unblocked home territory with no hostile host present. Bills survive and rearm stamps apply.
+At ordinary seasonal war review an insolvent AI attacker in recovery uses existing
+white peace for AI-only wars. Player wars stay player-controlled; holy-war hosts
+return home without forcing a coalition settlement. No market-stock shortage alone
+triggers fiscal recovery. This extends `ai_realm_treasury`, technology impact none.
+
+The provisioning supply pass skips the legacy drain quote whose result it does
+not use. Treasury upkeep snapshots unit rates once per supply pass and non-food
+basket weights once per visited county, while reading each host's live composition
+once. Snapshots expire with the pass; the next pass sees changed rates and prices.
+Per-class multiplication, division and host summation retain their original order.
+
+Provision quotes read supply technology once for both consumption and loading;
+later quotes still read fresh bonuses, stocks and funds. Already-idle halt orders
+return successfully without replacing their empty route or requesting map paint.
+Route-plan memos share land quotes by destination within that plan, preserving
+weighted search and tie ordering. Searches skip allocating strictly worse candidate
+paths, but retain equal-cost tie comparisons and fort fallback records. Directed
+leg caching was removed after the owner profile showed low reuse and higher search
+time. Holy-war objective results are shared by realm and starting county only
+within the orders phase; per-host supply and danger checks still run. Memos never
+survive into another plan or orders phase. Muster phases share the active-ambition scan across county
+validation; live county signatures and recruitment capacity checks remain daily.
+
 ## Automatic provisioning
 
 All non-rebel field hosts consume local provisions or their carried reserve each
@@ -26,9 +78,9 @@ in proportion to actual food taken. Peaceful purchases create scarcity and suppl
 turnover plus a 10% market due, split 80/20 between holder and sovereign when they
 differ. The ruler does not receive the full purchase price.
 
-AI realms use a saved provisioning purse with a capacity-based seasonal allowance
-and a two-season cap; every host of a realm shares it. Player purchases use actual
-available gold. No general AI treasury or synthetic merchant households are added.
+Every host of an AI realm shares its treasury, with accrued military bills excluded
+from available coin. Player purchases use actual available gold. No synthetic
+merchant households are added.
 Automatic hosts seek reachable stocked, affordable markets when supplies run low,
 and wait to refill toward their target before resuming; manual orders remain intact.
 
@@ -1317,9 +1369,47 @@ the result immediately, including when support was supplied by the caller.
 Regrouping and rebel reachability checks reuse an existing march only when every
 remaining edge, wasteland flag, fort and pinned departure is still legal. New targets
 retain normal weighted routing. Searches within one orders phase reuse identical
-host/from/target queries; their results are discarded before marching. Each route
-search checks a county's fort control once, sharing those answers with its fallback.
+host/from/target queries; their results are discarded before marching. Route searches
+share county fort answers for the same host and routing inputs within that phase,
+including fallback searches. Standalone searches read fort control afresh.
+Pathfinding also shares controller friendliness and hostility by realm within the
+orders phase, avoiding repeated diplomacy and hierarchy queries for counties with
+the same controller. Standalone searches create fresh relation tables. County fort
+and holy-war occupation checks remain separate. Replacement hostility hooks use
+live evaluation unless marked `militaryCacheSafe`; the built-in profiler preserves
+that marker. `Paths: controller hostility builds/hits` report this reuse.
+Ordinary-war and rebellion fort wrappers forward the relation context through
+their occupation overrides. The canonical hostility replacements retain the
+sharing marker; hosts with `rebellionId` always bypass controller relation sharing.
+Supply searches reuse county quotes and supply technology within one synchronous
+call. Cashless hosts skip positive-price purchase candidates; free markets, local
+requisition and the original retreat fallback remain available. No search ordering
+or daily recruitment eligibility checks are delayed.
 Daily goal selection, danger checks, movement, siege and battle timing are unchanged.
+Route-search candidates retain predecessor links instead of copying complete path
+arrays. Arrays are materialized for returned routes, including the first-fort
+fallback. The heap comparison order
+and route costs are unchanged. `Paths: path arrays materialized` counts those builds.
+Equal-cost route ties now compare predecessor links iteratively without materializing
+path arrays, stopping at shared ancestors and retaining the earliest differing county.
+Legacy array-backed military callers retain their array comparison. Fort fallback
+rejects strictly worse day/leg candidates before allocation and fort bookkeeping;
+equal-cost candidates retain lexicographic comparison. Its skipped allocations have
+a separate counter. Exploration order and the first fort on the chosen route remain
+unchanged; arrays are materialized when returning routes rather than for heap ties.
+Primary and fallback searches mark counties settled after their best route is popped.
+Edges back into settled counties skip quotes and fort checks: all leg costs are
+strictly positive, so later routes cannot improve them. Each search owns its settled
+set; no results survive into a later search. Separate settled-edge counters expose
+the work removed without changing neighbor counts or the exact route tie-break.
+Opt-in path diagnostics retain whole-search and fort-fallback timers, with counters
+for heap operations, ties and leg quotes. Per-call heap, tie and quote timers have
+been removed to reduce instrumentation overhead. Leg counters distinguish cached
+land quotes, land builds and water builds.
+Primary and fallback stale pops are separate, and fallback frontier/edge counters
+supplement the original primary-only exploration counters. Shared heap and quote
+helpers also count other military callers during the burst. Profiling still adds
+overhead; compare like-instrumented runs and do not sum inclusive parent/child rows.
 
 A fully supplied host on non-draining ground clears its low-supply warning without
 calculating recovery bonuses. Friendly-control checks still run after movement;

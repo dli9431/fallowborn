@@ -337,6 +337,8 @@ window.FB = window.FB || {};
     if (ar || br) return a.realm !== b.realm;
     return hostile(state, a, b);
   };
+  // Realm-only sharing is valid for ordinary hosts; rebel hosts opt out below.
+  FB.armiesHostile.militaryCacheSafe = hostile.militaryCacheSafe;
   var friendly = FB.armyFriendlyProvince;
   FB.armyFriendlyProvince = function (state, army, pid, relations) {
     var group = FB.countyInOpenRevolt(state, pid);
@@ -345,10 +347,10 @@ window.FB = window.FB || {};
     return friendly(state, army, pid, relations);
   };
   var fortBlocks = FB.fortBlocksArmy;
-  FB.fortBlocksArmy = function (state, pid, army) {
+  FB.fortBlocksArmy = function (state, pid, army, relations) {
     var group = FB.countyInOpenRevolt(state, pid);
     if (army.rebellionId && (group && group.id === army.rebellionId || targetOf(state, pid) === (FB.rebellionById(state, army.rebellionId) || {}).target)) return false;
-    return fortBlocks(state, pid, army);
+    return fortBlocks(state, pid, army, army.rebellionId ? null : relations);
   };
   var recruitmentBlocked = FB.recruitmentCountyBlocked;
   FB.recruitmentCountyBlocked = function (state, rid, pid, hosts) {
@@ -415,6 +417,7 @@ window.FB = window.FB || {};
         rank:component.length > 1 ? 2 : 1, color:'#a96f42', aggression:0.5,
         religion:FB.countyReligion ? FB.countyReligion(state, capital) : FB.world.byId[capital].religion,
         liege:null, war:null, op:0 };
+      if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, id, component);
       if (FB.mergeRealmTech) FB.mergeRealmTech(state, id, group.target);
       component.forEach(function (pid) { FB.transferProvince(state, pid, id); });
       FB.ensureRealmSuccession(state, id);

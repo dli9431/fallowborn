@@ -489,6 +489,22 @@ day can exceed that budget because the authoritative tick remains synchronous.
 
 ## Local fast-forward timing
 
+Enabled bursts record start/end workload snapshots: army and marching/starving
+counts, holy-war participants/resolve, soldiers, active ordinary wars, treasury
+balances/accrual, and provisions stock. These are pure aggregate reads performed
+only twice per burst, never daily UI work or saved simulation state. Supply-pass
+counters accumulate host-days, soldier-days, marching, holy-war, and starvation
+workloads; provisioning reports actual coin/units and reasons for shortfalls.
+
+Treasury inputs are timed only beneath a `Treasury:` operation, so their rows do
+not include unrelated tax/support reads elsewhere in the game. Logistics quote,
+market source, withdrawal, and resupply-goal helpers receive separate nested rows.
+All wrappers restore at burst completion, including errors. Interpret inclusive
+and self time separately, and compare workload changes before judging speed.
+The owner-only save profiler includes this report, a treasury-disabled reference
+mode, and a gameplay hash excluding only diagnostic accounts. See the stress-save
+recipe in `docs/TESTS.md` for the root winter holy-war fixture and measurement steps.
+
 `FB.game.fastForwardTiming.enable(true)` enables console diagnostics only on
 file://, localhost, 127.0.0.1 or IPv6 loopback. Other hostnames refuse activation.
 It defaults off on every page load and has no save, preference or telemetry field.
@@ -519,6 +535,19 @@ tracking. Missing rows mean the operation was not reached during that run. Timed
 phases close on early return and exceptions; the recorder exists only during an
 enabled local burst. These diagnostics do not change military or religious rules.
 
+Goal counters compare selected goals with the existing order and identify marching
+hosts and current-county goals. Order counters distinguish unchanged destinations,
+marching hosts, prepared plans, halts and rejected plans. Path counters distinguish
+requests, actual searches, order-cache hits, failed searches, returned legs, frontier
+pops and neighbor edges. Repeated endpoint pairs are counted within each day;
+matching endpoints alone do not establish identical movement permissions or costs.
+Provisioning counters group quotes by host/realm/county and realm/county within a
+day. Hosts without ids share their realm/county diagnostic group. Repeated quotes
+can still require fresh stock, funds or control. Scoped provisioning rows time
+consumption, technology, hostility and fort inputs. Repetition sets exist only in
+the enabled recorder and reset each day; nothing is saved. Compare runs using the
+same instrumentation because inner-search counters and timers add overhead.
+
 An idle restored-head holy-war check verifies its historical unlock, cooldown,
 AI head and player-Pope restrictions before enumerating target kingdoms. Initial
 unlock checks similarly skip target construction for an ineligible head/cooldown.
@@ -528,6 +557,12 @@ The local profiler's counters distinguish muster projection requests for new hos
 and detachments, per-realm projection builds, failed raises, capacity-rejected
 splits and created detachments. Nested muster rows cover war/realm lookup, allied
 troop refresh, new-host checks, detachment checks and peace/disband checks.
+County-input counters distinguish same-phase hits, retained inputs, cold counties,
+changed input signatures and changed reader functions. Bypass reasons identify
+unsafe support/modifier readers, community projects and active ambitions; reasons
+can overlap and must not be summed as rebuilds. Timing wrappers preserve readers'
+`militaryCacheSafe` flags. Wrapping changes function identity, so a previously warm
+county may rebuild once when profiling starts, but should then retain valid inputs.
 Supply counters distinguish cache hits from actual builds, map counts discarded,
 state/world/control/alliance-campaign invalidations, and per-realm/campaign rebuilds.
 Control-change diagnostics further separate ownership, hierarchy, player holdings
@@ -536,6 +571,12 @@ reason counters must not be summed as a reset count. The first observed validati
 has no prior diagnostic control snapshot. Friendly-source scanning and distance
 propagation have separate timing rows. Diagnostic snapshots and counters add some
 overhead only while profiling; comparison runs should use the same instrumentation.
+
+Path diagnostics use whole-search and fort-fallback timers. Heap operations, route
+ties and leg quotes retain counters but no longer enter individual timing rows,
+reducing overhead in the inner loops. Settled-edge skips are counted separately for
+primary and fallback searches. Comparisons against the earlier fine-timer reports
+include reduced instrumentation cost as well as runtime optimization.
 
 Annual world diagnostics split worldTick into preparation, fortifications/population,
 religion, indexes/family links, realm families/rulers, vassal breakaways, alliances,

@@ -3173,6 +3173,7 @@ FB.CHANGELOG = [
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
+    if (FB.treasuryInitialize) FB.treasuryInitialize(state);
     if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
     if (sc.tier === 0) {
       /* The integrated tenure sheet and lawful-freedom routes name the exact
@@ -3343,6 +3344,7 @@ FB.CHANGELOG = [
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
+    if (FB.treasuryInitialize) FB.treasuryInitialize(state);
     if (FB.ensureFaithStandingBaselines) {
       FB.ensureFaithStandingBaselines(state);
     }
@@ -3383,10 +3385,45 @@ FB.CHANGELOG = [
     },
     isEnabled:function () { return timingEnabled && localTimingAllowed(); }
   };
+  // Only called at the edges of an enabled profiling burst. No repairing readers.
+  function timingWorkload(state) {
+    state = state || {};
+    const out = { turn:state.turn, date:Object.assign({}, state.date),
+      armies:0, holyWarArmies:0, marchingArmies:0, starvingArmies:0, soldiers:0,
+      treasuryAccounts:0, treasuryGold:0, militaryAccrued:0, activeWars:0,
+      provisionsStock:0, marketTurn:state.market ? state.market.lastTurn : null };
+    for (const army of state.armies || []) {
+      out.armies++; out.soldiers += Number(army.men) || 0;
+      if (army.warId === 'holy') out.holyWarArmies++;
+      if (army.moveLeft > 0 || (army.path && army.path.length)) out.marchingArmies++;
+      if (army.supply !== undefined && army.supply <= 0) out.starvingArmies++;
+    }
+    for (const rid of Object.keys(state.realms || {})) {
+      const realm = state.realms[rid], account = realm && realm.treasury;
+      if (!realm || !realm.alive || !account || account.retired) continue;
+      out.treasuryAccounts++;
+      out.treasuryGold += Number(account.gold) || 0;
+      out.militaryAccrued += Number(account.militaryAccrued) || 0;
+    }
+    for (const id of Object.keys(state.wars || {})) {
+      if (state.wars[id] && state.wars[id].status === 'active') out.activeWars++;
+    }
+    const market = state.market, good = market && market.goods ? market.goods.indexOf('provisions') : -1;
+    if (good >= 0) for (const pid of Object.keys(market.counties || {})) {
+      const row = market.counties[pid];
+      out.provisionsStock += Number(row && row[0] && row[0][good]) || 0;
+    }
+    const holy = state.greatHolyWar;
+    out.holyWar = holy ? { id:holy.id, phase:holy.phase, resolve:holy.resolve,
+      attackers:(holy.participants && holy.participants.attackers || []).length,
+      defenders:(holy.participants && holy.participants.defenders || []).length } : null;
+    return out;
+  }
   function beginFastForwardTiming() {
     if (!G.fastForwardTiming.isEnabled()) return null;
     const now = function () { return window.performance.now(); };
     const started = now(), startTurn = FB.state.turn;
+    const workloadStart = timingWorkload(FB.state);
     const rows = Object.create(null), counters = Object.create(null), restore = [], stack = [];
     let waitingSince = started, waitingMs = 0, batches = 0, done = false;
     function enter(label) {
@@ -3402,7 +3439,15 @@ FB.CHANGELOG = [
       row.calls++; row.totalMs += elapsed; row.selfMs += elapsed - entry.children;
       row.maxMs = Math.max(row.maxMs, elapsed);
     }
+    let repeatTurn = null, repeatKeys = Object.create(null);
     G._fastForwardTiming = { enter:enter, leave:leave,
+      repeat:function (label, key, turn) {
+        if (repeatTurn !== turn) { repeatTurn = turn; repeatKeys = Object.create(null); }
+        const group = repeatKeys[label] || (repeatKeys[label] = Object.create(null));
+        const suffix = group[key] ? ' repeated same day' : ' distinct same day';
+        group[key] = true;
+        counters[label + suffix] = (counters[label + suffix] || 0) + 1;
+      },
       count:function (label, amount) {
         counters[label] = (counters[label] || 0) + (amount === undefined ? 1 : amount);
       }
@@ -3412,11 +3457,15 @@ FB.CHANGELOG = [
       if (!owner || typeof owner[key] !== 'function') return;
       const original = owner[key];
       const wrapper = function () {
-        if (annualOnly && !stack.some(function (entry) { return entry.label === 'worldTick'; })) return original.apply(this, arguments);
+        if (annualOnly && !stack.some(function (entry) {
+          return typeof annualOnly === 'string' ? entry.label.indexOf(annualOnly) === 0 : entry.label === 'worldTick';
+        })) return original.apply(this, arguments);
         const entry = enter(label);
         try { return original.apply(this, arguments); }
         finally { leave(entry); }
       };
+      // Instrumentation must preserve the cache contract of canonical readers.
+      if (original.militaryCacheSafe !== undefined) wrapper.militaryCacheSafe = original.militaryCacheSafe;
       owner[key] = wrapper;
       restore.push(function () { if (owner[key] === wrapper) owner[key] = original; });
     }
@@ -3442,6 +3491,18 @@ FB.CHANGELOG = [
       'ensureGreatHolyWar', 'greatHolyWarTargets'].forEach(function (key) {
       wrap(FB, key, 'Religious operation: ' + key);
     });
+    ['armyProvisionQuote', 'armySupplyGoal', 'marketProvisionSource',
+      'marketWithdrawProvisions', 'armyMarketDemand', 'armyProvisionSeason',
+      'armyProducerSnapshot', 'armyProducerSettle'].forEach(function (key) {
+      wrap(FB, key, 'Logistics operation: ' + key);
+    });
+    ['countyTaxBase', 'countySettlementTax', 'countyPopulationFactor',
+      'countyModifierSnapshot', 'countyPopularSupport', 'modBonus', 'techBonus'].forEach(function (key) {
+      wrap(FB, key, 'Treasury input: ' + key, 'Treasury:');
+    });
+    ['armyProvisionUse', 'techBonus', 'armiesHostile', 'fortAt', 'fortBlocksArmy'].forEach(function (key) {
+      wrap(FB, key, 'Provisioning input: ' + key, 'Logistics operation:');
+    });
     ['ensureDynasticState', 'checkAllCrownRecognition', 'fortAIYear', 'populationYear',
       'papacyYearly', 'greatHolyWarYearly', 'familyLinksSnapshot', 'ensureRealmSuccession',
       'refreshRealmSuccession', 'advanceRealmSuccession', 'killChar', 'compactCourtRecord',
@@ -3462,14 +3523,18 @@ FB.CHANGELOG = [
       finish:function (reason) {
         if (done) return;
         done = true;
+        let workloadEnd;
+        try { workloadEnd = timingWorkload(FB.state); }
+        finally { restore.forEach(function (undo) { undo(); }); }
         const elapsed = now() - started;
-        restore.forEach(function (undo) { undo(); });
         const report = {
           reason:reason, days:FB.state.turn - startTurn, batches:batches,
           elapsedMs:elapsed, betweenBatchesMs:waitingMs,
           simulationMs:rows['Simulation (all days)'] ? rows['Simulation (all days)'].totalMs : 0,
+          version:FB.VERSION, observe:!!G.observe,
+          workload:{ start:workloadStart, end:workloadEnd },
           rows:rows, counters:counters,
-          note:'Rows are inclusive totals; selfMs excludes timed children. Waiting includes browser work. Deferred paint and IndexedDB completion are not measured.'
+          note:'Rows are inclusive totals; selfMs excludes timed children. Workload snapshots run only at burst boundaries. Host-days count daily supply-pass visits. Waiting includes browser work. Deferred paint and IndexedDB completion are not measured.'
         };
         G.fastForwardTiming.last = report;
         if (window.console) {
@@ -3560,6 +3625,8 @@ FB.CHANGELOG = [
        mortality, births, events, or autosaves; nothing personal reaches the watcher. */
     if (G.observe) {
       if (seasonBoundary && FB.marketSeason) FB.marketSeason(s);
+      if (seasonBoundary && FB.treasurySeason) FB.treasurySeason(s);
+      if (seasonBoundary && newYear && FB.treasuryRevalue) FB.treasuryRevalue(s, 1);
       if (seasonBoundary && FB.intrigueSeason) FB.intrigueSeason(s);
       if (seasonBoundary && FB.techSeason) FB.techSeason(s, false);
       // This resolver owns AI campaigns too, including sieges and exhaustion.
@@ -3582,7 +3649,9 @@ FB.CHANGELOG = [
       if (FB.intrigueSeason) FB.intrigueSeason(s);
       if (p.dead) return 'dead';
       if (FB.marketSeason) FB.marketSeason(s);
-      const income = p.tier >= 3 ? FB.playerTax(s) : 0;
+      const taxParts = p.tier >= 3 ? FB.playerTaxParts(s) : null;
+      const income = taxParts ? FB.playerTax(s, taxParts) : 0;
+      if (FB.treasurySeason) FB.treasurySeason(s, taxParts);
       const buildingUpkeep = p.tier >= 3
         ? FB.buildingBonus(s, 'upkeep') + (FB.fortUpkeep ? FB.fortUpkeep(s) : 0)
         : 0;

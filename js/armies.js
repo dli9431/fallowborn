@@ -768,6 +768,8 @@ window.FB = window.FB || {};
     };
   }
 
+  FB.hostStandingUpkeepParts = hostUpkeepParts;
+
   /* Current seasonal cost of the live player hosts. A missing (disbanded or
      shattered) host has no base logistics and therefore costs nothing; each
      fielded host — the main body and every detachment — pays its own camp
@@ -1134,7 +1136,9 @@ window.FB = window.FB || {};
       if (!room) continue;
       record.batches.push({
         n:Math.min(lost, room),
-        readyTurn:state.turn + cohortReplaceDays(key)
+        readyTurn:state.turn + cohortReplaceDays(key),
+        funded:!(state.treasuryAccounting && state.treasuryAccounting.mode === 'active' &&
+          realmId !== 'player' && state.realms[realmId] && state.realms[realmId].treasury)
       });
     }
   };
@@ -1151,6 +1155,7 @@ window.FB = window.FB || {};
   function cohortTickUntimed(state) {
     const ledgers = state.armyCohorts;
     if (!ledgers) return;
+    let fundingPolicy;
     for (const realmId in ledgers) {
       const ledger = ledgers[realmId];
       if (!ledger) continue;
@@ -1160,6 +1165,17 @@ window.FB = window.FB || {};
         let drilled = 0;
         const pendingBatches = [];
         for (const batch of record.batches) {
+          if (batch.funded === false) {
+            if (FB.treasuryRetryReady(state, realmId, 'replacement')) {
+              if (fundingPolicy === undefined) fundingPolicy = FB.treasuryMilitaryPolicy(state, true);
+              if (FB.treasuryFundReplacement(state, realmId, classId, batch.n, fundingPolicy)) {
+                batch.funded = true;
+                batch.readyTurn = state.turn + cohortReplaceDays(classId);
+              }
+            }
+            pendingBatches.push(batch);
+            continue;
+          }
           if (batch.readyTurn <= state.turn) drilled += batch.n;
           else pendingBatches.push(batch);
         }
@@ -1333,6 +1349,8 @@ window.FB = window.FB || {};
     if (rb && opposed(b.realm, rb.war)) return true;
     return false;
   };
+
+  FB.armiesHostile.militaryCacheSafe = true;
 
   /* Vassals can own campaigns too. Retain living realm order until a death
      or hierarchy mutation advances the shared revision; muster order must
@@ -1661,15 +1679,34 @@ window.FB = window.FB || {};
       units[classId] = (units[classId] || 0) + cohort[classId];
       cohortMen += cohort[classId];
     }
-    if (cohortMen) {
-      cohortConsumeReady(state, rid, cohort);
-      units.levy -= cohortMen;
+    if (cohortMen) units.levy -= cohortMen;
+    const policy = projection && (projection.getPolicy ? projection.getPolicy() : projection.policy);
+    const candidate = { id:'muster:' + rid, realm:rid, at:territory.rally, men:men, units:units, supply:100 };
+    let fallback = false;
+    if (FB.treasuryApproveHost && !FB.treasuryApproveHost(state, candidate, policy, false, 'muster')) {
+      if (!defending && FB.greatHolyWarCamp(state, rid) !== 'defenders') return null;
+      // Bounded halving finds a supportable levy defense without consuming
+      // drilled professionals, issuing free coin, or changing rearm delays.
+      candidate.units = emptyUnitCounts(); fallback = true;
+      let accepted = false;
+      for (let attempt = 0; attempt < 12; attempt++) {
+        candidate.men = attempt === 11 ? (B().armyMinMen || 40) :
+          Math.max(B().armyMinMen || 40, Math.floor(candidate.men / 2));
+        candidate.units.levy = candidate.men;
+        if (FB.treasuryApproveHost(state, candidate, policy, true, 'muster')) { accepted = true; break; }
+        if (candidate.men === (B().armyMinMen || 40)) break;
+      }
+      if (!accepted) return null;
+      men = candidate.men;
+      for (const key in units) units[key] = candidate.units[key] || 0;
+      if (FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster affordable levy defenses');
     }
+    if (cohortMen && !fallback) cohortConsumeReady(state, rid, cohort);
     const host = { id: FB.uid(), realm: rid, men: men, size: men, units: units,
       warId:FB.realmWars(state, rid).length ? FB.realmWars(state, rid)[0].id :
         (FB.greatHolyWarCamp(state, rid) ? 'holy' : null),
       at: territory.rally, from: territory.rally, moveLeft: 0, path: [], goal: null };
-    if (allied.men) host.allied = allied;
+    if (allied.men && !fallback) host.allied = allied;
     state.armies.push(host);
     if (host.warId === 'holy' && FB.greatHolyWarMarkMuster) {
       FB.greatHolyWarMarkMuster(state, rid);
@@ -1970,15 +2007,22 @@ window.FB = window.FB || {};
   }
 
   function quoteFromMemo(memo, fromPid, toPid) {
+    const timing = FB.game && FB.game._fastForwardTiming;
     const crossingClass = FB.waterCrossing
       ? FB.waterCrossing(fromPid, toPid) : null;
     if (!crossingClass) {
+      const land = memo.landQuotes || (memo.landQuotes = Object.create(null));
+      if (land[toPid]) {
+        if (timing) timing.count('Paths: land quote cache hits');
+        return land[toPid];
+      }
+      if (timing) timing.count('Paths: land quotes built');
       /* land legs pay the destination's terrain: the day-weighted route
          search then detours around mountains and mires on its own. Sea legs
          keep their crossing-class clock. */
       const landDays = Math.max(1, Math.round(memo.landDays *
         terrainMarchFactor(terrainOf(toPid))));
-      return {
+      return land[toPid] = {
         water:false,
         crossingClass:null,
         hostMen:memo.hostMen,
@@ -1989,6 +2033,7 @@ window.FB = window.FB || {};
         totalDays:landDays
       };
     }
+    if (timing) timing.count('Paths: water quotes built');
     const crossing = memo.crossings[crossingClass] || memo.crossings.narrow ||
       { cycleDays:2, capacityMult:2 };
     const effectiveCapacity = Math.max(1, Math.round(memo.nationalCapacity *
@@ -2023,13 +2068,49 @@ window.FB = window.FB || {};
     return a.length - b.length;
   }
 
+  function routePath(node) {
+    if (node.path) return node.path;
+    const path = new Array(node.legs);
+    let current = node;
+    for (let i = path.length - 1; i >= 0; i--) {
+      path[i] = current.pid;
+      current = current.parent;
+    }
+    node.path = path;
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (timing) timing.count('Paths: path arrays materialized');
+    return path;
+  }
+
+  function routeTieCompare(a, b) {
+    // Walk equal-depth predecessors backwards; the earliest difference wins.
+    // Shared ancestors terminate the walk without copying either route.
+    let order = 0;
+    while (a !== b && a.legs) {
+      if (!a.parent || !b.parent) {
+        return pathCompare(routePath(a), routePath(b)) || order;
+      }
+      if (a.pid < b.pid) order = -1;
+      else if (a.pid > b.pid) order = 1;
+      a = a.parent; b = b.parent;
+    }
+    return order;
+  }
+
   function routeCompare(a, b) {
-    return a.totalDays - b.totalDays ||
-      a.legs - b.legs ||
-      pathCompare(a.path, b.path);
+    const order = a.totalDays - b.totalDays || a.legs - b.legs;
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (timing) timing.count('Paths: route comparisons');
+    if (order) return order;
+    if (!timing) return routeTieCompare(a, b);
+    timing.count('Paths: tie comparisons');
+    timing.count('Paths: tie chain legs', a.legs + b.legs);
+    return routeTieCompare(a, b);
   }
 
   function frontierPush(frontier, item) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (timing) timing.count('Paths: heap pushes');
     let index = frontier.length;
     frontier.push(item);
     while (index > 0) {
@@ -2042,6 +2123,8 @@ window.FB = window.FB || {};
   }
 
   function frontierPop(frontier) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (timing) timing.count('Paths: heap pops');
     if (!frontier.length) return null;
     const first = frontier[0];
     const last = frontier.pop();
@@ -2114,6 +2197,8 @@ window.FB = window.FB || {};
   }
 
   function findArmyPathFrom(state, army, fromPid, toPid, memo) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (timing) timing.count('Paths: requests');
     const queries = orderQueries && orderQueries.state === state ? orderQueries : null;
     if (!queries) return searchArmyPathFrom(state, army, fromPid, toPid, memo);
     let routes = queries.routes.get(army);
@@ -2121,7 +2206,7 @@ window.FB = window.FB || {};
     const key = JSON.stringify([fromPid, toPid, army.from, army.realm, army.warId, army.men]);
     if (!Object.prototype.hasOwnProperty.call(routes, key)) {
       routes[key] = searchArmyPathFrom(state, army, fromPid, toPid, memo);
-    }
+    } else if (timing) timing.count('Paths: order cache hits');
     return routes[key];
   }
 
@@ -2129,10 +2214,17 @@ window.FB = window.FB || {};
     const timing = FB.game && FB.game._fastForwardTiming;
     if (!timing) return searchArmyPathFromUntimed(state, army, fromPid, toPid, memo);
     const entry = timing.enter('Army operation: path search');
-    try { return searchArmyPathFromUntimed(state, army, fromPid, toPid, memo); }
+    if (timing.repeat) timing.repeat('Paths: endpoint pair', JSON.stringify([fromPid, toPid]), state.turn);
+    try {
+      const result = searchArmyPathFromUntimed(state, army, fromPid, toPid, memo);
+      timing.count(result ? 'Paths: found' : 'Paths: failed');
+      if (result) timing.count('Paths: returned legs', result.path.length);
+      return result;
+    }
     finally { timing.leave(entry); }
   }
   function searchArmyPathFromUntimed(state, army, fromPid, toPid, memo) {
+    const timing = FB.game && FB.game._fastForwardTiming;
     if (!FB.world || !FB.world.adj || !FB.world.adj[fromPid] ||
         !FB.world.adj[toPid]) return null;
     if (fromPid === toPid) return { path:[], totalDays:0, waterLegs:0 };
@@ -2140,23 +2232,36 @@ window.FB = window.FB || {};
     if (comp[fromPid] !== comp[toPid]) return null;
     memo = memo || legQuoteMemo(state, army);
     // Fort control is constant during a synchronous search, including fallback.
-    const blockedForts = Object.create(null);
+    let blockedForts = Object.create(null);
+    let fortRelations = { friendly:Object.create(null), hostile:Object.create(null) };
+    if (orderQueries && orderQueries.state === state) {
+      let hostForts = orderQueries.forts.get(army);
+      if (!hostForts) { hostForts = Object.create(null); orderQueries.forts.set(army, hostForts); }
+      const fortKey = JSON.stringify([army.realm, army.warId, army.from, army.at, army.men, army.rebellionId]);
+      blockedForts = hostForts[fortKey] || (hostForts[fortKey] = Object.create(null));
+      // Controller relations depend on realm, not the host's route or strength.
+      // The orders phase ends before movement, combat or occupation changes.
+      fortRelations = orderQueries.fortRelations[army.realm] ||
+        (orderQueries.fortRelations[army.realm] = fortRelations);
+    }
     function fortBlocks(pid) {
       if (blockedForts[pid] === undefined) {
-        blockedForts[pid] = !!(FB.fortBlocksArmy && FB.fortBlocksArmy(state, pid, army));
-      }
+        blockedForts[pid] = !!(FB.fortBlocksArmy && FB.fortBlocksArmy(state, pid, army, fortRelations));
+      } else if (timing) timing.count('Paths: fort cache hits');
       return blockedForts[pid];
     }
     const adj = FB.world.adj;
     const start = {
       pid:fromPid, path:[], totalDays:0, legs:0, waterLegs:0
     };
-    const frontier = [], best = {}, blocked = [];
+    const frontier = [], best = {}, blocked = [], settled = Object.create(null);
     best[fromPid] = start;
     frontierPush(frontier, start);
     while (frontier.length) {
       const current = frontierPop(frontier);
-      if (best[current.pid] !== current) continue;
+      if (timing) timing.count('Paths: frontier pops');
+      if (best[current.pid] !== current) { if (timing) timing.count('Paths: primary stale pops'); continue; }
+      settled[current.pid] = true;
       if (current.pid === toPid) {
         const around = [];
         for (let blockedIndex = 0; blockedIndex < blocked.length; blockedIndex++) {
@@ -2164,7 +2269,7 @@ window.FB = window.FB || {};
           if (around.indexOf(blockedPid) < 0) around.push(blockedPid);
         }
         const reached = {
-          path:current.path,
+          path:routePath(current),
           totalDays:current.totalDays,
           waterLegs:current.waterLegs
         };
@@ -2176,8 +2281,15 @@ window.FB = window.FB || {};
         return reached;
       }
       const neighbors = sortedNeighbors(adj, current.pid);
+      if (timing) timing.count('Paths: neighbor edges', neighbors.length);
       for (let i = 0; i < neighbors.length; i++) {
         const neighbor = neighbors[i];
+        // Every leg costs at least one day. A settled route cannot improve
+        // through a later popped node, including its leg and county tie-breaks.
+        if (settled[neighbor]) {
+          if (timing) timing.count('Paths: settled edges skipped');
+          continue;
+        }
         /* Wastelands are impassable scenery: never a route leg. The flag is
            read live so a county converted to real land during play (wasteland
            materialization) becomes passable without rebuilding the per-world
@@ -2192,18 +2304,28 @@ window.FB = window.FB || {};
             !(FB.armyFriendlyProvince &&
               FB.armyFriendlyProvince(state, army, neighbor))) continue;
         const quote = quoteFromMemo(memo, current.pid, neighbor);
+        const totalDays = current.totalDays + quote.totalDays, legs = current.legs + 1;
+        const blockedNeighbor = neighbor !== toPid && fortBlocks(neighbor);
+        const previous = best[neighbor];
+        // Strictly worse costs cannot win the lexicographic path tie-break.
+        // Fort candidates still enter the original fallback bookkeeping.
+        if (!blockedNeighbor && previous && (totalDays > previous.totalDays ||
+            (totalDays === previous.totalDays && legs > previous.legs))) {
+          if (timing) timing.count('Paths: dominated allocations skipped');
+          continue;
+        }
         const candidate = {
           pid:neighbor,
-          path:current.path.concat([neighbor]),
-          totalDays:current.totalDays + quote.totalDays,
-          legs:current.legs + 1,
+          parent:current, path:null,
+          totalDays:totalDays,
+          legs:legs,
           waterLegs:current.waterLegs + (quote.water ? 1 : 0)
         };
         /* A hostile fort is a legal destination but never an intermediate
            node. Remember the best encountered obstacle so a route with no
            bypass ends at the fort instead of pretending no march is
            possible. */
-        if (neighbor !== toPid && fortBlocks(neighbor)) {
+        if (blockedNeighbor) {
           candidate.blockedByFort = neighbor;
           blocked.push(candidate);
           continue;
@@ -2220,39 +2342,55 @@ window.FB = window.FB || {};
        an order away from its intended road. The returned route still ends at
        the first strongpoint and never carries the host through it. */
     if (blocked.length) {
+      const fallbackEntry = timing && timing.enter('Paths: fort fallback');
+      try {
       const virtualStart = {
         pid:fromPid, path:[], totalDays:0, legs:0, waterLegs:0,
         firstFort:null, firstFortLength:0, firstFortDays:0,
         firstFortWaterLegs:0
       };
-      const virtualFrontier = [], virtualBest = {};
+      const virtualFrontier = [], virtualBest = {}, virtualSettled = Object.create(null);
       virtualBest[fromPid] = virtualStart;
       frontierPush(virtualFrontier, virtualStart);
       while (virtualFrontier.length) {
         const current = frontierPop(virtualFrontier);
-        if (virtualBest[current.pid] !== current) continue;
+        if (timing) timing.count('Paths: fallback frontier pops');
+        if (virtualBest[current.pid] !== current) { if (timing) timing.count('Paths: fallback stale pops'); continue; }
+        virtualSettled[current.pid] = true;
         if (current.pid === toPid) {
           if (!current.firstFort) return null;
           return {
-            path:current.path.slice(0, current.firstFortLength),
+            path:routePath(current).slice(0, current.firstFortLength),
             totalDays:current.firstFortDays,
             waterLegs:current.firstFortWaterLegs,
             blockedByFort:current.firstFort
           };
         }
         const neighbors = sortedNeighbors(adj, current.pid);
+        if (timing) timing.count('Paths: fallback neighbor edges', neighbors.length);
         for (let i = 0; i < neighbors.length; i++) {
           const neighbor = neighbors[i];
+          if (virtualSettled[neighbor]) {
+            if (timing) timing.count('Paths: fallback settled edges skipped');
+            continue;
+          }
           if (current.pid === fromPid && fortBlocks(fromPid) &&
               neighbor !== army.from &&
               !(FB.armyFriendlyProvince &&
                 FB.armyFriendlyProvince(state, army, neighbor))) continue;
           const quote = quoteFromMemo(memo, current.pid, neighbor);
+          const totalDays = current.totalDays + quote.totalDays, legs = current.legs + 1;
+          const previous = virtualBest[neighbor];
+          if (previous && (totalDays > previous.totalDays ||
+              (totalDays === previous.totalDays && legs > previous.legs))) {
+            if (timing) timing.count('Paths: fallback dominated allocations skipped');
+            continue;
+          }
           const candidate = {
             pid:neighbor,
-            path:current.path.concat([neighbor]),
-            totalDays:current.totalDays + quote.totalDays,
-            legs:current.legs + 1,
+            parent:current, path:null,
+            totalDays:totalDays,
+            legs:legs,
             waterLegs:current.waterLegs + (quote.water ? 1 : 0),
             firstFort:current.firstFort,
             firstFortLength:current.firstFortLength,
@@ -2261,7 +2399,7 @@ window.FB = window.FB || {};
           };
           if (!candidate.firstFort && fortBlocks(neighbor)) {
             candidate.firstFort = neighbor;
-            candidate.firstFortLength = candidate.path.length;
+            candidate.firstFortLength = candidate.legs;
             candidate.firstFortDays = candidate.totalDays;
             candidate.firstFortWaterLegs = candidate.waterLegs;
           }
@@ -2272,6 +2410,7 @@ window.FB = window.FB || {};
           }
         }
       }
+      } finally { if (timing) timing.leave(fallbackEntry); }
     }
     return null;
   }
@@ -2351,8 +2490,19 @@ window.FB = window.FB || {};
   /* A new movement order immediately overrides any previous destination and
      routes directly from the host's current position to the new goal. */
   FB.orderArmy = function (state, army, destPid, preparedPlan) {
+    const timing = FB.game && FB.game._fastForwardTiming;
+    if (timing) {
+      timing.count(destPid === army.goal ? 'Orders: same destination' : 'Orders: changed destination');
+      if (army.moveLeft > 0 || (army.path && army.path.length)) timing.count('Orders: while marching');
+      if (preparedPlan) timing.count('Orders: prepared plan');
+    }
     const plan = preparedPlan || armyOrderPlan(state, army, destPid);
+    if (timing) timing.count(plan.halt ? 'Orders: halt' : plan.ok ? 'Orders: accepted' : 'Orders: rejected');
     if (plan.halt) {
+      if (army.goal === null && army.moveLeft === 0 && army.path && !army.path.length) {
+        if (timing) timing.count('Orders: idle halt skipped');
+        return true;
+      }
       army.path = []; army.goal = null; army.moveLeft = 0;
       requestMap();
       return true;
@@ -2566,14 +2716,35 @@ window.FB = window.FB || {};
     const timing = FB.game && FB.game._fastForwardTiming;
     if (!timing) return aiGoalUntimed(state, army, warring, primaryByRealm);
     const entry = timing.enter('Army operation: AI goal selection');
-    try { return aiGoalUntimed(state, army, warring, primaryByRealm); }
+    try {
+      const goal = aiGoalUntimed(state, army, warring, primaryByRealm);
+      timing.count(goal === army.goal ? 'Goals: unchanged' : 'Goals: changed');
+      if (army.moveLeft > 0 || (army.path && army.path.length)) timing.count('Goals: evaluated while marching');
+      if (goal === army.at) timing.count('Goals: current county');
+      return goal;
+    }
     finally { timing.leave(entry); }
+  }
+  function holyWarGoal(state, army) {
+    const queries = orderQueries && orderQueries.state === state ? orderQueries : null;
+    if (!queries) return FB.greatHolyWarArmyGoal(state, army.realm, army.at);
+    const key = JSON.stringify([army.realm, army.at]);
+    if (!Object.prototype.hasOwnProperty.call(queries.holyGoals, key)) {
+      queries.holyGoals[key] = FB.greatHolyWarArmyGoal(state, army.realm, army.at);
+    } else {
+      const timing = FB.game && FB.game._fastForwardTiming;
+      if (timing) timing.count('Goals: holy objective cache hits');
+    }
+    return queries.holyGoals[key];
   }
   function aiGoalUntimed(state, army, warring, primaryByRealm) {
     const r = state.realms[army.realm];
     if (!r) return army.at;
     if (army.broken !== undefined && state.turn - army.broken < 40) {
       return FB.armyRetreatGoal(state, army) || army.at;
+    }
+    if (FB.treasuryRetrenching && FB.treasuryRetrenching(state, army.realm)) {
+      return FB.armyRegroupGoal(state, army) || army.at;
     }
     if (FB.rebellionDefenseGoal) {
       const defense = FB.rebellionDefenseGoal(state, army);
@@ -2593,7 +2764,7 @@ window.FB = window.FB || {};
     /* Pursuing a remote banner must not divert the whole coalition from
        its objectives into forts that this campaign can never occupy. */
     if (greatCamp) {
-      return FB.greatHolyWarArmyGoal(state, army.realm, army.at) || army.at;
+      return holyWarGoal(state, army) || army.at;
     }
     const detachment = (primaryByRealm
       ? primaryByRealm[army.realm]
@@ -2613,7 +2784,7 @@ window.FB = window.FB || {};
     }
     if (army.warId === 'holy' && FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, army.realm) &&
         FB.greatHolyWarArmyGoal) {
-      return FB.greatHolyWarArmyGoal(state, army.realm, army.at) || army.at;
+      return holyWarGoal(state, army) || army.at;
     }
     const campaignGoal = FB.campaignArmyGoal && FB.campaignArmyGoal(state, army);
     if (campaignGoal) return campaignGoal;
@@ -3558,7 +3729,7 @@ window.FB = window.FB || {};
   function supplyTickHost(state, army, distCache) {
     const bal = B();
     const wasStarving = FB.hostSupply(army) <= 0;
-    const drain = supplyDrainPerDay(state, army, distCache);
+    const drain = FB.provisionArmy ? 0 : supplyDrainPerDay(state, army, distCache);
     if (FB.provisionArmy) {
       FB.provisionArmy(state, army);
       if (army.supply >= (bal.supplyLowThreshold === undefined ? 30 : bal.supplyLowThreshold)) delete army.lowSupplyWarned;
@@ -3672,7 +3843,12 @@ window.FB = window.FB || {};
       // Share projections only within this muster phase. Orders, movement,
       // battles and the next day always observe fresh recruitment inputs.
       const musterProjections = Object.create(null), defendingRealms = Object.create(null);
-      const musterCountyInputs = Object.create(null), musterCountyHosts = Object.create(null);
+      const musterCountyInputs = Object.create(null), musterCountyHosts = Object.create(null), musterContext = {};
+      let fiscalPolicy;
+      function militaryPolicy() {
+        if (fiscalPolicy === undefined) fiscalPolicy = FB.treasuryMilitaryPolicy ? FB.treasuryMilitaryPolicy(state, true) : null;
+        return fiscalPolicy;
+      }
       for (const host of state.armies) {
         (musterCountyHosts[host.at] || (musterCountyHosts[host.at] = [])).push(host);
       }
@@ -3687,7 +3863,7 @@ window.FB = window.FB || {};
           if (timing) timing.count('Muster projections built for ' + rid);
           const territory = FB.recruitmentTerritory(state, rid, musterCountyHosts);
           musterProjections[rid] = { territory:territory, defending:!!defendingRealms[rid],
-            capacity:territory.rally ? FB.aiBaseHost(state, rid, territory, musterCountyInputs) : 0 };
+            capacity:territory.rally ? FB.aiBaseHost(state, rid, territory, musterCountyInputs, musterContext) : 0 };
         } else if (timing) timing.count('Muster projection cache hits');
         return musterProjections[rid];
       }
@@ -3722,7 +3898,11 @@ window.FB = window.FB || {};
         if (!warring[id] || (hostsByRealm[id] && hostsByRealm[id].length)) continue;
         const down = state.armyDown[id];
         if (down !== undefined && state.turn - down < B().armyRearmDays) continue;
-        const raised = raiseAIHost(state, id, musterProjection(id, 'new host'));
+        if (FB.treasuryRetrenching && FB.treasuryRetrenching(state, id)) continue;
+        if (FB.treasuryRetryReady && !FB.treasuryRetryReady(state, id, 'muster')) continue;
+        const projection = musterProjection(id, 'new host');
+        projection.getPolicy = militaryPolicy;
+        const raised = raiseAIHost(state, id, projection);
         if (timing) timing.count(raised ? 'Muster new hosts raised' : 'Muster raise attempts failed');
         if (raised) {
           hostsByRealm[id] = [raised];
@@ -3758,6 +3938,8 @@ window.FB = window.FB || {};
         const offensive = !!(r.war && r.war.enemy) ||
           (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, id) === 'attackers');
         if (!offensive) continue;
+        if (FB.treasuryRetrenching && FB.treasuryRetrenching(state, id)) continue;
+        if (FB.treasuryRetryReady && !FB.treasuryRetryReady(state, id, 'detachment')) continue;
         const detachDown = (state.armyDetachmentDown || {})[id];
         if (detachDown !== undefined &&
             state.turn - detachDown < detachmentRearm) continue;
@@ -3765,6 +3947,11 @@ window.FB = window.FB || {};
         if (primary.broken !== undefined) continue; // a routed host does not divide
         const target = Math.round(primary.men * detachmentFrac);
         if (target < minMen || primary.men - target < minMen) continue;
+        // Splitting adds another camp's fixed cost. Quote conservatively as
+        // an additional levy host before any expensive capacity projection.
+        if (FB.treasuryApproveHost && !FB.treasuryApproveHost(state,
+            { id:'detachment:' + id, realm:id, at:primary.at, men:target,
+              units:{ levy:target }, supply:FB.hostSupply(primary) }, militaryPolicy(), false, 'detachment')) continue;
         if (musterProjection(id, 'detachment').capacity < multiStrength) {
           if (timing) timing.count('Muster detachment rejected: capacity');
           continue;
@@ -3795,6 +3982,15 @@ window.FB = window.FB || {};
         }
         if (a.rebellionId && FB.rebellionById && FB.rebellionById(state, a.rebellionId)) continue;
         const r = state.realms[a.realm];
+        if (FB.treasuryRetrenching && FB.treasuryRetrenching(state, a.realm) &&
+            !a.moveLeft && ((state.holder || {})[a.at] || state.owner[a.at]) === a.realm &&
+            !(musterCountyHosts[a.at] || []).some(function (other) {
+              return other !== a && other.men > 0 && FB.armiesHostile(state, a, other);
+            }) &&
+            !FB.recruitmentCountyBlocked(state, a.realm, a.at)) {
+          state.armyDown[a.realm] = state.turn;
+          disband(state, a); continue;
+        }
         if (!r || !r.alive || !warring[a.realm]) disband(state, a);
       }
 
@@ -3826,8 +4022,8 @@ window.FB = window.FB || {};
          just entered, retarget across one adjacent leg, and join a battle in
          that same tick. */
       const previousQueries = orderQueries;
-      orderQueries = { state:state, enemies:Object.create(null), pursuit:new WeakMap(), routes:new WeakMap(), power:new WeakMap(),
-        hostility:Object.create(null), byCounty:Object.create(null) };
+      orderQueries = { state:state, enemies:Object.create(null), pursuit:new WeakMap(), routes:new WeakMap(), power:new WeakMap(), forts:new WeakMap(),
+        hostility:Object.create(null), byCounty:Object.create(null), holyGoals:Object.create(null), fortRelations:Object.create(null) };
       for (const army of state.armies) {
         (orderQueries.byCounty[army.at] || (orderQueries.byCounty[army.at] = [])).push(army);
       }
@@ -3914,11 +4110,14 @@ window.FB = window.FB || {};
       let reinforcementChanged = false;
       let reinforcementCompleted = false;
       const recruitRoom = {};
+      let reinforcementPolicy;
       for (const a of state.armies) {
         if (a.rebellionId) continue;
         if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
         FB.hostUnits(a); // hosts from before levy tiers
         if (a.men >= a.size || a.moveLeft > 0) continue;
+        if (FB.treasuryRetrenching && FB.treasuryRetrenching(state, a.realm)) continue;
+        if (FB.treasuryRetryReady && !FB.treasuryRetryReady(state, a.realm, 'reinforce')) continue;
         // a starving host eats before it fills its ranks
         if (FB.hostSupply(a) <= 0) continue;
         const own = FB.armyFriendlyProvince
@@ -3927,6 +4126,15 @@ window.FB = window.FB || {};
               ? ((p.provs && p.provs.indexOf(a.at) >= 0) || (state.holder && state.holder[a.at] === 'player'))
               : state.owner[a.at] === a.realm);
         if (own && !FB.recruitmentCountyBlocked(state, a.realm, a.at)) {
+          if (a.realm !== 'player' && FB.treasuryApproveHost) {
+            if (reinforcementPolicy === undefined) reinforcementPolicy = FB.treasuryMilitaryPolicy(state, true);
+            const additions = cohortMusterAdditions(state, a.realm, a.size - a.men);
+            const proposed = Object.assign({}, a, { units:Object.assign({}, a.units), men:a.size });
+            let professional = 0;
+            for (const key in additions) { proposed.units[key] = (proposed.units[key] || 0) + additions[key]; professional += additions[key]; }
+            proposed.units.levy += Math.max(0, a.size - a.men - professional);
+            if (!FB.treasuryApproveHost(state, proposed, reinforcementPolicy, false, 'reinforce')) continue;
+          }
           if (recruitRoom[a.realm] === undefined) {
             const territory = FB.recruitmentTerritory(state, a.realm);
             const plan = a.realm === 'player' ? playerMusterPlan(state) : null;
@@ -3974,10 +4182,20 @@ window.FB = window.FB || {};
          Starvation can disband a host, so the loop walks a snapshot. */
       if (timing) { timing.leave(phase); phase = timing.enter('Army phase: supply'); }
       const supplyDistances = FB.provisionArmy ? null : retainedSupplyDistanceMaps(state);
+      const fiscalBatch = FB.treasuryMilitaryBatch && FB.treasuryMilitaryBatch(state);
       for (const a of state.armies.slice()) {
+        if (timing) {
+          timing.count('Workload: host-days');
+          timing.count('Workload: soldier-days', a.men || 0);
+          if (a.warId === 'holy') timing.count('Workload: holy-war host-days');
+          if (a.moveLeft > 0 || (a.path && a.path.length)) timing.count('Workload: marching host-days');
+          if (a.supply !== undefined && a.supply <= 0) timing.count('Workload: starving host-days');
+        }
         if (a.rebellionId) { a.supply = 100; continue; }
+        if (fiscalBatch) FB.treasuryAccrueHost(state, a, fiscalBatch);
         supplyTickHost(state, a, supplyDistances);
       }
+      if (fiscalBatch) FB.treasuryCommitMilitary(state, fiscalBatch);
 
       /* battles: hostile camps sharing a province (one clash per province per
          day). Hosts that are not mutually hostile fight as one side — the

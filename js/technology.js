@@ -300,6 +300,7 @@ window.FB = window.FB || {};
       }
     }
     addUnique(record.completed, id);
+    FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
     addUnique(record.exposed, id);
     delete visiting[id];
     return true;
@@ -748,7 +749,10 @@ window.FB = window.FB || {};
   };
 
   var bonusCache = new WeakMap();
-  FB.invalidateTechBonuses = function () { bonusCache = new WeakMap(); };
+  FB.invalidateTechBonuses = function () {
+    bonusCache = new WeakMap();
+    FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
+  };
   function combinedBonuses(state, realmId) {
     var list = FB.techList(state, realmId), signature = JSON.stringify(list);
     var cached = bonusCache.get(list);
@@ -875,6 +879,7 @@ window.FB = window.FB || {};
     if (progress + 0.0001 < cost) return false;
     record.progress[id] = cost;
     addUnique(record.completed, id);
+    FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
     addUnique(record.exposed, id);
     var index = record.active.indexOf(id);
     if (index >= 0) record.active.splice(index, 1);

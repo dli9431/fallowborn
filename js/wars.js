@@ -297,6 +297,7 @@
     const ca = FB.greatHolyWarCamp(state, a.realm), cb = FB.greatHolyWarCamp(state, b.realm);
     return !!(ca && cb && ca !== cb);
   };
+  FB.armiesHostile.militaryCacheSafe = true;
   const oldContext = FB.warEventContext;
   FB.warEventContext = function (state, ctx) {
     const out = oldContext(state, ctx);
@@ -799,6 +800,10 @@
       if (!state.realms[w.attacker] || !state.realms[w.attacker].alive || !state.realms[w.defender] || !state.realms[w.defender].alive) {
         FB.settleOrdinaryWar(state, w.id, 'invalid'); return;
       }
+      if (!endpoint(w, 'player') && FB.treasuryRetrenching &&
+          FB.treasuryRetrenching(state, w.attacker)) {
+        FB.settleOrdinaryWar(state, w.id, 'white_peace'); return;
+      }
       if (!w.legacy && territorial(w)) {
         w.seasons++;
         FB.withOrdinaryWar(state, w.id, function () { FB.advanceOrdinaryObjectives(state, w.id); });
@@ -1061,13 +1066,13 @@
     return w.occupations[pid].occupied ? army.realm === w.attacker : army.realm === w.defender;
   };
   const fortBlocks = FB.fortBlocksArmy;
-  FB.fortBlocksArmy = function (state, pid, army) {
+  FB.fortBlocksArmy = function (state, pid, army, relations) {
     const control = army && FB.ordinaryOccupationControl(state, army, pid);
     if (control !== null && control !== undefined) {
       const fort = FB.fortAt(state, pid);
       return !!(fort && fort.level && !fort.ruined && !control);
     }
-    return fortBlocks(state, pid, army);
+    return fortBlocks(state, pid, army, relations);
   };
   const recruitmentBlocked = FB.recruitmentCountyBlocked;
   FB.recruitmentCountyBlocked = function (state, rid, pid, hosts) {

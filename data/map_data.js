@@ -1517,6 +1517,9 @@ FBDATA.balance = {
   armyProvisionDues: 0.10, // paid sales share reaching holder/sovereign
   armyProvisionAIBudgetBase: 10,
   armyProvisionAIBudgetStrength: 2,
+  aiTreasuryOpeningSeasons: 2,
+  aiTreasuryRetryDays: 7,
+  aiTreasuryOpeningFloor: [0, 10, 20, 30, 40],
   supplyFortRecoverMult: 1.5, // resupply multiplier in a county with a friendly fort (depot effect)
   supplyDevastatedRecoverFloor: 0.4, // resupply multiplier floor on a war-worn county (development below its baseline)
   supplyDrainBase: 1.2, // supply points a host on neutral or hostile land loses per day

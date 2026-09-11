@@ -1340,6 +1340,7 @@ window.FB = window.FB || {};
     }
   }
   FB.invalidateRealmCache = function () {
+    FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
     rc.dirty = true;
     rcRevision++;
   };
@@ -1524,6 +1525,7 @@ window.FB = window.FB || {};
       op: 0, generated: true, favor: FB.ri(-15, 15) // the house's standing at its liege's court
     };
     state.realms[r.id] = r;
+    if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, r.id, [opts.capital]);
     if (state.date) FB.ensureRealmSuccession(state, r.id);
     FB.invalidateRealmCache();
     return r;
@@ -1922,6 +1924,7 @@ window.FB = window.FB || {};
       op:0
     };
     state.realms[canonicalId] = restored;
+    if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, canonicalId, [meta.seat]);
     if (FB.mergeRealmTech && controllerSovereign) {
       FB.mergeRealmTech(state, canonicalId, controllerSovereign);
     }
@@ -4037,17 +4040,34 @@ window.FB = window.FB || {};
   };
 
   let militaryCountyState = null, militaryCountyCache = Object.create(null);
-  function militaryCountyInput(state, pid) {
+  function militaryCountyInput(state, pid, context) {
+    const timing = FB.game && FB.game._fastForwardTiming;
     if (militaryCountyState !== state) { militaryCountyState = state; militaryCountyCache = Object.create(null); }
     const records = FB.countyModifierRecords ? FB.countyModifierRecords(state, pid) : null;
     const population = state.population && state.population.counties && state.population.counties[pid];
     let reusable = !!(FB.countyPopularSupport && FB.countyPopularSupport.militaryCacheSafe &&
       FB.modBonus && FB.modBonus.militaryCacheSafe) && !(population && population.settlementCommunityProjects && Object.keys(population.settlementCommunityProjects).length);
+    if (timing) {
+      timing.count('Muster county input requests');
+      if (!(FB.countyPopularSupport && FB.countyPopularSupport.militaryCacheSafe)) timing.count('Muster cache bypass: support reader');
+      if (!(FB.modBonus && FB.modBonus.militaryCacheSafe)) timing.count('Muster cache bypass: modifier reader');
+      if (population && population.settlementCommunityProjects && Object.keys(population.settlementCommunityProjects).length) timing.count('Muster cache bypass: community projects');
+    }
     // These optional effects depend on wider political/population state. Keep
     // their canonical live reader until they expose a complete revision contract.
-    for (const id in state.historicalAmbitions || {}) {
-      const rec = state.historicalAmbitions[id];
-      if (rec && !rec.established && state.turn < rec.endTurn) { reusable = false; break; }
+    let activeAmbition = context ? context.activeAmbition : undefined;
+    if (activeAmbition === undefined) {
+      activeAmbition = false;
+      if (timing) timing.count('Muster ambition scans');
+      for (const id in state.historicalAmbitions || {}) {
+        const rec = state.historicalAmbitions[id];
+        if (rec && !rec.established && state.turn < rec.endTurn) { activeAmbition = true; break; }
+      }
+      if (context) context.activeAmbition = activeAmbition;
+    }
+    if (activeAmbition) {
+      if (timing) timing.count('Muster cache bypass: active ambition');
+      reusable = false;
     }
     let signature = null;
     if (reusable) {
@@ -4062,6 +4082,13 @@ window.FB = window.FB || {};
       }
       signature = JSON.stringify(parts);
       const previous = militaryCountyCache[pid];
+      if (timing) {
+        if (!previous) timing.count('Muster cache miss: cold county');
+        else {
+          if (previous.signature !== signature) timing.count('Muster cache miss: changed inputs');
+          if (previous.support !== FB.countyPopularSupport || previous.modifier !== FB.modBonus) timing.count('Muster cache miss: changed reader');
+        }
+      }
       if (previous && previous.signature === signature && previous.support === FB.countyPopularSupport && previous.modifier === FB.modBonus) {
         if (FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster county inputs retained');
         return previous.input;
@@ -4078,7 +4105,7 @@ window.FB = window.FB || {};
     if (FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster county inputs rebuilt');
     return input;
   }
-  FB.aiBaseHost = function (state, rid, recruitment, countyInputs) {
+  FB.aiBaseHost = function (state, rid, recruitment, countyInputs, context) {
     const captivePenalty = FB.intrigueRealmRulerCaptive &&
       FB.intrigueRealmRulerCaptive(state, rid) ? 0.8 : 1;
     const territory = recruitment || (FB.recruitmentTerritory ? FB.recruitmentTerritory(state, rid) : null);
@@ -4086,8 +4113,9 @@ window.FB = window.FB || {};
     let supportDevelopment = 0;
     const levyDevelopment = territory ? territory.eligible.reduce(function (sum, pid) {
       let input = countyInputs && countyInputs[pid];
+      if (input && FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster county phase cache hits');
       if (!input) {
-        input = militaryCountyInput(state, pid);
+        input = militaryCountyInput(state, pid, context);
         if (countyInputs) countyInputs[pid] = input;
       }
       supportDevelopment += input.support;
@@ -5385,6 +5413,7 @@ window.FB = window.FB || {};
     if (FB.mergeRealmTech) {
       FB.mergeRealmTech(state, FB.topRealm(state, liege || 'player'), rid);
     }
+    if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, rid, liege || 'player');
     FB.markRealmDead(state, rid);
     FB.invalidateRealmCache();
     FB.checkTierPromotions(state);
@@ -5675,6 +5704,8 @@ window.FB = window.FB || {};
             ev.newRealm.ruler, state.date.year), war: null, op: 0
         };
         FB.ensureRealmSuccession(state, rid);
+        if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, rid,
+          ev.targets.filter(function (pid) { return state.owner[pid] !== 'player'; }));
         if (!ev.newRealm.liege && formerSovereign && formerSovereign !== rid &&
             FB.mergeRealmTech) {
           FB.mergeRealmTech(state, rid, formerSovereign);
@@ -5930,6 +5961,8 @@ window.FB = window.FB || {};
     const maxPerYear = (FBDATA.balance && FBDATA.balance.aiMaxBuildingsPerYear) || 1;
     const changed = developmentChangesFor(state);
 
+    const reserves = FB.treasuryConstructionReserves ? FB.treasuryConstructionReserves(state) : null;
+
     const contested = {};
     const armies = state.armies || [];
     for (let i = 0; i < armies.length; i++) {
@@ -5991,6 +6024,7 @@ window.FB = window.FB || {};
 
       const held = heldByRealm[rid] || [];
       if (!held.length) continue;
+      if (reserves && (reserves[rid] === undefined || FB.treasuryAvailable(state, rid) <= reserves[rid])) continue;
 
       let builtThisYear = 0;
       const sortedCounties = held.slice().sort(function (a, b) {
@@ -6034,10 +6068,12 @@ window.FB = window.FB || {};
           if (bdef.maxCounty && (countIn[bid] || 0) >= bdef.maxCounty) continue;
           if (bdef.requiresTech && FB.techRequirementMet &&
               !FB.techRequirementMet(state, bdef.requiresTech, rid)) continue;
+          const cost = reserves ? FB.buildCost(state, pid, bid, rid) : 0;
+          if (reserves && cost + reserves[rid] + (bdef.upkeep || 0) > FB.treasuryAvailable(state, rid)) continue;
 
           for (let sIdx = 0; sIdx < settlements.length; sIdx++) {
             if (!existingAt[sIdx + ':' + bid]) {
-              chosen = { pid: pid, s: sIdx, id: bid, def: bdef };
+              chosen = { pid: pid, s: sIdx, id: bid, def: bdef, cost:cost };
               break;
             }
           }
@@ -6045,6 +6081,9 @@ window.FB = window.FB || {};
         }
 
         if (chosen) {
+          if (reserves && !FB.treasurySpendOptional(state, rid, chosen.cost,
+              reserves[rid] + (chosen.def.upkeep || 0))) continue;
+          if (reserves) reserves[rid] += chosen.def.upkeep || 0;
           state.buildings = state.buildings || {};
           const list = state.buildings[chosen.pid] = state.buildings[chosen.pid] || [];
           const record = { s: chosen.s, id: chosen.id };
@@ -8399,6 +8438,7 @@ window.FB = window.FB || {};
     if (!heir.royalLine) heir.royalLine = { realmId:rid, memberId:rootId };
 
     state.realms[rid] = realm;
+    if (FB.treasuryCreateRealm) FB.treasuryCreateRealm(state, rid, null, 0);
     if (FB.noteCharacterStatus && FB.realmRulerTitleSnapshot) {
       FB.noteCharacterStatus(state, heir,
         FB.clamp((realm.rank || 1) + 3, 4, 7),
@@ -8482,6 +8522,7 @@ window.FB = window.FB || {};
     if (FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', rid);
     if (FB.remapWarRealm) FB.remapWarRealm(state, rid, 'player');
     if (FB.historicalAmbitionRealmInherited) FB.historicalAmbitionRealmInherited(state, rid, 'player');
+    if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, rid, 'player');
     FB.markRealmDead(state, rid);
     /* The realm's temporal inheritance is separate from any religious office:
        markRealmDead leaves the latter explicitly vacant for recovery. */

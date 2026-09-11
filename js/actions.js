@@ -6033,7 +6033,7 @@ window.FB = window.FB || {};
     return sum;
   };
 
-  function countyTaxBase(state, pid, rate) {
+  function countyTaxBase(state, pid, rate, localTaxBonus) {
     const B = FBDATA.balance || {};
     const baseRate = Number(B.taxPerDev || 1.5);
     const dev = (state.dev && state.dev[pid]) || 1;
@@ -6044,9 +6044,13 @@ window.FB = window.FB || {};
     if (FB.countyPopulationFactor) {
       total *= FB.countyPopulationFactor(state, pid);
     }
-    const local = FB.modBonus ? FB.modBonus(state, 'tax', pid) : 0;
+    const local = localTaxBonus === undefined
+      ? (FB.modBonus ? FB.modBonus(state, 'tax', pid) : 0) : localTaxBonus;
     return total * Math.max(0, 1 + local);
   }
+
+  // Pure county primitive shared with the batched AI fiscal snapshot.
+  FB.countyTaxBase = countyTaxBase;
 
   /* One direct vassal's exact seasonal tax source. The settlement tax ledger
      and Governance use this same adapter. */
@@ -6127,8 +6131,8 @@ window.FB = window.FB || {};
     };
   };
 
-  FB.playerTax = function (state) {
-    return Math.round(FB.playerTaxParts(state).total);
+  FB.playerTax = function (state, parts) {
+    return Math.round((parts || FB.playerTaxParts(state)).total);
   };
 
   /* ===== domain limit: how much land the player may hold in his own hand =====
@@ -9595,6 +9599,7 @@ window.FB = window.FB || {};
   }
 
   FB.invalidateBuildingIndex = function (state, pid) {
+    FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
     const store = state && state.buildings || null;
     if (state && pid !== undefined && buildingIndexState === state &&
         buildingIndexStore === store) {
@@ -9804,16 +9809,16 @@ window.FB = window.FB || {};
   /* copies of the same building beyond the first in the same county cost
      cost × buildingRepeatCostGrowth^(copies standing) — the price climbs
      instead of the bonus shrinking */
-  FB.buildCost = function (state, pid, id) {
+  FB.buildCost = function (state, pid, id, realmId) {
     const def = FBDATA.buildings[id];
     if (!def || def.fort) return 0;
     const copies = FB.buildingCountIn(state, pid, id, true);
     let c = def.cost * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
-      Math.max(0, FB.techCostFactor(state, 'build') -
-        (FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
+      Math.max(0, FB.techCostFactor(state, 'build', realmId) -
+        (!realmId && FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
     c *= Math.max(0, 1 +
       (FB.modBonus ? FB.modBonus(state, 'buildingCost', pid) : 0));
-    if (state.player.flags.mason_visit) c *= 0.75;
+    if (!realmId && state.player.flags.mason_visit) c *= 0.75;
     return FB.marketCostQuote ? FB.marketCostQuote(state, c,
       def.marketBasket, pid, 'up') : Math.round(c);
   };

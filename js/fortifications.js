@@ -465,9 +465,17 @@ window.FB = window.FB || {};
     return FB.topRealm ? FB.topRealm(state, realmId) : realmId;
   }
 
+  function controllerHostile(state, army, controller, relations) {
+    if (!relations || !relations.hostile) return !!(FB.armiesHostile && FB.armiesHostile(state, army, { realm:controller }));
+    if (!Object.prototype.hasOwnProperty.call(relations.hostile, controller)) {
+      relations.hostile[controller] = !!(FB.armiesHostile && FB.armiesHostile(state, army, { realm:controller }));
+      if (FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Paths: controller hostility builds');
+    } else if (FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Paths: controller hostility hits');
+    return relations.hostile[controller];
+  }
   function realmFriendlyTo(state, realmId, controller, relations) {
     if (!controller || realmId === controller) return true;
-    if (FB.armiesHostile && FB.armiesHostile(state, { realm:realmId }, { realm:controller })) return false;
+    if (controllerHostile(state, { realm:realmId }, controller, relations)) return false;
     if (state.greatHolyWar && state.greatHolyWar.phase === 'active' && FB.greatHolyWarCamp) {
       var camp = FB.greatHolyWarCamp(state, realmId);
       if (camp && camp === FB.greatHolyWarCamp(state, controller)) return true;
@@ -518,20 +526,21 @@ window.FB = window.FB || {};
     return camp === controllingCamp;
   }
 
-  FB.fortBlocksArmy = function (state, pid, army) {
+  FB.fortBlocksArmy = function (state, pid, army, relations) {
+    if (!FB.armiesHostile || !FB.armiesHostile.militaryCacheSafe || (army && army.rebellionId)) relations = null;
     var fort = FB.fortAt(state, pid);
     if (!fort || fort.ruined || !fort.level || !army) return false;
     var holyWarControl = holyWarFortControl(state, army, pid);
     if (holyWarControl !== null) return !holyWarControl;
-    if (FB.armyFriendlyProvince(state, army, pid)) return false;
+    if (FB.armyFriendlyProvince(state, army, pid, relations)) return false;
     /* Campaign hosts may cross neutral land without besieging a country
        outside their war. This grants passage, not friendly supply depots. */
     if (state.greatHolyWar && state.greatHolyWar.phase === 'active' &&
         FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, army.realm)) {
       var holder = state.holder && state.holder[pid];
       var owner = state.owner && state.owner[pid];
-      if (!FB.armiesHostile(state, army, { realm:holder }) &&
-          !FB.armiesHostile(state, army, { realm:owner })) return false;
+      if (!controllerHostile(state, army, holder, relations) &&
+          !controllerHostile(state, army, owner, relations)) return false;
     }
     return true;
   };

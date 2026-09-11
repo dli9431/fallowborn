@@ -4535,6 +4535,8 @@ window.FB = window.FB || {};
   FB.enterpriseYield = function (state, e, chainSeen) {
     return enterpriseRead(state, function () { return readEnterpriseYield(state, e, chainSeen); });
   };
+  // Physical output always uses baseline yield, never army-sale earnings.
+  FB.enterprisePhysicalYield = function (state, e) { return FB.enterpriseYield(state, e); };
   function readEnterpriseYield(state, e, chainSeen) {
     const operational = FB.enterpriseOperationalWorkerIds(state, e);
     if (enterpriseStaffFromIds(state, operational) + 0.0001 <
@@ -5161,6 +5163,7 @@ window.FB = window.FB || {};
       alms += line.doctrineAlms || 0;
     }
     state.player.gold += gold;
+    if (FB.armyProducerSettle) FB.armyProducerSettle(state);
     if (gold > 0 && FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('first-coin',
         '💡 The season’s work has paid. Gold funds land, gifts, loans, and the household table.',
@@ -7620,6 +7623,7 @@ window.FB = window.FB || {};
     /* Only coin in hand is revalued. A negative balance is a real household
        shortfall rather than nominal cash or a signed debt contract. */
     if (state.player.gold > 0) state.player.gold *= oldPrice / newPrice;
+    if (FB.treasuryRevalue) FB.treasuryRevalue(state, oldPrice / newPrice);
     e.price = newPrice;
     e.lastRate = newPrice / oldPrice - 1;
     e.lastAdjustment = state.player.gold - oldGold;

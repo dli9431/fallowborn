@@ -16,6 +16,8 @@ dependsOnRuntime(__filename, [
   'js/politics.js',
   'js/institutions.js',
   'js/market.js',
+  'js/treasury.js',
+  'js/logistics.js',
   'js/events.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
@@ -1886,6 +1888,76 @@ test('hosted origins cannot enable fast-forward diagnostics', async function ({ 
   } finally {
     await context.close();
   }
+});
+
+test('profiling captures workload changes and scoped fiscal inputs without retaining wrappers', async function ({ page }) {
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const g = FB.game, s = FB.state, callbacks = [];
+    const original = { day:g.passDay, finish:FB.ui.fastForwardFinished,
+      frame:window.requestAnimationFrame, coach:FB.ui.coachmarkOpen,
+      quote:FB.armyProvisionQuote, tax:FB.countyTaxBase, support:FB.countyPopularSupport };
+    const rid = Object.keys(s.realms).filter(function (id) {
+      return id !== 'player' && s.realms[id].alive && s.realms[id].rank >= 1;
+    }).sort()[0];
+    const host = { realm:rid, warId:'holy', at:s.realms[rid].capital,
+      men:1000, units:{ levy:1000 }, supply:50, path:[s.realms[rid].capital], moveLeft:1 };
+    s.armies = [host];
+    FB.treasurySnapshot(s);
+    FB.armyProvisionQuote(s, host);
+    const snapshot = JSON.stringify(s), rng = FB.getRngState();
+    const modifier = FB.modBonus;
+    let cacheContracts = false;
+    window.requestAnimationFrame = function (fn) { callbacks.push(fn); return callbacks.length; };
+    FB.ui.coachmarkOpen = function () { return false; };
+    FB.ui.fastForwardFinished = function () {};
+    g.passDay = function () {
+      cacheContracts = FB.countyPopularSupport !== original.support && FB.modBonus !== modifier &&
+        FB.countyPopularSupport.militaryCacheSafe === true && FB.modBonus.militaryCacheSafe === true;
+      FB.treasurySnapshot(s);
+      FB.armyProvisionQuote(s, host);
+      FB.armyProvisionQuote(s, host);
+      g._fastForwardTiming.repeat('Probe', 'same', s.turn);
+      g._fastForwardTiming.repeat('Probe', 'same', s.turn + 1);
+      host.path = []; host.moveLeft = 0; host.supply = 0; host.men = 900;
+      return 'season';
+    };
+    try {
+      g.fastForwardTiming.enable(true);
+      g.skipAhead();
+      while (callbacks.length && g.fastForwarding) callbacks.shift()();
+      const report = g.fastForwardTiming.last;
+      const changed = JSON.parse(snapshot);
+      changed.armies[0] = Object.assign({}, changed.armies[0], {
+        path:[], moveLeft:0, supply:0, men:900
+      });
+      return { workload:report.workload, rows:report.rows, counters:report.counters, cacheContracts:cacheContracts,
+        restored:FB.armyProvisionQuote === original.quote && FB.countyTaxBase === original.tax &&
+          FB.countyPopularSupport === original.support && FB.modBonus === modifier && !g._fastForwardTiming,
+        rngSame:FB.getRngState() === rng,
+        stateSame:JSON.stringify(s) === JSON.stringify(changed) };
+    } finally {
+      g.fastForwarding = false; g.paused = true; g.fastForwardTiming.enable(false);
+      g.passDay = original.day; FB.ui.fastForwardFinished = original.finish;
+      window.requestAnimationFrame = original.frame; FB.ui.coachmarkOpen = original.coach;
+    }
+  });
+  expect(result.workload.start.holyWarArmies).toBe(1);
+  expect(result.workload.start.marchingArmies).toBe(1);
+  expect(result.workload.end.marchingArmies).toBe(0);
+  expect(result.workload.end.starvingArmies).toBe(1);
+  expect(result.workload.end.soldiers).toBe(900);
+  expect(result.workload.start.soldiers).toBe(1000);
+  expect(result.rows['Treasury input: countyTaxBase'].calls).toBeGreaterThan(0);
+  expect(result.rows['Logistics operation: armyProvisionQuote'].calls).toBe(2);
+  expect(result.rows['Provisioning input: armyProvisionUse'].calls).toBe(2);
+  expect(result.counters['Provision quotes: host and county distinct same day']).toBe(1);
+  expect(result.counters['Provision quotes: host and county repeated same day']).toBe(1);
+  expect(result.counters['Probe distinct same day']).toBe(2);
+  expect(result.counters['Probe repeated same day'] || 0).toBe(0);
+  expect(result.restored).toBe(true); expect(result.rngSame).toBe(true);
+  expect(result.stateSame).toBe(true);
+  expect(result.cacheContracts).toBe(true);
 });
 
 

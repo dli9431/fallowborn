@@ -4,10 +4,22 @@
 
 Field provisioning withdraws provisions daily through `js/logistics.js`. County
 capacity and stocks are shared by all visiting hosts. Paid trade debits available
-player coin or the realm's bounded AI provisioning purse. Ten percent reaches the
+player coin or the realm's available treasury. Ten percent reaches the
 holder/sovereign as market dues; the rest is supplier turnover, not a second full
-payment to the ruler. No synthetic AI households are created. Existing producer
-returns respond to local prices rather than receiving duplicate sale income.
+payment to the ruler. No synthetic AI households are created. Serf Harvest and
+commodity ventures respond to local prices, but ordinary enterprise earnings do
+not receive general commodity-price adjustments. Food enterprises receive a separate
+seasonal army-trade adjustment; physical output uses baseline enterprise yield.
+Frozen food-output shares allocate purchases and requisition jointly within county
+output capacity. Supplier receipts exclude dues and replace the baseline revenue
+for allocated purchases. Gains cap at 25% of baseline food income and attributed
+receipts; seizure losses cap at 50%. No daily enterprise scan occurs. New producers
+enter the next period; saved snapshots retain earned household claims if an
+enterprise disappears. Adjustments settle once with livelihoods before necessities.
+At legacy import the first denominator uses civilian demand as an output proxy;
+later snapshots use the seasonal production report, floored at household output.
+Technology impact `army_producer_receipts` is **none**: local food sales and losses
+are baseline activity, not an advanced capability.
 
 Enemy requisition removes real stock without payment. Each intact enemy fort tier
 protects 20% of normal reserve and reduces daily loading by 20%, up to 80%.

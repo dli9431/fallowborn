@@ -570,6 +570,14 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Automatic requisition in enemy counties is baseline warfare. Existing fort tiers protect stores and limit extraction until occupied; no new technology gates forced provisioning.'
       },
+      ai_realm_treasury:{
+        mode:'none',
+        rationale:'Persistent ruler accounts, territorial receipts, expense reserves, affordable levy defense and financial recovery are baseline accounting. Existing technology gates remain on buildings and military classes being funded.'
+      },
+      army_producer_receipts:{
+        mode:'none',
+        rationale:'Local producers selling food to marching hosts and losing goods to requisition are baseline market activity. Physical output and technology bonuses remain separate from cash receipts.'
+      },
       terrain_combat_modifiers:{
         mode:'none',
         rationale:'Terrain battle factors, home-ground defense, and march costs apply to every host in every age; no credible period technology gates reading the ground, so no dependency is invented.'
