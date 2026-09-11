@@ -407,8 +407,7 @@ window.FB = window.FB || {};
     return {
       attack:unitClassAttack(classId),
       defense:unitClassDefense(classId),
-      upkeepPer100:def && isFinite(Number(def.upkeepPer100))
-        ? Number(def.upkeepPer100) : 0,
+      upkeepPer100:standingUnitUpkeep(def),
       professional:!!(def && def.professional),
       counters:counters
     };
@@ -737,15 +736,24 @@ window.FB = window.FB || {};
     return true;
   };
 
+  function standingUnitUpkeep(def) {
+    let cost = def && isFinite(Number(def.upkeepPer100)) ? Number(def.upkeepPer100) : 0;
+    if (FB.provisionArmy && def && def.basket) {
+      let weight = 0;
+      for (const good in def.basket) weight += Math.max(0, Number(def.basket[good]) || 0);
+      if (weight) cost *= 1 - (def.basket.provisions || 0) / weight;
+    }
+    return cost;
+  }
   function hostUpkeepParts(units, mercenaryCompanies) {
     const bal = B();
-    const base = bal.hostLogisticsBase === undefined ? 2 : bal.hostLogisticsBase;
+    const base = (bal.hostLogisticsBase === undefined ? 2 : bal.hostLogisticsBase) *
+      (FB.provisionArmy ? 0.45 : 1); // provisions are purchased daily
     const byClass = {};
     let soldiers = 0;
     for (const key of FB.unitClassIds()) {
       const def = unitClassDef(key);
-      const per100 = def && isFinite(Number(def.upkeepPer100))
-        ? Number(def.upkeepPer100) : 0;
+      const per100 = standingUnitUpkeep(def);
       byClass[key] = Math.max(0, Number(units[key]) || 0) / 100 * per100;
       soldiers += byClass[key];
     }
@@ -792,12 +800,14 @@ window.FB = window.FB || {};
     if (FB.marketCostQuote) {
       const pid = host.at || state.player.provinceId;
       parts.base = FB.marketCostQuote(state, parts.base,
-        { provisions:0.55, materials:0.25, transport:0.20 }, pid);
+        FB.provisionArmy ? { materials:0.25, transport:0.20 }
+          : { provisions:0.55, materials:0.25, transport:0.20 }, pid);
       /* each class quotes its own provisions/materials/transport basket */
       for (const key of FB.unitClassIds()) {
         const def = unitClassDef(key);
-        const basket = def && def.basket;
+        let basket = def && def.basket;
         if (!basket) continue;
+        if (FB.provisionArmy) { basket = Object.assign({}, basket); delete basket.provisions; }
         parts.byClass[key] = FB.marketCostQuote(state, parts.byClass[key],
           basket, pid);
       }
@@ -2567,6 +2577,8 @@ window.FB = window.FB || {};
     const campaign = state.greatHolyWar;
     const greatCamp = army.warId === 'holy' && campaign && campaign.phase === 'active' &&
       FB.greatHolyWarCamp(state, army.realm);
+    const supplyGoal = FB.armySupplyGoal && FB.armySupplyGoal(state, army);
+    if (supplyGoal) return supplyGoal;
     if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, army)) {
       if (greatCamp && campaign.objectiveCounties.indexOf(army.at) < 0) {
         return FB.armyRetreatGoal(state, army) || army.at;
@@ -2644,6 +2656,7 @@ window.FB = window.FB || {};
   };
 
   function automatedResupplyGoal(state, host) {
+    if (FB.armySupplyGoal) return FB.armySupplyGoal(state, host);
     const auto = FB.game && FB.game.auto;
     if (!auto || auto.hostResupply === false) {
       delete host.autoResupply;
@@ -3489,6 +3502,7 @@ window.FB = window.FB || {};
     finally { timing.leave(entry); }
   }
   function supplyDrainPerDayUntimed(state, army, distCache) {
+    if (FB.armyProvisionUse) return FB.armyProvisionUse(state, army);
     if (FB.armyFriendlyProvince && FB.armyFriendlyProvince(state, army, army.at)) {
       return 0;
     }
@@ -3534,23 +3548,27 @@ window.FB = window.FB || {};
     return rate;
   }
 
-  /* one host's day of supply: refill on friendly land, drain and starve
-     abroad. The player hears the news once, on the day the well runs dry. */
+  /* One host's daily consumption and local provisioning. The player hears
+     the starvation news once, on the day the well runs dry. */
   function supplyTickHost(state, army, distCache) {
     const bal = B();
     const wasStarving = FB.hostSupply(army) <= 0;
     const drain = supplyDrainPerDay(state, army, distCache);
-    if (drain <= 0) {
+    if (FB.provisionArmy) {
+      FB.provisionArmy(state, army);
+      if (army.supply >= (bal.supplyLowThreshold === undefined ? 30 : bal.supplyLowThreshold)) delete army.lowSupplyWarned;
+    } else if (drain <= 0) {
       if (army.supply < 100) army.supply = Math.min(100, army.supply + supplyRecoverPerDay(state, army));
       if (army.supply >= (bal.supplyLowThreshold === undefined ? 30 : bal.supplyLowThreshold)) delete army.lowSupplyWarned;
       return;
+    } else {
+      army.supply = Math.max(0, army.supply - drain);
     }
-    army.supply = Math.max(0, army.supply - drain);
     if (army.supply < (bal.supplyLowThreshold === undefined ? 30 : bal.supplyLowThreshold) &&
         !army.lowSupplyWarned) {
       army.lowSupplyWarned = true;
       if (army.realm === 'player') FB.news(state, FB.msg('news.army.low_supply',
-        'The host at {province} is low on supplies. Reach friendly ground before starvation.',
+        'The host at {province} is low on supplies. Reach a stocked market before starvation.',
         { province:provName(army.at) }));
     }
     if (army.supply > 0) return;
@@ -3595,15 +3613,18 @@ window.FB = window.FB || {};
     const friendly = !!(FB.armyFriendlyProvince &&
       FB.armyFriendlyProvince(state, army, army.at));
     let daysToAttrition = null;
-    if (!army.rebellionId && !friendly && supply > 0) {
-      const drain = supplyDrainPerDay(state, army, {});
+    const provision = !army.rebellionId && FB.armyProvisionQuote ? FB.armyProvisionQuote(state, army) : null;
+    if (!army.rebellionId && supply > 0) {
+      const drain = provision ? (provision.reason === 'reserve' ? 0 : Math.max(0, -provision.net))
+        : friendly ? 0 : supplyDrainPerDay(state, army, {});
       if (drain > 0) daysToAttrition = Math.ceil(supply / drain);
     }
     return {
       supply: supply,
       status: supply <= 0 ? 'starving' : (supply < low ? 'low' : 'good'),
       friendly: friendly,
-      daysToAttrition: daysToAttrition
+      daysToAttrition: daysToAttrition,
+      provisioning:provision
     };
   };
 
@@ -3947,7 +3968,7 @@ window.FB = window.FB || {};
          until borders, hierarchy, development, or alliances change.
          Starvation can disband a host, so the loop walks a snapshot. */
       if (timing) { timing.leave(phase); phase = timing.enter('Army phase: supply'); }
-      const supplyDistances = retainedSupplyDistanceMaps(state);
+      const supplyDistances = FB.provisionArmy ? null : retainedSupplyDistanceMaps(state);
       for (const a of state.armies.slice()) {
         if (a.rebellionId) { a.supply = 100; continue; }
         supplyTickHost(state, a, supplyDistances);

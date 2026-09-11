@@ -1,5 +1,17 @@
 # Coin & Credit
 
+Raised hosts pay their provisions component through automatic daily county
+purchases, limited to actual available gold. Standing host upkeep excludes its
+former food share; camp materials/transport, class non-food costs, mercenary
+contracts and replacement drilling remain. Enemy requisition costs no coin, but
+damages stocks, production and Popular support. Paid sales return a 10% market due
+to county rulers (80% holder, 20% sovereign if distinct). Actual daily cash movements
+participate in the existing seasonal net balance. AI realms use a bounded provisioning
+allowance, not a general treasury. See war.md and markets.md for stock conservation.
+The income forecast shows estimated provisions consumption at current local prices
+separately from standing upkeep. Filling depleted reserves can cost more; the estimate
+does not itself charge gold, and switches off with automatic purchases.
+
 **Gold remains constant-purchasing-power game gold.** `state.economy.price` is the
 nominal coin needed to buy one gold of obligations and is distinct from the
 county commodity prices in [markets.md](markets.md). Once each spring

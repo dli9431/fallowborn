@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/main.js', 'js/armies.js', 'js/wars.js', 'js/fortifications.js', 'js/world.js',
+  'js/logistics.js', 'js/market.js', 'js/main.js', 'js/armies.js', 'js/wars.js', 'js/fortifications.js', 'js/world.js',
   'js/technology.js', 'js/rebellions.js', 'js/modifiers.js', 'js/population.js', 'js/ambitions.js',
   'data/map_data.js', 'data/units.js', 'data/modifiers.js'
 ]);
@@ -104,116 +104,24 @@ test('daily pursuit agrees with live battle strength and expires before subseque
   expect(result.weak).toBe(true);
 });
 
-test('retained supply maps distinguish concurrent campaigns and refresh after occupation changes', async function ({ page }, testInfo) {
+test('provisioning observes occupation changes without building homeland supply maps', async function ({ page }, testInfo) {
   const ids = await startWarSafety(page, testInfo);
   const result = await page.evaluate(function (ids) {
-    const s = FB.state, originalWorld = FB.world, war = s.player.war;
-    const otherWar = FB.registerOrdinaryWar(s, 'player', {
-      enemy:ids.other, target:s.realms[ids.other].capital, casus:{ type:'aggression' }
-    });
-    const field = s.realms[ids.enemy].capital, neutral = s.realms[ids.liege].capital;
-    const adj = {}, byId = {};
-    for (const pid of [ids.home, ids.second, field, neutral]) {
-      adj[pid] = {}; byId[pid] = Object.assign({}, originalWorld.byId[pid], { terrain:'plains' });
-      s.buildings[pid] = [];
-    }
-    adj[ids.home][ids.second] = 1; adj[ids.second][ids.home] = 1;
-    adj[ids.second][field] = 1; adj[field][ids.second] = 1;
-    FB.world = { adj:adj, byId:byId };
-    s.player.provs = [ids.home];
-    s.owner[ids.second] = s.holder[ids.second] = ids.enemy;
-    s.owner[field] = s.holder[field] = ids.enemy;
-    war.occupations[ids.second] = { occupied:true };
-    FB.invalidateRealmCache(); FB.invalidateFortIndex();
-    const first = { id:99201, realm:'player', warId:war.id, at:field,
-      men:100, size:100, units:{ levy:100 }, supply:100, path:[], moveLeft:0 };
-    const second = Object.assign({}, first, { id:99202, warId:otherWar.id, units:{ levy:100 } });
-    s.armies = [first, second];
-    for (const rid in s.realms) s.armyDown[rid] = s.turn;
-    const results = [], tech = FB.techBonus, bal = FBDATA.balance;
-    const originalBalance = { base:bal.supplyDrainBase, depth:bal.supplyDistanceDepth, terrain:bal.supplyDrainTerrain };
-    bal.supplyDrainBase = 1; bal.supplyDistanceDepth = 1; bal.supplyDrainTerrain = { plains:1 };
-    s.date.season = 0;
-    FB.techBonus = function (state, key) { return key === 'supply' ? 0 : tech.apply(this, arguments); };
-    function tick(expected) {
-      const before = s.armies.map(function (host) { return host.supply; });
-      FB.armyTick(s);
-      results.push({ expected:expected, actual:[before[0] - first.supply, before[1] - second.supply] });
-    }
-    try {
-      tick([2, 3]);
-      const friendly = FB.armyFriendlyProvince;
-      let mapReads = 0;
-      FB.armyFriendlyProvince = function (state, army, pid, relations) {
-        if (relations) mapReads++;
-        return friendly.apply(this, arguments);
-      };
-      try {
-        s.dev[ids.home] = (s.dev[ids.home] || 1) + 1;
-        FB.invalidateRealmCache();
-        tick([2, 3]);
-        if (mapReads) throw new Error('Development alone rebuilt supply distance maps');
-      } finally { FB.armyFriendlyProvince = friendly; }
-      war.occupations[ids.second].occupied = false; // no turn or realm revision change
-      const counts = Object.create(null), previousTiming = FB.game._fastForwardTiming;
-      FB.game._fastForwardTiming = {
-        enter:function () { return {}; }, leave:function () {},
-        count:function (key, amount) { counts[key] = (counts[key] || 0) + (amount === undefined ? 1 : amount); }
-      };
-      try { tick([3, 3]); }
-      finally {
-        if (previousTiming) FB.game._fastForwardTiming = previousTiming;
-        else delete FB.game._fastForwardTiming;
-      }
-      if (counts['Supply distance maps built'] !== 1 || counts['Supply maps retained after control change'] !== 1 || !counts['Supply controller answers reused']) {
-        throw new Error('A campaign control change must rebuild only its affected supply map: ' + JSON.stringify(counts));
-      }
-      return results;
-    } finally {
-      FB.world = originalWorld; FB.techBonus = tech;
-      bal.supplyDrainBase = originalBalance.base; bal.supplyDistanceDepth = originalBalance.depth;
-      bal.supplyDrainTerrain = originalBalance.terrain;
-      FB.invalidateRealmCache(); FB.invalidateFortIndex();
-    }
+    const s = FB.state, host = FB.playerHost(s), pid = s.realms[ids.enemy].capital;
+    host.at = pid; host.supply = 50;
+    s.buildings[pid] = [{ s:0, id:'walls', level:3 }];
+    FB.invalidateFortIndex();
+    const before = FB.armyProvisionQuote(s, host);
+    s.player.war.occupations[pid] = { occupied:true };
+    const occupied = FB.armyProvisionQuote(s, host);
+    s.player.war.occupations[pid].occupied = false;
+    const restored = FB.armyProvisionQuote(s, host);
+    return { before:before.protection, occupied:occupied.protection, restored:restored.protection };
   }, ids);
-  for (const row of result) {
-    expect(row.actual[0]).toBeCloseTo(row.expected[0], 8);
-    expect(row.actual[1]).toBeCloseTo(row.expected[1], 8);
-  }
-  expect(result[0].expected[0]).toBeLessThan(result[0].expected[1]);
-  expect(result[2].expected[0]).toBe(result[2].expected[1]);
+  expect(result.before).toBeCloseTo(0.6, 8);
+  expect(result.occupied).toBe(0);
+  expect(result.restored).toBeCloseTo(result.before, 8);
 });
-
-
-test('full friendly supply skips recovery bonuses while damaged and foreign supply stay live', async function ({ page }, testInfo) {
-  const ids = await startWarSafety(page, testInfo);
-  const result = await page.evaluate(function (ids) {
-    const s = FB.state, bonus = FB.techBonus;
-    for (const id in s.realms) s.armyDown[id] = s.turn;
-    const host = { id:'supply-probe', realm:'player', warId:s.player.war.id, men:100, size:100,
-      units:{ levy:100 }, at:ids.home, from:ids.home, path:[], goal:null, moveLeft:0,
-      holdManual:true, supply:100, lowSupplyWarned:true };
-    s.armies = [host];
-    let reads = 0;
-    FB.techBonus = function (state, key, realm) {
-      if (key === 'supply') reads++;
-      return bonus(state, key, realm);
-    };
-    try {
-      FB.armyTick(s);
-      const full = { supply:host.supply, reads:reads, warned:!!host.lowSupplyWarned };
-      host.supply = 50; reads = 0; FB.armyTick(s);
-      const recovered = { supply:host.supply, reads:reads };
-      host.at = s.realms[ids.enemy].capital; host.supply = 50; FB.armyTick(s);
-      return { full:full, recovered:recovered, abroad:host.supply };
-    } finally { FB.techBonus = bonus; }
-  }, ids);
-  expect(result.full).toEqual({ supply:100, reads:0, warned:false });
-  expect(result.recovered.supply).toBeGreaterThan(50);
-  expect(result.recovered.reads).toBeGreaterThan(0);
-  expect(result.abroad).toBeLessThan(50);
-});
-
 
 test('AI garrison costs reuse recruitment blocking without changing the result', async function ({ page }, testInfo) {
   const ids = await startWarSafety(page, testInfo);
@@ -238,7 +146,7 @@ test('AI garrison costs reuse recruitment blocking without changing the result',
 });
 
 
-test('army diagnostics distinguish muster requests and supply hits from rebuilds', async function ({ page }, testInfo) {
+test('army diagnostics distinguish muster requests and local provisioning', async function ({ page }, testInfo) {
   await startWarSafety(page, testInfo);
   const result = await page.evaluate(function () {
     const g = FB.game, originalDay = g.passDay, originalFrame = window.requestAnimationFrame;
@@ -263,14 +171,9 @@ test('army diagnostics distinguish muster requests and supply hits from rebuilds
   expect(rows['Muster: new-host checks'].calls).toBe(2);
   expect(rows['Muster: detachment checks'].calls).toBe(2);
   expect(rows['Muster: peace/disband checks'].calls).toBe(2);
-  const lookups = rows['Army operation: supply distance lookup/build'];
-  expect((counts['Supply distance cache hits'] || 0) + (counts['Supply distance maps built'] || 0))
-    .toBe(lookups ? lookups.calls : 0);
-  const builds = counts['Supply distance maps built'] || 0;
-  expect(rows['Supply build: friendly source scan'] ? rows['Supply build: friendly source scan'].calls : 0).toBeGreaterThanOrEqual(builds);
-  expect(rows['Supply build: distance propagation'] ? rows['Supply build: distance propagation'].calls : 0).toBe(builds);
-  expect(Object.keys(counts).filter(function (key) { return key.indexOf('Supply rebuild for ') === 0; })
-    .reduce(function (sum, key) { return sum + counts[key]; }, 0)).toBe(builds);
+  expect(rows['Army operation: local provisioning'].calls).toBeGreaterThan(0);
+  expect(counts['Provisioning hosts']).toBeGreaterThan(0);
+  expect(rows['Supply build: distance propagation']).toBeUndefined();
 });
 
 

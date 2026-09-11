@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/armies.js',
+  'js/armies.js', 'js/logistics.js', 'js/market.js',
   'js/world.js',
   'js/fortifications.js',
   'data/map_data.js',
@@ -162,291 +162,22 @@ test('terrain and supply shape battle power, and the technology data validates',
     expect(result.validation).toEqual([]);
   });
 
-test('a host drains supply abroad, starves at 0, and refills at home',
+test('empty local markets expose terrain and winter consumption without a homeland-distance penalty',
   async function ({ page }) {
     const result = await page.evaluate(function () {
-      const state = FB.state;
-      const originalWorld = FB.world;
-      const originalWar = state.player.war;
-      const originalHosts = state.armies;
-      const originalDown = state.armyDown;
-      const originalAuto = FB.game.auto.hosts;
-      const originalSeason = state.date.season;
-      const rid = FB.techRealmId(state, 'player');
-      const originalTech = state.realmTech[rid];
-      state.realmTech[rid] = {
-        completed:[], exposed:[], active:[], progress:{},
-        reserve:0, priorities:{}
-      };
-
-      const playerSovereign = FB.playerRealmId(state);
-      const sovereigns = [];
-      for (const realmId in state.realms) {
-        const realm = state.realms[realmId];
-        if (realmId !== 'player' && realm && realm.alive && !realm.liege) {
-          sovereigns.push(realmId);
-        }
-      }
-      sovereigns.sort();
-      let enemy = null;
-      for (let i = 0; i < sovereigns.length; i++) {
-        if (sovereigns[i] !== playerSovereign) { enemy = sovereigns[i]; break; }
-      }
-      for (const realmId in state.realms) {
-        if (state.realms[realmId]) state.realms[realmId].war = null;
-      }
-      state.armyDown = {};
-      FB.game.auto.hosts = 'manual';
-
-      FB.world = {
-        adj:{ a:{ e1:1 }, e1:{ a:1, e2:1 }, e2:{ e1:1, e3:1 }, e3:{ e2:1 } },
-        waterAdj:{ a:{}, e1:{}, e2:{}, e3:{} },
-        byId:{
-          a:{ id:'a', name:'A', cx:0, cy:0, terrain:'farmland' },
-          e1:{ id:'e1', name:'E1', cx:20, cy:0, terrain:'farmland' },
-          e2:{ id:'e2', name:'E2', cx:40, cy:0, terrain:'farmland' },
-          e3:{ id:'e3', name:'E3', cx:60, cy:0, terrain:'farmland' }
-        }
-      };
-      const keptOwner = {}, keptHolder = {};
-      ['a', 'e1', 'e2', 'e3'].forEach(function (pid) {
-        keptOwner[pid] = state.owner[pid];
-        keptHolder[pid] = state.holder ? state.holder[pid] : undefined;
-      });
-      state.holder = state.holder || {};
-      state.holder.a = 'player'; // home ground
-      state.owner.e1 = enemy;
-      state.owner.e2 = enemy;
-      state.owner.e3 = enemy;
-      state.player.war = { enemy:enemy, defending:true };
-
-      const host = {
-        id:'supply_host', realm:'player', men:1000, size:1000,
-        units:{ levy:1000, arch:0, cav:0, ret:0, mercs:0 },
-        at:'e3', from:'e3', moveLeft:0, path:[], goal:null, supply:50
-      };
-      state.armies = [host];
-
-      /* deep in enemy land (three counties past the frontier), out of winter:
-         1.2 × terrain 1 × (1 + 0.25 × 3) = 2.1 supply per day */
+      const state = FB.state, pid = state.player.provinceId;
+      const host = { realm:'player', men:1000, units:{ levy:1000 }, at:pid, supply:50 };
+      FB.game.auto.buySupplies = false;
       state.date.season = 1;
-      FB.armyTick(state);
-      const afterDrain = host.supply;
-
-      /* winter bites harder */
-      host.supply = 50;
+      const summer = FB.armyProvisionUse(state, host);
       state.date.season = 3;
-      FB.armyTick(state);
-      const afterWinter = host.supply;
-
-      /* the well runs dry: attrition gnaws daily, the news fires once */
-      host.supply = 1;
-      state.date.season = 1;
-      FB.armyTick(state);
-      const starving = { supply:host.supply, men:host.men };
-      FB.armyTick(state);
-      const starvingAgain = { supply:host.supply, men:host.men };
-      const starvingNews = state.log.filter(function (entry) {
-        return entry.msg && entry.msg.key === 'news.army.host_starving';
-      }).length;
-
-      const abroadStatus = FB.hostSupplyStatus(state, host);
-
-      /* home ground: a starving host eats before it fills its ranks */
-      host.at = 'a';
-      host.from = 'a';
-      FB.armyTick(state);
-      const firstHome = { supply:host.supply, men:host.men };
-      const savedTerritory = FB.recruitmentTerritory;
-      FB.recruitmentTerritory = function (s, realm) {
-        return realm === 'player' ? { eligible:['a'], blocked:[], rally:'a', development:100 } : savedTerritory(s, realm);
-      };
-      const savedComposition = FB.playerComposition;
-      FB.playerComposition = function () { return { levy:1000 }; };
-      FB.armyTick(state);
-      const secondHome = { supply:host.supply, men:host.men };
-      FB.playerComposition = savedComposition;
-      FB.recruitmentTerritory = savedTerritory;
-      const homeStatus = FB.hostSupplyStatus(state, host);
-
-      state.date.season = originalSeason;
-      state.armies = originalHosts;
-      state.armyDown = originalDown;
-      state.player.war = originalWar;
-      FB.game.auto.hosts = originalAuto;
-      state.realmTech[rid] = originalTech;
-      ['a', 'e1', 'e2', 'e3'].forEach(function (pid) {
-        if (keptOwner[pid] === undefined) delete state.owner[pid];
-        else state.owner[pid] = keptOwner[pid];
-        if (keptHolder[pid] === undefined) delete state.holder[pid];
-        else state.holder[pid] = keptHolder[pid];
-      });
-      FB.world = originalWorld;
-      return {
-        enemy:enemy,
-        afterDrain:afterDrain,
-        afterWinter:afterWinter,
-        starving:starving,
-        starvingAgain:starvingAgain,
-        starvingNews:starvingNews,
-        abroadStatus:abroadStatus,
-        firstHome:firstHome,
-        secondHome:secondHome,
-        homeStatus:homeStatus
-      };
+      const winter = FB.armyProvisionUse(state, host);
+      const status = FB.hostSupplyStatus(state, host);
+      return { summer:summer, winter:winter, days:status.daysToAttrition };
     });
-
-    expect(result.enemy).toBeTruthy();
-    expect(result.afterDrain).toBeCloseTo(47.9, 8);
-    expect(result.afterWinter).toBeCloseTo(46.85, 8);
-    expect(result.starving.supply).toBe(0);
-    expect(result.starving.men).toBe(997);
-    expect(result.starvingAgain.men).toBe(995);
-    expect(result.starvingNews).toBe(1);
-    expect(result.abroadStatus.status).toBe('starving');
-    expect(result.abroadStatus.friendly).toBe(false);
-    expect(result.firstHome.men).toBe(995); // 0 supply: no reinforcement
-    expect(result.firstHome.supply).toBe(3);
-    expect(result.secondHome.men).toBe(1000); // fed again: ranks refill
-    expect(result.secondHome.supply).toBe(6);
-    expect(result.homeStatus.status).toBe('low');
-    expect(result.homeStatus.friendly).toBe(true);
-    expect(result.homeStatus.daysToAttrition).toBeNull();
-  });
-
-test('automated hosts retreat with a week of supply and refit before resuming',
-  async function ({ page }) {
-    const result = await page.evaluate(function () {
-      const state = FB.state;
-      const p = state.player;
-      const originalWorld = FB.world;
-      const originalProvinceId = p.provinceId;
-      const originalProvs = p.provs;
-      const originalWar = p.war;
-      const originalArmies = state.armies;
-      const originalArmyDown = state.armyDown;
-      const originalArmyDetachmentDown = state.armyDetachmentDown;
-      const originalArmyCohorts = state.armyCohorts;
-      const originalAutoHosts = FB.game.auto.hosts;
-      const originalAutoResupply = FB.game.auto.hostResupply;
-      const enemyId = Object.keys(state.realms).filter(function (rid) {
-        const realm = state.realms[rid];
-        return rid !== 'player' && realm && realm.alive && !realm.liege;
-      })[0];
-      const originalEnemyCapital = state.realms[enemyId].capital;
-      const originalRealmWars = {};
-      for (const rid in state.realms) {
-        originalRealmWars[rid] = state.realms[rid] && state.realms[rid].war;
-        if (state.realms[rid]) state.realms[rid].war = null;
-      }
-      FB.world = {
-        adj:{ a:{ b:1 }, b:{ a:1, c:1 }, c:{ b:1 } },
-        waterAdj:{ a:{}, b:{}, c:{} },
-        byId:{
-          a:{ id:'a', name:'Friendly A', cx:0, cy:0, terrain:'farmland' },
-          b:{ id:'b', name:'Foreign B', cx:20, cy:0, terrain:'farmland' },
-          c:{ id:'c', name:'Target C', cx:40, cy:0, terrain:'farmland' }
-        }
-      };
-      p.provinceId = 'a';
-      p.provs = ['a'];
-      state.owner.a = 'player';
-      state.holder.a = 'player';
-      state.owner.b = enemyId;
-      state.holder.b = enemyId;
-      state.owner.c = enemyId;
-      state.holder.c = enemyId;
-      state.realms[enemyId].capital = 'c';
-      p.war = {
-        enemy:enemyId, target:'c', wins:0, losses:0,
-        seasons:0, defending:false, strength:1
-      };
-      const host = {
-        id:'auto-resupply-host', realm:'player', men:500, size:500,
-        units:{ levy:500 }, at:'b', from:'b', moveLeft:0,
-        path:[], goal:null, supply:1
-      };
-      state.armies = [host];
-      state.armyDown = {};
-      state.armyDown[enemyId] = state.turn;
-      state.armyDetachmentDown = {};
-      state.armyCohorts = {};
-      FB.invalidateRealmCache();
-      FB.invalidateFortIndex();
-      FB.game.auto.hosts = 'off';
-      FB.game.auto.hostResupply = true;
-
-      const warning = FB.hostSupplyStatus(state, host);
-      FB.armyTick(state);
-      const retreat = {
-        goal:host.goal,
-        refitting:!!host.autoResupply,
-        automated:!!host.automatedOrder
-      };
-
-      host.at = 'a';
-      host.from = 'a';
-      host.path = [];
-      host.goal = null;
-      host.moveLeft = 0;
-      host.supply = 5;
-      FB.armyTick(state);
-      const refill = {
-        at:host.at,
-        goal:host.goal,
-        supply:host.supply,
-        refitting:!!host.autoResupply
-      };
-
-      host.at = 'b';
-      host.from = 'b';
-      host.path = [];
-      host.goal = null;
-      host.moveLeft = 0;
-      host.supply = 100;
-      host.manual = 0;
-      host.holdManual = 0;
-      delete host.autoResupply;
-      delete host.automatedOrder;
-      FB.game.auto.hostResupply = false;
-      FB.armyTick(state);
-      const out = {
-        warning:warning,
-        retreat:retreat,
-        refill:refill,
-        disabledGoal:host.goal
-      };
-      FB.world = originalWorld;
-      p.provinceId = originalProvinceId;
-      p.provs = originalProvs;
-      p.war = originalWar;
-      state.armies = originalArmies;
-      state.armyDown = originalArmyDown;
-      state.armyDetachmentDown = originalArmyDetachmentDown;
-      state.armyCohorts = originalArmyCohorts;
-      state.realms[enemyId].capital = originalEnemyCapital;
-      for (const rid in originalRealmWars) {
-        if (state.realms[rid]) state.realms[rid].war = originalRealmWars[rid];
-      }
-      FB.game.auto.hosts = originalAutoHosts;
-      FB.game.auto.hostResupply = originalAutoResupply;
-      FB.invalidateRealmCache();
-      FB.invalidateFortIndex();
-      return out;
-    });
-
-    expect(result.warning.friendly).toBe(false);
-    expect(result.warning.daysToAttrition).toBeLessThanOrEqual(7);
-    expect(result.retreat).toEqual({
-      goal:'a',
-      refitting:true,
-      automated:true
-    });
-    expect(result.refill.at).toBe('a');
-    expect(result.refill.goal).toBeNull();
-    expect(result.refill.supply).toBeGreaterThan(5);
-    expect(result.refill.refitting).toBe(true);
-    expect(result.disabledGoal).toBe('c');
+    expect(result.summer).toBeGreaterThan(0);
+    expect(result.winter / result.summer).toBeCloseTo(1.5, 8);
+    expect(result.days).toBeGreaterThan(0);
   });
 
 test('daily troop replenishment redraws the map on a bounded cadence',
@@ -552,5 +283,5 @@ test('the selected host readout reports its supply in the Land tab',
     const panel = page.locator('#tab-prov');
     await expect(panel).toContainText('Supply & Upkeep');
     await expect(panel).toContainText('Low (20%)');
-    await expect(panel).toContainText('days before hunger bites');
+    await expect(panel.locator('[data-host-provision]')).not.toBeEmpty();
   });

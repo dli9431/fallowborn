@@ -1510,6 +1510,13 @@ FBDATA.balance = {
      its sovereign's, or allied land and drains abroad by terrain, season,
      and depth past the friendly frontier; at 0 the host starves */
   supplyRecoverRate: 3, // supply points a host on friendly land regains per day
+  armyProvisionPrice: 0.45, // gold per abstract provisions unit, before local price
+  armyProvisionMenPerUnit: 120, // infantry fed for a season by one market unit
+  armyProvisionMarketDays: 2, // county daily loading ceiling in days of civilian demand
+  armyProvisionFortProtection: 0.20, // protected normal reserve and reduced loading per fort level
+  armyProvisionDues: 0.10, // paid sales share reaching holder/sovereign
+  armyProvisionAIBudgetBase: 10,
+  armyProvisionAIBudgetStrength: 2,
   supplyFortRecoverMult: 1.5, // resupply multiplier in a county with a friendly fort (depot effect)
   supplyDevastatedRecoverFloor: 0.4, // resupply multiplier floor on a war-worn county (development below its baseline)
   supplyDrainBase: 1.2, // supply points a host on neutral or hostile land loses per day

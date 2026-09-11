@@ -1,5 +1,14 @@
 # Game state & saves
 
+`state.armyLogistics` is additive: shared AI provisioning `purses`, current county
+withdrawals in `counties`, and one completed period in `last`. Purses retain gold,
+allowance and the funded season to prevent reload funding. County records retain
+bought/taken units, payments, dues and the current day's loading use. Hosts retain
+only their most recent numeric/id-based `provisioning` receipt and optional resupply
+destination/retry turn. Old saves initialize lazily without replaying past spending
+or withdrawals. Browser-local `fb_automation` adds `buySupplies` (true) and
+`supplyTarget` (75, clamped 25–100). Save format stays 3.
+
 No-claim escalation adds `realm.aggressionDeclarations` and each declared war's
 `aggressionSequence`. They are positive integer counters, independent of ruler
 generation; old saves default to no counted declarations. County modifier records

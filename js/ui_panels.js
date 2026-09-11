@@ -993,9 +993,9 @@ window.FB = window.FB || {};
       if (supplyInfo.status === 'starving') {
         detailsHtml += '<div>🥀 ' + esc(FB.T('Starving — supplies are gone and hunger thins its ranks daily.')) + '</div>';
       } else if (supplyInfo.status === 'low') {
-        detailsHtml += '<div>🥖 ' + esc(FB.T('Low on supplies — forage before starvation sets in.')) + '</div>';
+        detailsHtml += '<div>🥖 ' + esc(FB.T('Low on supplies — seek a stocked market before starvation.')) + '</div>';
       } else {
-        detailsHtml += '<div>🥖 ' + esc(FB.T('Supplies replenished from friendly territory.')) + '</div>';
+        detailsHtml += '<div>🥖 ' + esc(FB.T('Local provisions feed the host; shortages consume its carried reserve.')) + '</div>';
       }
     }
     if (feedback) {
@@ -1037,6 +1037,8 @@ window.FB = window.FB || {};
       '</span></div>' +
       landKv('Your Host', esc(hostLine), true) +
       landKv('Supply & Upkeep', esc(supplyUpkeepLine)) +
+      '<div data-host-provision="' + esc(pHost ? String(pHost.id) : '') + '">' +
+      (pHost && FB.armyProvisionText ? esc(FB.armyProvisionText(s, pHost)) : '') + '</div>' +
       landKv('Battle Odds', esc(oddsLine)) +
       '<div data-war-siege="">' + siegeFeedbackHtml(s) + '</div>' +
       '<div data-war-recruitment>' + esc(recruitmentFeedback(s)) + '</div>' +
@@ -1101,6 +1103,11 @@ window.FB = window.FB || {};
       const id = node.getAttribute('data-host-starvation');
       const host = (s.armies || []).find(function (a) { return String(a.id) === id; });
       node.textContent = starvationText(s, host);
+    });
+    document.querySelectorAll('[data-host-provision]').forEach(function (node) {
+      const id = node.getAttribute('data-host-provision');
+      const host = (s.armies || []).find(function (a) { return String(a.id) === id; });
+      node.textContent = host && FB.armyProvisionText ? FB.armyProvisionText(s, host) : '';
     });
     document.querySelectorAll('[data-war-recruitment]').forEach(function (node) {
       node.textContent = recruitmentFeedback(s);
@@ -7124,7 +7131,7 @@ window.FB = window.FB || {};
             pct: Math.round(supplyInfo.supply), days: supplyInfo.daysToAttrition
           })) + '</div>';
         } else {
-          detailsHtml += '<div>🥖 ' + esc(FB.T('Supply at {pct}% — refilling on friendly land.', {
+          detailsHtml += '<div>🥖 ' + esc(FB.T('Supply at {pct}% — local provisioning covers consumption.', {
             pct: Math.round(supplyInfo.supply)
           })) + '</div>';
         }
@@ -7167,6 +7174,8 @@ window.FB = window.FB || {};
       landKv('Status', esc(hostStatusText)) +
       landKv('Troops', esc(troopSummary), true) +
       landKv('Supply & Upkeep', esc(supplyUpkeepLine)) +
+      '<div data-host-provision="' + esc(String(selA.id)) + '">' +
+      (FB.armyProvisionText ? esc(FB.armyProvisionText(s, selA)) : '') + '</div>' +
       '<div data-host-starvation="' + esc(String(selA.id)) + '">' +
       esc(starvationText(s, selA)) + '</div>';
 

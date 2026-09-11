@@ -6550,6 +6550,7 @@ window.FB = window.FB || {};
     let total = -FB.householdUpkeep(state);
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
     if (FB.playerHostUpkeepParts) total -= FB.playerHostUpkeepParts(state).total;
+    if (FB.playerProvisionEstimate) total -= FB.playerProvisionEstimate(state);
     if (FB.modifierUpkeep) total -= FB.modifierUpkeep(state, 'gold');
     if (p.tier >= 3) {
       total += FB.playerTax(state);
@@ -6763,10 +6764,11 @@ window.FB = window.FB || {};
     if (FB.playerHostUpkeepParts) {
       const hostUpkeep = FB.playerHostUpkeepParts(state);
       add('gold', FB.T('Raised-host base logistics'), -hostUpkeep.base);
-      add('gold', FB.T('Levy food and supplies'), -hostUpkeep.levy);
-      add('gold', FB.T('Archer food and supplies'), -hostUpkeep.archers);
-      add('gold', FB.T('Cavalry fodder and supplies'), -hostUpkeep.cavalry);
-      add('gold', FB.T('Men-at-arms food and supplies'), -hostUpkeep.retinue);
+      add('gold', FB.T('Levy equipment and transport'), -hostUpkeep.levy);
+      add('gold', FB.T('Archer equipment and transport'), -hostUpkeep.archers);
+      add('gold', FB.T('Cavalry equipment and transport'), -hostUpkeep.cavalry);
+      add('gold', FB.T('Men-at-arms equipment and transport'), -hostUpkeep.retinue);
+      if (FB.playerProvisionEstimate) add('gold', FB.T('Army provisions (estimated consumption)'), -FB.playerProvisionEstimate(state));
       /* unlocked classes (crossbows, pikes, cultural companies) bill per 100
          from the unit-class table */
       const billed = { levy:1, arch:1, cav:1, ret:1 };

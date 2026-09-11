@@ -109,6 +109,17 @@ governance surfaces while retaining their responsive layouts.
 
 ## Shared input and dropdown style
 
+Automation's Host orders section includes **Buy supplies automatically** and a
+labeled native **Supply reserve target** range (25–100%, default 75%). Its output
+updates during keyboard or pointer input; committed changes persist with the other
+automation preferences without rebuilding the modal or losing focus/scroll. The
+44px slider and controls wrap on compact screens. Available-coin spending and the
+automatic enemy-requisition risk remain visible; stock limits, fort protection and
+neutral-county rules use the existing Details tooltip/compact disclosure. Turning
+off purchases does not disable requisition or reset the reserve target. Manual host
+orders remain authoritative. Host cards keep a live provisioning/shortage line;
+county markets report actual withdrawals and market dues without blocking play.
+
 All native selects and text, search, number, and multiline inputs use the shared
 field skin in `css/style.css`, with the Market basket overlay as the visual
 reference: brown parchment gradient, gold border, eight-pixel corners, light serif

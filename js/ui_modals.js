@@ -576,8 +576,20 @@ window.FB = window.FB || {};
       h += hr('def', 'Defensive — throw back invaders, then refit at home');
       h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
       h += cb('ar-host-resupply', a.hostResupply !== false,
-        '<b>Return automated hosts to friendly land when supplies run low</b>',
-        'At one week of supply remaining, or after supplies run out, automated hosts retreat to reachable friendly territory and refill before resuming their stance. Manual routes and holds remain yours.');
+        esc(FB.T('Seek markets when supplies run low')),
+        esc(FB.T('Automated hosts seek reachable, stocked markets and refill toward the reserve target. Manual routes and holds remain yours.')));
+      h += cb('ar-buy-supplies', a.buySupplies !== false,
+        esc(FB.T('Buy supplies automatically')),
+        esc(FB.T('All your hosts buy local provisions with available coin, even while marching under manual orders. Prices, county stocks and loading capacity limit purchases. Standing upkeep excludes this food.')));
+      h += '<div class="ui-control-row settcard" data-provision-controls><div class="settcard-head">' +
+        '<label for="ar-supply-target">' + esc(FB.T('Supply reserve target')) + '</label>' +
+        '<output id="ar-supply-value" for="ar-supply-target">' + esc(FB.T('{percent}%', { percent:a.supplyTarget })) + '</output>' +
+        cardInfoButton('ar-supply-target-details') + '</div>' +
+        '<input type="range" class="provision-slider" id="ar-supply-target" min="25" max="100" step="5" value="' + a.supplyTarget + '">' +
+        '<p>' + esc(FB.T('Higher reserves cost more to fill. Purchases use available coin only.')) + '</p>' +
+        '<p class="ui-control-warning">' + esc(FB.T('Enemy land: food is requisitioned automatically, harming stocks and Popular support. Forts limit seizure.')) + '</p>' +
+        '<div class="settcard-details hidden" id="ar-supply-target-details">' +
+        esc(FB.T('The target also limits requisition, which continues when purchases are off. Neutral land is never requisitioned. Intact enemy forts protect stores until occupied; exhausted counties cannot feed the host.')) + '</div></div>';
     }
     if (access.build) {
       h += panelh('Realm stewardship');
@@ -623,6 +635,12 @@ window.FB = window.FB || {};
       if (hsel) a.hosts = hsel.value;
       const hostResupply = $('ar-host-resupply');
       if (hostResupply) a.hostResupply = hostResupply.checked;
+      const buySupplies = $('ar-buy-supplies'), supplyTarget = $('ar-supply-target');
+      if (buySupplies) a.buySupplies = buySupplies.checked;
+      if (supplyTarget) {
+        a.supplyTarget = FB.clamp(Number(supplyTarget.value), 25, 100);
+        $('ar-supply-value').textContent = FB.T('{percent}%', { percent:a.supplyTarget });
+      }
       if (a.hosts === 'manual' && FB.state && FB.enforceManualHostControl) {
         FB.enforceManualHostControl(FB.state);
       }
@@ -632,7 +650,11 @@ window.FB = window.FB || {};
       }
       if (FB.state) UI.refresh();
     }
-    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-host-resupply', 'ar-build',
+    const supplySlider = $('ar-supply-target');
+    if (supplySlider) supplySlider.addEventListener('input', function () {
+      $('ar-supply-value').textContent = FB.T('{percent}%', { percent:Number(supplySlider.value) });
+    });
+    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-host-resupply', 'ar-buy-supplies', 'ar-supply-target', 'ar-build',
       'ar-research', 'ar-research-mode'].forEach(function (id) {
       const control = $(id);
       if (control) control.addEventListener('change', sync);
@@ -7462,6 +7484,7 @@ window.FB = window.FB || {};
 
   /* ================= county commodity market ================= */
   function marketShockSourceText(source) {
+    if (source === 'army_requisition') return FB.T('Army requisition');
     if (source === 'war_disruption') return FB.T('War disruption');
     if (source === 'lean_harvest') return FB.T('Lean harvest');
     if (source === 'pestilence') return FB.T('Pestilence');
@@ -7528,6 +7551,20 @@ window.FB = window.FB || {};
       kv('Last net flow', esc(amount(row.netFlow))) +
       kv('Your household demand', esc(amount(row.household))) +
       kv('Your enterprise output', esc(amount(row.enterprise)));
+    const provisioning = goodId === 'provisions' && FB.armyProvisionCounty
+      ? FB.armyProvisionCounty(s, pid) : null;
+    if (provisioning) {
+      const taken = provisioning.current;
+      h += '<div class="settcard" tabindex="0"><div class="settcard-head"><h4>' +
+        esc(FB.T('Army provisioning this season')) + '</h4>' + cardInfoButton('market-provision-details') + '</div>' +
+        kv('Food purchased / requisitioned', esc(FB.T('{bought} / {taken} units', {
+          bought:amount(taken.bought), taken:amount(taken.taken) }))) +
+        kv('Supplier sales', esc(FB.money(taken.paid - taken.dues))) +
+        kv('Ruler market dues', esc(FB.money(taken.dues))) +
+        '<div class="settcard-details hidden" id="market-provision-details">' +
+        esc(FB.T('Actual food withdrawals along army routes. Paid purchases fund suppliers and market dues; requisition pays nothing and harms production and Popular support. Forts protect part of the stores until occupied.')) +
+        '</div></div>';
+    }
     h += '<div class="gm-body-text"><h4>' + esc(FB.T('Historical endowments')) +
       '</h4>';
     if (market.endowments.entries.length) {

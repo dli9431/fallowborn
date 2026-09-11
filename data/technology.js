@@ -564,7 +564,11 @@ window.FBDATA = window.FBDATA || {};
       },
       field_supply_attrition:{
         mode:'soft', tech:['pack_saddles','wheeled_carts','logistics_magazines'],
-        rationale:'Every field host carries supply, refills it on friendly land, and starves abroad from the baseline; pack, cart, and magazine innovations stretch how long a campaign can range before attrition bites.'
+        rationale:'All field hosts automatically buy local provisions toward a reserve target and consume carried supplies when local food is unavailable. Pack, cart, and magazine innovations reduce consumption and improve loading; basic provisioning and its preferences remain available without research.'
+      },
+      army_requisition:{
+        mode:'none',
+        rationale:'Automatic requisition in enemy counties is baseline warfare. Existing fort tiers protect stores and limit extraction until occupied; no new technology gates forced provisioning.'
       },
       terrain_combat_modifiers:{
         mode:'none',

@@ -287,7 +287,7 @@
       const price = arrayMap(oldIds, existing[1], ids, function () { return 1; });
       const flow = arrayMap(oldIds, existing[2], ids, function () { return 0; });
       for (let i = 0; i < ids.length; i++) {
-        stock[i] = stockNumber(stock[i]);
+        stock[i] = ids[i] === 'provisions' ? Math.max(0, Number(stock[i]) || 0) : stockNumber(stock[i]);
         price[i] = priceNumber(price[i]);
         flow[i] = Math.round((Number(flow[i]) || 0) * 10) / 10;
       }
@@ -579,7 +579,7 @@
       modifiers:modifierBonusIndex(state),
       merchant:merchantCapacityIndex(state),
       enterprises:enterpriseOutputIndex(state),
-      armies:armyDemandIndex(state),
+      armies:FB.armyMarketDemand ? FB.armyMarketDemand(state) : armyDemandIndex(state),
       corridors:corridorBonusIndex(state)
     };
     const techByRealm = Object.create(null);
@@ -633,7 +633,8 @@
       let realm = army.realm || army.realmId || army.owner;
       if (realm === 'player' && FB.playerRealmId) realm = FB.playerRealmId(state);
       const sovereign = realm && FB.topRealm ? FB.topRealm(state, realm) : realm;
-      if (sovereign && sovereign !== state.owner[pid]) affected[pid] = 1;
+      if (sovereign && FB.armiesHostile &&
+          FB.armiesHostile(state, army, { realm:state.owner[pid] })) affected[pid] = 1;
     }
     for (const pid in affected) {
       FB.addMarketShock(state, {
@@ -851,7 +852,9 @@
   FB.marketSeason = function (state) {
     const market = FB.ensureMarket(state);
     if (!market || market.lastTurn === state.turn) return false;
-    syncWarShocks(state);
+    // Requisition records actual daily damage; paid foreign visitors cause
+    // scarcity without an additional blanket war-disruption penalty.
+    if (!FB.provisionArmy) syncWarShocks(state);
     const ids = market.goods;
     const pids = provinceIds();
     const context = seasonContext(state, ids, pids);
@@ -875,7 +878,6 @@
       for (let g = 0; g < ids.length; g++) {
         const shock = context.counties[pid].shocks[ids[g]];
         demand[g] *= Math.max(0.05, 1 + shock.demand);
-        demand[g] += ids[g] === 'provisions' ? (context.armies[pid] || 0) : 0;
         if (pid === home) {
           const exact = Number(household[ids[g]]) || 0;
           demand[g] += exact;
@@ -890,6 +892,13 @@
       for (let g = 0; g < ids.length; g++) {
         market.counties[pid][0][g] = Math.max(0,
           market.counties[pid][0][g] + production[pid][g] - demand[g]);
+        // Military food was removed on each day of the march. Include it in
+        // price/flow pressure and the report, never subtract it a second time.
+        if (ids[g] === 'provisions') {
+          demand[g] += context.armies[pid] || 0;
+          report.demand[g] = demand[g];
+          report.military = context.armies[pid] || 0;
+        }
       }
     }
     for (let pass = 0; pass < 2; pass++) {
@@ -923,6 +932,34 @@
     market.lastTurn = state.turn;
     reportState = state;
     reports = reportByPid;
+    if (FB.armyProvisionSeason) FB.armyProvisionSeason(state);
+    return true;
+  };
+
+  let provisionState = null, provisionMarket = null, provisionWorld = null;
+  let provisionTurn = null, provisionDemand = {};
+  FB.marketProvisionSource = function (state, pid) {
+    const market = FB.ensureMarket(state);
+    const at = market && market.goods.indexOf('provisions');
+    const row = market && market.counties[pid];
+    if (!row || at < 0) return null;
+    if (provisionState !== state || provisionMarket !== market ||
+        provisionWorld !== FB.world || provisionTurn !== market.lastTurn) {
+      provisionState = state; provisionMarket = market; provisionWorld = FB.world;
+      provisionTurn = market.lastTurn; provisionDemand = {};
+    }
+    if (provisionDemand[pid] === undefined) {
+      provisionDemand[pid] = baseDemand(state, pid, market.goods)[at];
+    }
+    const demand = provisionDemand[pid];
+    return { stock:row[0][at], price:row[1][at], demand:demand,
+      reserve:demand * balance('marketReserveSeasons', 2) };
+  };
+  FB.marketWithdrawProvisions = function (state, pid, amount) {
+    const market = FB.ensureMarket(state), at = market.goods.indexOf('provisions');
+    const row = market.counties[pid];
+    if (!row || at < 0 || amount < 0 || row[0][at] < amount) return false;
+    row[0][at] = Math.max(0, row[0][at] - amount);
     return true;
   };
 

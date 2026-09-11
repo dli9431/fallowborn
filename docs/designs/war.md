@@ -1,5 +1,42 @@
 # Wars
 
+## Automatic provisioning
+
+All non-rebel field hosts consume local provisions or their carried reserve each
+day. Automation defaults to paid purchases and a 75% reserve target (25–100%).
+The setting applies even to manually marched player hosts, but never changes
+manual routes or holds. Enemy counties instead face automatic requisition,
+independent of the purchasing switch. Neutral counties permit paid trade, never
+unpaid seizure. Purchases cannot overdraw the payer or county stock.
+
+Supply is a carried reserve, not a penalty for distance from the homeland.
+Terrain, winter and supply technology affect daily consumption; available local
+food covers it before reserves run out. Loading is bounded per host and county.
+Actual withdrawals are recorded where each host passes, including between season
+boundaries. Food is removed daily and is not charged again as seasonal demand or
+as the provisions component of standing host upkeep. Wages/contracts, materials,
+transport and replacement drilling retain their existing obligations.
+
+An intact enemy-controlled fort protects 20% of the county's normal food reserve
+per level (capped at 80%) and reduces daily requisition capacity by the same share.
+It protects stores and reduces extraction damage, not every farm. Occupation
+removes that fort protection and opens surviving stores; it does not create food.
+Requisition reduces Popular support and causes bounded production/flow disruption
+in proportion to actual food taken. Peaceful purchases create scarcity and supplier
+turnover plus a 10% market due, split 80/20 between holder and sovereign when they
+differ. The ruler does not receive the full purchase price.
+
+AI realms use a saved provisioning purse with a capacity-based seasonal allowance
+and a two-season cap; every host of a realm shares it. Player purchases use actual
+available gold. No general AI treasury or synthetic merchant households are added.
+Automatic hosts seek reachable stocked, affordable markets when supplies run low,
+and wait to refill toward their target before resuming; manual orders remain intact.
+
+Technology impact: `field_supply_attrition` remains **soft**. Pack Saddles,
+Wheeled Carts and Military Magazines improve consumption/loading without gating
+basic purchases, reserve preferences or resupply. `army_requisition` is **none**:
+forced provisioning is baseline warfare; existing fort technology protects stores.
+
 Observe mode runs the shared ordinary-campaign seasonal resolver before the
 annual world tick and daily army movement, as normal play does. AI campaigns
 advance occupations, settle completed objectives, and reach white peace after
@@ -30,10 +67,8 @@ where the tick has already validated the roster. Recruitment capacity accepts
 the territory projection already calculated by its caller, and detachment checks
 reject routed or undersized hosts before calculating recruitment capacity.
 
-Supply-distance maps distinguish realm and campaign, and expire on campaign or
-occupation changes as well as realm and alliance changes. Within one map build,
-controller relationship checks are shared across counties; occupation and direct
-player ownership are still checked county by county. Retreats retain capital
+Local provisioning reads live county stock and fort control; it no longer builds
+homeland-distance supply maps. County market demand is shared within a season. Retreats retain capital
 priority and their original breadth-first candidate order, using one legal
 reachability traversal instead of a weighted route search per fallback county.
 
@@ -485,29 +520,14 @@ host also refreshes a saved severe shock that lowers local production and adjace
 capacity; after the host leaves, the shock ages out normally. This replaces the former
 flat sovereign-war surcharge on household necessities. See [markets.md](markets.md).
 
-**Every host carries a supply meter (0–100), and supply lines are real.** Each day
-(`FB.armyTick`, after the march and reinforcement, before the battle scan) a host on
-friendly ground — its own, its sovereign's, or allied land, one
-`FB.armyFriendlyProvince` question — refills at `balance.supplyRecoverRate`, half again
-as fast in a county with a friendly fort (the depot effect), and slower on a war-worn
-county whose development has been beaten below its bookmark baseline (floored at
-`balance.supplyDevastatedRecoverFloor`). Abroad the host drains at
-`balance.supplyDrainBase` × the terrain being crossed (`balance.supplyDrainTerrain`) ×
-the winter multiplier (`balance.supplyWinterDrainMult`, season 3) × (1 +
-`balance.supplyDistanceDepth` per county of distance from the nearest friendly land —
-one reverse-BFS map per host realm, retained until territorial, hierarchy,
-development, or alliance inputs change). The capped national `fx.supply`
-technologies (pack saddles, iron-tired carts, military magazines) shrink the drain and
-quicken the refill. At 0 supply the host starves: `balance.supplyAttritionPerDay` of
-its men melt away daily through `FB.applyHostLosses`, its battle power falls to
-`balance.supplyStarvedPowerMult`, the player hears the news once on the day the well
-runs dry, and a starving host cannot reinforce even at home — it eats before it fills
-its ranks. A besieging host pinned on hostile ground drains at the foreign rate like
-any other; the siege's own seasonal attrition is unchanged and never doubled. AI hosts
-follow the same rules through the same path. Hosts from older saves default to a full
-100 (`FB.hostSupply`, repaired by `FB.armiesEnsure`); the Land tab and war status read
-the meter through `FB.hostSupplyStatus` (Good / Low / Starving, with a rough
-days-to-attrition hint abroad).
+**Every host carries a supply meter (0?100).** Daily provisioning runs after
+marching and reinforcement, before battle. See Automatic provisioning above for
+paid purchases, requisition, fort protection and reserve settings. Only unmet
+consumption drains the meter; at zero, `supplyAttritionPerDay` removes troops and
+`supplyStarvedPowerMult` reduces battle power. A starving host cannot reinforce
+until it has eaten. Older hosts retain their saved reserve, or start at 100 when
+that legacy field is absent. `FB.hostSupplyStatus` reports current local shortfall;
+AI starvation remains visible through host counts rather than daily news spam.
 
 **Ordinary player wars retain a compact campaign-feedback ledger.** The active
 `player.war` object stores at most eight battle records (outcome, field/abstract mode,
@@ -682,11 +702,11 @@ order is unavailable in manual mode, and stale event or automated routes are hal
 the daily march while a hand-tapped route and a forced battlefield retreat remain intact.
 Canceling such a route does not create a hand-given halt, so selecting Defensive or
 Offensive again can command the idle host immediately, including during fast-forward.
-Automated stances have a persistent **Return automated hosts to friendly land when supplies
-run low** setting. When enabled, a host abroad with seven or fewer projected supply days,
-or no supply, seeks reachable friendly territory before its ordinary stance goal. It stays
-there until supply reaches the existing low-supply threshold, then resumes defensive or
-offensive command. A manual route or hold always takes precedence over this retreat.
+Automated stances have a persistent **Seek markets when supplies run low**
+setting. At 15% reserve or below, a host whose local provisioning cannot feed it
+seeks a reachable stocked market. It waits toward the chosen reserve target,
+then resumes its stance. Searches examine at most 60 nearby counties and retry
+failed searches weekly. Manual routes and holds always take precedence.
 While a host is selected, a tap resolved to a different province always issues a
 destination order even when the host marker's hit radius overlaps that province at
 low zoom; only a second tap in the host's current province halts it.

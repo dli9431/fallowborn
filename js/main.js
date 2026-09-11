@@ -4327,7 +4327,7 @@ FB.CHANGELOG = [
      themselves (see autoResolve in ui.js); outcomes go to the chronicle. */
   G.auto = {
     minor:false, major:false, war:false, all:false, style:'safe',
-    hosts:'manual', hostResupply:true,
+    hosts:'manual', hostResupply:true, buySupplies:true, supplyTarget:75,
     build:false, research:false, researchMode:'cheapest'
   };
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
@@ -4342,6 +4342,8 @@ FB.CHANGELOG = [
   } catch (e) { /* keep defaults */ }
   if (typeof G.auto.researchMode !== 'string') G.auto.researchMode = 'cheapest';
   G.auto.hostResupply = G.auto.hostResupply !== false;
+  G.auto.buySupplies = G.auto.buySupplies !== false;
+  G.auto.supplyTarget = FB.clamp(isFinite(Number(G.auto.supplyTarget)) ? Number(G.auto.supplyTarget) : 75, 25, 100);
   G.saveAuto = function () {
     try { localStorage.setItem('fb_automation', JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
   };

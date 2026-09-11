@@ -2,6 +2,32 @@
 
 ## Purpose and scale
 
+Field provisioning withdraws provisions daily through `js/logistics.js`. County
+capacity and stocks are shared by all visiting hosts. Paid trade debits available
+player coin or the realm's bounded AI provisioning purse. Ten percent reaches the
+holder/sovereign as market dues; the rest is supplier turnover, not a second full
+payment to the ruler. No synthetic AI households are created. Existing producer
+returns respond to local prices rather than receiving duplicate sale income.
+
+Enemy requisition removes real stock without payment. Each intact enemy fort tier
+protects 20% of normal reserve and reduces daily loading by 20%, up to 80%.
+Occupied or ruined forts no longer protect stores from that host. Actual seizures
+lower Popular support and create bounded provisions production/flow shocks. Mere
+peaceful foreign presence no longer creates a war shock.
+
+`state.armyLogistics.counties` accumulates bought/taken units, payments and dues
+along the entire route. The seasonal market includes these withdrawals in reported
+demand and reserve/flow pressure but does not subtract them again. The completed
+ledger moves to `last`; only two periods are retained. Normal civilian demand is
+cached per county/market season; stock, price and control are live. Daily withdrawals
+and save repair preserve fractional provisions until seasonal quantization, avoiding
+free tiny purchases or food loss on reload.
+
+The market sheet exposes current-season purchased/requisitioned food, supplier
+sales and ruler dues with the shared Details disclosure. Work scales with active
+hosts and visited counties; the whole market does not run daily. Technology impact
+is documented in war.md: `field_supply_attrition` (soft), `army_requisition` (none).
+
 The market is a deterministic county simulation of five broad baskets:
 `provisions`, `wares`, `materials`, `transport`, and `luxuries`. A unit is a
 season-sized abstract share, not a bushel, bolt, log, horse, or individual
