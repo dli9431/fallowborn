@@ -100,7 +100,8 @@
     Object.keys(state.realms).sort().forEach(function (rid) {
       if (rid !== 'player') bind(state, state.realms[rid], rid);
     });
-    if (state.player.flags && state.player.flags.in_prison && !state.player.captiveWarId) {
+    if (state.player.flags && state.player.flags.in_prison && !state.player.captiveWarId &&
+        !state.player.flags.intrigue_captive && !state.player.flags.intrigue_legal_custody) {
       const captiveWar = current(state, 'player');
       if (captiveWar) state.player.captiveWarId = captiveWar.id;
     }
@@ -391,7 +392,8 @@
     const retainedFocus = state.player.focus, retainedBack = state.player.focusBack;
     const result = FB.withOrdinaryWar(state, w.id, function () {
       const flags = state.player.flags || {};
-      const otherCaptive = flags.in_prison && state.player.captiveWarId && state.player.captiveWarId !== w.id;
+      const otherCaptive = flags.in_prison && (flags.intrigue_captive || flags.intrigue_legal_custody ||
+        state.player.captiveWarId && state.player.captiveWarId !== w.id);
       const captive = flags.in_prison;
       if (otherCaptive) delete flags.in_prison;
       try { return oldEnd(state, invalid); }
@@ -1066,9 +1068,15 @@
   };
   const capturePlayer = FB.maybeCapturePlayer;
   if (capturePlayer) FB.maybeCapturePlayer = function (state) {
+    const wasCaptive = !!state.player.flags.in_prison;
     const result = capturePlayer.apply(FB, arguments);
     const w = current(state, 'player');
-    if (w && state.player.flags.in_prison) state.player.captiveWarId = w.id;
+    if (w && state.player.flags.in_prison && !state.player.flags.intrigue_captive &&
+        !state.player.flags.intrigue_legal_custody) {
+      state.player.captiveWarId = w.id;
+      if (!wasCaptive) state.player.captiveTurn = state.turn;
+      if (FB.materializeRealmRuler) FB.materializeRealmRuler(state, w.enemy);
+    }
     return result;
   };
   const friendly = FB.armyFriendlyProvince;

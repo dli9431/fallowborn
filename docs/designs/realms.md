@@ -1,5 +1,17 @@
 # Realms, the liege hierarchy & tiers
 
+## Territorial justice
+
+Barons can arrest non-rulers at their seat; counts and higher rulers can also
+arrest subordinate rulers physically within their territory. Open arrest never
+reaches a superior or foreign ruler. Sentence eligibility instead requires
+actual custody, and all arbitrary/excessive punishments carry the shared county
+support costs. Judicial authority and prisoners pass to a lawful successor.
+Forfeiture uses escheat with an explicit `recipientId`, avoiding the heirless
+estate lottery while retaining sovereign ownership, treasury retirement, and
+vassal transfers. See [justice](justice.md) for the capability and technology
+review decisions.
+
 Rank-elevation reviews itemize the costs of all crossed ranks. A Count-to-King
 claim therefore displays Duke and King recognition separately, while payment still
 uses their existing combined cost. Imperial benefits identify Emperor as the highest
@@ -1079,8 +1091,9 @@ honest, content, patient, and peace-seeking rulers are strongly suppressed.
 Personal schemes cannot cross sovereign borders. A neighboring court may still use the
 existing rebel-sponsorship system or sabotage a county across a shared border. Captive
 rulers cannot start wars or schemes and their projected host is multiplied by 0.8.
-Succession invalidates generation-stamped schemes, releases captives held by the former
-ruler, and removes predecessor leverage without substituting the new ruler.
+Succession invalidates generation-stamped schemes, releases private abductees,
+and removes predecessor leverage. Judicial prisoners instead pass with the lawful
+authority, as described in [justice](justice.md).
 
 ## Marriage lineage and royal succession
 

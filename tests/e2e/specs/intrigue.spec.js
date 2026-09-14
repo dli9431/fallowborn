@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/intrigue.js',
+  'js/justice.js',
   'js/ui_modals.js',
   'data/intrigue.js',
   'data/events_intrigue.js'
@@ -175,7 +176,9 @@ test('accomplice consent, secret refusal, and leaks are seeded and exact',
         proceedsAlone:proceedsAlone,
         leaked:leaked,
         plotAfterLeak:s.player.plot,
-        hearingEvidence:s.intrigue.hearing && s.intrigue.hearing.evidence
+        hearingEvidence:(s.justice && s.justice.offenses || []).filter(function (o) {
+          return o.accusedId === s.player.charId;
+        }).map(function (o) { return o.evidence; })[0]
       };
     });
 
@@ -480,7 +483,7 @@ test('captivity, ransom, escape, leverage, and conduct remain bounded',
     expect(result.prisonCleared).toBe(true);
   });
 
-test('hearings project regional forms and severe punishment waits for choice',
+test('legacy regional projections remain readable but hearings cannot fine an uncaptured player',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
@@ -535,8 +538,7 @@ test('hearings project regional forms and severe punishment waits for choice',
         canPay:canPay,
         paid:paid,
         hearingCleared:!s.intrigue.hearing,
-        culpable:[me.traits.indexOf('abductor') >= 0,
-          accomplice.traits.indexOf('abductor') >= 0]
+        gold:s.player.gold
       };
     });
 
@@ -548,145 +550,37 @@ test('hearings project regional forms and severe punishment waits for choice',
     ]);
     expect(result.sacred).toBe(true);
     expect(result.aliveBeforeChoice).toBe(true);
-    expect(result.canPay).toBe(true);
-    expect(result.paid).toBe(true);
+    expect(result.canPay).toBe(false);
+    expect(result.paid).toBe(false);
     expect(result.hearingCleared).toBe(true);
-    expect(result.culpable).toEqual([true, true]);
+    expect(result.gold).toBe(500);
   });
 
-test('hearing choices cover challenge, penance, custody, flight, resistance, deposition, and execution',
+test('legacy severe hearing choices cannot imprison, depose, or execute an uncaptured player',
   async function ({ page }) {
     const result = await page.evaluate(function () {
-      const s = FB.state;
-      const me = s.chars[s.player.charId];
-      const home = FB.world.byId[s.player.provinceId];
-      const target = FB.makeCharacter(s, {
-        name:'Lawful Accuser', sex:'m', culture:'frankish',
-        religion:'catholic', born:s.date.year - 42,
-        station:3, traitsN:0
-      });
-      const authority = Object.keys(s.realms).filter(function (id) {
-        const realm = s.realms[id];
-        return id !== 'player' && realm && realm.alive && !realm.liege;
-      })[0];
-      s.realms[authority].religion = 'catholic';
-      function hearing(id, plotId, evidence, severity, successful) {
-        const record = {
+      const s = FB.state, me = s.chars[s.player.charId];
+      const lord = FB.getRole(s, 'lord', true);
+      const before = { gold:s.player.gold, piety:s.player.piety, tier:s.player.tier };
+      const outcomes = ['prison', 'byzantine', 'execution'].map(function (id) {
+        FB.ensureIntrigue(s).hearing = {
           id:id, accusedId:me.id, accusedGeneration:s.generation,
-          targetId:target.id, plotId:plotId,
-          context:{ characterId:target.id, targetSovereign:authority },
-          evidence:evidence, severity:severity, successful:successful,
-          authority:authority
+          targetId:lord.id, plotId:'assassination', context:{ characterId:lord.id },
+          evidence:'redhanded', severity:4, successful:true,
+          authority:FB.playerRealmId(s)
         };
-        FB.ensureIntrigue(s).hearing = record;
-        return { hearingId:id, studentId:target.id };
-      }
-      const bands = [
-        FB.intrigueOffenseSeverity(s, 'blackmail',
-          { characterId:target.id }, false),
-        FB.intrigueOffenseSeverity(s, 'abduction',
-          { characterId:target.id }, false),
-        FB.intrigueOffenseSeverity(s, 'assassination',
-          { characterId:target.id }, false),
-        FB.intrigueOffenseSeverity(s, 'assassination',
-          { characterId:target.id }, true)
-      ];
-
-      const originalChance = FB.chance;
-      FB.chance = function () { return true; };
-      const challenge = FB.fns.intrigue_hearing_challenge(s,
-        hearing('challenge', 'blackmail', 'testimony', 1, false));
-      FB.chance = originalChance;
-      const challengeCleared = !s.intrigue.hearing;
-
-      target.role = 'priest';
-      s.player.piety = 100;
-      const penanceCtx = hearing('penance', 'abduction', 'material', 2,
-        true);
-      const canPenance = FB.fns.intrigue_hearing_can_penance(s,
-        penanceCtx);
-      const pietyBefore = s.player.piety;
-      const penance = FB.fns.intrigue_hearing_penance(s, penanceCtx);
-      const penanceCost = pietyBefore - s.player.piety;
-
-      target.role = null;
-      const prison = FB.fns.intrigue_hearing_submit(s,
-        hearing('prison', 'abduction', 'material', 2, true));
-      const inLegalCustody = !!(s.intrigue.legalCustody &&
-        s.player.flags.in_prison);
-      s.intrigue.legalCustody = null;
-      delete s.player.flags.in_prison;
-
-      let landLosses = 0, resistanceCalls = 0, deathCalls = 0;
-      const originalLoseAllLand = FB.loseAllLand;
-      const originalResist = FB.fns.attainder_resist;
-      const originalDie = FB.game.die;
-      FB.loseAllLand = function () { landLosses++; };
-      FB.fns.attainder_resist = function () { resistanceCalls++; };
-      FB.game.die = function () { deathCalls++; };
-
-      const fled = FB.fns.intrigue_hearing_flee(s,
-        hearing('flight', 'fabricated_charge', 'redhanded', 3, false));
-      const formerTier = s.player.tier;
-      const formerLiege = s.player.liege;
-      const formerWar = s.player.war;
-      s.player.tier = 3;
-      s.player.liege = authority;
-      s.player.war = null;
-      const resistCtx = hearing('resist', 'fabricated_charge',
-        'redhanded', 3, false);
-      const canResist = FB.fns.intrigue_hearing_can_resist(s, resistCtx);
-      const resisted = FB.fns.intrigue_hearing_resist(s, resistCtx);
-
-      target.culture = 'greek';
-      s.realms[authority].religion = 'orthodox';
-      const deposed = FB.fns.intrigue_hearing_submit(s,
-        hearing('byzantine', 'assassination', 'redhanded', 4, true));
-      const maimed = me.traits.indexOf('one_eyed') >= 0 &&
-        me.traits.indexOf('maimed') >= 0;
-
-      target.culture = 'frankish';
-      s.realms[authority].religion = 'catholic';
-      const executed = FB.fns.intrigue_hearing_submit(s,
-        hearing('latin', 'assassination', 'redhanded', 4, true));
-
-      FB.loseAllLand = originalLoseAllLand;
-      FB.fns.attainder_resist = originalResist;
-      FB.game.die = originalDie;
-      s.player.tier = formerTier;
-      s.player.liege = formerLiege;
-      s.player.war = formerWar;
-      return {
-        bands:bands,
-        challenge:challenge, challengeCleared:challengeCleared,
-        canPenance:canPenance, penance:penance,
-        penanceCost:penanceCost,
-        prison:prison, inLegalCustody:inLegalCustody,
-        fled:fled, canResist:canResist, resisted:resisted,
-        deposed:deposed, maimed:maimed, executed:executed,
-        landLosses:landLosses, resistanceCalls:resistanceCalls,
-        deathCalls:deathCalls, hearingCleared:!s.intrigue.hearing
-      };
+        return FB.fns.intrigue_hearing_submit(s, { hearingId:id });
+      });
+      return { outcomes:outcomes, before:before,
+        after:{ gold:s.player.gold, piety:s.player.piety, tier:s.player.tier },
+        alive:!me.dead, prisoner:!!s.player.flags.in_prison,
+        maimed:me.traits.indexOf('maimed') >= 0 };
     });
-
-    expect(result.bands).toEqual([1, 2, 3, 4]);
-    expect(result.challenge).toBe(true);
-    expect(result.challengeCleared).toBe(true);
-    expect(result.canPenance).toBe(true);
-    expect(result.penance).toBe(true);
-    expect(result.penanceCost).toBeGreaterThanOrEqual(20);
-    expect(result.prison).toBe(true);
-    expect(result.inLegalCustody).toBe(true);
-    expect(result.fled).toBe(true);
-    expect(result.canResist).toBe(true);
-    expect(result.resisted).toBe(true);
-    expect(result.deposed).toBe(true);
-    expect(result.maimed).toBe(true);
-    expect(result.executed).toBe(true);
-    expect(result.landLosses).toBe(2);
-    expect(result.resistanceCalls).toBe(1);
-    expect(result.deathCalls).toBe(1);
-    expect(result.hearingCleared).toBe(true);
+    expect(result.outcomes).toEqual([false, false, false]);
+    expect(result.after).toEqual(result.before);
+    expect(result.alive).toBe(true);
+    expect(result.prisoner).toBe(false);
+    expect(result.maimed).toBe(false);
   });
 
 test('leverage is single-use and accomplices leave without retargeting',

@@ -1607,6 +1607,9 @@ window.FB = window.FB || {};
     if (FB.ensureIntrigue) restoreRepair('intrigue state', function () {
       FB.ensureIntrigue(FB.state);
     });
+    if (FB.ensureJustice) restoreRepair('justice state', function () {
+      FB.ensureJustice(FB.state);
+    });
     if (FB.fabricatedClaimOf) restoreRepair('fabricated claims', function () {
       FB.fabricatedClaimOf(FB.state);
     });

@@ -42,7 +42,7 @@ for (const player of [true, false]) {
           sequence:war.aggressionSequence });
       }
       const count = FB.aggressionDeclarationCount(s, attacker);
-      const exported = FB.save.parseExport(FB.save.serialize());
+      const exported = FB.save.parseExport(FB.save.exportState());
       const savedCount = FB.aggressionDeclarationCount(exported.state, attacker);
       const savedSequences = Object.keys(exported.state.wars).map(function (id) {
         return exported.state.wars[id].aggressionSequence;

@@ -10796,6 +10796,13 @@ window.FB = window.FB || {};
     });
     if (record.type === 'worldNews') return FB.T('World news follows');
     if (record.type === 'system') {
+      if (record.system === 'justice') {
+        if (record.action === 'custody') return FB.T('Enter custody for up to {days} days', { days:record.days || 90 });
+        if (record.action === 'resist') return FB.T('Risk of capture: {chance}%', { chance:Math.round((record.chance || 0) * 100) });
+        const sentence = FBDATA.justiceSentences && FBDATA.justiceSentences[record.action];
+        if (sentence) return FB.dataText(state, state.player.charId, 'justiceSentence', record.action, sentence, 'name', {});
+        return FB.T('Custody changes');
+      }
       if (record.system === 'war') return record.action === 'ended'
         ? FB.T('The current war ends')
         : FB.T('Campaign or host conditions change');
@@ -12809,6 +12816,9 @@ window.FB = window.FB || {};
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
     if (oldLiege && (FB.ordinaryWarBetween(state, 'player', oldLiege) ||
         FB.truceExpiry(state, 'player', oldLiege))) return false;
+    if (oldLiege && FB.justiceRecordRebellion) {
+      FB.justiceRecordRebellion(state, oldLiege, p.charId, 'independence:player:' + state.turn);
+    }
     if (!p.provs || !p.provs.length) {
       // a baron who renounces his lord seizes the home county he was
       // enfeoffed in — transferProvince buries the old holder if landless

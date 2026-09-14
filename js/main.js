@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.12';
+FB.VERSION = '1.180.0';
 FB.CHANGELOG = [
+  { v: '1.180.0', date: '2026-09-14', changes: [
+    'Barons and higher rulers can arrest local characters and sentence prisoners through Justice and prisoners. Regional punishments require custody, and unjust sentences cost popular support.'
+  ] },
   { v: '1.179.12', date: '2026-09-14', changes: [
     'Edit your name from equipment and your spouse or children’s names from their character sheets without changing their portraits. Back from the skills Guide restores the original sheet.'
   ] },

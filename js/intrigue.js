@@ -139,9 +139,13 @@ window.FB = window.FB || {};
   }
 
   function normalizeCaptive(state, record) {
+    if (record && (record.source === 'judicial' || record.source === 'legal') && FB.justiceRepairCaptive) {
+      record = FB.justiceRepairCaptive(state, record);
+    }
     if (!record || typeof record !== 'object' ||
         !liveCharacterId(state, record.captiveId) ||
-        !liveCharacterId(state, record.captorId)) return null;
+        (!liveCharacterId(state, record.captorId) && !(record.source === 'judicial' &&
+          record.captorId === state.player.charId && state.player.dead))) return null;
     var captorRealm = record.captorRealmId ||
       (FB.realmIdForRulerCharacter &&
         FB.realmIdForRulerCharacter(state, record.captorId)) || null;
@@ -158,6 +162,12 @@ window.FB = window.FB || {};
       captorGeneration:Number(record.captorGeneration),
       source:typeof record.source === 'string' ? record.source : 'abduction',
       captureTurn:Math.max(0, finite(record.captureTurn, state.turn)),
+      authority:record.authority || null,
+      endTurn:record.source === 'judicial' ? finite(record.endTurn, state.turn + 90) : null,
+      offenseId:record.offenseId || null,
+      unjustPaid:Math.max(0, finite(record.unjustPaid, 0)),
+      sentenced:!!record.sentenced,
+      sentenceIds:Array.isArray(record.sentenceIds) ? record.sentenceIds.slice() : [],
       demand:record.demand && typeof record.demand === 'object'
         ? { amount:Math.max(0, finite(record.demand.amount, fallbackRansom)),
             turn:Math.max(0, finite(record.demand.turn, state.turn)) }
@@ -929,6 +939,10 @@ window.FB = window.FB || {};
   }
 
   function queuePlayerHearing(state, plot, evidence, successful) {
+    if (FB.justiceExposeScheme && evidence !== 'suspicion') {
+      FB.justiceExposeScheme(state, plot, evidence, successful);
+      return;
+    }
     var intrigue = FB.ensureIntrigue(state);
     var target = targetCharacter(state, plot.context);
     if (evidence === 'suspicion') {
@@ -1227,12 +1241,13 @@ window.FB = window.FB || {};
       source:source || 'abduction', captureTurn:state.turn,
       demand:{ amount:amount, turn:state.turn }
     };
+    if (FB.justiceInitializeCaptive) FB.justiceInitializeCaptive(state, record);
     intrigue.captives.push(record);
     if (captiveId === state.player.charId) {
       state.player.flags.in_prison = 1;
       state.player.flags.intrigue_captive = 1;
       clearPlayerPlot(state);
-      FB.queueEvent(state, 'intrigue_captive_ransom', {
+      if (source !== 'judicial') FB.queueEvent(state, 'intrigue_captive_ransom', {
         captiveId:captiveId, captorId:captorId,
         captorGeneration:record.captorGeneration, ransom:amount
       });
@@ -1240,7 +1255,7 @@ window.FB = window.FB || {};
     intrigue.aiSchemes = intrigue.aiSchemes.filter(function (scheme) {
       return scheme.actorId !== captiveId;
     });
-    return record;
+    return rawCaptivityOf(state, captiveId) || record;
   };
 
   function createLeverage(state, actorId, targetId, source, actorRealmId) {
@@ -1538,6 +1553,21 @@ window.FB = window.FB || {};
   }
 
   function applyPlayerSentence(state, hearing, projection) {
+    if (FB.justiceApplyPunishment) {
+      var custodian = authorityCharacter(state, hearing.authority);
+      var offense = FB.justiceExposeScheme(state, {
+        id:hearing.plotId, actorId:hearing.accusedId, context:hearing.context
+      }, hearing.evidence, hearing.successful);
+      clearHearing(state);
+      if (custodian && FB.justiceCustodyOf(state, hearing.accusedId)) {
+        var sentence = projection.outcome === 'prison' ? 'imprisonment' :
+          projection.outcome === 'compensation' ? 'fine' :
+          projection.outcome === 'outlawry' ? 'exile' : projection.outcome;
+        FB.justiceApplyPunishment(state, custodian.id, hearing.accusedId, sentence,
+          offense && offense.id);
+      }
+      return;
+    }
     var p = state.player;
     publicConductForHearing(state, hearing);
     if (projection.outcome === 'compensation') {
@@ -1578,6 +1608,13 @@ window.FB = window.FB || {};
     if (evidence === 'suspicion') {
       applySuspicionDamage(state, scheme);
       return true;
+    }
+    if (FB.justiceExposeScheme) {
+      var offense = FB.justiceExposeScheme(state, scheme, evidence, successful);
+      FB.noteConduct(state, accused.id, { public:true,
+        murderer:successful && scheme.id === 'assassination',
+        abductor:successful && scheme.id === 'abduction' });
+      return !!offense;
     }
     var hearing = {
       accusedId:accused.id, targetId:scheme.context.characterId || null,
@@ -1981,7 +2018,14 @@ window.FB = window.FB || {};
     }
   };
 
+  var intrigueSeason = FB.intrigueSeason;
+  FB.intrigueSeason = function (state) {
+    intrigueSeason(state);
+    if (FB.justiceSeason) FB.justiceSeason(state);
+  };
+
   FB.intrigueDay = function (state) {
+    if (FB.justiceDay) FB.justiceDay(state);
     var intrigue = intrigueForRead(state);
     if (!intrigue) return;
     if (state.player.flags.in_prison && state.player.plot) clearPlayerPlot(state);
@@ -2007,7 +2051,7 @@ window.FB = window.FB || {};
     var records = intrigue.captives.slice();
     for (var i = 0; i < records.length; i++) {
       if (records[i].captiveId === c.id) releaseCaptiveRecord(state, records[i]);
-      else if (records[i].captorId === c.id) releaseCaptiveRecord(state,
+      else if (records[i].captorId === c.id && records[i].source !== 'judicial') releaseCaptiveRecord(state,
         records[i], FB.msg('news.intrigue.captor_died',
           '⛓ A captor’s death ends the confinement.', {}));
     }
@@ -2047,7 +2091,7 @@ window.FB = window.FB || {};
           break;
         }
       }
-      if (current) {
+      if (current && current.source !== 'judicial') {
         releaseCaptiveRecord(state, current, FB.msg(
           'news.intrigue.captor_succession',
           '⛓ A captor’s succession ends the confinement.', {}));
@@ -2068,7 +2112,7 @@ window.FB = window.FB || {};
     if (!intrigue) return;
     var records = intrigue.captives.slice();
     for (var i = 0; i < records.length; i++) {
-      if (records[i].captorRealmId === rid &&
+      if (records[i].source !== 'judicial' && records[i].captorRealmId === rid &&
           records[i].captorGeneration !== rulerGeneration(state, rid)) {
         releaseCaptiveRecord(state, records[i], FB.msg(
           'news.intrigue.captor_succession',
@@ -2163,6 +2207,10 @@ window.FB = window.FB || {};
 
   function activeHearing(state, ctx) {
     var hearing = FB.ensureIntrigue(state).hearing;
+    if (hearing && FB.justiceImportHearing) {
+      FB.justiceImportHearing(state, hearing);
+      return null;
+    }
     return hearing && hearing.id === ctx.hearingId &&
       hearing.accusedId === state.player.charId &&
       hearing.accusedGeneration === state.generation ? hearing : null;
@@ -2263,7 +2311,7 @@ window.FB = window.FB || {};
 
   function playerRansom(state, ctx) {
     var record = FB.intrigueCaptivityOf(state, state.player.charId);
-    return record && record.captorId === ctx.captorId &&
+    return record && record.source !== 'judicial' && record.captorId === ctx.captorId &&
       record.captorGeneration === Number(ctx.captorGeneration) ? record : null;
   }
 
@@ -2288,7 +2336,7 @@ window.FB = window.FB || {};
 
   FB.payIntrigueRansom = function (state) {
     var record = FB.intrigueCaptivityOf(state, state.player.charId);
-    if (!record || !record.demand || state.player.gold < record.demand.amount) {
+    if (!record || record.source === 'judicial' || !record.demand || state.player.gold < record.demand.amount) {
       return false;
     }
     if (!FB.treasuryTransfer(state, 'player', FB.treasuryCharacterRealm(state, record.captorId),

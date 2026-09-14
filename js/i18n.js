@@ -444,6 +444,7 @@ window.FBDATA = window.FBDATA || {};
           item: FBDATA.items, building: FBDATA.buildings, fort:FBDATA.fortLevels,
           holding: FBDATA.holdings,
           plot: FBDATA.plots, tech: FBDATA.tech,
+          justiceSentence:FBDATA.justiceSentences,
           techDomain:FBDATA.techDomains, techTradition:FBDATA.techTraditions,
           trait: FBDATA.traits,
           modifier: FBDATA.modifiers,

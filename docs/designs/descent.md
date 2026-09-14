@@ -1,5 +1,15 @@
 # Descent — the way down
 
+## Judicial punishment and custody
+
+Ruler justice uses actual imprisonment before any sentence, including execution,
+forfeiture, and exile. It shares ordinary death, succession, and land-loss paths.
+Failed arrests of landed subjects can start ordinary independence resistance;
+there is no second civil-war simulator. Imprisonment expires or permits seasonal
+escape, and judicial prisoners pass to a lawful successor. War peace and old
+ransom offers cannot clear judicial custody. See [justice](justice.md) for player
+responses and unjust-punishment costs.
+
 The ladder goes both ways. Alongside every promotion path the game carries
 descent mechanics, each grounded in a real medieval process and each driven
 by a **player decision or a sustained pattern of neglect** — never a bare

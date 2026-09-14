@@ -206,15 +206,15 @@ the target at the direct liege's court. Sabotage applies `covert_sabotage` for 7
 No outcome retargets when a person dies, moves courts, loses office, or succeeds to a
 different generation.
 
-Evidence, not a flat failure penalty, controls consequences. Suspicion damages Standing;
-testimony, material proof, or capture red-handed queues a lawful hearing. The authority
-is the victim's direct lawful lord or sovereign. Severity begins at one for blackmail
-and sabotage, two for false charges and abduction, three for attempted murder, and four
-for a proven killing, with political and sacred victims aggravating it. Player execution,
-deposition, mutilation, exile, imprisonment, forfeiture, or outlawry occurs only after
-the hearing decision. Latin, Byzantine, Muslim, and customary forms select fines,
-penance, prison, monastic exile, blinding/deposition, diya/qisas, wergild, outlawry, or
-execution from one mechanical ladder.
+Evidence, not a flat failure penalty, controls consequences. Suspicion damages
+Standing; testimony, material proof, or red-handed evidence records a case before
+the competent ruler. Evidence never captures the organizer automatically. Player
+and AI barons and higher rulers must obtain physical custody before imposing a
+sentence. The wronged ruler controls their own case; arbitrary or excessive
+punishment incurs county-support penalties. Judicial prisoners and cases pass
+to the lawful successor. See [ruler justice](justice.md) for jurisdiction, the
+severity ladder, regional sentences, prisoner expiry, and player response events.
+Legacy hearings no longer execute, depose, fine, or imprison uncaptured people.
 
 The regional presentation follows the historical institutions the ladder abstracts:
 [the National Archives on treason](https://www.nationalarchives.gov.uk/whats-on/exhibitions/treason-people-power-plot/)

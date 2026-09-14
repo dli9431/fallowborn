@@ -4,6 +4,22 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.plots = FBDATA.plots || {};
 
+FBDATA.justiceSentences = {
+    release:{ name:'Release', desc:'End custody without pardoning unresolved offenses.', level:0, penalty:0 },
+    pardon:{ name:'Pardon and release', desc:'Forgive all unresolved offenses before this court and end custody.', level:0, penalty:0 },
+    ransom:{ name:'Accept ransom and release', desc:'Accept the available portion of the captive’s ransom and release them without pardoning unresolved offenses.', level:0, penalty:0, money:true },
+    fine:{ name:'Fine or compensation', desc:'Take the available portion of the assessed fine and release the prisoner.', level:1, penalty:10, money:true },
+    penance:{ name:'Public penance', desc:'Lose 40 piety and 20 prestige, then go free.', level:1, penalty:10, form:'latin' },
+    imprisonment:{ name:'Imprisonment', desc:'Serve one year, with time already spent in custody credited. An extension requires a new justification.', level:2, penalty:20 },
+    exile:{ name:'Exile', desc:'Lose local titles and offices and leave the domain for five years.', level:2, penalty:30, exile:true },
+    forfeiture:{ name:'Forfeiture', desc:'Surrender titles and lands within the sentencing ruler’s authority, then go free.', level:3, penalty:35, forfeit:true },
+    monastic_exile:{ name:'Monastic exile', desc:'Lose local titles and offices, enter monastic life, and leave the domain for five years.', level:2, penalty:30, exile:true, form:'byzantine' },
+    blinding_deposition:{ name:'Blinding and deposition', desc:'Suffer permanent injury and be removed from current rule, then go free.', level:3, penalty:45, maim:true, form:'byzantine' },
+    diya:{ name:'Diya', desc:'Accept the available blood compensation for a proven killing and release the prisoner.', level:1, penalty:10, money:true, form:'muslim' },
+    qisas:{ name:'Qisas', desc:'Execute a prisoner convicted of a killing.', level:3, penalty:60, kill:true, form:'muslim' },
+    execution:{ name:'Execution', desc:'Put the prisoner to death. Their succession follows the ordinary inheritance rules.', level:3, penalty:60, kill:true }
+};
+
 FBDATA.intrigue = {
   maxAiSchemes:6,
   aiStartsPerYear:2,

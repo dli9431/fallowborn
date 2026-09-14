@@ -257,7 +257,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   `events_intrigue.js` after tournament events and before ruler-agency events).
 - Engine second, all writing to `window.FB`: `util → messages → i18n →
   model → music → portrait → siteart → world → settlement → fortifications → holywar → population → modifiers →
-  economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue →
+  economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
   technology → council → agency → politics → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar) → keys → save → mods → main`. The generated English
   catalog is absent from an ordinary English boot; a translated boot dynamically loads it
@@ -293,6 +293,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/seeds.md` — shareable start seeds.
 - `docs/designs/events.md` — events are declarative data; interpreter rules.
 - `docs/designs/historical-ambitions.md` — regional foundations, recognition, timed rewards, and seasonal AI.
+- `docs/designs/justice.md` — custody, ruler arrests, regional sentences, justification, and support penalties.
 - `docs/designs/descent.md` — the way down: title lapse, submission, attainder, capture & ransom, distraint & bondage, devastation.
 - `docs/designs/time.md` — daily tick, seasons, focuses/instants, slot days, automation mode.
 - `docs/designs/war.md` — field armies on the map, battles, sieges, mercs, wartime event flow.

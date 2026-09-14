@@ -75,6 +75,17 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      ruler_arrest:{ mode:'none', rationale:'Local arrest is baseline territorial authority; jurisdiction and physical capture, not research, limit it.' },
+      judicial_custody:{ mode:'none', rationale:'Holding and inheriting prisoners is baseline ruler authority with existing escape and release paths.' },
+      judicial_release:{ mode:'none', rationale:'Release and pardon are baseline recovery and mercy without a research dependency.' },
+      judicial_fines:{ mode:'none', rationale:'Fines and compensation use ordinary coin and existing regional legal forms.' },
+      judicial_penance:{ mode:'none', rationale:'Public penance is a personal religious sentence without a technology dependency.' },
+      judicial_imprisonment:{ mode:'none', rationale:'Imprisonment requires custody and proportionate cause, not advanced technology.' },
+      judicial_exile:{ mode:'none', rationale:'Exile is baseline territorial authority constrained by custody and political consequences.' },
+      judicial_forfeiture:{ mode:'none', rationale:'Forfeiture uses existing feudal title authority rather than researched capabilities.' },
+      judicial_monastic_exile:{ mode:'none', rationale:'Monastic exile follows a regional institution, not research.' },
+      judicial_blinding:{ mode:'none', rationale:'Political mutilation is a regional sentencing form without an advanced technical dependency.' },
+      judicial_execution:{ mode:'none', rationale:'Execution and homicide-specific qisas require physical custody and proportionate cause, not technology.' },
       family_personal_names:{ mode:'none', rationale:'Editing the personal name of the protagonist, a spouse or child is cosmetic customization and has no research dependency.' },
       war_event_provisions:{ mode:'none', rationale:'Purchased or captured campaign provisions immediately refill an existing field host. Obtaining food is baseline recovery; ordinary local provisioning remains available without research.' },
       concurrent_campaigns:{ mode:'none', rationale:'Independent campaigns share existing troops and logistics; coordinating commitments is baseline military play.' },

@@ -1,5 +1,12 @@
 # Items, instances, and equipment
 
+## Exiled household members
+
+An NPC serving a judicial exile remains a living relative but is excluded from
+managed-household membership until the ban expires. Their residence follows the
+exile record, so equipment and household management cannot silently bring them
+back into the ruler's power. See [justice](justice.md).
+
 **The family owns an armory; characters wear loadouts.** `player.items` is the shared
 list of exact item references. `player.loadouts[characterId]` maps Head, Neck, Body,
 Waist, Feet, Left hand, Right hand, and Ring to those references. The managed wearers

@@ -2,9 +2,30 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/modifiers.js', 'js/actions.js', 'js/events.js',
   'js/institutions.js', 'js/world.js', 'js/wars.js', 'js/main.js', 'js/save.js',
-  'js/ui_panels.js', 'data/modifiers.js', 'data/map_data.js']);
+  'js/ui_panels.js', 'js/justice.js', 'js/intrigue.js', 'data/intrigue.js',
+  'data/modifiers.js', 'data/map_data.js']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
+
+test('unjust punishment lowers each governed county output and respects the support floor', async function ({ page }, testInfo) {
+  const ids = await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state;
+    s.modifiers = { county:{} }; s.countySupport = {};
+    FB.setCountySupport(s, ids.home, -80);
+    FB.setCountySupport(s, ids.second, 0);
+    const before = 1 + FB.modBonus(s, 'tax', ids.second);
+    const prisoner = FB.makeCharacter(s, { name:'Unjustly Condemned', sex:'m', culture:'frankish',
+      religion:'catholic', born:s.date.year - 30, station:1, traitsN:0 });
+    FB.captureIntrigue(s, s.player.charId, prisoner.id, 'abduction', 'player');
+    const result = FB.justiceApplyPunishment(s, s.player.charId, prisoner.id, 'execution');
+    return { ok:result.ok, home:FB.countySupportBase(s, ids.home), second:FB.countySupportBase(s, ids.second),
+      reduced:(1 + FB.modBonus(s, 'tax', ids.second)) < before,
+      foreign:FB.countySupportBase(s, s.realms[ids.enemy].capital),
+      homeDelta:result.impacts.filter(function (r) { return r.type === 'commonVoice' && r.pid === ids.home; })[0].amount };
+  }, ids);
+  expect(result).toEqual({ ok:true, home:-100, second:-60, reduced:true, foreign:0, homeDelta:-20 });
+});
 
 test('legacy support migrates once and stays with counties across transfers', async function ({ page }, testInfo) {
   const ids = await startWarSafety(page, testInfo);
@@ -24,7 +45,7 @@ test('legacy support migrates once and stays with counties across transfers', as
     return { migrated:migrated, retained:FB.countySupportBase(s, home),
       foreignUnchanged:foreignBefore === FB.countyPopularSupport(s, foreign),
       personal:Object.prototype.hasOwnProperty.call(s.player, 'pop'),
-      saved:FB.save.parseExport(FB.save.serialize()).state.countySupport[home] };
+      saved:FB.save.parseExport(FB.save.exportState()).state.countySupport[home] };
   }, ids);
   expect(result).toEqual({ migrated:30, retained:30, foreignUnchanged:true, personal:false, saved:30 });
 });

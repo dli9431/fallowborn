@@ -1,5 +1,22 @@
 # UI: keyboard & mobile
 
+## Justice and prisoners
+
+Governance's Political actions section opens Justice and prisoners. Character
+interaction sheets expose Attempt arrest or Punish, with jurisdiction and
+custody blockers explained in the review. Searchable lists put the ruler's
+prisoners first and retain search, scroll, and focus on return. Confirmation
+shows identity, evidence, proportionate/unjust status, actual money, release
+date or exile destination, arrest odds and resistance risk, and support cost per
+county. A disclosure itemizes counties and clamped before/after values.
+
+Significant actions settle into a guarded result with Continue and actual
+receipts in Details. Return paths revalidate the character without repeating the
+action. Native inputs, buttons, cards, modal history, and compact touch sizes use
+the shared styles. Player arrest/hearing events always require a response even
+under Resolve everything. Sentence names and descriptions use the structured
+`justiceSentence` catalog; saved outcomes use message descriptors.
+
 County siege readouts use current per-objective occupation progress, including other
 active campaigns besides the first. Completed objectives show Occupied — awaiting
 peace until a counter-siege begins; progress, shortages, and contested status count

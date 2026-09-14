@@ -1,5 +1,14 @@
 # Wars
 
+## Justice custody at campaign boundaries
+
+An identified campaign prisoner can be sentenced only by their actual captor.
+Converting that captivity to a judicial prison term removes campaign release
+authority. Peace, war-captivity ticks, and old ransom events leave judicial and
+private intrigue custody intact. Existing anonymous raid captives do not become
+named prisoners. Arrest resistance reuses ordinary independence campaigns;
+ordinary foreign war alone is not a punishable offense. See [justice](justice.md).
+
 Generic player-facing wording uses Holy War. Campaign names use the calling
 faith's resolved group: Christian Crusade, Muslim Jihad, pagan Sacred War, and
 Holy War otherwise. Pagan wording is game flavor, not a claim that diverse pagan

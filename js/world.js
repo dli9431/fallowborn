@@ -5352,9 +5352,20 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return false;
     const held = FB.realmHeldCounties(state, rid);
-    if (!held.length) return false;
+    if (!held.length && !opts.recipientId) return false;
+    if (opts.recipientId) {
+      const recipient = state.realms[opts.recipientId];
+      if (!recipient || !recipient.alive || opts.recipientId === rid) return false;
+      let ancestor = r.liege;
+      const seen = {};
+      while (ancestor && ancestor !== opts.recipientId && !seen[ancestor]) {
+        seen[ancestor] = true;
+        ancestor = state.realms[ancestor] && state.realms[ancestor].liege;
+      }
+      if (ancestor !== opts.recipientId) return false;
+    }
     const p = state.player;
-    const liege = (r.liege && state.realms[r.liege] && state.realms[r.liege].alive) ? r.liege : FB.topRealm(state, rid);
+    const liege = opts.recipientId || ((r.liege && state.realms[r.liege] && state.realms[r.liege].alive) ? r.liege : FB.topRealm(state, rid));
     // orphaned vassals pass to the dead house's liege
     for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = liege || null;
     for (const pid of held) {
@@ -5368,7 +5379,7 @@ window.FB = window.FB || {};
             '🕯 The lord of {province} dies without an heir — the fief returns to your hand.',
             { province: pr.name }));
         }
-      } else if (p.tier >= 4 && p.provs && liege && state.realms[liege] &&
+      } else if (!opts.recipientId && p.tier >= 4 && p.provs && liege && state.realms[liege] &&
                  FB.topRealm(state, rid) === FB.playerRealmId(state)) {
         // the scramble: you must border the empty fief and share its sovereign
         let borders = false;
@@ -6444,6 +6455,10 @@ window.FB = window.FB || {};
         if (terr.length < 3) continue;
         if (FB.realmStrength(state, top) < 8) continue;
         if (timing) timing.count('World annual: breakaways');
+        if (FB.justiceRecordRebellion) {
+          const rebel = FB.realmRulerCharacterSnapshot(state, id) || FB.materializeRealmRuler(state, id);
+          if (rebel) FB.justiceRecordRebellion(state, top, rebel.id, 'breakaway:' + id + ':' + state.turn);
+        }
         r.liege = null;
         for (const pid of terr) state.owner[pid] = id;
         FB.invalidateRealmCache();
@@ -6962,6 +6977,7 @@ window.FB = window.FB || {};
   FB.warCaptivityTick = function (state) {
     const p = state.player, w = p.war;
     if (!w || !p.flags || !p.flags.in_prison ||
+        p.flags.intrigue_captive || p.flags.intrigue_legal_custody ||
         (p.captiveWarId && p.captiveWarId !== w.id) || p.captivitySeasonTurn === state.turn) return;
     p.captivitySeasonTurn = state.turn;
     const enemy = state.realms[w.enemy];
@@ -7571,7 +7587,8 @@ window.FB = window.FB || {};
   FB.fns.prison_still = function (state, ctx) {
     const p = state.player;
     return FB.fns.war_event_context_valid(state, ctx) &&
-      !!(p.flags && p.flags.in_prison && p.war &&
+      !!(p.flags && p.flags.in_prison && !p.flags.intrigue_captive &&
+      !p.flags.intrigue_legal_custody && p.war &&
       state.realms[p.war.enemy] && state.realms[p.war.enemy].alive);
   };
   FB.fns.prison_can_pay = function (state) {

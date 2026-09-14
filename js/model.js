@@ -2098,6 +2098,9 @@ window.FB = window.FB || {};
      an explicit homeProvinceId keeps relocated contacts such as rivals behind. */
   FB.characterResidence = function (state, c) {
     if (!state || !state.player || !c) return null;
+    const exile = state.justice && state.justice.exiles && state.justice.exiles[c.id];
+    if (exile && exile.endTurn > state.turn && exile.destination &&
+        c.id !== state.player.charId) return exile.destination;
     /* A reigning spouse keeps the court and person at the realm's current
        capital; marriage never turns that sovereign household into a managed
        member of the player's permanent home. */

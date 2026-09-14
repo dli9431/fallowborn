@@ -1,5 +1,19 @@
 # Game state & saves
 
+## Ruler justice records
+
+Save format remains 3. Optional `state.justice` contains `offenses`, arrest
+`cooldowns`, arbitrary-action cooldowns, `exiles`, one stamped player `pending`
+response, a monotonic `nextId`, the last AI season, and one `last` receipt.
+Records contain identifiers and numeric terms, never rendered prose. Restore
+repairs invalid/dead records without replaying penalties or rolling sentences.
+Judicial rows in `state.intrigue.captives` add `authority`, `endTurn`, `offenseId`,
+`unjustPaid`, `sentenced`, and `sentenceIds`. They inherit with authority; private
+abductions retain their existing generation cleanup. Old legal custody and
+campaign-stamped captivity are readable without inventing a captor for an
+ambiguous prison flag. Legacy hearings become cases and require custody before
+a new response event can lead to sentencing. See [justice](justice.md).
+
 Converted wastelands persist in additive `state.wastelandSettlements`, keyed by
 county id with the founding `culture` and `religion`. Restore reapplies their
 physical map status and deterministic sites before other county repairs, without

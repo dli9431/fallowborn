@@ -1,5 +1,13 @@
 # Characters: skills & growing up
 
+## Judicial exile
+
+Active exile supplies an NPC's authoritative residence before household or royal
+provenance. The character remains alive and keeps family links, but does not
+count as a managed household member during the ban. Existing injury traits and
+death/succession implement physical sentences; no new medical model is added.
+See [justice](justice.md).
+
 At character creation, the selected county community supplies one coupled culture and
 faith identity to the protagonist and the whole generated starting family: parents,
 patronymic grandparents, siblings, and any preset spouse and children. Names and the

@@ -5,13 +5,40 @@ window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
 FBDATA.events.push(
+{ id:'justice_arrest', title:'An Order for Your Arrest',
+  trigger:{ never:true }, contextValidator:'justice_response_valid',
+  text:'{student} has sent officers to take you into custody. Submission puts you in their power; resistance may let you escape, but can lead to armed rebellion if you hold land under them.',
+  options:[
+    { label:'Submit to arrest.', desc:'Enter provisional custody. The ruler must hear your response before carrying out a sentence.', effects:{ custom:'justice_submit' } },
+    { label:'Resist arrest.', desc:'Risk capture while attempting to evade the officers. A landed subject who escapes may rise in rebellion.', effects:{ custom:'justice_resist' } }
+  ] },
+{ id:'justice_hearing', title:'Judgment in Captivity',
+  trigger:{ never:true }, contextValidator:'justice_response_valid',
+  text:{ select:'value', param:'sentence', cases:{
+    fine:'You are held in {student}’s custody. The proposed sentence is a fine and release.',
+    imprisonment:'You are held in {student}’s custody. The proposed sentence is a year in prison, with time already served credited.',
+    execution:'You are held in {student}’s custody. The ruler proposes your execution. Your response is heard before judgment is carried out.',
+    blinding_deposition:'You are held in {student}’s custody. The ruler proposes blinding and deposition, leaving permanent injuries and removing you from rule.',
+    qisas:'You are held in {student}’s custody. The ruler proposes execution under qisas for a proven killing; compensation may still be offered.',
+    exile:'You are held in {student}’s custody. The ruler proposes exile and the loss of local titles and offices.',
+    monastic_exile:'You are held in {student}’s custody. The ruler proposes monastic exile and the loss of local titles and offices.',
+    forfeiture:'You are held in {student}’s custody. The ruler proposes forfeiture of titles and lands within their authority.',
+    other:'You are held in {student}’s custody. The ruler will hear your answer before passing sentence.'
+  } },
+  options:[
+    { label:'Plead for clemency.', desc:'Diplomacy and weaker evidence improve the chance of pardon. If refused, the announced sentence is carried out.', effects:{ custom:'justice_plead' } },
+    { label:'Challenge the evidence.', desc:'Intrigue and weaker evidence improve the chance of acquittal. If the challenge fails, the announced sentence is carried out.', effects:{ custom:'justice_challenge' } },
+    { label:'Offer compensation.', require:{ custom:'justice_can_pay' }, desc:'Pay the full assessed fine and accept release if this court permits settlement.', effects:{ custom:'justice_pay' } },
+    { label:'Accept public penance.', require:{ custom:'justice_can_penance' }, desc:'Accept the religious sentence and release where this court permits it.', effects:{ custom:'justice_penance' } },
+    { label:'Submit to sentence.', desc:'Accept the announced sentence.', effects:{ custom:'justice_submit' } }
+  ] },
 { id:'intrigue_warning', title:'A Thread in the Dark',
   trigger:{ never:true }, contextValidator:'intrigue_warning_valid',
   text:'A frightened servant brings one clue: someone is preparing a grave attack on {student}. There is time for one response before the attempt.',
   options:[
     { label:'Investigate the clue.', desc:'Try to identify the plotter and weaken the attempt.', effects:{ custom:'intrigue_warning_investigate' } },
     { label:'Hire guards and tasters. ({money:15})', require:{ goldMin:15 }, desc:'Pay for security that sharply reduces the attempt’s chance.', effects:{ gold:-15, custom:'intrigue_warning_security' } },
-    { label:'Set a counter-trap.', desc:'Risk strengthening the attempt in order to cancel it and catch its author.', effects:{ custom:'intrigue_warning_countertrap' } },
+    { label:'Set a counter-trap.', desc:'Risk strengthening the attempt in order to cancel it and obtain evidence against its author.', effects:{ custom:'intrigue_warning_countertrap' } },
     { label:'Ignore the warning.', desc:'Make no preparation. The attempt proceeds at its full strength.', effects:{ custom:'intrigue_warning_ignore' } }
   ] },
 { id:'intrigue_hearing', title:'Called to Answer',

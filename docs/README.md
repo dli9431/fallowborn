@@ -1,5 +1,15 @@
 # Fallowborn
 
+## Ruler justice
+
+From Baron upward, open **Governance → Political actions → Justice and prisoners**,
+or review arrest/punishment from a character's sheet. A proven offense can justify
+an arrest, but you must actually hold the person before punishing them. Failed
+arrests can provoke resistance. Regional sentences include fines, prison, exile,
+forfeiture, and execution. Unjust or excessive punishment sharply lowers county
+support; review the exact consequences before confirming. Judicial prisoners pass
+to the next ruler, and captives may escape or serve out their term.
+
 A browser grand-strategy dynasty saga — except you probably start as a **serf**.
 Begin in **Spring 867** or **Spring 1066**, then guide one family through the
 generations: from mud-floored huts toward

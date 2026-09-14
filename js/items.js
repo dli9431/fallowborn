@@ -94,6 +94,8 @@ window.FB = window.FB || {};
        boundary; every other household member must still be living. */
     if (c.id === me.id) return true;
     if (c.dead) return false;
+    const exile = state.justice && state.justice.exiles && state.justice.exiles[c.id];
+    if (exile && exile.endTurn > state.turn) return false;
     if (FB.isExternalHouseholdAuthority &&
         FB.isExternalHouseholdAuthority(state, c)) {
       return false;

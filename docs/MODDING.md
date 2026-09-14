@@ -1,5 +1,39 @@
 # Modding Fallowborn
 
+## Ruler justice
+
+`FBDATA.justiceSentences` defines sentence ids with display `name`/`desc`, required
+`level` (0–3), unjust support `penalty`, optional regional `form`, and the
+`money`, `exile`, `forfeit`, `maim`, or `kill` effect categories. The shipped
+registry is authored data; ordinary runtime intrigue overrides do not merge it.
+Existing private abduction and its single-captive limit are unchanged.
+
+Read-only APIs are `FB.justiceRulerEligible(state, actorId)`,
+`FB.justiceCounties(state, actorId)`, `FB.justiceCustodyOf(state, targetId)`,
+`FB.justiceOffenseFor(state, actorId, targetId, optionalOffenseId)`,
+`FB.justiceArrestProjection(state, actorId, targetId, optionalOffenseId)`, and
+`FB.justicePunishmentProjection(state, actorId, targetId, sentenceId, optionalOffenseId)`.
+Projections include `ready`, a machine-readable `blocker`, exact odds/amounts,
+affected county ids, justification/evidence, and applicable expiry/destination.
+`FB.justiceSentenceOptions` returns the regional sentence projections.
+
+`FB.justiceAttemptArrest` and `FB.justiceApplyPunishment` accept the same actor,
+target, and offense identities and revalidate at mutation. Results return `ok`,
+`blocker` on rejection, and `captured`, `pending`, or `impacts` where applicable.
+The optional response id on punishment is only for the matching queued player
+hearing. `justice_arrest` and `justice_hearing` use `justice_response_valid` and
+custom effects `justice_submit`, `justice_resist`, `justice_challenge`,
+`justice_plead`, `justice_pay`, and `justice_penance`, with matching impact adapters.
+`justice_can_pay` and `justice_can_penance` gate the applicable alternatives.
+
+`FB.justiceRecordOffense` accepts `(state, authorityCharacterId, accusedId,
+kind, evidence, successful, victimId, sourceId)`. Reusing a source id within the
+same court does not create another cause. This is a trusted simulation-authoring
+API, not a player-facing way to manufacture evidence. `FB.escheatRealm` accepts
+an optional `recipientId` for an already-authorized judicial forfeiture; ordinary
+calls retain their existing heirless-estate behavior. See
+[the justice design](designs/justice.md) for sentencing, jurisdiction, and save rules.
+
 ## Ordinary war provisions
 
 The existing `custom:'war_supply'` event effect now refills carried food rather than

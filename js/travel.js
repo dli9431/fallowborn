@@ -934,6 +934,7 @@ window.FB = window.FB || {};
     opts = opts || {};
     const def = purpose(purposeId);
     if (!pid || pid === p.provinceId || seen[pid] || !settled(pid)) return;
+    if (FB.justiceExileBlocks && FB.justiceExileBlocks(state, p.charId, pid)) return;
     if (!opts.ignoreHistory) {
       if (purposeId === 'pilgrimage' &&
         (historyHas(state, 'pilgrimage') || me(state).traits.indexOf('pilgrim') >= 0)) return;
@@ -1090,6 +1091,7 @@ window.FB = window.FB || {};
   };
 
   function beginJourney(state, purposeId, choice, opts) {
+    if (FB.justiceExileBlocks && FB.justiceExileBlocks(state, state.player.charId, choice.destinationId)) return false;
     opts = opts || {};
     const p = state.player;
     const legDays = choice.legDays || FB.travelLegDays(state);
