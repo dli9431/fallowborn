@@ -23,19 +23,21 @@ FBDATA.events.push(
   ]},
 { id:'war_muster', title:'The Banners Rise', trigger:{ never:true }, wartime:true,
   contextValidator:'war_event_context_valid',
-  text:'War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls, season by season, until the works are done.',
+  text:'War with {enemy}. Farmers, spears, and banners fill the muster yard. Your captains count the men answering your call, while the roads to {target} wait beyond the gates.',
+  desc:'A host already in the field keeps its location; these preparations do not order a march. To take {target}, move a host there and maintain the siege through the required seasons.',
   options:[
     { label:'Hire mercenaries. ({money:20})', require:{ goldMin:20 }, desc:'A company of ~150 hard men, promptly paid ({money:4} a season while the host is raised).',
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the war.' } },
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to war.' } },
-    { label:'March with what you have.', desc:'Trust the spears that answered the first call.', effects:{ prestige:3, custom:'war_raise' } }
+    { label:'Use the current muster.', desc:'Trust the spears that answered the first call.', effects:{ prestige:3, custom:'war_raise' } }
   ]},
 { id:'war_enforcement_defense', title:'The Liege Enforces the Peace', trigger:{ never:true }, wartime:true,
   contextValidator:'war_event_context_valid',
-  text:'{enemy} declares war after your refusal to end an unlawful campaign. The liege marches on {target} to enforce the peace. Defeat ends the offending campaign and costs you 50 prestige; it does not revoke your lands.',
+  text:'{enemy} declares war after your refusal to end an unlawful campaign. The liege marches on {target} to enforce the peace.',
+  desc:'Defeat ends the offending campaign and costs you 50 prestige; it does not revoke your lands.',
   options:[
-    { label:'Stand ready.', desc:'Your host musters to resist the liege.', effects:{ custom:'war_raise' } }
+    { label:'Stand ready.', desc:'Raise a host if one can muster. An existing field host keeps its location and orders. Defeat costs 50 prestige and ends the offending campaign.', effects:{ custom:'war_raise' } }
   ]},
 { id:'war_defense_muster', title:'War Comes to You', trigger:{ never:true }, wartime:true,
   contextValidator:'war_event_context_valid',
@@ -45,16 +47,16 @@ FBDATA.events.push(
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the defense.' } },
     { label:'Call up every able man.', desc:'A greater levy — but the fields will miss them.',
       effects:{ custom:'war_mass', popularOpinion:-8, log:'Called a great levy to the defense.' } },
-    { label:'Stand ready at the border.', desc:'Meet them with the host you already have.', effects:{ prestige:2, custom:'war_raise' } }
+    { label:'Use the current muster.', desc:'Raise a host if one can muster. Use map orders or host automation to move it.', effects:{ prestige:2, custom:'war_raise' } }
   ]},
 { id:'war_council', title:'The War Council', trigger:{ never:true }, wartime:true, warStatus:true,
   contextValidator:'war_event_context_valid',
   text:'Maps, candle-stubs, and hard-eyed captains. The war against {enemy} must be given its next move — and the men must see you certain of it.',
   options:[
     { label:'Hunt down their field host.', require:{ custom:'war_can_hunt' },
-      desc:'March on their army in the field — battle joins when you catch it.',
+      desc:'Requires automatic host control, an idle host without a manual hold, and a route to the enemy. Forts may stop the march; battle begins when hostile hosts meet in one county.',
       effects:{ custom:'war_hunt' } },
-    { label:'Fall back and refit.', desc:'The host mends and your borders are relieved — but no ground is gained.',
+    { label:'Reorganize the campaign.', desc:'Combat-effectiveness modifier: up to +15 percentage points for this campaign, capped at 110%, and +1 health. The host keeps its position, orders, and provisions.',
       effects:{ custom:'war_hold', health:1 } },
     { label:'Seek terms.', desc:'End the war now, at a price.', confirm:'war_end', effects:{ custom:'war_terms' } }
   ]},
@@ -64,7 +66,7 @@ FBDATA.events.push(
   options:[
     { label:'Accept peace.', desc:'Take the available tribute and end the war. An empty treasury means peace without silver.',
       confirm:'war_end', effects:{ custom:'war_accept_tribute', log:'Accepted peace and ended the war.' } },
-    { label:'Press on for {target}.', desc:'Keep your host standing on {target} — the works advance each season it holds the ground. Fortifications may demand more work and a larger host.',
+    { label:'Press on for {target}.', desc:'Continue the war. This choice does not move your host: order it onto {target} and hold the siege. Fortifications may require more work and troops.',
       effects:{ prestige:2, custom:'war_press_on', log:'Refused tribute; the war goes on.' } }
   ]},
 
@@ -232,42 +234,43 @@ FBDATA.events.push(
   trigger:{ tierMin:3, atWar:true, custom:'war_deserters_due', chance:0.35 }, wartime:true, warStatus:true, weight:9, cooldown:2,
   text:'After a recent defeat and {warLosses} recorded campaign losses, the morning count wavers. {hostMen} soldiers still stand beneath the banner, but men are slipping home to harvests, wives, and unfinished lives.',
   options:[
-    { label:'Hunt them down and hang one.', desc:'Discipline raises abstract campaign condition; no live troops return or leave.', effects:{ custom:'war_discipline_deserters', prestige:3, popularOpinion:-5 } },
-    { label:'Clear the arrears. ({money:deserterPay})', require:{ custom:'war_can_pay_deserters' }, desc:'Pay two seasons of current live-host logistics. Supply raises abstract condition; live troops do not change.', effects:{ custom:'war_pay_deserters' } },
-    { label:'Let the faint-hearted go.', desc:'A seeded {deserterMinPercent}–{deserterMaxPercent}% leave the live host by deterministic casualty order; abstract condition does not change.', effects:{ custom:'war_desert', prestige:-2 } }
+    { label:'Hunt them down and hang one.', desc:'Combat-effectiveness modifier: up to +4 percentage points for this campaign, capped at 110%. No troops return or leave.', effects:{ custom:'war_discipline_deserters', prestige:3, popularOpinion:-5 } },
+    { label:'Clear the arrears. ({money:deserterPay})', require:{ custom:'war_can_pay_deserters' }, desc:'Pay the displayed arrears for up to +8 percentage points of combat effectiveness, capped at 110%. Troop count and provisions stay unchanged.', effects:{ custom:'war_pay_deserters' } },
+    { label:'Let the faint-hearted go.', desc:'Between {deserterMinPercent}% and {deserterMaxPercent}% of the field host desert. Campaign condition stays unchanged.', effects:{ custom:'war_desert', prestige:-2 } }
   ]},
-{ id:'war_grain_seller', title:'Grain at Sword-Season Prices',
+{ id:'war_grain_seller', title:'Grain for the Host',
   trigger:{ tierMin:3, atWar:true, custom:'war_live_host', chance:0.2 }, wartime:true, warStatus:true, weight:7, cooldown:4,
-  text:'A merchant with excellent timing and no shame offers grain enough to keep the host fed — at thrice the honest price.',
+  text:'A merchant brings loaded grain wagons to the camp. Behind him, the drivers watch your hungry soldiers and wait for the bargaining to begin.',
+  desc:'Buying or seizing the cargo refills this campaign’s largest field host’s carried provisions immediately. A full reserve cannot hold more; each choice shows the actual refill available.',
   options:[
-    { label:'Pay him. ({money:8})', require:{ goldMin:8 }, desc:'Supply raises abstract campaign condition; live troop totals do not change.', effects:{ gold:-8, custom:'war_supply' } },
-    { label:'“Requisition” the wagons.', chance:0.6, desc:'Take it by right of hunger — success changes abstract supply, not live troops.',
-      success:{ text:'The host eats; the merchant curses your name in three ports.', effects:{ custom:'war_supply', prestige:-2, piety:-3 } },
-      failure:{ text:'His guards were better than his prices. Men are hurt for nothing.', effects:{ custom:'war_thin', prestige:-3 } } },
-    { label:'The men can tighten their belts.', desc:'Thin ranks lower abstract campaign condition; live troop totals do not change.', effects:{ custom:'war_thin' } }
+    { label:'Pay him. ({money:8})', require:{ goldMin:8 }, desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ gold:-8, custom:'war_supply' } },
+    { label:'Seize the grain wagons.', chance:0.6, desc:'Success grants +{warProvisions} provisions immediately. Failure lowers the campaign combat-effectiveness modifier by up to 10 percentage points.',
+      success:{ text:'The captured grain fills the host’s supply carts; the merchant curses your name in three ports.', effects:{ custom:'war_supply', prestige:-2, piety:-3 } },
+      failure:{ text:'His men refuse, and the quarrel leaves the camp in greater disorder.', effects:{ custom:'war_thin', prestige:-3 } } },
+    { label:'Refuse the offer.', desc:'Combat-effectiveness modifier: up to -10 percentage points for this campaign, with a minimum of 50%. No troops or food are removed.', effects:{ custom:'war_thin' } }
   ]},
 { id:'war_pay_chest', title:'The Pay Chest Is Light',
   trigger:{ tierMin:3, atWar:true, custom:'war_host_under_pressure', chance:0.28 }, wartime:true, warStatus:true, weight:7, cooldown:3,
   text:'The paymaster opens a chest that should be heavy and is not. The host has already suffered; another promise may sound like an insult.',
   options:[
-    { label:'Make up the arrears yourself. ({money:10})', require:{ goldMin:10 }, desc:'Restored supply raises abstract campaign condition; no live troops change.', effects:{ gold:-10, custom:'war_supply', prestige:2 } },
-    { label:'Put the officers before the ranks.', desc:'Visible discipline raises abstract condition, but the purse stays empty.', effects:{ custom:'war_discipline', prestige:1 } },
-    { label:'Issue another promise.', desc:'Disorder lowers abstract condition; live troop totals do not change yet.', effects:{ custom:'war_disorder', prestige:-2 } }
+    { label:'Pay for the quartermaster’s provisions. ({money:10})', require:{ goldMin:10 }, desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ gold:-10, custom:'war_supply', prestige:2 } },
+    { label:'Put the officers before the ranks.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', prestige:1 } },
+    { label:'Issue another promise.', desc:'Combat-effectiveness modifier: up to -8 percentage points for this campaign, with a minimum of 50%. No troops are removed.', effects:{ custom:'war_disorder', prestige:-2 } }
   ]},
 { id:'war_camp_discipline', title:'A Knife Between Companies',
   trigger:{ tierMin:3, atWar:true, custom:'war_live_host', chance:0.22 }, wartime:true, warStatus:true, weight:6, cooldown:3,
   text:'A quarrel between two companies ends with a knife in the mud and both sides reaching for spears. The whole camp waits on the judgment.',
   options:[
-    { label:'Judge the killers in public.', desc:'Discipline raises abstract condition; the live roster is unchanged.', effects:{ custom:'war_discipline', prestige:3, popularOpinion:-2 } },
-    { label:'Make both companies drill together.', desc:'Slow reconciliation raises abstract discipline without executions.', effects:{ custom:'war_discipline', skills:{mar:1} } },
-    { label:'Let their captains settle it.', desc:'Disorder lowers abstract condition; live troop totals do not change.', effects:{ custom:'war_disorder', prestige:-2 } }
+    { label:'Judge the killers in public.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', prestige:3, popularOpinion:-2 } },
+    { label:'Make both companies drill together.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', skills:{mar:1} } },
+    { label:'Let their captains settle it.', desc:'Combat-effectiveness modifier: up to -8 percentage points for this campaign, with a minimum of 50%. No troops are removed.', effects:{ custom:'war_disorder', prestige:-2 } }
   ]},
 { id:'war_officers_divided', title:'Captains at Cross Purposes',
   trigger:{ tierMin:3, atWar:true, custom:'war_campaign_deep', chance:0.2 }, wartime:true, warStatus:true, weight:6, cooldown:4,
   text:'The senior captains no longer argue about roads. They argue about who will be blamed for the road already taken.',
   options:[
-    { label:'Set one command and own it.', desc:'A clear chain of command raises abstract discipline.', effects:{ custom:'war_discipline', prestige:3, skills:{mar:1} } },
-    { label:'Balance every grievance.', chance:0.55, desc:'Diplomacy may reconcile them; failure deepens abstract disorder.',
+    { label:'Set one command and own it.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', prestige:3, skills:{mar:1} } },
+    { label:'Balance every grievance.', chance:0.55, desc:'Diplomacy may reconcile them; failure deepens campaign disorder.',
       success:{ text:'Each captain leaves heard, and all leave with the same written order.', effects:{ custom:'war_discipline', skills:{dip:1} } },
       failure:{ text:'Each hears a different promise and distrusts the others more.', effects:{ custom:'war_disorder', prestige:-2 } } }
   ]},
@@ -275,17 +278,17 @@ FBDATA.events.push(
   trigger:{ tierMin:3, atWar:true, custom:'war_live_host', chance:0.18 }, wartime:true, warStatus:true, weight:5, cooldown:4,
   text:'Smiths, laundresses, traders, children, gamblers, and wounded men stretch the camp into a second army. They feed the host and slow it in equal measure.',
   options:[
-    { label:'License the camp market.', desc:'Order and supplies raise abstract campaign condition.', effects:{ gold:3, custom:'war_supply', popularOpinion:1 } },
-    { label:'Drive away everyone without a spear.', desc:'Harsh discipline raises abstract condition at a cost in reputation.', effects:{ custom:'war_discipline', prestige:-2, popularOpinion:-2 } },
-    { label:'Leave the road to govern itself.', desc:'Disorder lowers abstract condition; the live roster is unchanged.', effects:{ custom:'war_disorder' } }
+    { label:'License the camp market.', desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ gold:3, custom:'war_supply', popularOpinion:1 } },
+    { label:'Drive away everyone without a spear.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', prestige:-2, popularOpinion:-2 } },
+    { label:'Leave the road to govern itself.', desc:'Combat-effectiveness modifier: up to -8 percentage points for this campaign, with a minimum of 50%. No troops are removed.', effects:{ custom:'war_disorder' } }
   ]},
 { id:'war_local_requisition', title:'The Villages Bar Their Doors',
   trigger:{ tierMin:3, atWar:true, custom:'war_host_abroad', chance:0.25 }, wartime:true, warStatus:true, weight:7, cooldown:3,
   text:'The host stands on enemy soil and the nearby villages hide grain, carts, and livestock. Your foragers ask how much law follows a banner across the border.',
   options:[
-    { label:'Pay for every sack. ({money:6})', require:{ goldMin:6 }, desc:'Bought food raises abstract supply; live troops do not change.', effects:{ gold:-6, custom:'war_supply', piety:2 } },
-    { label:'Take what the campaign requires.', desc:'Requisition raises abstract supply and damages your name.', effects:{ custom:'war_supply', gold:3, piety:-3, prestige:-2 } },
-    { label:'Move on hungry.', desc:'Thin ranks lower abstract condition; no troops are directly removed.', effects:{ custom:'war_thin', piety:2 } }
+    { label:'Pay for every sack. ({money:6})', require:{ goldMin:6 }, desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ gold:-6, custom:'war_supply', piety:2 } },
+    { label:'Raid the village stores.', desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ custom:'war_supply', gold:3, piety:-3, prestige:-2 } },
+    { label:'Leave the villages in peace.', desc:'Combat-effectiveness modifier: up to -10 percentage points for this campaign, with a minimum of 50%. No troops or food are removed.', effects:{ custom:'war_thin', piety:2 } }
   ]},
 
 /* ---------- the whole war: objectives, allies, exhaustion, and peace ---------- */
@@ -293,50 +296,50 @@ FBDATA.events.push(
   trigger:{ tierMin:3, atWar:true, custom:'war_objective_under_debate', chance:0.2 }, wartime:true, warStatus:true, weight:6, cooldown:4,
   text:'The captains point at {target}; the treasurer points at the empty columns beside it. What began as one clean objective now carries a dozen private ambitions.',
   options:[
-    { label:'Name {target}, and nothing beyond it.', desc:'A limited objective restores abstract discipline.', effects:{ custom:'war_discipline', prestige:3 } },
-    { label:'Promise the host whatever it can take.', desc:'Plunder buys enthusiasm but weakens abstract discipline.', effects:{ gold:4, custom:'war_disorder', piety:-3 } },
-    { label:'Admit the objective must wait.', desc:'Restored supply raises condition, but public resolve suffers.', effects:{ custom:'war_supply', popularOpinion:2, prestige:-3 } }
+    { label:'Name {target}, and nothing beyond it.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', prestige:3 } },
+    { label:'Promise the host whatever it can take.', desc:'Combat-effectiveness modifier: up to -8 percentage points for this campaign, with a minimum of 50%. No troops are removed.', effects:{ gold:4, custom:'war_disorder', piety:-3 } },
+    { label:'Gather provisions before pressing on.', desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ custom:'war_supply', popularOpinion:2, prestige:-3 } }
   ]},
 { id:'war_allied_hesitation', title:'An Ally Counts the Cost',
   trigger:{ tierMin:3, atWar:true, custom:'war_has_allied_host', chance:0.22 }, wartime:true, warStatus:true, weight:7, cooldown:4,
   text:'Your ally’s captain says {alliedMen} spears were promised for defense, not for every road the campaign might choose. Their camp is already packing.',
   options:[
-    { label:'Pay their disputed costs. ({money:8})', require:{ goldMin:8 }, desc:'The allied live troops remain and abstract supply improves.', effects:{ gold:-8, custom:'war_supply' } },
-    { label:'Call on the honor of their oath.', desc:'Discipline rises in the abstract ledger; allied troops remain.', effects:{ custom:'war_discipline', prestige:3 } },
-    { label:'Let them march home.', desc:'Their men leave the live host and abstract condition falls; the feedback ledger records both.', effects:{ custom:'war_allied_withdrawal', prestige:-2 } }
+    { label:'Pay their disputed costs. ({money:8})', require:{ goldMin:8 }, desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ gold:-8, custom:'war_supply' } },
+    { label:'Call on the honor of their oath.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', prestige:3 } },
+    { label:'Let them march home.', desc:'Their men leave the live host and campaign condition falls; both losses appear in the outcome.', effects:{ custom:'war_allied_withdrawal', prestige:-2 } }
   ]},
 { id:'war_enemy_concessions', title:'A Lesser Offer from the Enemy',
   trigger:{ tierMin:3, atWar:true, custom:'war_enemy_offer_possible', chance:0.18 }, wartime:true, warStatus:true, weight:5, cooldown:4,
   text:'Enemy envoys offer prisoners, wagons, and a purse — not peace, and not {target}, but enough to test whether the war’s purpose is still worth its price.',
   options:[
-    { label:'Exchange prisoners and take the wagons.', desc:'Supplies raise abstract condition; the live roster does not change.', effects:{ gold:5, custom:'war_supply', piety:2 } },
+    { label:'Exchange prisoners and take the wagons.', desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ gold:5, custom:'war_supply', piety:2 } },
     { label:'Take only the wounded home.', desc:'Mercy helps public resolve without altering either army ledger.', effects:{ popularOpinion:3, piety:3 } },
-    { label:'Send them back unheard.', desc:'A show of discipline raises abstract condition.', effects:{ custom:'war_discipline', prestige:2 } }
+    { label:'Send them back unheard.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', prestige:2 } }
   ]},
 { id:'war_public_exhaustion', title:'The Roll Counts Empty Houses',
   trigger:{ tierMin:3, atWar:true, custom:'war_campaign_exhausted', chance:0.28 }, wartime:true, warStatus:true, weight:8, cooldown:3,
   text:'Four seasons and more have passed. At home, rents arrive late, fields go short of hands, and every household tally seems to count someone beneath your banner.',
   options:[
-    { label:'Send relief home. ({money:8})', require:{ goldMin:8 }, desc:'Public patience and abstract supply recover; live troops remain.', effects:{ gold:-8, popularOpinion:5, custom:'war_supply' } },
-    { label:'Demand one more effort.', desc:'Discipline rises while Popular support falls.', effects:{ custom:'war_discipline', popularOpinion:-7, prestige:2 } },
-    { label:'Acknowledge the cost in public.', desc:'Popular support recovers, but thin ranks lower abstract condition.', effects:{ popularOpinion:3, custom:'war_thin', prestige:-2 } }
+    { label:'Buy provisions from households at home. ({money:8})', require:{ goldMin:8 }, desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ gold:-8, popularOpinion:5, custom:'war_supply' } },
+    { label:'Demand one more effort.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', popularOpinion:-7, prestige:2 } },
+    { label:'Acknowledge the cost in public.', desc:'Combat-effectiveness modifier: up to -10 percentage points for this campaign, with a minimum of 50%. No troops or food are removed.', effects:{ popularOpinion:3, custom:'war_thin', prestige:-2 } }
   ]},
 { id:'war_occupation_policy', title:'Under Your Banner',
   trigger:{ never:true }, wartime:true, warStatus:true,
   contextValidator:'war_event_context_valid',
   text:'The siege works bite into {target}. Farms and streets behind your lines now answer to soldiers who ask whether they are conquerors, guests, or thieves.',
   options:[
-    { label:'Protect market, shrine, and field.', require:{ goldMin:4 }, desc:'Restraint raises abstract discipline and costs {money:4}.', effects:{ gold:-4, custom:'war_discipline', piety:4, popularOpinion:2 } },
-    { label:'Requisition under written receipts.', desc:'Supplies raise abstract condition; promises burden your reputation.', effects:{ custom:'war_supply', prestige:-1 } },
-    { label:'Let fear shorten the siege.', desc:'Disorder and cruelty lower abstract condition despite immediate plunder.', effects:{ gold:7, custom:'war_disorder', piety:-6, popularOpinion:-4 } }
+    { label:'Protect market, shrine, and field.', require:{ goldMin:4 }, desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ gold:-4, custom:'war_discipline', piety:4, popularOpinion:2 } },
+    { label:'Requisition under written receipts.', desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ custom:'war_supply', prestige:-1 } },
+    { label:'Let fear shorten the siege.', desc:'Combat-effectiveness modifier: up to -8 percentage points for this campaign, with a minimum of 50%. No troops are removed.', effects:{ gold:7, custom:'war_disorder', piety:-6, popularOpinion:-4 } }
   ]},
 { id:'war_negotiated_withdrawal', title:'A Road Out of the War',
   trigger:{ tierMin:3, atWar:true, custom:'war_negotiation_possible', chance:0.24 }, wartime:true, warStatus:true, weight:7, cooldown:3,
   text:'A neutral household offers safe conduct, an exchange of captives, and an end without triumph. The road home is open now; another defeat may close it.',
   options:[
     { label:'Negotiate the withdrawal.', desc:'End the war now with a smaller prestige loss than abandoning it unilaterally.', confirm:'war_end', effects:{ custom:'war_negotiated_withdrawal' } },
-    { label:'Use the talks to rest the host.', desc:'Supply raises abstract condition; the war continues.', effects:{ custom:'war_supply', prestige:-1 } },
-    { label:'Break off the talks.', desc:'Discipline rises in the abstract ledger; the war continues.', effects:{ custom:'war_discipline', prestige:2 } }
+    { label:'Use the talks to obtain provisions.', desc:'Immediate provisions +{warProvisions} points for this campaign’s largest field host, capped at 100%.', effects:{ custom:'war_supply', prestige:-1 } },
+    { label:'Break off the talks.', desc:'Combat-effectiveness modifier: up to +6 percentage points for this campaign, capped at 110%. Later events can change it.', effects:{ custom:'war_discipline', prestige:2 } }
   ]},
 
 /* ---------- battles on the map (hosts meeting in a province, js/armies.js) ---------- */

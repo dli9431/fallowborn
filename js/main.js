@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.8';
+FB.VERSION = '1.179.9';
 FB.CHANGELOG = [
+  { v: '1.179.9', date: '2026-09-13', changes: [
+    'Army orders, campaign automation, and resupply handle blocked routes and interrupted marches. War choices distinguish provisions refills from combat modifiers, with instructions in tooltips.',
+    'Settled wastelands survive reloading. County support, rank prices, and court cultivation show their effects more clearly.'
+  ] },
   { v: '1.179.8', date: '2026-09-11', changes: [
     'Rulers pay government and campaign costs, reserve funds for construction, and can distribute surplus wealth. Crusade settlements record their terms in the Chronicle, and news settings control popups only.',
     'Deleted autosaves stay deleted while paused, staffing lists retain their position, and rebel hosts survive unrelated peace settlements.'

@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
-  'js/armies.js',
+  'js/armies.js', 'js/world.js', 'js/wars.js', 'data/map_data.js',
   'js/events.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -257,6 +257,7 @@ test('campaign feedback shares battle, class-loss, effect, and upkeep facts',
       var first = fieldLoss(100);
       s.turn += 20;
       var second = fieldLoss(80);
+      FB.playerHost(s).supply = 50;
       FB.fns.war_supply(s, {}, FB.eventById('war_grain_seller'));
       var feedback = FB.warFeedback(s);
       var upkeep = FB.playerHostUpkeepParts(s);
@@ -293,8 +294,8 @@ test('campaign feedback shares battle, class-loss, effect, and upkeep facts',
     expect(result.lossTotal).toBe(180);
     expect(result.effect).toMatchObject({
       source:'war_grain_seller',
-      condition:'supply',
-      target:'strength',
+      condition:'provisions',
+      target:'provisions',
       troopTotal:0
     });
     expect(result.upkeep).toEqual(result.authoritativeUpkeep);
@@ -428,6 +429,7 @@ test('visible and autoresolved campaign choices use the same effects',
     await startCampaignGame(page, testInfo);
     var result = await page.evaluate(function () {
       var event = FB.eventById('war_grain_seller');
+      FB.playerHost(FB.state).supply = 50;
       var baseline = JSON.parse(FB.save.serialize());
       var oldAuto = FB.game.auto;
       FB.game.auto = {
@@ -463,8 +465,8 @@ test('visible and autoresolved campaign choices use the same effects',
     expect(result.automated).toEqual(result.visible);
     expect(result.visible.effect).toMatchObject({
       source:'war_grain_seller',
-      condition:'supply',
-      target:'strength'
+      condition:'provisions',
+      target:'provisions'
     });
   });
 

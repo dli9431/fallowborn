@@ -391,6 +391,12 @@ window.FB = window.FB || {};
   /* the chatelaine's road: noblewomen command through the household and the
      court, not the drill yard — Standing and polish instead of swordplay */
   { id: 'courtly_graces',
+    desc: function (s) {
+      const recipient = s.player.liege && s.realms[s.player.liege];
+      return FB.T('Each season: +2 prestige, up to +4 Standing with {recipient}, and a chance to train Diplomacy. The prestige gain is fixed; higher Diplomacy does not increase it.', {
+        recipient:recipient ? recipient.name : FB.T('your local lord')
+      });
+    },
     show: function (s) { return female(s) && adult(s) && s.player.tier >= 2; },
     tick: function (s) {
       if (s.player.liege) {
@@ -9136,6 +9142,17 @@ window.FB = window.FB || {};
       : FB.T('Cost: {money:gold} and {prestige} prestige.', {
         gold:cost.gold, prestige:cost.prestige
       });
+  };
+
+  FB.rankElevationBreakdown = function (state, fromTier, toTier) {
+    const rows = [];
+    const from = FB.clamp(Math.floor(Number(fromTier) || 0), 0, 7);
+    const to = FB.clamp(Math.floor(Number(toTier) || 0), 0, 7);
+    for (let tier = Math.max(2, from + 1); tier <= to; tier++) {
+      rows.push({ tier:tier, name:FB.titleWordFor(state, tier),
+        cost:FB.rankElevationCost(state, tier - 1, tier) });
+    }
+    return rows;
   };
 
   function rankElevationShortage(state, cost) {

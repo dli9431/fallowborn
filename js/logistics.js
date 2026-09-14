@@ -133,12 +133,16 @@
     const price = B('armyProvisionPrice', 0.45) * market.price;
     const funds = rights.hostile ? Infinity : purseView(state, army.realm).gold;
     const affordable = rights.hostile || !price ? Infinity : funds / price;
+    result.stockAvailable = available;
+    result.loadingAvailable = room;
+    result.affordable = affordable;
     result.available = Math.min(available, room);
     result.units = Math.max(0, Math.min(desiredPoints * perPoint, result.available, affordable));
     result.cost = rights.hostile ? 0 : Math.min(funds, result.units * price);
     result.points = result.units / perPoint;
     result.net = result.points - use;
-    result.reason = result.units > 0 ? null : !desiredPoints ? 'reserve' : !affordable ? 'coin' : rights.protection ? 'fort' : 'empty';
+    result.reason = result.units > 0 ? null : !desiredPoints ? 'reserve' : !affordable ? 'coin'
+      : !available ? (rights.protection && market.stock > 0 ? 'fort' : 'stock') : 'loading';
     return result;
   };
   FB.provisionArmy = function (state, army) {
@@ -286,7 +290,10 @@
     if (q.reason === 'disabled') return FB.T('Supply purchases off; carried reserves feed the host.');
     if (q.reason === 'coin') return FB.T('No coin for provisions; carried reserves feed the host.');
     if (q.reason === 'fort') return FB.T('Enemy fort protects remaining supplies.');
-    if (q.reason === 'empty') return FB.T('Local provisions or loading capacity exhausted.');
+    if (q.reason === 'stock' || q.reason === 'empty') return FB.T('Local food stocks are exhausted. Coin alone cannot refill this host here.');
+    if (q.reason === 'loading') return FB.T('This county has reached its daily food-loading limit. More can be loaded tomorrow if stocks remain.');
+    if (q.net < 0) return FB.T('Local food covers {loaded} of {needed} supply points needed today. Carried reserves cover the shortfall; county stocks and daily loading limit purchases.', {
+      loaded:Math.round(q.points * 10) / 10, needed:Math.round(q.use * 10) / 10 });
     if (q.mode === 'requisition') return FB.T('Requisitioning food; fort protection {percent}%. County stocks and Popular support fall.',
       { percent:Math.round(q.protection * 100) });
     return FB.T('Automatic provisions: up to {money:cost} today. Reserve target {percent}%.',
@@ -297,11 +304,13 @@
   FB.armySupplyGoal = function (state, army) {
     const auto = FB.game.auto || {};
     if (army.realm === 'player' && (auto.hostResupply === false || auto.buySupplies === false)) {
-      delete army.autoResupply; return null;
+      delete army.autoResupply; delete army.supplyStop; delete army.supplyRetreat; delete army.supplySearchTurn; return null;
     }
     const supply = FB.hostSupply(army);
     const target = FB.armyProvisionTarget(army);
-    if (supply >= target - 1) { delete army.autoResupply; return null; }
+    if (supply >= target - 1) {
+      delete army.autoResupply; delete army.supplyStop; delete army.supplyRetreat; delete army.supplySearchTurn; return null;
+    }
     if (!army.autoResupply && supply > 15) return null;
     // No purchases or movement occur inside this synchronous search.
     const quotes = Object.create(null), tech = FB.techBonus(state, 'supply', army.realm);
@@ -328,10 +337,23 @@
       const q = quote(pid);
       return q.mode === 'purchase' && q.net > 0.05 && FB.armyCanPursue(state, army, pid);
     };
-    if (canRefill(army.at)) return army.at;
+    if (canRefill(army.at)) { army.supplyStop = army.at; delete army.supplyRetreat; return army.at; }
     const prior = army.supplyStop;
-    if (prior && canRefill(prior) && FB.armyHasRouteTo(state, army, prior)) return prior;
-    if (army.supplySearchTurn !== undefined && state.turn - army.supplySearchTurn < 7) return army.goal || army.at;
+    if (prior && prior !== army.at && canRefill(prior)) {
+      const route = FB.armyHasRouteTo(state, army, prior) || FB.findArmyPath(state, army, prior);
+      if (route && !route.blockedByFort) return prior;
+    }
+    delete army.supplyStop;
+    if (army.supplySearchTurn !== undefined && state.turn - army.supplySearchTurn < 7) {
+      const retreat = army.supplyRetreat;
+      if (retreat && FB.armyFriendlyProvince(state, army, retreat) &&
+          FB.armyCanPursue(state, army, retreat)) {
+        const route = FB.armyHasRouteTo(state, army, retreat) || FB.findArmyPath(state, army, retreat);
+        if (route && !route.blockedByFort) return retreat;
+      }
+      delete army.supplyRetreat;
+      return army.at;
+    }
     army.supplySearchTurn = state.turn;
     const queue = [army.at], seen = {};
     seen[army.at] = true;
@@ -339,12 +361,14 @@
       const pid = queue[i];
       if (pid !== army.at && canRefill(pid)) {
         const path = FB.findArmyPath(state, army, pid);
-        if (path && !path.blockedByFort) { army.supplyStop = pid; return pid; }
+        if (path && !path.blockedByFort) { army.supplyStop = pid; delete army.supplyRetreat; return pid; }
       }
       Object.keys(FB.world.adj[pid] || {}).sort().forEach(function (next) {
         if (!seen[next]) { seen[next] = true; queue.push(next); }
       });
     }
-    return FB.armyRetreatGoal(state, army) || army.at;
+    const retreat = FB.armyRetreatGoal(state, army) || army.at;
+    army.supplyRetreat = retreat;
+    return retreat;
   };
 }());

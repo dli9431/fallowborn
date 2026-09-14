@@ -4062,10 +4062,13 @@ window.FB = window.FB || {};
           out[k] = FB.warDeserterPayment ? FB.warDeserterPayment(state) : 0;
           break;
         case 'hostMen': {
-          const host = FB.playerHost ? FB.playerHost(state) : null;
+          const host = FB.warPlayerHost(state, ctx);
           out[k] = host ? host.men : 0;
           break;
         }
+        case 'warProvisions':
+          out[k] = FB.warProvisionQuote ? FB.warProvisionQuote(state, ctx).amount : 0;
+          break;
         case 'warLosses': {
           const feedback = FB.warFeedback ? FB.warFeedback(state) : null;
           out[k] = feedback ? feedback.lossTotal : 0;
@@ -4325,8 +4328,9 @@ window.FB = window.FB || {};
   };
 
   function warConditionText(condition) {
-    if (condition === 'supply') return FB.T('Supply');
-    if (condition === 'thin_ranks') return FB.T('Thin ranks');
+    if (condition === 'provisions') return FB.T('Provisions');
+    if (condition === 'supply') return FB.T('Campaign readiness');
+    if (condition === 'thin_ranks') return FB.T('Campaign strain');
     if (condition === 'discipline') return FB.T('Discipline');
     if (condition === 'disorder') return FB.T('Disorder');
     if (condition === 'desertion') return FB.T('Desertion');
@@ -4335,16 +4339,17 @@ window.FB = window.FB || {};
   }
 
   function warEffectTargetText(target) {
+    if (target === 'provisions') return FB.T('carried food reserve');
     if (target === 'both') {
       return FB.renderKey('fx.warstate.target_both',
-        { text:'abstract strength and live troops' }, {});
+        { text:'combat effectiveness and field troops' }, {});
     }
     if (target === 'troops') {
       return FB.renderKey('fx.warstate.target_troops',
         { text:'live troops only' }, {});
     }
     return FB.renderKey('fx.warstate.target_strength',
-      { text:'abstract strength only' }, {});
+      { text:'combat effectiveness; food reserves and troop count unchanged' }, {});
   }
 
   FB.warEffectsText = function (state, feedback) {
@@ -4361,6 +4366,7 @@ window.FB = window.FB || {};
     const rows = [];
     for (const effect of chosen) {
       const deltas = [];
+      if (effect.provisionsDelta) deltas.push(FB.T('+{amount} provisions', { amount:effect.provisionsDelta }));
       const strength = Math.round((effect.strengthDelta || 0) * 100);
       if (strength) {
         deltas.push(FB.renderKey('fx.warstate.condition_delta',
@@ -4438,19 +4444,18 @@ window.FB = window.FB || {};
     const war = state.player.war;
     if (!war) return '';
     const feedback = FB.warFeedback ? FB.warFeedback(state) : null;
-    const host = FB.playerHost ? FB.playerHost(state) : null;
-    const men = host ? host.men :
-      Math.round(Math.max(FBDATA.balance.armyMinMen || 40, FB.playerLevy(state)) * (war.strength || 1) +
-        (war.mercCos || 0) * (FBDATA.balance.mercCompanySize || 150));
+    const host = FB.warPlayerHost(state);
+    const men = host ? host.men : 0;
     const condition = Math.round((war.strength || 1) * 100);
     const clauses = [
       host
         ? FB.renderKey('fx.warstate.host_at', {
-          text: 'Your host: ~{men} men at {condition}% condition, at {place}'
+          text: 'Your host: ~{men} men at {place}; campaign combat modifier {condition}%; provisions {provisions}%'
         }, { men: men, condition: condition,
+          provisions:Math.round(FB.hostSupply(host)),
           place: FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?' })
         : FB.renderKey('fx.warstate.host_unmustered', {
-          text: 'Your host: ~{men} men at {condition}% condition, not yet mustered'
+          text: 'No field host assigned to this campaign. Campaign combat modifier: {condition}%.'
         }, { men: men, condition: condition })
     ];
     // urgent warnings only; the panel carries the full supply detail
@@ -9096,6 +9101,25 @@ window.FB = window.FB || {};
 
   function coreCustomPreview(id, state, ctx) {
     const p = state.player;
+    if (id === 'war_supply') {
+      const quote = FB.warProvisionQuote(state, ctx);
+      return [impact('hostProvisions', { amount:quote.amount, targetId:quote.hostId,
+        provinceId:quote.pid })];
+    }
+    const conditionChanges = { war_hold:0.15, war_thin:-0.1,
+      war_discipline:0.06, war_disorder:-0.08, war_discipline_deserters:0.04,
+      war_pay_deserters:0.08 };
+    if (Object.prototype.hasOwnProperty.call(conditionChanges, id)) {
+      const war = ctx && ctx.warId !== undefined && FB.ordinaryWarById
+        ? FB.ordinaryWarById(state, ctx.warId) : p.war;
+      if (!war) return [];
+      const before = war.strength || 1;
+      const changes = [impact('warCondition', {
+        amount:FB.clamp(before + conditionChanges[id], 0.5, 1.1) - before
+      })];
+      if (id === 'war_pay_deserters') changes.push(impact('gold', { amount:-FB.warDeserterPayment(state) }));
+      return changes;
+    }
     if (id === 'rank_elevation_claim') {
       const status = FB.rankElevationContextStatus &&
         FB.rankElevationContextStatus(state, ctx);
@@ -9874,7 +9898,8 @@ window.FB = window.FB || {};
       const c = state.chars[charId];
       if (c) opinions[charId] = Number(c.opinion) || 0;
     }
-    let host = !localOnly && FB.playerHost ? FB.playerHost(state) : null;
+    let host = !localOnly && FB.playerHost
+      ? (p.war ? FB.warPlayerHost(state, ctx) : FB.playerHost(state)) : null;
     const deadCharacters = {};
     if (!localOnly) {
       for (const snapshotCharId in state.chars) {
@@ -9937,6 +9962,7 @@ window.FB = window.FB || {};
       warSiege:p.war ? Number(p.war.siege) || 0 : null,
       hostMen:host ? Number(host.men) || 0 : null,
       hostSize:host ? Number(host.size) || 0 : null,
+      warProvision:localOnly ? null : FB.warProvisionQuote(state, ctx),
       investments:state.economy && state.economy.investments
         ? state.economy.investments.length : 0,
       privileges:state.privileges ? state.privileges.length : 0
@@ -10201,6 +10227,12 @@ window.FB = window.FB || {};
     }
     if (before.warStrength !== after.warStrength) diffNumeric(out, 'warCondition',
       Number(before.warStrength) || 0, Number(after.warStrength) || 0);
+    if (before.warProvision && after.warProvision && before.warProvision.hostId &&
+        before.warProvision.hostId === after.warProvision.hostId &&
+        before.warProvision.before !== after.warProvision.before) {
+      out.push(impact('hostProvisions', { amount:after.warProvision.before - before.warProvision.before,
+        targetId:after.warProvision.hostId, provinceId:after.warProvision.pid }));
+    }
     if (before.warSiege !== after.warSiege) diffNumeric(out, 'warSiege',
       Number(before.warSiege) || 0, Number(after.warSiege) || 0);
     if (before.hostMen !== after.hostMen && before.hostMen !== null && after.hostMen !== null) {
@@ -10739,12 +10771,17 @@ window.FB = window.FB || {};
     if (record.type === 'rivalHeat') return FB.T('Rivalry heat {change}', {
       change:numberText(amount)
     });
-    if (record.type === 'warCondition') return FB.T('Campaign condition {change}', {
-      change:numberText(amount)
+    if (record.type === 'warCondition') return FB.T('Combat effectiveness {change} percentage points', {
+      change:numberText(Math.round(amount * 10000) / 100)
     });
     if (record.type === 'warSiege') return FB.T('Siege progress {change}', {
       change:numberText(amount)
     });
+    if (record.type === 'hostProvisions') return record.targetId
+      ? FB.T('Provisions {change} points at {county} (maximum 100%)', {
+        change:numberText(amount), county:FB.world.byId[record.provinceId]
+          ? FB.world.byId[record.provinceId].name : FB.T('the host’s camp')
+      }) : FB.T('No field host assigned to this campaign to receive provisions');
     if (record.type === 'hostMen') return FB.T('Live host {change} troops', {
       change:numberText(amount)
     });

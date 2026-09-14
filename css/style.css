@@ -3730,6 +3730,7 @@ textarea.modjson, textarea.savetext {
 }
 .governance-county-protections .btn { min-height: 36px; white-space: normal; }
 .governance-county-protections .settcard-actions { align-self: center; }
+.governance-county-stats { grid-column: 1 / -1; min-width: 0; }
 .governance-county-details {
   grid-column: 1 / -1; padding-top: 8px; border-top: 1px solid var(--ui-border-color);
   color: var(--helper-text-color); font-size: var(--ui-label-size); line-height: 1.4;

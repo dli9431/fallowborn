@@ -1,5 +1,45 @@
 # Wars
 
+War-event narrative stays in the story's voice. Muster/siege instructions and
+provisions capacity explanations live in top-level `desc`, rendered as the shared
+Details tooltip or compact disclosure. Choice consequences remain with the choices.
+
+## Orders, alternative objectives, and event rewards
+
+`FB.armyOrderPlan` is the shared preview/execution quote. It reports the requested
+county, actual stop, route, and invalid/unreachable/pinned rejection. A rejected
+order preserves the current march and selection; repeating a valid unchanged route
+preserves its elapsed leg. Enemy-banner taps resolve to the host's actual county,
+including when the drawn banner overlaps another county. Fort passage rules remain.
+
+Ordinary AI primary hosts consider reachable enemies in stable distance order,
+using the existing 1.1 combat-power threshold. If no pursuit qualifies, hosts inspect
+unfinished objectives in saved order, including recapture for defenders. The route
+must end at a pending objective and meet existing combat and siege-force checks;
+non-objective or neutral forts cannot become unsiegeable fallback destinations.
+Great-holy-war selection remains separate. No battle or siege thresholds change.
+
+Resupply retains a checked purchase destination, or an explicitly recorded safe
+retreat, during its existing seven-day search cooldown. It never reuses an unrelated
+combat goal. Completion, manual orders, and disabled resupply clear stale destination
+metadata. Existing reserve targets, food prices, market stocks, loading limits, and
+search bounds remain. Supply text separates stock, loading, money and fort limits.
+
+Supply choices using `war_supply` now deliver `balance.warEventProvisions` (10)
+carried provision points immediately, capped at 100, to the largest surviving player
+host assigned to the event's ordinary war. This is event cargo, not another daily
+market purchase. It changes neither troop count nor `war.strength`. Empty or ended
+campaigns receive nothing; another campaign's host cannot receive the cargo. Old
+unassigned hosts qualify only for an unambiguous single campaign. Preview, outcome,
+and the bounded war ledger report the actual capped refill and receiving host.
+Technology impact `war_event_provisions` is **none**: acquiring food is basic recovery,
+and ordinary local provisioning remains available without research.
+
+Other campaign choices expose their existing combat-effectiveness modifier in
+percentage points, capped at 50–110%, rather than implying troop replacement or food.
+Reorganizing does not move a host. Council hunts respect manual routes and holds,
+require a route, and are scoped to the event's campaign. Costs and other rewards remain.
+
 Named cash peace terms and battlefield ransoms use paired treasury transfers.
 Unaccepted tribute offers are capped at the enemy's available cash, up to the
 existing 25, and rechecked at acceptance; zero cash still permits peace. Binding
@@ -615,11 +655,12 @@ the parent report id at append time, so campaign developments reopen the same re
 reconstructing history. Save repair creates the compact parent once for a legacy active war;
 it does not add a daily check.
 
-Campaign condition and live troops remain deliberately separate. Thin ranks,
+Campaign condition, carried provisions, and live troops remain separate. Thin ranks,
 discipline, and disorder normally move the bounded abstract `war.strength` that
 multiplies the host's field-battle power (`battlePower`); field supply is the
 exception, a live per-host meter (above) whose
-starvation bleeds real men. A handler changes headcount only when its option says so,
+starvation bleeds real men. Supply-event cargo refills the live reserve directly.
+A handler changes headcount only when its option says so,
 and all such
 losses use `FB.applyHostLosses`; the feedback UI labels the affected ledger explicitly.
 The loss-aware **Empty Bedrolls** event requires a surviving raised host, meaningful

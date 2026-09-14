@@ -1,5 +1,19 @@
 # Events are data
 
+Optional top-level `desc` holds supporting instructions separately from narrative
+`text`. The event dialog localizes it through `FB.eventText` and presents it in the
+shared Details tooltip/disclosure. Choice costs and material consequences remain
+with their choices. This is display-only and does not change event resolution.
+
+Ordinary war choices describe their actual field effect. `war_supply` refills the
+event campaign's main host immediately; `{warProvisions}` quotes its capped gain.
+It no longer raises campaign strength. Discipline, strain and reorganization keep
+their existing bounded combat-effectiveness effects and disclose percentage points.
+Preview and receipt impacts distinguish `hostProvisions` from `warCondition` and
+troop losses. The grain and village-raiding stories now describe delivered cargo;
+reorganization never claims to order a retreat. Event ids and option order remain
+stable for saves and mods. See war.md for scope and technology review.
+
 News reuses deeply frozen descriptors created by the message API. A transient
 WeakSet distinguishes these from loaded or caller-authored objects, which still
 receive defensive copies. Receipt-free Chronicle packing shares immutable message

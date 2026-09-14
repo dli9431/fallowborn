@@ -9,6 +9,116 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
+test('resupply cooldown never resumes a stale combat destination and completion clears its stop', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const r = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0], original = FB.armyProvisionQuote;
+    try {
+      host.supply = 5; host.autoResupply = 1;
+      host.supplyStop = window.provisionIds.home;
+      host.supplySearchTurn = s.turn;
+      host.goal = window.provisionIds.target;
+      FB.armyProvisionQuote = function () { return { mode:'purchase', net:-1 }; };
+      const goal = FB.armySupplyGoal(s, host);
+      const stopRemoved = host.supplyStop === undefined;
+      host.supply = FB.armyProvisionTarget(host);
+      host.supplyStop = window.provisionIds.home;
+      const finished = FB.armySupplyGoal(s, host);
+      return { held:goal === host.at, stopRemoved:stopRemoved, finished:finished,
+        cleaned:host.supplyStop === undefined && host.supplySearchTurn === undefined && host.autoResupply === undefined };
+    } finally { FB.armyProvisionQuote = original; }
+  });
+  expect(r).toEqual({ held:true, stopRemoved:true, finished:null, cleaned:true });
+});
+
+test('resupply retains a valid destination after an interrupted route and honors manual control', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const r = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0], originalQuote = FB.armyProvisionQuote;
+    const originalPath = FB.findArmyPath, originalPursue = FB.armyCanPursue;
+    try {
+      const stop = window.provisionIds.home;
+      host.supply = 5; host.autoResupply = 1; host.supplyStop = stop;
+      host.supplySearchTurn = s.turn; host.path = []; host.goal = null;
+      FB.armyProvisionQuote = function (state, army, pid) {
+        return { mode:'purchase', net:pid === stop ? 2 : -1 };
+      };
+      FB.findArmyPath = function () { return { path:[stop] }; };
+      FB.armyCanPursue = function () { return true; };
+      const goal = FB.armySupplyGoal(s, host);
+      host.path = [stop]; host.goal = stop; host.moveLeft = 3; host.manual = 1;
+      FB.game.auto.hosts = 'manual';
+      FB.enforceManualHostControl(s);
+      return { goal:goal, stop:stop, path:host.path, moveLeft:host.moveLeft,
+        cleaned:host.supplyStop === undefined && host.autoResupply === undefined };
+    } finally {
+      FB.armyProvisionQuote = originalQuote; FB.findArmyPath = originalPath;
+      FB.armyCanPursue = originalPursue;
+    }
+  });
+  expect(r.goal).toBe(r.stop);
+  expect(r.path).toEqual([r.stop]);
+  expect(r.moveLeft).toBe(3);
+  expect(r.cleaned).toBe(true);
+});
+
+test('wealth does not conceal stock and daily loading limits in provision quotes', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const r = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0], original = FB.marketProvisionSource;
+    try {
+      host.supply = 0; s.player.gold = 5000;
+      const market = { stock:0, reserve:0, demand:900, price:1 };
+      FB.marketProvisionSource = function () { return market; };
+      const stock = FB.armyProvisionQuote(s, host);
+      const stockText = FB.armyProvisionText(s, host);
+      market.stock = 1000;
+      s.armyLogistics = { counties:{} };
+      s.armyLogistics.counties[host.at] = { day:s.turn,
+        used:market.demand / 90 * (FBDATA.balance.armyProvisionMarketDays || 2) };
+      const loading = FB.armyProvisionQuote(s, host);
+      const loadingText = FB.armyProvisionText(s, host);
+      s.turn++;
+      const tomorrow = FB.armyProvisionQuote(s, host);
+      s.player.gold = 0;
+      const coin = FB.armyProvisionQuote(s, host);
+      return { stock:stock.reason, stockText:stockText, loading:loading.reason,
+        loadingText:loadingText, tomorrow:tomorrow.units, coin:coin.reason };
+    } finally { FB.marketProvisionSource = original; }
+  });
+  expect(r.stock).toBe('stock');
+  expect(r.stockText).toContain('food stocks');
+  expect(r.loading).toBe('loading');
+  expect(r.loadingText).toContain('daily food-loading limit');
+  expect(r.tomorrow).toBeGreaterThan(0);
+  expect(r.coin).toBe('coin');
+});
+
+test('a recorded safe supply retreat continues during the search cooldown', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const r = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0], stop = window.provisionIds.home;
+    const names = ['armyProvisionQuote', 'armyRetreatGoal', 'armyFriendlyProvince', 'armyCanPursue', 'armyHasRouteTo'];
+    const originals = {}; names.forEach(function (name) { originals[name] = FB[name]; });
+    try {
+      host.supply = 0; host.autoResupply = 1; delete host.supplySearchTurn;
+      FB.armyProvisionQuote = function () { return { mode:'purchase', net:-1 }; };
+      FB.armyRetreatGoal = function () { return stop; };
+      FB.armyFriendlyProvince = function () { return true; };
+      FB.armyCanPursue = function () { return true; };
+      FB.armyHasRouteTo = function () { return true; };
+      const first = FB.armySupplyGoal(s, host);
+      host.goal = first; host.path = [first]; host.moveLeft = 3;
+      const second = FB.armySupplyGoal(s, host);
+      FB.armyCanPursue = function () { return false; };
+      const unsafe = FB.armySupplyGoal(s, host);
+      return { first:first === stop, second:second === stop, stayed:unsafe === host.at,
+        cleared:host.supplyRetreat === undefined };
+    } finally { names.forEach(function (name) { FB[name] = originals[name]; }); }
+  });
+  expect(r).toEqual({ first:true, second:true, stayed:true, cleared:true });
+});
+
 async function setup(page, testInfo) {
   const ids = await startWarSafety(page, testInfo);
   await page.evaluate(function (ids) {

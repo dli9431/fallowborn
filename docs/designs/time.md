@@ -1,5 +1,10 @@
 # Time, focuses & automation
 
+Cultivate the court describes its fixed +2 seasonal prestige, up to +4 Standing
+with the current liege or local lord, and Diplomacy training chance. The description
+is contextual so a changed liege is reflected immediately; Diplomacy does not scale
+the prestige reward. Existing gain and training formulas remain unchanged.
+
 Local fast-forward profiling groups courier checks, movement and arrivals into
 one daily row, with a separate queue-removal row and pending-visit/removal counters.
 Gift-scoped helper rows separate queue repair, standing, cooldown bookkeeping,

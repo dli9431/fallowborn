@@ -1025,7 +1025,7 @@ test('the occupation trigger follows the besieging host, not the siege ledger',
     expect(result.afterOwnerChange).toBe(false);
   });
 
-test('the war council offers only map orders — no abstract battle, siege, or harry',
+test('the war council separates movement, reorganization, and peace without simulating battles',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const def = FB.eventById('war_council');
@@ -1051,7 +1051,7 @@ test('the war council offers only map orders — no abstract battle, siege, or h
 
     expect(result.labels).toEqual([
       'Hunt down their field host.',
-      'Fall back and refit.',
+      'Reorganize the campaign.',
       'Seek terms.'
     ]);
     expect(result.chances).not.toContain('war_battle');

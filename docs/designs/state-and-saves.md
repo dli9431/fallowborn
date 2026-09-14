@@ -1,5 +1,22 @@
 # Game state & saves
 
+Converted wastelands persist in additive `state.wastelandSettlements`, keyed by
+county id with the founding `culture` and `religion`. Restore reapplies their
+physical map status and deterministic sites before other county repairs, without
+replaying costs, grants, development, population or news. Format stays 3.
+Legacy saves without the table recover authored wastelands with positive saved
+development and a holder/owner; saved population identity supplies culture/faith,
+falling back to the saved protagonist when older records lack that identity.
+Bookmark activation and new politics clear cached conversions; each loaded save
+then applies only its own table. Ownership and population remain authoritative
+in their existing saved records, including after conquest or succession.
+
+War-event supply refills use the host's existing saved `supply`. Optional war effect
+records add `target:'provisions'`, `provisionsDelta`, and `hostId`; existing effect
+records retain their meanings. Resupply may retain an optional `supplyRetreat` county
+beside `supplyStop` and `supplySearchTurn`, revalidated before reuse and cleared with
+manual control or completion. No save version changes or replayed historical rewards.
+
 Deleting Autosave (or all slots) suppresses background-only saves for the same
 in-memory life and turn until play advances or a normal autosave resumes saving. Reload or tab hiding cannot
 immediately recreate a deleted slot. This suppression is transient.

@@ -593,6 +593,7 @@ window.FB = window.FB || {};
 
   function bindWorld(world) {
     FB.world = world;
+    FB.restoreWastelandSettlements(null);
     if (FB.map && FB.map.canvas && FB.map.useWorld) FB.map.useWorld();
   }
 
@@ -1434,6 +1435,8 @@ window.FB = window.FB || {};
 
   FB.initPolitics = function (state) {
     state.owner = {}; state.dev = {}; state.realms = {}; state.holder = {};
+    state.wastelandSettlements = {};
+    FB.restoreWastelandSettlements(state);
     // authored realms (kings, emperors, independent dukes, authored vassals)
     for (const r of FBDATA.realms) {
       const cap = FB.world.byId[r.capital];
@@ -5444,6 +5447,50 @@ window.FB = window.FB || {};
      commoner frontier journey passes the gateway county's holder and grants
      only household property. Returns the province, or null when the land is
      not convertible. */
+  /* Rebuild only the physical conversion; never replay settlement costs,
+     ownership grants, development, population creation, promotions or news.
+     Cached bookmark worlds must also forget conversions from a different life. */
+  FB.restoreWastelandSettlements = function (state) {
+    const world = FB.world;
+    if (!world) return;
+    const legacy = state && !state.wastelandSettlements;
+    const records = state ? (state.wastelandSettlements || {}) : {};
+    const waste = {};
+    for (const baseline of FBDATA.provinces) {
+      if (!baseline.wasteland) continue;
+      const pid = baseline.id, pr = world.byId[pid];
+      if (!pr) continue;
+      waste[pid] = true;
+      if (legacy && state.dev && state.dev[pid] > 0 &&
+          ((state.holder && state.holder[pid]) || (state.owner && state.owner[pid]))) {
+        const population = state.population && state.population.counties && state.population.counties[pid];
+        const identity = population && (population.identity || (population.communities || [])[0]);
+        const founder = state.chars && state.player && state.chars[state.player.charId];
+        const culture = identity && identity.culture || founder && founder.culture;
+        const religion = identity && identity.religion || founder && founder.religion;
+        if (culture && religion) records[pid] = { culture:culture, religion:religion };
+      }
+      pr.wasteland = true;
+      pr.culture = baseline.culture;
+      pr.religion = baseline.religion;
+      if (world.sitesByProv) delete world.sitesByProv[pid];
+    }
+    world.sites = (world.sites || []).filter(function (site) { return !waste[site.pid]; });
+    world.sitesRender = world.sites.slice().sort(siteRenderCompare);
+    for (const pid in records) {
+      const record = records[pid], pr = world.byId[pid];
+      if (!waste[pid] || !record || typeof record.culture !== 'string' ||
+          typeof record.religion !== 'string' || !record.culture || !record.religion) continue;
+      pr.wasteland = false;
+      pr.culture = record.culture;
+      pr.religion = record.religion;
+      FB.worldCompileSettlements(pid);
+    }
+    if (state) state.wastelandSettlements = records;
+    FB.invalidateRealmCache();
+    if (FB.marketWorldDirty) FB.marketWorldDirty();
+  };
+
   FB.materializeWasteland = function (state, pid, opts) {
     opts = opts || {};
     const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
@@ -5455,6 +5502,8 @@ window.FB = window.FB || {};
     const holderId = opts.holderId || null;
     const ownerId = opts.ownerId || holderId;
     if (!culture || !religion || !holderId || !ownerId) return null;
+    state.wastelandSettlements = state.wastelandSettlements || {};
+    state.wastelandSettlements[pid] = { culture:culture, religion:religion };
     pr.wasteland = false;
     pr.culture = culture;
     pr.religion = religion;
@@ -7660,7 +7709,7 @@ window.FB = window.FB || {};
     return ev && ev.id ? ev.id : fallback;
   }
   function abstractBattleRecord(state, outcome) {
-    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const host = FB.warPlayerHost(state);
     return {
       turn:state.turn, outcome:outcome, mode:'abstract', pid:host && host.at,
       playerBefore:host ? host.men : 0, playerAfter:host ? host.men : 0,
@@ -7887,7 +7936,7 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     const cs = FBDATA.balance.mercCompanySize || 150;
     w.mercCos = (w.mercCos || 0) + 1;
-    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const host = FB.warPlayerHost(state);
     if (host) {
       FB.hostUnits(host); // migrates hosts from before composition
       host.units.mercs += cs;
@@ -7905,7 +7954,7 @@ window.FB = window.FB || {};
   FB.fns.war_mass = function (state) {
     const w = state.player.war; if (!w) return;
     w.mass = 1;
-    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const host = FB.warPlayerHost(state);
     if (host) { // already mustered: swell the levy now (the professionals stay as they are)
       const mult = FBDATA.balance.massLevyMult || 1.35;
       FB.hostUnits(host);
@@ -7918,14 +7967,18 @@ window.FB = window.FB || {};
   };
   FB.fns.war_can_hunt = function (state) {
     const w = state.player.war;
-    return !!(w && !(FB.hostAutomationManual && FB.hostAutomationManual()) &&
-      FB.playerHost && FB.playerHost(state) &&
-      FB.hostOf && FB.hostOf(state, w.enemy));
+    if (!w || (FB.hostAutomationManual && FB.hostAutomationManual())) return false;
+    const host = FB.warPlayerHost(state);
+    const prey = FB.hostOf && FB.hostOf(state, w.enemy);
+    if (!host || !prey || host.holdManual ||
+        (host.manual && (host.moveLeft > 0 || (host.path || []).length))) return false;
+    const plan = FB.armyOrderPlan(state, host, prey.at);
+    return plan.ok && !plan.halt;
   };
   FB.fns.war_hunt = function (state) {
     const w = state.player.war; if (!w) return;
-    if (FB.hostAutomationManual && FB.hostAutomationManual()) return;
-    const host = FB.playerHost && FB.playerHost(state);
+    if (!FB.fns.war_can_hunt(state)) return;
+    const host = FB.warPlayerHost(state);
     const prey = FB.hostOf && FB.hostOf(state, w.enemy);
     if (!host || !prey) return;
     const ename = state.realms[w.enemy] ? state.realms[w.enemy].name : '';
@@ -7953,16 +8006,10 @@ window.FB = window.FB || {};
       }, { named: ename ? 'yes' : 'other', enemy: ename }));
     }
   };
-  /* small condition shifts for wartime flavor events */
+  /* Immediate provisions and combat-effectiveness changes for wartime events. */
   FB.fns.war_supply = function (state, ctx, ev) {
-    const w = state.player.war; if (!w) return;
-    if (FB.adjustWarStrength) {
-      FB.adjustWarStrength(state, 0.1, {
-        source:warEffectSource(ev, 'war_supply'), condition:'supply'
-      });
-    } else {
-      w.strength = Math.min(1.1, (w.strength || 1) + 0.1);
-    }
+    if (!state.player.war) return;
+    FB.refillWarProvisions(state, ctx, warEffectSource(ev, 'war_supply'));
   };
   FB.fns.war_thin = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
@@ -7975,7 +8022,7 @@ window.FB = window.FB || {};
     }
   };
   FB.fns.war_live_host = function (state) {
-    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const host = FB.warPlayerHost(state);
     return !!(state.player.war && host && host.men > 0);
   };
   FB.fns.war_host_under_pressure = function (state) {
@@ -8021,7 +8068,7 @@ window.FB = window.FB || {};
   };
   FB.fns.war_desert = function (state, ctx, ev) {
     const w = state.player.war;
-    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const host = FB.warPlayerHost(state);
     if (!w || !host || !FB.playerWarHostLoss) return;
     const min = FBDATA.balance.warDeserterLossMin === undefined
       ? 0.10 : FBDATA.balance.warDeserterLossMin;
@@ -8064,12 +8111,12 @@ window.FB = window.FB || {};
   };
   FB.fns.war_has_allied_host = function (state) {
     const w = state.player.war;
-    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const host = FB.warPlayerHost(state);
     return !!(w && !w.alliedWithdrew && host && host.allied && host.allied.men > 0);
   };
   FB.fns.war_allied_withdrawal = function (state, ctx, ev) {
     const w = state.player.war;
-    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const host = FB.warPlayerHost(state);
     if (!w || !host || !host.allied || !host.allied.men) return;
     const contribution = host.allied.men;
     const leaving = Math.min(contribution, host.men);
@@ -8094,7 +8141,7 @@ window.FB = window.FB || {};
   };
   FB.fns.war_host_abroad = function (state) {
     const w = state.player.war;
-    const host = FB.playerHost ? FB.playerHost(state) : null;
+    const host = FB.warPlayerHost(state);
     return !!(w && host && host.at && state.owner[host.at] === w.enemy);
   };
   FB.fns.war_enemy_offer_possible = function (state) {

@@ -1,5 +1,13 @@
 # Provinces & the map
 
+Wasteland conversions are saved in `state.wastelandSettlements` with founding
+culture and faith. Both noble settlement and commoner frontier homesteads use the
+same record. On load it restores inhabited map status and deterministic settlement
+slots before population repair; it never repeats settlement rewards or costs.
+Cached bookmark maps discard another life's conversions when rebound. Legacy
+saves recover converted land from saved development and ownership (see
+[state-and-saves.md](state-and-saves.md)); colonies remain outside de jure titles.
+
 The Land tab's County card shows the selected county's Popular support: its saved
 base plus active local effects, including foreign counties. There is no personal
 support score or Self-tab support row. Taxes and levies respond to this local

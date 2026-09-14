@@ -1,5 +1,17 @@
 # Modding Fallowborn
 
+## Ordinary war provisions
+
+The existing `custom:'war_supply'` event effect now refills carried food rather than
+raising campaign strength. `balance.warEventProvisions` defaults to 10 supply points;
+the largest surviving player host assigned to the event's ordinary war receives only
+the amount that fits beneath 100. It does not move the host or change troop counts.
+`{warProvisions}` is the actual capped refill for display fields, including zero for
+a full reserve or no eligible host. Event contexts retain their campaign identity;
+another campaign's host cannot receive the reward. Acquisition of this event cargo
+is distinct from daily market provisioning. Discipline and strain custom effects
+keep their existing bounded combat-effectiveness changes.
+
 ## Active treasury and army producer accounting
 
 Stage 4: `treasuryTransfer(state, payer, recipient, amount, compulsory)` moves finite
@@ -1365,6 +1377,11 @@ or riding with the liege's host — random picks draw *only* from wartime events
 life waits for peace. Queued events bypass the wartime/random filter but still pass their
 context validator. At most one valid queued event enters the UI per simulated day; when
 one does, that day's random slot event is skipped.
+
+Optional top-level `desc` provides localized supporting instructions in the event
+dialog's Details tooltip (hover/focus) or question-mark disclosure on compact
+screens. Keep narrative in `text` and essential costs/results with the choices.
+Like event `text`, `desc` supports contextual tokens and faith variants.
 
 `warStatus: true` adds the current localized host, enemy, siege, and advance summary as a
 separate paragraph below the event text. Use this instead of embedding a `{warstate}` token:

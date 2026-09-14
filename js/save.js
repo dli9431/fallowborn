@@ -1432,9 +1432,6 @@ window.FB = window.FB || {};
         !FB.state.realms || !FB.state.owner) {
       throw new Error('The save is missing required world or player records.');
     }
-    if (FB.ensureCountySupport) restoreRepair('county support', function () {
-      FB.ensureCountySupport(FB.state);
-    });
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }
@@ -1460,6 +1457,12 @@ window.FB = window.FB || {};
     });
     if (FB.configureCultures) restoreRepair('culture definitions', function () {
       FB.configureCultures(FB.state);
+    });
+    if (FB.restoreWastelandSettlements) restoreRepair('wasteland settlements', function () {
+      FB.restoreWastelandSettlements(FB.state);
+    });
+    if (FB.ensureCountySupport) restoreRepair('county support', function () {
+      FB.ensureCountySupport(FB.state);
     });
     /* Save format 3 remains stable: missing religious-office assignments gain
        bookmark-aware defaults; vacancies gain additive turn/former-holder

@@ -74,7 +74,7 @@ STRUCTURED_DATA = {
     "tenureRights": "tenureRight",
 }
 DATA_FIELDS = ("name", "desc")
-EVENT_FIELDS = ("title", "text")
+EVENT_FIELDS = ("title", "text", "desc")
 TOKEN_RE = re.compile(
     r"\{((?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))"
     r"|(?:[A-Za-z_][A-Za-z0-9_]*))\}"

@@ -1,5 +1,24 @@
 # UI: keyboard & mobile
 
+Event narratives carry the story. Supporting rules such as how to move a host,
+maintain a siege, or refill provisions belong in the event's Details hover/focus
+tooltip and compact question-mark disclosure. Essential choice effects stay visible.
+
+County details and Governance's direct-county rows show Popular support beside its
+tax/levy multiplier. This is the support contribution, not the final tax or levy:
+other modifiers and rebellion are explained in the existing Details disclosure.
+Support belongs to the named county; it is not a realm-wide capital stat.
+Multi-rank recognition sheets itemize each crossed rank from the same price arrays
+used for payment. Emperor is identified as the highest rank, including faith-specific
+titles. Court cultivation describes its fixed prestige, Standing recipient, and
+training chance. No new navigation or top-bar statistic is introduced.
+
+War choices distinguish immediate carried provisions, combat-effectiveness modifiers,
+troop losses, and movement orders. Essential capped effects remain visible in previews
+and receipts; explanations must not substitute internal ledger terminology for effects.
+Failed movement leaves the selected host available for another order and names a
+pinning fort when applicable. A valid repeated order does not restart travel.
+
 Work-list return rendering captures scroll before deferred focus and scroll events
 can replace it. Staffing-preview redraws manage scroll explicitly and disable
 browser scroll anchoring so removed hiring controls do not shift the restored view.

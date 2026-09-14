@@ -63,7 +63,7 @@ FBDATA.focuses = [
   { id:'serve_lord', label:'🤝 Attend the lord’s hall', order:19,
     desc:'Be seen, be useful, be remembered.', vocational:'noble', handler:'serve_lord' },
   { id:'courtly_graces', label:'🕊 Cultivate the court', order:20,
-    desc:'Hawking, letters, and patronage — Standing is won in hall and garden. (+liege Standing, +prestige)', vocational:'noble', handler:'courtly_graces' },
+    vocational:'noble', handler:'courtly_graces' },
   { id:'train_arms', label:'⚔ Train at arms', order:21,
     desc:'A blade kept sharp.', handler:'train_arms' },
   { id:'lead_host', label:'🚩 Lead the host', order:22,

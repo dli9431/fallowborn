@@ -75,6 +75,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      war_event_provisions:{ mode:'none', rationale:'Purchased or captured campaign provisions immediately refill an existing field host. Obtaining food is baseline recovery; ordinary local provisioning remains available without research.' },
       concurrent_campaigns:{ mode:'none', rationale:'Independent campaigns share existing troops and logistics; coordinating commitments is baseline military play.' },
       lawful_claim_packages:{ mode:'none', rationale:'Pressing several existing territorial rights is baseline diplomacy; each acquisition method retains its own eligibility.' },
       vassal_war_laws:{ mode:'none', rationale:'Sovereign peace, permission and deliberate defiance are political relationships rather than researched capabilities.' },

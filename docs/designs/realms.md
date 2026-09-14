@@ -1,5 +1,11 @@
 # Realms, the liege hierarchy & tiers
 
+Rank-elevation reviews itemize the costs of all crossed ranks. A Count-to-King
+claim therefore displays Duke and King recognition separately, while payment still
+uses their existing combined cost. Imperial benefits identify Emperor as the highest
+rank and explain authority above vassal kings; Great Sultan is its ordinary Muslim
+title, not an additional rung. No promotion prices or eligibility change.
+
 County purchases credit the direct selling holder before a landless seller retires.
 Retirement keeps the existing bounded disposition of funds; county buyers do not
 inherit the seller's treasury. Local and delivered cash gifts credit the named realm.

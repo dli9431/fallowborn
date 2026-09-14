@@ -1112,6 +1112,14 @@ window.FB = window.FB || {};
       s, s.player.charId, ev, 'text', ctx);
     let bodyHtml = scheduledDutyTeachingHtml(
       s, ev, ctx, eventDescription) || esc(eventDescription);
+    if (ev.desc) {
+      const detailsId = 'event-background-details';
+      bodyHtml += '<div class="settcard" data-event-background tabindex="0" aria-describedby="' +
+        detailsId + '"><div class="settcard-head"><span>' + esc(FB.T('Details')) +
+        '</span>' + cardInfoButton(detailsId) + '</div><div class="settcard-details hidden" id="' +
+        detailsId + '"><p>' + esc(FB.eventText(s, s.player.charId, ev, 'desc', ctx)) +
+        '</p></div></div>';
+    }
     bodyHtml += freedomOfferTermsHtml(s, ev);
     if (ev.id === 'ruler_marriage_offer' || ev.id === 'proposal_made' || ev.id === 'sibling_proposal_made') {
       const lineage = ev.id === 'ruler_marriage_offer' ? ctx && ctx.lineage :
@@ -2878,7 +2886,7 @@ window.FB = window.FB || {};
       4:FB.T('Your home county in your name and a count’s domain.'),
       5:FB.T('Ducal rank over the qualifying duchy.'),
       6:FB.T('Royal rank and access to the Royal Council.'),
-      7:FB.T('Imperial rank at the highest station.')
+      7:FB.T('Emperor rank — the highest rank. Your imperial title can stand above vassal kings; the Royal Council remains available.')
     };
     return benefits[targetTier] || FB.T('Recognition at the next station.');
   }
@@ -2949,6 +2957,15 @@ window.FB = window.FB || {};
       esc(route) + '">' + rankTransitionHtml(currentTitle, nextTitle) +
       kv('Cost', esc(rankElevationCostValue(status.cost))) +
       kv('Benefits', esc(rankElevationBenefit(status.targetTier)));
+    const crossedRanks = FB.rankElevationBreakdown(s, s.player.tier, status.targetTier);
+    if (crossedRanks.length > 1) {
+      h += '<div data-rank-elevation-breakdown><p>' + esc(FB.T(
+        'The total includes recognition at every crossed rank:')) + '</p>';
+      for (const row of crossedRanks) {
+        h += kv(row.name, esc(rankElevationCostValue(row.cost)));
+      }
+      h += '</div>';
+    }
     if (chance !== null) {
       h += kv('Approval chance', esc(FB.T('{chance}%', {
         chance:Math.round(chance * 100)
@@ -12685,7 +12702,8 @@ window.FB = window.FB || {};
         governanceCountyLink(pid, province.name, markers.join(' · ')) +
         '<span>' + esc(FB.T('Development {development}', {
           development:s.dev[pid] || 1
-        })) + '</span></div><span class="governance-county-protections">' +
+        })) + '</span></div>' +
+        '<span class="governance-county-protections">' +
         grantProtectionButton(pid) +
         '<button type="button" class="btn small protection-toggle" ' +
         'data-autobuild-protection="' + esc(pid) + '" aria-pressed="' +
@@ -12698,12 +12716,18 @@ window.FB = window.FB || {};
         'aria-controls="' + esc(detailsId) + '" title="' +
         esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
         '">?</button></span></span>' +
+        '<div class="governance-county-stats" data-governance-support="' + esc(pid) + '">' +
+        kv('Popular support', esc(signedNumber(FB.countyPopularSupport(s, pid)))) +
+        kv('Tax and levy from support', esc(FB.T('{percent}% of the county base', {
+          percent:Math.round(FB.countySupportFactor(s, pid) * 100)
+        }))) + '</div>' +
         '<div class="settcard-details governance-county-details hidden" id="' +
         esc(detailsId) + '"><p><b>' + esc(FB.T('Reserve')) +
         '</b><br>' + esc(FB.T(
           'Keeps this county out of automatic and reviewed land-grant proposals.')) +
         '</p><p><b>' + esc(FB.T('Autobuild')) + '</b><br>' + esc(FB.T(
           'Controls whether household automation may begin construction in this county.')) +
+        '</p><p>' + esc(FB.T('Popular support belongs to this county. Other modifiers and rebellion also affect its final taxes and levies.')) +
         '</p>' + (markers.length
           ? '<p><b>' + esc(FB.T('Domain role')) + '</b><br>' +
             esc(markers.join(' · ')) + '</p>' : '') + '</div></div>';
