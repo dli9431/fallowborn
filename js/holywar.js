@@ -26,6 +26,23 @@ window.FB = window.FB || {};
     return FB.faithGroup(religionId, state);
   }
 
+  FB.holyWarCampaignType = function (state, religionId) {
+    var group = callingGroup(state, religionId);
+    return group === 'christian' ? 'crusade' : group === 'muslim' ? 'jihad' :
+      group === 'pagan' ? 'sacred' : 'other';
+  };
+  FB.holyWarName = function (state, religionId) {
+    var type = FB.holyWarCampaignType(state, religionId);
+    return type === 'crusade' ? FB.T('Crusade') : type === 'jihad' ? FB.T('Jihad') :
+      type === 'sacred' ? FB.T('Sacred War') : FB.T('Holy War');
+  };
+  FB.holyWarNameParam = function (state, religionId) {
+    return { $message:FB.msg('news.holywar.campaign_name', {
+      forms:{ select:'value', param:'type', cases:{ crusade:'Crusade',
+        jihad:'Jihad', sacred:'Sacred War', other:'Holy War' } }
+    }, { type:FB.holyWarCampaignType(state, religionId) }) };
+  };
+
   function opposedToCall(state, religionId, callingReligion) {
     var relation = FB.faithRelation(state, religionId, callingReligion);
     return relation === 'hostile' || relation === 'foreign';
@@ -264,9 +281,7 @@ window.FB = window.FB || {};
   function campaignEventContext(state, campaign) {
     var kingdom = FBDATA.kingdoms[campaign.targetKingdom];
     return {
-      campaignType:papalFaith(state, campaign.callingReligion) ? 'crusade' :
-        (FB.faithOfficeId(campaign.callingReligion, state) === 'sunni'
-          ? 'jihad' : 'other'),
+      campaignType:FB.holyWarCampaignType(state, campaign.callingReligion),
       caller:realmName(state, campaign.callerRealm),
       leader:realmName(state, campaign.leaderRealm),
       kingdom:kingdom ? kingdom.name : campaign.targetKingdom
@@ -712,7 +727,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.holywar.called',
       '📯 {caller} calls the faithful to a {campaign} for {kingdom}. The banners have 180 days to gather.', {
         caller:realmName(state, head.id),
-        campaign:FB.dataParam('religion', religionId, 'head.greatHolyWar.name'),
+        campaign:FB.holyWarNameParam(state, religionId),
         kingdom:kingdom ? kingdom.name : kingdomId
       }));
     FB.queueEvent(state, 'ghw_called', campaignEventContext(state, campaign));
@@ -788,8 +803,7 @@ window.FB = window.FB || {};
       if (FB.syncGreatHolyWarModifiers) FB.syncGreatHolyWarModifiers(state);
       FB.news(state, FB.msg('news.holywar.player_pledges',
         '📯 You take the vow and pledge yourself to the {campaign}.', {
-          campaign:FB.dataParam('religion', campaign.callingReligion,
-            'head.greatHolyWar.name')
+          campaign:FB.holyWarNameParam(state, campaign.callingReligion)
         }));
       return true;
     }
@@ -1112,8 +1126,7 @@ window.FB = window.FB || {};
     }
     FB.news(state, FB.msg('news.holywar.collapses',
       '🏳 The gathering {campaign} collapses before the banners can march.', {
-        campaign:FB.dataParam('religion', campaign.callingReligion,
-          'head.greatHolyWar.name')
+        campaign:FB.holyWarNameParam(state, campaign.callingReligion)
       }));
     state.greatHolyWar = null;
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
@@ -1172,8 +1185,7 @@ window.FB = window.FB || {};
     }
     FB.news(state, FB.msg('news.holywar.launches',
       '⚔ The {campaign} begins. {leader} takes command of the gathered host.', {
-        campaign:FB.dataParam('religion', campaign.callingReligion,
-          'head.greatHolyWar.name'),
+        campaign:FB.holyWarNameParam(state, campaign.callingReligion),
         leader:realmName(state, campaign.leaderRealm)
       }));
     return true;
@@ -2210,8 +2222,7 @@ window.FB = window.FB || {};
       campaign.settlement = buildCouncilSettlement(state, campaign);
       FB.news(state, FB.msg('news.holywar.victory',
         '👑 The attacking camp wins the {campaign}. A settlement council convenes over the occupied lands.', {
-          campaign:FB.dataParam('religion', campaign.callingReligion,
-            'head.greatHolyWar.name')
+          campaign:FB.holyWarNameParam(state, campaign.callingReligion)
         }));
       advanceCouncil(state, campaign);
       return true;
@@ -2221,8 +2232,7 @@ window.FB = window.FB || {};
         state.player.greatHolyWar.camp === 'defenders') nonLandReward(state, campaign);
     FB.news(state, FB.msg('news.holywar.failure',
       '🏳 The defenders break the {campaign}. No conquered land changes hands.', {
-        campaign:FB.dataParam('religion', campaign.callingReligion,
-          'head.greatHolyWar.name')
+        campaign:FB.holyWarNameParam(state, campaign.callingReligion)
       }));
     finalize(state, campaign);
     return true;
@@ -2730,8 +2740,7 @@ window.FB = window.FB || {};
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     FB.news(state, FB.msg('news.holywar.victory_partitioned',
       '👑 The attacking camp wins the {campaign}. The settlement council’s awards take effect.', {
-        campaign:FB.dataParam('religion', campaign.callingReligion,
-          'head.greatHolyWar.name')
+        campaign:FB.holyWarNameParam(state, campaign.callingReligion)
       }));
     recordCouncilTerms(state, campaign, acceptPlayer);
     finalize(state, campaign);
@@ -2981,7 +2990,7 @@ window.FB = window.FB || {};
   FB.greatHolyWarSeason = function (state) {
     var campaign = state && state.greatHolyWar;
     if (!campaign || campaign.phase !== 'active') return;
-    /* Great-holy-war progress is earned daily, but abandoned works decay and
+    /* Holy war progress is earned daily, but abandoned works decay and
        a fort's sortie attrition both pulse only at the seasonal boundary. */
     for (var objectiveIndex = 0;
          objectiveIndex < campaign.objectiveCounties.length; objectiveIndex++) {

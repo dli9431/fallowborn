@@ -1,5 +1,52 @@
 # UI: keyboard & mobile
 
+Holy-war combatant overviews open from county details, ruler war cards, and the
+campaign panel. They show the target, caller, attacking leader, and complete opposing
+rosters in two bordered boxes. Compact heraldry-and-name buttons expose current
+campaign troops, host counts, service roles, and contribution points through shared
+hover/focus tooltips anchored beside the name on desktop, flipping left when needed
+and clamping to the viewport. Action tooltips can opt into this control-relative
+placement with `data-tooltip-anchor="control"`. Activating a name opens its details with Back navigation for
+touch and keyboard users. Desktop rosters use multiple columns to fit the campaign
+on one screen; target, leadership, phase, and side totals stay visible. The two sides
+stack on narrow screens with 44px touch targets. Shared modal history preserves the
+originating sheet and scroll position on Back; Close dismisses the modal chain.
+One 44px sort button applies to both rosters: A↓ for A–Z, 9↓ for descending
+campaign troop totals across each realm's hosts. Its accessible label names the
+current order and next action. Ties use realm name then id; leaders follow the same
+order. Sorting reorders existing entries, preserving focus, scroll, and detail links.
+The mode is session-only and survives returning from combatant details.
+Each side's compact activity links show current battle counties and siege progress
+or stalled sieges. Activating a county closes the modal and selects and centers it
+on the map. Links support keyboard focus and 44px touch targets.
+Ruler cards for holy-war participants omit the expanded Current wars opponent list.
+Their faith-named campaign card shows the target and both coalitions as a named realm
+plus the remaining realm count and combined field troops, followed immediately by
+View all combatants. Separate ordinary-war goal cards and truce notices remain visible.
+The Land tab uses this same compact campaign card for participating realms, holy-war
+host locations, and target counties. It replaces the expanded opponent notice and
+the separate campaign button; only the card's View all combatants button remains.
+
+County provisions sheets show current civilian food consumption per season and
+food spoiled in the latest seasonal report; uncomputed spoilage uses the existing
+Updates next season placeholder. These numeric rows remain visible.
+
+Counties with multiple hosts show the combined troop count and composition, then
+an explicitly labeled individual-host picker. The chosen host retains its own
+orders, supply, and battle-quality tooltip; switching preserves panel scroll and
+picker focus. Its prompt is inside the dropdown with an accessible name.
+A compact button beside the picker toggles A–Z and largest-first order, with an
+icon for the current mode and a localized accessible label naming the next action.
+Sort changes retain the inspected host, panel scroll, and button focus. The mode
+is session-only; equal counts sort by realm name, then stable host id.
+Inspection is transient and separate from map command selection, including foreign
+hosts; it resets when the county, life, or inspected host changes/disappears.
+Unit combat and upkeep display values round to three decimal places.
+
+Market price-band labels and the market-map legend match canvas marker colors:
+teal for cheap, gold for steady, coral for dear. Their triangle/dot symbols remain
+visible alongside color, independent of the county shading's intensity scale.
+
 Event narratives carry the story. Supporting rules such as how to move a host,
 maintain a siege, or refill provisions belong in the event's Details hover/focus
 tooltip and compact question-mark disclosure. Essential choice effects stay visible.

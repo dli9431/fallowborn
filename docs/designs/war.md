@@ -1,5 +1,28 @@
 # Wars
 
+Generic player-facing wording uses Holy War. Campaign names use the calling
+faith's resolved group: Christian Crusade, Muslim Jihad, pagan Sacred War, and
+Holy War otherwise. Pagan wording is game flavor, not a claim that diverse pagan
+faiths used one historical term. Names and queued call/muster events use the same
+group resolver; durable named news keeps a localized message parameter. This is
+presentation only and does not expand which faiths can call a campaign. Existing
+greatHolyWar state/API identifiers and saved event IDs are unchanged.
+
+Food-unit calibration: one unit feeds 30 infantry for a base season, versus 40
+civilians. Mounted troops keep their existing extra mouth-equivalent. The base
+unit price is 0.1125, preserving pre-change normal-price ration cost while making
+physical consumption four times larger. Local scarcity prices still increase cost.
+
+The Land county view separates all-host totals from individual host inspection.
+Live regional provisions prices are shared with army purchases and the market map;
+seasonal reserve pressure remains additional background accounting (markets.md).
+
+At seasonal market updates, large field-host concentrations create food-price
+pressure in their county and neighboring land (four steps at 10,000 men, nine at
+60,000, with no fixed distance ceiling), scaling with total
+troops and fading with distance. This changes reserve/trade pressure, not actual
+withdrawals or provisioning permissions. See markets.md for thresholds and caps.
+
 War-event narrative stays in the story's voice. Muster/siege instructions and
 provisions capacity explanations live in top-level `desc`, rendered as the shared
 Details tooltip or compact disclosure. Choice consequences remain with the choices.
@@ -432,6 +455,32 @@ from existing ancestor hosts. Host splitting retains assignment. Neutral armies 
 not join a battle merely because they are not hostile to one side.
 
 Holy wars retain their calling, vow, occupation, contribution and settlement systems.
+The combatant overview lists every recorded participant on each side, including
+expedition participants and realms with no remaining hosts. Each side has a visible
+troop total; individual heraldry-and-name entries
+put their troop and contribution details in hover/focus tooltips and tap-open sheets.
+Desktop tooltips sit beside the hovered or focused name, within the screen edges.
+The compact desktop overview keeps both rosters together without per-realm stat cards.
+Both sides share an A–Z / largest-host-first toggle; host size is the realm's
+combined campaign field troops, including split detachments, with names breaking ties.
+Overview activity links use current campaign hosts: opposing camps sharing a county
+mark a battle, matching the map's daily-tick battle markers. Objective counties with
+hosts besieging the opposing occupation show progress or the fort's manpower blocker.
+Completed occupations without a counter-siege are omitted. This read-only snapshot
+does not retain historical battles or change siege progress; county links center the map.
+Ruler cards summarize the attacking caller and the strongest mandatory defending
+realm (or strongest participant when no mandatory defender exists), plus each side's
+other realm count and actual field troops. This representative is not a new defending
+commander. The full roster remains available through View all combatants.
+Relevant Land county panels share this coalition card and its single roster button,
+replacing the long war-opponent list during the campaign.
+Current field totals sum
+all campaign detachments (including legacy unassigned hosts), excluding ordinary-war
+assignments and rebels. Preparation shows actual raised troops rather than projected
+muster. Contribution is the existing campaign score, labeled as points; it is not an
+itemized treasury or provisions ledger. The attacking military leader and caller are
+identified separately; defenders retain individual command, with no invented overall
+leader. This is presentation only and changes no technology eligibility or war rules.
 They coexist with ordinary wars using the same military resources. Hosts work on the
 objectives of their assigned campaign; a battle credits one eligible campaign, preferring
 an assigned ordinary campaign where hostility overlaps. Holy-war semantic IDs and save

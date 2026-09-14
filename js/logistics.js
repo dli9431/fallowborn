@@ -76,7 +76,7 @@
       const def = FBDATA.unitClasses[id];
       if (def && def.basket && number(def.basket.transport) >= 0.4) mouths += number(units[id]);
     });
-    return mouths / Math.max(1, B('armyProvisionMenPerUnit', 120)) / 90 /
+    return mouths / Math.max(1, B('armyProvisionMenPerUnit', 30)) / 90 /
       Math.max(0.01, B('supplyDrainBase', 1.2));
   }
   FB.armyProvisionUse = function (state, army, pid, supplyTech) {
@@ -91,14 +91,14 @@
   FB.armyProvisionCommitment = function (state, army, seasons) {
     return unitsPerPoint(army) * (FB.armyProvisionUse(state, army) * 90 * seasons +
       Math.max(0, FB.armyProvisionTarget(army) - number(army.supply))) *
-      B('armyProvisionPrice', 0.45) * FB.marketPrice(state, army.at, 'provisions');
+      B('armyProvisionPrice', 0.1125) * FB.marketPrice(state, army.at, 'provisions');
   };
   FB.playerProvisionEstimate = function (state) {
     let cost = 0;
     (state.armies || []).forEach(function (army) {
       if (army.realm !== 'player' || !purchases(army) || control(state, army, army.at).hostile) return;
       cost += unitsPerPoint(army) * FB.armyProvisionUse(state, army) * 90 *
-        B('armyProvisionPrice', 0.45) * FB.marketPrice(state, army.at, 'provisions');
+        B('armyProvisionPrice', 0.1125) * FB.marketPrice(state, army.at, 'provisions');
     });
     return cost;
   };
@@ -130,7 +130,7 @@
     const capacity = market.demand / 90 * B('armyProvisionMarketDays', 2);
     const available = Math.max(0, market.stock - market.reserve * rights.protection);
     const room = Math.max(0, capacity * (1 - rights.protection) - used);
-    const price = B('armyProvisionPrice', 0.45) * market.price;
+    const price = B('armyProvisionPrice', 0.1125) * market.price;
     const funds = rights.hostile ? Infinity : purseView(state, army.realm).gold;
     const affordable = rights.hostile || !price ? Infinity : funds / price;
     result.stockAvailable = available;
@@ -328,7 +328,7 @@
       // and the ordinary retreat fallback remain independent of this shortcut.
       if (!quotes[pid] && funds <= 0) {
         const market = FB.marketProvisionSource(state, pid);
-        if (!market || B('armyProvisionPrice', 0.45) * market.price > 0) {
+        if (!market || B('armyProvisionPrice', 0.1125) * market.price > 0) {
           const timing = FB.game && FB.game._fastForwardTiming;
           if (timing) timing.count('Supply search: unaffordable quotes skipped');
           return false;

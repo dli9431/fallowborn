@@ -4106,7 +4106,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       if (!s.player.war) return false;
-      // a great-holy-war host is vow-bound — withdrawal runs its own path
+      // a holy war host is vow-bound — withdrawal runs its own path
       if (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s)) return false;
       return !!(FB.playerHost && FB.playerHost(s));
     },

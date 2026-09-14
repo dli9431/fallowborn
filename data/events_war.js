@@ -376,7 +376,7 @@ FBDATA.events.push(
     { label:'Give them a place in the line.',
       desc:'120 volunteers join as levy without a recruitment fee. Their supplies still add about {money:0.6} to seasonal logistics.',
       effects:{ custom:'ghw_recruit_volunteers',
-        log:'Accepted armed pilgrims into the great holy-war host.' } }
+        log:'Accepted armed pilgrims into the holy war host.' } }
   ]},
 { id:'ghw_swords_seeking_banner', title:'Swords Seeking a Banner',
   trigger:{ custom:'ghw_has_field_host', goldMin:15, chance:0.25 },
@@ -412,14 +412,16 @@ FBDATA.events.push(
   ]},
 { id:'ghw_called',
   title:{ forms:{ select:'value', param:'campaignType', cases:{
-    crusade:'The Pope Calls a Crusade',
+    crusade:'A Crusade Is Called',
     jihad:'The Caliph Calls a Jihad',
+    sacred:'A Sacred War Is Called',
     other:'A Holy War Is Called'
   }}},
   trigger:{ never:true }, wartime:true,
   text:{ forms:{ select:'value', param:'campaignType', cases:{
-    crusade:'The Pope calls Christendom to a Crusade for {kingdom}. Across the Latin realms, preachers carry the summons and rulers take the cross. The banners have 180 days to gather.',
+    crusade:'{caller} calls the Christian faithful to a Crusade for {kingdom}. Preachers carry the summons and rulers take the cross. The banners have 180 days to gather.',
     jihad:'The Caliph calls the faithful to Jihad for {kingdom}. Across the Muslim realms, preachers carry the summons and rulers take the vow. The armies have 180 days to gather.',
+    sacred:'{caller} calls a Sacred War for {kingdom}. Sacred oaths pass from shrine to hall as warriors gather beneath their banners. The hosts have 180 days to gather.',
     other:'{caller} calls the faithful to a holy war for {kingdom}. Preachers carry the summons from court to court, and the armies have 180 days to gather.'
   }}},
   options:[
@@ -431,12 +433,14 @@ FBDATA.events.push(
   title:{ forms:{ select:'value', param:'campaignType', cases:{
     crusade:'The Crusade Begins',
     jihad:'The Jihad Begins',
+    sacred:'The Sacred War Begins',
     other:'The Holy War Begins'
   }}},
   trigger:{ never:true }, wartime:true,
   text:{ forms:{ select:'value', param:'campaignType', cases:{
     crusade:'The 180 days of preaching and preparation are ended. The crusading hosts stand beneath their banners, and {leader} takes command for the march on {kingdom}.',
     jihad:'The 180 days of preaching and preparation are ended. The armies of the jihad stand beneath their banners, and {leader} takes command for the march on {kingdom}.',
+    sacred:'The 180 days of oaths and preparation are ended. The hosts of the Sacred War stand beneath their banners, and {leader} takes command for the march on {kingdom}.',
     other:'The 180 days of preaching and preparation are ended. The gathered hosts stand beneath their banners, and {leader} takes command for the march on {kingdom}.'
   }}},
   options:[

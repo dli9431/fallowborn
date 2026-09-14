@@ -1,5 +1,71 @@
 # County commodity markets
 
+Large army concentrations add regional provisions pressure at the seasonal market
+update. Troops from all banners in a county are summed before applying the 2,500-men
+threshold. Reach adds one land-adjacency step per 2,500 men up to 10,000 (four steps).
+Above that, distance scale is sqrt(men / 10,000), radius is floor(men / 2,500 /
+distance scale), and decay uses distance / distance scale. Thus 60,000 troops reach
+nine steps, retaining about 44% of their origin pressure at that outer ring;
+120,000 reach thirteen. Pressure starts at men / provisions-men-per-unit
+and has a baseline retention of 80% per step. Each camp visits each county once, cannot cross wasteland
+or use water-only links, and overlaps with other camps add. Borders do not stop
+commercial pressure. There is no fixed ring ceiling: visits are bounded by the
+reachable world counties, with one traversal per occupied source county. Growing
+radius approximately with the square root of troop count expands the affected area
+without making reach grow linearly across the continent. Larger hosts spread
+substantial pressure across the region instead of merely adding a negligible fringe.
+
+Historical basis: the study [The Islamic countryside and food supplies to the
+Levantine crusader cities](https://www.cambridge.org/core/journals/rural-history/article/islamic-countryside-and-food-supplies-to-the-levantine-crusader-cities-in-the-first-half-of-the-twelfth-century/645279AA1C15309E01ED6FDC3FD8E593)
+estimates 288,400 kg of provisions for 15,000 soldiers over two to three weeks,
+excluding animal feed and several other supplies, and describes competition for
+crops across agricultural districts around Aleppo and Damascus. This supports a
+regional burden at 10,000 men, not a precise county radius or universal price rise.
+The thresholds and decay are gameplay approximations; this model does not yet
+measure occupation duration or independently model baggage animals and fodder.
+
+The larger of actual county withdrawals and regional pressure enters provisions
+reserve targets and trade flows. This does not withdraw additional food, credit
+suppliers, or create requisition penalties. Existing price smoothing and caps apply;
+abundant stocks and imports can soften the effect. Movement and casualties affect
+the next seasonal calculation; existing scarcity then recovers through normal trade.
+No new gameplay capability or technology gate is introduced: this is a numeric
+extension of existing army-driven market pricing. The three `marketArmyPressure*`
+balance settings control threshold, regional troop scale, and decay.
+
+Current concentrations also impose a live provisions quote floor, shared by army
+purchases, household quotes, the county sheet, and map markers/shading. The floor
+is 1 + regional pressure / max(1, civilian seasonal demand, stock / reserve seasons),
+capped at the crisis price ceiling and combined with the saved price using max,
+not multiplication. It responds immediately to troop movement and losses, while
+saved seasonal scarcity persists normally. Pressure traversals are cached against
+world, state, troop locations/counts, balance inputs and military revision; map
+shading also invalidates for changed food stocks. Quotes do not withdraw stock.
+Civilian food consumption is current population / 40 per season, without the old
+capped population multiplier. Other baskets retain their existing demand model.
+Agricultural output starts from bookmark baseline population / 40, with existing
+terrain, development, technology, buildings, and endowments; it does not grow
+automatically to feed every extra resident. Player household demand remains an
+additional small consumption term.
+
+At each seasonal update, opening food stock loses 5%, plus 20% of the excess above
+two seasons of civilian consumption, bounded by available stock. Fresh production
+is added afterward. This gives surplus storage diminishing returns without an
+instant load-time deletion or hard storage cap. Existing saves retain their exact
+stock until a market season passes. Only provisions spoil. The county market
+shows current civilian consumption and the latest spoilage amount.
+
+Army food units now feed 30 infantry for a base season instead of 120. Mounted
+troops retain their additional mouth-equivalent, and terrain, winter, and supply
+technology retain their existing consumption effects. Base unit price changes
+from 0.45 to 0.1125 so a normal-price ration has the same gold cost while physical
+withdrawals are four times larger. Existing purchases are never replayed.
+These are explicit game-balance units, not historical bushels or tonnes.
+
+Cheap, steady, and dear markers and their HTML legend/price labels use matching
+teal (#6ee5d3), gold (#f0d170), and coral (#ff9676). County shading retains its
+separate intensity scale; symbols continue to distinguish price bands.
+
 ## Purpose and scale
 
 Field provisioning withdraws provisions daily through `js/logistics.js`. County

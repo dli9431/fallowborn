@@ -1147,10 +1147,7 @@ window.FB = window.FB || {};
     }
     if (s.greatHolyWar && FB.playerGreatHolyWarCamp(s)) {
       const great = s.greatHolyWar;
-      const greatReligion = FB.religionOf(great.callingReligion, s);
-      const greatName = greatReligion
-        ? dt(s, 'religion', great.callingReligion, greatReligion,
-          'head.greatHolyWar.name') : FB.T('holy war');
+      const greatName = FB.holyWarName(s, great.callingReligion);
       const greatKingdom = FBDATA.kingdoms[great.targetKingdom];
       let greatStatus;
       if (great.phase === 'preparation') {
@@ -6467,6 +6464,8 @@ window.FB = window.FB || {};
   };
 
   let selectedProv = null;
+  let inspectedCountyHost = null;
+  let countyHostSort = 'name';
   UI.selectProvince = function (pid) {
     selectedProv = pid;
     FB.map.select(pid, mapGroupOf);
@@ -7073,10 +7072,11 @@ window.FB = window.FB || {};
         let classLine = FB.T(
           '{icon} {unit} ×{count} — attack {attack}, defense {defense}', {
             icon: classDef.icon || '', unit: className, count: classCount,
-            attack: classStats.attack, defense: classStats.defense
+            attack: Math.round(classStats.attack * 1000) / 1000,
+            defense: Math.round(classStats.defense * 1000) / 1000
           });
         if (classStats.upkeepPer100) {
-          classLine += FB.T(', upkeep {upkeep} per 100', { upkeep: classStats.upkeepPer100 });
+          classLine += FB.T(', upkeep {upkeep} per 100', { upkeep: Math.round(classStats.upkeepPer100 * 1000) / 1000 });
         }
         if (classStats.counters.length) {
           const counterNames = [];
@@ -7245,18 +7245,63 @@ window.FB = window.FB || {};
     h += '<div data-war-siege="' + esc(pid) + '">' + siegeFeedbackHtml(s, pid) + '</div>';
     const selectedRealmId = !pr.wasteland && s.owner[pid];
     const selectedRealm = selectedRealmId && s.realms[selectedRealmId];
-    if (selectedRealm && FB.isRealmAtWar(s, selectedRealmId)) {
+    const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
+    const hostsHere = FB.armiesAt ? FB.armiesAt(s, pid) : [];
+    const holyWarHere = s.greatHolyWar && ((FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, selectedRealmId)) ||
+      hostsHere.some(function (host) { return host.warId === 'holy'; }) ||
+      (s.greatHolyWar.objectiveCounties || []).indexOf(pid) >= 0);
+    if (holyWarHere && UI.holyWarCardHtml) {
+      h += UI.holyWarCardHtml(s);
+    } else if (selectedRealm && FB.isRealmAtWar(s, selectedRealmId)) {
       h += '<div class="progressnote warnote land-current-war">' +
         '⚔ ' + FB.warStatusLinkHtml(s, selectedRealmId) + '</div>';
     }
-    const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
-    const hostsHere = FB.armiesAt ? FB.armiesAt(s, pid) : [];
     const playerHostHere = hostsHere.find(function (a) {
       return a.realm === 'player' ||
         (FB.playerControlsHost && FB.playerControlsHost(s, a));
     });
-    const hostToShow = (selA && (selA.at === pid || !hostsHere.length)) ?
-      selA : (playerHostHere || hostsHere[0] || selA);
+    if (inspectedCountyHost && (inspectedCountyHost.state !== s || inspectedCountyHost.pid !== pid)) {
+      inspectedCountyHost = null;
+    }
+    const inspectedHost = inspectedCountyHost && hostsHere.find(function (host) {
+      return host.id === inspectedCountyHost.id && host.men > 0;
+    });
+    if (!inspectedHost) inspectedCountyHost = null;
+    const hostToShow = inspectedHost || ((selA && (selA.at === pid || !hostsHere.length)) ?
+      selA : (playerHostHere || hostsHere[0] || selA));
+    if (hostsHere.length > 1) {
+      const sortedHosts = hostsHere.slice().sort(function (a, b) {
+        const ar = s.realms[a.realm], br = s.realms[b.realm];
+        const byName = String(ar ? ar.name : a.realm).localeCompare(String(br ? br.name : b.realm));
+        return (countyHostSort === 'size' ? (b.men - a.men) || byName : byName || (b.men - a.men)) ||
+          String(a.id).localeCompare(String(b.id));
+      });
+      const sortLabel = countyHostSort === 'name'
+        ? FB.T('Sorted A–Z. Change to largest first.')
+        : FB.T('Sorted largest first. Change to A–Z.');
+      const combined = {};
+      let total = 0;
+      for (const host of hostsHere) {
+        total += Math.max(0, Number(host.men) || 0);
+        for (const id in host.units || {}) combined[id] = (combined[id] || 0) +
+          Math.max(0, Number(host.units[id]) || 0);
+      }
+      h += '<div class="progressnote" id="county-host-summary"><b>' + esc(FB.T(
+        '{count} hosts at {place} — {men}', { count:hostsHere.length, place:pr.name,
+          men:menText(s, total) })) + '</b><div>' +
+        esc(FB.unitClassParts ? FB.unitClassParts(s, combined).join(' · ') : '') +
+        '</div><div class="county-host-controls"><select id="county-host-picker" aria-label="' + esc(FB.T('Inspect individual host')) +
+        '"><option value="" disabled' + (!inspectedHost ? ' selected' : '') + '>' +
+        esc(FB.T('Inspect individual host')) + '</option>' + sortedHosts.map(function (host) {
+          const realm = s.realms[host.realm];
+          return '<option value="' + esc(host.id) + '"' +
+            (inspectedHost && host.id === inspectedHost.id ? ' selected' : '') + '>' +
+            esc(FB.T('{realm} — {men}', { realm:realm ? realm.name : host.realm,
+              men:menText(s, host.men) })) + '</option>';
+        }).join('') + '</select><button type="button" class="btn small" id="county-host-sort" ' +
+        'data-sort="' + countyHostSort + '" title="' + esc(sortLabel) + '" aria-label="' + esc(sortLabel) +
+        '"><span aria-hidden="true">' + (countyHostSort === 'name' ? 'A↓' : '9↓') + '</span></button></div></div>';
+    }
     if (hostToShow) {
       h += renderWarCard(s, hostToShow, pr);
     }
@@ -7474,7 +7519,7 @@ window.FB = window.FB || {};
         const strongpoint = FB.fortSiegeStatus
           ? FB.fortSiegeStatus(s, pid, occupation, 0) : null;
         h += '<div class="progressnote warnote">' + esc(FB.T(
-          '📯 Great holy-war objective · {status}', {
+          '📯 Holy war objective · {status}', {
             status:objectiveStatus
           })) + (strongpoint && strongpoint.level
           ? '<br>' + esc(FB.T(
@@ -7600,6 +7645,29 @@ window.FB = window.FB || {};
       });
     });
     const hostSplit = $('btn-host-split');
+    const holyWarOverview = box.querySelector('[data-holy-war-overview-link]');
+    if (holyWarOverview) holyWarOverview.addEventListener('click', UI.showHolyWarOverview);
+    const hostPicker = $('county-host-picker');
+    const hostSort = $('county-host-sort');
+    if (hostSort) hostSort.addEventListener('click', function () {
+      const scroll = box.scrollTop;
+      countyHostSort = countyHostSort === 'name' ? 'size' : 'name';
+      renderProv();
+      box.scrollTop = scroll;
+      const replacement = $('county-host-sort');
+      if (replacement) replacement.focus({ preventScroll:true });
+    });
+    if (hostPicker) hostPicker.addEventListener('change', function () {
+      const scroll = box.scrollTop;
+      inspectedCountyHost = { state:s, pid:pid, id:hostPicker.value };
+      const tooltip = $('tooltip');
+      if (tooltip) tooltip.classList.add('hidden');
+      renderProv();
+      box.scrollTop = scroll;
+      const replacement = $('county-host-picker');
+      if (replacement) replacement.focus({ preventScroll:true });
+      if (FB.map) FB.map.request();
+    });
     if (hostSplit && hostToShow) hostSplit.addEventListener('click', function () {
       if (FB.splitHost) FB.splitHost(s, hostToShow);
       if (FB.map) FB.map.request();

@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.9';
+FB.VERSION = '1.179.10';
 FB.CHANGELOG = [
+  { v: '1.179.10', date: '2026-09-14', changes: [
+    'Large armies raise regional food prices, provisions spoil, and civilian and army consumption use revised quantities.',
+    'County hosts and holy-war coalitions have sortable lists, clearer summaries, and combatant details, with siege and battle links to the map.'
+  ] },
   { v: '1.179.9', date: '2026-09-13', changes: [
     'Army orders, campaign automation, and resupply handle blocked routes and interrupted marches. War choices distinguish provisions refills from combat modifiers, with instructions in tooltips.',
     'Settled wastelands survive reloading. County support, rank prices, and court cultivation show their effects more clearly.'
@@ -441,7 +445,7 @@ FB.CHANGELOG = [
       'Household standards now use inline −/+ controls, with desktop tooltips and compact ? disclosures replacing separate sheets.',
       'Equipment slots use even rows and desktop or compact details; Equip Best now applies immediately from the same centered sheet.',
       'Freehold-land choices now keep cost and seasonal yield on the row and move their complete terms into tooltips.',
-      'Great holy-war progress now appears in Deeds only when your character has joined that campaign.',
+      'Holy war progress now appears in Deeds only when your character has joined that campaign.',
       'Gentry households can continue buying available freehold plots after declaring their first manor.'
     ] },
     { v: '1.154.0', date: '2026-08-24', changes: [
@@ -1110,16 +1114,16 @@ FB.CHANGELOG = [
       'Sunni kings and emperors can now contest a sitting Caliph in an office-only succession war.'
     ] },
     { v: '1.76.0', date: '2026-07-27', changes: [
-      'Great holy-war leaders can now reinforce a live field host with pilgrims, mercenaries, landless cavalry, or adventurers through wartime events.'
+      'Holy war leaders can now reinforce a live field host with pilgrims, mercenaries, landless cavalry, or adventurers through wartime events.'
     ] },
     { v: '1.75.1', date: '2026-07-27', changes: [
-      'Great holy-war settlement text, temporary modifier labels, and Roadwise guidance now read more clearly.'
+      'Holy war settlement text, temporary modifier labels, and Roadwise guidance now read more clearly.'
     ] },
     { v: '1.75.0', date: '2026-07-27', changes: [
       'Character traits are now grouped as dispositions, formations, reputations, and conditions, with five new traits earned through votes, journeys, war service, rents, and family choices.'
     ] },
     { v: '1.74.0', date: '2026-07-27', changes: [
-      'Great holy wars now end in settlement councils where vows, service, occupation, rights, and local support shape claims to captured land and sacred-site custody.'
+      'Holy wars now end in settlement councils where vows, service, occupation, rights, and local support shape claims to captured land and sacred-site custody.'
     ] },
     { v: '1.73.0', date: '2026-07-27', changes: [
       'Temporary county and campaign modifiers now make relief, charters, vows, and military conditions visible until their effects expire.'
@@ -1202,7 +1206,7 @@ FB.CHANGELOG = [
       'Commoner households can now choose a living standard that shapes their daily expenses, provisions, comfort, health, and standing.'
     ] },
     { v: '1.60.2', date: '2026-07-25', changes: [
-      'Great holy wars now announce the religious head’s call and the assembled armies’ march through wartime events.'
+      'Holy wars now announce the religious head’s call and the assembled armies’ march through wartime events.'
     ] },
     { v: '1.60.1', date: '2026-07-25', changes: [
       'Mobile Back now returns through previously selected Deeds, Land, Network, and Chronicle panels before leaving the game.'
@@ -5828,7 +5832,7 @@ FB.CHANGELOG = [
       blockers.push(FB.T('Return from campaign before retiring.'));
     } else if (FB.playerGreatHolyWarHostActive &&
         FB.playerGreatHolyWarHostActive(s)) {
-      blockers.push(FB.T('The great holy war must be resolved before retiring.'));
+      blockers.push(FB.T('The holy war must be resolved before retiring.'));
     } else if (FB.atWarPersonally && FB.atWarPersonally(s)) {
       blockers.push(FB.T('Resolve the current wartime duty before retiring.'));
     }

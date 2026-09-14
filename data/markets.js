@@ -190,6 +190,12 @@ FBDATA.marketEndowments = {
 /* Market simulation tunables. Units are deliberately broad: one stock unit
    is a season-sized share of a county basket, not a literal bushel or horse. */
 FBDATA.balance.marketReserveSeasons = 2;
+FBDATA.balance.marketFoodPeoplePerUnit = 40;
+FBDATA.balance.marketFoodSpoilage = 0.05;
+FBDATA.balance.marketFoodExcessSpoilage = 0.20;
+FBDATA.balance.marketArmyPressureMinMen = 2500;
+FBDATA.balance.marketArmyPressureRegionalMen = 10000;
+FBDATA.balance.marketArmyPressureDecay = 0.80;
 FBDATA.balance.marketFlowPasses = 2;
 FBDATA.balance.marketEdgeCapacity = 12;
 FBDATA.balance.marketStockScale = 12;

@@ -1511,8 +1511,8 @@ FBDATA.balance = {
      and depth past the friendly frontier; at 0 the host starves */
   supplyRecoverRate: 3, // supply points a host on friendly land regains per day
   warEventProvisions: 10, // immediate event refill, capped by the host's 100-point reserve
-  armyProvisionPrice: 0.45, // gold per abstract provisions unit, before local price
-  armyProvisionMenPerUnit: 120, // infantry fed for a season by one market unit
+  armyProvisionPrice: 0.1125, // rescaled with physical food units; local prices still apply
+  armyProvisionMenPerUnit: 30, // infantry fed for a season by one market unit
   armyProvisionMarketDays: 2, // county daily loading ceiling in days of civilian demand
   armyProvisionFortProtection: 0.20, // protected normal reserve and reduced loading per fort level
   armyProvisionDues: 0.10, // paid sales share reaching holder/sovereign

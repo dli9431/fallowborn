@@ -104,7 +104,12 @@
       luxuries:luxury
     };
     const out = [];
-    for (let i = 0; i < ids.length; i++) out.push(base.amount * clampedPopFactor * (ratios[ids[i]] || 0.1));
+    const population = state.population && state.population.counties && state.population.counties[pid];
+    const people = population && isFinite(Number(population.count)) ? Math.max(0, Number(population.count)) :
+      (FB.countyPopulationBaseline ? FB.countyPopulationBaseline(state, pid) : base.amount * 40);
+    for (let i = 0; i < ids.length; i++) out.push(ids[i] === 'provisions'
+      ? people / Math.max(1, balance('marketFoodPeoplePerUnit', 40))
+      : base.amount * clampedPopFactor * (ratios[ids[i]] || 0.1));
     return out;
   }
 
@@ -489,6 +494,74 @@
     return out;
   }
 
+  // Large concentrations compete for food beyond their camp. This is reserve
+  // and trade pressure only: actual food withdrawals remain in logistics.
+  FB.marketArmyPressure = function (state) {
+    const world = FB.world, out = {}, camps = {};
+    if (!world || !world.byId || !world.adj) return out;
+    const minimum = Math.max(1, balance('marketArmyPressureMinMen', 2500));
+    const regionalMen = Math.max(minimum, balance('marketArmyPressureRegionalMen', 10000));
+    const decay = Math.max(0, Math.min(1, balance('marketArmyPressureDecay', 0.80)));
+    const menPerUnit = Math.max(1, balance('armyProvisionMenPerUnit', 30));
+    for (const army of state.armies || []) {
+      const pid = army.at || army.provinceId || army.pid;
+      const men = Number(army.men);
+      if (!world.byId[pid] || world.byId[pid].wasteland || !isFinite(men) || men <= 0) continue;
+      camps[pid] = (camps[pid] || 0) + men;
+    }
+    for (const origin of Object.keys(camps).sort()) {
+      const men = camps[origin];
+      if (men < minimum) continue;
+      // Above regional scale, grow the affected area roughly with troop count
+      // and weaken distance decay. No fixed ring ceiling truncates great hosts.
+      const distanceScale = Math.max(1, Math.sqrt(men / regionalMen));
+      const radius = Math.floor(men / minimum / distanceScale);
+      const seen = {}, queue = [{ pid:origin, distance:0 }];
+      seen[origin] = true;
+      for (let at = 0; at < queue.length; at++) {
+        const row = queue[at];
+        out[row.pid] = (out[row.pid] || 0) + men / menPerUnit * Math.pow(decay, row.distance / distanceScale);
+        if (row.distance >= radius) continue;
+        for (const next of Object.keys(world.adj[row.pid] || {}).sort()) {
+          if (seen[next] || !world.byId[next] || world.byId[next].wasteland) continue;
+          seen[next] = true;
+          queue.push({ pid:next, distance:row.distance + 1 });
+        }
+      }
+    }
+    return out;
+  };
+
+  let liveArmyPressureCache = null;
+  function liveArmyPressure(state) {
+    const signature = (state.armies || []).map(function (army) {
+      return [army.at || army.provinceId || army.pid, army.men].join(':');
+    }).join('|') + ':' + [balance('marketArmyPressureMinMen', 2500),
+      balance('marketArmyPressureRegionalMen', 10000), balance('marketArmyPressureDecay', 0.8),
+      balance('armyProvisionMenPerUnit', 30)].join(':');
+    if (!liveArmyPressureCache || liveArmyPressureCache.state !== state ||
+        liveArmyPressureCache.world !== FB.world || liveArmyPressureCache.signature !== signature ||
+        liveArmyPressureCache.revision !== FB.militaryInputRevision) {
+      liveArmyPressureCache = { state:state, world:FB.world, signature:signature,
+        revision:FB.militaryInputRevision, pressure:FB.marketArmyPressure(state) };
+    }
+    return liveArmyPressureCache;
+  }
+
+  function quotedMarketPrice(state, market, pid, at) {
+    const row = market.counties[pid];
+    const base = row[1][at];
+    if (market.goods[at] !== 'provisions') return priceNumber(base);
+    const pressure = liveArmyPressure(state).pressure[pid] || 0;
+    if (!pressure) return priceNumber(base);
+    const demand = baseDemand(state, pid, market.goods)[at];
+    const available = Math.max(1, demand, row[0][at] / Math.max(0.01, balance('marketReserveSeasons', 2)));
+    // A current concentration bids against civilian supplies now, not only at
+    // the next seasonal accounting. Do not compound this with the saved price.
+    const floor = Math.min(balance('marketPriceCrisisMax', 2.5), 1 + pressure / available);
+    return priceNumber(Math.max(base, floor));
+  }
+
   function modifierBonusIndex(state) {
     const out = Object.create(null);
     if (!FB.ensureModifiers) return out;
@@ -687,7 +760,10 @@
       const shock = cached ? cached.shocks[id] : shocksFor(state, pid, id);
       modifier *= Math.max(0, 1 + shock.production);
       const terrainAmount = terrain[id] === undefined ? 0.1 : terrain[id];
-      out.push(Math.max(0, base.amount * terrainAmount *
+      const outputBase = id === 'provisions' && FB.countyPopulationBaseline
+        ? FB.countyPopulationBaseline(state, pid) / Math.max(1, balance('marketFoodPeoplePerUnit', 40))
+        : base.amount;
+      out.push(Math.max(0, outputBase * terrainAmount *
         (0.86 + base.dev * 0.025) * modifier));
       report.severe[i] = shock.severe;
     }
@@ -863,11 +939,13 @@
     const demands = {};
     const production = {};
     const reportByPid = {};
+    const armyPressure = FB.marketArmyPressure(state);
     const household = FB.marketHouseholdDemand(state);
     const home = state.player.provinceId;
     for (let p = 0; p < pids.length; p++) {
       const pid = pids[p];
       const demand = baseDemand(state, pid, ids, context);
+      const civilianFood = demand[ids.indexOf('provisions')] || 0;
       const report = {
         production:emptyVector(ids, 0), demand:emptyVector(ids, 0),
         imports:emptyVector(ids, 0), exports:emptyVector(ids, 0),
@@ -890,14 +968,23 @@
       report.demand = demand.slice();
       reportByPid[pid] = report;
       for (let g = 0; g < ids.length; g++) {
+        if (ids[g] === 'provisions') {
+          const stock = market.counties[pid][0][g];
+          const normalReserve = civilianFood * balance('marketReserveSeasons', 2);
+          report.spoilage = Math.min(stock, stock * Math.min(1, Math.max(0, balance('marketFoodSpoilage', 0.05))) +
+            Math.max(0, stock - normalReserve) * Math.min(1, Math.max(0, balance('marketFoodExcessSpoilage', 0.20))));
+          report.civilianFood = civilianFood;
+          market.counties[pid][0][g] -= report.spoilage;
+        }
         market.counties[pid][0][g] = Math.max(0,
           market.counties[pid][0][g] + production[pid][g] - demand[g]);
-        // Military food was removed on each day of the march. Include it in
-        // price/flow pressure and the report, never subtract it a second time.
+        // Actual withdrawals and anticipated regional competition share one
+        // reserve-pressure floor; neither subtracts physical food a second time.
         if (ids[g] === 'provisions') {
-          demand[g] += context.armies[pid] || 0;
+          demand[g] += Math.max(context.armies[pid] || 0, armyPressure[pid] || 0);
           report.demand[g] = demand[g];
           report.military = context.armies[pid] || 0;
+          report.armyPressure = armyPressure[pid] || 0;
         }
       }
     }
@@ -953,7 +1040,7 @@
       provisionDemand[pid] = baseDemand(state, pid, market.goods)[at];
     }
     const demand = provisionDemand[pid];
-    return { stock:row[0][at], price:row[1][at], demand:demand,
+    return { stock:row[0][at], price:quotedMarketPrice(state, market, pid, at), demand:demand,
       reserve:demand * balance('marketReserveSeasons', 2) };
   };
   FB.marketWithdrawProvisions = function (state, pid, amount) {
@@ -968,7 +1055,7 @@
     const market = FB.ensureMarket(state);
     if (!market || !market.counties[pid]) return 1;
     const at = market.goods.indexOf(goodId);
-    return at < 0 ? 1 : priceNumber(market.counties[pid][1][at]);
+    return at < 0 ? 1 : quotedMarketPrice(state, market, pid, at);
   };
 
   FB.marketCostQuote = function (state, base, basket, pid, rounding) {
@@ -997,7 +1084,9 @@
     const goods = {};
     for (let i = 0; i < ids.length; i++) {
       goods[ids[i]] = {
-        stock:record[0][i], price:record[1][i],
+        stock:record[0][i], price:quotedMarketPrice(state, market, pid, i),
+        civilianFood:ids[i] === 'provisions' ? baseDemand(state, pid, ids)[i] : null,
+        spoilage:ids[i] === 'provisions' && report ? report.spoilage : null,
         trend:report ? record[1][i] - report.priorPrice[i] : 0,
         netFlow:record[2][i],
         production:report ? report.production[i] : null,
@@ -1131,7 +1220,10 @@
     const market = state && FB.ensureMarket(state);
     if (!market || market.goods.indexOf(goodId) < 0) return null;
     const key = String(market.lastTurn) + ':' + goodId + ':' +
-      FB.world.W + 'x' + FB.world.H;
+      FB.world.W + 'x' + FB.world.H + ':' + state.turn + ':' +
+      (goodId === 'provisions' ? liveArmyPressure(state).signature + ':' +
+        FB.militaryInputRevision + ':' +
+        Object.keys(market.counties).map(function (pid) { return market.counties[pid][0][market.goods.indexOf(goodId)]; }).join(',') : '');
     if (overlayWorld === FB.world && overlayState === state &&
         overlayCache.key === key &&
         overlayCache.canvas) return overlayCache.canvas;
@@ -1149,7 +1241,7 @@
         countyColors.push([0,0,0,0]);
         continue;
       }
-      const price = market.counties[pr.id][1][at];
+      const price = quotedMarketPrice(state, market, pr.id, at);
       countyColors.push(marketOverlayColor(price));
     }
     for (let i = 0; i < FB.world.grid.length; i++) {
@@ -1216,7 +1308,7 @@
         const pr = FB.world.provs[i];
         if (pr.wasteland || !market.counties[pr.id]) continue;
         const point = toScreen(pr.cx, pr.cy);
-        const price = market.counties[pr.id][1][at];
+        const price = quotedMarketPrice(state, market, pr.id, at);
         const symbol = marketPriceSymbol(price);
         ctx.lineWidth = 4 * dpr;
         ctx.strokeStyle = 'rgba(8,9,10,.92)';

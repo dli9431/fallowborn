@@ -6220,7 +6220,7 @@ window.FB = window.FB || {};
   }
 
   /* Read-only projection for other world-scale yearly systems. It shares the
-     exact normalization and great-holy-war handling used by the world tick,
+     exact normalization and holy war handling used by the world tick,
      without exposing the tick's mutation hooks. */
   FB.realmWarSnapshot = function (state) {
     const index = worldYearWarIndex(state);

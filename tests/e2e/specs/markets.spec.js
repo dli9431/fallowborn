@@ -7,7 +7,8 @@ dependsOnRuntime(__filename, [
   'js/technology.js',
   'js/ui_modals.js',
   'data/economy.js',
-  'data/markets.js'
+  'data/markets.js',
+  'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -928,6 +929,9 @@ test('the Market lens and sheet are keyboard/touch accessible and storage stays 
     expect(result.keyJustifyContent).toBe('center');
     expect(result.keyTextAlign).toBe('center');
     expect(new Set(result.keyColors).size).toBe(3);
+    expect(result.keyColors).toEqual([
+      'rgb(110, 229, 211)', 'rgb(240, 209, 112)', 'rgb(255, 150, 118)'
+    ]);
     expect(result.markerColors).toEqual({
       '▼':'#6ee5d3', '●':'#f0d170', '▲':'#ff9676'
     });

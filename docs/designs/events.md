@@ -1,5 +1,9 @@
 # Events are data
 
+Holy-war call and muster events select Crusade, Jihad, Sacred War, or generic
+Holy War wording from the calling faith's group. Their event IDs remain stable;
+the additive `campaignType:'sacred'` case also renders queued pagan campaigns.
+
 Optional top-level `desc` holds supporting instructions separately from narrative
 `text`. The event dialog localizes it through `FB.eventText` and presents it in the
 shared Details tooltip/disclosure. Choice costs and material consequences remain

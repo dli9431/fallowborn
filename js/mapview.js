@@ -1405,7 +1405,7 @@ window.FB = window.FB || {};
         }
       }
     }
-    // great holy-war objectives and temporary occupations sit beneath hosts
+    // holy war objectives and temporary occupations sit beneath hosts
     if (FB.state && FB.renderGreatHolyWar) {
       FB.renderGreatHolyWar(ctx, toScreen, z, M.dpr);
     }

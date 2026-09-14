@@ -668,9 +668,38 @@ body.war-picking #timebtns { visibility: hidden; }
   text-shadow: 0 1px 2px #000;
 }
 .market-price-key b { min-width: 13px; font-size: var(--ui-label-size); text-align: center; }
-.market-price-cheap { color: var(--ui-positive-color); }
-.market-price-steady { color: var(--ui-accent-hover); }
-.market-price-dear { color: var(--ui-danger-color); }
+.county-host-controls { display: flex; align-items: center; gap: 6px; }
+.holy-war-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.holy-war-sides > section { min-width: 0; overflow-wrap: break-word; }
+.holy-war-overview-modal .modalcard { width: min(96vw, 1440px); max-height: 96vh; padding: 14px; }
+.holy-war-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 20px; margin-bottom: 10px; }
+.holy-war-summary .kv { margin: 0; padding: 2px 0; }
+.holy-war-sort-control { display: flex; justify-content: flex-end; }
+.holy-war-activity { display: flex; flex-wrap: wrap; gap: 3px 10px; margin-bottom: 8px; color: var(--helper-text-color); font-size: 13px; }
+.holy-war-location { padding: 2px 0; border: 0; background: transparent; color: var(--ui-accent-color); font: inherit; text-align: left; text-decoration: underline; cursor: pointer; }
+.holy-war-location:focus-visible { outline: 1px solid var(--ui-accent-color); outline-offset: 2px; }
+@media (max-width: 700px), (pointer: coarse) { .holy-war-location { min-height: 44px; } }
+#holy-war-sort { min-width: 44px; min-height: 44px; padding: 4px; }
+.holy-war-sides > section { border: 1px solid #7a6234; border-radius: 8px; padding: 10px; }
+.holy-war-sides h3 { margin: 0 0 3px; }
+.holy-war-side-total { color: var(--helper-text-color); font-size: 13px; margin: 0 0 8px; }
+.holy-war-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 10px; align-content: start; }
+.holy-war-roster-large { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.holy-war-combatant { min-width: 0; }
+.holy-war-name { display: flex; align-items: center; gap: 5px; width: 100%; min-height: 26px; padding: 2px; border: 0; border-radius: 3px; background: transparent; color: var(--main-text-color); font: 13px/1.2 Georgia, serif; text-align: left; cursor: pointer; }
+.holy-war-name .crest { flex: 0 0 18px; }
+.holy-war-name span { min-width: 0; overflow-wrap: break-word; }
+.holy-war-name:hover, .holy-war-name:focus-visible { background: rgba(212,175,55,.12); outline: 1px solid var(--ui-accent-color); }
+.holy-war-overview-modal .gm-footer { margin-top: 10px; }
+@media (max-width: 1000px) { .holy-war-roster-large { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px), (pointer: coarse) { .holy-war-name { min-height: 44px; } }
+@media (max-width: 700px) { .holy-war-summary { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 700px) { .holy-war-sides { grid-template-columns: minmax(0, 1fr); } }
+.county-host-controls select { flex: 1; min-width: 0; width: 0; }
+#county-host-sort { flex: 0 0 44px; min-width: 44px; min-height: 44px; padding: 4px; }
+.market-price-cheap { color: #6ee5d3; }
+.market-price-steady { color: #f0d170; }
+.market-price-dear { color: #ff9676; }
 .market-lens-controls.hidden { display: none; }
 .market-sheet-picker {
   display: grid; grid-template-columns: minmax(0, 1fr);

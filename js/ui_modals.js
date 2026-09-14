@@ -3492,7 +3492,7 @@ window.FB = window.FB || {};
     }
 
     if (rel.properties && rel.properties.head && rel.properties.head.greatHolyWar) {
-      const ghwName = dt(s, 'religion', fid, rel, 'head.greatHolyWar.name') || FB.T('Holy war');
+      const ghwName = FB.holyWarName(s, fid);
       lines.push('<b>' + esc(FB.T('Holy War')) + ':</b> ' + esc(ghwName));
     }
 
@@ -4391,11 +4391,7 @@ window.FB = window.FB || {};
   }
 
   function greatHolyWarName(s, campaign) {
-    const religion = campaign && FB.religionOf(campaign.callingReligion, s);
-    return religion
-      ? dt(s, 'religion', campaign.callingReligion, religion,
-        'head.greatHolyWar.name')
-      : FB.T('Holy war');
+    return FB.holyWarName(s, campaign && campaign.callingReligion);
   }
 
   function greatHolyWarParticipantNames(s, campaign, camp) {
@@ -4483,8 +4479,7 @@ window.FB = window.FB || {};
       if (((!head || head.id !== 'player') && !playerCatholicPope) ||
           !FB.canCallGreatHolyWar(s, religionId, null, 'player')) continue;
       const targets = FB.greatHolyWarTargets(s, religionId);
-      const campaignName = dt(s, 'religion', religionId, religion,
-        'head.greatHolyWar.name');
+      const campaignName = FB.holyWarName(s, religionId);
       for (const target of targets) {
         const kingdom = FBDATA.kingdoms[target.kingdomId];
         const holyNames = target.holyCounties.map(function (pid) {
@@ -4690,6 +4685,149 @@ window.FB = window.FB || {};
     showService();
   };
 
+  let holyWarCombatantSort = 'name';
+  function holyWarActivityHtml(s, campaign, camp) {
+    if (campaign.phase !== 'active') return '';
+    const byCounty = {};
+    (s.armies || []).forEach(function (host) {
+      if (!(host.men > 0) || host.rebellionId || (host.warId && host.warId !== 'holy') ||
+          !FB.world.byId[host.at]) return;
+      const side = FB.greatHolyWarCamp(s, host.realm);
+      if (!side) return;
+      if (!byCounty[host.at]) byCounty[host.at] = { attackers:[], defenders:[] };
+      byCounty[host.at][side].push(host);
+    });
+    const links = Object.keys(byCounty).sort(function (a, b) {
+      return FB.world.byId[a].name.localeCompare(FB.world.byId[b].name);
+    }).map(function (pid) {
+      const here = byCounty[pid];
+      if (!here[camp].length) return '';
+      let label;
+      if (here.attackers.length && here.defenders.length) {
+        label = FB.T('Battle at {county}', { county:FB.world.byId[pid].name });
+      } else {
+        if ((campaign.objectiveCounties || []).indexOf(pid) < 0) return '';
+        const occupation = campaign.occupations && campaign.occupations[pid] || {};
+        if ((camp === 'attackers' && occupation.occupied) ||
+            (camp === 'defenders' && !occupation.occupied)) return '';
+        const status = FB.fortSiegeStatus && FB.fortSiegeStatus(s, pid, occupation, here[camp]);
+        const requirement = FB.greatHolyWarSiegeRequirement(s, pid, occupation);
+        const progress = occupation.progressCamp === camp ? Number(occupation.progress) || 0 : 0;
+        label = status && !status.canProgress
+          ? FB.T('Siege stalled at {county}', { county:FB.world.byId[pid].name })
+          : FB.T('Sieging {county} ({percent}%)', { county:FB.world.byId[pid].name,
+            percent:Math.min(100, Math.floor(100 * progress / Math.max(1, requirement))) });
+      }
+      return '<button type="button" class="holy-war-location" data-holy-war-county="' + esc(pid) + '">' + esc(label) + '</button>';
+    }).filter(function (entry) { return !!entry; });
+    return '<div class="holy-war-activity">' + (links.length ? links.join('') :
+      '<span>' + esc(FB.T('No current sieges or battles')) + '</span>') + '</div>';
+  }
+  UI.showHolyWarOverview = function () {
+    const s = FB.state, campaign = s && s.greatHolyWar;
+    if (!campaign) return;
+    const kingdom = FBDATA.kingdoms[campaign.targetKingdom];
+    let h = '<div class="gm-body-text" data-holy-war-overview><div class="holy-war-summary">' +
+      kv('Target', esc(kingdom ? kingdom.name : campaign.targetKingdom)) +
+      kv('Caller', esc(greatHolyWarRealmName(s, campaign.callerRealm))) +
+      kv('Attacking military leader', esc(campaign.leaderRealm
+        ? greatHolyWarRealmName(s, campaign.leaderRealm) : FB.T('Not yet appointed'))) +
+      kv('Defending command', esc(FB.T('Each realm commands its own host'))) +
+      kv('Phase', esc(campaign.phase === 'preparation' ? FB.T('Gathering') :
+        campaign.phase === 'active' ? FB.T('Campaigning') : FB.T('Settlement'))) +
+      '<div class="holy-war-sort-control"><button type="button" class="btn small" id="holy-war-sort"></button></div>' +
+      '</div><div class="holy-war-sides">';
+    for (const camp of ['attackers', 'defenders']) {
+      const rows = (campaign.participants && campaign.participants[camp] || []).slice();
+      let total = 0;
+      const roster = rows.map(function (part) {
+        const hosts = (s.armies || []).filter(function (host) {
+          return host.realm === part.realm && host.men > 0 && !host.rebellionId &&
+            (!host.warId || host.warId === 'holy');
+        });
+        const men = hosts.reduce(function (sum, host) { return sum + host.men; }, 0);
+        total += men;
+        const realm = s.realms[part.realm];
+        const score = Math.max(0, Number(campaign.contribution && campaign.contribution[part.realm]) || 0);
+        const detailsId = 'holy-war-details-' + camp + '-' + rows.indexOf(part);
+        let row = '<div class="hidden" id="' + detailsId + '">' +
+          '<h4>' + esc(greatHolyWarRealmName(s, part.realm)) + '</h4>';
+        if (part.realm === campaign.leaderRealm) row += '<div>' + esc(FB.T('Military leader')) + '</div>';
+        if (part.realm === campaign.callerRealm) row += '<div>' + esc(FB.T('Caller')) + '</div>';
+        if (realm && realm.alive === false) row += '<div>' + esc(FB.T('Realm no longer active')) + '</div>';
+        row += kv('Field troops', esc(menText(s, men))) +
+          kv('Field hosts', esc(String(hosts.length))) +
+          kv('Contribution points', esc(String(Math.round(score * 10) / 10))) +
+          kv('Service', esc(part.sovereign ? FB.T('Realm host') : FB.T('Expedition service')));
+        if (part.mandatory) row += '<div>' + esc(FB.T('Bound to defend')) + '</div>';
+        return '<div class="holy-war-combatant" data-holy-war-men="' + men + '" data-holy-war-participant="' + esc(part.realm) + '">' +
+          '<button type="button" class="holy-war-name" data-tooltip-anchor="control" data-action-tooltip="' + detailsId +
+          '" aria-describedby="' + detailsId + '">' + FB.crestTag(part.realm, 18, 22) +
+          '<span>' + esc(greatHolyWarRealmName(s, part.realm)) + '</span></button>' + row + '</div></div>';
+      }).join('');
+      h += '<section data-holy-war-side="' + camp + '"><h3>' +
+        esc(camp === 'attackers' ? FB.T('Attackers') : FB.T('Defenders')) + '</h3>' +
+        '<p class="holy-war-side-total">' + esc(FB.T('{count} combatants · {troops}', {
+          count:rows.length, troops:menText(s, total)
+        })) + '</p>' + holyWarActivityHtml(s, campaign, camp) +
+        '<div class="holy-war-roster' + (rows.length > 30 ? ' holy-war-roster-large' : '') + '">' +
+        (roster || '<p>' + esc(FB.T('No participants yet')) + '</p>') + '</div></section>';
+    }
+    h += '</div></div><div class="gm-footer"><button class="btn primary" id="holy-war-overview-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('{campaign} — combatants', { campaign:greatHolyWarName(s, campaign) }), h, {
+      historyView:true, historyBack:true, modalClass:'fullsheet-modal holy-war-overview-modal'
+    });
+    FB.paintCrests($('gm-body'));
+    $('gm-body').querySelectorAll('[data-holy-war-county]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const pid = button.getAttribute('data-holy-war-county');
+        UI.closeModal();
+        UI.selectProvince(pid);
+        if (FB.map) FB.map.centerOn(pid, FB.map.zoom);
+      });
+    });
+    function sortCombatants() {
+      const body = $('gm-body'), scroll = body.scrollTop;
+      body.querySelectorAll('.holy-war-roster').forEach(function (roster) {
+        const entries = Array.from(roster.querySelectorAll('.holy-war-combatant'));
+        entries.sort(function (a, b) {
+          const byName = a.querySelector('.holy-war-name').textContent.localeCompare(
+            b.querySelector('.holy-war-name').textContent);
+          const bySize = Number(b.dataset.holyWarMen) - Number(a.dataset.holyWarMen);
+          return (holyWarCombatantSort === 'size' ? bySize || byName : byName) ||
+            a.dataset.holyWarParticipant.localeCompare(b.dataset.holyWarParticipant);
+        });
+        entries.forEach(function (entry) { roster.appendChild(entry); });
+      });
+      const button = $('holy-war-sort');
+      const label = holyWarCombatantSort === 'name'
+        ? FB.T('Sorted A–Z. Sort both sides by largest host first.')
+        : FB.T('Sorted by largest host first. Sort both sides A–Z.');
+      button.dataset.sort = holyWarCombatantSort;
+      button.title = label;
+      button.setAttribute('aria-label', label);
+      button.innerHTML = '<span aria-hidden="true">' + (holyWarCombatantSort === 'name' ? 'A↓' : '9↓') + '</span>';
+      body.scrollTop = scroll;
+    }
+    sortCombatants();
+    $('holy-war-sort').addEventListener('click', function () {
+      holyWarCombatantSort = holyWarCombatantSort === 'name' ? 'size' : 'name';
+      const tip = $('tooltip');
+      if (tip) tip.classList.add('hidden');
+      sortCombatants();
+    });
+    $('gm-body').querySelectorAll('.holy-war-name').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const details = $(button.getAttribute('aria-describedby'));
+        openModal(button.textContent, '<div class="gm-body-text">' + details.innerHTML + '</div>', {
+          historyView:true, historyBack:true
+        });
+      });
+    });
+    $('holy-war-overview-close').addEventListener('click', UI.closeModal);
+  };
+
   UI.showGreatHolyWarPanel = function () {
     const s = FB.state, campaign = s && s.greatHolyWar;
     if (!campaign) return;
@@ -4720,6 +4858,7 @@ window.FB = window.FB || {};
         phase:campaign.phase === 'preparation' ? FB.T('preparation')
           : campaign.phase === 'active' ? FB.T('active campaign') : FB.T('settlement')
       })) + '</p></div>';
+    h += '<button type="button" class="actionbtn" id="ghw-panel-combatants">' + esc(FB.T('View all combatants')) + '</button>';
     h += kv('Caller', esc(greatHolyWarRealmName(s, campaign.callerRealm)));
     h += kv('Military leader', esc(greatHolyWarRealmName(s, campaign.leaderRealm)));
     h += kv('Schedule', esc(timing));
@@ -4818,6 +4957,7 @@ window.FB = window.FB || {};
       modalClass:'fullsheet-modal ghw-campaign-modal'
     });
     $('ghw-panel-close').addEventListener('click', UI.closeModal);
+    $('ghw-panel-combatants').addEventListener('click', UI.showHolyWarOverview);
   };
 
   UI.showGreatHolyWarWithdraw = function () {
@@ -7581,6 +7721,10 @@ window.FB = window.FB || {};
       kv('Last net flow', esc(amount(row.netFlow))) +
       kv('Your household demand', esc(amount(row.household))) +
       kv('Your enterprise output', esc(amount(row.enterprise)));
+    if (goodId === 'provisions') {
+      h += kv('Civilian food consumption per season', esc(amount(row.civilianFood))) +
+        kv('Food spoiled this season', esc(amount(row.spoilage)));
+    }
     const provisioning = goodId === 'provisions' && FB.armyProvisionCounty
       ? FB.armyProvisionCounty(s, pid) : null;
     if (provisioning) {
@@ -22772,6 +22916,43 @@ window.FB = window.FB || {};
       });
   }
 
+  function holyWarCoalitionText(s, campaign, side) {
+    const ids = (campaign.participants[side] || []).map(function (part) { return part.realm; })
+      .filter(function (id, index, all) { return all.indexOf(id) === index; });
+    if (!ids.length) return FB.T('No participants yet');
+    const troops = {};
+    ids.forEach(function (id) { troops[id] = 0; });
+    (s.armies || []).forEach(function (host) {
+      if (ids.indexOf(host.realm) >= 0 && host.men > 0 && !host.rebellionId &&
+          (!host.warId || host.warId === 'holy')) troops[host.realm] += host.men;
+    });
+    const mandatory = campaign.participants[side].filter(function (part) { return part.mandatory; })
+      .map(function (part) { return part.realm; });
+    const ranked = (mandatory.length ? mandatory : ids).slice().sort(function (a, b) {
+      return troops[b] - troops[a] || greatHolyWarRealmName(s, a).localeCompare(greatHolyWarRealmName(s, b));
+    });
+    const lead = side === 'attackers' && campaign.callerRealm ? campaign.callerRealm : ranked[0];
+    const total = ids.reduce(function (sum, id) { return sum + troops[id]; }, 0);
+    const others = ids.length - (ids.indexOf(lead) >= 0 ? 1 : 0);
+    const params = { realm:greatHolyWarRealmName(s, lead), count:others, troops:menText(s, total) };
+    return others === 0 ? FB.T('{realm} ({troops} in the field)', params)
+      : others === 1 ? FB.T('{realm} + 1 other realm ({troops} in the field)', params)
+      : FB.T('{realm} + {count} other realms ({troops} in the field)', params);
+  }
+
+  UI.holyWarCardHtml = function (s) {
+    const campaign = s.greatHolyWar;
+    if (!campaign) return '';
+    const kingdom = FBDATA.kingdoms[campaign.targetKingdom];
+    return '<section class="character-war-campaign" data-character-holy-war><h4>' + esc(greatHolyWarName(s, campaign)) + '</h4><span>' +
+      esc(FB.T('Contest control of {kingdom}.', { kingdom:kingdom ? kingdom.name : campaign.targetKingdom })) +
+      '</span><p>' + esc(FB.T('{attackers} is at war with {defenders}.', {
+        attackers:holyWarCoalitionText(s, campaign, 'attackers'),
+        defenders:holyWarCoalitionText(s, campaign, 'defenders')
+      })) + '</p><button type="button" class="actionbtn" data-holy-war-overview-link>' +
+      esc(FB.T('View all combatants')) + '</button></section>';
+  };
+
   function realmWarGoalsHtml(s, rid) {
     let h = '';
     const campaigns = FB.realmWars(s, rid);
@@ -22798,9 +22979,7 @@ window.FB = window.FB || {};
     const campaign = s.greatHolyWar;
     const camp = FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, rid);
     if (campaign && camp) {
-      const kingdom = FBDATA.kingdoms[campaign.targetKingdom];
-      h += '<section class="character-war-campaign"><h4>' + esc(FB.T('Holy war')) + '</h4><span>' +
-        esc(FB.T('Contest control of {kingdom}.', { kingdom:kingdom ? kingdom.name : campaign.targetKingdom })) + '</span></section>';
+      h += UI.holyWarCardHtml(s);
     }
     return h;
   }
@@ -22808,6 +22987,9 @@ window.FB = window.FB || {};
   function realmWarNoticeHtml(s, rid) {
     if (!rid) return '';
     const truce = FB.truceText(s, 'player', rid);
+    if (s.greatHolyWar && FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, rid)) {
+      return realmWarGoalsHtml(s, rid) + (truce ? '<div class="progressnote">' + esc(truce) + '</div>' : '');
+    }
     if (!FB.isRealmAtWar(s, rid)) return truce ? '<div class="progressnote">' + esc(truce) + '</div>' : '';
     return '<div class="progressnote warnote character-current-war" ' +
       'data-current-war="' + esc(rid) + '"><b>' +
@@ -22817,6 +22999,9 @@ window.FB = window.FB || {};
   }
 
   function bindWarRealmLinks(root, s, rid, cid, returnContext) {
+    root.querySelectorAll('[data-holy-war-overview-link]').forEach(function (button) {
+      button.addEventListener('click', UI.showHolyWarOverview);
+    });
     const links = root.querySelectorAll('[data-war-realm]');
     for (let i = 0; i < links.length; i++) {
       links[i].addEventListener('click', function (event) {

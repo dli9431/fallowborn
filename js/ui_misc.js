@@ -4413,7 +4413,8 @@ window.FB = window.FB || {};
         if (!details) return false;
         return showSideTip(btn, details.innerHTML, {
           contentClass:details.className,
-          modalLeft:btn.hasAttribute('data-action-tooltip')
+          modalLeft:btn.hasAttribute('data-action-tooltip') &&
+            btn.getAttribute('data-tooltip-anchor') !== 'control'
         });
       }
       function showSettCardTip(infoBtn) {

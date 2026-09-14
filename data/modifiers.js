@@ -1,4 +1,4 @@
-/* Fallowborn — temporary county and great-holy-war modifiers.
+/* Fallowborn — temporary county and holy war modifiers.
    Numeric rates are fractions; flat values are ordinary game units. */
 window.FBDATA = window.FBDATA || {};
 
