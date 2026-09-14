@@ -752,7 +752,8 @@ window.FB = window.FB || {};
     var authored = c.portraitProfile && FBDATA.portraitProfiles &&
       Object.prototype.hasOwnProperty.call(FBDATA.portraitProfiles,c.portraitProfile)
       ? FBDATA.portraitProfiles[c.portraitProfile] : null;
-    var identity = hashOf(authored ? authored.identity : (c.id || '') + '|' + (c.name || ''));
+    var portraitName = c.portraitName === undefined ? (c.name || '') : c.portraitName;
+    var identity = hashOf(authored ? authored.identity : (c.id || '') + '|' + portraitName);
     var source = opts.loadout !== undefined ? opts.loadout
       : (state && FB.loadoutReadOnly ? FB.loadoutReadOnly(state,c.id) : {});
     var loadout = {}, slots = frame === 'figure' ? VISIBLE_SLOTS : BUST_SLOTS;
@@ -810,7 +811,7 @@ window.FB = window.FB || {};
       hwVolume:.25+saltedUnit(identity,'wardrobe-hw-vol',0)*.5,
       hwDrape:.25+saltedUnit(identity,'wardrobe-hw-drape',0)*.5,
       hwTrim:0,
-      bgHue:hashOf(c.dyn||c.name||'fallow')%360,
+      bgHue:hashOf(c.dyn||portraitName||'fallow')%360,
       cultureHue:hashOf(culture)%360,skin:skinColors({tone:pigment},health),
       cloth:clothColors(tier,profession,saltedUnit(identity,'wardrobe-cloth',0)*2-1)
     };
@@ -881,7 +882,7 @@ window.FB = window.FB || {};
     var markKey = ailments.marks.map(function (mark) {
       return keyToken(mark.id)+':'+keyToken(mark.mark)+':'+mark.severity;
     }).join(',');
-    var parts = ['portrait-v2',frame,keyToken(c.id),keyToken(c.name),
+    var parts = ['portrait-v2',frame,keyToken(c.id),keyToken(portraitName),
       keyToken(c.dyn||''),keyToken(c.sex||''),age,keyToken(culture),keyToken(faith),
       tier,keyToken(profession),health,expressionClass,spec.scarred?1:0,
       spec.oneEyed?1:0,ailments.sickness||legacyIll?1:0,markKey,

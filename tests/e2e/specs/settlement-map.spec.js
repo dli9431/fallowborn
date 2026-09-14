@@ -1261,12 +1261,12 @@ test('the guide returns to the context modal on Back and dismisses on Close',
       'aria-label', 'Guide: settlements and development');
     await expect(page.locator('#genmodal .gm-footer #settlement-guide')).toHaveCount(0);
 
-    /* closing the guide returns to the sheet with its live nodes, listeners,
+    /* Back returns to the sheet with its live nodes, listeners,
        and header help control restored */
     await guide.click();
     await expect(page.locator('#gm-title')).toContainText('Guide');
     await expect(page.locator('#guide-back')).toHaveCount(0);
-    await page.locator('#guide-close').click();
+    await page.locator('#genmodal [data-modal-nav="back"]').click();
     await expect(page.locator('#gm-title')).toContainText(name);
     await expect(page.locator('#genmodal .gm-heading > #settlement-guide'))
       .toBeVisible();
@@ -1274,13 +1274,11 @@ test('the guide returns to the context modal on Back and dismisses on Close',
     await page.locator('#gm-cancel').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
-    /* Close consistently returns to the source sheet. */
+    /* Close dismisses the complete modal chain. */
     await page.evaluate(function (id) { FB.ui.showSettlement(id, 0); }, pid);
     await page.locator('#settlement-guide').click();
     await expect(page.locator('#gm-title')).toContainText('Guide');
     await page.locator('#guide-close').click();
-    await expect(page.locator('#gm-title')).toContainText(name);
-    await page.locator('#gm-cancel').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 

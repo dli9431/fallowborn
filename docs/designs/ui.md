@@ -2825,3 +2825,10 @@ card when its trigger becomes disabled. Payment always revalidates live eligibil
 The Family, Realm and All significant events settings filter news popups only.
 Neither the live Chronicle nor the full/exported Chronicle viewer applies these
 preferences; their own Choices/News and other explicit viewer filters still apply.
+
+Character and ruler skill-info buttons open the Guide through shared modal history.
+The Guide must not capture its source separately: Back restores the original live
+sheet, its scroll position and focused info button; Close dismisses the full chain.
+
+Modal history retains live title nodes as well as body nodes, so inline heading
+controls (including the equipment name pencil) retain their listeners on Back.

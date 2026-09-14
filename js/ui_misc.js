@@ -3349,6 +3349,9 @@ window.FB = window.FB || {};
     view.focus = document.activeElement && $('genmodal').contains(document.activeElement)
       ? document.activeElement : null;
     while (body.firstChild) view.body.appendChild(body.firstChild);
+    view.titleNodes = document.createDocumentFragment();
+    const title = $('gm-title');
+    while (title.firstChild) view.titleNodes.appendChild(title.firstChild);
   }
 
   function restoreModalView(view) {
@@ -3357,6 +3360,10 @@ window.FB = window.FB || {};
     const body = $('gm-body');
     while (body.firstChild) body.removeChild(body.firstChild);
     $('gm-title').textContent = view.title;
+    if (view.titleNodes) {
+      $('gm-title').textContent = '';
+      $('gm-title').appendChild(view.titleNodes);
+    }
     body.appendChild(view.body);
     setModalGuide(view.guide);
     setModalTitleDetails(view.titleDetails);

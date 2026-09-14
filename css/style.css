@@ -3527,6 +3527,10 @@ textarea.modjson, textarea.savetext {
   background: transparent; cursor: pointer; line-height: 0;
 }
 .character-card-portrait-button .pface { display: block; }
+.character-portrait-tools { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.character-rename { background: transparent; color: var(--helper-text-color); border: 0; border-radius: 5px; width: 28px; height: 28px; cursor: pointer; }
+.character-rename:hover, .character-rename:focus { color: var(--ui-accent-color); outline: 1px solid var(--ui-border-color); }
+@media (pointer: coarse) { .character-rename { min-width: 44px; min-height: 44px; } }
 .character-card-portrait-button:hover .pface { border-color: #c9a24a; }
 .character-card-portrait-button:focus-visible {
   outline: 2px solid var(--ui-accent-color); outline-offset: 2px;

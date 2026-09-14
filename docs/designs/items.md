@@ -310,3 +310,8 @@ Historical context: [The Met, Arms and Armor in Medieval Europe](https://www.met
 places widespread mounted-warrior chausses by 1200; [Royal Collection, sabatons](https://www.rct.uk/collection/stories/european-armour-in-the-royal-collection/sabatons-from-the-armour-garniture-of-henry-viii-for-the-field-and-tilt-rcin-72834l-and-m)
 describes fifteenth-century pointed plate footwear. The common set floors are a catalogue
 consistency choice, not first-invention dates for each component.
+
+The current protagonist can edit their personal name using the small pencil beside
+the equipment heading name. The shared personal-name editor returns to that same
+equipment sheet and scroll position. This is cosmetic, free and advances no time;
+its technology decision is the shared `family_personal_names: none` entry.

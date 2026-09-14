@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.11';
+FB.VERSION = '1.179.12';
 FB.CHANGELOG = [
+  { v: '1.179.12', date: '2026-09-14', changes: [
+    'Edit your name from equipment and your spouse or children’s names from their character sheets without changing their portraits. Back from the skills Guide restores the original sheet.'
+  ] },
   { v: '1.179.11', date: '2026-09-14', changes: [
     'Automated offensive detachments gather and march together while remaining separate hosts. Hostile route forts can be besieged to open passage, neutral forts allow transit, and siege readouts show campaign progress.'
   ] },

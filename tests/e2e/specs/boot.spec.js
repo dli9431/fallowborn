@@ -245,6 +245,15 @@ test('world construction yields across expensive raster phases',
 
 test('the hosted update banner is play-only and saves a live campaign before reload',
   async function ({ page }, testInfo) {
+    // This scenario covers update persistence, not first-visit audio choice.
+    // WebKit may show the static music prompt before codec detection hides it;
+    // start with an explicit saved preference so setup cannot click that prompt
+    // while it disappears. Keep the preference on the subsequent real reload.
+    await page.addInitScript(function () {
+      const prefs = JSON.parse(localStorage.getItem('fb_ui') || '{}');
+      prefs.musicChoice = 'off';
+      localStorage.setItem('fb_ui', JSON.stringify(prefs));
+    });
     await openGame(page, testInfo);
     await startDeterministicGame(page);
 

@@ -3789,7 +3789,11 @@ window.FB = window.FB || {};
       ? ' ' + esc(options.cardClass) : '') + '"' +
       (clickable ? ' data-cid="' + c.id + '" title="' +
       esc(FB.T('Open their sheet and your dealings with them')) + '"' : '') + '>' +
-      portrait +
+      (options.renameFamily && FB.canRenameFamilyCharacter(s, c.id)
+        ? '<div class="character-portrait-tools">' + portrait +
+          '<button type="button" class="character-rename" aria-label="' + esc(FB.T('Change name')) +
+          '" title="' + esc(FB.T('Change name')) + '"><span aria-hidden="true">&#x270e;</span></button></div>'
+        : portrait) +
       '<div><div class="ccname">' + esc(displayName) + house + '</div>' +
       (options.realmMusterHtml ? '<div class="ccmeta realm-ruler-muster">' +
         options.realmMusterHtml + '</div>' : '') +

@@ -23060,6 +23060,35 @@ window.FB = window.FB || {};
     return h;
   }
 
+  function showPersonalNameEditor(cid, returnToCharacter) {
+    const s = FB.state, c = s && s.chars[cid];
+    if (!c) return;
+    openModal(FB.T('Change name'),
+      '<label for="family-name">' + esc(FB.T('Name')) + '</label>' +
+      '<input id="family-name" type="text" maxlength="40" autocomplete="off">' +
+      '<p id="family-name-error" role="alert"></p>' +
+      '<button type="button" class="btn primary" id="family-name-save">' + esc(FB.T('Save')) + '</button>',
+      { historyView:true, historyBackRender:returnToCharacter });
+    const input = $('family-name');
+    input.value = c.name;
+    input.focus(); input.select();
+    function saveName() {
+      const result = FB.renameCharacter(s, cid, input.value);
+      if (!result.ok) {
+        $('family-name-error').textContent = result.reason === 'ineligible'
+          ? FB.T('Only your current character, living spouse and children can be renamed.')
+          : FB.T('Enter a name of 1 to 40 characters without angle brackets or control characters.');
+        input.focus(); return;
+      }
+      UI.refresh();
+      modalHistoryBack(returnToCharacter);
+    }
+    $('family-name-save').addEventListener('click', saveName);
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); saveName(); }
+    });
+  }
+
   function showCharacterInteractionSheet(cid, returnContext, replaceView,
       realmIdHint) {
     const s = FB.state;
@@ -23086,7 +23115,7 @@ window.FB = window.FB || {};
     const displayRealmId = model.realmId || selfRealmId;
     const royalCourt = royalCourtCharacterContext(s, cid, returnContext);
     if (royalCourt) model.showContext = false;
-    const cardOptions = { skillsGuide:true, mapHome:true };
+    const cardOptions = { skillsGuide:true, mapHome:true, renameFamily:true };
     if (royalCourt) {
       cardOptions.namePrefix = FB.realmFamilyTitle(s,
         s.realms[royalCourt.rid], c, royalCourt.role);
@@ -23168,6 +23197,17 @@ window.FB = window.FB || {};
     FB.paintFaces($('gm-body'), s);
     bindCharacterSkillsGuides($('gm-body'));
     bindCharacterCommitmentNavigation($('gm-body'), c.id, returnContext);
+    const rename = $('gm-body').querySelector('.character-rename');
+    if (rename) rename.addEventListener('click', function () {
+      const scroll = $('gm-body').scrollTop;
+      function returnToCharacter() {
+        UI.showCharModal(cid, returnContext, false, realmIdHint);
+        $('gm-body').scrollTop = scroll;
+        const button = $('gm-body').querySelector('.character-rename');
+        if (button) button.focus({ preventScroll:true });
+      }
+      showPersonalNameEditor(cid, returnToCharacter);
+    });
     if (familyContext) bindRealmFamilyNavigation($('gm-body'), familyContext);
     if (displayRealmId) {
       bindWarRealmLinks($('gm-body'), s, displayRealmId, c.id, returnContext);
@@ -23577,6 +23617,28 @@ window.FB = window.FB || {};
       });
     if (mobileLayoutNow()) {
       $('gm-title').textContent = fullName + '\n' + FB.T('Equipment');
+    }
+    if (cid === s.player.charId) {
+      const rename = document.createElement('button');
+      rename.type = 'button'; rename.className = 'character-rename';
+      rename.id = 'equipment-rename';
+      rename.setAttribute('aria-label', FB.T('Change name'));
+      rename.title = FB.T('Change name');
+      rename.innerHTML = '<span aria-hidden="true">&#x270e;</span>';
+      if (mobileLayoutNow()) {
+        $('gm-title').textContent = fullName;
+        $('gm-title').appendChild(rename);
+        $('gm-title').appendChild(document.createTextNode('\n' + FB.T('Equipment')));
+      } else $('gm-title').appendChild(rename);
+      rename.addEventListener('click', function () {
+        const scroll = $('gm-body').scrollTop;
+        showPersonalNameEditor(cid, function () {
+          UI.showEquipmentModal(cid, exitMode, returnContext);
+          $('gm-body').scrollTop = scroll;
+          const button = $('equipment-rename');
+          if (button) button.focus({ preventScroll:true });
+        });
+      });
     }
     FB.paintFaces($('gm-body'), s);
     wireEquipmentButtons($('gm-body'), returnMode);
@@ -28577,21 +28639,14 @@ window.FB = window.FB || {};
         esc(FB.T('More info')) + '</a></div>';
       h += '</div></div>';
     }
-    /* Entered from another dialog, Close returns to that context; a Guide
-       opened directly still uses its ordinary close destination. */
+    /* Shared modal history captures the source once, retaining its live
+       controls and scroll position for Back. Close dismisses the stack. */
     const fromModal = !$('genmodal').classList.contains('hidden');
     h += '</div><div class="tech-empty hidden" id="guide-empty">' +
       esc(FB.T('No guide entries match this search.')) +
       '</div><div class="gm-footer">' +
       '<button class="btn" id="guide-close">' +
       esc(FB.T('Close')) + '</button></div>';
-    let backView = null;
-    if (fromModal && !mobileNavEnsure()) {
-      /* no mobile history layer will capture the context dialog, so its
-         live nodes (listeners and all) move aside; Close restores them */
-      backView = {};
-      captureModalView(backView);
-    }
     openModal(FB.T('Guide'), h, {
       modalClass:'fullsheet-modal guide-modal', historyView:true
     });
@@ -28640,8 +28695,7 @@ window.FB = window.FB || {};
     });
     $('guide-close').addEventListener('click', function () {
       if (fromModal) {
-        if (backView) restoreModalView(backView);
-        else modalHistoryBack(function () { UI.closeModal(); });
+        modalHistoryBack(function () { UI.closeModal(); });
         return;
       }
       if (options.closeToGame) {

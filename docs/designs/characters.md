@@ -1084,3 +1084,27 @@ succession. No separate succession line or explanatory toolbar text is added.
 Prospective heirs are not marked. Missing records or collapsed played cards break
 the highlight. Connector colors refresh after branch changes and resizing; ordinary
 ancestry layout, keyboard navigation and saved tree position remain intact.
+
+## Family personal names
+
+The character sheet offers a small pencil beneath the portrait for the living
+protagonist's living spouses and direct children, including adopted children and
+adult children outside the household. Eligibility uses current spouse links and
+`FB.childrenOf`, not dynasty membership. `FB.renameFamilyCharacter` rechecks this
+relationship when saving, trims the name, and accepts 1?40 characters excluding
+control characters and angle brackets. Only `c.name` changes; dynasty, identity,
+relationships, resources, and time stay intact. Existing saved name fields persist
+the edit without a save-format change; historical message snapshots stay historical.
+Technology impact: `family_personal_names` is `none`, because personal naming is
+cosmetic customization with no credible research dependency. Back discards edits;
+Save returns to the same character and preserves its sheet position.
+
+The current protagonist uses the same editor from the pencil beside their name in
+the equipment heading. Before the first personal rename, `portraitName` retains
+the original name used for deterministic facial identity, background fallback and
+visual cache keys. Subsequent edits preserve it; older saves without this field
+continue to use their existing name. Authored portrait profiles remain authoritative.
+
+Personal rename mutations are limited to the selected character's `name` and the
+one-time `portraitName` snapshot. They consume no RNG and change no other saved
+state. Invalid input and submitting the existing name leave all state untouched.

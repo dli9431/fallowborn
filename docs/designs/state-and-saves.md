@@ -1459,3 +1459,8 @@ Each payer (player or AI treasury) may retain numeric `distributionNextTurn` and
 `lastDistribution:{turn,amount,counties}` receipt. They survive succession and repair;
 county effects use the existing modifier records. No new save format, historical
 replay, treasury cap or forced player spending is introduced.
+
+Personal-name edits add `chars[id].portraitName` once, preserving the original
+portrait name seed. Rendering falls back to `name` when absent, so existing saves
+keep their faces without an eager migration or save-format bump. Later edits and
+reloads retain the frozen seed, including the no-dynasty background fallback.

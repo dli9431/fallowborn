@@ -5,6 +5,10 @@ dependsOnRuntime(__filename, [
   'data/political_institutions.js',
   'data/actions.js',
   'js/actions.js',
+  'js/model.js',
+  'js/portrait.js',
+  'js/events.js',
+  'data/technology.js',
   'js/main.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -51,6 +55,158 @@ async function ordinaryContact(page) {
     return c.id;
   });
 }
+
+test('character skill info returns to the same live sheet on Back',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    const cid = await ordinaryContact(page);
+    await page.evaluate(function (id) { FB.ui.showCharModal(id); }, cid);
+    const title = await page.locator('#gm-title').textContent();
+    const info = page.locator('#genmodal .character-skills-guide');
+    await info.evaluate(function (button) {
+      button.dataset.returnWitness = 'original';
+      button.addEventListener('click', function () {
+        button.dataset.sourceScroll = document.getElementById('gm-body').scrollTop;
+      }, true);
+    });
+    for (let visit = 0; visit < 2; visit++) {
+      await info.click();
+      await expect(page.locator('#guide-category')).toHaveValue('skills');
+      await page.locator('#genmodal [data-modal-nav="back"]').click();
+      await expect(page.locator('#gm-title')).toHaveText(title);
+      await expect(info).toBeVisible();
+      await expect(info).toHaveAttribute('data-return-witness', 'original');
+      await expect(info).toBeFocused();
+      expect(await info.evaluate(function (button) {
+        return Math.abs(document.getElementById('gm-body').scrollTop -
+          Number(button.dataset.sourceScroll));
+      })).toBeLessThanOrEqual(1);
+    }
+    await info.click();
+    await page.locator('#genmodal [data-modal-nav="close"]').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  });
+
+test('family name editing is limited to spouses and children and returns to their sheet',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    const cid = await ordinaryContact(page);
+    const before = await page.evaluate(function (id) {
+      const s = FB.state, me = s.chars[s.player.charId], c = s.chars[id];
+      const unrelated = FB.renameFamilyCharacter(s, id, 'Not allowed');
+      const child = FB.makeCharacter(s, { name:'Child', sex:'f', born:s.date.year - 20,
+        culture:me.culture, religion:me.religion, quality:1 });
+      me.childrenIds = (me.childrenIds || []).concat([child.id]);
+      const adopted = FB.canRenameFamilyCharacter(s, child.id);
+      const renamedChild = FB.renameFamilyCharacter(s, child.id, 'New Child');
+      const blank = FB.renameFamilyCharacter(s, child.id, '   ');
+      const markup = FB.renameFamilyCharacter(s, child.id, '<b>Name</b>');
+      const long = FB.renameFamilyCharacter(s, child.id, 'x'.repeat(41));
+      me.spouseId = c.id; c.spouseId = me.id;
+      FB.ui.showCharModal(id);
+      return { unrelated:unrelated.ok, adopted:adopted, child:renamedChild.ok,
+        blank:blank.ok, markup:markup.ok, long:long.ok, name:c.name, dyn:c.dyn,
+        turn:s.turn, gold:s.player.gold,
+        tech:FBDATA.techImpactReviews.features.family_personal_names.mode };
+    }, cid);
+    expect(before).toMatchObject({ unrelated:false, adopted:true, child:true,
+      blank:false, markup:false, long:false, tech:'none' });
+    const edit = page.locator('#genmodal .character-portrait-tools .character-rename');
+    await expect(edit).toHaveAccessibleName('Change name');
+    await edit.click();
+    await page.locator('#family-name').fill('Discarded');
+    await page.locator('#genmodal [data-modal-nav="back"]').click();
+    expect(await page.evaluate(function (id) { return FB.state.chars[id].name; }, cid)).toBe(before.name);
+    await edit.click();
+    await page.locator('#family-name').fill('  Renamed Spouse  ');
+    await page.locator('#family-name-save').click();
+    await expect(page.locator('#gm-title')).toContainText('Renamed Spouse');
+    await expect(edit).toBeFocused();
+    expect(await page.evaluate(function (id) {
+      const s = FB.state, c = s.chars[id];
+      return { name:c.name, dyn:c.dyn, turn:s.turn, gold:s.player.gold,
+        savedName:JSON.parse(JSON.stringify(s)).chars[id].name };
+    }, cid)).toEqual({ name:'Renamed Spouse', dyn:before.dyn, turn:before.turn,
+      gold:before.gold, savedName:'Renamed Spouse' });
+    await page.evaluate(function () { FB.ui.showCharModal(FB.state.player.charId); });
+    await expect(edit).toHaveCount(0);
+  });
+
+test('personal renames preserve portraits and the player edits their name from equipment',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    const family = await ordinaryContact(page);
+    const portrait = await page.evaluate(function (id) {
+      const s = FB.state, me = s.chars[s.player.charId], c = s.chars[id];
+      me.spouseId = c.id; c.spouseId = me.id;
+      // The no-dynasty case also exercises the portrait background fallback.
+      c.dyn = '';
+      const before = FB.characterVisualKey(s, c);
+      FB.renameFamilyCharacter(s, id, 'First Name');
+      const after = FB.characterVisualKey(s, c);
+      FB.renameFamilyCharacter(s, id, 'Second Name');
+      const restored = JSON.parse(JSON.stringify(c));
+      return { before:before, after:after, restored:FB.characterVisualKey(s, restored) };
+    }, family);
+    expect(portrait.after).toBe(portrait.before);
+    expect(portrait.restored).toBe(portrait.before);
+    const before = await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId];
+      FB.ui.showEquipmentModal(c.id);
+      return FB.characterVisualKey(s, c);
+    });
+    const edit = page.locator('#gm-title #equipment-rename');
+    await expect(edit).toHaveAccessibleName('Change name');
+    await edit.click();
+    await page.locator('#family-name').fill('New Protagonist');
+    await page.locator('#family-name-save').click();
+    await expect(page.locator('#gm-title')).toContainText('New Protagonist');
+    await expect(edit).toBeFocused();
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      return FB.characterVisualKey(s, s.chars[s.player.charId]);
+    })).toBe(before);
+    // Another child sheet must retain the live title button when returning.
+    await page.evaluate(function () { FB.ui.showGuide({ category:'skills' }); });
+    await page.locator('#genmodal [data-modal-nav="back"]').click();
+    await expect(edit).toBeVisible();
+    await edit.click();
+    await expect(page.locator('#family-name')).toHaveValue('New Protagonist');
+  });
+
+test('renaming mutates only the selected name and its frozen portrait name',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    const family = await ordinaryContact(page);
+    const result = await page.evaluate(function (id) {
+      const s = FB.state, me = s.chars[s.player.charId], spouse = s.chars[id];
+      me.spouseId = id; spouse.spouseId = me.id;
+      const child = FB.makeCharacter(s, { name:'Child', sex:'m', born:s.date.year - 5,
+        culture:me.culture, religion:me.religion, quality:1 });
+      me.childrenIds = (me.childrenIds || []).concat([child.id]);
+      const results = [];
+      [me.id, id, child.id].forEach(function (cid) {
+        const before = JSON.stringify(s), rng = FB.getRngState();
+        FB.renameCharacter(s, cid, s.chars[cid].name);
+        const unchanged = before === JSON.stringify(s);
+        const expected = JSON.parse(before);
+        expected.chars[cid].portraitName = expected.chars[cid].name || '';
+        expected.chars[cid].name = 'Renamed ' + cid;
+        const renamed = FB.renameCharacter(s, cid, expected.chars[cid].name);
+        const onlyName = JSON.stringify(s) === JSON.stringify(expected);
+        const after = JSON.stringify(s);
+        const rejected = FB.renameCharacter(s, cid, '');
+        results.push({ unchanged:unchanged, renamed:renamed.ok, onlyName:onlyName,
+          rejected:!rejected.ok, rejectionUnchanged:after === JSON.stringify(s),
+          rngUnchanged:rng === FB.getRngState() });
+      });
+      return results;
+    }, family);
+    expect(result).toEqual(Array.from({ length:3 }, function () {
+      return { unchanged:true, renamed:true, onlyName:true, rejected:true,
+        rejectionUnchanged:true, rngUnchanged:true };
+    }));
+  });
 
 test('character cards use the shared grammar and authoritative blocked reasons',
   async function ({ page }, testInfo) {
@@ -594,7 +750,7 @@ test('ruler character sheets foreground the titled ruler and linked court',
 
     await sheet.locator('.realm-ruler-card .character-skills-guide').click();
     await expect(page.locator('#guide-category')).toHaveValue('skills');
-    await page.locator('#guide-close').click();
+    await page.locator('#genmodal [data-modal-nav="back"]').click();
     await expect(sheet).toBeVisible();
 
     await page.evaluate(function () {

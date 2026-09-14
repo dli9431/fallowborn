@@ -1655,6 +1655,31 @@ window.FB = window.FB || {};
     return { ok:true, name:nm };
   };
 
+  FB.canRenameFamilyCharacter = function (state, cid) {
+    const me = state && state.player && state.chars[state.player.charId];
+    const c = state && state.chars && state.chars[cid];
+    if (!me || me.dead || !c || c.dead || c.id === me.id) return false;
+    return FB.childrenOf(state, me).some(function (child) { return child.id === cid; }) ||
+      (FB.spousesOf ? FB.spousesOf(state, me) : []).some(function (spouse) { return spouse.id === cid; });
+  };
+
+  FB.renameFamilyCharacter = function (state, cid, value) {
+    if (!FB.canRenameFamilyCharacter(state, cid)) return { ok:false, reason:'ineligible' };
+    return FB.renameCharacter(state, cid, value);
+  };
+
+  FB.renameCharacter = function (state, cid, value) {
+    const c = state && state.chars && state.chars[cid];
+    if (!c || c.dead || !(state.player && cid === state.player.charId ||
+        FB.canRenameFamilyCharacter(state, cid))) return { ok:false, reason:'ineligible' };
+    const name = String(value === undefined || value === null ? '' : value).trim();
+    if (!name || name.length > 40 || /[<>\x00-\x1f\x7f]/.test(name)) return { ok:false, reason:'name' };
+    if (name === c.name) return { ok:true };
+    if (c.portraitName === undefined) c.portraitName = c.name || '';
+    c.name = name;
+    return { ok:true };
+  };
+
   /* A house is just the c.dyn string its members share, so a rename rewrites
      every character carrying the old string — the same membership rule
      FB.dynastyNameSet uses — plus the player realm identity when it was
