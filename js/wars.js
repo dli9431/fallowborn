@@ -171,9 +171,11 @@
     if (FB.greatHolyWarEnemies) (FB.greatHolyWarEnemies(state, rid) || []).forEach(function (id) { found[id] = 1; });
     return Object.keys(found).sort();
   };
+  const legacyIsRealmAtWar = FB.isRealmAtWar;
   FB.isRealmAtWar = function (state, rid) {
     if (!state || !rid) return false;
-    FB.ensureWars(state);
+    // Display queries must not bind or migrate an uninitialized save snapshot.
+    if (!state.wars) return legacyIsRealmAtWar(state, rid);
     return FB.realmWars(state, rid).length > 0 || !!(FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, rid));
   };
   FB.playerRealmAtWar = function (state) {

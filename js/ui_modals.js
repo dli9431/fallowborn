@@ -23204,7 +23204,11 @@ window.FB = window.FB || {};
         UI.showCharModal(cid, returnContext, false, realmIdHint);
         $('gm-body').scrollTop = scroll;
         const button = $('gm-body').querySelector('.character-rename');
-        if (button) button.focus({ preventScroll:true });
+        if (button) setTimeout(function () {
+          if (document.documentElement.contains(button)) {
+            button.focus({ preventScroll:true }); $('gm-body').scrollTop = scroll;
+          }
+        }, 0);
       }
       showPersonalNameEditor(cid, returnToCharacter);
     });
@@ -23636,7 +23640,11 @@ window.FB = window.FB || {};
           UI.showEquipmentModal(cid, exitMode, returnContext);
           $('gm-body').scrollTop = scroll;
           const button = $('equipment-rename');
-          if (button) button.focus({ preventScroll:true });
+          if (button) setTimeout(function () {
+            if (document.documentElement.contains(button)) {
+              button.focus({ preventScroll:true }); $('gm-body').scrollTop = scroll;
+            }
+          }, 0);
         });
       });
     }

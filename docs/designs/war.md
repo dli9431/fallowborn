@@ -1671,3 +1671,7 @@ negotiated payments and declined personal grants. Entries snapshot names at the
 settlement and remain readable after succession or save/load. Only final applied
 awards are reported, once; detail entries suppress popups. Older chronicles retain
 their original summaries and do not invent missing terms.
+
+War-status display queries read the campaign registry without initializing bindings
+or migrating military pools. Legacy snapshots without a registry use the legacy
+read-only status projection; initialization remains an explicit simulation/save step.

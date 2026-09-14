@@ -386,6 +386,9 @@ test('sieges enforce force, attrition, decay, snapshots, and breach-only transfe
       s.owner[target] = enemy;
       s.holder[target] = enemy;
       p.provs = [home];
+      s.owner[home] = s.holder[home] = 'player';
+      p.tier = 4;
+      FB.foundPlayerRealm(s);
       p.war = {
         enemy:enemy, target:target, wins:0, losses:0, seasons:0,
         defending:false, siege:2, siegeFortLevel:1,
@@ -518,7 +521,10 @@ test('AI seats, annual works, holy-war occupation, and daily indexing stay bound
         path:[], goal:null, moveLeft:0
       };
       s.armies = [aiHost];
-      const aiWar = { fortSieges:{} };
+      const defenderRealm = FB.topRealm(s, s.holder[fortPid] || s.owner[fortPid]);
+      const aiWar = FB.registerOrdinaryWar(s, besieger, { enemy:defenderRealm,
+        target:fortPid, fortSieges:{}, legacy:true });
+      aiHost.warId = aiWar.id;
       const yearlySiege = FB.advanceAIYearlyFortSiege(
         s, aiWar, fortPid, besieger);
       const expectedYearlyProgress = 4 * (1 + (FB.techBonus

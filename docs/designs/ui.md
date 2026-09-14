@@ -2832,3 +2832,7 @@ sheet, its scroll position and focused info button; Close dismisses the full cha
 
 Modal history retains live title nodes as well as body nodes, so inline heading
 controls (including the equipment name pencil) retain their listeners on Back.
+
+Personal-name editor return focus runs after the destination sheet's deferred
+autofocus and checks that its pencil is still attached before restoring focus and
+scroll. This applies to both family sheets and the protagonist's equipment sheet.

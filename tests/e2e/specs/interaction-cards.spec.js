@@ -13,7 +13,8 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
-  'js/world.js'
+  'js/world.js',
+  'js/wars.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -541,6 +542,25 @@ test('realm cards distinguish lieges, vassals, neighbors, allies, and war enemie
       rejectedOfferSpent:25,
       rejectedOfferFormedAlliance:false
     });
+  });
+
+test('war-status display queries leave uninitialized save snapshots untouched',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const snapshot = JSON.parse(JSON.stringify(FB.state));
+      const rid = Object.keys(snapshot.realms).filter(function (id) {
+        return id !== 'player' && snapshot.realms[id].alive;
+      })[0];
+      snapshot.wars = { inspection:{ id:'inspection', status:'active', attacker:'player',
+        defender:rid, legacyOwner:'player', musterPool:123, startedTurn:0 } };
+      delete snapshot.military;
+      const before = JSON.stringify(snapshot), rng = FB.getRngState();
+      const active = FB.isRealmAtWar(snapshot, rid);
+      return { active:active, unchanged:before === JSON.stringify(snapshot),
+        rngUnchanged:rng === FB.getRngState() };
+    });
+    expect(result).toEqual({ active:true, unchanged:true, rngUnchanged:true });
   });
 
 test('materialized rulers share Standing, keep one gift path, and render without mutation',

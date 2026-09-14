@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/treasury.js',
   'js/actions.js',
   'js/mapview.js',
   'js/travel.js',
@@ -687,6 +688,10 @@ test('annual AI building construction skips direct player counties but places in
         const holder = (s.holder && s.holder[pr.id]) || s.owner[pr.id];
         if (holder && holder !== 'player') { governed = pr.id; break; }
       }
+      // Isolate construction ownership from the separate treasury budget gate.
+      Object.keys(s.realms).forEach(function (id) {
+        if (s.realms[id].treasury) s.realms[id].treasury.gold = 1000000;
+      });
       const savedDev = s.dev;
       const savedProvs = p.provs;
       const savedBuildings = s.buildings;

@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/treasury.js',
   'js/wars.js', 'js/ui_wars.js',
   'js/holywar.js',
   'js/armies.js',
@@ -37,6 +38,8 @@ test('holy-war participation preserves an unrelated ordinary campaign and its ho
       return rid !== 'player' && s.realms[rid].alive && !s.realms[rid].liege &&
         !FB.greatHolyWarCamp(s, rid);
     }).sort()[0];
+    // Campaign lifecycle is exercised with funding for the promised hosts.
+    s.realms.west_francia.treasury.gold = 1000000;
     const w = FB.registerOrdinaryWar(s, 'west_francia', { enemy:other, target:s.realms[other].capital });
     FB.armyTick(s);
     const host = FB.hostOf(s, 'west_francia');
@@ -68,6 +71,7 @@ test('active holy-war leaders and participants muster and remuster without ordin
         ]
       });
       const realms = ['west_francia', 'italy', 'abbasid'];
+      realms.forEach(function (id) { s.realms[id].treasury.gold = 1000000; });
       function fielded() {
         return realms.map(function (id) {
           return FB.hostsOf(s, id).some(function (host) {

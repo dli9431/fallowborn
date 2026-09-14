@@ -86,7 +86,14 @@ test('offensive detachments gather, count combined strength, and march without m
   const plans = await page.evaluate(function () {
     const s = FB.state, f = window.conquestFixture, target = f.counties[3];
     const individual = FB.fortSiegeStatus(s, target, {}, s.armies[0]).canProgress;
-    s.armies.push(f.host('enemy', f.enemy, target, 500));
+    const enemy = f.host('enemy', f.enemy, target, 500);
+    s.armies.push(enemy);
+    // Keep this a combined-force scenario across ruler and terrain changes.
+    const attack = s.armies.slice(0, 2).reduce(function (sum, host) {
+      return sum + FB.armyBattlePower(s, host, target, 'attack');
+    }, 0);
+    const defense = FB.armyBattlePower(s, enemy, target, 'defense');
+    enemy.men = enemy.size = enemy.units.levy = Math.floor(500 * attack * 0.75 / defense);
     const combined = FB.armyOffensiveCoordination(s, 'off');
     s.armies[1].at = f.counties[1];
     const gather = FB.armyOffensiveCoordination(s, 'off');
