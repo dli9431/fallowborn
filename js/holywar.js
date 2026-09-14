@@ -1245,6 +1245,9 @@ window.FB = window.FB || {};
     var hosts = FB.armiesAt ? FB.armiesAt(state, pid) : [];
     for (var i = 0; i < hosts.length; i++) {
       if (hosts[i].warId && hosts[i].warId !== 'holy') continue;
+      var occupation = state.greatHolyWar && state.greatHolyWar.occupations[pid];
+      if (occupation && occupation.transit &&
+          (hosts[i].moveLeft > 0 || (hosts[i].path || []).length)) continue;
       var camp = FB.greatHolyWarCamp(state, hosts[i].realm);
       if (!camp) continue;
       out[camp].push(hosts[i]);
@@ -1262,8 +1265,22 @@ window.FB = window.FB || {};
 
   function occupationTick(state, campaign) {
     var changed = false;
-    for (var i = 0; i < campaign.objectiveCounties.length; i++) {
-      var pid = campaign.objectiveCounties[i];
+    // Hostile route forts are temporary occupations, never extra peace awards.
+    (state.armies || []).forEach(function (host) {
+      if (host.warId !== 'holy' || !(host.men > 0) || campaign.occupations[host.at]) return;
+      var camp = FB.greatHolyWarCamp(state, host.realm);
+      var homeCamp = FB.greatHolyWarCamp(state, sovereignRealm(state,
+        (state.holder || {})[host.at] || (state.owner || {})[host.at]));
+      var fort = FB.fortAt && FB.fortAt(state, host.at);
+      if (!camp || !homeCamp || camp === homeCamp || !fort || !fort.level || fort.ruined) return;
+      campaign.occupations[host.at] = { occupied:homeCamp === 'attackers',
+        progress:0, progressCamp:null, occupiedBy:null, transit:true };
+    });
+    var siegeCounties = campaign.objectiveCounties.concat(Object.keys(campaign.occupations).filter(function (pid) {
+      return campaign.objectiveCounties.indexOf(pid) < 0;
+    }).sort());
+    for (var i = 0; i < siegeCounties.length; i++) {
+      var pid = siegeCounties[i];
       var occupation = campaign.occupations[pid];
       if (!occupation) {
         occupation = { occupied:false, progress:0, progressCamp:null, occupiedBy:null };
@@ -1319,7 +1336,7 @@ window.FB = window.FB || {};
         })[0].realm;
         if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, pid);
         if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'great_holy_war');
-        campaign.resolve = FB.clamp(campaign.resolve +
+        if (!occupation.transit) campaign.resolve = FB.clamp(campaign.resolve +
           B('greatHolyWarOccupationResolve', 5), -100, 100);
         shareOccupationContribution(state, campaign, present.attackers,
           present.attackersMen, points);
@@ -1332,7 +1349,7 @@ window.FB = window.FB || {};
         occupation.occupiedBy = null;
         if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, pid);
         if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'great_holy_war');
-        campaign.resolve = FB.clamp(campaign.resolve -
+        if (!occupation.transit) campaign.resolve = FB.clamp(campaign.resolve -
           B('greatHolyWarOccupationResolve', 5), -100, 100);
         shareOccupationContribution(state, campaign, present.defenders,
           present.defendersMen, points);
@@ -2992,9 +3009,12 @@ window.FB = window.FB || {};
     if (!campaign || campaign.phase !== 'active') return;
     /* Holy war progress is earned daily, but abandoned works decay and
        a fort's sortie attrition both pulse only at the seasonal boundary. */
+    var siegeCounties = campaign.objectiveCounties.concat(Object.keys(campaign.occupations).filter(function (pid) {
+      return campaign.objectiveCounties.indexOf(pid) < 0;
+    }).sort());
     for (var objectiveIndex = 0;
-         objectiveIndex < campaign.objectiveCounties.length; objectiveIndex++) {
-      var objectivePid = campaign.objectiveCounties[objectiveIndex];
+         objectiveIndex < siegeCounties.length; objectiveIndex++) {
+      var objectivePid = siegeCounties[objectiveIndex];
       var objectiveOccupation = campaign.occupations[objectivePid];
       if (!objectiveOccupation || !(objectiveOccupation.progress > 0)) continue;
       var objectivePresent = hostsAtByCamp(state, objectivePid);

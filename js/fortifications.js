@@ -533,15 +533,10 @@ window.FB = window.FB || {};
     var holyWarControl = holyWarFortControl(state, army, pid);
     if (holyWarControl !== null) return !holyWarControl;
     if (FB.armyFriendlyProvince(state, army, pid, relations)) return false;
-    /* Campaign hosts may cross neutral land without besieging a country
-       outside their war. This grants passage, not friendly supply depots. */
-    if (state.greatHolyWar && state.greatHolyWar.phase === 'active' &&
-        FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, army.realm)) {
-      var holder = state.holder && state.holder[pid];
-      var owner = state.owner && state.owner[pid];
-      if (!controllerHostile(state, army, holder, relations) &&
-          !controllerHostile(state, army, owner, relations)) return false;
-    }
+    // Neutral passage applies to ordinary campaigns too. Military occupation
+    // control above still takes precedence over the county's legal owner.
+    if (!controllerHostile(state, army, (state.holder || {})[pid], relations) &&
+        !controllerHostile(state, army, (state.owner || {})[pid], relations)) return false;
     return true;
   };
 

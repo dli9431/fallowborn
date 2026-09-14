@@ -38,8 +38,8 @@ including when the drawn banner overlaps another county. Fort passage rules rema
 Ordinary AI primary hosts consider reachable enemies in stable distance order,
 using the existing 1.1 combat-power threshold. If no pursuit qualifies, hosts inspect
 unfinished objectives in saved order, including recapture for defenders. The route
-must end at a pending objective and meet existing combat and siege-force checks;
-non-objective or neutral forts cannot become unsiegeable fallback destinations.
+may stop at a hostile route fort before a pending objective, meeting existing combat
+and siege-force checks. Route forts receive temporary occupation pulses too.
 Great-holy-war selection remains separate. No battle or siege thresholds change.
 
 Resupply retains a checked purchase destination, or an explicitly recorded safe
@@ -448,6 +448,25 @@ unavailable objective without compensation. Campaigns exhaust into white peace a
 32 seasons. Nonterritorial causes retain their specialized settlement handlers.
 
 Hosts share realm recruitment, casualties, reinforcements, mercenaries and upkeep.
+Offensive automation coordinates ready detachments belonging to the same realm and
+campaign. They gather on uncontested ground, evaluate objective garrisons and enemy
+field strength together, and take one shared route leg at the slowest host's pace.
+Host records, units, supply, and individual selection remain separate. Manual orders,
+manual holds, recent routs, and low-supply/resupply hosts are excluded. Defensive player
+automation and player-commanded AI hosts retain their existing orders. Coordination
+is derived each daily orders phase and stores no formation in saves; this fixes split
+host automation without adding a technology-gated capability.
+Neutral forts allow passage. Hostile forts block onward marches even outside the war
+objectives. Halted campaign hosts can siege these intermediate forts with the same
+force and progress requirements; temporary occupation opens the route and permits
+recapture. Ordinary occupations remember their original side in `homeRealm`; holy-war
+route occupations carry `transit:true` and use the existing camp control flag. These
+records persist in saves, but never expand peace awards or objective victory checks.
+Legacy ordinary campaigns pulse route sieges separately from their objective events.
+Passage alone grants neither friendly supply nor immunity to hostile field armies.
+Ordinary siege readouts use the selected county's campaign occupation record and only
+count halted, living hosts assigned to that campaign. They include counter-sieges,
+contested ground, garrison shortages, and completed occupation awaiting peace.
 Their `warId` selects an ordinary campaign or `holy`; changing assignment cancels the
 route but preserves location, composition and supply. Vassal recruitment excludes its
 counties from a simultaneously mobilized ancestor, recalling the overlapping share
@@ -1135,8 +1154,8 @@ names retain their width. Fort requirements occupy a separate line below siege s
 Active coalition members treat one another's territory as friendly for fort passage
 and supply recovery. Neutral forts permit campaign transit without becoming supply
 depots; hostile forts and objective occupation control still block normally. Campaign
-AI prioritizes its objectives over distant enemy banners and retreats from a pinned
-non-objective fort, where this campaign cannot advance an occupation. Coalition changes
+AI prioritizes its objectives over distant enemy banners and sieges hostile forts
+that interrupt its route, including forts outside the objective counties. Coalition changes
 invalidate retained supply-distance maps. Withdrawal, participant pruning, and save
 repair replace an absent military leader with the strongest remaining sovereign attacker,
 using realm-id order to break ties. These repair existing campaign behavior and add no

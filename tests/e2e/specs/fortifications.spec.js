@@ -214,6 +214,12 @@ test('routes bypass strongpoints, stop at unavoidable forts, and clear stale ord
     const result = await page.evaluate(function () {
       const s = FB.state;
       const oldWorld = FB.world;
+      const oldHostile = FB.armiesHostile;
+      // This routing fixture tests hostile forts; neutral forts allow passage.
+      FB.armiesHostile = function (state, a, b) {
+        return a.realm === 'player' && b.realm === 'enemy' ||
+          a.realm === 'enemy' && b.realm === 'player';
+      };
       FB.world = {
         adj:{
           a:{ b:1, c:1 }, b:{ a:1, d:1 },
@@ -268,6 +274,7 @@ test('routes bypass strongpoints, stop at unavoidable forts, and clear stale ord
         path:host.path.slice(), goal:host.goal, moveLeft:host.moveLeft
       };
       FB.world = oldWorld;
+      FB.armiesHostile = oldHostile;
       return {
         around:around,
         unavoidable:unavoidable,

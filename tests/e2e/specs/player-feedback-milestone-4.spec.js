@@ -763,6 +763,9 @@ test.describe('sibling and collateral-household agency', function () {
       await info.click();
       await expect(page.locator('#education-policy-preview-details'))
         .toBeVisible();
+      // Expanding details lengthens the body while Back stays in the sticky
+      // footer. Bring the body action into view before comparing its position.
+      await save.evaluate(function (button) { button.scrollIntoView({ block:'center' }); });
       const saveBox = await save.boundingBox(), backBox = await back.boundingBox();
       expect(saveBox.y).toBeLessThan(backBox.y);
       await page.locator('#education-policy-focus').selectOption('ste');

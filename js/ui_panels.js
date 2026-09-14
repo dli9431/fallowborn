@@ -1062,7 +1062,8 @@ window.FB = window.FB || {};
     const status = FB.warSiegeProjection && FB.warSiegeProjection(s, county);
     if (!status) return '';
     const province = FB.world.byId[status.pid];
-    const blocker = status.blocker === 'absent' ? FB.T('No halted besiegers') :
+    const blocker = status.blocker === 'occupied' ? FB.T('Occupied — awaiting peace') :
+      status.blocker === 'absent' ? FB.T('No halted besiegers') :
       status.blocker === 'contested' ? FB.T('Contested ground') :
       status.blocker === 'shortage' ? FB.T('Needs {men} more men', { men:status.shortage }) :
       FB.T('Siege works advancing');

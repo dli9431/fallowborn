@@ -759,7 +759,7 @@
     FB.checkTierPromotions(state);
     return true;
   }
-  FB.advanceOrdinaryObjectives = function (state, id) {
+  FB.advanceOrdinaryObjectives = function (state, id, transitOnly) {
     const w = FB.ordinaryWarById(state, id);
     if (!w || !territorial(w)) return false;
     if (w.objectivePulseTurn === state.turn) return false;
@@ -769,9 +769,26 @@
       return w.enforcementOf || FB.warCountyHeldBy(state, o.target, w.defender);
     });
     if (!w.objectives.length) return FB.settleOrdinaryWar(state, id, 'invalid');
-    for (const o of w.objectives) {
+    const siegeTargets = transitOnly ? [] : w.objectives.slice();
+    (state.armies || []).forEach(function (a) {
+      if (a.warId !== id || !endpoint(w, a.realm) || !(a.men > 0)) return;
+      const pid = a.at, fort = FB.fortAt(state, pid);
+      if (!fort || !fort.level || fort.ruined || w.objectives.some(function (o) { return o.target === pid; })) return;
+      const homeRealm = FB.warCountyHeldBy(state, pid, w.defender) ? w.defender :
+        FB.warCountyHeldBy(state, pid, w.attacker) ? w.attacker : null;
+      if (!homeRealm) return;
+      if (!w.occupations[pid]) w.occupations[pid] = { progress:0, occupied:false, homeRealm:homeRealm };
+    });
+    Object.keys(w.occupations).forEach(function (pid) {
+      if (w.objectives.some(function (o) { return o.target === pid; })) return;
+      const siege = w.occupations[pid];
+      if (siege.homeRealm && FB.warCountyHeldBy(state, pid, siege.homeRealm)) siegeTargets.push({ target:pid });
+      else delete w.occupations[pid];
+    });
+    for (const o of siegeTargets) {
       const siege = w.occupations[o.target] = w.occupations[o.target] || { progress:0, occupied:false };
-      const besieger = siege.occupied ? w.defender : w.attacker;
+      const homeRealm = siege.homeRealm || w.defender;
+      const besieger = siege.occupied ? homeRealm : homeRealm === w.defender ? w.attacker : w.defender;
       const hosts = (state.armies || []).filter(function (a) {
         return a.realm === besieger && a.warId === id && a.at === o.target && !a.moveLeft && !(a.path || []).length;
       });
@@ -788,6 +805,7 @@
           realm:state.realms[besieger].name, province:FB.world.byId[o.target].name }));
       }
     }
+    if (transitOnly) return false;
     w.target = (w.objectives.filter(function (o) { return !w.occupations[o.target].occupied; })[0] || w.objectives[0]).target;
     return finishObjectives(state, w);
   };
@@ -815,7 +833,10 @@
         if (w.status === 'active' && endpoint(w, 'player') && !state.player.flags.in_prison) {
           FB.withOrdinaryWar(state, w.id, function () { FB.queueWarEvent(state, 'war_council', {}); });
         }
-      } else if (endpoint(w, 'player')) FB.withOrdinaryWar(state, w.id, function () { oldPlayerTick(state); });
+      } else if (endpoint(w, 'player')) FB.withOrdinaryWar(state, w.id, function () {
+        if (territorial(w)) FB.advanceOrdinaryObjectives(state, w.id, true);
+        oldPlayerTick(state);
+      });
       if (w.status === 'active' && w.peaceDemand) {
         if (w.peaceDemand.status === 'pending' && state.turn >= w.peaceDemand.deadline) w.peaceDemand.status = 'refused';
         if (w.peaceDemand.status === 'refused' && w.peaceDemand.liege !== 'player' &&
@@ -1067,7 +1088,8 @@
   FB.ordinaryOccupationControl = function (state, army, pid) {
     const w = FB.ordinaryWarById(state, army.warId);
     if (!w || !w.occupations[pid] || !endpoint(w, army.realm)) return null;
-    return w.occupations[pid].occupied ? army.realm === w.attacker : army.realm === w.defender;
+    const siege = w.occupations[pid], homeRealm = siege.homeRealm || w.defender;
+    return siege.occupied ? army.realm !== homeRealm : army.realm === homeRealm;
   };
   const fortBlocks = FB.fortBlocksArmy;
   FB.fortBlocksArmy = function (state, pid, army, relations) {
@@ -1077,6 +1099,52 @@
       return !!(fort && fort.level && !fort.ruined && !control);
     }
     return fortBlocks(state, pid, army, relations);
+  };
+  const legacySiegeProjection = FB.warSiegeProjection;
+  FB.warSiegeProjection = function (state, county) {
+    const wars = FB.realmWars(state, 'player');
+    const war = wars.filter(function (w) {
+      return territorial(w) && (!w.legacy || county && w.occupations[county] && w.occupations[county].homeRealm) &&
+        (!county || w.occupations[county] || w.objectives.some(function (o) { return o.target === county; }));
+    })[0];
+    if (!war) return legacySiegeProjection(state, county);
+    const pid = county || war.target || war.objectives[0] && war.objectives[0].target;
+    if (!pid) return null;
+    const siege = war.occupations[pid] || {};
+    const homeRealm = siege.homeRealm || war.defender;
+    const besieger = siege.occupied ? homeRealm : homeRealm === war.defender ? war.attacker : war.defender;
+    const hosts = (state.armies || []).filter(function (a) {
+      return a.realm === besieger && a.warId === war.id && a.at === pid && a.men > 0 &&
+        !a.moveLeft && !(a.path || []).length;
+    });
+    const contested = (state.armies || []).some(function (a) {
+      return a.men > 0 && a.at === pid && hosts.some(function (h) { return FB.armiesHostile(state, h, a); });
+    });
+    const status = FB.fortSiegeStatus(state, pid, siege, hosts);
+    status.warId = war.id; status.hosts = hosts; status.contested = contested;
+    status.defending = besieger !== 'player'; status.occupied = !!siege.occupied;
+    status.blocker = !hosts.length ? (siege.occupied ? 'occupied' : 'absent') :
+      contested ? 'contested' : !status.canProgress ? 'shortage' : null;
+    status.canProgress = !!hosts.length && !contested && status.canProgress;
+    status.percent = status.blocker === 'occupied' ? 100 :
+      Math.min(status.breached ? 100 : 99, Math.floor(100 * status.progress / status.required));
+    status.days = 91 - (state.date && state.date.day || 1);
+    return status;
+  };
+  const legacyPlayerSiegeStatus = FB.playerSiegeStatus;
+  FB.playerSiegeStatus = function (state) {
+    const w = current(state, 'player');
+    if (w && !w.legacy && territorial(w)) return FB.warSiegeProjection(state, w.target);
+    return legacyPlayerSiegeStatus(state);
+  };
+  const legacyCanSiege = FB.fns.war_can_siege;
+  FB.fns.war_can_siege = function (state) {
+    const w = current(state, 'player');
+    if (w && !w.legacy && territorial(w)) {
+      const status = FB.playerSiegeStatus(state);
+      return !!(status && !status.defending && status.canProgress);
+    }
+    return legacyCanSiege(state);
   };
   const recruitmentBlocked = FB.recruitmentCountyBlocked;
   FB.recruitmentCountyBlocked = function (state, rid, pid, hosts) {

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.179.10';
+FB.VERSION = '1.179.11';
 FB.CHANGELOG = [
+  { v: '1.179.11', date: '2026-09-14', changes: [
+    'Automated offensive detachments gather and march together while remaining separate hosts. Hostile route forts can be besieged to open passage, neutral forts allow transit, and siege readouts show campaign progress.'
+  ] },
   { v: '1.179.10', date: '2026-09-14', changes: [
     'Large armies raise regional food prices, provisions spoil, and civilian and army consumption use revised quantities.',
     'County hosts and holy-war coalitions have sortable lists, clearer summaries, and combatant details, with siege and battle links to the map.'

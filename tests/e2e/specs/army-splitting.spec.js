@@ -11,6 +11,7 @@ dependsOnRuntime(__filename, [
   'js/mapview.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
+  'js/ui_wars.js',
   'js/save.js',
   'data/units.js',
   'data/map_data.js',
@@ -243,6 +244,10 @@ test('a host shattered while cut off is destroyed outright, with graver capture 
         at:'x', from:'x', moveLeft:0, path:[], goal:null, supply:100
       };
       state.armies = [host, foe];
+      // Raw fixture wars need the same registry binding as the daily tick
+      // before querying hostility or encirclement.
+      FB.ensureWars(state);
+      FB.assignCampaignHosts(state);
       const cutOff = FB.hostCutOff(state, host);
 
       FB.rf = function () { return 1; };
@@ -638,79 +643,60 @@ test('Land tab shows war card when selecting a county containing troops without 
     await expect(warCard.locator('#btn-host-split')).toBeVisible();
   });
 
-test('Deeds panel renders compact war card with summary and interactive tooltips',
+test('Deeds campaign list opens host assignments and shared details',
   async function ({ page }) {
-    await page.evaluate(function () {
-      FB.state.player.tier = 4;
-      FB.state.player.liege = null;
-      FB.state.player.provs = [FB.state.player.provinceId];
-      FB.foundPlayerRealm(FB.state);
-      FB.state.owner[FB.state.player.provinceId] = 'player';
-      FB.state.holder[FB.state.player.provinceId] = 'player';
-      FB.invalidateRealmCache();
-
+    const fixture = await page.evaluate(function () {
       const state = FB.state;
-      const home = state.player.provinceId;
-      state.player.war = {
-        enemy:'croatia',
-        wins:1,
-        losses:0,
-        strength:1.0,
+      state.player.tier = 4;
+      state.player.liege = null;
+      state.player.provs = [state.player.provinceId];
+      FB.foundPlayerRealm(state);
+      state.owner[state.player.provinceId] = 'player';
+      state.holder[state.player.provinceId] = 'player';
+      FB.invalidateRealmCache();
+      const enemy = Object.keys(state.realms).filter(function (id) {
+        return id !== 'player' && state.realms[id].alive && !state.realms[id].liege;
+      }).sort()[0];
+      const target = state.realms[enemy].capital;
+      const war = FB.registerOrdinaryWar(state, 'player', {
+        enemy:enemy, target:target, wins:1, losses:0, strength:1,
         started:state.turn - 30
-      };
-      const host = {
-        id:'deeds_test_host', realm:'player', men:7800, size:7800,
-        units:{ levy:3300, arch:1000, cav:27, ret:2200, mercs:0 },
+      });
+      const home = state.player.provinceId;
+      state.armies = [{
+        id:'deeds_test_host', realm:'player', warId:war.id, men:7800, size:7800,
+        units:{ levy:3300, arch:1000, cav:1300, ret:2200, mercs:0 },
         at:home, from:home, moveLeft:0, path:[], goal:null, supply:70
-      };
-      state.armies = [host];
+      }];
       FB.ui.showTab('actions');
       FB.ui.refresh();
+      return { id:war.id, enemy:state.realms[enemy].name,
+        county:FB.world.byId[target].name };
     });
 
-    const deedsWarCard = page.locator('#deeds-war-card');
-    await expect(deedsWarCard).toBeVisible();
-    await expect(deedsWarCard.locator('.settcard-head')).toContainText('At War with');
-    await expect(deedsWarCard.locator('.settcard-head')).toContainText('1W · 0L');
-    await expect(deedsWarCard).toContainText('Your Host');
-    await expect(deedsWarCard).toContainText('Supply & Upkeep');
-    await expect(deedsWarCard).toContainText('Battle Odds');
-
-    const details = deedsWarCard.locator('#deeds-war-details');
-    await expect(details).toHaveClass(/hidden/);
-
-    const infoBtn = deedsWarCard.locator('.settcard-info');
-    await infoBtn.click();
-    await expect(details).not.toHaveClass(/hidden/);
-    await expect(details).toContainText('Host & Units');
-    await expect(details).toContainText('Logistics & Supply');
-
-    await infoBtn.click();
-    await expect(details).toHaveClass(/hidden/);
-
-    // Verify march hint text
-    await expect(deedsWarCard.locator('.hint')).toContainText('troops');
-    await expect(deedsWarCard.locator('.hint')).toContainText('county to move');
-
-    // Verify enemy name is an interactive link that highlights their borders in red
-    const enemyLink = deedsWarCard.locator('.settcard-head button[data-war-enemy="croatia"]');
-    await expect(enemyLink).toBeVisible();
-    await expect(enemyLink).toContainText('Croatia');
-    await enemyLink.click();
-
-    const highlightState = await page.evaluate(function () {
-      return {
-        selected: FB.map.selected,
-        highlightColor: FB.map.highlightColor,
-        focusColor: FB.map.focusColor(),
-        hasGroupOutline: !!(FB.map.groupOutline || FB.map.groupOutlineSmooth),
-        groupActive: FB.map.focusGroupActive
-      };
-    });
-    expect(highlightState.highlightColor).toBe('#c8352b');
-    expect(highlightState.focusColor).toBe('#c8352b');
-    expect(highlightState.groupActive).toBe(true);
-    expect(highlightState.hasGroupOutline).toBe(true);
+    const list = page.locator('[data-campaign-list]');
+    await expect(list).toBeVisible();
+    const campaign = list.locator('[data-campaign-open="' + fixture.id + '"]');
+    await expect(campaign).toContainText(fixture.enemy);
+    await expect(campaign).toContainText('0/1 objectives occupied');
+    await campaign.click();
+    const sheet = page.locator('[data-campaign-detail="' + fixture.id + '"]');
+    await expect(sheet).toBeVisible();
+    await expect(sheet).toContainText(fixture.county);
+    await expect(sheet).toContainText('7800 men');
+    await expect(sheet).toContainText('Total upkeep');
+    await expect(sheet.locator('[data-host-campaign="deeds_test_host"]')).toHaveValue(fixture.id);
+    const hosts = sheet.locator('#campaign-host-details-section');
+    const details = hosts.locator('#campaign-host-details');
+    await expect(details).toBeHidden();
+    await hosts.locator('.settcard-info').click();
+    await expect(details).toBeVisible();
+    await expect(details).toContainText('Hosts share troops, supplies, and upkeep');
+    await hosts.locator('.settcard-info').click();
+    await expect(details).toBeHidden();
+    await page.locator('#campaign-back').click();
+    await expect(list).toBeVisible();
+    await expect(campaign).toContainText('0/1 objectives occupied');
   });
 
 test('Map routes show controlled hosts and only the active-war enemy',

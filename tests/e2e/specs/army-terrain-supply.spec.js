@@ -200,6 +200,11 @@ test('daily troop replenishment redraws the map on a bounded cadence',
       const originalAuto = FB.game.auto.hosts;
       const originalRequest = FB.map.request;
       const home = state.player.provinceId;
+      const originalDev = state.dev[home];
+      // This fixture measures redraw cadence, not the recruitment-cap limit.
+      // Give the county enough levy capacity to replace the missing 600 men.
+      state.dev[home] = 30;
+      FB.invalidateRealmCache();
       state.holder = state.holder || {};
       const originalHolder = state.holder[home];
       const playerSovereign = FB.playerRealmId(state);
@@ -226,6 +231,9 @@ test('daily troop replenishment redraws the map on a bounded cadence',
         moveLeft:0, path:[], goal:null, supply:100
       };
       state.armies = [host];
+      FB.ensureWars(state);
+      FB.assignCampaignHosts(state);
+      const capacity = FB.playerMusterPreview(state).men;
 
       let requests = 0;
       FB.map.request = function () { requests++; };
@@ -236,10 +244,13 @@ test('daily troop replenishment redraws the map on a bounded cadence',
 
       const out = {
         enemy:enemy,
+        capacity:capacity,
         men:host.men,
         requests:requests
       };
       FB.map.request = originalRequest;
+      state.dev[home] = originalDev;
+      FB.invalidateRealmCache();
       state.turn = originalTurn;
       state.player.war = originalWar;
       state.armies = originalHosts;
@@ -252,6 +263,7 @@ test('daily troop replenishment redraws the map on a bounded cadence',
     });
 
     expect(result.enemy).toBeTruthy();
+    expect(result.capacity).toBeGreaterThanOrEqual(1000);
     expect(result.men).toBe(1000);
     /* The five-day cadence yields six paints over thirty days, or seven when
        the final completion falls between cadence days. The old hot path

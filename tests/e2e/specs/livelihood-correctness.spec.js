@@ -378,10 +378,20 @@ test('clears remote enterprise staffing and previews relocation impact',
     expect(setup.impactCount).toBe(1);
     expect(setup.warning).toContain(setup.impactWorker);
     expect(setup.warning).toContain('will be unassigned');
-    await page.getByRole('button', {
-      name:'Back',
+    // The shared footer normalizes this top-level cancellation to Close.
+    await page.locator('#genmodal').getByRole('button', {
+      name:'Close',
       exact:true
     }).click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    const dismissed = await page.evaluate(function () {
+      const state = FB.state;
+      return { home:state.player.provinceId,
+        worker:state.player.enterprises[0].workerId,
+        player:state.player.charId };
+    });
+    expect(dismissed.home).toBe(setup.oldHome);
+    expect(dismissed.worker).toBe(dismissed.player);
 
     const moved = await page.evaluate(function (destination) {
       const state = FB.state;
@@ -1253,12 +1263,22 @@ test('local hiring retains a scrolled staffing preview and row details', async f
     await row.locator('.settcard-info').click();
     const hire = row.locator('[data-enterprise-staffing-hire]');
     await hire.scrollIntoViewIfNeeded();
-    const scroll = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
-    expect(scroll).toBeGreaterThan(100);
+    // Playwright may scroll again to uncover a target behind the sticky footer.
+    // Measure the position at activation, after that pointer preparation.
+    await hire.evaluate(function (button) {
+      button.addEventListener('click', function () {
+        document.getElementById('gm-body').dataset.hireActivationScroll =
+          String(document.getElementById('gm-body').scrollTop);
+      }, { capture:true, once:true });
+    });
     await hire.click();
     await expect(row.locator('[data-enterprise-staffing-hire]')).toHaveCount(0);
     await expect(row.locator('.settcard-info')).toBeFocused();
     await expect(row.locator('.settcard-info')).toHaveAttribute('aria-expanded', 'true');
+    const scroll = await page.locator('#gm-body').evaluate(function (body) {
+      return Number(body.dataset.hireActivationScroll);
+    });
+    expect(scroll).toBeGreaterThan(100);
     const after = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
     expect(Math.abs(after - scroll)).toBeLessThanOrEqual(2);
   }

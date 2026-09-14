@@ -154,9 +154,39 @@ test('campaign passage distinguishes coalition depots, neutral forts, and enemy 
       neutral:{ friendly:false, blocked:false },
       enemy:{ friendly:false, blocked:true },
       captured:{ friendly:false, blocked:false },
-      gathering:{ friendly:false, blocked:true },
+      gathering:{ friendly:false, blocked:false },
       validLeader:true
     });
+  });
+
+test('holy-war route forts must fall before passage and never become peace objectives',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const campaign = FBTEST.makeGreatHolyWar({ capturedCounties:[] });
+      const pid = 'paris';
+      s.owner[pid] = s.holder[pid] = 'abbasid';
+      s.buildings[pid] = [{ id:'walls', s:0, level:2 }];
+      FB.invalidateRealmCache(); FB.invalidateFortIndex();
+      const host = { id:'route-siege', realm:'west_francia', warId:'holy',
+        at:pid, men:3000, units:{ levy:3000 }, path:[], moveLeft:0, supply:100 };
+      s.armies = [host];
+      const objectives = campaign.objectiveCounties.slice();
+      const blocked = FB.fortBlocksArmy(s, pid, host);
+      FB.greatHolyWarTick(s);
+      const siege = campaign.occupations[pid];
+      const started = !!(siege && siege.transit && siege.progress > 0 && !siege.occupied);
+      siege.progress = FB.greatHolyWarSiegeRequirement(s, pid, siege) - 0.01;
+      s.turn++;
+      FB.greatHolyWarTick(s);
+      FB.repairGreatHolyWar(s);
+      return { blocked:blocked, started:started, occupied:campaign.occupations[pid].occupied,
+        passage:!FB.fortBlocksArmy(s, pid, host), owner:s.owner[pid],
+        objectivesUnchanged:JSON.stringify(objectives) === JSON.stringify(campaign.objectiveCounties),
+        active:campaign.phase === 'active' };
+    });
+    expect(result).toEqual({ blocked:true, started:true, occupied:true, passage:true,
+      owner:'abbasid', objectivesUnchanged:true, active:true });
   });
 
 test('holy-war armies march on objectives instead of a stronger remote enemy',

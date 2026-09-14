@@ -1,5 +1,10 @@
 # UI: keyboard & mobile
 
+County siege readouts use current per-objective occupation progress, including other
+active campaigns besides the first. Completed objectives show Occupied — awaiting
+peace until a counter-siege begins; progress, shortages, and contested status count
+only eligible hosts for that campaign. Legacy wars retain their older progress fields.
+
 Holy-war combatant overviews open from county details, ruler war cards, and the
 campaign panel. They show the target, caller, attacking leader, and complete opposing
 rosters in two bordered boxes. Compact heraldry-and-name buttons expose current

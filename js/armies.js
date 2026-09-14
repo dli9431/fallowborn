@@ -2795,13 +2795,9 @@ window.FB = window.FB || {};
     const supplyGoal = FB.armySupplyGoal && FB.armySupplyGoal(state, army);
     if (supplyGoal) return supplyGoal;
     if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, army)) {
-      if (greatCamp && campaign.objectiveCounties.indexOf(army.at) < 0) {
-        return FB.armyRetreatGoal(state, army) || army.at;
-      }
       return army.at;
     }
-    /* Pursuing a remote banner must not divert the whole coalition from
-       its objectives into forts that this campaign can never occupy. */
+    /* Prioritize the campaign route over distant enemy banners. */
     if (greatCamp) {
       return holyWarGoal(state, army) || army.at;
     }
@@ -2855,8 +2851,7 @@ window.FB = window.FB || {};
     return null;
   };
 
-  /* Only saved objectives receive ordinary occupation pulses. A neutral or
-     non-objective fort must never become an AI siege dead end. */
+  /* Hostile forts on the route receive transit occupation pulses too. */
   FB.armyCampaignAdvanceGoal = function (state, army) {
     const war = FB.ordinaryWarById(state, army.warId);
     if (!war) return null;
@@ -2871,13 +2866,91 @@ window.FB = window.FB || {};
         FB.findArmyPath(state, army, objective.target);
       if (!route) continue;
       const stop = route.blockedByFort || objective.target;
-      if (!pending.some(function (o) { return o.target === stop; }) ||
-          !FB.armyCanPursue(state, army, stop)) continue;
+      if (!FB.armyCanPursue(state, army, stop)) continue;
       const siege = war.occupations && war.occupations[stop];
       if (FB.fortSiegeStatus && !FB.fortSiegeStatus(state, stop, siege, army).canProgress) continue;
       return stop;
     }
     return null;
+  };
+
+  /* Derived daily orders: gather same-campaign detachments without merging
+     records, then take one shared leg at the slowest host's pace. */
+  FB.armyOffensiveCoordination = function (state, autoMode, command) {
+    const buckets = {}, goals = {}, marches = [];
+    for (const a of state.armies || []) {
+      const war = FB.ordinaryWarById(state, a.warId);
+      const holy = a.warId === 'holy' && state.greatHolyWar && state.greatHolyWar.phase === 'active';
+      if (!war && !holy) continue;
+      if (a.realm === 'player' ? autoMode !== 'off' :
+          (command && a.realm === command.sovereignRealmId) ||
+          (war ? war.attacker !== a.realm : FB.greatHolyWarCamp(state, a.realm) !== 'attackers')) continue;
+      if (!(a.men > 0) || a.rebellionId || a.manual || a.holdManual || a.autoResupply ||
+          a.supplyRetreat || (a.broken !== undefined && state.turn - a.broken < 40) ||
+          FB.hostSupply(a) <= (B().supplyLowThreshold === undefined ? 30 : B().supplyLowThreshold)) continue;
+      if (a.realm !== 'player' && FB.treasuryRetrenching && FB.treasuryRetrenching(state, a.realm)) continue;
+      const key = a.realm + ':' + a.warId;
+      (buckets[key] || (buckets[key] = [])).push(a);
+    }
+    Object.keys(buckets).sort().forEach(function (key) {
+      const group = buckets[key].sort(function (a, b) { return b.men - a.men || String(a.id).localeCompare(String(b.id)); });
+      if (group.length < 2) return;
+      const lead = group[0], war = FB.ordinaryWarById(state, lead.warId);
+      const enemies = (state.armies || []).filter(function (a) { return a.men > 0 && FB.armiesHostile(state, lead, a); });
+      const together = group.every(function (a) { return a.at === lead.at; });
+      if (!together) {
+        // Gather on uncontested ground; never send a lone reinforcement into
+        // a battle on the strength of hosts that have not arrived yet.
+        const anchor = group.filter(function (a) { return !enemies.some(function (e) { return e.at === a.at; }); })[0];
+        if (!anchor) return;
+        if (!group.every(function (a) {
+          if (a.at === anchor.at) return true;
+          const route = FB.findArmyPath(state, a, anchor.at);
+          return route && route.path && route.path.every(function (pid) {
+            return !enemies.some(function (e) { return e.at === pid; });
+          });
+        })) return;
+        group.forEach(function (a) { goals[a.id] = anchor.at; });
+        return;
+      }
+      const inFlight = group.filter(function (a) { return a.moveLeft > 0 && a.path && a.path.length; });
+      if (inFlight.length && group.every(function (a) { return !a.path || !a.path.length || a.path[0] === inFlight[0].path[0]; })) {
+        group.forEach(function (a) { goals[a.id] = inFlight[0].path[0]; });
+        marches.push(group); return;
+      }
+      let targets;
+      if (war) targets = (war.objectives || []).filter(function (o) {
+        const occupied = war.occupations[o.target] && war.occupations[o.target].occupied;
+        return lead.realm === war.attacker ? !occupied : !!occupied;
+      }).map(function (o) { return o.target; });
+      else targets = [FB.greatHolyWarArmyGoal(state, lead.realm, lead.at)].filter(Boolean);
+      enemies.forEach(function (a) { if (targets.indexOf(a.at) < 0) targets.push(a.at); });
+      const edge = lead.realm === 'player' && FB.game.auto && FB.game.auto.style === 'bold' ? 0.85 :
+        lead.realm === 'player' && FB.game.auto && FB.game.auto.style === 'safe' ? 1.3 : 1.1;
+      let goal = lead.at;
+      for (const pid of targets) {
+        const defense = enemies.filter(function (a) { return a.at === pid; }).reduce(function (n, a) { return n + battlePower(state, a, pid, 'defense'); }, 0);
+        const attack = group.reduce(function (n, a) { return n + battlePower(state, a, pid, 'attack'); }, 0);
+        if (defense && attack < defense * edge) continue;
+        const objective = war && war.objectives.some(function (o) { return o.target === pid; });
+        const occupation = objective ? war.occupations[pid] : !war && (state.greatHolyWar.occupations || {})[pid];
+        if ((objective || (!war && (state.greatHolyWar.objectiveCounties || []).indexOf(pid) >= 0)) &&
+            !FB.fortSiegeStatus(state, pid, occupation, group).canProgress) continue;
+        if (pid === lead.at) { goal = pid; break; }
+        const route = FB.findArmyPath(state, lead, pid);
+        if (!route || !route.path || !route.path.length) continue;
+        if (route.blockedByFort && !FB.fortSiegeStatus(state, route.blockedByFort,
+            war ? war.occupations[route.blockedByFort] : state.greatHolyWar.occupations[route.blockedByFort], group).canProgress) continue;
+        const next = route.path[0];
+        const onRoad = enemies.filter(function (a) { return a.at === next; }).reduce(function (n, a) { return n + battlePower(state, a, next, 'defense'); }, 0);
+        if (onRoad && group.reduce(function (n, a) { return n + battlePower(state, a, next, 'attack'); }, 0) < onRoad * edge) continue;
+        if (!group.every(function (a) { return FB.findArmyPath(state, a, next); })) continue;
+        goal = next; break;
+      }
+      group.forEach(function (a) { goals[a.id] = goal; });
+      if (goal !== lead.at) marches.push(group);
+    });
+    return { goals:goals, marches:marches };
   };
 
   /* Manual host control is a hard boundary. It preserves a route issued by
@@ -4106,6 +4179,7 @@ window.FB = window.FB || {};
         (orderQueries.byCounty[army.at] || (orderQueries.byCounty[army.at] = [])).push(army);
       }
       try {
+        const coordinated = FB.armyOffensiveCoordination(state, autoHosts, militaryCommand);
         for (const a of state.armies) {
           if (a.path && a.path.length && FB.fortBlocksArmy &&
               FB.fortBlocksArmy(state, a.at, a) &&
@@ -4121,7 +4195,9 @@ window.FB = window.FB || {};
           const commandedByPlayer = !!(militaryCommand &&
             a.realm === militaryCommand.sovereignRealmId &&
             (!militaryCommand.hostId || a.id === militaryCommand.hostId));
-          if (a.rebellionId && FB.rebelArmyGoal) {
+          if (Object.prototype.hasOwnProperty.call(coordinated.goals, a.id)) {
+            if (FB.orderArmy(state, a, coordinated.goals[a.id])) a.automatedOrder = 1;
+          } else if (a.rebellionId && FB.rebelArmyGoal) {
             const goal = FB.rebelArmyGoal(state, a);
             if (goal && (goal !== a.goal || (!a.path.length && goal !== a.at))) FB.orderArmy(state, a, goal);
           } else if (a.realm !== 'player' && !commandedByPlayer) {
@@ -4155,6 +4231,12 @@ window.FB = window.FB || {};
             else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
           }
         }
+        coordinated.marches.forEach(function (group) {
+          const next = group[0].path && group[0].path[0];
+          if (!next || !group.every(function (a) { return a.at === group[0].at && a.path && a.path[0] === next; })) return;
+          const days = group.reduce(function (n, a) { return Math.max(n, a.moveLeft); }, 0);
+          group.forEach(function (a) { a.moveLeft = days; });
+        });
       } finally { orderQueries = previousQueries; }
       /* Only after all orders are fixed do hosts advance. The battle scan below
          therefore sees genuine end-of-day co-location; adjacency alone never
