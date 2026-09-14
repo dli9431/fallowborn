@@ -1789,6 +1789,53 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .actionsubhead.deed-section-active {
   color:var(--ui-accent-color); border-left:2px solid var(--ui-accent-color); padding-left:6px;
 }
+/* Justice cards share the parchment palette; keep facts and actions in separate rows. */
+#gm-body .justice-card {
+  display: block; min-width: 0; margin: 12px 0; padding: 12px;
+  border: 1px solid var(--ui-border-color); border-radius: 8px;
+  background: var(--ui-card-color);
+}
+#gm-body .justice-card > .settcard-head {
+  min-height: 32px; margin-bottom: 8px; gap: 12px; align-items: center;
+}
+#gm-body .justice-card > .settcard-head > b {
+  min-width: 0; color: var(--ui-accent-color); font-size: 16px;
+  line-height: 1.4; overflow-wrap: anywhere;
+}
+#gm-body .justice-card-facts > .kv {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  align-items: start; gap: 4px 12px; padding: 6px 0;
+}
+#gm-body .justice-card-facts > .kv > * { text-align: left; }
+#gm-body .justice-card-actions {
+  display: flex; justify-content: flex-end; gap: 8px;
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--ui-border-color);
+}
+#gm-body .justice-card-actions > button {
+  flex: 0 1 auto; width: auto; min-height: 44px; margin: 0; padding: 10px 16px;
+  text-align: center; white-space: normal;
+}
+#gm-body .justice-evidence { margin: 12px 0; color: var(--helper-text-color); }
+#gm-body .justice-card-facts > .justice-evidence { margin: 6px 0; }
+#gm-body .justice-card:focus-visible { outline: 2px solid var(--ui-accent-color); outline-offset: 2px; }
+#gm-body .justice-sentence-choice {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px;
+}
+#gm-body .justice-sentence-choice > .settcard-head { margin: 0; }
+#gm-body .justice-sentence-choice > .justice-card-actions {
+  grid-column: 2; grid-row: 1; margin: 0; padding: 0; border: 0;
+}
+#gm-body .justice-sentence-choice > .justice-card-facts,
+#gm-body .justice-sentence-choice > .settcard-details { grid-column: 1 / -1; }
+#gm-body .justice-sentence-choice > .justice-card-facts:empty { display: none; }
+#gm-body .justice-blocker { color: var(--helper-text-color); margin: 0; }
+#gm-body .justice-sentence-choice .settcard-details .kv {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px;
+}
+@media (max-width: 600px) {
+  #gm-body .justice-card-facts > .kv { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
+  #gm-body .justice-card-actions > button { width: 100%; font-size: 16px; }
+}
 .kv {
   display: flex; flex-wrap: wrap; justify-content: space-between;
   align-items: baseline; gap: 4px 12px; min-width: 0;

@@ -6,7 +6,8 @@ Barons can arrest non-rulers at their seat; counts and higher rulers can also
 arrest subordinate rulers physically within their territory. Open arrest never
 reaches a superior or foreign ruler. Sentence eligibility instead requires
 actual custody, and all arbitrary/excessive punishments carry the shared county
-support costs. Judicial authority and prisoners pass to a lawful successor.
+support costs and standing losses with all subordinate rulers and the direct
+liege. Judicial authority and prisoners pass to a lawful successor.
 Forfeiture uses escheat with an explicit `recipientId`, avoiding the heirless
 estate lottery while retaining sovereign ownership, treasury retirement, and
 vassal transfers. See [justice](justice.md) for the capability and technology

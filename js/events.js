@@ -10473,6 +10473,14 @@ window.FB = window.FB || {};
       if (concealedGain) return FB.T('Research may advance');
       return FB.T('Research {change}', { change:numberText(amount) });
     }
+    if (record.type === 'justiceStanding') {
+      return FB.T('{observer}: standing toward {ruler} {change}', {
+        observer:impactTargetName(state, { targetKind:'realm', targetId:record.realmId }),
+        ruler:record.actorRealmId === 'player' ? FB.fullName(state.chars[state.player.charId]) :
+          impactTargetName(state, { targetKind:'realm', targetId:record.actorRealmId }),
+        change:numberText(amount)
+      });
+    }
     if (record.type === 'standing') {
       const target = impactTargetName(state, record);
       if (concealedGain) return FB.T('Standing with {target} may improve', { target:target });

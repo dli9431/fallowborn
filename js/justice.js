@@ -170,6 +170,27 @@
     });
     return effects;
   }
+  FB.justiceStandingProjection = function (s, actor, supportLoss) {
+    var rid = realmOf(s, actor) || (actor === s.player.charId ? 'player' : null);
+    var amount = supportLoss < 0 ? -Math.ceil(Math.abs(supportLoss) / 2) : 0;
+    if (!rid || !amount) return [];
+    var liege = rid === 'player' ? s.player.liege : s.realms[rid] && s.realms[rid].liege;
+    return Object.keys(s.realms).sort().filter(function (other) {
+      return other !== rid && s.realms[other].alive &&
+        (other === liege || under(s, other, rid));
+    }).map(function (other) {
+      var before = FB.rulerRegard(s, other, rid);
+      return { realmId:other, actorRealmId:rid, before:before,
+        after:FB.clamp(before + amount, -100, 100), amount:amount };
+    });
+  };
+  function standingPenalty(s, actor, supportLoss) {
+    return FB.justiceStandingProjection(s, actor, supportLoss).map(function (row) {
+      FB.adjustRulerRegard(s, row.realmId, row.actorRealmId, row.amount, 'justice:unjust_punishment');
+      return { type:'justiceStanding', realmId:row.realmId, actorRealmId:row.actorRealmId,
+        amount:FB.rulerRegard(s, row.realmId, row.actorRealmId) - row.before };
+    });
+  }
   FB.justiceArrestProjection = function (s, actor, target, offenseId) {
     var a = person(s, actor), t = person(s, target);
     var counties = FB.justiceCounties(s, actor), offense = caseFor(s, actor, target, offenseId);
@@ -270,12 +291,12 @@
   function arrestNow(s, p, submit) {
     var j = ensure(s);
     if (!p.ready) return { ok:false, blocker:p.blocker };
-    var effects = support(s, p.counties, p.attemptSupport);
+    var effects = support(s, p.counties, p.attemptSupport).concat(standingPenalty(s, p.actorId, p.attemptSupport));
     var caught = submit || FB.chance(p.chance);
     if (caught) {
       var row = capture(s, p.actorId, p.targetId, p.offenseId, !p.justified);
       if (!row) return { ok:false, blocker:'already_held' };
-      effects = effects.concat(support(s, p.counties, p.captureSupport));
+      effects = effects.concat(support(s, p.counties, p.captureSupport), standingPenalty(s, p.actorId, p.captureSupport));
       news(s, p.actorId, p.targetId, 'arrest', effects);
     } else {
       j.cooldowns[p.actorId + ':' + p.targetId] = s.turn + 90;
@@ -436,7 +457,7 @@
     var def = FBDATA.justiceSentences[sentence], row = p.custody;
     if (def.money && !transfer(s, target, actor, p.amount)) return { ok:false, blocker:'funds' };
     j.pending = null;
-    var effects = support(s, p.counties, p.support);
+    var effects = support(s, p.counties, p.support).concat(standingPenalty(s, actor, p.support));
     effects.push({ type:'system', system:'justice', action:sentence,
       days:p.endTurn ? p.endTurn - s.turn : null, lethal:!!def.kill,
       permanent:!!(def.kill || def.maim || def.forfeit) });

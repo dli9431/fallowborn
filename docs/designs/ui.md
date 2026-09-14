@@ -17,6 +17,24 @@ the shared styles. Player arrest/hearing events always require a response even
 under Resolve everything. Sentence names and descriptions use the structured
 `justiceSentence` catalog; saved outcomes use message descriptors.
 
+Justice uses standard bottom sheets and compact identity/status cards. Sentence
+choices show the sentence name, Review action and first blocker; judgment, support
+and consequence details use the card tooltip/disclosure. Confirmations keep
+costs, consequences, money, deadlines and destinations visible before applying
+any sentence. Rules and sentence explanations use
+the shared header tooltip and card hover/focus tooltip with a separate touch `?`.
+Unavailable cards remain focusable. Back restores open disclosures as well as
+search, focus and scroll. Confirmations name the action, and results show actual
+effect totals before the expandable county ledger.
+Confirmation and Judgment recorded actions sit inside their terms/outcome cards.
+Trait and ailment inspection retains the original Justice sheet for Back.
+After execution, outcome Back and Continue return to the Justice list, never to
+the dead prisoner's action sheet. Arrest receipts combine attempt and capture
+charges per county and count each affected county once.
+Justice terms also show the standing cost to vassals and the liege, with an
+Affected rulers disclosure listing clamped before/after values. Outcomes group
+standing losses into a compact range and keep individual rulers in Details.
+
 County siege readouts use current per-objective occupation progress, including other
 active campaigns besides the first. Completed objectives show Occupied — awaiting
 peace until a counter-siege begins; progress, shortages, and contested status count

@@ -1659,7 +1659,11 @@ window.FB = window.FB || {};
     const me = state && state.player && state.chars[state.player.charId];
     const c = state && state.chars && state.chars[cid];
     if (!me || me.dead || !c || c.dead || c.id === me.id) return false;
-    return FB.childrenOf(state, me).some(function (child) { return child.id === cid; }) ||
+    return FB.childrenOf(state, me).some(function (child) {
+      return child.id === cid || FB.childrenOf(state, child).some(function (grandchild) {
+        return grandchild.id === cid;
+      });
+    }) ||
       (FB.spousesOf ? FB.spousesOf(state, me) : []).some(function (spouse) { return spouse.id === cid; });
   };
 

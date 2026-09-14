@@ -4256,6 +4256,10 @@ window.FB = window.FB || {};
       }
       const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment]');
       if (chip) {
+        if (chip.closest('#genmodal.justice-modal')) {
+          chip.setAttribute('tabindex', '0');
+          chip.focus({ preventScroll:true });
+        }
         if (chip.hasAttribute('data-ailment')) UI.showAilmentModal(chip.getAttribute('data-ailment'));
         else UI.showTraitModal(chip.getAttribute('data-trait'));
         return;

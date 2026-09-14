@@ -7,9 +7,38 @@ only by their actual captor. Anonymous raid captives are not character prisoners
 
 ## Authority, evidence, and capture
 
+Unjust punishment also lowers every subordinate ruler's and the direct liege's
+standing toward the punishing ruler, including indirect vassals. The penalty is
+half the support cost, rounded up in magnitude: imprisonment 10, exile 15,
+forfeiture 18, blinding 23 and execution 30. Arrest charges 5 on the attempt and
+5 on capture; subsequent imprisonment credits those charges instead of charging
+twice. Justified actions and mercy carry no penalty. Standing clamps at -100.
+Player relationships use ordinary Standing; AI relationships use ruler regard,
+including vassal favor. Existing ruler-generation and succession rules apply.
+Previews disclose affected rulers and outcomes report actual clamped losses.
+This is a consequence/balance expansion, with no new technology eligibility.
+
 Justice list and character-sheet return paths restore focus and scroll after
 the modal's deferred autofocus, only while the intended sheet is still present.
 Cancelling a review returns focus to the action that opened it.
+County support previews round displayed before/after values to whole numbers;
+the simulation retains its underlying precision.
+Justice uses compact status cards and standard bottom sheets. Legal explanations
+live in shared header/card tooltips and touch disclosures; immediate consequences,
+costs, deadlines, risks and blockers stay visible. Back preserves open disclosures.
+Results show actual effects and a support range when county floors differ, with
+the individual county ledger under Details.
+Each decision card has a quiet border, parchment surface, 12px padding and a gold
+heading. Desktop facts use aligned label/value columns; narrow screens stack
+labels above values. A separated action row right-aligns desktop buttons and
+uses full-width buttons on narrow screens, with at least 44px touch targets.
+Sentence selection is condensed to a name, Review button and blocker; detailed
+judgment, support and consequences remain accessible in hover/focus and touch
+disclosures. Every punishment confirmation exposes the full immediate terms.
+Confirmation and result buttons live inside their cards. Trait/ailment Back
+restores the original Justice sheet. Execution outcomes return to the Justice
+list instead of reopening a dead prisoner's sheet. Outcome totals combine both
+arrest charges for each county before formatting the summary and ledger.
 
 Open arrest requires the target to be physically inside the ruler's territory.
 The player character's travel position takes precedence over their home. Other

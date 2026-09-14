@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, ['index.html', 'js/justice.js', 'js/intrigue.js',
   'js/events.js', 'js/model.js', 'js/items.js', 'js/i18n.js', 'js/world.js', 'js/wars.js', 'js/actions.js',
   'js/travel.js', 'js/treasury.js', 'js/modifiers.js', 'js/save.js',
   'js/ui_modals.js', 'js/ui_misc.js', 'data/intrigue.js', 'data/events_intrigue.js',
-  'data/technology.js']);
+  'data/technology.js', 'js/agency.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
@@ -335,6 +335,103 @@ test('justice navigation preserves search and keyboard return without applying a
   })).toBeNull();
 });
 
+test('justice sentence choices condense terms into disclosures and show them before confirmation', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.captureIntrigue(s, f.actor, f.target, 'abduction', 'player');
+    FB.ui.showJusticeCharacter(f.target);
+  });
+  const sentence = page.locator('.justice-card').filter({ has:page.locator('[data-justice-sentence="execution"]') });
+  const details = sentence.locator('.settcard-details');
+  await expect(details).toBeHidden();
+  await expect(sentence.locator('.justice-card-facts')).toBeEmpty();
+  await expect(sentence.locator('.kv').filter({ hasText:'Consequence' })).toContainText('Death');
+  await expect(sentence.locator('.kv').filter({ hasText:'Support per county' })).toContainText('-60');
+  await sentence.locator('.settcard-info').click();
+  await expect(details).toBeVisible();
+  await sentence.locator('[data-justice-sentence]').click();
+  await expect(page.locator('#justice-confirm')).toHaveText('Execution');
+  await expect(page.locator('.justice-card-facts > .kv').filter({ hasText:'Consequence' })).toContainText('Death');
+  await expect(page.locator('#gm-title-details')).toBeHidden();
+  await page.locator('#justice-cancel').click();
+  await expect(sentence.locator('[data-justice-sentence]')).toBeFocused();
+  await expect(details).toBeVisible();
+  expect(await page.locator('#gm-body').evaluate(function (body) {
+    return body.scrollWidth <= body.clientWidth + 1;
+  })).toBe(true);
+  expect(await page.evaluate(function () {
+    return !!FB.state.chars[window.justiceFixture.target].dead;
+  })).toBe(false);
+});
+
+for (const width of [390, 1280]) {
+  test('justice arrest cards align facts and separate actions at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:900 });
+    await page.evaluate(function () { FB.ui.showJusticeCharacter(window.justiceFixture.target); });
+    const card = page.locator('.justice-card').filter({ has:page.locator('#justice-arrest') });
+    const layout = await card.evaluate(function (node) {
+      const style = getComputedStyle(node), box = node.getBoundingClientRect();
+      const facts = node.querySelector('.justice-card-facts').getBoundingClientRect();
+      const actions = node.querySelector('.justice-card-actions').getBoundingClientRect();
+      const button = node.querySelector('#justice-arrest').getBoundingClientRect();
+      const row = node.querySelector('.kv'), label = row.firstElementChild.getBoundingClientRect();
+      const value = row.lastElementChild.getBoundingClientRect();
+      return { border:parseFloat(style.borderTopWidth), padding:parseFloat(style.paddingLeft),
+        actionGap:actions.top - facts.bottom, height:button.height,
+        inside:button.left >= box.left && button.right <= box.right,
+        stacked:value.top >= label.bottom, aligned:Math.abs(value.left - label.left) < 1,
+        sameRow:Math.abs(value.top - label.top) < 1,
+        fullWidth:Math.abs(button.width - actions.width) < 1 };
+    });
+    expect(layout.border).toBe(1);
+    expect(layout.padding).toBe(12);
+    expect(layout.actionGap).toBeGreaterThanOrEqual(12);
+    expect(layout.height).toBeGreaterThanOrEqual(44);
+    expect(layout.inside).toBe(true);
+    if (width === 390) expect(layout).toMatchObject({ stacked:true, aligned:true, fullWidth:true });
+    else expect(layout.sameRow).toBe(true);
+    await page.locator('#justice-arrest').click();
+    await expect(page.locator('.justice-card')).toHaveCount(1);
+    await expect(page.locator('#justice-review-details')).toBeHidden();
+  });
+}
+
+test('unavailable justice sentences remain keyboard-inspectable', async function ({ page }) {
+  await page.setViewportSize({ width:1280, height:900 });
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.captureIntrigue(s, f.actor, f.target, 'abduction', 'player');
+    FB.ui.showJusticeCharacter(f.target);
+  });
+  const card = page.locator('.justice-card').filter({ has:page.locator('[data-justice-sentence="forfeiture"]') });
+  await expect(card.locator('[data-justice-sentence]')).toBeDisabled();
+  await expect(card.locator('.justice-blocker')).toBeVisible();
+  await card.focus();
+  await expect(card).toBeFocused();
+  await expect(page.locator('#tooltip')).toContainText('Surrender titles and lands');
+});
+
+test('punishment support previews show whole numbers without changing stored fractions', async function ({ page }) {
+  const before = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.setCountySupport(s, f.home, 3.9999999999999996);
+    FB.setCountySupport(s, f.second, -95.6);
+    FB.ui.showJusticeCharacter(f.target);
+    return { home:FB.countySupportBase(s, f.home), second:FB.countySupportBase(s, f.second),
+      homeName:FB.world.byId[f.home].name, secondName:FB.world.byId[f.second].name };
+  });
+  await page.locator('#justice-arrest').click();
+  const disclosure = page.locator('#gm-body details').filter({ hasText:'Affected counties' });
+  await disclosure.locator('summary').click();
+  await expect(disclosure).toContainText(before.homeName + ': 4 → -16');
+  await expect(disclosure).toContainText(before.secondName + ': -96 → -100');
+  expect(await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    return { home:FB.countySupportBase(s, f.home), second:FB.countySupportBase(s, f.second) };
+  })).toEqual({ home:before.home, second:before.second });
+});
+
 test('fines transfer only available wealth and release the prisoner', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, f = window.justiceFixture;
@@ -430,4 +527,107 @@ test('judicial escape invalidates a pending sentence and ambiguous prison flags 
       valid:FB.fns.justice_response_valid(s, ctx), alive:!s.chars[f.actor].dead };
   });
   expect(result).toEqual({ ambiguous:null, escaped:true, valid:false, alive:true });
+});
+
+for (const exit of ['continue', 'back']) {
+  test('execution outcome returns to the justice list via ' + exit, async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state, f = window.justiceFixture;
+      FB.captureIntrigue(s, f.actor, f.target, 'abduction', 'player');
+      FB.ui.showJusticeCharacter(f.target);
+    });
+    await page.locator('[data-justice-sentence="execution"]').click();
+    await page.locator('#justice-confirm').click();
+    await expect(page.locator('#gm-title')).toHaveText('Judgment recorded');
+    await expect(page.locator('.justice-card-actions #justice-continue')).toBeVisible();
+    await page.waitForFunction(function () { return !FB.ui.genericOutcomeGuarded(); });
+    await page.locator(exit === 'continue' ? '#justice-continue' : '#genmodal [data-modal-nav="back"]').click();
+    await expect(page.locator('#justice-search')).toBeVisible();
+    await expect(page.locator('#justice-arrest')).toHaveCount(0);
+    expect(await page.evaluate(function () { return !!FB.state.chars[window.justiceFixture.target].dead; })).toBe(true);
+  });
+}
+
+test('justice trait inspection retains the original sheet and controls on Back', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    s.chars[f.target].traits = ['strong'];
+    FB.ui.showJusticeCharacter(f.target);
+  });
+  const chip = page.locator('#gm-body .traitchip[data-trait="strong"]');
+  await chip.evaluate(function (node) { node.dataset.returnWitness = 'justice'; });
+  await chip.click();
+  await expect(page.locator('#genmodal [data-modal-nav="back"]')).toBeEnabled();
+  await page.locator('#genmodal [data-modal-nav="back"]').click();
+  await expect(chip).toHaveAttribute('data-return-witness', 'justice');
+  await expect(chip).toBeFocused();
+  await page.locator('#justice-arrest').click();
+  await expect(page.locator('#justice-confirm')).toBeEnabled();
+});
+
+test('arrest outcome sums both charges per county', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    window.justiceOriginalChance = FB.chance;
+    FB.chance = function () { return true; };
+    FB.ui.showJusticeCharacter(f.target);
+  });
+  try {
+    await page.locator('#justice-arrest').click();
+    await page.locator('#justice-confirm').click();
+    const facts = page.locator('.justice-card-facts');
+    await expect(facts.locator('.kv').filter({ hasText:'Support per county' })).toContainText('-20');
+    await expect(facts.locator('.kv').filter({ hasText:'Counties affected' })).toContainText('2');
+  } finally {
+    await page.evaluate(function () { FB.chance = window.justiceOriginalChance; });
+  }
+});
+
+test('unjust sentences reduce all subordinate and liege standing with proportional, clamped penalties', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    s.realms[f.enemy].liege = 'player';
+    s.realms[f.other].liege = f.enemy;
+    FB.changePlayerLiege(s, f.liege, 'test:justice');
+    FB.invalidateRealmCache();
+    const ids = [f.enemy, f.other, f.liege];
+    ids.forEach(function (id) { FB.setRealmRulerStanding(s, id, id === f.other ? -95 : 0); });
+    FB.captureIntrigue(s, f.actor, f.target, 'abduction', 'player');
+    const preview = FB.justiceStandingProjection(s, f.actor, -60);
+    const before = ids.map(function (id) { return FB.rulerRegard(s, id, 'player'); });
+    const applied = FB.justiceApplyPunishment(s, f.actor, f.target, 'execution');
+    const after = ids.map(function (id) { return FB.rulerRegard(s, id, 'player'); });
+    const repeat = FB.justiceApplyPunishment(s, f.actor, f.target, 'execution');
+    return { ready:applied.ok, count:preview.length, before:before, after:after, repeat:repeat.ok,
+      receipts:applied.impacts.filter(function (r) { return r.type === 'justiceStanding'; }).length };
+  });
+  expect(result).toEqual({ ready:true, count:3, before:[0,-95,0], after:[-30,-100,-30], repeat:false, receipts:3 });
+});
+
+test('AI unjust punishment damages vassal regard but justified punishment does not', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    s.realms[f.other].liege = f.enemy; s.realms[f.other].favor = 0;
+    const actor = FB.materializeRealmRuler(s, f.enemy);
+    FB.captureIntrigue(s, actor.id, f.target, 'abduction', f.enemy);
+    const offense = FB.justiceRecordOffense(s, actor.id, f.target, 'assassination', 'material', false, actor.id);
+    FB.justiceApplyPunishment(s, actor.id, f.target, 'imprisonment', offense.id);
+    const lawful = FB.rulerRegard(s, f.other, f.enemy);
+    FB.justiceApplyPunishment(s, actor.id, f.target, 'execution');
+    return { lawful:lawful, unjust:FB.rulerRegard(s, f.other, f.enemy) };
+  });
+  expect(result).toEqual({ lawful:0, unjust:-30 });
+});
+
+test('unjust arrest standing is charged once when imprisonment follows', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture, chance = FB.chance;
+    s.realms[f.enemy].liege = 'player'; FB.setRealmRulerStanding(s, f.enemy, 0);
+    try { FB.chance = function () { return true; }; FB.justiceAttemptArrest(s, f.actor, f.target); }
+    finally { FB.chance = chance; }
+    const captured = FB.rulerRegard(s, f.enemy, 'player');
+    FB.justiceApplyPunishment(s, f.actor, f.target, 'imprisonment');
+    return { captured:captured, imprisoned:FB.rulerRegard(s, f.enemy, 'player') };
+  });
+  expect(result).toEqual({ captured:-10, imprisoned:-10 });
 });

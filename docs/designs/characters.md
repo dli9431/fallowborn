@@ -1096,8 +1096,9 @@ ancestry layout, keyboard navigation and saved tree position remain intact.
 ## Family personal names
 
 The character sheet offers a small pencil beneath the portrait for the living
-protagonist's living spouses and direct children, including adopted children and
-adult children outside the household. Eligibility uses current spouse links and
+protagonist's living spouses, children and grandchildren, including adopted descendants and
+adult descendants outside the household. Grandchildren remain eligible after their parent dies.
+Eligibility uses current spouse links and two generations of
 `FB.childrenOf`, not dynasty membership. `FB.renameFamilyCharacter` rechecks this
 relationship when saving, trims the name, and accepts 1?40 characters excluding
 control characters and angle brackets. Only `c.name` changes; dynasty, identity,

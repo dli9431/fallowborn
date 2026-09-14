@@ -88,7 +88,7 @@ test('character skill info returns to the same live sheet on Back',
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
-test('family name editing is limited to spouses and children and returns to their sheet',
+test('family name editing includes spouses and children and returns to their sheet',
   async function ({ page }, testInfo) {
     await startInteractionGame(page, testInfo);
     const cid = await ordinaryContact(page);
@@ -131,6 +131,45 @@ test('family name editing is limited to spouses and children and returns to thei
       gold:before.gold, savedName:'Renamed Spouse' });
     await page.evaluate(function () { FB.ui.showCharModal(FB.state.player.charId); });
     await expect(edit).toHaveCount(0);
+  });
+
+test('grandchildren can edit names after a parent dies and return to their character sheet',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    const cid = await ordinaryContact(page);
+    const before = await page.evaluate(function (id) {
+      const s = FB.state, me = s.chars[s.player.charId], grandchild = s.chars[id];
+      const child = FB.makeCharacter(s, { name:'Parent', sex:'f', born:s.date.year - 40,
+        culture:me.culture, religion:me.religion, quality:1 });
+      me.childrenIds = (me.childrenIds || []).concat([child.id]);
+      child.childrenIds = [id]; child.dead = true;
+      const great = FB.makeCharacter(s, { name:'Great Grandchild', sex:'m', born:s.date.year - 5,
+        culture:me.culture, religion:me.religion, quality:1 });
+      grandchild.childrenIds = [great.id];
+      const greatEligible = FB.canRenameFamilyCharacter(s, great.id);
+      FB.ui.showCharModal(id);
+      return { name:grandchild.name, portrait:FB.characterVisualKey(s, grandchild), greatEligible:greatEligible };
+    }, cid);
+    expect(before.greatEligible).toBe(false);
+    const edit = page.locator('#genmodal .character-portrait-tools .character-rename');
+    await expect(edit).toHaveAccessibleName('Change name');
+    await edit.click();
+    await page.locator('#family-name').fill('Discarded');
+    await page.locator('#genmodal [data-modal-nav="back"]').click();
+    await expect(edit).toBeFocused();
+    expect(await page.evaluate(function (id) { return FB.state.chars[id].name; }, cid)).toBe(before.name);
+    await edit.click();
+    await page.locator('#family-name').fill('Renamed Grandchild');
+    await page.locator('#family-name-save').click();
+    await expect(page.locator('#gm-title')).toContainText('Renamed Grandchild');
+    await expect(edit).toBeFocused();
+    expect(await page.evaluate(function (id) {
+      const s = FB.state, c = s.chars[id];
+      const portrait = FB.characterVisualKey(s, c);
+      c.dead = true;
+      return { portrait:portrait, deadEligible:FB.canRenameFamilyCharacter(s, id),
+        rejected:FB.renameFamilyCharacter(s, id, 'Not allowed').ok };
+    }, cid)).toEqual({ portrait:before.portrait, deadEligible:false, rejected:false });
   });
 
 test('personal renames preserve portraits and the player edits their name from equipment',
