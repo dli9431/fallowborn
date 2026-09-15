@@ -7651,6 +7651,7 @@ window.FB = window.FB || {};
   const SETT_ICON = { village: '🏡', town: '🏘', city: '🏙' };
   UI.showSettlements = function () {
     const s = FB.state;
+    let visiting = false;
     const list = FB.settlementsOf(s, s.player.provinceId);
     let h = '<div class="gm-list">';
     for (const st of list) {
@@ -7660,19 +7661,22 @@ window.FB = window.FB || {};
           { kind: settlementKindName(st.kind) })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Stay home</button>';
-    openModal('Where To?', h);
+    openModal('Where To?', h, { onDismiss:function () {
+      if (!visiting && FB.state === s) {
+        delete s.player.cooldowns.go_to_town;
+        UI.refresh();
+      }
+    } });
     document.querySelectorAll('[data-visit]').forEach(function (btn) {
       btn.addEventListener('click', function () {
+        visiting = true;
         FB.queueEvent(FB.state, 'visit_' + btn.dataset.kind,
           { settlement:btn.dataset.visit });
         UI.closeModal();
         FB.game.passDay({ skipFocus: true }); // the outing spends the day
       });
     });
-    $('gm-cancel').addEventListener('click', function () {
-      delete FB.state.player.cooldowns.go_to_town; // no visit, no cooldown
-      UI.closeModal(); UI.refresh();
-    });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
   /* ================= county commodity market ================= */

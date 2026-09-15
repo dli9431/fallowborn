@@ -2170,6 +2170,7 @@ FB.CHANGELOG = [
   }
 
   function readyTitleShell() {
+    initializeReturningPlayerOnboarding();
     FB.map.init($('map'));
     FB.ui.wire();
     wireMenus();
@@ -4028,27 +4029,30 @@ FB.CHANGELOG = [
      holds a save when the tips layer first initializes (an upgrade, not a
      fresh player) never starts the lessons. Once decided either way the
      stored tipsSeen/tipsGrandfathered keys keep this from re-deciding. */
-  if (!storedTipsLayer && !G.uiPrefs.tipsGrandfathered) {
-    try {
-      if (FB.save && FB.save.hasAnySave && FB.save.hasAnySave()) {
-        G.uiPrefs.tipsGrandfathered = true;
-        G.uiPrefs.onboardingStarted = true;
-      }
-    } catch (e2) { /* storage probe failed: leave tips on */ }
-  }
-  if (!storedOnboardingLayer && !G.uiPrefs.onboardingStarted) {
-    try {
-      if (FB.save && FB.save.hasAnySave && FB.save.hasAnySave()) {
-        G.uiPrefs.onboardingStarted = true;
-      }
-    } catch (e3) { /* storage probe failed: leave onboarding available */ }
-  }
   G.saveUiPrefs = function () {
     try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
   };
-  if ((!storedTipsLayer && G.uiPrefs.tipsGrandfathered) ||
-      (!storedOnboardingLayer && G.uiPrefs.onboardingStarted)) {
-    G.saveUiPrefs();
+  function initializeReturningPlayerOnboarding() {
+    // IndexedDB slots must be loaded before deciding whether this is an upgrade.
+    if (!storedTipsLayer && !G.uiPrefs.tipsGrandfathered) {
+      try {
+        if (FB.save && FB.save.hasAnySave && FB.save.hasAnySave()) {
+          G.uiPrefs.tipsGrandfathered = true;
+          G.uiPrefs.onboardingStarted = true;
+        }
+      } catch (e2) { /* storage probe failed: leave tips on */ }
+    }
+    if (!storedOnboardingLayer && !G.uiPrefs.onboardingStarted) {
+      try {
+        if (FB.save && FB.save.hasAnySave && FB.save.hasAnySave()) {
+          G.uiPrefs.onboardingStarted = true;
+        }
+      } catch (e3) { /* storage probe failed: leave onboarding available */ }
+    }
+    if ((!storedTipsLayer && G.uiPrefs.tipsGrandfathered) ||
+        (!storedOnboardingLayer && G.uiPrefs.onboardingStarted)) {
+      G.saveUiPrefs();
+    }
   }
   G.applyMainTextColor = function (color) {
     if (typeof color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(color)) {

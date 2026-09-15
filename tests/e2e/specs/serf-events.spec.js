@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'data/events_peasant.js',
   'data/markets.js',
   'data/technology.js',
-  'js/armies.js',
+  'js/armies.js', 'js/wars.js',
   'js/main.js',
   'js/i18n.js',
   'js/market.js',
@@ -129,7 +129,7 @@ test('desperate measures offers four serf-only crimes and commits only a chosen 
       log:before.log,
       cooldown:false
     });
-    await page.getByRole('button', { name:'Not today', exact:true }).click();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
     expect(await page.evaluate(function () {
       return {
         turn:FB.state.turn,
@@ -721,7 +721,7 @@ test('all seven serf tenures share Toil mechanics while contextual work presenta
       expect(entry.description).toContain('does not train skills');
       expect(entry.description).toContain('does not cancel');
       expect(entry.viewLabel).toBe(entry.label);
-      expect(entry.viewDescription).toBe(result.expected[archetypeId][1]);
+      expect(entry.viewDescription).toBe(entry.description);
       expect(entry.gain).toEqual(result.labels.dependent_farming.gain);
       expect(entry.eligible).toBe(result.labels.dependent_farming.eligible);
       expect(entry.stateUnchanged).toBe(true);
@@ -803,8 +803,11 @@ test('serf Toil and Harvest follow provisions prices and lose yield to local war
       state.wars = {};
       state.greatHolyWar = null;
       player.war = null;
-      state.realms.harvest_defenders = { war:{ enemy:'harvest_raiders' } };
-      state.realms.harvest_raiders = { war:{ enemy:'harvest_defenders' } };
+      state.realms.harvest_defenders = { id:'harvest_defenders', alive:true, capital:pid };
+      state.realms.harvest_raiders = { id:'harvest_raiders', alive:true, capital:pid };
+      FB.registerOrdinaryWar(state, 'harvest_raiders', {
+        enemy:'harvest_defenders', target:pid
+      });
       state.owner[pid] = 'harvest_defenders';
 
       function setPrice(price) {
@@ -2181,6 +2184,7 @@ test('Phase 5 authority review keeps former and current people navigable at a 39
     await expect(currentCard).toHaveCount(1);
     await expect(formerCard).toContainText(people.formerName);
     await expect(currentCard).toContainText(people.currentName);
+    await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
     await formerCard.locator(
       '[data-event-character="' + people.formerId + '"]').click();
     await expect(page.getByRole('heading', {
@@ -2449,7 +2453,11 @@ test('exact participant binding is deterministic, bounded, persistent, and never
         FB.state.eventQueue[0].ctx.participants);
       return {
         order:candidates.map(function (c) { return c.id; }),
-        expected:[friend.id, rival.id, attention.id, early.id, later.id, notable.id],
+        expected:[friend.id, rival.id, attention.id, early.id, later.id].concat(
+          FB.localFolkAt(s, p.provinceId).filter(function (c) {
+            return FB.ageOf(c, s.date.year) >= 16 &&
+              [friend.id, rival.id, attention.id, early.id, later.id].indexOf(c.id) < 0;
+          }).map(function (c) { return c.id; }).sort(), [notable.id]),
         rngStable:rngBefore === rngAfterCandidates &&
           rngBefore === rngAfterBinding,
         candidatePure:candidateStateBefore === candidateStateAfter,

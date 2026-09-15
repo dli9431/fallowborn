@@ -1,5 +1,10 @@
 # Time, focuses & automation
 
+Canceling the Go into town settlement picker clears its provisional cooldown
+through the shared modal dismissal callback, including Close, Escape and browser
+Back. It spends no day and grants no tutorial deed credit. Selecting a settlement
+keeps the cooldown and spends the confirmed visit day.
+
 Serf daily focuses use plain activity names: Work the fields (with regional
 alternatives), Practice with the levy, and Manage the household. Their shared
 hover/focus tooltips and touch Details explain that fieldwork earns harvest income

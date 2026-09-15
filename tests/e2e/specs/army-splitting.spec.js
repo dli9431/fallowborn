@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/armies.js', 'js/logistics.js', 'js/market.js',
-  'js/world.js', 'js/wars.js',
+  'js/world.js', 'js/wars.js', 'js/treasury.js',
   'js/fortifications.js', 'js/util.js',
   'js/holywar.js',
   'js/events.js',
@@ -346,6 +346,7 @@ test('a strong AI aggressor fields a detachment in an offensive war',
       const originalDown = state.armyDown;
       const originalDetachmentDown = state.armyDetachmentDown;
       const originalWar = state.player.war;
+      const originalRegistry = state.wars;
       const originalAuto = FB.game.auto.hosts;
       const knob = FBDATA.balance.aiMultiHostStrength;
 
@@ -374,7 +375,13 @@ test('a strong AI aggressor fields a detachment in an offensive war',
       FB.game.auto.hosts = 'manual';
       /* the strongest realm clears the bar by a single spear */
       FBDATA.balance.aiMultiHostStrength = FB.aiBaseHost(state, aggressor) - 1;
-      state.realms[aggressor].war = { enemy:defender };
+      state.wars = {};
+      FB.registerOrdinaryWar(state, aggressor, {
+        enemy:defender, target:state.realms[defender].capital
+      });
+      FB.treasuryInitialize(state);
+      state.realms[aggressor].treasury.gold = 10000000;
+      state.realms[defender].treasury.gold = 10000000;
 
       FB.armyTick(state);
       const hosts = FB.hostsOf(state, aggressor).map(function (a) {
@@ -394,6 +401,7 @@ test('a strong AI aggressor fields a detachment in an offensive war',
       state.armyDown = originalDown;
       state.armyDetachmentDown = originalDetachmentDown;
       state.player.war = originalWar;
+      state.wars = originalRegistry;
       FB.game.auto.hosts = originalAuto;
       for (const realmId in keptWars) {
         state.realms[realmId].war = keptWars[realmId];
@@ -694,6 +702,7 @@ test('Deeds campaign list opens host assignments and shared details',
     await expect(details).toContainText('Hosts share troops, supplies, and upkeep');
     await hosts.locator('.settcard-info').click();
     await expect(details).toBeHidden();
+    await expect(page.locator('#campaign-back')).toBeEnabled();
     await page.locator('#campaign-back').click();
     await expect(list).toBeVisible();
     await expect(campaign).toContainText('0/1 objectives occupied');

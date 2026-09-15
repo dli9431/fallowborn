@@ -47,7 +47,7 @@ async function finishOpeningMapTour(page) {
   const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
   await expect(home).toBeVisible();
   await home.getByRole('button', { name:'Got it', exact:true }).click();
-  const filters = page.locator('.coachmark', { hasText:'Use Map filters' });
+  const filters = page.locator('.coachmark', { hasText:'Open Map filters' });
   await expect(filters).toBeVisible();
   await filters.getByRole('button', { name:'Got it', exact:true }).click();
   await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
@@ -254,7 +254,7 @@ test('Daily Focus stays separate and desperate measures commits only after a cho
         tutorial:!!FB.state.player.flags.tut_deed
       };
     })).toEqual(Object.assign({}, before, { tutorial:false }));
-    await page.getByRole('button', { name:'Not today', exact:true }).click();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
     expect(await page.evaluate(function () {
       return {
         turn:FB.state.turn,
@@ -284,6 +284,7 @@ test('Daily Focus stays separate and desperate measures commits only after a cho
 test('a choice-backed deed completes only after its confirmed day',
   async function ({ page }) {
     await startDeterministicGame(page);
+    const initialTurn = await page.evaluate(function () { return FB.state.turn; });
     expect(await page.evaluate(function () {
       return !!FB.state.player.flags.tut_deed;
     })).toBe(false);
@@ -294,11 +295,27 @@ test('a choice-backed deed completes only after its confirmed day',
     expect(await page.evaluate(function () {
       return !!FB.state.player.flags.tut_deed;
     })).toBe(false);
-    await page.getByRole('button', { name:'Stay home', exact:true }).click();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
+    await expect(page.locator('[data-action-id="go_to_town"]')).toBeEnabled();
+    expect(await page.evaluate(function () {
+      return { turn:FB.state.turn, cooldown:FB.state.player.cooldowns.go_to_town };
+    })).toEqual({ turn:initialTurn, cooldown:undefined });
     expect(await page.evaluate(function () {
       return !!FB.state.player.flags.tut_deed;
     })).toBe(false);
 
+    await page.locator('[data-action-id="go_to_town"]').click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator('[data-action-id="go_to_town"]')).toBeEnabled();
+    await page.locator('[data-action-id="go_to_town"]').click();
+    await page.evaluate(function () { history.back(); });
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator('[data-action-id="go_to_town"]')).toBeEnabled();
+    expect(await page.evaluate(function () {
+      return { turn:FB.state.turn, cooldown:FB.state.player.cooldowns.go_to_town,
+        deed:!!FB.state.player.flags.tut_deed };
+    })).toEqual({ turn:initialTurn, cooldown:undefined, deed:false });
     await page.locator('[data-action-id="go_to_town"]').click();
     await page.locator('[data-visit]').first().click();
 
@@ -314,6 +331,9 @@ test('a choice-backed deed completes only after its confirmed day',
       })[0];
     });
     expect(deedStep.done).toBe(true);
+    expect(await page.evaluate(function () {
+      return { turn:FB.state.turn, cooldown:typeof FB.state.player.cooldowns.go_to_town };
+    })).toEqual({ turn:initialTurn + 1, cooldown:'number' });
   });
 
 test('an affected tutorial save repairs its missing deed evidence',
@@ -348,8 +368,16 @@ test('an existing profile is grandfathered out of first-life onboarding',
     test.skip(testInfo.project.name !== 'chromium-served',
       'The upgrade storage contract belongs to the served origin.');
     await startDeterministicGame(page);
+    const stored = await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        FB.save.toSlot(1, function (ok) {
+          resolve({ ok:ok, backend:FB.save.storageBackend() });
+        });
+      });
+    });
+    expect(stored).toEqual({ ok:true, backend:'indexeddb' });
     await page.evaluate(function () {
-      FB.game.toTitle(); // leaves the autosave as evidence of prior play
+      FB.game.toTitle();
       localStorage.removeItem('fb_ui'); // simulate upgrading from older prefs
     });
     await page.reload();

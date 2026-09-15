@@ -1,5 +1,10 @@
 # Game state & saves
 
+Returning-player onboarding checks for existing saves after IndexedDB slot loading
+completes, before enabling the title screen. Profiles upgrading without stored tip
+preferences therefore retain veteran status even when their only save is in IndexedDB.
+Existing explicit tip preferences remain authoritative.
+
 ## Ruler justice records
 
 Save format remains 3. Optional `state.justice` contains `offenses`, arrest

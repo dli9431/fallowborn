@@ -91,7 +91,9 @@
       button('campaign-peace', w.defending ? FB.T('Buy peace') : FB.T('Withdraw')),
       '<p>' + esc(FB.T('Ends this campaign only. Other campaigns and their assigned hosts continue.')) + '</p>');
     h += button('campaign-back', FB.T('Back')) + '</div>';
-    SH.openModal(FB.T('Campaign'), h, { historyView:true, modalClass:'war-sheet-modal' });
+    const fromPanel = document.getElementById('genmodal').classList.contains('hidden');
+    SH.openModal(FB.T('Campaign'), h, { historyView:true, modalClass:'war-sheet-modal',
+      historyBackRender:fromPanel ? function () { UI.closeModal(); } : null });
     document.querySelectorAll('[data-host-campaign]').forEach(function (el) {
       el.addEventListener('change', function () {
         const host = hosts.filter(function (a) { return String(a.id) === el.dataset.hostCampaign; })[0];

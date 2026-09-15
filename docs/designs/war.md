@@ -1,5 +1,9 @@
 # Wars
 
+Campaign details opened from a retained panel provide an explicit Back route that
+closes the sheet and returns to the originating campaign list. Details opened from
+another modal keep that modal's saved Back history instead.
+
 Player-controlled map hosts carry the player's heraldic crest
 above the banner, including detachments and a patron host under
 active military command. Friendly hosts retain their side color without this badge.

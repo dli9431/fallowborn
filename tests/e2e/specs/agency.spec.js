@@ -499,6 +499,7 @@ test('a royal family sheet arranges an exact match with a managed descendant fro
         rid:rid,
         partnerId:partner.id,
         childId:child.id,
+        lineageChoice:FB.marriageLineageStatus(s, child, partner).maternalAllowed,
         ready:status.ready,
         reason:status.reason,
         dowry:status.terms.amount,
@@ -529,7 +530,7 @@ test('a royal family sheet arranges an exact match with a managed descendant fro
       };
     });
     await candidate.click();
-    await page.locator('#marriage-lineage-confirm').click();
+    if (setup.lineageChoice) await page.locator('#marriage-lineage-confirm').click();
     const refused = await page.evaluate(function (ids) {
       var child = FB.state.chars[ids.childId];
       var partner = FB.state.chars[ids.partnerId];
@@ -561,7 +562,7 @@ test('a royal family sheet arranges an exact match with a managed descendant fro
       '[data-interaction-action="relationship.royal-family-match"]').click();
     await page.locator(
       '[data-royal-kin-match="' + setup.childId + '"]').click();
-    await page.locator('#marriage-lineage-confirm').click();
+    if (setup.lineageChoice) await page.locator('#marriage-lineage-confirm').click();
     const accepted = await page.evaluate(function (ids) {
       var child = FB.state.chars[ids.childId];
       var partner = FB.state.chars[ids.partnerId];
@@ -784,7 +785,7 @@ test('AI royal offers revalidate and can pledge exact managed kin from birth',
       stale.rulerGeneration++;
       var staleBeforeAcceptance =
         FB.fns.agency_marriage_context_valid(s, stale);
-      var expectedGold = 500 + terms.playerDelta;
+      var expectedGold = 500 - (terms.subjectPays ? terms.amount : 0);
       var accepted = FB.fns.agency_marriage_accept(s, ctx);
       return {
         valid:valid,
@@ -797,6 +798,8 @@ test('AI royal offers revalidate and can pledge exact managed kin from birth',
         staleValid:staleBeforeAcceptance,
         gold:s.player.gold,
         expectedGold:expectedGold,
+        deferredDowry:partner.dowryDue || 0,
+        expectedDeferredDowry:terms.subjectPays ? 0 : terms.amount,
         familyOnly:FB.isAgencyFamilyMember(s, child.id)
       };
     });
@@ -808,6 +811,7 @@ test('AI royal offers revalidate and can pledge exact managed kin from birth',
     expect(result.partnerBetrothed).toBe(result.child);
     expect(result.staleValid).toBe(false);
     expect(result.gold).toBe(result.expectedGold);
+    expect(result.deferredDowry).toBe(result.expectedDeferredDowry);
     expect(result.familyOnly).toBe(true);
   });
 
