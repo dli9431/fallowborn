@@ -1686,11 +1686,18 @@ window.FB = window.FB || {};
     const plan = selectedMusterPlan(state, fullPlayerMusterPlan(state, true), selection, rally);
     if (!plan) return null;
     const hosts = musterHosts(state, plan, formation);
+    // Price the planned banners at their starting counties, including the
+    // provisions pressure they create, without changing the live army list.
+    const pricedState = Object.assign({}, state, {
+      armies:(state.armies || []).filter(function (host) {
+        return host.realm !== 'player';
+      }).concat(hosts)
+    });
     let standing = 0, food = 0;
     const estimates = {}, batch = { prices:Object.create(null), baskets:Object.create(null) };
     hosts.forEach(function (host) {
-      const upkeep = FB.hostFieldUpkeepParts ? FB.hostFieldUpkeepParts(state, host, batch).total : FB.hostStandingUpkeepParts(host.units, 0).total;
-      const provisions = host.at && FB.armyProvisionCommitment ? FB.armyProvisionCommitment(state, host, 1) : 0;
+      const upkeep = FB.hostFieldUpkeepParts ? FB.hostFieldUpkeepParts(pricedState, host, batch).total : FB.hostStandingUpkeepParts(host.units, 0).total;
+      const provisions = host.at && FB.armyProvisionCommitment ? FB.armyProvisionCommitment(pricedState, host, 1) : 0;
       standing += upkeep; food += provisions;
       estimates[host.at] = { standing:upkeep, food:provisions };
     });

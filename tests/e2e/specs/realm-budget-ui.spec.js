@@ -9,7 +9,7 @@ const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
 for (const width of [390, 1280]) {
-  test('distribution preview preserves Finance scroll and disclosure on Back, Escape, browser Back and payment at ' + width,
+  test('distribution preview preserves Finance position on Back, Escape, payment and mobile browser Back at ' + width,
     async function ({ page }, testInfo) {
       await page.setViewportSize({ width:width, height:844 });
       await startWarSafety(page, testInfo);
@@ -17,12 +17,19 @@ for (const width of [390, 1280]) {
         FB.state.player.gold = 10000;
         FB.ui.showFinance();
       });
-      await page.locator('[aria-controls="finance-government-details"]').click();
+      if (width === 390) await page.locator('[aria-controls="finance-government-details"]').click();
+      else {
+        await page.locator('#finance-government').hover();
+        await expect(page.locator('#tooltip')).toContainText('Administration follows landed revenue');
+      }
       const trigger = page.locator('#finance-distribution');
       await trigger.scrollIntoViewIfNeeded();
       const original = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
       const gold = await page.evaluate(function () { return FB.state.player.gold; });
-      for (const way of ['button', 'escape', 'history']) {
+      // Desktop browser Back navigates the page; only mobile layouts own
+      // browser-history entries for modal layers.
+      const returnWays = width === 390 ? ['button', 'escape', 'history'] : ['button', 'escape'];
+      for (const way of returnWays) {
         await trigger.click();
         await expect(page.locator('[data-public-distribution]')).toHaveCount(3);
         await expect(page.locator('#gm-body')).toContainText('Larger gifts provide the same benefit');
@@ -30,7 +37,7 @@ for (const width of [390, 1280]) {
         else if (way === 'escape') await page.keyboard.press('Escape');
         else await page.evaluate(function () { history.back(); });
         await expect(trigger).toBeVisible();
-        await expect(page.locator('#finance-government-details')).toBeVisible();
+        if (width === 390) await expect(page.locator('#finance-government-details')).toBeVisible();
         await expect.poll(function () {
           return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
         }).toBeCloseTo(original, 0);
@@ -42,7 +49,7 @@ for (const width of [390, 1280]) {
       await page.locator('[data-public-distribution]').first().click();
       await expect(trigger).toBeDisabled();
       await expect(trigger).toContainText('Available again in 360 days');
-      await expect(page.locator('#finance-government-details')).toBeVisible();
+      if (width === 390) await expect(page.locator('#finance-government-details')).toBeVisible();
       expect(await page.evaluate(function () { return FB.state.player.gold; })).toBeCloseTo(gold - amount, 8);
       await expect(page.locator('#finance-government')).toBeFocused();
     });
@@ -61,6 +68,7 @@ test('distribution payment revalidates a stale preview', async function ({ page 
 });
 
 test('ruler treasury disclosure uses locale routing and leaves balances unchanged', async function ({ page }, testInfo) {
+  await page.setViewportSize({ width:390, height:844 });
   const ids = await startWarSafety(page, testInfo);
   const result = await page.evaluate(function (ids) {
     const s = FB.state, row = s.realms[ids.enemy].treasury;

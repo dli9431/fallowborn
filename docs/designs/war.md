@@ -1802,3 +1802,7 @@ reserve targets, search cooldowns, and fort passage rules are unchanged.
 Muster plan offers a keyboard-accessible Show/Hide county troops button. Collapsing
 the county inputs keeps their draft values and leaves estimates, global presets,
 and plan actions available. Assembly and Rally point have no explanatory tooltip.
+
+Muster cost quotes include the planned hosts in a detached army list so their
+provisions price pressure at the selected rally matches newly raised hosts.
+The live army list and treasury remain unchanged while reviewing the plan.

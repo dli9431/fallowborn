@@ -200,6 +200,7 @@ for (const width of [390, 1280]) {
       await expect(inputs.first()).toHaveValue(String(Math.floor(maximum * percent / 100)));
       await expect(inputs.nth(1)).toHaveValue(before[1]);
     }
+    await page.locator('#muster-rally').focus();
     await page.locator('#muster-rally').selectOption(ids.second);
     await expect(page.locator('#muster-rally')).toBeFocused();
     await page.locator('#muster-back').click();
@@ -270,7 +271,7 @@ for (const width of [390, 1280]) {
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await expect(page.locator('#muster-counties')).toBeHidden();
     await expect(toggle).toBeFocused();
-    await expect(page.locator('#muster-costs')).toHaveText(costs);
+    await expect(page.locator('#muster-costs')).toHaveText(costs, { useInnerText:true });
     await page.keyboard.press('Space');
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await expect(input).toHaveValue('0');
