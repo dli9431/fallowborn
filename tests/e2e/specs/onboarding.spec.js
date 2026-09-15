@@ -308,7 +308,13 @@ test('a choice-backed deed completes only after its confirmed day',
     await page.keyboard.press('Escape');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await expect(page.locator('[data-action-id="go_to_town"]')).toBeEnabled();
+    // Browser Back dismisses game layers only on compact/mobile layouts.
+    await page.setViewportSize({ width:390, height:844 });
     await page.locator('[data-action-id="go_to_town"]').click();
+    await page.waitForFunction(function () {
+      return history.state && history.state.fallowbornNav === 1 &&
+        history.state.depth > 0;
+    });
     await page.evaluate(function () { history.back(); });
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await expect(page.locator('[data-action-id="go_to_town"]')).toBeEnabled();
