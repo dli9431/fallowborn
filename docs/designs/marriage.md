@@ -1,5 +1,11 @@
 # Marriage & child matches
 
+Generated match shortlists support 1–4 in displayed order, including a fourth
+protagonist prospect when available. Descendant recommendations retain their
+displayed ordering and disabled choices keep their number. The shortcut activates
+the ordinary Meet/Pledge/Choose control and preserves existing lineage review,
+eligibility and time costs; it adds no gameplay capability or technology requirement.
+
 Travel reviews register their source with the shared modal footer. Back restores
 the marriage finder's filters, expanded details, scroll position, and originating
 control, including when the review opens without a retained history entry.

@@ -3214,7 +3214,9 @@ window.FB = window.FB || {};
   }
   function modalShortcutControls(kind) {
     if (UI._gmNoHotkeys || $('gm-body').classList.contains('equipment-picker-open')) return [];
-    const selector = kind === 'section'
+    const selector = kind === 'match'
+      ? '.suitor-list [data-suitor], .match-candidate-card [data-match]'
+      : kind === 'section'
       ? '[data-ui-section-hotkey], [data-governance-section]'
       : '[data-ui-action-hotkey], [data-interaction-action], [data-governance-action], ' +
         '[data-governance-institution], [data-governance-privileges], [data-governance-policies], #governance-justice, ' +
@@ -3227,11 +3229,13 @@ window.FB = window.FB || {};
   function refreshModalShortcuts() {
     const hints = $('gm-body').querySelectorAll('.keyhint');
     for (let i = 0; i < hints.length; i++) hints[i].parentNode.removeChild(hints[i]);
-    if (FB.isTouch || UI._gmNoHotkeys) return;
-    ['section', 'action'].forEach(function (kind) {
-      const controls = modalShortcutControls(kind), limit = kind === 'section' ? 9 : 18;
+    if (UI._gmNoHotkeys) return;
+    ['section', 'action', 'match'].forEach(function (kind) {
+      const controls = modalShortcutControls(kind), limit = kind === 'match' ? 4 : kind === 'section' ? 9 : 18;
       for (let i = 0; i < controls.length && i < limit; i++) {
-        const hint = kind === 'section' ? '<span class="keyhint">' + (i + 1) + '</span>' : hintFor(i);
+        if (kind === 'match') controls[i].setAttribute('aria-keyshortcuts', String(i + 1));
+        if (FB.isTouch) continue;
+        const hint = kind !== 'action' ? '<span class="keyhint">' + (i + 1) + '</span>' : hintFor(i);
         const label = controls[i].querySelector('.interaction-action-label');
         (label || controls[i]).insertAdjacentHTML(label ? 'beforeend' : 'afterbegin', hint);
       }
@@ -3240,7 +3244,7 @@ window.FB = window.FB || {};
   UI.refreshModalShortcuts = refreshModalShortcuts;
   UI.runModalShortcut = function (kind, index, run) {
     const controls = modalShortcutControls(kind);
-    if (index < 0 || index >= (kind === 'section' ? 9 : 18)) return false;
+    if (index < 0 || index >= (kind === 'match' ? 4 : kind === 'section' ? 9 : 18)) return false;
     const control = controls[index];
     if (!control) return false;
     if (run && !control.disabled) control.click();
@@ -4536,8 +4540,13 @@ window.FB = window.FB || {};
             'tooltip-breakdown');
           tip.classList.remove('hidden');
           const sr = statEl.getBoundingClientRect();
-          tip.style.left = Math.max(4, Math.min(window.innerWidth - 250, sr.left)) + 'px';
-          tip.style.top = Math.min(window.innerHeight - 110, sr.bottom + 6) + 'px';
+          const edge = 8;
+          const top = Math.max(edge, Math.min(window.innerHeight - 120, sr.bottom + 6));
+          // The scroll box must fit below its actual top, not span the full viewport.
+          tip.style.maxWidth = Math.max(0, Math.min(320, window.innerWidth - edge * 2)) + 'px';
+          tip.style.maxHeight = Math.max(0, window.innerHeight - top - edge) + 'px';
+          tip.style.left = Math.max(edge, Math.min(window.innerWidth - tip.getBoundingClientRect().width - edge, sr.left)) + 'px';
+          tip.style.top = top + 'px';
           return;
         }
         const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment], .traitchip[data-item], .traitchip[data-itemview], .modifierchip[data-modifier]');

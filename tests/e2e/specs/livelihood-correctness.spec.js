@@ -1283,3 +1283,105 @@ test('local hiring retains a scrolled staffing preview and row details', async f
     expect(Math.abs(after - scroll)).toBeLessThanOrEqual(2);
   }
 });
+
+
+test('staff all local fills whole vacancies and charges the displayed wages without passing a day', async function ({ page }) {
+  const before = await page.evaluate(function () {
+    const s = FB.state;
+    s.player.gold = 1000;
+    s.player.enterpriseMigration = 1;
+    s.player.enterprises = [
+      { uid:'bulk_full', level:0 }, { uid:'bulk_partial', level:1 },
+      { uid:'bulk_empty', level:0 }
+    ].map(function (item) {
+      return Object.assign(item, { type:'orchard_business',
+        provinceId:s.player.provinceId, settlement:0, workerId:null });
+    });
+    FB.hireEnterpriseWorker(s, 'bulk_full');
+    FB.hireEnterpriseWorker(s, 'bulk_partial');
+    const workers = FB.enterpriseLaborRecords(s).map(function (r) { return r.charId; });
+    const missing = FB.enterpriseList(s).reduce(function (n, e) {
+      return n + Math.floor(FB.enterpriseStaffRequired(e) - FB.enterpriseStaffAssigned(s, e));
+    }, 0);
+    const cost = missing * FB.enterpriseLaborPay(s, { type:'orchard_business' });
+    FB.ui.showEnterpriseStaffingPreview();
+    return { gold:s.player.gold, turn:s.turn, workers:workers, missing:missing, cost:cost };
+  });
+  await expect(page.locator('#enterprise-staffing-local-terms')).toContainText(String(before.missing));
+  await page.getByRole('button', { name:'Staff all local', exact:true }).click();
+  const after = await page.evaluate(function () {
+    const s = FB.state;
+    return { gold:s.player.gold, turn:s.turn,
+      workers:FB.enterpriseLaborRecords(s).map(function (r) { return r.charId; }),
+      full:FB.enterpriseList(s).every(function (e) {
+        return FB.enterpriseStaffAssigned(s, e) === FB.enterpriseStaffRequired(e);
+      }) };
+  });
+  expect(after.gold).toBe(before.gold - before.cost);
+  expect(after.turn).toBe(before.turn);
+  expect(after.workers.slice(0, before.workers.length)).toEqual(before.workers);
+  expect(after.workers.length).toBe(before.workers.length + before.missing);
+  expect(after.full).toBe(true);
+  await expect(page.locator('#enterprise-staffing-local')).toBeDisabled();
+});
+
+test('staff all local requires the full wage and revalidates changed vacancies', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state;
+    s.player.enterpriseMigration = 1;
+    s.player.enterprises = ['bulk_a', 'bulk_b'].map(function (uid) {
+      return { uid:uid, type:'orchard_business', provinceId:s.player.provinceId,
+        settlement:0, workerId:null };
+    });
+    s.player.gold = FB.enterpriseLaborPay(s, s.player.enterprises[0]);
+    FB.ui.showEnterpriseStaffingPreview();
+  });
+  await expect(page.locator('#enterprise-staffing-local')).toBeDisabled();
+  const gold = await page.evaluate(function () {
+    const s = FB.state;
+    s.player.gold = 1000;
+    FB.ui.showEnterpriseStaffingPreview();
+    FB.hireEnterpriseWorker(s, 'bulk_a');
+    return s.player.gold;
+  });
+  await page.locator('#enterprise-staffing-local').click();
+  await expect(page.locator('.enterprise-staffing-notice')).toContainText('Local staffing changed');
+  expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(gold);
+  await page.locator('#enterprise-staffing-local').click();
+  await expect(page.locator('#enterprise-staffing-local')).toBeDisabled();
+});
+
+[390, 1280].forEach(function (width) {
+  test('staffing preview remembers scroll after management and reopening at ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:650 });
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.gold = 10000; s.player.enterpriseMigration = 1;
+      s.player.enterprises = [];
+      for (let i = 0; i < 20; i++) s.player.enterprises.push({
+        uid:'remember_' + i, type:'field_strip', provinceId:s.player.provinceId,
+        settlement:0, workerId:null
+      });
+      FB.ui.showEnterpriseStaffingPreview();
+      const body = document.getElementById('gm-body');
+      body.scrollTop = 500;
+      body.dispatchEvent(new Event('scroll'));
+    });
+    // Activate without scrolling to a different row before leaving the preview.
+    await page.locator('[data-enterprise-staffing-manage="remember_8"]').evaluate(function (button) { button.click(); });
+    await page.getByRole('button', { name:'Back', exact:true }).click();
+    await expect.poll(function () {
+      return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+    }).toBe(500);
+    await page.keyboard.press('Escape');
+    await page.evaluate(function () { FB.ui.showEnterpriseStaffingPreview(); });
+    await expect.poll(function () {
+      return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+    }).toBe(500);
+    await page.locator('#enterprise-staffing-local').evaluate(function (button) { button.click(); });
+    await expect(page.locator('#enterprise-staffing-local')).toBeDisabled();
+    await expect.poll(function () {
+      return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+    }).toBe(500);
+  });
+});

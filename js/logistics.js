@@ -20,6 +20,9 @@
     const value = army.realm === 'player' ? Number(auto.supplyTarget) : 85;
     return FB.clamp(isFinite(value) ? value : 75, 25, 100);
   };
+  function forced(army) {
+    return army.realm === 'player' && FB.game.auto && FB.game.auto.forceSupplies === true;
+  }
   function purchases(army) {
     return army.realm !== 'player' || !FB.game.auto || FB.game.auto.buySupplies !== false;
   }
@@ -96,13 +99,43 @@
   FB.playerProvisionEstimate = function (state) {
     let cost = 0;
     (state.armies || []).forEach(function (army) {
-      if (army.realm !== 'player' || !purchases(army) || control(state, army, army.at).hostile) return;
+      if (army.realm !== 'player' || forced(army) || !purchases(army) || control(state, army, army.at).hostile) return;
       cost += unitsPerPoint(army) * FB.armyProvisionUse(state, army) * 90 *
         B('armyProvisionPrice', 0.1125) * FB.marketPrice(state, army.at, 'provisions');
     });
     return cost;
   };
-  FB.armyProvisionQuote = function (state, army, pid, supplyTech) {
+  // Only safe overland connections inside the same sovereign realm carry food.
+  function regionalSources(state, army, pid, atRest) {
+    const realm = army.realm === 'player' ? FB.playerRealmId(state) : FB.topRealm(state, army.realm);
+    function safe(id) {
+      const pr = FB.world.byId[id], rights = control(state, army, id);
+      const owner = rights.owner === 'player' ? FB.playerRealmId(state) : FB.topRealm(state, rights.owner);
+      return pr && !pr.wasteland && realm && owner === realm && !rights.hostile &&
+        !(FB.countyOccupiedOrBesieged && FB.countyOccupiedOrBesieged(state, id)) &&
+        !Object.keys(state.wars || {}).some(function (wid) {
+          const war = state.wars[wid], occupation = war && war.occupations && war.occupations[id];
+          return war && war.status !== 'ended' && occupation && (occupation.occupied || occupation.progress > 0);
+        }) &&
+        !(state.armies || []).some(function (other) {
+          return other.at === id && other.men > 0 && FB.armiesHostile(state, army, other);
+        });
+    }
+    if (!atRest || !safe(pid)) return [pid];
+    const queue = [{ pid:pid, depth:0 }], seen = {};
+    seen[pid] = true;
+    for (let i = 0; i < queue.length; i++) {
+      const current = queue[i];
+      if (current.depth >= 2) continue;
+      Object.keys(FB.world.adj[current.pid] || {}).sort().forEach(function (next) {
+        if (seen[next] || FB.waterCrossing(current.pid, next) || !safe(next)) return;
+        seen[next] = true;
+        queue.push({ pid:next, depth:current.depth + 1 });
+      });
+    }
+    return queue.map(function (item) { return item.pid; });
+  }
+  FB.armyProvisionQuote = function (state, army, pid, supplyTech, atRest) {
     pid = pid || army.at;
     const timing = FB.game && FB.game._fastForwardTiming;
     if (timing && timing.repeat) {
@@ -117,32 +150,42 @@
       protection:0, available:0, net:-use, reason:'empty' };
     if (!market || !army.men || army.rebellionId) return result;
     const rights = control(state, army, pid);
-    result.mode = rights.hostile ? 'requisition' : 'purchase';
+    result.forced = forced(army);
+    const seizure = rights.hostile || result.forced;
+    result.mode = seizure ? 'requisition' : 'purchase';
     result.protection = rights.protection;
-    if (!rights.hostile && !purchases(army)) { result.reason = 'disabled'; return result; }
+    if (!seizure && !purchases(army)) { result.reason = 'disabled'; return result; }
     const perPoint = unitsPerPoint(army);
     if (!perPoint) return result;
     const loading = B('supplyRecoverRate', 3) * (1 + tech);
     const desiredPoints = Math.min(use + loading, Math.max(0, target - number(army.supply) + use));
-    const data = state.armyLogistics;
-    const today = data && data.counties && data.counties[pid];
-    const used = today && today.day === state.turn ? number(today.used) : 0;
-    const capacity = market.demand / 90 * B('armyProvisionMarketDays', 2);
-    const available = Math.max(0, market.stock - market.reserve * rights.protection);
-    const room = Math.max(0, capacity * (1 - rights.protection) - used);
-    const price = B('armyProvisionPrice', 0.1125) * market.price;
-    const funds = rights.hostile ? Infinity : purseView(state, army.realm).gold;
-    const affordable = rights.hostile || !price ? Infinity : funds / price;
-    result.stockAvailable = available;
-    result.loadingAvailable = room;
-    result.affordable = affordable;
-    result.available = Math.min(available, room);
-    result.units = Math.max(0, Math.min(desiredPoints * perPoint, result.available, affordable));
-    result.cost = rights.hostile ? 0 : Math.min(funds, result.units * price);
+    const sources = seizure ? [pid] : regionalSources(state, army, pid,
+      atRest === true || (!(army.path && army.path.length) && !(army.moveLeft > 0)));
+    result.regional = sources.length > 1;
+    result.sources = [];
+    result.stockAvailable = 0; result.loadingAvailable = 0; result.affordable = 0;
+    let funds = seizure ? Infinity : purseView(state, army.realm).gold;
+    sources.forEach(function (sourcePid) {
+      const source = sourcePid === pid ? market : FB.marketProvisionSource(state, sourcePid);
+      if (!source) return;
+      const data = state.armyLogistics;
+      const today = data && data.counties && data.counties[sourcePid];
+      const used = today && today.day === state.turn ? number(today.used) : 0;
+      const available = Math.max(0, source.stock - source.reserve * rights.protection);
+      const room = Math.max(0, source.demand / 90 * B('armyProvisionMarketDays', 2) * (1 - rights.protection) - used);
+      const price = B('armyProvisionPrice', 0.1125) * source.price;
+      const affordable = seizure || !price ? Infinity : funds / price;
+      const units = Math.max(0, Math.min(desiredPoints * perPoint - result.units, available, room, affordable));
+      const cost = seizure ? 0 : Math.min(funds, units * price);
+      result.stockAvailable += available; result.loadingAvailable += room;
+      result.affordable += affordable; result.available += Math.min(available, room);
+      if (units > 0) result.sources.push({ pid:sourcePid, units:units, cost:cost });
+      result.units += units; result.cost += cost; funds -= cost;
+    });
     result.points = result.units / perPoint;
     result.net = result.points - use;
-    result.reason = result.units > 0 ? null : !desiredPoints ? 'reserve' : !affordable ? 'coin'
-      : !available ? (rights.protection && market.stock > 0 ? 'fort' : 'stock') : 'loading';
+    result.reason = result.units > 0 ? null : !desiredPoints ? 'reserve' : !result.affordable ? 'coin'
+      : !result.stockAvailable ? (rights.protection && market.stock > 0 ? 'fort' : 'stock') : 'loading';
     return result;
   };
   FB.provisionArmy = function (state, army) {
@@ -156,33 +199,48 @@
     if (army.rebellionId) return null;
     const q = FB.armyProvisionQuote(state, army);
     const data = ensure(state);
-    const row = data.counties[army.at] = data.counties[army.at] || emptyCounty();
-    if (row.day !== state.turn) { row.day = state.turn; row.used = 0; }
-    if (q.units > 0) {
-      // No tenths rounding here: small daily purchases must remove real stock.
-      if (!FB.marketWithdrawProvisions(state, army.at, q.units)) return null;
-      row.used += q.units;
-      if (q.mode === 'purchase') {
-        pay(state, army.realm, q.cost);
-        const dues = q.cost * B('armyProvisionDues', 0.1);
-        const holder = (state.holder || {})[army.at] || (state.owner || {})[army.at];
-        const sovereign = holder === 'player' ? FB.playerRealmId(state) || 'player' : FB.topRealm(state, holder);
-        credit(state, holder, holder === sovereign ? dues : dues * 0.8);
-        if (holder !== sovereign) credit(state, sovereign, dues * 0.2);
-        row.bought += q.units; row.paid += q.cost; row.dues += dues;
-      } else {
-        row.taken += q.units;
-        const source = FB.marketProvisionSource(state, army.at);
-        const burden = Math.min(0.35, row.taken / Math.max(1, source.demand));
-        const id = 'requisition:' + army.at;
-        const old = state.market.shocks.filter(function (s) { return s.id === id; })[0];
-        FB.addMarketShock(state, { id:id, source:'army_requisition', provinceId:army.at,
-          goodId:'provisions', production:-Math.max(burden, old ? -old.production : 0),
-          flow:-Math.max(burden, old ? -old.flow : 0), remaining:2, severe:burden >= 0.2 });
-        if (FB.adjustCountySupport) FB.adjustCountySupport(state, army.at,
-          -Math.min(2, q.units / Math.max(1, source.demand) * 40));
+    (q.sources || []).forEach(function (purchase) {
+      const row = data.counties[purchase.pid] = data.counties[purchase.pid] || emptyCounty();
+      if (row.day !== state.turn) { row.day = state.turn; row.used = 0; }
+      if (purchase.units > 0) {
+        // No tenths rounding here: small daily purchases must remove real stock.
+        if (!FB.marketWithdrawProvisions(state, purchase.pid, purchase.units)) {
+          q.units -= purchase.units; q.cost -= purchase.cost;
+          q.points = q.units / unitsPerPoint(army); q.net = q.points - q.use;
+          return;
+        }
+        row.used += purchase.units;
+        if (q.mode === 'purchase') {
+          pay(state, army.realm, purchase.cost);
+          const dues = purchase.cost * B('armyProvisionDues', 0.1);
+          const holder = (state.holder || {})[purchase.pid] || (state.owner || {})[purchase.pid];
+          const sovereign = holder === 'player' ? FB.playerRealmId(state) || 'player' : FB.topRealm(state, holder);
+          credit(state, holder, holder === sovereign ? dues : dues * 0.8);
+          if (holder !== sovereign) credit(state, sovereign, dues * 0.2);
+          row.bought += purchase.units; row.paid += purchase.cost; row.dues += dues;
+        } else {
+          row.taken += purchase.units;
+          const source = FB.marketProvisionSource(state, purchase.pid);
+          const burden = Math.min(0.35, row.taken / Math.max(1, source.demand));
+          const id = 'requisition:' + purchase.pid;
+          const old = state.market.shocks.filter(function (s) { return s.id === id; })[0];
+          FB.addMarketShock(state, { id:id, source:'army_requisition', provinceId:purchase.pid,
+            goodId:'provisions', production:-Math.max(burden, old ? -old.production : 0),
+            flow:-Math.max(burden, old ? -old.flow : 0), remaining:2, severe:burden >= 0.2 });
+          if (FB.adjustCountySupport) FB.adjustCountySupport(state, purchase.pid,
+            -Math.min(2, purchase.units / Math.max(1, source.demand) * 40));
+          if (q.forced) {
+            const holder = (state.holder || {})[purchase.pid] || (state.owner || {})[purchase.pid];
+            if (holder && holder !== army.realm && FB.adjustStanding) {
+              const target = { kind:'realm', id:holder };
+              const standing = FB.standingOf(state, target);
+              const loss = Math.min(2, purchase.units / Math.max(1, source.demand) * 40);
+              FB.adjustStanding(state, target, Math.min(-25, standing - loss) - standing, 'army:forced_provisions');
+            }
+          }
+        }
       }
-    }
+    });
     army.supply = FB.clamp(number(army.supply) - q.use + q.points, 0, 100);
     army.provisioning = { turn:state.turn, pid:army.at, mode:q.mode, cost:q.cost,
       units:q.units, net:q.net, protection:q.protection, reason:q.reason };
@@ -286,10 +344,17 @@
   };
   FB.armyProvisionText = function (state, army) {
     const q = FB.armyProvisionQuote(state, army);
+    if (q.forced && q.units > 0) return FB.T('Forcing supplies without payment. County Popular support falls; its direct ruler becomes hostile toward you (Standing at most -25) and loses more Standing with further seizures. Stocks and loading limits still apply.');
     if (q.reason === 'reserve') return FB.T('Using carried supplies toward the {percent}% reserve target.', { percent:q.target });
     if (q.reason === 'disabled') return FB.T('Supply purchases off; carried reserves feed the host.');
     if (q.reason === 'coin') return FB.T('No coin for provisions; carried reserves feed the host.');
     if (q.reason === 'fort') return FB.T('Enemy fort protects remaining supplies.');
+    if (q.regional && q.reason === 'stock') return FB.T('Local and nearby markets have no food left. Coin alone cannot refill this host here.');
+    if (q.regional && q.reason === 'loading') return FB.T('Local and nearby markets have reached their daily food-loading limits.');
+    if (q.regional && q.net < 0) return FB.T('Local and nearby markets deliver {loaded} of {needed} supply points needed today. Carried reserves cover the shortfall.', {
+      loaded:Math.round(q.points * 10) / 10, needed:Math.round(q.use * 10) / 10 });
+    if (q.sources && q.sources.some(function (source) { return source.pid !== army.at; })) return FB.T('Buying food locally and from nearby markets: up to {money:cost} today. Reserve target {percent}%. Deliveries travel up to two counties through safe land in your realm.',
+      { cost:q.cost, percent:q.target });
     if (q.reason === 'stock' || q.reason === 'empty') return FB.T('Local food stocks are exhausted. Coin alone cannot refill this host here.');
     if (q.reason === 'loading') return FB.T('This county has reached its daily food-loading limit. More can be loaded tomorrow if stocks remain.');
     if (q.net < 0) return FB.T('Local food covers {loaded} of {needed} supply points needed today. Carried reserves cover the shortfall; county stocks and daily loading limit purchases.', {
@@ -303,8 +368,19 @@
   // It never overwrites hand-issued player or patron-host orders.
   FB.armySupplyGoal = function (state, army) {
     const auto = FB.game.auto || {};
-    if (army.realm === 'player' && (auto.hostResupply === false || auto.buySupplies === false)) {
+    if (army.realm === 'player' && (auto.hostResupply === false || (auto.buySupplies === false && !forced(army)))) {
       delete army.autoResupply; delete army.supplyStop; delete army.supplyRetreat; delete army.supplySearchTurn; return null;
+    }
+    const offensive = army.realm === 'player' && auto.hosts === 'off';
+    function realmCounty(pid) {
+      const rights = control(state, army, pid);
+      const owner = rights.owner === 'player' ? FB.playerRealmId(state) : FB.topRealm(state, rights.owner);
+      return owner === FB.playerRealmId(state) && !rights.hostile &&
+        FB.armyFriendlyProvince(state, army, pid) &&
+        !(FB.countyOccupiedOrBesieged && FB.countyOccupiedOrBesieged(state, pid)) &&
+        !(state.armies || []).some(function (other) {
+          return other.at === pid && other.men > 0 && FB.armiesHostile(state, army, other);
+        });
     }
     const supply = FB.hostSupply(army);
     const target = FB.armyProvisionTarget(army);
@@ -315,18 +391,19 @@
     // No purchases or movement occur inside this synchronous search.
     const quotes = Object.create(null), tech = FB.techBonus(state, 'supply', army.realm);
     function quote(pid) {
-      if (!quotes[pid]) quotes[pid] = FB.armyProvisionQuote(state, army, pid, tech);
+      if (!quotes[pid]) quotes[pid] = FB.armyProvisionQuote(state, army, pid, tech, true);
       return quotes[pid];
     }
     const local = quote(army.at);
-    if (!army.autoResupply && local.net >= 0) return null;
+    if (!army.autoResupply && local.net >= 0 && !forced(army)) return null;
     army.autoResupply = 1;
     const funds = purseView(state, army.realm).gold;
     const canRefill = function (pid) {
+      if (offensive && !realmCounty(pid)) return false;
       // This goal seeks purchases only. With no coin a positive-price market
       // cannot refill; free markets still need the full quote. Local seizure
       // and the ordinary retreat fallback remain independent of this shortcut.
-      if (!quotes[pid] && funds <= 0) {
+      if (!quotes[pid] && funds <= 0 && !forced(army)) {
         const market = FB.marketProvisionSource(state, pid);
         if (!market || B('armyProvisionPrice', 0.1125) * market.price > 0) {
           const timing = FB.game && FB.game._fastForwardTiming;
@@ -335,7 +412,7 @@
         }
       }
       const q = quote(pid);
-      return q.mode === 'purchase' && q.net > 0.05 && FB.armyCanPursue(state, army, pid);
+      return (q.mode === 'purchase' || q.forced) && q.net > 0.05 && FB.armyCanPursue(state, army, pid);
     };
     if (canRefill(army.at)) { army.supplyStop = army.at; delete army.supplyRetreat; return army.at; }
     const prior = army.supplyStop;
@@ -346,7 +423,7 @@
     delete army.supplyStop;
     if (army.supplySearchTurn !== undefined && state.turn - army.supplySearchTurn < 7) {
       const retreat = army.supplyRetreat;
-      if (retreat && FB.armyFriendlyProvince(state, army, retreat) &&
+      if (retreat && (!offensive || realmCounty(retreat)) && FB.armyFriendlyProvince(state, army, retreat) &&
           FB.armyCanPursue(state, army, retreat)) {
         const route = FB.armyHasRouteTo(state, army, retreat) || FB.findArmyPath(state, army, retreat);
         if (route && !route.blockedByFort) return retreat;
@@ -367,7 +444,7 @@
         if (!seen[next]) { seen[next] = true; queue.push(next); }
       });
     }
-    const retreat = FB.armyRetreatGoal(state, army) || army.at;
+    const retreat = FB.armyRetreatGoal(state, army, offensive ? realmCounty : null) || army.at;
     army.supplyRetreat = retreat;
     return retreat;
   };

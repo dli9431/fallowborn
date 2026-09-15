@@ -596,6 +596,10 @@ window.FB = window.FB || {};
       h += cb('ar-buy-supplies', a.buySupplies !== false,
         esc(FB.T('Buy supplies automatically')),
         esc(FB.T('All your hosts buy local provisions with available coin, even while marching under manual orders. Prices, county stocks and loading capacity limit purchases. Standing upkeep excludes this food.')));
+      h += cb('ar-force-supplies', a.forceSupplies === true,
+        esc(FB.T('Force supplies without payment')),
+        esc(FB.T('All your hosts seize food in their current county instead of buying it, even in debt or with purchases off. Each seizure drains county Popular support and makes its direct ruler hostile toward you (Standing at most -25), with further losses over time. No remote seizures; stocks, forts and loading limits still apply.')));
+      h += '<p class="ui-control-warning">' + esc(FB.T('Forced supplies harm county Popular support and relations with its direct ruler.')) + '</p>';
       h += '<div class="ui-control-row settcard" data-provision-controls><div class="settcard-head">' +
         '<label for="ar-supply-target">' + esc(FB.T('Supply reserve target')) + '</label>' +
         '<output id="ar-supply-value" for="ar-supply-target">' + esc(FB.T('{percent}%', { percent:a.supplyTarget })) + '</output>' +
@@ -604,7 +608,7 @@ window.FB = window.FB || {};
         '<p>' + esc(FB.T('Higher reserves cost more to fill. Purchases use available coin only.')) + '</p>' +
         '<p class="ui-control-warning">' + esc(FB.T('Enemy land: food is requisitioned automatically, harming stocks and Popular support. Forts limit seizure.')) + '</p>' +
         '<div class="settcard-details hidden" id="ar-supply-target-details">' +
-        esc(FB.T('The target also limits requisition, which continues when purchases are off. Neutral land is never requisitioned. Intact enemy forts protect stores until occupied; exhausted counties cannot feed the host.')) + '</div></div>';
+        esc(FB.T('The target also limits requisition, which continues when purchases are off. Friendly and neutral land can be requisitioned only with Force supplies without payment enabled. Intact enemy forts protect stores until occupied; exhausted counties cannot feed the host.')) + '</div></div>';
     }
     if (access.build) {
       h += panelh('Realm stewardship');
@@ -652,6 +656,8 @@ window.FB = window.FB || {};
       if (hostResupply) a.hostResupply = hostResupply.checked;
       const buySupplies = $('ar-buy-supplies'), supplyTarget = $('ar-supply-target');
       if (buySupplies) a.buySupplies = buySupplies.checked;
+      const forceSupplies = $('ar-force-supplies');
+      if (forceSupplies) a.forceSupplies = forceSupplies.checked;
       if (supplyTarget) {
         a.supplyTarget = FB.clamp(Number(supplyTarget.value), 25, 100);
         $('ar-supply-value').textContent = FB.T('{percent}%', { percent:a.supplyTarget });
@@ -669,7 +675,7 @@ window.FB = window.FB || {};
     if (supplySlider) supplySlider.addEventListener('input', function () {
       $('ar-supply-value').textContent = FB.T('{percent}%', { percent:Number(supplySlider.value) });
     });
-    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-host-resupply', 'ar-buy-supplies', 'ar-supply-target', 'ar-build',
+    ['ar-minor', 'ar-major', 'ar-war', 'ar-all', 'ar-host-resupply', 'ar-buy-supplies', 'ar-force-supplies', 'ar-supply-target', 'ar-build',
       'ar-research', 'ar-research-mode'].forEach(function (id) {
       const control = $(id);
       if (control) control.addEventListener('change', sync);
@@ -6316,6 +6322,7 @@ window.FB = window.FB || {};
       if (legalPreview.law.level === 'permission') h += '<button type="button" class="actionbtn" id="war-request-permission">' + esc(FB.T('Request permission')) + '</button>';
       if (legalPreview.law.level !== 'customary') h += '<label><input type="checkbox" id="war-confirm-unlawful"> ' + esc(FB.T('Break the peace: −20 Standing with the liege, a demand to stop within 90 days, and possible armed enforcement.')) + '</label>';
     }
+    h += '<button type="button" class="actionbtn" id="war-muster-plan">' + esc(FB.T('Muster plan')) + '</button>';
     h += '<div class="gm-list"><button type="button" class="actionbtn" ' +
       'id="war-justification-confirm">⚔ ' + esc(FB.T('Declare war')) +
       '</button><button type="button" class="actionbtn" ' +
@@ -6334,6 +6341,7 @@ window.FB = window.FB || {};
       historyView:!!returnContext,
       historyBackRender:restoreTargets
     });
+    $('war-muster-plan').addEventListener('click', function () { UI.showMusterPlan(); });
     const reason = $('war-justification-reason');
     const permissionButton = $('war-request-permission');
     if (permissionButton) permissionButton.addEventListener('click', function () {
@@ -20724,9 +20732,32 @@ window.FB = window.FB || {};
       });
   }
 
+  const enterpriseStaffingPosition = { state:null, top:0 };
+
+  function enterpriseLocalStaffQuote(s) {
+    const hires = [];
+    let cost = 0;
+    for (const enterprise of FB.enterpriseList(s)) {
+      if (!FBDATA.enterprises[enterprise.type] ||
+          !FB.world.byId[enterprise.provinceId]) continue;
+      const count = Math.max(0, Math.floor(FB.enterpriseStaffRequired(enterprise) -
+        FB.enterpriseStaffAssigned(s, enterprise) + 0.0001));
+      const pay = FB.enterpriseLaborPay(s, enterprise);
+      for (let i = 0; i < count; i++) hires.push(enterprise.uid);
+      cost += count * pay;
+    }
+    return { hires:hires, cost:cost };
+  }
+
   UI.showEnterpriseStaffingPreview = function (returnContext, notice) {
     const s = FB.state;
     const plan = FB.enterpriseStaffingPlan(s);
+    const local = enterpriseLocalStaffQuote(s);
+    if (enterpriseStaffingPosition.state !== s) {
+      enterpriseStaffingPosition.state = s;
+      enterpriseStaffingPosition.top = 0;
+    }
+    const savedScroll = enterpriseStaffingPosition.top;
     function isIdle(row) {
       return (row.currentStaff || 0) + 0.0001 < (row.requiredCount || 1);
     }
@@ -20736,7 +20767,7 @@ window.FB = window.FB || {};
     const rowByUid = {};
     for (const row of plan.rows) rowByUid[row.uid] = row;
     const intro = FB.T(
-      'Review the complete result before applying it. Locked pairings and reserved workers stay fixed; every other enterprise and eligible household worker may be rebalanced. Applying it spends no day or money.');
+      'Review the complete result before applying it. Locked pairings and reserved workers stay fixed; every other enterprise and eligible household worker may be rebalanced. Applying it spends no day or money.') + ' ' + FB.T('Staff all local hires paid workers for all open whole positions. Existing workers stay assigned; half positions stay open. Wages are paid now and each season. No day passes.');
     let h = (notice ? '<div class="hint enterprise-staffing-notice">' +
         esc(notice) + '</div>' : '') +
       '<div class="enterprise-staffing-totals">' +
@@ -20846,10 +20877,19 @@ window.FB = window.FB || {};
               }) : hireStatus) + '</span></div>'
           : '') + '</div></div>';
     }
-    h += '</div><div class="gm-footer">' +
+    h += '</div><div class="hint" id="enterprise-staffing-local-terms">' +
+      esc(FB.T('Local staff: {count} workers. Pay {money:cost} now and each season.', {
+        count:local.hires.length, cost:local.cost
+      })) + (s.player.gold + 0.0001 < local.cost ? ' ' +
+        esc(FB.T('Not enough gold for the first wages.')) : '') +
+      '</div><div class="gm-footer">' +
       '<button type="button" class="btn" id="enterprise-staffing-apply"' +
       (!plan.changed ? ' disabled' : '') + '>' +
       esc(FB.T('Apply staffing plan')) + '</button>' +
+      '<button type="button" class="btn" id="enterprise-staffing-local" ' +
+      'aria-describedby="enterprise-staffing-local-terms"' +
+      (!local.hires.length || s.player.gold + 0.0001 < local.cost ? ' disabled' : '') + '>' +
+      esc(FB.T('Staff all local')) + '</button>' +
       '<button type="button" class="btn" id="enterprise-staffing-back">' +
       esc(FB.T('Back')) + '</button></div>';
     const options = livelihoodsHistoryOptions(returnContext);
@@ -20857,6 +20897,41 @@ window.FB = window.FB || {};
     options.replaceView = !!notice;
     options.titleDetailsHtml = '<p>' + esc(intro) + '</p>';
     openModal(FB.T('⚙ Enterprise staffing preview'), h, options);
+    const staffingBody = $('gm-body');
+    const staffingRows = staffingBody.querySelector('.enterprise-staffing-rows');
+    staffingBody.scrollTop = savedScroll;
+    // The body is shared by every modal. Only the live staffing rows own this listener.
+    if (UI._enterpriseStaffingScroll) {
+      staffingBody.removeEventListener('scroll', UI._enterpriseStaffingScroll);
+    }
+    UI._enterpriseStaffingScroll = function () {
+      if (staffingBody.contains(staffingRows) && enterpriseStaffingPosition.state === s) {
+        enterpriseStaffingPosition.top = staffingBody.scrollTop;
+      }
+    };
+    staffingBody.addEventListener('scroll', UI._enterpriseStaffingScroll);
+    if (UI._enterpriseStaffingClick) {
+      staffingBody.removeEventListener('click', UI._enterpriseStaffingClick, true);
+    }
+    UI._enterpriseStaffingClick = UI._enterpriseStaffingScroll;
+    staffingBody.addEventListener('click', UI._enterpriseStaffingClick, true);
+    $('enterprise-staffing-local').addEventListener('click', function () {
+      const fresh = enterpriseLocalStaffQuote(s);
+      if (JSON.stringify(fresh) !== JSON.stringify(local) ||
+          s.player.gold + 0.0001 < fresh.cost) {
+        UI.showEnterpriseStaffingPreview(returnContext, FB.T(
+          'Local staffing changed. Review the updated wages before hiring.'));
+        return;
+      }
+      let hired = 0;
+      for (const uid of fresh.hires) {
+        if (!FB.hireEnterpriseWorker(s, uid)) break;
+        hired++;
+      }
+      UI.refresh();
+      UI.showEnterpriseStaffingPreview(returnContext, FB.T(
+        '{count} local workers hired. Review the refreshed staffing plan.', { count:hired }));
+    });
     document.querySelectorAll('[data-enterprise-staffing-manage]').forEach(
       function (button) {
         button.addEventListener('click', function () {

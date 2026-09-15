@@ -586,10 +586,14 @@ Opening and closing it uses the generic modal's normal activating-control restor
 **Keyboard support is a requirement** (`js/keys.js` + focus management in `ui_misc.js`): the game
 must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay reachable —
 modals autofocus their first control. Digits 1-9 (number row or numpad) select
-UI sections only; Shift+digit never extends a list. Section action buttons use
+UI sections; Shift+digit never extends a list. Generated marriage shortlists are
+the explicit exception: 1–4 activate Meet or Pledge/Choose in displayed order.
+Disabled matches retain their number; desktop buttons show the shared key hint
+and expose `aria-keyshortcuts`. Typing and held-key repeats do not choose a match.
+Section action buttons use
 QWE/ASD/ZXC, then Shift with the same letters for actions 10-18. List entries
 (people, titles, counties, equipment, buildings, saves, and other growing rosters)
-never receive number or letter shortcuts, including action buttons repeated per
+receive no number or letter shortcuts beyond that marriage exception, including action buttons repeated per
 entry. They remain reachable through Tab, Enter, and Space. Search and native
 selects retain ordinary typing and keyboard behavior.
 
@@ -2950,3 +2954,61 @@ controls (including the equipment name pencil) retain their listeners on Back.
 Personal-name editor return focus runs after the destination sheet's deferred
 autofocus and checks that its pencil is still attached before restoring focus and
 scroll. This applies to both family sheets and the protagonist's equipment sheet.
+
+## County muster plans
+
+Muster plan opens from Campaigns, campaign details, the muster deed, or war
+justification review. Native county troop inputs, percentage presets, and an
+assembly selector choose one rally host or separate county hosts. In-place cost
+updates retain input focus. County estimates and the total show the current-market
+bill; details explain allocation, food uncertainty and each host's minimum size.
+Ordinary muster has no immediate support loss. Forced-supply consequences stay
+visible beside the cost preview. Existing-host dismissal displays returned men
+and the rearm delay before its explicit button.
+
+Back, Escape and mobile Back discard unsaved edits and restore the parent view.
+Save plan persists choices; Save and muster revalidates and raises the force.
+Neither opening nor editing consumes a day; confirmed muster or dismissal spends
+one day. Shared card tooltip/touch disclosures
+hold explanations; the inputs, amounts, costs and action blockers stay visible.
+Mechanics and technology impact are in [war.md](war.md#county-muster-plans).
+
+
+County rows also offer their own 0/25/50/100% buttons; these change only that
+county's amount. The rally selector lists eligible recruitment counties and
+updates cost estimates without saving the draft. Optional `player.musterRally`
+persists the chosen county. Combined hosts gather there; with separate county
+hosts, hired troops and allies join there. If that county becomes unavailable,
+quotes and execution use the normal eligible rally fallback. Old saves retain
+the default rally. This extends `county_muster_selection` with no research gate.
+
+
+## Seasonal budget subtotals
+
+The gold tooltip and money sheet group the same itemized estimate into Income,
+Government, Buildings and forts, Household, Army, and Other costs. Each nonempty
+group ends with a subtotal; Estimated net each season is the final budget row.
+Groups use semantic ids supplied by the income calculation, never translated-label
+matching. Building revenue includes an explicit support/rebellion adjustment and
+tax rounding so visible revenue reconciles with the actual tax calculation.
+Annual coin adjustment is marked as outside the recurring estimate; the top-bar
+badge continues to show the previous season's actual change, including events.
+This changes presentation only, without altering charges or balance parameters.
+
+
+Desktop resource tooltips cap their scroll-box height to the space below their
+actual position, leaving an eight-pixel viewport margin. Long budget breakdowns
+must scroll through the final net row without extending below the screen.
+
+Enterprise staffing preview offers **Staff all local** beside Apply staffing plan.
+It shows the worker count and total wages due now and each season, and requires
+enough gold for the entire batch. It fills whole vacant positions through the existing
+local-hire API, keeping existing assignments and leaving half positions open.
+Changed quotes require another review. This is a shortcut for existing ungated local
+hiring, with no new technology requirement or day cost. The preview remembers its
+scroll position across redraws, management visits, and closing/reopening in the same
+loaded game; loading another state resets this transient position.
+
+Muster plan offers a keyboard-accessible Show/Hide county troops button. Collapsing
+the county inputs keeps their draft values and leaves estimates, global presets,
+and plan actions available. Assembly and Rally point have no explanatory tooltip.

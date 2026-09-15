@@ -397,3 +397,36 @@ sack, −20% on a skirmish) and restricting inter-county flows (−25%), resulti
 scarcity, hardship, and price surges in the victim province.
 
 The seasonal calculation distributes shocks into county/good buckets once, in saved order. County-only, good-only, and global shocks retain the same additive arithmetic and report ordering. These buckets exist only during that seasonal calculation.
+
+### Regional army resupply
+
+Stationary player and AI hosts in their own sovereign realm buy locally first,
+then cover any shortfall from markets within two overland county connections.
+Every county on the route must belong to the same realm and be free of occupation,
+siege, and hostile hosts. Sea crossings and foreign markets do not extend the pool.
+Moving hosts retain local provisioning only; resupply destination searches quote
+what the host could buy after stopping there.
+
+Purchases deduct actual stock and charge each source market's price. Each source
+shares its existing daily loading limit among all hosts and receives its own sales
+and dues. The host's total refill rate, consumption, reserve target and purchasing
+preference remain unchanged. Tooltips explain regional deliveries and shortages.
+Technology impact `regional_army_resupply` is **none**: basic recovery remains
+available without research; existing supply innovations still improve loading
+and consumption through `field_supply_attrition`.
+
+### Forced provisions
+
+The player may enable **Force supplies without payment** in army automation.
+It defaults off and persists with automation preferences. While enabled, player
+hosts requisition real food in their current county, including friendly and neutral
+land, instead of paying; debt and disabled purchases do not block seizure. There
+are no remote seizures. Reserve, loading, stock and enemy-fort limits still apply.
+Every actual seizure uses existing requisition support loss and market disruption.
+The county's direct holder (not its sovereign) also loses player-relative Standing:
+the first seizure lowers it to at most -25, and subsequent seizures subtract the
+same amount as county support loss. Player-held counties have no self-opinion loss.
+Empty or blocked withdrawals cause no penalties. Hostile Standing does not itself
+declare war. Ordinary AI purchases and enemy requisition remain unchanged.
+Technology impact `forced_army_provisions` is **none**: coercive emergency food
+collection needs no research; paid provisioning remains the ordinary alternative.

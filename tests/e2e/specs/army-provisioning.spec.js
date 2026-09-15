@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/logistics.js', 'js/treasury.js', 'js/economy.js', 'js/market.js', 'js/armies.js', 'js/wars.js', 'js/actions.js',
-  'js/rebellions.js', 'js/fortifications.js', 'js/holywar.js', 'js/modifiers.js',
+  'js/world.js', 'js/population.js', 'js/rebellions.js', 'js/fortifications.js', 'js/holywar.js', 'js/modifiers.js',
   'js/main.js', 'js/ui_misc.js', 'js/ui_modals.js', 'js/ui_panels.js', 'css/style.css',
   'data/map_data.js', 'data/markets.js', 'data/technology.js', 'data/units.js'
 ]);
@@ -133,6 +133,7 @@ async function setup(page, testInfo) {
     host.men = host.size = 1000; host.units = { levy:1000 }; host.supply = 50;
     s.player.gold = 100;
     s.armyLogistics = undefined;
+    FB.game.auto.forceSupplies = false;
     FB.game.auto.buySupplies = true; FB.game.auto.supplyTarget = 75;
     FB.game.auto.hostResupply = true;
     FB.ensureMarket(s);
@@ -448,12 +449,12 @@ for (const width of [390, 1280]) {
     const details = page.locator('[aria-controls="ar-supply-target-details"]');
     if (width >= 1000) {
       await slider.focus();
-      await expect(page.locator('#tooltip')).toContainText('Neutral land is never requisitioned');
+      await expect(page.locator('#tooltip')).toContainText('Friendly and neutral land can be requisitioned only');
     } else {
       await details.click();
       await expect(details).toHaveAttribute('aria-expanded', 'true');
       await expect(page.locator('#ar-supply-target-details')).toBeVisible();
-      await expect(page.locator('#ar-supply-target-details')).toContainText('Neutral land is never requisitioned');
+      await expect(page.locator('#ar-supply-target-details')).toContainText('Friendly and neutral land can be requisitioned only');
       await details.click();
       await expect(details).toHaveAttribute('aria-expanded', 'false');
     }
@@ -478,3 +479,234 @@ for (const width of [390, 1280]) {
     await expect(slider).toHaveValue('80'); await expect(toggle).not.toBeChecked();
   });
 }
+
+for (const realm of ['player', 'regional_ai']) {
+  test('regional provisions conserve stock, prices and shared loading for ' + realm, async function ({ page }, testInfo) {
+    await setup(page, testInfo);
+    const r = await page.evaluate(function (realm) {
+      const s = FB.state, host = s.armies[0];
+      const saved = { adj:FB.world.adj, byId:FB.world.byId, water:FB.world.waterAdj,
+        source:FB.marketProvisionSource, withdraw:FB.marketWithdrawProvisions,
+        hostile:FB.armiesHostile, tech:FB.techBonus, available:FB.treasuryAvailable,
+        spend:FB.treasurySpend, credit:FB.treasuryCredit };
+      try {
+        s.realms.regional_ai = { alive:true };
+        s.realms.player = { alive:true };
+        s.realms.regional_seller = { alive:true, liege:realm };
+        s.realms.regional_foreign = { alive:true };
+        s.holder = { a:realm, b:'regional_seller', c:'regional_seller', d:realm };
+        s.owner = { a:realm, b:realm, c:realm, d:realm };
+        s.occupations = {}; s.wars = {}; s.greatHolyWar = null; s.player.war = null;
+        FB.world.byId = { a:{}, b:{}, c:{}, d:{} };
+        FB.world.adj = { a:{b:1}, b:{a:1,c:1}, c:{b:1,d:1}, d:{c:1} };
+        FB.world.waterAdj = {};
+        FB.armiesHostile = function (state, army, other) { return other.realm === 'enemy'; };
+        FB.techBonus = function () { return 0; };
+        let funds = 100, spent = 0;
+        FB.treasuryAvailable = function () { return funds; };
+        FB.treasurySpend = function (state, id, amount) { funds -= amount; spent += amount; };
+        FB.treasuryCredit = function () {};
+        s.treasuryAccounting = { mode:'active' };
+        host.realm = realm; host.at = 'a'; host.path = []; host.moveLeft = 0;
+        host.men = 3240; host.units = { levy:3240 }; host.supply = 10;
+        const markets = { a:{stock:0.2,demand:45,price:1,reserve:0},
+          b:{stock:50,demand:45,price:2,reserve:0},
+          c:{stock:50,demand:450,price:3,reserve:0},
+          d:{stock:50,demand:450,price:1,reserve:0} };
+        FB.marketProvisionSource = function (state, pid) { return markets[pid] || null; };
+        FB.marketWithdrawProvisions = function (state, pid, amount) {
+          if (markets[pid].stock < amount) return false;
+          markets[pid].stock -= amount; return true;
+        };
+        const before = JSON.stringify([markets, s.armyLogistics, s.player.gold]);
+        const q = FB.armyProvisionQuote(s, host);
+        const pure = before === JSON.stringify([markets, s.armyLogistics, s.player.gold]);
+        const text = FB.armyProvisionText(s, host);
+        const price = FBDATA.balance.armyProvisionPrice;
+        const expectedCost = q.sources.reduce(function (sum, row) { return sum + row.units * markets[row.pid].price * price; }, 0);
+        const applied = FB.provisionArmy(s, host);
+        const next = FB.armyProvisionQuote(s, host);
+        const ledger = s.armyLogistics.counties;
+        const sourceTotals = Object.keys(ledger).reduce(function (sum, pid) { return sum + ledger[pid].bought; }, 0);
+        const payment = realm === 'player' ? 100 - s.player.gold + ledger.a.dues + ledger.b.dues * 0.2 + ledger.c.dues * 0.2 : spent;
+        return { pure:pure, order:q.sources.map(function (row) { return row.pid; }),
+          local:q.sources[0].units, nearby:q.sources[1].units, cost:q.cost, expectedCost:expectedCost,
+          payment:payment, sourceTotals:sourceTotals, units:applied.units,
+          untouched:markets.d.stock, nextUsesB:next.sources.some(function (row) { return row.pid === 'b'; }),
+          net:q.net, refill:FBDATA.balance.supplyRecoverRate, supply:host.supply,
+          regionalText:text.indexOf('nearby markets') >= 0 };
+      } finally {
+        FB.world.adj = saved.adj; FB.world.byId = saved.byId; FB.world.waterAdj = saved.water;
+        FB.marketProvisionSource = saved.source; FB.marketWithdrawProvisions = saved.withdraw;
+        FB.armiesHostile = saved.hostile; FB.techBonus = saved.tech;
+        FB.treasuryAvailable = saved.available; FB.treasurySpend = saved.spend; FB.treasuryCredit = saved.credit;
+      }
+    }, realm);
+    expect(r.pure).toBe(true);
+    expect(r.order).toEqual(['a', 'b', 'c']);
+    expect(r.local).toBeCloseTo(0.2);
+    expect(r.nearby).toBeCloseTo(1);
+    expect(r.cost).toBeCloseTo(r.expectedCost);
+    expect(r.payment).toBeCloseTo(r.cost);
+    expect(r.sourceTotals).toBeCloseTo(r.units);
+    expect(r.untouched).toBe(50);
+    expect(r.nextUsesB).toBe(false);
+    expect(r.net).toBeCloseTo(r.refill);
+    expect(r.supply).toBeCloseTo(10 + r.refill);
+    expect(r.regionalText).toBe(true);
+  });
+}
+
+test('regional resupply respects movement, safe routes, funds and purchasing preferences', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const r = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0];
+    s.realms.player = { alive:true }; s.holder = { a:'player', b:'player', c:'player' };
+    s.owner = Object.assign({}, s.holder); s.occupations = {}; s.wars = {};
+    s.greatHolyWar = null; s.player.war = null;
+    FB.world.byId = { a:{}, b:{}, c:{} };
+    FB.world.adj = { a:{b:1}, b:{a:1,c:1}, c:{b:1} }; FB.world.waterAdj = {};
+    FB.armiesHostile = function (state, army, other) { return other.realm === 'enemy'; };
+    FB.marketProvisionSource = function (state, pid) { return { stock:pid === 'c' ? 100 : 0, demand:900, price:1, reserve:0 }; };
+    host.at = 'a'; host.path = []; host.moveLeft = 0; host.supply = 1;
+    function units() { return FB.armyProvisionQuote(s, host).units; }
+    const available = units();
+    host.path = ['b']; const moving = units();
+    const arrival = FB.armyProvisionQuote(s, host, 'a', undefined, true).units;
+    host.path = []; host.moveLeft = 1; const marching = units(); host.moveLeft = 0;
+    FB.world.waterAdj = { a:{b:{}} }; const water = units(); FB.world.waterAdj = {};
+    s.occupations.b = { occupied:true }; const occupied = units(); s.occupations = {};
+    s.wars.test = { fortSieges:{ b:{} } }; const siege = units(); s.wars = {};
+    s.wars.test = { status:'active', occupations:{ b:{ occupied:true } } };
+    const warOccupation = units(); s.wars = {};
+    s.holder.b = 'foreign'; const foreign = units(); s.holder.b = 'player';
+    s.armies.push({ at:'b', realm:'enemy', men:10 }); const enemy = units(); s.armies.pop();
+    s.player.gold = 0; const broke = units(); s.player.gold = 0.01;
+    const budget = FB.armyProvisionQuote(s, host); s.player.gold = 100;
+    FB.game.auto.buySupplies = false; const disabled = units(); FB.game.auto.buySupplies = true;
+    host.supply = FB.armyProvisionTarget(host);
+    const target = FB.armyProvisionQuote(s, host);
+    return { available:available, arrival:arrival, blocked:[moving,marching,water,occupied,siege,warOccupation,foreign,enemy,broke,disabled],
+      cost:budget.cost, limited:budget.units < available, targetNet:target.net };
+  });
+  expect(r.available).toBeGreaterThan(0);
+  expect(r.arrival).toBeCloseTo(r.available);
+  expect(r.blocked).toEqual([0,0,0,0,0,0,0,0,0,0]);
+  expect(r.cost).toBeCloseTo(0.01);
+  expect(r.limited).toBe(true);
+  expect(r.targetNet).toBeCloseTo(0);
+});
+
+
+test('forced provisions in debt take real local food and punish the direct ruler relationship', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const r = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0], pid = host.at;
+    const sovereign = s.owner[pid], holder = window.provisionIds.enemy;
+    s.holder[pid] = holder;
+    const hostile = FB.armiesHostile;
+    FB.armiesHostile = function () { return false; };
+    try {
+      s.player.gold = -6000; FB.game.auto.buySupplies = false;
+      const target = { kind:'realm', id:holder };
+      FB.adjustStanding(s, target, 40 - FB.standingOf(s, target));
+      const support = FB.countySupportBase(s, pid);
+      const stock = FB.marketProvisionSource(s, pid).stock;
+      const disabled = FB.armyProvisionQuote(s, host);
+      FB.game.auto.forceSupplies = true;
+      const preview = FB.armyProvisionQuote(s, host);
+      const pure = FB.standingOf(s, target) === 40 && FB.countySupportBase(s, pid) === support;
+      const first = FB.provisionArmy(s, host);
+      const firstStanding = FB.standingOf(s, target);
+      s.turn++;
+      FB.provisionArmy(s, host);
+      const secondStanding = FB.standingOf(s, target);
+      const row = s.armyLogistics.counties[pid];
+      const supportAfter = FB.countySupportBase(s, pid);
+      const remaining = FB.marketProvisionSource(s, pid).stock;
+      const g = s.market.goods.indexOf('provisions'); s.market.counties[pid][0][g] = 0;
+      s.turn++; FB.provisionArmy(s, host);
+      const emptyHarmless = FB.standingOf(s, target) === secondStanding && FB.countySupportBase(s, pid) === supportAfter;
+      return { disabled:disabled.reason, pure:pure, forced:preview.forced, mode:first.mode,
+        sources:preview.sources.map(function (source) { return source.pid; }), pid:pid,
+        firstStanding:firstStanding, secondStanding:secondStanding, supportLoss:supportAfter < support,
+        gold:s.player.gold, taken:row.taken, withdrawn:stock - remaining, paid:row.paid,
+        emptyHarmless:emptyHarmless, directDiffers:holder !== sovereign };
+    } finally { FB.armiesHostile = hostile; }
+  });
+  expect(r.disabled).toBe('disabled'); expect(r.pure).toBe(true);
+  expect(r.forced).toBe(true); expect(r.mode).toBe('requisition');
+  expect(r.sources).toEqual([r.pid]); expect(r.directDiffers).toBe(true);
+  expect(r.firstStanding).toBeLessThanOrEqual(-25);
+  expect(r.secondStanding).toBeLessThan(r.firstStanding);
+  expect(r.supportLoss).toBe(true); expect(r.gold).toBe(-6000);
+  expect(r.taken).toBeCloseTo(r.withdrawn); expect(r.paid).toBe(0);
+  expect(r.emptyHarmless).toBe(true);
+});
+
+test('forced provision setting is explicit, defaults off and persists when selected', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  await page.evaluate(function () { FB.ui.showAutoResolve(); });
+  const toggle = page.locator('#ar-force-supplies');
+  await expect(toggle).not.toBeChecked();
+  await toggle.check();
+  expect(await page.evaluate(function () {
+    return FB.game.auto.forceSupplies && JSON.parse(localStorage.getItem('fb_automation')).forceSupplies;
+  })).toBe(true);
+  await toggle.uncheck();
+  expect(await page.evaluate(function () { return FB.game.auto.forceSupplies; })).toBe(false);
+});
+
+
+test('offensive supply retreat chooses nearby realm land instead of the capital', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, host = s.armies[0];
+    const names = ['armyProvisionQuote', 'armyFriendlyProvince', 'fortBlocksArmy',
+      'countyOccupiedOrBesieged', 'armiesHostile'];
+    const originals = {};
+    names.forEach(function (name) { originals[name] = FB[name]; });
+    try {
+      const start = host.at;
+      const nearby = Object.keys(FB.world.adj[start]).sort().filter(function (pid) {
+        return !FB.world.byId[pid].wasteland;
+      });
+      if (!nearby.length) throw new Error('Fixture needs neighboring land');
+      const capital = Object.keys(FB.world.byId).filter(function (pid) {
+        return pid !== start && nearby.indexOf(pid) < 0 && !FB.world.byId[pid].wasteland;
+      })[0];
+      s.player.provinceId = capital;
+      if (s.realms.player) s.realms.player.capital = capital;
+      s.player.gold = 1000;
+      Object.keys(FB.world.byId).forEach(function (pid) {
+        s.owner[pid] = 'player'; s.holder[pid] = 'player';
+      });
+      FB.armyFriendlyProvince = function (state, army, pid) { return pid !== start; };
+      FB.fortBlocksArmy = function () { return false; };
+      FB.countyOccupiedOrBesieged = function () { return false; };
+      FB.armiesHostile = function () { return false; };
+      FB.armyProvisionQuote = function () { return { mode:'purchase', net:-1 }; };
+      FB.game.auto.hosts = 'off';
+      host.supply = 0; host.autoResupply = 1;
+      delete host.supplyStop; delete host.supplyRetreat; delete host.supplySearchTurn;
+      const goal = FB.armySupplyGoal(s, host);
+      const retained = FB.armySupplyGoal(s, host);
+      // An unsafe nearest county must not remain a supply destination.
+      FB.countyOccupiedOrBesieged = function (state, pid) { return pid === goal; };
+      delete host.supplySearchTurn;
+      const replacement = FB.armySupplyGoal(s, host);
+      host.supply = FB.armyProvisionTarget(host);
+      const complete = FB.armySupplyGoal(s, host);
+      return { goal:goal, expected:nearby[0], capital:capital, retained:retained,
+        replacement:replacement, complete:complete, cleaned:host.supplyRetreat === undefined };
+    } finally {
+      names.forEach(function (name) { FB[name] = originals[name]; });
+    }
+  });
+  expect(result.goal).toBe(result.expected);
+  expect(result.goal).not.toBe(result.capital);
+  expect(result.retained).toBe(result.goal);
+  expect(result.replacement).not.toBe(result.goal);
+  expect(result.complete).toBeNull();
+  expect(result.cleaned).toBe(true);
+});

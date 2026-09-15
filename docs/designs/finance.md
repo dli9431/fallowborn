@@ -399,3 +399,16 @@ Finance separates projected seasonal deployment/provisions from non-food militar
 payments already made. AI treasury details disclose the last recurring settlement,
 accrued military bills, reserve target and last distribution; their displayed seasonal
 balance is explicitly before daily food purchases and other transfers.
+
+
+## Seasonal budget subtotals
+
+The gold tooltip and money sheet group the same itemized estimate into Income,
+Government, Buildings and forts, Household, Army, and Other costs. Each nonempty
+group ends with a subtotal; Estimated net each season is the final budget row.
+Groups use semantic ids supplied by the income calculation, never translated-label
+matching. Building revenue includes an explicit support/rebellion adjustment and
+tax rounding so visible revenue reconciles with the actual tax calculation.
+Annual coin adjustment is marked as outside the recurring estimate; the top-bar
+badge continues to show the previous season's actual change, including events.
+This changes presentation only, without altering charges or balance parameters.

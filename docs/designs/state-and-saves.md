@@ -1483,3 +1483,23 @@ Personal-name edits add `chars[id].portraitName` once, preserving the original
 portrait name seed. Rendering falls back to `name` when absent, so existing saves
 keep their faces without an eager migration or save-format bump. Later edits and
 reloads retain the frozen seed, including the no-dynasty background fallback.
+
+## County muster plans
+
+Optional `player.musterSelection` stores integer county troop caps;
+`player.musterFormation` is `gather` or `county`. Missing fields retain the legacy
+full combined muster. The selection is clamped against current recruitment at
+quote and execution; newly acquired counties default to zero once a plan exists.
+Opening the sheet creates no record. Saved plans survive reload and apply to
+later automatic/manual raises; existing hosts retain their own reinforcement
+ceilings. No save-format bump is needed. Mechanics and the technology decision
+(`county_muster_selection`: none) are in [war.md](war.md#county-muster-plans).
+
+
+County rows also offer their own 0/25/50/100% buttons; these change only that
+county's amount. The rally selector lists eligible recruitment counties and
+updates cost estimates without saving the draft. Optional `player.musterRally`
+persists the chosen county. Combined hosts gather there; with separate county
+hosts, hired troops and allies join there. If that county becomes unavailable,
+quotes and execution use the normal eligible rally fallback. Old saves retain
+the default rally. This extends `county_muster_selection` with no research gate.

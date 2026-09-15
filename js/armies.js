@@ -1550,12 +1550,12 @@ window.FB = window.FB || {};
      defensive allies still answer independently. The ordinary minimum muster
      may seed a fresh war, but never manufactures replacements after a
      voluntary de-muster. */
-  function playerMusterPlan(state) {
+  function fullPlayerMusterPlan(state, planning) {
     const p = state.player, w = p.war;
     const military = state.military && state.military.player || w;
     const greatHost = FB.playerGreatHolyWarHostActive &&
       FB.playerGreatHolyWarHostActive(state);
-    if (!w && !greatHost && !(FB.realmHasRebellion && FB.realmHasRebellion(state, 'player'))) return null;
+    if (!planning && !w && !greatHost && !(FB.realmHasRebellion && FB.realmHasRebellion(state, 'player'))) return null;
     const territory = FB.recruitmentTerritory(state, 'player');
     if (!territory.rally) return {
       territory:territory, units:emptyUnitCounts(), allied:{ ally:null, men:0 },
@@ -1603,6 +1603,117 @@ window.FB = window.FB || {};
     };
   }
 
+  // Apportion the existing realm rolls; choosing a smaller call never adds troops.
+  function musterShare(units, count) {
+    const total = unitCountTotal(units), out = emptyUnitCounts(), fractions = [];
+    let assigned = 0;
+    Object.keys(units).sort().forEach(function (key) {
+      const exact = total ? units[key] * count / total : 0;
+      out[key] = Math.floor(exact); assigned += out[key];
+      fractions.push({ key:key, remainder:exact - out[key] });
+    });
+    fractions.sort(function (a, b) { return b.remainder - a.remainder || (a.key < b.key ? -1 : 1); });
+    for (let i = 0; assigned < count && i < fractions.length; i++) {
+      const key = fractions[i].key;
+      if (out[key] < units[key]) { out[key]++; assigned++; }
+    }
+    return out;
+  }
+  function countyMusterRows(state, plan) {
+    const remaining = copyUnitCounts(plan.units);
+    remaining.mercs = 0;
+    remaining.levy = Math.max(0, remaining.levy - plan.allied.men);
+    let men = unitCountTotal(remaining);
+    const rows = plan.territory.eligible.map(function (pid) {
+      return { pid:pid, weight:Math.max(1, (state.dev[pid] || 1) *
+        (FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1) *
+        (FB.countySupportFactor ? FB.countySupportFactor(state, pid) : 1)) };
+    });
+    let weight = rows.reduce(function (sum, row) { return sum + row.weight; }, 0);
+    rows.forEach(function (row, i) {
+      row.maximum = i === rows.length - 1 ? men : Math.min(men, Math.floor(men * row.weight / weight));
+      row.units = musterShare(remaining, row.maximum);
+      Object.keys(remaining).forEach(function (key) { remaining[key] -= row.units[key] || 0; });
+      men -= row.maximum; weight -= row.weight;
+    });
+    return rows;
+  }
+  function selectedMusterPlan(state, plan, selection, rally) {
+    if (!plan) return null;
+    if (rally === undefined) rally = state.player.musterRally;
+    if (plan.territory.eligible.indexOf(rally) >= 0) plan.territory.rally = rally;
+    const rows = countyMusterRows(state, plan);
+    if (selection === undefined) selection = state.player.musterSelection;
+    const units = emptyUnitCounts();
+    units.mercs = plan.units.mercs || 0;
+    units.levy = plan.allied.men;
+    rows.forEach(function (row) {
+      const value = selection ? Number(selection[row.pid]) : row.maximum;
+      row.selected = selection ? FB.clamp(isFinite(value) ? Math.floor(value) : 0, 0, row.maximum) : row.maximum;
+      const part = musterShare(row.units, row.selected);
+      row.calledUnits = part;
+      Object.keys(part).forEach(function (key) { units[key] = (units[key] || 0) + part[key]; });
+    });
+    plan.rows = rows; plan.units = units; plan.men = unitCountTotal(units);
+    if (plan.cohort) Object.keys(plan.cohort).forEach(function (key) {
+      plan.cohort[key] = Math.min(plan.cohort[key], units[key] || 0);
+    });
+    return plan;
+  }
+  function playerMusterPlan(state) {
+    return selectedMusterPlan(state, fullPlayerMusterPlan(state));
+  }
+  function musterHosts(state, plan, formation) {
+    if (formation === undefined) formation = state.player.musterFormation;
+    const warId = state.player.war ? state.player.war.id : (plan.greatHost ? 'holy' : null);
+    function host(pid, units) {
+      return { realm:'player', at:pid, from:pid, units:copyUnitCounts(units),
+        men:unitCountTotal(units), size:unitCountTotal(units), supply:100,
+        warId:warId, moveLeft:0, path:[], goal:null };
+    }
+    if (formation !== 'county') return plan.men ? [host(plan.territory.rally, plan.units)] : [];
+    const hosts = plan.rows.map(function (row) { return host(row.pid, row.calledUnits); });
+    const rally = hosts.filter(function (entry) { return entry.at === plan.territory.rally; })[0];
+    if (rally) {
+      rally.units.mercs = plan.units.mercs || 0;
+      rally.units.levy += plan.allied.men;
+      rally.men = rally.size = unitCountTotal(rally.units);
+    }
+    return hosts.filter(function (entry) { return entry.men > 0; });
+  }
+  FB.playerMusterSelectionQuote = function (state, selection, formation, rally) {
+    if (state.player.tier < 3) return null;
+    const plan = selectedMusterPlan(state, fullPlayerMusterPlan(state, true), selection, rally);
+    if (!plan) return null;
+    const hosts = musterHosts(state, plan, formation);
+    let standing = 0, food = 0;
+    const estimates = {}, batch = { prices:Object.create(null), baskets:Object.create(null) };
+    hosts.forEach(function (host) {
+      const upkeep = FB.hostFieldUpkeepParts ? FB.hostFieldUpkeepParts(state, host, batch).total : FB.hostStandingUpkeepParts(host.units, 0).total;
+      const provisions = host.at && FB.armyProvisionCommitment ? FB.armyProvisionCommitment(state, host, 1) : 0;
+      standing += upkeep; food += provisions;
+      estimates[host.at] = { standing:upkeep, food:provisions };
+    });
+    const auto = FB.game.auto || {}, force = auto.forceSupplies === true;
+    const valid = hosts.length > 0 && hosts.every(function (host) { return host.men >= plan.floor; });
+    return { rows:plan.rows, men:plan.men, units:plan.units, rally:plan.territory.rally,
+      minimum:plan.floor, days:FB.musterDelay(state, 'player'), valid:valid,
+      canRaise:!!fullPlayerMusterPlan(state) && valid && !FB.musterDelay(state, 'player') && !FB.playerHost(state),
+      standing:standing, food:food, total:standing + (force || auto.buySupplies === false ? 0 : food),
+      forced:force, purchases:auto.buySupplies !== false, fixed:(plan.units.mercs || 0) + plan.allied.men,
+      hosts:hosts.length, estimates:estimates, formation:(formation === undefined ? state.player.musterFormation : formation) === 'county' ? 'county' : 'gather' };
+  };
+  FB.savePlayerMusterSelection = function (state, selection, formation, rally) {
+    const quote = FB.playerMusterSelectionQuote(state, selection, formation, rally);
+    if (!quote) return false;
+    const saved = {};
+    quote.rows.forEach(function (row) { saved[row.pid] = row.selected; });
+    state.player.musterSelection = saved;
+    state.player.musterFormation = quote.formation;
+    state.player.musterRally = quote.rally;
+    return true;
+  };
+
   FB.musterDelay = function (state, realm, detachment) {
     const down = ((detachment ? state.armyDetachmentDown : state.armyDown) || {})[realm];
     const days = detachment ? (B().detachmentRearmDays || 25) : (B().armyRearmDays || 60);
@@ -1614,7 +1725,7 @@ window.FB = window.FB || {};
     if (!plan) return null;
     return {
       men:plan.men, minimum:plan.floor,
-      canRaise:plan.men >= plan.floor && !FB.musterDelay(state, 'player'), limited:plan.limited,
+      canRaise:plan.men >= plan.floor && musterHosts(state, plan).every(function (host) { return host.men >= plan.floor; }) && !FB.musterDelay(state, 'player'), limited:plan.limited,
       days:FB.musterDelay(state, 'player'), territory:plan.territory,
       units:copyUnitCounts(plan.units)
     };
@@ -1629,25 +1740,27 @@ window.FB = window.FB || {};
     if (down !== undefined && state.turn - down < B().armyRearmDays) return null;
     const plan = playerMusterPlan(state);
     if (!plan || plan.men < plan.floor) return null;
+    const raised = musterHosts(state, plan);
+    if (!raised.length || raised.some(function (host) { return host.men < plan.floor; })) return null;
     if (plan.limited) {
       if (state.military && state.military.player) state.military.player.musterPool = null;
       else if (w) w.musterPool = null;
     }
     if (plan.cohort) cohortConsumeReady(state, 'player', plan.cohort);
-    const units = plan.units, allied = plan.allied, men = plan.men;
+    const allied = plan.allied;
     const home = plan.territory.rally;
-    const host = { id: FB.uid(), realm: 'player', men: men, size: men, units: units,
-      warId:w ? w.id : (plan.greatHost ? 'holy' : null),
-      at: home, from: home, moveLeft: 0, path: [], goal: null };
+    const host = raised.filter(function (entry) { return entry.at === home; })[0] || raised[0];
     if (allied.men) host.allied = allied;
-    state.armies.push(host);
+    raised.forEach(function (entry) { entry.id = FB.uid(); state.armies.push(entry); });
     if (w && FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
     if (host.warId === 'holy' && plan.greatHost && FB.greatHolyWarMarkMuster) {
       FB.greatHolyWarMarkMuster(state, 'player');
     }
-    FB.news(state, FB.msg('news.army.player_musters',
-      '🚩 The host musters at {province} — {men} men take the field.',
-      { province: provName(home), men: men }));
+    raised.forEach(function (entry) {
+      FB.news(state, FB.msg('news.army.player_musters',
+        '🚩 The host musters at {province} — {men} men take the field.',
+        { province: provName(entry.at), men: entry.men }));
+    });
     if (!p.flags.hostHintShown) {
       p.flags.hostHintShown = 1; // once per save: the host waits for hand-tapped orders
       if (FB.ui) FB.ui.toast('🚩 Your host has mustered — tap it on the map, then tap a province to march.');
@@ -2651,11 +2764,13 @@ window.FB = window.FB || {};
   /* where a beaten host can actually run: home while the road is clear,
      else the nearest friendly county a legal march can reach (no hostile
      unbreached fort on the road), else null — it stands its ground */
-  FB.armyRetreatGoal = function (state, army) {
+  FB.armyRetreatGoal = function (state, army, nearestCounty) {
     const home = army.realm === 'player' ? playerHome(state)
       : (state.realms[army.realm] ? state.realms[army.realm].capital : null);
-    if (home === army.at) return army.at; // beaten on home ground: it stands
-    if (home) {
+    // Supply recovery may request nearest suitable land without preferring home.
+    if (nearestCounty && nearestCounty(army.at)) return army.at;
+    if (!nearestCounty && home === army.at) return army.at; // beaten on home ground: it stands
+    if (!nearestCounty && home) {
       const direct = findArmyPathFrom(state, army, army.at, home);
       if (direct && !direct.blockedByFort) return home;
     }
@@ -2693,7 +2808,7 @@ window.FB = window.FB || {};
         if (!(FB.armyFriendlyProvince &&
               FB.armyFriendlyProvince(state, army, pid))) continue;
         if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, pid, army)) continue;
-        if (reachable[pid]) return pid;
+        if (reachable[pid] && (!nearestCounty || nearestCounty(pid))) return pid;
       }
       const next = [];
       for (const pid of frontier) {

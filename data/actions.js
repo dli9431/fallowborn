@@ -204,7 +204,7 @@ FBDATA.deeds = [
   { id:'settle_waste', label:'🌱 Settle the wasteland…', order:60,
     desc:'Found a new holding on empty land bordering your demesne.', group:'realm', flow:'choices', layoutGroup:'ruler', cooldownDays:360, handler:'settle_waste' },
   { id:'muster_host', label:'🚩 Muster the host', order:61,
-    group:'war', flow:'immediate', handler:'muster_host' },
+    group:'war', flow:'choices', handler:'muster_host' },
   { id:'demuster_host', label:'🏳 De-muster the host', order:62,
     group:'realm', flow:'immediate', handler:'demuster_host' },
   { id:'hire_mercs', label:'⚔ Hire a mercenary company', order:63,

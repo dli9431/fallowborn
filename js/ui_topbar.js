@@ -101,21 +101,24 @@ window.FB = window.FB || {};
   function statBreakdownHtml(stat) {
     const bd = FB.incomeBreakdown(FB.state)[stat];
     let h = '';
-    for (const ln of bd.lines) {
-      h += '<div class="bd-row"><span>' + esc(ln.label) + '</span>' +
-        '<span class="bd-amt ' + (ln.amount > 0 ? 'op-good' : 'op-bad') + '">' +
-        esc(fmtAmt(ln.amount, stat === 'gold')) + '</span></div>';
+    function row(label, amount, extra) {
+      return '<div class="bd-row' + (extra ? ' ' + extra : '') + '"><span>' + esc(label) + '</span>' +
+        '<span class="bd-amt ' + (amount > 0 ? 'op-good' : amount < 0 ? 'op-bad' : '') + '">' +
+        esc(fmtAmt(amount, stat === 'gold')) + '</span></div>';
     }
-    if (!bd.lines.length) {
-      h += '<div class="bd-note">' +
-        esc(FB.T('No steady income yet.')) + '</div>';
+    if (stat === 'gold' && bd.groups) {
+      for (const group of bd.groups) {
+        h += '<section data-budget-group="' + esc(group.id) + '">';
+        for (const line of group.lines) h += row(line.label, line.amount);
+        h += row(group.label, group.total, 'bd-total bd-subtotal') + '</section>';
+      }
     } else {
-      h += '<div class="bd-row bd-total"><span>' + esc(FB.T('Each season')) + '</span>' +
-        '<span class="bd-amt ' + (bd.total > 0 ? 'op-good' : bd.total < 0 ? 'op-bad' : '') + '">' +
-        esc(fmtAmt(bd.total, stat === 'gold')) + '</span></div>';
+      for (const line of bd.lines) h += row(line.label, line.amount);
     }
-    if (stat === 'gold' && bd.coinAdjustment !== undefined) {
-      h += '<div class="bd-row"><span>' + esc(FB.T('Coin and prices this year')) + '</span>' +
+    if (!bd.lines.length) h += '<div class="bd-note">' + esc(FB.T('No steady income yet.')) + '</div>';
+    if (stat !== 'gold' && bd.lines.length) h += row(FB.T('Each season'), bd.total, 'bd-total');
+    if (stat === 'gold' && bd.coinAdjustment) {
+      h += '<div class="bd-row"><span>' + esc(FB.T('Annual coin adjustment (not in estimate)')) + '</span>' +
         '<span class="bd-amt ' + (bd.coinAdjustment > 0 ? 'op-good' :
           bd.coinAdjustment < 0 ? 'op-bad' : '') + '">' +
         esc(fmtAmt(bd.coinAdjustment, true)) + '</span></div>';
@@ -136,6 +139,7 @@ window.FB = window.FB || {};
       }[stat];
       if (teach) h += '<div class="bd-note">🌱 ' + esc(FB.T(teach)) + '</div>';
     }
+    if (stat === 'gold') h += row(FB.T('Estimated net each season'), bd.total, 'bd-total bd-net-total');
     return h;
   }
 

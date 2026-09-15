@@ -402,3 +402,12 @@ bonuses in counties without enterprises. Other callers keep live upgrade queries
 The next annual pass rebuilds the snapshot, so staffing, death, upgrades and relocation
 are observed. Profiling exposes this cost as enterprise upgrade snapshot rather than
 charging repeated enterprise scans to each county's capacity and attraction.
+
+Enterprise staffing preview offers **Staff all local** beside Apply staffing plan.
+It shows the worker count and total wages due now and each season, and requires
+enough gold for the entire batch. It fills whole vacant positions through the existing
+local-hire API, keeping existing assignments and leaving half positions open.
+Changed quotes require another review. This is a shortcut for existing ungated local
+hiring, with no new technology requirement or day cost. The preview remembers its
+scroll position across redraws, management visits, and closing/reopening in the same
+loaded game; loading another state resets this transient position.

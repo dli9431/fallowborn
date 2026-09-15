@@ -46,6 +46,69 @@ test('match choices expose Q and W action shortcuts for local and dynastic searc
   await expect(page.locator('#finder-scope')).toHaveValue('near');
 });
 
+[3, 4].forEach(function (count) {
+  test('generated suitor shortlist maps digits and numpad to all ' + count + ' matches', async function ({ page }) {
+    await page.evaluate(function (count) {
+      const s = FB.state;
+      s.chars[s.player.charId].born = s.date.year - (count === 4 ? 40 : 30);
+      FB.refreshSuitors(s);
+      FB.ui.showSuitorPicker();
+      window.shortlistClicks = [];
+      // Observe dispatch without consuming the shortlist after the first choice.
+      document.querySelectorAll('[data-suitor]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          event.stopImmediatePropagation();
+          window.shortlistClicks.push(button.dataset.suitor);
+        }, true);
+      });
+    }, count);
+    const buttons = page.locator('[data-suitor]');
+    await expect(buttons).toHaveCount(count);
+    const ids = await buttons.evaluateAll(function (nodes) {
+      return nodes.map(function (node) { return node.dataset.suitor; });
+    });
+    for (let i = 0; i < count; i++) {
+      await expect(buttons.nth(i).locator('.keyhint')).toHaveText(String(i + 1));
+      await expect(buttons.nth(i)).toHaveAttribute('aria-keyshortcuts', String(i + 1));
+      await page.keyboard.press('Digit' + (i + 1));
+    }
+    for (let i = 0; i < count; i++) await page.keyboard.press('Numpad' + (i + 1));
+    await page.keyboard.press('Digit5');
+    await page.keyboard.press('Shift+Digit1');
+    expect(await page.evaluate(function () { return window.shortlistClicks; })).toEqual(ids.concat(ids));
+    await page.keyboard.down('Digit1');
+    await page.keyboard.down('Digit1');
+    await page.keyboard.up('Digit1');
+    expect(await page.evaluate(function () { return window.shortlistClicks; })).toEqual(ids.concat(ids, [ids[0]]));
+  });
+});
+
+test('descendant match numbers preserve disabled positions and use the existing review', async function ({ page }) {
+  const ids = await page.evaluate(function () {
+    const s = FB.state;
+    s.player.gold = 100000; s.player.prestige = 100000;
+    FB.ui.showMatchPicker(window.discoveryChildId);
+    const buttons = Array.from(document.querySelectorAll('[data-match]'));
+    buttons[0].disabled = true;
+    window.shortlistReviews = [];
+    FB.ui.showMarriageLineageReview = function (subject, candidate) {
+      window.shortlistReviews.push({ subject:subject, candidate:candidate });
+    };
+    return { child:window.discoveryChildId, candidates:buttons.map(function (button) { return button.dataset.match; }) };
+  });
+  const buttons = page.locator('[data-match]');
+  await expect(buttons).toHaveCount(3);
+  await expect(buttons.nth(0).locator('.keyhint')).toHaveText('1');
+  await expect(buttons.nth(1).locator('.keyhint')).toHaveText('2');
+  await expect(buttons.nth(1)).toBeEnabled();
+  await page.keyboard.press('Digit1');
+  expect(await page.evaluate(function () { return window.shortlistReviews; })).toEqual([]);
+  await page.keyboard.press('Digit2');
+  expect(await page.evaluate(function () { return window.shortlistReviews; })).toEqual([
+    { subject:ids.child, candidate:ids.candidates[1] }
+  ]);
+});
+
 test('both subjects browse scopes and filters without writing state or consuming RNG', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state;

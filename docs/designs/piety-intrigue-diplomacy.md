@@ -281,3 +281,19 @@ Successful Cardinal promotion closes the Bishopric/management history before ope
 A refused bishop petition uses only the standard news outcome, titled Appointment refused, with its candidate portrait and any paid endowment in the receipt. It does not precede that outcome with a separate religious-office result.
 
 Promotion result resource chips use the shared Details tooltip on desktop and compact tap disclosure. The result title, identity, and benefit summary remain visible; previously omitted petition/examination fee chips remain omitted.
+
+### Forced provisions
+
+The player may enable **Force supplies without payment** in army automation.
+It defaults off and persists with automation preferences. While enabled, player
+hosts requisition real food in their current county, including friendly and neutral
+land, instead of paying; debt and disabled purchases do not block seizure. There
+are no remote seizures. Reserve, loading, stock and enemy-fort limits still apply.
+Every actual seizure uses existing requisition support loss and market disruption.
+The county's direct holder (not its sovereign) also loses player-relative Standing:
+the first seizure lowers it to at most -25, and subsequent seizures subtract the
+same amount as county support loss. Player-held counties have no self-opinion loss.
+Empty or blocked withdrawals cause no penalties. Hostile Standing does not itself
+declare war. Ordinary AI purchases and enemy requisition remain unchanged.
+Technology impact `forced_army_provisions` is **none**: coercive emergency food
+collection needs no research; paid provisioning remains the ordinary alternative.

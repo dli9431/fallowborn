@@ -29,10 +29,12 @@
         esc(FB.T('{enemy}: {held}/{total} objectives occupied', { enemy:name(s, w.enemy), held:occupied, total:w.objectives.length })) +
         (w.unlawful ? ' · ' + esc(FB.T('Unlawful')) : '') + '</button>';
     });
+    h += '<button type="button" class="actionbtn" data-muster-plan>' + esc(FB.T('Muster plan')) + '</button>';
     h += '<button type="button" class="actionbtn" data-war-laws>' + esc(FB.T('War laws & permissions')) + '</button></section>';
     return h;
   };
   UI.bindCampaigns = function (root) {
+    root.querySelectorAll('[data-muster-plan]').forEach(function (el) { el.addEventListener('click', function () { UI.showMusterPlan(); }); });
     root.querySelectorAll('[data-campaign-open]').forEach(function (el) {
       el.addEventListener('click', function () { UI.showCampaign(el.dataset.campaignOpen); });
     });
@@ -80,6 +82,7 @@
       hostHtml += '</select></label>';
     });
     if (!hosts.length) hostHtml += '<p>' + esc(FB.T('No host is currently raised.')) + '</p>';
+    hostHtml += button('campaign-muster-plan', FB.T('Muster plan'));
     hostHtml += fact(FB.T('Total upkeep'), FB.T('{money:cost} per season', { cost:FB.playerHostUpkeepParts(s).total }));
     hostHtml += '<p class="hint">' + esc(FB.T('Changing assignment cancels the host’s route.')) + '</p>';
     h += section('campaign-host-details', FB.T('Hosts'), hostHtml,
@@ -109,6 +112,146 @@
       UI.closeModal(); UI.refresh();
     });
     bind('campaign-back', back);
+    bind('campaign-muster-plan', function () { UI.showMusterPlan(); });
+  };
+  UI.showMusterPlan = function () {
+    const s = FB.state, initial = FB.playerMusterSelectionQuote(s);
+    if (!initial) return;
+    FB.game.setPaused(true);
+    const draft = {};
+    initial.rows.forEach(function (row) { draft[row.pid] = row.selected; });
+    let formation = initial.formation, rally = initial.rally, shownQuote = '';
+    let h = '<div class="war-sheet" data-muster-sheet>';
+    h += section('muster-call-details', FB.T('Call to arms'),
+      '<label class="war-host-assignment">' + esc(FB.T('Assembly')) +
+      '<select id="muster-formation"><option value="gather"' + (formation === 'gather' ? ' selected' : '') + '>' + esc(FB.T('Gather at the rally point')) +
+      '</option><option value="county"' + (formation === 'county' ? ' selected' : '') + '>' + esc(FB.T('Raise in each county')) + '</option></select></label>' +
+      '<label class="war-host-assignment">' + esc(FB.T('Rally point')) + '<select id="muster-rally">' +
+      initial.rows.map(function (row) {
+        return '<option value="' + esc(row.pid) + '"' + (row.pid === rally ? ' selected' : '') + '>' + esc(FB.world.byId[row.pid].name) + '</option>';
+      }).join('') + '</select></label>' +
+      '<div class="muster-presets">' + [0,25,50,100].map(function (percent) {
+        return '<button type="button" class="btn" data-muster-percent="' + percent + '">' + esc(FB.T('{percent}%', { percent:percent })) + '</button>';
+      }).join('') + '</div>');
+    let counties = '';
+    initial.rows.forEach(function (row, i) {
+      const county = FB.world.byId[row.pid];
+      counties += '<div class="muster-county-row"><label for="muster-county-' + i + '">' + esc(county ? county.name : row.pid) +
+        '<span class="hint">' + esc(FB.T('Up to {men} troops', { men:row.maximum })) + '</span><span class="hint" data-muster-cost="' + esc(row.pid) + '"></span></label>' +
+        '<input type="number" inputmode="numeric" id="muster-county-' + i + '" data-muster-county="' + esc(row.pid) + '" min="0" max="' + row.maximum + '" step="1" value="' + row.selected + '"></div>' +
+        '<div class="muster-presets" role="group" aria-label="' + esc(FB.T('Troop presets for {county}', { county:county ? county.name : row.pid })) + '">' +
+        [0,25,50,100].map(function (percent) {
+          return '<button type="button" class="btn" data-muster-county-preset="' + esc(row.pid) + '" data-percent="' + percent + '">' + esc(FB.T('{percent}%', { percent:percent })) + '</button>';
+        }).join('') + '</div>';
+    });
+    h += section('muster-county-details', FB.T('County troops'),
+      '<button type="button" class="btn" id="muster-counties-toggle" aria-expanded="true" aria-controls="muster-counties">' +
+      esc(FB.T('Hide county troops')) + '</button><div id="muster-counties">' +
+      (counties || '<p>' + esc(FB.T('No eligible recruitment counties.')) + '</p>') + '</div>',
+      '<p>' + esc(FB.T('Fewer troops cost less to keep in the field. Each county shows its share of the estimated cost. Besieged or occupied counties cannot send troops. Mustering itself does not lower Popular support.')) + '</p>');
+    h += section('muster-cost-details', FB.T('Estimated cost'), '<div id="muster-costs" aria-live="polite"></div>',
+      '<p>' + esc(FB.T('Costs use current prices where each host starts. Food costs depend on available stocks and your supply settings. Moving, winter and price changes can raise the bill.')) + '</p>' +
+      '<p>' + esc(FB.T('There is no fee to raise troops. You pay to keep them in the field. Existing contracts and replacement training may cost extra.')) + '</p>');
+    h += '<p id="muster-blocker" class="warnote"></p>';
+    h += button('muster-save', FB.T('Save plan')) + button('muster-raise', FB.T('Save and muster'));
+    const demuster = FB.demusterPreview(s);
+    if (demuster && !(FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))) {
+      h += section('muster-dismiss-details', FB.T('Current host'),
+        '<p>' + esc(FB.T('De-muster to stop this host’s field upkeep. {men} troops return to the rolls; the next muster must wait {days} days.', {
+          men:demuster.men, days:FBDATA.balance.armyRearmDays || 60 })) + '</p>' + button('muster-dismiss', FB.T('Save plan and de-muster current host')),
+        '<p>' + esc(FB.T('Sends your main host home. Other hosts stay in the field. All troops can return when dismissed on your own land; elsewhere, some or all are lost.')) + '</p>');
+    }
+    h += button('muster-back', FB.T('Back')) + '</div>';
+    const fromPanel = document.getElementById('genmodal').classList.contains('hidden');
+    SH.openModal(FB.T('Muster plan'), h, { historyView:true, modalClass:'war-sheet-modal',
+      historyBackRender:fromPanel ? function () { UI.closeModal(); } : null });
+    // Assembly and rally point need no explanatory tooltip or extra tab stop.
+    const callSection = document.getElementById('muster-call-details-section');
+    callSection.removeAttribute('aria-describedby');
+    callSection.removeAttribute('tabindex');
+    bind('muster-counties-toggle', function () {
+      const toggle = document.getElementById('muster-counties-toggle');
+      const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(expanded));
+      toggle.textContent = expanded ? FB.T('Hide county troops') : FB.T('Show county troops');
+      document.getElementById('muster-counties').classList.toggle('hidden', !expanded);
+    });
+    function update() {
+      const quote = FB.playerMusterSelectionQuote(s, draft, formation, rally);
+      if (!quote) return;
+      shownQuote = JSON.stringify([quote.units, quote.hosts, quote.total, quote.rally]);
+      let costs = fact(FB.T('Troops / hosts'), FB.T('{men} troops in {hosts} hosts', { men:quote.men, hosts:quote.hosts })) +
+        fact(FB.T('Field upkeep'), FB.T('{money:cost} per season', { cost:quote.standing })) +
+        fact(FB.T('Food estimate'), FB.T('{money:cost} per season', { cost:quote.food })) +
+        fact(FB.T('Expected spending'), FB.T('{money:cost} per season', { cost:quote.total })) +
+        fact(FB.T('Treasury'), FB.T('{money:gold}', { gold:s.player.gold })) +
+        fact(FB.T('Popular support on muster'), FB.T('No immediate loss')) +
+        fact(FB.T('Muster time'), FB.T('1 day'));
+      if (quote.fixed) costs += fact(FB.T('Hired troops and allies included'), FB.T('{men} troops', { men:quote.fixed }));
+      if (quote.forced) costs += '<p class="warnote">' + esc(FB.T('Forced supplies: no food payment, but seizures reduce county Popular support and make its direct ruler hostile toward you.')) + '</p>';
+      else if (!quote.purchases) costs += '<p class="warnote">' + esc(FB.T('Food purchases are off. Troops will consume carried reserves.')) + '</p>';
+      else if (s.player.gold < quote.total) costs += '<p class="warnote">' + esc(FB.T('Your treasury covers less than one season at these prices. Future income is not included.')) + '</p>';
+      if (formation === 'gather' && quote.rally) costs += fact(FB.T('Rally point'), FB.world.byId[quote.rally].name);
+      document.getElementById('muster-costs').innerHTML = costs;
+      document.getElementById('muster-raise').disabled = !quote.canRaise;
+      document.getElementById('muster-save').disabled = !quote.valid && quote.men > 0;
+      document.querySelectorAll('[data-muster-cost]').forEach(function (el) {
+        const row = quote.rows.filter(function (entry) { return entry.pid === el.dataset.musterCost; })[0];
+        const county = quote.estimates[el.dataset.musterCost];
+        const cost = formation === 'county' ? (county ? county.standing + (quote.forced || !quote.purchases ? 0 : county.food) : 0) :
+          quote.total * (row ? row.selected : 0) / Math.max(1, quote.men);
+        el.textContent = FB.T('About {money:cost} per season', { cost:cost });
+      });
+      document.getElementById('muster-blocker').textContent = FB.playerHost(s) ? FB.T('This plan applies to later musters; troops already in the field keep their current size.') :
+        quote.days ? FB.T('Ready to muster in {days} days.', { days:quote.days }) :
+        !quote.men ? FB.T('No troops will muster until you change this plan.') :
+        !quote.valid ? FB.T('Each host needs at least {men} troops. Choose more troops or gather at the rally point.', { men:quote.minimum }) :
+        !quote.canRaise ? FB.T('Save this plan for when war begins.') : FB.T('The plan also applies to automatic musters.');
+    }
+    document.querySelectorAll('[data-muster-county]').forEach(function (el) {
+      el.addEventListener('input', function () { draft[el.dataset.musterCounty] = Number(el.value); update(); });
+      el.addEventListener('change', function () {
+        const value = FB.clamp(Math.floor(Number(el.value) || 0), 0, Number(el.max));
+        el.value = value; draft[el.dataset.musterCounty] = value; update();
+      });
+    });
+    document.querySelectorAll('[data-muster-percent]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        const percent = Number(el.dataset.musterPercent);
+        initial.rows.forEach(function (row) { draft[row.pid] = Math.floor(row.maximum * percent / 100); });
+        document.querySelectorAll('[data-muster-county]').forEach(function (input) { input.value = draft[input.dataset.musterCounty]; });
+        update();
+      });
+    });
+    document.querySelectorAll('[data-muster-county-preset]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        const pid = el.dataset.musterCountyPreset;
+        const row = initial.rows.filter(function (entry) { return entry.pid === pid; })[0];
+        draft[pid] = Math.floor(row.maximum * Number(el.dataset.percent) / 100);
+        document.querySelectorAll('[data-muster-county]').forEach(function (input) {
+          if (input.dataset.musterCounty === pid) input.value = draft[pid];
+        });
+        update();
+      });
+    });
+    document.getElementById('muster-rally').addEventListener('change', function (event) { rally = event.target.value; update(); });
+    document.getElementById('muster-formation').addEventListener('change', function (event) { formation = event.target.value; update(); });
+    bind('muster-save', function () { if (FB.savePlayerMusterSelection(s, draft, formation, rally)) { back(); UI.refresh(); } });
+    bind('muster-raise', function () {
+      const quote = FB.playerMusterSelectionQuote(s, draft, formation, rally);
+      if (!quote || !quote.canRaise || JSON.stringify([quote.units, quote.hosts, quote.total, quote.rally]) !== shownQuote) { update(); return; }
+      FB.savePlayerMusterSelection(s, draft, formation, rally);
+      const host = FB.raisePlayerHost(s);
+      if (!host) { update(); return; }
+      back(); FB.game.passDay({ skipFocus:true }); UI.refresh();
+    });
+    bind('muster-dismiss', function () {
+      if (!FB.demusterPreview(s) || (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))) return;
+      FB.savePlayerMusterSelection(s, draft, formation, rally);
+      if (FB.demusterPlayerHost(s)) { back(); FB.game.passDay({ skipFocus:true }); UI.refresh(); }
+    });
+    bind('muster-back', back);
+    update();
   };
   UI.showWarLaws = function (view) {
     const s = FB.state, sovereign = FB.playerRealmId(s) || 'player';

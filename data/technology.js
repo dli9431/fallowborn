@@ -579,6 +579,18 @@ window.FBDATA = window.FBDATA || {};
         mode:'soft', tech:['pack_saddles','wheeled_carts','logistics_magazines'],
         rationale:'All field hosts automatically buy local provisions toward a reserve target and consume carried supplies when local food is unavailable. Pack, cart, and magazine innovations reduce consumption and improve loading; basic provisioning and its preferences remain available without research.'
       },
+      regional_army_resupply:{
+        mode:'none',
+        rationale:'Stationary hosts may buy finite food from safe overland markets within two county connections in their sovereign realm. Regional recovery is baseline access; existing supply technology still improves consumption and loading.'
+      },
+      county_muster_selection:{
+        mode:'none',
+        rationale:'Calling a chosen share of existing county muster rolls and choosing an eligible rally county is basic command and budgeting. Existing recruitment, technology, rearm and returned-veteran limits still determine available troops; full musters remain available.'
+      },
+      forced_army_provisions:{
+        mode:'none',
+        rationale:'Taking finite local food without payment is basic emergency coercion. It costs county support and direct-ruler Standing, retains stock and loading limits, and requires no research. Paid local and regional provisioning remains available.'
+      },
       army_requisition:{
         mode:'none',
         rationale:'Automatic requisition in enemy counties is baseline warfare. Existing fort tiers protect stores and limit extraction until occupied; no new technology gates forced provisioning.'

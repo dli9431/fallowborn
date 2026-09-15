@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.180.3';
+FB.VERSION = '1.181.0';
 FB.CHANGELOG = [
+  { v: '1.181.0', date: '2026-09-15', changes: [
+    'Plan county muster sizes and rally points, draw supplies from nearby realm markets, or force provisions at a cost to local support and relations. Budget subtotals, local staffing controls, and marriage shortcuts make household management easier.'
+  ] },
   { v: '1.180.3', date: '2026-09-15', changes: [
     'Army controls have clearer names and tooltips, and your hosts display your heraldic crest. Court letters require Baron rank, while serf activities and building limits explain their benefits and requirements.'
   ] },
@@ -4444,7 +4447,7 @@ FB.CHANGELOG = [
      themselves (see autoResolve in ui.js); outcomes go to the chronicle. */
   G.auto = {
     minor:false, major:false, war:false, all:false, style:'safe',
-    hosts:'manual', hostResupply:true, buySupplies:true, supplyTarget:75,
+    hosts:'manual', hostResupply:true, buySupplies:true, forceSupplies:false, supplyTarget:75,
     build:false, research:false, researchMode:'cheapest'
   };
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
@@ -4460,6 +4463,7 @@ FB.CHANGELOG = [
   if (typeof G.auto.researchMode !== 'string') G.auto.researchMode = 'cheapest';
   G.auto.hostResupply = G.auto.hostResupply !== false;
   G.auto.buySupplies = G.auto.buySupplies !== false;
+  G.auto.forceSupplies = G.auto.forceSupplies === true;
   G.auto.supplyTarget = FB.clamp(isFinite(Number(G.auto.supplyTarget)) ? Number(G.auto.supplyTarget) : 75, 25, 100);
   G.saveAuto = function () {
     try { localStorage.setItem('fb_automation', JSON.stringify(G.auto)); } catch (e) { /* private mode */ }

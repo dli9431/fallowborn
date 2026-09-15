@@ -1707,3 +1707,98 @@ their original summaries and do not invent missing terms.
 War-status display queries read the campaign registry without initializing bindings
 or migrating military pools. Legacy snapshots without a registry use the legacy
 read-only status projection; initialization remains an explicit simulation/save step.
+
+### Regional army resupply
+
+Stationary player and AI hosts in their own sovereign realm buy locally first,
+then cover any shortfall from markets within two overland county connections.
+Every county on the route must belong to the same realm and be free of occupation,
+siege, and hostile hosts. Sea crossings and foreign markets do not extend the pool.
+Moving hosts retain local provisioning only; resupply destination searches quote
+what the host could buy after stopping there.
+
+Purchases deduct actual stock and charge each source market's price. Each source
+shares its existing daily loading limit among all hosts and receives its own sales
+and dues. The host's total refill rate, consumption, reserve target and purchasing
+preference remain unchanged. Tooltips explain regional deliveries and shortages.
+Technology impact `regional_army_resupply` is **none**: basic recovery remains
+available without research; existing supply innovations still improve loading
+and consumption through `field_supply_attrition`.
+
+### Forced provisions
+
+The player may enable **Force supplies without payment** in army automation.
+It defaults off and persists with automation preferences. While enabled, player
+hosts requisition real food in their current county, including friendly and neutral
+land, instead of paying; debt and disabled purchases do not block seizure. There
+are no remote seizures. Reserve, loading, stock and enemy-fort limits still apply.
+Every actual seizure uses existing requisition support loss and market disruption.
+The county's direct holder (not its sovereign) also loses player-relative Standing:
+the first seizure lowers it to at most -25, and subsequent seizures subtract the
+same amount as county support loss. Player-held counties have no self-opinion loss.
+Empty or blocked withdrawals cause no penalties. Hostile Standing does not itself
+declare war. Ordinary AI purchases and enemy requisition remain unchanged.
+Technology impact `forced_army_provisions` is **none**: coercive emergency food
+collection needs no research; paid provisioning remains the ordinary alternative.
+
+## County muster plans
+
+The Muster plan sheet is available from Campaigns, individual campaigns, the
+Muster the host deed, and war declaration review. Players choose integer troop
+amounts by county, with 0/25/50/100% presets, and choose either one combined host
+at the rally point or a separate host in each selected county. Every fielded
+banner must meet the existing minimum. Zero calls can be saved to defer mustering.
+
+County quotas apportion the existing eligible realm muster rolls by development,
+population and Popular support. They are deployment quotas, not an additional
+county levy. Deterministic largest-remainder allocation preserves every unit class
+at a full call; smaller calls retain proportional composition. Hired companies
+and defensive allies remain separate commitments at the rally point. Blocked
+counties, returned-veteran ceilings, ready professional cohorts and rearm waits
+still constrain the authoritative quote and execution. Selection adds no troops,
+research requirement, immediate fee or Popular support penalty.
+
+Optional `player.musterSelection` stores county troop caps, and
+`player.musterFormation` stores `gather` or `county`. Missing fields preserve the
+legacy full combined muster. Saved caps apply to war-start, manual and automatic
+remusters, and new counties default to zero once a plan exists. Existing hosts
+keep their size; replacements cannot exceed it. Explicit later great-levy or hired
+company choices still add the troops promised by those choices. No save-format
+bump is required. Old saves do not gain a plan merely by opening the sheet.
+
+The sheet previews troop/host totals, current-market field upkeep and ongoing
+food costs, treasury, and supply-policy consequences. Each county shows its share
+of the estimated bill. Per-county assembly quotes each starting market and camp;
+combined assembly quotes the rally market. These estimates exclude future income,
+price/season changes and separate replacement drilling. Ordinary mustering shows
+no immediate support loss; forced provisioning warns about later seizures and
+ruler hostility. An existing ordinary-war primary host may be de-mustered through
+an explicit button with returned-men and rearm terms; detachments remain fielded.
+
+Native numeric inputs and the assembly selector retain focus while totals update
+in place. Details use shared hover/focus tooltips and touch disclosures. Back,
+Escape and mobile back discard unsaved drafts and preserve the parent sheet/list.
+Saving or mustering requires an explicit action; opening, editing and saving spend
+no day, while confirmed muster or dismissal spends one day.
+Technology impact `county_muster_selection` is **none**: calling fewer troops or
+assembling existing troops separately is baseline command and budgeting.
+
+
+County rows also offer their own 0/25/50/100% buttons; these change only that
+county's amount. The rally selector lists eligible recruitment counties and
+updates cost estimates without saving the draft. Optional `player.musterRally`
+persists the chosen county. Combined hosts gather there; with separate county
+hosts, hired troops and allies join there. If that county becomes unavailable,
+quotes and execution use the normal eligible rally fallback. Old saves retain
+the default rally. This extends `county_muster_selection` with no research gate.
+
+Offensive player automation searches for replenishing markets in its own sovereign
+realm, including vassal counties. If no nearby market can refill the host, its supply
+retreat uses the nearest reachable safe realm county by county distance, with stable
+ties, instead of preferring the capital. Occupied, besieged, and enemy-held positions
+are excluded. Battle retreats keep their home preference. Supply prices, stocks,
+reserve targets, search cooldowns, and fort passage rules are unchanged.
+
+Muster plan offers a keyboard-accessible Show/Hide county troops button. Collapsing
+the county inputs keeps their draft values and leaves estimates, global presets,
+and plan actions available. Assembly and Rally point have no explanatory tooltip.

@@ -4041,19 +4041,9 @@ window.FB = window.FB || {};
         FB.ui.showSettleWaste(options && options.returnContext);
       }
     } },
-  { id: 'muster_host',
+  { id: 'muster_host', opensChoices:true, noConsume:true,
     desc: function (s) {
-      const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
-      let text = FB.T('Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.',
-        { men: preview ? preview.men : FB.playerLevy(s) });
-      const parts = preview && preview.units && FB.unitClassParts
-        ? FB.unitClassParts(s, preview.units) : [];
-      if (parts.length) {
-        text += ' ' + FB.T('Muster: {composition}.', {
-          composition: parts.join(', ')
-        });
-      }
-      return text;
+      return FB.T('Choose county troop amounts, gather at your rally point or raise separate hosts, and review field costs before mustering.');
     },
     show: function (s) {
       return !!s.player.war || !!(FB.playerGreatHolyWarHostActive &&
@@ -4070,7 +4060,12 @@ window.FB = window.FB || {};
           days:rearmDays - (s.turn - down)
         });
       }
-      const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
+      let preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
+      // The sheet must remain reachable when the saved call is zero or too small.
+      if (preview && !preview.canRaise && FB.playerMusterSelectionQuote) {
+        const full = FB.playerMusterSelectionQuote(s, null, 'gather');
+        if (full && full.valid) preview = Object.assign({}, preview, { canRaise:true });
+      }
       if (preview && preview.territory && !preview.territory.rally) {
         return FB.T('Recruitment blocked: no eligible rally county.');
       }
@@ -4087,7 +4082,7 @@ window.FB = window.FB || {};
       return down === undefined ? null : down +
         (configured === undefined ? 60 : configured);
     },
-    run: function (s) { if (FB.raisePlayerHost) FB.raisePlayerHost(s); } },
+    run: function (s) { if (FB.ui.showMusterPlan) FB.ui.showMusterPlan(); } },
   { id: 'demuster_host',
     desc: function (s) {
       const prev = FB.demusterPreview ? FB.demusterPreview(s) : null;
@@ -6599,9 +6594,10 @@ window.FB = window.FB || {};
     const p = state.player;
     if (FB.enterpriseList) FB.enterpriseList(state); // normalize legacy business holdings first
     const lines = { gold: [], prestige: [], piety: [] };
+    let goldGroup = 'income';
     function add(stat, label, amount) {
       if (!amount) return; // a dry source is no line at all
-      lines[stat].push({ label: label, amount: amount });
+      lines[stat].push({ label: label, amount: amount, group:stat === 'gold' ? goldGroup : undefined });
     }
     function dataName(kind, id, def) {
       return def.icon + ' ' + FB.dataText(state, p.charId, kind, id, def, 'name');
@@ -6652,7 +6648,9 @@ window.FB = window.FB || {};
         }), source.amount);
       }
       add('gold', FB.T('Vassal dues'), tax.dues);
-      addBuildings('gold', 'tax');
+      const grossBuildingTax = addBuildings('gold', 'tax');
+      add('gold', FB.T('Building income: support and rebellion'), tax.tolls - grossBuildingTax);
+      add('gold', FB.T('Tax rounding'), Math.round(tax.total) - tax.total);
       add('gold', FB.T('National technology'), tax.national);
       add('gold', FB.T('Royal Seneschal'), tax.council);
       add('gold', FB.T('Guild monopoly tolls'), tax.monopoly);
@@ -6676,6 +6674,7 @@ window.FB = window.FB || {};
       if (p.liege) {
         add('gold', FB.T('Liege’s cut'), tax.liege);
       }
+      goldGroup = 'buildings';
       addBuildings('gold', 'upkeep', -1, true);
       if (FB.fortUpkeep) {
         add('gold', FB.T('Fortification upkeep'), -FB.fortUpkeep(state));
@@ -6683,6 +6682,7 @@ window.FB = window.FB || {};
       addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
     }
 
+    goldGroup = 'income';
     /* household property and carried treasures, line by line */
     for (const hid of FB.holdingList(state)) {
       const def = FBDATA.holdings[hid];
@@ -6737,9 +6737,11 @@ window.FB = window.FB || {};
 
     /* station, resident family, and recurring schooling are separate lines so
        a larger household never hides inside an unexplained flat charge */
+    goldGroup = 'government';
     const government = FB.playerGovernmentCosts(state);
     add('gold', FB.T('Government administration'), -government.administration);
     add('gold', FB.T('Official court expenses'), -government.court);
+    goldGroup = 'household';
     const upkeep = FB.householdUpkeepParts(state);
     add('gold', FB.T('Household upkeep'), -upkeep.base);
     add('gold', FB.T('Family provisions and quarters'), -upkeep.family);
@@ -6764,9 +6766,10 @@ window.FB = window.FB || {};
         label:FB.T('Unfunded household necessities last season: {percent}%', {
           percent:Math.round(state.player.marketHardship.unpaidShare * 100)
         }),
-        amount:0
+        amount:0, group:'household'
       });
     }
+    goldGroup = 'other';
     if (FB.modifierUpkeepEntries) {
       for (const entry of FB.modifierUpkeepEntries(state, 'gold')) {
         const def = FBDATA.modifiers[entry.id];
@@ -6779,6 +6782,7 @@ window.FB = window.FB || {};
         }), -entry.amount);
       }
     }
+    goldGroup = 'army';
     if (FB.playerHostUpkeepParts) {
       const hostUpkeep = FB.playerHostUpkeepParts(state);
       add('gold', FB.T('Raised-host base logistics'), -hostUpkeep.base);
@@ -6810,6 +6814,7 @@ window.FB = window.FB || {};
         add('gold', FB.T('Campaign supply modifiers'), -hostUpkeep.campaignModifier);
       }
     }
+    goldGroup = 'household';
     if (FB.retainerRecords) {
       for (const record of FB.retainerRecords(state)) {
         const c = state.chars[record.charId];
@@ -6838,6 +6843,7 @@ window.FB = window.FB || {};
         }), -term.cost);
       }
     }
+    goldGroup = 'other';
     if (FB.financeAssignedIncomeCost) {
       add('gold', FB.T('Revenue assigned to lenders'), -FB.financeAssignedIncomeCost(state));
     }
@@ -6852,6 +6858,18 @@ window.FB = window.FB || {};
        lines differ by a fraction. Annual coin revaluation is an adjustment,
        not a recurring source, and is carried separately for the gold sheet. */
     out.gold.total = FB.reliableGoldIncome(state);
+    out.gold.groups = [
+      { id:'income', label:FB.T('Income subtotal') },
+      { id:'government', label:FB.T('Government subtotal') },
+      { id:'buildings', label:FB.T('Buildings and forts subtotal') },
+      { id:'household', label:FB.T('Household subtotal') },
+      { id:'army', label:FB.T('Army subtotal') },
+      { id:'other', label:FB.T('Other costs subtotal') }
+    ].map(function (group) {
+      group.lines = out.gold.lines.filter(function (line) { return line.group === group.id; });
+      group.total = group.lines.reduce(function (sum, line) { return sum + line.amount; }, 0);
+      return group;
+    }).filter(function (group) { return group.lines.length > 0; });
     if (FB.ensureEconomy) out.gold.coinAdjustment = FB.ensureEconomy(state).lastAdjustment;
     return out;
   };

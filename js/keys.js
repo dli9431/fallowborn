@@ -165,7 +165,7 @@ window.FB = window.FB || {};
     const keyId = e.code || k;
     if (heldEventKeys[keyId] === undefined) heldEventKeys[keyId] = FB.ui.eventInputEpoch || 0;
     /* 1-9 hotkeys by PHYSICAL key (number row or numpad, any layout, any
-       NumLock state); reserved for UI sections, never list entries. */
+       NumLock state); UI sections and the generated marriage-match shortlist. */
     let digit = 0;
     if (e.code && e.code.length === 6 && e.code.indexOf('Digit') === 0) digit = +e.code.charAt(5) || 0;
     else if (e.code && e.code.length === 7 && e.code.indexOf('Numpad') === 0) digit = +e.code.charAt(6) || 0;
@@ -219,6 +219,7 @@ window.FB = window.FB || {};
         return;
       }
       if (digit && !e.shiftKey) {
+        if (FB.ui.runModalShortcut('match', digit - 1, !e.repeat)) { e.preventDefault(); return; }
         if (FB.ui.runModalShortcut('section', digit - 1, !e.repeat)) { e.preventDefault(); return; }
       } else if (slot >= 0) {
         if (FB.ui.runModalShortcut('action', slot, !e.repeat)) { e.preventDefault(); return; }
