@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.180.2';
+FB.VERSION = '1.180.3';
 FB.CHANGELOG = [
+  { v: '1.180.3', date: '2026-09-15', changes: [
+    'Army controls have clearer names and tooltips, and your hosts display your heraldic crest. Court letters require Baron rank, while serf activities and building limits explain their benefits and requirements.'
+  ] },
   { v: '1.180.2', date: '2026-09-15', changes: [
     'Justice groups prisoners and noble households, adds clearer arrest notices, and separates judgment review from sentencing results. Number keys select sections, while action shortcuts use letters and character lists have no hotkeys.'
   ] },

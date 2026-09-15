@@ -4847,6 +4847,22 @@ window.FB = window.FB || {};
     return plan;
   }
 
+  let armyCrestCanvas = null, armyCrestSeed = null;
+  function playerArmyCrest(state) {
+    const me = state.chars[state.player.charId];
+    const seed = me && (me.dyn || me.name) || 'Fallowborn';
+    if (!armyCrestCanvas) {
+      armyCrestCanvas = document.createElement('canvas');
+      armyCrestCanvas.width = 48;
+      armyCrestCanvas.height = 56;
+    }
+    if (armyCrestSeed !== seed) {
+      if (!FB.drawCrest(armyCrestCanvas, seed)) return null;
+      armyCrestSeed = seed;
+    }
+    return armyCrestCanvas;
+  }
+
   FB.renderArmies = function (ctx, toScreen, z, dpr) {
     const s = FB.state;
     if (!s || !s.armies || !s.armies.length) return;
@@ -5088,6 +5104,15 @@ window.FB = window.FB || {};
       if (sel && sel.id === a.id) {
         ctx.strokeStyle = '#ffe28a'; ctx.lineWidth = 2 * dpr;
         ctx.beginPath(); ctx.arc(x, y - u * 0.15, u * 1.05, 0, Math.PI * 2); ctx.stroke();
+      }
+      // Ownership stays readable without color or selection. Leave the row
+      // immediately above the spearmen for battle and encirclement warnings.
+      if (mine) {
+        const crest = playerArmyCrest(s);
+        if (crest) {
+          ctx.drawImage(crest, x - 12 * dpr, y - u * 1.7 - 28 * dpr,
+            24 * dpr, 28 * dpr);
+        }
       }
       // crossed swords over a host locked with an enemy in this province today
       if (battles[a.at]) {

@@ -816,6 +816,7 @@ test('the annual agency pass caps player approaches and family requests',
     await startAgencyGame(page, testInfo);
     const result = await page.evaluate(function () {
       var s = FB.state;
+      s.player.tier = 3;
       var me = s.chars[s.player.charId];
       var child = FB.makeCharacter(s, {
         name:'Requesting Kin', sex:'f', culture:me.culture,
@@ -1026,3 +1027,49 @@ test('annual ruler intrigue obeys weighting, cadence, caps, cooldowns, and letha
     expect(result.resolvedAfterWarning).toBe(true);
     expect(result.playerStillAlive).toBe(true);
   });
+
+
+test('court overtures require Baron rank when queued and when answered', async function ({ page }, testInfo) {
+  await startAgencyGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, home = s.player.provinceId;
+    const rid = Object.keys(s.realms).filter(function (id) {
+      return id !== 'player' && s.realms[id].alive && s.realms[id].ruler;
+    })[0];
+    s.realms[rid].capital = home;
+    FB.ensureAgency(s);
+    const ctx = { realmId:rid, rulerGeneration:s.realms[rid].ruler.generation };
+    const originalChance = FB.chance;
+    FB.chance = function () { return true; };
+    const rows = [];
+    try {
+      for (const tier of [0, 1, 2, 3]) {
+        s.player.tier = tier;
+        s.eventQueue = [];
+        delete s.agency.lastPlayerApproachYear;
+        Object.keys(s.agency.rulerAims).forEach(function (id) {
+          delete s.agency.rulerAims[id].lastApproachYear;
+          s.agency.rulerAims[id].id = 'expand_realm';
+        });
+        FB.rulerAgencyYearly(s);
+        rows.push({ tier:tier, valid:FB.fns.agency_overture_context_valid(s, ctx),
+          queued:s.eventQueue.some(function (item) { return item.id === 'ruler_overture'; }) });
+      }
+      s.player.tier = 0;
+      const before = JSON.stringify(s);
+      const rejected = ['welcome', 'gift', 'rebuff'].every(function (action) {
+        return FB.fns['agency_overture_' + action](s, ctx) === false;
+      });
+      return { rows:rows, rejected:rejected, unchanged:before === JSON.stringify(s),
+        validator:FBDATA.events.filter(function (ev) { return ev.id === 'ruler_overture'; })[0].contextValidator };
+    } finally { FB.chance = originalChance; }
+  });
+  expect(result.rows.slice(0, 3)).toEqual([
+    { tier:0, valid:false, queued:false }, { tier:1, valid:false, queued:false },
+    { tier:2, valid:false, queued:false }
+  ]);
+  expect(result.rows[3]).toEqual({ tier:3, valid:true, queued:true });
+  expect(result.rejected).toBe(true);
+  expect(result.unchanged).toBe(true);
+  expect(result.validator).toBe('agency_overture_context_valid');
+});

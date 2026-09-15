@@ -30,6 +30,10 @@ one current right, or restore one historically challenged right. Amendments are 
 as semantic tenure history rather than property, modifiers, or hidden ownership changes.
 
 Tier-0 Toil is harvest and customary household return rather than a fixed hired wage. Its
+player-facing label is Work the fields, with plain regional alternatives for herding,
+irrigation, woodland and household service. The focus tooltip explains harvest income,
+the absence of skill training, and that other focuses do not cancel customary duties.
+Its
 daily credit and expected seasonal income, plus both outcomes of the farming-year Harvest
 event, use the home county's live provisions price at 75% exposure
 (`1 + (price - 1) * 0.75`). The strongest immediate local disruption then applies: any

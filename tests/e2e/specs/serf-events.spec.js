@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'data/map_data.js',
   'data/bookmarks.js',
   'data/cultures.js',
-  'data/economy.js',
+  'data/economy.js', 'data/actions.js',
   'data/events_peasant.js',
   'data/markets.js',
   'data/technology.js',
@@ -645,13 +645,13 @@ test('all seven serf tenures share Toil mechanics while contextual work presenta
         return focus.id === 'rest';
       })[0];
       const expected = {
-        latin_manorial:['Tend strips and serve the demesne', 'Work the household strips and meet the labor owed on the lord’s demesne.'],
-        irrigated_fellah:['Tend fields and waterworks', 'Work the household fields and maintain the shared water on which they depend.'],
-        norse_coastal_service:['Work shore, boats, and transport', 'Labor for the household through boats, shore work, and local transport.'],
-        pastoral_steppe:['Tend the household herds', 'Keep the herds, pasture, and seasonal service that sustain the household.'],
-        woodland_dependence:['Work woodland and clearings', 'Tend the clearing and meet the woodland labor owed by the household.'],
-        pagan_household_service:['Serve the master’s household', 'Labor within the master’s household and its dependent fields.'],
-        dependent_farming:['Work the household holding', 'Work the customary holding and meet its seasonal service.']
+        latin_manorial:['Work the fields', 'Farm your family’s plots and work the lord’s fields.'],
+        irrigated_fellah:['Farm and maintain irrigation', 'Work the household fields and maintain the shared water on which they depend.'],
+        norse_coastal_service:['Work boats and carry goods', 'Labor for the household through boats, shore work, and local transport.'],
+        pastoral_steppe:['Tend the herds', 'Keep the herds, pasture, and seasonal service that sustain the household.'],
+        woodland_dependence:['Work the woods and fields', 'Tend the clearing and meet the woodland labor owed by the household.'],
+        pagan_household_service:['Work for your master', 'Labor within the master’s household and its dependent fields.'],
+        dependent_farming:['Work the family farm', 'Work the customary holding and meet its seasonal service.']
       };
       const originalTenure = JSON.parse(JSON.stringify(player.tenure));
       const labels = {};
@@ -717,9 +717,11 @@ test('all seven serf tenures share Toil mechanics while contextual work presenta
       const entry = result.labels[archetypeId];
       expect(entry.label).toBe(result.expected[archetypeId][0]);
       expect(entry.repeated).toBe(entry.label);
-      expect(entry.description).toBe(result.expected[archetypeId][1]);
+      expect(entry.description).toContain(result.expected[archetypeId][1]);
+      expect(entry.description).toContain('does not train skills');
+      expect(entry.description).toContain('does not cancel');
       expect(entry.viewLabel).toBe(entry.label);
-      expect(entry.viewDescription).toBe(entry.description);
+      expect(entry.viewDescription).toBe(result.expected[archetypeId][1]);
       expect(entry.gain).toEqual(result.labels.dependent_farming.gain);
       expect(entry.eligible).toBe(result.labels.dependent_farming.eligible);
       expect(entry.stateUnchanged).toBe(true);
@@ -2970,3 +2972,24 @@ test('exact participant effects and receipts match between manual and autoresolv
     expect(result.stale).toBe(false);
     expect(result.staleGold).toBe(result.staleGoldBefore);
   });
+
+
+test('serf focus descriptions explain income, training and continuing duties', async function ({ page }, testInfo) {
+  await startGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    const rows = {};
+    ['toil', 'militia', 'keep_house'].forEach(function (id) {
+      rows[id] = { label:FB.focusLabel(s, id), description:FB.focusDescription(s, id) };
+    });
+    return rows;
+  });
+  expect(result.militia.label).toContain('Practice with the levy');
+  expect(result.militia.description).toContain('Martial');
+  expect(result.militia.description).toContain('earns no focus income');
+  expect(result.keep_house.label).toContain('Manage the household');
+  expect(result.keep_house.description).toContain('Stewardship or Diplomacy');
+  expect(result.keep_house.description).toContain('earn coin');
+  expect(result.toil.description).toContain('does not train skills');
+  for (const row of Object.values(result)) expect(row.description).toContain('does not cancel');
+});

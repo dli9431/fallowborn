@@ -559,9 +559,13 @@ window.FB = window.FB || {};
       return '<label class="autorow"><input type="radio" name="ar-style" value="' + val + '"' +
         (a.style === val ? ' checked' : '') + '> ' + label + '</label>';
     }
-    function hr(val, label) {
-      return '<label class="autorow"><input type="radio" name="ar-hosts" value="' + val + '"' +
-        ((a.hosts || 'manual') === val ? ' checked' : '') + '> ' + label + '</label>';
+    function hr(val, label, desc) {
+      const detailsId = 'ar-hosts-' + val + '-details';
+      return '<div class="ui-control-row settcard"><div class="settcard-head">' +
+        '<label class="autorow"><input type="radio" name="ar-hosts" value="' + val + '"' +
+        ((a.hosts || 'manual') === val ? ' checked' : '') + '> ' + esc(label) + '</label>' +
+        cardInfoButton(detailsId) + '</div><div class="settcard-details hidden" id="' +
+        detailsId + '">' + esc(desc) + '</div></div>';
     }
     const titleDetails = '<p>' + esc(FB.T(
       'While the days flow (or fast-forward), the chosen kinds of events resolve themselves. Every outcome is written to the Chronicle.')) +
@@ -577,12 +581,15 @@ window.FB = window.FB || {};
     h += rb('first', 'First option — take the default');
     if (access.hosts) {
       h += '<div class="settcard" tabindex="0"><div class="settcard-head">' +
-        panelh('Host orders') + cardInfoButton('ar-host-orders-details') + '</div>' +
+        panelh('Army control') + cardInfoButton('ar-host-orders-details') + '</div>' +
         '<div class="settcard-details hidden" id="ar-host-orders-details">' + esc(FB.T(
-          'Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):')) + '</div></div>';
-      h += hr('manual', 'Manually — you march the host yourself');
-      h += hr('def', 'Defensive — throw back invaders, then refit at home');
-      h += hr('off', 'Offensive — hunt their host when stronger, then besiege the prize');
+          'Choose who gives your armies movement orders. Automatic orders resume after a march you ordered finishes. A host you halt stays put until you order another march. Battles and sieges still happen automatically in every mode.')) + '</div></div>';
+      h += hr('manual', FB.T('You give orders'), FB.T(
+        'Choose each destination on the map yourself. Armies do not choose marches or market trips for you. Forced retreats still happen, and automatic supply purchases follow their separate setting.'));
+      h += hr('def', FB.T('Auto: defend your lands'), FB.T(
+        'In ordinary wars, armies move to intercept invaders in your lands; otherwise they return home to recover. They do not seek enemy war targets. Holy-war hosts follow campaign objectives in either automatic mode. Your own marches and halts take priority.'));
+      h += hr('off', FB.T('Auto: attack war targets'), FB.T(
+        'Armies pursue enemy hosts when the strength comparison allows it, otherwise returning home. Choice preference controls how much risk they take. With no opposing host, they advance on campaign objectives and stay to besiege the target. Holy-war hosts follow campaign objectives. Your own marches and halts take priority.'));
       h += cb('ar-host-resupply', a.hostResupply !== false,
         esc(FB.T('Seek markets when supplies run low')),
         esc(FB.T('Automated hosts seek reachable, stocked markets and refill toward the reserve target. Manual routes and holds remain yours.')));
@@ -7386,7 +7393,7 @@ window.FB = window.FB || {};
     if (d.terrains && (!pr || d.terrains.indexOf(pr.terrain) < 0)) {
       return FB.T('The terrain is unsuitable.');
     }
-    return FB.T('No open settlement remains.');
+    return FB.T('Every settlement already has this building or its ruins.');
   }
 
   function buildingOpenCount(s, pid, demesneContext) {
@@ -7406,7 +7413,7 @@ window.FB = window.FB || {};
       h += '<option value="' + esc(id) + '"' +
         (id === pid ? ' selected' : '') +
         (open || id === pid ? '' : ' disabled') + '>' +
-        esc(FB.T('{province} ({count} possible)', {
+        esc(FB.T('{province} ({count} building options)', {
           province:pr.name, count:open
         })) + (FB.isProtected(s, 'autoBuildCounty', id)
           ? ' · ' + esc(FB.T('no autobuild')) : '') + '</option>';
@@ -7429,7 +7436,7 @@ window.FB = window.FB || {};
               development: s.dev[id] || 1,
               built: FB.standingBuildingCountIn(s, id, true),
               remaining: open
-                ? FB.T('{count} possible', { count: open })
+                ? FB.T('{count} building options', { count: open })
                 : FB.T('nothing more to raise')
             })) + '</span></button>';
       }
@@ -7455,7 +7462,7 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(FB.T(
           'Manual construction remains available here.')) + '</span></label>' +
         '<p class="hint">' + esc(FB.T(
-          'Raise buildings without leaving this ledger; each further copy of the same building in one county costs {percent}% more.',
+          'Each settlement can hold one of each building. Ruins still occupy that place. Some buildings have a county or realm-wide limit. Each additional copy in a county costs {percent}% more.',
           { percent: growth })) + '</p><div class="gm-list">';
       let cardSeq = 0;
       for (const id in FBDATA.buildings) {
@@ -7463,6 +7470,18 @@ window.FB = window.FB || {};
         if (d.fort) continue;
         const slots = FB.buildingSlots(s, pid, id, buildingContext);
         const standing = FB.buildingCountIn(s, pid, id, false);
+        let remaining = slots.length;
+        if (d.maxCounty) remaining = Math.min(remaining, Math.max(0, d.maxCounty - standing));
+        const demesneStanding = d.maxDemesne ? FB.buildingCount(s, id, false) : 0;
+        if (d.maxDemesne) remaining = Math.min(remaining, Math.max(0, d.maxDemesne - demesneStanding));
+        let capacity = FB.T('{standing} built in this county · {remaining} more can be raised now', {
+          standing:standing, remaining:remaining
+        });
+        if (d.maxCounty) capacity += ' · ' + FB.T('County limit: {count}', { count:d.maxCounty });
+        if (d.maxDemesne) capacity += ' · ' + FB.T('Across your counties: {built}/{limit}', {
+          built:demesneStanding, limit:d.maxDemesne
+        });
+
         const copies = FB.buildingCountIn(s, pid, id, true);
         const cost = FB.buildCost(s, pid, id);
         const name = dt(s, 'building', id, d, 'name');
@@ -7478,8 +7497,8 @@ window.FB = window.FB || {};
         let details;
         if (slots.length) {
           meta = {
-            text: costText + ' · ' + FB.T('{standing} standing · next in {settlement}.', {
-              standing: standing, settlement: sts[slots[0]].name
+            text: costText + ' · ' + capacity + ' · ' + FB.T('Next in {settlement}.', {
+              settlement: sts[slots[0]].name
             }),
             tone: short ? 'unaffordable' : 'cost'
           };
@@ -7495,12 +7514,12 @@ window.FB = window.FB || {};
             esc(dt(s, 'building', id, d, 'desc')) + ' ' + esc(repeat) + '</div>';
         } else {
           meta = {
-            text: buildingUnavailableText(s, pid, id, d),
+            text: capacity + ' · ' + buildingUnavailableText(s, pid, id, d),
             tone: 'unavailable'
           };
           details = assetEffectSummary({
             compact:true,
-            scope:FB.T('No eligible settlement'),
+            scope:buildingUnavailableText(s, pid, id, d),
             setupCost:costInfo,
             recurringCost:assetSeasonalMoneyCost(d.upkeep),
             effect:effects,

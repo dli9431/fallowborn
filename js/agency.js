@@ -1134,8 +1134,9 @@ window.FB = window.FB || {};
           state.date.year - Number(aimRecord.lastApproachYear) < 4) continue;
       var relevance = FB.rulerPlayerRelevance(state, rid);
       if (!relevance.eligible) continue;
-      candidates.push({ rid:rid, relevance:relevance,
-        marriage:marriagePair(state, rid, familySnapshot) });
+      var marriage = marriagePair(state, rid, familySnapshot);
+      if (!marriage && state.player.tier < 3) continue;
+      candidates.push({ rid:rid, relevance:relevance, marriage:marriage });
     }
     if (!candidates.length) return;
     candidates.sort(function (a, b) {
@@ -1469,15 +1470,20 @@ window.FB = window.FB || {};
       FB.rulerPlayerRelevance(state, ctx.realmId).eligible);
   };
 
+  FB.fns.agency_overture_context_valid = function (state, ctx) {
+    return !!(state.player && state.player.tier >= 3 &&
+      FB.fns.agency_ruler_context_valid(state, ctx));
+  };
+
   FB.fns.agency_overture_welcome = function (state, ctx) {
-    if (!FB.fns.agency_ruler_context_valid(state, ctx)) return false;
+    if (!FB.fns.agency_overture_context_valid(state, ctx)) return false;
     FB.adjustRulerRegard(state, ctx.realmId, 'player', 8,
       'agency:overture_welcomed');
     return true;
   };
 
   FB.fns.agency_overture_gift = function (state, ctx) {
-    if (!FB.fns.agency_ruler_context_valid(state, ctx)) return false;
+    if (!FB.fns.agency_overture_context_valid(state, ctx)) return false;
     if (ctx.treasuryPaid || !FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, ctx.realmId), 8)) return false;
     ctx.treasuryPaid = true;
     FB.adjustRulerRegard(state, ctx.realmId, 'player', 15,
@@ -1486,7 +1492,7 @@ window.FB = window.FB || {};
   };
 
   FB.fns.agency_overture_rebuff = function (state, ctx) {
-    if (!FB.fns.agency_ruler_context_valid(state, ctx)) return false;
+    if (!FB.fns.agency_overture_context_valid(state, ctx)) return false;
     FB.adjustRulerRegard(state, ctx.realmId, 'player', -8,
       'agency:overture_rebuffed');
     return true;

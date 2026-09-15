@@ -5393,10 +5393,15 @@ window.FB = window.FB || {};
     if (!focus) return '';
     const contextual = contextualTenureFocusText(state, focus,
       'workDescription', 'workDescriptionKey');
-    if (contextual) return contextual;
-    if (typeof focus.desc === 'function') return focus.desc(state);
-    return FB.dataText(state, state && state.player && state.player.charId,
-      'focus', focus.id, focus, 'desc', {});
+    let desc = contextual || (typeof focus.desc === 'function' ? focus.desc(state) :
+      FB.dataText(state, state && state.player && state.player.charId,
+        'focus', focus.id, focus, 'desc', {}));
+    if (contextual) desc += ' ' + FB.T('Earns harvest income; does not train skills.');
+    if (state && state.player.tier === 0 &&
+        ['toil', 'militia', 'keep_house'].indexOf(focus.id) >= 0) {
+      desc += ' ' + FB.T('Choosing another daily focus does not cancel the work or payments you owe your lord.');
+    }
+    return desc;
   };
 
   /* ================= shared helpers ================= */

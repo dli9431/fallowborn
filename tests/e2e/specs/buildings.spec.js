@@ -162,7 +162,7 @@ test('raises buildings in two held counties from the narrow county ledger',
     await expect(millWorkCard).toHaveCount(1);
     await expect(millWorkCard.locator('.settcard-fx')).toContainText('+2');
     await expect(millWorkCard.locator('.settcard-meta'))
-      .toContainText('standing');
+      .toContainText('built in this county');
     const workDetails = millWorkCard.locator('.settcard-details');
     await expect(workDetails).toBeHidden();
     const workInfo = millWorkCard.locator('.settcard-info');
@@ -623,4 +623,36 @@ test.describe('building ledger keyboard and tooltip access', function () {
         });
       }).toBe(1);
     });
+});
+
+
+test('building ledger shows remaining copies, shared limits and occupied ruins', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const setup = await page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId;
+    s.player.tier = 4; s.player.provs = [pid]; s.player.gold = 10000;
+    s.owner[pid] = 'player'; s.holder[pid] = 'player';
+    FB.foundPlayerRealm(s);
+    s.buildings[pid] = [];
+    FBDATA.buildings.capacity_test = { name:'Capacity test', icon:'X', cost:1, maxCounty:2 };
+    FBDATA.buildings.shared_test = { name:'Shared test', icon:'X', cost:1, maxDemesne:1 };
+    FBDATA.buildings.ruin_test = { name:'Ruin test', icon:'X', cost:1 };
+    const count = FB.settlementsOf(s, pid).length;
+    for (let i = 0; i < count; i++) s.buildings[pid].push({ s:i, id:'ruin_test', ruined:true });
+    FB.invalidateBuildingIndex(s, pid);
+    FB.ui.showBuildings(pid);
+    return { remaining:Math.min(2, count) };
+  });
+  const card = function (id) { return page.locator('.settcard').filter({ has:page.locator('[data-bquick="' + id + '"]') }); };
+  await expect(card('capacity_test')).toContainText(setup.remaining + ' more can be raised now');
+  await expect(card('capacity_test')).toContainText('County limit: 2');
+  await expect(card('shared_test')).toContainText('1 more can be raised now');
+  await expect(card('shared_test')).toContainText('Across your counties: 0/1');
+  await page.locator('[data-bquick="shared_test"]').click();
+  await expect(card('shared_test')).toContainText('0 more can be raised now');
+  await expect(card('shared_test')).toContainText('Across your counties: 1/1');
+  await expect(page.locator('[data-bquick="shared_test"]')).toBeDisabled();
+  await expect(card('ruin_test')).toContainText('Every settlement already has this building or its ruins.');
+  await expect(page.locator('[data-bquick="ruin_test"]')).toBeDisabled();
 });

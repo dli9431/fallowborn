@@ -1,5 +1,19 @@
 # Time, focuses & automation
 
+Serf daily focuses use plain activity names: Work the fields (with regional
+alternatives), Practice with the levy, and Manage the household. Their shared
+hover/focus tooltips and touch Details explain that fieldwork earns harvest income
+without training skills, levy practice can train Martial without focus income,
+and household work earns coin scaled by Stewardship and can train Stewardship or
+Diplomacy. Training is a chance over time. Choosing another focus does not cancel
+scheduled tenure duties. Availability and economic/training formulas are unchanged.
+
+Court overtures require player tier 3 (Baron) or above, in addition to ordinary
+ruler relevance. Candidate selection filters out non-rulers before consuming an
+approach slot; the overture-specific context validator and outcome handlers also
+reject letters after a loss of rank. Marriage offers retain their separate rules.
+This corrects court-letter eligibility and introduces no new capability or technology gate.
+
 Cultivate the court describes its fixed +2 seasonal prestige, up to +4 Standing
 with the current liege or local lord, and Diplomacy training chance. The description
 is contextual so a changed liege is reflected immediately; Diplomacy does not scale

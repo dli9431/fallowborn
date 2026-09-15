@@ -5,7 +5,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/armies.js', 'js/logistics.js', 'js/market.js',
   'js/world.js', 'js/wars.js',
-  'js/fortifications.js',
+  'js/fortifications.js', 'js/util.js',
   'js/holywar.js',
   'js/events.js',
   'js/mapview.js',
@@ -699,6 +699,74 @@ test('Deeds campaign list opens host assignments and shared details',
     await expect(campaign).toContainText('0/1 objectives occupied');
   });
 
+test('ownership badges distinguish controlled hosts from same-color allies at every zoom',
+  async function ({ page }) {
+    const results = await page.evaluate(function () {
+      const s = FB.state, home = s.player.provinceId;
+      const makeHost = function (id, realm) {
+        return { id:id, realm:realm, at:home, from:home, men:400, size:400,
+          units:{ levy:400 }, path:[], moveLeft:0, supply:100 };
+      };
+      s.armies = [makeHost('badge-primary', 'player'),
+        makeHost('badge-split', 'player'), makeHost('badge-ally', 'badge-realm'),
+        makeHost('badge-command', 'badge-realm')];
+      s.realms['badge-realm'] = { id:'badge-realm', alive:true, name:'Ally',
+        color:'#3fae4a', capital:home, rank:4 };
+      s.player.militaryCommand = { sovereignRealmId:'badge-realm', hostId:'badge-command' };
+      const originalCommand = FB.activeMilitaryCommand;
+      const originalCutOff = FB.hostCutOff;
+      FB.activeMilitaryCommand = function () { return s.player.militaryCommand; };
+      FB.hostCutOff = function () { return true; };
+      FB.selectArmy(null);
+      const canvas = document.createElement('canvas');
+      canvas.width = 1000; canvas.height = 800;
+      const ctx = canvas.getContext('2d');
+      const originalFill = ctx.fillText;
+      const originalDraw = ctx.drawImage;
+      let badges = [];
+      const expected = document.createElement('canvas');
+      expected.width = 48; expected.height = 56;
+      ctx.drawImage = function (image, x, y) {
+        badges.push({ x:x, y:y, matches:image.toDataURL() === expected.toDataURL() });
+        return originalDraw.apply(this, arguments);
+      };
+      let labels = [];
+      ctx.fillText = function (text, x, y) {
+        labels.push({ text:text, x:x, y:y });
+        return originalFill.apply(this, arguments);
+      };
+      const results = [];
+      try {
+        for (const dpr of [1, 2]) {
+          for (const zoom of [0.8, 2, 5]) {
+            // Changing the dynasty must refresh the cached army heraldry.
+            s.chars[s.player.charId].dyn = 'Army crest ' + dpr + ' ' + zoom;
+            FB.drawCrest(expected, s.chars[s.player.charId].dyn);
+            labels = [];
+            badges = [];
+            FB.renderArmies(ctx, function () { return [400, 400]; }, zoom, dpr);
+            const warnings = labels.filter(function (label) { return label.text === '✂'; });
+            results.push({ badges:badges.length, warnings:warnings.length,
+              matchingCrests:badges.every(function (badge) { return badge.matches; }),
+              hasYouLabel:labels.some(function (label) { return label.text === FB.T('You'); }),
+              aboveWarnings:badges.every(function (badge) {
+                return warnings.every(function (warning) { return badge.y < warning.y - 12 * dpr; });
+              }), selected:FB.selectedArmy(s) });
+          }
+        }
+      } finally {
+        FB.activeMilitaryCommand = originalCommand;
+        FB.hostCutOff = originalCutOff;
+      }
+      return results;
+    });
+    expect(results).toHaveLength(6);
+    for (const result of results) {
+      expect(result).toEqual({ badges:3, warnings:4, aboveWarnings:true,
+        hasYouLabel:false, matchingCrests:true, selected:null });
+    }
+  });
+
 test('Map routes show controlled hosts and only the active-war enemy',
   async function ({ page }) {
     const result = await page.evaluate(function () {
@@ -753,6 +821,7 @@ test('Map routes show controlled hosts and only the active-war enemy',
         closePath: function () {},
         fill: function () {},
         fillText: function () {},
+        drawImage: function () {},
         strokeText: function () {},
         save: function () {},
         restore: function () {},

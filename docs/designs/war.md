@@ -1,5 +1,16 @@
 # Wars
 
+Player-controlled map hosts carry the player's heraldic crest
+above the banner, including detachments and a patron host under
+active military command. Friendly hosts retain their side color without this badge.
+Ownership remains visible at every zoom and without selection; the gold selection
+ring and the lower battle/encirclement warning row remain separate. The shield marks
+control, not the character's physical presence or personal leadership. It uses the
+same dynasty/name seed and crest renderer as the top bar, cached in a transient
+canvas and refreshed when that identity changes. The 24-by-28 screen-pixel shield
+scales for pixel density and remains independent of map zoom.
+This is a presentation change with no technology or simulation impact.
+
 ## Justice custody at campaign boundaries
 
 An identified campaign prisoner can be sentenced only by their actual captor.
@@ -864,6 +875,14 @@ future work; host-level supply lines are simulated separately (see above) and ne
 double the siege's own attrition.
 
 **The host can fight the war for you.** The ⚙ automation's host-command stances
+are labeled **You give orders**, **Auto: defend your lands**, and
+**Auto: attack war targets** under **Army control**. Each uses the shared
+hover/focus tooltip and compact question-mark disclosure to explain movement,
+recovery, objectives, and manual-order priority. The explanations distinguish
+ordinary-war defense from holy-war objectives (followed in either automatic mode),
+and clarify that battles, sieges, and forced retreats still occur with player orders.
+These are presentation changes; saved mode ids and gameplay eligibility are unchanged.
+The stances
 (`G.auto.hosts`) re-raise a destroyed host once the rearm window passes and steer an
 *idle* host each day (`playerGoal` in armies.js): defensive throws back any invader
 standing in the player's lands and otherwise refits at home; offensive hunts the

@@ -1389,6 +1389,9 @@ event when it returns false. The succession stories use
 `diplomacy_succession_valid` and a saved `rulerGeneration`, preventing an old embassy from
 affecting a later ruler. Custom trigger and option-require functions likewise receive
 `(state, ctx)`; existing one-argument functions remain compatible.
+Court overtures use `agency_overture_context_valid`, requiring Baron rank or above
+as well as the existing ruler-generation and relevance checks. Marriage and other
+agency events keep their own validators.
 Core plot discovery and every plot resolution event use
 `plot_event_context_valid`; their queued context carries `plotId`, and the event expires
 if the active plot or any target component has changed. For save compatibility, a legacy

@@ -4,7 +4,7 @@ FBDATA.events = FBDATA.events || [];
 
 FBDATA.events.push(
 { id:'ruler_overture', title:'A Letter Between Courts',
-  trigger:{ never:true }, contextValidator:'agency_ruler_context_valid',
+  trigger:{ never:true }, contextValidator:'agency_overture_context_valid',
   text:'A courier from {rulername} of {rname} brings compliments, small news, and a carefully worded invitation to warmer dealings. The letter is friendly; the purpose behind it is not hidden.',
   options:[
     { label:'Answer in the same spirit.',

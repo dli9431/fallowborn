@@ -1,5 +1,15 @@
 # Development & buildings
 
+The building ledger displays the standing count and how many additional copies
+can be raised under current conditions. Remaining copies are capped by county
+and demesne limits, not just the number of suitable settlement placements.
+County limits and the demesne-wide built/limit count stay visible on each card.
+The ledger explains one copy of each building per settlement and that ruins keep
+their place occupied. Unavailable cards and their Details give the actual blocker;
+the county picker calls its summed building/settlement combinations building options,
+not a promise of that many additional buildings. Counts exclude affordability,
+which remains separately visible through the price and disabled Raise button.
+
 Building list entries have no positional hotkeys or badges. Their controls
 remain reachable with Tab and activate with Enter or Space.
 
