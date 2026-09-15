@@ -533,7 +533,7 @@ test('promotion acknowledgement rejects transition input and held shortcuts', as
     let now = realNow();
     Date.now = function () { return now; };
     function key(type, repeat) {
-      document.dispatchEvent(new KeyboardEvent(type, { key:'1', code:'Digit1', repeat:!!repeat, bubbles:true }));
+      document.dispatchEvent(new KeyboardEvent(type, { key:'q', code:'KeyQ', repeat:!!repeat, bubbles:true }));
     }
     function visible() {
       const result = document.querySelector('[data-religious-office-result]');
@@ -545,7 +545,7 @@ test('promotion acknowledgement rejects transition input and held shortcuts', as
       // An activation key and pointer are already down when the result appears.
       const input = document.createElement('input');
       document.getElementById('gm-body').appendChild(input);
-      input.dispatchEvent(new KeyboardEvent('keydown', { key:'1', code:'Digit1', bubbles:true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key:'q', code:'KeyQ', bubbles:true }));
       document.dispatchEvent(new MouseEvent('mousedown', { bubbles:true }));
       document.getElementById('bishop-cardinal').click();
       const gold = FB.state.player.gold;

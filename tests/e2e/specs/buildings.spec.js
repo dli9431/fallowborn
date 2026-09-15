@@ -607,12 +607,13 @@ test.describe('building ledger keyboard and tooltip access', function () {
       await expect(page.getByRole('heading', { name:/Building Works/ }))
         .toBeVisible();
 
-      // the compact cards keep the modal's numbered keyboard hints on the raise button
+      // Building list entries remain keyboard accessible without positional shortcuts.
       const firstRaise = page.locator('#gm-body .settcard-raise').first();
-      await expect(firstRaise.locator('.keyhint')).toHaveText('1');
+      await expect(firstRaise.locator('.keyhint')).toHaveCount(0);
 
-      // mill is the first building in data order, so 1 raises it
-      await page.keyboard.press('1');
+      // Focus and native activation select the first building.
+      await firstRaise.focus();
+      await page.keyboard.press('Enter');
       await expect.poll(function () {
         return page.evaluate(function () {
           return FB.buildingCountIn(FB.state, FB.state.player.provinceId,

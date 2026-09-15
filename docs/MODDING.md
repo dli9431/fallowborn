@@ -10,11 +10,13 @@ Existing private abduction and its single-captive limit are unchanged.
 
 Read-only APIs are `FB.justiceRulerEligible(state, actorId)`,
 `FB.justiceCounties(state, actorId)`, `FB.justiceCustodyOf(state, targetId)`,
+`FB.justiceSupportCounties(state, actorId)` (direct holdings for county penalties),
 `FB.justiceOffenseFor(state, actorId, targetId, optionalOffenseId)`,
 `FB.justiceArrestProjection(state, actorId, targetId, optionalOffenseId)`, and
 `FB.justicePunishmentProjection(state, actorId, targetId, sentenceId, optionalOffenseId)`.
 Projections include `ready`, a machine-readable `blocker`, exact odds/amounts,
-affected county ids, justification/evidence, and applicable expiry/destination.
+`counties` (full jurisdiction), `supportCounties` (direct holdings receiving
+support changes), justification/evidence, and applicable expiry/destination.
 `FB.justiceSentenceOptions` returns the regional sentence projections.
 
 `FB.justiceAttemptArrest` and `FB.justiceApplyPunishment` accept the same actor,

@@ -49,8 +49,10 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   activate the first nine entries in that section (and `Shift+Q W E` / `A S D` / `Z X C` for
   items 10–18); section keys leave their section open unless repeat-key toggling is enabled in
   Settings · Network uses `1–6` and the same letter grid for management actions only ·
-  in events and dialogs, `1–9` choose an
-  item and `Shift+1–9` reaches items 10–18 (the number row and numpad both work) · `Space`/`E` play/pause the
+  digits select UI sections only; section actions and event choices use the same
+  letter grid (with Shift for actions 10-18). People, titles, and other list entries
+  have no hotkeys: use Tab and Enter/Space. Search and sort fields keep native keyboard
+  behavior. `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
   `V` opens autoresolve settings · `R` opens the map filter chooser (Realm / Mine / Liege /
   De jure duchies / De jure kingdoms / War) ·

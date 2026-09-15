@@ -3,10 +3,22 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html', 'js/justice.js', 'js/intrigue.js',
   'js/events.js', 'js/model.js', 'js/items.js', 'js/i18n.js', 'js/world.js', 'js/wars.js', 'js/actions.js',
   'js/travel.js', 'js/treasury.js', 'js/modifiers.js', 'js/save.js',
-  'js/ui_modals.js', 'js/ui_misc.js', 'data/intrigue.js', 'data/events_intrigue.js',
+  'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/keys.js', 'js/portrait.js', 'data/intrigue.js', 'data/events_intrigue.js',
   'data/technology.js', 'js/agency.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
+
+async function finishJusticeSentence(page) {
+  await expect(page.locator('#gm-title')).toHaveText('Review judgment');
+  await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
+  await page.locator('#justice-confirm').click();
+  await expect(page.locator('#gm-title')).toHaveText('Sentence carried out');
+  await expect(page.locator('[data-guarded-outcome]')).toContainText('sentence has been carried out');
+  await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
+  await page.locator('#justice-continue').click();
+  await expect(page.locator('#justice-search')).toBeVisible();
+  await expect(page.locator('.justice-roster-receipt, [data-guarded-outcome]')).toHaveCount(0);
+}
 
 test.beforeEach(async function ({ page }, testInfo) {
   const ids = await startWarSafety(page, testInfo);
@@ -22,6 +34,48 @@ test.beforeEach(async function ({ page }, testInfo) {
     target.homeProvinceId = ids.home; target.wealth = 500; target.traits = [];
     window.justiceFixture = Object.assign(ids, { target:target.id, actor:s.player.charId });
   }, ids);
+});
+
+test('judgment review is separate from execution and Back does not sentence', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.captureIntrigue(s, f.actor, f.target, 'abduction', 'player');
+    FB.ui.showJusticeCharacter(f.target);
+  });
+  await page.locator('[data-justice-sentence="execution"]').click();
+  await expect(page.locator('#gm-title')).toHaveText('Review judgment');
+  expect(await page.evaluate(function () { return !!FB.state.chars[window.justiceFixture.target].dead; })).toBe(false);
+  await page.locator('#justice-cancel').click();
+  await expect(page.locator('[data-justice-sentence="execution"]')).toBeFocused();
+  expect(await page.evaluate(function () { return !!FB.state.chars[window.justiceFixture.target].dead; })).toBe(false);
+  await page.locator('[data-justice-sentence="execution"]').click();
+  await finishJusticeSentence(page);
+  expect(await page.evaluate(function () { return !!FB.state.chars[window.justiceFixture.target].dead; })).toBe(true);
+});
+
+test('governance justice entry shares political action typography', async function ({ page }) {
+  await page.evaluate(function () { FB.ui.showGovernance('actions'); });
+  const entry = page.locator('#governance-justice');
+  await expect(entry).toBeVisible();
+  await expect(entry).toContainText('⚖️ Justice and prisoners');
+  await expect(entry.locator('b, strong')).toHaveCount(0);
+  const styles = await page.evaluate(function () {
+    const justice = document.getElementById('governance-justice');
+    const peer = document.querySelector('#governance-actions [data-governance-action]');
+    function typography(node) {
+      const style = getComputedStyle(node);
+      return [style.fontFamily, style.fontSize, style.fontWeight, style.color, style.lineHeight];
+    }
+    return {
+      label:typography(justice), peerLabel:typography(peer),
+      description:typography(justice.querySelector('.adesc')),
+      peerDescription:typography(peer.querySelector('.adesc'))
+    };
+  });
+  expect(styles.label).toEqual(styles.peerLabel);
+  expect(styles.description).toEqual(styles.peerDescription);
+  await entry.click();
+  await expect(page.locator('#justice-search')).toBeVisible();
 });
 
 test('evidence of a failed assassination permits arrest, never remote execution', async function ({ page }) {
@@ -318,21 +372,364 @@ test('exile moves the prisoner out of the realm and blocks voluntary return', as
   expect(result.where).toBe(result.destination);
 });
 
+test('justice card grid sorts current titles and names while retaining filtered rows', async function ({ page }) {
+  const ids = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    const low = s.chars[f.target];
+    low.name = 'Roster Alpha'; low.dyn = null; low.station = 1;
+    const high = FB.materializeRealmRuler(s, f.enemy);
+    high.name = 'Roster Bravo'; high.dyn = null; high.station = 1;
+    s.realms[f.enemy].rank = 3;
+    FB.captureIntrigue(s, f.actor, high.id, 'judicial', 'player');
+    const mid = FB.makeCharacter(s, { name:'Roster Zulu', sex:'m',
+      culture:'frankish', religion:'catholic', born:s.date.year - 30, station:3, traitsN:0 });
+    mid.dyn = null; mid.homeProvinceId = f.home;
+    FB.ui.showJustice();
+    return { low:low.id, mid:mid.id, high:high.id,
+      title:FB.renderTitleSnapshot(FB.realmRulerTitleSnapshot(s, s.realms[f.enemy], high)) };
+  });
+  await expect(page.locator('#justice-sort')).toHaveValue('highest');
+  await page.locator('#justice-search').fill('Roster ');
+  const rows = page.locator('#justice-list [data-justice-row]:visible');
+  async function order() {
+    return rows.evaluateAll(function (nodes) { return nodes.map(function (n) { return n.dataset.justiceRow; }); });
+  }
+  expect(await order()).toEqual([ids.high, ids.mid, ids.low]);
+  await expect(rows.locator('.justice-person canvas.pface')).toHaveCount(3);
+  await expect(page.locator('[data-justice-row="' + ids.high + '"] .justice-person-title')).toHaveText(ids.title);
+  await page.locator('#justice-sort').selectOption('lowest');
+  expect(await order()).toEqual([ids.high, ids.low, ids.mid]);
+  await page.locator('#justice-sort').selectOption('name');
+  expect(await order()).toEqual([ids.high, ids.mid, ids.low]);
+  await expect(page.locator('#justice-search')).toHaveValue('Roster ');
+  await page.locator('#justice-search').fill('No matching roster name');
+  await expect(rows).toHaveCount(0);
+  await expect(page.locator('#justice-empty')).toBeVisible();
+});
+
 test('justice navigation preserves search and keyboard return without applying a cancelled arrest', async function ({ page }) {
   await page.setViewportSize({ width:390, height:844 });
   await page.evaluate(function () { FB.ui.showJustice(); });
   await page.locator('#justice-search').fill('Justice Target');
+  await page.locator('#justice-sort').selectOption('lowest');
   await page.locator('[data-justice-character]:visible').click();
-  await page.locator('#justice-arrest').click();
-  await expect(page.locator('#justice-confirm')).toBeEnabled();
-  await page.locator('#justice-cancel').click();
-  await expect(page.locator('#justice-arrest')).toBeFocused();
+  await expect(page.locator('#justice-arrest')).toBeEnabled();
   await page.locator('#justice-character-back').click();
   await expect(page.locator('#justice-search')).toHaveValue('Justice Target');
+  await expect(page.locator('#justice-sort')).toHaveValue('lowest');
   await expect(page.locator('[data-justice-character]:visible')).toBeFocused();
   expect(await page.evaluate(function () {
     return FB.justiceCustodyOf(FB.state, window.justiceFixture.target);
   })).toBeNull();
+});
+
+test('justice roster has no positional shortcuts and remains keyboard accessible', async function ({ page }) {
+  await page.evaluate(function () { FB.ui.showJustice(); });
+  await page.locator('#justice-search').fill('Justice Target');
+  await expect(page.locator('#genmodal .keyhint')).toHaveCount(0);
+  const person = page.locator('[data-justice-character]:visible');
+  await person.focus();
+  for (const key of ['1', 'Shift+1', 'q', 'Shift+q', 'c', 'Shift+c']) {
+    await page.keyboard.press(key);
+    await expect(page.locator('#justice-search')).toBeVisible();
+  }
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#justice-arrest')).toBeVisible();
+});
+
+test('failed arrest shows a roster notice and toast without losing search or sort', async function ({ page }) {
+  await page.evaluate(function () {
+    window.failedArrestChance = FB.chance;
+    window.failedArrestToast = FB.ui.toast;
+    window.failedArrestMessages = [];
+    FB.chance = function () { return false; };
+    FB.ui.toast = function (message) {
+      window.failedArrestMessages.push(message);
+      return window.failedArrestToast.apply(this, arguments);
+    };
+    FB.ui.showJustice();
+  });
+  try {
+    await page.locator('#justice-search').fill('Justice Target');
+    await page.locator('#justice-sort').selectOption('lowest');
+    await page.locator('[data-justice-character]:visible').click();
+    await page.locator('#justice-arrest').click();
+    const notice = page.locator('.justice-arrest-notice');
+    await expect(notice).toBeVisible();
+    await expect(notice).toContainText('Justice Target');
+    await expect(notice).toContainText('remains free');
+    await expect(notice).toContainText('You can attempt another arrest on');
+    await expect(notice.locator('canvas.pface')).toBeVisible();
+    await expect(page.locator('#justice-search')).toHaveValue('Justice Target');
+    await expect(page.locator('#justice-sort')).toHaveValue('lowest');
+    expect(await page.evaluate(function () { return window.failedArrestMessages; }))
+      .toContain('The arrest failed. The character remains free.');
+    await page.locator('#justice-sort').selectOption('name');
+    await page.locator('#justice-search').fill('');
+    await expect(notice).toBeVisible();
+    await page.evaluate(function () { FB.ui.showJustice(); });
+    await expect(notice).toHaveCount(0);
+  } finally {
+    await page.evaluate(function () {
+      FB.chance = window.failedArrestChance;
+      FB.ui.toast = window.failedArrestToast;
+    });
+  }
+});
+
+test('arrest opens sentencing directly and imprisoned cards return to sentencing', async function ({ page }) {
+  const id = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.justiceRecordOffense(s, f.actor, f.target, 'sabotage', 'material', true, f.actor);
+    window.justiceFlowChance = FB.chance;
+    FB.chance = function () { return true; };
+    FB.ui.showJustice();
+    return f.target;
+  });
+  try {
+    await page.locator('#justice-search').fill('Justice Target');
+    await page.locator('[data-justice-character="' + id + '"]').click();
+    await expect(page.locator('#justice-arrest')).toHaveText('Attempt arrest');
+    await page.locator('#justice-arrest').click();
+    await expect(page.locator('.justice-custody-card')).toBeVisible();
+    await expect(page.locator('#justice-confirm, #justice-continue')).toHaveCount(0);
+    await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
+    await page.locator('[data-justice-sentence="imprisonment"]').click();
+    await finishJusticeSentence(page);
+    await expect(page.locator('#justice-search')).toHaveValue('Justice Target');
+    const imprisoned = page.locator('[data-justice-tier="9"]');
+    await expect(imprisoned.locator('h4')).toHaveText('Imprisoned');
+    await expect(imprisoned.locator('.justice-person-crime')).toContainText('Sabotage');
+    await expect(imprisoned.locator('.justice-person-release')).toContainText('Release due:');
+    await page.locator('#justice-sort').selectOption('lowest');
+    await expect(page.locator('.justice-roster-group:visible').first()).toHaveAttribute('data-justice-tier', '9');
+    await imprisoned.locator('[data-justice-character]').click();
+    await expect(page.locator('.justice-custody-card')).toBeVisible();
+    await expect(page.locator('#justice-arrest')).toHaveCount(0);
+    await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
+    await page.locator('[data-justice-sentence="release"]').click();
+    await finishJusticeSentence(page);
+    await expect(page.locator('#justice-search')).toBeVisible();
+    await expect(page.locator('[data-justice-tier="9"]')).toHaveCount(0);
+  } finally {
+    await page.evaluate(function () { FB.chance = window.justiceFlowChance; });
+  }
+});
+
+test('justified sentence previews and outcomes explain no support loss without an affected county ledger', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.justiceRecordOffense(s, f.actor, f.target, 'assassination', 'material', false, f.actor);
+    FB.captureIntrigue(s, f.actor, f.target, 'judicial', 'player');
+    FB.ui.showJusticeCharacter(f.target);
+  });
+  const choice = page.locator('.justice-sentence-choice').filter({ has:page.locator('[data-justice-sentence="execution"]') });
+  await expect(choice.locator('.settcard-details')).toContainText('No loss — justified action');
+  await choice.locator('[data-justice-sentence]').click();
+  await expect(page.locator('.justice-card-facts')).toContainText('No loss');
+  await finishJusticeSentence(page);
+  await expect(page.locator('#justice-search')).toBeVisible();
+  await expect(page.locator('#justice-confirm, #justice-continue')).toHaveCount(0);
+});
+
+test('custody groups sentence actions and distinguishes provisional detention from a sentence', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.justiceRecordOffense(s, f.actor, f.target, 'assassination', 'material', false, f.actor);
+    const row = FB.captureIntrigue(s, f.actor, f.target, 'judicial', 'player');
+    row.endTurn = s.turn + 90; row.sentenced = false;
+    FB.ui.showJusticeCharacter(f.target);
+  });
+  const custody = page.locator('.justice-custody-card');
+  await expect(custody).toContainText('Held by');
+  await expect(custody).toContainText('Provisional custody ends');
+  await expect(custody).toContainText('released when it ends unless sentenced');
+  await expect(custody).toContainText('Material proof');
+  await expect(custody.locator('[data-justice-sentence="release"]')).toHaveText('Release');
+  await expect(custody.getByRole('button', { name:'Review', exact:true })).toHaveCount(0);
+  await custody.locator('[data-justice-sentence="imprisonment"]').click();
+  await finishJusticeSentence(page);
+  await expect(page.locator('#justice-search')).toBeVisible();
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.ui.showJusticeCharacter(f.target);
+  });
+  await expect(custody).toContainText('Sentence ends');
+  await expect(custody).not.toContainText('No sentence has been imposed');
+});
+
+for (const justified of [true, false]) {
+  test('arrest card contains evidence and explains support ' + (justified ? 'exemption' : 'penalties'), async function ({ page }) {
+    await page.evaluate(function (justified) {
+      const s = FB.state, f = window.justiceFixture;
+      if (justified) FB.justiceRecordOffense(s, f.actor, f.target, 'sabotage', 'material', true, f.actor);
+      FB.ui.showJusticeCharacter(f.target);
+    }, justified);
+    const card = page.locator('.justice-card').filter({ has:page.locator('#justice-arrest') });
+    await expect(card.locator('.justice-card-facts')).toContainText(justified ? 'Material proof' : 'No proven offense');
+    await expect(page.locator('#gm-body > .justice-evidence')).toHaveCount(0);
+    if (justified) {
+      await expect(card).toContainText('No loss — justified arrest');
+      await expect(card).not.toContainText('0 per county');
+    } else {
+      await expect(card).toContainText('Popular support loss if caught');
+      await expect(card).toContainText('20 per directly governed county');
+      await expect(card).toContainText('Popular support loss if arrest fails');
+      await expect(card).toContainText('10 per directly governed county');
+    }
+    await expect(page.locator('#gm-body')).toContainText(justified ? 'No loss — justified arrest' : '20 per directly governed county');
+  });
+}
+
+test('justice groups noble house members by recorded realm rank without granting ruler titles', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    s.realms[f.enemy].rank = 2;
+    s.realms[f.liege].rank = 1;
+    const members = [];
+    [f.enemy, f.liege, null].forEach(function (rid, index) {
+      const c = FB.makeCharacter(s, { name:'House member ' + index, sex:'f',
+        born:s.date.year - 25, station:3, culture:'frankish', religion:'catholic', traitsN:0 });
+      c.homeProvinceId = f.home;
+      // A misleading display name must never grant rank to an unaffiliated noble.
+      c.dyn = 'of Duchy of Example';
+      if (rid) c.royalLine = { realmId:rid, memberId:'justice-house-' + index };
+      members.push(c.id);
+    });
+    FB.ui.showJustice();
+    return { ids:members, duchy:s.realms[f.enemy].name, county:s.realms[f.liege].name };
+  });
+  for (let i = 0; i < result.ids.length; i++) {
+    const card = page.locator('[data-justice-row="' + result.ids[i] + '"]');
+    expect(await card.evaluate(function (node) { return node.closest('[data-justice-tier]').dataset.justiceTier; }))
+      .toBe(['5', '4', '3'][i]);
+    await expect(card.locator('.justice-person-title')).toHaveText(
+      i === 0 ? 'House of ' + result.duchy : i === 1 ? 'House of ' + result.county : 'Noble');
+  }
+});
+
+test('justice tiers occupy separate rows and justified arrest excludes blocked or innocent targets', async function ({ page }) {
+  await page.setViewportSize({ width:1280, height:900 });
+  const ids = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    const result = {};
+    ['justified', 'innocent', 'held', 'cooldown', 'outside'].forEach(function (kind, index) {
+      const c = FB.makeCharacter(s, { name:'Filter ' + kind, sex:'m', culture:'frankish',
+        religion:'catholic', born:s.date.year - 30, station:index === 1 ? 3 : 1, traitsN:0 });
+      c.homeProvinceId = kind === 'outside' ? s.realms[f.enemy].capital : f.home;
+      result[kind] = c.id;
+      if (kind !== 'innocent') FB.justiceRecordOffense(s, f.actor, c.id, 'sabotage', 'material', true, f.actor);
+      if (kind === 'held') FB.captureIntrigue(s, f.actor, c.id, 'judicial', 'player');
+      if (kind === 'cooldown') s.justice.cooldowns[f.actor + ':' + c.id] = s.turn + 90;
+    });
+    FB.ui.showJustice();
+    return result;
+  });
+  await page.locator('#justice-search').fill('Filter ');
+  const groups = page.locator('.justice-roster-group:visible');
+  expect(await groups.locator('h4').allTextContents()).toEqual(['Imprisoned', 'Barons and other nobles', 'Freeholders']);
+  const separate = await groups.evaluateAll(function (nodes) {
+    return nodes[1].getBoundingClientRect().top >= nodes[0].getBoundingClientRect().bottom;
+  });
+  expect(separate).toBe(true);
+  const card = page.locator('[data-justice-character="' + ids.justified + '"]');
+  await card.hover();
+  await expect(page.locator('#tooltip')).toContainText('Filter justified');
+  await expect(page.locator('#tooltip')).toContainText('Material proof');
+  expect(await page.locator('#tooltip .charcard').evaluate(function (card) {
+    return card.previousElementSibling.textContent.indexOf('Material proof') >= 0;
+  })).toBe(true);
+  await page.locator('#justice-sort').selectOption('justified');
+  await expect(page.locator('[data-justice-row]:visible')).toHaveCount(1);
+  await expect(card).toBeVisible();
+  await expect(groups.locator('h4')).toHaveText('Freeholders');
+  await page.setViewportSize({ width:390, height:844 });
+  const details = page.locator('[data-justice-row="' + ids.justified + '"] > .settcard-info');
+  await details.click();
+  await expect(details).toHaveAttribute('aria-expanded', 'true');
+  await card.click();
+  await page.locator('#justice-character-back').click();
+  await expect(page.locator('#justice-sort')).toHaveValue('justified');
+  await expect(page.locator('#justice-search')).toHaveValue('Filter ');
+  await expect(details).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('justice roster uses compact portrait cards with standing and family relationship', async function ({ page }) {
+  await page.setViewportSize({ width:1280, height:900 });
+  const target = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture, me = s.chars[f.actor];
+    const child = s.chars[f.target];
+    child.fatherId = me.id;
+    me.childrenIds = (me.childrenIds || []).concat(child.id);
+    FB.touchFamily();
+    FB.ui.showJustice();
+    return child.id;
+  });
+  const card = page.locator('[data-justice-character="' + target + '"]');
+  await expect(card.locator('canvas.pface')).toBeVisible();
+  await expect(card.locator('.justice-person-title')).toBeVisible();
+  await expect(card.locator('.justice-person-name')).toHaveText(/Justice Target/);
+  await expect(card.locator('.justice-person-standing')).toContainText('Standing:');
+  await expect(card.locator('.justice-person-relation')).toHaveText('Your child');
+  await expect(card.locator('.justice-person-custody')).toHaveCount(0);
+  await expect(page.locator('#justice-list table, #justice-list .keyhint')).toHaveCount(0);
+  for (const layout of [{ width:1280, columns:4 }, { width:700, columns:2 }, { width:390, columns:1 }]) {
+    await page.setViewportSize({ width:layout.width, height:900 });
+    const geometry = await page.locator('.justice-roster-grid').first().evaluate(function (grid) {
+      return { columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+        overflow:grid.scrollWidth > grid.clientWidth + 1 };
+    });
+    expect(geometry).toEqual({ columns:layout.columns, overflow:false });
+  }
+  await card.click();
+  await expect(page.locator('#justice-arrest')).toBeVisible();
+});
+
+test('modal section and action shortcuts exclude unbounded list entries', async function ({ page }) {
+  await page.evaluate(function () {
+    window.shortcutClicks = [];
+    let html = '<button data-ui-section-hotkey id="shortcut-section">Section</button>' +
+      '<input id="shortcut-search" type="search"><select id="shortcut-sort"><option>Alpha</option><option>Zulu</option></select>';
+    for (let i = 0; i < 25; i++) html += '<button class="actionbtn" data-person="' + i + '">Person ' + i + '</button>';
+    for (let i = 0; i < 18; i++) html += '<button class="actionbtn" data-ui-action-hotkey data-command="' + i + '"' +
+      (i === 1 ? ' disabled' : '') + '>Action</button>';
+    html += '<div hidden><button data-ui-action-hotkey data-command="hidden">Hidden</button></div>';
+    FB.ui.openModal('Shortcut contract', html);
+    // A displayed action wins when the same letter opened the modal.
+    FB.ui._gmModalKey = 'q';
+    document.getElementById('gm-body').addEventListener('click', function (event) {
+      const button = event.target.closest('button');
+      if (button) window.shortcutClicks.push(button.id || button.dataset.command || 'person');
+    });
+  });
+  await expect(page.locator('[data-person] .keyhint')).toHaveCount(0);
+  await expect(page.locator('#shortcut-section .keyhint')).toHaveText('1');
+  await expect(page.locator('[data-command="0"] .keyhint')).toHaveText('Q');
+  await expect(page.locator('[data-command="9"] .keyhint')).toHaveText('⇧Q');
+  await expect(page.locator('[data-command="hidden"] .keyhint')).toHaveCount(0);
+  for (const key of ['1', 'Shift+1', 'q', 'w', 'Shift+q', 'Shift+c']) await page.keyboard.press(key);
+  expect(await page.evaluate(function () { return window.shortcutClicks; }))
+    .toEqual(['shortcut-section', '0', '9', '17']);
+  await page.locator('#shortcut-search').fill('qwe123');
+  await page.locator('#shortcut-sort').focus();
+  await page.keyboard.press('q');
+  await page.keyboard.press('1');
+  expect(await page.evaluate(function () { return window.shortcutClicks.length; })).toBe(4);
+  await page.locator('[data-person="24"]').focus();
+  await page.keyboard.press('Enter');
+  expect(await page.evaluate(function () { return window.shortcutClicks.slice(-1); })).toEqual(['person']);
+  await page.evaluate(function () {
+    FB.ui.openModal('No shortcuts', '<button data-ui-section-hotkey>Section</button>' +
+      '<button data-ui-action-hotkey>Action</button>', { noHotkeys:true });
+    window.disabledShortcutClicks = 0;
+    document.getElementById('gm-body').querySelectorAll('button').forEach(function (button) {
+      button.onclick = function () { window.disabledShortcutClicks++; };
+    });
+  });
+  await expect(page.locator('#genmodal .keyhint')).toHaveCount(0);
+  await page.keyboard.press('1');
+  await page.keyboard.press('q');
+  expect(await page.evaluate(function () { return window.disabledShortcutClicks; })).toBe(0);
 });
 
 test('justice sentence choices condense terms into disclosures and show them before confirmation', async function ({ page }) {
@@ -347,22 +744,12 @@ test('justice sentence choices condense terms into disclosures and show them bef
   await expect(details).toBeHidden();
   await expect(sentence.locator('.justice-card-facts')).toBeEmpty();
   await expect(sentence.locator('.kv').filter({ hasText:'Consequence' })).toContainText('Death');
-  await expect(sentence.locator('.kv').filter({ hasText:'Support per county' })).toContainText('-60');
+  await expect(sentence.locator('.kv').filter({ hasText:'Popular support loss' })).toContainText('60 per directly governed county');
   await sentence.locator('.settcard-info').click();
   await expect(details).toBeVisible();
   await sentence.locator('[data-justice-sentence]').click();
-  await expect(page.locator('#justice-confirm')).toHaveText('Execution');
-  await expect(page.locator('.justice-card-facts > .kv').filter({ hasText:'Consequence' })).toContainText('Death');
-  await expect(page.locator('#gm-title-details')).toBeHidden();
-  await page.locator('#justice-cancel').click();
-  await expect(sentence.locator('[data-justice-sentence]')).toBeFocused();
-  await expect(details).toBeVisible();
-  expect(await page.locator('#gm-body').evaluate(function (body) {
-    return body.scrollWidth <= body.clientWidth + 1;
-  })).toBe(true);
-  expect(await page.evaluate(function () {
-    return !!FB.state.chars[window.justiceFixture.target].dead;
-  })).toBe(false);
+  await finishJusticeSentence(page);
+  await expect(page.locator('#justice-search')).toBeVisible();
 });
 
 for (const width of [390, 1280]) {
@@ -529,24 +916,18 @@ test('judicial escape invalidates a pending sentence and ambiguous prison flags 
   expect(result).toEqual({ ambiguous:null, escaped:true, valid:false, alive:true });
 });
 
-for (const exit of ['continue', 'back']) {
-  test('execution outcome returns to the justice list via ' + exit, async function ({ page }) {
-    await page.evaluate(function () {
-      const s = FB.state, f = window.justiceFixture;
-      FB.captureIntrigue(s, f.actor, f.target, 'abduction', 'player');
-      FB.ui.showJusticeCharacter(f.target);
-    });
-    await page.locator('[data-justice-sentence="execution"]').click();
-    await page.locator('#justice-confirm').click();
-    await expect(page.locator('#gm-title')).toHaveText('Judgment recorded');
-    await expect(page.locator('.justice-card-actions #justice-continue')).toBeVisible();
-    await page.waitForFunction(function () { return !FB.ui.genericOutcomeGuarded(); });
-    await page.locator(exit === 'continue' ? '#justice-continue' : '#genmodal [data-modal-nav="back"]').click();
-    await expect(page.locator('#justice-search')).toBeVisible();
-    await expect(page.locator('#justice-arrest')).toHaveCount(0);
-    expect(await page.evaluate(function () { return !!FB.state.chars[window.justiceFixture.target].dead; })).toBe(true);
+test('execution result returns to the roster without reopening the dead character', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    FB.captureIntrigue(s, f.actor, f.target, 'abduction', 'player');
+    FB.ui.showJusticeCharacter(f.target);
   });
-}
+  await page.locator('[data-justice-sentence="execution"]').click();
+  await finishJusticeSentence(page);
+  await expect(page.locator('#justice-search')).toBeVisible();
+  await expect(page.locator('#justice-confirm, #justice-continue, #justice-arrest')).toHaveCount(0);
+  expect(await page.evaluate(function () { return !!FB.state.chars[window.justiceFixture.target].dead; })).toBe(true);
+});
 
 test('justice trait inspection retains the original sheet and controls on Back', async function ({ page }) {
   await page.evaluate(function () {
@@ -561,8 +942,7 @@ test('justice trait inspection retains the original sheet and controls on Back',
   await page.locator('#genmodal [data-modal-nav="back"]').click();
   await expect(chip).toHaveAttribute('data-return-witness', 'justice');
   await expect(chip).toBeFocused();
-  await page.locator('#justice-arrest').click();
-  await expect(page.locator('#justice-confirm')).toBeEnabled();
+  await expect(page.locator('#justice-arrest')).toBeEnabled();
 });
 
 test('arrest outcome sums both charges per county', async function ({ page }) {
@@ -574,10 +954,11 @@ test('arrest outcome sums both charges per county', async function ({ page }) {
   });
   try {
     await page.locator('#justice-arrest').click();
-    await page.locator('#justice-confirm').click();
-    const facts = page.locator('.justice-card-facts');
-    await expect(facts.locator('.kv').filter({ hasText:'Support per county' })).toContainText('-20');
-    await expect(facts.locator('.kv').filter({ hasText:'Counties affected' })).toContainText('2');
+    await expect(page.locator('.justice-roster-receipt')).toHaveCount(0);
+    const changes = await page.evaluate(function () {
+      return FB.state.justice ? FB.justiceCustodyOf(FB.state, window.justiceFixture.target).unjustPaid : 0;
+    });
+    expect(changes).toBe(20);
   } finally {
     await page.evaluate(function () { FB.chance = window.justiceOriginalChance; });
   }
@@ -586,6 +967,11 @@ test('arrest outcome sums both charges per county', async function ({ page }) {
 test('unjust sentences reduce all subordinate and liege standing with proportional, clamped penalties', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, f = window.justiceFixture;
+    // The selected sovereigns already have generated vassals. Isolate this
+    // fixture's direct vassal, indirect vassal and liege before asserting three.
+    Object.keys(s.realms).forEach(function (id) {
+      if (['player', f.enemy, f.other].indexOf(s.realms[id].liege) >= 0) s.realms[id].liege = null;
+    });
     s.realms[f.enemy].liege = 'player';
     s.realms[f.other].liege = f.enemy;
     FB.changePlayerLiege(s, f.liege, 'test:justice');
@@ -630,4 +1016,62 @@ test('unjust arrest standing is charged once when imprisonment follows', async f
     return { captured:captured, imprisoned:FB.rulerRegard(s, f.enemy, 'player') };
   });
   expect(result).toEqual({ captured:-10, imprisoned:-10 });
+});
+
+for (const playerRuler of [true, false]) {
+  test('justice support stays with direct holdings for ' + (playerRuler ? 'player' : 'AI') + ' rulers', async function ({ page }) {
+    const result = await page.evaluate(function (playerRuler) {
+      const s = FB.state, f = window.justiceFixture;
+      const rid = playerRuler ? 'player' : f.enemy;
+      const actor = playerRuler ? f.actor : FB.materializeRealmRuler(s, rid).id;
+      const direct = playerRuler ? f.home : s.realms[rid].capital;
+      const delegated = f.second, vassal = f.other;
+      s.realms[vassal].liege = rid; s.realms[vassal].favor = 0;
+      s.holder[delegated] = vassal; s.owner[delegated] = rid;
+      s.player.provs = s.player.provs.filter(function (pid) { return pid !== delegated; });
+      s.chars[f.target].homeProvinceId = delegated;
+      FB.invalidateRealmCache();
+      FB.setCountySupport(s, direct, 0); FB.setCountySupport(s, delegated, 17);
+      if (playerRuler) FB.setRealmRulerStanding(s, vassal, 0);
+      const preview = FB.justiceArrestProjection(s, actor, f.target);
+      const chance = FB.chance;
+      let arrest;
+      try { FB.chance = function () { return true; }; arrest = FB.justiceAttemptArrest(s, actor, f.target); }
+      finally { FB.chance = chance; }
+      const prison = FB.justiceApplyPunishment(s, actor, f.target, 'imprisonment');
+      const sentence = FB.justicePunishmentProjection(s, actor, f.target, 'execution');
+      const execution = FB.justiceApplyPunishment(s, actor, f.target, 'execution');
+      const impacts = arrest.impacts.concat(prison.impacts, execution.impacts);
+      return { jurisdiction:preview.counties.indexOf(delegated) >= 0,
+        arrestAllowed:preview.ready, arrested:arrest.captured,
+        previewExcludesVassal:preview.supportCounties.indexOf(delegated) < 0,
+        sentenceExcludesVassal:sentence.supportCounties.indexOf(delegated) < 0,
+        direct:FB.countySupportBase(s, direct), delegated:FB.countySupportBase(s, delegated),
+        standing:FB.rulerRegard(s, vassal, rid),
+        chargedVassal:impacts.some(function (r) { return r.type === 'commonVoice' && r.pid === delegated; }) };
+    }, playerRuler);
+    expect(result).toEqual({ jurisdiction:true, arrestAllowed:true, arrested:true,
+      previewExcludesVassal:true, sentenceExcludesVassal:true, direct:-80, delegated:17,
+      standing:-40, chargedVassal:false });
+  });
+}
+
+test('justice review lists only directly governed counties while retaining affected vassals', async function ({ page }) {
+  const names = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    s.realms[f.enemy].liege = 'player'; s.holder[f.second] = f.enemy;
+    s.player.provs = [f.home]; FB.invalidateRealmCache();
+    FB.ui.showJusticeCharacter(f.target);
+    return { direct:FB.world.byId[f.home].name, delegated:FB.world.byId[f.second].name,
+      vassal:s.realms[f.enemy].name };
+  });
+  await page.locator('.justice-card').filter({ has:page.locator('#justice-arrest') }).locator('.settcard-info').click();
+  const counties = page.locator('#gm-body details').filter({ hasText:'Affected counties' });
+  await counties.locator('summary').click();
+  await expect(counties.locator('li')).toHaveCount(1);
+  await expect(counties).toContainText(names.direct);
+  await expect(counties).not.toContainText(names.delegated + ':');
+  const rulers = page.locator('#gm-body details').filter({ hasText:'Affected rulers' });
+  await rulers.locator('summary').click();
+  await expect(rulers).toContainText(names.vassal);
 });

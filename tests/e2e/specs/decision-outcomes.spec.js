@@ -51,6 +51,24 @@ async function fever(page, success) {
   }, success);
 }
 
+test('event choices use letter shortcuts and ignore list number shortcuts', async function ({ page }, testInfo) {
+  await start(page, testInfo);
+  await fever(page, true);
+  await ready(page);
+  const first = page.locator('#ev-options .evopt').first();
+  await expect(first.locator('.keyhint')).toHaveText('Q');
+  await first.focus();
+  await page.keyboard.press('1');
+  await page.keyboard.press('Shift+1');
+  await expect(page.locator('#outcome-continue')).toHaveCount(0);
+  await page.keyboard.press('q');
+  await expect(page.locator('#outcome-continue')).toBeVisible();
+  await ready(page);
+  await expect(page.locator('#outcome-continue .keyhint')).toHaveText('Q');
+  await page.keyboard.press('q');
+  await expect(page.locator('#eventmodal')).toBeHidden();
+});
+
 test('event footer protects the decision and closes a settled outcome without repeating it',
   async function ({ page }, testInfo) {
     await start(page, testInfo);

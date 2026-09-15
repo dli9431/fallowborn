@@ -4,7 +4,7 @@
    province at screen center · in Deeds and Network, digits select a section and
    QWE / ASD / ZXC activate its first nine items (Shift+QWE / ASD / ZXC for
    items 10-18) ·
-   dialogs use 1-9 and Shift+1-9 · Space or E play/pause · F skip to the next
+   digits select UI sections; dialog actions use the same letter grid · Space or E play/pause · F skip to the next
    happening · V autoresolve settings · T/G/B/Y/N/U open Self/Kin/Deeds/Land/
    Network/Chronicle panels · configurable unused letters fire semantic action
    bindings · [ ] cycle panels · Esc menu / back / close dialog. */
@@ -165,18 +165,18 @@ window.FB = window.FB || {};
     const keyId = e.code || k;
     if (heldEventKeys[keyId] === undefined) heldEventKeys[keyId] = FB.ui.eventInputEpoch || 0;
     /* 1-9 hotkeys by PHYSICAL key (number row or numpad, any layout, any
-       NumLock state); dialogs and pickers use Shift for items 10-18. */
+       NumLock state); reserved for UI sections, never list entries. */
     let digit = 0;
     if (e.code && e.code.length === 6 && e.code.indexOf('Digit') === 0) digit = +e.code.charAt(5) || 0;
     else if (e.code && e.code.length === 7 && e.code.indexOf('Numpad') === 0) digit = +e.code.charAt(6) || 0;
     if (!digit && k >= '1' && k <= '9') digit = +k;
-    const slot = digit ? digit - 1 + (e.shiftKey ? 9 : 0) : -1;
-    if ((eventOpen() || guardedOutcomeOpen()) && (digit || k === 'Enter' || k === ' ')) {
-      if (e.repeat || heldEventKeys[keyId] !== (FB.ui.eventInputEpoch || 0) || (FB.ui.eventInputGuarded && FB.ui.eventInputGuarded())) {
-        e.preventDefault(); return;
+    const actionKey = 'qweasdzxc'.indexOf(String(k).toLowerCase());
+    const slot = actionKey < 0 ? -1 : actionKey + (e.shiftKey ? 9 : 0);
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) {
+      if (k === 'Tab' && (genOpen() || eventOpen())) {
+        if (genOpen()) containModalTab(e); else containEventTab(e);
+        return;
       }
-    }
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
       if (k === 'Enter' && t.id === 'cg-name') { e.preventDefault(); $('btn-cg-start').click(); }
       if (k === 'Enter' && t.id === 'ev-name') { e.preventDefault(); clickNth('#ev-options .evopt', 0); return; }
       if (k === 'Escape' && genOpen()) {
@@ -185,19 +185,16 @@ window.FB = window.FB || {};
         else FB.ui.closeModal();
         return;
       }
-      /* Checkboxes and radios take no typed text, so a focused one (a
-         dialog's first control can be a protection checkbox) swallows
-         ordinary letters. The key that opened its current modal remains a
-         structural close command, rather than checkbox input. */
+      /* Text fields and native selects own typing; checkboxes and radios
+         still allow the modal's section and action shortcuts. */
       const checkable = t.tagName === 'INPUT' &&
         (t.type === 'checkbox' || t.type === 'radio');
-      if (checkable && genOpen() && FB.ui && FB.ui.modalHotkeyClose &&
-          FB.ui.modalHotkeyClose(k, e.shiftKey)) {
-        e.preventDefault();
-        FB.ui.closeModal();
-        return;
+      if (!checkable) return;
+    }
+    if ((eventOpen() || guardedOutcomeOpen()) && (slot >= 0 || k === 'Enter' || k === ' ')) {
+      if (e.repeat || heldEventKeys[keyId] !== (FB.ui.eventInputEpoch || 0) || (FB.ui.eventInputGuarded && FB.ui.eventInputGuarded())) {
+        e.preventDefault(); return;
       }
-      if (!checkable || !digit) return;
     }
     const onButton = t && t.tagName === 'BUTTON';
 
@@ -205,7 +202,7 @@ window.FB = window.FB || {};
     if (eventOpen()) {
       if (k === 'Escape' && FB.ui.cancelEventConfirmation && FB.ui.cancelEventConfirmation()) e.preventDefault();
       else if (k === 'Tab') containEventTab(e);
-      else if (digit) { e.preventDefault(); clickNth('#ev-options .evopt', slot); }
+      else if (slot >= 0) { e.preventDefault(); clickNth('#ev-options .evopt', slot); }
       return; // Enter/Space act natively on the focused control
     }
 
@@ -221,16 +218,14 @@ window.FB = window.FB || {};
         containModalTab(e);
         return;
       }
+      if (digit && !e.shiftKey) {
+        if (FB.ui.runModalShortcut('section', digit - 1, !e.repeat)) { e.preventDefault(); return; }
+      } else if (slot >= 0) {
+        if (FB.ui.runModalShortcut('action', slot, !e.repeat)) { e.preventDefault(); return; }
+      }
       if (FB.ui && FB.ui.modalHotkeyClose && FB.ui.modalHotkeyClose(k, e.shiftKey)) {
         e.preventDefault();
         FB.ui.closeModal();
-        return;
-      }
-      if (digit) {
-        if (!FB.ui._gmNoHotkeys) {
-          e.preventDefault();
-          clickNth('#gm-body .actionbtn, #gm-body .settcard-raise', slot);
-        }
       }
       return;
     }
@@ -248,11 +243,6 @@ window.FB = window.FB || {};
       if (k === 'Escape') {
         e.preventDefault();
         FB.ui.cancelTravelPicker();
-        return;
-      }
-      if (digit) {
-        e.preventDefault();
-        clickNth('#travel-destination-list .travel-destination', slot);
         return;
       }
       if (k === ' ' || k === 'e' || k === 'E' || k === 'f' || k === 'F') {
@@ -288,14 +278,14 @@ window.FB = window.FB || {};
     if (FB.game && FB.game.pickMode && k === 'Escape') { $('btn-pick-back').click(); return; }
 
     /* Deeds uses stable number keys for its sections, then a compact letter
-       grid for the active section. Dialogs above retain positional digits. */
+       grid for actions in the active section. List entries have no shortcuts. */
     const deedsActive = FB.state && $('tab-actions').classList.contains('active');
     if (!travelOpen() && !raidOpen() && !warOpen() &&
         !(FB.game && FB.game.pickMode) && deedsActive) {
       if (digit) {
         e.preventDefault();
         if (!e.repeat && FB.ui && FB.ui.activateDeedSection) {
-          FB.ui.activateDeedSection(digit - 1);
+          if (!e.shiftKey) FB.ui.activateDeedSection(digit - 1);
         }
         return;
       }
@@ -315,7 +305,7 @@ window.FB = window.FB || {};
       if (digit) {
         e.preventDefault();
         if (!e.repeat && FB.ui && FB.ui.activateNetworkSection) {
-          FB.ui.activateNetworkSection(digit - 1);
+          if (!e.shiftKey) FB.ui.activateNetworkSection(digit - 1);
         }
         return;
       }
@@ -327,7 +317,7 @@ window.FB = window.FB || {};
     }
 
     /* User bindings are semantic deed/focus targets. Digits never enter this
-       path, so positional modal navigation keeps its independent meaning. */
+       path; modal section/action navigation has already consumed its keys. */
     if (!travelOpen() && !raidOpen() && !warOpen() &&
         !(FB.game && FB.game.pickMode) &&
         !e.shiftKey && !e.repeat && FB.ui && FB.ui.runActionShortcut &&

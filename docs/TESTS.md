@@ -290,7 +290,7 @@ The initial suite covers:
 - representative council copy, move buttons, consequence previews, personal award choices,
   and the named-beneficiary installation journey;
 - a relevant serialization and restore contract after every representative council outcome;
-- council focus entry and return, modal Tab containment, Enter and numbered activation,
+- council focus entry and return, modal Tab containment, Enter and section/action shortcut activation,
   principal panel shortcuts, and desktop/mobile-width structure;
 - gendered novice copy and recorded patronyms, formal and informal dowry settlement,
   ordinary and royal stepfamilies, succession cleanup, career resumption, renewable Guild

@@ -99,7 +99,7 @@ test('the council is keyboard-operable at desktop and mobile widths',
         return FB.state.greatHolyWar.settlement.case.step;
       });
     }).toBe(1);
-    await page.keyboard.press('Digit1');
+    await page.keyboard.press('q');
     await expect.poll(function () {
       return page.evaluate(function () {
         return FB.state.greatHolyWar.settlement.case.step > 1;

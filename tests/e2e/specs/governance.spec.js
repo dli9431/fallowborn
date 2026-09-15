@@ -2167,7 +2167,7 @@ test('Governance tabs show one compact desktop surface at a time',
     await expect(page.locator('#governance-obligations')).toBeVisible();
   });
 
-test('narrow Governance keeps focus, numbered actions, geometry, and browser Back',
+test('narrow Governance keeps focus, section and action shortcuts, geometry, and browser Back',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:740 });
     await startGovernanceGame(page, testInfo);

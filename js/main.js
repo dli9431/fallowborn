@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.180.1';
+FB.VERSION = '1.180.2';
 FB.CHANGELOG = [
+  { v: '1.180.2', date: '2026-09-15', changes: [
+    'Justice groups prisoners and noble households, adds clearer arrest notices, and separates judgment review from sentencing results. Number keys select sections, while action shortcuts use letters and character lists have no hotkeys.'
+  ] },
   { v: '1.180.1', date: '2026-09-14', changes: [
     'Justice uses compact sentence cards, clearer confirmations and outcomes, and reliable Back navigation. Unjust punishment lowers vassal and liege standing, and grandchildren can be renamed from their character sheets.'
   ] },

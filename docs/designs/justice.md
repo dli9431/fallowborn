@@ -1,11 +1,92 @@
 # Ruler justice
 
+Sentencing has a dedicated Sentence carried out modal with the prisoner's portrait,
+actual effects, and expandable receipts. Continue or Back returns to the roster.
+The roster and custody screens never embed result receipts. Successful arrests
+still open sentencing directly; failed arrests return to the roster with a toast
+and a notice naming and picturing the target and giving the retry date. The
+notice stays with that roster view across search, sort, and review returns, and
+clears on the next justice action or a fresh roster opening. Failure scrolls to
+the top so the notice is visible.
+
+Justice navigation is roster to arrest review, then sentencing after capture.
+Selecting a sentence opens Review judgment with visible consequences and costs.
+Only its named action applies the sentence and opens Sentence carried out.
+Back from review returns to sentencing without mutation; Continue or Back from
+Sentence carried out returns to the roster. Arrests retain their direct flow.
+The Imprisoned group stays first in either rank direction and shows portrait,
+name, title, recorded offense, and release date (or no date set). Closed offenses
+may describe a prisoner's history; they never establish a new sentencing cause.
+Search/sort and return position persist. Navigation is reset on settlement so
+Back cannot reopen a completed action or an executed character.
+
+All sentence previews and disclosures label Popular support loss explicitly.
+Zero-cost justified actions say No loss — justified action; previously credited
+penalties say No additional loss. Zero-change county ledgers are omitted.
+Outcome receipts label actual changes as Popular support change per county,
+or explicitly state no loss. These are changes, never approval levels or gains.
+
+Custody details and all sentence buttons share one card beneath the prisoner.
+Buttons use sentence names and open Review judgment; judgment, support, consequences,
+money, and deadlines live in the hover/focus tooltip and touch Details disclosure.
+Only blockers remain beneath buttons. Review judgment exposes all immediate terms
+before its action commits the sentence. Details retain hover/focus and touch disclosures.
+Unsentenced judicial detention is labeled Provisional custody ends, with an
+explicit explanation that release follows after 90 days unless sentenced.
+Imposed prison terms instead show Sentence ends. Evidence does not itself impose
+a sentence or extend provisional detention.
+
+The character's Arrest card contains offense/evidence above arrest odds and costs.
+Justified arrests show Popular support: No loss — justified arrest. Unjust arrests
+label the loss explicitly: 20 per directly governed county if caught, 10 if the
+attempt fails. These are penalties, not current support levels; mechanics are unchanged.
+
+The Governance entry uses the same normal-weight action label and shared
+description styling as the other Political actions buttons, with a scales-of-justice icon.
+
+The Justice roster uses compact character cards in a four-column desktop grid,
+reducing to three, two, or one column on narrower screens. Each whole-card button
+places the portrait beside current title, name, standing with the player, and
+family relationship when applicable. Custody appears only for held characters.
+Cards use content-sized heights, eight-pixel padding and gaps, and no repeated
+Review label. The roster sheet widens to accommodate four readable columns.
+Each tier has a labeled divider and its own grid, beginning on a new row.
+Family and royalty share the first group by default, followed by dukes, counts,
+barons, gentry, freeholders, and serfs. Lowest-title order reverses the groups;
+A–Z orders names within each group. Empty groups disappear when filtered.
+Hover/focus reveals the shared character card and offense evidence; a separate
+touch Details button provides the same information. Expanded details survive review returns.
+Justified arrest is a filtered sort option showing only projections with both
+`ready` and `justified`: proven cause alone does not bypass custody, jurisdiction,
+location, or cooldown blockers. It combines with search and retains highest-rank order.
+Search remains separate from the sort selector: highest title first (default),
+lowest title first, or A–Z, with name and identity breaking rank ties. Current
+realm rank supplies ruling titles; other members use their character station.
+Members of a living noble house use its recorded `royalLine.realmId` rank for
+grouping and show House of the realm, rather than claiming its ruler's title.
+Generic station-3 nobles without a recorded house remain with Barons and other
+nobles. Display names never determine rank. Roster tooltips put offense/evidence
+above the character card.
+Sorting reorders existing rows and preserves search and focus. Review return
+paths also retain the selected order and scroll position.
+Roster entries never receive number or letter hotkeys; use Tab and Enter/Space
+to review a person. The Governance entry remains a section action with a letter shortcut.
+
 Territorial barons and higher rulers can arrest local characters and sentence
 prisoners. Player and AI use `js/justice.js`; evidence never substitutes for
 physical custody. Named battle prisoners and private abductees can be sentenced
 only by their actual captor. Anonymous raid captives are not character prisoners.
 
 ## Authority, evidence, and capture
+
+County support penalties apply only to the punishing ruler's directly held
+counties (`justiceSupportCounties`), never to vassal-held counties. Barons retain
+their local seat scope. Arrest jurisdiction, title authority and exile boundaries
+still use the full territorial `justiceCounties` scope. Political standing losses
+continue to reach subordinate rulers and the direct liege. This prevents a
+vassal's local concession pressure from rising because of the liege's injustice.
+Existing county support is not reset: older losses cannot be reliably separated
+from unrelated local causes. This is a scope fix with no new technology gate.
 
 Unjust punishment also lowers every subordinate ruler's and the direct liege's
 standing toward the punishing ruler, including indirect vassals. The penalty is
@@ -20,7 +101,7 @@ This is a consequence/balance expansion, with no new technology eligibility.
 
 Justice list and character-sheet return paths restore focus and scroll after
 the modal's deferred autofocus, only while the intended sheet is still present.
-Cancelling a review returns focus to the action that opened it.
+Back from review restores the originating roster position without applying an action.
 County support previews round displayed before/after values to whole numbers;
 the simulation retains its underlying precision.
 Justice uses compact status cards and standard bottom sheets. Legal explanations
@@ -32,12 +113,11 @@ Each decision card has a quiet border, parchment surface, 12px padding and a gol
 heading. Desktop facts use aligned label/value columns; narrow screens stack
 labels above values. A separated action row right-aligns desktop buttons and
 uses full-width buttons on narrow screens, with at least 44px touch targets.
-Sentence selection is condensed to a name, Review button and blocker; detailed
-judgment, support and consequences remain accessible in hover/focus and touch
-disclosures. Every punishment confirmation exposes the full immediate terms.
-Confirmation and result buttons live inside their cards. Trait/ailment Back
-restores the original Justice sheet. Execution outcomes return to the Justice
-list instead of reopening a dead prisoner's sheet. Outcome totals combine both
+Sentence buttons keep only blockers visible underneath. Judgment, support costs,
+consequences, money, deadlines, background rules, and county ledgers appear in
+hover/focus tooltips and touch Details disclosures.
+Actions live inside their terms cards; results appear in a separate sentencing result modal. Trait/ailment Back
+restores the original Justice sheet. Execution results return to the Justice list through Continue or Back. Outcome totals combine both
 arrest charges for each county before formatting the summary and ledger.
 
 Open arrest requires the target to be physically inside the ruler's territory.

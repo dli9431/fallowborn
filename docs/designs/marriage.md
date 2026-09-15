@@ -1,8 +1,9 @@
 # Marriage & child matches
 
-The Seek a match choice sheet uses the standard modal number shortcuts: `1` seeks
-local prospects and `2` opens the dynastic marriage finder. Desktop buttons display
-their number badges; Back retains the ordinary modal-history behavior.
+The Seek a match choice sheet uses the standard action shortcuts: `Q` seeks
+local prospects and `W` opens the dynastic marriage finder. Desktop buttons display
+their letter badges; candidate lists never receive shortcuts. Back retains the
+ordinary modal-history behavior.
 
 Marriage terms appear only when both partners can choose maternal lineage. Otherwise
 the proposal proceeds with paternal lineage, or preserves an already accepted contract.

@@ -1,5 +1,8 @@
 # Development & buildings
 
+Building list entries have no positional hotkeys or badges. Their controls
+remain reachable with Tab and activate with Enter or Space.
+
 ## Settlements and development
 
 Starting development is an ordinal measure of a whole county's productive,

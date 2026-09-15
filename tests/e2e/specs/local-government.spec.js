@@ -665,7 +665,7 @@ test('local government choices use neutral focus and sticky modal footers',
     expect(await page.locator('#gm-body button').evaluateAll(function (buttons) {
       return buttons.every(function (button) { return button.type === 'button'; });
     })).toBe(true);
-    await expect(councilChoices.first().locator('.keyhint')).toHaveText('1');
+    await expect(councilChoices.first().locator('.keyhint')).toHaveText('Q');
     await expect(page.locator(
       '#gm-body > .gm-footer > #local-motion-cancel')).toBeVisible();
     await page.locator('#local-motion-cancel').click();
@@ -694,7 +694,7 @@ test('local government choices use neutral focus and sticky modal footers',
     expect(await page.locator('#gm-body button').evaluateAll(function (buttons) {
       return buttons.every(function (button) { return button.type === 'button'; });
     })).toBe(true);
-    await expect(castellanChoices.first().locator('.keyhint')).toHaveText('1');
+    await expect(castellanChoices.first().locator('.keyhint')).toHaveText('Q');
     await expect(page.locator(
       '#gm-body > .gm-footer > #castellan-cancel')).toBeVisible();
   });

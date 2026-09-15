@@ -1021,23 +1021,7 @@ window.FB = window.FB || {};
   }
 
   function refreshLargeListKeyhints(root) {
-    if (FB.isTouch || !root || !$('genmodal').contains(root)) return;
-    const buttons = $('gm-body').querySelectorAll('.actionbtn');
-    for (let i = 0; i < buttons.length; i++) {
-      const children = buttons[i].children;
-      for (let j = children.length - 1; j >= 0; j--) {
-        if (children[j].classList.contains('keyhint')) {
-          buttons[i].removeChild(children[j]);
-        }
-      }
-    }
-    if (UI._gmNoHotkeys) return;
-    let visibleIndex = 0;
-    for (let i = 0; i < buttons.length; i++) {
-      if (!visibleLargeListAction(buttons[i])) continue;
-      buttons[i].insertAdjacentHTML('afterbegin', hintFor(visibleIndex));
-      visibleIndex++;
-    }
+    if (root && $('genmodal').contains(root)) refreshModalShortcuts();
   }
 
   function applyLargeListView(root) {
@@ -3221,13 +3205,47 @@ window.FB = window.FB || {};
   }
 
 
-  /* hotkey badge for the Nth list item: 1-9, then ⇧1-⇧9 */
+  /* Section actions use the same letter grid as Deeds and Network. */
+  const MODAL_ACTION_KEYS = 'qweasdzxc';
   function hintFor(n) {
-    if (FB.isTouch) return '';
-    if (n < 9) return '<span class="keyhint">' + (n + 1) + '</span>';
-    if (n < 18) return '<span class="keyhint">⇧' + (n - 8) + '</span>';
-    return '';
+    if (FB.isTouch || n < 0 || n >= 18) return '';
+    return '<span class="keyhint">' + (n >= 9 ? '&#8679;' : '') +
+      MODAL_ACTION_KEYS.charAt(n % 9).toUpperCase() + '</span>';
   }
+  function modalShortcutControls(kind) {
+    if (UI._gmNoHotkeys || $('gm-body').classList.contains('equipment-picker-open')) return [];
+    const selector = kind === 'section'
+      ? '[data-ui-section-hotkey], [data-governance-section]'
+      : '[data-ui-action-hotkey], [data-interaction-action], [data-governance-action], ' +
+        '[data-governance-institution], [data-governance-privileges], [data-governance-policies], #governance-justice, ' +
+        '[data-ghw-council-move], [data-local-motion], [data-castellan-tenure], ' +
+        '#match-local, #match-dynastic, #office-result-continue';
+    return Array.prototype.filter.call($('gm-body').querySelectorAll(selector), function (node) {
+      return !node.hidden && node.getClientRects().length > 0;
+    });
+  }
+  function refreshModalShortcuts() {
+    const hints = $('gm-body').querySelectorAll('.keyhint');
+    for (let i = 0; i < hints.length; i++) hints[i].parentNode.removeChild(hints[i]);
+    if (FB.isTouch || UI._gmNoHotkeys) return;
+    ['section', 'action'].forEach(function (kind) {
+      const controls = modalShortcutControls(kind), limit = kind === 'section' ? 9 : 18;
+      for (let i = 0; i < controls.length && i < limit; i++) {
+        const hint = kind === 'section' ? '<span class="keyhint">' + (i + 1) + '</span>' : hintFor(i);
+        const label = controls[i].querySelector('.interaction-action-label');
+        (label || controls[i]).insertAdjacentHTML(label ? 'beforeend' : 'afterbegin', hint);
+      }
+    });
+  }
+  UI.refreshModalShortcuts = refreshModalShortcuts;
+  UI.runModalShortcut = function (kind, index, run) {
+    const controls = modalShortcutControls(kind);
+    if (index < 0 || index >= (kind === 'section' ? 9 : 18)) return false;
+    const control = controls[index];
+    if (!control) return false;
+    if (run && !control.disabled) control.click();
+    return true;
+  };
   UI.hintFor = hintFor;
 
   /* ================= generic modal ================= */
@@ -3667,12 +3685,7 @@ window.FB = window.FB || {};
     setModalTitleDetails(!!(opts && opts.titleDetailsHtml));
     bindCardInfoToggles($('gm-body'));
     $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
-    if (!FB.isTouch && !UI._gmNoHotkeys) {
-      const btns = $('gm-body').querySelectorAll('.actionbtn, .settcard-raise');
-      for (let i = 0; i < btns.length && i < 18; i++) {
-        btns[i].insertAdjacentHTML('afterbegin', hintFor(i));
-      }
-    }
+    refreshModalShortcuts();
     /* opts.noFocus: focus the dialog rather than a choice, so a stray
        Space/Enter cannot activate the first button (used where the choice
        must be deliberate) */

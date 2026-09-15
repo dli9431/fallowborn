@@ -4693,7 +4693,7 @@ window.FB = window.FB || {};
                 standing:favor.cost, amount:favor.amount
               });
       const actionHtml = networkActionHtml('guild-favor-' + c.id,
-        'data-network-action data-guild-favor="' + esc(c.id) + '"' +
+        'data-guild-favor="' + esc(c.id) + '"' +
         (!favor || !favor.ready ? ' disabled' : '') +
         ' data-list-focus-key="guild-favor-' + esc(c.id) + '"',
         esc(FB.T('Call in guild commissions')), esc(favorDetails), {
@@ -5125,7 +5125,7 @@ window.FB = window.FB || {};
                     (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
                 });
         record.actionHtml = networkActionHtml('vassal-favor-' + rid,
-          'data-network-action data-vassal-favor="' + esc(rid) + '"' +
+          'data-vassal-favor="' + esc(rid) + '"' +
           (!readyFavor ? ' disabled' : '') +
           ' data-list-focus-key="vassal-favor-' + esc(rid) + '"',
           esc(FB.T('Ask for an exceptional levy')), esc(favorDetails), {

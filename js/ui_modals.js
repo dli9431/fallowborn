@@ -13367,8 +13367,8 @@ window.FB = window.FB || {};
       '<h4>' + esc(FB.T('Political actions')) + '</h4>' +
       governanceActionGroups(s, summary) +
       (FB.justiceRulerEligible(s, s.player.charId) ?
-        '<button type="button" class="actionbtn" id="governance-justice"><b>' +
-        esc(FB.T('Justice and prisoners')) + '</b><span class="adesc">' +
+        '<button type="button" class="actionbtn" id="governance-justice">⚖️ ' +
+        esc(FB.T('Justice and prisoners')) + '<span class="adesc">' +
         esc(FB.T('Review offenses, attempt arrests, and sentence prisoners in your custody.')) +
         '</span></button>' : '') + '</section></div>' +
       '<div class="gm-footer"><button type="button" class="btn" ' +
@@ -13383,23 +13383,7 @@ window.FB = window.FB || {};
       '[data-governance-section]');
     bindCardInfoToggles($('gm-body'));
     function refreshGovernanceActionHints(activeId) {
-      const actionButtons = document.querySelectorAll(
-        '.governance-card .actionbtn');
-      for (let i = 0; i < actionButtons.length; i++) {
-        const children = actionButtons[i].children;
-        for (let j = children.length - 1; j >= 0; j--) {
-          if (children[j].classList.contains('keyhint')) {
-            actionButtons[i].removeChild(children[j]);
-          }
-        }
-      }
-      if (FB.isTouch) return;
-      const active = $('governance-' + activeId);
-      if (!active) return;
-      const visibleButtons = active.querySelectorAll('.actionbtn');
-      for (let i = 0; i < visibleButtons.length && i < 18; i++) {
-        visibleButtons[i].insertAdjacentHTML('afterbegin', hintFor(i));
-      }
+      UI.refreshModalShortcuts();
     }
     function alignGovernanceTab(tab) {
       if (!tab || !mobileLayoutNow()) return;
@@ -23628,7 +23612,7 @@ window.FB = window.FB || {};
     return def ? FB.dataText(FB.state, FB.state.player.charId, 'justiceSentence', id, def, field, {}) : FB.T('Sentence');
   }
   function justiceRulesHtml() {
-    return '<p>' + esc(FB.T('Arrest requires local authority. Sentencing requires custody. Proven offenses justify proportionate sentences; unjust punishment costs popular support.')) + '</p>';
+    return '<p>' + esc(FB.T('Arrest requires local authority. Sentencing requires custody. Unjust punishment lowers support in directly governed counties and standing with vassals and the liege.')) + '</p>';
   }
   function justiceCard(id, title, face, details, action) {
     return '<section class="settcard justice-card' + (id.indexOf('justice-sentence-') === 0 ? ' justice-sentence-choice' : '') +
@@ -23639,7 +23623,7 @@ window.FB = window.FB || {};
       (action ? '<div class="justice-card-actions">' + action + '</div>' : '') + '</section>';
   }
   function justiceRememberDetails(view) {
-    view.expanded = Array.from($('gm-body').querySelectorAll('.justice-card .settcard-info[aria-expanded="true"]'))
+    view.expanded = Array.from($('gm-body').querySelectorAll('.justice-card .settcard-info[aria-expanded="true"], .justice-roster-entry .settcard-info[aria-expanded="true"]'))
       .map(function (button) { return button.getAttribute('aria-controls'); });
   }
   function justiceRestoreDetails(view) {
@@ -23651,7 +23635,9 @@ window.FB = window.FB || {};
   function justiceSentenceFacts(p) {
     const s = FB.state, def = FBDATA.justiceSentences[p.sentence];
     let h = kv('Judgment', esc(p.justified ? FB.T('Justified') : FB.T('Unjust or excessive'))) +
-      kv('Support per county', esc(Math.round(p.support)));
+      (p.support ? kv('Popular support loss', esc(FB.T('{amount} per directly governed county', {
+        amount:Math.abs(Math.round(p.support))
+      }))) : kv('Popular support', esc(p.justified ? FB.T('No loss — justified action') : FB.T('No additional loss'))));
     if (def.kill) h += kv('Consequence', esc(FB.T('Death')));
     else if (def.maim) h += kv('Consequence', esc(FB.T('Permanent injury and deposition')));
     else if (def.exile) h += kv('Consequence', esc(FB.T('Local titles and offices lost; exile for 5 years')));
@@ -23673,9 +23659,16 @@ window.FB = window.FB || {};
     })));
   }
   function justiceArrestFacts(p) {
-    let h = kv('Arrest success', esc(FB.T('{chance}%', { chance:Math.round(p.chance * 100) }))) +
-      kv('Support if caught', esc(FB.T('{amount} per county', { amount:Math.round(p.attemptSupport + p.captureSupport) }))) +
-      kv('Support if escaped', esc(FB.T('{amount} per county', { amount:Math.round(p.attemptSupport) })));
+    let h = kv('Arrest success', esc(FB.T('{chance}%', { chance:Math.round(p.chance * 100) })));
+    if (p.justified) {
+      h += kv('Popular support', esc(FB.T('No loss — justified arrest')));
+    } else {
+      h += kv('Popular support loss if caught', esc(FB.T('{amount} per directly governed county', {
+        amount:Math.abs(Math.round(p.attemptSupport + p.captureSupport))
+      }))) + kv('Popular support loss if arrest fails', esc(FB.T('{amount} per directly governed county', {
+        amount:Math.abs(Math.round(p.attemptSupport))
+      })));
+    }
     if (p.resistance) h += kv('Risk', esc(FB.T('Armed rebellion if arrest fails')));
     if (!p.ready) h += kv('Unavailable', esc(justiceBlocker(p.blocker)));
     if (p.cooldownUntil > FB.state.turn) h += kv('Try again', esc(fortDateText(FB.state, p.cooldownUntil)));
@@ -23686,8 +23679,9 @@ window.FB = window.FB || {};
     return h;
   }
   function justiceSupportHtml(s, p, amount) {
+    if (!amount) return '';
     let h = '<details><summary>' + esc(FB.T('Affected counties')) + '</summary><ul>';
-    p.counties.forEach(function (pid) {
+    p.supportCounties.forEach(function (pid) {
       const before = FB.countySupportBase(s, pid), after = FB.clamp(before + amount, -100, 100);
       h += '<li>' + esc(FB.T('{county}: {before} → {after}', {
         county:(FB.world.byId[pid] || {}).name || '', before:Math.round(before), after:Math.round(after)
@@ -23707,13 +23701,21 @@ window.FB = window.FB || {};
     }
     return h;
   }
-  function justiceEvidenceHtml(s, target) {
-    const offense = FB.justiceOffenseFor(s, s.player.charId, target);
+  function justiceEvidenceHtml(s, target, history) {
+    let offense = FB.justiceOffenseFor(s, s.player.charId, target);
+    if (!offense && history) {
+      const records = s.justice && s.justice.offenses || [];
+      for (let i = records.length - 1; i >= 0; i--) {
+        if (records[i].accusedId === target && records[i].actorId === s.player.charId && records[i].closed) {
+          offense = records[i]; break;
+        }
+      }
+    }
     if (!offense) return '<p class="justice-evidence">' + esc(FB.T('No proven offense')) + '</p>';
     const evidence = { testimony:FB.T('Testimony'), material:FB.T('Material proof'), redhanded:FB.T('Caught red-handed') };
     const kind = offense.kind === 'rebellion' ? FB.T('Rebellion') :
       FB.dataText(s, s.player.charId, 'plot', offense.kind, FBDATA.plots[offense.kind], 'name', {});
-    return '<p>' + esc(FB.T('Offense: {offense}. Evidence: {evidence}.', {
+    return '<p>' + esc(FB.T(offense.closed ? 'Recorded offense: {offense}. Evidence: {evidence}.' : 'Offense: {offense}. Evidence: {evidence}.', {
       offense:kind, evidence:evidence[offense.evidence] || ''
     })) + '</p>';
   }
@@ -23728,46 +23730,138 @@ window.FB = window.FB || {};
       const custody = FB.justiceCustodyOf(s, id);
       return custody && custody.captorId === actor || FB.justiceOffenseFor(s, actor, id) ||
         FB.justiceArrestProjection(s, actor, id).ready;
-    }).sort(function (a, b) {
-      const ca = FB.justiceCustodyOf(s, a), cb = FB.justiceCustodyOf(s, b);
-      return Number(!!cb && cb.captorId === actor) - Number(!!ca && ca.captorId === actor) ||
-        FB.fullName(s.chars[a]).localeCompare(FB.fullName(s.chars[b])) || a.localeCompare(b);
     });
-    let h = '<label for="justice-search">' + esc(FB.T('Search characters')) + '</label>' +
-      '<input id="justice-search" type="search" value="' + esc(view.query) + '">' +
-      '<div class="gm-list" id="justice-list">';
+    if (['highest', 'lowest', 'name', 'justified'].indexOf(view.sort) < 0) view.sort = 'highest';
+    const titles = {}, arrests = {};
+    const kin = FB.kinOf(s).byId;
+    ids.forEach(function (id) {
+      const c = s.chars[id], rid = FB.realmIdForRulerCharacter(s, id);
+      const realm = rid && s.realms[rid];
+      const title = realm && realm.alive ? FB.realmRulerTitleSnapshot(s, realm, c) : null;
+      arrests[id] = FB.justiceArrestProjection(s, actor, id);
+      titles[id] = { rank:title ? title.tier : FB.stationOf(c),
+        text:title ? FB.renderTitleSnapshot(title) : FB.characterStationName(s, c) };
+      const familyRealm = !title && c.royalLine && s.realms[c.royalLine.realmId];
+      if (familyRealm && familyRealm.alive) {
+        titles[id].rank = FB.clamp((familyRealm.rank || 1) + 3, 4, 7);
+        titles[id].text = FB.T('House of {realm}', { realm:familyRealm.name });
+      }
+      const custody = FB.justiceCustodyOf(s, id);
+      titles[id].group = custody && custody.captorId === actor ? 9 : kin[id] || titles[id].rank >= 6 ? 8 : titles[id].rank;
+    });
+    function compare(a, b) {
+      if (titles[a].group === 9 && titles[b].group !== 9) return -1;
+      if (titles[b].group === 9 && titles[a].group !== 9) return 1;
+      const group = (titles[a].group - titles[b].group) * (view.sort === 'lowest' ? 1 : -1);
+      const rank = view.sort === 'name' ? 0 :
+        (titles[a].rank - titles[b].rank) * (view.sort === 'lowest' ? 1 : -1);
+      return group || rank || FB.fullName(s.chars[a]).localeCompare(FB.fullName(s.chars[b])) || a.localeCompare(b);
+    }
+    ids.sort(compare);
+    let notice = '';
+    if (view.failedArrest && s.chars[view.failedArrest.target]) {
+      const failed = s.chars[view.failedArrest.target];
+      notice = '<section class="settcard justice-arrest-notice" role="status"><h4>' +
+        esc(FB.T('Arrest failed')) + '</h4>' + FB.faceTag(failed, 40, 46) +
+        '<p>' + esc(FB.T('{name} remains free.', { name:FB.fullName(failed) })) + '</p>' +
+        '<p>' + esc(FB.T('You can attempt another arrest on {date}.', {
+          date:fortDateText(s, view.failedArrest.retryTurn)
+        })) + '</p></section>';
+    }
+    let h = notice + '<div class="justice-list-controls"><div><label for="justice-search">' + esc(FB.T('Search characters')) + '</label>' +
+      '<input id="justice-search" type="search" value="' + esc(view.query) + '"></div>' +
+      '<div><label for="justice-sort">' + esc(FB.T('Sort order')) + '</label>' +
+      '<select id="justice-sort">' +
+      '<option value="highest">' + esc(FB.T('Highest title first')) + '</option>' +
+      '<option value="lowest">' + esc(FB.T('Lowest title first')) + '</option>' +
+      '<option value="justified">' + esc(FB.T('Justified arrest')) + '</option>' +
+      '<option value="name">' + esc(FB.T('A–Z')) + '</option></select></div></div>' +
+      '<div class="justice-roster" id="justice-list">';
     ids.forEach(function (id) {
       const c = s.chars[id], row = FB.justiceCustodyOf(s, id), mine = row && row.captorId === actor;
       const status = mine ? FB.T('In your custody') : row ? FB.T('Held by another captor') : FB.T('Free');
-      h += '<div data-justice-row="' + esc(id) + '">' + justiceCard('justice-person-' + id,
-        FB.fullName(c), kv('Status', esc(status)) + justiceEvidenceHtml(s, id),
-        UI.charCardHtml(s, c, false),
-        '<button type="button" class="actionbtn" data-justice-character="' + esc(id) + '"><b>' +
-        esc(mine ? FB.T('Review sentences') : FB.T('Review arrest')) + '</b></button>') + '</div>';
+      const relationship = kin[id] ? relationText(s, c) || FB.T(kin[id]) : null;
+      const standing = FB.standingOf(s, { kind:'character', id:id });
+      h += '<div class="settcard justice-roster-entry" role="listitem" data-justice-row="' + esc(id) + '">' +
+        '<button type="button" class="actionbtn justice-person" data-justice-character="' + esc(id) + '">' +
+        FB.faceTag(c, 40, 46) + '<span class="justice-person-text">' +
+        '<span class="justice-person-title">' + esc(titles[id].text) + '</span>' +
+        '<span class="justice-person-name">' + esc(FB.fullName(c)) + '</span>' +
+        '<span class="justice-person-standing">' + esc(FB.T('Standing: {standing}', {
+          standing:standingText(standing)
+        })) + '</span>' +
+        (relationship ? '<span class="justice-person-relation">' + esc(relationship) + '</span>' : '') +
+        (row ? '<span class="justice-person-custody">' + esc(status) + '</span>' : '') +
+        (mine ? '<span class="justice-person-crime">' + justiceEvidenceHtml(s, id, true).replace(/<p\b/g, '<span').replace(/<\/p>/g, '</span>') + '</span>' +
+          '<span class="justice-person-release">' + esc(row.endTurn ? FB.T('Release due: {date}', { date:fortDateText(s, row.endTurn) }) : FB.T('No release date set')) + '</span>' : '') +
+        '</span></button>' + cardInfoButton('justice-roster-details-' + id) +
+        '<div class="settcard-details hidden" id="justice-roster-details-' + esc(id) + '">' +
+        justiceEvidenceHtml(s, id) + UI.charCardHtml(s, c, false) + '</div></div>';
     });
     h += '</div><p id="justice-empty"' + (ids.length ? ' hidden' : '') + '>' +
       esc(FB.T('No matching prisoners, cases, or local arrest targets.')) + '</p>' +
       '<div class="gm-footer"><button type="button" class="btn" id="justice-back">' + esc(FB.T('Back')) + '</button></div>';
     const back = function () { UI.showGovernance('actions'); };
     openModal(FB.T('Justice and prisoners'), h, { historyView:true,
-      modalClass:'intrigue-modal justice-modal', titleDetailsHtml:justiceRulesHtml() });
+      modalClass:'intrigue-modal justice-modal justice-roster-modal', titleDetailsHtml:justiceRulesHtml() });
     FB.paintFaces($('gm-body'), s);
+    const groupLabels = { 9:FB.T('Imprisoned'), 8:FB.T('Family and royalty'), 5:FB.T('Dukes'),
+      4:FB.T('Counts'), 3:FB.T('Barons and other nobles'), 2:FB.T('Gentry'),
+      1:FB.T('Freeholders'), 0:FB.T('Serfs') };
+    function arrangeGroups() {
+      const root = $('justice-list'), rows = {};
+      root.querySelectorAll('[data-justice-row]').forEach(function (row) {
+        rows[row.dataset.justiceRow] = row;
+        row.parentNode.removeChild(row);
+      });
+      root.innerHTML = '';
+      const groups = {};
+      ids.sort(compare).forEach(function (id) {
+        const key = titles[id].group;
+        if (!groups[key]) {
+          const section = document.createElement('section');
+          section.className = 'justice-roster-group';
+          section.dataset.justiceTier = key;
+          const heading = document.createElement('h4');
+          heading.id = 'justice-tier-' + key;
+          heading.textContent = groupLabels[key] || FB.stationName(key);
+          section.setAttribute('aria-labelledby', heading.id);
+          const grid = document.createElement('div');
+          grid.className = 'justice-roster-grid'; grid.setAttribute('role', 'list');
+          section.appendChild(heading); section.appendChild(grid); root.appendChild(section);
+          groups[key] = grid;
+        }
+        groups[key].appendChild(rows[id]);
+      });
+    }
     function filter() {
       view.query = $('justice-search').value;
       let visible = 0;
       document.querySelectorAll('[data-justice-row]').forEach(function (row) {
-        row.hidden = FB.fullName(s.chars[row.dataset.justiceRow]).toLowerCase().indexOf(view.query.toLowerCase()) < 0;
+        row.hidden = (view.sort === 'justified' && !(arrests[row.dataset.justiceRow].ready && arrests[row.dataset.justiceRow].justified)) || FB.fullName(s.chars[row.dataset.justiceRow]).toLowerCase().indexOf(view.query.toLowerCase()) < 0;
         if (!row.hidden) visible++;
+      });
+      document.querySelectorAll('.justice-roster-group').forEach(function (group) {
+        group.hidden = !group.querySelector('[data-justice-row]:not([hidden])');
       });
       $('justice-empty').hidden = visible > 0;
     }
+    $('justice-sort').value = view.sort;
+    $('justice-sort').onchange = function () {
+      view.sort = this.value;
+      const scroll = $('gm-body').scrollTop;
+      arrangeGroups();
+      filter();
+      $('gm-body').scrollTop = scroll;
+    };
     $('justice-search').oninput = filter;
+    arrangeGroups();
     filter();
     document.querySelectorAll('[data-justice-character]').forEach(function (button) {
       button.onclick = function () {
         justiceRememberDetails(view);
         view.scroll = $('gm-body').scrollTop; view.focus = button.dataset.justiceCharacter;
-        UI.showJusticeCharacter(view.focus, function () { UI.showJustice(view); });
+        UI.showJusticeCharacter(view.focus, function () { UI.showJustice(view); }, { roster:view });
       };
     });
     $('justice-back').onclick = function () { modalHistoryBack(back); };
@@ -23790,27 +23884,39 @@ window.FB = window.FB || {};
     if (back === undefined) back = function () { UI.showJustice(); };
     view = view || { scroll:0 };
     const actor = s.player.charId, custody = FB.justiceCustodyOf(s, target);
-    let h = UI.charCardHtml(s, c, false) + justiceEvidenceHtml(s, target);
+    let h = UI.charCardHtml(s, c, false);
     if (custody) {
       const captor = s.chars[custody.captorId];
-      h += kv('Held by', esc(captor ? FB.fullName(captor) : FB.T('Unknown')));
-      if (custody.endTurn) h += '<p>' + esc(FB.T('Release due: {date}', { date:fortDateText(s, custody.endTurn) })) + '</p>';
+      h += '<section class="settcard justice-custody-card"><h4>' + esc(FB.T('Custody')) + '</h4>' +
+        kv('Held by', (captor ? FB.faceTag(captor, 32, 37) + ' ' : '') +
+          esc(captor ? FB.fullName(captor) : FB.T('Unknown')));
+      if (custody.endTurn) {
+        h += kv(custody.sentenced ? 'Sentence ends' : custody.source === 'judicial' ? 'Provisional custody ends' : 'Release due',
+          esc(fortDateText(s, custody.endTurn)));
+        if (!custody.sentenced && custody.source === 'judicial') h += '<p class="justice-custody-notice">' +
+          esc(FB.T('No sentence has been imposed. Provisional custody lasts 90 days; the prisoner is released when it ends unless sentenced.')) + '</p>';
+      }
+      h += justiceEvidenceHtml(s, target);
     }
     if (custody && custody.captorId === actor) {
-      h += '<div class="gm-list">';
+      h += '<div class="justice-custody-actions">';
       FB.justiceSentenceOptions(s, actor, target).forEach(function (p) {
-        h += justiceCard('justice-sentence-' + p.sentence, justiceSentenceText(p.sentence, 'name'),
-          (!p.ready ? '<p class="justice-blocker">' + esc(justiceBlocker(p.blocker)) + '</p>' : ''),
-          justiceSentenceFacts(p) + '<p>' + esc(justiceSentenceText(p.sentence, 'desc')) + '</p>',
-          '<button type="button" class="actionbtn" data-justice-sentence="' + esc(p.sentence) + '"' +
-          (p.ready ? '' : ' disabled') + '><b>' + esc(FB.T('Review')) + '</b></button>');
+        const id = 'justice-sentence-' + p.sentence;
+        h += '<section class="settcard justice-card justice-sentence-choice" tabindex="0">' +
+          '<div class="justice-card-actions"><button type="button" class="actionbtn" data-justice-sentence="' + esc(p.sentence) + '"' +
+          (p.ready ? '' : ' disabled') + '>' + esc(justiceSentenceText(p.sentence, 'name')) + '</button>' +
+          cardInfoButton(id) + '</div><div class="justice-card-facts">' +
+          (!p.ready ? '<p class="justice-blocker">' + esc(justiceBlocker(p.blocker)) + '</p>' : '') +
+          '</div><div class="settcard-details hidden" id="' + esc(id) + '">' +
+          justiceSentenceFacts(p) + '<p>' + esc(justiceSentenceText(p.sentence, 'desc')) + '</p>' + justiceSupportHtml(s, p, p.support) + '</div></section>';
       });
-      h += '</div>';
+      h += '</div></section>';
     } else {
+      if (custody) h += '</section>';
       const p = FB.justiceArrestProjection(s, actor, target);
-      h += justiceCard('justice-arrest-details', FB.T('Arrest'), justiceArrestFacts(p), justiceRulesHtml(),
+      h += justiceCard('justice-arrest-details', FB.T('Arrest'), justiceEvidenceHtml(s, target) + justiceArrestFacts(p), justiceRulesHtml() + justiceSupportHtml(s, p, p.attemptSupport + p.captureSupport),
         '<button type="button" class="btn" id="justice-arrest"' + (p.ready ? '' : ' disabled') + '>' +
-        esc(FB.T('Review arrest')) + '</button>');
+        esc(FB.T('Attempt arrest')) + '</button>');
     }
     h += '<div class="gm-footer"><button type="button" class="btn" id="justice-character-back">' +
       esc(FB.T('Back')) + '</button></div>';
@@ -23820,12 +23926,12 @@ window.FB = window.FB || {};
       button.onclick = function () {
         justiceRememberDetails(view);
         view.scroll = $('gm-body').scrollTop; view.focus = button.dataset.justiceSentence;
-        showJusticeReview(target, button.dataset.justiceSentence, back, view);
+        showJusticeJudgment(target, button.dataset.justiceSentence, back, view);
       };
     });
     if ($('justice-arrest')) $('justice-arrest').onclick = function () {
       justiceRememberDetails(view);
-      view.scroll = $('gm-body').scrollTop; view.focus = 'arrest'; showJusticeReview(target, 'arrest', back, view);
+      view.scroll = $('gm-body').scrollTop; view.focus = 'arrest'; applyJusticeAction(target, 'arrest', view);
     };
     $('justice-character-back').onclick = function () { modalHistoryBack(back || UI.closeModal); };
     const focus = view.focus === 'arrest' ? $('justice-arrest') : view.focus &&
@@ -23838,78 +23944,100 @@ window.FB = window.FB || {};
       $('gm-body').scrollTop = view.scroll;
     }, 0);
   };
-  function showJusticeReview(target, action, origin, view) {
+  function showJusticeJudgment(target, action, origin, view) {
+    const s = FB.state, c = s.chars[target];
+    if (!c || c.dead) { UI.showJustice(view.roster); return; }
+    const p = FB.justicePunishmentProjection(s, s.player.charId, target, action);
+    const back = function () { UI.showJusticeCharacter(target, origin, view); };
+    let h = UI.charCardHtml(s, c, false) +
+      justiceCard('justice-review-details', justiceSentenceText(action, 'name'),
+        justiceEvidenceHtml(s, target) + justiceSentenceFacts(p),
+        '<p>' + esc(justiceSentenceText(action, 'desc')) + '</p>' + justiceSupportHtml(s, p, p.support),
+        '<button type="button" class="btn" id="justice-confirm"' + (p.ready ? '' : ' disabled') + '>' +
+        esc(justiceSentenceText(action, 'name')) + '</button>');
+    h += '<div class="gm-footer"><button type="button" class="btn" id="justice-cancel">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Review judgment'), h, { historyView:true, historyBackRender:back,
+      modalClass:'intrigue-modal justice-modal', titleDetailsHtml:justiceRulesHtml() });
+    FB.paintFaces($('gm-body'), s);
+    $('justice-cancel').onclick = function () { modalHistoryBack(back); };
+    $('justice-confirm').onclick = function () { applyJusticeAction(target, action, view); };
+  }
+  function applyJusticeAction(target, action, view) {
+    if (eventInputGuarded()) return;
     const s = FB.state, actor = s.player.charId;
     const p = action === 'arrest' ? FB.justiceArrestProjection(s, actor, target) :
       FB.justicePunishmentProjection(s, actor, target, action);
-    const back = function () {
-      if (!FB.state.chars[target] || FB.state.chars[target].dead) {
-        if (typeof origin === 'function') origin(); else UI.showJustice();
-      } else UI.showJusticeCharacter(target, origin, view);
-    };
-    let h = UI.charCardHtml(s, s.chars[target], false) + justiceEvidenceHtml(s, target);
-    h += justiceCard('justice-review-details', action === 'arrest' ? FB.T('Arrest terms') : justiceSentenceText(action, 'name'),
-      action === 'arrest' ? justiceArrestFacts(p) : justiceSentenceFacts(p),
-      action === 'arrest' ? justiceRulesHtml() : '<p>' + esc(justiceSentenceText(action, 'desc')) + '</p>',
-      '<button type="button" class="btn" id="justice-confirm"' + (p.ready ? '' : ' disabled') + '>' +
-      esc(action === 'arrest' ? FB.T('Attempt arrest') : justiceSentenceText(action, 'name')) + '</button>');
-    h += justiceSupportHtml(s, p, action === 'arrest' ? p.attemptSupport + p.captureSupport : p.support);
-    h += '<div class="gm-footer"><button type="button" class="btn" id="justice-cancel">' +
-      esc(FB.T('Cancel')) + '</button></div>';
-    openModal(action === 'arrest' ? FB.T('Confirm arrest') : justiceSentenceText(action, 'name'), h,
-      { historyView:true, historyBackRender:back, modalClass:'intrigue-modal justice-modal',
-        titleDetailsHtml:action === 'arrest' ? justiceRulesHtml() : '<p>' + esc(justiceSentenceText(action, 'desc')) + '</p>' + justiceRulesHtml() });
-    FB.paintFaces($('gm-body'), s);
-    $('justice-cancel').onclick = function () { modalHistoryBack(back); };
-    $('justice-confirm').onclick = function () {
-      if (eventInputGuarded()) return;
-      $('justice-confirm').disabled = true;
-      const result = action === 'arrest' ? FB.justiceAttemptArrest(s, actor, target, p.offenseId) :
-        FB.justiceApplyPunishment(s, actor, target, action, p.offenseId);
-      if (!result.ok) { UI.toast(justiceBlocker(result.blocker)); showJusticeReview(target, action, origin, view); return; }
-      UI.refresh();
-      const message = action === 'arrest' ? (result.captured ? FB.T('The character is now in your custody.') :
-        FB.T('The arrest failed. The character remains free.')) : FB.T('The sentence has been carried out.');
-      let receipt = '<ul>', effects = action === 'arrest' ? '' : kv('Sentence', esc(justiceSentenceText(action, 'name')));
-      const supportChanges = {};
-      const standingChanges = {};
-      (result.impacts || []).forEach(function (impact) {
-        if (impact.type === 'commonVoice') {
-          supportChanges[impact.pid] = (supportChanges[impact.pid] || 0) + impact.amount;
-        } else {
-          const text = FB.eventImpactText(s, impact, 'resolved');
-          receipt += '<li>' + esc(text) + '</li>';
-          if (impact.type === 'justiceStanding') standingChanges[impact.realmId] =
-            (standingChanges[impact.realmId] || 0) + impact.amount;
-          else if (impact.type !== 'system') effects += '<p>' + esc(text) + '</p>';
-        }
-      });
-      const supportValues = Object.keys(supportChanges).map(function (pid) { return Math.round(supportChanges[pid]); });
-      Object.keys(supportChanges).forEach(function (pid) {
-        receipt += '<li>' + esc(FB.T('{county}: {amount} popular support', {
-          county:(FB.world.byId[pid] || {}).name || '', amount:Math.round(supportChanges[pid])
-        })) + '</li>';
-      });
-      if (supportValues.length) {
-        const low = Math.min.apply(null, supportValues), high = Math.max.apply(null, supportValues);
-        effects += kv('Support per county', esc(low === high ? String(low) :
-          FB.T('{low} to {high}', { low:low, high:high })));
-        effects += kv('Counties affected', esc(supportValues.length));
+    const result = action === 'arrest' ? FB.justiceAttemptArrest(s, actor, target, p.offenseId) :
+      FB.justiceApplyPunishment(s, actor, target, action, p.offenseId);
+    if (!result.ok) {
+      UI.toast(justiceBlocker(result.blocker));
+      UI.showJusticeCharacter(target, undefined, view);
+      return;
+    }
+    UI.refresh();
+    const message = action === 'arrest' ? (result.captured ? FB.T('The character is now in your custody.') :
+      FB.T('The arrest failed. The character remains free.')) : FB.T('The sentence has been carried out.');
+    let receipt = '<ul>', effects = action === 'arrest' ? '' : kv('Sentence', esc(justiceSentenceText(action, 'name')));
+    const supportChanges = {};
+    const standingChanges = {};
+    (result.impacts || []).forEach(function (impact) {
+      if (impact.type === 'commonVoice') {
+        if (impact.amount) supportChanges[impact.pid] = (supportChanges[impact.pid] || 0) + impact.amount;
+      } else {
+        const text = FB.eventImpactText(s, impact, 'resolved');
+        receipt += '<li>' + esc(text) + '</li>';
+        if (impact.type === 'justiceStanding') standingChanges[impact.realmId] =
+          (standingChanges[impact.realmId] || 0) + impact.amount;
+        else if (impact.type !== 'system') effects += '<p>' + esc(text) + '</p>';
       }
-      receipt += '</ul>';
-      const standingValues = Object.keys(standingChanges).map(function (rid) { return Math.round(standingChanges[rid]); });
-      if (standingValues.length) effects += kv('Vassal and liege standing', esc(FB.T('{low} to {high} ({count} rulers)', {
-        low:Math.min.apply(null, standingValues), high:Math.max.apply(null, standingValues), count:standingValues.length
-      })));
-      openModal(FB.T('Judgment recorded'), '<div data-guarded-outcome>' + UI.charCardHtml(s, s.chars[target], false) +
+    });
+    const supportValues = Object.keys(supportChanges).map(function (pid) { return Math.round(supportChanges[pid]); });
+    Object.keys(supportChanges).forEach(function (pid) {
+      receipt += '<li>' + esc(FB.T('{county}: {amount} popular support', {
+        county:(FB.world.byId[pid] || {}).name || '', amount:Math.round(supportChanges[pid])
+      })) + '</li>';
+    });
+    if (supportValues.length) {
+      const low = Math.min.apply(null, supportValues), high = Math.max.apply(null, supportValues);
+      effects += kv('Popular support change per county', esc(low === high ? String(low) :
+        FB.T('{low} to {high}', { low:low, high:high })));
+      effects += kv('Counties affected', esc(supportValues.length));
+    } else {
+      effects += kv('Popular support', esc(p.justified ? FB.T('No loss — justified action') : FB.T('No additional loss')));
+    }
+    receipt += '</ul>';
+    const standingValues = Object.keys(standingChanges).map(function (rid) { return Math.round(standingChanges[rid]); });
+    if (standingValues.length) effects += kv('Vassal and liege standing', esc(FB.T('{low} to {high} ({count} rulers)', {
+      low:Math.min.apply(null, standingValues), high:Math.max.apply(null, standingValues), count:standingValues.length
+    })));
+    const roster = view.roster || { query:'', scroll:0 };
+    delete roster.receipt;
+    delete roster.failedArrest;
+    UI.closeModal();
+    if (action === 'arrest') {
+      if (result.captured) UI.showJusticeCharacter(target, function () { UI.showJustice(roster); }, { roster:roster });
+      else {
+        roster.failedArrest = { target:target,
+          retryTurn:FB.justiceArrestProjection(s, actor, target).cooldownUntil };
+        roster.scroll = 0;
+        delete roster.focus;
+        UI.showJustice(roster);
+        UI.toast(message);
+      }
+    } else {
+      const back = function () { UI.showJustice(roster); };
+      openModal(FB.T('Sentence carried out'), '<div data-guarded-outcome>' +
+        UI.charCardHtml(s, s.chars[target], false) +
         justiceCard('justice-outcome-details', message, effects, receipt,
           '<button type="button" class="btn" id="justice-continue">' + esc(FB.T('Continue')) + '</button>') + '</div>', {
-          historyView:true, historyBackRender:back, replaceView:true, modalClass:'intrigue-modal justice-modal', titleDetailsHtml:justiceRulesHtml()
-        });
+        historyView:true, historyBackRender:back, modalClass:'intrigue-modal justice-modal',
+        titleDetailsHtml:justiceRulesHtml()
+      });
       FB.paintFaces($('gm-body'), s);
-      armEventGuard();
       $('justice-continue').onclick = function () { if (!eventInputGuarded()) modalHistoryBack(back); };
-    };
+    }
+    armEventGuard();
   }
 
   UI.showCharModal = function (cid, returnContext, replaceView, realmIdHint) {
@@ -25305,12 +25433,6 @@ window.FB = window.FB || {};
         function () { return document.documentElement.contains(overlay); },
         function () { return true; });
       FB.localizeTree(overlay);
-      if (!FB.isTouch) {
-        const numbered = overlay.querySelectorAll('.actionbtn');
-        for (let n = 0; n < numbered.length && n < 18; n++) {
-          numbered[n].insertAdjacentHTML('afterbegin', hintFor(n));
-        }
-      }
       overlay.addEventListener('click', function (event) {
         if (event.target === overlay) UI.closeModal();
       });
@@ -29104,7 +29226,7 @@ window.FB = window.FB || {};
       '<p><b>Holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
-      '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–5</b> select a section and use the same letter grid for management actions only · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
+      '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–6</b> select a section and use the same letter grid for management actions only · <b>1–9</b> select UI sections only; section actions and event choices use <b>QWE / ASD / ZXC</b>, then Shift with the same letters; people, titles, and other list entries use Tab and Enter/Space · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
       '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback. View Chronicle on the title screen reads the autosave, manual slots, exported .txt saves, and complete Chronicle JSON downloads without resuming a life.</p>' +
       '</div><button class="btn primary" id="gm-ok">' + esc(FB.T('Close')) + '</button>',
       { historyView:true });

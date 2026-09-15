@@ -2,23 +2,75 @@
 
 ## Justice and prisoners
 
+Sentence results appear only in a separate Sentence carried out modal. It shows
+the prisoner, actual effects and Details, then returns to the roster via Continue
+or Back. No result block appears on roster or custody screens. Arrest success
+continues straight to sentencing without an intervening result screen.
+Failed arrests show both a toast and a top-of-roster status card with the
+target's portrait/name and retry date. This transient notice survives search,
+sorting, and review returns; a new justice action or fresh opening clears it.
+
+The flow is roster, arrest review, sentencing after capture, Review judgment,
+Sentence carried out, then roster. Selecting a sentence does not apply it.
+Existing prisoners link directly to sentencing from a first Imprisoned group,
+with portrait, name, title, crime, and release date. This group remains first in
+either rank order. Search and the justified-arrest filter still apply.
+Sentence choices use tooltips and touch Details; Review judgment shows immediate
+terms before its named action applies them. Sentence carried out has Continue. A separate sentencing result reports actual effects. A short input guard prevents
+rapid consecutive actions, and settled navigation cannot reopen a spent action.
+
+Justice support previews distinguish penalties from approval: Popular support
+loss gives the amount per directly governed county, while justified zero-cost
+actions say No loss — justified action. Credited penalties say No additional loss.
+Omit zero-change county ledgers; outcomes label actual Popular support changes
+or explicitly state no loss. Never imply that justification grants support.
+
+Prisoner sheets group Held by (with the captor portrait), custody deadline,
+offense/evidence, and sentence-name buttons in one Custody card. Sentence buttons
+open Review judgment; their judgment, support, consequence, money, and deadline rows
+belong in hover/focus tooltips and touch Details, with only blockers beneath
+the buttons. Separate Review buttons and duplicate headings are
+omitted. Unsentenced custody explains its 90-day expiry and release unless a
+sentence is imposed. Sentenced prisoners show Sentence ends instead.
+
+Arrest sheets place offense/evidence inside the Arrest card. Its popular-support
+row explains No loss — justified arrest instead of showing two unexplained zeroes.
+Unjust-arrest rows explicitly label support loss if caught or if the attempt fails,
+with the amount per directly governed county.
+
 Governance's Political actions section opens Justice and prisoners. Character
 interaction sheets expose Attempt arrest or Punish, with jurisdiction and
 custody blockers explained in the review. Searchable lists put the ruler's
-prisoners first and retain search, scroll, and focus on return. Confirmation
+characters in a compact four-column desktop card grid, reducing the column count
+on narrow screens. Portraits sit beside title, name, standing, and family relationship
+when applicable; held characters also show custody. The whole card opens review,
+without a repeated Review label. Eight-pixel padding/gaps and content-sized cards
+keep the roster dense. The default order
+uses separate labeled tier grids: Family and royalty, Dukes, Counts, Barons,
+Gentry, Freeholders, and Serfs. Each group begins on a fresh row; empty groups
+are hidden. Hover/focus tooltips and a separate touch Details control expose
+the character card and offense evidence. Roster tooltips place the
+offense/evidence line above the character card.
+Noble house members group by their recorded living realm's rank and display
+House of the realm; only actual rulers display its ruling title. Unaffiliated
+station-3 nobles share Barons and other nobles. A–Z sorts within groups. Justified
+arrest filters to targets with a proven cause who can currently be arrested,
+combines with search, and retains rank grouping. The default sort
+is highest current title first; a separate native selector offers lowest title
+first and A–Z. Rank ties use name then stable identity. Search, sort, scroll,
+and focus are retained on return. Confirmation
 shows identity, evidence, proportionate/unjust status, actual money, release
 date or exile destination, arrest odds and resistance risk, and support cost per
 county. A disclosure itemizes counties and clamped before/after values.
 
-Significant actions settle into a guarded result with Continue and actual
-receipts in Details. Return paths revalidate the character without repeating the
+Sentences open a separate result with actual receipts and expandable Details; Continue returns to the roster. Return paths revalidate the character without repeating the
 action. Native inputs, buttons, cards, modal history, and compact touch sizes use
 the shared styles. Player arrest/hearing events always require a response even
 under Resolve everything. Sentence names and descriptions use the structured
 `justiceSentence` catalog; saved outcomes use message descriptors.
 
 Justice uses standard bottom sheets and compact identity/status cards. Sentence
-choices show the sentence name, Review action and first blocker; judgment, support
+choices show a sentence-name button and first blocker; judgment, support
 and consequence details use the card tooltip/disclosure. Confirmations keep
 costs, consequences, money, deadlines and destinations visible before applying
 any sentence. Rules and sentence explanations use
@@ -26,14 +78,17 @@ the shared header tooltip and card hover/focus tooltip with a separate touch `?`
 Unavailable cards remain focusable. Back restores open disclosures as well as
 search, focus and scroll. Confirmations name the action, and results show actual
 effect totals before the expandable county ledger.
-Confirmation and Judgment recorded actions sit inside their terms/outcome cards.
+Action buttons sit beside visible terms; receipts need no acknowledgment screen.
 Trait and ailment inspection retains the original Justice sheet for Back.
-After execution, outcome Back and Continue return to the Justice list, never to
+Execution results return to the Justice list, never to
 the dead prisoner's action sheet. Arrest receipts combine attempt and capture
 charges per county and count each affected county once.
 Justice terms also show the standing cost to vassals and the liege, with an
 Affected rulers disclosure listing clamped before/after values. Outcomes group
 standing losses into a compact range and keep individual rulers in Details.
+Affected counties lists only the sentencing ruler's directly governed holdings;
+vassal counties remain within arrest jurisdiction but do not take local support
+losses for their liege's punishments.
 
 County siege readouts use current per-objective occupation progress, including other
 active campaigns besides the first. Completed objectives show Occupied — awaiting
@@ -522,13 +577,28 @@ Opening and closing it uses the generic modal's normal activating-control restor
 
 **Keyboard support is a requirement** (`js/keys.js` + focus management in `ui_misc.js`): the game
 must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay reachable —
-modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyhint` badges via
-`UI.openModal` (`UI.hintFor`; Shift+digit reaches items 10–18, resolved by physical key
-code in keys.js). Pressing Escape on any modal closes it, and pressing a modal's opening hotkey
-again (such as `V` for Automation, `M` for Menu, or a custom action shortcut) closes the open modal.
+modals autofocus their first control. Digits 1-9 (number row or numpad) select
+UI sections only; Shift+digit never extends a list. Section action buttons use
+QWE/ASD/ZXC, then Shift with the same letters for actions 10-18. List entries
+(people, titles, counties, equipment, buildings, saves, and other growing rosters)
+never receive number or letter shortcuts, including action buttons repeated per
+entry. They remain reachable through Tab, Enter, and Space. Search and native
+selects retain ordinary typing and keyboard behavior.
+
+Generic modals opt action buttons into this policy with `data-ui-action-hotkey`
+(or the shared semantic action selectors in `modalShortcutControls`); a CSS
+`actionbtn` class alone never grants a shortcut. Section controls use
+`data-ui-section-hotkey`; Governance's section tabs are recognized directly.
+`UI.refreshModalShortcuts` and `UI.runModalShortcut` share the same visible
+controls, retaining disabled slots and excluding hidden sections. Refresh after
+changing a section or rendering new actions. `noHotkeys` suppresses both layers.
+Equipment overlays and other entity pickers have no positional shortcuts.
+Pressing Escape on any modal closes it, and pressing a modal's opening hotkey
+again (such as `V` for Automation, `M` for Menu, or a custom action shortcut) closes the open modal
+unless that key is assigned to a visible section action; the displayed action badge wins.
 Tab and Shift+Tab wrap between the first and last focusable controls of an open generic
 dialog or mandatory event, so keyboard focus cannot move into the obscured game until the
-dialog closes. Event option number shortcuts target only the resolving Choice buttons;
+dialog closes. Event option letter shortcuts target only the resolving Choice buttons;
 their separate Details buttons are ordinary Tab stops and cannot resolve an event.
 Dialogs whose first choice must be deliberate focus the dialog container on entry rather
 than preselecting a choice; the first Tab still enters the dialog's controls.
@@ -549,7 +619,7 @@ opens `livelihoods`; Reset to Defaults restores it. Duplicate keys block saving,
 action ids remain visible as unavailable saved bindings, and hidden or disabled targets
 keep their key while reporting the current reason. `toil` and `work_land` deliberately
 share the `farmer-work` focus family, so promotion preserves that binding's meaning.
-Modal 1–9/Shift+1–9 navigation still wins while a dialog is open. Desktop Settings places the
+Modal section/action navigation still wins while a dialog is open. Desktop Settings places the
 shortcut entry in its own Keyboard section. Touch and compact layouts omit that section and
 global-key badges.
 The desktop Deeds panel has its own two-stage keyboard layer. `1` selects Daily Focus and
@@ -567,7 +637,7 @@ section extends beyond nine items, subsequent items are
 assigned `Shift+Q, Shift+W, Shift+E, Shift+A, Shift+S, Shift+D, Shift+Z, Shift+X, Shift+C`
 (items 10–18). Only the active section shows these letter badges. These local
 letters take precedence over panel, time, autoresolve, and configurable semantic shortcuts
-while that Deeds section is active; modal and event digit handling still takes precedence over
+while that Deeds section is active; modal and event action handling still takes precedence over
 the panel layer. Shift+digit does not extend the Deeds list.
 When **Group Deeds by action type** is enabled in Settings, the same positional layer uses
 `1` for Daily Focus and `2`–`4` for One-shot & recurring deeds, Personal decisions, and
@@ -1125,7 +1195,7 @@ day and returns to the originating person or Household Plan flow. Landed protago
 the preserved path as biography but receive no examination actions.
 The building deed's county ledger stays open after **Raise**, so repeated construction
 does not traverse province and settlement dialogs for every work. Its building cards
-retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that
+remain keyboard-focusable without positional hints, show the exact live price, and explicitly warn that
 repeat copies in one county become 50% dearer each time. A sticky native county selector stays
 in reach above the scrolling ledger, including on narrow touch layouts, and switches directly
 among all held counties. On compact layouts each card's details and Raise controls share one
@@ -1240,7 +1310,7 @@ ordinary price checks.
 Maintained transport and outfits are explicitly described as expenses rather than
 productive or combat property. The permanent section keeps Pack Mule, Fine Tools, Good
 Mail, Warhorse, and other existing assets under their old one-time ownership rules.
-The sheet uses ordinary numbered action buttons, nested same-document history, a sticky
+The sheet uses ordinary keyboard-focusable action buttons, nested same-document history, a sticky
 footer, and the `fullsheet-modal` narrow/mobile layout.
 
 The conquest picker previews the current household's normal-muster logistics before
@@ -1358,7 +1428,7 @@ Its selector, textual trend, stock and seasonal report, named endowments, disrup
 ventures, charters, and hardship duplicate every canvas meaning for keyboard, touch,
 screen-reader, and color-vision access. See [markets.md](markets.md).
 Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Space
-navigation, and opens a numbered compatible-armory list over the still-visible equipment
+navigation, and opens a keyboard-focusable compatible-armory list over the still-visible equipment
 sheet; no drag-and-drop path is required. On roomy fine-pointer layouts, hovering or
 keyboard-focusing a slot shows its current exact object, description, quality, effects,
 value, two-handed or automatic-protection state when applicable, and selection guidance;
@@ -1493,7 +1563,7 @@ departs as one operation. The assigned person's sheet repeats their Standing,
 access-adjusted daily rate, and estimated active days to the relevant threshold. **Call
 friend** remains visibly disabled below the shared +40 threshold; **Propose marriage**
 uses the candidate's exact courtship threshold, including culture and faith premiums.
-**Offer a gift…** opens a numbered cash-and-armory picker. Cash and every exact armory
+**Offer a gift…** opens a keyboard-focusable cash-and-armory picker. Cash and every exact armory
 object show their access-adjusted cost and +Standing value and either readiness or
 recipient-specific days remaining
 on the shared cash/item gift cooldown. Equipped and pledged objects remain visible but
@@ -1833,8 +1903,9 @@ levy, and seasonal-tax totals; its session-only native selector sorts the full r
 levy (the default), tax, Standing, rank, or name. Each row retains ruler portrait,
 territory, obligations, office, and management controls while showing its exact levy and
 share of all direct-vassal levies on the permanent face. Controls are native buttons,
-ordinary number hints and shortcuts apply only to actions in the active section, and no
-layout hides blocked reasons. This is a presentation-only projection of existing
+digits select section tabs and letter shortcuts apply only to section actions.
+Roster controls receive no shortcuts, and no layout hides blocked reasons.
+This is a presentation-only projection of existing
 authoritative obligation values, so it requires no technology-impact entry. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
@@ -1978,7 +2049,7 @@ management expose active campaigns and preserve their originating Back route.
 Work & Wealth includes **Petition for a guild monopoly** only for a Craft or Trade
 guildmaster; its locked description exposes the exact missing technology, guild standing,
 Standing with the grantor, grantor, cooldown, or occupied-slot condition. Rank & Realm includes
-**Grant a guild monopoly…** for every baron and greater ruler. Its numbered,
+**Grant a guild monopoly…** for every baron and greater ruler. Its keyboard-focusable,
 keyboard-focusable profession picker previews Craft and Trade with the current
 tier-scaled fee, tax, enterprise, duration, and Popular support terms, then repeats all effects
 in a confirmation sheet before spending the day. While Guild Charters is missing, its
@@ -2057,7 +2128,7 @@ realm expose red route lines and destination arrows on the map; every unrelated 
 remains hidden. These long feedback lines wrap naturally in narrow layouts and add no
 fixed-width controls.
 Independent counts and higher also get a compact political-attention summary above those
-groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
+groups. The Foreign Policy deed opens a keyboard-focusable neighboring-court list and then
 Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile
 bottom-sheet modal. Foreign province panels link their sovereign to the ruler sheet, and
 both views show Standing and the current direction.
@@ -2081,7 +2152,7 @@ action expose applicable friendship, rivalry, courtship, marriage, and spouse ac
 The unified ruler-character sheet suppresses the ordinary character travel duplicate and
 shows the ruler-specific cultivation route exactly once.
 Both sheets route gifts back through the
-ruler picker, so its numbered cash choice uses the rank price, exact armory influence,
+ruler picker, so its cash choice uses the rank price, exact armory influence,
 Standing, and the ruler-generation cooldown rather than the ordinary five-gold path.
 Foreign-sovereign choices preview courier time and later show outbound/return ETA. The
 Royal Council opens this same picker for seated vassals. Its Back/Close behavior uses
@@ -2168,7 +2239,7 @@ wide seven-column table ordered as household head, resident family, then paid re
 On narrow or short layouts, each person becomes a stacked card and every cell repeats its
 localized column label. Education, instruction, work/standing, assignment, match, and
 equipment summaries are derived from their owning APIs; actionable cells are native
-buttons that retain modal focus, number shortcuts, Tab/Enter/Space, minimum touch sizes,
+buttons that retain modal focus, Tab/Enter/Space, minimum touch sizes,
 and browser-history Back. The scope introduction uses the modal-title details affordance.
 Touch, tablet-width, and short layouts keep each primary status and warning on the card
 while moving secondary and tertiary helper lines behind an adjacent touch-sized `?`
@@ -2441,7 +2512,7 @@ full-sheet campaign dialog names caller, military leader, schedule, camp strengt
 resolve, both participant lists, every frozen objective and occupation/siege state,
 and the protagonist's vow progress, desire, occupation evidence, contribution, share,
 and projected weighted claim. A player religious head gets a target picker. Joining is
-a numbered, keyboard/mobile-safe sequence for four/eight/twelve seasons, desire, exact
+a keyboard/mobile-safe sequence for four/eight/twelve seasons, desire, exact
 duchy/county where needed, optional eligible beneficiary, and final review. Renewal and
 withdrawal state the inherited choice or exact fulfilled/broken-vow costs.
 
@@ -2491,7 +2562,7 @@ settlement emblem; construction adds a crossed corner. Neither meaning depends o
 and the badge does not change cached site art. For a county's tier-3+ player holder, the
 settlement sheet shows current and target fort tier, project dates, upfront/no-refund terms,
 upkeep, local defense, garrison and field burden, movement control, siege minimum/attrition,
-and the next sequential tier. Those owned sheets provide keyboard-numbered, mobile-size
+and the next sequential tier. Those owned sheets provide keyboard-focusable, mobile-size
 project and demolition controls; commoner and foreign sheets omit county building and
 fortification information. A locked tier stays visible to the holder and its action opens
 the exact technology detail.
@@ -2824,7 +2895,7 @@ are identified rather than reported as empty. Settings and downloaded files rema
 The dialog explains that continued play can create a new autosave.
 
 Confirm delete stays in the body above the shared Back/Close footer. Back receives
-initial focus; automatic number shortcuts are disabled for this destructive confirmation.
+initial focus; automatic positional shortcuts are disabled for this destructive confirmation.
 Back and Escape restore the source sheet and scroll position. Close dismisses the modal
 stack without deleting anything. Success returns to fresh slot metadata and updates
 Continue; failures remain in the dialog with an error.
@@ -2841,7 +2912,7 @@ Work separates owned businesses under Family enterprises from settlement purchas
 links under New enterprises. The staffing assistant action sits above the owned
 section, outside its disclosure, including when the list is grouped.
 
-The Work & Enterprises overview has no automatic number shortcuts or number badges.
+The Work & Enterprises overview has no automatic positional shortcuts or positional badges.
 Tab, Enter/Space, Escape and explicit Back remain available; filtering and returning
 from nested views must not reinstall number hints on this overview.
 

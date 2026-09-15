@@ -22,7 +22,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
-test('match choices expose 1 and 2 shortcuts for local and dynastic searches', async function ({ page }) {
+test('match choices expose Q and W action shortcuts for local and dynastic searches', async function ({ page }) {
   await page.evaluate(function () {
     FB.game.setPaused(true);
     window.matchShortcutCalls = [];
@@ -34,15 +34,15 @@ test('match choices expose 1 and 2 shortcuts for local and dynastic searches', a
     FB.ui.showMatchChoices();
   });
   try {
-    await expect(page.locator('#match-local .keyhint')).toHaveText('1');
-    await expect(page.locator('#match-dynastic .keyhint')).toHaveText('2');
-    await page.keyboard.press('Digit1');
+    await expect(page.locator('#match-local .keyhint')).toHaveText('Q');
+    await expect(page.locator('#match-dynastic .keyhint')).toHaveText('W');
+    await page.keyboard.press('q');
     expect(await page.evaluate(function () { return window.matchShortcutCalls; }))
       .toEqual([{ id:'seek_match', localMatch:true }]);
   } finally {
     await page.evaluate(function () { FB.runInstant = window.matchOriginalInstant; });
   }
-  await page.keyboard.press('Digit2');
+  await page.keyboard.press('w');
   await expect(page.locator('#finder-scope')).toHaveValue('near');
 });
 

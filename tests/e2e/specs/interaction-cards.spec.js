@@ -1106,11 +1106,11 @@ test('war-realm links open the full ruler sheet, even for your own realm',
       })[0];
       var enemyCapital = s.realms[enemyId].capital;
       FB.materializeRealmRuler(s, enemyId);
-      p.war = {
+      FB.registerOrdinaryWar(s, 'player', {
         enemy:enemyId, target:enemyCapital, wins:0, losses:0,
         seasons:1, defending:false, strength:1,
         casus:{ type:'fabricated' }
-      };
+      });
       FB.invalidateRealmCache();
       s.player.panelIntrosSeen = s.player.panelIntrosSeen || {};
       s.player.panelIntrosSeen.prov = 1;
@@ -1131,6 +1131,9 @@ test('war-realm links open the full ruler sheet, even for your own realm',
     }, setup);
     await waitForUiRefresh(page);
     await expect(page.locator('#tab-prov .land-current-war')).toBeVisible();
+    expect(await page.evaluate(function (ids) {
+      return FB.warOpponents(FB.state, ids.enemyId).indexOf('player') >= 0;
+    }, setup)).toBe(true);
     await page.locator(
       '#tab-prov .land-current-war [data-war-realm="player"]').click();
     await expect(page.locator(

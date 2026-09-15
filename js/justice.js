@@ -63,6 +63,12 @@
     var pid = id === s.player.charId ? s.player.provinceId : location(s, id);
     return pid ? [pid] : [];
   };
+  // Political jurisdiction includes vassals; local popularity belongs to the holder.
+  FB.justiceSupportCounties = function (s, id) {
+    if (!FB.justiceRulerEligible(s, id)) return [];
+    var rid = realmOf(s, id);
+    return rid ? FB.realmHeldCounties(s, rid).slice().sort() : FB.justiceCounties(s, id);
+  };
   // No repair here: a sheet must neither materialize rulers nor change saves.
   FB.justiceCustodyOf = function (s, id) {
     var rows = s.intrigue && s.intrigue.captives || [];
@@ -209,7 +215,7 @@
       offenseId && !offense ? 'case' : null;
     return { ready:!blocker, blocker:blocker, actorId:actor, targetId:target,
       offenseId:offense && offense.id, evidence:offense && offense.evidence,
-      justified:!!offense, counties:counties, cooldownUntil:cooldown,
+      justified:!!offense, counties:counties, supportCounties:FB.justiceSupportCounties(s, actor), cooldownUntil:cooldown,
       chance:a && t ? FB.clamp(0.60 + 0.02 * (FB.skillOf(a, 'mar') - FB.skillOf(t, 'int')), 0.15, 0.90) : 0,
       attemptSupport:offense ? 0 : -10, captureSupport:offense ? 0 : -10,
       resistance:subordinateBaron || !!rid && !!arid && under(s, rid, arid) };
@@ -291,12 +297,12 @@
   function arrestNow(s, p, submit) {
     var j = ensure(s);
     if (!p.ready) return { ok:false, blocker:p.blocker };
-    var effects = support(s, p.counties, p.attemptSupport).concat(standingPenalty(s, p.actorId, p.attemptSupport));
+    var effects = support(s, p.supportCounties, p.attemptSupport).concat(standingPenalty(s, p.actorId, p.attemptSupport));
     var caught = submit || FB.chance(p.chance);
     if (caught) {
       var row = capture(s, p.actorId, p.targetId, p.offenseId, !p.justified);
       if (!row) return { ok:false, blocker:'already_held' };
-      effects = effects.concat(support(s, p.counties, p.captureSupport), standingPenalty(s, p.actorId, p.captureSupport));
+      effects = effects.concat(support(s, p.supportCounties, p.captureSupport), standingPenalty(s, p.actorId, p.captureSupport));
       news(s, p.actorId, p.targetId, 'arrest', effects);
     } else {
       j.cooldowns[p.actorId + ':' + p.targetId] = s.turn + 90;
@@ -381,6 +387,7 @@
     return { ready:!blocker, blocker:blocker, actorId:actor, targetId:target, sentence:sentence,
       custody:row, offenseId:offense && offense.id, evidence:offense && offense.evidence,
       justified:justified, form:legalForm, amount:amount, fine:fine, counties:counties,
+      supportCounties:FB.justiceSupportCounties(s, actor),
       support:loss, destination:destination, titleRealmId:localTitle ? rid : null,
       endTurn:sentence === 'imprisonment' && row ? Math.max(s.turn, row.captureTurn + 360,
         row.sentenced ? row.endTurn + 360 : 0) : null,
@@ -457,7 +464,7 @@
     var def = FBDATA.justiceSentences[sentence], row = p.custody;
     if (def.money && !transfer(s, target, actor, p.amount)) return { ok:false, blocker:'funds' };
     j.pending = null;
-    var effects = support(s, p.counties, p.support).concat(standingPenalty(s, actor, p.support));
+    var effects = support(s, p.supportCounties, p.support).concat(standingPenalty(s, actor, p.support));
     effects.push({ type:'system', system:'justice', action:sentence,
       days:p.endTurn ? p.endTurn - s.turn : null, lethal:!!def.kill,
       permanent:!!(def.kill || def.maim || def.forfeit) });

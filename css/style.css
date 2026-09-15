@@ -1815,6 +1815,34 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   flex: 0 1 auto; width: auto; min-height: 44px; margin: 0; padding: 10px 16px;
   text-align: center; white-space: normal;
 }
+.justice-list-controls { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.justice-list-controls > div { flex: 1 1 180px; min-width: 0; }
+.justice-list-controls label { display: block; margin-bottom: 4px; }
+.justice-list-controls input, .justice-list-controls select { width: 100%; }
+#genmodal.justice-roster-modal .modalcard { width: 1120px; max-width: 96vw; }
+.justice-roster-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: start; }
+.justice-roster [hidden] { display: none; }
+.justice-roster .justice-person { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 8px; min-height: 64px; }
+.justice-person > canvas { flex-shrink: 0; }
+.justice-person-text { min-width: 0; overflow-wrap: break-word; }
+.justice-person-text > span { display: block; }
+.justice-person-name { font-weight: bold; }
+.justice-person-title, .justice-person-standing, .justice-person-relation, .justice-person-custody {
+  color: var(--helper-text-color); font-size: var(--ui-label-size); line-height: 1.35;
+}
+@media (max-width: 1000px) {
+  .justice-roster-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .justice-roster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .justice-roster-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px), (pointer: coarse) {
+  .justice-person-text > span { font-size: 14px; }
+  .justice-person-text > .justice-person-name { font-size: 16px; }
+}
 #gm-body .justice-evidence { margin: 12px 0; color: var(--helper-text-color); }
 #gm-body .justice-card-facts > .justice-evidence { margin: 6px 0; }
 #gm-body .justice-card:focus-visible { outline: 2px solid var(--ui-accent-color); outline-offset: 2px; }
@@ -6099,3 +6127,17 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 [data-provision-controls] .settcard-head { flex-wrap: wrap; gap: 8px; }
 [data-provision-controls] output { font-weight: bold; font-variant-numeric: tabular-nums; }
 .enterprise-staffing-modal #gm-body { overflow-anchor: none; }
+
+.justice-roster-group { margin-bottom: 16px; }
+.justice-roster-group > h4 { margin: 0 0 8px; padding: 8px 0; border-bottom: 1px solid var(--ui-border-color); color: var(--ui-accent-color); }
+#gm-body .justice-roster-entry { position: relative; padding: 0; margin: 0; border: 0; background: none; min-width: 0; }
+.justice-roster-entry > .settcard-info { position: absolute; right: 4px; top: 4px; }
+.justice-roster-entry .justice-person { padding-right: 32px; }
+.justice-custody-card > h4 { margin: 0 0 8px; color: var(--ui-accent-color); }
+.justice-custody-card .kv .pface { vertical-align: middle; }
+.justice-custody-notice { margin: 8px 0; }
+.justice-custody-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+#gm-body .justice-custody-actions > .justice-sentence-choice { display: block; padding: 0; margin: 0; border: 0; background: none; }
+#gm-body .justice-custody-actions .justice-card-actions { display: flex; gap: 8px; border: 0; padding: 0; margin: 0; }
+#gm-body .justice-custody-actions .justice-card-actions > .actionbtn { flex: 1; width: auto; margin: 0; text-align: left; }
+#gm-body .justice-custody-actions .justice-card-actions > .settcard-info { flex: 0 0 auto; width: auto; }
