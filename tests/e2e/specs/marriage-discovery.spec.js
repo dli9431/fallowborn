@@ -230,7 +230,8 @@ test('selected royal match reviews lineage and retains its subject after an unre
       if (args.invitation) FB.ui.showMarriageCultureInvitation(args.partner, args.child);
       else FB.ui.showMarriageLineageReview(args.child, args.partner, function () {});
     }, { child:setup.child, partner:setup.partner, invitation:invitation });
-    await page.locator('#gm-cancel').click();
+    await expect(page.locator('[data-modal-nav="back"]')).toBeDisabled();
+    await page.locator('[data-modal-nav="close"]').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   }
 });
@@ -309,15 +310,24 @@ for (const width of [320, 390]) {
     await expect(button).toBeFocused();
     expect(await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; })).toBe(saved);
     await expect(page.locator('#finder-filters')).toHaveAttribute('open', '');
-    expect(await page.locator('.finder-card-actions').evaluateAll(function (groups) {
-      return groups.every(function (group) {
+    const overflow = await page.locator('#finder-results .finder-card-actions').evaluateAll(function (groups) {
+      return groups.reduce(function (failures, group) {
         const outer = group.getBoundingClientRect();
-        return Array.from(group.querySelectorAll('button')).every(function (button) {
+        Array.from(group.querySelectorAll('button')).forEach(function (button) {
           const box = button.getBoundingClientRect();
-          return box.left >= outer.left - 1 && box.right <= outer.right + 1 && box.height >= 44;
+          const minHeight = parseFloat(getComputedStyle(button).minHeight);
+          // Chromium can report 43.984375px for a 44px grid control: allow
+          // one 1/64px layout unit while keeping the CSS minimum strict.
+          if (box.left < outer.left - 1 || box.right > outer.right + 1 ||
+              box.height < 44 - 1 / 64 || !(minHeight >= 44)) {
+            failures.push({ text:button.textContent, left:box.left - outer.left,
+              right:box.right - outer.right, height:box.height, minHeight:minHeight });
+          }
         });
-      });
-    })).toBe(true);
+        return failures;
+      }, []);
+    });
+    expect(overflow).toEqual([]);
   });
 }
 

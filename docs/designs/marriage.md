@@ -1,5 +1,11 @@
 # Marriage & child matches
 
+Travel reviews register their source with the shared modal footer. Back restores
+the marriage finder's filters, expanded details, scroll position, and originating
+control, including when the review opens without a retained history entry.
+Standalone marriage terms and culture invitations have no parent: Back is disabled
+and Close dismisses them.
+
 The Seek a match choice sheet uses the standard action shortcuts: `Q` seeks
 local prospects and `W` opens the dynastic marriage finder. Desktop buttons display
 their letter badges; candidate lists never receive shortcuts. Back retains the

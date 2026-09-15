@@ -2536,12 +2536,22 @@ window.FB = window.FB || {};
       (preview.cost > s.player.gold ? ' disabled' : '') + '>' + esc(FB.T('Depart')) +
       '</button><button class="actionbtn" id="social-visit-cancel">' +
       esc(FB.T('Not now')) + '</button></div>';
+    function returnToVisitSource() {
+      if (options.returnContext && options.returnContext.view === 'marriage-finder') {
+        UI.showMarriageFinder(null, undefined, true);
+      } else if (options.returnRealmId) {
+        UI.showLiegeModal(options.returnRealmId, options.returnContext);
+      } else {
+        UI.showCharModal(c.id, options.returnContext);
+      }
+    }
     openModal(options.courtship
       ? FB.T('Travel to court {name}', { name:c.name })
       : FB.T('Travel to cultivate {name}', { name:c.name }), h, {
         titleDetailsHtml:details,
         historyView:true,
-        historyBack:true
+        historyBack:true,
+        historyBackRender:returnToVisitSource
       });
     const depart = $('social-visit-depart');
     if (depart) depart.addEventListener('click', function () {
@@ -2553,15 +2563,7 @@ window.FB = window.FB || {};
       UI.refresh();
     });
     $('social-visit-cancel').addEventListener('click', function () {
-      modalHistoryBack(function () {
-        if (options.returnContext && options.returnContext.view === 'marriage-finder') {
-          UI.showMarriageFinder(null, undefined, true);
-        } else if (options.returnRealmId) {
-          UI.showLiegeModal(options.returnRealmId, options.returnContext);
-        } else {
-          UI.showCharModal(c.id, options.returnContext);
-        }
-      });
+      modalHistoryBack(returnToVisitSource);
     });
   };
 

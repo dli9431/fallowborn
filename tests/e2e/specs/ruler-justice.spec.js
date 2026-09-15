@@ -437,6 +437,29 @@ test('justice roster has no positional shortcuts and remains keyboard accessible
   await expect(page.locator('#justice-arrest')).toBeVisible();
 });
 
+test('compact justice Details controls fit inside cards beside the text', async function ({ page }) {
+  for (const width of [390, 1000]) {
+    await page.setViewportSize({ width:width, height:844 });
+    await page.evaluate(function () { FB.ui.showJustice(); });
+    const row = page.locator('[data-justice-row]').first();
+    const details = row.locator(':scope > .settcard-actions .settcard-info');
+    await expect(details).toBeVisible();
+    const bounds = await row.evaluate(function (node) {
+      const card = node.querySelector('.justice-person').getBoundingClientRect();
+      const text = node.querySelector('.justice-person-text').getBoundingClientRect();
+      const button = node.querySelector('.settcard-info').getBoundingClientRect();
+      return { beside:button.left >= text.right, aligned:Math.abs(button.top - text.top) <= 1,
+        inside:button.left >= card.left && button.right <= card.right && button.bottom <= card.bottom,
+        touch:button.width >= 44 && button.height >= 44 };
+    });
+    expect(bounds).toEqual({ beside:true, aligned:true, inside:true, touch:true });
+    await details.click();
+    await expect(details).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#justice-search')).toBeVisible();
+    await expect(row.locator(':scope > .settcard-details')).toBeVisible();
+  }
+});
+
 test('failed arrest shows a roster notice and toast without losing search or sort', async function ({ page }) {
   await page.evaluate(function () {
     window.failedArrestChance = FB.chance;
@@ -644,7 +667,7 @@ test('justice tiers occupy separate rows and justified arrest excludes blocked o
   await expect(card).toBeVisible();
   await expect(groups.locator('h4')).toHaveText('Freeholders');
   await page.setViewportSize({ width:390, height:844 });
-  const details = page.locator('[data-justice-row="' + ids.justified + '"] > .settcard-info');
+  const details = page.locator('[data-justice-row="' + ids.justified + '"] > .settcard-actions .settcard-info');
   await details.click();
   await expect(details).toHaveAttribute('aria-expanded', 'true');
   await card.click();
@@ -778,9 +801,15 @@ for (const width of [390, 1280]) {
     expect(layout.inside).toBe(true);
     if (width === 390) expect(layout).toMatchObject({ stacked:true, aligned:true, fullWidth:true });
     else expect(layout.sameRow).toBe(true);
-    await page.locator('#justice-arrest').click();
-    await expect(page.locator('.justice-card')).toHaveCount(1);
-    await expect(page.locator('#justice-review-details')).toBeHidden();
+    await expect(card.locator('#justice-arrest')).toHaveText(/Attempt arrest$/);
+    await expect(card.locator('#justice-arrest-details')).toBeHidden();
+    if (width === 390) {
+      await card.locator('.settcard-info').click();
+      await expect(card.locator('#justice-arrest-details')).toBeVisible();
+    } else {
+      await card.hover();
+      await expect(page.locator('#tooltip')).toContainText('Arrest requires local authority');
+    }
   });
 }
 
@@ -794,12 +823,19 @@ test('unavailable justice sentences remain keyboard-inspectable', async function
   const card = page.locator('.justice-card').filter({ has:page.locator('[data-justice-sentence="forfeiture"]') });
   await expect(card.locator('[data-justice-sentence]')).toBeDisabled();
   await expect(card.locator('.justice-blocker')).toBeVisible();
+  const penance = page.locator('.justice-card').filter({ has:page.locator('[data-justice-sentence="penance"]') });
+  await penance.hover();
+  await expect(page.locator('#tooltip')).toContainText('Lose 40 piety');
   await card.focus();
   await expect(card).toBeFocused();
   await expect(page.locator('#tooltip')).toContainText('Surrender titles and lands');
+  await page.mouse.move(0, 0);
+  await penance.hover();
+  await expect(page.locator('#tooltip')).toContainText('Lose 40 piety');
 });
 
 test('punishment support previews show whole numbers without changing stored fractions', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
   const before = await page.evaluate(function () {
     const s = FB.state, f = window.justiceFixture;
     FB.setCountySupport(s, f.home, 3.9999999999999996);
@@ -808,7 +844,7 @@ test('punishment support previews show whole numbers without changing stored fra
     return { home:FB.countySupportBase(s, f.home), second:FB.countySupportBase(s, f.second),
       homeName:FB.world.byId[f.home].name, secondName:FB.world.byId[f.second].name };
   });
-  await page.locator('#justice-arrest').click();
+  await page.locator('.justice-card').filter({ has:page.locator('#justice-arrest') }).locator('.settcard-info').click();
   const disclosure = page.locator('#gm-body details').filter({ hasText:'Affected counties' });
   await disclosure.locator('summary').click();
   await expect(disclosure).toContainText(before.homeName + ': 4 → -16');
@@ -1057,6 +1093,7 @@ for (const playerRuler of [true, false]) {
 }
 
 test('justice review lists only directly governed counties while retaining affected vassals', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
   const names = await page.evaluate(function () {
     const s = FB.state, f = window.justiceFixture;
     s.realms[f.enemy].liege = 'player'; s.holder[f.second] = f.enemy;

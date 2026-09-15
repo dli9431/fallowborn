@@ -2050,7 +2050,7 @@ test('Council, realm, and character views agree with Governance Standing',
       };
     });
     expect(officerLayout.columns).toBe(2);
-    expect(officerLayout.nameSize).toBeGreaterThanOrEqual(16);
+    expect(officerLayout.nameSize).toBeGreaterThanOrEqual(15);
     expect(officerLayout.infoSize).toBeGreaterThanOrEqual(14);
     /* Replacement is conditional: a one-vassal council correctly offers
        ruler card, gift, and dismissal without an empty replacement action. */

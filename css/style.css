@@ -6131,8 +6131,10 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 .justice-roster-group { margin-bottom: 16px; }
 .justice-roster-group > h4 { margin: 0 0 8px; padding: 8px 0; border-bottom: 1px solid var(--ui-border-color); color: var(--ui-accent-color); }
 #gm-body .justice-roster-entry { position: relative; padding: 0; margin: 0; border: 0; background: none; min-width: 0; }
-.justice-roster-entry > .settcard-info { position: absolute; right: 4px; top: 4px; }
-.justice-roster-entry .justice-person { padding-right: 32px; }
+.justice-roster-entry > .settcard-actions { position: absolute; right: 8px; top: 8px; }
+@media (max-width: 1100px), (max-height: 520px), (pointer: coarse) {
+  .justice-roster-entry .justice-person { padding-right: 60px; }
+}
 .justice-custody-card > h4 { margin: 0 0 8px; color: var(--ui-accent-color); }
 .justice-custody-card .kv .pface { vertical-align: middle; }
 .justice-custody-notice { margin: 8px 0; }

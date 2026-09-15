@@ -1,5 +1,9 @@
 # Ruler justice
 
+On compact/touch layouts, each roster card's Details control sits inside the
+card to the right of its text. It remains a sibling button, so opening details
+never activates character review. Text reserves room for its 44px touch target.
+
 Sentencing has a dedicated Sentence carried out modal with the prisoner's portrait,
 actual effects, and expandable receipts. Continue or Back returns to the roster.
 The roster and custody screens never embed result receipts. Successful arrests

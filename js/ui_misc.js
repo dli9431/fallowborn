@@ -4475,7 +4475,21 @@ window.FB = window.FB || {};
           (UI.familyTreeStatusHtml
             ? UI.familyTreeStatusHtml(FB.state, c) : '') + '</div>');
       }
-      document.addEventListener('mouseover', function (e) {
+      let focusedCardTip = false;
+      let tipPointerX = null, tipPointerY = null;
+      // Scrolling a keyboard-focused card under a stationary pointer must not
+      // replace its tooltip with the card that happens to pass under the mouse.
+      document.addEventListener('mousemove', function (e) {
+        const moved = e.clientX !== tipPointerX || e.clientY !== tipPointerY;
+        tipPointerX = e.clientX; tipPointerY = e.clientY;
+        if (focusedCardTip && moved) {
+          focusedCardTip = false;
+          showHoverTip(e);
+        }
+      });
+      function showHoverTip(e) {
+        if (focusedCardTip) return;
+        tipPointerX = e.clientX; tipPointerY = e.clientY;
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
         if (e.target.closest('#tooltip')) {
           cancelHideTip();
@@ -4585,7 +4599,8 @@ window.FB = window.FB || {};
         const r = chip.getBoundingClientRect();
         tip.style.left = Math.max(4, Math.min(window.innerWidth - 250, r.left)) + 'px';
         tip.style.top = Math.min(window.innerHeight - 110, r.bottom + 6) + 'px';
-      });
+      }
+      document.addEventListener('mouseover', showHoverTip);
       document.addEventListener('click', function (e) {
         if (!e.target || !e.target.closest) return;
         if (e.target.closest('.ftchip[data-cid]')) {
@@ -4650,6 +4665,7 @@ window.FB = window.FB || {};
         }
         const settCardFocus = e.target.closest('.settcard');
         if (settCardFocus) {
+          focusedCardTip = true;
           if (showSettCardTip(settCardFocus)) return;
           scheduleHideTip();
           return;
@@ -4660,6 +4676,7 @@ window.FB = window.FB || {};
         }
       });
       document.addEventListener('focusout', function (e) {
+        focusedCardTip = false;
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
         if (e.relatedTarget && e.relatedTarget.closest &&
             (e.relatedTarget.closest('#tooltip') ||

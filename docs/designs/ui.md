@@ -1,6 +1,14 @@
 # UI: keyboard & mobile
 
+Keyboard focus owns a card's desktop tooltip until focus leaves or the pointer
+moves. Scrolling a focused card into view must not let another card passing under
+a stationary pointer replace its tooltip.
+
 ## Justice and prisoners
+
+Justice roster Details buttons sit within the card boundary to the right of the text
+on compact/touch layouts. They remain separate from the character button, with
+44px targets and space reserved beside the text, rather than adding an outer row.
 
 Sentence results appear only in a separate Sentence carried out modal. It shows
 the prisoner, actual effects and Details, then returns to the roster via Continue

@@ -315,7 +315,9 @@ test('deeds tab shows demesne buildings as a county grid that opens settlements'
 
     // each building card shows just a name and a one-line effect; the audit
     // table and description stay hidden behind the card's ? button
-    const cards = page.locator('#gm-body .settcard');
+    const cards = page.locator('#gm-body .settcard').filter({
+      has:page.locator('.settcard-details[id^="settcard-details-"]')
+    });
     await expect(cards).toHaveCount(3);
     const millCard = cards.first();
     await expect(millCard.locator('b')).toContainText('Watermill');
