@@ -102,6 +102,11 @@ County siege readouts use current per-objective occupation progress, including o
 active campaigns besides the first. Completed objectives show Occupied — awaiting
 peace until a counter-siege begins; progress, shortages, and contested status count
 only eligible hosts for that campaign. Legacy wars retain their older progress fields.
+Multi-objective readouts in Land, Deeds and the campaign sheet keep the occupied
+count, every target's occupation status, and the simultaneous-occupation victory
+condition visible. Completed occupations omit the seasonal siege countdown;
+an active counter-siege restores it. Defensive campaigns name the attacking realm
+whose occupation of all targets must be prevented.
 
 Holy-war combatant overviews open from county details, ruler war cards, and the
 campaign panel. They show the target, caller, attacking leader, and complete opposing

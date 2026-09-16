@@ -1067,12 +1067,15 @@ window.FB = window.FB || {};
       status.blocker === 'contested' ? FB.T('Contested ground') :
       status.blocker === 'shortage' ? FB.T('Needs {men} more men', { men:status.shortage }) :
       FB.T('Siege works advancing');
+    const campaign = status.warId && FB.ordinaryWarById ? FB.ordinaryWarById(s, status.warId) : null;
+    const objectives = UI.campaignObjectivesHtml ? UI.campaignObjectivesHtml(s, campaign) : '';
     return '<b>' + esc(FB.T('Siege objective: {province}', {
       province:province ? province.name : status.pid })) + '</b><div>' +
       '<progress max="100" value="' + status.percent + '" aria-label="' +
       esc(FB.T('Siege progress')) + '"></progress> ' + status.percent + '%</div><div>' +
-      esc(FB.T('Next seasonal check in {days} days', { days:status.days })) +
-      ' · ' + esc(blocker) + '</div>';
+      (status.blocker === 'occupied' ? '' :
+        esc(FB.T('Next seasonal check in {days} days', { days:status.days })) + ' · ') +
+      esc(blocker) + '</div>' + objectives;
   }
 
   function recruitmentFeedback(s) {

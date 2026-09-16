@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/wars.js', 'js/actions.js', 'js/world.js',
-  'js/institutions.js', 'data/policies.js', 'data/technology.js', 'js/armies.js', 'js/ui_wars.js', 'js/ui_modals.js', 'js/i18n.js', 'js/messages.js', 'js/events.js', 'data/events_war.js']);
+  'js/institutions.js', 'data/policies.js', 'data/technology.js', 'js/armies.js', 'js/ui_wars.js', 'js/ui_modals.js', 'js/i18n.js', 'js/messages.js', 'js/events.js', 'data/events_war.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
@@ -232,6 +232,28 @@ test('enforcement declares its cause in a campaign-bound modal, toast and report
 });
 
 
+async function expectPeaceTermsInset(page, terms) {
+  for (const width of [1000, 390]) {
+    await page.setViewportSize({ width:width, height:800 });
+    await expect(terms).toBeVisible();
+    const layout = await terms.evaluate(function (section) {
+      const heading = section.querySelector('h4').getBoundingClientRect();
+      const bounds = section.getBoundingClientRect();
+      return Array.from(section.querySelectorAll('li')).map(function (item) {
+        const rect = item.getBoundingClientRect();
+        return { inset:rect.left - heading.left, right:rect.right - bounds.right,
+          overflow:item.scrollWidth - item.clientWidth };
+      });
+    });
+    expect(layout.length).toBeGreaterThan(0);
+    for (const item of layout) {
+      expect(item.inset).toBeGreaterThanOrEqual(18);
+      expect(item.right).toBeLessThanOrEqual(1);
+      expect(item.overflow).toBeLessThanOrEqual(1);
+    }
+  }
+}
+
 for (const resolution of ['enforced', 'bought']) {
   test('peace outcome displays actual ' + resolution + ' terms without hiding them', async function ({ page }, testInfo) {
     const ids = await vassalSetup(page, testInfo);
@@ -268,8 +290,10 @@ for (const resolution of ['enforced', 'bought']) {
     await expect(terms).toContainText('No land changes hands.');
     if (resolution === 'enforced') await expect(terms).toContainText('The unlawful campaign is ended.');
     else await expect(terms).toContainText('Tribute paid:');
+    await expectPeaceTermsInset(page, terms);
     await page.evaluate(function (id) { FB.ui.showHostileReport(id); }, result.reportId);
     await expect(page.locator('#gm-body .war-peace-terms')).toBeVisible();
     await expect(page.locator('#gm-body .war-peace-terms')).toContainText('No land changes hands.');
+    await expectPeaceTermsInset(page, page.locator('#gm-body .war-peace-terms'));
   });
 }

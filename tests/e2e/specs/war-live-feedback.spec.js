@@ -2,10 +2,78 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js', 'js/world.js', 'js/fortifications.js', 'js/ui_panels.js',
-  'js/ui_topbar.js', 'js/ui_misc.js', 'data/map_data.js', 'data/units.js'
+  'js/ui_topbar.js', 'js/ui_misc.js', 'js/ui_wars.js', 'js/wars.js',
+  'data/map_data.js', 'data/units.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
+
+for (const width of [1000, 390]) {
+  test('multiple siege objectives stay explicit at width ' + width, async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:width, height:800 });
+    const ids = await startWarSafety(page, testInfo);
+    const fixture = await page.evaluate(function (ids) {
+      const s = FB.state, w = s.player.war;
+      const first = w.target, second = s.realms[ids.liege].capital;
+      w.legacy = false;
+      w.objectives = [{ target:first, type:'fabricated' }, { target:second, type:'fabricated' }];
+      w.occupations = {};
+      w.occupations[first] = { occupied:true, progress:0, fortLevel:1 };
+      w.occupations[second] = { occupied:false, progress:0, fortLevel:1 };
+      w.target = second;
+      [first, second].forEach(function (pid) { s.owner[pid] = ids.enemy; s.holder[pid] = ids.enemy; });
+      FB.invalidateRealmCache();
+      FB.ui.selectProvince(first);
+      return { first:first, second:second, warId:w.id,
+        firstName:FB.world.byId[first].name, secondName:FB.world.byId[second].name };
+    }, ids);
+    const county = page.locator('[data-war-siege="' + fixture.first + '"]');
+    await expect(county).toContainText('100%');
+    await expect(county).toContainText('Occupied — awaiting peace');
+    await expect(county).not.toContainText('Next seasonal check');
+    await expect(county).toContainText('Campaign objectives: 1/2 occupied');
+    await expect(county.locator('li')).toHaveText([
+      fixture.firstName + ': Occupied', fixture.secondName + ': Still to occupy'
+    ]);
+    await expect(county).toContainText('Occupy every objective at the same time to win this war.');
+    expect(await county.evaluate(function (el) { return el.scrollWidth <= el.clientWidth + 1; })).toBe(true);
+
+    await page.evaluate(function (f) {
+      const s = FB.state, w = s.wars[f.warId];
+      s.armies = [{ id:'counter-siege', realm:w.defender, warId:w.id, at:f.first,
+        men:1000, size:1000, units:{ levy:1000 }, supply:100, path:[], moveLeft:0 }];
+      w.occupations[f.first].progress = 1;
+      FB.ui.refresh({ liveTick:true });
+    }, fixture);
+    await expect(county).toContainText('Next seasonal check');
+    await expect(county).not.toContainText('Occupied — awaiting peace');
+
+    // Recapture makes the remaining work and county progress update in place.
+    await page.evaluate(function (f) {
+      FB.state.armies = [];
+      FB.state.wars[f.warId].occupations[f.first].occupied = false;
+      FB.ui.refresh({ liveTick:true });
+    }, fixture);
+    await expect(county).toContainText('Campaign objectives: 0/2 occupied');
+    await expect(county).toContainText('Next seasonal check');
+    await expect(county.locator('li').first()).toHaveText(fixture.firstName + ': Still to occupy');
+
+    await page.evaluate(function () { FB.ui.revealDeedAction('muster_host'); FB.ui.refresh(); });
+    await expect(page.locator('#deeds-war-card .campaign-objectives')).toContainText('0/2 occupied');
+    await page.evaluate(function (f) { FB.ui.showCampaign(f.warId); }, fixture);
+    await expect(page.locator('#campaign-goal-details-section .campaign-objectives li')).toHaveText([
+      fixture.firstName + ': Still to occupy', fixture.secondName + ': Still to occupy'
+    ]);
+    const enemyName = await page.evaluate(function (f) {
+      const s = FB.state, w = s.wars[f.warId];
+      w.attacker = w.enemy; w.defender = 'player'; w.defending = true;
+      FB.ui.showCampaign(w.id);
+      return s.realms[w.enemy].name;
+    }, fixture);
+    await expect(page.locator('#campaign-goal-details-section .campaign-objectives')).toContainText(
+      'Prevent ' + enemyName + ' from occupying every objective at the same time.');
+  });
+}
 
 test('siege projection reports fractional progress, absence, contested ground and defensive works',
   async function ({ page }, testInfo) {

@@ -235,6 +235,8 @@ automatic campaign endings queue the same presentation from Chronicle milestones
 Conquest and loss identify the actual county, and the existing report supplies
 the field record. Battle result events remain their own acknowledgement, without
 a second screen. Resolve everything skips the additional presentation.
+Peace-term lists reserve an inset for bullets within the content column, with
+wrapped lines aligned beneath each item's text in both outcomes and campaign reports.
 
 ## Causes and defensive alliances
 
@@ -491,6 +493,10 @@ Passage alone grants neither friendly supply nor immunity to hostile field armie
 Ordinary siege readouts use the selected county's campaign occupation record and only
 count halted, living hosts assigned to that campaign. They include counter-sieges,
 contested ground, garrison shortages, and completed occupation awaiting peace.
+Multi-objective campaigns display the full target list and occupied count beside
+the county siege status and in the campaign sheet, explaining that all objectives
+must be occupied together. Completed occupations hide the next-siege countdown
+unless counter-siege work begins. This is presentation only; victory rules are unchanged.
 Their `warId` selects an ordinary campaign or `holy`; changing assignment cancels the
 route but preserves location, composition and supply. Vassal recruitment excludes its
 counties from a simultaneously mobilized ancestor, recalling the overlapping share

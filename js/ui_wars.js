@@ -20,6 +20,25 @@
         '" aria-label="' + esc(FB.T('Details')) + '">?</button></span>' : '') + '</div>' + content +
       (detail ? '<div class="settcard-details hidden" id="' + id + '">' + detail + '</div>' : '') + '</section>';
   }
+  UI.campaignObjectivesHtml = function (s, w) {
+    if (!w || w.legacy || !w.objectives || w.objectives.length < 2) return '';
+    const held = w.objectives.filter(function (o) {
+      return w.occupations[o.target] && w.occupations[o.target].occupied;
+    }).length;
+    let h = '<section class="campaign-objectives"><b>' + esc(FB.T('Campaign objectives: {held}/{total} occupied', {
+      held:held, total:w.objectives.length
+    })) + '</b><ul>';
+    w.objectives.forEach(function (o) {
+      const occupied = w.occupations[o.target] && w.occupations[o.target].occupied;
+      h += '<li>' + esc(FB.T('{province}: {status}', {
+        province:objectiveName(o), status:occupied ? FB.T('Occupied') : FB.T('Still to occupy')
+      })) + '</li>';
+    });
+    h += '</ul><p>' + esc(w.attacker === 'player'
+      ? FB.T('Occupy every objective at the same time to win this war.')
+      : FB.T('Prevent {realm} from occupying every objective at the same time.', { realm:name(s, w.attacker) })) + '</p></section>';
+    return h;
+  };
   UI.campaignsHtml = function (s) {
     if (s.player.tier < 3) return '';
     let h = '<section class="land-section" data-campaign-list><h3>' + esc(FB.T('Campaigns')) + '</h3>';
@@ -68,7 +87,7 @@
       : special === 'caliphate' ? FB.T('Gain the Caliphate office.')
       : special === 'restoration' ? FB.T('Restore the crown and its vassals.')
       : FB.T('Occupy all objectives to gain them at peace.');
-    h += section('campaign-goal-details', FB.T('Objectives'), objectives + '<p>' + esc(victory) + '</p>',
+    h += section('campaign-goal-details', FB.T('Objectives'), (UI.campaignObjectivesHtml(s, w) || objectives) + '<p>' + esc(victory) + '</p>',
       '<p>' + esc(FB.T('Occupation is temporary until peace. All territorial objectives must remain occupied together. Office and independence wars follow their own terms.')) + '</p>');
     let hostHtml = '';
     const hosts = (s.armies || []).filter(function (a) { return a.realm === 'player'; });

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.4';
+FB.VERSION = '1.181.5';
 FB.CHANGELOG = [
+  { v: '1.181.5', date: '2026-09-16', changes: [
+    'Siege panels show every campaign objective and what remains to win. Completed occupations hide the siege countdown, and peace summaries align their terms.'
+  ] },
   { v: '1.181.4', date: '2026-09-16', changes: [
     'County construction and demolition require direct control of the county. Becoming a baron no longer unlocks building works throughout the home county.'
   ] },
