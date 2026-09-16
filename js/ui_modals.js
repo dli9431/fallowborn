@@ -2971,8 +2971,16 @@ window.FB = window.FB || {};
       : (status.reason || FB.T('This elevation is not currently available.'));
     const detailsId = 'rank-elevation-confirm-details';
     let h = '<div class="gm-body-text" data-rank-elevation-sheet="' +
-      esc(route) + '">' + rankTransitionHtml(currentTitle, nextTitle) +
-      kv('Cost', esc(rankElevationCostValue(status.cost))) +
+      esc(route) + '">' + rankTransitionHtml(currentTitle, nextTitle);
+    if (route === 'barony') {
+      h += kv('Requirements', esc(FB.T(
+        'An established gentle house, at least {prestige} prestige, and at least {standing} Standing with your lord.', {
+          prestige:FBDATA.balance.baronyPrestige,
+          standing:FBDATA.balance.baronyOpinion
+        })));
+    }
+    h += kv(route === 'barony' ? FB.T('Cost if granted') : FB.T('Cost'),
+      esc(rankElevationCostValue(status.cost))) +
       kv('Benefits', esc(rankElevationBenefit(status.targetTier)));
     const crossedRanks = FB.rankElevationBreakdown(s, s.player.tier, status.targetTier);
     if (crossedRanks.length > 1) {

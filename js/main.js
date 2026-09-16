@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.0';
+FB.VERSION = '1.181.1';
 FB.CHANGELOG = [
+  { v: '1.181.1', date: '2026-09-15', changes: [
+    'Barony petitions show the required prestige and Standing with your lord separately from the investiture cost.'
+  ] },
   { v: '1.181.0', date: '2026-09-15', changes: [
     'Plan county muster sizes and rally points, draw supplies from nearby realm markets, or force provisions at a cost to local support and relations. Budget subtotals, local staffing controls, and marriage shortcuts make household management easier.'
   ] },
