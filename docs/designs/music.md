@@ -22,6 +22,11 @@ changes the generated revision token, allowing the persistent music cache to kee
 
 ## Choosing music
 
+The inline title shell checks saved preferences and Ogg Opus support before its
+first paint, hiding the music prompt when a choice already exists or the codec
+is unsupported. If the early probe throws, the shell keeps the pending prompt;
+runtime detection remains authoritative and resolves it during boot.
+
 The first boot with a non-empty catalog asks whether to play music and shows the expected download
 size. Its loading-screen surface uses an explicit viewport-height content wrapper so the title,
 download explanation, and both choices remain rendered and scrollable in narrow mobile browser

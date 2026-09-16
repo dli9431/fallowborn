@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.5';
+FB.VERSION = '1.181.6';
 FB.CHANGELOG = [
+  { v: '1.181.6', date: '2026-09-16', changes: [
+    'Browsers without Ogg Opus support skip the music prompt from the first title-screen paint.'
+  ] },
   { v: '1.181.5', date: '2026-09-16', changes: [
     'Siege panels show every campaign objective and what remains to win. Completed occupations hide the siege countdown, and peace summaries align their terms.'
   ] },

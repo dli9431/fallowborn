@@ -25,7 +25,16 @@
           choice = saved && (saved.musicChoice === "on" ||
             saved.musicChoice === "off") ? saved.musicChoice : null;
         } catch (error) { /* keep the first-visit choice visible */ }
-        document.documentElement.classList.add(choice
+        var supported = true;
+        try {
+          var probe = document.createElement("audio");
+          supported = !!probe.canPlayType &&
+            probe.canPlayType('audio/ogg; codecs="opus"') !== "";
+        } catch (error) {
+          /* Fall back to normal pending display if detection fails;
+             runtime detection in js/music.js remains authoritative. */
+        }
+        document.documentElement.classList.add(choice || !supported
           ? "music-choice-resolved" : "music-choice-pending");
       })();
     </script>

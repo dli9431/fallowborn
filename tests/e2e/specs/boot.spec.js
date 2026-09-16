@@ -223,6 +223,13 @@ test('a translated boot loads English first and keeps incomplete Preview coverag
 
 test('world construction yields across expensive raster phases',
   async function ({ page }, testInfo) {
+    // Raster scheduling does not depend on the first-visit music prompt.
+    // Save the choice before navigation to avoid its WebKit dismissal race.
+    await page.addInitScript(function () {
+      const prefs = JSON.parse(localStorage.getItem('fb_ui') || '{}');
+      prefs.musicChoice = 'off';
+      localStorage.setItem('fb_ui', JSON.stringify(prefs));
+    });
     await openGame(page, testInfo);
     const progressCounts = await page.evaluate(function () {
       return new Promise(function (resolve, reject) {
@@ -330,3 +337,39 @@ test('title menu gives every action a decorative icon and a clean accessible nam
       await expect(button).toHaveAccessibleName(item[1]);
     }
   });
+
+for (const scenario of [
+  { name:'missing codec', supported:false, choice:null, resolved:true },
+  { name:'saved music on with supported codec', supported:true, choice:'on', resolved:true },
+  { name:'saved music off with supported codec', supported:true, choice:'off', resolved:true },
+  { name:'first visit with supported codec', supported:true, choice:null, resolved:false }
+]) {
+  test('early music shell handles ' + scenario.name,
+    async function ({ page }, testInfo) {
+      // Separate contexts ensure unsupported codecs cannot mask preference checks.
+      await page.addInitScript(function (scenario) {
+        if (scenario.choice) localStorage.setItem('fb_ui', JSON.stringify({ musicChoice:scenario.choice }));
+        else localStorage.removeItem('fb_ui');
+        const originalCanPlayType = HTMLMediaElement.prototype.canPlayType;
+        HTMLMediaElement.prototype.canPlayType = function (type) {
+          if (type === 'audio/ogg; codecs="opus"') return scenario.supported ? 'probably' : '';
+          return originalCanPlayType ? originalCanPlayType.apply(this, arguments) : '';
+        };
+        // Registered before main.js: capture the head-script result before
+        // runtime initialization can hide a broken early-shell decision.
+        document.addEventListener('DOMContentLoaded', function () {
+          window.musicShellSnapshot = {
+            resolved:document.documentElement.classList.contains('music-choice-resolved'),
+            pending:document.documentElement.classList.contains('music-choice-pending'),
+            hidden:getComputedStyle(document.getElementById('music-choice')).display === 'none',
+            bootReady:FB.game.bootReady
+          };
+        }, { once:true });
+      }, scenario);
+      await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
+      expect(await page.evaluate(function () { return window.musicShellSnapshot; })).toEqual({
+        resolved:scenario.resolved, pending:!scenario.resolved,
+        hidden:scenario.resolved, bootReady:false
+      });
+    });
+}
