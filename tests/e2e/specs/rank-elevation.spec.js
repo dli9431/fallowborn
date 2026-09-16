@@ -498,6 +498,48 @@ test('restoring a lost dignity pays the full rung again',
     });
   });
 
+test('barony review separates all eligibility requirements from the price even when blocked',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state, p = s.player;
+      p.tier = 2;
+      p.lineDepth = 1;
+      p.gentryGeneration = 1;
+      p.gold = 500;
+      p.prestige = 250;
+      const lord = FB.getRole(s, 'lord', true);
+      FB.adjustStanding(s, { kind:'character', id:lord.id },
+        0 - FB.standingOf(s, { kind:'character', id:lord.id }),
+        'test:barony_requirements');
+      FB.runInstant(s, 'petition_barony');
+    });
+    const sheet = page.locator('[data-rank-elevation-sheet="barony"]');
+    await expect(sheet).toContainText(
+      'An established gentle house, at least 400 prestige, and at least 60 Standing with your lord.');
+    await expect(sheet).toContainText('Cost if granted');
+    await expect(sheet).toContainText('250 prestige');
+    await expect(page.locator('#rank-elevation-confirm'))
+      .toHaveAttribute('aria-disabled', 'true');
+
+    await page.locator('#rank-elevation-cancel').click();
+    await page.evaluate(function () {
+      const s = FB.state, p = s.player;
+      p.lineDepth = 2;
+      p.prestige = 400;
+      const lord = FB.getRole(s, 'lord', true);
+      FB.adjustStanding(s, { kind:'character', id:lord.id },
+        60 - FB.standingOf(s, { kind:'character', id:lord.id }),
+        'test:barony_requirements_ready');
+      FB.runInstant(s, 'petition_barony');
+    });
+    await expect(sheet).toContainText(
+      'An established gentle house, at least 400 prestige, and at least 60 Standing with your lord.');
+    await expect(sheet).toContainText('Cost if granted');
+    await expect(sheet).toContainText('250 prestige');
+    await expect(page.locator('#rank-elevation-confirm'))
+      .not.toHaveAttribute('aria-disabled', 'true');
+  });
+
 test('an accepted petitioned barony charges its rank resources',
   async function ({ page }) {
     const result = await page.evaluate(function () {

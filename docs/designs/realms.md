@@ -785,6 +785,10 @@ because the player explicitly takes command and must win a real map battle first
 territorial gate qualifies the household; it does not silently grant the style. Every
 rank-appropriate Deeds launcher remains visible and enabled without calculating land,
 liege, house, cooldown, or resource eligibility during the retained-panel status pass.
+The barony review always lists the established-house requirement and the configured
+prestige and lord Standing thresholds (currently 400 prestige and 60 Standing), even
+when another requirement blocks the petition. Its separate Cost if granted row shows
+the investiture price (500 gold and 250 prestige), not the eligibility threshold.
 Opening it performs that calculation on request and presents one compact review with the
 current and new status, cumulative price, benefit, approval chance for a petition, and a
 focusable available or greyed confirmation. Longer timing and refusal terms use the shared
