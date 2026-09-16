@@ -1,5 +1,11 @@
 # National technology
 
+The Phase 2 settlement-lordship foundation has technology impact **none**
+(`settlement_lordship`): hereditary ownership and county authority are baseline
+political relationships. It adds no capacity bonus or enforcement yet. Phase 3 of
+the settlement plan introduces the separate soft administrative-capacity interaction;
+foundation projections explicitly leave that limit unintegrated.
+
 Knightly equipment uses matching production gates across Head, Body, and Feet:
 Mail Coif, Knightly Mail Hauberk, and Mail Chausses require `mail_hauberks` and 1200;
 Knightly Bascinet, Knight's Plate Armor, and Plate Sabatons require `plate_armor` and

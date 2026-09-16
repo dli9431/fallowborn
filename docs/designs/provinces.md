@@ -181,7 +181,16 @@ growth, loss, and movement, and pursuing communal conversion or assimilation are
 character, demographic, and territorial behavior, not advanced capabilities that
 research could credibly gate.
 
-**Settlements are derived, not stored.** Two identities exist. The settlement *slot* —
+**Settlement presentations are derived; establishment and lordship are saved.**
+`state.settlementLordships.counties[pid].established` is a persistent visibility
+floor, while delegated records use stable slot indices. Missing delegation means
+direct control by the current county holder. County borders, owners, population,
+and physical site definitions do not change when a lordship changes. Development
+growth still reveals sites during the ownership-foundation phase; recording its
+high-water mark prevents later loss from hiding them. Chartered founding replaces
+automatic reveals in Phase 5, not in the ownership migration.
+
+Two identities exist. The settlement *slot* —
 the zero-based index inside one county — remains the canonical saved reference for
 buildings, plots, manors, and enterprises. The physical *site* is a stable snake-case
 slug with one longitude/latitude in the shared `FBDATA.settlementSites` table

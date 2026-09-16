@@ -3233,6 +3233,7 @@ FB.CHANGELOG = [
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
     if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
+    if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
     if (sc.tier === 0) {
       /* The integrated tenure sheet and lawful-freedom routes name the exact
          home authority from the first playable frame. Establish the bounded
@@ -3403,6 +3404,7 @@ FB.CHANGELOG = [
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
+    if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
     if (FB.ensureFaithStandingBaselines) {
       FB.ensureFaithStandingBaselines(state);
     }
@@ -5300,6 +5302,9 @@ FB.CHANGELOG = [
       FB.news(s, '☠ ' + causeText);
     }
     const heirs = FB.heirsOf(s);
+    if (!heirs.length && FB.settlementLordshipsPlayerSuccession) {
+      FB.settlementLordshipsPlayerSuccession(s, me.id, null);
+    }
     const deathTelemetry = {
       entry_type:telemetryEntryType,
       active_seconds:activeSeconds,
@@ -5507,6 +5512,9 @@ FB.CHANGELOG = [
   G.resumePendingDeath = function () {
     const continuation = G.deathContinuation(FB.state);
     if (!continuation || !FB.ui || !FB.ui.showDeath) return false;
+    if (!continuation.heirs.length && FB.settlementLordshipsPlayerSuccession) {
+      FB.settlementLordshipsPlayerSuccession(FB.state, continuation.character.id, null);
+    }
     G.paused = true;
     FB.ui.showDeath(continuation.heirs, continuation.causeText);
     return true;
@@ -5520,7 +5528,12 @@ FB.CHANGELOG = [
     const old = s.chars[p.charId];
     const heir = s.chars[heirId];
     if (!heir || heir.dead) {
-      if (!livingAbdication) FB.ui.gameOver();
+      if (!livingAbdication) {
+        if (FB.settlementLordshipsPlayerSuccession) {
+          FB.settlementLordshipsPlayerSuccession(s, old.id, null);
+        }
+        FB.ui.gameOver();
+      }
       return false;
     }
     /* Complete the old-save property migration before taking the inheritance
@@ -5611,6 +5624,9 @@ FB.CHANGELOG = [
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     FB.learnMaternalCustoms(s);
     p.charId = heir.id;
+    if (FB.settlementLordshipsPlayerSuccession) {
+      FB.settlementLordshipsPlayerSuccession(s, old.id, heir.id);
+    }
     if (FB.chronicleNoteHead) FB.chronicleNoteHead(s);
     if (successionTier !== p.tier) {
       FB.setPlayerTier(s, successionTier, {

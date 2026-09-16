@@ -1,5 +1,59 @@
 # Modding Fallowborn
 
+## Settlement lordships (ownership foundation)
+
+`js/lordships.js` loads after `world.js`. County owner/holder and realm APIs remain
+county-scoped. Optional save-format-3 `settlementLordships` version 1 records
+established slot floors and delegated character-held lordships; missing delegation
+means direct county-holder control. The full record and succession rules are in
+[state and saves](designs/state-and-saves.md#settlement-ownership-foundation).
+
+Read-only, detached interfaces:
+
+- `FB.settlementCountyHolder(state, pid)` returns the living supervising realm id.
+- `FB.homeCountyAuthority(state)` returns `{provinceId, realmId, characterId}`;
+  an unmaterialized ruler has a null character id until a mutation boundary resolves it.
+- `FB.settlementEstablishedCount(state, pid)` returns the saved visibility floor.
+- `FB.settlementLordship(state, pid, slot)` returns a copied delegation or null.
+- `FB.settlementHolder(state, pid, slot)` returns `{kind:'realm'|'character', id}`
+  or null for unavailable sites. A player barony uses the player character id;
+  direct county government uses the realm id, including `'player'`.
+- `FB.directSettlements(state, actor)` returns `{provinceId, settlement}` rows.
+  Actors are typed holder objects; a string means a realm, and omission means the
+  player. The player actor includes both personal baronies and direct county holdings.
+- `FB.settlementConstructionAuthority(state, pid, slot, actor)` returns `holder`,
+  `countyHolderId`, and `direct`, with `integrated:false` and
+  `liveAccounting:'county'`. This is ownership authority, not yet the live Build gate.
+- `FB.settlementCapacityProjection(state, actor)` returns `directCount` and rows,
+  with `limit:null`, `enforced:false`, and `stage:'ownership'` until Phase 3.
+- `FB.settlementFiscalProjection(state, pid, slot)` returns the holder, supervising
+  count, and copied obligations. `FB.settlementContributionProjection` exposes the
+  payer and receiving realm. Both return `amounts:null` and `integrated:false`:
+  consumers must not treat unimplemented fiscal amounts as zero or available income.
+- `FB.settlementFoundingEligibility(state, pid)` reports established and unused
+  physical slots, but `ready:false` and `blocker:'founding_not_integrated'` until Phase 5.
+
+Mutation boundaries are `FB.ensureSettlementLordships(state, {fresh:true}?)`,
+`FB.rememberSettlementSites(state, pid)`, `FB.syncHomeCountyLord(state)`,
+`FB.assignSettlementLordship(state, pid, slot, holderId, options?)`, and
+`FB.revertSettlementLordship(state, pid, slot)`. Assignment/reversion return booleans;
+assignment requires an established non-seat slot, a living recipient, and a living
+county holder. The legacy-migration exception also permits the dead protagonist
+whose playable succession decision is pending. These are trusted simulation primitives, not player grant actions:
+they do not negotiate, charge, move a household, or award rank. `source:'legacy'`
+marks the one-time migration grant. Ordinary grants default to customary service.
+
+`FB.settlementLordshipsCharacterDied` and
+`FB.settlementLordshipsPlayerSuccession(state, oldId, heirId)` own inheritance and
+reversion. A null playable heir reverts the old player's delegations. A saved nominee
+is used only when alive, free, and distinct from the deceased. Direct custom writes
+must call `FB.invalidateSettlementLordships(state, pid)`; prefer the mutation APIs.
+`FB.settlementLordshipRevision()` is transient, never saved, and
+`FB.settlementLordshipReferencesCharacter` protects retained identity references.
+
+No construction, tax, levy, capacity-penalty, or founding gameplay is enabled by
+calling a projection. Those integrations are separate phases of the saved plan.
+
 ## Ruler justice
 
 `FBDATA.justiceSentences` defines sentence ids with display `name`/`desc`, required

@@ -3284,6 +3284,8 @@ window.FB = window.FB || {};
      so the check errs toward keeping the record. */
   FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
     if (!state || !c || !state.player) return false;
+    if (FB.settlementLordshipReferencesCharacter &&
+        FB.settlementLordshipReferencesCharacter(state, c.id)) return true;
     const p = state.player;
     if (c.id === p.charId || p.courtingId === c.id) return true;
     if (c.items && c.items.length) return true;
@@ -4429,6 +4431,9 @@ window.FB = window.FB || {};
     const dev = settlementDev(state, pid);
     let visible = Math.min(SETTLEMENT_MAX_SLOTS,
       Math.max(info.authored, info.legacyBase + villageBonus(dev)));
+    if (FB.settlementEstablishedCount) {
+      visible = Math.max(visible, FB.settlementEstablishedCount(state, pid));
+    }
     /* A fort remains a map landmark even if later development decline would
        ordinarily conceal its settlement. The cached fort lookup keeps this
        allocation-free renderer seam constant-time. */
@@ -5336,6 +5341,9 @@ window.FB = window.FB || {};
     if (FB.papacyProvinceTransferred) {
       FB.papacyProvinceTransferred(state, pid, from, toRealm);
     }
+    if (state.player && state.player.provinceId === pid && FB.syncHomeCountyLord) {
+      FB.syncHomeCountyLord(state);
+    }
     if (serfAuthorityBefore && FB.serfHomeAuthority &&
         FB.noteSerfHomeTransition) {
       FB.noteSerfHomeTransition(state, 'county_transfer',
@@ -5525,6 +5533,7 @@ window.FB = window.FB || {};
        settler community now so every live identity reader sees saved state. */
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     FB.worldCompileSettlements(pid);
+    if (FB.rememberSettlementSites) FB.rememberSettlementSites(state, pid);
     FB.invalidateRealmCache();
     if (FB.marketWorldDirty) FB.marketWorldDirty();
     FB.checkTierPromotions(state);
@@ -5979,7 +5988,9 @@ window.FB = window.FB || {};
     }
     if (cause !== 'ai_drift') developmentChangesFor(state)[pid] = 1;
     if (after === before) return 0;
+    if (FB.rememberSettlementSites) FB.rememberSettlementSites(state, pid);
     state.dev[pid] = after;
+    if (FB.rememberSettlementSites) FB.rememberSettlementSites(state, pid);
     FB.invalidateRealmCache();
     if (FB.map && FB.map.request) FB.map.request();
     if (FB.reconcileSettlementCommunities) {
@@ -8802,6 +8813,7 @@ window.FB = window.FB || {};
 
   FB.checkTierPromotions = function (state) {
     const p = state.player;
+    if (FB.syncHomeCountyLord) FB.syncHomeCountyLord(state);
     // no one is his own vassal — repair saves where a flight into the
     // player's own demesne left p.liege pointing at the player's realm
     if (p.liege === 'player') {

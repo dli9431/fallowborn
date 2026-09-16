@@ -1,5 +1,35 @@
 # Realms, the liege hierarchy & tiers
 
+## Settlement lordship foundation (Phase 2)
+
+`js/lordships.js` separates delegated settlement ownership from county titles.
+Delegations belong to ordinary characters, with hereditary identity and customary
+service obligations; they never add county realm nodes or entries in `player.provs`.
+Direct unassigned settlements follow the county holder dynamically. County conquest
+therefore changes a barony's supervising ruler without transferring its lordship or
+private property. Assignment and reversion are centralized trusted simulation APIs;
+negotiation, construction control, taxes, and AI delegation are later integration work.
+
+The home county holder is now the authoritative local lord. `FB.getRole(state, 'lord')`
+resolves that ruler's existing character; its creating path may materialize the
+exact ruler on the existing scoped court stream, but never invents a landless grantor.
+Former generated local lords remain ordinary contacts. Barony petitions and freedom
+negotiation use the actual ruler, while a commoner remains a resident rather than a
+formal noble vassal. The role cache refreshes on restore, county transfer, ruler death,
+and normal hierarchy reconciliation. A higher-ranked county holder may reside in
+another county; this does not invalidate their local authority.
+
+Legacy territorial barons receive one non-seat settlement at migration; personal and
+temporary offices do not. See [state and saves](state-and-saves.md) for succession,
+extinction, migration exclusions, and custom counties without a grantable second site.
+New barony offers still use the existing rank mechanism until Phase 4 replaces them
+with concrete grants. Phase 2 is a foundation, not a releasable partial economy.
+
+Technology impact `settlement_lordship` is **none**: ownership, inherited rights,
+and county authority are ordinary political relationships. Phase 3 separately adds
+the **soft** administrative-capacity interaction and live accounting; the Phase 2
+capacity/fiscal interfaces explicitly report their unintegrated status.
+
 ## Territorial justice
 
 Barons can arrest non-rulers at their seat; counts and higher rulers can also

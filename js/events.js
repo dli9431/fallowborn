@@ -887,6 +887,14 @@ window.FB = window.FB || {};
   };
 
   FB.getRole = function (state, role, create) {
+    if (role === 'lord') {
+      const authority = FB.homeCountyAuthority(state);
+      const lord = create ? FB.syncHomeCountyLord(state) :
+        (authority.characterId && authority.characterId !== state.player.charId
+          ? state.chars[authority.characterId] : null);
+      if (lord && create) FB.getRole(state, 'steward', true);
+      return lord || null;
+    }
     if (role === 'spouse') {
       return FB.spouseOf(state, state.chars[state.player.charId]);
     }
@@ -895,19 +903,6 @@ window.FB = window.FB || {};
     }
     const id = state.roles[role];
     if (id && state.chars[id] && !state.chars[id].dead) {
-      /* Old saves could turn this authoritative story role into a retainer.
-         The role index is canonical, so restore its character metadata as it
-         is resolved even if the obsolete contract has already been removed. */
-      if (role === 'lord' && state.chars[id].role !== 'lord') {
-        state.chars[id].role = 'lord';
-      }
-      if (role === 'lord' && create) {
-        const stewardId = state.roles.steward;
-        if (!stewardId || !state.chars[stewardId] ||
-            state.chars[stewardId].dead) {
-          FB.getRole(state, 'steward', true);
-        }
-      }
       return state.chars[id];
     }
     if (!create) return null;
@@ -917,14 +912,12 @@ window.FB = window.FB || {};
          receiving attention at the shared threshold, never a stranger. */
       return FB.attentionFriendCandidate(state);
     }
-    if (['lord','steward','priest','rival','notable'].indexOf(role) < 0) {
+    if (['steward','priest','rival','notable'].indexOf(role) < 0) {
       return null;
     }
-    const authorityBefore = role === 'lord' && FB.serfHomeAuthority
-      ? FB.serfHomeAuthority(state) : null;
     const pr = FB.world.byId[state.player.provinceId];
     const me = state.chars[state.player.charId];
-    const institutional = role === 'lord' || role === 'steward' ||
+    const institutional = role === 'steward' ||
       role === 'priest';
     const identity = institutional && FB.countyDominantCommunity
       ? FB.countyDominantCommunity(state, pr.id)
@@ -935,8 +928,7 @@ window.FB = window.FB || {};
       religion:identity && identity.religion || pr.religion,
       born:state.date.year - FB.ri(25, 55), role:role
     };
-    if (role === 'lord') { opts.quality = 4; opts.sex = 'm'; opts.dyn = 'of ' + pr.name; opts.station = 3; }
-    else if (role === 'steward') { opts.quality = 3; opts.born = state.date.year - FB.ri(30, 60); opts.station = 2; }
+    if (role === 'steward') { opts.quality = 3; opts.born = state.date.year - FB.ri(30, 60); opts.station = 2; }
     else if (role === 'priest') { opts.quality = 2; opts.sex = 'm'; opts.born = state.date.year - FB.ri(30, 60); opts.station = 1; }
     else if (role === 'notable') {
       opts.quality = 1;
@@ -951,32 +943,6 @@ window.FB = window.FB || {};
     }
     const c = FB.makeCharacter(state, opts);
     state.roles[role] = c.id;
-    if (role === 'lord' && create) FB.getRole(state, 'steward', true);
-    if (role === 'lord' && FB.activeSerfTenure &&
-        FB.activeSerfTenure(state) && FB.serfHomeAuthority) {
-      const tenure = FB.activeSerfTenure(state);
-      const authorityAfter = FB.serfHomeAuthority(state);
-      if (tenure.authorityCheckpoint &&
-          tenure.authorityCheckpoint.localLordId === null) {
-        normalizeSerfTenure(state, tenure);
-        const transition = state.player.tenureTransition;
-        if (transition && transition.oldAuthority &&
-            transition.newAuthority) {
-          transition.oldAuthority.localLordId = c.id;
-          transition.newAuthority.localLordId = c.id;
-          if (transition.queued) {
-            transition.revision++;
-            transition.status = 'pending';
-            transition.queued = false;
-            removeQueuedTenureReviews(state);
-          }
-        }
-      } else if (authorityBefore && authorityAfter &&
-          FB.noteSerfHomeTransition) {
-        FB.noteSerfHomeTransition(state, 'local_lord_succession',
-          authorityBefore, authorityAfter);
-      }
-    }
     return c;
   };
 
@@ -2768,6 +2734,9 @@ window.FB = window.FB || {};
     if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(state, c);
     c.dead = true;
     c.died = state.date.year; // remembered on their sheet: born–died
+    if (FB.settlementLordshipsCharacterDied) {
+      FB.settlementLordshipsCharacterDied(state, c.id);
+    }
     /* A dead character no longer reigns, and no longer belongs to any
        family walk: close the derived indexes here, in the one true death
        path, rather than waiting for a verify-on-hit to notice. */
@@ -2802,6 +2771,7 @@ window.FB = window.FB || {};
     /* Again at the end: the spouse and betrothal links above were severed
        after the first bump, and the family index reads exactly those. */
     if (FB.touchFamily) FB.touchFamily();
+    if ((serfLordDied || reigningRealmId) && FB.syncHomeCountyLord) FB.syncHomeCountyLord(state);
     if (serfLordDied && serfAuthorityBefore && FB.serfHomeAuthority &&
         FB.noteSerfHomeTransition) {
       FB.noteSerfHomeTransition(state, 'local_lord_succession',
@@ -6604,7 +6574,8 @@ window.FB = window.FB || {};
     const tenure = FB.activeSerfTenure(state);
     if (!tenure) return null;
     const p = state.player;
-    const localLordId = state.roles && state.roles.lord;
+    const authority = FB.homeCountyAuthority && FB.homeCountyAuthority(state);
+    const localLordId = authority ? authority.characterId : state.roles && state.roles.lord;
     const localLord = localLordId && state.chars && state.chars[localLordId];
     const localLordHome = localLord && FB.characterResidence
       ? FB.characterResidence(state, localLord) : null;
@@ -6623,7 +6594,8 @@ window.FB = window.FB || {};
       provinceId:tenure.provinceId,
       settlement:tenure.settlement,
       localLordId:localLord && !localLord.dead &&
-        localLordHome === tenure.provinceId ? localLord.id : null,
+        (authority ? authority.provinceId === tenure.provinceId :
+          localLordHome === tenure.provinceId) ? localLord.id : null,
       holderRealmId:holderRealmId,
       holderGeneration:holder.generation,
       sovereignRealmId:sovereignRealmId,

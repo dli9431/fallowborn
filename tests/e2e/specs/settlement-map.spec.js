@@ -10,6 +10,7 @@ dependsOnRuntime(__filename, [
   'js/settlement.js',
   'js/siteart.js',
   'js/world.js',
+  'js/lordships.js',
   'css/style.css',
   'data/settlements.js'
 ]);
@@ -607,7 +608,7 @@ test('a valid demesne sheet retains construction and demolition controls',
 
 /* ---------- condition-driven development and settlement anchors ---------- */
 
-test('development decline never conceals an anchored settlement',
+test('legacy settlement projections retain their investment anchors before migration',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
     await page.evaluate(function () { FB.game.setPaused(true); });
@@ -620,8 +621,12 @@ test('development decline never conceals an anchored settlement',
       const savedBuildings = s.buildings[pid];
       const savedEnterprises = s.player.enterprises;
       const savedHome = s.player.homeSettlement;
+      const savedLordships = s.settlementLordships;
       const out = { pid:pid };
       try {
+        /* Test the pre-migration fallback in isolation. Established-site
+           persistence is covered by settlement-lordship.spec.js. */
+        delete s.settlementLordships;
         s.dev[pid] = 1; // below every reveal threshold
         const base = FB.settlementVisibleCount(s, pid);
         out.base = base;
@@ -659,6 +664,8 @@ test('development decline never conceals an anchored settlement',
         else s.buildings[pid] = savedBuildings;
         s.player.enterprises = savedEnterprises;
         s.player.homeSettlement = savedHome;
+        if (savedLordships === undefined) delete s.settlementLordships;
+        else s.settlementLordships = savedLordships;
       }
       return out;
     });

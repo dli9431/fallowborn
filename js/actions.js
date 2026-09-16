@@ -2251,6 +2251,11 @@ window.FB = window.FB || {};
   };
 
   function freedomCurrentLord(state) {
+    if (FB.homeCountyAuthority) {
+      const authority = FB.homeCountyAuthority(state);
+      return authority.characterId && authority.characterId !== state.player.charId
+        ? state.chars[authority.characterId] : null;
+    }
     const id = state && state.roles && state.roles.lord;
     const lord = id && state.chars && state.chars[id];
     return lord && !lord.dead ? lord : null;

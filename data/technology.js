@@ -75,6 +75,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      settlement_lordship:{ mode:'none', rationale:'Hereditary settlement ownership, succession, and identification of the county ruler are baseline territorial relationships. Administrative capacity and live fiscal delegation are integrated separately.' },
       ruler_arrest:{ mode:'none', rationale:'Local arrest is baseline territorial authority; jurisdiction and physical capture, not research, limit it.' },
       judicial_custody:{ mode:'none', rationale:'Holding and inheriting prisoners is baseline ruler authority with existing escape and release paths.' },
       judicial_release:{ mode:'none', rationale:'Release and pardon are baseline recovery and mercy without a research dependency.' },

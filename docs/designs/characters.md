@@ -1,5 +1,11 @@
 # Characters: skills & growing up
 
+Settlement-lordship holders, founders, and saved nominees are retained references
+for court compaction. NPC lordships use existing parent/child links, including
+adoption, for deterministic hereditary succession; player lordships follow the
+selected playable heir. No new characters or RNG draws are needed to repair a
+lordship on restore. See [state and saves](state-and-saves.md).
+
 ## Judicial exile
 
 Active exile supplies an NPC's authoritative residence before household or royal

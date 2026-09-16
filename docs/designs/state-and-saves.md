@@ -1,5 +1,44 @@
 # Game state & saves
 
+## Settlement ownership foundation
+
+Save format remains 3. `state.settlementLordships` is additive version-1 data:
+`{version:1, counties:{[pid]:{established, lordships:{[slot]:record}}}, legacyBarony}`.
+Only delegated lordships need records. Unassigned established slots derive their
+holder from the current county holder; county ownership and realm arrays are unchanged.
+Each record stores `holderId`, immutable `founderId` and `dynasty`, `playerHouse`,
+optional `successorId`, `obligations:{charterId:'customary_service'}`, `grantedTurn`,
+and `source:'grant'|'legacy'`. There are no rendered names, fiscal caches, or realm
+nodes for baronies. Slot zero remains the protected county seat.
+
+`FB.ensureSettlementLordships` runs at new game/Observe and restore. Fresh starts
+record existing settlement floors without inventing barony grants; actual new-game
+barony investiture is part of the later grant integration. Restore without this
+table preserves existing sites as direct holdings and grants an old territorial
+player baron a non-seat manor/home slot, otherwise the first non-seat slot. Offices
+(Castellan, Bishop, Chief Qadi, and papal office) are excluded. `legacyBarony` is
+`none`, `granted`, or `unavailable`; the last case preserves custom one-site counties
+without seizing their seat. Migration never charges, promotes, moves the household,
+changes population/property, or consumes RNG. Repeat restore does not grant again.
+Unknown future versions are preserved rather than downgraded.
+
+Established floors are recorded on initialization, restore, development mutation,
+wasteland materialization, and lordship assignment. Visibility reads do not repair
+state. A development decline cannot conceal an established site. Existing investments
+still contribute their original visibility floors.
+
+NPC lordships pass to a saved living, free nominee, then the first living free
+descendant found generation-by-generation, ordering siblings by birth and stable id.
+Both parent pointers and adopted child links count. Extinction removes the delegation
+so the county holder resumes direct rule. Player records wait at the death decision
+and follow the selected playable heir, including retirement; a terminal heirless
+death reverts them. Referenced holders, founders, and nominees are protected from
+court compaction. Ownership indexes and revision stamps are transient.
+
+This is Phase 2 of [the settlement plan](../plans/settlement-lordship-and-progression.md).
+Capacity enforcement, fiscal settlement, building permissions, and grant/founding UI
+remain on the existing systems until their respective integration phases.
+
 Returning-player onboarding checks for existing saves after IndexedDB slot loading
 completes, before enabling the title screen. Profiles upgrading without stored tip
 preferences therefore retain veteran status even when their only save is in IndexedDB.
