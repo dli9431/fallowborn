@@ -1507,3 +1507,9 @@ the default rally. This extends `county_muster_selection` with no research gate.
 Gentry eligibility derives house-relative depth from existing founder, parent and
 child records when available, so older maternal-line undercounts need no save
 rewrite or version migration. Succession records the corrected depth.
+
+County muster targets also apply while hosts are fielded. Existing host sizes
+reserve casualty replacement ranks when quoting additional troops; no new saved
+field or migration is needed for inherited hosts. The shared military musterPool
+ceiling now survives partial raises until the campaign military state is cleared,
+preventing later calls from bypassing returned-veteran limits.

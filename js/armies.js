@@ -1663,6 +1663,49 @@ window.FB = window.FB || {};
   function playerMusterPlan(state) {
     return selectedMusterPlan(state, fullPlayerMusterPlan(state));
   }
+  // A call is a total deployment target, not a fresh copy of the rolls.
+  // Reserve existing hosts' missing ranks too: casualties recover through
+  // reinforcement, never through repeated fresh musters.
+  function remainingMusterPlan(state, plan) {
+    if (!plan) return null;
+    const serving = emptyUnitCounts();
+    let reserved = 0, alliedServing = 0;
+    (state.armies || []).forEach(function (host) {
+      if (host.realm !== 'player' || host.rebellionId) return;
+      const units = host.units || { levy:Math.max(0, host.men - (host.mercs || 0)), mercs:host.mercs || 0 };
+      Object.keys(serving).forEach(function (key) { serving[key] += units[key] || 0; });
+      reserved += Math.max(host.men, host.size === undefined ? host.men : host.size);
+      alliedServing += host.allied && host.allied.men || 0;
+    });
+    const room = Math.max(0, plan.men - reserved);
+    Object.keys(plan.units).forEach(function (key) {
+      plan.units[key] = Math.max(0, plan.units[key] - (serving[key] || 0));
+    });
+    if (unitCountTotal(plan.units) > room) plan.units = musterShare(plan.units, room);
+    plan.men = unitCountTotal(plan.units);
+    plan.allied = Object.assign({}, plan.allied, {
+      men:Math.min(plan.units.levy, Math.max(0, plan.allied.men - alliedServing))
+    });
+    const remaining = copyUnitCounts(plan.units);
+    remaining.mercs = 0; remaining.levy -= plan.allied.men;
+    const targets = emptyUnitCounts();
+    plan.rows.forEach(function (row) {
+      Object.keys(targets).forEach(function (key) { targets[key] += row.calledUnits[key] || 0; });
+    });
+    plan.rows.forEach(function (row) {
+      Object.keys(targets).forEach(function (key) {
+        const target = row.calledUnits[key] || 0;
+        const take = targets[key] ? Math.min(remaining[key], Math.floor(remaining[key] * target / targets[key])) : 0;
+        row.calledUnits[key] = take;
+        targets[key] -= target; remaining[key] -= take;
+      });
+      row.additional = unitCountTotal(row.calledUnits);
+    });
+    if (plan.cohort) Object.keys(plan.cohort).forEach(function (key) {
+      plan.cohort[key] = Math.min(plan.cohort[key], plan.units[key] || 0);
+    });
+    return plan;
+  }
   function musterHosts(state, plan, formation) {
     if (formation === undefined) formation = state.player.musterFormation;
     const warId = state.player.war ? state.player.war.id : (plan.greatHost ? 'holy' : null);
@@ -1683,15 +1726,13 @@ window.FB = window.FB || {};
   }
   FB.playerMusterSelectionQuote = function (state, selection, formation, rally) {
     if (state.player.tier < 3) return null;
-    const plan = selectedMusterPlan(state, fullPlayerMusterPlan(state, true), selection, rally);
+    const plan = remainingMusterPlan(state, selectedMusterPlan(state, fullPlayerMusterPlan(state, true), selection, rally));
     if (!plan) return null;
     const hosts = musterHosts(state, plan, formation);
     // Price the planned banners at their starting counties, including the
     // provisions pressure they create, without changing the live army list.
     const pricedState = Object.assign({}, state, {
-      armies:(state.armies || []).filter(function (host) {
-        return host.realm !== 'player';
-      }).concat(hosts)
+      armies:(state.armies || []).concat(hosts)
     });
     let standing = 0, food = 0;
     const estimates = {}, batch = { prices:Object.create(null), baskets:Object.create(null) };
@@ -1705,7 +1746,7 @@ window.FB = window.FB || {};
     const valid = hosts.length > 0 && hosts.every(function (host) { return host.men >= plan.floor; });
     return { rows:plan.rows, men:plan.men, units:plan.units, rally:plan.territory.rally,
       minimum:plan.floor, days:FB.musterDelay(state, 'player'), valid:valid,
-      canRaise:!!fullPlayerMusterPlan(state) && valid && !FB.musterDelay(state, 'player') && !FB.playerHost(state),
+      canRaise:!!fullPlayerMusterPlan(state) && valid && !FB.musterDelay(state, 'player'),
       standing:standing, food:food, total:standing + (force || auto.buySupplies === false ? 0 : food),
       forced:force, purchases:auto.buySupplies !== false, fixed:(plan.units.mercs || 0) + plan.allied.men,
       hosts:hosts.length, estimates:estimates, formation:(formation === undefined ? state.player.musterFormation : formation) === 'county' ? 'county' : 'gather' };
@@ -1728,7 +1769,7 @@ window.FB = window.FB || {};
   };
 
   FB.playerMusterPreview = function (state) {
-    const plan = playerMusterPlan(state);
+    const plan = remainingMusterPlan(state, playerMusterPlan(state));
     if (!plan) return null;
     return {
       men:plan.men, minimum:plan.floor,
@@ -1741,18 +1782,13 @@ window.FB = window.FB || {};
   FB.raisePlayerHost = function (state) {
     FB.armiesEnsure(state);
     const p = state.player, w = p.war;
-    const existing = FB.playerHost(state);
-    if (existing) return existing;
     const down = state.armyDown['player'];
     if (down !== undefined && state.turn - down < B().armyRearmDays) return null;
-    const plan = playerMusterPlan(state);
+    const plan = remainingMusterPlan(state, playerMusterPlan(state));
     if (!plan || plan.men < plan.floor) return null;
     const raised = musterHosts(state, plan);
     if (!raised.length || raised.some(function (host) { return host.men < plan.floor; })) return null;
-    if (plan.limited) {
-      if (state.military && state.military.player) state.military.player.musterPool = null;
-      else if (w) w.musterPool = null;
-    }
+    // Keep returned-veteran ceilings for subsequent partial calls as well.
     if (plan.cohort) cohortConsumeReady(state, 'player', plan.cohort);
     const allied = plan.allied;
     const home = plan.territory.rally;

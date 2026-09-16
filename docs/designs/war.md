@@ -1743,6 +1743,17 @@ collection needs no research; paid provisioning remains the ordinary alternative
 
 ## County muster plans
 
+Muster remains available with existing hosts, including armies acquired through
+succession. County amounts are total deployment targets; quotes and execution
+subtract every player host's serving composition and reserve its missing ranks
+before creating additional banners. Existing hosts retain size, location, supply
+and orders. Repeated calls cannot duplicate soldiers, hired companies or allied
+contingents, or bypass casualty reinforcement. Quotes show additional troops and
+their additional field costs alongside existing hosts' market pressure. Returned
+veteran ceilings persist after a partial call, so a later call cannot bypass them.
+This extends `county_muster_selection`, technology impact **none**: calling the
+remaining existing rolls is basic military command, including after succession.
+
 The Muster plan sheet is available from Campaigns, individual campaigns, the
 Muster the host deed, and war declaration review. Players choose integer troop
 amounts by county, with 0/25/50/100% presets, and choose either one combined host

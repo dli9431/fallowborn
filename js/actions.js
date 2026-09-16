@@ -4050,9 +4050,6 @@ window.FB = window.FB || {};
         FB.playerGreatHolyWarHostActive(s));
     },
     can: function (s) {
-      if (FB.playerHost && FB.playerHost(s)) {
-        return FB.T('Your host is already in the field.');
-      }
       const down = (s.armyDown || {})['player'];
       const rearmDays = FBDATA.balance.armyRearmDays;
       if (down !== undefined && s.turn - down < rearmDays) {

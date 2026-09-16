@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.2';
+FB.VERSION = '1.181.3';
 FB.CHANGELOG = [
+  { v: '1.181.3', date: '2026-09-15', changes: [
+    'Muster remaining available troops while other hosts are already in the field, including armies inherited through succession.'
+  ] },
   { v: '1.181.2', date: '2026-09-15', changes: [
     'Barony petitions recognize established houses through maternal descent and recorded child links, including in existing saves.'
   ] },

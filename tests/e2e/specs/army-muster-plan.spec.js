@@ -284,3 +284,134 @@ for (const width of [390, 1280]) {
     })).toBe(true);
   });
 }
+
+
+for (const formation of ['gather', 'county']) {
+  test('an inherited field host leaves the remaining levy available: ' + formation, async function ({ page }, testInfo) {
+    const ids = await setup(page, testInfo);
+    const result = await page.evaluate(function (args) {
+      const s = FB.state, ids = args.ids;
+      const composition = FB.playerComposition;
+      try {
+        // The owner's save has a 370-man inherited professional host with
+        // 406 replacement ranks, while the household levy remains uncalled.
+        FB.playerComposition = function () { return { levy:800, arch:29, cav:20, ret:260, crossbow:61 }; };
+        s.armies.push({ id:'inherited-muster-host', realm:ids.other,
+          at:ids.home, from:ids.home, men:370, size:406,
+          units:{ levy:0, arch:29, cav:20, ret:260, crossbow:61, mercs:0 },
+          warId:s.player.war.id, supply:75, path:[], moveLeft:0, goal:null, manual:1 });
+        FB.remapWarRealm(s, ids.other, 'player');
+        FB.armiesEnsure(s);
+        const inherited = s.armies[0];
+        FB.hostUnits(inherited);
+        const before = JSON.stringify(inherited);
+        const rng = FB.getRngState();
+        const quote = FB.playerMusterSelectionQuote(s, null, args.formation);
+        const pure = before === JSON.stringify(inherited) && rng === FB.getRngState();
+        FB.savePlayerMusterSelection(s, null, args.formation);
+        const raised = FB.raisePlayerHost(s);
+        const added = s.armies.filter(function (host) { return host.id !== inherited.id; });
+        const repeat = FB.raisePlayerHost(s);
+        const exhausted = FB.playerMusterSelectionQuote(s);
+        return { pure:pure, canRaise:quote.canRaise, quoted:quote.men,
+          added:added.reduce(function (sum, host) { return sum + host.men; }, 0),
+          levy:added.reduce(function (sum, host) { return sum + host.units.levy; }, 0),
+          raised:!!raised, unchanged:before === JSON.stringify(inherited),
+          duplicate:!!repeat, exhausted:exhausted.men, disabled:!exhausted.canRaise };
+      } finally { FB.playerComposition = composition; }
+    }, { ids:ids, formation:formation });
+    expect(result).toEqual({ pure:true, canRaise:true, quoted:764, added:764,
+      levy:764, raised:true, unchanged:true, duplicate:false, exhausted:0, disabled:true });
+  });
+}
+
+test('increasing a saved call raises only the remainder and preserves casualty ranks after reload', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, full = FB.playerMusterSelectionQuote(s, null, 'gather'), half = {};
+    full.rows.forEach(function (row) { half[row.pid] = Math.floor(row.maximum / 2); });
+    FB.savePlayerMusterSelection(s, half, 'gather');
+    const first = FB.raisePlayerHost(s), firstMen = first.men;
+    const repeated = FB.raisePlayerHost(s);
+    FB.savePlayerMusterSelection(s, null, 'gather');
+    const remaining = FB.playerMusterSelectionQuote(s);
+    FB.raisePlayerHost(s);
+    const total = s.armies.reduce(function (sum, host) { return sum + host.men; }, 0);
+    const casualty = Math.min(20, first.units.levy);
+    first.units.levy -= casualty; first.men -= casualty;
+    const copy = JSON.parse(JSON.stringify(s));
+    return { first:firstMen, full:full.men, repeated:!!repeated, remaining:remaining.men,
+      total:total, casualty:casualty, afterLoss:FB.playerMusterSelectionQuote(s).men,
+      restored:FB.playerMusterSelectionQuote(copy).men };
+  });
+  expect(result.first).toBeLessThan(result.full);
+  expect(result.repeated).toBe(false);
+  expect(result.remaining).toBe(result.full - result.first);
+  expect(result.total).toBe(result.full);
+  expect(result.casualty).toBeGreaterThan(0);
+  expect(result.afterLoss).toBe(0); expect(result.restored).toBe(0);
+});
+
+test('partial repeated calls cannot bypass returned-veteran or hired-company limits', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, ledger = s.military.player;
+    ledger.musterPool = { levy:160 }; ledger.mercCos = 1;
+    const full = FB.playerMusterSelectionQuote(s, null, 'gather'), half = {};
+    full.rows.forEach(function (row) { half[row.pid] = Math.floor(row.maximum / 2); });
+    FB.savePlayerMusterSelection(s, half, 'gather'); FB.raisePlayerHost(s);
+    FB.savePlayerMusterSelection(s, null, 'gather');
+    const quote = FB.playerMusterSelectionQuote(s);
+    FB.raisePlayerHost(s); FB.raisePlayerHost(s);
+    return { levy:s.armies.reduce(function (n, host) { return n + host.units.levy; }, 0),
+      mercs:s.armies.reduce(function (n, host) { return n + host.units.mercs; }, 0),
+      extraMercs:quote.units.mercs, company:FBDATA.balance.mercCompanySize || 150,
+      remaining:FB.playerMusterSelectionQuote(s).men, cap:ledger.musterPool.levy };
+  });
+  expect(result.levy).toBe(160); expect(result.mercs).toBe(result.company);
+  expect(result.extraMercs).toBe(0); expect(result.remaining).toBe(0); expect(result.cap).toBe(160);
+});
+
+for (const width of [390, 1280]) {
+  test('muster sheet raises the remainder beside an existing host at ' + width, async function ({ page }, testInfo) {
+    await setup(page, testInfo);
+    await page.setViewportSize({ width:width, height:844 });
+    await page.evaluate(function () {
+      const s = FB.state, full = FB.playerMusterSelectionQuote(s, null, 'gather'), half = {};
+      full.rows.forEach(function (row) { half[row.pid] = Math.floor(row.maximum / 2); });
+      FB.savePlayerMusterSelection(s, half, 'gather'); FB.raisePlayerHost(s);
+      FB.ui.showMusterPlan();
+    });
+    await page.locator('[data-muster-percent="100"]').click();
+    await expect(page.locator('#muster-raise')).toBeEnabled();
+    await expect(page.locator('#muster-costs')).toContainText('Additional troops / hosts');
+    await page.locator('#muster-raise').click();
+    expect(await page.evaluate(function () {
+      return FB.state.armies.filter(function (host) { return host.realm === 'player'; }).length;
+    })).toBe(2);
+  });
+}
+
+
+test('all field hosts count toward the target and defensive allies cannot muster twice', async function ({ page }, testInfo) {
+  const ids = await setup(page, testInfo);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state, composition = FB.playerComposition, allies = FB.alliedReinforcement;
+    try {
+      FB.playerComposition = function () { return { levy:800 }; };
+      FB.alliedReinforcement = function () { return { ally:ids.other, men:120 }; };
+      s.player.war.defending = true;
+      const full = FB.playerMusterSelectionQuote(s, null, 'gather');
+      [200, 220].forEach(function (men, i) {
+        s.armies.push({ id:'fielded-' + i, realm:'player', at:ids.home, from:ids.home,
+          men:men, size:men, units:{ levy:men }, supply:100, path:[], moveLeft:0,
+          warId:s.player.war.id, allied:i ? { ally:ids.other, men:120 } : null });
+      });
+      const q = FB.playerMusterSelectionQuote(s, null, 'gather');
+      const added = FB.raisePlayerHost(s);
+      return { full:full.men, remaining:q.men, fixed:q.fixed, added:added.men,
+        allied:added.allied ? added.allied.men : 0, exhausted:FB.playerMusterSelectionQuote(s).men };
+    } finally { FB.playerComposition = composition; FB.alliedReinforcement = allies; }
+  }, ids);
+  expect(result).toEqual({ full:920, remaining:500, fixed:0, added:500, allied:0, exhausted:0 });
+});

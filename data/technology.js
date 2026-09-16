@@ -585,7 +585,7 @@ window.FBDATA = window.FBDATA || {};
       },
       county_muster_selection:{
         mode:'none',
-        rationale:'Calling a chosen share of existing county muster rolls and choosing an eligible rally county is basic command and budgeting. Existing recruitment, technology, rearm and returned-veteran limits still determine available troops; full musters remain available.'
+        rationale:'Calling a chosen share of existing county muster rolls, including remaining troops while hosts are fielded, and choosing an eligible rally county is basic command and budgeting. Existing hosts and replacement ranks count toward the target. Recruitment, technology, rearm and returned-veteran limits still determine available troops; full musters remain available.'
       },
       forced_army_provisions:{
         mode:'none',

@@ -148,7 +148,7 @@
       '<button type="button" class="btn" id="muster-counties-toggle" aria-expanded="true" aria-controls="muster-counties">' +
       esc(FB.T('Hide county troops')) + '</button><div id="muster-counties">' +
       (counties || '<p>' + esc(FB.T('No eligible recruitment counties.')) + '</p>') + '</div>',
-      '<p>' + esc(FB.T('Fewer troops cost less to keep in the field. Each county shows its share of the estimated cost. Besieged or occupied counties cannot send troops. Mustering itself does not lower Popular support.')) + '</p>');
+      '<p>' + esc(FB.T('County amounts set your total deployment target. Existing hosts and their replacement ranks count toward that target; only additional available troops muster. Existing hosts keep their orders. Besieged or occupied counties cannot send troops. Mustering itself does not lower Popular support.')) + '</p>');
     h += section('muster-cost-details', FB.T('Estimated cost'), '<div id="muster-costs" aria-live="polite"></div>',
       '<p>' + esc(FB.T('Costs use current prices where each host starts. Food costs depend on available stocks and your supply settings. Moving, winter and price changes can raise the bill.')) + '</p>' +
       '<p>' + esc(FB.T('There is no fee to raise troops. You pay to keep them in the field. Existing contracts and replacement training may cost extra.')) + '</p>');
@@ -180,7 +180,7 @@
       const quote = FB.playerMusterSelectionQuote(s, draft, formation, rally);
       if (!quote) return;
       shownQuote = JSON.stringify([quote.units, quote.hosts, quote.total, quote.rally]);
-      let costs = fact(FB.T('Troops / hosts'), FB.T('{men} troops in {hosts} hosts', { men:quote.men, hosts:quote.hosts })) +
+      let costs = fact(FB.T('Additional troops / hosts'), FB.T('{men} troops in {hosts} hosts', { men:quote.men, hosts:quote.hosts })) +
         fact(FB.T('Field upkeep'), FB.T('{money:cost} per season', { cost:quote.standing })) +
         fact(FB.T('Food estimate'), FB.T('{money:cost} per season', { cost:quote.food })) +
         fact(FB.T('Expected spending'), FB.T('{money:cost} per season', { cost:quote.total })) +
@@ -199,12 +199,11 @@
         const row = quote.rows.filter(function (entry) { return entry.pid === el.dataset.musterCost; })[0];
         const county = quote.estimates[el.dataset.musterCost];
         const cost = formation === 'county' ? (county ? county.standing + (quote.forced || !quote.purchases ? 0 : county.food) : 0) :
-          quote.total * (row ? row.selected : 0) / Math.max(1, quote.men);
+          quote.total * (row ? row.additional : 0) / Math.max(1, quote.men);
         el.textContent = FB.T('About {money:cost} per season', { cost:cost });
       });
-      document.getElementById('muster-blocker').textContent = FB.playerHost(s) ? FB.T('This plan applies to later musters; troops already in the field keep their current size.') :
-        quote.days ? FB.T('Ready to muster in {days} days.', { days:quote.days }) :
-        !quote.men ? FB.T('No troops will muster until you change this plan.') :
+      document.getElementById('muster-blocker').textContent = quote.days ? FB.T('Ready to muster in {days} days.', { days:quote.days }) :
+        !quote.men ? FB.T('No additional troops are available under this plan. Troops already fielded and their replacement ranks count toward the target.') :
         !quote.valid ? FB.T('Each host needs at least {men} troops. Choose more troops or gather at the rally point.', { men:quote.minimum }) :
         !quote.canRaise ? FB.T('Save this plan for when war begins.') : FB.T('The plan also applies to automatic musters.');
     }
