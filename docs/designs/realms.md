@@ -1142,3 +1142,11 @@ payer record, so succession cannot reset annual generosity. County support remai
 temporary county modifier and follows county transfer normally. Treasury balances are
 never confiscated or capped to solve long-term accumulation; AI uses the reserve policy
 in finance.md, while player spending remains voluntary.
+
+House generation depth is anchored at `houseFounderId` (depth 1), follows both
+parents and recorded child lists, and searches shared ancestors for collateral
+heirs. It does not measure an unrelated spouse’s ancestry. The established-gentry
+check derives this depth without modifying the save, repairing older maternal-line
+undercounts immediately; succession and new gentry rises record the same scale.
+Unconnected trees retain the saved-depth fallback, and legacy saves without
+`lineDepth` retain the saga-generation comparison. Cycles are bounded by visited IDs.

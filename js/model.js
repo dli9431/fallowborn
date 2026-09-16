@@ -2446,6 +2446,34 @@ window.FB = window.FB || {};
      differences matter — succession uses them to tell a child's inheritance
      from a sibling's. The seen set ends the walk on any cycle in a corrupt
      save. */
+  // Compare generations within the founding family, never the unrelated
+  // spouse's ancestry. Child lists also recover adoption and older missing links.
+  FB.houseLineDepthOf = function (state, c) {
+    const founder = state.player && state.chars[state.player.houseFounderId];
+    if (!founder || !c) return null;
+    const ancestors = [{ c:founder, depth:1 }], seenAncestors = {};
+    seenAncestors[founder.id] = true;
+    for (let i = 0; i < ancestors.length; i++) {
+      const root = ancestors[i], queue = [root], seen = {};
+      seen[root.c.id] = true;
+      for (let j = 0; j < queue.length; j++) {
+        const row = queue[j];
+        if (row.c.id === c.id) return Math.max(1, row.depth);
+        for (const child of childrenOf(state, row.c)) {
+          if (seen[child.id]) continue;
+          seen[child.id] = true;
+          queue.push({ c:child, depth:row.depth + 1 });
+        }
+      }
+      for (const parent of familyParentsOf(state, root.c)) {
+        if (seenAncestors[parent.id]) continue;
+        seenAncestors[parent.id] = true;
+        ancestors.push({ c:parent, depth:root.depth - 1 });
+      }
+    }
+    return null;
+  };
+
   FB.lineDepthOf = function (state, c) {
     let depth = 1, cur = c;
     const seen = {};

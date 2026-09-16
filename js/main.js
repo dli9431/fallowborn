@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.1';
+FB.VERSION = '1.181.2';
 FB.CHANGELOG = [
+  { v: '1.181.2', date: '2026-09-15', changes: [
+    'Barony petitions recognize established houses through maternal descent and recorded child links, including in existing saves.'
+  ] },
   { v: '1.181.1', date: '2026-09-15', changes: [
     'Barony petitions show the required prestige and Standing with your lord separately from the investiture cost.'
   ] },
@@ -5569,8 +5572,10 @@ FB.CHANGELOG = [
       } else {
         heirDepth = FB.lineDepthOf ? FB.lineDepthOf(s, heir) : oldDepth;
       }
-      p.lineDepth = Math.max(1, p.lineDepth === undefined ?
-        heirDepth : p.lineDepth + (heirDepth - oldDepth));
+      const houseDepth = FB.houseLineDepthOf && FB.houseLineDepthOf(s, heir);
+      p.lineDepth = houseDepth !== null && houseDepth !== undefined ? houseDepth :
+        Math.max(1, p.lineDepth === undefined ?
+          heirDepth : p.lineDepth + (heirDepth - oldDepth));
     }
     heir.dyn = old.dyn;
     heir.role = null;

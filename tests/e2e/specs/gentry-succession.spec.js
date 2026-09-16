@@ -413,3 +413,36 @@ test('field command cannot bypass the founder-life boundary for an established h
       began:false
     });
   });
+
+
+test('maternal and recorded-child descent repairs a saved gentry gate without counting an unrelated father', async function ({ page }) {
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    // The exported Barcelona save retains the founder's daughter only in
+    // childrenIds; her descendants have fathers from unrelated houses.
+    const chars = {
+      founder:{ id:'founder', childrenIds:['gentle', 'daughter'] },
+      gentle:{ id:'gentle', fatherId:'founder', childrenIds:[] },
+      daughter:{ id:'daughter', childrenIds:['father'] },
+      outsider:{ id:'outsider', childrenIds:['father'] },
+      father:{ id:'father', fatherId:'outsider', motherId:'daughter', childrenIds:['head'] },
+      head:{ id:'head', fatherId:'father', childrenIds:[] }
+    };
+    const state = Object.assign({}, s, { chars:chars,
+      player:Object.assign({}, s.player, { houseFounderId:'founder',
+        charId:'head', tier:2, lineDepth:2, gentryGeneration:2 }) });
+    const before = JSON.stringify(state.player);
+    const depth = FB.houseLineDepthOf(state, chars.head);
+    const established = FB.gentryEstablished(state);
+    const unchanged = before === JSON.stringify(state.player);
+    state.player.charId = 'daughter';
+    const sibling = FB.gentryEstablished(state);
+    state.player.charId = 'father';
+    const nephew = FB.gentryEstablished(state);
+    return { depth:depth, established:established, unchanged:unchanged,
+      sibling:sibling, nephew:nephew, unrelated:FB.houseLineDepthOf(state, chars.outsider) };
+  });
+  expect(result).toEqual({ depth:4, established:true, unchanged:true,
+    sibling:false, nephew:true, unrelated:null });
+});

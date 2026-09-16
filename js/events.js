@@ -5267,12 +5267,18 @@ window.FB = window.FB || {};
     if (!p || p.tier < 2) return false;
     if (p.gentryGeneration === undefined) return true;
     if (p.gentryGeneration === null) return false;
-    if (p.lineDepth !== undefined) return p.gentryGeneration < p.lineDepth;
+    if (p.lineDepth !== undefined) {
+      const depth = FB.houseLineDepthOf && FB.houseLineDepthOf(state, state.chars[p.charId]);
+      return p.gentryGeneration < (depth === null || depth === undefined ? p.lineDepth : depth);
+    }
     return p.gentryGeneration < state.generation;
   };
   FB.markGentryRise = function (state) {
     const p = state.player;
     if (p.gentryGeneration === undefined || p.gentryGeneration === null) {
+      const depth = p.lineDepth !== undefined && FB.houseLineDepthOf
+        ? FB.houseLineDepthOf(state, state.chars[p.charId]) : null;
+      if (depth !== null && depth !== undefined) p.lineDepth = depth;
       p.gentryGeneration = p.lineDepth !== undefined ? p.lineDepth : state.generation;
     }
   };

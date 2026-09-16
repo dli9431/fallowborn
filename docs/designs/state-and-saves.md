@@ -1503,3 +1503,7 @@ persists the chosen county. Combined hosts gather there; with separate county
 hosts, hired troops and allies join there. If that county becomes unavailable,
 quotes and execution use the normal eligible rally fallback. Old saves retain
 the default rally. This extends `county_muster_selection` with no research gate.
+
+Gentry eligibility derives house-relative depth from existing founder, parent and
+child records when available, so older maternal-line undercounts need no save
+rewrite or version migration. Succession records the corrected depth.
