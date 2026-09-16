@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.3';
+FB.VERSION = '1.181.4';
 FB.CHANGELOG = [
+  { v: '1.181.4', date: '2026-09-16', changes: [
+    'County construction and demolition require direct control of the county. Becoming a baron no longer unlocks building works throughout the home county.'
+  ] },
   { v: '1.181.3', date: '2026-09-15', changes: [
     'Muster remaining available troops while other hosts are already in the field, including armies inherited through succession.'
   ] },

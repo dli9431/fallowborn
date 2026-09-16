@@ -3834,9 +3834,9 @@ window.FB = window.FB || {};
       return s.player.flags.mason_visit ? 'The master mason waits — a quarter off your next work.'
         : 'Mills, walls, markets — stone outlasts silver.';
     },
-    show: function (s) { return s.player.tier >= 3; },
+    show: function (s) { return FB.buildingCounties(s).length > 0; },
     can: function (s) {
-      for (const pid of FB.demesne(s)) if (FB.anyBuildable(s, pid)) return true;
+      for (const pid of FB.buildingCounties(s)) if (FB.anyBuildable(s, pid)) return true;
       return 'Nothing more can be raised in your lands.';
     },
     run: function (s) { if (FB.ui && FB.ui.showBuildings) FB.ui.showBuildings(); } },
@@ -9601,6 +9601,19 @@ window.FB = window.FB || {};
     return FB.demesne(state)[0];
   };
 
+  // Residence is household scope, not authority over the county's works.
+  FB.canManageCountyBuildings = function (state, pid) {
+    return !!(state.player && state.player.tier >= 3 &&
+      ((state.holder && state.holder[pid]) || (state.owner && state.owner[pid])) === 'player');
+  };
+
+  FB.buildingCounties = function (state) {
+    if (!state.player || state.player.tier < 3) return [];
+    return FB.realmHeldCounties(state, 'player').filter(function (pid) {
+      return FB.canManageCountyBuildings(state, pid);
+    });
+  };
+
   /* Building reads fan out through seasonal finance, population, markets,
      host composition, automation, and the county ledger. Retain one transient
      per-county aggregation until that county's list changes. Nothing here is
@@ -9807,7 +9820,7 @@ window.FB = window.FB || {};
   };
 
   FB.buildingDemesneContext = function (state) {
-    const provinces = FB.demesne(state);
+    const provinces = FB.buildingCounties(state);
     const standing = Object.create(null);
     const byProvince = Object.create(null);
     for (const pid of provinces) {
@@ -9835,8 +9848,7 @@ window.FB = window.FB || {};
       pid:pid,
       index:index,
       visibleCount:FB.settlementVisibleCount(state, pid, index.visibleFloor),
-      held:demesneContext
-        ? !!demesneContext.byProvince[pid] : FB.demesne(state).indexOf(pid) >= 0,
+      held:FB.canManageCountyBuildings(state, pid),
       demesne:demesneContext
     };
   };
@@ -9869,7 +9881,7 @@ window.FB = window.FB || {};
     context = context && context.state === state && context.pid === pid
       ? context : FB.buildingContext(state, pid);
     if (!def || def.fort || typeof idx !== 'number' || !isFinite(idx) ||
-        Math.floor(idx) !== idx || !context.held ||
+        Math.floor(idx) !== idx || !FB.canManageCountyBuildings(state, pid) ||
         idx < 0 || idx >= context.visibleCount) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (context.index.occupied[(idx | 0) + ':' + id]) return false;
@@ -9989,11 +10001,10 @@ window.FB = window.FB || {};
   };
 
   FB.demolishBuilding = function (state, pid, idx, id) {
-    if (!state || !state.player || state.player.tier < 3) return false;
+    if (!state || !FB.canManageCountyBuildings(state, pid)) return false;
     if (id === 'walls' && FB.demolishFort) {
       return FB.demolishFort(state, pid, idx);
     }
-    if (FB.demesne(state).indexOf(pid) < 0) return false;
     const done = FB.builtIn(state, pid);
     for (let i = 0; i < done.length; i++) {
       if (done[i].id === id && done[i].s === idx && !done[i].ruined) {

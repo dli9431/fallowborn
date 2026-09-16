@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
+  'js/events.js',
   'js/settlement.js',
   'js/technology.js',
   'js/world.js',
@@ -655,4 +656,82 @@ test('building ledger shows remaining copies, shared limits and occupied ruins',
   await expect(page.locator('[data-bquick="shared_test"]')).toBeDisabled();
   await expect(card('ruin_test')).toContainText('Every settlement already has this building or its ruins.');
   await expect(page.locator('[data-bquick="ruin_test"]')).toBeDisabled();
+});
+
+
+test('gentry promotion to baron grants no control over home-county buildings', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId;
+    FB.game.setPaused(true);
+    s.player.provs = []; s.player.gold = 10000;
+    FBDATA.buildings.authority_test = { name:'Authority test', icon:'X', cost:1 };
+    s.buildings[pid] = [{ s:0, id:'mill' }];
+    FB.invalidateBuildingIndex(s, pid);
+    const holder = s.holder[pid] || s.owner[pid];
+    const before = JSON.stringify([s.buildings, s.dev]);
+    FB.setPlayerTier(s, 2);
+    const gentry = FB.canBuildAt(s, pid, 0, 'authority_test');
+    FB.setPlayerTier(s, 3);
+    const gold = s.player.gold;
+    const baron = FB.canBuildAt(s, pid, 0, 'authority_test');
+    const build = FB.build(s, pid, 0, 'authority_test');
+    const demolish = FB.demolishBuilding(s, pid, 0, 'mill');
+    const automatic = FB.autoBuild(s);
+    const deed = FB.listInstants(s, { deferEligibility:true }).some(function (entry) { return entry.a.id === 'build'; });
+    FB.ui.showSettlement(pid, 0);
+    const parent = document.getElementById('gm-body').innerHTML;
+    FB.ui.showBuildings(pid, 0);
+    return { gentry:gentry, baron:baron, build:build, demolish:demolish,
+      automatic:automatic, deed:deed, counties:FB.buildingCounties(s),
+      holderUnchanged:(s.holder[pid] || s.owner[pid]) === holder,
+      goldUnchanged:s.player.gold === gold,
+      assetsUnchanged:JSON.stringify([s.buildings, s.dev]) === before,
+      retained:document.getElementById('gm-body').innerHTML === parent,
+      fallback:FB.demesne(s).indexOf(pid) >= 0 };
+  });
+  expect(result).toEqual({ gentry:false, baron:false, build:false, demolish:false,
+    automatic:false, deed:false, counties:[], holderUnchanged:true,
+    goldUnchanged:true, assetsUnchanged:true, retained:true, fallback:true });
+  await expect(page.locator('#gm-raise')).toHaveCount(0);
+  await expect(page.locator('[data-demolish]')).toHaveCount(0);
+});
+
+test('building authority follows the direct holder and rejects stale county context', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId;
+    const formerHolder = s.holder[pid] || s.owner[pid];
+    s.player.tier = 4; s.player.provs = [pid]; s.player.gold = 10000;
+    FB.foundPlayerRealm(s);
+    FBDATA.buildings.authority_test = { name:'Authority test', icon:'X', cost:1 };
+    s.buildings[pid] = [];
+    FB.invalidateBuildingIndex(s, pid);
+    const allowed = FB.canBuildAt(s, pid, 0, 'authority_test');
+    const built = FB.build(s, pid, 0, 'authority_test');
+    const demolished = FB.demolishBuilding(s, pid, 0, 'authority_test');
+    s.buildings[pid] = [];
+    FB.invalidateBuildingIndex(s, pid);
+    const context = FB.buildingContext(s, pid, FB.buildingDemesneContext(s));
+    // Still sovereign, with a stale personal county list, but no longer holder.
+    s.holder[pid] = formerHolder;
+    FB.invalidateRealmCache();
+    const gold = s.player.gold;
+    const stale = FB.canBuildAt(s, pid, 0, 'authority_test', context);
+    const rejected = !FB.build(s, pid, 0, 'authority_test');
+    const excluded = FB.buildingCounties(s).indexOf(pid) < 0;
+    // Direct holding under a foreign sovereign still grants local authority.
+    s.holder[pid] = 'player'; s.owner[pid] = formerHolder;
+    FB.invalidateRealmCache();
+    const vassal = FB.canBuildAt(s, pid, 0, 'authority_test');
+    s.player.tier = 2;
+    const commoner = FB.canBuildAt(s, pid, 0, 'authority_test');
+    return { allowed:allowed, built:built, demolished:demolished, stale:stale,
+      rejected:rejected, excluded:excluded, vassal:vassal, commoner:commoner,
+      unspent:s.player.gold === gold };
+  });
+  expect(result).toEqual({ allowed:true, built:true, demolished:true, stale:false,
+    rejected:true, excluded:true, vassal:true, commoner:false, unspent:true });
 });

@@ -7439,7 +7439,11 @@ window.FB = window.FB || {};
 
   UI.showBuildings = function (pid, idx, keep) {
     const s = FB.state;
-    const provs = FB.demesne(s);
+    const provs = FB.buildingCounties(s);
+    if (!provs.length || (pid && !FB.canManageCountyBuildings(s, pid))) {
+      UI.toast(FB.T('You must directly hold a county to manage its buildings.'));
+      return;
+    }
     const demesneContext = FB.buildingDemesneContext(s);
     if (!pid && provs.length > 1) {
       let h = '<div class="gm-list">';
@@ -8351,7 +8355,7 @@ window.FB = window.FB || {};
     /* A commoner's home county is a display fallback in FB.demesne, not
        authority over county works. Building and fortification information is
        relevant only while the player is the county's landed holder. */
-    const managesCounty = holdId === 'player' && s.player.tier >= 3;
+    const managesCounty = FB.canManageCountyBuildings(s, pid);
     const holderText = holdId === 'player'
       ? FB.T('your household')
       : (s.realms[holdId] ? s.realms[holdId].name : FB.T('no one'));

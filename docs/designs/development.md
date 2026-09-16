@@ -40,8 +40,14 @@ visible early; thresholds already satisfied that way are skipped rather than pro
 The UI displays the starting development and next threshold together so historical starting
 advantage is not described as growth achieved during play.
 
-**Development is buildings.** Tier-3+ rulers raise named buildings (`FBDATA.buildings` in
+**Development is buildings.** Tier-3+ direct county holders raise named buildings (`FBDATA.buildings` in
 map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, picker in ui.js.
+Baron status alone grants no county construction or demolition authority. The
+Build deed, ledger, settlement controls, automation and mutation APIs share the
+direct-holder check; residence and stale county lists cannot substitute for it.
+Household scope retains its home-county fallback. Existing buildings in old saves
+remain county assets, including works previously commissioned by a baron.
+This corrects authority checks and introduces no new technology capability.
 After choosing a province when necessary, `UI.showBuildings` presents a persistent
 building-first county ledger. A sticky native county selector remains visible while the
 ledger scrolls, so touch and keyboard players can move directly between every held county.

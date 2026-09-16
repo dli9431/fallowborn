@@ -3012,3 +3012,8 @@ loaded game; loading another state resets this transient position.
 Muster plan offers a keyboard-accessible Show/Hide county troops button. Collapsing
 the county inputs keeps their draft values and leaves estimates, global presets,
 and plan actions available. Assembly and Rally point have no explanatory tooltip.
+
+The Build deed, county building ledger and settlement construction controls require
+the same direct county-holder authority. Becoming a baron does not expose works
+through the household home-county fallback. Opening an unauthorized building
+ledger shows a localized explanation and retains the current screen and its state.
