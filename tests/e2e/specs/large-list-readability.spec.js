@@ -441,6 +441,65 @@ test('large Work roster counts choices, orders attention, and preserves exact en
     await expect(touchWorkDetails).toContainText('base value');
   });
 
+test('mobile Work fills the screen and keeps disclosures beneath navigation',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:844 });
+    await startListGame(page, testInfo);
+    await makeLargeListFixture(page);
+    await page.evaluate(function () { FB.ui.showLivelihoods(); });
+
+    for (const viewport of [{ width:390, height:844 }, { width:844, height:390 }]) {
+      await page.setViewportSize(viewport);
+      const sheet = page.locator('#genmodal .modalcard');
+      await expect(sheet).toBeVisible();
+      const bounds = await sheet.boundingBox();
+      expect(bounds.x).toBeCloseTo(0, 0);
+      expect(bounds.y).toBeCloseTo(0, 0);
+      expect(bounds.width).toBeCloseTo(viewport.width, 0);
+      expect(bounds.height).toBeCloseTo(viewport.height, 0);
+
+      // Put a real card's help button behind the sticky footer. Its geometry
+      // still overlaps, but neither its paint nor its hit target may escape.
+      const overlap = await page.evaluate(function () {
+        var body = document.getElementById('gm-body');
+        var footer = body.querySelector('.gm-footer');
+        var buttons = body.querySelectorAll('.large-list-work-actions .settcard-info');
+        for (var i = 0; i < buttons.length; i++) {
+          var rect = buttons[i].getBoundingClientRect();
+          var foot = footer.getBoundingClientRect();
+          body.scrollTop += rect.top + rect.height / 2 - (foot.top + foot.height / 2);
+          rect = buttons[i].getBoundingClientRect();
+          foot = footer.getBoundingClientRect();
+          var x = rect.left + rect.width / 2;
+          var y = rect.top + rect.height / 2;
+          if (x > foot.left && x < foot.right && y > foot.top && y < foot.bottom) {
+            return { found:true, footerOwnsPoint:footer.contains(document.elementFromPoint(x, y)) };
+          }
+        }
+        return { found:false };
+      });
+      expect(overlap).toEqual({ found:true, footerOwnsPoint:true });
+
+      const card = page.locator('[data-list-section="family-enterprises"] .large-list-work-card').first();
+      const help = card.locator('.settcard-info');
+      await help.evaluate(function (button) { button.scrollIntoView({ block:'center' }); });
+      await help.click();
+      await expect(help).toHaveAttribute('aria-expanded', 'true');
+      const details = card.locator('.large-list-work-details');
+      await expect(details).toBeVisible();
+      const detailsBounds = await details.boundingBox();
+      expect(detailsBounds.x).toBeGreaterThanOrEqual(0);
+      expect(detailsBounds.x + detailsBounds.width).toBeLessThanOrEqual(viewport.width);
+      expect(await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollWidth <= body.clientWidth;
+      })).toBe(true);
+      await help.click();
+      await expect(details).toBeHidden();
+    }
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#genmodal')).toBeHidden();
+  });
+
 test('Network limits section hotkeys to actions and moves chips into tooltips',
   async function ({ page }, testInfo) {
     await startListGame(page, testInfo);

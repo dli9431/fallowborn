@@ -989,7 +989,9 @@ uses compact key/value rows for the selected reason’s exact costs or rewards a
 modal-header tooltip for the supporting political and mechanical explanation.
 Two families break only the bottom-sheet framing: the Changelog
 (`.changelog-modal`) stays an evenly margined centered panel, while the Menu, Automation,
-and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
+Work & Enterprises, and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
+Work list disclosure controls stay in the list's stacking context, below pinned navigation,
+so scrolling cards cannot draw help buttons over the footer.
 Action buttons never flex-shrink inside these columns, so wrapped descriptions and expanded
 translations remain inside their button borders and contribute their full height to scrolling.
 Ordinary modals (including event, settlement, and resource dialogs), the nested equipment

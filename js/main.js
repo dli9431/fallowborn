@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.6';
+FB.VERSION = '1.181.7';
 FB.CHANGELOG = [
+  { v: '1.181.7', date: '2026-09-16', changes: [
+    'Work & Enterprises fills the mobile screen, and card help buttons stay beneath the footer when scrolling.'
+  ] },
   { v: '1.181.6', date: '2026-09-16', changes: [
     'Browsers without Ogg Opus support skip the music prompt from the first title-screen paint.'
   ] },
