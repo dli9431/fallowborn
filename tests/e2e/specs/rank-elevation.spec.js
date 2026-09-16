@@ -521,10 +521,13 @@ test('barony review separates all eligibility requirements from the price even w
     await expect(page.locator('#rank-elevation-confirm'))
       .toHaveAttribute('aria-disabled', 'true');
 
+    await expect(sheet.locator('[data-rank-elevation-status]')).toBeVisible();
     await page.locator('#rank-elevation-cancel').click();
     await page.evaluate(function () {
       const s = FB.state, p = s.player;
-      p.lineDepth = 2;
+      // Use the established-house scenario baseline. Raising the saved
+      // depth alone cannot turn the founding character into a descendant.
+      p.gentryGeneration = 0;
       p.prestige = 400;
       const lord = FB.getRole(s, 'lord', true);
       FB.adjustStanding(s, { kind:'character', id:lord.id },
@@ -538,6 +541,8 @@ test('barony review separates all eligibility requirements from the price even w
     await expect(sheet).toContainText('250 prestige');
     await expect(page.locator('#rank-elevation-confirm'))
       .not.toHaveAttribute('aria-disabled', 'true');
+    await expect(sheet.locator('[data-rank-elevation-status]')).toHaveCount(0);
+    await expect(sheet).not.toContainText('Ready to confirm.');
   });
 
 test('an accepted petitioned barony charges its rank resources',

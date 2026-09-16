@@ -2996,9 +2996,11 @@ window.FB = window.FB || {};
         chance:Math.round(chance * 100)
       })));
     }
-    h += '<div class="progressnote' + (status.ready ? '' : ' warnote') +
-      '" data-rank-elevation-status>' + esc(reason) + '</div></div>' +
-      '<div class="event-choice-details hidden" id="' + detailsId + '">' +
+    if (route !== 'barony' || !status.ready) {
+      h += '<div class="progressnote' + (status.ready ? '' : ' warnote') +
+        '" data-rank-elevation-status>' + esc(reason) + '</div>';
+    }
+    h += '</div><div class="event-choice-details hidden" id="' + detailsId + '">' +
       '<p>' + esc(status.ready ? FB.T(
         'Confirm this elevation under the terms shown above.') : reason) +
       '</p></div><div class="gm-footer">' +

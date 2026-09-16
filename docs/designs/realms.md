@@ -1150,3 +1150,6 @@ check derives this depth without modifying the save, repairing older maternal-li
 undercounts immediately; succession and new gentry rises record the same scale.
 Unconnected trees retain the saved-depth fallback, and legacy saves without
 `lineDepth` retain the saga-generation comparison. Cycles are bounded by visited IDs.
+
+The barony review omits the redundant ready-to-confirm status when eligible;
+blocked petitions retain their visible requirement or cost explanation.
