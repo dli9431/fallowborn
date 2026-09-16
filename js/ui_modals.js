@@ -18387,7 +18387,7 @@ window.FB = window.FB || {};
     h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Close')) + '</button></div>';
     const modalOptions = householdPlanHistoryOptions(returnContext) || {};
-    modalOptions.modalClass = 'large-list-modal work-list-modal';
+    modalOptions.modalClass = 'large-list-modal work-list-modal fullsheet-modal';
     modalOptions.noHotkeys = true;
     modalOptions.replaceView = !!replaceView;
     modalOptions.guide = guideModalOption('work-guide', 'family-scopes',

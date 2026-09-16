@@ -375,6 +375,10 @@ Enterprise staffing candidate cards show Available when unassigned, or Working a
 enterprise. The location uses the existing settlement/county label. Selection and
 reassignment eligibility remain independent of this visible work status.
 
+On mobile, Work & Enterprises uses the shared full-screen sheet with safe-area padding
+and pinned navigation. Card help opens inline; its controls scroll beneath the footer.
+Desktop retains the centered list dialog.
+
 The owned enterprise list shows every business by default, including staffed ones;
 the shared five-routine-row preview cap does not apply to enterprise rows. Explicit
 search and staffing filters still apply, including in category and settlement groups.
