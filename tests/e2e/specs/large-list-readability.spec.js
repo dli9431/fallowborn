@@ -350,16 +350,10 @@ test('large Work roster counts choices, orders attention, and preserves exact en
     })).toBe(true);
 
     await page.locator('#enterprise-staffing-preview').click();
-    const staffingRow = page.locator('.enterprise-staffing-row').first();
-    await expect(staffingRow).toBeVisible();
-    await expect(staffingRow.locator('.enterprise-staffing-status'))
-      .toHaveCount(0);
-    await expect(staffingRow.locator('.enterprise-staffing-comparison'))
-      .toBeVisible();
-    const staffingChange = (await staffingRow.locator(
-      '.enterprise-staffing-change').textContent()).trim();
-    await staffingRow.hover();
-    await expect(page.locator('#tooltip')).toContainText(staffingChange);
+    await expect(page.locator('.enterprise-staffing-option')).toHaveCount(2);
+    await expect(page.locator('.enterprise-staffing-row')).toHaveCount(0);
+    await expect(page.locator('#enterprise-staffing-apply')).toBeVisible();
+    await expect(page.locator('#enterprise-staffing-local')).toBeVisible();
     await page.locator('#enterprise-staffing-back').click();
     await expect(page.locator('#enterprise-staffing-preview')).toBeVisible();
 

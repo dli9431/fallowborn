@@ -4535,6 +4535,22 @@ window.FB = window.FB || {};
   FB.enterpriseYield = function (state, e, chainSeen) {
     return enterpriseRead(state, function () { return readEnterpriseYield(state, e, chainSeen); });
   };
+  // Local hires have random skills and traits. Preview a typical unmodified
+  // skill (0..6 plus quality 1), without generating people or consuming RNG.
+  FB.enterpriseLocalStaffYieldEstimate = function (state, e) {
+    const def = FBDATA.enterprises[e.type];
+    if (!def) return 0;
+    const operational = FB.enterpriseOperationalWorkerIds(state, e);
+    const staff = enterpriseStaffFromIds(state, operational);
+    const required = FB.enterpriseStaffRequired(e);
+    if (staff + Math.floor(required - staff + 0.0001) + 0.0001 < required) return 0;
+    const worker = operational.length ? state.chars[operational[0]] : {
+      skills:{ dip:4, mar:4, ste:4, int:4, lea:4 }, traits:[],
+      career:{ profession:def.profession, rank:'journeyman',
+        guildRank:def.guildRank || 'none', experience:0, chosen:true }
+    };
+    return enterpriseWorkerYield(state, e, worker);
+  };
   // Physical output always uses baseline yield, never army-sale earnings.
   FB.enterprisePhysicalYield = function (state, e) { return FB.enterpriseYield(state, e); };
   function readEnterpriseYield(state, e, chainSeen) {

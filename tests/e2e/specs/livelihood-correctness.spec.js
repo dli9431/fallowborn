@@ -23,52 +23,43 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('staffing preview puts empty and partially staffed enterprises before fully staffed ones',
-  async function ({ page }) {
-    const expected = await page.evaluate(function () {
-      const s = FB.state;
-      s.player.gold = 1000;
-      s.player.enterprises = [
-        { uid:'a_staffed', level:0 },
-        { uid:'b_partial', level:1 },
-        { uid:'c_staffed', level:0 },
-        { uid:'d_empty', level:0 }
-      ].map(function (record) {
-        record.type = 'orchard_business';
-        record.provinceId = s.player.provinceId;
-        record.settlement = 0;
-        record.workerId = null;
-        return record;
-      });
-      ['a_staffed', 'b_partial', 'c_staffed'].forEach(function (uid) {
-        if (!FB.hireEnterpriseWorker(s, uid)) throw new Error('Fixture hire failed');
-      });
-      const rows = FB.enterpriseStaffingPlan(s).rows;
-      const idle = rows.filter(function (row) {
-        return row.uid === 'b_partial' || row.uid === 'd_empty';
-      });
-      const staffed = rows.filter(function (row) {
-        return row.uid === 'a_staffed' || row.uid === 'c_staffed';
-      });
-      FB.ui.showEnterpriseStaffingPreview();
-      return {
-        before:idle.concat(staffed).map(function (row) { return row.uid; }),
-        after:['d_empty'].concat(rows.filter(function (row) {
-          return row.uid !== 'd_empty';
-        }).map(function (row) { return row.uid; }))
-      };
+test('staffing preview summarizes enterprises in a full-screen mobile sheet', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
+  const expected = await page.evaluate(function () {
+    const s = FB.state;
+    s.player.gold = 1000;
+    s.player.enterpriseMigration = 1;
+    s.player.enterprises = ['summary_a', 'summary_b', 'summary_c'].map(function (uid) {
+      return { uid:uid, type:'orchard_business', provinceId:s.player.provinceId,
+        settlement:0, workerId:null };
     });
-    const rows = page.locator('[data-enterprise-staffing-uid]');
-    expect(await rows.evaluateAll(function (nodes) {
-      return nodes.map(function (node) { return node.dataset.enterpriseStaffingUid; });
-    })).toEqual(expected.before);
-    await page.locator('[data-enterprise-staffing-hire="b_partial"]').click();
-    await expect.poll(function () {
-      return rows.evaluateAll(function (nodes) {
-        return nodes.map(function (node) { return node.dataset.enterpriseStaffingUid; });
-      });
-    }).toEqual(expected.after);
+    FB.hireEnterpriseWorker(s, 'summary_a');
+    const plan = FB.enterpriseStaffingPlan(s);
+    FB.ui.showEnterpriseStaffingPreview();
+    return { changed:plan.changedCount, open:plan.unresolvedCount };
   });
+  const summary = page.locator('.enterprise-staffing-summary');
+  await expect(summary).toHaveCount(1);
+  await expect(summary.locator('.enterprise-staffing-option')).toHaveCount(2);
+  await expect(summary.locator('[data-staffing-option="plan"]')).toContainText(expected.changed + ' enterprises reassigned.');
+  await expect(summary).toContainText('Pay now');
+  await expect(summary).toContainText('Idle enterprises');
+  await expect(summary).toContainText('Income estimate includes new wages');
+  await expect(page.locator('[data-enterprise-staffing-uid]')).toHaveCount(0);
+  await expect(page.locator('#enterprise-staffing-apply')).toHaveText('Apply plan');
+  await expect(page.locator('#enterprise-staffing-local')).toHaveText('Staff local');
+  for (const size of [{ width:390, height:844 }, { width:844, height:390 }]) {
+    await page.setViewportSize(size);
+    const bounds = await page.locator('#genmodal .modalcard').boundingBox();
+    expect(bounds.x).toBeCloseTo(0, 0);
+    expect(bounds.y).toBeCloseTo(0, 0);
+    expect(bounds.width).toBeCloseTo(size.width, 0);
+    expect(bounds.height).toBeCloseTo(size.height, 0);
+  }
+  await page.locator('.modal-title-info').click();
+  await expect(page.locator('#gm-title-details')).toContainText('paid retainers');
+  await expect(page.locator('#gm-title-details')).toContainText('Locked pairings');
+});
 
 ['hire', 'assign'].forEach(function (action) {
   test('enterprise ' + action + ' returns to the refreshed work list with its position',
@@ -1115,83 +1106,30 @@ test('enterprise manager exposes upgrades, staffing thresholds, and paid labor c
       .not.toContainText('Owner');
   });
 
-test('staffing preview discloses details and staffs each idle enterprise directly',
-  async function ({ page }) {
-    await page.setViewportSize({ width:900, height:844 });
-    const fixture = await page.evaluate(function () {
-      const s = FB.state;
-      const me = s.chars[s.player.charId];
-      me.career = {
-        profession:'farmer', rank:'journeyman', experience:4,
-        startedYear:s.date.year - 4, guildRank:'none', guildStanding:0,
-        chosen:true
-      };
-      s.player.profession = 'farmer';
-      s.player.enterpriseMigration = 1;
-      s.player.gold = 100;
-      const enterprise = {
-        uid:'staffing_preview_actions_fixture', type:'field_strip',
-        provinceId:s.player.provinceId, settlement:0, workerId:null
-      };
-      s.player.enterprises = [enterprise];
-      FB.ui.showEnterpriseStaffingPreview();
-      return { uid:enterprise.uid, workerId:me.id };
-    });
-
-    const titleInfo = page.locator('.modal-title-info');
-    await expect(titleInfo).toBeVisible();
-    await titleInfo.click();
-    await expect(page.locator('#gm-title-details')).toContainText(
-      'Locked pairings and reserved workers stay fixed');
-
-    let row = page.locator(
-      '[data-enterprise-staffing-uid="' + fixture.uid + '"]');
-    const rowInfo = row.locator('.settcard-info');
-    await expect(rowInfo).toBeVisible();
-    await expect(row.locator('.enterprise-staffing-place')).toBeHidden();
-    await expect(row.locator('.enterprise-staffing-comparison small').first())
-      .toBeHidden();
-    await rowInfo.click();
-    await expect(row.locator('.enterprise-staffing-details')).toContainText(
-      'Hire a local worker');
-    await expect(row.locator('.enterprise-staffing-details')).toContainText(
-      'of 1 staffing positions filled');
-    await expect(row.locator('.enterprise-staffing-details')).toContainText(
-      'Pay');
-    await expect(row.locator('[data-enterprise-staffing-manage]'))
-      .toBeVisible();
-    await expect(row.locator('[data-enterprise-staffing-hire]'))
-      .toBeEnabled();
-
-    await row.locator('[data-enterprise-staffing-manage]').click();
-    await expect(page.locator('.enterprise-management-modal')).toBeVisible();
-    await expect(page.locator(
-      '[data-enterprise-worker="' + fixture.workerId + '"]')).toBeVisible();
-    await page.locator('#gm-cancel').click();
-    await expect(page.locator('#gm-title')).toContainText(
-      'Enterprise staffing preview');
-
-    row = page.locator(
-      '[data-enterprise-staffing-uid="' + fixture.uid + '"]');
-    await row.locator('[data-enterprise-staffing-hire]').click();
-    await expect(page.locator('#gm-title')).toContainText(
-      'Enterprise staffing preview');
-    await expect(page.locator('.enterprise-staffing-notice')).toContainText(
-      'A local worker was hired');
-    await expect(page.locator(
-      '[data-enterprise-staffing-uid="' + fixture.uid + '"] ' +
-      '[data-enterprise-staffing-hire]')).toHaveCount(0);
-    const staffed = await page.evaluate(function (uid) {
-      const enterprise = FB.state.player.enterprises.filter(function (entry) {
-        return entry.uid === uid;
-      })[0];
-      return {
-        workers:FB.enterpriseWorkerIds(enterprise).length,
-        contracts:FB.enterpriseLaborRecords(FB.state).length
-      };
-    }, fixture.uid);
-    expect(staffed).toEqual({ workers:1, contracts:1 });
+test('Apply plan uses the reviewed assignments without hiring or spending', async function ({ page }) {
+  const before = await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    s.player.tier = 0;
+    FB.setCareer(s, me, 'farmer', 'journeyman');
+    s.player.enterpriseMigration = 1;
+    s.player.enterprises = [{ uid:'apply_summary', type:'field_strip',
+      provinceId:s.player.provinceId, settlement:0, workerId:null }];
+    const plan = FB.enterpriseStaffingPlan(s);
+    FB.ui.showEnterpriseStaffingPreview();
+    return { gold:s.player.gold, turn:s.turn,
+      workers:plan.rows[0].proposedWorkerIds,
+      hires:FB.enterpriseLaborRecords(s).length };
   });
+  expect(before.workers.length).toBeGreaterThan(0);
+  await page.locator('#enterprise-staffing-apply').click();
+  await expect(page.locator('#gm-title')).toContainText('Work & Enterprises');
+  expect(await page.evaluate(function () {
+    const s = FB.state;
+    return { gold:s.player.gold, turn:s.turn,
+      workers:FB.enterpriseWorkerIds(s.player.enterprises[0]),
+      hires:FB.enterpriseLaborRecords(s).length };
+  })).toEqual(before);
+});
 
 test('staffing assistant completes an upgraded crew instead of scattering partial staffs',
   async function ({ page }) {
@@ -1246,45 +1184,6 @@ test('staffing assistant completes an upgraded crew instead of scattering partia
   });
 
 
-test('local hiring retains a scrolled staffing preview and row details', async function ({ page }) {
-  await page.setViewportSize({ width:390, height:650 });
-  await page.evaluate(function () {
-    const s = FB.state;
-    s.player.gold = 10000; s.player.enterpriseMigration = 1;
-    s.player.enterprises = [];
-    for (let i = 0; i < 15; i++) s.player.enterprises.push({
-      uid:'scroll_hire_' + i, type:'field_strip', provinceId:s.player.provinceId,
-      settlement:0, workerId:null
-    });
-    FB.ui.showEnterpriseStaffingPreview();
-  });
-  for (const id of ['scroll_hire_8', 'scroll_hire_9']) {
-    const row = page.locator('[data-enterprise-staffing-uid="' + id + '"]');
-    await row.locator('.settcard-info').click();
-    const hire = row.locator('[data-enterprise-staffing-hire]');
-    await hire.scrollIntoViewIfNeeded();
-    // Playwright may scroll again to uncover a target behind the sticky footer.
-    // Measure the position at activation, after that pointer preparation.
-    await hire.evaluate(function (button) {
-      button.addEventListener('click', function () {
-        document.getElementById('gm-body').dataset.hireActivationScroll =
-          String(document.getElementById('gm-body').scrollTop);
-      }, { capture:true, once:true });
-    });
-    await hire.click();
-    await expect(row.locator('[data-enterprise-staffing-hire]')).toHaveCount(0);
-    await expect(row.locator('.settcard-info')).toBeFocused();
-    await expect(row.locator('.settcard-info')).toHaveAttribute('aria-expanded', 'true');
-    const scroll = await page.locator('#gm-body').evaluate(function (body) {
-      return Number(body.dataset.hireActivationScroll);
-    });
-    expect(scroll).toBeGreaterThan(100);
-    const after = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
-    expect(Math.abs(after - scroll)).toBeLessThanOrEqual(2);
-  }
-});
-
-
 test('staff all local fills whole vacancies and charges the displayed wages without passing a day', async function ({ page }) {
   const before = await page.evaluate(function () {
     const s = FB.state;
@@ -1308,7 +1207,7 @@ test('staff all local fills whole vacancies and charges the displayed wages with
     return { gold:s.player.gold, turn:s.turn, workers:workers, missing:missing, cost:cost };
   });
   await expect(page.locator('#enterprise-staffing-local-terms')).toContainText(String(before.missing));
-  await page.getByRole('button', { name:'Staff all local', exact:true }).click();
+  await page.getByRole('button', { name:'Staff local', exact:true }).click();
   const after = await page.evaluate(function () {
     const s = FB.state;
     return { gold:s.player.gold, turn:s.turn,
@@ -1351,37 +1250,92 @@ test('staff all local requires the full wage and revalidates changed vacancies',
   await expect(page.locator('#enterprise-staffing-local')).toBeDisabled();
 });
 
-[390, 1280].forEach(function (width) {
-  test('staffing preview remembers scroll after management and reopening at ' + width, async function ({ page }) {
-    await page.setViewportSize({ width:width, height:650 });
-    await page.evaluate(function () {
-      const s = FB.state;
-      s.player.gold = 10000; s.player.enterpriseMigration = 1;
-      s.player.enterprises = [];
-      for (let i = 0; i < 20; i++) s.player.enterprises.push({
-        uid:'remember_' + i, type:'field_strip', provinceId:s.player.provinceId,
-        settlement:0, workerId:null
-      });
-      FB.ui.showEnterpriseStaffingPreview();
-      const body = document.getElementById('gm-body');
-      body.scrollTop = 500;
-      body.dispatchEvent(new Event('scroll'));
-    });
-    // Activate without scrolling to a different row before leaving the preview.
-    await page.locator('[data-enterprise-staffing-manage="remember_8"]').evaluate(function (button) { button.click(); });
-    await page.getByRole('button', { name:'Back', exact:true }).click();
-    await expect.poll(function () {
-      return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
-    }).toBe(500);
-    await page.keyboard.press('Escape');
-    await page.evaluate(function () { FB.ui.showEnterpriseStaffingPreview(); });
-    await expect.poll(function () {
-      return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
-    }).toBe(500);
-    await page.locator('#enterprise-staffing-local').evaluate(function (button) { button.click(); });
-    await expect(page.locator('#enterprise-staffing-local')).toBeDisabled();
-    await expect.poll(function () {
-      return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
-    }).toBe(500);
+test('Apply plan requires another review when staffing changes', async function ({ page }) {
+  const before = await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    s.player.tier = 0;
+    FB.setCareer(s, me, 'farmer', 'journeyman');
+    s.player.enterpriseMigration = 1;
+    s.player.enterprises = [{ uid:'stale_summary', type:'field_strip',
+      provinceId:s.player.provinceId, settlement:0, workerId:null }];
+    FB.ui.showEnterpriseStaffingPreview();
+    // Change a reviewed input without redrawing the modal.
+    s.player.enterprises[0].level = 1;
+    return { gold:s.player.gold, turn:s.turn };
   });
+  await page.locator('#enterprise-staffing-apply').click();
+  await expect(page.locator('.enterprise-staffing-notice')).toContainText('A fresh plan is shown');
+  expect(await page.evaluate(function () {
+    return { gold:FB.state.player.gold, turn:FB.state.turn };
+  })).toEqual(before);
+  await expect(page.locator('.enterprise-staffing-summary')).toHaveCount(1);
+});
+
+['household', 'local', 'unprofitable', 'unaffordable'].forEach(function (scenario) {
+  test('staffing comparison explains the useful option: ' + scenario, async function ({ page }) {
+    await page.evaluate(function (kind) {
+      const s = FB.state;
+      s.player.tier = 0;
+      s.player.enterpriseMigration = 1;
+      s.player.gold = kind === 'unaffordable' ? 0 : 1000;
+      for (const worker of FB.householdWorkers(s)) {
+        FB.setCareer(s, worker, 'soldier', 'journeyman');
+      }
+      if (kind === 'household') FB.setCareer(s, s.chars[s.player.charId], 'farmer', 'journeyman');
+      FBDATA.enterprises.field_strip.yield = 10;
+      FBDATA.enterprises.field_strip.laborPay = kind === 'unprofitable' ? 100 : 1;
+      s.player.enterprises = [{ uid:'compare', type:'field_strip',
+        provinceId:s.player.provinceId, settlement:0, workerId:null }];
+      FB.ui.showEnterpriseStaffingPreview();
+    }, scenario);
+    const plan = page.locator('[data-staffing-option="plan"]');
+    const local = page.locator('[data-staffing-option="local"]');
+    await expect(plan.locator('#enterprise-staffing-apply')).toHaveCount(1);
+    await expect(local.locator('#enterprise-staffing-local')).toHaveCount(1);
+    await expect(local).toContainText('Income estimate includes new wages');
+    if (scenario === 'household') {
+      await expect(plan).toHaveAttribute('data-recommended', 'true');
+      await expect(local).toContainText('Apply the free plan first');
+    } else {
+      await expect(plan).toContainText('No household staffing improvement available');
+      await expect(plan.locator('button')).toBeDisabled();
+      if (scenario === 'local') {
+        await expect(local).toHaveAttribute('data-recommended', 'true');
+        await expect(local).toContainText('Best estimated income gain');
+      } else {
+        await expect(local).toHaveAttribute('data-recommended', 'false');
+        await expect(local).toContainText(scenario === 'unprofitable'
+          ? 'Wages outweigh' : 'Not enough gold');
+      }
+    }
+  });
+});
+
+test('local income estimate is deterministic and leaves state untouched', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    s.player.enterpriseMigration = 1;
+    s.player.enterprises = [{ uid:'estimate', type:'field_strip',
+      provinceId:s.player.provinceId, settlement:0, workerId:null }];
+    const enterprise = FB.enterpriseList(s)[0];
+    FB.enterpriseLocalStaffYieldEstimate(s, enterprise);
+    const before = JSON.stringify(s);
+    const first = FB.enterpriseLocalStaffYieldEstimate(s, enterprise);
+    const second = FB.enterpriseLocalStaffYieldEstimate(s, enterprise);
+    return { first:first, second:second, unchanged:before === JSON.stringify(s) };
+  });
+  expect(result.first).toBeGreaterThan(0);
+  expect(result.second).toBe(result.first);
+  expect(result.unchanged).toBe(true);
+});
+
+test('empty staffing summary disables both batch actions', async function ({ page }) {
+  await page.evaluate(function () {
+    FB.state.player.enterpriseMigration = 1;
+    FB.state.player.enterprises = [];
+    FB.ui.showEnterpriseStaffingPreview();
+  });
+  await expect(page.locator('.enterprise-staffing-summary')).toContainText('No whole vacancies to fill');
+  await expect(page.locator('#enterprise-staffing-apply')).toBeDisabled();
+  await expect(page.locator('#enterprise-staffing-local')).toBeDisabled();
 });

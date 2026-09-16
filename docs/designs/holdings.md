@@ -267,16 +267,22 @@ Work & Enterprises list, preserving its view state, scroll, and originating focu
 Managers opened from Household Plan or the staffing preview return to that source instead.
 Failed actions and worker removal keep the enterprise manager open.
 
-The all-enterprise staffing preview is also an entry point for resolving an idle row. Its
-rows place currently understaffed enterprises first, including partially filled businesses,
-while preserving the plan order within the idle and fully staffed groups. Proposed
-assignments do not determine this display order. Its Assign workers action opens the
-same owned-enterprise manager and returns to a newly derived
-preview, while Hire a local worker calls the canonical paid-labor mutation directly and
-refreshes the preview in place, preserving scroll and expanded row details. Focus
-returns to the same row after both successful hires and stale/blocked attempts. Disabled hiring retains the exact wage or affordability
-reason in the row's tooltip/touch disclosure; the batch proposal is never silently applied
-by either per-row action.
+The all-enterprise staffing preview uses two option cards: Household plan and Local
+workers. Each contains its action, idle enterprise count before/after (including
+partial crews), upfront payment, new seasonal wages, and extra seasonal income.
+Local extra income deducts new wages and is explicitly estimated: the shared yield
+formula uses a skill-4, trait-free journeyman at the required guild rank, or the
+existing lead worker for partial crews, against current production chains. No people
+are generated and no RNG is consumed. Actual hires may earn more or less.
+The free plan is recommended when it fills every crew or matches/exceeds the local
+net gain; otherwise affordable, positive local net gain is highlighted. Disabled
+options explain no improvement, no whole vacancy, or insufficient gold. Neither
+option is recommended as profitable when its projected gain is negative.
+Standard Back/Close navigation remains available. The shared header tooltip/touch
+disclosure explains eligibility, locks, reservations, and estimate assumptions.
+Mobile uses the shared full-screen sheet. Individual assignments and hiring remain
+in each enterprise's manager, reached from Work & Enterprises. This is presentation
+of existing actions and needs no new technology gate.
 
 The owned-enterprise manager is deliberately terse. Its permanent face contains section
 titles, worker states, and action labels only. Enterprise description, staffing status and
@@ -407,11 +413,11 @@ The next annual pass rebuilds the snapshot, so staffing, death, upgrades and rel
 are observed. Profiling exposes this cost as enterprise upgrade snapshot rather than
 charging repeated enterprise scans to each county's capacity and attraction.
 
-Enterprise staffing preview offers **Staff all local** beside Apply staffing plan.
+Enterprise staffing preview offers **Staff local** beside Apply plan.
 It shows the worker count and total wages due now and each season, and requires
 enough gold for the entire batch. It fills whole vacant positions through the existing
 local-hire API, keeping existing assignments and leaving half positions open.
 Changed quotes require another review. This is a shortcut for existing ungated local
 hiring, with no new technology requirement or day cost. The preview remembers its
-scroll position across redraws, management visits, and closing/reopening in the same
+scroll position across redraws and closing/reopening in the same
 loaded game; loading another state resets this transient position.

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.7';
+FB.VERSION = '1.181.8';
 FB.CHANGELOG = [
+  { v: '1.181.8', date: '2026-09-16', changes: [
+    'Enterprise staffing compares household assignments and local hiring in two cards, showing costs, idle businesses, and estimated income gains. The preview fills the mobile screen.'
+  ] },
   { v: '1.181.7', date: '2026-09-16', changes: [
     'Work & Enterprises fills the mobile screen, and card help buttons stay beneath the footer when scrolling.'
   ] },

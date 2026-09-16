@@ -174,9 +174,15 @@ and receipts; explanations must not substitute internal ledger terminology for e
 Failed movement leaves the selected host available for another order and names a
 pinning fort when applicable. A valid repeated order does not restart travel.
 
+Enterprise staffing compares Household plan and Local workers in two cards, each
+with its own action. Idle businesses before/after, payment now, recurring new wages,
+and extra seasonal income remain visible. Estimated local income includes those
+new wages; the header disclosure explains assumptions. Recommendations use text and
+a highlighted border, with explicit blockers for unavailable options.
+
 Work-list return rendering captures scroll before deferred focus and scroll events
 can replace it. Staffing-preview redraws manage scroll explicitly and disable
-browser scroll anchoring so removed hiring controls do not shift the restored view.
+browser scroll anchoring so updated summary content does not shift the restored view.
 
 War peace previews show the current affordable tribute, capped at 25 after accrued
 bills. Acceptance rechecks funds. The option explains that an empty enemy treasury
@@ -989,7 +995,7 @@ uses compact key/value rows for the selected reason’s exact costs or rewards a
 modal-header tooltip for the supporting political and mechanical explanation.
 Two families break only the bottom-sheet framing: the Changelog
 (`.changelog-modal`) stays an evenly margined centered panel, while the Menu, Automation,
-Work & Enterprises, and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
+Work & Enterprises, Enterprise staffing preview, and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
 Work list disclosure controls stay in the list's stacking context, below pinned navigation,
 so scrolling cards cannot draw help buttons over the footer.
 Action buttons never flex-shrink inside these columns, so wrapped descriptions and expanded

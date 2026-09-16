@@ -1684,6 +1684,18 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .enterprise-requirement-row span { color: var(--helper-text-color); font-size: var(--ui-label-size); }
 .enterprise-staffing-hint { margin: 8px 0; }
 .enterprise-staffing-modal .modalcard { width: min(96vw, 820px); }
+.enterprise-staffing-summary { display: grid; gap: 12px; flex-shrink: 0; }
+.enterprise-staffing-option { padding: 12px; margin: 0; min-width: 0; }
+.enterprise-staffing-option[data-recommended="true"] { border-color: var(--ui-accent-color); }
+.enterprise-staffing-option h4 { margin: 0 0 6px; }
+.enterprise-staffing-option p { margin: 8px 0; }
+.enterprise-staffing-option .kv { gap: 12px; align-items: baseline; }
+.enterprise-staffing-option .kv > b { text-align: right; }
+.enterprise-staffing-option .btn { width: 100%; min-height: 44px; margin-top: 4px; }
+.enterprise-staffing-verdict { color: var(--ui-accent-color); }
+.enterprise-staffing-summary .enterprise-staffing-totals {
+  margin: 12px 0; padding: 0; border: 0; background: none;
+}
 .enterprise-staffing-notice {
   margin-bottom: 10px; border-color: #a87932; color: var(--ui-warning-color);
 }

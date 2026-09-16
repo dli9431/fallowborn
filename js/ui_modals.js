@@ -16243,13 +16243,6 @@ window.FB = window.FB || {};
       returnContext.view === ENTERPRISE_STAFFING_RETURN);
   }
 
-  function enterpriseStaffingReturnContext(returnContext) {
-    return {
-      view:ENTERPRISE_STAFFING_RETURN,
-      returnContext:returnContext
-    };
-  }
-
   function returnsToInteractionManagement(returnContext) {
     return !!(returnContext && typeof returnContext === 'object' &&
       (returnContext.view === 'self' ||
@@ -20664,93 +20657,11 @@ window.FB = window.FB || {};
     });
   };
 
-  function enterpriseStaffingLabel(s, row) {
-    const def = row && FBDATA.enterprises[row.type];
-    const province = FB.world.byId[row.provinceId];
-    const settlements = province ? FB.settlementsOf(s, row.provinceId) : [];
-    const place = settlements[row.settlement]
-      ? settlements[row.settlement].name
-      : (province ? province.name : FB.T('unknown place'));
-    if (!def) {
-      return { name:FB.T('Unknown enterprise'), icon:'?', place:place };
-    }
-    return {
-      name:dt(s, 'enterprise', row.type, def, 'name'),
-      icon:def.icon,
-      place:place
-    };
-  }
-
-  function enterpriseStaffingStatus(row) {
-    const labels = {
-      locked:'🔒 ' + FB.T('Locked'),
-      reserved:'🔒 ' + FB.T('Reserved'),
-      unchanged:FB.T('Unchanged'),
-      assigned:FB.T('Assigned'),
-      moved:FB.T('Moved'),
-      replaced:FB.T('Replaced'),
-      unresolved:FB.T('Unresolved')
-    };
-    return labels[row.status] || labels.unchanged;
-  }
-
-  function enterpriseStaffingReason(s, row) {
-    if (row.unresolvedReason === 'no_eligible_worker') {
-      return FB.enterpriseStaffingStatus(s, {
-        uid:row.uid, type:row.type, provinceId:row.provinceId,
-        settlement:row.settlement, level:row.level,
-        workerId:row.currentWorkerId, workerIds:row.currentWorkerIds
-      }).reason;
-    }
-    if (row.unresolvedReason === 'eligible_workers_locked') {
-      return FB.T('Every eligible worker is locked to another enterprise.');
-    }
-    if (row.unresolvedReason === 'allocated_higher_yield') {
-      return FB.T(
-        'Eligible workers produce more total yield in the assignments shown elsewhere.');
-    }
-    return '';
-  }
-
-  function enterpriseStaffingChange(s, row, rowByUid) {
-    const currentIds = row.currentWorkerIds || [];
-    const proposedIds = row.proposedWorkerIds || [];
-    const added = proposedIds.filter(function (id) {
-      return currentIds.indexOf(id) < 0;
-    });
-    const removed = currentIds.filter(function (id) {
-      return proposedIds.indexOf(id) < 0;
-    });
-    function names(ids) {
-      return ids.map(function (id) {
-        return s.chars[id] ? s.chars[id].name : FB.T('Unknown worker');
-      }).join(', ');
-    }
-    if (row.status === 'reserved') {
-      return FB.T('Reserved workers stay with this enterprise.');
-    }
-    if (row.status === 'locked') {
-      return FB.T('Locked staff stay with this enterprise.');
-    }
-    if (row.status === 'unchanged') return FB.T('Kept in place.');
-    if (added.length && removed.length) return FB.T('{incoming} join; {outgoing} leave.', {
-      incoming:names(added), outgoing:names(removed)
-    });
-    if (added.length) return FB.T('{workers} join this staff.', { workers:names(added) });
-    if (removed.length) return FB.T('{workers} leave this staff.', {
-      workers:names(removed)
-    });
-    return enterpriseStaffingReason(s, row) || FB.T(
-      '{count} of {required} staffing positions can be filled.', {
-        count:row.proposedStaff || 0, required:row.requiredCount || 1
-      });
-  }
-
   const enterpriseStaffingPosition = { state:null, top:0 };
 
   function enterpriseLocalStaffQuote(s) {
     const hires = [];
-    let cost = 0;
+    let cost = 0, gain = 0, idle = 0;
     for (const enterprise of FB.enterpriseList(s)) {
       if (!FBDATA.enterprises[enterprise.type] ||
           !FB.world.byId[enterprise.provinceId]) continue;
@@ -20759,8 +20670,13 @@ window.FB = window.FB || {};
       const pay = FB.enterpriseLaborPay(s, enterprise);
       for (let i = 0; i < count; i++) hires.push(enterprise.uid);
       cost += count * pay;
+      const remaining = FB.enterpriseStaffRequired(enterprise) -
+        FB.enterpriseStaffAssigned(s, enterprise) - count;
+      if (remaining > 0.0001) idle++;
+      if (count) gain += FB.enterpriseLocalStaffYieldEstimate(s, enterprise) -
+        FB.enterpriseYield(s, enterprise);
     }
-    return { hires:hires, cost:cost };
+    return { hires:hires, cost:cost, gain:gain - cost, idle:idle };
   }
 
   UI.showEnterpriseStaffingPreview = function (returnContext, notice) {
@@ -20772,154 +20688,65 @@ window.FB = window.FB || {};
       enterpriseStaffingPosition.top = 0;
     }
     const savedScroll = enterpriseStaffingPosition.top;
-    function isIdle(row) {
-      return (row.currentStaff || 0) + 0.0001 < (row.requiredCount || 1);
+    const intro = FB.T('Apply plan reassigns eligible resident family, manageable unmarried siblings, and paid retainers to improve enterprise income. Career and guild requirements still apply. Locked pairings, reserved workers, and existing local hires stay fixed.') + ' ' +
+      FB.T('Staff local hires paid workers for all open whole positions. Existing workers stay assigned; half positions stay open. Wages are paid now and each season. No day passes.');
+    const planGain = plan.proposedTotal - plan.currentTotal;
+    const localAvailable = local.hires.length > 0 && s.player.gold + 0.0001 >= local.cost;
+    const preferPlan = plan.changed && planGain >= -0.0001 &&
+      (!localAvailable || planGain + 0.0001 >= local.gain || plan.unresolvedCount === 0);
+    const preferLocal = localAvailable && local.gain > 0.0001 && !preferPlan;
+    function metric(label, value) {
+      return '<div class="kv"><span>' + esc(label) + '</span><b>' + esc(value) + '</b></div>';
     }
-    const displayRows = plan.rows.filter(isIdle).concat(plan.rows.filter(function (row) {
-      return !isIdle(row);
-    }));
-    const rowByUid = {};
-    for (const row of plan.rows) rowByUid[row.uid] = row;
-    const intro = FB.T(
-      'Review the complete result before applying it. Locked pairings and reserved workers stay fixed; every other enterprise and eligible household worker may be rebalanced. Applying it spends no day or money.') + ' ' + FB.T('Staff all local hires paid workers for all open whole positions. Existing workers stay assigned; half positions stay open. Wages are paid now and each season. No day passes.');
-    let h = (notice ? '<div class="hint enterprise-staffing-notice">' +
-        esc(notice) + '</div>' : '') +
-      '<div class="enterprise-staffing-totals">' +
-      '<div><span>' + esc(FB.T('Current total')) + '</span><b>' +
-      esc(FB.T('{money:amount} each season', { amount:plan.currentTotal })) +
-      '</b></div><div class="enterprise-staffing-arrow" aria-hidden="true">→</div>' +
-      '<div><span>' + esc(FB.T('Proposed total')) + '</span><b>' +
-      esc(FB.T('{money:amount} each season', { amount:plan.proposedTotal })) +
-      '</b></div></div>';
-    if (!plan.changed) {
-      h += '<div class="hint">' + esc(FB.T(
-        'The current assignments already produce the best available total yield.')) +
-        '</div>';
+    function idleResult(count) {
+      return FB.T('{before} to {after}', { before:plan.idleCount, after:count });
     }
-    h += '<div class="enterprise-staffing-rows">';
-    for (const row of displayRows) {
-      const label = enterpriseStaffingLabel(s, row);
-      function workerList(ids, fallback) {
-        const names = (ids || []).map(function (id) {
-          return s.chars[id] && s.chars[id].name;
-        }).filter(Boolean);
-        return names.length ? names.join(', ') : fallback;
-      }
-      const current = workerList(row.currentWorkerIds, FB.T('Idle'));
-      const proposed = workerList(row.proposedWorkerIds, FB.T('Unresolved'));
-      const currentCount = FB.T('{assigned} of {required} staffing positions filled', {
-        assigned:row.currentStaff || 0,
-        required:row.requiredCount || 1
-      });
-      const proposedCount = FB.T('{assigned} of {required} staffing positions filled', {
-        assigned:row.proposedStaff || 0,
-        required:row.requiredCount || 1
-      });
-      const reason = row.status === 'unresolved'
-        ? enterpriseStaffingReason(s, row) : '';
-      const change = enterpriseStaffingChange(s, row, rowByUid);
-      const detailsId = 'enterprise-staffing-details-' + row.uid;
-      const idle = isIdle(row);
-      const hireStatus = idle
-        ? (FBDATA.enterprises[row.type]
-            ? FB.canHireEnterpriseWorker(s, row.uid)
-            : FB.T('This enterprise is not recognized.'))
-        : null;
-      const hirePay = idle ? FB.enterpriseLaborPay(s, {
-        type:row.type
-      }) : 0;
-      h += '<div class="enterprise-staffing-row settcard ' +
-        (row.status === 'unresolved' ? 'unresolved' :
-          (row.status === 'locked' || row.status === 'reserved'
-            ? 'locked' : '')) + '" data-enterprise-staffing-uid="' +
-        esc(row.uid) + '"' +
-        (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
-        ' aria-describedby="' + esc(detailsId) + '">' +
-        '<div class="enterprise-staffing-head"><span class="enterprise-staffing-name">' +
-        esc(label.icon + ' ' + label.name) + '</span>' +
-        '<span class="enterprise-staffing-state">' +
-        esc(enterpriseStaffingStatus(row)) + '</span>' +
-        '<span class="settcard-actions enterprise-staffing-actions">' +
-        '<button type="button" class="btn small settcard-info" ' +
-        'aria-expanded="false" aria-controls="' + esc(detailsId) +
-        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
-        esc(FB.T('Details')) + '">?</button></span></div>' +
-        '<div class="enterprise-staffing-place">' + esc(label.place) + '</div>' +
-        '<div class="enterprise-staffing-comparison"><div><span>' +
-        esc(FB.T('Current')) + '</span><b>' +
-        esc(current) + '</b><small>' +
-        esc(currentCount) + ' · ' +
-        esc(FB.T('{money:amount} each season', { amount:row.currentYield })) +
-        '</small></div><div><span>' + esc(FB.T('Proposed')) + '</span><b>' +
-        esc(proposed) + '</b><small>' +
-        esc(proposedCount) + ' · ' +
-        esc(FB.T('{money:amount} each season', { amount:row.proposedYield })) +
-        '</small></div></div>' + (idle
-          ? '<div class="enterprise-staffing-row-actions">' +
-            '<button type="button" class="btn" ' +
-            'data-enterprise-staffing-manage="' + esc(row.uid) +
-            '" aria-describedby="' + esc(detailsId) + '">' +
-            esc(FB.T('Assign workers…')) + '</button>' +
-            '<button type="button" class="btn" ' +
-            'data-enterprise-staffing-hire="' + esc(row.uid) +
-            '" aria-describedby="' + esc(detailsId) + '"' +
-            (hireStatus === true ? '' : ' disabled') + '>' +
-            esc(FB.T('Hire a local worker')) + '</button></div>'
-          : '') + '<div class="settcard-details ' +
-        'enterprise-staffing-details hidden" id="' + esc(detailsId) + '">' +
-        '<b>' + esc(enterpriseStaffingStatus(row)) + '</b>' +
-        '<div class="enterprise-staffing-detail-place">' +
-        esc(label.place) + '</div>' +
-        '<div class="enterprise-staffing-detail-pair"><span>' +
-        esc(FB.T('Current')) + '</span><b>' + esc(current) + '</b><small>' +
-        esc(currentCount) + ' · ' +
-        esc(FB.T('{money:amount} each season', { amount:row.currentYield })) +
-        '</small></div><div class="enterprise-staffing-detail-pair"><span>' +
-        esc(FB.T('Proposed')) + '</span><b>' + esc(proposed) + '</b><small>' +
-        esc(proposedCount) + ' · ' +
-        esc(FB.T('{money:amount} each season', { amount:row.proposedYield })) +
-        '</small></div>' +
-        '<div class="enterprise-staffing-change">' + esc(change) + '</div>' +
-        (reason && reason !== change
-          ? '<div class="enterprise-staffing-reason">' + esc(reason) + '</div>'
-          : '') + (idle
-          ? '<div class="enterprise-staffing-hire-details"><b>' +
-            esc(FB.T('Hire a local worker')) + '</b><span>' +
-            esc(hireStatus === true ? FB.T(
-              'Pay {money:pay} now and each season. The worker is qualified and tied to this enterprise.', {
-                pay:hirePay
-              }) : hireStatus) + '</span></div>'
-          : '') + '</div></div>';
-    }
-    h += '</div><div class="hint" id="enterprise-staffing-local-terms">' +
-      esc(FB.T('Local staff: {count} workers. Pay {money:cost} now and each season.', {
-        count:local.hires.length, cost:local.cost
-      })) + (s.player.gold + 0.0001 < local.cost ? ' ' +
-        esc(FB.T('Not enough gold for the first wages.')) : '') +
-      '</div><div class="gm-footer">' +
-      '<button type="button" class="btn" id="enterprise-staffing-apply"' +
-      (!plan.changed ? ' disabled' : '') + '>' +
-      esc(FB.T('Apply staffing plan')) + '</button>' +
-      '<button type="button" class="btn" id="enterprise-staffing-local" ' +
-      'aria-describedby="enterprise-staffing-local-terms"' +
-      (!local.hires.length || s.player.gold + 0.0001 < local.cost ? ' disabled' : '') + '>' +
-      esc(FB.T('Staff all local')) + '</button>' +
-      '<button type="button" class="btn" id="enterprise-staffing-back">' +
+    function money(amount) { return FB.T('{money:amount}', { amount:amount }); }
+    let h = '<div class="enterprise-staffing-summary">' +
+      (notice ? '<div class="hint enterprise-staffing-notice" role="status">' + esc(notice) + '</div>' : '') +
+      '<div class="enterprise-staffing-option settcard" data-staffing-option="plan" data-recommended="' + preferPlan + '">' +
+      '<h4>' + esc(FB.T('Household plan')) + '</h4>' +
+      '<p class="enterprise-staffing-verdict">' + esc(preferPlan ? FB.T('Use household workers first') :
+        !plan.changed ? FB.T('No household staffing improvement available') : FB.T('Free reassignment')) + '</p>' +
+      metric(FB.T('Idle enterprises'), idleResult(plan.unresolvedCount)) +
+      metric(FB.T('Pay now'), money(0)) +
+      metric(FB.T('New wages / season'), money(0)) +
+      metric(FB.T('Extra income / season'), money(planGain)) +
+      '<p id="enterprise-staffing-plan-terms">' + esc(FB.T(
+        '{count} enterprises reassigned. No time cost.', { count:plan.changedCount })) + '</p>' +
+      '<button type="button" class="btn" id="enterprise-staffing-apply" aria-describedby="enterprise-staffing-plan-terms"' +
+      (!plan.changed ? ' disabled' : '') + '>' + esc(FB.T('Apply plan')) + '</button></div>' +
+      '<div class="enterprise-staffing-option settcard" data-staffing-option="local" data-recommended="' + preferLocal + '">' +
+      '<h4>' + esc(FB.T('Local workers')) + '</h4>' +
+      '<p class="enterprise-staffing-verdict">' + esc(!local.hires.length ? FB.T('No whole vacancies to fill') :
+        !localAvailable ? FB.T('Not enough gold for the first wages.') :
+        preferLocal ? FB.T('Best estimated income gain') :
+        preferPlan ? FB.T('Apply the free plan first, then review hiring') :
+        local.gain <= 0 ? FB.T('Wages outweigh the estimated gain') : FB.T('Paid staffing')) + '</p>' +
+      metric(FB.T('Idle enterprises'), idleResult(local.idle)) +
+      metric(FB.T('Pay now'), money(local.cost)) +
+      metric(FB.T('New wages / season'), money(local.cost)) +
+      metric(FB.T('Est. extra income / season'), money(local.gain)) +
+      '<p id="enterprise-staffing-local-terms">' + esc(FB.T(
+        '{count} hires. Income estimate includes new wages.', { count:local.hires.length })) + '</p>' +
+      '<button type="button" class="btn" id="enterprise-staffing-local" aria-describedby="enterprise-staffing-local-terms"' +
+      (!localAvailable ? ' disabled' : '') + '>' + esc(FB.T('Staff local')) + '</button></div>' +
+      '</div><div class="gm-footer"><button type="button" class="btn" id="enterprise-staffing-back">' +
       esc(FB.T('Back')) + '</button></div>';
     const options = livelihoodsHistoryOptions(returnContext);
-    options.modalClass = 'enterprise-staffing-modal';
+    options.modalClass = 'enterprise-staffing-modal fullsheet-modal';
     options.replaceView = !!notice;
-    options.titleDetailsHtml = '<p>' + esc(intro) + '</p>';
+    options.titleDetailsHtml = '<p>' + esc(intro) + '</p><p>' + esc(FB.T('Idle includes partially staffed enterprises. Both options compare against current assignments. Local income uses typical worker skills and current production chains; actual hires may earn more or less.')) + '</p>';
     openModal(FB.T('⚙ Enterprise staffing preview'), h, options);
     const staffingBody = $('gm-body');
-    const staffingRows = staffingBody.querySelector('.enterprise-staffing-rows');
+    const staffingSummary = staffingBody.querySelector('.enterprise-staffing-summary');
     staffingBody.scrollTop = savedScroll;
-    // The body is shared by every modal. Only the live staffing rows own this listener.
+    // The body is shared by every modal. Only the live summary owns this listener.
     if (UI._enterpriseStaffingScroll) {
       staffingBody.removeEventListener('scroll', UI._enterpriseStaffingScroll);
     }
     UI._enterpriseStaffingScroll = function () {
-      if (staffingBody.contains(staffingRows) && enterpriseStaffingPosition.state === s) {
+      if (staffingBody.contains(staffingSummary) && enterpriseStaffingPosition.state === s) {
         enterpriseStaffingPosition.top = staffingBody.scrollTop;
       }
     };
@@ -20946,56 +20773,6 @@ window.FB = window.FB || {};
       UI.showEnterpriseStaffingPreview(returnContext, FB.T(
         '{count} local workers hired. Review the refreshed staffing plan.', { count:hired }));
     });
-    document.querySelectorAll('[data-enterprise-staffing-manage]').forEach(
-      function (button) {
-        button.addEventListener('click', function () {
-          UI.showEnterpriseManage(button.dataset.enterpriseStaffingManage,
-            enterpriseStaffingReturnContext(returnContext));
-        });
-      });
-    document.querySelectorAll('[data-enterprise-staffing-hire]').forEach(
-      function (button) {
-        button.addEventListener('click', function () {
-          const uid = button.dataset.enterpriseStaffingHire;
-          const scrollTop = $('gm-body').scrollTop;
-          const expanded = [];
-          $('gm-body').querySelectorAll('.settcard-info[aria-expanded="true"]').forEach(function (info) {
-            expanded.push(info.getAttribute('aria-controls'));
-          });
-          function redraw(notice) {
-            UI.showEnterpriseStaffingPreview(returnContext, notice);
-            const body = $('gm-body');
-            setTimeout(function () {
-              expanded.forEach(function (id) {
-                const info = body.querySelector('[aria-controls="' + id + '"]');
-                if (info && info.getAttribute('aria-expanded') !== 'true') info.click();
-              });
-              const row = body.querySelector('[data-enterprise-staffing-uid="' + uid + '"]');
-              const focus = row && (row.querySelector('[data-enterprise-staffing-hire]:not(:disabled)') ||
-                row.querySelector('.settcard-info'));
-              if (focus) focus.focus({ preventScroll:true });
-              body.scrollTop = scrollTop;
-            }, 0);
-          }
-          let enterprise = null;
-          for (const item of FB.enterpriseList(s)) {
-            if (item.uid === uid) enterprise = item;
-          }
-          const status = enterprise && FBDATA.enterprises[enterprise.type]
-            ? FB.canHireEnterpriseWorker(s, uid)
-            : FB.T('This enterprise is not recognized.');
-          if (status !== true || !FB.hireEnterpriseWorker(s, uid)) {
-            redraw(
-              status === true
-                ? FB.T('Household staffing changed after this review. A fresh plan is shown; review it before applying.')
-                : status);
-            return;
-          }
-          UI.refresh();
-          redraw(FB.T(
-            'A local worker was hired. Review the refreshed staffing plan.'));
-        });
-      });
     $('enterprise-staffing-apply').addEventListener('click', function () {
       const result = FB.applyEnterpriseStaffingPlan(s, plan);
       if (!result.ok) {
