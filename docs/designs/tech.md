@@ -511,3 +511,17 @@ invalidates automatically, and runtime mod application calls `FB.invalidateTechB
 for in-place technology edits. Custom code that edits nested technology effects must
 call that same API. Summation order, caps, effective-sovereign selection and seeded
 research outcomes are unchanged. This internal optimization adds no technology gate.
+
+
+County-ruler founding: Counts and higher may use Found a settlement in Deeds and
+choose a directly ruled county. Sovereign ownership alone does not authorize
+founding in a vassal's county. Existing costs, duration, one-household-project limit,
+capacity and conserved-population requirements apply. These projects save additive
+`rulerFounded: true`; completion requires retained direct county control but not
+household residence there. Completion adds an undelegated direct holding without
+changing rank or the household seat. Lost control pauses completion, retaining the
+funded project. Legacy/Gentry charters keep their existing hereditary-seat behavior.
+The review names direct-holding benefits, no baronial dues, and capacity consequences;
+its county selector uses native keyboard/mobile controls and the existing modal
+history. The settlement_founding technology review remains none, expanded to cover
+ordinary county-ruler founding; administrative capacity retains its soft role.

@@ -435,3 +435,8 @@ Changed quotes require another review. This is a shortcut for existing ungated l
 hiring, with no new technology requirement or day cost. The preview remembers its
 scroll position across redraws and closing/reopening in the same
 loaded game; loading another state resets this transient position.
+
+The Network Household section body forms one bordered card below the section
+toggle. It contains counts, costs, active standards, Household Plan, Hire a retainer
+when available, character cards and Show all. The generic introductory sentence
+is omitted. Collapsing the section hides the entire card.

@@ -17,8 +17,19 @@ window.FB = window.FB || {};
   var noGroups = {};
   function groups(state) { return state.rebellions && state.rebellions.groups || noGroups; }
   function countyName(pid) { return FB.world.byId[pid].name; }
-  function notice(state, key, text, params) {
-    FB.news(state, FB.msg('news.rebellion.' + key, text, params));
+  // Register authored fallbacks before saved Chronicle entries can be rendered.
+  FB.msg('news.rebellion.ended', { forms:{ select:'value', param:'reason', cases:{
+      independence:'The uprising in {county} ends with independence.',
+      concession:'The uprising in {county} ends in a negotiated settlement.',
+      other:'The rebel hosts in {county} are defeated. Occupation ends; resentment remains, with a two-year revolt cooldown.'
+    } } });
+  FB.msg('news.rebellion.muster', 'The commons of {county} muster {men} rebels against {realm}.');
+  FB.msg('news.rebellion.independence', 'The rebel counties of {counties} become independent under a new ruler.');
+  FB.msg('news.rebellion.occupied', 'Rebels occupy {county}. Collection and muster cease until the county is recovered.');
+  FB.msg('news.rebellion.warning', 'The commons of {county} give their ruler 90 days to settle their grievance.');
+  FB.msg('news.rebellion.ai_settlement', 'The ruler of {county} accepts costly local concessions to avert revolt.');
+  function notice(state, key, params) {
+    FB.news(state, FB.message('news.rebellion.' + key, params));
   }
   FB.rebellionById = function (state, id) { return groups(state)[id] || null; };
   var indexState = null, indexGroups = null, indexRevision = -1, indexCounties = {}, indexRealms = {};
@@ -184,11 +195,7 @@ window.FB = window.FB || {};
     }
     FB.invalidateRealmCache();
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
-    notice(state, 'ended', { forms:{ select:'value', param:'reason', cases:{
-      independence:'The uprising in {county} ends with independence.',
-      concession:'The uprising in {county} ends in a negotiated settlement.',
-      other:'The rebel hosts in {county} are defeated. Occupation ends; resentment remains, with a two-year revolt cooldown.'
-    } } }, { county:Object.keys(group.counties).map(countyName).join(', '), reason:reason });
+    notice(state, 'ended', { county:Object.keys(group.counties).map(countyName).join(', '), reason:reason });
   }
   function settleOpenCounties(state, counties) {
     var rows = groups(state);
@@ -268,7 +275,7 @@ window.FB = window.FB || {};
       state.armies.push({ id:FB.uid(), realm:group.faction, rebellionId:group.id,
         homeCounty:pid, at:pid, from:pid, men:men, size:men, units:{ levy:men },
         moveLeft:0, path:[], goal:null, supply:100 });
-      notice(state, 'muster', 'The commons of {county} muster {men} rebels against {realm}.', {
+      notice(state, 'muster', {
         county:countyName(pid), men:men, realm:state.realms[group.target].name });
     }
     FB.addModifier(state, 'commons_uprising', pid, { silent:true });
@@ -422,7 +429,7 @@ window.FB = window.FB || {};
       component.forEach(function (pid) { FB.transferProvince(state, pid, id); });
       FB.ensureRealmSuccession(state, id);
       // The new polity uses its capital's proper name and the normal rank label.
-      notice(state, 'independence', 'The rebel counties of {counties} become independent under a new ruler.', { counties:component.map(countyName).join(', ') });
+      notice(state, 'independence', { counties:component.map(countyName).join(', ') });
     }
     if (state.player.tier >= 4 && !state.player.provs.length && FB.loseAllLand) FB.loseAllLand(state);
     finish(state, group, 'independence');
@@ -452,7 +459,7 @@ window.FB = window.FB || {};
             if (siege.breached) {
               record.occupied = true;
               FB.invalidateRealmCache();
-              notice(state, 'occupied', 'Rebels occupy {county}. Collection and muster cease until the county is recovered.', { county:countyName(pid) });
+              notice(state, 'occupied', { county:countyName(pid) });
               Object.keys(FB.world.adj[pid] || {}).sort().forEach(function (neighbor) {
                 if (targetOf(state, neighbor) === group.target && !group.counties[neighbor] &&
                     FB.countyPopularSupport(state, neighbor) < 0 && !FB.hasModifier(state, 'uprising_settlement', neighbor)) join(state, group, neighbor, false);
@@ -529,7 +536,7 @@ window.FB = window.FB || {};
             FB.hasModifier(state, 'uprising_settlement', pid) || FB.hasPrivilege(state, 'confirmed_custom', pid) ||
             FB.countyPopularSupport(state, pid) > -20) return;
         saved.warnings[pid] = { holder:holder, startedTurn:state.turn, dueTurn:state.turn + 90, phase:'warning' };
-        notice(state, 'warning', 'The commons of {county} give their ruler 90 days to settle their grievance.', { county:countyName(pid) });
+        notice(state, 'warning', { county:countyName(pid) });
       });
     }
     Object.keys(saved.groups).forEach(function (id) {
@@ -568,7 +575,7 @@ window.FB = window.FB || {};
         if (FB.chance(quote.negotiationChance)) {
           settlement(state, pid); FB.addModifier(state, 'tax_concession', pid, { silent:true });
           delete saved.warnings[pid];
-          notice(state, 'ai_settlement', 'The ruler of {county} accepts costly local concessions to avert revolt.', { county:countyName(pid) });
+          notice(state, 'ai_settlement', { county:countyName(pid) });
           return;
         }
       }

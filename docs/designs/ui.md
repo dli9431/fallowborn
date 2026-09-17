@@ -2913,10 +2913,11 @@ A county that cannot begin a valid campaign does not clear the existing selectio
 
 Campaign and war-law sheets use shared label/value rows and quiet section dividers.
 Opponent, objective status, victory condition, upkeep, peace costs, current laws,
-and actionable proclamation costs/Standing changes stay visible. A ruler eligibility
-blocker appears once above the laws; unavailable ruler controls are omitted in this
-read-only view. Law alternatives and campaign background use shared desktop
-hover/focus tooltips and compact question-mark disclosures. Proclamation retains
+and actionable proclamation costs/Standing changes stay visible. Read-only laws show the current law and its meaning once, without ruler-only
+helpers, hidden alternatives, or tooltips. Eligible rulers see named full-width
+proclamation actions and their effects; each action discloses its cost and Standing
+change through the shared hover/focus tooltip and compact Details control.
+Campaign background uses the same disclosure pattern. Proclamation retains
 scroll and expanded disclosures and focuses the changed law section. Nested Back
 restores the prior sheet and its disclosures.
 
@@ -3026,21 +3027,22 @@ justification review. Native county troop inputs, percentage presets, and an
 assembly selector choose one rally host or separate county hosts. In-place cost
 updates retain input focus. County estimates and the total show the current-market
 bill; details explain allocation, food uncertainty and each host's minimum size.
-Ordinary muster has no immediate support loss. Forced-supply consequences stay
-visible beside the cost preview. Existing-host dismissal displays returned men
+Ordinary muster has no immediate support loss. Forced-supply consequences appear in the cost tooltip and touch disclosure. Existing-host dismissal displays returned men
 and the rearm delay before its explicit button.
 
-Back, Escape and mobile Back discard unsaved edits and restore the parent view.
-Save plan persists choices; Save and muster revalidates and raises the force.
+Edits save automatically, including county sliders, numeric inputs, assembly and rally changes.
+Back, Close, Escape and mobile Back retain those choices; opening alone creates
+no plan. The single full-width Muster action revalidates and raises the force.
 Neither opening nor editing consumes a day; confirmed muster or dismissal spends
 one day. Shared card tooltip/touch disclosures
 hold explanations; the inputs, amounts, costs and action blockers stay visible.
 Mechanics and technology impact are in [war.md](war.md#county-muster-plans).
 
 
-County rows also offer their own 0/25/50/100% buttons; these change only that
-county's amount. The rally selector lists eligible recruitment counties and
-updates cost estimates without saving the draft. Optional `player.musterRally`
+Each county has a native troop slider with its numeric input attached on the right.
+Both controls synchronize, update costs and save automatically; they affect only
+that county. Global 0/25/50/100% presets update every slider and input. The rally selector lists eligible recruitment counties and
+updates cost estimates and automatically saves the plan. Optional `player.musterRally`
 persists the chosen county. Combined hosts gather there; with separate county
 hosts, hired troops and allies join there. If that county becomes unavailable,
 quotes and execution use the normal eligible rally fallback. Old saves retain
@@ -3073,7 +3075,7 @@ hiring, with no new technology requirement or day cost. The preview remembers it
 scroll position across redraws, management visits, and closing/reopening in the same
 loaded game; loading another state resets this transient position.
 
-Muster plan offers a keyboard-accessible Show/Hide county troops button. Collapsing
+Muster plan uses the shared Work and enterprises section-heading toggle for county troops. Collapsing
 the county inputs keeps their draft values and leaves estimates, global presets,
 and plan actions available. Assembly and Rally point have no explanatory tooltip.
 
@@ -3082,3 +3084,102 @@ require direct settlement ownership. A baron can develop their own settlements;
 residence alone gives no construction authority. Strategic forts remain controlled
 by the count. Unauthorized ledgers retain the current screen and show a localized
 explanation.
+
+
+County-ruler founding: Counts and higher may use Found a settlement in Deeds and
+choose a directly ruled county. Sovereign ownership alone does not authorize
+founding in a vassal's county. Existing costs, duration, one-household-project limit,
+capacity and conserved-population requirements apply. These projects save additive
+`rulerFounded: true`; completion requires retained direct county control but not
+household residence there. Completion adds an undelegated direct holding without
+changing rank or the household seat. Lost control pauses completion, retaining the
+funded project. Legacy/Gentry charters keep their existing hereditary-seat behavior.
+The review names direct-holding benefits, no baronial dues, and capacity consequences;
+its county selector uses native keyboard/mobile controls and the existing modal
+history. The settlement_founding technology review remains none, expanded to cover
+ordinary county-ruler founding; administrative capacity retains its soft role.
+
+
+Direct settlement holders can rename established settlements with the small pencil
+button in the settlement sheet title, matching the character name editor. The editor
+accepts trimmed names of 1-40 characters, excluding angle brackets and controls;
+saving revalidates direct ownership. Back discards edits and restores the settlement
+sheet's scroll, disclosures and focus. Names are literal player text, not translated.
+An optional `state.settlementNames` table maps stable site IDs to display overrides;
+legacy saves need no migration. Geography, county names and site identities remain
+unchanged. Settlement lists, map labels and map search read the saved display name;
+search resolves overrides per query so loading a different save cannot stale names.
+This is cosmetic naming only and introduces no technology eligibility requirement.
+
+
+Settlement charter reviews keep total upfront cost, time, concise benefit, dues,
+holding-limit penalty and current blocker visible. Secondary rules use the shared
+heading hover/focus tooltip and touch Details disclosure. The county ruler opens
+the character sheet through retained modal history. County capacity remains x/8;
+development blockers state both the established count and currently unlocked count.
+New projects save `costsPaid:true` after charging gold, prestige and piety together;
+completion neither checks nor charges those resources again. Missing flags preserve
+legacy completion charges. Cancellation refunds none of the paid resources.
+
+
+Charter review uses row-specific hover/focus tooltips and touch Details: County
+capacity contains development limits and the non-refundable-payment notice;
+Your holdings after founding contains its excess-holding penalty. The bottom-right
+Fund charter action exposes Settlement, Pay now, Construction time and Benefit in
+its own tooltip/disclosure, rather than repeating those rows in the review card.
+The disabled action retains a focusable details wrapper. Other blockers stay inline.
+
+
+## Default modal action buttons
+
+Gameplay actions inside modals use the plot picker's full-width, left-aligned
+`actionbtn` style, stacked vertically. This includes Fund charter and Claim a
+higher dignity. Use `modal-body-actions` for action groups; Back, Cancel and Close
+remain in shared navigation, and compact inline editing/disclosure controls remain
+compact. Do not use narrow centered primary buttons for gameplay actions.
+Every action with a cost must expose its current itemized price through the shared
+hover/focus tooltip and touch/keyboard Details disclosure, including disabled
+actions through a focusable wrapper. Revalidate the quoted cost on activation.
+Charter action details include settlement, payment, duration and benefit. Capacity
+and holding-limit explanations belong to their own row tooltips. This supersedes
+the earlier bottom-right compact charter button placement.
+
+
+Building Works cards use bold names with regular-weight supporting text at the
+shared label size. Price, county availability and next settlement/requirements
+occupy separate lines; unavailable rows use the same upright typography, not
+italics. Effects remain regular-weight with consistent spacing. Cards have a
+visible gap, and the existing detail tooltip retains the full mechanical audit.
+
+Action-cost tooltip rows keep labels beside their values without stretched columns;
+separate the cost row from its requirement or confirmation text with an eight-pixel gap.
+
+Muster cost summaries show additional troops and expected seasonal spending.
+The shared hover/focus tooltip and touch Details contain upkeep, food, treasury,
+support, rally and supply-policy explanations. The full-width Muster action has
+its own cost and one-day duration disclosure. There is no separate Save button.
+
+The County troops section has no explanation tooltip or Details button; its
+heading only toggles the county controls. Cost and Muster disclosures remain.
+
+War-law facts keep labels beside values with a 12px gap and wrap on narrow
+screens. Sections use 12px separation; headings and descriptions use 6px gaps.
+
+The Network Household section body forms one bordered card below the section
+toggle. It contains counts, costs, active standards, Household Plan, Hire a retainer
+when available, character cards and Show all. The generic introductory sentence
+is omitted. Collapsing the section hides the entire card.
+
+Connections uses the same bordered section-body card as Household, enclosing
+its attention summary, related actions, character rows and Show all. Its section
+heading remains outside the card and collapses all of that content together.
+
+All six Network sections use this same bordered section-body card, including
+Trade & Guild, Political blocs, Realm and Local folk. Summaries, actions, rows,
+empty states and Show all stay inside; section headings remain outside.
+
+Network section-body cards use opaque warm brown (#382d20), contrasting with
+the darker inner person and action cards. No gradient or transparency is used.
+
+Unboxed labels and helper text on Network section backgrounds use main ivory
+for contrast. Inner cards keep their existing label and supporting-text colors.

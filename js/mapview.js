@@ -1216,7 +1216,8 @@ window.FB = window.FB || {};
         if (detail) {
           const fs = Math.round(settlementLabelCssPx(rank) * dpr);
           ctx.font = fs + 'px Georgia';
-          const tw = ctx.measureText(site.name).width;
+          const name = FB.settlementDisplayName(FB.state, site.pid, site.index);
+          const tw = ctx.measureText(name).width;
           const lx = scrX;
           const gap = half ? half + 5 * u : (rank === 2 ? 9.5 : 8.5) * dpr;
           for (let pos = 0; pos < 2; pos++) {
@@ -1232,8 +1233,8 @@ window.FB = window.FB || {};
             ctx.lineWidth = 2.5 * dpr;
             ctx.strokeStyle = focused ? 'rgba(20,16,10,0.72)' : 'rgba(20,16,10,0.4)';
             ctx.fillStyle = focused ? 'rgba(255,250,235,0.95)' : 'rgba(255,250,235,0.5)';
-            ctx.strokeText(site.name, lx, ly);
-            ctx.fillText(site.name, lx, ly);
+            ctx.strokeText(name, lx, ly);
+            ctx.fillText(name, lx, ly);
             break;
           }
         }

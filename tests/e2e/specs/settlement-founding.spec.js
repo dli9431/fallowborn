@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/lordships.js', 'js/world.js', 'js/settlement.js', 'js/population.js',
   'js/actions.js', 'js/main.js', 'js/model.js', 'js/save.js', 'js/modifiers.js', 'js/events.js',
-  'js/economy.js', 'js/treasury.js',
+  'js/economy.js', 'js/treasury.js', 'js/mapview.js',
   'js/ui_modals.js', 'js/ui_panels.js', 'js/ui_misc.js', 'js/technology.js',
   'data/actions.js', 'data/map_data.js', 'data/technology.js', 'data/settlements.js', 'data/economy.js',
   'css/style.css'
@@ -127,8 +127,8 @@ test('completion conserves every community, retains private property and grants 
     const population = s.population.counties[pid].count, development = s.dev[pid];
     const property = JSON.stringify([p.manor, p.landPlots, p.enterprises, p.holdings]);
     const q = FB.settlementFoundingEligibility(s, pid);
-    FB.beginSettlementFounding(s, q);
     const prestige = p.prestige;
+    FB.beginSettlementFounding(s, q);
     s.turn += q.days;
     const completed = FB.settlementFoundingDay(s);
     const repeated = FB.completeSettlementFounding(s);
@@ -152,11 +152,14 @@ test('completion conserves every community, retains private property and grants 
   expect(r.liege).toBe(r.count);
 });
 
-test('occupation pauses time; missing prestige and travel retain the funded charter without partial grants', async function ({ page }) {
+test('legacy charter occupation pauses time; missing prestige and travel retain the funded charter without partial grants', async function ({ page }) {
   const r = await page.evaluate(function () {
     const s = FB.state, p = s.player, pid = p.provinceId;
     const q = FB.settlementFoundingEligibility(s, pid);
     FB.beginSettlementFounding(s, q);
+    // Simulate a saved charter funded under the original completion-payment terms.
+    delete s.settlementLordships.founding[pid].costsPaid;
+    p.prestige += q.prestige; p.piety += q.piety;
     s.occupations = s.occupations || {}; s.occupations[pid] = { occupied:true };
     s.turn += 90; FB.settlementFoundingDay(s);
     const paused = FB.activeSettlementFounding(s), reason = FB.settlementFoundingStatus(s).reason;
@@ -267,23 +270,206 @@ test('funded charters survive save loading, inheritance and replacement of the c
 test('mobile charter review exposes costs and both routes; cancellation Back retains the project view', async function ({ page }) {
   await page.setViewportSize({ width:390, height:844 });
   await page.evaluate(function () { FB.ui.showSettlementFounding(); });
-  await expect(page.locator('[data-founding-review]')).toContainText('Pay now');
-  await expect(page.locator('[data-founding-review]')).toContainText('Due at completion');
-  await expect(page.locator('[data-founding-review]')).toContainText('360 days');
+  await expect(page.locator('#founding-action-details')).toContainText('Pay now');
+  await expect(page.locator('#founding-action-details')).not.toContainText('Due at completion');
+  await expect(page.locator('#founding-action-details')).toContainText('250 prestige');
+  await expect(page.locator('.modal-title-info')).toBeVisible();
+  await page.locator('.modal-title-info').click();
+  await expect(page.locator('#gm-title-details')).toBeVisible();
+  await page.locator('#founding-ruler').click();
+  await page.locator('#genmodal').getByRole('button', { name:'Back', exact:true }).click();
+  await expect(page.locator('#gm-title-details')).toBeVisible();
+  await expect(page.locator('#founding-ruler')).toBeFocused();
+  await expect(page.locator('#founding-action-details')).toContainText('360 days');
   await expect(page.locator('#founding-petition')).toBeVisible();
   await page.locator('#founding-confirm').focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('[data-founding-review]')).toContainText('Construction paid');
+  await expect(page.locator('#founding-action-details')).toContainText('Construction paid');
   await page.locator('#founding-cancel-review').click();
   await expect(page.locator('#gm-body')).toContainText('will not be refunded');
   await expect(page.getByRole('button', { name:'Cancel charter', exact:true })).toBeVisible();
   await expect(page.locator('#genmodal').getByRole('button', { name:'Back', exact:true })).toHaveCount(1);
   await page.locator('#founding-keep-back').click();
-  await expect(page.locator('[data-founding-review]')).toContainText('Construction paid');
+  await expect(page.locator('#founding-action-details')).toContainText('Construction paid');
   expect(await page.evaluate(function () {
     return document.documentElement.scrollWidth <= window.innerWidth;
   })).toBe(true);
   await page.locator('#founding-cancel-review').click();
   await page.locator('#founding-cancel-confirm').click();
   expect(await page.evaluate(function () { return FB.activeSettlementFounding(FB.state); })).toBeNull();
+});
+
+
+test('county rulers found direct holdings without moving their seat or changing rank', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, pid = p.provinceId;
+    p.tier = 4; p.provs = [pid];
+    s.holder[pid] = 'player'; s.owner[pid] = 'player';
+    FB.foundPlayerRealm(s);
+    const oldHome = p.homeSettlement, oldCount = FB.settlementVisibleCount(s, pid);
+    const quote = FB.settlementFoundingEligibility(s, pid);
+    const funded = FB.beginSettlementFounding(s, quote);
+    const project = FB.activeSettlementFounding(s);
+    if (!project) throw new Error('Expected ruler charter');
+    s.turn = project.dueTurn;
+    const oldHolder = s.holder[pid];
+    s.holder[pid] = Object.keys(s.realms).find(function (id) { return id !== 'player' && s.realms[id].alive; });
+    FB.invalidateSettlementLordships(s);
+    const lost = FB.settlementFoundingStatus(s).ready;
+    s.holder[pid] = oldHolder;
+    FB.invalidateSettlementLordships(s);
+    const completed = FB.completeSettlementFounding(s);
+    return { funded:funded, ready:quote.ready, completed:completed, lost:lost,
+      rank:p.tier, home:p.homeSettlement, oldHome:oldHome,
+      count:FB.settlementVisibleCount(s, pid), expected:oldCount+1,
+      holder:FB.settlementHolder(s, pid, oldCount),
+      lordship:FB.settlementLordship(s, pid, oldCount) };
+  });
+  expect(result).toMatchObject({ funded:true, ready:true, completed:true, lost:false,
+    rank:4, holder:{ kind:'realm', id:'player' }, lordship:null });
+  expect(result.home).toBe(result.oldHome);
+  expect(result.count).toBe(result.expected);
+});
+
+test('ruler founding review offers county selection and direct-holding terms', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId;
+    s.player.tier = 4; s.player.provs = [pid];
+    s.holder[pid] = 'player'; s.owner[pid] = 'player'; FB.foundPlayerRealm(s);
+    FB.ui.showSettlementFounding();
+  });
+  await expect(page.locator('#founding-county')).toBeVisible();
+  await expect(page.locator('#founding-action-details')).toContainText('New direct holding');
+  await expect(page.locator('#gm-title-details')).toContainText('Your rank and household seat stay unchanged');
+  await expect(page.locator('#founding-petition')).toHaveCount(0);
+  await expect(page.locator('#founding-confirm')).toBeEnabled();
+});
+
+
+test('development blocker distinguishes unlocked capacity from eight physical sites', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId;
+    s.dev[pid] = 1;
+    const capacity = FB.settlementCapacity(s, pid);
+    s.settlementLordships.counties[pid] = { established:capacity, lordships:{} };
+    FB.invalidateSettlementLordships(s, pid);
+    const q = FB.settlementFoundingEligibility(s, pid);
+    return { capacity:capacity, ready:q.ready, reason:q.reason };
+  });
+  expect(result.capacity).toBeLessThan(8);
+  expect(result.ready).toBe(false);
+  expect(result.reason).toContain('current development allows ' + result.capacity);
+  expect(result.reason).toContain('Raise county development');
+});
+
+test('full county charter shows eight-site capacity and explains that every site is founded', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, pid = 'barcelona';
+    s.player.provinceId = pid;
+    s.settlementLordships.counties[pid] = { established:8, lordships:{} };
+    s.dev[pid] = 1;
+    FB.invalidateSettlementLordships(s, pid);
+    FB.ui.showSettlementFounding();
+  });
+  await expect(page.locator('[data-founding-review]')).toContainText('8/8');
+  await expect(page.locator('[data-founding-review]')).not.toContainText('unlocked');
+  await expect(page.locator('#founding-capacity-details')).toContainText('All settlement sites in this county are already founded.');
+  await expect(page.locator('[data-founding-status]')).toHaveCount(0);
+  await expect(page.locator('#founding-confirm')).toBeDisabled();
+});
+
+test('settlement rename persists without changing geography and rejects unheld sites', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    let s = FB.state; const pid = s.player.provinceId;
+    s.player.tier = 3;
+    FB.assignSettlementLordship(s, pid, 1, s.player.charId);
+    const site = FB.world.sitesByProv[pid].list[1], original = site.name;
+    const denied = FB.renameSettlement(s, pid, 0, 'Not mine');
+    const bad = FB.renameSettlement(s, pid, 1, '<bad>');
+    const good = FB.renameSettlement(s, pid, 1, '  New Haven  ');
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+    return { denied:denied.ok, bad:bad.ok, good:good.ok,
+      name:FB.settlementsOf(s, pid)[1].name,
+      unchanged:FB.world.sitesByProv[pid].list[1].name === original };
+  });
+  expect(result).toEqual({ denied:false, bad:false, good:true, name:'New Haven', unchanged:true });
+});
+
+test('settlement pencil opens a keyboard name editor and returns to the sheet', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
+  await page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId;
+    s.player.tier = 3; FB.assignSettlementLordship(s, pid, 1, s.player.charId);
+    FB.ui.showSettlement(pid, 1);
+  });
+  await page.locator('#settlement-rename').click();
+  await page.locator('#settlement-name').fill('New Haven');
+  await page.locator('#settlement-name').press('Enter');
+  await expect(page.locator('#gm-title')).toContainText('New Haven');
+  await expect(page.locator('#settlement-rename')).toBeFocused();
+  await page.locator('#settlement-rename').click();
+  await page.locator('#settlement-name').fill('Discard this');
+  await page.getByRole('button', { name:'Back', exact:true }).click();
+  await expect(page.locator('#gm-title')).toContainText('New Haven');
+});
+
+
+test('new charter pays prestige upfront, survives loading and completes without another charge', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    let s = FB.state; const pid = s.player.provinceId;
+    s.player.prestige = 0;
+    const denied = FB.settlementFoundingEligibility(s, pid);
+    const rejected = FB.beginSettlementFounding(s, denied);
+    s.player.prestige = 1000;
+    const q = FB.settlementFoundingEligibility(s, pid), before = s.player.prestige;
+    FB.beginSettlementFounding(s, q);
+    const spent = before - s.player.prestige;
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+    const project = FB.activeSettlementFounding(s);
+    s.player.prestige = 0; s.player.piety = 0; s.turn = project.dueTurn;
+    const completed = FB.completeSettlementFounding(s);
+    return { ready:denied.ready, rejected:rejected, reason:denied.reason,
+      spent:spent, cost:q.prestige, paid:project.costsPaid, completed:completed,
+      prestige:s.player.prestige, piety:s.player.piety };
+  });
+  expect(result).toMatchObject({ ready:false, rejected:false, paid:true, completed:true, prestige:0, piety:0 });
+  expect(result.reason).toContain('prestige');
+  expect(result.spent).toBe(result.cost);
+});
+
+
+test('charter action and capacity terms use touch disclosures instead of expanded prose', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
+  await page.evaluate(function () { FB.ui.showSettlementFounding(); });
+  await expect(page.locator('#founding-action-details')).toBeHidden();
+  await expect(page.locator('[data-founding-review]')).not.toContainText('Pay now');
+  await page.locator('[aria-controls="founding-action-details"]').click();
+  await expect(page.locator('#founding-action-details')).toBeVisible();
+  await expect(page.locator('#founding-action-details')).toContainText('Settlement');
+  await expect(page.locator('#founding-action-details')).toContainText('Construction time');
+  await expect(page.locator('#founding-action-details')).toContainText('Benefit');
+  await page.locator('[aria-controls="founding-capacity-details"]').click();
+  await expect(page.locator('#founding-capacity-details')).toBeVisible();
+  await expect(page.locator('#founding-capacity-details')).toContainText('non-refundable');
+  await page.locator('[aria-controls="founding-holdings-details"]').click();
+  await expect(page.locator('#founding-holdings-details')).toBeVisible();
+});
+
+
+test('charter and elevation actions use full-width plot-style buttons with cost details', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
+  await page.evaluate(function () { FB.ui.showSettlementFounding(); });
+  await expect(page.locator('#founding-confirm')).toHaveClass(/actionbtn/);
+  const widths = await page.evaluate(function () {
+    return { action:document.querySelector('.charter-actions > .charter-info').getBoundingClientRect().width,
+      group:document.querySelector('.charter-actions').getBoundingClientRect().width };
+  });
+  expect(Math.abs(widths.action - widths.group)).toBeLessThan(2);
+  await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showRankElevation('barony'); });
+  await expect(page.locator('#rank-elevation-confirm')).toHaveClass(/actionbtn/);
+  await page.locator('[aria-controls="rank-elevation-confirm-details"]').click();
+  await expect(page.locator('#rank-elevation-confirm-details')).toBeVisible();
+  await expect(page.locator('#rank-elevation-confirm-details')).toContainText('prestige');
+  await expect(page.locator('#rank-elevation-confirm-details .kv > b')).toHaveCSS('flex-grow', '0');
+  await expect(page.locator('#rank-elevation-confirm-details .kv')).toHaveCSS('margin-bottom', '8px');
 });

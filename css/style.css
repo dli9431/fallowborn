@@ -6180,10 +6180,90 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 /* County muster inputs retain a compact, touch-sized shared-sheet layout. */
 .muster-presets { display:flex; flex-wrap:wrap; gap:8px; }
 .muster-presets .btn { min-height:44px; }
-.muster-county-row { display:flex; align-items:center; gap:12px; margin:12px 0; }
+.muster-county-row { display:flex; flex-direction:column; align-items:stretch; gap:8px; margin:12px 0; }
 .muster-county-row label { flex:1; min-width:0; overflow-wrap:anywhere; }
 .muster-county-row .hint { display:block; }
 .muster-county-row input { width:100px; min-width:0; min-height:44px; box-sizing:border-box; }
 
 [data-budget-group] + [data-budget-group] { margin-top:12px; }
 .bd-net-total { margin-top:12px; }
+
+/* Charter terms use the shared hover/focus tooltip and touch disclosure. */
+.charter-info { margin: 0; padding: 0; border: 0; background: transparent; min-width: 0; }
+.charter-info .settcard-head > .kv { flex: 1; min-width: 0; }
+.charter-actions { justify-content: flex-end; align-items: flex-start; }
+.charter-actions > .charter-info { margin-left: auto; max-width: 100%; }
+.charter-actions .settcard-head { justify-content: flex-end; }
+
+/* Full-width modal body actions; shared Back/Close navigation stays separate. */
+.modal-body-actions { flex-direction: column; }
+.modal-body-actions > .actionbtn { box-sizing: border-box; width: 100%; margin: 0; }
+.modal-action-card, .charter-actions > .charter-info {
+  box-sizing: border-box; width: 100%; margin: 0; padding: 0;
+  border: 0; background: transparent;
+}
+.modal-action-card .settcard-head, .charter-actions .settcard-head { align-items: stretch; }
+.modal-action-card .actionbtn, .charter-actions .actionbtn { flex: 1; min-width: 0; margin: 0; }
+
+/* Building ledger: names lead; supporting facts stay regular and readable. */
+.building-works-modal .gm-list { display: grid; gap: 10px; }
+.building-works-modal .asset-owned-row { margin: 0; padding: 12px; }
+.building-works-modal .settcard-head > b { font-size: var(--ui-value-size); line-height: 1.4; }
+.building-works-modal .settcard-meta,
+.building-works-modal .settcard-meta.unavailable,
+.building-works-modal .settcard-fx {
+  font-size: var(--ui-label-size); font-weight: normal; font-style: normal;
+  line-height: 1.5; margin-top: 7px;
+}
+.building-works-modal .settcard-meta { white-space: pre-line; color: var(--helper-text-color); }
+.building-works-modal .settcard-meta.unaffordable { color: var(--ui-danger-color); }
+.building-works-modal .settcard-fx { color: var(--main-text-color); }
+
+.modal-action-terms .kv,
+#tooltip .modal-action-terms .kv {
+  display: flex; flex-wrap: wrap; justify-content: flex-start;
+  gap: 4px 12px; padding: 0; margin: 0 0 8px;
+}
+.modal-action-terms .kv > :first-child { flex: 0 0 auto; }
+.modal-action-terms .kv > :last-child { flex: 0 1 auto; text-align: left; }
+.modal-action-terms > p { margin: 0; line-height: 1.5; }
+
+/* Muster uses the same full-width section toggle as Work and enterprises. */
+#muster-county-details-section .war-sheet-heading h3 { flex: 1; min-width: 0; }
+#muster-counties-toggle { width: 100%; }
+
+.muster-county-controls { display:flex; align-items:center; gap:10px; min-width:0; }
+.muster-county-controls input[type="range"] { flex:1; width:0; margin:0; }
+.muster-county-controls input[type="number"] { flex:0 0 90px; width:90px; }
+
+/* War laws show each current rule once; action disclosures contain only terms. */
+.war-laws-sheet .war-law-description { font-size:var(--ui-label-size); font-weight:normal; line-height:1.5; color:var(--helper-text-color); }
+.war-laws-sheet .war-law-option + .war-law-option { margin-top:16px; }
+.war-laws-sheet .war-law-current .kv { margin-bottom:6px; }
+
+/* Keep law labels and values together instead of using the generic half-width ledger. */
+.war-laws-sheet > .kv,
+.war-laws-sheet .war-law-current .kv {
+  display:flex; flex-wrap:wrap; align-items:baseline; justify-content:flex-start;
+  gap:4px 12px; padding:0; margin:0;
+}
+.war-laws-sheet > .kv > *,
+.war-laws-sheet .war-law-current .kv > * { flex:0 1 auto; width:auto; min-width:0; text-align:left; }
+.war-laws-sheet > .war-sheet-section { margin:12px 0 0; padding:0 0 12px; }
+.war-laws-sheet .war-sheet-heading { margin-bottom:6px; }
+.war-laws-sheet .war-law-description { margin:6px 0 0; }
+
+/* Each Network section encloses its summary, actions, rows and Show all. */
+#tab-network .large-list-section-body {
+  box-sizing:border-box; width:100%; min-width:0;
+  border:1px solid var(--ui-border-color); border-radius:8px;
+  background:#382d20; padding:12px; margin:8px 0 10px;
+}
+
+/* Unboxed Network summary copy needs stronger contrast on the outer brown surface. */
+#tab-network .large-list-section-summary > .kv > span,
+#tab-network .network-household-summary .kv > span,
+#tab-network .large-list-section-summary > .hint,
+#tab-network .large-list-section-body > .hint {
+  color:var(--main-text-color);
+}

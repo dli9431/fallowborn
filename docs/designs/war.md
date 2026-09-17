@@ -1859,17 +1859,17 @@ ruler hostility. An existing ordinary-war primary host may be de-mustered throug
 an explicit button with returned-men and rearm terms; detachments remain fielded.
 
 Native numeric inputs and the assembly selector retain focus while totals update
-in place. Details use shared hover/focus tooltips and touch disclosures. Back,
-Escape and mobile back discard unsaved drafts and preserve the parent sheet/list.
-Saving or mustering requires an explicit action; opening, editing and saving spend
-no day, while confirmed muster or dismissal spends one day.
+in place. Details use shared hover/focus tooltips and touch disclosures. Edits save automatically, so Back, Close, Escape and mobile back retain choices
+and preserve the parent sheet/list. Opening alone creates no plan. Only Muster
+or dismissal requires an explicit action and spends one day; editing spends none.
 Technology impact `county_muster_selection` is **none**: calling fewer troops or
 assembling existing troops separately is baseline command and budgeting.
 
 
-County rows also offer their own 0/25/50/100% buttons; these change only that
-county's amount. The rally selector lists eligible recruitment counties and
-updates cost estimates without saving the draft. Optional `player.musterRally`
+Each county has a native troop slider with its numeric input attached on the right.
+Both controls synchronize, update costs and save automatically; they affect only
+that county. Global 0/25/50/100% presets update every slider and input. The rally selector lists eligible recruitment counties and
+updates cost estimates and automatically saves the plan. Optional `player.musterRally`
 persists the chosen county. Combined hosts gather there; with separate county
 hosts, hired troops and allies join there. If that county becomes unavailable,
 quotes and execution use the normal eligible rally fallback. Old saves retain
@@ -1882,7 +1882,7 @@ ties, instead of preferring the capital. Occupied, besieged, and enemy-held posi
 are excluded. Battle retreats keep their home preference. Supply prices, stocks,
 reserve targets, search cooldowns, and fort passage rules are unchanged.
 
-Muster plan offers a keyboard-accessible Show/Hide county troops button. Collapsing
+Muster plan uses the shared Work and enterprises section-heading toggle for county troops. Collapsing
 the county inputs keeps their draft values and leaves estimates, global presets,
 and plan actions available. Assembly and Rally point have no explanatory tooltip.
 
@@ -1925,3 +1925,19 @@ treasury inputs. Military revisions reset this visibility alongside other phase 
 No holding list, visibility count, or recruitment outcome is retained across days.
 The profiler reports fiscal visibility builds/hits; holding-scan coverage compares
 results with construction authority before and after death and county transfer.
+
+Muster cost summaries show additional troops and expected seasonal spending.
+The shared hover/focus tooltip and touch Details contain upkeep, food, treasury,
+support, rally and supply-policy explanations. The full-width Muster action has
+its own cost and one-day duration disclosure. There is no separate Save button.
+
+The County troops section has no explanation tooltip or Details button; its
+heading only toggles the county controls. Cost and Muster disclosures remain.
+
+War laws presents each current law and its meaning once. Read-only players see
+no hidden alternatives or proclamation helper text. Eligible rulers see named
+proclamation buttons with the proposed rule visible and costs/Standing in their
+action disclosures; unavailable actions retain their blocker.
+
+War-law facts keep labels beside values with a 12px gap and wrap on narrow
+screens. Sections use 12px separation; headings and descriptions use 6px gaps.

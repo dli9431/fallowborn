@@ -3700,7 +3700,7 @@ window.FB = window.FB || {};
     } },
   { id:'found_settlement', opensChoices:true, noConsume:true, deferCooldown:true,
     desc:function () { return FB.T('Fund a hereditary settlement, or review your charter.'); },
-    show:function (s) { return s.player.tier === 2 || !!FB.activeSettlementFounding(s); },
+    show:function (s) { return s.player.tier === 2 || s.player.tier >= 4 || !!FB.activeSettlementFounding(s); },
     run:function () { FB.ui.showSettlementFounding(); } },
   { id: 'petition_barony', opensChoices:true, noConsume:true,
     deferCooldown:true,

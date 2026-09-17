@@ -4600,6 +4600,25 @@ window.FB = window.FB || {};
   /* Read-only projection for ordinary game systems. Records carry the stable
      site slug, bookmark name, live kind, compiled world point, and authored
      flag; callers reading only name and kind keep working unchanged. */
+  FB.settlementDisplayName = function (state, pid, slot) {
+    const info = FB.world && FB.world.sitesByProv && FB.world.sitesByProv[pid];
+    const site = info && info.list[slot];
+    const names = state && state.settlementNames;
+    return site ? (names && Object.prototype.hasOwnProperty.call(names, site.site) &&
+      typeof names[site.site] === 'string' ? names[site.site] : site.name) : '';
+  };
+  FB.renameSettlement = function (state, pid, slot, value) {
+    if (!state || !state.player || state.player.dead || !FB.settlementConstructionAuthority(state, pid, slot).direct) {
+      return { ok:false, reason:'ineligible' };
+    }
+    const name = String(value === undefined || value === null ? '' : value).trim();
+    if (!name || name.length > 40 || /[<>\x00-\x1f\x7f]/.test(name)) return { ok:false, reason:'name' };
+    const site = FB.world.sitesByProv[pid].list[slot];
+    if (!state.settlementNames) state.settlementNames = {};
+    Object.defineProperty(state.settlementNames, site.site, { value:name, writable:true, enumerable:true, configurable:true });
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    return { ok:true };
+  };
   FB.settlementsOf = function (state, pid) {
     const info = FB.world && FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
     if (!info) return [];
@@ -4610,7 +4629,7 @@ window.FB = window.FB || {};
       const rec = info.list[i];
       out.push({
         site:rec.site,
-        name:rec.name,
+        name:FB.settlementDisplayName(state, pid, i),
         kind:SETTLEMENT_KIND_BY_RANK[liveSettlementRank(
           FB.settlementKindRank(rec.kind), rec.index, dev)],
         x:rec.x,

@@ -5229,9 +5229,7 @@ window.FB = window.FB || {};
         '</div>';
     }
 
-    let intro = '<div class="hint">' + esc(FB.T(
-      'The people and institutions tied to this household, and what each tie currently does.')) +
-      '</div>';
+    let intro = '';
     if ((!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) &&
         FB.tutorialLife && FB.tutorialLife(s) &&
         !connectionRows.length && !tradeRows.length && !realmRows.length) {

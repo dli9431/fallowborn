@@ -1,6 +1,6 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/messages.js', 'js/save.js', 'js/ui_modals.js']);
+dependsOnRuntime(__filename, ['js/messages.js', 'js/i18n.js', 'js/rebellions.js', 'js/save.js', 'js/ui_modals.js']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
@@ -36,4 +36,24 @@ test('retention removes only old routine world notices independently of visibili
   expect(result).toEqual({ count:5, removed:4, stable:true, later:4, totalRemoved:5,
     major:true, complete:false, exportRemoved:5, rngStable:true });
   await expect(page.locator('.chronicle-archive-warning')).toContainText('5 older notices have been removed');
+});
+
+test('saved rebellion notices render on a fresh English boot before any rebellion occurs', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const keys = ['warning', 'ai_settlement', 'muster', 'occupied', 'independence', 'ended'];
+    return keys.map(function (key) {
+      const entry = JSON.parse(JSON.stringify({ msg:{ key:'news.rebellion.' + key,
+        params:{ county:'Barcelona', counties:'Barcelona', men:100, realm:'West Francia', reason:'concession' } } }));
+      return FB.newsText(entry, FB.state, FB.state.player.charId);
+    });
+  });
+  expect(result[0]).toBe('The commons of Barcelona give their ruler 90 days to settle their grievance.');
+  expect(result[5]).toBe('The uprising in Barcelona ends in a negotiated settlement.');
+  result.forEach(function (text) {
+    expect(text).toContain('Barcelona');
+    expect(text).not.toContain('news.rebellion.');
+    expect(text).not.toContain('{county}');
+  });
 });

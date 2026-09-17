@@ -609,15 +609,19 @@ window.FB = window.FB || {};
     if (!root || root.foundingVersion !== 1) reason = FB.T('Settlement founding is unavailable in this save.');
     else if (active) reason = FB.T('Your household already has a funded settlement project.');
     else if (reserved && reserved.status === 'building') reason = FB.T('A charter already reserves this county for founding.');
-    else if (p.tier !== 2) reason = FB.T('A Gentry household may charter a new settlement.');
-    else if (p.travel || p.provinceId !== pid) reason = FB.T('Return to your home county to charter a settlement.');
+    else if (p.tier !== 2 && !(p.tier >= 4 && rid === 'player')) reason = FB.T('Found as Gentry in your home county, or in a county you directly rule.');
+    else if (p.tier === 2 && (p.travel || p.provinceId !== pid)) reason = FB.T('Return to your home county to charter a settlement.');
     else if (!living(state, p.charId) || p.dead) reason = FB.T('Choose the next household head before founding.');
     else if (!rid || !info || !count) reason = FB.T('A settled county and its current ruler are required.');
-    else if (count >= capacity) reason = FB.T('No founding capacity is available. County development must unlock another site.');
+    else if (count >= Math.min(8, info.list.length)) reason = FB.T('All settlement sites in this county are already founded.');
+    else if (count >= capacity) reason = FB.T('This county has {established} settlements; current development allows {capacity}. Raise county development to unlock the next site (maximum 8).', { established:count, capacity:capacity });
     else if (FB.countyOccupiedOrBesieged(state, pid)) reason = FB.T('Wait until the county is free of occupation and siege.');
+    else if (p.prestige < cost.prestige) reason = FB.T('You need {prestige} prestige to fund this charter.', { prestige:cost.prestige });
+    else if (p.piety < cost.piety) reason = FB.T('You need {piety} piety to fund this charter.', { piety:cost.piety });
     else if (p.gold < cost.gold) reason = FB.T('You need {money:amount} to fund construction.', { amount:cost.gold });
     const grantor = rid === 'player' ? state.chars[p.charId] : FB.realmRulerCharacterSnapshot(state, rid);
     return { provinceId:pid, countyHolderId:rid, grantorId:grantor && grantor.id || null,
+      rulerFounded:p.tier >= 4 && rid === 'player',
       sponsorId:p.charId, settlement:count, site:info && info.list[count] && info.list[count].site || null,
       established:count, capacity:capacity, unusedSlots:Math.max(0, capacity - count),
       gold:cost.gold, prestige:cost.prestige, piety:cost.piety,
@@ -631,14 +635,15 @@ window.FB = window.FB || {};
     const root = table(state), c = state.chars[state.player.charId];
     if (!object(root.founding)) root.founding = {};
     state.player.gold -= current.gold;
+    state.player.prestige -= current.prestige; state.player.piety -= current.piety;
     root.foundingSerial = (root.foundingSerial || 0) + 1;
     root.founding[current.provinceId] = {
       id:root.foundingSerial,
-      status:'building', playerHouse:true, provinceId:current.provinceId,
+      status:'building', playerHouse:true, provinceId:current.provinceId, rulerFounded:current.rulerFounded,
       sponsorId:c.id, founderId:c.id, dynasty:c.dyn || '',
       grantorId:current.grantorId, grantorRealmId:current.countyHolderId,
       settlement:current.settlement, site:current.site, funded:current.gold,
-      prestige:current.prestige, piety:current.piety, startedTurn:state.turn,
+      prestige:current.prestige, piety:current.piety, costsPaid:true, startedTurn:state.turn,
       dueTurn:state.turn + current.days, lastTurn:state.turn, pausedDays:0
     };
     FB.invalidateSettlementLordships(state);
@@ -663,10 +668,11 @@ window.FB = window.FB || {};
     else if (!FB.settlementCountyHolder(state, pid)) reason = FB.T('Awaiting a recognized county ruler.');
     else if (project.settlement >= FB.settlementCapacity(state, pid)) reason = FB.T('County development must recover before the site can be established.');
     else if (p.tier < 2) reason = FB.T('Recover Gentry standing to complete this charter.');
-    else if (p.travel || p.provinceId !== pid) reason = FB.T('Return your household to the charter county to establish its new seat.');
+    else if (project.rulerFounded && FB.settlementCountyHolder(state, pid) !== 'player') reason = FB.T('Recover direct rule of the charter county to complete construction.');
+    else if (!project.rulerFounded && (p.travel || p.provinceId !== pid)) reason = FB.T('Return your household to the charter county to establish its new seat.');
     else if (days) reason = FB.T('Construction: {days} days remaining.', { days:days });
-    else if (p.prestige < project.prestige) reason = FB.T('Ready for investiture: {prestige} prestige required.', { prestige:project.prestige });
-    else if (p.piety < project.piety) reason = FB.T('Ready for investiture: {piety} piety required.', { piety:project.piety });
+    else if (!project.costsPaid && p.prestige < project.prestige) reason = FB.T('Ready for investiture: {prestige} prestige required.', { prestige:project.prestige });
+    else if (!project.costsPaid && p.piety < project.piety) reason = FB.T('Ready for investiture: {piety} piety required.', { piety:project.piety });
     else if (!FB.settlementFoundingPopulationPlan(state, pid, project.settlement)) reason = FB.T('The county cannot yet supply residents for this settlement.');
     return { project:project, days:days, occupied:occupied, ready:!reason, reason:reason };
   };
@@ -697,15 +703,17 @@ window.FB = window.FB || {};
     if (!c) return false;
     const oldCount = c.established;
     c.established = q.settlement + 1;
-    if (!FB.assignSettlementLordship(state, pid, q.settlement, p.charId)) {
+    if (!q.rulerFounded && !FB.assignSettlementLordship(state, pid, q.settlement, p.charId)) {
       c.established = oldCount;
       return false;
     }
     state.population.counties[pid].communities = population.communities;
-    p.prestige -= q.prestige; p.piety -= q.piety;
-    p.homeSettlement = q.settlement;
-    const lordship = record(state, pid, q.settlement);
-    lordship.founderId = q.founderId; lordship.dynasty = q.dynasty; lordship.source = 'founding';
+    if (!q.costsPaid) { p.prestige -= q.prestige; p.piety -= q.piety; }
+    if (!q.rulerFounded) {
+      p.homeSettlement = q.settlement;
+      const lordship = record(state, pid, q.settlement);
+      lordship.founderId = q.founderId; lordship.dynasty = q.dynasty; lordship.source = 'founding';
+    }
     root.founding[pid].status = 'complete';
     root.founding[pid].completedTurn = state.turn;
     if (p.tier < 3) FB.setPlayerTier(state, 3);
@@ -715,7 +723,12 @@ window.FB = window.FB || {};
     }
     FB.invalidateSettlementLordships(state, pid);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
-    FB.news(state, FB.msg('news.lordship.founded',
+    if (q.rulerFounded) FB.news(state, FB.msg('news.lordship.county_founded',
+      '{settlement} is established as your direct holding in {county}. Its {people} residents relocated within the county.', {
+        settlement:FB.world.sitesByProv[pid].list[q.settlement].name,
+        people:population.settlers, county:FB.world.byId[pid].name
+      }));
+    else FB.news(state, FB.msg('news.lordship.founded',
       '{settlement} is established as your hereditary lordship and household seat. Its {people} residents moved from other settlements in {county}.', {
         settlement:FB.world.sitesByProv[pid].list[q.settlement].name,
         people:population.settlers, county:FB.world.byId[pid].name

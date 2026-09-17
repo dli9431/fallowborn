@@ -513,3 +513,15 @@ initialization, save restoration, or destination arrival. That lifecycle also in
 each resident's empty career-history container, so merely formatting an occupation in either
 view cannot mutate the campaign. Settlement person cards order their compact facts as gender,
 age, occupation, then the player's relationship status with that resident.
+
+
+Direct settlement holders can rename established settlements with the small pencil
+button in the settlement sheet title, matching the character name editor. The editor
+accepts trimmed names of 1-40 characters, excluding angle brackets and controls;
+saving revalidates direct ownership. Back discards edits and restores the settlement
+sheet's scroll, disclosures and focus. Names are literal player text, not translated.
+An optional `state.settlementNames` table maps stable site IDs to display overrides;
+legacy saves need no migration. Geography, county names and site identities remain
+unchanged. Settlement lists, map labels and map search read the saved display name;
+search resolves overrides per query so loading a different save cannot stale names.
+This is cosmetic naming only and introduces no technology eligibility requirement.

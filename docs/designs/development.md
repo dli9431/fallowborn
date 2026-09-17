@@ -2,12 +2,17 @@
 
 ## Settlement founding
 
+The charter review shows County capacity as established sites out of eight (`x/8`).
+When every physical site is founded, its blocker says so rather than suggesting
+more development. Development still gates unused sites below that maximum.
+
 Gentry can fund an unused site from Deeds or the barony petition review, including
 in their first generation. Development supplies capacity at 3, 5, 7 and 9; it no
 longer creates settlements automatically. A charter costs the existing barony gold
 investment upfront (normally 500) and takes `settlementFoundingSeasons` (four,
-360 days). The quoted barony prestige/piety cost is saved and paid at establishment
-(normally 250 prestige, zero piety). The household remains Gentry while building.
+360 days). The quoted barony prestige/piety cost is paid with gold at funding
+(normally 250 prestige, zero piety); all payments are non-refundable. Legacy
+charters without `costsPaid` keep their original completion payment terms. The household remains Gentry while building.
 
 One project reserves the next compiled slot; county transfer and inheritance retain
 it. Occupation or siege pauses its clock. Completion waits for capacity, residents,
@@ -404,3 +409,28 @@ Military construction reserves are still read again for the distribution pass.
 Profiler counters distinguish annual unchanged-snapshot reuse from a fresh
 post-construction snapshot. This is a read-reuse optimization, with no research gate
 or change to spending eligibility, building choices, simulation order or RNG.
+
+
+County-ruler founding: Counts and higher may use Found a settlement in Deeds and
+choose a directly ruled county. Sovereign ownership alone does not authorize
+founding in a vassal's county. Existing costs, duration, one-household-project limit,
+capacity and conserved-population requirements apply. These projects save additive
+`rulerFounded: true`; completion requires retained direct county control but not
+household residence there. Completion adds an undelegated direct holding without
+changing rank or the household seat. Lost control pauses completion, retaining the
+funded project. Legacy/Gentry charters keep their existing hereditary-seat behavior.
+The review names direct-holding benefits, no baronial dues, and capacity consequences;
+its county selector uses native keyboard/mobile controls and the existing modal
+history. The settlement_founding technology review remains none, expanded to cover
+ordinary county-ruler founding; administrative capacity retains its soft role.
+
+
+Building Works cards use bold names with regular-weight supporting text at the
+shared label size. Price, county availability and next settlement/requirements
+occupy separate lines; unavailable rows use the same upright typography, not
+italics. Effects remain regular-weight with consistent spacing. Cards have a
+visible gap, and the existing detail tooltip retains the full mechanical audit.
+
+Building Works always shows the current quoted construction price, including
+technology-locked buildings and buildings with no free eligible slot. Requirements
+and capacity remain visible alongside the price; Raise stays disabled.

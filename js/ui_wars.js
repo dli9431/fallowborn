@@ -164,45 +164,48 @@
       const county = FB.world.byId[row.pid];
       counties += '<div class="muster-county-row"><label for="muster-county-' + i + '">' + esc(county ? county.name : row.pid) +
         '<span class="hint">' + esc(FB.T('Up to {men} troops', { men:row.maximum })) + '</span><span class="hint" data-muster-cost="' + esc(row.pid) + '"></span></label>' +
-        '<input type="number" inputmode="numeric" id="muster-county-' + i + '" data-muster-county="' + esc(row.pid) + '" min="0" max="' + row.maximum + '" step="1" value="' + row.selected + '"></div>' +
-        '<div class="muster-presets" role="group" aria-label="' + esc(FB.T('Troop presets for {county}', { county:county ? county.name : row.pid })) + '">' +
-        [0,25,50,100].map(function (percent) {
-          return '<button type="button" class="btn" data-muster-county-preset="' + esc(row.pid) + '" data-percent="' + percent + '">' + esc(FB.T('{percent}%', { percent:percent })) + '</button>';
-        }).join('') + '</div>';
+        '<div class="muster-county-controls"><input type="range" class="provision-slider" data-muster-slider="' + esc(row.pid) + '" aria-label="' + esc(FB.T('Troops from {county}', { county:county ? county.name : row.pid })) + '" min="0" max="' + row.maximum + '" step="1" value="' + row.selected + '">' +
+        '<input type="number" inputmode="numeric" id="muster-county-' + i + '" data-muster-county="' + esc(row.pid) + '" min="0" max="' + row.maximum + '" step="1" value="' + row.selected + '"></div></div>';
     });
     h += section('muster-county-details', FB.T('County troops'),
-      '<button type="button" class="btn" id="muster-counties-toggle" aria-expanded="true" aria-controls="muster-counties">' +
-      esc(FB.T('Hide county troops')) + '</button><div id="muster-counties">' +
-      (counties || '<p>' + esc(FB.T('No eligible recruitment counties.')) + '</p>') + '</div>',
-      '<p>' + esc(FB.T('County amounts set your total deployment target. Existing hosts and their replacement ranks count toward that target; only additional available troops muster. Existing hosts keep their orders. Besieged or occupied counties cannot send troops. Mustering itself does not lower Popular support.')) + '</p>');
+      '<div id="muster-counties">' +
+      (counties || '<p>' + esc(FB.T('No eligible recruitment counties.')) + '</p>') + '</div>');
     h += section('muster-cost-details', FB.T('Estimated cost'), '<div id="muster-costs" aria-live="polite"></div>',
-      '<p>' + esc(FB.T('Costs use current prices where each host starts. Food costs depend on available stocks and your supply settings. Moving, winter and price changes can raise the bill.')) + '</p>' +
+      '<div id="muster-cost-breakdown"></div><p>' + esc(FB.T('Costs use current prices where each host starts. Food costs depend on available stocks and your supply settings. Moving, winter and price changes can raise the bill.')) + '</p>' +
       '<p>' + esc(FB.T('There is no fee to raise troops. You pay to keep them in the field. Existing contracts and replacement training may cost extra.')) + '</p>');
-    h += '<p id="muster-blocker" class="warnote"></p>';
-    h += button('muster-save', FB.T('Save plan')) + button('muster-raise', FB.T('Save and muster'));
+    h += '<p class="hint">' + esc(FB.T('Changes save automatically and apply to future musters.')) + '</p><p id="muster-blocker" class="warnote"></p>';
+    h += '<div class="modal-body-actions"><div class="settcard modal-action-card" tabindex="0" aria-describedby="muster-action-details"><div class="settcard-head">' +
+      '<button type="button" class="actionbtn" id="muster-raise" data-action-tooltip data-tooltip-anchor="control" aria-describedby="muster-action-details">' + esc(FB.T('Muster')) + '</button>' +
+      '<span class="settcard-actions"><button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="muster-action-details" aria-label="' + esc(FB.T('Details')) + '">?</button></span></div>' +
+      '<div class="settcard-details hidden" id="muster-action-details"></div></div></div>';
     const demuster = FB.demusterPreview(s);
     if (demuster && !(FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))) {
       h += section('muster-dismiss-details', FB.T('Current host'),
         '<p>' + esc(FB.T('De-muster to stop this host’s field upkeep. {men} troops return to the rolls; the next muster must wait {days} days.', {
-          men:demuster.men, days:FBDATA.balance.armyRearmDays || 60 })) + '</p>' + button('muster-dismiss', FB.T('Save plan and de-muster current host')),
+          men:demuster.men, days:FBDATA.balance.armyRearmDays || 60 })) + '</p>' + button('muster-dismiss', FB.T('De-muster current host')),
         '<p>' + esc(FB.T('Sends your main host home. Other hosts stay in the field. All troops can return when dismissed on your own land; elsewhere, some or all are lost.')) + '</p>');
     }
     h += button('muster-back', FB.T('Back')) + '</div>';
     const fromPanel = document.getElementById('genmodal').classList.contains('hidden');
     SH.openModal(FB.T('Muster plan'), h, { historyView:true, modalClass:'war-sheet-modal',
       historyBackRender:fromPanel ? function () { UI.closeModal(); } : null });
-    // Assembly and rally point need no explanatory tooltip or extra tab stop.
-    const callSection = document.getElementById('muster-call-details-section');
-    callSection.removeAttribute('aria-describedby');
-    callSection.removeAttribute('tabindex');
+    const countyHeading = document.querySelector('#muster-county-details-section h3');
+    countyHeading.innerHTML = '<button type="button" class="large-list-section-toggle" id="muster-counties-toggle" aria-expanded="true" aria-controls="muster-counties"><span class="large-list-section-title">' + esc(FB.T('County troops')) + '</span><span class="large-list-section-caret" aria-hidden="true">&#9662;</span></button>';
+    // These controls need no explanatory tooltip or extra section tab stop.
+    ['muster-call-details-section', 'muster-county-details-section'].forEach(function (id) {
+      const controlSection = document.getElementById(id);
+      controlSection.removeAttribute('aria-describedby');
+      controlSection.removeAttribute('tabindex');
+    });
     bind('muster-counties-toggle', function () {
       const toggle = document.getElementById('muster-counties-toggle');
       const expanded = toggle.getAttribute('aria-expanded') !== 'true';
       toggle.setAttribute('aria-expanded', String(expanded));
-      toggle.textContent = expanded ? FB.T('Hide county troops') : FB.T('Show county troops');
+      toggle.querySelector('.large-list-section-caret').textContent = expanded ? '\u25be' : '\u25b8';
       document.getElementById('muster-counties').classList.toggle('hidden', !expanded);
     });
-    function update() {
+    function update(saveChanges) {
+      if (saveChanges === true) FB.savePlayerMusterSelection(s, draft, formation, rally);
       const quote = FB.playerMusterSelectionQuote(s, draft, formation, rally);
       if (!quote) return;
       shownQuote = JSON.stringify([quote.units, quote.hosts, quote.total, quote.rally]);
@@ -218,9 +221,15 @@
       else if (!quote.purchases) costs += '<p class="warnote">' + esc(FB.T('Food purchases are off. Troops will consume carried reserves.')) + '</p>';
       else if (s.player.gold < quote.total) costs += '<p class="warnote">' + esc(FB.T('Your treasury covers less than one season at these prices. Future income is not included.')) + '</p>';
       if (formation === 'gather' && quote.rally) costs += fact(FB.T('Rally point'), FB.world.byId[quote.rally].name);
-      document.getElementById('muster-costs').innerHTML = costs;
+      document.getElementById('muster-costs').innerHTML =
+        fact(FB.T('Additional troops'), quote.men) +
+        fact(FB.T('Expected spending'), FB.T('{money:cost} per season', { cost:quote.total }));
+      document.getElementById('muster-cost-breakdown').innerHTML = costs;
+      document.getElementById('muster-action-details').innerHTML = '<div class="modal-action-terms">' +
+        fact(FB.T('Expected spending'), FB.T('{money:cost} per season', { cost:quote.total })) +
+        fact(FB.T('Muster time'), FB.T('1 day')) +
+        '<p>' + esc(FB.T('There is no fee to raise troops. You pay to keep them in the field.')) + '</p></div>';
       document.getElementById('muster-raise').disabled = !quote.canRaise;
-      document.getElementById('muster-save').disabled = !quote.valid && quote.men > 0;
       document.querySelectorAll('[data-muster-cost]').forEach(function (el) {
         const row = quote.rows.filter(function (entry) { return entry.pid === el.dataset.musterCost; })[0];
         const county = quote.estimates[el.dataset.musterCost];
@@ -231,37 +240,37 @@
       document.getElementById('muster-blocker').textContent = quote.days ? FB.T('Ready to muster in {days} days.', { days:quote.days }) :
         !quote.men ? FB.T('No additional troops are available under this plan. Troops already fielded and their replacement ranks count toward the target.') :
         !quote.valid ? FB.T('Each host needs at least {men} troops. Choose more troops or gather at the rally point.', { men:quote.minimum }) :
-        !quote.canRaise ? FB.T('Save this plan for when war begins.') : FB.T('The plan also applies to automatic musters.');
+        !quote.canRaise ? FB.T('Available when war begins.') : '';
     }
-    document.querySelectorAll('[data-muster-county]').forEach(function (el) {
-      el.addEventListener('input', function () { draft[el.dataset.musterCounty] = Number(el.value); update(); });
-      el.addEventListener('change', function () {
-        const value = FB.clamp(Math.floor(Number(el.value) || 0), 0, Number(el.max));
-        el.value = value; draft[el.dataset.musterCounty] = value; update();
+    function syncCountyControls() {
+      document.querySelectorAll('[data-muster-county], [data-muster-slider]').forEach(function (input) {
+        const pid = input.dataset.musterCounty || input.dataset.musterSlider;
+        input.value = draft[pid];
       });
+    }
+    document.querySelectorAll('[data-muster-county], [data-muster-slider]').forEach(function (el) {
+      function changed() {
+        const pid = el.dataset.musterCounty || el.dataset.musterSlider;
+        draft[pid] = FB.clamp(Math.floor(Number(el.value) || 0), 0, Number(el.max));
+        // Leave a numeric field editable while typing; its paired slider stays current.
+        document.querySelectorAll('[data-muster-county], [data-muster-slider]').forEach(function (other) {
+          if (other !== el && (other.dataset.musterCounty || other.dataset.musterSlider) === pid) other.value = draft[pid];
+        });
+        update(true);
+      }
+      el.addEventListener('input', changed);
+      el.addEventListener('change', function () { changed(); el.value = draft[el.dataset.musterCounty || el.dataset.musterSlider]; });
     });
     document.querySelectorAll('[data-muster-percent]').forEach(function (el) {
       el.addEventListener('click', function () {
         const percent = Number(el.dataset.musterPercent);
         initial.rows.forEach(function (row) { draft[row.pid] = Math.floor(row.maximum * percent / 100); });
-        document.querySelectorAll('[data-muster-county]').forEach(function (input) { input.value = draft[input.dataset.musterCounty]; });
-        update();
+        syncCountyControls();
+        update(true);
       });
     });
-    document.querySelectorAll('[data-muster-county-preset]').forEach(function (el) {
-      el.addEventListener('click', function () {
-        const pid = el.dataset.musterCountyPreset;
-        const row = initial.rows.filter(function (entry) { return entry.pid === pid; })[0];
-        draft[pid] = Math.floor(row.maximum * Number(el.dataset.percent) / 100);
-        document.querySelectorAll('[data-muster-county]').forEach(function (input) {
-          if (input.dataset.musterCounty === pid) input.value = draft[pid];
-        });
-        update();
-      });
-    });
-    document.getElementById('muster-rally').addEventListener('change', function (event) { rally = event.target.value; update(); });
-    document.getElementById('muster-formation').addEventListener('change', function (event) { formation = event.target.value; update(); });
-    bind('muster-save', function () { if (FB.savePlayerMusterSelection(s, draft, formation, rally)) { back(); UI.refresh(); } });
+    document.getElementById('muster-rally').addEventListener('change', function (event) { rally = event.target.value; update(true); });
+    document.getElementById('muster-formation').addEventListener('change', function (event) { formation = event.target.value; update(true); });
     bind('muster-raise', function () {
       const quote = FB.playerMusterSelectionQuote(s, draft, formation, rally);
       if (!quote || !quote.canRaise || JSON.stringify([quote.units, quote.hosts, quote.total, quote.rally]) !== shownQuote) { update(); return; }
@@ -282,31 +291,33 @@
     const s = FB.state, sovereign = FB.playerRealmId(s) || 'player';
     const ruler = s.realms.player;
     const canProclaim = ruler && ruler.alive && !ruler.liege && !s.player.liege && s.player.tier >= 5;
-    let h = '<div class="war-sheet">' + fact(FB.T('Governing realm'), name(s, sovereign));
-    if (!canProclaim) h += '<p class="warnote">' + esc(FB.T('Only independent dukes and crowned rulers can change these laws.')) + '</p>';
+    let h = '<div class="war-sheet war-laws-sheet">' + fact(FB.T('Governing realm'), name(s, sovereign));
     ['internal_peace', 'external_campaigns'].forEach(function (id) {
       const def = FBDATA.policies[id], current = FB.realmPolicyLevelId(s, id);
       const currentIndex = def.levels.map(function (l) { return l.id; }).indexOf(current);
-      let rows = '', details = '';
+      let rows = '';
       def.levels.forEach(function (level, i) {
-        const status = FB.realmPolicyStatus(s, id, level.id);
+        if (level.id !== current && !canProclaim) return;
         const label = FB.dataText(s, s.player.charId, 'policy', id, def, 'levels.' + i + '.name', {});
         const desc = FB.dataText(s, s.player.charId, 'policy', id, def, 'levels.' + i + '.desc', {});
-        details += '<p><b>' + esc(label) + '</b><br>' + esc(desc) + '</p>';
-        if (level.id !== current && !canProclaim) return;
-        rows += '<div class="war-law-option">' + (level.id === current
-          ? fact(label, FB.T('Current'))
-          : '<h4>' + esc(label) + '</h4>');
-        if (level.id === current) rows += '<p>' + esc(desc) + '</p>';
-        else if (canProclaim) {
-          rows += fact(FB.T('Vassal Standing'), i > currentIndex ? FB.T('-10') : FB.T('+10')) +
-            '<button type="button" class="actionbtn" data-proclaim-war-law="' + id + ':' + level.id + '"' + (status.ready ? '' : ' disabled') + '>' +
-            esc(FB.T('Proclaim: {money:cost}', { cost:status.cost })) + '</button>' +
-            (!status.ready ? '<p class="warnote">' + esc(status.reason) + '</p>' : '');
+        if (level.id === current) {
+          rows = '<div class="war-law-option war-law-current">' + fact(FB.T('Current law'), label) +
+            '<p class="war-law-description">' + esc(desc) + '</p></div>' + rows;
+          return;
         }
-        rows += '</div>';
+        const status = FB.realmPolicyStatus(s, id, level.id), detailId = 'war-law-action-' + id + '-' + level.id;
+        rows += '<div class="war-law-option settcard modal-action-card" tabindex="0" aria-describedby="' + detailId + '"><div class="settcard-head">' +
+          '<button type="button" class="actionbtn" data-proclaim-war-law="' + id + ':' + level.id + '" data-action-tooltip data-tooltip-anchor="control" aria-describedby="' + detailId + '"' + (status.ready ? '' : ' disabled') + '>' +
+          esc(FB.T('Proclaim {law}', { law:label })) + '</button>' +
+          '<span class="settcard-actions"><button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="' + detailId + '" aria-label="' + esc(FB.T('Details')) + '">?</button></span></div>' +
+          '<p class="war-law-description">' + esc(desc) + '</p>' +
+          '<div class="settcard-details hidden" id="' + detailId + '"><div class="modal-action-terms">' +
+          fact(FB.T('Cost'), FB.T('{money:cost}', { cost:status.cost })) +
+          fact(FB.T('Vassal Standing'), i > currentIndex ? FB.T('-10') : FB.T('+10')) + '</div></div>' +
+          (!status.ready ? '<p class="warnote">' + esc(status.reason) + '</p>' : '') + '</div>';
       });
-      h += section('war-law-details-' + id, FB.dataText(s, s.player.charId, 'policy', id, def, 'name', {}), rows, details);
+      h += '<section class="war-sheet-section" id="war-law-details-' + id + '-section" tabindex="-1"><div class="war-sheet-heading"><h3>' +
+        esc(FB.dataText(s, s.player.charId, 'policy', id, def, 'name', {})) + '</h3></div>' + rows + '</section>';
     });
     if (canProclaim) h += '<p class="hint">' + esc(FB.T('One change per law each year. Existing wars keep their terms.')) + '</p>';
     Object.keys(s.warPermissionRequests || {}).forEach(function (key, i) {

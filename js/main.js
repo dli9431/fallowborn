@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.182.0';
+FB.VERSION = '1.182.1';
 FB.CHANGELOG = [
+  { v: '1.182.1', date: '2026-09-17', changes: [
+    'County rulers can found settlements, and direct holders can rename them. Charter, building, muster, war-law and Network screens are clearer, muster plans save automatically, and saved rebellion notices display correctly.'
+  ] },
   { v: '1.182.0', date: '2026-09-17', changes: [
     'Found and grant settlements, rule landed baronies, and pursue county titles through claims and recognition. Settlement management, wartime fast-forward, and annual treasury calculations do less repeated work.'
   ] },

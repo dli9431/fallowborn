@@ -165,6 +165,10 @@ test('raises buildings in two held counties from the narrow county ledger',
     await expect(millWorkCard.locator('.settcard-fx')).toContainText('+2');
     await expect(millWorkCard.locator('.settcard-meta'))
       .toContainText('built in this county');
+    await expect(millWorkCard.locator('.settcard-meta')).toHaveCSS('font-style', 'normal');
+    await expect(millWorkCard.locator('.settcard-meta')).toHaveCSS('font-weight', '400');
+    await expect(millWorkCard.locator('.settcard-fx')).toHaveCSS('font-weight', '400');
+    await expect(millWorkCard.locator('.settcard-meta')).toHaveCSS('white-space', 'pre-line');
     const workDetails = millWorkCard.locator('.settcard-details');
     await expect(workDetails).toBeHidden();
     const workInfo = millWorkCard.locator('.settcard-info');
@@ -661,6 +665,11 @@ test('building ledger shows remaining copies, shared limits and occupied ruins',
   await expect(page.locator('[data-bquick="shared_test"]')).toBeDisabled();
   await expect(card('ruin_test')).toContainText('Every settlement already has this building or its ruins.');
   await expect(page.locator('[data-bquick="ruin_test"]')).toBeDisabled();
+  const blockedCost = await page.evaluate(function () {
+    return FB.T('{money:amount}', { amount:FB.buildCost(FB.state, FB.state.player.provinceId, 'ruin_test') });
+  });
+  await expect(card('ruin_test').locator('.settcard-meta')).toContainText(blockedCost);
+
 });
 
 

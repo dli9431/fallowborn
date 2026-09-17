@@ -505,6 +505,23 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
     await expect(page.locator('#network-list-search')).toHaveCount(0);
     await expect(page.locator('#tab-network [data-list-filter]')).toHaveCount(0);
     await expect(page.locator('#tab-network [data-list-section]')).toHaveCount(6);
+    const networkSurfaces = await page.locator('#tab-network .large-list-section-body').evaluateAll(function (cards) {
+      return cards.map(function (card) {
+        const style = getComputedStyle(card);
+        return { color:style.backgroundColor, image:style.backgroundImage };
+      });
+    });
+    expect(networkSurfaces).toEqual(Array(6).fill({ color:'rgb(56, 45, 32)', image:'none' }));
+    for (const section of ['trade', 'politics', 'realm', 'local-folk']) {
+      const card = page.locator('#network-list-body-' + section);
+      await expect(card).toHaveCSS('border-top-style', 'solid');
+      await expect(card).toHaveCSS('border-top-width', '1px');
+      await expect(card).toHaveCSS('border-radius', '8px');
+      await expect(card).toHaveCSS('padding-left', '12px');
+      await expect(card.locator('.large-list-section-summary')).toHaveCount(1);
+      await expect(card.locator('.large-list-rows')).toHaveCount(1);
+      await expect(card.locator('[data-list-show-all]')).toHaveCount(1);
+    }
     const householdToggle = page.locator('[data-list-toggle="household"]');
     const connectionsToggle = page.locator('[data-list-toggle="connections"]');
     const tradeToggle = page.locator('[data-list-toggle="trade"]');
@@ -519,6 +536,21 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
     const householdSummary = page.locator(
       '[data-list-section="household"] .network-household-summary');
     await expect(householdSummary).toBeVisible();
+    const householdCard = page.locator('#network-list-body-household');
+    await expect(householdCard.locator('.network-household-summary')).toHaveCount(1);
+    await expect(householdSummary.locator('.kv > span').first()).toHaveCSS('color', 'rgb(242, 234, 219)');
+    const unboxedCopy = page.locator('#tab-network .large-list-section-summary > .hint, #tab-network .large-list-section-summary > .kv > span');
+    const copyColors = await unboxedCopy.evaluateAll(function (els) { return els.map(function (el) { return getComputedStyle(el).color; }); });
+    copyColors.forEach(function (color) { expect(color).toBe('rgb(242, 234, 219)'); });
+    await expect(householdCard.locator('#network-household-plan')).toHaveCount(1);
+    await expect(householdCard.locator('#network-hire')).toHaveCount(1);
+    await expect(householdCard.locator('.large-list-rows')).toHaveCount(1);
+    await expect(householdCard.locator('[data-list-show-all="household"]')).toHaveCount(1);
+    await expect(householdCard).toHaveCSS('border-top-style', 'solid');
+    await expect(householdCard).toHaveCSS('border-top-width', '1px');
+    await expect(householdCard).toHaveCSS('padding-left', '12px');
+    await expect(householdCard).toHaveCSS('border-radius', '8px');
+    await expect(page.locator('#tab-network')).not.toContainText('The people and institutions tied to this household');
     const householdStandards = householdSummary.locator(
       '.network-household-standards');
     expect(await householdStandards.evaluate(function (row) {
@@ -538,6 +570,14 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
       whiteSpace:'normal',
       overflowWrap:'normal'
     });
+    const connectionsCard = page.locator('#network-list-body-connections');
+    await expect(connectionsCard).toHaveCSS('border-top-width', '1px');
+    await expect(connectionsCard).toHaveCSS('border-top-style', 'solid');
+    await expect(connectionsCard).toHaveCSS('padding-left', '12px');
+    await expect(connectionsCard).toHaveCSS('border-radius', '8px');
+    await expect(connectionsCard.locator('.large-list-section-summary')).toHaveCount(1);
+    await expect(connectionsCard.locator('.large-list-rows')).toHaveCount(1);
+    await expect(connectionsCard.locator('[data-list-show-all="connections"]')).toHaveCount(1);
     await connectionsToggle.hover();
     await expect(page.locator('#tooltip')).toContainText('Connections');
     await expect(page.locator('#tooltip')).toContainText('3 total');

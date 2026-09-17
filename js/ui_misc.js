@@ -3534,6 +3534,14 @@ window.FB = window.FB || {};
       if (old.tagName !== 'BUTTON') old.classList.add('modal-body-actions');
       if (!old.children.length && !old.textContent.trim()) old.parentNode.removeChild(old);
     }
+    // Body actions use the same full-width treatment as the plot picker.
+    const actions = root.querySelectorAll('.modal-body-actions > .btn');
+    for (const action of actions) {
+      if (!action.classList.contains('hidden')) {
+        action.classList.remove('btn', 'primary');
+        action.classList.add('actionbtn');
+      }
+    }
     root.appendChild(footer);
   }
 

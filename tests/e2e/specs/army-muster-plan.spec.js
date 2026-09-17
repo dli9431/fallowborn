@@ -176,16 +176,16 @@ test('muster budgeting explains forced food and nested Back retains parent contr
   });
   expect(r.paid).toBeCloseTo(r.forced + r.food);
   expect(r.forced).toBeCloseTo(r.standing);
-  await expect(page.locator('#muster-costs')).toContainText('Forced supplies');
+  await expect(page.locator('#muster-cost-breakdown')).toContainText('Forced supplies');
   await page.locator('[data-muster-county]').first().fill('0');
   await page.locator('#muster-back').click();
   await expect(page.locator('#muster-parent-search')).toHaveValue('kept');
-  expect(await page.evaluate(function () { return FB.state.player.musterSelection; })).toBeUndefined();
+  expect(await page.evaluate(function () { return Object.values(FB.state.player.musterSelection).includes(0); })).toBe(true);
 });
 
 
 for (const width of [390, 1280]) {
-  test('county presets affect only their county and rally choice stays a draft at ' + width, async function ({ page }, testInfo) {
+  test('county sliders affect only their county and rally choice saves automatically at ' + width, async function ({ page }, testInfo) {
     await page.setViewportSize({ width:width, height:844 });
     const ids = await setup(page, testInfo);
     await page.evaluate(function () { FB.ui.showMusterPlan(); });
@@ -193,21 +193,38 @@ for (const width of [390, 1280]) {
     const before = await inputs.evaluateAll(function (els) { return els.map(function (el) { return el.value; }); });
     const pid = await inputs.first().getAttribute('data-muster-county');
     const maximum = Number(await inputs.first().getAttribute('max'));
+    const slider = page.locator('[data-muster-slider="' + pid + '"]');
+    await expect(page.locator('[data-muster-county-preset]')).toHaveCount(0);
     for (const percent of [0,25,50,100]) {
-      const button = page.locator('[data-muster-county-preset="' + pid + '"][data-percent="' + percent + '"]');
-      await button.click();
-      await expect(button).toBeFocused();
-      await expect(inputs.first()).toHaveValue(String(Math.floor(maximum * percent / 100)));
+      const value = String(Math.floor(maximum * percent / 100));
+      await slider.fill(value);
+      await expect(inputs.first()).toHaveValue(value);
       await expect(inputs.nth(1)).toHaveValue(before[1]);
+      expect(await page.evaluate(function (pid) { return FB.state.player.musterSelection[pid]; }, pid)).toBe(Number(value));
     }
+    await inputs.first().fill('12');
+    await expect(slider).toHaveValue('12');
+    await slider.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(inputs.first()).toHaveValue('13');
+    await expect(slider).toBeFocused();
+    const layout = await slider.evaluate(function (el) {
+      const input = el.parentNode.querySelector('input[type="number"]');
+      const a = el.getBoundingClientRect(), b = input.getBoundingClientRect();
+      return { beside:a.right <= b.left, fits:b.right <= document.documentElement.clientWidth, aligned:Math.abs(a.top - b.top) < 10 };
+    });
+    expect(layout).toEqual({ beside:true, fits:true, aligned:true });
+    await page.locator('[data-muster-percent="50"]').click();
+    await expect(slider).toHaveValue(String(Math.floor(maximum / 2)));
+    await expect(inputs.first()).toHaveValue(String(Math.floor(maximum / 2)));
     await page.locator('#muster-rally').focus();
     await page.locator('#muster-rally').selectOption(ids.second);
     await expect(page.locator('#muster-rally')).toBeFocused();
     await page.locator('#muster-back').click();
-    expect(await page.evaluate(function () { return FB.state.player.musterRally; })).toBeUndefined();
+    expect(await page.evaluate(function () { return FB.state.player.musterRally; })).toBe(ids.second);
     await page.evaluate(function () { FB.ui.showMusterPlan(); });
     await page.locator('#muster-rally').selectOption(ids.second);
-    await page.locator('#muster-save').click();
+    await page.locator('#muster-back').click();
     expect(await page.evaluate(function () { return FB.state.player.musterRally; })).toBe(ids.second);
   });
 }
@@ -262,6 +279,9 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width:width, height:650 });
     await page.evaluate(function () { FB.ui.showMusterPlan(); });
     await expect(page.locator('#muster-call-details-section .settcard-info')).toHaveCount(0);
+    await expect(page.locator('#muster-county-details-section .settcard-info')).toHaveCount(0);
+    await expect(page.locator('#muster-county-details')).toHaveCount(0);
+    await expect(page.locator('#muster-county-details-section')).not.toHaveAttribute('aria-describedby');
     const input = page.locator('[data-muster-county]').first();
     await input.fill('0');
     const costs = await page.locator('#muster-costs').innerText();
@@ -415,3 +435,40 @@ test('all field hosts count toward the target and defensive allies cannot muster
   }, ids);
   expect(result).toEqual({ full:920, remaining:500, fixed:0, added:500, allied:0, exhausted:0 });
 });
+
+for (const exit of ['close', 'escape']) {
+  test('muster edits survive ' + exit + ' without advancing time or raising troops', async function ({ page }, testInfo) {
+    await setup(page, testInfo);
+    await page.setViewportSize({ width:390, height:844 });
+    const before = await page.evaluate(function () {
+      const s = FB.state;
+      FB.ui.showMusterPlan();
+      return { turn:s.turn, gold:s.player.gold, armies:s.armies.length };
+    });
+    expect(await page.evaluate(function () { return FB.state.player.musterSelection; })).toBeUndefined();
+    await expect(page.locator('#muster-save')).toHaveCount(0);
+    await expect(page.locator('#muster-raise')).toHaveText('Muster');
+    await expect(page.locator('#muster-raise')).toHaveClass(/actionbtn/);
+    await expect(page.locator('#muster-counties-toggle')).toHaveClass(/large-list-section-toggle/);
+    await expect(page.locator('#muster-costs .kv')).toHaveCount(2);
+    await page.locator('[data-muster-percent="0"]').click();
+    await page.locator('[aria-controls="muster-action-details"]').click();
+    await expect(page.locator('#muster-action-details')).toBeVisible();
+    await expect(page.locator('#muster-action-details')).toContainText('1 day');
+    await page.locator('[aria-controls="muster-cost-details"]').click();
+    await expect(page.locator('#muster-cost-breakdown')).toBeVisible();
+    await expect(page.locator('#muster-cost-breakdown')).toContainText('Field upkeep');
+    if (exit === 'escape') await page.keyboard.press('Escape');
+    else await page.locator('#genmodal').getByRole('button', { name:'Close', exact:true }).click();
+    await expect(page.locator('#genmodal')).toBeHidden();
+    const after = await page.evaluate(function () {
+      const s = FB.state;
+      return { turn:s.turn, gold:s.player.gold, armies:s.armies.length };
+    });
+    expect(after).toEqual(before);
+    await page.evaluate(function () { FB.ui.showMusterPlan(); });
+    expect(await page.locator('[data-muster-county]').evaluateAll(function (inputs) {
+      return inputs.every(function (input) { return input.value === '0'; });
+    })).toBe(true);
+  });
+}

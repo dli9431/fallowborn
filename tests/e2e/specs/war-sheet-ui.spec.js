@@ -20,11 +20,14 @@ test('campaign facts stay visible and supporting details disclose on mobile', as
   await expect(page.locator('#campaign-peace')).toContainText('Withdraw');
 });
 
-test('law sheet explains the ruler restriction once and preserves details through Back', async function ({ page }, testInfo) {
+test('read-only laws show only current rules without redundant help and survive Back', async function ({ page }, testInfo) {
   await page.setViewportSize({ width:390, height:740 });
   await startWarSafety(page, testInfo);
   await page.evaluate(function () { FB.ui.showWarLaws(); });
-  await expect(page.locator('.war-sheet > .warnote')).toHaveCount(1);
+  await expect(page.locator('.war-sheet > .warnote')).toHaveCount(0);
+  await expect(page.locator('.war-laws-sheet .settcard-info')).toHaveCount(0);
+  await expect(page.locator('.war-laws-sheet')).not.toContainText('Permission required');
+  await expect(page.locator('.war-laws-sheet')).not.toContainText('Prohibited');
   await expect(page.locator('[data-proclaim-war-law]')).toHaveCount(0);
   await expect(page.locator('.war-law-option')).toHaveCount(2);
   const rows = await page.locator('.war-sheet .kv').evaluateAll(function (rows) {
@@ -33,14 +36,13 @@ test('law sheet explains the ruler restriction once and preserves details throug
   expect(rows).toBe(true);
   await expect(page.locator('.war-sheet-section').last()).toHaveCSS('border-bottom-width', '0px');
 
-  await expect(page.locator('.war-law-option b').filter({ hasText:'Current' })).toHaveCount(2);
-  const help = page.locator('[aria-controls="war-law-details-internal_peace"]');
-  await help.click();
-  await expect(page.locator('#war-law-details-internal_peace')).toBeVisible();
+  await expect(page.locator('.war-law-current .kv').filter({ hasText:'Current law' })).toHaveCount(2);
+  await expect(page.locator('.war-law-description')).toHaveCount(2);
+  await expect(page.locator('.war-law-description').first()).toHaveCSS('font-weight', '400');
   await page.evaluate(function () { FB.ui.showCampaign(FB.realmWars(FB.state, 'player')[0].id); });
   await page.locator('#campaign-back').click();
-  await expect(help).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.locator('#war-law-details-internal_peace')).toBeVisible();
+  await expect(page.locator('.war-law-current')).toHaveCount(2);
+  await expect(page.locator('.war-laws-sheet .settcard-info')).toHaveCount(0);
 });
 
 
@@ -48,14 +50,36 @@ test('proclaiming a law retains its disclosure and focuses the updated section',
   await page.setViewportSize({ width:390, height:740 });
   await startWarSafety(page, testInfo);
   await page.evaluate(function () { FB.state.player.tier = 5; FB.ui.showWarLaws(); });
-  const help = page.locator('[aria-controls="war-law-details-internal_peace"]');
+  const help = page.locator('[aria-controls="war-law-action-internal_peace-prohibited"]');
   await help.click();
   const proclaim = page.locator('[data-proclaim-war-law="internal_peace:permission"]');
-  await expect(proclaim).toContainText('Proclaim:');
+  await expect(proclaim).toHaveText('Proclaim Permission required');
+  await expect(proclaim).toHaveClass(/actionbtn/);
+  await expect(page.locator('#war-law-action-internal_peace-permission')).toContainText('Cost');
+  await expect(page.locator('#war-law-action-internal_peace-permission')).toContainText('-10');
   await proclaim.click();
   await expect(page.locator('#war-law-details-internal_peace-section')).toBeFocused();
-  await expect(page.locator('#war-law-details-internal_peace')).toBeVisible();
+  await expect(page.locator('#war-law-action-internal_peace-prohibited')).toBeVisible();
   await expect(help).toHaveAttribute('aria-expanded', 'true');
   const current = page.locator('#war-law-details-internal_peace-section .war-law-option').filter({ hasText:'Permission required' });
   await expect(current).toContainText('Current');
 });
+
+for (const width of [390, 1280]) {
+  test('law facts stay together with compact section spacing at ' + width, async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:width, height:800 });
+    await startWarSafety(page, testInfo);
+    await page.evaluate(function () { FB.ui.showWarLaws(); });
+    const facts = page.locator('.war-laws-sheet > .kv, .war-law-current .kv');
+    const gaps = await facts.evaluateAll(function (rows) {
+      return rows.map(function (row) {
+        const label = row.firstElementChild.getBoundingClientRect();
+        const value = row.lastElementChild.getBoundingClientRect();
+        return { gap:Math.round(value.left - label.right), fits:value.right <= row.getBoundingClientRect().right + 1 };
+      });
+    });
+    gaps.forEach(function (result) { expect(result.gap).toBe(12); expect(result.fits).toBe(true); });
+    await expect(page.locator('.war-laws-sheet .war-sheet-heading').first()).toHaveCSS('margin-bottom', '6px');
+    await expect(page.locator('.war-laws-sheet .war-law-description').first()).toHaveCSS('margin-top', '6px');
+  });
+}

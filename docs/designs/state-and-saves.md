@@ -1608,3 +1608,39 @@ reserve casualty replacement ranks when quoting additional troops; no new saved
 field or migration is needed for inherited hosts. The shared military musterPool
 ceiling now survives partial raises until the campaign military state is cleared,
 preventing later calls from bypassing returned-veteran limits.
+
+
+County-ruler founding: Counts and higher may use Found a settlement in Deeds and
+choose a directly ruled county. Sovereign ownership alone does not authorize
+founding in a vassal's county. Existing costs, duration, one-household-project limit,
+capacity and conserved-population requirements apply. These projects save additive
+`rulerFounded: true`; completion requires retained direct county control but not
+household residence there. Completion adds an undelegated direct holding without
+changing rank or the household seat. Lost control pauses completion, retaining the
+funded project. Legacy/Gentry charters keep their existing hereditary-seat behavior.
+The review names direct-holding benefits, no baronial dues, and capacity consequences;
+its county selector uses native keyboard/mobile controls and the existing modal
+history. The settlement_founding technology review remains none, expanded to cover
+ordinary county-ruler founding; administrative capacity retains its soft role.
+
+
+Direct settlement holders can rename established settlements with the small pencil
+button in the settlement sheet title, matching the character name editor. The editor
+accepts trimmed names of 1-40 characters, excluding angle brackets and controls;
+saving revalidates direct ownership. Back discards edits and restores the settlement
+sheet's scroll, disclosures and focus. Names are literal player text, not translated.
+An optional `state.settlementNames` table maps stable site IDs to display overrides;
+legacy saves need no migration. Geography, county names and site identities remain
+unchanged. Settlement lists, map labels and map search read the saved display name;
+search resolves overrides per query so loading a different save cannot stale names.
+This is cosmetic naming only and introduces no technology eligibility requirement.
+
+
+Settlement charter reviews keep total upfront cost, time, concise benefit, dues,
+holding-limit penalty and current blocker visible. Secondary rules use the shared
+heading hover/focus tooltip and touch Details disclosure. The county ruler opens
+the character sheet through retained modal history. County capacity remains x/8;
+development blockers state both the established count and currently unlocked count.
+New projects save `costsPaid:true` after charging gold, prestige and piety together;
+completion neither checks nor charges those resources again. Missing flags preserve
+legacy completion charges. Cancellation refunds none of the paid resources.
