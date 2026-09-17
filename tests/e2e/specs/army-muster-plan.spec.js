@@ -114,17 +114,19 @@ test('automatic war footing uses the saved call and leaves old unplanned saves a
 });
 
 for (const width of [390, 1280]) {
-  test('muster sheet keeps editing focus, cancels cleanly and confirms the chosen assembly at ' + width, async function ({ page }, testInfo) {
+  test('muster sheet keeps editing focus, saves the call on Back and confirms the chosen assembly at ' + width, async function ({ page }, testInfo) {
     await page.setViewportSize({ width:width, height:844 });
     await setup(page, testInfo);
     await page.evaluate(function () { window.musterTurn = FB.state.turn; FB.ui.showMusterPlan(); });
     const first = page.locator('[data-muster-county]').first();
+    const firstPid = await first.getAttribute('data-muster-county');
     await first.fill('80'); await expect(first).toBeFocused();
-    await expect(page.locator('#muster-costs')).toContainText('No immediate loss');
+    await expect(page.locator('#muster-cost-breakdown')).toContainText('No immediate loss');
     await expect(page.locator('[aria-controls="muster-call-details"]')).toHaveCount(0);
     await page.locator('#muster-back').click();
-    expect(await page.evaluate(function () { return FB.state.player.musterSelection === undefined && FB.state.armies.length === 0 && FB.state.turn === window.musterTurn; })).toBe(true);
+    expect(await page.evaluate(function (pid) { return FB.state.player.musterSelection[pid] === 80 && FB.state.armies.length === 0 && FB.state.turn === window.musterTurn; }, firstPid)).toBe(true);
     await page.evaluate(function () { FB.ui.showMusterPlan(); });
+    await expect(page.locator('[data-muster-county]').first()).toHaveValue('80');
     await page.locator('[data-muster-percent="50"]').click();
     await page.locator('#muster-formation').selectOption('county');
     const expected = await page.evaluate(function () {
@@ -404,7 +406,8 @@ for (const width of [390, 1280]) {
     });
     await page.locator('[data-muster-percent="100"]').click();
     await expect(page.locator('#muster-raise')).toBeEnabled();
-    await expect(page.locator('#muster-costs')).toContainText('Additional troops / hosts');
+    await expect(page.locator('#muster-costs')).toContainText('Additional troops');
+    await expect(page.locator('#muster-cost-breakdown')).toContainText('Additional troops / hosts');
     await page.locator('#muster-raise').click();
     expect(await page.evaluate(function () {
       return FB.state.armies.filter(function (host) { return host.realm === 'player'; }).length;

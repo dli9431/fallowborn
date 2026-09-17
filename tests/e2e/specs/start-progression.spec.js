@@ -243,14 +243,14 @@ test('867 Fustat Sunni standard starts with irrigated_fellah tenure',
     })).toEqual({ arch: 'irrigated_fellah', prov: 'fustat', sett: 0 });
   });
 
-test('867 Novgorod Slavic Pagan standard starts with pagan_household_service tenure',
+test('867 Novgorod Slavic Pagan standard starts with woodland_dependence tenure',
   async function ({ page }) {
     await startWithSerfCode(page, 'TENUREP-867-serf-novgorod-m-Igor');
     expect(await page.evaluate(function () {
       var p = FB.state.player;
       return { arch: p.tenure && p.tenure.archetypeId, prov: p.tenure && p.tenure.provinceId,
         sett: p.tenure && p.tenure.settlement };
-    })).toEqual({ arch: 'pagan_household_service', prov: 'novgorod', sett: 0 });
+    })).toEqual({ arch: 'woodland_dependence', prov: 'novgorod', sett: 0 });
   });
 
 test('1066 Fustat Shia standard starts with irrigated_fellah tenure',
@@ -279,7 +279,7 @@ test('1066 Novgorod Finnic Baltic Pagan standard starts with pagan_household_ser
   { label:'867 Fustat Sunni', code:'TENUREM-867-serf-fustat-m-Hassan-established',
     arch:'irrigated_fellah', prov:'fustat', duties:['irrigation_labor', 'crop_share', 'waterworks_cartage', 'mill_share'] },
   { label:'867 Novgorod Slavic Pagan', code:'TENUREP-867-serf-novgorod-m-Igor-established',
-    arch:'pagan_household_service', prov:'novgorod', duties:['household_service', 'masters_harvest', 'local_heavy_service'] },
+    arch:'woodland_dependence', prov:'novgorod', duties:['woodland_service', 'mast_due', 'timber_cartage', 'deadwood_due'] },
   { label:'1066 Fustat Shia', code:'TENUREM-1066-serf-fustat-m-Ali-established',
     arch:'irrigated_fellah', prov:'fustat', duties:['irrigation_labor', 'crop_share', 'waterworks_cartage', 'mill_share'] },
   { label:'1066 Novgorod Finnic Baltic Pagan', code:'TENUREP-1066-serf-novgorod-m-Tapio-established-0-finnic.baltic_pagan',

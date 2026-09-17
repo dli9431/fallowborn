@@ -3015,6 +3015,10 @@ sheet, its scroll position and focused info button; Close dismisses the full cha
 
 Modal history retains live title nodes as well as body nodes, so inline heading
 controls (including the equipment name pencil) retain their listeners on Back.
+Header Details restores its expanded state and accessible toggle label with the
+retained body. Inspecting the county ruler from a charter uses that retained view.
+Deferred modal autofocus belongs to the rendered content that scheduled it and
+must yield to an explicit focus choice made while opening or restoring that sheet.
 
 Personal-name editor return focus runs after the destination sheet's deferred
 autofocus and checks that its pencil is still attached before restoring focus and

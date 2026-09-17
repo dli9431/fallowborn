@@ -14,6 +14,34 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+for (const noFocus of [false, true]) {
+  test('deferred modal focus preserves an explicit destination with noFocus ' + noFocus, async function ({ page }) {
+    await page.evaluate(function (noFocus) {
+      FB.ui.openModal('Focus return', '<button id="focus-first">First</button>' +
+        '<button id="focus-return">Return target</button>', { noFocus:noFocus });
+      document.getElementById('focus-return').focus({ preventScroll:true });
+      // Queue behind the modal's deferred focus, so the assertion cannot pass early.
+      setTimeout(function () {
+        document.getElementById('focus-return').dataset.settled = 'true';
+      }, 0);
+    }, noFocus);
+    const target = page.locator('#focus-return');
+    await expect(target).toHaveAttribute('data-settled', 'true');
+    await expect(target).toBeFocused();
+  });
+}
+
+test('autofocus still selects the default control or the deliberate-choice dialog', async function ({ page }) {
+  await page.evaluate(function () {
+    FB.ui.openModal('Ordinary sheet', '<button id="default-focus">Default</button>');
+  });
+  await expect(page.locator('#default-focus')).toBeFocused();
+  await page.evaluate(function () {
+    FB.ui.openModal('Deliberate choice', '<button id="deliberate-choice">Choose</button>', { noFocus:true });
+  });
+  await expect(page.locator('#genmodal')).toBeFocused();
+});
+
 test('root footer disables Back and keeps decisions in the body', async function ({ page }) {
   await page.evaluate(function () {
     window.navigationCommits = 0;

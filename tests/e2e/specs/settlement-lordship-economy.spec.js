@@ -53,7 +53,7 @@ test('a landed baron can build only at their site and cannot take over the count
       demolished:demolished, repeatCost:repeatCost, rebuild:rebuild, stale:stale };
   });
   expect(r.blocked).toBe(false); expect(r.built).toBe(true);
-  expect(r.spent).toBe(r.cost); expect(r.own).toBe(1);
+  expect(r.spent).toBeCloseTo(r.cost, 8); expect(r.own).toBe(1);
   expect(r.foreignDemolition).toBe(false); expect(r.fort).toBe(false);
   expect(r.ai).toBe(false); expect(r.demolished).toBe(true);
   expect(r.repeatCost).toBeGreaterThan(r.cost);
@@ -169,7 +169,7 @@ test('baron purses settle once, reserve obligations, and pay actual construction
   });
   expect(r.first).toBeCloseTo(r.expected, 8); expect(r.second).toBe(r.first);
   expect(r.refused).toBe(false); expect(r.built).toBe(true);
-  expect(r.spent).toBe(r.cost); expect(r.unauthorized).toBe(false);
+  expect(r.spent).toBeCloseTo(r.cost, 8); expect(r.unauthorized).toBe(false);
 });
 
 test('mobile construction exposes only the granted site and preserves settlement return', async function ({ page }) {

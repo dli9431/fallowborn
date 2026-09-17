@@ -279,7 +279,12 @@ test('mobile charter review exposes costs and both routes; cancellation Back ret
   await page.locator('#founding-ruler').click();
   await page.locator('#genmodal').getByRole('button', { name:'Back', exact:true }).click();
   await expect(page.locator('#gm-title-details')).toBeVisible();
+  await expect(page.locator('.modal-title-info')).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('#founding-ruler')).toBeFocused();
+  await page.locator('.modal-title-info').click();
+  await expect(page.locator('#gm-title-details')).toBeHidden();
+  await page.locator('.modal-title-info').click();
+  await expect(page.locator('#gm-title-details')).toBeVisible();
   await expect(page.locator('#founding-action-details')).toContainText('360 days');
   await expect(page.locator('#founding-petition')).toBeVisible();
   await page.locator('#founding-confirm').focus();
@@ -411,6 +416,7 @@ test('settlement pencil opens a keyboard name editor and returns to the sheet', 
   await page.locator('#settlement-name').fill('Discard this');
   await page.getByRole('button', { name:'Back', exact:true }).click();
   await expect(page.locator('#gm-title')).toContainText('New Haven');
+  await expect(page.locator('#settlement-rename')).toBeFocused();
 });
 
 

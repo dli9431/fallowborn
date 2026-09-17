@@ -1373,6 +1373,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
     const setup = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
+      const originalCount = FBDATA.deeds.length;
       const rngBefore = JSON.stringify(FB.getRngState());
       const eventWasAbsent = FB.eventById('e2e_declarative_followup') === null;
       FB.mods.apply({
@@ -1388,7 +1389,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
             id:'e2e_declarative_exchange', handler:'declarative_deed',
             label:'Make the chartered exchange',
             desc:'Trade coin and standing for a pious endowment.',
-            order:81, group:'life', cooldownDays:12, spendsDay:false,
+            order:1001, group:'life', cooldownDays:12, spendsDay:false,
             layoutGroup:'personal',
             requiresTech:'crop_rotation',
             visibility:{ flagsAll:['e2e_deed_visible'] },
@@ -1403,14 +1404,14 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
             id:'e2e_declarative_day', handler:'declarative_deed',
             label:'Spend a day on the charter',
             desc:'Complete one bounded day-spending deed.',
-            order:82, group:'life', cooldownDays:0, spendsDay:true,
+            order:1002, group:'life', cooldownDays:0, spendsDay:true,
             effects:{ prestige:1 }
           },
           {
             id:'e2e_declarative_story', handler:'declarative_deed',
             label:'Request the promised audience',
             desc:'Pay for one authored follow-up event.',
-            order:83, group:'life', cooldownDays:5, spendsDay:false,
+            order:1003, group:'life', cooldownDays:5, spendsDay:false,
             costs:{ piety:1 }, queueEvent:'e2e_declarative_followup'
           }
         ]
@@ -1449,7 +1450,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
       return {
         eventWasAbsent:eventWasAbsent,
         sameModEvent:FB.eventById('e2e_declarative_followup').title,
-        count:FBDATA.deeds.length,
+        count:FBDATA.deeds.length, originalCount:originalCount,
         hidden:{ shown:hidden.shown, preview:hidden.preview || null },
         techBlocked:{ can:techBlocked.can, reason:techBlocked.reason },
         eligibilityBlocked:{
@@ -1474,7 +1475,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
 
     expect(setup.eventWasAbsent).toBe(true);
     expect(setup.sameModEvent).toBe('A promised audience');
-    expect(setup.count).toBe(84);
+    expect(setup.count).toBe(setup.originalCount + 3);
     expect(setup.hidden).toEqual({ shown:false, preview:null });
     expect(setup.techBlocked).toEqual({
       can:false,
@@ -1651,7 +1652,7 @@ test('milestone-four phase C rejects unsafe declarative deeds without mutation',
         return Object.assign({
           id:'e2e_unsafe_deed', handler:'declarative_deed',
           label:'Unsafe deed', desc:'A rejected declarative deed.',
-          order:81, group:'life', cooldownDays:1, spendsDay:false,
+          order:1001, group:'life', cooldownDays:1, spendsDay:false,
           effects:{ piety:1 }
         }, patch || {});
       }
@@ -2089,6 +2090,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
     const setup = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
+      const originalCounts = [FBDATA.focuses.length, FBDATA.deeds.length];
       p.profession = 'merchant';
       p.gold = 10;
       p.piety = 5;
@@ -2143,7 +2145,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
             capability:'resource_choice',
             label:'Choose a charter grant',
             desc:'Select one bounded grant to confirm.',
-            order:81, group:'life', cooldownDays:15, spendsDay:false,
+            order:1001, group:'life', cooldownDays:15, spendsDay:false,
             choices:[
               {
                 id:'hidden', label:'Hidden grant',
@@ -2183,7 +2185,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
             capability:'resource_choice',
             label:'Choose a day-long grant',
             desc:'Confirm one grant that occupies the day.',
-            order:82, group:'life', cooldownDays:4, spendsDay:true,
+            order:1002, group:'life', cooldownDays:4, spendsDay:true,
             choices:[{
               id:'accept', label:'Accept the grant', effects:{ prestige:2 }
             }]
@@ -2207,7 +2209,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
       const fallback = FB.focusStatus(s, 'e2e_fallback_first').action;
       FB.ui.refresh();
       return {
-        counts:[FBDATA.focuses.length, FBDATA.deeds.length],
+        counts:[FBDATA.focuses.length, FBDATA.deeds.length], originalCounts:originalCounts,
         defaults:[roleDefault, tiedFallback, highFallback],
         action:{
           flow:action.flow, opensChoices:action.opensChoices,
@@ -2232,7 +2234,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
       };
     });
 
-    expect(setup.counts).toEqual([31, 83]);
+    expect(setup.counts).toEqual([setup.originalCounts[0] + 3, setup.originalCounts[1] + 2]);
     expect(setup.defaults).toEqual([
       'trade_run', 'e2e_fallback_first', 'e2e_fallback_high'
     ]);
@@ -2431,7 +2433,7 @@ test('milestone-four phase E rejects unregistered action capabilities atomically
         return Object.assign({
           id:'e2e_capability_deed', handler:'declarative_deed',
           capability:'resource_choice', label:'Capability deed',
-          desc:'A bounded picker-backed deed.', order:81, group:'life',
+          desc:'A bounded picker-backed deed.', order:1001, group:'life',
           cooldownDays:1, spendsDay:false, choices:[choice()]
         }, patch || {});
       }

@@ -23571,7 +23571,8 @@ window.FB = window.FB || {};
       historyView:!!returnContext && !royalCourt,
       replaceView:!!replaceView,
       historyBackRender:returnContext && (returnContext.view === 'marriage-finder' ||
-        returnContext.view === 'religious-office-result')
+        returnContext.view === 'religious-office-result' ||
+        returnContext.view === 'settlement-founding')
         ? null : function () {
         interactionReturn(returnContext);
       }

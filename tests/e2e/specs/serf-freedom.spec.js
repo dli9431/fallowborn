@@ -44,7 +44,7 @@ test('a county ruler can authorize a bound relative freedom without a separate l
     const quote = FB.familyManumissionStatus(s, child.id), gold = p.gold;
     const freed = FB.resolveFamilyManumission(s, child.id);
     const repeated = FB.resolveFamilyManumission(s, child.id);
-    return { ready:quote.ready, freed:freed, repeated:repeated,
+    return { ready:quote.ready, freed:freed === child, repeated:repeated,
       price:quote.price, spent:gold - p.gold,
       lord:child.manumission && child.manumission.lordId, player:me.id,
       unfree:FB.isUnfreeCharacter(s, child), station:FB.stationOf(child),
@@ -143,7 +143,9 @@ test('freedom terms validate and Standing deterministically freezes exact offers
         rngStable:legacyRngBefore === JSON.stringify(FB.getRngState())
       };
       const savedLordRole = s.roles.lord;
+      const home = s.player.provinceId, holder = s.holder[home], owner = s.owner[home];
       delete s.roles.lord;
+      s.holder[home] = s.owner[home] = 'missing_freedom_authority';
       const missingLordRngBefore = JSON.stringify(FB.getRngState());
       const noLordPetition = FB.freedomPetitionStatus(s);
       s.player.gold = FBDATA.balance.freedomCost;
@@ -151,6 +153,7 @@ test('freedom terms validate and Standing deterministically freezes exact offers
       const missingLordRngStable = missingLordRngBefore ===
         JSON.stringify(FB.getRngState());
       s.roles.lord = savedLordRole;
+      s.holder[home] = holder; s.owner[home] = owner;
 
       function invalid(mutator) {
         const terms = JSON.parse(JSON.stringify(FBDATA.freedomTerms));
@@ -783,15 +786,16 @@ test('lords notice queues one exact non-random manumission offer and expiry hono
         'test:accept_offer');
       const ready = FB.eventOptionStatus(s, manumission,
         manumission.options[0], queued.ctx);
-      const originalRole = s.roles.lord;
-      const stranger = FB.makeCharacter(s, {
-        name:'Replacement Lord', sex:'m', culture:lord.culture,
-        religion:lord.religion, born:s.date.year - 40,
-        station:3, traitsN:0
+      const home = p.provinceId, originalHolder = s.holder[home];
+      const replacement = Object.keys(s.realms).find(function (rid) {
+        const ruler = FB.realmRulerCharacterSnapshot(s, rid);
+        return ruler && ruler.id !== lord.id;
       });
-      s.roles.lord = stranger.id;
+      if (!replacement) throw new Error('Missing replacement county ruler');
+      // Leave the old cached role in place: the actual county ruler is authoritative.
+      s.holder[home] = replacement;
       const stale = FB.freedomOfferAcceptanceStatus(s);
-      s.roles.lord = originalRole;
+      s.holder[home] = originalHolder;
       const goldBeforeAcceptance = p.gold;
       const accepted = FB.resolveEventOption(s, manumission,
         manumission.options[0], queued.ctx, { automated:true });

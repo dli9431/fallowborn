@@ -1278,8 +1278,9 @@ test('Apply plan requires another review when staffing changes', async function 
       s.player.tier = 0;
       s.player.enterpriseMigration = 1;
       s.player.gold = kind === 'unaffordable' ? 0 : 1000;
+      // Estate service accepts both sexes; Soldier would leave women farming.
       for (const worker of FB.householdWorkers(s)) {
-        FB.setCareer(s, worker, 'soldier', 'journeyman');
+        if (!FB.setCareer(s, worker, 'noble', 'journeyman')) throw new Error('Staffing fixture career rejected');
       }
       if (kind === 'household') FB.setCareer(s, s.chars[s.player.charId], 'farmer', 'journeyman');
       FBDATA.enterprises.field_strip.yield = 10;

@@ -24,7 +24,7 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
-  'js/world.js',
+  'js/world.js', 'js/wars.js',
   'css/style.css'
 ]);
 
@@ -485,30 +485,34 @@ test('settlement policy penalties are weighted instead of county modifiers',
     const result = await page.evaluate(function (pid) {
       const s = FB.state;
       const keys = ['tax', 'levy', 'commonVoice', 'unrest', 'marketFlow'];
+      // Separate the weighted policy effects from the support multiplier.
+      const beforeSupport = FB.countyPopularSupport(s, pid);
       const before = {};
-      keys.forEach(function (key) { before[key] = FB.modBonus(s, key, pid); });
+      keys.forEach(function (key) { before[key] = FB.modBonus(s, key, pid, 0); });
       const startedCulture = FB.orderSettlementCommunityProject(
         s, pid, 0, 'culture', 'norse', 'coercive');
       const share = FB.settlementPopulation(s, pid, 0) /
         s.population.counties[pid].count;
       const afterCulture = {};
       keys.forEach(function (key) {
-        afterCulture[key] = FB.modBonus(s, key, pid);
+        afterCulture[key] = FB.modBonus(s, key, pid, 0);
       });
+      const effectiveTax = FB.modBonus(s, 'tax', pid);
+      const effectiveLevy = FB.modBonus(s, 'levy', pid);
       const startedFaith = FB.orderSettlementCommunityProject(
         s, pid, 0, 'faith', 'norse_pagan', 'coercive');
       const afterBoth = {};
-      keys.forEach(function (key) { afterBoth[key] = FB.modBonus(s, key, pid); });
+      keys.forEach(function (key) { afterBoth[key] = FB.modBonus(s, key, pid, 0); });
       const hasCountyModifier = FB.countyModifierRecords(s, pid).some(
         function (record) { return record.id === 'community_coercion'; });
       FB.cancelSettlementCommunityProject(s, pid, 0, 'culture');
-      const afterOneStop = FB.modBonus(s, 'tax', pid);
+      const afterOneStop = FB.modBonus(s, 'tax', pid, 0);
       FB.cancelSettlementCommunityProject(s, pid, 0, 'faith');
-      const afterBothStop = FB.modBonus(s, 'tax', pid);
+      const afterBothStop = FB.modBonus(s, 'tax', pid, 0);
       return {
         startedCulture:startedCulture,
         startedFaith:startedFaith,
-        share:share,
+        share:share, beforeSupport:beforeSupport, effectiveTax:effectiveTax, effectiveLevy:effectiveLevy,
         before:before,
         afterCulture:afterCulture,
         afterBoth:afterBoth,
@@ -531,6 +535,9 @@ test('settlement policy penalties are weighted instead of county modifiers',
       .toBeCloseTo(0.40 * result.share, 8);
     expect(result.afterCulture.marketFlow - result.before.marketFlow)
       .toBeCloseTo(-0.10 * result.share, 8);
+    const supportFactor = Math.max(0, Math.min(2, 1 + (result.beforeSupport - 8 * result.share) / 100));
+    expect(result.effectiveTax).toBeCloseTo((1 + result.afterCulture.tax) * supportFactor - 1, 8);
+    expect(result.effectiveLevy).toBeCloseTo((1 + result.afterCulture.levy) * supportFactor - 1, 8);
     expect(result.afterBoth).toEqual(result.afterCulture);
     expect(result.afterOneStop).toBeCloseTo(result.afterCulture.tax, 8);
     expect(result.afterBothStop).toBeCloseTo(result.before.tax, 8);
@@ -951,10 +958,10 @@ test('AI sponsorship requires authority, community support, stability, and motiv
         ruler:{ culture:'gaelic', religion:'catholic', age:40,
           generation:1, traits:[] }
       };
-      s.realms[rid].war = { enemy:'e2e_community_enemy' };
+      const war = FB.registerOrdinaryWar(s, rid, { enemy:'e2e_community_enemy', target:pid });
       const noWar = !FB.communityProjectAICandidates(s).some(
         function (entry) { return entry.rid === rid; });
-      delete s.realms[rid].war;
+      war.status = 'ended';
       s.occupations = s.occupations || {};
       s.occupations[pid] = { progress:1 };
       const noSiege = !FB.communityProjectAICandidates(s).some(

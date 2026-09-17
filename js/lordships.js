@@ -179,9 +179,11 @@ window.FB = window.FB || {};
     return false;
   };
   FB.settlementConstructionAuthority = function (state, pid, slot, actor) {
+    actor = actorRef(state, actor);
     const holder = FB.settlementHolder(state, pid, slot);
     return { holder:holder, countyHolderId:FB.settlementCountyHolder(state, pid),
-      direct:actorHolds(state, actor, holder), liveAccounting:'settlement', integrated:true };
+      direct:!(actor.kind === 'realm' && actor.id === 'player' && state.player.tier < 3) &&
+        actorHolds(state, actor, holder), liveAccounting:'settlement', integrated:true };
   };
   function actorRealm(state, actor, pid) {
     actor = actorRef(state, actor);

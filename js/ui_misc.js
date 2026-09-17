@@ -3330,10 +3330,12 @@ window.FB = window.FB || {};
     actions.className = 'settcard-actions modal-title-actions';
     button.type = 'button';
     button.className = 'btn small settcard-info modal-title-info';
-    button.setAttribute('aria-expanded', 'false');
+    const expanded = !$('gm-title-details').classList.contains('hidden');
+    const label = expanded ? FB.T('Hide details') : FB.T('Details');
+    button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     button.setAttribute('aria-controls', 'gm-title-details');
-    button.setAttribute('aria-label', FB.T('Details'));
-    button.title = FB.T('Details');
+    button.setAttribute('aria-label', label);
+    button.title = label;
     button.textContent = '?';
     actions.appendChild(button);
     heading.classList.add('settcard', 'has-modal-title-details');
@@ -3546,8 +3548,13 @@ window.FB = window.FB || {};
   }
 
   function focusFirstModalControl() {
+    const body = $('gm-body'), content = body.firstChild;
+    const active = document.activeElement;
     setTimeout(function () {
-      if ($('genmodal').classList.contains('hidden')) return;
+      const gm = $('genmodal');
+      if (gm.classList.contains('hidden') || body.firstChild !== content) return;
+      // A sheet may explicitly restore its trigger after openModal returns.
+      if (document.activeElement !== active && gm.contains(document.activeElement)) return;
       const b = $('gm-body').querySelector(
         'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]');
       if (b) b.focus({ preventScroll:true });
@@ -3555,9 +3562,11 @@ window.FB = window.FB || {};
   }
 
   function focusModalContainer() {
+    const content = $('gm-body').firstChild, active = document.activeElement;
     setTimeout(function () {
       const gm = $('genmodal');
-      if (gm.classList.contains('hidden')) return;
+      if (gm.classList.contains('hidden') || $('gm-body').firstChild !== content) return;
+      if (document.activeElement !== active && gm.contains(document.activeElement)) return;
       gm.setAttribute('tabindex', '-1');
       gm.focus({ preventScroll:true });
     }, 0);

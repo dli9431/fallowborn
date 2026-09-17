@@ -123,6 +123,10 @@ test('raises buildings in two held counties from the narrow county ledger',
 
       state.player.tier = 4;
       state.player.provs = [home, other];
+      state.holder[home] = state.owner[home] = 'player';
+      state.holder[other] = state.owner[other] = 'player';
+      FB.foundPlayerRealm(state);
+      FB.invalidateSettlementLordships(state);
       state.player.gold = 1000;
       state.dev[home] = 10;
       state.dev[other] = 10;
@@ -411,7 +415,11 @@ test('raise a building modal shows existing buildings at top and highlighted cos
       const state = FB.state;
       const pid = state.player.provinceId;
       state.player.tier = 4;
-      state.player.gold = 20; // the first card (watermill, ~40 gold) is out of reach
+      state.player.provs = [pid];
+      state.holder[pid] = state.owner[pid] = 'player';
+      FB.foundPlayerRealm(state);
+      FB.invalidateSettlementLordships(state);
+      state.player.gold = 0; // every paid building is out of reach
       state.buildings = state.buildings || {};
       state.buildings[pid] = [{ s:0, id:'granary' }];
       const record = FB.realmTechRecord(state);
@@ -463,6 +471,10 @@ test.describe('building ledger keyboard and tooltip access', function () {
         const state = FB.state;
         const pid = state.player.provinceId;
         state.player.tier = 4;
+        state.player.provs = [pid];
+        state.holder[pid] = state.owner[pid] = 'player';
+        FB.foundPlayerRealm(state);
+        FB.invalidateSettlementLordships(state);
         state.player.gold = 500;
         FB.ui.refresh();
         FB.ui.showBuildings(pid, 0);
@@ -567,6 +579,10 @@ test.describe('building ledger keyboard and tooltip access', function () {
         const state = FB.state;
         const pid = state.player.provinceId;
         state.player.tier = 4;
+        state.player.provs = [pid];
+        state.holder[pid] = state.owner[pid] = 'player';
+        FB.foundPlayerRealm(state);
+        FB.invalidateSettlementLordships(state);
         state.player.gold = 500;
         FB.ui.refresh();
         FB.ui.showBuildings(pid, 0);
@@ -742,10 +758,17 @@ test('building authority follows the direct holder and rejects stale county cont
     const vassal = FB.canBuildAt(s, pid, 0, 'authority_test');
     s.player.tier = 2;
     const commoner = FB.canBuildAt(s, pid, 0, 'authority_test');
+    const commonerBuild = FB.build(s, pid, 0, 'authority_test');
+    s.buildings[pid] = [{ s:0, id:'mill' }];
+    FB.invalidateBuildingIndex(s, pid);
+    const commonerDemolition = FB.demolishBuilding(s, pid, 0, 'mill');
     return { allowed:allowed, built:built, demolished:demolished, stale:stale,
       rejected:rejected, excluded:excluded, vassal:vassal, commoner:commoner,
+      commonerBuild:commonerBuild, commonerDemolition:commonerDemolition,
+      retained:!s.buildings[pid][0].ruined,
       unspent:s.player.gold === gold };
   });
   expect(result).toEqual({ allowed:true, built:true, demolished:true, stale:false,
-    rejected:true, excluded:true, vassal:true, commoner:false, unspent:true });
+    rejected:true, excluded:true, vassal:true, commoner:false, unspent:true,
+    commonerBuild:false, commonerDemolition:false, retained:true });
 });

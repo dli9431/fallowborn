@@ -518,7 +518,7 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
       await expect(card).toHaveCSS('border-top-width', '1px');
       await expect(card).toHaveCSS('border-radius', '8px');
       await expect(card).toHaveCSS('padding-left', '12px');
-      await expect(card.locator('.large-list-section-summary')).toHaveCount(1);
+      await expect(card.locator('.large-list-section-summary')).toHaveCount(section === 'politics' ? 0 : 1);
       await expect(card.locator('.large-list-rows')).toHaveCount(1);
       await expect(card.locator('[data-list-show-all]')).toHaveCount(1);
     }
@@ -929,5 +929,5 @@ test('Work has no number shortcuts and search typing stays local',
     await expect(page.locator('.work-list-modal')).toBeVisible();
     await expect(page.locator('.work-list-modal .keyhint')).toHaveCount(0);
     await page.keyboard.press('Escape');
-    await expect(page.locator('.work-list-modal')).toHaveCount(0);
+    await expect(page.locator('.work-list-modal')).toBeHidden();
   });

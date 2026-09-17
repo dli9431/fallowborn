@@ -79,22 +79,26 @@ test('no spare county and changed ownership reject grants without payment', asyn
 });
 
 for (const kind of ['sanctioned', 'claim', 'usurpation']) {
-  test(kind + ' challenge retains a recruitment county before any hosts appear', async function ({ page }) {
+  test(kind + ' challenge musters automatically and checks recruitment without nearby hosts', async function ({ page }) {
     const r = await page.evaluate(function (kind) {
       const s = FB.state, f = countyFixture;
       s.armies = [];
       if (kind !== 'usurpation') s.player.fabricatedClaims = { [f.pid]:{ pid:f.pid, madeTurn:s.turn } };
       if (kind === 'sanctioned') FB.requestCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
       const declared = FB.beginCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
+      const automaticHost = s.armies.some(function (host) { return host.realm === 'player' && host.at === f.pid; });
+      const remaining = FB.playerMusterSelectionQuote(s, null, 'gather').men;
       const eligible = FB.recruitmentTerritory(s, 'player');
       const blocked = FB.recruitmentCountyBlocked(s, 'player', f.pid, []);
       FB.revertSettlementLordship(s, f.pid, 1);
       const landlessBlocked = FB.recruitmentCountyBlocked(s, 'player', f.pid, []);
-      return { declared:declared, blocked:blocked, landlessBlocked:landlessBlocked,
+      return { declared:declared, automaticHost:automaticHost, remaining:remaining,
+        blocked:blocked, landlessBlocked:landlessBlocked,
         rally:eligible.rally, expected:f.pid, counties:s.player.provs.length,
         holder:s.holder[f.pid], incumbent:f.countId };
     }, kind);
-    expect(r).toMatchObject({ declared:true, blocked:false, landlessBlocked:true, counties:0 });
+    expect(r).toMatchObject({ declared:true, automaticHost:true, remaining:0,
+      blocked:false, landlessBlocked:true, counties:0 });
     expect(r.rally).toBe(r.expected);
     expect(r.holder).toBe(r.incumbent);
   });
@@ -105,10 +109,13 @@ for (const kind of ['sanctioned', 'claim', 'usurpation']) {
       const f = countyFixture;
       s.armies = [];
       s.armyDown = {};
-      s.player.musterSelection = null;
+      // Save a zero call so declaration does not already exhaust the levy.
+      s.player.musterSelection = {};
       if (kind !== 'usurpation') s.player.fabricatedClaims = { [f.pid]:{ pid:f.pid, madeTurn:s.turn } };
       if (kind === 'sanctioned') FB.requestCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
       const declared = FB.beginCountyChallenge(s, FB.countyChallengeQuote(s, f.pid));
+      const zeroCall = !s.armies.some(function (host) { return host.realm === 'player'; });
+      s.player.musterSelection = null;
       s.armies.push({ id:'incumbent_muster_test', realm:f.countId, at:f.pid,
         men:1000, size:1000, units:{ levy:1000 }, path:[], moveLeft:0 });
       // Exercise the persisted campaign too, rather than only its declaration context.
@@ -118,14 +125,14 @@ for (const kind of ['sanctioned', 'claim', 'usurpation']) {
       const quote = FB.playerMusterSelectionQuote(s, null, 'gather');
       FB.savePlayerMusterSelection(s, null, 'gather', f.pid);
       const host = FB.raisePlayerHost(s);
-      return { declared:declared, eligible:territory.eligible.indexOf(f.pid) >= 0,
+      return { declared:declared, zeroCall:zeroCall, eligible:territory.eligible.indexOf(f.pid) >= 0,
         canRaise:quote.canRaise, host:!!host, at:host && host.at,
         expected:f.pid, tier:s.player.tier, counties:s.player.provs.length,
         holder:s.holder[f.pid], incumbent:f.countId,
         twice:!!FB.raisePlayerHost(s),
         ownHostBlocks:FB.recruitmentCountyBlocked(s, 'player', f.pid) };
     }, kind);
-    expect(result).toMatchObject({ declared:true, eligible:true, canRaise:true,
+    expect(result).toMatchObject({ declared:true, zeroCall:true, eligible:true, canRaise:true,
       host:true, tier:3, counties:0, twice:false, ownHostBlocks:false });
     expect(result.at).toBe(result.expected);
     expect(result.holder).toBe(result.incumbent);

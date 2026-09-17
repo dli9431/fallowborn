@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/actions.js', 'js/lordships.js',
+  'js/actions.js', 'js/lordships.js', 'js/fortifications.js',
   'js/market.js',
   'js/population.js',
   'js/settlement.js',
@@ -240,6 +240,10 @@ test('late-game building reads reuse county aggregates and refresh after mutatio
         }
       }
 
+      // Ownership reads also need the separate fort index. Measure only the
+      // county building aggregation here, after that one-time scan is warm.
+      FB.rebuildFortIndex(s);
+      idReads = 0;
       const initial = {
         tax:FB.buildingBonus(s, 'tax'),
         upkeep:FB.buildingBonus(s, 'upkeep'),

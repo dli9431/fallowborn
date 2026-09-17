@@ -55,6 +55,8 @@ Build, ledgers, settlement controls, automation, AI eligibility, and mutation AP
 share this rule. County forts remain strategic county-holder assets at their existing
 physical site, including when that settlement is delegated. County residence alone
 never grants either kind of authority.
+Player construction authority also requires Baron rank or higher. Stale ownership
+records after a rank change cannot grant commoners construction or demolition access.
 
 The transient building index includes settlement subtotals. Local tax, upkeep,
 piety, levy, retinue, and archers follow the holder. Development, Popular support,
