@@ -1,6 +1,8 @@
 # Settlement lordship and the road to Count
 
-Status: Phases 1–2 implemented; regression coverage authored. Phases 3–7 pending.
+Status: Phases 1-6 implemented; Phase 7 partially completed. Regression coverage
+authored; twelve owner-local scenario saves prepared. See
+[Phase 7 handoff](settlement-lordship-validation.md) for scope and remaining work.
 Execution and gameplay validation remain owner-controlled.
 
 ## Outcome
@@ -201,37 +203,37 @@ Dependencies: Phase 2.
 
 Tasks:
 
-- [ ] Permit ordinary construction and demolition only in directly held settlements,
+- [x] Permit ordinary construction and demolition only in directly held settlements,
   consistently across manual controls, Build, ledgers, automation, and mutation APIs.
-- [ ] Add settlement-level building projections alongside county aggregates. Grants,
+- [x] Add settlement-level building projections alongside county aggregates. Grants,
   succession, construction, demolition, ruin, and transfers invalidate affected
   projections without introducing repeated whole-world scans.
-- [ ] Partition the existing county tax base: distribute its development component
+- [x] Partition the existing county tax base: distribute its development component
   by conserved population shares and retain each settlement's kind contribution.
   Unmodified settlement bases must sum to the original county base.
-- [ ] Assign local revenue, upkeep, and recruitment to the settlement holder.
+- [x] Assign local revenue, upkeep, and recruitment to the settlement holder.
   Remove the flat landless-baron income fallback for territorial barons.
-- [ ] Use existing default feudal-service terms for baronial dues and military
+- [x] Use existing default feudal-service terms for baronial dues and military
   contributions. Debit and credit once; never also collect the delegated site's
   full return. Do not recursively tax the same transferred receipt.
-- [ ] Extend AI treasury accounting to baronies. Construction must use actual
+- [x] Extend AI treasury accounting to baronies. Construction must use actual
   available funds with obligations and upkeep reserved first.
-- [ ] Classify every building effect as local, shared county, or national. Local
+- [x] Classify every building effect as local, shared county, or national. Local
   fiscal/recruitment effects follow the holder; carrying capacity, attraction,
   resilience, and national research retain their appropriate shared scope and
   apply once. Update tooltips to explain that scope.
-- [ ] Keep settlement occupancy, county physical limits, and county repeat-copy
+- [x] Keep settlement occupancy, county physical limits, and county repeat-copy
   prices. Personal demesne limits count directly held works. Delegation must not
   reset construction history or bypass physical limits.
-- [ ] Apply settlement capacity and technology to player and AI holders using the
+- [x] Apply settlement capacity and technology to player and AI holders using the
   defaults above. Preserve holdings when capacity falls. Display county and
   settlement penalties separately and exclude vassal contributions from both.
-- [ ] Retain one strategic county fort and siege target at its existing physical
+- [x] Retain one strategic county fort and siege target at its existing physical
   site. The county holder retains explicit control of this strategic asset even
   when its settlement is delegated; ordinary buildings follow settlement ownership.
-- [ ] Feed levies and host composition from direct settlements plus owed service,
+- [x] Feed levies and host composition from direct settlements plus owed service,
   without counting the same manpower as both direct and vassal troops.
-- [ ] Update development, finance, war, and technology documentation and ledger.
+- [x] Update development, finance, war, and technology documentation and ledger.
 
 Tests to author: authority enforcement, conserved tax bases, paired dues transfers,
 upkeep ownership, shared effects once, capacity penalties and technology, AI
@@ -240,29 +242,60 @@ affordability, construction history, fort authority, and nonduplicated manpower.
 Completion: projections, actual seasonal settlement, AI accounts, income breakdowns,
 construction controls, and muster calculations agree on ownership and contributions.
 
+### Phase 3 implementation record
+
+- Settlement fiscal projections partition county development tax by conserved
+  population shares, retain site-kind tax, and assign local works, upkeep, and
+  customary contributions to the actual holder. Player forecasts, seasonal
+  settlement, AI accounts, and income/levy breakdowns consume those projections.
+- Capacity is two plus Stewardship/5 plus national domain technology, with
+  separate county and settlement penalties. Received contributions are outside
+  both penalties and are not recursively taxed. Offices retain their dedicated
+  income rules; territorial barons receive no flat landless rent.
+- Building indexes now retain per-site subtotals. Manual construction, demolition,
+  automation, AI eligibility, personal limits, and UI controls respect lordship.
+  Ruins and county copy history remain physical. The county holder retains the
+  strategic fort and its maintenance, even when its site is delegated.
+- Local military sources divide between retained troops and owed service; direct
+  realm vassals contribute their own troops, not recursively collected service.
+  Occupation and rally eligibility remain county-based and include personal baronies.
+- National building research is collected once in the sovereign research rate.
+  Shared population/resilience effects remain county-wide. County policy upkeep is
+  paid once by the count, rather than also by a resident baron.
+- NPC baron purses are additive version-1 account records, initially zero, with
+  once-per-season settlement, inheritance, real-gold revaluation, and a paid
+  construction primitive that reserves obligations and upkeep. Autonomous seasonal
+  building choices, new grants, and founding remain in their planned later phases.
+- Settlement sheets show holder and local gross/upkeep/dues/net. Capacity losses
+  have distinct income/military labels; technology effects disclose both limits.
+  Existing tooltip, touch disclosure, and modal history patterns are retained.
+- Added `settlement-lordship-economy.spec.js`; updated ownership, treasury,
+  governance, and late-game building coverage for the new ownership contracts.
+  Test execution and visual/gameplay validation remain owner-controlled.
+
 ## Phase 4 — Concrete barony grants and autonomous delegation
 
 Dependencies: Phases 2–3.
 
 Tasks:
 
-- [ ] Replace title-only barony petitions with a review of a concrete eligible
+- [x] Replace title-only barony petitions with a review of a concrete eligible
   settlement, actual grantor, buildings, revenue, obligations, costs, and chance.
   Keep existing ordinary Gentry and established-house eligibility.
-- [ ] Exclude the county seat; prefer the family manor's settlement only when
+- [x] Exclude the county seat; prefer the family manor's settlement only when
   eligible. Revalidate the offer atomically on confirmation. Cancellation, stale
   offers, or blocked confirmation must not charge resources or grant a title.
-- [ ] Let counts grant eligible directly held settlements. Show lost direct
+- [x] Let counts grant eligible directly held settlements. Show lost direct
   revenue, transferred upkeep, expected dues, and capacity relief before granting.
-- [ ] Make AI grants prioritize excess direct holdings while protecting the seat;
+- [x] Make AI grants prioritize excess direct holdings while protecting the seat;
   ordinary patronage still uses standing, eligibility, and disclosed acceptance.
-- [ ] Make the exceptional military barony route convey an eligible settlement as
+- [x] Make the exceptional military barony route convey an eligible settlement as
   well. Do not promise an unavailable grant or fall back to landless tier 3.
-- [ ] Add bounded seasonal baron development decisions using existing seeded AI
+- [x] Add bounded seasonal baron development decisions using existing seeded AI
   patterns and affordable construction. Do not require routine player approvals.
-- [ ] Present county government as own settlements plus baronies and net
+- [x] Present county government as own settlements plus baronies and net
   contributions. Settlement sheets name holder and count, with clear authority.
-- [ ] Update realm, holdings, and development docs. Author all new text through i18n.
+- [x] Update realm, holdings, and development docs. Author all new text through i18n.
 
 Tests to author: concrete petitions, protected seats, eligibility and refusal,
 stale confirmations, grant accounting, military rewards, AI bounded work and
@@ -271,31 +304,50 @@ affordability, UI disclosure, keyboard access, and preserved return state.
 Completion: becoming Baron always gives actual settlement control. Delegating
 reduces direct returns and obligations and creates a functioning autonomous vassal.
 
+### Phase 4 implementation record
+
+- Concrete detached quotes are shared by ordinary petitions, voluntary grants and
+  military rewards. Confirmation rechecks authority, ownership, local works,
+  recipient eligibility and fiscal terms; petitions also recheck costs and chance.
+- Counts grant through settlement sheets. Reviews disclose hereditary control,
+  transferred upkeep, forgone income, contributions and direct-capacity relief.
+  County government now distinguishes direct sites and baronies.
+- AI rotates through at most 12 realms and 24 barons each season. Over-capacity
+  rulers can grant one non-seat site; a considered baron can fund one legal work
+  from their own purse with reserves. Cursors and the season guard persist.
+- The military route gives land with rank, or offers a purse if land is unavailable.
+  Fresh Baron starts require an eligible site. Founding remains Phase 5.
+- Added settlement-lordship-grants.spec.js for transactions, military rewards,
+  accounting, bounded deterministic development and desktop/mobile return paths;
+  updated rank-elevation, gentry-succession and fresh-start coverage.
+- Existing lordship technology review expanded with mode none; capacity remains
+  soft and construction keeps each building's existing gates. Owning docs updated.
+
 ## Phase 5 — Chartered founding and early progression
 
 Dependencies: Phases 2–4.
 
 Tasks:
 
-- [ ] Reserve unused stable slots from existing compiled sites; do not edit generated
+- [x] Reserve unused stable slots from existing compiled sites; do not edit generated
   settlement data or allow unlimited new sites. Development unlocks capacity rather
   than automatically revealing settlements. Retain authored starting settlements,
   existing saves' established sites, and current town/city upgrades initially.
-- [ ] Add one active founding project per household and county, saving sponsor,
+- [x] Add one active founding project per household and county, saving sponsor,
   reserved slot, funding, and completion date. Disclose the full cost and duration.
-- [ ] Protect the charter across inheritance and county transfer. Pause completion
+- [x] Protect the charter across inheritance and county transfer. Pause completion
   during hostile occupation and resume afterward. Cancellation releases the slot,
   retains Gentry, and does not refund committed construction expenditure.
-- [ ] Use conserved population machinery to move inhabitants from existing county
+- [x] Use conserved population machinery to move inhabitants from existing county
   communities at establishment. Do not create people or immediately increase
   county-wide development. Subsequent growth and migration expand the economy.
-- [ ] At completion, revalidate establishment and the required prestige, establish
+- [x] At completion, revalidate establishment and the required prestige, establish
   the site, grant hereditary lordship, relocate the household seat, and award Baron
   once. If a completion requirement is temporarily unavailable, retain the funded
   project and clearly show the blocker rather than partially applying the grant.
-- [ ] Keep private property in the old settlement. Charter acceptance itself leaves
+- [x] Keep private property in the old settlement. Charter acceptance itself leaves
   the household Gentry. Give existing-settlement grants and founding equal visibility.
-- [ ] Update province, population-related, development, holdings, realm, and save
+- [x] Update province, population-related, development, holdings, realm, and save
   documentation, including the replacement of automatic settlement reveals.
 
 Tests to author: slot capacity and reservations, initial settlements, funding,
@@ -311,32 +363,32 @@ Dependencies: Phases 2–5.
 
 Tasks:
 
-- [ ] Replace the ordinary petition asking the incumbent count to surrender their
+- [x] Replace the ordinary petition asking the incumbent count to surrender their
   home county with a petition to an eligible higher ruler. Offer only directly held
   counties that ruler can convey, excluding their seat and last personal county.
   Clearly explain when no county is available.
-- [ ] Retain inheritance and existing county claims, extending eligibility to
+- [x] Retain inheritance and existing county claims, extending eligibility to
   landed barons. Preserve the family's barony and improvements on elevation.
-- [ ] Add a county-replacement objective through existing county war/rebellion
+- [x] Add a county-replacement objective through existing county war/rebellion
   machinery. Distinguish superior-authorized challenges, unauthorized claim-backed
   rebellion, and unclaimed usurpation.
-- [ ] Resolve superior participation before declaration. Show participants,
+- [x] Resolve superior participation before declaration. Show participants,
   justification, target, political costs, and victory terms. Claims are not immunity
   from superior opposition. Independent counties have no superior to petition.
-- [ ] Victory transfers the target county title and the defeated count's directly
+- [x] Victory transfers the target county title and the defeated count's directly
   held settlements there; preserve unrelated baronies, private property, and
   counties outside the objective. Ordinary county conquest changes baronies'
   supervising count without automatically confiscating them.
-- [ ] Sanctioned victory gives recognized countship. Unclaimed victory gives
+- [x] Sanctioned victory gives recognized countship. Unclaimed victory gives
   control with existing aggression consequences and a displaced-dynasty restoration
   claim. Extend explicit revocation, restoration, and succession to lordships.
-- [ ] Give an unrecognized vassal count a visible superior-recognition petition using
+- [x] Give an unrecognized vassal count a visible superior-recognition petition using
   ordinary county investiture costs and cooldowns. Acceptance removes disputed
   status, not surviving rival claims; refusal leaves control intact. Independent
   victors have no superior-recognition requirement but retain other consequences.
-- [ ] Use existing rebellion peace and punishment for defeat. Do not automatically
+- [x] Use existing rebellion peace and punishment for defeat. Do not automatically
   erase the dynasty or unrelated property. Keep warfare county-based throughout.
-- [ ] Update realm, war, descent, and relevant political documentation.
+- [x] Update realm, war, descent, and relevant political documentation.
 
 Tests to author: available grants and exclusions, inheritance, all justifications,
 superior participation, victory transfers, surviving baronies, restoration claims,
@@ -360,14 +412,29 @@ Tasks:
   settlement-engine, population, fealty-rank, vassal-war-laws, vassal-revocation,
   gentry-succession, and technology-impact-gates. Add focused settlement-lordship
   and settlement-founding specs with runtime dependency declarations.
-- [ ] Author cross-system deterministic/save-load coverage and ensure the technology
+- [x] Author cross-system deterministic/save-load coverage and ensure the technology
   review ledger matches documented behavior. Do not execute validators or tests.
 - [ ] Audit every new flow against the mandatory UI/UX section: brevity, immediate
   decision clarity, tooltips/Details, accessible controls, clear effect scope, and
   retained list state. Update shared UI policy only when introducing a shared rule.
-- [ ] Finish owning design and modding docs and mark authored work in this plan.
-- [ ] Hand off the changed test files and explicitly state they were not run. Keep
+- [x] Finish owning design and modding docs and mark authored work in this plan.
+- [x] Hand off the changed test files and explicitly state they were not run. Keep
   that execution status out of commit or merge metadata.
+
+Authored in the Phase 7 source pass:
+
+- [x] Prepare twelve independent save imports and a scenario guide in
+  `notes/settlement-lordship-test-saves/`, including near-complete founding.
+- [x] Fix title-only Governance eligibility and residence/county-wide local
+  community-project authority; update their regression fixtures.
+- [x] Update the exact technology-ledger regression for all six review entries.
+- [x] Add deterministic funded-save replay through completion, population and
+  fiscal projections, without executing the authored coverage.
+- [x] Review new decision-flow source and clarify the in-game settlement guide.
+
+The broad ownership, regression and UI audit tasks above remain open for the
+final exhaustive pass; source findings and owner validation are distinguished in
+[the handoff](settlement-lordship-validation.md).
 
 Owner validation checklist:
 

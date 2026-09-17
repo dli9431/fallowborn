@@ -322,6 +322,24 @@ sometimes break away — so the map redraws itself decade by decade. Their conqu
 prefer finishing compact de jure duchies and larger title regions instead of stretching
 through whichever weak border county happens to be available.
 
+A barony is a hereditary settlement holding under its county ruler. You receive
+its local income and building rights and owe charter dues; private plots and
+enterprises remain separate property. Gentry may also fund a new settlement from
+**Deeds**, including in the first generation. Development unlocks founding space;
+construction and investiture take time and resources.
+
+Counts can retain settlements directly or delegate secondary sites to barons.
+Direct settlement capacity is separate from county capacity and improves with
+administrative technology. Delegation exchanges full local returns for charter
+dues and autonomous baron investment. The county seat and strategic forts remain
+under county control.
+
+A landed Baron reaches Count through an actual county grant, inheritance or a
+county challenge. The road-to-Count review names the grantor or defender. A claim
+does not bypass the superior: authorization, unauthorized victory, usurpation and
+later recognition have distinct disclosed consequences. Other baronies survive a
+county transfer.
+
 #### The religious ladder
 
 The household also has a **religious ladder** under **Work, training & enterprises**.

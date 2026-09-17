@@ -1,5 +1,71 @@
 # Wars
 
+## County replacement campaigns
+
+`county_replacement` is an ordinary territorial campaign with exactly one county
+objective and saved `countyChallenge` terms. It uses existing hosts, map combat,
+fort sieges, occupation, capture, peace, truce and battlefield-defeat handling.
+A landed baron gets a temporary player campaign realm, without gaining a county
+or rank at declaration. A failed/abandoned challenge restores their actual county
+liege and retires that empty campaign realm; their settlement and private property
+are retained. An unrelated title acquired during the war is not erased.
+
+During an active county challenge, the Baron's directly held settlement supplies
+a county rally point even when the incumbent or their superior has a field host
+there. Those banners do not themselves represent occupation of the separate
+barony; the raised armies must resolve their opposition through normal combat.
+Friendly challenger hosts do not block recruitment merely because the county
+holder is hostile. Outside besiegers, holy-war occupation, ordinary troop limits
+and rearm delays retain their existing checks. The exception requires the actual
+barony and the original incumbent still holding the challenged county.
+The ordinary-war holder-chain recruitment guard also recognizes direct baronies:
+a county holder's active war cannot suppress the baron's separate personal troop
+pool. This bypass does not grant county ownership or the count's levies. Enemy
+occupation of the county still blocks the barony; occupation by the challenger's
+own side does not. Without an actual holding the holder-chain guard still applies.
+
+The review resolves defenders before confirmation. Authorized challenges face the
+incumbent count; other challenges face the superior's defending side, including
+the incumbent's county. The challenger is detached for the rebellion; authorized
+challengers are attached to the superior. Claims do not grant immunity. Alliances,
+pacts, truces, shared holy-war camps, captivity, travel and existing campaigns
+block declaration. Existing sacrilege and aggression consequences still apply.
+
+Occupation alone does not grant a title; the peace transaction revalidates the
+incumbent and awards the county exactly once. The ordinary objectives path then
+ends the campaign. Unrelated baronies are preserved. A superior-backed victory
+is recognized; unauthorized vassal victories need a later recognition petition.
+Independent victories keep aggression and displaced-dynasty claims when relevant
+but require no superior recognition. Technology review county_challenges is none.
+
+Battlefield barony rewards now carry a specific eligible settlement from the patron
+count, with gross/upkeep/dues/net and customary service disclosed in the event.
+Starting the command requires an available non-seat site. Victory rechecks the
+patron and available site; if none remains it offers a purse without promising
+land. Acceptance revalidates the exact grant before giving ownership, rank,
+prestige or Standing. A stale grant cannot become a landless title; the purse and
+decline options remain available. Warfare itself remains county-based.
+
+
+## Settlement recruitment (Phase 3)
+
+The county remains the movement, occupation, siege, and war-objective unit. Its
+strategic fort stays under the actual county holder, even on a delegated site.
+Development manpower is divided using the same conserved population shares as tax.
+Local levy and specialist buildings follow their settlement holder. Direct county
+and settlement capacity penalties reduce personal territorial sources before owed
+service; household/office sources remain separate. Delegated troops are divided
+between the baron's available troops and customary service to the count. A count
+cannot muster both the site's full levy and its contribution. Direct realm vassals
+similarly provide their own territorial service, without recursively forwarding
+baronial receipts. Existing AI host scaling and national modifiers remain in place.
+
+Player composition itemizes county and settlement capacity losses and service.
+Recruitment eligibility includes directly held baronies, still blocks occupied
+counties, and retains county rally/fort rules. Private enterprise troops remain
+household assets regardless of who governs their site.
+
+
 Campaign details opened from a retained panel provide an explicit Back route that
 closes the sheet and returns to the originating campaign list. Details opened from
 another modal keep that modal's saved Back history instead.
@@ -1823,3 +1889,39 @@ and plan actions available. Assembly and Rally point have no explanatory tooltip
 Muster cost quotes include the planned hosts in a detached army list so their
 provisions price pressure at the selected rally matches newly raised hosts.
 The live army list and treasury remain unchanged while reviewing the plan.
+
+
+Wartime settlement scaling: recruitment's personal-holding check examines only the
+requested county's established sites, using the same holder/actor rules as the full
+holding list. It has no retained cache, so grants, deaths and county transfers are
+observed immediately. County-challenge muster uses this same local check.
+AI muster projections share county population shares alongside settlement quotes and
+capacity within the existing synchronous muster context. A military-input revision
+clears all three together; the next daily muster pass creates a fresh context.
+This removes repeated domain scans and population reads without postponing retries,
+changing eligibility, or adding a cross-day cache. No technology gate changes.
+
+
+Settlement projection reuse is scoped to synchronous reads. Military muster requests
+only levy/specialist amounts from the common settlement formula, skipping tax, toll,
+national-income and upkeep calculations; it reuses the holding list already computed
+for direct-capacity limits. County support, population factors and levy modifiers,
+and actor county penalties, are read once per context. Muster input revisions clear
+these records together with quotes/capacity/population shares; each daily pass starts
+fresh, so daily development, support, ruler and technology changes are not hidden by
+a retained cross-day cache. Recruitment blocking remains live and retries are unchanged.
+The seasonal treasury snapshot and subsequent baron credits share full fiscal quotes
+before any grant or building changes can occur, then discard their context. Quote and
+county-input build/hit counters expose this reuse in the local profiler. No gameplay
+eligibility or technology gate changes are introduced.
+
+
+Holding scans resolve the realm's ruler once and read each candidate county's visible
+settlement count once. Their internal holder queries accept that synchronous count
+instead of repeating visibility's building, fort, enterprise and project checks for
+every slot. Standalone holder queries still read live visibility. Fiscal contexts also
+share visibility per county and discard it at the same boundary as other muster or
+treasury inputs. Military revisions reset this visibility alongside other phase data.
+No holding list, visibility count, or recruitment outcome is retained across days.
+The profiler reports fiscal visibility builds/hits; holding-scan coverage compares
+results with construction authority before and after death and county transfer.

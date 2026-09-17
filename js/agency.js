@@ -1389,8 +1389,7 @@ window.FB = window.FB || {};
     var out = [];
     var p = state.player;
     if (!p || p.tier < 3 || p.war) return out;
-    var held = FB.demesne ? FB.demesne(state).slice() : [];
-    if (p.tier === 3 && !held.length) held.push(p.provinceId);
+    var held = FB.buildingCounties(state);
     held.sort();
     function add(id, ctx) {
       ctx.communitySituationId = id;

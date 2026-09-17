@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/main.js',
+  'js/main.js', 'js/lordships.js',
   'js/events.js',
   'js/save.js',
   'js/ui_modals.js',
@@ -383,3 +383,23 @@ test('tier 1 or higher starts do not form serf tenure placeholder records',
     expect(result.tier).toBe(1);
     expect(result.tenure).toBeNull();
   });
+
+test('a fresh Baron start controls a real non-seat settlement without an extra investiture charge', async function ({ page }) {
+  await page.evaluate(function () { FB.startProgression.noteTier(3); });
+  await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill('LORDSHIP-867-baron-london-f-Ada');
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+  await expect(page.getByRole('heading', { name:'Your Story Begins', exact:true })).toBeVisible();
+  const r = await page.evaluate(function () {
+    const s = FB.state, sites = FB.directSettlements(s);
+    return { tier:s.player.tier, gold:s.player.gold, sites:sites,
+      seat:FB.settlementHolder(s, s.player.provinceId, 0), count:FB.settlementCountyHolder(s, s.player.provinceId),
+      legacy:s.settlementLordships.legacyBarony };
+  });
+  expect(r.tier).toBe(3); expect(r.gold).toBe(80); expect(r.sites).toHaveLength(1);
+  expect(r.sites[0].settlement).toBeGreaterThan(0);
+  expect(r.seat).toEqual({ kind:'realm', id:r.count }); expect(r.legacy).toBe('none');
+});

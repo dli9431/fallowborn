@@ -1,5 +1,12 @@
 # The Estates (parliament)
 
+Settlement barons pay their saved customary-service charter to the actual county
+holder through the settlement ledger. This payment is not charged again as Parliament
+aid. For county-holding player rulers, the assembly's aid applies to personal noble
+revenue, excluding incoming baronial and realm-vassal contributions. One-off assembly
+subsidies and scutage choices keep their existing paired transfers.
+
+
 Cash subsidies debit the player and credit the liege's active treasury together.
 The existing affordability gate remains; the saved event context records payment
 to prevent replaying the same subsidy. No new levy or household account is added.

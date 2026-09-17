@@ -2109,11 +2109,23 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .land-market-card-copy .market-price-dear { font-weight: bold; }
 .land-market-card-open { color: var(--ui-accent-color); font-size: 24px; line-height: 1; }
 .land-section .land-settlements {
-  grid-template-columns: minmax(112px, .85fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px; padding: 3px 0;
 }
 .land-section .land-settlements > span { color: var(--main-text-color); line-height: 1.35; }
-.land-section .land-settlements .settlist { line-height: 1.35; }
+.land-section .land-settlements .settlist {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px;
+  line-height: 1.35;
+}
+.land-settlements .settlist > .settlink {
+  display: block; width: 100%; min-width: 0; max-width: 100%; min-height: 44px;
+  white-space: normal; overflow-wrap: break-word; overflow-wrap: anywhere;
+  text-align: left; padding: 4px 0;
+}
+.land-settlements .settlink > span { display: block; }
+.land-settlements .settlink > .adesc {
+  margin-top: 2px; color: var(--helper-text-color); font-size: var(--ui-label-size);
+}
 .settblock {
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start;
   gap: 0 10px; font-size: 14px; padding: 3px 0;

@@ -643,9 +643,14 @@ window.FB = window.FB || {};
     return out;
   }
 
-  function settlementPopulationAllocation(state, pid, total) {
+  function settlementPopulationAllocation(state, pid, total, foundingSlot) {
     total = Math.max(0, Math.round(Number(total) || 0));
     var setts = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
+    if (foundingSlot === setts.length) {
+      var site = FB.world.sitesByProv[pid].list[foundingSlot];
+      var rank = FB.siteKindRank(state, site);
+      setts.push({ kind:rank >= 2 ? 'city' : rank === 1 ? 'town' : 'village' });
+    }
     if (!setts.length) return [total];
     var built = FB.builtIn ? FB.builtIn(state, pid) : [];
     var weights = [];
@@ -1218,6 +1223,24 @@ window.FB = window.FB || {};
         bySettlement:community.bySettlement.slice()
       };
     });
+  };
+
+  /* Prepare a conserved partition before ownership/visibility is committed.
+     Only residents move between sites; county and culture-faith totals stay fixed. */
+  FB.settlementFoundingPopulationPlan = function (state, pid, slot) {
+    var rec = state.population && state.population.counties && state.population.counties[pid];
+    var info = FB.world.sitesByProv[pid];
+    if (!rec || !info || !info.list[slot] || slot !== FB.settlementVisibleCount(state, pid)) return null;
+    var communities = FB.countyCommunities(state, pid);
+    var total = communities.reduce(function (sum, c) { return sum + c.count; }, 0);
+    if (total !== rec.count || total < slot + 1) return null;
+    var rows = settlementPopulationAllocation(state, pid, total, slot);
+    if (!(rows[slot] > 0) || rows.some(function (n) { return n < 0; })) return null;
+    var previous = settlementPreviousColumns(rec.communities, communities);
+    var matrix = FB.settlement.integerMatrix(communities.map(function (c) { return c.count; }), rows, previous);
+    if (!matrix.length) return null;
+    applySettlementMatrix(communities, matrix);
+    return { countyPopulation:total, settlers:rows[slot], communities:communities };
   };
 
   FB.reconcileSettlementCommunities = function (state, pid) {

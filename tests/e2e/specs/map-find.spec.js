@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/keys.js',
   'js/mapview.js',
   'js/world.js',
+  'js/lordships.js',
   'data/counties.js',
   'data/map_data.js',
   'js/ui_misc.js',
@@ -96,6 +97,31 @@ test('find overlay searches settlements, counties, duchies, and kingdoms',
     await expect(settlementItem.locator('.map-finder-name')).toContainText('London');
     await expect(settlementItem.locator('.map-finder-type')).toHaveText('Settlement');
   });
+
+test('campaign search excludes future sites and updates established sites without rebuilding geography', async function ({ page }) {
+  const target = await page.evaluate(function () {
+    const s = FB.state;
+    const pid = Object.keys(FB.world.sitesByProv).find(function (id) {
+      return FB.settlementVisibleCount(s, id) < FB.world.sitesByProv[id].list.length;
+    });
+    const slot = FB.settlementVisibleCount(s, pid);
+    return { pid:pid, slot:slot, name:FB.world.sitesByProv[pid].list[slot].name };
+  });
+  await page.locator('#btn-find').click();
+  const input = page.locator('#map-finder-input');
+  await input.fill(target.name);
+  const match = page.locator('#map-finder-results .map-finder-item').filter({
+    has:page.locator('.map-finder-name', { hasText:target.name })
+  });
+  await expect(match).toHaveCount(0);
+  await page.evaluate(function (t) {
+    FB.state.settlementLordships.counties[t.pid].established = t.slot + 1;
+    FB.invalidateSettlementLordships(FB.state, t.pid);
+  }, target);
+  await input.fill('');
+  await input.fill(target.name);
+  await expect(match).not.toHaveCount(0);
+});
 
 test('selecting a search result centers the camera and updates province selection',
   async function ({ page }) {

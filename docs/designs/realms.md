@@ -1,5 +1,117 @@
 # Realms, the liege hierarchy & tiers
 
+## Family settlement grants
+
+Free adult kin, including Freeholders, may receive settlement grants even when married or living
+outside the managed household. The grant itself raises the recipient to Baron. Unrelated candidates still need
+Gentry rank. Existing ruler exclusions remain. Character sheets
+open a settlement picker followed by the same revalidated grant review as the
+settlement-first flow. Other holders link from settlement sheets to their character
+sheet, with a return to the originating settlement. This extends the existing
+settlement_lordship technology review (none); no research gate applies.
+
+## Governance authority
+
+A Baron needs an actual directly held settlement and the home county liege to
+enter territorial Governance. A title without land does not confer authority.
+Settlement community projects follow direct lordship, while county policy
+remains a county-holder power. These are ownership-consistency fixes, not new
+technology-gated capabilities.
+
+## Territorial countship (Phase 6)
+
+A landed Baron petitions a higher ruler in the home county's ancestor chain.
+A directly governing Duke or higher ruler can also grant from their own demesne.
+Only that ruler's directly held, unoccupied counties are offered, excluding their
+capital and last personal county. The selected county and grantor are part of the
+stale-review check. The petition requires 65 Standing with that grantor and 400
+prestige, charges existing county investiture resources only on acceptance, and
+uses the existing 1,440-day county petition cooldown. Acceptance chance is
+clamped to 10%-85%, with base 25% plus Standing/200. Existing inherited titles
+continue through absorbRealm; baronies and works are preserved on elevation.
+
+A landed Baron can challenge a county containing their barony. An explicit
+superior-authorization petition succeeds with a county claim and 65 Standing;
+it is free and has the ordinary county petition cooldown. Authorization is tied
+to the challenger, incumbent and superior ruler identities. Without authorization,
+the superior defends the incumbent even against a valid claim. Independent
+counties have no superior and no authorization request.
+
+Sanctioned victory is recognized. Unauthorized victory beneath a superior gives
+control with disputed status; a separate recognition petition uses ordinary county
+investiture resources and the shared 1,440-day petition cooldown. Refusal charges
+no investiture resources and leaves control intact. Acceptance clears only disputed
+status, never rival claims. Independent victors need no superior recognition.
+Unclaimed usurpation additionally applies existing aggression costs/unrest and
+records a county restoration claim for the displaced ruler and dynasty.
+
+Only the objective county changes hands. Unassigned holdings and settlements held
+personally by its incumbent follow its county title; unrelated baronies, the
+player's pre-existing barony, buildings and private property retain their owners.
+No county outside the objective is confiscated. Landless defeated realm nodes may
+dissolve through existing hierarchy cleanup; their people and property survive.
+
+Technology impact reviews county_investiture, county_challenges and
+county_recognition are **none**: these are ordinary political and recovery rights.
+Explicit settlement revocation/restoration extends the existing **none**
+settlement_lordship review.
+
+## Founding a barony (Phase 5)
+
+Gentry have two visible routes: petition for an existing settlement, or fund a
+charter for an unused home-county site. Founding is available in the first Gentry
+generation without the existing-grant petition's Standing and generation gates.
+It charges construction first and saved investiture resources at completion.
+The current county holder becomes the new baron's liege; a change of count does
+not revoke a funded charter. Succession transfers sponsorship to the household
+heir while retaining original founder provenance. Founding grants no county and
+keeps warfare county-based. It cannot reduce a rank acquired during construction.
+Technology impact is **none**, recorded as `settlement_founding`: this ordinary
+route is available without research; administrative capacity remains separate.
+
+## Concrete settlement grants (Phase 4)
+
+Barony petitions keep the established-house, prestige, Standing and investiture
+requirements. The actual home count offers a specific directly held non-seat
+settlement, preferring the family's manor only if eligible. The review names the
+count, local works, gross/upkeep/dues/net, obligations, capacity, cost and chance.
+An over-capacity count adds 15 percentage points to the ordinary base grant chance
+before the existing repeated-grant multiplier. Standing and house eligibility
+still apply. No eligible settlement means no territorial barony offer.
+
+Confirmation compares the complete detached quote, grantor, costs and chance
+before drawing acceptance or charging anything. Successful ownership and rank
+commit together. Stale/blocked reviews and cancellation spend nothing; an ordinary
+refusal retains its existing day, cooldown and Standing consequences.
+
+Counts can grant non-seat direct settlements to adult gentle household members or
+local nobles who are not reigning rulers. Voluntary grants cost no gold or day and
+are certain; the review makes hereditary control, lost direct revenue, transferred
+upkeep, expected dues and capacity relief visible. Private property, county titles,
+strategic forts and borders do not transfer. Grant APIs revalidate recipients and
+ownership. Fresh Baron starts also require a concrete grant; an unavailable site
+returns the player to start selection rather than creating a landless title.
+
+After seasonal accounting, AI considers at most 12 living non-player realms in a
+saved rotating order, making at most one grant for each over-capacity ruler.
+It protects every county seat and prefers unlanded local noble recipients; when
+none exists it creates one ordinary local character, never a realm node. Managed
+player-household members are excluded from autonomous AI recipient selection.
+Ordinary player petitions remain the disclosed patronage route below the cap.
+The existing `settlement_lordship` technology review remains **none**: granting
+political rights is baseline play. Capacity retains its separate soft interaction.
+
+
+Phase 3 consumes the lordship foundation for local construction, direct settlement
+capacity, income, upkeep, and military service. Capacity begins at two plus one per
+five Stewardship and national domain technology. The 15% multiplicative penalty
+per excess site preserves ownership and excludes received contributions; county
+capacity remains a separate constraint. Customary baronial receipts are not taxed
+again up the realm hierarchy. Concrete grants and autonomous delegation are integrated in
+Phase 4. See development.md, finance.md, and war.md for the live integrations.
+
+
+
 ## Settlement lordship foundation (Phase 2)
 
 `js/lordships.js` separates delegated settlement ownership from county titles.
@@ -8,7 +120,8 @@ service obligations; they never add county realm nodes or entries in `player.pro
 Direct unassigned settlements follow the county holder dynamically. County conquest
 therefore changes a barony's supervising ruler without transferring its lordship or
 private property. Assignment and reversion are centralized trusted simulation APIs;
-negotiation, construction control, taxes, and AI delegation are later integration work.
+Construction control and accounting are integrated in Phase 3; concrete petitions
+and AI delegation are integrated in Phase 4.
 
 The home county holder is now the authoritative local lord. `FB.getRole(state, 'lord')`
 resolves that ruler's existing character; its creating path may materialize the
@@ -22,13 +135,13 @@ another county; this does not invalidate their local authority.
 Legacy territorial barons receive one non-seat settlement at migration; personal and
 temporary offices do not. See [state and saves](state-and-saves.md) for succession,
 extinction, migration exclusions, and custom counties without a grantable second site.
-New barony offers still use the existing rank mechanism until Phase 4 replaces them
-with concrete grants. Phase 2 is a foundation, not a releasable partial economy.
+New barony offers use concrete grants in Phase 4. Phase 3 supplies the local
+economy on this foundation.
 
 Technology impact `settlement_lordship` is **none**: ownership, inherited rights,
-and county authority are ordinary political relationships. Phase 3 separately adds
-the **soft** administrative-capacity interaction and live accounting; the Phase 2
-capacity/fiscal interfaces explicitly report their unintegrated status.
+and county authority are ordinary political relationships. Phase 3 adds the
+**soft** administrative-capacity interaction under `settlement_administration`;
+capacity and fiscal interfaces now expose their integrated projections.
 
 ## Territorial justice
 

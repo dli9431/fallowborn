@@ -1015,6 +1015,12 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       }
       return {
         counts:[FBDATA.focuses.length, FBDATA.deeds.length],
+        lordshipDeeds:['found_settlement', 'county_challenge', 'county_recognition'].map(function (id) {
+          const definition = FBDATA.deeds.find(function (def) { return def.id === id; });
+          const projected = definition && FB.instants[definition.order];
+          return !!projected && projected.id === id && typeof projected.run === 'function';
+        }),
+        initialized:[typeof FB.standingOf, typeof FB.feudalCharterDef, Array.isArray(FB.focuses)],
         validation:FB.validateActionData(),
         focusMetadata:focusMetadata,
         deedMetadata:deedMetadata,
@@ -1024,7 +1030,9 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 79]);
+    expect(result.counts).toEqual([28, 83]);
+    expect(result.lordshipDeeds).toEqual([true, true, true]);
+    expect(result.initialized).toEqual(['function', 'function', true]);
     expect(result.validation).toEqual([]);
     expect(result.focusMetadata).toBe(true);
     expect(result.deedMetadata).toBe(true);

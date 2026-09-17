@@ -10,6 +10,7 @@ dependsOnRuntime(__filename, [
   'data/map_data.js',
   'data/modifiers.js',
   'js/actions.js',
+  'js/lordships.js',
   'js/agency.js',
   'js/events.js',
   'js/modifiers.js',
@@ -380,7 +381,7 @@ test('settlement sheets retain local context and never mutate remote browsing',
       '.settlement-community-project-stop')).toHaveCount(0);
   });
 
-test('barons can direct only their saved home settlement',
+test('barons direct owned settlements rather than their residence',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
@@ -389,6 +390,14 @@ test('barons can direct only their saved home settlement',
       s.player.tier = 3;
       s.player.provs = [];
       s.player.homeSettlement = 1;
+      const countId = Object.keys(s.realms).find(function (id) {
+        return id !== 'player' && s.realms[id].alive;
+      });
+      s.holder[pid] = countId;
+      s.owner[pid] = FB.topRealm(s, countId);
+      const landless = FB.playerControlsSettlementCommunity(s, pid, 1);
+      FB.assignSettlementLordship(s, pid, 1, s.player.charId);
+      s.player.homeSettlement = 0;
       const rec = s.population.counties[pid];
       const first = Math.floor(rec.count / 2);
       rec.communities = [
@@ -397,6 +406,7 @@ test('barons can direct only their saved home settlement',
       ];
       FB.reconcileCountyCommunities(s, pid);
       return {
+        landless:landless,
         head:FB.playerControlsSettlementCommunity(s, pid, 0),
         home:FB.playerControlsSettlementCommunity(s, pid, 1),
         otherCounty:FB.playerControlsSettlementCommunity(
@@ -410,12 +420,30 @@ test('barons can direct only their saved home settlement',
       };
     });
     expect(result).toEqual({
+      landless:false,
       head:false,
       home:true,
       otherCounty:false,
       countyReady:false,
       localReady:true
     });
+  });
+
+test('delegation removes settlement project authority while retaining county policy authority',
+  async function ({ page }) {
+    await configureCountyProjectUi(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, pid = s.player.provinceId, me = s.chars[s.player.charId];
+      const baron = FB.makeCharacter(s, { name:'Local Baron', station:3,
+        born:s.date.year - 30, culture:me.culture, religion:me.religion, traits:[] });
+      const before = FB.playerControlsSettlementCommunity(s, pid, 1);
+      const granted = FB.assignSettlementLordship(s, pid, 1, baron.id);
+      return { before:before, granted:granted,
+        delegated:FB.playerControlsSettlementCommunity(s, pid, 1),
+        seat:FB.playerControlsSettlementCommunity(s, pid, 0),
+        county:FB.playerDirectlyHoldsCounty(s, pid) };
+    });
+    expect(result).toEqual({ before:true, granted:true, delegated:false, seat:true, county:true });
   });
 
 test('settlement policy penalties are weighted instead of county modifiers',

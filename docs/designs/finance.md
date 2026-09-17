@@ -1,5 +1,31 @@
 # Coin & Credit
 
+## Settlement income and dues (Phase 3)
+
+`settlementTaxBase` splits county development tax by conserved settlement population
+shares and keeps each site's village/town/city contribution. Their sum equals the
+county tax primitive, including population and local modifiers. Building income and
+upkeep follow the direct holder; county policy upkeep and strategic fort maintenance
+remain the count's obligations. Territorial Baron no longer supplies flat landless rent.
+
+`settlementFiscalProjection` exposes local base, gross, national bonus, upkeep,
+customary dues, net, and the two capacity multipliers. Player tax, forecasts,
+settlement sheets, AI accounts, and contribution projections consume this ownership
+model. Personal traits, council, and other player offices remain separate additions
+in the existing income breakdown. Count receipts contain a delegated baron's dues,
+not the site's full income. Received dues receive no further capacity penalty or
+recursive liege tax. Customary service uses the existing 20% tax/15% military charter.
+
+NPC barons have saved `settlementLordships.accounts[characterId]` purses, initially
+zero. Seasonal settlement credits local income and national bonuses, deducts upkeep
+and dues once, and records the settlement period. Construction reserves recurring
+upkeep and dues before allowing expenditure, including upkeep for the proposed work.
+Inheritance transfers a purse once; yearly real-gold revaluation includes these purses.
+Counts receive the matching dues through their ordinary treasury snapshot; the
+player's settlement dues are not also mirrored as Parliament aid. Private plots,
+enterprises, and manors retain their independent ownership and income.
+
+
 Named ruler cash transfers pair the payer debit with the recipient credit.
 Voluntary peace tribute is capped by available funds; compulsory ransom and imposed
 terms retain full liability. County sellers receive payment before retirement.
@@ -412,3 +438,29 @@ tax rounding so visible revenue reconciles with the actual tax calculation.
 Annual coin adjustment is marked as outside the recurring estimate; the top-bar
 badge continues to show the previous season's actual change, including events.
 This changes presentation only, without altering charges or balance parameters.
+
+
+Settlement projection reuse is scoped to synchronous reads. Military muster requests
+only levy/specialist amounts from the common settlement formula, skipping tax, toll,
+national-income and upkeep calculations; it reuses the holding list already computed
+for direct-capacity limits. County support, population factors and levy modifiers,
+and actor county penalties, are read once per context. Muster input revisions clear
+these records together with quotes/capacity/population shares; each daily pass starts
+fresh, so daily development, support, ruler and technology changes are not hidden by
+a retained cross-day cache. Recruitment blocking remains live and retries are unchanged.
+The seasonal treasury snapshot and subsequent baron credits share full fiscal quotes
+before any grant or building changes can occur, then discard their context. Quote and
+county-input build/hit counters expose this reuse in the local profiler. No gameplay
+eligibility or technology gate changes are introduced.
+
+
+Annual construction and public distributions can share the full treasury snapshot
+when the construction pass buys nothing. The snapshot is created after annual
+population, succession and ruler agency. Any successful ordinary-building purchase
+clears the handoff before changing buildings/development; public distributions then
+rebuild their snapshot, preserving post-construction income, upkeep and reserve rules.
+The handoff is local to worldTick, never persisted or shared with seasonal accounting.
+Military construction reserves are still read again for the distribution pass.
+Profiler counters distinguish annual unchanged-snapshot reuse from a fresh
+post-construction snapshot. This is a read-reuse optimization, with no research gate
+or change to spending eligibility, building choices, simulation order or RNG.

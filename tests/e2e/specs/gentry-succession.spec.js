@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'data/events_paths.js',
+  'data/events_paths.js', 'data/events_war.js', 'js/lordships.js', 'js/actions.js',
   'js/events.js',
   'js/main.js',
   'js/model.js',
@@ -222,6 +222,8 @@ test('a battle-proven founder can manually march and win by real field command',
       FB.setPlayerTier(s, 0);
       FB.setPlayerTier(s, 2);
       p.profession = 'noble';
+      s.dev[p.provinceId] = 8;
+      FB.rememberSettlementSites(s, p.provinceId);
       p.flags.seen_battle = 1;
       p.flags.lords_favor = 1;
       p.prestige = FBDATA.balance.militaryBaronyPrestige;
@@ -349,6 +351,7 @@ test('a battle-proven founder can manually march and win by real field command',
         commandCleared:!p.militaryCommand,
         tier:p.tier,
         liegeMatchesPatron:p.liege === patronId,
+        landed:FB.directSettlements(s).length > 0,
         grantCount:p.liegeGrants
       };
     });
@@ -375,6 +378,7 @@ test('a battle-proven founder can manually march and win by real field command',
       commandCleared:true,
       tier:3,
       liegeMatchesPatron:true,
+      landed:true,
       grantCount:1
     });
   });

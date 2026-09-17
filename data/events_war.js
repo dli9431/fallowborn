@@ -134,15 +134,22 @@ FBDATA.events.push(
 /* ---------- an extraordinary first-life command (newly gentle founder) ---------- */
 { id:'military_barony_victory', title:'A Banner Won in Blood',
   trigger:{ never:true }, wartime:true,
-  text:'At {cname}, the contingent held to your command while the enemy host broke. Before the surviving banners, {rulername} calls the victory proof no pedigree can gainsay: a tower, land, and a banner of your own are offered to you.',
+  text:'At {cname}, the contingent held to your command while the enemy host broke. Before the surviving banners, {rulername} calls the victory proof no pedigree can gainsay: the settlement of {grantSettlement} and its local works are offered to you. Each season: income {money:grantRevenue}, upkeep {money:grantUpkeep}, dues {money:grantDues}, net {money:grantNet}. You owe {grantTaxShare}% of local tax and {grantLevyShare}% of local troops. The county fort stays with the count.',
   options:[
-    { label:'Kneel, and rise a baron.', desc:'The founder of a gentle house becomes its first landed lord.',
-      effects:{ tierSet:3, prestige:100, standingRealm:20, custom:'record_liege_grant', log:'Won a barony by leading the ruler’s host to victory.' } },
+    { label:'Accept the settlement.', desc:'Become its hereditary baron at no investiture cost. Gain 100 prestige and 20 Standing with the count. The grant is checked again before acceptance.',
+      require:{ custom:'military_settlement_available' },
+      effects:{ custom:'military_settlement_grant' } },
     { label:'Ask for the victor’s purse instead.', desc:'Take wealth and renown, but remain gentry.',
       effects:{ gold:100, prestige:25, standingRealm:-5, log:'Refused a battlefield barony for the victor’s purse.' } },
     { label:'Decline the reward.', desc:'Let the victory stand without changing your station.',
       effects:{ prestige:15, standingRealm:5 } }
   ]},
+
+{ id:'military_victory_purse', title:'Victory Honored', trigger:{ never:true }, wartime:true,
+  text:'Your victory earns thanks from your patron, but no eligible settlement remains to grant. Your station is unchanged.',
+  options:[{ label:'Accept the victory purse.', desc:'Gain {money:100} and 25 prestige.',
+    effects:{ gold:100, prestige:25 } },
+    { label:'Decline the reward.', effects:{ prestige:15 } }] },
 
 /* ---------- life on campaign (soldiers and levied men) ---------- */
 { id:'camp_forage', title:'Empty Wagons',

@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/lordships.js',
   'data/actions.js',
   'js/actions.js',
   'js/events.js',
@@ -224,7 +225,7 @@ test('raises buildings in two held counties from the narrow county ledger',
     expect(built).toEqual({ home:1, other:1 });
   });
 
-test('deeds tab shows demesne buildings as a county grid that opens settlements',
+test('deeds icon grid includes every held settlement including empty sites',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -261,6 +262,7 @@ test('deeds tab shows demesne buildings as a county grid that opens settlements'
       FB.ui.refresh();
       return {
         home:FB.world.byId[home].name,
+        held:FB.directSettlements(state).length, homeId:home,
         other:FB.world.byId[other].name,
         homeSettlement:FB.settlementsOf(state, home)[0].name
       };
@@ -269,6 +271,8 @@ test('deeds tab shows demesne buildings as a county grid that opens settlements'
     await page.locator('#sidetabs [data-tab="actions"]').click();
     const grid = page.locator('#tab-actions .bldsummary .bldgrid');
     await expect(grid).toBeVisible();
+    await expect(page.locator('#tab-actions')).toContainText('Settlements:');
+    await expect(page.locator('#tab-actions')).not.toContainText('Direct settlements:');
 
     // one column per building type standing in the demesne, in data order
     const heads = grid.locator('.bldcell.bldcolhead');
@@ -279,7 +283,7 @@ test('deeds tab shows demesne buildings as a county grid that opens settlements'
 
     // both counties appear as clickable name cells
     const countyCells = grid.locator('button.bldprov');
-    await expect(countyCells).toHaveCount(2);
+    await expect(countyCells).toHaveCount(names.held);
 
     // the two watermills fold into one cell with a count badge
     const millPair = grid.locator('.bldcell[title="Watermill ×2"]');
@@ -289,17 +293,18 @@ test('deeds tab shows demesne buildings as a county grid that opens settlements'
     // gaps read as dimmed markers: home lacks a market, the other county's
     // ruined watermill does not fill its mill cell, and it has no granary
     await expect(grid.locator('.bldcell.bldmiss[title="No Market Square"]'))
-      .toHaveCount(1);
+      .toHaveCount(names.held - 1);
     await expect(grid.locator('.bldcell.bldmiss[title="No Watermill"]'))
-      .toHaveCount(1);
+      .toHaveCount(names.held - 1);
     await expect(grid.locator('.bldcell.bldmiss[title="No Granary"]'))
-      .toHaveCount(1);
+      .toHaveCount(names.held - 1);
     await expect(grid.locator('.bldcell[title="Market Square"]:not(.bldcolhead)'))
       .toHaveCount(1);
 
     // clicking a county name opens its head settlement's sheet
-    await grid.locator('button.bldprov', { hasText:names.home }).click();
+    await grid.locator('[data-bldprov="' + names.homeId + '"][data-bldsett="0"]').click();
     await expect(page.locator('#gm-title')).toContainText(names.homeSettlement);
+    await expect(page.locator('.settlement-context')).toContainText('held by you');
     await expect(page.locator('#gm-body')).toContainText('County development:');
 
     // development guidance uses the same mobile details disclosure as cards

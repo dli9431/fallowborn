@@ -10,6 +10,7 @@ window.FB = window.FB || {};
 
   const D = 90; // days per season
   const RANK_PETITION_DAYS = { barony:360, county:1440 };
+  FB.countyPetitionDays = function () { return RANK_PETITION_DAYS.county; };
 
   function me(state) { return state.chars[state.player.charId]; }
   function adult(state) { return FB.ageOf(me(state), state.date.year) >= 16; }
@@ -1605,12 +1606,7 @@ window.FB = window.FB || {};
   FB.playerControlsSettlementCommunity = function (state, pid, settlement) {
     const p = state && state.player;
     if (!p || p.tier < 3) return false;
-    if (p.tier >= 4 && FB.playerDirectlyHoldsCounty &&
-        FB.playerDirectlyHoldsCounty(state, pid)) return true;
-    const home = p.homeSettlement !== undefined
-      ? p.homeSettlement : (p.settlement !== undefined ? p.settlement : 0);
-    return p.tier === 3 && p.provinceId === pid &&
-      (Number(home) || 0) === Number(settlement);
+    return FB.settlementConstructionAuthority(state, pid, Number(settlement)).direct;
   };
 
   FB.settlementCommunityProjectOrderStatus = function (state, pid,
@@ -2757,13 +2753,14 @@ window.FB = window.FB || {};
       out.reason = FB.T('A captive cannot arrange a manumission.');
       return out;
     }
-    const lord = freedomCurrentLord(state);
+    const ownsHomeCounty = FB.settlementCountyHolder(state, state.player.provinceId) === 'player';
+    const lord = ownsHomeCounty ? me : freedomCurrentLord(state);
     out.lord = lord;
     if (!lord) {
       out.reason = FB.T('No local lord can authorize this manumission.');
       return out;
     }
-    if (FB.standingOf(state, { kind:'character', id:lord.id }) < -20) {
+    if (!ownsHomeCounty && FB.standingOf(state, { kind:'character', id:lord.id }) < -20) {
       out.reason = FB.T('The lord despises you and refuses.');
       return out;
     }
@@ -3701,6 +3698,10 @@ window.FB = window.FB || {};
         FB.ui.showRankElevation('manor');
       }
     } },
+  { id:'found_settlement', opensChoices:true, noConsume:true, deferCooldown:true,
+    desc:function () { return FB.T('Fund a hereditary settlement, or review your charter.'); },
+    show:function (s) { return s.player.tier === 2 || !!FB.activeSettlementFounding(s); },
+    run:function () { FB.ui.showSettlementFounding(); } },
   { id: 'petition_barony', opensChoices:true, noConsume:true,
     deferCooldown:true,
     desc: function () {
@@ -3903,6 +3904,14 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 3; },
     can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; },
     run: function (s) { FB.queueEvent(s, 'court_feast', {}); } },
+  { id:'county_challenge', opensChoices:true, noConsume:true, deferCooldown:true,
+    desc:function () { return FB.T('Review a county challenge and the superior’s position.'); },
+    show:function (s) { return FB.landedBaron(s); },
+    run:function () { FB.ui.showCountyProgression(); } },
+  { id:'county_recognition', opensChoices:true, noConsume:true, deferCooldown:true,
+    desc:function () { return FB.T('Ask your superior to recognize a disputed county.'); },
+    show:function (s) { return s.player.tier >= 4 && !!s.player.liege && Object.keys(s.settlementLordships.disputedCounties || {}).some(function (pid) { return FB.settlementCountyHolder(s, pid) === 'player'; }); },
+    run:function () { FB.ui.showCountyProgression(); } },
   { id: 'petition_liege', opensChoices:true, noConsume:true,
     deferCooldown:true,
     desc: function (s) {
@@ -3952,7 +3961,7 @@ window.FB = window.FB || {};
     run: function (s) {
       if (s.player.tier === 3) {
         if (FB.ui && FB.ui.showRankElevation) {
-          FB.ui.showRankElevation('county');
+          FB.ui.showCountyProgression();
         }
         return;
       }
@@ -6067,11 +6076,8 @@ window.FB = window.FB || {};
     if (!realm || !realm.alive || realm.liege !== 'player') return 0;
     const contract = FB.feudalContractOf(state, rid);
     const charter = FB.feudalCharterDef(contract.charterId);
-    const rate = FBDATA.balance.taxPerDev * charter.taxShare;
-    let total = 0;
-    for (const pid of FB.realmHeldCounties(state, rid)) {
-      total += countyTaxBase(state, pid, rate);
-    }
+    const fiscal = FB.settlementActorFiscal(state, rid);
+    const total = fiscal.tax * charter.taxShare;
     return total;
   };
 
@@ -6080,23 +6086,12 @@ window.FB = window.FB || {};
   FB.playerTaxParts = function (state) {
     const B = FBDATA.balance;
     const p = state.player;
-    let rents = 0;
-    for (const pid of (p.provs || [])) {
-      rents += countyTaxBase(state, pid, B.taxPerDev);
+    const fiscal = FB.settlementActorFiscal(state, 'player');
+    let rents = fiscal.tax;
+    if (p.tier === 3 && FB.castellanyOf && FB.castellanyOf(state)) {
+      rents += 6 * Math.max(0, 1 + FB.modBonus(state, 'tax', p.provinceId));
     }
     const bishopric = FB.bishopricIncome ? FB.bishopricIncome(state) : 0;
-    if (p.tier === 3 && !bishopric) {
-      /* A baron's seat is their liege's county, so no rent line above covers
-         it and the loop applied no county tax modifier. The estate records
-         sitting on that seat still act on the baron's own revenues, by the
-         same ownership rule that already charges them upkeep for those
-         records. Without this a Market Charter costs a baron gold every
-         season and returns nothing. See FB.modifierCounties. */
-      const seat = FB.modifierSeat ? FB.modifierSeat(state) : null;
-      const local = seat && FB.modBonus ? FB.modBonus(state, 'tax', seat) : 0;
-      rents = Math.max(rents, 6 * Math.max(0, 1 + local));
-    }
-    rents *= FB.domainPenalty(state);
     const rentBase = rents;
     const rentTraits = [];
     const me = state.chars[p.charId];
@@ -6108,17 +6103,12 @@ window.FB = window.FB || {};
       rentTraits.push({ id:tid, amount:amount });
       rents += amount;
     }
-    let dues = 0;
+    let dues = fiscal.duesIn;
     for (const vid of FB.playerVassals(state)) {
       dues += FB.vassalTaxContribution(state, vid);
     }
-    let tolls = 0;
-    for (const pid of FB.demesne(state)) {
-      let factor = FB.countySupportFactor(state, pid);
-      if (FB.hasModifier(state, 'commons_uprising', pid)) factor *= 1 - FB.commonsUprisingReduction(state, pid);
-      tolls += FB.buildingBonusIn(state, pid, 'tax') * factor;
-    }
-    const taxable = rents + dues + tolls;
+    const tolls = fiscal.tolls;
+    const taxable = rents + tolls;
     const national = taxable * FB.techBonus(state, 'tax');
     const council = taxable * (FB.councilBonus ? FB.councilBonus(state, 'tax') : 0);
     const positions = taxable * (FB.positionBonus ? FB.positionBonus(state, 'tax') : 0);
@@ -6127,15 +6117,18 @@ window.FB = window.FB || {};
     const papacy = taxable *
       (FB.papacyInvestitureTaxRate ? FB.papacyInvestitureTaxRate(state) : 0);
     const beforeLiege = taxable + national + council + positions + monopoly +
-      papacy + bishopric;
-    const liege = p.liege
-      ? -beforeLiege * (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
+      papacy + bishopric + dues;
+    const countyLiege = p.liege && (p.provs || []).length
+      ? -(taxable + national + council + positions + monopoly + papacy + bishopric) *
+        (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
+    const liege = countyLiege - fiscal.duesOut;
     return {
       rents:rents, rentBase:rentBase, rentTraits:rentTraits,
+      countyLoss:fiscal.countyLoss, settlementLoss:fiscal.settlementLoss,
       dues:dues, tolls:tolls, taxable:taxable,
       national:national, council:council, positions:positions,
       monopoly:monopoly, papacy:papacy, bishopric:bishopric,
-      liege:liege, total:beforeLiege + liege
+      liege:liege, countyLiege:countyLiege, settlementDues:fiscal.duesOut, total:beforeLiege + liege
     };
   };
 
@@ -6197,25 +6190,36 @@ window.FB = window.FB || {};
     }
     let directTaxBefore = 0, directTaxAfter = 0, grantedTax = 0;
     let directLevyBefore = 0, directLevyAfter = 0, grantedLevy = 0;
-    for (const pid of held) {
-      directTaxBefore += countyTaxBase(state, pid, FBDATA.balance.taxPerDev);
-      directLevyBefore += domainCountyLevyBase(state, pid);
-      if (granted[pid]) {
-        const customary = FB.feudalCharterDef('customary_service');
-        grantedTax += countyTaxBase(state, pid,
-          FBDATA.balance.taxPerDev * customary.taxShare);
-        grantedLevy += domainCountyLevyBase(state, pid) *
-          customary.levyShare;
+    const sites = FB.directSettlements(state), capacity = FB.settlementCapacityProjection(state);
+    const afterSites = sites.filter(function (site) { return !granted[site.provinceId]; });
+    const afterSettlementPenalty = Math.pow(1 - (FBDATA.balance.overDomainPenalty || 0.15),
+      Math.max(0, afterSites.length - capacity.limit));
+    const afterCountyPenalty = FB.domainPenaltyForCount(state, remaining.length);
+    const context = { capacities:{} }, customary = FB.feudalCharterDef('customary_service');
+    for (const site of sites) {
+      const pid = site.provinceId;
+      const a = FB.settlementFiscalProjection(state, pid, site.settlement, context).amounts;
+      directTaxBefore += a.tax + a.tolls - a.dues;
+      directLevyBefore += a.availableLevy + a.specialists - a.specialistDues;
+      const oldFactor = a.countyPenalty * a.settlementPenalty;
+      const rawTax = oldFactor ? (a.tax + a.tolls) / oldFactor : 0;
+      const rawLevy = oldFactor ? (a.levy + a.specialists) / oldFactor : 0;
+      if (granted[pid] && !FB.settlementLordship(state, pid, site.settlement)) {
+        grantedTax += rawTax * customary.taxShare;
+        grantedLevy += rawLevy * customary.levyShare;
       } else {
-        directTaxAfter += countyTaxBase(state, pid,
-          FBDATA.balance.taxPerDev);
-        directLevyAfter += domainCountyLevyBase(state, pid);
+        directTaxAfter += rawTax * afterCountyPenalty * afterSettlementPenalty - a.dues;
+        directLevyAfter += rawLevy * afterCountyPenalty * afterSettlementPenalty - a.levyDues - a.specialistDues;
       }
     }
-    directTaxBefore *= FB.domainPenaltyForCount(state, held.length);
-    directTaxAfter *= FB.domainPenaltyForCount(state, remaining.length);
-    directLevyBefore *= FB.domainPenaltyForCount(state, held.length);
-    directLevyAfter *= FB.domainPenaltyForCount(state, remaining.length);
+    // Existing baronial receipts are not themselves taxed by the new count.
+    for (const pid of held) for (let slot = 0; slot < FB.settlementVisibleCount(state, pid); slot++) {
+      const a = FB.settlementFiscalProjection(state, pid, slot, context).amounts;
+      directTaxBefore += a.dues; directLevyBefore += a.levyDues + a.specialistDues;
+      if (!granted[pid]) {
+        directTaxAfter += a.dues; directLevyAfter += a.levyDues + a.specialistDues;
+      }
+    }
     return {
       beforeTax:directTaxBefore + existingTax,
       afterTax:directTaxAfter + existingTax + grantedTax,
@@ -6374,7 +6378,7 @@ window.FB = window.FB || {};
          (p.flags && p.flags.bishop)))));
     if (seeOnly) return false;
     if (p.flags && p.flags.chief_qadi) return false;
-    if (p.tier !== 3 || !p.liege) return false;
+    if (p.tier !== 3 || !p.liege || !FB.landedBaron(state)) return false;
     const holder = (state.holder && state.holder[p.provinceId]) ||
       (state.owner && state.owner[p.provinceId]);
     return holder === p.liege && !!(state.realms[p.liege] &&
@@ -6641,7 +6645,9 @@ window.FB = window.FB || {};
       const tax = FB.playerTaxParts(state);
       add('gold', FB.castellanyOf && FB.castellanyOf(state)
         ? FB.T('Castellan’s stipend and revenues')
-        : FB.T('Rents from your lands'), tax.rentBase);
+        : FB.T('Rents from your lands'), tax.rentBase - tax.countyLoss - tax.settlementLoss);
+      add('gold', FB.T('County capacity penalty'), tax.countyLoss);
+      add('gold', FB.T('Settlement capacity penalty'), tax.settlementLoss);
       for (const source of tax.rentTraits) {
         const trait = FBDATA.traits[source.id];
         if (!trait) continue;
@@ -7689,12 +7695,11 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     const rate = FB.vassalLevyRate(state, rid);
     let amount = 0;
-    for (const pid of FB.realmHeldCounties(state, rid)) {
-      if (recruitmentRealm && FB.recruitmentCountyBlocked(state, recruitmentRealm, pid)) continue;
-      const modifier = FB.modBonus
-        ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
-      const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
-      amount += (state.dev[pid] || 1) * popFactor * B.levyPerDev * modifier * rate;
+    const context = { capacities:{} };
+    for (const site of FB.directSettlements(state, rid)) {
+      if (recruitmentRealm && FB.recruitmentCountyBlocked(state, recruitmentRealm, site.provinceId)) continue;
+      const a = FB.settlementFiscalProjection(state, site.provinceId, site.settlement, context).amounts;
+      amount += (a.availableLevy + a.specialists - a.specialistDues) * rate;
     }
     return amount;
   };
@@ -9309,6 +9314,7 @@ window.FB = window.FB || {};
         });
       }
     } else if (route === 'barony') {
+      site = FB.baronyPetitionSite(state);
       const lord = FB.getRole(state, 'lord', true);
       grantorId = lord && lord.id || null;
       const standing = lord
@@ -9316,6 +9322,9 @@ window.FB = window.FB || {};
       if (p.tier !== 2 || !FB.gentryEstablished(state)) {
         eligible = false;
         reason = FB.T('Only an established gentle house may accept this barony.');
+      } else if (!site) {
+        eligible = false;
+        reason = FB.T('Your count has no eligible settlement to grant. The county seat is protected.');
       } else if (p.prestige < FBDATA.balance.baronyPrestige) {
         eligible = false;
         reason = FB.T('You need at least {needed} prestige (now {current}).', {
@@ -9332,25 +9341,23 @@ window.FB = window.FB || {};
           : FB.T('No current lord can grant this barony.');
       }
     } else if (route === 'county') {
-      grantorId = p.liege || null;
-      const standing = p.liege ? FB.standingOf(state, {
-        kind:'realm', id:p.liege
-      }) : 0;
-      if (p.tier !== 3 || !FB.liegeHomeCountyGrantAuthority(state)) {
+      const candidates = FB.countyGrantCandidates(state);
+      const candidate = options.county ? candidates.filter(function (q) { return q.provinceId === options.county; })[0] : candidates[0];
+      grantorId = candidate && candidate.grantorId || null;
+      site = candidate ? { provinceId:candidate.provinceId, settlement:0 } : null;
+      const standing = grantorId ? FB.standingOf(state, { kind:'realm', id:grantorId }) : 0;
+      if (!FB.landedBaron(state) || !candidate) {
         eligible = false;
-        reason = FB.T(
-          'Only a titled count or greater lord who directly holds your home county can invest you with it.');
+        reason = FB.T('No higher ruler can grant a county. Their seat, last personal county and vassals’ counties are protected.');
+      } else if (FB.realmWars(state, 'player').length) {
+        eligible = false;
+        reason = FB.T('Finish your campaign before petitioning for a county.');
       } else if (standing < 65) {
         eligible = false;
-        reason = FB.T(
-          'Your Standing with your liege must be 65 or more (now {current}).', {
-            current:Math.round(standing)
-          });
+        reason = FB.T('You need 65 Standing with the granting ruler (now {current}).', { current:Math.round(standing) });
       } else if (p.prestige < 400) {
         eligible = false;
-        reason = FB.T('You need at least 400 prestige (now {current}).', {
-          current:Math.round(p.prestige)
-        });
+        reason = FB.T('You need at least 400 prestige (now {current}).', { current:Math.round(p.prestige) });
       }
     } else if (route === 'higher' && !expectedTarget) {
       eligible = false;
@@ -9371,12 +9378,15 @@ window.FB = window.FB || {};
       fromTier:p.tier,
       targetTier:target || null,
       region:options.region || null,
-      titleData:target && options.region && (FBDATA.duchies[options.region] || FBDATA.kingdoms[options.region])
+      titleData:route === 'county' && site ? FB.rankTitleSnapshot(state, 4, FB.world.byId[site.provinceId].name) :
+        target && options.region && (FBDATA.duchies[options.region] || FBDATA.kingdoms[options.region])
         ? FB.rankTitleSnapshot(state, target,
           (FBDATA.duchies[options.region] || FBDATA.kingdoms[options.region]).name) :
         target ? rankElevationTitleData(state, target) : null,
       cost:cost,
       site:site,
+      settlementGrant:route === 'barony' && site ? FB.settlementGrantQuote(state,
+        site.provinceId, site.settlement, p.charId, FB.settlementCountyHolder(state, site.provinceId)) : null,
       liegeId:p.liege || null,
       grantorId:grantorId
     };
@@ -9396,6 +9406,9 @@ window.FB = window.FB || {};
       usesPiety:status.cost.piety ? 'yes' : 'other',
       liegeId:status.liegeId,
       grantorId:status.grantorId,
+      settlementGrant:status.settlementGrant || null,
+      grantChance:status.route === 'county' ? FB.countyPetitionChance(state, status.grantorId) :
+        status.route === 'barony' && status.grantorId ? FB.baronyGrantChance(state, status.grantorId) : null,
       siteProvinceId:status.site ? status.site.provinceId : null,
       siteSettlement:status.site ? status.site.settlement : null
     };
@@ -9406,12 +9419,15 @@ window.FB = window.FB || {};
         ctx.fromTier !== state.player.tier ||
         ctx.liegeId !== (state.player.liege || null)) return null;
     const status = FB.rankElevationStatus(state, ctx.targetTier, {
-      route:ctx.route, region:ctx.region || null
+      route:ctx.route, region:ctx.region || null, county:ctx.route === 'county' ? ctx.siteProvinceId : null
     });
     if (!status.eligible || status.cost.gold !== ctx.goldCost ||
         status.cost.prestige !== ctx.prestigeCost ||
         status.cost.piety !== ctx.pietyCost ||
         status.grantorId !== ctx.grantorId ||
+        (status.route === 'barony' && FB.baronyGrantChance(state, status.grantorId) !== ctx.grantChance) ||
+        (status.route === 'county' && FB.countyPetitionChance(state, status.grantorId) !== ctx.grantChance) ||
+        JSON.stringify(status.settlementGrant || null) !== JSON.stringify(ctx.settlementGrant || null) ||
         (status.site ? status.site.provinceId : null) !== ctx.siteProvinceId ||
         (status.site ? status.site.settlement : null) !== ctx.siteSettlement ||
         JSON.stringify(status.titleData) !== JSON.stringify(ctx.titleData)) {
@@ -9433,7 +9449,9 @@ window.FB = window.FB || {};
     const status = FB.rankElevationContextStatus(state, ctx);
     if (!status || !status.ready) return false;
     const p = state.player;
-    if (status.route === 'county' && !FB.grantByLiege(state)) return false;
+    if (status.route === 'county' && !FB.countyInvestiture(state, status.site.provinceId, status.grantorId, status.grantorId)) return false;
+    if (status.route === 'barony' && !FB.confirmSettlementGrant(state, status.settlementGrant)) return false;
+    if (status.route === 'county') FB.recordLiegeGrant(state);
     p.gold -= status.cost.gold;
     p.prestige -= status.cost.prestige;
     p.piety -= status.cost.piety;
@@ -9444,8 +9462,7 @@ window.FB = window.FB || {};
       };
       FB.setPlayerTier(state, 2);
     } else if (status.route === 'barony') {
-      FB.setPlayerTier(state, 3);
-      FB.recordLiegeGrant(state);
+      // Settlement and title were granted together before charging the reviewed costs.
     } else if (status.route === 'higher') {
       FB.setPlayerTier(state, status.targetTier, { attachLiege:false });
       FB.foundPlayerRealm(state);
@@ -9504,9 +9521,9 @@ window.FB = window.FB || {};
       }
     } else {
       FB.applyEffects(state, { prestige:-5 });
-      if (status.liegeId) {
+      if (status.grantorId) {
         FB.adjustStanding(state, {
-          kind:'realm', id:status.liegeId
+          kind:'realm', id:status.grantorId
         }, -8, 'deed:petition_liege');
       }
       FB.news(state, FB.msg('news.action.county_title_refused',
@@ -9518,20 +9535,18 @@ window.FB = window.FB || {};
     });
   }
 
-  FB.attemptRankElevation = function (state, route) {
-    const status = FB.rankElevationStatus(state, null, { route:route });
+  FB.attemptRankElevation = function (state, route, reviewedContext) {
+    const status = reviewedContext ? FB.rankElevationContextStatus(state, reviewedContext) :
+      FB.rankElevationStatus(state, null, { route:route });
+    if (!status || status.route !== route) return { attempted:false, claimed:false, status:status };
     if (!status.ready) {
       return { attempted:false, claimed:false, status:status };
     }
     let accepted = true;
     if (route === 'barony') {
-      accepted = FB.chance(FB.liegeGrantChance(state,
-        0.15 + FB.standingOf(state, {
-          kind:'character', id:status.grantorId
-        }) / 400 + state.player.prestige / 1200));
+      accepted = FB.chance(FB.baronyGrantChance(state, status.grantorId));
     } else if (route === 'county') {
-      accepted = !!FB.namedChance &&
-        FB.chance(FB.namedChance(state, 'liege_grant', {}));
+      accepted = FB.chance(FB.countyPetitionChance(state, status.grantorId));
     }
     if (!accepted) {
       noteRankElevationAttempt(state, route);
@@ -9614,9 +9629,9 @@ window.FB = window.FB || {};
 
   FB.buildingCounties = function (state) {
     if (!state.player || state.player.tier < 3) return [];
-    return FB.realmHeldCounties(state, 'player').filter(function (pid) {
-      return FB.canManageCountyBuildings(state, pid);
-    });
+    const counties = {};
+    for (const site of FB.directSettlements(state)) counties[site.provinceId] = true;
+    return Object.keys(counties).sort();
   };
 
   /* Building reads fan out through seasonal finance, population, markets,
@@ -9638,6 +9653,7 @@ window.FB = window.FB || {};
     standing:Object.create(null),
     usable:Object.create(null),
     occupied:Object.create(null),
+    bySettlement:Object.create(null),
     bonuses:Object.create(null),
     bonusCounts:Object.create(null),
     standingNonFort:0,
@@ -9694,6 +9710,7 @@ window.FB = window.FB || {};
       standing:Object.create(null),
       usable:Object.create(null),
       occupied:Object.create(null),
+      bySettlement:Object.create(null),
       bonuses:Object.create(null),
       bonusCounts:Object.create(null),
       standingNonFort:0,
@@ -9729,9 +9746,14 @@ window.FB = window.FB || {};
       if (!id) continue;
       index.all[id] = (index.all[id] || 0) + 1;
       const settlement = buildingSettlementIndex(entry.s);
+      const local = index.bySettlement[settlement] || (index.bySettlement[settlement] = {
+        all:Object.create(null), standing:Object.create(null), bonuses:Object.create(null), bonusCounts:Object.create(null)
+      });
+      local.all[id] = (local.all[id] || 0) + 1;
       index.occupied[settlement + ':' + id] = 1;
       if (entry.ruined) continue;
       index.visibleFloor = Math.max(index.visibleFloor, settlement + 1);
+      local.standing[id] = (local.standing[id] || 0) + 1;
       index.standingTotal++;
       index.standing[id] = (index.standing[id] || 0) + 1;
       if (id !== 'walls' || (Number(entry.level) || 0) > 0) {
@@ -9744,6 +9766,11 @@ window.FB = window.FB || {};
         const amount = def[key];
         if (typeof amount !== 'number' || !amount) continue;
         index.bonuses[key] = (index.bonuses[key] || 0) + amount;
+        local.bonuses[key] = (local.bonuses[key] || 0) + amount;
+        if (BUILDING_COUNT_BONUS_KEYS[key]) {
+          const localCounts = local.bonusCounts[key] || (local.bonusCounts[key] = Object.create(null));
+          localCounts[id] = (localCounts[id] || 0) + 1;
+        }
         if (BUILDING_COUNT_BONUS_KEYS[key]) {
           const counts = index.bonusCounts[key] ||
             (index.bonusCounts[key] = Object.create(null));
@@ -9781,16 +9808,21 @@ window.FB = window.FB || {};
 
   FB.buildingCount = function (state, id, includeRuins) {
     let count = 0;
-    for (const pid of FB.demesne(state)) count += FB.buildingCountIn(state, pid, id, includeRuins);
+    if (id === 'walls' || (FBDATA.buildings[id] && FBDATA.buildings[id].fort)) {
+      for (const pid of FB.realmHeldCounties(state, 'player')) count += FB.buildingCountIn(state, pid, id, includeRuins);
+      return count;
+    }
+    for (const site of FB.directSettlements(state)) {
+      const local = buildingIndexFor(state, site.provinceId).bySettlement[site.settlement];
+      if (local) count += (includeRuins ? local.all[id] : local.standing[id]) || 0;
+    }
     return count;
   };
-
-  /* built anywhere in the demesne (the reading used by event triggers) */
   FB.hasBuilding = function (state, id) {
-    for (const pid of FB.demesne(state)) {
-      if (buildingIndexFor(state, pid).usable[id]) return true;
-    }
-    return false;
+    if (id === 'walls') return FB.realmHeldCounties(state, 'player').some(function (pid) {
+      return FB.hasBuildingIn(state, pid, id);
+    });
+    return FB.buildingCount(state, id) > 0;
   };
 
   /* built in ONE province (walls guard the county they stand in) */
@@ -9802,6 +9834,17 @@ window.FB = window.FB || {};
     return buildingIndexFor(state, pid).bonuses[key] || 0;
   };
 
+  FB.buildingBonusAt = function (state, pid, slot, key) {
+    const local = buildingIndexFor(state, pid).bySettlement[slot];
+    return local && local.bonuses[key] || 0;
+  };
+  FB.buildingEffectScope = function (key) {
+    if (key === 'research') return 'national';
+    if (['dev', 'pop', 'populationCapacity', 'populationFamineProtection',
+      'populationCrisisProtection', 'migrationAttraction', 'communityFaithPressure'].indexOf(key) >= 0) return 'county';
+    return 'local';
+  };
+
   FB.standingBuildingCountIn = function (state, pid, includeForts) {
     const index = buildingIndexFor(state, pid);
     return includeForts ? index.standingTotal : index.standingNonFort;
@@ -9809,51 +9852,43 @@ window.FB = window.FB || {};
 
   FB.buildingBonusCounts = function (state, key, recruitmentRealm) {
     const out = Object.create(null);
-    for (const pid of FB.demesne(state)) {
-      if (recruitmentRealm && FB.recruitmentCountyBlocked(state, recruitmentRealm, pid)) continue;
-      const counts = buildingIndexFor(state, pid).bonusCounts[key];
-      if (!counts) continue;
-      for (const id in counts) out[id] = (out[id] || 0) + counts[id];
+    for (const site of FB.directSettlements(state)) {
+      if (recruitmentRealm && FB.recruitmentCountyBlocked(state, recruitmentRealm, site.provinceId)) continue;
+      const local = buildingIndexFor(state, site.provinceId).bySettlement[site.settlement];
+      const counts = local && local.bonusCounts[key];
+      if (counts) for (const id in counts) out[id] = (out[id] || 0) + counts[id];
     }
     return out;
   };
-
   FB.buildingBonus = function (state, key) {
     let sum = 0;
-    for (const pid of FB.demesne(state)) sum += FB.buildingBonusIn(state, pid, key);
+    for (const site of FB.directSettlements(state)) sum += FB.buildingBonusAt(state, site.provinceId, site.settlement, key);
     return sum;
   };
-
   FB.buildingDemesneContext = function (state) {
-    const provinces = FB.buildingCounties(state);
-    const standing = Object.create(null);
-    const byProvince = Object.create(null);
-    for (const pid of provinces) {
-      byProvince[pid] = 1;
-      const counts = buildingIndexFor(state, pid).standing;
-      for (const id in counts) standing[id] = (standing[id] || 0) + counts[id];
+    const provinces = FB.buildingCounties(state), standing = Object.create(null), byProvince = Object.create(null);
+    for (const site of FB.directSettlements(state)) {
+      byProvince[site.provinceId] = 1;
+      const local = buildingIndexFor(state, site.provinceId).bySettlement[site.settlement];
+      if (local) for (const id in local.standing) standing[id] = (standing[id] || 0) + local.standing[id];
     }
-    return {
-      state:state,
-      store:state.buildings || null,
-      provinces:provinces,
-      byProvince:byProvince,
-      standing:standing
-    };
+    return { state:state, store:state.buildings || null, revision:FB.militaryInputRevision, provinces:provinces, byProvince:byProvince, standing:standing };
   };
 
   FB.buildingContext = function (state, pid, demesneContext) {
     if (!demesneContext || demesneContext.state !== state ||
-        demesneContext.store !== (state.buildings || null)) {
+        demesneContext.store !== (state.buildings || null) ||
+        demesneContext.revision !== FB.militaryInputRevision) {
       demesneContext = null;
     }
     const index = buildingIndexFor(state, pid);
     return {
       state:state,
       pid:pid,
+      revision:FB.militaryInputRevision,
       index:index,
       visibleCount:FB.settlementVisibleCount(state, pid, index.visibleFloor),
-      held:FB.canManageCountyBuildings(state, pid),
+      held:FB.buildingCounties(state).indexOf(pid) >= 0,
       demesne:demesneContext
     };
   };
@@ -9883,10 +9918,11 @@ window.FB = window.FB || {};
   FB.canBuildAt = function (state, pid, idx, id, context) {
     const def = FBDATA.buildings[id];
     const pr = FB.world.byId[pid];
-    context = context && context.state === state && context.pid === pid
+    context = context && context.state === state && context.pid === pid &&
+      context.revision === FB.militaryInputRevision && context.index === buildingIndexFor(state, pid)
       ? context : FB.buildingContext(state, pid);
     if (!def || def.fort || typeof idx !== 'number' || !isFinite(idx) ||
-        Math.floor(idx) !== idx || !FB.canManageCountyBuildings(state, pid) ||
+        Math.floor(idx) !== idx || !FB.settlementConstructionAuthority(state, pid, idx).direct ||
         idx < 0 || idx >= context.visibleCount) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (context.index.occupied[(idx | 0) + ':' + id]) return false;
@@ -9905,25 +9941,50 @@ window.FB = window.FB || {};
     const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
     if (!def || def.fort || !pr || pr.wasteland) return false;
     const sts = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
-    if (!sts[idx]) return false;
+    if (!sts[idx] || !FB.settlementConstructionAuthority(state, pid, idx, rid).direct) return false;
+    const actor = FB.settlementActor(state, rid);
+    const techRealm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(state, pid);
     if (def.requiresTech && FB.techRequirementMet &&
-        !FB.techRequirementMet(state, def.requiresTech, rid)) return false;
+        !FB.techRequirementMet(state, def.requiresTech, techRealm)) return false;
     const done = FB.builtIn(state, pid);
     for (let i = 0; i < done.length; i++) {
-      if (done[i].id === id && done[i].s === idx && !done[i].ruined) return false;
+      if (done[i].id === id && done[i].s === idx) return false;
     }
     const dev = (state.dev && state.dev[pid]) || 1;
     if (def.devMin && dev < def.devMin) return false;
     if (def.coastal && !pr.coastal) return false;
     if (def.terrains && def.terrains.indexOf(pr.terrain) < 0) return false;
     if (def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) return false;
+    if (def.homeOnly && (actor.kind !== 'realm' || !state.realms[actor.id] || state.realms[actor.id].capital !== pid)) return false;
+    if (def.maxDemesne) {
+      let copies = 0;
+      for (const site of FB.directSettlements(state, actor)) {
+        const local = buildingIndexFor(state, site.provinceId).bySettlement[site.settlement];
+        copies += local && local.standing[id] || 0;
+      }
+      if (copies >= def.maxDemesne) return false;
+    }
+    return true;
+  };
+
+  FB.buildBarony = function (state, cid, pid, idx, id) {
+    const actor = { kind:'character', id:cid }, def = FBDATA.buildings[id];
+    if (cid === state.player.charId || !def || !FB.aiCanBuildAt(state, actor, pid, idx, id)) return false;
+    const cost = FB.buildCost(state, pid, id, FB.settlementCountyHolder(state, pid));
+    if (!FB.spendBaronyConstruction(state, cid, cost, def.upkeep || 0)) return false;
+    const record = { s:idx, id:id };
+    builtInForWrite(state, pid).push(record);
+    FB.invalidateBuildingIndex(state, pid);
+    if (def.dev) record.devGranted = FB.changeCountyDevelopment(state, pid, def.dev, 'building');
+    if (FB.reconcileSettlementCommunities) FB.reconcileSettlementCommunities(state, pid);
     return true;
   };
 
   /* what one settlement can still raise: one of each building per
      settlement, subject to county/demesne limits and siting gates */
   FB.buildable = function (state, pid, idx, context) {
-    context = context && context.state === state && context.pid === pid
+    context = context && context.state === state && context.pid === pid &&
+      context.revision === FB.militaryInputRevision && context.index === buildingIndexFor(state, pid)
       ? context : FB.buildingContext(state, pid);
     const out = [];
     for (const id in FBDATA.buildings) {
@@ -9936,7 +9997,8 @@ window.FB = window.FB || {};
   };
 
   FB.buildingSlots = function (state, pid, id, context) {
-    context = context && context.state === state && context.pid === pid
+    context = context && context.state === state && context.pid === pid &&
+      context.revision === FB.militaryInputRevision && context.index === buildingIndexFor(state, pid)
       ? context : FB.buildingContext(state, pid);
     const out = [];
     for (let idx = 0; idx < context.visibleCount; idx++) {
@@ -9946,7 +10008,8 @@ window.FB = window.FB || {};
   };
 
   FB.buildableCount = function (state, pid, idx, context) {
-    context = context && context.state === state && context.pid === pid
+    context = context && context.state === state && context.pid === pid &&
+      context.revision === FB.militaryInputRevision && context.index === buildingIndexFor(state, pid)
       ? context : FB.buildingContext(state, pid);
     let count = 0;
     for (const id in FBDATA.buildings) {
@@ -10006,10 +10069,9 @@ window.FB = window.FB || {};
   };
 
   FB.demolishBuilding = function (state, pid, idx, id) {
-    if (!state || !FB.canManageCountyBuildings(state, pid)) return false;
-    if (id === 'walls' && FB.demolishFort) {
-      return FB.demolishFort(state, pid, idx);
-    }
+    if (!state) return false;
+    if (id !== 'walls' && !FB.settlementConstructionAuthority(state, pid, idx).direct) return false;
+    if (id === 'walls') return !!FB.demolishFort && FB.demolishFort(state, pid, idx);
     const done = FB.builtIn(state, pid);
     for (let i = 0; i < done.length; i++) {
       if (done[i].id === id && done[i].s === idx && !done[i].ruined) {
@@ -10551,6 +10613,14 @@ window.FB = window.FB || {};
 
   FB.claimCandidates = function (state) {
     const out = [], seen = {};
+    if (FB.landedBaron(state)) {
+      FB.directSettlements(state).forEach(function (site) {
+        if (!seen[site.provinceId] && !FB.countyClaim(state, site.provinceId)) {
+          seen[site.provinceId] = true; out.push(site.provinceId);
+        }
+      });
+      return out.sort();
+    }
     if (state.player.tier < 4) return out;
     const mine = playerBorderLands(state), mySovereign = FB.playerRealmId(state);
     const titles = heldTitleSets(state);
@@ -12063,7 +12133,7 @@ window.FB = window.FB || {};
     for (const a of FB.instants) {
       if (state.player.travel &&
         ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
-          'travel_settle_here', 'frontier_settle_here', 'review_serf_tenure', 'declare_manor', 'petition_barony',
+          'travel_settle_here', 'frontier_settle_here', 'review_serf_tenure', 'declare_manor', 'petition_barony', 'found_settlement',
           'petition_liege', 'claim_higher_title'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;
       const shown = !!a.show(state);

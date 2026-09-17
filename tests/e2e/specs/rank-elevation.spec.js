@@ -21,7 +21,7 @@ dependsOnRuntime(__filename, [
   'data/events_world.js',
   'data/map_data.js',
   'css/style.css',
-  'js/actions.js',
+  'js/actions.js', 'js/lordships.js', 'js/population.js', 'js/technology.js',
   'js/events.js',
   'js/main.js',
   'js/model.js',
@@ -37,6 +37,10 @@ const { startDeterministicGame } = require('../support/game/start');
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
+  await page.evaluate(function () {
+    FB.state.dev[FB.state.player.provinceId] = 8;
+    FB.rememberSettlementSites(FB.state, FB.state.player.provinceId);
+  });
 });
 
 test('per-rung prices and multi-rank claims use the complete crossed cost',
@@ -681,7 +685,7 @@ test('legacy event promotions are retired and inheritance cannot bypass rank rev
 
     expect(result).toEqual({
       retired:[],
-      directTierEvents:['military_barony_victory'],
+      directTierEvents:[],
       independenceOfferTierMin:4,
       tierAfterInheritance:1,
       inheritancePaid:true

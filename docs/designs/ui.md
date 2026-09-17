@@ -1,5 +1,56 @@
 # UI: keyboard & mobile
 
+## County progression reviews
+
+The road-to-Count list offers named higher-ruler county grants and challenges in
+counties where the player holds a barony. No available grant explains protected
+seats, last counties and vassal ownership. Grant review names its selected county,
+grantor, cost and chance. Challenge review shows incumbent, defending side,
+authorization, justification, political costs, victory recognition and defeat
+terms before declaration. Supporting rules use shared header Details.
+
+Recognition is a visible Deed for disputed vassal counties. Its review separates
+cost on acceptance from refusal, explains the cooldown, and states that rival
+claims survive. Campaign details retain the declared justification and victory
+terms. Shared modal history preserves the originating list on Back. Explicit
+settlement revocation/restoration use separate reviews and retained sheet history.
+All new controls use shared cards/buttons, localization and keyboard/mobile flow.
+
+## Settlement charters
+
+Deeds and the barony review expose both existing-settlement petitions and founding.
+The charter review keeps upfront construction, completion prestige/piety, duration,
+site/county, capacity and hereditary building rights visible. An active charter is
+also accessible from Ongoing commitments. Blockers remain visible beside the action;
+shared header Details explains inheritance, occupation and conserved population.
+Cancellation has a separate review naming the non-refundable amount. Shared modal
+history retains the project view on Back, and funding replaces its spent quote.
+Controls use shared cards/buttons and localizable text for keyboard and mobile.
+
+Settlement grant reviews reuse the shared modal history and keyboard buttons.
+The searchable recipient list uses shared person cards with Stewardship and
+capacity disclosures, retaining search, scroll, focus and open Details on Cancel or Back; returning to the
+settlement refreshes ownership while retaining its scroll position. The essential
+review shows the named settlement/count, local works, gross/upkeep/dues/net or
+transferred income/upkeep/dues, capacity and hereditary construction rights.
+Calculation details use the shared header tooltip and touch disclosure. Petition
+reviews also show costs and acceptance chance. Stale terms require a fresh review.
+County government distinguishes direct holdings from named baronies and shows
+aggregate tax and troop contributions. Settlement sheets name both holder and
+supervising count; the county seat has no Grant settlement control.
+The county settlement list uses full-width rows with the holding label below the
+settlement name. Both wrap inside the panel at desktop and mobile widths; each
+row remains one keyboard-accessible button with a minimum 44px touch target.
+
+
+Settlement construction follows the named settlement holder; strategic fort controls
+follow the county holder. Settlement sheets show gross local seasonal income,
+building upkeep, dues to the count, and net local income with consistent money
+formatting. The Land panel and income/military breakdowns distinguish county and
+settlement capacity penalties. Supporting building effect scopes remain in the
+existing tooltip/touch disclosure; national technology names both capacity benefits.
+
+
 Keyboard focus owns a card's desktop tooltip until focus leaves or the pointer
 moves. Scrolling a focused card into view must not let another card passing under
 a stationary pointer replace its tooltip.
@@ -3020,7 +3071,8 @@ Muster plan offers a keyboard-accessible Show/Hide county troops button. Collaps
 the county inputs keeps their draft values and leaves estimates, global presets,
 and plan actions available. Assembly and Rally point have no explanatory tooltip.
 
-The Build deed, county building ledger and settlement construction controls require
-the same direct county-holder authority. Becoming a baron does not expose works
-through the household home-county fallback. Opening an unauthorized building
-ledger shows a localized explanation and retains the current screen and its state.
+The Build deed, building ledger and ordinary settlement construction controls
+require direct settlement ownership. A baron can develop their own settlements;
+residence alone gives no construction authority. Strategic forts remain controlled
+by the count. Unauthorized ledgers retain the current screen and show a localized
+explanation.

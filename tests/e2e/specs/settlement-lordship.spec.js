@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/bookmarks.js', 'data/map_data.js', 'data/settlements.js', 'data/economy.js',
   'data/technology.js', 'js/lordships.js', 'js/world.js', 'js/model.js',
-  'js/events.js', 'js/actions.js', 'js/main.js', 'js/save.js'
+  'js/events.js', 'js/actions.js', 'js/main.js', 'js/save.js', 'js/population.js', 'js/technology.js', 'js/modifiers.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -104,7 +104,7 @@ test('reads are detached and do not repair saves, generate courts, or consume RN
         charter:FB.settlementLordship(s, pid, 1).obligations.charterId };
     });
     expect(result).toEqual({ unchanged:true, rng:true, direct:true, count:false,
-      integrated:false, founding:false, charter:'customary_service' });
+      integrated:true, founding:false, charter:'customary_service' });
   });
 
 test('migration preserves direct holdings and excludes personal or appointed offices',

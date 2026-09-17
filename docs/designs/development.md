@@ -1,5 +1,72 @@
 # Development & buildings
 
+## Settlement founding
+
+Gentry can fund an unused site from Deeds or the barony petition review, including
+in their first generation. Development supplies capacity at 3, 5, 7 and 9; it no
+longer creates settlements automatically. A charter costs the existing barony gold
+investment upfront (normally 500) and takes `settlementFoundingSeasons` (four,
+360 days). The quoted barony prestige/piety cost is saved and paid at establishment
+(normally 250 prestige, zero piety). The household remains Gentry while building.
+
+One project reserves the next compiled slot; county transfer and inheritance retain
+it. Occupation or siege pauses its clock. Completion waits for capacity, residents,
+a living sponsor, Gentry-or-higher rank, residence in the charter county and the
+investiture resources. It then grants hereditary lordship, moves the household seat
+and awards Baron once, preserving any higher rank. Cancellation releases the slot
+without refunding construction or removing current rank/property. Existing-site
+petitions retain their established-house and Standing rules; founding is the funded
+alternative, without an additional approval roll or generation requirement.
+
+Technology review `settlement_founding` is **none**: ordinary chartering needs no
+research. Existing soft administrative capacity and building technology still apply.
+Founding grants no immediate development or extra people; the conserved county
+community partition supplies its residents.
+
+## Autonomous baron development (Phase 4)
+
+After seasonal treasury settlement, a saved rotating cursor considers at most
+24 living NPC barons, at most four rotating holdings per baron, and at most one local
+building per considered baron. Seeded selection uses only currently legal and
+affordable works. Existing technology, terrain, occupancy, county and personal
+limits remain authoritative; strategic forts remain the count's responsibility.
+The baron pays from their own purse while preserving the existing reserve for
+upkeep and dues, including the proposed building's upkeep. There are no routine
+player approvals or free construction. Repeating a seasonal pass is a no-op.
+This is automation of existing construction, not a separately gated capability;
+the lordship review remains `none`, and individual building gates still apply.
+
+
+## Settlement lordship accounting (Phase 3)
+
+The Deeds building summary retains its compact icon grid with one row per directly held settlement, including empty
+holdings. Each row opens its exact settlement; building counts remain local to it. Its holding count reads "Settlements"; the cap
+still counts only directly held settlements. Settlement sheets describe a player
+holding as "held by you", including personal baronies within another ruler's county.
+
+Ordinary construction and demolition require direct settlement lordship. A territorial
+baron can develop their granted sites; a count cannot build in a delegated site.
+Build, ledgers, settlement controls, automation, AI eligibility, and mutation APIs
+share this rule. County forts remain strategic county-holder assets at their existing
+physical site, including when that settlement is delegated. County residence alone
+never grants either kind of authority.
+
+The transient building index includes settlement subtotals. Local tax, upkeep,
+piety, levy, retinue, and archers follow the holder. Development, Popular support,
+population capacity, migration attraction, famine/crisis protection, and community
+faith pressure retain county scope; research goes once to the sovereign through
+`techResearchRate`. Prestige and Popular support granted on construction remain
+one-time effects. `buildingEffectScope` exposes local/county/national classification.
+
+Occupancy and repeat-copy prices include ruins and remain physical county properties.
+County limits include all sites; personal limits count only directly held works.
+Grants, succession, construction, demolition, and political transfers invalidate the
+ownership/military or building projections without resetting construction history.
+AI counts use their treasury reserves and cannot build for free before accounting
+is active. `buildBarony` provides the paid, authority-checked construction primitive;
+Phase 4 schedules autonomous seasonal choices after treasury settlement.
+
+
 The building ledger displays the standing count and how many additional copies
 can be raised under current conditions. Remaining copies are capped by county
 and demesne limits, not just the number of suitable settlement placements.
@@ -33,21 +100,17 @@ development or change development-driven calculations.
 `FB.settlementDevelopment(state, pid)` is the read-only growth explanation shared by
 province, settlement, and Guide UI. It returns current and bookmark development plus
 the next settlement-growth threshold that will actually change something: 3, 5, 7, and 9
-each add one settlement, 4 promotes the head village to a town, 6 promotes the second
+each unlock one founding slot, 4 promotes the head village to a town, 6 promotes the second
 settlement to a town, and 7 promotes the head settlement to a city. Authored settlement baselines
 (`data/settlements.js`) floor a slot's kind and an authored list can make a slot
 visible early; thresholds already satisfied that way are skipped rather than promised.
 The UI displays the starting development and next threshold together so historical starting
 advantage is not described as growth achieved during play.
 
-**Development is buildings.** Tier-3+ direct county holders raise named buildings (`FBDATA.buildings` in
-map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, picker in ui.js.
-Baron status alone grants no county construction or demolition authority. The
-Build deed, ledger, settlement controls, automation and mutation APIs share the
-direct-holder check; residence and stale county lists cannot substitute for it.
-Household scope retains its home-county fallback. Existing buildings in old saves
-remain county assets, including works previously commissioned by a baron.
-This corrects authority checks and introduces no new technology capability.
+**Development is buildings.** Tier-3+ settlement holders raise named works
+(`FBDATA.buildings` in map_data.js) through `FB.build`/`FB.buildable` and the
+building picker. Baron status alone grants no land or construction authority;
+a concrete lordship does. Existing works remain attached to their settlement.
 After choosing a province when necessary, `UI.showBuildings` presents a persistent
 building-first county ledger. A sticky native county selector remains visible while the
 ledger scrolls, so touch and keyboard players can move directly between every held county.
@@ -329,3 +392,15 @@ and initial food loading. Every new building also reserves ten seasons of its ow
 upkeep. Existing construction limits, priorities and technology gates remain; annual
 public distributions run only after construction. Player automation reads government
 expenses through reliable net income but does not enforce the AI savings target.
+
+
+Annual construction and public distributions can share the full treasury snapshot
+when the construction pass buys nothing. The snapshot is created after annual
+population, succession and ruler agency. Any successful ordinary-building purchase
+clears the handoff before changing buildings/development; public distributions then
+rebuild their snapshot, preserving post-construction income, upkeep and reserve rules.
+The handoff is local to worldTick, never persisted or shared with seasonal accounting.
+Military construction reserves are still read again for the distribution pass.
+Profiler counters distinguish annual unchanged-snapshot reuse from a fresh
+post-construction snapshot. This is a read-reuse optimization, with no research gate
+or change to spending eligibility, building choices, simulation order or RNG.

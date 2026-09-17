@@ -2922,13 +2922,10 @@ window.FB = window.FB || {};
   function rankElevationChance(s, status) {
     if (!status.eligible) return null;
     if (status.route === 'barony' && status.grantorId) {
-      return FB.liegeGrantChance(s,
-        0.15 + FB.standingOf(s, {
-          kind:'character', id:status.grantorId
-        }) / 400 + s.player.prestige / 1200);
+      return FB.baronyGrantChance(s, status.grantorId);
     }
-    if (status.route === 'county' && status.liegeId && FB.namedChance) {
-      return FB.namedChance(s, 'liege_grant', {});
+    if (status.route === 'county' && status.grantorId) {
+      return FB.countyPetitionChance(s, status.grantorId);
     }
     return null;
   }
@@ -2955,11 +2952,155 @@ window.FB = window.FB || {};
     return detail;
   }
 
-  UI.showRankElevation = function (route) {
+  UI.showCountyProgression = function () {
+    const s = FB.state;
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T('Gain a county through investiture, inheritance or a county challenge. Existing baronies and private property keep their owners.')) + '</p></div><div class="gm-list">';
+    const grants = FB.countyGrantCandidates(s);
+    grants.forEach(function (q) {
+      h += '<button class="actionbtn" data-county-grant="' + esc(q.provinceId) + '">' +
+        esc(FB.T('Petition {ruler} for {county}', { ruler:s.realms[q.grantorId].name, county:FB.world.byId[q.provinceId].name })) + '</button>';
+    });
+    if (FB.landedBaron(s)) {
+      if (!grants.length) h += '<p class="warnote">' + esc(FB.T('No county is available from a higher ruler. Their seat, last personal county and vassals’ counties are protected.')) + '</p>';
+      const seen = {};
+      FB.directSettlements(s).forEach(function (site) {
+        if (seen[site.provinceId]) return;
+        seen[site.provinceId] = true;
+        h += '<button class="actionbtn" data-county-challenge="' + esc(site.provinceId) + '">' + esc(FB.T('Challenge for {county}', { county:FB.world.byId[site.provinceId].name })) + '</button>';
+      });
+    }
+    Object.keys(s.settlementLordships.disputedCounties || {}).sort().forEach(function (pid) {
+      if (FB.settlementCountyHolder(s, pid) === 'player') h += '<button class="actionbtn" data-county-recognition="' + esc(pid) + '">' + esc(FB.T('Seek recognition of {county}', { county:FB.world.byId[pid].name })) + '</button>';
+    });
+    openModal(FB.T('The road to Count'), h + '</div>', { historyView:true, noFocus:true });
+    document.querySelectorAll('[data-county-grant]').forEach(function (el) { el.onclick = function () { UI.showRankElevation('county', el.dataset.countyGrant); }; });
+    document.querySelectorAll('[data-county-challenge]').forEach(function (el) { el.onclick = function () { UI.showCountyChallenge(el.dataset.countyChallenge); }; });
+    document.querySelectorAll('[data-county-recognition]').forEach(function (el) { el.onclick = function () { UI.showCountyRecognition(el.dataset.countyRecognition); }; });
+  };
+  UI.showCountyChallenge = function (pid, replace) {
+    const s = FB.state, q = FB.countyChallengeQuote(s, pid);
+    const names = { sanctioned:FB.T('Superior-authorized challenge'), claim:FB.T('Claim-backed rebellion'), usurpation:FB.T('Unclaimed usurpation') };
+    let h = '<div class="gm-body-text"><div class="asset-owned-row" data-county-challenge-review>' +
+      kv('County', esc(FB.world.byId[pid].name)) + kv('Justification', esc(names[q.justification])) +
+      kv('Incumbent', esc(s.realms[q.countId] ? s.realms[q.countId].name : FB.T('None'))) +
+      kv('Defending side', esc(s.realms[q.enemy] ? s.realms[q.enemy].name : FB.T('None'))) +
+      kv('Superior', esc(q.superior ? q.authorized ? FB.T('Authorizes your challenge; does not join the fighting.') :
+        FB.T('Opposes you and defends the incumbent, even if you have a claim.') : FB.T('Independent county: no superior to petition.'))) +
+      kv('Victory', esc(q.superior && !q.authorized ? FB.T('Control of this county under its superior; recognition must be petitioned afterward.') : FB.T('Recognized control of this county.'))) +
+      kv('Defeat', esc(FB.T('Ordinary campaign peace and capture rules apply. Your barony and unrelated private property are not automatically confiscated.')));
+    if (q.sacrilege) h += '<p class="warnote">' + esc(FB.T('Sacrilege: lose all piety, lose {standing} Standing with living Catholic rulers, and become excommunicated.', { standing:Math.abs(FBDATA.balance.religiousHeadWarOpinion === undefined ? -40 : FBDATA.balance.religiousHeadWarOpinion) })) + '</p>';
+    if (q.standingCost) h += kv('Superior Standing', esc(FB.T('Lose up to {amount}', { amount:-q.standingCost })));
+    h += kv('Enemy Standing', esc(FB.T('Becomes Hostile')));
+    if (q.aggression) h += kv('Standing penalties', esc(FB.T('Vassals {vassal}; foreign rulers {foreign}', {
+      vassal:standingChangeRange(q.aggression.vassals), foreign:standingChangeRange(q.aggression.foreign)
+    }))) + kv('Victory unrest', esc(FB.T('{amount} Popular support; {days} days', {
+      amount:q.aggression.modifier ? q.aggression.modifier.fx.commonVoice : 0,
+      days:q.aggression.modifier ? q.aggression.modifier.days : 0
+    }))) + kv('Aggression cost', esc(FB.T('{prestige} prestige; condemnation from vassals and foreign courts; unrest after conquest and a restoration claim for the displaced dynasty.', { prestige:q.aggression.prestigeChange })));
+    if (q.reason) h += '<p class="warnote">' + esc(q.reason) + '</p>';
+    const last = s.settlementLordships.countyConsentTurn;
+    const consentReady = q.ready && q.superior && !q.authorized && (last === undefined || s.turn - last >= FB.countyPetitionDays());
+    h += '</div>';
+    if (q.superior && !q.authorized) h += '<p>' + esc(FB.T('Authorization requires a county claim and 65 Standing with the superior. Requests are free; retry after {days} days.', { days:FB.countyPetitionDays() })) + '</p>';
+    h += '</div><div class="gm-footer">';
+    if (q.superior && !q.authorized) h += '<button class="btn" id="county-consent"' + (consentReady ? '' : ' disabled') + '>' + esc(FB.T('Request authorization')) + '</button>';
+    h += '<button class="btn danger" id="county-declare"' + (q.ready ? '' : ' disabled') + '>' + esc(FB.T('Declare county challenge')) + '</button></div>';
+    openModal(FB.T('County challenge'), h, { historyView:true, replaceView:!!replace, noFocus:true,
+      titleDetailsHtml:'<p>' + esc(FB.T('The objective is this county only. The count’s direct settlements pass with the county; unrelated baronies and private holdings do not. Authorization is tied to the named incumbent, superior and challenger. An unauthorized claim does not prevent superior opposition.')) + '</p>' });
+    if ($('county-consent')) $('county-consent').onclick = function () {
+      if (!FB.requestCountyChallenge(FB.state, q)) toast(FB.T('Terms changed. Review the current challenge.'));
+      UI.showCountyChallenge(pid, true);
+    };
+    $('county-declare').onclick = function () {
+      if (!FB.beginCountyChallenge(FB.state, q)) { toast(FB.T('Terms changed. Review the current challenge.')); UI.showCountyChallenge(pid, true); return; }
+      UI.closeModal(); UI.refresh();
+    };
+  };
+  UI.showCountyRecognition = function (pid, replace) {
+    const s = FB.state, q = FB.countyRecognitionQuote(s, pid);
+    const h = '<div class="gm-body-text"><div class="asset-owned-row" data-county-recognition-review>' +
+      kv('County', esc(FB.world.byId[pid].name)) + kv('Superior', esc(q.superior ? s.realms[q.superior].name : FB.T('None'))) +
+      kv('Cost if accepted', esc(rankElevationCostValue(q.cost))) +
+      kv('Acceptance chance', esc(FB.T('{chance}%', { chance:Math.round(q.chance * 100) }))) +
+      '<p>' + esc(FB.T('Acceptance removes disputed status. Rival claims survive. Refusal leaves control intact and costs no investiture resources; retry after {days} days.', { days:FB.countyPetitionDays() })) + '</p>' +
+      (q.reason ? '<p class="warnote">' + esc(q.reason) + '</p>' : '') + '</div></div><div class="gm-footer"><button class="btn primary" id="county-recognize"' + (q.ready ? '' : ' disabled') + '>' + esc(FB.T('Petition for recognition')) + '</button></div>';
+    openModal(FB.T('County recognition'), h, { historyView:true, replaceView:!!replace, noFocus:true });
+    $('county-recognize').onclick = function () {
+      const result = FB.petitionCountyRecognition(FB.state, q);
+      if (result && result.accepted) { UI.closeModal(); UI.refresh(); }
+      else { if (result) toast(FB.T('Recognition refused. You retain control.')); UI.showCountyRecognition(pid, true); }
+    };
+  };
+
+  UI.showSettlementFounding = function (replace) {
+    const s = FB.state, status = FB.settlementFoundingStatus(s);
+    const q = status ? status.project : FB.settlementFoundingEligibility(s, s.player.provinceId);
+    const info = FB.world.sitesByProv[q.provinceId];
+    const site = info && info.list[q.settlement];
+    const ready = status ? status.ready : q.ready;
+    const reason = status ? status.reason : q.reason;
+    const charter = FB.feudalCharterDef('customary_service');
+    const capacity = FB.settlementCapacityProjection(s);
+    const countId = FB.settlementCountyHolder(s, q.provinceId);
+    const count = countId === 'player' ? s.chars[s.player.charId] :
+      countId && FB.realmRulerCharacterSnapshot(s, countId);
+    let h = '<div class="gm-body-text" data-founding-review><div class="asset-owned-row">' +
+      kv('Settlement', esc(site ? site.name : FB.T('No unused site'))) +
+      kv('County', esc(FB.world.byId[q.provinceId].name)) +
+      kv('County ruler', esc(count ? FB.fullName(count) : FB.T('Awaiting a ruler'))) +
+      kv(status ? 'Construction paid' : 'Pay now', esc(FB.T('{money:amount}', {
+        amount:status ? q.funded : q.gold }))) +
+      kv('Due at completion', esc(q.piety ? FB.T('{prestige} prestige and {piety} piety', q) :
+        FB.T('{prestige} prestige', q))) +
+      kv(status ? 'Construction remaining' : 'Construction time', esc(FB.T('{days} days', {
+        days:status ? status.days : q.days }))) +
+      kv('Benefit', esc(FB.T('A hereditary settlement, building control and Baron rank. Your household seat moves here; existing private property stays where it is.')));
+    h += kv('Obligations', esc(FB.T('{tax}% of local tax and {levy}% of local troops', {
+      tax:Math.round(charter.taxShare * 100), levy:Math.round(charter.levyShare * 100)
+    }))) + kv('Direct settlements after founding', esc(FB.T('{held} / {limit}', {
+      held:capacity.directCount + 1, limit:capacity.limit
+    })));
+    if (capacity.directCount + 1 > capacity.limit) h += '<p class="warnote">' +
+      esc(FB.T('Above capacity: your direct settlement income and troops will be reduced.')) + '</p>';
+    if (!status) h += kv('County capacity', esc(FB.T('{established} established / {capacity} unlocked', q)));
+    h += '<p>' + esc(FB.T('Construction is paid upfront and is not refundable. Prestige is paid only when the settlement is established.')) + '</p>';
+    if (reason) h += '<p class="warnote" data-founding-status>' + esc(reason) + '</p>';
+    h += '</div></div><div class="gm-footer">' +
+      '<button class="btn primary" id="founding-confirm"' + (ready ? '' : ' disabled') + '>' +
+      esc(status ? FB.T('Establish settlement') : FB.T('Fund charter')) + '</button>';
+    if (status) h += '<button class="btn" id="founding-cancel-review">' + esc(FB.T('Cancel charter...')) + '</button>';
+    else h += '<button class="btn" id="founding-petition">' + esc(FB.T('Petition for an existing settlement')) + '</button>';
+    h += '</div>';
+    openModal(FB.T('Settlement charter'), h, { historyView:true, historyBack:true, noFocus:true, replaceView:!!replace,
+      titleDetailsHtml:'<p>' + esc(FB.T('One charter per household and county. Occupation or siege pauses construction. Your heir keeps the charter if you die, and a change of count does not revoke it. Residents relocate within the county; founding creates no population or development. Completion is automatic when time, local capacity and investiture requirements are met.')) + '</p>' });
+    $('founding-confirm').onclick = function () {
+      const changed = status ? FB.completeSettlementFounding(FB.state, q) : FB.beginSettlementFounding(FB.state, q);
+      if (!changed) toast(FB.T('Terms changed. Review the current charter.'));
+      if (changed && status) { UI.closeModal(); UI.refresh(); }
+      else UI.showSettlementFounding(true);
+    };
+    if ($('founding-petition')) $('founding-petition').onclick = function () { UI.showRankElevation('barony'); };
+    if ($('founding-cancel-review')) $('founding-cancel-review').onclick = function () {
+      openModal(FB.T('Cancel settlement charter'), '<div class="gm-body-text"><p>' +
+        esc(FB.T('Release the reserved site and stop construction? The {money:amount} already paid will not be refunded. Your current rank and property are retained.', { amount:q.funded })) +
+        '</p></div><button type="button" class="btn danger" id="founding-cancel-confirm">' + esc(FB.T('Cancel charter')) +
+        '</button><div class="gm-footer"><button type="button" class="btn" id="founding-keep-back">' + esc(FB.T('Back')) + '</button></div>',
+        { historyView:true, historyBack:true });
+      $('founding-keep-back').onclick = function () { UI.backModal(); };
+      $('founding-cancel-confirm').onclick = function () {
+        if (FB.cancelSettlementFounding(FB.state, q)) { UI.closeModal(); UI.refresh(); }
+        else { toast(FB.T('Terms changed. Review the current charter.')); UI.showSettlementFounding(); }
+      };
+    };
+    return true;
+  };
+
+  UI.showRankElevation = function (route, county) {
     const s = FB.state;
     const status = s && FB.rankElevationStatus
-      ? FB.rankElevationStatus(s, null, { route:route }) : null;
+      ? FB.rankElevationStatus(s, null, { route:route, county:county }) : null;
     if (!status || !status.visible) return false;
+    const reviewedContext = FB.rankElevationContext(s, status);
     const actionId = rankElevationActionId(route);
     const currentTitle = FB.styledTitle(s);
     const nextTitle = status.titleData
@@ -2972,6 +3113,8 @@ window.FB = window.FB || {};
     const detailsId = 'rank-elevation-confirm-details';
     let h = '<div class="gm-body-text" data-rank-elevation-sheet="' +
       esc(route) + '">' + rankTransitionHtml(currentTitle, nextTitle);
+    if (route === 'county' && status.site) h += kv('County granted', esc(FB.world.byId[status.site.provinceId].name)) +
+      kv('Granting ruler', esc(s.realms[status.grantorId].name)) + '<p>' + esc(FB.T('Your existing barony and private property remain yours. You become Count under the granting ruler.')) + '</p>';
     if (route === 'barony') {
       h += kv('Requirements', esc(FB.T(
         'An established gentle house, at least {prestige} prestige, and at least {standing} Standing with your lord.', {
@@ -2979,6 +3122,8 @@ window.FB = window.FB || {};
           standing:FBDATA.balance.baronyOpinion
         })));
     }
+    if (route === 'barony') h += '<p><button class="btn" id="rank-founding">' + esc(FB.T('Found a new settlement instead')) + '</button></p>';
+    if (status.settlementGrant) h += settlementGrantSummary(s, status.settlementGrant, false);
     h += kv(route === 'barony' ? FB.T('Cost if granted') : FB.T('Cost'),
       esc(rankElevationCostValue(status.cost))) +
       kv('Benefits', esc(rankElevationBenefit(status.targetTier)));
@@ -3012,6 +3157,7 @@ window.FB = window.FB || {};
       esc(rankElevationConfirmLabel(route)) + '</button></div>';
     openModal(FB.T('Rank elevation'), h, {
       modalClass:'rank-elevation-modal',
+      historyView:true,
       noFocus:true,
       modalAction:actionId,
       modalTarget:'action:' + actionId,
@@ -3019,15 +3165,16 @@ window.FB = window.FB || {};
       guide:guideModalOption('rank-elevation-guide', 'roles',
         'Guide: ranks and roles')
     });
+    if ($('rank-founding')) $('rank-founding').onclick = function () { UI.showSettlementFounding(); };
     const confirm = $('rank-elevation-confirm');
     if (confirm) confirm.addEventListener('click', function () {
       if (confirm.getAttribute('aria-disabled') === 'true') {
-        UI.showRankElevation(route);
+        UI.showRankElevation(route, county);
         return;
       }
-      const result = FB.attemptRankElevation(FB.state, route);
+      const result = FB.attemptRankElevation(FB.state, route, reviewedContext);
       if (!result || !result.attempted) {
-        UI.showRankElevation(route);
+        UI.showRankElevation(route, county);
         return;
       }
       UI.closeModal();
@@ -7379,13 +7526,13 @@ window.FB = window.FB || {};
         place:place
       });
     }
-    return FB.T('{place}; standing benefits count across the demesne', {
+    return FB.T('{place}; income, upkeep and troops follow its holder. Population effects serve the county; research serves the nation', {
       place:place
     });
   }
 
   function buildingTransferRule() {
-    return FB.T('Belongs to the county and follows it through conquest');
+    return FB.T('Follows settlement lordship; private household property is separate');
   }
 
   function buildingExpiryRule() {
@@ -7442,8 +7589,8 @@ window.FB = window.FB || {};
   UI.showBuildings = function (pid, idx, keep) {
     const s = FB.state;
     const provs = FB.buildingCounties(s);
-    if (!provs.length || (pid && !FB.canManageCountyBuildings(s, pid))) {
-      UI.toast(FB.T('You must directly hold a county to manage its buildings.'));
+    if (!provs.length || (pid && provs.indexOf(pid) < 0)) {
+      UI.toast(FB.T('You must directly hold a settlement to manage its buildings.'));
       return;
     }
     const demesneContext = FB.buildingDemesneContext(s);
@@ -8346,6 +8493,175 @@ window.FB = window.FB || {};
     return h + '</article>';
   }
 
+  function settlementGrantSummary(s, q, giving) {
+    const site = FB.settlementsOf(s, q.provinceId)[q.settlement];
+    const grantor = q.grantorId && s.chars[q.grantorId];
+    let h = '<div class="gm-body-text" data-settlement-grant-summary>' +
+      kv('Settlement', esc(site.name)) +
+      kv('Count', esc(grantor ? FB.fullName(grantor) : s.realms[q.realmId].name));
+    if (giving) {
+      h += kv('Direct income given up / season', esc(FB.T('{money:amount}', { amount:q.lostRevenue }))) +
+        kv('Upkeep transferred / season', esc(FB.T('{money:amount}', { amount:q.upkeep }))) +
+        kv('Dues from this settlement / season', esc(FB.T('{money:amount}', { amount:q.dues }))) +
+        kv('Direct settlements', esc(FB.T('{before} to {after} / {limit}', {
+          before:q.directBefore, after:q.directAfter, limit:q.limit
+        }))) + '<p>' + esc(FB.T('The baron and their heirs control local construction. Private property and the county fort stay with their current owners.')) + '</p>';
+    } else {
+      h += kv('Gross local income / season', esc(FB.T('{money:amount}', { amount:q.revenue }))) +
+        kv('Building upkeep / season', esc(FB.T('{money:amount}', { amount:q.upkeep }))) +
+        kv('Dues to count / season', esc(FB.T('{money:amount}', { amount:q.dues }))) +
+        kv('Net local income / season', esc(FB.T('{money:amount}', { amount:q.net }))) +
+        kv('Direct settlements', esc(FB.T('{held} / {limit}', { held:q.recipientCount, limit:q.recipientLimit })));
+    }
+    if (giving) h += kv('Baron direct settlements', esc(FB.T('{held} / {limit}', {
+      held:q.recipientCount, limit:q.recipientLimit
+    })));
+    if (q.recipientCount > q.recipientLimit) h += '<p class="warnote">' + esc(FB.T(
+      'Above capacity: local income and troops are reduced by {percent}%. The amounts shown include this reduction.', {
+        percent:Math.round((1 - q.recipientPenalty) * 100)
+      })) + '</p>';
+    h += kv('Obligations', esc(FB.T('{tax}% of local tax and {levy}% of local troops', {
+      tax:Math.round(q.taxShare * 100), levy:Math.round(q.levyShare * 100)
+    })));
+    const names = q.buildings.map(function (b) {
+      const def = FBDATA.buildings[b.id];
+      const name = def ? FB.dataText(s, s.player.charId, 'building', b.id, def, 'name', {}) : b.id;
+      return b.ruined ? FB.T('{building} (ruined)', { building:name }) : name;
+    });
+    h += kv('Local works', esc(names.length ? names.join(', ') : FB.T('None'))) + '</div>';
+    return h;
+  }
+
+  UI.showSettlementGrant = function (pid, idx, returnOptions) {
+    const s = FB.state;
+    const originScroll = $('gm-body').scrollTop;
+    const openDetails = Array.prototype.map.call($('gm-body').querySelectorAll(
+      '.settcard-details:not(.hidden), .event-choice-details:not(.hidden)'), function (node) { return node.id; });
+    let granted = false;
+    const restoreSettlement = function () {
+      UI.showSettlement(pid, idx, returnOptions);
+      for (const id of openDetails) {
+        const detail = id && $(id);
+        if (detail) detail.classList.remove('hidden');
+      }
+      $('genmodal').querySelectorAll('.settcard-info').forEach(function (button) {
+        if (openDetails.indexOf(button.getAttribute('aria-controls')) < 0) return;
+        button.setAttribute('aria-expanded', 'true');
+        button.setAttribute('aria-label', FB.T('Hide details'));
+        button.title = FB.T('Hide details');
+      });
+      setTimeout(function () {
+        const focus = $('settlement-grant') || $('gm-cancel');
+        if (focus) focus.focus({ preventScroll:true });
+        $('gm-body').scrollTop = originScroll;
+      }, 0);
+    };
+    if (!FB.settlementGrantSites(s, pid, 'player').some(function (site) {
+      return site.settlement === idx;
+    })) return false;
+    const candidates = Object.keys(s.chars).filter(function (cid) {
+      return FB.settlementGrantRecipient(s, cid, 'player');
+    }).sort(function (a, b) {
+      return FB.fullName(s.chars[a]).localeCompare(FB.fullName(s.chars[b])) || a.localeCompare(b);
+    });
+    let h = '<label for="grant-search">' + esc(FB.T('Find recipient')) + '</label>' +
+      '<input type="search" id="grant-search" autocomplete="off">' +
+      '<div class="gm-list" data-settlement-grant-candidates>';
+    for (const cid of candidates) {
+      const c = s.chars[cid], capacity = FB.settlementCapacityProjection(s, { kind:'character', id:cid });
+      h += personAssignmentCard({ person:c, name:FB.fullName(c),
+        faceState:FB.stationName(FB.stationOf(c)), data:{ grantRecipient:cid },
+        rows:[{ label:'Stewardship', value:FB.skillOf(c, 'ste') },
+          { label:'Direct settlements', value:FB.T('{held} / {limit}', { held:capacity.directCount, limit:capacity.limit }) },
+          { label:'Consequence', kind:'consequence', value:FB.T('Hereditary control of this settlement and its local works.') }] });
+    }
+    if (!candidates.length) h += '<p class="hint">' + esc(FB.T('No eligible free adult relative, gentle household member or local noble is available.')) + '</p>';
+    h += '</div><p class="hint hidden" id="grant-empty" role="status">' + esc(FB.T('No matching recipients.')) +
+      '</p><div class="gm-footer"><button type="button" class="btn" id="grant-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Grant settlement'), h, { historyView:true, historyBack:true,
+      historyBackRender:restoreSettlement,
+      titleDetailsHtml:'<p>' + esc(FB.T('Choose a free adult relative, gentle household member or noble resident of your directly held counties. The recipient becomes Baron. Review the income and authority transferred before granting. No gold or day cost.')) + '</p>' });
+    FB.paintFaces($('gm-body'), s);
+    $('grant-search').addEventListener('input', function () {
+      const query = this.value.toLocaleLowerCase().trim();
+      let matched = 0;
+      $('gm-body').querySelectorAll('[data-grant-recipient]').forEach(function (button) {
+        const c = s.chars[button.getAttribute('data-grant-recipient')];
+        const match = FB.fullName(c).toLocaleLowerCase().indexOf(query) >= 0;
+        button.closest('.person-assignment-shell').classList.toggle('hidden', !match);
+        if (match) matched++;
+      });
+      $('grant-empty').classList.toggle('hidden', matched > 0 || !candidates.length);
+    });
+    $('grant-back').addEventListener('click', UI.backModal);
+    $('gm-body').querySelectorAll('[data-grant-recipient]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (granted) { toast(FB.T('This settlement has already been granted.')); return; }
+        UI.showSettlementGrantReview(pid, idx, button.getAttribute('data-grant-recipient'), function () { granted = true; });
+      });
+    });
+    return true;
+  };
+  UI.showCharacterSettlementGrant = function (cid) {
+    const s = FB.state;
+    if (!FB.settlementGrantRecipient(s, cid, 'player')) return false;
+    let h = '<p class="hint">' + esc(FB.T('Choose a settlement for {name}. Review the transfer before granting.', {
+      name:FB.fullName(s.chars[cid])
+    })) + '</p><div class="gm-list">';
+    const sites = [];
+    for (const pid of FB.realmHeldCounties(s, 'player')) {
+      for (const site of FB.settlementGrantSites(s, pid, 'player')) sites.push(site);
+    }
+    sites.forEach(function (site, i) {
+      h += '<button type="button" class="actionbtn" data-character-grant-site="' + i + '">' +
+        esc(FB.T('{settlement} in {county}', {
+          settlement:FB.settlementsOf(s, site.provinceId)[site.settlement].name,
+          county:FB.world.byId[site.provinceId].name
+        })) + '</button>';
+    });
+    if (!sites.length) h += '<p class="hint">' + esc(FB.T('No settlement is available to grant. County seats are protected.')) + '</p>';
+    h += '</div><div class="gm-footer"><button type="button" class="btn" id="character-grant-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Grant settlement'), h, { historyView:true, historyBack:true });
+    $('character-grant-back').onclick = UI.backModal;
+    $('gm-body').querySelectorAll('[data-character-grant-site]').forEach(function (button) {
+      button.onclick = function () {
+        const site = sites[Number(button.dataset.characterGrantSite)];
+        UI.showSettlementGrantReview(site.provinceId, site.settlement, cid);
+      };
+    });
+    return true;
+  };
+  UI.showSettlementGrantReview = function (pid, idx, cid, onGranted) {
+    const s = FB.state, quote = FB.settlementGrantQuote(s, pid, idx, cid, 'player');
+    if (!quote) { toast(FB.T('This grant is no longer available.')); return false; }
+    let h = '<div class="gm-body-text">' + kv('New baron', esc(FB.fullName(s.chars[cid]))) + '</div>' +
+      settlementGrantSummary(s, quote, true) +
+      '<p class="hint">' + esc(FB.T('No gold or day cost. This hereditary grant takes effect immediately.')) + '</p>' +
+      '<p class="warnote" id="grant-status" role="status"></p>' +
+      '<div class="gm-footer"><button type="button" class="btn" id="grant-cancel">' + esc(FB.T('Cancel')) +
+      '</button><button type="button" class="btn primary" id="grant-confirm">' + esc(FB.T('Grant settlement')) + '</button></div>';
+    openModal(FB.T('Review settlement grant'), h, { historyView:true, historyBack:true,
+      titleDetailsHtml:'<p>' + esc(FB.T('Income reflects current buildings, population and administration. Giving up one direct settlement may improve returns from your remaining holdings when you exceed capacity. The baron pays local upkeep and develops the settlement from their own income.')) + '</p>' });
+    $('grant-cancel').addEventListener('click', UI.backModal);
+    $('grant-confirm').addEventListener('click', function () {
+      if (FB.state !== s || !FB.confirmSettlementGrant(s, quote)) {
+        $('grant-status').textContent = FB.T('The terms changed. Go back and review the grant again.');
+        $('grant-confirm').disabled = true;
+        return;
+      }
+      FB.news(s, FB.msg('news.lordship.player_grant', 'You grant {settlement} to {baron} and their heirs.', {
+        settlement:FB.settlementsOf(s, pid)[idx].name, baron:FB.fullName(s.chars[cid])
+      }));
+      if (onGranted) onGranted();
+      $('grant-status').textContent = FB.T('Settlement granted.');
+      $('grant-confirm').disabled = true;
+      $('grant-cancel').textContent = FB.T('Back');
+      UI.refresh();
+    });
+    return true;
+  };
+
   UI.showSettlement = function (pid, idx, options) {
     options = options || {};
     const s = FB.state;
@@ -8354,20 +8670,35 @@ window.FB = window.FB || {};
     const st = FB.settlementsOf(s, pid)[idx];
     if (!st) return;
     const holdId = (s.holder && s.holder[pid]) || s.owner[pid];
-    /* A commoner's home county is a display fallback in FB.demesne, not
-       authority over county works. Building and fortification information is
-       relevant only while the player is the county's landed holder. */
+    /* Ordinary works follow settlement lordship; strategic forts follow the count. */
     const managesCounty = FB.canManageCountyBuildings(s, pid);
-    const holderText = holdId === 'player'
-      ? FB.T('your household')
+    const managesSettlement = FB.settlementConstructionAuthority(s, pid, idx).direct;
+    const settlementHolder = FB.settlementHolder(s, pid, idx);
+    const holderText = managesSettlement ? FB.T('you') : settlementHolder && settlementHolder.kind === 'character'
+      ? (s.chars[settlementHolder.id] ? s.chars[settlementHolder.id].name : FB.T('Unknown holder'))
+      : holdId === 'player' ? FB.T('your household')
       : (s.realms[holdId] ? s.realms[holdId].name : FB.T('no one'));
+    const fiscal = FB.settlementFiscalProjection(s, pid, idx);
+    const linkedHolder = !managesSettlement && (settlementHolder && settlementHolder.kind === 'character'
+      ? s.chars[settlementHolder.id] : FB.realmRulerCharacterSnapshot(s, holdId));
+    const holderMarkup = linkedHolder
+      ? '<button type="button" class="linklike" id="settlement-holder-link">' + esc(FB.fullName(linkedHolder)) + '</button>'
+      : esc(holderText);
     let h = '<div class="gm-body-text settlement-context"><p>' +
       esc(FB.T('{kind} in {county} county · held by {holder}', {
-        kind:settlementKindName(st.kind), county:FB.L(pr.name), holder:holderText
-      })) + '</p></div>';
+        kind:settlementKindName(st.kind), county:FB.L(pr.name), holder:'__settlement_holder__'
+      })).replace('__settlement_holder__', holderMarkup) + '</p></div>';
+    const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
+    h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
+      (s.realms[holdId] ? s.realms[holdId].name : FB.T('None')))) + '</div>';
+    if (managesCounty && managesSettlement && idx > 0) {
+      h += '<button type="button" class="actionbtn" id="settlement-grant">' + esc(FB.T('Grant settlement')) + '</button>';
+    }
+    const delegated = FB.settlementLordship(s, pid, idx);
+    const restorationHolder = FB.settlementRestorationHolder(s, pid, idx);
+    if (holdId === 'player' && idx > 0 && delegated && !delegated.playerHouse) h += '<button class="actionbtn" id="settlement-revoke">' + esc(FB.T('Revoke barony')) + '</button>';
+    if (holdId === 'player' && idx > 0 && !delegated && restorationHolder) h += '<button class="actionbtn" id="settlement-restore">' + esc(FB.T('Restore barony')) + '</button>';
     const settPop = FB.settlementPopulation ? FB.settlementPopulation(s, pid, idx) : 0;
-    const B = FBDATA.balance || {};
-    const kindTax = st.kind === 'city' ? (B.settlementCityTax || 4.5) : (st.kind === 'town' ? (B.settlementTownTax || 2.0) : (B.settlementVillageTax || 0.75));
     const developmentDetailsId = 'settlement-development-details';
     const developmentStatus = FB.settlementDevelopment
       ? FB.settlementDevelopment(s, pid) : null;
@@ -8387,15 +8718,21 @@ window.FB = window.FB || {};
       esc(FB.T('County development: {current} / {cap}', {
         current:(s.dev[pid] || 1), cap:FB.devCap(s, pid)
       })) + ' · ' + esc(FB.T('Population: ~{pop}', { pop:settPop.toLocaleString() })) +
-      ' · ' + esc(FB.T('Dues: +{tax}g/season', {
-        tax:(Math.round(kindTax * 100) / 100)
-      })) + '</b><span class="settcard-actions">' +
+      '</b><span class="settcard-actions">' +
       '<button type="button" class="btn small settcard-info"' +
       ' aria-expanded="false" aria-controls="' + developmentDetailsId + '"' +
       ' title="' + esc(FB.T('Details')) + '" aria-label="' +
       esc(FB.T('Details')) + '">?</button></span></div>' +
       '<div class="settcard-details hidden" id="' + developmentDetailsId +
       '">' + developmentDetails + '</div></div>';
+    if (fiscal) {
+      const amounts = fiscal.amounts;
+      h += '<div class="gm-body-text settlement-fiscal-summary">' +
+        kv('Gross local income / season', FB.T('{money:amount}', { amount:amounts.gross + amounts.national })) +
+        kv('Building upkeep / season', FB.T('{money:amount}', { amount:amounts.upkeep })) +
+        kv('Dues to count / season', FB.T('{money:amount}', { amount:amounts.dues })) +
+        kv('Net local income / season', FB.T('{money:amount}', { amount:amounts.net })) + '</div>';
+    }
     const settlementCommunities = FB.settlementCommunities
       ? FB.settlementCommunities(s, pid, idx) : [];
     const canControlCommunity = FB.playerControlsSettlementCommunity &&
@@ -8444,17 +8781,16 @@ window.FB = window.FB || {};
       h += '<div class="gm-body-text settlement-property"><p>' +
         property.join('<br>') + '</p></div>';
     }
-    const canRaise = managesCounty &&
+    const canRaise = managesSettlement &&
       FB.buildable(s, pid, idx).length > 0;
     if (canRaise) {
       h += '<div class="gm-list" style="margin-bottom:8px;"><button class="actionbtn" id="gm-raise">' +
         esc(FB.T('🏗 Raise a building…')) + '</button></div>';
     }
     const done = [];
-    if (managesCounty) {
-      for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
-    }
-    if (managesCounty && done.length) {
+    for (const e of FB.builtIn(s, pid)) if (e.s === idx &&
+        (e.id === 'walls' ? managesCounty : managesSettlement)) done.push(e);
+    if (done.length) {
       let cardSeq = 0;
       for (const e of done) {
         const id = e.id;
@@ -8493,7 +8829,7 @@ window.FB = window.FB || {};
             id);
         }
       }
-    } else if (managesCounty) {
+    } else if (managesSettlement) {
       h += '<p class="hint">' + esc(FB.T('No buildings yet in {settlement}.',
         { settlement: st.name })) + '</p>';
     }
@@ -8564,7 +8900,49 @@ window.FB = window.FB || {};
       guide:guideModalOption('settlement-guide', 'settlements-development',
         'Guide: settlements and development')
     });
+    if ($('settlement-holder-link')) $('settlement-holder-link').onclick = function () {
+      if (!s.chars[linkedHolder.id] && holdId !== 'player') FB.materializeRealmRuler(s, holdId, { displayOnly:true });
+      UI.showCharModal(linkedHolder.id, { view:'settlement', provinceId:pid,
+        settlement:idx, scrollTop:$('gm-body').scrollTop, options:options });
+    };
     FB.paintFaces($('gm-body'), s);
+    function reviewLordshipChange(restoring) {
+      const originScroll = $('gm-body').scrollTop;
+      const details = Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'), function (el) { return el.id; });
+      let changed = false;
+      function returnToSettlement() {
+        UI.showSettlement(pid, idx, options);
+        details.forEach(function (id) {
+          const el = $(id); if (el) el.classList.remove('hidden');
+          document.querySelectorAll('[aria-controls]').forEach(function (button) {
+            if (button.getAttribute('aria-controls') === id) button.setAttribute('aria-expanded', 'true');
+          });
+        });
+        setTimeout(function () {
+          const button = $((restoring !== changed) ? 'settlement-restore' : 'settlement-revoke') || $('gm-cancel');
+          if (button) button.focus({ preventScroll:true });
+          $('gm-body').scrollTop = originScroll;
+        }, 0);
+      }
+      const message = restoring ? FB.T('Restore hereditary ownership and building control to the dispossessed holder or their heir. You keep only customary dues. Private property stays unchanged.') :
+        FB.T('Take this barony into your direct holdings. The holder loses up to 40 Standing toward you, and this counts as political mistreatment. Their family retains a restoration right and all private property.');
+      openModal(restoring ? FB.T('Restore barony') : FB.T('Revoke barony'),
+        '<div class="gm-body-text">' + kv('Settlement', esc(st.name)) +
+        kv('Local gross income / season', esc(FB.T('{money:amount}', { amount:fiscal.amounts.gross }))) +
+        kv('Building upkeep / season', esc(FB.T('{money:amount}', { amount:fiscal.amounts.upkeep }))) +
+        '<p>' + esc(message) + '</p></div><div class="gm-footer"><button class="btn primary" id="lordship-change-confirm">' + esc(restoring ? FB.T('Restore barony') : FB.T('Revoke barony')) + '</button></div>',
+        { historyView:true, noFocus:true, historyBackRender:returnToSettlement });
+      $('lordship-change-confirm').onclick = function () {
+        changed = restoring ? FB.restoreSettlementLordship(FB.state, pid, idx, restorationHolder) :
+          FB.revokeSettlementLordship(FB.state, pid, idx, delegated.holderId);
+        if (!changed) toast(FB.T('Ownership changed. Review the settlement again.'));
+        UI.backModal(); UI.refresh();
+      };
+    }
+    if ($('settlement-revoke')) $('settlement-revoke').onclick = function () { reviewLordshipChange(false); };
+    if ($('settlement-restore')) $('settlement-restore').onclick = function () { reviewLordshipChange(true); };
+    const grantButton = $('settlement-grant');
+    if (grantButton) grantButton.addEventListener('click', function () { UI.showSettlementGrant(pid, idx, options); });
     const folkButtons = $('gm-body').querySelectorAll('[data-settlement-folk]');
     for (let folkButtonIndex = 0; folkButtonIndex < folkButtons.length;
          folkButtonIndex++) {
@@ -10276,6 +10654,7 @@ window.FB = window.FB || {};
   }
 
   function warCauseName(s, cause) {
+    if (cause.type === 'county_replacement') return FB.T('County challenge');
     if (cause.type === 'enforcement') return FB.T('Enforcement of the liege’s peace demand');
     if (cause.type === 'claims') return FB.T('Combined territorial claims');
     if (cause.type === 'aggression') return FB.T('War of Aggression');
@@ -10744,11 +11123,17 @@ window.FB = window.FB || {};
     } else if (returnContext.view === 'character') {
       UI.showCharModal(returnContext.characterId, returnContext.returnContext,
         false, returnContext.realmId || null);
+      if (returnContext.familyFocus) {
+        const button = $('gm-body').querySelector('[data-baron-family-cid="' + returnContext.familyFocus + '"]');
+        if (button) button.focus({ preventScroll:true });
+        $('gm-body').scrollTop = returnContext.scrollTop || 0;
+      }
     } else if (returnContext.view === 'family-tree') {
       UI.showFamilyTree(returnContext.familyTreeState);
     } else if (returnContext.view === 'settlement') {
       UI.showSettlement(returnContext.provinceId,
-        Number(returnContext.settlement) || 0);
+        Number(returnContext.settlement) || 0, returnContext.options);
+      if (returnContext.scrollTop !== undefined) $('gm-body').scrollTop = returnContext.scrollTop;
     } else if (returnContext.view === 'retainer') {
       UI.showRetainerManage(returnContext.characterId,
         returnContext.returnContext);
@@ -10825,6 +11210,32 @@ window.FB = window.FB || {};
      Omitting the displayed character makes the strip a compact local
      navigator: a consort sees their spouse and children, while the ruler sees
      their consort and children. */
+  function baronFamilyStripHtml(s, baron) {
+    const rows = [], seen = {};
+    function add(c, relation) {
+      if (!c || c.dead || c.id === baron.id || seen[c.id]) return;
+      seen[c.id] = true;
+      rows.push({ c:c, relation:relation });
+    }
+    for (const spouse of FB.spousesSnapshot(s, baron)) {
+      add(spouse, FB.T(spouse.sex === 'f' ? 'Wife' : 'Husband'));
+    }
+    for (const child of FB.childrenOf(s, baron)) {
+      add(child, FB.T(child.sex === 'f' ? 'Daughter' : 'Son'));
+    }
+    if (!rows.length) return '';
+    let h = '<div class="court-strip" data-baron-family role="list" aria-label="' + esc(FB.T('Ruler’s family')) + '">';
+    for (const row of rows) {
+      h += '<button type="button" class="ftchip" role="listitem" data-baron-family-cid="' + esc(row.c.id) +
+        '" aria-label="' + esc(FB.T('Open {name}’s character sheet', { name:FB.fullName(row.c) })) + '">' +
+        FB.faceTag(row.c, 50, 57) + '<span class="fname">' + esc(FB.fullName(row.c)) +
+        '</span><span class="frel">' + esc(FB.T('{relation} · age {age}', {
+          relation:row.relation, age:FB.ageOf(row.c, s.date.year)
+        })) + '</span></button>';
+    }
+    return h + '</div>';
+  }
+
   function realmCourtStripHtml(s, rid, subjectId) {
     const rows = [];
     const realm = s.realms[rid];
@@ -21119,7 +21530,7 @@ window.FB = window.FB || {};
     if (fx.research) out.push(FB.T('+{amount} research each season', {
       amount:researchNumber(fx.research)
     }));
-    if (fx.domain) out.push(FB.T('+{amount} domain capacity', { amount:fx.domain }));
+    if (fx.domain) out.push(FB.T('+{amount} county and settlement capacity', { amount:fx.domain }));
     if (fx.seaTransport) out.push(FB.T(
       'Sea transport capacity: up to {capacity} per crossing cycle.', {
         capacity:menText(FB.state, fx.seaTransport)
@@ -22370,6 +22781,18 @@ window.FB = window.FB || {};
     }
     const familyManumission = FB.familyManumissionStatus
       ? FB.familyManumissionStatus(s, c.id) : null;
+    const settlementRecipient = FB.settlementGrantRecipient(s, c.id, 'player');
+    if (FB.realmHeldCounties(s, 'player').length && c.id !== s.player.charId &&
+        (settlementRecipient || FB.kinOf(s).byId[c.id])) {
+      addInteractionAction(model, {
+        id:'management.settlement.grant', group:'management',
+        label:FB.T('Grant settlement…'), enabled:settlementRecipient,
+        blockedReason:settlementRecipient ? null : FB.T('Requires a living free adult who is not already a realm ruler.'),
+        detail:FB.T('Choose a non-seat settlement and review its income and obligations. No gold or day cost.'),
+        consequence:FB.T('Hereditary control of the settlement and its local works.'),
+        route:'settlement-grant'
+      });
+    }
     if (familyManumission && familyManumission.relevant) {
       addInteractionAction(model, {
         id:'management.family.manumission',
@@ -23260,6 +23683,9 @@ window.FB = window.FB || {};
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
     if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
+    else if (FB.directSettlements(s, { kind:'character', id:c.id }).length) {
+      h += baronFamilyStripHtml(s, c);
+    }
     h += localFolkSheetHtml(s, c);
     if (!c.dead) {
       const access = FB.rankAccessStatus(s, { kind:'character', id:c.id });
@@ -23335,6 +23761,13 @@ window.FB = window.FB || {};
       showPersonalNameEditor(cid, returnToCharacter);
     });
     if (familyContext) bindRealmFamilyNavigation($('gm-body'), familyContext);
+    $('gm-body').querySelectorAll('[data-baron-family-cid]').forEach(function (button) {
+      button.onclick = function () {
+        UI.showCharModal(button.dataset.baronFamilyCid, { view:'character', characterId:c.id,
+          returnContext:returnContext, realmId:realmIdHint, scrollTop:$('gm-body').scrollTop,
+          familyFocus:button.dataset.baronFamilyCid });
+      };
+    });
     if (displayRealmId) {
       bindWarRealmLinks($('gm-body'), s, displayRealmId, c.id, returnContext);
     }
@@ -23372,6 +23805,8 @@ window.FB = window.FB || {};
           UI.showCharacterGiftModal(c.id, returnContext);
         } else if (action.route === 'family-manumission') {
           UI.showFamilyManumissionConfirm(c.id, returnContext);
+        } else if (action.route === 'settlement-grant') {
+          UI.showCharacterSettlementGrant(c.id);
         } else if (action.route === 'courtship-begin') {
           UI.closeModal();
           if (!FB.beginCourtship(s, c)) return;
@@ -27347,7 +27782,17 @@ window.FB = window.FB || {};
   }
 
   function matchLocationSearch(query) {
-    const entries = buildLocationSearchIndex();
+    // Keep the geography index cached, but evaluate establishment against the
+    // current save on every query so founding and save loads cannot stale it.
+    const searchState = FB.game && FB.game.pickMode ? null : FB.state;
+    const visibleCounts = {};
+    const entries = buildLocationSearchIndex().filter(function (entry) {
+      if (entry.type !== 'settlement') return true;
+      if (visibleCounts[entry.provId] === undefined) {
+        visibleCounts[entry.provId] = FB.settlementVisibleCount(searchState, entry.provId);
+      }
+      return entry.settIndex < visibleCounts[entry.provId];
+    });
     const q = (query || '').trim().toLowerCase();
     if (!q) {
       const featured = [];
@@ -27376,13 +27821,6 @@ window.FB = window.FB || {};
     const results = [];
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
-      /* A campaign may navigate to settlement slots that future development
-         will reveal. The birthplace picker cannot offer those slots yet, so
-         keep its exact settlement results aligned with its native select. */
-      if (FB.game && FB.game.pickMode && entry.type === 'settlement' &&
-          entry.settIndex >= FB.settlementVisibleCount(null, entry.provId)) {
-        continue;
-      }
       const n = entry.name.toLowerCase();
       const s = entry.search;
       let score = 0;
@@ -29066,12 +29504,12 @@ window.FB = window.FB || {};
       FB.T('Historical places and growth derived from county development.'),
       guideBody([
         FB.T('Settlements are not founded manually. Significant counties show researched historical places — every realm capital, faith seat, and great city of the start date — while generated local names fill the remaining slots. The same place keeps one identity in both start dates, with a name and standing appropriate to the year.'),
-        FB.T('The county’s current development derives how many places appear and whether the leading ones are villages, towns, or a city, never below a historical place’s authored standing.'),
+        FB.T('Development unlocks capacity to found settlements and upgrades leading places to towns or cities. Existing settlements remain established when development falls. A Gentry household can fund a charter from Deeds to build a hereditary barony.'),
         provinceId ? settlementDevelopmentText(s, provinceId) :
           FB.T('Start a life to see the next threshold for the current county.'),
         provinceId ? bookmarkDevelopmentText(s, provinceId) :
           FB.T('The county screen separates its authored bookmark start from later growth.'),
-        FB.T('Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Sheets abroad are read-only; construction and demolition appear only in your own demesne.'),
+        FB.T('Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Ordinary construction and demolition require direct settlement ownership. Delegated settlements belong to their barons; strategic forts remain under county control.'),
         FB.T('Buildings that grant development identify the immediate amount when raised. National technologies can raise every county’s development ceiling in that nation above its base of 10.')
       ]), 'county village town city threshold growth bookmark historical buildings development ceiling map markers');
 

@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
-  'js/actions.js',
+  'js/actions.js', 'js/lordships.js', 'js/modifiers.js',
   'js/council.js',
   'js/main.js',
   'js/model.js',
@@ -99,6 +99,7 @@ async function configureGovernance(page, kind) {
       if (s.realms.player) s.realms.player.alive = false;
       s.holder[homeId] = liegeId;
       s.owner[homeId] = FB.topRealm(s, liegeId);
+      FB.assignSettlementLordship(s, homeId, 1, p.charId);
       s.realms[liegeId].obl = {
         aid:0.25,
         scutage:false,
@@ -191,6 +192,8 @@ test('Governance eligibility and roles follow territorial politics',
       p.flags = p.flags || {};
       delete p.flags.bishop;
       delete p.flags.chief_qadi;
+      var landless = FB.governanceEligible(s);
+      FB.assignSettlementLordship(s, homeId, 1, p.charId);
       var baron = FB.governanceSummary(s);
 
       delete me.bishopricVacatedTurn;
@@ -237,6 +240,7 @@ test('Governance eligibility and roles follow territorial politics',
       FB.ui.showGovernance();
 
       return {
+        landless:landless,
         baron:{
           role:baron && baron.role,
           playerRealmId:baron && baron.playerRealmId,
@@ -253,6 +257,7 @@ test('Governance eligibility and roles follow territorial politics',
       };
     });
 
+    expect(result.landless).toBe(false);
     expect(result.baron).toEqual({
       role:'vassal',
       playerRealmId:null,
@@ -2338,19 +2343,18 @@ test('narrow Governance keeps focus, section and action shortcuts, geometry, and
     await expect(page.locator('#governance-institution')).toBeFocused();
   });
 
-test('a baron pays for, receives, and can see the modifiers on their seat',
+test('a landed baron receives shared county effects without paying county upkeep twice',
   async function ({ page }, testInfo) {
     await startGovernanceGame(page, testInfo);
     await configureGovernance(page, 'baron');
 
-    /* A baron holds no county directly: their seat belongs to their liege.
-       Every modifier consumer has to agree on that one ownership rule, or the
-       player pays upkeep for a record that grants nothing and appears
-       nowhere. */
     expect(await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
       const seat = p.provinceId;
+      s.dev[seat] = 8;
+      FB.rememberSettlementSites(s, seat);
+      FB.assignSettlementLordship(s, seat, 1, p.charId);
 
       const before = {
         tax:FB.playerTaxParts(s).total,
@@ -2393,7 +2397,7 @@ test('a baron pays for, receives, and can see the modifiers on their seat',
       estatesActive:true,
       ruleIsSeatOnly:true,
       seatIsRule:true,
-      chargedUpkeep:true,
+      chargedUpkeep:false,
       taxRose:true,
       levyFell:true,
       voiceRose:true,

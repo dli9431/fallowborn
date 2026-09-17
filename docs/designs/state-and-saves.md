@@ -1,19 +1,75 @@
 # Game state & saves
 
+## County progression saves (Phase 6)
+
+The version-1 settlement lordship table gains optional `countyConsentTurn`,
+`countyConsent:{[pid]:{countId,rulerId,superior,superiorRulerId,sponsorId}}`,
+`countyClaims:{[pid]:[{characterId,dynasty,createdTurn}]}` and
+`disputedCounties:{[pid]:{superior,acquiredTurn}}`. Recognition shares the existing
+`player.cooldowns.petition_liege` counter. Claims remain after recognition and
+follow their dynasty; disputed status follows the household's county ownership.
+
+Ordinary war records may have `casus.type:'county_replacement'` and
+`countyChallenge:{provinceId,countId,rulerId,dynasty,superior,justification,claim,
+oldLiege,awarded?,finished?}`. Justification is sanctioned, claim or usurpation.
+The awarded/finished flags prevent repeated grants and cleanup. The temporary
+player campaign realm conveys no county at declaration and retires after a
+non-winning peace if the household still owns no counties.
+
+Explicit revocation stores the former record in
+`revokedLordships:{['provinceId:slot']:lordshipRecord}`. Restoration resolves the
+living holder or heir and preserves founder/dynasty/obligations, with source
+`restoration`. Referenced displaced characters are retained for succession.
+All additions are optional; no save-format or table-version bump is needed.
+
+## Founding saves (Phase 5)
+
+The additive version-1 lordship table now stores `foundingVersion:1`,
+`foundingSerial` and `founding:{[provinceId]:project}`. Projects store `id`,
+`status` (`building`, `complete`, `cancelled`), `playerHouse`, `provinceId`,
+`sponsorId`, original `founderId`/`dynasty`, original `grantorId`/`grantorRealmId`,
+reserved `settlement`/`site`, `funded`, quoted `prestige`/`piety`, `startedTurn`,
+`dueTurn`, `lastTurn`, `pausedDays` and optional `completedTurn`. No rendered prose
+is saved. Unique monotonic IDs reject stale cancellation/completion reviews.
+Only one building project per household and county is permitted.
+
+On first migration to foundingVersion 1, current automatic reveals are captured
+as established floors before enabling capacity-only growth. Repeat loads never
+reveal extra sites or charge again. Existing new-game bookmark sites are retained.
+Daily progress extends dueTurn for occupation/siege. Completion revalidates all
+requirements before changing visibility, conserved community partition, lordship,
+seat, resources and rank; completed status prevents repeat rewards. Missing
+requirements retain the paid project. Sponsorship follows the selected heir;
+extinction cancels the project. Save format remains 3.
+
+Phase 4 adds optional `lastDevelopmentSeason`, `grantCursor` and
+`developmentCursor` fields to the version-1 lordship table. These bound and rotate
+seasonal AI work and prevent repeated development after a save reload. Grant
+reviews carry detached quotes; pending military events persist their exact grant
+quote in context. Old title-only military offers cannot grant landlessly, and
+retain their purse/decline alternatives. No save-format bump is needed.
+
+
 ## Settlement ownership foundation
 
 Save format remains 3. `state.settlementLordships` is additive version-1 data:
 `{version:1, counties:{[pid]:{established, lordships:{[slot]:record}}}, legacyBarony}`.
+Phase 3 adds optional `accounts:{[characterId]:{gold,lastSeason,lastNet?,lastRevaluedYear?}}`
+inside that same version-1 table for NPC baron treasuries. Accounts start at zero,
+settle once per season, and follow hereditary succession. This is additive; no
+save-format bump, back payments, RNG consumption, or new realm nodes are required.
+Fiscal projections and building/capacity caches remain transient.
+
 Only delegated lordships need records. Unassigned established slots derive their
 holder from the current county holder; county ownership and realm arrays are unchanged.
 Each record stores `holderId`, immutable `founderId` and `dynasty`, `playerHouse`,
 optional `successorId`, `obligations:{charterId:'customary_service'}`, `grantedTurn`,
-and `source:'grant'|'legacy'`. There are no rendered names, fiscal caches, or realm
+and `source:'grant'|'legacy'|'founding'`. There are no rendered names, fiscal caches, or realm
 nodes for baronies. Slot zero remains the protected county seat.
 
 `FB.ensureSettlementLordships` runs at new game/Observe and restore. Fresh starts
-record existing settlement floors without inventing barony grants; actual new-game
-barony investiture is part of the later grant integration. Restore without this
+record existing settlement floors; Phase 4 separately grants an eligible
+non-seat holding to a fresh territorial Baron. Restore without this
 table preserves existing sites as direct holdings and grants an old territorial
 player baron a non-seat manor/home slot, otherwise the first non-seat slot. Offices
 (Castellan, Bishop, Chief Qadi, and papal office) are excluded. `legacyBarony` is

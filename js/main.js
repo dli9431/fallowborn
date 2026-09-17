@@ -2986,6 +2986,7 @@ FB.CHANGELOG = [
   }
 
   G.start = function () {
+    const previousState = FB.state, previousRng = FB.getRngState(), previousUid = FB.getUidCounter();
     G.observe = false;
     document.body.classList.remove('observing');
     const sc = G.pending && G.pending.scenario;
@@ -3234,6 +3235,15 @@ FB.CHANGELOG = [
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
     if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
     if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
+    if (sc.tier === 3 && !FB.initializeBaronyStart(state)) {
+      FB.state = previousState;
+      FB.setRngState(previousRng);
+      FB.setUidCounter(previousUid);
+      FB.invalidateSettlementLordships(previousState);
+      FB.ui.toast('This county has no settlement available for a baron. Choose another starting rank or county.');
+      showScenarios();
+      return false;
+    }
     if (sc.tier === 0) {
       /* The integrated tenure sheet and lawful-freedom routes name the exact
          home authority from the first playable frame. Establish the bounded
@@ -3473,6 +3483,17 @@ FB.CHANGELOG = [
       const row = market.counties[pid];
       out.provisionsStock += Number(row && row[0] && row[0][good]) || 0;
     }
+    const lordships = state.settlementLordships || {}, counties = lordships.counties || {};
+    out.settlements = { recordedCounties:0, established:0, delegated:0,
+      baronAccounts:Object.keys(lordships.accounts || {}).length,
+      foundingProjects:Object.keys(lordships.founding || {}).length };
+    Object.keys(counties).forEach(function (pid) {
+      const county = counties[pid];
+      if (!county) return;
+      out.settlements.recordedCounties++;
+      out.settlements.established += Number(county.established) || 0;
+      out.settlements.delegated += Object.keys(county.lordships || {}).length;
+    });
     const holy = state.greatHolyWar;
     out.holyWar = holy ? { id:holy.id, phase:holy.phase, resolve:holy.resolve,
       attackers:(holy.participants && holy.participants.attackers || []).length,
@@ -3579,6 +3600,17 @@ FB.CHANGELOG = [
     ['ensurePopulationState', 'enterpriseUpgradeEffectsByCounty', 'countyPopulationCapacity', 'countyMigrationAttraction'].forEach(function (key) {
       wrap(FB, key, 'Population annual operation: ' + key, true);
     });
+    ['settlementFoundingDay', 'settlementLordshipSeason', 'settleBaronyAccounts',
+      'directSettlements', 'holdsSettlementInCounty', 'settlementCapacityProjection', 'settlementActorFiscal',
+      'settlementFiscalProjection', 'settlementCountyPenalty', 'settlementPopulationShares',
+      'settlementGrantRecipient', 'ensureSettlementLordships'].forEach(function (key) {
+      wrap(FB, key, 'Settlement operation: ' + key);
+    });
+    ['realmIdForRulerCharacter', 'realmRulerCharacterSnapshot', 'realmHeldCounties',
+      'settlementPopulations', 'buildingBonusAt', 'kinOf'].forEach(function (key) {
+      wrap(FB, key, 'Settlement input: ' + key, 'Settlement operation:');
+    });
+    wrap(FB, 'recruitmentCountyBlocked', 'Army operation: recruitmentCountyBlocked');
     wrap(FB.save, 'autosave', 'Autosave scheduling');
     wrap(FB.save, 'serialize', 'Save serialization');
     wrap(FB.ui, 'runEvents', 'Event UI');
@@ -3679,6 +3711,7 @@ FB.CHANGELOG = [
     FB.scriptedTick(s);
     if (seasonBoundary && FB.historicalAmbitionsSeason) FB.historicalAmbitionsSeason(s);
     if (FB.fortificationDay) FB.fortificationDay(s);
+    if (FB.settlementFoundingDay) FB.settlementFoundingDay(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
     if (FB.papacyDay) FB.papacyDay(s);
     if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
@@ -3743,7 +3776,7 @@ FB.CHANGELOG = [
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {
         p.piety += FB.buildingBonus(s, 'piety') + (FB.councilBonus ? FB.councilBonus(s, 'piety') : 0);
-        FB.addResearch(s, FB.buildingBonus(s, 'research'));
+        // Building research is credited once through national techResearchRate.
         if (FB.councilEnsure) FB.councilEnsure(s); // the royal council forms at a coronation — and heals old saves
         if (FB.parliamentEnsure) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
         if (G.auto.build) FB.autoBuild(s);

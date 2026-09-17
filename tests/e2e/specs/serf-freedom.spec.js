@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
   'data/map_data.js',
   'data/technology.js',
   'js/actions.js',
+  'js/lordships.js',
   'js/events.js',
   'js/i18n.js',
   'js/main.js',
@@ -25,6 +26,35 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
+
+test('a county ruler can authorize a bound relative freedom without a separate local lord', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const r = await page.evaluate(function () {
+    const s = FB.state, p = s.player, me = s.chars[p.charId];
+    p.tier = 4; p.provs = [p.provinceId]; p.gold = 1000;
+    p.travel = null; p.flags.in_prison = false;
+    me.born = s.date.year - 35; me.unfree = false;
+    FB.foundPlayerRealm(s);
+    FB.syncHomeCountyLord(s);
+    const child = FB.makeCharacter(s, { name:'Bound heir', born:s.date.year - 18,
+      culture:me.culture, religion:me.religion, station:0, traits:[] });
+    child.fatherId = me.id; child.unfree = true;
+    me.childrenIds = (me.childrenIds || []).concat([child.id]);
+    const quote = FB.familyManumissionStatus(s, child.id), gold = p.gold;
+    const freed = FB.resolveFamilyManumission(s, child.id);
+    const repeated = FB.resolveFamilyManumission(s, child.id);
+    return { ready:quote.ready, freed:freed, repeated:repeated,
+      price:quote.price, spent:gold - p.gold,
+      lord:child.manumission && child.manumission.lordId, player:me.id,
+      unfree:FB.isUnfreeCharacter(s, child), station:FB.stationOf(child),
+      grantEligible:FB.settlementGrantRecipient(s, child.id, 'player') };
+  });
+  expect(r).toMatchObject({ ready:true, freed:true, repeated:false, unfree:false,
+    station:1, grantEligible:true });
+  expect(r.lord).toBe(r.player);
+  expect(r.spent).toBe(r.price);
+});
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);

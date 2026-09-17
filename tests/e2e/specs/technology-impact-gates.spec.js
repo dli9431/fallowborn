@@ -184,10 +184,13 @@ test('the prospective review ledger and every gate schema validate together',
       'concentric_fortress_upgrade',
       'confirmation_of_great_offices',
       'consent_of_estates',
+      'county_challenges',
       'county_community_conversion',
       'county_community_identity',
       'county_goods_markets',
+      'county_investiture',
       'county_population_demographics',
+      'county_recognition',
       'culture_adoption',
       'culture_unit_classes',
       'data_defined_deeds',
@@ -251,7 +254,10 @@ test('the prospective review ledger and every gate schema validate together',
       'serf_freedom_petition',
       'serf_harvest_conditions',
       'serf_tenure_authority_review',
+      'settlement_administration',
       'settlement_dynamic_rents',
+      'settlement_founding',
+      'settlement_lordship',
       'soldier_command_assignments',
       'stone_castle_upgrade',
       'terrain_combat_modifiers',
@@ -302,8 +308,13 @@ test('the prospective review ledger and every gate schema validate together',
     ];
     expect(additiveHardIds.map(function (id) { return result.modes[id]; }))
       .toEqual(['hard', 'hard']);
+    const lordshipIds = ['county_challenges', 'county_investiture', 'county_recognition',
+      'settlement_administration', 'settlement_founding', 'settlement_lordship'];
+    expect(lordshipIds.map(function (id) { return result.modes[id]; }))
+      .toEqual(['none', 'none', 'none', 'soft', 'none', 'none']);
     const establishedModes = result.featureIds.filter(function (id) {
-      return additiveNoneIds.indexOf(id) < 0 && additiveHardIds.indexOf(id) < 0;
+      return additiveNoneIds.indexOf(id) < 0 && additiveHardIds.indexOf(id) < 0 &&
+        lordshipIds.indexOf(id) < 0;
     }).map(function (id) { return result.modes[id]; });
     expect(establishedModes).toEqual([
       'none', 'none', 'none', 'hard', 'none', 'hard', 'hard', 'hard', 'hard',

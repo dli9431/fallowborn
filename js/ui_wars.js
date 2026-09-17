@@ -74,7 +74,10 @@
     if (!w) { UI.toast(FB.T('This campaign has ended.')); return; }
     FB.game.setPaused(true);
     let h = '<div class="war-sheet" data-campaign-detail="' + esc(id) + '">' +
-      fact(FB.T('Opponent'), name(s, w.enemy)) + fact(FB.T('Declaration'), w.unlawful ? FB.T('Unlawful') : FB.T('Lawful'));
+      fact(FB.T('Opponent'), name(s, w.enemy)) + fact(FB.T('Declaration'), w.countyChallenge ?
+        w.countyChallenge.justification === 'sanctioned' ? FB.T('Superior-authorized challenge') :
+          w.countyChallenge.justification === 'claim' ? FB.T('Claim-backed rebellion') : FB.T('Unclaimed usurpation') :
+        w.unlawful ? FB.T('Unlawful') : FB.T('Lawful'));
     let objectives = '';
     w.objectives.forEach(function (o) {
       const occupied = w.occupations[o.target] && w.occupations[o.target].occupied;
@@ -82,7 +85,11 @@
         (occupied ? 'op-good' : 'op-neutral') + '">' + esc(occupied ? FB.T('Occupied') : FB.T('Not occupied')) + '</b></div>';
     });
     const special = w.casus && w.casus.type;
-    const victory = w.enforcementOf ? FB.T('End the unlawful war; offender loses 50 prestige.')
+    const victory = w.countyChallenge ?
+      w.countyChallenge.superior && w.countyChallenge.justification !== 'sanctioned'
+        ? FB.T('Take this county under its superior, then petition for recognition. Existing baronies and private property keep their owners.')
+        : FB.T('Gain recognized control of this county. Existing baronies and private property keep their owners.')
+      : w.enforcementOf ? FB.T('End the unlawful war; offender loses 50 prestige.')
       : special === 'independence' ? FB.T('Secure independence.')
       : special === 'caliphate' ? FB.T('Gain the Caliphate office.')
       : special === 'restoration' ? FB.T('Restore the crown and its vassals.')

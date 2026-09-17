@@ -987,6 +987,10 @@ window.FB = window.FB || {};
     var rid = FB.techRealmId(state, realmId);
     var dev = FB.realmStrength ? FB.realmStrength(state, rid) : 0;
     var rate = 2 + Math.min(4, dev * 0.04) + FB.techBonus(state, 'research', rid);
+    // Each physical library contributes once to its sovereign, regardless of delegation.
+    for (const pid of FB.realmProvinces(state, rid)) {
+      rate += FB.buildingBonusIn(state, pid, 'research');
+    }
     if (rid === FB.techRealmId(state) && FB.householdStandardEffect) {
       rate += FB.householdStandardEffect(state, 'research');
     }

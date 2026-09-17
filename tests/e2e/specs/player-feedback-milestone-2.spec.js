@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
+  'js/world.js',
+  'js/lordships.js',
   'js/economy.js',
   'js/main.js',
   'js/model.js',
@@ -693,12 +695,12 @@ test('settlement growth reports every derived threshold and the bookmark baselin
     expect(rows.map(function (row) {
       return [row.development, row.next, row.change];
     })).toEqual([
-      [2, 3, 'new_village'],
-      [3, 5, 'new_village'],
-      [4, 5, 'new_village'],
+      [2, 3, 'founding_capacity'],
+      [3, 5, 'founding_capacity'],
+      [4, 5, 'founding_capacity'],
       [5, 6, 'second_town'],
       [6, 7, 'head_city'],
-      [7, 9, 'new_village'],
+      [7, 9, 'founding_capacity'],
       [9, null, null]
     ]);
     expect(rows[0].bookmark).toBeGreaterThan(0);
