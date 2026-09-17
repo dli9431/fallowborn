@@ -3,12 +3,14 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/keys.js',
   'js/localfolk.js',
+  'js/lordships.js',
   'js/main.js',
   'js/market.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
   'js/world.js',
+  'js/wars.js',
   'css/style.css'
 ]);
 
@@ -494,6 +496,40 @@ test('mobile Work fills the screen and keeps disclosures beneath navigation',
     await expect(page.locator('#genmodal')).toBeHidden();
   });
 
+for (const width of [390, 1280]) {
+  test('Network section cards share Land surfaces at width ' + width, async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:width, height:844 });
+    await startListGame(page, testInfo);
+    await page.evaluate(function () {
+      FB.ui.selectProvince(FB.state.player.provinceId);
+      FB.ui.showTab('prov', { history:false });
+    });
+    await expect(page.locator('#tab-prov .land-section').first()).toBeVisible();
+    const land = await page.locator('#tab-prov .land-section').first().evaluate(function (card) {
+      const style = getComputedStyle(card);
+      return [style.backgroundColor, style.backgroundImage, style.borderTopColor,
+        style.borderTopStyle, style.borderTopWidth, style.borderRadius];
+    });
+    await page.evaluate(function () { FB.ui.showTab('network', { history:false }); });
+    const cards = page.locator('#tab-network .large-list-section-body');
+    await expect(cards).toHaveCount(6);
+    const network = await cards.evaluateAll(function (entries) {
+      return entries.map(function (card) {
+        const style = getComputedStyle(card);
+        return [style.backgroundColor, style.backgroundImage, style.borderTopColor,
+          style.borderTopStyle, style.borderTopWidth, style.borderRadius];
+      });
+    });
+    expect(network).toEqual(Array(6).fill(land));
+    const toggle = page.locator('[data-list-toggle="household"]');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await toggle.click();
+    await expect(page.locator('#network-list-body-household')).toBeHidden();
+    await toggle.click();
+    await expect(page.locator('#network-list-body-household')).toBeVisible();
+  });
+}
+
 test('Network limits section hotkeys to actions and moves chips into tooltips',
   async function ({ page }, testInfo) {
     await startListGame(page, testInfo);
@@ -511,7 +547,7 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
         return { color:style.backgroundColor, image:style.backgroundImage };
       });
     });
-    expect(networkSurfaces).toEqual(Array(6).fill({ color:'rgb(56, 45, 32)', image:'none' }));
+    expect(networkSurfaces).toEqual(Array(6).fill({ color:'rgb(28, 23, 16)', image:'none' }));
     for (const section of ['trade', 'politics', 'realm', 'local-folk']) {
       const card = page.locator('#network-list-body-' + section);
       await expect(card).toHaveCSS('border-top-style', 'solid');
@@ -568,9 +604,21 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
       valueDisplay:'block',
       textAlign:'left',
       whiteSpace:'normal',
-      overflowWrap:'normal'
+      overflowWrap:'anywhere'
     });
     const connectionsCard = page.locator('#network-list-body-connections');
+    // Resolving the lord role restores the real county ruler alongside the
+    // three synthetic contacts; the fixture's friend is not that ruler.
+    const countyLordId = await page.evaluate(function () {
+      return FB.homeCountyAuthority(FB.state).characterId;
+    });
+    expect(countyLordId).toBeTruthy();
+    const connectionIds = await connectionsCard.locator('[data-large-list-row]').evaluateAll(function (rows) {
+      return rows.map(function (row) { return row.getAttribute('data-list-identity'); }).sort();
+    });
+    expect(connectionIds).toEqual([
+      fixture.sharedId, fixture.secondId, fixture.thirdId, countyLordId
+    ].sort());
     await expect(connectionsCard).toHaveCSS('border-top-width', '1px');
     await expect(connectionsCard).toHaveCSS('border-top-style', 'solid');
     await expect(connectionsCard).toHaveCSS('padding-left', '12px');
@@ -580,7 +628,7 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
     await expect(connectionsCard.locator('[data-list-show-all="connections"]')).toHaveCount(1);
     await connectionsToggle.hover();
     await expect(page.locator('#tooltip')).toContainText('Connections');
-    await expect(page.locator('#tooltip')).toContainText('3 total');
+    await expect(page.locator('#tooltip')).toContainText('4 total');
     await expect(page.locator('#tooltip')).toContainText('1 need attention');
     const householdPlan = page.locator('#network-household-plan');
     const householdPlanRow = householdPlan.locator('..');
@@ -678,7 +726,7 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
     await connectionSectionInfo.click();
     await expect(page.locator(
       '[data-list-section="connections"] .large-list-section-details'))
-      .toContainText('3 total');
+      .toContainText('4 total');
     await expect(page.locator(
       '[data-list-section="connections"] .large-list-section-details'))
       .toContainText('1 need attention');
@@ -779,10 +827,18 @@ test('Network limits section hotkeys to actions and moves chips into tooltips',
       var rid = Object.keys(s.realms).filter(function (id) {
         return id !== 'player' && s.realms[id] && s.realms[id].alive;
       })[0];
-      s.player.war = { enemy:rid, defending:true };
+      // Opponent labels read the authoritative campaign registry, not an
+      // unbound legacy player.war record.
+      var war = FB.registerOrdinaryWar(s, 'player', {
+        enemy:rid, defending:true, target:s.player.provinceId
+      });
+      if (!war || FB.ordinaryWarBetween(s, 'player', rid) !== war) {
+        throw new Error('Expected a registered defensive campaign');
+      }
       FB.ui.refresh();
       return { id:rid, name:s.realms[rid].name };
     });
+    await waitForUiRefresh(page);
     var warRealmRow = page.locator(
       '[data-list-section="realm"] [data-list-identity="' +
       warRealm.id + '"]');

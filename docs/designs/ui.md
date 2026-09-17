@@ -3182,8 +3182,10 @@ All six Network sections use this same bordered section-body card, including
 Trade & Guild, Political blocs, Realm and Local folk. Summaries, actions, rows,
 empty states and Show all stay inside; section headings remain outside.
 
-Network section-body cards use opaque warm brown (#382d20), contrasting with
-the darker inner person and action cards. No gradient or transparency is used.
+Network section-body cards share Land's opaque dark background (#1c1710), quiet
+border and 8px corners through one CSS rule. Inner person and action cards retain
+the shared raised-card and control styles. No gradient or transparency is used
+on section backgrounds.
 
 Unboxed labels and helper text on Network section backgrounds use main ivory
 for contrast. Inner cards keep their existing label and supporting-text colors.

@@ -1931,6 +1931,8 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .household-standard-summary-item { white-space: nowrap; }
 .land-section {
   margin: 0 0 9px; padding: 7px 9px 8px;
+}
+.land-section, #tab-network .large-list-section-body {
   border: 1px solid var(--ui-border-color); border-radius: 8px; background: #1c1710;
 }
 .land-section-title {
@@ -6256,11 +6258,10 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 /* Each Network section encloses its summary, actions, rows and Show all. */
 #tab-network .large-list-section-body {
   box-sizing:border-box; width:100%; min-width:0;
-  border:1px solid var(--ui-border-color); border-radius:8px;
-  background:#382d20; padding:12px; margin:8px 0 10px;
+  padding:12px; margin:8px 0 10px;
 }
 
-/* Unboxed Network summary copy needs stronger contrast on the outer brown surface. */
+/* Unboxed Network summary copy uses the same primary contrast as Land facts. */
 #tab-network .large-list-section-summary > .kv > span,
 #tab-network .network-household-summary .kv > span,
 #tab-network .large-list-section-summary > .hint,

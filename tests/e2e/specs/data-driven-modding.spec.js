@@ -1373,6 +1373,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
     const setup = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
+      // Appended orders must be unique and below the merged catalog length.
       const originalCount = FBDATA.deeds.length;
       const rngBefore = JSON.stringify(FB.getRngState());
       const eventWasAbsent = FB.eventById('e2e_declarative_followup') === null;
@@ -1389,7 +1390,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
             id:'e2e_declarative_exchange', handler:'declarative_deed',
             label:'Make the chartered exchange',
             desc:'Trade coin and standing for a pious endowment.',
-            order:1001, group:'life', cooldownDays:12, spendsDay:false,
+            order:originalCount, group:'life', cooldownDays:12, spendsDay:false,
             layoutGroup:'personal',
             requiresTech:'crop_rotation',
             visibility:{ flagsAll:['e2e_deed_visible'] },
@@ -1404,14 +1405,14 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
             id:'e2e_declarative_day', handler:'declarative_deed',
             label:'Spend a day on the charter',
             desc:'Complete one bounded day-spending deed.',
-            order:1002, group:'life', cooldownDays:0, spendsDay:true,
+            order:originalCount + 1, group:'life', cooldownDays:0, spendsDay:true,
             effects:{ prestige:1 }
           },
           {
             id:'e2e_declarative_story', handler:'declarative_deed',
             label:'Request the promised audience',
             desc:'Pay for one authored follow-up event.',
-            order:1003, group:'life', cooldownDays:5, spendsDay:false,
+            order:originalCount + 2, group:'life', cooldownDays:5, spendsDay:false,
             costs:{ piety:1 }, queueEvent:'e2e_declarative_followup'
           }
         ]
@@ -1652,7 +1653,7 @@ test('milestone-four phase C rejects unsafe declarative deeds without mutation',
         return Object.assign({
           id:'e2e_unsafe_deed', handler:'declarative_deed',
           label:'Unsafe deed', desc:'A rejected declarative deed.',
-          order:1001, group:'life', cooldownDays:1, spendsDay:false,
+          order:FBDATA.deeds.length, group:'life', cooldownDays:1, spendsDay:false,
           effects:{ piety:1 }
         }, patch || {});
       }
@@ -2117,21 +2118,21 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
             capability:'fallback_focus', fallbackScore:20,
             label:'Keep the fallback ledger',
             desc:'The first equally scored safe fallback.',
-            order:28, contexts:['home'], seasonal:{ gold:1 }
+            order:originalCounts[0], contexts:['home'], seasonal:{ gold:1 }
           },
           {
             id:'e2e_fallback_second', handler:'declarative_focus',
             capability:'fallback_focus', fallbackScore:20,
             label:'Keep the second ledger',
             desc:'The later equally scored safe fallback.',
-            order:29, contexts:['home'], seasonal:{ prestige:1 }
+            order:originalCounts[0] + 1, contexts:['home'], seasonal:{ prestige:1 }
           },
           {
             id:'e2e_fallback_high', handler:'declarative_focus',
             capability:'fallback_focus', fallbackScore:30,
             label:'Keep the high-priority ledger',
             desc:'A higher score that remains statically gated.',
-            order:30, contexts:['home'],
+            order:originalCounts[0] + 2, contexts:['home'],
             eligibility:{
               reason:'The high ledger remains sealed.',
               flagsAll:['e2e_high_fallback']
@@ -2145,7 +2146,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
             capability:'resource_choice',
             label:'Choose a charter grant',
             desc:'Select one bounded grant to confirm.',
-            order:1001, group:'life', cooldownDays:15, spendsDay:false,
+            order:originalCounts[1], group:'life', cooldownDays:15, spendsDay:false,
             choices:[
               {
                 id:'hidden', label:'Hidden grant',
@@ -2185,7 +2186,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
             capability:'resource_choice',
             label:'Choose a day-long grant',
             desc:'Confirm one grant that occupies the day.',
-            order:1002, group:'life', cooldownDays:4, spendsDay:true,
+            order:originalCounts[1] + 1, group:'life', cooldownDays:4, spendsDay:true,
             choices:[{
               id:'accept', label:'Accept the grant', effects:{ prestige:2 }
             }]
@@ -2433,7 +2434,7 @@ test('milestone-four phase E rejects unregistered action capabilities atomically
         return Object.assign({
           id:'e2e_capability_deed', handler:'declarative_deed',
           capability:'resource_choice', label:'Capability deed',
-          desc:'A bounded picker-backed deed.', order:1001, group:'life',
+          desc:'A bounded picker-backed deed.', order:FBDATA.deeds.length, group:'life',
           cooldownDays:1, spendsDay:false, choices:[choice()]
         }, patch || {});
       }
