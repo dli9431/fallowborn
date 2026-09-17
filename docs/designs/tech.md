@@ -1,5 +1,47 @@
 # National technology
 
+## County progression (Phase 6)
+
+county_investiture, county_challenges and county_recognition each have a **none**
+review. Land, claim/authorization, ordinary military victory and political costs
+govern these independently available capabilities. Fabricating a local claim is
+extended to landed barons without a new gate. Revocation/restoration extends the
+existing **none** settlement_lordship review. No research blocks recovery.
+
+## Settlement founding (Phase 5)
+
+`settlement_founding` is reviewed as **none**. Ordinary Gentry chartering has no
+research prerequisite; it requires an unused development-unlocked slot, construction
+funding, time and investiture resources. Soft settlement-administration capacity
+and individual building gates continue to govern the resulting holding.
+
+Phase 4 extends the existing `settlement_lordship` **none** review to concrete
+petitions, voluntary grants and military land rewards. These are ordinary
+political rights. Autonomous delegation and baron development apply the same
+rights, administrative capacity and existing per-building technology gates;
+there is no new research prerequisite for granting land or routine development.
+
+
+## Settlement administration (Phase 3)
+
+`settlement_administration` has a **soft** impact review. Direct settlement capacity
+is two plus one per five Stewardship plus existing national `domain` technology
+bonuses. Professional Bailiffs and Royal Chancery expand both direct-county and
+direct-settlement capacity, disclosed together in technology effects. Player and
+AI holders retain all holdings above capacity; each excess settlement multiplies
+personal territorial income and troops by 0.85. County capacity penalties are
+separate; incoming vassal contributions are exempt from both. There is no hard
+research gate on baseline ownership or recovery from overextension.
+
+Physical library/university research is included once in sovereign seasonal research,
+including delegated sites. It is no longer also credited in the player's seasonal
+building loop. Existing building prerequisites remain unchanged.
+
+
+Hereditary ownership and county authority remain baseline political relationships
+under the `settlement_lordship` **none** review. Capacity is the separate soft
+interaction above; founding remains pending Phase 5.
+
 Knightly equipment uses matching production gates across Head, Body, and Feet:
 Mail Coif, Knightly Mail Hauberk, and Mail Chausses require `mail_hauberks` and 1200;
 Knightly Bascinet, Knight's Plate Armor, and Plate Sabatons require `plate_armor` and

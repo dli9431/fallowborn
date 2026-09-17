@@ -123,8 +123,9 @@ Descriptions, scaled county consequences, replacement terms, and annual timing u
 shared desktop tooltip or compact-layout `?` disclosure. Selecting a policy starts or
 replaces the local project immediately; settlement policy has no separate confirmation
 sheet. Stopping a local project is likewise immediate and redraws the settlement sheet
-without a confirmation view. A count can direct any settlement in a directly held county;
-a baron can direct only the saved home settlement. County Land controls remain county-wide
+without a confirmation view. Local project authority follows actual direct settlement
+lordship for both counts and barons; residence gives no authority, and delegated
+settlements are controlled by their barons. County Land controls remain county-wide
 and retain their review/confirmation step, and Self, Faith, or Culture never chooses a
 settlement implicitly.
 

@@ -646,3 +646,77 @@ player's paid total into the last-season record; the later player ledger charges
 replacement drilling, not live-host deployment again. Government expenses settle with
 landed income. Annual public distributions follow AI construction in both Observe and
 normal play. No extra daily all-realm fiscal scan is introduced.
+
+
+Settlement scaling diagnostics wrap founding, seasonal grants/development, baron account
+settlement, holding/capacity scans and fiscal projections. Nested input rows isolate
+ruler resolution, county ownership, settlement population, building bonuses and kin
+lookups within these operations. Recruitment blocking is separately timed to expose
+holding scans reached from army work. Counters distinguish counties/sites scanned,
+holder-index rebuilds/invalidations and fiscal capacity/population cache hits/builds.
+Wrappers use the existing burst-scoped try/finally cleanup and preserve reader cache
+flags; counters are transient and disabled outside an enabled local profiling burst.
+Boundary workload snapshots report recorded established/delegated sites, accounts and
+founding projects without normalizing state. They count saved records, not map markers.
+These diagnostics change no gameplay eligibility and require no technology gate.
+
+`tools/settlement_performance_saves.py` prepares matched control, dense-direct and
+dense-delegated exports under `notes/settlement-performance/` from the existing source
+used for lordship scenarios. All share characters, population, date and RNG; dense
+variants set eight established sites per owned county, and delegation gives six to a
+funded synthetic baron. Import reconciliation and subsequent AI decisions can change
+counts, so inspect both workload snapshots. This offline fixture preparation does not
+run the game. Owner-controlled measurements should reload each export, hold viewport,
+selected panel and Observe mode constant, and compare equal-day seasonal bursts.
+Measure year-boundary bursts separately. Import and deferred paint are not measured.
+Source-level suspects are repeated holding scans within recruitment/fiscal reads and
+per-candidate ruler resolution during seasonal grants; timings are needed before
+attributing the regression or changing cache/invalidation behavior.
+
+
+Wartime settlement scaling: recruitment's personal-holding check examines only the
+requested county's established sites, using the same holder/actor rules as the full
+holding list. It has no retained cache, so grants, deaths and county transfers are
+observed immediately. County-challenge muster uses this same local check.
+AI muster projections share county population shares alongside settlement quotes and
+capacity within the existing synchronous muster context. A military-input revision
+clears all three together; the next daily muster pass creates a fresh context.
+This removes repeated domain scans and population reads without postponing retries,
+changing eligibility, or adding a cross-day cache. No technology gate changes.
+
+
+Settlement projection reuse is scoped to synchronous reads. Military muster requests
+only levy/specialist amounts from the common settlement formula, skipping tax, toll,
+national-income and upkeep calculations; it reuses the holding list already computed
+for direct-capacity limits. County support, population factors and levy modifiers,
+and actor county penalties, are read once per context. Muster input revisions clear
+these records together with quotes/capacity/population shares; each daily pass starts
+fresh, so daily development, support, ruler and technology changes are not hidden by
+a retained cross-day cache. Recruitment blocking remains live and retries are unchanged.
+The seasonal treasury snapshot and subsequent baron credits share full fiscal quotes
+before any grant or building changes can occur, then discard their context. Quote and
+county-input build/hit counters expose this reuse in the local profiler. No gameplay
+eligibility or technology gate changes are introduced.
+
+
+Holding scans resolve the realm's ruler once and read each candidate county's visible
+settlement count once. Their internal holder queries accept that synchronous count
+instead of repeating visibility's building, fort, enterprise and project checks for
+every slot. Standalone holder queries still read live visibility. Fiscal contexts also
+share visibility per county and discard it at the same boundary as other muster or
+treasury inputs. Military revisions reset this visibility alongside other phase data.
+No holding list, visibility count, or recruitment outcome is retained across days.
+The profiler reports fiscal visibility builds/hits; holding-scan coverage compares
+results with construction authority before and after death and county transfer.
+
+
+Annual construction and public distributions can share the full treasury snapshot
+when the construction pass buys nothing. The snapshot is created after annual
+population, succession and ruler agency. Any successful ordinary-building purchase
+clears the handoff before changing buildings/development; public distributions then
+rebuild their snapshot, preserving post-construction income, upkeep and reserve rules.
+The handoff is local to worldTick, never persisted or shared with seasonal accounting.
+Military construction reserves are still read again for the distribution pass.
+Profiler counters distinguish annual unchanged-snapshot reuse from a fresh
+post-construction snapshot. This is a read-reuse optimization, with no research gate
+or change to spending eligibility, building choices, simulation order or RNG.

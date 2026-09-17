@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/actions.js',
+  'js/actions.js', 'js/lordships.js',
   'js/market.js',
   'js/population.js',
   'js/settlement.js',
@@ -96,6 +96,9 @@ test('construction gates enforce devMin, requiresTech, and coastal requirements'
       const pid = s.player.provinceId || 'london';
       s.player.tier = 5; // King/Duke level tier for deeds
       s.player.provs = [pid];
+      s.holder[pid] = 'player'; s.owner[pid] = 'player';
+      FB.foundPlayerRealm(s);
+      FB.invalidateSettlementLordships(s, pid);
       s.buildings = s.buildings || {};
       s.buildings[pid] = [];
 
@@ -156,6 +159,9 @@ test('demographic and research bonuses from late-game buildings apply correctly'
       const pid = s.player.provinceId || 'london';
       s.player.tier = 5;
       s.player.provs = [pid];
+      s.holder[pid] = 'player'; s.owner[pid] = 'player';
+      FB.foundPlayerRealm(s);
+      FB.invalidateSettlementLordships(s, pid);
       s.buildings = s.buildings || {};
       s.buildings[pid] = [
         { s: 0, id: 'cathedral' },
@@ -217,6 +223,10 @@ test('late-game building reads reuse county aggregates and refresh after mutatio
 
       s.player.tier = 6;
       s.player.provs = [home, other];
+      s.holder[home] = 'player'; s.owner[home] = 'player';
+      s.holder[other] = 'player'; s.owner[other] = 'player';
+      FB.foundPlayerRealm(s);
+      FB.invalidateSettlementLordships(s);
       s.dev[home] = 10;
       s.dev[other] = 10;
       s.buildings = {};

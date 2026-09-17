@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.181.8';
+FB.VERSION = '1.182.0';
 FB.CHANGELOG = [
+  { v: '1.182.0', date: '2026-09-17', changes: [
+    'Found and grant settlements, rule landed baronies, and pursue county titles through claims and recognition. Settlement management, wartime fast-forward, and annual treasury calculations do less repeated work.'
+  ] },
   { v: '1.181.8', date: '2026-09-16', changes: [
     'Enterprise staffing compares household assignments and local hiring in two cards, showing costs, idle businesses, and estimated income gains. The preview fills the mobile screen.'
   ] },
@@ -2992,6 +2995,7 @@ FB.CHANGELOG = [
   }
 
   G.start = function () {
+    const previousState = FB.state, previousRng = FB.getRngState(), previousUid = FB.getUidCounter();
     G.observe = false;
     document.body.classList.remove('observing');
     const sc = G.pending && G.pending.scenario;
@@ -3239,6 +3243,16 @@ FB.CHANGELOG = [
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
     if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
+    if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
+    if (sc.tier === 3 && !FB.initializeBaronyStart(state)) {
+      FB.state = previousState;
+      FB.setRngState(previousRng);
+      FB.setUidCounter(previousUid);
+      FB.invalidateSettlementLordships(previousState);
+      FB.ui.toast('This county has no settlement available for a baron. Choose another starting rank or county.');
+      showScenarios();
+      return false;
+    }
     if (sc.tier === 0) {
       /* The integrated tenure sheet and lawful-freedom routes name the exact
          home authority from the first playable frame. Establish the bounded
@@ -3409,6 +3423,7 @@ FB.CHANGELOG = [
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
+    if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
     if (FB.ensureFaithStandingBaselines) {
       FB.ensureFaithStandingBaselines(state);
     }
@@ -3477,6 +3492,17 @@ FB.CHANGELOG = [
       const row = market.counties[pid];
       out.provisionsStock += Number(row && row[0] && row[0][good]) || 0;
     }
+    const lordships = state.settlementLordships || {}, counties = lordships.counties || {};
+    out.settlements = { recordedCounties:0, established:0, delegated:0,
+      baronAccounts:Object.keys(lordships.accounts || {}).length,
+      foundingProjects:Object.keys(lordships.founding || {}).length };
+    Object.keys(counties).forEach(function (pid) {
+      const county = counties[pid];
+      if (!county) return;
+      out.settlements.recordedCounties++;
+      out.settlements.established += Number(county.established) || 0;
+      out.settlements.delegated += Object.keys(county.lordships || {}).length;
+    });
     const holy = state.greatHolyWar;
     out.holyWar = holy ? { id:holy.id, phase:holy.phase, resolve:holy.resolve,
       attackers:(holy.participants && holy.participants.attackers || []).length,
@@ -3583,6 +3609,17 @@ FB.CHANGELOG = [
     ['ensurePopulationState', 'enterpriseUpgradeEffectsByCounty', 'countyPopulationCapacity', 'countyMigrationAttraction'].forEach(function (key) {
       wrap(FB, key, 'Population annual operation: ' + key, true);
     });
+    ['settlementFoundingDay', 'settlementLordshipSeason', 'settleBaronyAccounts',
+      'directSettlements', 'holdsSettlementInCounty', 'settlementCapacityProjection', 'settlementActorFiscal',
+      'settlementFiscalProjection', 'settlementCountyPenalty', 'settlementPopulationShares',
+      'settlementGrantRecipient', 'ensureSettlementLordships'].forEach(function (key) {
+      wrap(FB, key, 'Settlement operation: ' + key);
+    });
+    ['realmIdForRulerCharacter', 'realmRulerCharacterSnapshot', 'realmHeldCounties',
+      'settlementPopulations', 'buildingBonusAt', 'kinOf'].forEach(function (key) {
+      wrap(FB, key, 'Settlement input: ' + key, 'Settlement operation:');
+    });
+    wrap(FB, 'recruitmentCountyBlocked', 'Army operation: recruitmentCountyBlocked');
     wrap(FB.save, 'autosave', 'Autosave scheduling');
     wrap(FB.save, 'serialize', 'Save serialization');
     wrap(FB.ui, 'runEvents', 'Event UI');
@@ -3683,6 +3720,7 @@ FB.CHANGELOG = [
     FB.scriptedTick(s);
     if (seasonBoundary && FB.historicalAmbitionsSeason) FB.historicalAmbitionsSeason(s);
     if (FB.fortificationDay) FB.fortificationDay(s);
+    if (FB.settlementFoundingDay) FB.settlementFoundingDay(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
     if (FB.papacyDay) FB.papacyDay(s);
     if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
@@ -3747,7 +3785,7 @@ FB.CHANGELOG = [
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {
         p.piety += FB.buildingBonus(s, 'piety') + (FB.councilBonus ? FB.councilBonus(s, 'piety') : 0);
-        FB.addResearch(s, FB.buildingBonus(s, 'research'));
+        // Building research is credited once through national techResearchRate.
         if (FB.councilEnsure) FB.councilEnsure(s); // the royal council forms at a coronation — and heals old saves
         if (FB.parliamentEnsure) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
         if (G.auto.build) FB.autoBuild(s);
@@ -5306,6 +5344,9 @@ FB.CHANGELOG = [
       FB.news(s, '☠ ' + causeText);
     }
     const heirs = FB.heirsOf(s);
+    if (!heirs.length && FB.settlementLordshipsPlayerSuccession) {
+      FB.settlementLordshipsPlayerSuccession(s, me.id, null);
+    }
     const deathTelemetry = {
       entry_type:telemetryEntryType,
       active_seconds:activeSeconds,
@@ -5513,6 +5554,9 @@ FB.CHANGELOG = [
   G.resumePendingDeath = function () {
     const continuation = G.deathContinuation(FB.state);
     if (!continuation || !FB.ui || !FB.ui.showDeath) return false;
+    if (!continuation.heirs.length && FB.settlementLordshipsPlayerSuccession) {
+      FB.settlementLordshipsPlayerSuccession(FB.state, continuation.character.id, null);
+    }
     G.paused = true;
     FB.ui.showDeath(continuation.heirs, continuation.causeText);
     return true;
@@ -5526,7 +5570,12 @@ FB.CHANGELOG = [
     const old = s.chars[p.charId];
     const heir = s.chars[heirId];
     if (!heir || heir.dead) {
-      if (!livingAbdication) FB.ui.gameOver();
+      if (!livingAbdication) {
+        if (FB.settlementLordshipsPlayerSuccession) {
+          FB.settlementLordshipsPlayerSuccession(s, old.id, null);
+        }
+        FB.ui.gameOver();
+      }
       return false;
     }
     /* Complete the old-save property migration before taking the inheritance
@@ -5617,6 +5666,9 @@ FB.CHANGELOG = [
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     FB.learnMaternalCustoms(s);
     p.charId = heir.id;
+    if (FB.settlementLordshipsPlayerSuccession) {
+      FB.settlementLordshipsPlayerSuccession(s, old.id, heir.id);
+    }
     if (FB.chronicleNoteHead) FB.chronicleNoteHead(s);
     if (successionTier !== p.tier) {
       FB.setPlayerTier(s, successionTier, {

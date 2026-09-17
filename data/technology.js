@@ -75,6 +75,12 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      county_investiture:{ mode:'none', rationale:'Higher rulers can convey directly held non-seat counties through ordinary political investiture. Land, Standing and investiture resources govern eligibility, not technology.' },
+      county_recognition:{ mode:'none', rationale:'A vassal can settle disputed county status through superior recognition without research. Investiture resources, diplomacy and cooldowns govern this recovery route.' },
+      county_challenges:{ mode:'none', rationale:'County investiture, inherited claims, authorized challenges, rebellion, usurpation and recognition are ordinary political rights. Land, superior consent, military victory and disclosed political costs govern them without a research prerequisite.' },
+      settlement_founding:{ mode:'none', rationale:'A funded Gentry household may charter an unused county site without research. Time, existing development capacity, conserved local population and investiture resources govern establishment; administrative technologies retain their separate soft capacity role.' },
+      settlement_administration:{ mode:'soft', tech:['professional_bailiffs','royal_chancery'], rationale:'Baseline direct settlement government is available without research. Existing domain-capacity innovations expand both county and settlement capacity; excess holdings retain ownership with separate revenue and levy penalties.' },
+      settlement_lordship:{ mode:'none', rationale:'Hereditary settlement ownership, concrete petitions and voluntary grants including free adult kin of Freeholder rank outside the household, military land rewards, explicit revocation and restoration, succession, and identification of the county ruler are baseline political relationships. AI delegation and development use these same rights and existing building gates. Administrative capacity has its separate soft review.' },
       ruler_arrest:{ mode:'none', rationale:'Local arrest is baseline territorial authority; jurisdiction and physical capture, not research, limit it.' },
       judicial_custody:{ mode:'none', rationale:'Holding and inheriting prisoners is baseline ruler authority with existing escape and release paths.' },
       judicial_release:{ mode:'none', rationale:'Release and pardon are baseline recovery and mercy without a research dependency.' },

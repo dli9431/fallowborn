@@ -1,5 +1,23 @@
 # Provinces & the map
 
+## Chartered settlements
+
+Map search filters its cached geography index against the current established
+settlement count on every query, including featured results. Potential founding
+sites are not searchable places. New establishments appear without rebuilding
+geography; the birthplace picker uses the bookmark baseline instead of a save.
+
+Development now unlocks founding capacity rather than revealing new villages.
+An explicit positive established count in a charter-era save takes precedence over
+the bookmark development floor. Bookmark floors initialize counties without that
+record; development thereafter unlocks capacity only. Authored places and every established save site remain
+visible; town/city upgrades retain their existing thresholds. The first unused
+compiled slot is reserved by a funded charter, with one active project per county
+and household. Generated settlement data and stable slot identities are unchanged.
+Establishment repartitions the county's existing residents with the conserved
+integer community matrix. County population and each culture-faith total stay
+unchanged, and development receives no completion bonus.
+
 Wasteland conversions are saved in `state.wastelandSettlements` with founding
 culture and faith. Both noble settlement and commoner frontier homesteads use the
 same record. On load it restores inhabited map status and deterministic settlement
@@ -181,7 +199,16 @@ growth, loss, and movement, and pursuing communal conversion or assimilation are
 character, demographic, and territorial behavior, not advanced capabilities that
 research could credibly gate.
 
-**Settlements are derived, not stored.** Two identities exist. The settlement *slot* —
+**Settlement presentations are derived; establishment and lordship are saved.**
+`state.settlementLordships.counties[pid].established` is a persistent visibility
+floor, while delegated records use stable slot indices. Missing delegation means
+direct control by the current county holder. County borders, owners, population,
+and physical site definitions do not change when a lordship changes. Development
+growth still reveals sites during the ownership-foundation phase; recording its
+high-water mark prevents later loss from hiding them. Chartered founding replaces
+automatic reveals in Phase 5, not in the ownership migration.
+
+Two identities exist. The settlement *slot* —
 the zero-based index inside one county — remains the canonical saved reference for
 buildings, plots, manors, and enterprises. The physical *site* is a stable snake-case
 slug with one longitude/latitude in the shared `FBDATA.settlementSites` table
@@ -211,7 +238,7 @@ The county-head entry is exempt and keeps the county's name.
 
 At world compilation (`compileSites` in `js/world.js`) every settled county receives an
 ordered record list: authored slots first (never renumbered), then deterministic
-generated slots filling to the maximum eight so a development reveal never projects
+generated slots filling to the maximum eight so a charter completion never projects
 during play. Authored coordinates project into the declared county's raster, snapping
 to the nearest in-county cell when the simplified boundary requires it (displacement
 beyond 45 world px is an activation error), then keeps a two-cell land margin from
@@ -224,7 +251,7 @@ and take deterministic in-county points that spread across the county — each s
 draws its own hash-derived angle and radius band scaled to the county, keeping a few
 cells clear of the other sites where the county allows it instead of stacking on the
 centroid, then take the same inland nudge off coastal-edge cells. `FB.settlementsOf(state, pid)` is the unchanged
-public projection: the visible count follows the legacy rule (2 + a hash bit, +1 at
+public projection: initial visibility and live founding capacity follow the legacy rule (2 + a hash bit, +1 at
 development 3, 5, 7, and 9) raised to the curated (non-`fill`) authored count, and each record carries `{site, name, kind, x, y,
 authored}` — callers reading only `name`/`kind` are unaffected. Kind thresholds: the
 head becomes at least a town at dev 4 and a city at 7, the second slot at least a town

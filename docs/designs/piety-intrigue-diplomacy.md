@@ -1,5 +1,21 @@
 # Piety, intrigue & diplomacy
 
+## Baronial county claims
+
+Landed barons may use the existing Fabricate a County Claim plot against a county
+containing their barony. Counts and higher rulers retain bordering foreign targets.
+Personal/appointed baron titles without a settlement do not qualify. Stored claims
+remain valid within a liege's realm and survive temporary lack of a foreign-war
+target; this is essential for challenging the home count. Existing plot progress,
+chance, failure consequences and claim consumption remain in force.
+
+A superior authorizes a named county challenge when the petitioner has a claim and
+65 Standing. Otherwise the superior defends the incumbent; refusal and unauthorized
+rebellion remain distinct choices. Unclaimed challenges reuse aggression penalties.
+County recognition is a separate recovery petition, charging ordinary investiture
+resources only on acceptance; refusal preserves control and surviving rival claims.
+These expansions use the none county_challenges/county_recognition tech reviews.
+
 Successful courier arrivals share one ruler-cooldown cleanup per synchronous daily
 batch. Each gift still records its recipient's current ruler generation and turn.
 Direct gifts retain full cleanup; replacing the cooldown table forces fresh cleanup.
@@ -19,7 +35,7 @@ payment audit in `../plans/archive/ai-treasury.md` for scope and saved-payment r
 ## Targeted claims and alliances
 
 Plots may carry a selected target in `player.plot.context`. The landed
-count-and-above `fabricate_claim` plot selects one bordering foreign county not already
+`fabricate_claim` plot selects a baron's own county or a count-and-above bordering foreign county not already
 covered by a de jure right and stores `{pid}` through discovery and resolution. It needs
 14 plot power; its chance is
 `clamp(0.30 + intrigue*0.03 + learning*0.01 + prestige/1000, 0.10, 0.90)`.

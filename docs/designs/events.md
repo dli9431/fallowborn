@@ -1,5 +1,14 @@
 # Events are data
 
+The `lord` role resolves the actual holder of the household's home county through
+`FB.homeCountyAuthority`, rather than generating a separate landless character.
+Read resolution does not create a court or rewrite the role index; creating resolution
+refreshes the index and retains the existing local-steward setup. Former generated
+lords remain contacts but cannot serve as current grantors. Serf authority snapshots
+recognize a county ruler even when their personal residence is another county.
+Historical exact-participant contexts still name their original characters.
+See [realms](realms.md) for the ownership foundation and later integration boundaries.
+
 Event choices use QWE/ASD/ZXC, then Shift with the same letters, for their
 action shortcuts. Digits are reserved for UI sections. Details remain ordinary
 Tab stops. Input guards cover these letter keys across choices and outcomes.

@@ -1,5 +1,23 @@
 # Descent — the way down
 
+## County challenges and settlement restoration
+
+Losing a county challenge uses ordinary campaign defeat/capture/peace; it does
+not automatically erase the family, its barony or unrelated property. Unclaimed
+county usurpation leaves a restoration claim for the displaced ruler and dynasty.
+Later superior recognition does not extinguish it. A claimant who holds a barony
+in that county can use the claim in a county challenge; superior opposition still
+applies. Normal realm inheritance and settlement succession are retained.
+
+A count can explicitly revoke a delegated barony from its settlement review.
+The saved hereditary record becomes a restoration right; private property and
+buildings remain. Revocation costs up to 40 Standing with the holder and records
+political mistreatment. It does not pretend to be ordinary county conquest.
+An unassigned settlement can be restored to the living dispossessed holder or
+eligible heir, preserving founder, dynasty and charter obligations. A later
+third-party grant must be revoked separately before restoration; restoration
+never silently dispossesses another baron.
+
 ## Judicial punishment and custody
 
 Ruler justice uses actual imprisonment before any sentence, including execution,

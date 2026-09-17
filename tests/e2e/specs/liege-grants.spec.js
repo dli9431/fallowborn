@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/events.js',
   'js/politics.js',
+  'js/lordships.js',
   'js/world.js',
   'js/ui_modals.js'
 ]);
@@ -515,18 +516,18 @@ test('a generated local lord cannot grant a county title',
     expect(result).toEqual({
       blocked:{
         rejected:true,
-        reason:'Only a titled count or greater lord who directly holds your home county can invest you with it.',
+        reason:'No higher ruler can grant a county. Their seat, last personal county and vassals’ counties are protected.',
         tier:3,
         holder:'lg_story_lord',
         provs:[]
       },
-      titledCanGrant:true,
-      granted:true,
-      tier:4,
-      holder:'player',
-      liege:'lg_duke',
-      gold:0,
-      prestige:0
+      titledCanGrant:false,
+      granted:false,
+      tier:3,
+      holder:'lg_count',
+      liege:'lg_count',
+      gold:800,
+      prestige:400
     });
   });
 

@@ -105,7 +105,7 @@ window.FB = window.FB || {};
   function settlementChangeName(change) {
     const changes = {
       head_town:FB.T('the first village becomes a town'),
-      new_village:FB.T('an additional village appears'),
+      founding_capacity:FB.T('capacity for another settlement is unlocked'),
       second_town:FB.T('the second settlement becomes a town'),
       head_city:FB.T('the first settlement becomes a city')
     };
@@ -116,7 +116,7 @@ window.FB = window.FB || {};
     if (!status) return '';
     if (status.next === null) {
       return FB.T(
-        'Started at development {start}. The settlements have grown as far as the land allows.', {
+        'Started at development {start}. Development cannot unlock more sites or town upgrades here.', {
           start:status.bookmark,
           development:status.development
         });

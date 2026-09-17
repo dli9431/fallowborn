@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'js/treasury.js', 'js/armies.js', 'js/actions.js', 'js/economy.js',
+  'index.html', 'js/lordships.js', 'js/population.js', 'js/treasury.js', 'js/armies.js', 'js/actions.js', 'js/economy.js',
   'js/main.js', 'js/save.js', 'js/model.js', 'js/world.js', 'js/rebellions.js',
   'js/modifiers.js', 'js/fortifications.js', 'js/technology.js', 'js/logistics.js', 'js/market.js',
   'data/map_data.js', 'data/modifiers.js', 'data/technology.js', 'data/units.js', 'data/markets.js', 'data/economy.js'
@@ -94,13 +94,16 @@ test('annual builder charges an affordable candidate once and skips an exhausted
       FB.techRequirementMet = function () { return true; };
       FB.buildCost = function () { return 80; };
       FB.playerDirectlyHoldsCounty = function () { return false; };
-      FB.aiBuildingsYear(s);
+      const budget = {};
+      FB.aiBuildingsYear(s, budget);
+      const invalidated = budget.snapshot === null;
       const first = s.buildings[pid].length;
-      FB.aiBuildingsYear(s);
-      return { first:first, final:s.buildings[pid].length, gold:a.gold };
+      FB.aiBuildingsYear(s, budget);
+      return { first:first, final:s.buildings[pid].length, gold:a.gold,
+        invalidated:invalidated, retained:!!budget.snapshot };
     } finally { names.forEach(function (name) { FB[name] = saved[name]; }); }
   });
-  expect(r).toEqual({ first:1, final:1, gold:20 });
+  expect(r).toEqual({ first:1, final:1, gold:20, invalidated:true, retained:true });
 });
 
 test('activation rebases diagnostic coin once and reserves accrued bills from food spending', async function ({ page }, testInfo) {
@@ -247,10 +250,7 @@ test('direct-holder income and immediate-liege dues settle once without touching
     s.realms[parent].liege = null;
     FB.invalidateRealmCache();
     const snapshot = FB.treasurySnapshot(s), a = snapshot.rows[child];
-    let expected = 0;
-    for (const pid in s.owner) if ((s.holder[pid] || s.owner[pid]) === child) {
-      expected += FB.countyTaxBase(s, pid, FBDATA.balance.taxPerDev);
-    }
+    const expected = FB.settlementActorFiscal(s, child).tax;
     const charter = FB.feudalCharterDef(FB.feudalContractOf(s, child).charterId);
     const balance = s.realms[child].treasury.gold, playerGold = s.player.gold;
     s.realms[child].treasury.militaryAccrued = 12;
@@ -424,18 +424,18 @@ test('realm death retires bills and fiscal profiling unwinds after a failed quot
     const row = s.realms[rid].treasury;
     row.gold = -3; row.militaryAccrued = 7;
     FB.markRealmDead(s, rid);
-    const oldTiming = FB.game._fastForwardTiming, oldTax = FB.countyTaxBase;
+    const oldTiming = FB.game._fastForwardTiming, oldTax = FB.settlementActorFiscal;
     const stack = [];
     FB.game._fastForwardTiming = {
       enter:function (label) { stack.push(label); return label; },
       leave:function (label) { if (stack.pop() !== label) throw new Error('Timer order'); },
       count:function () {}
     };
-    FB.countyTaxBase = function () { throw new Error('Expected quote failure'); };
+    FB.settlementActorFiscal = function () { throw new Error('Expected quote failure'); };
     let message = null;
     try { FB.treasurySnapshot(s); }
     catch (error) { message = error.message; }
-    finally { FB.countyTaxBase = oldTax; FB.game._fastForwardTiming = oldTiming; }
+    finally { FB.settlementActorFiscal = oldTax; FB.game._fastForwardTiming = oldTiming; }
     return { retired:row.retired, gold:row.retirement.gold, bills:row.retirement.accrued,
       message:message, stack:stack.length, available:FB.treasuryAvailable(s, rid) };
   });
@@ -487,7 +487,7 @@ test('maintenance respects ruined buildings and unbuilt forts; player liege paym
     s.player.liege = rid;
     const snapshot = FB.treasurySnapshot(s), gold = s.player.gold;
     s.turn += 90;
-    FB.treasurySeason(s, { liege:-11 });
+    FB.treasurySeason(s, { countyLiege:-11 });
     const summary = s.realms[rid].treasury.lastSummary;
     return { delta:after - before, expected:FB.fortLevelDef(2).upkeep + FBDATA.buildings.hospital.upkeep,
       dues:summary.duesIn, expectedDues:snapshot.rows[rid].duesIn + 11,
@@ -495,4 +495,36 @@ test('maintenance respects ruined buildings and unbuilt forts; player liege paym
   });
   expect(r.delta).toBeCloseTo(r.expected, 8); expect(r.dues).toBeCloseTo(r.expectedDues, 8);
   expect(r.playerUnchanged).toBe(true);
+});
+
+
+test('annual no-purchase budget reuses fiscal snapshot with identical distributions', async function ({ page }, testInfo) {
+  await setup(page, testInfo);
+  const result = await page.evaluate(function () {
+    const base = JSON.parse(JSON.stringify(FB.state)), original = FB.treasurySnapshot;
+    Object.keys(base.realms).forEach(function (rid) {
+      if (base.realms[rid].treasury) base.realms[rid].treasury.gold = 0;
+    });
+    function run(reuse) {
+      const state = JSON.parse(JSON.stringify(base));
+      FB.invalidateRealmCache();
+      FB.invalidateSettlementLordships(state);
+      let calls = 0;
+      FB.treasurySnapshot = function () { calls++; return original.apply(FB, arguments); };
+      try {
+        const budget = {};
+        FB.aiBuildingsYear(state, budget);
+        FB.treasurySurplusYear(state, reuse ? budget.snapshot : null);
+        return { calls:calls, state:JSON.stringify(state), retained:!!budget.snapshot };
+      } finally { FB.treasurySnapshot = original; }
+    }
+    const rng = FB.getRngState();
+    const reference = run(false), referenceRng = FB.getRngState();
+    FB.setRngState(rng);
+    const optimized = run(true);
+    return { referenceCalls:reference.calls, calls:optimized.calls,
+      same:reference.state === optimized.state, retained:optimized.retained,
+      rng:FB.getRngState() === referenceRng };
+  });
+  expect(result).toEqual({ referenceCalls:2, calls:1, same:true, retained:true, rng:true });
 });

@@ -459,7 +459,9 @@ window.FB = window.FB || {};
   FB.modifierUpkeepEntries = function (state, key) {
     key = key || 'gold';
     const out = [];
-    const demesne = FB.modifierCounties(state);
+    // County policies are funded once by the actual count. Their shared effects
+    // still reach every settlement, including delegated baronies.
+    const demesne = FB.realmHeldCounties(state, 'player');
     for (let p = 0; p < demesne.length; p++) {
       const pid = demesne[p], list = FB.countyModifierRecords(state, pid);
       for (let i = 0; i < list.length; i++) {

@@ -658,6 +658,8 @@ window.FB = window.FB || {};
       });
     } else if (!patron) {
       reason = FB.T('Only a count or greater ruler can entrust you with a field command.');
+    } else if (!FB.baronyPetitionSite(state)) {
+      reason = FB.T('Your count has no eligible settlement to offer as a reward.');
     } else if (!FB.isRealmAtWar(state, patron.sovereignRealmId)) {
       reason = FB.T('Your ruler is not at war.');
     } else if (!FB.hostOf(state, patron.sovereignRealmId)) {
@@ -727,7 +729,19 @@ window.FB = window.FB || {};
         !FB.armiesHostile(state, winner, loser)) return false;
     delete state.player.militaryCommand;
     if (FB.validateFocus) FB.validateFocus(state);
+    const site = FB.baronyPetitionSite(state);
+    const grant = site && FB.settlementGrantQuote(state, site.provinceId, site.settlement,
+      state.player.charId, record.patronRealmId);
+    if (!grant) {
+      FB.queueEvent(state, 'military_victory_purse', { pid:pid, realmId:record.patronRealmId });
+      return true;
+    }
     FB.queueEvent(state, 'military_barony_victory', {
+      protagonistId:state.player.charId, settlementGrant:grant,
+      grantSettlement:FB.settlementsOf(state, site.provinceId)[site.settlement].name,
+      grantRevenue:grant.revenue, grantUpkeep:grant.upkeep, grantDues:grant.dues,
+      grantNet:grant.net, grantTaxShare:Math.round(grant.taxShare * 100),
+      grantLevyShare:Math.round(grant.levyShare * 100),
       pid:pid,
       realmId:record.patronRealmId,
       sovereignRealmId:record.sovereignRealmId,
@@ -1492,11 +1506,24 @@ window.FB = window.FB || {};
       campaign.occupations && campaign.occupations[pid];
     if (occupied && occupied.occupied && FB.greatHolyWarCamp &&
         FB.greatHolyWarCamp(state, realm) === 'defenders') return true;
+    // A county challenge starts inside the incumbent's county. Their field
+    // banner does not itself occupy the challenger's separately held barony.
+    // Both hosts must be able to take the field before county combat resolves.
+    const challenge = realm === 'player' && FB.realmWars && FB.realmWars(state, realm).find(function (war) {
+      return war.status === 'active' && war.countyChallenge &&
+        war.countyChallenge.provinceId === pid;
+    });
+    const baronRally = challenge && state.player.tier === 3 &&
+      FB.settlementCountyHolder(state, pid) === challenge.countyChallenge.countId &&
+      FB.holdsSettlementInCounty(state, realm, pid);
     const probe = { realm:realm }, forces = {};
     const hosts = countyHosts || state.armies || [];
     for (const host of hosts) {
       if (host.at !== pid || host.men <= 0 || host.moveLeft > 0 ||
           (host.path && host.path.length)) continue;
+      if (baronRally && (!FB.armiesHostile(state, probe, host) ||
+          host.realm === challenge.countyChallenge.countId ||
+          host.realm === challenge.countyChallenge.superior)) continue;
       if (FB.armiesHostile(state, probe, host) ||
           FB.armiesHostile(state, { realm:(state.holder || {})[pid] }, host) ||
           FB.armiesHostile(state, { realm:(state.owner || {})[pid] }, host)) {
@@ -1518,6 +1545,9 @@ window.FB = window.FB || {};
     let counties = FB.realmTerritory(state, realm).slice();
     const included = Object.create(null), hostsByCounty = countyHostIndex || Object.create(null);
     for (const pid of counties) included[pid] = true;
+    for (const site of FB.directSettlements(state, realm)) {
+      if (!included[site.provinceId]) { counties.push(site.provinceId); included[site.provinceId] = true; }
+    }
     if (realm === 'player') {
       for (const pid of p.provs || []) if (!included[pid]) {
         counties.push(pid); included[pid] = true;

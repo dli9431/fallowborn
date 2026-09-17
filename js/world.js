@@ -3284,6 +3284,8 @@ window.FB = window.FB || {};
      so the check errs toward keeping the record. */
   FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
     if (!state || !c || !state.player) return false;
+    if (FB.settlementLordshipReferencesCharacter &&
+        FB.settlementLordshipReferencesCharacter(state, c.id)) return true;
     const p = state.player;
     if (c.id === p.charId || p.courtingId === c.id) return true;
     if (c.items && c.items.length) return true;
@@ -4113,23 +4115,68 @@ window.FB = window.FB || {};
       FB.intrigueRealmRulerCaptive(state, rid) ? 0.8 : 1;
     const territory = recruitment || (FB.recruitmentTerritory ? FB.recruitmentTerritory(state, rid) : null);
     if (territory && !territory.rally) return 0;
-    let supportDevelopment = 0;
-    const levyDevelopment = territory ? territory.eligible.reduce(function (sum, pid) {
-      let input = countyInputs && countyInputs[pid];
-      if (input && FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster county phase cache hits');
-      if (!input) {
-        input = militaryCountyInput(state, pid, context);
-        if (countyInputs) countyInputs[pid] = input;
+    let men = 0;
+    const phase = context || {};
+    if (phase.lordshipRevision !== FB.militaryInputRevision) {
+      phase.lordshipRevision = FB.militaryInputRevision;
+      phase.settlementQuotes = {};
+      phase.settlementCapacities = {};
+      phase.settlementPopulations = {};
+      phase.settlementPenalties = {};
+      phase.settlementCountyInputs = {};
+      phase.settlementVisible = {};
+    }
+    const capacities = phase.settlementCapacities || (phase.settlementCapacities = {});
+    const populations = phase.settlementPopulations || (phase.settlementPopulations = {});
+    const penalties = phase.settlementPenalties || (phase.settlementPenalties = {});
+    const fiscalContext = { capacities:capacities, populations:populations,
+      penalties:penalties, militaryOnly:true,
+      visible:phase.settlementVisible || (phase.settlementVisible = {}),
+      countyInputs:phase.settlementCountyInputs || (phase.settlementCountyInputs = {}) };
+    function holdings(id) {
+      const key = 'realm:' + id;
+      if (!capacities[key]) capacities[key] = FB.settlementCapacityProjection(state, id);
+      return capacities[key].settlements;
+    }
+    const quotes = phase.settlementQuotes || (phase.settlementQuotes = {});
+    function amounts(pid, slot) {
+      const key = pid + ':' + slot;
+      if (!quotes[key]) quotes[key] = FB.settlementFiscalProjection(state, pid, slot, fiscalContext).amounts;
+      return quotes[key];
+    }
+    for (const site of holdings(rid)) {
+      if (territory && territory.eligible.indexOf(site.provinceId) < 0) continue;
+      const a = amounts(site.provinceId, site.settlement);
+      men += a.availableLevy + a.specialists - a.specialistDues;
+    }
+    const realm = state.realms[rid];
+    if (realm && realm.liege) {
+      const ownRate = FB.feudalCharterDef(FB.feudalContractOf(state, rid).charterId).levyShare;
+      men *= 1 - ownRate;
+    }
+    // Only a direct vassal's own settlement troops owe service. Receipts from
+    // that vassal's barons are not recursively levied a second time.
+    for (const vid of FB.realmDirectVassals(state, rid)) {
+      const vassal = state.realms[vid];
+      if (!vassal || !vassal.alive || vassal.liege !== rid) continue;
+      const rate = FB.feudalCharterDef(FB.feudalContractOf(state, vid).charterId).levyShare;
+      for (const site of holdings(vid)) {
+        if (territory && territory.eligible.indexOf(site.provinceId) < 0) continue;
+        const a = amounts(site.provinceId, site.settlement);
+        men += (a.availableLevy + a.specialists - a.specialistDues) * rate;
       }
-      supportDevelopment += input.support;
-      return sum + input.levy;
-    }, 0) : 0;
-    const strength = territory ? levyDevelopment * (FB.papacyRealmStrengthMultiplier
-      ? FB.papacyRealmStrengthMultiplier(state, rid) : 1) : FB.realmStrength(state, rid);
-    const minimum = territory ? 60 * Math.min(1, supportDevelopment / Math.max(1, territory.development)) : 60;
-    const base = Math.max(territory && territory.blocked.length ? 0 : minimum, Math.round(strength *
-      FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
-      (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
+    }
+    for (const pid of FB.realmHeldCounties(state, rid)) {
+      if (territory && territory.eligible.indexOf(pid) < 0) continue;
+      const n = FB.settlementVisibleCount(state, pid);
+      for (let i = 0; i < n; i++) {
+        const a = amounts(pid, i);
+        men += a.levyDues + a.specialistDues;
+      }
+    }
+    const base = Math.round(men * (FBDATA.balance.aiHostPerDev || 0.3) *
+      (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0)) *
+      (FB.papacyRealmStrengthMultiplier ? FB.papacyRealmStrengthMultiplier(state, rid) : 1));
     const burden = FB.fortGarrisonBurden
       ? FB.fortGarrisonBurden(state, rid, rid, territory) : 0;
     return Math.max(0, Math.round(base * captivePenalty) - burden);
@@ -4390,8 +4437,8 @@ window.FB = window.FB || {};
     return (state && state.dev && state.dev[pid]) || (pr ? pr.dev0 : 0) || 1;
   }
 
-  /* Development-scaled village reveals: one additional settlement becomes
-     visible at development 3, 5, 7, and 9. */
+  /* Development unlocks founding capacity at 3, 5, 7, and 9.
+     Visibility is separately persisted by the lordship system. */
   function villageBonus(dev) {
     return (dev >= 3) + (dev >= 5) + (dev >= 7) + (dev >= 9);
   }
@@ -4427,8 +4474,15 @@ window.FB = window.FB || {};
     const info = FB.world && FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
     if (!info) return 0;
     const dev = settlementDev(state, pid);
-    let visible = Math.min(SETTLEMENT_MAX_SLOTS,
-      Math.max(info.authored, info.legacyBase + villageBonus(dev)));
+    const chartered = state && state.settlementLordships && state.settlementLordships.foundingVersion === 1;
+    const startingDev = FB.world.byId[pid].dev0 || 1;
+    const established = FB.settlementEstablishedCount ? FB.settlementEstablishedCount(state, pid) : 0;
+    let visible = Math.min(SETTLEMENT_MAX_SLOTS, info.list.length,
+      Math.max(info.authored, chartered && established > 0 ? established :
+        info.legacyBase + villageBonus(chartered ? startingDev : dev)));
+    if (FB.settlementEstablishedCount) {
+      visible = Math.max(visible, FB.settlementEstablishedCount(state, pid));
+    }
     /* A fort remains a map landmark even if later development decline would
        ordinarily conceal its settlement. The cached fort lookup keeps this
        allocation-free renderer seam constant-time. */
@@ -4479,7 +4533,14 @@ window.FB = window.FB || {};
         visible = Math.max(visible, (p.homeSettlement | 0) + 1);
       }
     }
-    return Math.min(SETTLEMENT_MAX_SLOTS, visible);
+    return Math.min(SETTLEMENT_MAX_SLOTS, info.list.length, visible);
+  };
+
+  FB.settlementCapacity = function (state, pid) {
+    const info = FB.world && FB.world.sitesByProv && FB.world.sitesByProv[pid];
+    if (!info) return 0;
+    return Math.min(SETTLEMENT_MAX_SLOTS, info.list.length,
+      Math.max(info.authored, info.legacyBase + villageBonus(settlementDev(state, pid))));
   };
 
   /* Allocation-free seam for the map renderer: whether one compiled site is
@@ -4510,16 +4571,16 @@ window.FB = window.FB || {};
       ? FB.settlementKindRank(info.list[1].kind) : 0;
     function visibleAt(d) {
       return Math.min(SETTLEMENT_MAX_SLOTS,
-        Math.max(authored, legacyBase + villageBonus(d)));
+        Math.max(authored, legacyBase + villageBonus(d)), info ? info.list.length : SETTLEMENT_MAX_SLOTS);
     }
     const candidates = [];
-    if (visibleAt(3) > visibleAt(2)) candidates.push({ t: 3, change: 'new_village' });
+    if (visibleAt(3) > visibleAt(2)) candidates.push({ t: 3, change: 'founding_capacity' });
     if (headBase < 1) candidates.push({ t: 4, change: 'head_town' });
-    if (visibleAt(5) > visibleAt(4)) candidates.push({ t: 5, change: 'new_village' });
+    if (visibleAt(5) > visibleAt(4)) candidates.push({ t: 5, change: 'founding_capacity' });
     if (secondBase < 1) candidates.push({ t: 6, change: 'second_town' });
     if (headBase < 2) candidates.push({ t: 7, change: 'head_city' });
-    if (visibleAt(7) > visibleAt(6)) candidates.push({ t: 7, change: 'new_village' });
-    if (visibleAt(9) > visibleAt(8)) candidates.push({ t: 9, change: 'new_village' });
+    if (visibleAt(7) > visibleAt(6)) candidates.push({ t: 7, change: 'founding_capacity' });
+    if (visibleAt(9) > visibleAt(8)) candidates.push({ t: 9, change: 'founding_capacity' });
     let next = null, change = null;
     for (const candidate of candidates) {
       if (candidate.t > development) {
@@ -5336,6 +5397,9 @@ window.FB = window.FB || {};
     if (FB.papacyProvinceTransferred) {
       FB.papacyProvinceTransferred(state, pid, from, toRealm);
     }
+    if (state.player && state.player.provinceId === pid && FB.syncHomeCountyLord) {
+      FB.syncHomeCountyLord(state);
+    }
     if (serfAuthorityBefore && FB.serfHomeAuthority &&
         FB.noteSerfHomeTransition) {
       FB.noteSerfHomeTransition(state, 'county_transfer',
@@ -5525,6 +5589,7 @@ window.FB = window.FB || {};
        settler community now so every live identity reader sees saved state. */
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     FB.worldCompileSettlements(pid);
+    if (FB.rememberSettlementSites) FB.rememberSettlementSites(state, pid);
     FB.invalidateRealmCache();
     if (FB.marketWorldDirty) FB.marketWorldDirty();
     FB.checkTierPromotions(state);
@@ -5979,7 +6044,9 @@ window.FB = window.FB || {};
     }
     if (cause !== 'ai_drift') developmentChangesFor(state)[pid] = 1;
     if (after === before) return 0;
+    if (FB.rememberSettlementSites) FB.rememberSettlementSites(state, pid);
     state.dev[pid] = after;
+    if (FB.rememberSettlementSites) FB.rememberSettlementSites(state, pid);
     FB.invalidateRealmCache();
     if (FB.map && FB.map.request) FB.map.request();
     if (FB.reconcileSettlementCommunities) {
@@ -6016,12 +6083,20 @@ window.FB = window.FB || {};
      Prioritizes productive economic anchors (mills, markets, harbors, bridges)
      and civic resilience (granaries, temples, libraries). Direct player
      counties use the player's own construction deeds. */
-  FB.aiBuildingsYear = function (state) {
+  FB.aiBuildingsYear = function (state, annualBudget) {
     if (!state || !state.realms || !state.dev) return;
     const maxPerYear = (FBDATA.balance && FBDATA.balance.aiMaxBuildingsPerYear) || 1;
     const changed = developmentChangesFor(state);
 
-    const reserves = FB.treasuryConstructionReserves ? FB.treasuryConstructionReserves(state) : null;
+    // Reuse only after a no-purchase pass. Succession and population work have
+    // already finished; any construction below invalidates the handoff.
+    if (annualBudget) {
+      annualBudget.snapshot = state.treasuryAccounting && state.treasuryAccounting.mode === 'active'
+        ? FB.treasurySnapshot(state) : null;
+    }
+    const reserves = FB.treasuryConstructionReserves ?
+      FB.treasuryConstructionReserves(state, annualBudget && annualBudget.snapshot) : null;
+    if (!reserves) return;
 
     const contested = {};
     const armies = state.armies || [];
@@ -6132,7 +6207,7 @@ window.FB = window.FB || {};
           if (reserves && cost + reserves[rid] + (bdef.upkeep || 0) * FBDATA.balance.realmReserveSeasons > FB.treasuryAvailable(state, rid)) continue;
 
           for (let sIdx = 0; sIdx < settlements.length; sIdx++) {
-            if (!existingAt[sIdx + ':' + bid]) {
+            if (FB.aiCanBuildAt(state, rid, pid, sIdx, bid)) {
               chosen = { pid: pid, s: sIdx, id: bid, def: bdef, cost:cost };
               break;
             }
@@ -6145,6 +6220,7 @@ window.FB = window.FB || {};
               reserves[rid] + (chosen.def.upkeep || 0) * FBDATA.balance.realmReserveSeasons)) continue;
           if (reserves) reserves[rid] += (chosen.def.upkeep || 0) * FBDATA.balance.realmReserveSeasons;
           state.buildings = state.buildings || {};
+          if (annualBudget) annualBudget.snapshot = null;
           const list = state.buildings[chosen.pid] = state.buildings[chosen.pid] || [];
           const record = { s: chosen.s, id: chosen.id };
           list.push(record);
@@ -6535,8 +6611,9 @@ window.FB = window.FB || {};
       if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state, familyLinks);
 
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: AI buildings'); }
-      FB.aiBuildingsYear(state);
-      if (FB.treasurySurplusYear) FB.treasurySurplusYear(state);
+      const annualBudget = {};
+      FB.aiBuildingsYear(state, annualBudget);
+      if (FB.treasurySurplusYear) FB.treasurySurplusYear(state, annualBudget.snapshot);
       return annualContext;
     } finally { if (timing) timing.leave(phase); }
   };
@@ -6568,6 +6645,20 @@ window.FB = window.FB || {};
       entries.push(entry);
     }
     function buildingEntries(key, unit) {
+      if (key === 'retinue' || key === 'archers') {
+        const context = { capacities:{} };
+        for (const site of FB.directSettlements(state)) {
+          if (FB.recruitmentCountyBlocked(state, 'player', site.provinceId)) continue;
+          const a = FB.settlementFiscalProjection(state, site.provinceId, site.settlement, context).amounts;
+          for (const built of FB.builtIn(state, site.provinceId)) {
+            if (built.s !== site.settlement || built.ruined) continue;
+            const def = FBDATA.buildings[built.id];
+            if (def && def[key]) add(unit, 'building', def[key] * a.countyPenalty *
+              a.settlementPenalty * (1 - a.serviceRate), { buildingId:built.id, count:1 });
+          }
+        }
+        return;
+      }
       let count;
       if (FB.buildingBonusCounts) {
         count = FB.buildingBonusCounts(state, key, 'player');
@@ -6589,73 +6680,39 @@ window.FB = window.FB || {};
       }
     }
 
-    if (p.provs && p.provs.length) {
-      for (const pid of p.provs) {
-        if (FB.recruitmentCountyBlocked && FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
-        const popFactor = (baseline || !FB.countyPopulationFactor) ? 1 : FB.countyPopulationFactor(state, pid);
-        const levyBeforeCounty = comp.levy;
-        const countyLevy = (state.dev[pid] || 1) * popFactor * B.levyPerDev;
-        add('levy', 'county', countyLevy, { pid:pid });
-        const ambitionRate = FB.historicalAmbitionBonus
-          ? FB.historicalAmbitionBonus(state, pid, 'levy') : 0;
-        if (ambitionRate) add('levy', 'historical_ambition', countyLevy * ambitionRate,
-          { pid:pid, rate:ambitionRate });
-        if (FB.enterpriseUpgradeEffect) {
-          add('levy', 'enterprise',
-            FB.enterpriseUpgradeEffect(state, 'levy', pid), { pid:pid });
-          add('ret', 'enterprise',
-            FB.enterpriseUpgradeEffect(state, 'retinue', pid), { pid:pid });
-        }
-        if (FB.countyModifierRecords) {
-          for (const record of FB.countyModifierRecords(state, pid)) {
-            const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
-            const rate = record.id === 'commons_uprising' ? 0 : def && def.fx && Number(def.fx.levy);
-            if (isFinite(rate) && rate) {
-              add('levy', 'modifier', countyLevy * rate, {
-                modifierId:record.id, pid:pid, rate:rate
-              });
-            }
-          }
-        }
-        let supportFactor = FB.countySupportFactor ? FB.countySupportFactor(state, pid) : 1;
-        if (FB.hasModifier && FB.hasModifier(state, 'commons_uprising', pid)) supportFactor *= 1 - FB.commonsUprisingReduction(state, pid);
-        if (supportFactor !== 1) add('levy', 'popular_support',
-          (comp.levy - levyBeforeCounty) * (supportFactor - 1), { pid:pid, rate:supportFactor - 1 });
-      }
-    } else if (p.tier >= 3 &&
-        !(FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId]))) {
-      const retinue = B.baronyRetinue || 120;
-      add('ret', FB.castellanyOf && FB.castellanyOf(state)
-        ? 'castellany_retinue' : 'barony_retinue', retinue);
-      /* A baron holds no county, so the county-levy loop above never ran and
-         a levy concession on their seat went unapplied. Itemize it against
-         the household the baron actually raises, by the same ownership rule
-         that charges them upkeep for that record. See FB.modifierCounties. */
-      const seat = FB.modifierSeat ? FB.modifierSeat(state) : null;
-      if (seat && FB.enterpriseUpgradeEffect) {
-        add('ret', 'enterprise',
-          FB.enterpriseUpgradeEffect(state, 'levy', seat) +
-          FB.enterpriseUpgradeEffect(state, 'retinue', seat), { pid:seat });
-      }
-      if (seat && FB.countyModifierRecords) {
-        for (const record of FB.countyModifierRecords(state, seat)) {
-          const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
-          const rate = record.id === 'commons_uprising' ? 0 : def && def.fx && Number(def.fx.levy);
-          if (isFinite(rate) && rate) {
-            add('ret', 'modifier', retinue * rate, {
-              modifierId:record.id, pid:seat, rate:rate
-            });
-          }
-        }
-      }
-      let supportFactor = seat && FB.countySupportFactor ? FB.countySupportFactor(state, seat) : 1;
-      if (seat && FB.hasModifier && FB.hasModifier(state, 'commons_uprising', seat)) supportFactor *= 1 - FB.commonsUprisingReduction(state, seat);
-      if (supportFactor !== 1) add('ret', 'popular_support',
-        comp.ret * (supportFactor - 1), { pid:seat, rate:supportFactor - 1 });
+    const territorial = FB.directSettlements(state);
+    const fiscalContext = { capacities:{}, baseline:!!baseline };
+    let settlementService = 0, countyLevyPenalty = 0, settlementLevyPenalty = 0;
+    for (const site of territorial) {
+      const pid = site.provinceId;
+      if (FB.recruitmentCountyBlocked && FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
+      const f = FB.settlementFiscalProjection(state, pid, site.settlement, fiscalContext);
+      // Capacity is itemized below, so restore the pre-capacity personal source.
+      const factor = f.amounts.countyPenalty * f.amounts.settlementPenalty;
+      const localBuildings = FB.buildingBonusAt(state, pid, site.settlement, 'levy');
+      let support = FB.countySupportFactor(state, pid);
+      if (FB.hasModifier(state, 'commons_uprising', pid)) support *= 1 - FB.commonsUprisingReduction(state, pid);
+      const own = factor ? f.amounts.levy / factor : 0;
+      add('levy', 'county', own - localBuildings * support, { pid:pid });
+      settlementService += f.amounts.levyDues;
+      countyLevyPenalty += own * (f.amounts.countyPenalty - 1);
+      settlementLevyPenalty += own * f.amounts.countyPenalty * (f.amounts.settlementPenalty - 1);
+    }
+    if (!territorial.length && p.tier >= 3 && FB.castellanyOf && FB.castellanyOf(state)) {
+      add('ret', 'castellany_retinue', B.baronyRetinue || 120);
     }
     if (FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId])) {
       add('ret', 'episcopal_household',
         FB.bishopricRetinue ? FB.bishopricRetinue(state) : 120);
+    }
+    if (FB.enterpriseUpgradeEffect) {
+      const privateCounties = {};
+      for (const enterprise of FB.enterpriseList(state)) privateCounties[enterprise.provinceId] = true;
+      for (const pid of Object.keys(privateCounties)) {
+        if (FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
+        add('levy', 'enterprise', FB.enterpriseUpgradeEffect(state, 'levy', pid), { pid:pid });
+        add('ret', 'enterprise', FB.enterpriseUpgradeEffect(state, 'retinue', pid), { pid:pid });
+      }
     }
     if (FB.householdStandardEffect) {
       add('levy', 'household_standard',
@@ -6666,14 +6723,18 @@ window.FB = window.FB || {};
 
     if (p.tier >= 3) {
       buildingEntries('levy', 'levy');
-      for (const pid of FB.demesne(state)) {
+      for (const site of territorial) {
+        const pid = site.provinceId;
         if (FB.recruitmentCountyBlocked && FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
-        const levy = FB.buildingBonusIn(state, pid, 'levy');
+        const levy = FB.buildingBonusAt(state, pid, site.settlement, 'levy');
         if (!levy) continue;
         let factor = FB.countySupportFactor(state, pid);
         if (FB.hasModifier(state, 'commons_uprising', pid)) factor *= 1 - FB.commonsUprisingReduction(state, pid);
         add('levy', 'popular_support', levy * (factor - 1), { pid:pid, rate:factor - 1 });
       }
+      if (countyLevyPenalty) add('levy', 'domain_penalty', countyLevyPenalty);
+      if (settlementLevyPenalty) add('levy', 'settlement_penalty', settlementLevyPenalty);
+      if (settlementService) add('levy', 'settlement_service', -settlementService);
       buildingEntries('retinue', 'ret');
       buildingEntries('archers', 'arch');
       const techUnits = FB.techUnits ? FB.techUnits(state) :
@@ -6710,11 +6771,26 @@ window.FB = window.FB || {};
         add('levy', 'martial_rate', beforeMartial * martialRate, { rate:martialRate });
       }
 
-      const domain = FB.domainPenalty(state);
-      if (domain !== 1) {
-        const beforeDomain = comp.levy;
-        add('levy', 'domain_penalty', beforeDomain * (domain - 1), { rate:domain - 1 });
+      if (p.liege && (p.provs || []).length) {
+        const rate = FB.feudalCharterDef(FB.feudalContractOf(state, 'player').charterId).levyShare;
+        let service = 0;
+        for (const site of territorial) {
+          if (FB.settlementCountyHolder(state, site.provinceId) !== 'player' ||
+              FB.recruitmentCountyBlocked(state, 'player', site.provinceId)) continue;
+          const a = FB.settlementFiscalProjection(state, site.provinceId, site.settlement, fiscalContext).amounts;
+          service += (a.availableLevy + a.specialists - a.specialistDues) * rate;
+        }
+        if (service) add('levy', 'settlement_service', -Math.min(comp.levy, service));
       }
+      let localDues = 0;
+      for (const pid of FB.realmHeldCounties(state, 'player')) {
+        if (FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
+        for (let slot = 0; slot < FB.settlementVisibleCount(state, pid); slot++) {
+          const a = FB.settlementFiscalProjection(state, pid, slot, fiscalContext).amounts;
+          localDues += a.levyDues + a.specialistDues;
+        }
+      }
+      if (localDues) add('levy', 'settlement_contribution', localDues);
 
       /* Vassal men arrive after own-domain modifiers. A called favor raises
          only that named vassal's contribution and stays visible here. */
@@ -8802,6 +8878,7 @@ window.FB = window.FB || {};
 
   FB.checkTierPromotions = function (state) {
     const p = state.player;
+    if (FB.syncHomeCountyLord) FB.syncHomeCountyLord(state);
     // no one is his own vassal — repair saves where a flight into the
     // player's own demesne left p.liege pointing at the player's realm
     if (p.liege === 'player') {

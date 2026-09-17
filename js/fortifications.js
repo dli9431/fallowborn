@@ -124,8 +124,7 @@ window.FB = window.FB || {};
 
   function playerHolds(state, pid) {
     return !!(state && state.player &&
-      ((state.player.provs && state.player.provs.indexOf(pid) >= 0) ||
-       (state.holder && state.holder[pid] === 'player')));
+      ((state.holder && state.holder[pid]) || (state.owner && state.owner[pid])) === 'player');
   }
 
   function siteExists(pid, settlement) {

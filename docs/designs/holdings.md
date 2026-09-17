@@ -1,5 +1,19 @@
 # Holdings (commoner property)
 
+## Moving to a founded seat
+
+A funded settlement charter moves only `player.homeSettlement` when established.
+Private manor, plots, enterprises and other household property remain in their
+original settlements. Funding and cancellation do not change property or rank.
+An heir inherits the funded charter separately from existing private property.
+
+Settlement grants convey hereditary government and local public works. They do not
+move or confiscate household plots, manors, enterprises or other private property.
+A manor grants preference for that settlement only while the count can lawfully
+grant it; a manor at the county seat never makes the seat eligible. Grant reviews
+state the distinction before the player transfers control.
+
+
 **Commoners play tall through holdings and maintained standards.** `FBDATA.holdings`
 (map_data.js) is family property for tiers 0–2, bought with gold through the
 permanent-property section of the household deed

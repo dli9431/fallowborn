@@ -795,6 +795,11 @@ window.FB = window.FB || {};
       action:travel ? FB.T('Paused') : FB.T('Change…'),
       disabled:!!travel
     });
+    const founding = FB.settlementFoundingStatus(s);
+    if (founding) h += ongoingCommitmentRow({
+      id:'founding', icon:'+', label:FB.T('Settlement charter'),
+      status:founding.reason || FB.T('Ready to establish'), action:FB.T('Review')
+    });
     if (hostilePlot || intrigueCaptive || intrigueCaptured || intrigueLeverage) {
       const intrigueParts = [];
       if (hostilePlot) {
@@ -1211,37 +1216,44 @@ window.FB = window.FB || {};
             pct: Math.round((1 - FB.domainPenalty(s)) * 100)
           })) : '') + '</div>';
       }
-      /* Compact ledger: county rows against one shared column per building
-         type standing anywhere in the demesne, so a glance shows what each
-         county has and lacks. The county name opens its settlement sheet. */
+      const settlementCap = FB.settlementCapacityProjection(s);
+      h += '<div class="progressnote' + (settlementCap.over ? ' warnote' : '') + '">' +
+        esc(FB.T('Settlements: {held}/{cap}', { held:settlementCap.directCount, cap:settlementCap.limit })) +
+        (settlementCap.over ? ' &middot; ' + esc(FB.T('Settlement income and levy reduced by {percent}%', {
+          percent:Math.round((1 - settlementCap.multiplier) * 100)
+        })) : '') + '</div>';
+      // One row per direct holding, including settlements without buildings.
       const bldByProv = {};
       const bldTypes = {};
-      for (const bp of FB.demesne(s)) {
-        const cells = {};
+      const bldSites = FB.directSettlements(s);
+      for (const site of bldSites) {
+        const bp = site.provinceId, cells = {};
         for (const e of FB.builtIn(s, bp)) {
-          if (e.ruined || !FBDATA.buildings[e.id]) continue;
+          if (e.s !== site.settlement || e.ruined || !FBDATA.buildings[e.id]) continue;
+          if (e.id === 'walls' && !FB.canManageCountyBuildings(s, bp)) continue;
           cells[e.id] = (cells[e.id] || 0) + 1;
           bldTypes[e.id] = true;
         }
-        if (Object.keys(cells).length) bldByProv[bp] = cells;
+        bldByProv[bp + ':' + site.settlement] = cells;
       }
       const bldCols = [];
       for (const id in FBDATA.buildings) if (bldTypes[id]) bldCols.push(id);
-      const bldPids = Object.keys(bldByProv);
-      if (bldCols.length && bldPids.length) {
+      if (bldSites.length) {
         let grid = '<span class="bldprov bldcolhead"></span>';
         for (const id of bldCols) {
           const d = FBDATA.buildings[id];
           grid += '<span class="bldcell bldcolhead" title="' +
             esc(dt(s, 'building', id, d, 'name')) + '">' + d.icon + '</span>';
         }
-        for (const bp of bldPids) {
-          const cells = bldByProv[bp];
+        for (const site of bldSites) {
+          const bp = site.provinceId;
+          const settlement = FB.settlementsOf(s, bp)[site.settlement];
+          const cells = bldByProv[bp + ':' + site.settlement];
           grid += '<button type="button" class="bldprov" data-bldprov="' +
-            esc(bp) + '" title="' +
+            esc(bp) + '" data-bldsett="' + site.settlement + '" title="' +
             esc(FB.T('See the buildings of {settlement}', {
-              settlement: FB.world.byId[bp].name
-            })) + '">' + esc(FB.world.byId[bp].name) + '</button>';
+              settlement: settlement.name
+            })) + '">' + esc(settlement.name) + '</button>';
           for (const id of bldCols) {
             const d = FBDATA.buildings[id];
             const name = dt(s, 'building', id, d, 'name');
@@ -1260,8 +1272,8 @@ window.FB = window.FB || {};
         }
         h += '<div class="progressnote bldsummary"><span class="bldhead">🏗 ' +
           esc(FB.T('Buildings')) + '</span><div class="bldgrid" style="' +
-          'grid-template-columns:minmax(96px,max-content) repeat(' +
-          bldCols.length + ', 24px)">' + grid + '</div></div>';
+          'grid-template-columns:minmax(96px,1fr)' + (bldCols.length ? ' repeat(' +
+          bldCols.length + ', 24px)' : '') + '">' + grid + '</div></div>';
       }
     }
     if (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) {
@@ -1272,7 +1284,7 @@ window.FB = window.FB || {};
       btn.addEventListener('click', function () {
         const pid = btn.dataset.bldprov;
         FB.map.centerOn(pid);
-        UI.showSettlement(pid, 0);
+        UI.showSettlement(pid, Number(btn.dataset.bldsett));
       });
     });
     if ($('tutorial-dismiss')) {
@@ -1616,7 +1628,9 @@ window.FB = window.FB || {};
       function (button) {
         button.addEventListener('click', function () {
           const commitment = button.dataset.commitment;
-          if (commitment === 'focus') {
+          if (commitment === 'founding') {
+            UI.showSettlementFounding();
+          } else if (commitment === 'focus') {
             if (!focusSectionOpen) $('daily-focus-list').click();
             else setActiveActionSection('focus');
             focusActionControl('#daily-focus-list', null, 'start');
@@ -1805,6 +1819,7 @@ window.FB = window.FB || {};
     }
     if (s.player.tier === 2) {
       const command = FB.militaryCommandStatus && FB.militaryCommandStatus(s);
+      const foundingPath = FB.T('You may also fund a new settlement charter to become Baron, even in this first generation.');
       const text = FB.gentryEstablished(s)
         ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for investiture as baron.',
           {
@@ -1816,11 +1831,11 @@ window.FB = window.FB || {};
           prestige:command ? command.prestigeNeeded : 120
         });
       return '<div class="progressnote path-hint">🧭 ' + esc(text) +
-        (FB.gentryEstablished(s) ? ' ' + esc(FB.rankElevationCostText(
+        ' ' + esc(foundingPath) + (FB.gentryEstablished(s) ? ' ' + esc(FB.rankElevationCostText(
           FB.rankElevationCost(s, 2, 3))) : '') + '</div>';
     }
     const tips = {
-      3: 'Path: petition your liege for a county and fund its investiture — or declare independence and take one.',
+      3: 'Path: petition a higher ruler for an available county, inherit one, or challenge a count. A claim does not guarantee superior support.',
       4: 'Path: hold the majority of a de jure duchy (petition, inherit, or conquer), then claim recognition as duke.',
       5: 'Path: hold the majority of a de jure kingdom, win independence, then claim its crown.',
       6: 'Path: hold the majority of two kingdoms of one empire, then claim imperial recognition.',
@@ -3977,7 +3992,10 @@ window.FB = window.FB || {};
       return FB.T('{trait} — direct levy', { trait:name });
     }
     if (entry.kind === 'martial_rate') return FB.T('Ruler’s Martial');
-    if (entry.kind === 'domain_penalty') return FB.T('Over-domain penalty');
+    if (entry.kind === 'domain_penalty') return FB.T('County capacity penalty');
+    if (entry.kind === 'settlement_penalty') return FB.T('Settlement capacity penalty');
+    if (entry.kind === 'settlement_service') return FB.T('Settlement service owed');
+    if (entry.kind === 'settlement_contribution') return FB.T('Baronial military service');
     if (entry.kind === 'fort_garrison') return FB.T('Fort garrisons retained');
     if (entry.kind === 'papal_policy') return FB.T('Investiture and Papal standing');
     if (entry.kind === 'vassal') {
@@ -7424,9 +7442,23 @@ window.FB = window.FB || {};
         : FB.T('Commons resistance: {days} days remaining', { days:revolt.days })));
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
+        let direct = 0, baronies = 0, dues = 0, service = 0;
+        for (let slot = 0; slot < setts.length; slot++) {
+          const fiscal = FB.settlementFiscalProjection(s, pid, slot);
+          if (!fiscal) continue;
+          if (FB.settlementConstructionAuthority(s, pid, slot, fiscal.countyHolderId).direct) direct++;
+          else { baronies++; dues += fiscal.amounts.dues;
+            service += fiscal.amounts.levyDues + fiscal.amounts.specialistDues; }
+        }
+        h += landKv('County government', esc(FB.T('{direct} direct settlements, {baronies} baronies', {
+          direct:direct, baronies:baronies
+        }))) + landKv('Baronial contributions', esc(FB.T('{money:dues} / season and {troops} troops', {
+          dues:dues, troops:Math.floor(service)
+        })));
+
         // every settlement is a button: it opens that settlement's sheet
         // (UI.showSettlement) and centers the map on its parent county
-        const own = FB.demesne(s).indexOf(pid) >= 0;
+        const own = FB.directSettlements(s).some(function (site) { return site.provinceId === pid; });
         h += '<div class="settblock land-settlements"><span>' +
           esc(FB.T('Settlements')) + '</span>' +
           '<div class="settlist">' + setts.map(function (st, si) {
@@ -7437,11 +7469,15 @@ window.FB = window.FB || {};
                 (fort.targetLevel ? '⚒' : '') : '';
             const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') +
               ' ' + esc(st.name) + fortLabel;
-            return '<button class="linklike settlink" data-sett="' + si + '" title="' +
-              esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>';
+            const holder = FB.settlementHolder(s, pid, si);
+            const holderName = holder && holder.kind === 'character' && s.chars[holder.id] &&
+              !FB.settlementConstructionAuthority(s, pid, si, FB.settlementCountyHolder(s, pid)).direct
+              ? FB.T('Barony of {baron}', { baron:FB.fullName(s.chars[holder.id]) }) : FB.T('Direct holding');
+            return '<button type="button" class="linklike settlink" data-sett="' + si + '" title="' +
+              esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '"><span class="settlink-name">' + label + '</span><span class="adesc">' + esc(holderName) + '</span></button>';
           }).join('') + '</div></div>';
         if (own) {
-          h += '<div class="hint">' + esc(FB.T('Each settlement keeps its own buildings — tap one to see them and raise more.')) + '</div>';
+          h += '<div class="hint">' + esc(FB.T('Open a settlement to see its holder, income and construction rights.')) + '</div>';
         }
       }
       h += '</section><section class="land-section"><h3 class="land-section-title">' +

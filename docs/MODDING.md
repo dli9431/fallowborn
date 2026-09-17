@@ -1,5 +1,128 @@
 # Modding Fallowborn
 
+## County progression API and save additions
+
+`FB.countyGrantCandidates` returns only a higher ruler's eligible direct counties;
+rank-elevation options may carry `county` to select the reviewed grant.
+`FB.countyChallengeQuote`, `requestCountyChallenge` and `beginCountyChallenge`
+revalidate detached declaration terms. County challenges use the existing war
+registry with `county_replacement` objectives; they are not settlement wars.
+`FB.countyRecognitionQuote`/`petitionCountyRecognition` settle disputed ownership
+without erasing rival claims. `FB.countyPetitionDays()` shares the ordinary county
+petition cooldown. See state-and-saves.md for the optional serializable records.
+
+The existing `border_county_without_dejure` plot target also selects counties with
+an owned barony at rank 3; ranks 4+ retain foreign bordering targets. Existing
+claims inside a liege's realm remain stored. Settlement sources additionally allow
+`restoration`; explicit revoke/restore APIs preserve hereditary provenance.
+No new event trigger or effect keys or generated settlement data are introduced.
+
+## Chartered settlement founding
+
+`FBDATA.balance.settlementFoundingSeasons` defaults to 4 (90 days per season).
+Construction and investiture use the existing Gentry-to-Baron rank cost quote,
+saved when funded; changing balance does not reprice active charters.
+`FB.settlementCapacity(state, pid)` returns the development-unlocked slot limit;
+`FB.settlementVisibleCount` returns established slots. Capacity thresholds retain
+the old 3/5/7/9 schedule, but require explicit charter completion to establish a
+new slot. `settlementDevelopment.change` uses `founding_capacity`, not `new_village`.
+Generated site data must not be edited; reservation uses the next stable compiled
+slot. The save fields are documented in designs/state-and-saves.md. Lordship
+`source` also accepts `founding`. `settlement_founding` has technology mode `none`.
+No new event trigger or effect keys are introduced.
+
+Phase 4 grant interfaces:
+
+- `settlementGrantSites(state, pid, realmId)` lists directly held non-seat sites.
+- `baronyPetitionSite(state)` prefers the eligible home manor, then a non-seat site.
+- `settlementGrantRecipient(state, characterId, realmId)` checks a living adult
+  gentle recipient's residence/household and excludes reigning rulers.
+- `settlementGrantQuote(state, pid, slot, characterId, realmId)` returns detached
+  ownership, local-work, fiscal, service and capacity terms, or null.
+- `confirmSettlementGrant(state, quote)` revalidates exact terms before ownership
+  and rank commit. Ordinary petitions separately enforce house, cost and Standing
+  requirements through the rank-elevation transaction.
+- `settlementLordshipSeason(state, period)` runs bounded, idempotent delegation
+  and paid baron construction after accounting. Existing building gates apply.
+
+The `military_settlement_available` event requirement checks the exact quote in
+`ctx.settlementGrant` and `ctx.protagonistId`; `military_settlement_grant` repeats
+that check and atomically awards lordship, rank, prestige and Standing. New reward
+events must not combine this custom effect with an unconditional `tierSet:3`.
+The military reward context provides `grantSettlement`, `grantRevenue`,
+`grantUpkeep`, `grantDues`, `grantNet`, `grantTaxShare`, and `grantLevyShare` for
+localized event text. The no-site reward is `military_victory_purse`.
+
+
+## Settlement lordships and local accounting
+
+`js/lordships.js` loads after `world.js`. County owner/holder and realm APIs remain
+county-scoped. Optional save-format-3 `settlementLordships` version 1 records
+established slot floors and delegated character-held lordships; missing delegation
+means direct county-holder control. The full record and succession rules are in
+[state and saves](designs/state-and-saves.md#settlement-ownership-foundation).
+
+Read-only, detached interfaces:
+
+- `FB.settlementCountyHolder(state, pid)` returns the living supervising realm id.
+- `FB.homeCountyAuthority(state)` returns `{provinceId, realmId, characterId}`;
+  an unmaterialized ruler has a null character id until a mutation boundary resolves it.
+- `FB.settlementEstablishedCount(state, pid)` returns the saved visibility floor.
+- `FB.settlementLordship(state, pid, slot)` returns a copied delegation or null.
+- `FB.settlementHolder(state, pid, slot)` returns `{kind:'realm'|'character', id}`
+  or null for unavailable sites. A player barony uses the player character id;
+  direct county government uses the realm id, including `'player'`.
+- `FB.directSettlements(state, actor)` returns `{provinceId, settlement}` rows.
+  Actors are typed holder objects; a string means a realm, and omission means the
+  player. The player actor includes both personal baronies and direct county holdings.
+- `FB.settlementConstructionAuthority(state, pid, slot, actor)` returns `holder`,
+  `countyHolderId`, and `direct`, with `integrated:true` and `liveAccounting:'settlement'`.
+- `FB.settlementCapacityProjection(state, actor)` returns `directCount`, `settlements`,
+  `limit`, `over`, `technology`, `multiplier`, `enforced:true`, and `stage:'integrated'`.
+- `FB.settlementTaxBase(state, pid, slot, rate?)` partitions the county primitive.
+  `FB.settlementPopulationShares` returns conserved population weights.
+- `FB.settlementFiscalProjection` returns ownership, obligations, and `amounts`:
+  base, tax, tolls, gross, national bonus, upkeep, dues, net, levy, levyDues,
+  availableLevy, specialists, specialistDues, serviceRate, countyPenalty,
+  and settlementPenalty. `settlementContributionProjection.amounts` contains
+  paired `tax` and `levy` contributions. `settlementActorFiscal` aggregates a holder.
+- `FB.buildingBonusAt(state,pid,slot,key)` reads local indexed building effects;
+  `buildingBonusIn` retains physical county scope. `buildingEffectScope(key)` is
+  `local`, `county`, or `national`. Personal building counts use direct lordship.
+- `FB.baronyAccount(state,cid)` returns a detached purse; `baronyConstructionFunds`
+  excludes recurring reserves. `FB.buildBarony(state,cid,pid,slot,id)` checks
+  ownership, requirements, physical/personal limits, and actual funds before paying.
+  It does not schedule AI decisions or confer land. `settleBaronyAccounts(state,season)`
+  is the once-per-period treasury mutation. `settlementDomainBase` defaults to 2.
+- `FB.settlementFoundingEligibility(state, pid)` reports established and unused
+  physical slots, but `ready:false` and `blocker:'founding_not_integrated'` until Phase 5.
+
+Mutation boundaries are `FB.ensureSettlementLordships(state, {fresh:true}?)`,
+`FB.rememberSettlementSites(state, pid)`, `FB.syncHomeCountyLord(state)`,
+`FB.assignSettlementLordship(state, pid, slot, holderId, options?)`, and
+`FB.revertSettlementLordship(state, pid, slot)`. Assignment/reversion return booleans;
+assignment requires an established non-seat slot, a living recipient, and a living
+county holder. The legacy-migration exception also permits the dead protagonist
+whose playable succession decision is pending. These are trusted simulation primitives, not player grant actions:
+they do not negotiate, charge, move a household, or award rank. `source:'legacy'`
+marks the one-time migration grant. Ordinary grants default to customary service.
+
+`FB.playerControlsSettlementCommunity` uses actual direct settlement ownership,
+not residence or blanket county control. County community orders retain their
+separate county-holder requirement. Community agency scans the counties of direct
+holdings, so a barony outside the household residence is not omitted.
+
+`FB.settlementLordshipsCharacterDied` and
+`FB.settlementLordshipsPlayerSuccession(state, oldId, heirId)` own inheritance and
+reversion. A null playable heir reverts the old player's delegations. A saved nominee
+is used only when alive, free, and distinct from the deceased. Direct custom writes
+must call `FB.invalidateSettlementLordships(state, pid)`; prefer the mutation APIs.
+`FB.settlementLordshipRevision()` is transient, never saved, and
+`FB.settlementLordshipReferencesCharacter` protects retained identity references.
+
+No construction, tax, levy, capacity-penalty, or founding gameplay is enabled by
+calling a projection. Those integrations are separate phases of the saved plan.
+
 ## Ruler justice
 
 `FBDATA.justiceSentences` defines sentence ids with display `name`/`desc`, required
@@ -488,7 +611,7 @@ A focus override accepts `id` plus any of `label`, `desc`, `order`, and
   `action.<id>.desc`; a translation catalogue whose source hash no longer matches
   falls back to the mod's English.
 - `order` is a unique integer from 0 through 27 for focuses. Deed order runs from 0
-  through the effective deed count minus one (0 through 78 without added deeds). The
+  through the effective deed count minus one (0 through 82 without added deeds). The
   complete effective catalogue must remain a permutation, so moving one action generally
   requires giving the displaced action the old order in the same mod, as in the focus
   example above.

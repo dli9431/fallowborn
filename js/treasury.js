@@ -148,9 +148,11 @@
       { amount:amount, count:q.counties.length }));
     return true;
   };
-  FB.treasurySurplusYear = function (state) {
+  FB.treasurySurplusYear = function (state, constructionSnapshot) {
     if (!state.treasuryAccounting || state.treasuryAccounting.mode !== 'active') return;
-    const snapshot = FB.treasurySnapshot(state), reserves = FB.treasuryConstructionReserves(state, snapshot);
+    const snapshot = constructionSnapshot || FB.treasurySnapshot(state);
+    count(constructionSnapshot ? 'annual unchanged snapshot reused' : 'annual post-construction snapshot built');
+    const reserves = FB.treasuryConstructionReserves(state, snapshot);
     for (const rid of Object.keys(snapshot.rows)) {
       const row = account(state, rid);
       if (!row) continue;
@@ -163,7 +165,8 @@
   };
 
   // One direct-holder pass. Liege receipts never get taxed recursively.
-  FB.treasurySnapshot = function (state) {
+  FB.treasurySnapshot = function (state, settlementContext) {
+    settlementContext = settlementContext || {};
     return measured('fiscal snapshot', function () {
       const rows = Object.create(null), counties = Object.create(null);
       const realms = state.realms || {}, ids = Object.keys(realms).sort();
@@ -187,13 +190,6 @@
           const def = FBDATA.modifiers[record.id];
           row.upkeep += positive(def && def.upkeep && def.upkeep.gold);
         }
-        const popular = FB.countyPopularSupport(state, pid, records);
-        row.tax += FB.countyTaxBase(state, pid, FBDATA.balance.taxPerDev,
-          FB.modBonus(state, 'tax', pid, popular, records));
-        let support = FB.clamp(1 + popular / 100, 0, 2);
-        if (records.some(function (record) { return record.id === 'commons_uprising'; })) {
-          support *= 1 - FB.commonsUprisingReduction(state, pid, popular);
-        }
         const list = (state.buildings || {})[pid] || [];
         for (const raw of list) {
           count('building reads');
@@ -206,14 +202,19 @@
           } else {
             const def = FBDATA.buildings[building.id];
             if (!def) continue;
-            row.buildings += positive(def.tax) * support;
-            row.upkeep += positive(def.upkeep);
+            // Ordinary works are charged to their settlement holder below.
           }
         }
       }
       for (const rid of ids) {
         const row = rows[rid];
         if (!row) continue;
+        const localFiscal = FB.settlementActorFiscal(state, rid, settlementContext);
+        row.tax = localFiscal.tax;
+        row.buildings = localFiscal.tolls;
+        row.upkeep += localFiscal.upkeep;
+        row.duesIn += localFiscal.duesIn;
+        row.duesOut += localFiscal.duesOut;
         const sovereign = sovereigns[rid];
         if (tech[sovereign] === undefined) {
           count('realm tax bonus quotes');
@@ -226,7 +227,7 @@
         const contract = FB.feudalContractOf(state, rid);
         const charter = FB.feudalCharterDef(contract.charterId);
         const dues = row.tax * Math.max(0, numeric(charter.taxShare));
-        row.duesOut = dues;
+        row.duesOut += dues;
         if (rows[liege]) rows[liege].duesIn += dues;
       }
       for (const rid of ids) {
@@ -442,12 +443,16 @@
     const period = season(state);
     if (state.treasuryAccounting.lastSettledSeason === period) return false;
     return measured('seasonal settlement', function () {
-      const snapshot = FB.treasurySnapshot(state);
+      // No fiscal inputs change between the county snapshot and baron credits.
+      // Discard this detached context before grants or construction can run.
+      const settlementContext = {};
+      const snapshot = FB.treasurySnapshot(state, settlementContext);
+      FB.settleBaronyAccounts(state, period, settlementContext);
       // Mirror the existing player's liege deduction without changing player cash.
       const liege = state.player && state.player.liege;
       if (playerTax && snapshot.rows[liege]) {
         const fiscal = snapshot.rows[liege];
-        fiscal.duesIn += positive(-playerTax.liege);
+        fiscal.duesIn += positive(-(playerTax.countyLiege || 0));
         const costs = governmentCosts(state, liege, fiscal);
         fiscal.administration = costs.administration; fiscal.court = costs.court;
         fiscal.government = costs.total;
@@ -477,6 +482,7 @@
         count('accounts settled');
       }
       state.treasuryAccounting.lastSettledSeason = period;
+      FB.settlementLordshipSeason(state, period);
       return true;
     });
   };
@@ -581,6 +587,13 @@
   FB.treasuryRevalue = function (state, ratio) {
     if (!state.treasuryAccounting || !(ratio > 0) || !isFinite(ratio)) return;
     measured('annual revaluation', function () {
+      const baronies = state.settlementLordships && state.settlementLordships.accounts || {};
+      for (const cid of Object.keys(baronies)) {
+        const row = baronies[cid];
+        if (row.lastRevaluedYear >= state.date.year) continue;
+        if (row.gold > 0) row.gold *= ratio;
+        row.lastRevaluedYear = state.date.year;
+      }
       for (const rid of Object.keys(state.realms)) {
         const row = account(state, rid);
         if (!row || row.lastRevaluedYear >= state.date.year) continue;

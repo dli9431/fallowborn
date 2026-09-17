@@ -1,5 +1,11 @@
 # Characters: skills & growing up
 
+Settlement-lordship holders, founders, and saved nominees are retained references
+for court compaction. NPC lordships use existing parent/child links, including
+adoption, for deterministic hereditary succession; player lordships follow the
+selected playable heir. No new characters or RNG draws are needed to repair a
+lordship on restore. See [state and saves](state-and-saves.md).
+
 ## Judicial exile
 
 Active exile supplies an NPC's authoritative residence before household or royal
@@ -996,6 +1002,13 @@ This data/modding boundary has no technology-impact entry: it neither changes ba
 religious eligibility nor adds a separately gateable player capability.
 
 **The character interaction card owns dealings with one full character.**
+
+Settlement barons without a realm court show their existing living spouses and
+children in the same portrait-chip family strip used for higher rulers. Each
+chip identifies relationship and age and opens the person's character sheet.
+Back restores the baron's sheet, scroll position and selected family chip.
+Opening the strip creates no relatives or succession records; an empty family
+has no strip. This is presentation only and has no technology impact.
 It derives identity context, residence, occupation, faith, station, typed
 Standing, current personal attention, courtship, friendship, rivalry,
 betrothal, travel, and household-service commitments. Its actions route to the
@@ -1020,6 +1033,12 @@ and ruler-generation commitments.
 Individual family manumission has technology impact **none**: redeeming a named bound
 relative is baseline personal and legal recovery, not a capability credibly controlled
 by sovereign research.
+
+When the household head directly rules the home county, they authorize individual
+family manumission themselves; no separate local lord or self-Standing check is
+required. The ordinary quoted price and personal Freeholder outcome remain.
+A free adult relative may receive a settlement grant, which raises them to Baron.
+Unrelated recipients retain the Gentry requirement.
 
 **Hostile conduct belongs to exact characters, including AI rulers and accomplices.**
 The optional bounded `character.conduct` record holds successful-scheme progress and

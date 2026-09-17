@@ -1269,8 +1269,8 @@ FBDATA.plots = {
     trigger:{ tierMin:3, isVassal:true },
     desc:'What the liege’s tax men never see, the liege never misses.' },
   fabricate_claim: { name:'Fabricate a County Claim', icon:'📜', need:14, event:'plot_fabricate_claim',
-    trigger:{ tierMin:4 }, target:'border_county_without_dejure',
-    desc:'Buy witnesses, copy charters, and give a neighboring county a lawful-looking past.' },
+    trigger:{ tierMin:3 }, target:'border_county_without_dejure',
+    desc:'Buy witnesses and copy charters for a county claim. Landed barons may target their own count; county rulers may target neighboring counties.' },
   feudal_obligation: { name:'Bend the Feudal Obligation', icon:'⚖', need:12,
     event:'plot_feudal_obligation',
     trigger:{ tierMin:3, tierMax:5, isVassal:true },
@@ -1354,6 +1354,7 @@ FBDATA.balance = {
   rankElevationPrestigeByTier: [0,0,100,250,400,600,1000,1500],
   rankElevationPietyByTier: [0,0,0,0,0,0,300,600],
   baronyPrestige: 400, baronyOpinion: 60,
+  settlementFoundingSeasons: 4,
   militaryBaronyMartial: 12, militaryBaronyPrestige: 120, // founder's exceptional field-command gate
   taxPerDev: 1.5, levyPerDev: 90,
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial
@@ -1697,6 +1698,7 @@ FBDATA.balance = {
      cap = domainBase + floor(stewardship / domainStewPer); every county past
      the cap multiplies the player's OWN income and levy by (1 - overDomainPenalty).
      Grant the surplus to vassals to lift it. */
+  settlementDomainBase: 2,
   domainBase: 4, domainStewPer: 5, overDomainPenalty: 0.15,
   demandTaxSeasons: 4, demandTaxPerSte: 0.015, // extraordinary taxes: seasons squeezed + per-stewardship bonus
   enterpriseRepeatCostGrowth: 1.35, // each further family enterprise of one kind costs this much more

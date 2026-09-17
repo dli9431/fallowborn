@@ -210,7 +210,9 @@
     rows(state).forEach(function (w) {
       const a = state.realms[w.attacker], b = state.realms[w.defender];
       if (!a || !a.alive || !b || !b.alive || w.attacker === w.defender) {
-        w.status = 'ended'; w.endedTurn = state.turn; invalidateWars(state); return;
+        w.status = 'ended'; w.endedTurn = state.turn; invalidateWars(state);
+        if (w.countyChallenge) FB.finishCountyChallenge(state, w);
+        return;
       }
       w.occupations = w.occupations || {};
       if (endpoint(w, 'player')) FB.withOrdinaryWar(state, w.id, function () {
@@ -404,6 +406,7 @@
       }
     });
     w.occupations = {};
+    if (w.countyChallenge) FB.finishCountyChallenge(state, w);
     if (FB.realmWars(state, 'player').length || FB.greatHolyWarCamp(state, 'player')) {
       state.player.focus = retainedFocus; state.player.focusBack = retainedBack;
     } else delete (state.military || {}).player;
@@ -438,7 +441,7 @@
     if (old && !stored[old.pid]) all.push(old);
     return all.filter(function (c) {
       return c && FB.world.byId[c.pid] && !FB.world.byId[c.pid].wasteland &&
-        !!FB.warTargetDefender(state, 'player', c.pid);
+        !!FB.settlementCountyHolder(state, c.pid) && FB.settlementCountyHolder(state, c.pid) !== 'player';
     });
   };
   FB.saveFabricatedClaim = function (state, pid) {
@@ -626,7 +629,8 @@
     });
   };
   function recordAggressionDeclaration(state, war) {
-    if (war.aggressionSequence || !(war.objectives || []).some(function (o) { return o.type === 'aggression'; })) return;
+    if (war.aggressionSequence || !(war.countyChallenge && war.countyChallenge.justification === 'usurpation') &&
+        !(war.objectives || []).some(function (o) { return o.type === 'aggression'; })) return;
     const realm = state.realms[war.attacker];
     if (!realm) return;
     const sequence = FB.aggressionDeclarationCount(state, war.attacker) + 1;
@@ -723,13 +727,15 @@
     return true;
   };
 
-  function territorial(w) { return ['claims', 'dejure', 'fabricated', 'aggression', 'border', 'consolidation', 'enforcement'].indexOf(w.casus && w.casus.type || 'border') >= 0; }
+  function territorial(w) { return ['claims', 'dejure', 'fabricated', 'aggression', 'border', 'consolidation', 'enforcement', 'county_replacement'].indexOf(w.casus && w.casus.type || 'border') >= 0; }
   function finishObjectives(state, w) {
     return withPeaceReceipt(state, w, function () { return finishObjectivesApply(state, w); });
   }
   function finishObjectivesApply(state, w) {
     if (!w.objectives.length || !w.objectives.every(function (o) { return w.occupations[o.target] && w.occupations[o.target].occupied; })) return false;
-    if (w.enforcementOf) {
+    if (w.countyChallenge) {
+      if (!FB.completeCountyChallenge(state, w)) return FB.settleOrdinaryWar(state, w.id, 'invalid');
+    } else if (w.enforcementOf) {
       FB.settleOrdinaryWar(state, w.enforcementOf, 'white_peace', w.id);
       if (w.defender === 'player') state.player.prestige = Math.max(0, state.player.prestige - 50);
       else state.realms[w.defender].prestige = Math.max(0, (Number(state.realms[w.defender].prestige) || 0) - 50);
@@ -760,6 +766,7 @@
       }
     }
     FB.settleOrdinaryWar(state, w.id, 'victory');
+    if (w.countyChallenge) FB.realmBuryIfEmpty(state, w.countyChallenge.countId);
     FB.checkTierPromotions(state);
     return true;
   }
@@ -770,6 +777,7 @@
     w.objectivePulseTurn = state.turn;
     if (w.enforcementOf && !FB.ordinaryWarById(state, w.enforcementOf)) return FB.settleOrdinaryWar(state, id, 'invalid');
     w.objectives = w.objectives.filter(function (o) {
+      if (w.countyChallenge && FB.settlementCountyHolder(state, o.target) !== w.countyChallenge.countId) return false;
       return w.enforcementOf || FB.warCountyHeldBy(state, o.target, w.defender);
     });
     if (!w.objectives.length) return FB.settleOrdinaryWar(state, id, 'invalid');
@@ -1158,9 +1166,18 @@
   };
   const recruitmentBlocked = FB.recruitmentCountyBlocked;
   FB.recruitmentCountyBlocked = function (state, rid, pid, hosts) {
+    const countyHolder = (state.holder || {})[pid] || (state.owner || {})[pid];
+    const personalHolding = countyHolder !== rid && FB.holdsSettlementInCounty(state, rid, pid);
     if (rows(state).some(function (w) {
-      return w.occupations[pid] && w.occupations[pid].occupied && FB.warRealmContains(state, rid, w.defender);
+      return w.occupations[pid] && w.occupations[pid].occupied &&
+        (FB.warRealmContains(state, rid, w.defender) ||
+          (personalHolding && FB.warRealmContains(state, countyHolder, w.defender) &&
+            !FB.warRealmContains(state, rid, w.attacker)));
     })) return true;
+    // The holder-chain guard protects delegated county levies from being called
+    // twice. A separately owned barony supplies its own troops, not the count's.
+    // Still apply the underlying siege/host checks to that local muster.
+    if (personalHolding) return recruitmentBlocked(state, rid, pid, hosts);
     let holder = (state.holder || {})[pid];
     const seen = {};
     while (holder && holder !== rid && !seen[holder]) {
