@@ -2,6 +2,8 @@
 
 Applying a household staffing plan keeps Enterprise Plan open with refreshed figures
 and a confirmation. Back retains the original Household Plan or livelihoods return.
+On compact screens, enterprise purchase Details sits below the name and cost,
+while the Household Plan entry gives Details a separate column beside its action.
 
 ## Moving to a founded seat
 

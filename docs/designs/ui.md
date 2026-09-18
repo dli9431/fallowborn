@@ -19,8 +19,15 @@ Compact match cards place candidate names above their Details and Pledge control
 to preserve readable names inside narrow dialogs.
 Phone rank comparisons stack Current and New vertically with a downward arrow,
 leaving the full card width available for each rank name.
-Grant settlement recipient cards reserve a bottom row for mobile Details, keeping
-the name and portrait clear; expanded details remain below the selection card.
+Grant settlement recipient cards use a compact identity column beside a visible
+48px Details button; expanded details span both columns below the selection.
+Recipient identity uses the portrait's actual 40px width, with name and standing
+aligned beside it. Details occupies its own grid cell without overlapping the
+selection button or using a raised z-index. No empty bottom row is reserved.
+Enterprise purchase cards likewise reserve a bottom row for compact Details.
+Household Plan's Enterprise Plan entry uses a separate Details column whose touch
+target contributes to row height. These controls stay in the scrolling content,
+without a raised stacking layer that could cover the modal footer.
 
 The Descendant Match Assistant exposes one native age-preference selector:
 highest rank within five years either side, youngest eligible candidate, highest

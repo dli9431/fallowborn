@@ -60,15 +60,19 @@ for (const width of [390, 1280]) {
       const help = shell.locator('.settcard-info');
       await help.scrollIntoViewIfNeeded();
       const bounds = await shell.evaluate(function (shell) {
-        const name = shell.querySelector('.person-assignment-name').getBoundingClientRect();
         const help = shell.querySelector('.settcard-info').getBoundingClientRect();
         const card = shell.querySelector('.person-assignment-card').getBoundingClientRect();
-        return { nameBottom:name.bottom, helpTop:help.top, right:help.right,
-          bottom:help.bottom, cardRight:card.right, cardBottom:card.bottom };
+        const bounds = shell.getBoundingClientRect();
+        const hit = document.elementFromPoint(help.left + help.width / 2, help.top + help.height / 2);
+        return { helpLeft:help.left, right:help.right, height:bounds.height,
+          bottom:help.bottom, cardRight:card.right, shellRight:bounds.right,
+          shellBottom:bounds.bottom, reachable:!!hit && hit.closest('.settcard-info') !== null };
       });
-      expect(bounds.nameBottom).toBeLessThanOrEqual(bounds.helpTop);
-      expect(bounds.right).toBeLessThanOrEqual(bounds.cardRight);
-      expect(bounds.bottom).toBeLessThanOrEqual(bounds.cardBottom);
+      expect(bounds.helpLeft).toBeGreaterThanOrEqual(bounds.cardRight);
+      expect(bounds.right).toBeLessThanOrEqual(bounds.shellRight);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.shellBottom);
+      expect(bounds.height).toBeLessThan(120);
+      expect(bounds.reachable).toBe(true);
       await help.click();
       await expect(shell.locator('.person-assignment-details')).toBeVisible();
       await help.click();
@@ -378,6 +382,40 @@ for (const mobile of [false, true]) {
     });
     await page.locator('#settlement-grant').press('Enter');
     await page.locator('#grant-search').fill('Candidate');
+    if (mobile) {
+      const first = page.locator('[data-grant-recipient]:visible').first().locator('..');
+      await first.scrollIntoViewIfNeeded();
+      const alignment = await first.evaluate(function (card) {
+        const face = card.querySelector('.pface').getBoundingClientRect();
+        const name = card.querySelector('.person-assignment-name').getBoundingClientRect();
+        const standing = card.querySelector('.person-assignment-state').getBoundingClientRect();
+        const help = card.querySelector('.settcard-info').getBoundingClientRect();
+        const bounds = card.getBoundingClientRect();
+        return { faceRight:face.right, nameLeft:name.left, standingLeft:standing.left,
+          helpRight:help.right, helpBottom:help.bottom, right:bounds.right, bottom:bounds.bottom };
+      });
+      expect(alignment.nameLeft).toBeGreaterThanOrEqual(alignment.faceRight + 7);
+      expect(alignment.standingLeft).toBe(alignment.nameLeft);
+      expect(alignment.helpRight).toBeLessThanOrEqual(alignment.right);
+      expect(alignment.helpBottom).toBeLessThanOrEqual(alignment.bottom);
+      // Scroll controls across the footer boundary, then verify its hit targets.
+      for (const fraction of [0.25, 0.5, 0.75, 1]) {
+        await page.locator('#gm-body').evaluate(function (body, fraction) {
+          body.scrollTop = (body.scrollHeight - body.clientHeight) * fraction;
+        }, fraction);
+        const footerClear = await page.locator('#gm-body > .gm-footer').evaluate(function (footer) {
+          const r = footer.getBoundingClientRect();
+          for (let y = r.top + 4; y < r.bottom; y += 8) {
+            for (let x = r.left + 4; x < r.right; x += 8) {
+              const hit = document.elementFromPoint(x, y);
+              if (hit && hit.closest('.person-assignment-actions')) return false;
+            }
+          }
+          return true;
+        });
+        expect(footerClear).toBe(true);
+      }
+    }
     const candidate = page.locator('[data-grant-recipient]:visible').last();
     await candidate.focus();
     const cid = await candidate.getAttribute('data-grant-recipient');

@@ -144,6 +144,38 @@ test('locked monopoly deed keeps Guild Charters in its shared details surface',
       .toBeVisible();
   });
 
+for (const width of [320, 390]) {
+  test('enterprise purchase Details clears costs and the footer at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:740 });
+    await page.evaluate(function () { FB.ui.showEnterpriseMarket(0); });
+    const cards = page.locator('.enterprise-purchase-shell');
+    expect(await cards.count()).toBeGreaterThan(0);
+    for (let i = 0; i < await cards.count(); i++) {
+      const card = cards.nth(i);
+      const help = card.locator('.settcard-info');
+      await help.scrollIntoViewIfNeeded();
+      const bounds = await card.evaluate(function (card) {
+        const info = card.querySelector('.settcard-info').getBoundingClientRect();
+        const cost = card.querySelector('.enterprise-purchase-critical').getBoundingClientRect();
+        const action = card.querySelector('.enterprise-purchase-option').getBoundingClientRect();
+        const footer = document.querySelector('#gm-body > .gm-footer').getBoundingClientRect();
+        const hit = document.elementFromPoint(info.left + info.width / 2, info.top + info.height / 2);
+        return { top:info.top, bottom:info.bottom, right:info.right, costBottom:cost.bottom,
+          actionBottom:action.bottom, actionRight:action.right, footerTop:footer.top,
+          reachable:!!hit && card.querySelector('.settcard-info').contains(hit) };
+      });
+      expect(bounds.top).toBeGreaterThanOrEqual(bounds.costBottom);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.actionBottom);
+      expect(bounds.right).toBeLessThanOrEqual(bounds.actionRight);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.footerTop);
+      expect(bounds.reachable).toBe(true);
+      await help.click();
+      await expect(card.locator('.enterprise-purchase-details')).toBeVisible();
+      await help.click();
+    }
+  });
+}
+
 test('enterprise catalogue keeps blocked choices explainable and idle warnings actionable',
   async function ({ page }) {
     const fixture = await page.evaluate(function () {

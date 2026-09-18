@@ -616,6 +616,17 @@ test.describe('sibling and collateral-household agency', function () {
       });
       const staffingEntry = page.locator('.household-plan-staffing-entry');
       await expect(staffingEntry.locator('.settcard-info')).toBeVisible();
+      const staffingBounds = await staffingEntry.evaluate(function (entry) {
+        const help = entry.querySelector('.settcard-info').getBoundingClientRect();
+        const action = entry.querySelector('.actionbtn').getBoundingClientRect();
+        const row = entry.getBoundingClientRect();
+        const footer = document.querySelector('#gm-body > .gm-footer').getBoundingClientRect();
+        return { left:help.left, actionRight:action.right, bottom:help.bottom,
+          rowBottom:row.bottom, footerTop:footer.top };
+      });
+      expect(staffingBounds.left).toBeGreaterThanOrEqual(staffingBounds.actionRight);
+      expect(staffingBounds.bottom).toBeLessThanOrEqual(staffingBounds.rowBottom);
+      expect(staffingBounds.bottom).toBeLessThanOrEqual(staffingBounds.footerTop);
       await staffingEntry.locator('.settcard-info').click();
       await expect(staffingEntry.locator('.settcard-details')).toContainText(
         'Review household staffing, local hiring, and upgrades');
