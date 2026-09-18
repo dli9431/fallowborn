@@ -1695,6 +1695,9 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 [data-enterprise-upgrade-plan] > label { display: block; margin: 12px 0 6px; }
 [data-enterprise-upgrade-plan] > select { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; }
 [data-enterprise-upgrade-plan] > .settcard { margin-top: 8px; }
+[data-enterprise-upgrade-plan] .settcard-head > .actionbtn {
+  flex: 1; width: auto; min-width: 0; margin: 0; overflow-wrap: anywhere;
+}
 [data-enterprise-upgrade-plan] .settcard-info { width: 44px; margin-top: 0; }
 .enterprise-staffing-verdict { color: var(--ui-accent-color); }
 .enterprise-staffing-summary .enterprise-staffing-totals {
@@ -2869,6 +2872,10 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .rank-elevation-arrow {
   align-self: center; color: var(--ui-accent-color); font-size: 20px;
 }
+@media (max-width: 480px) {
+  .rank-elevation-path { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .rank-elevation-arrow { justify-self: center; transform: rotate(90deg); }
+}
 .rank-elevation-confirm[aria-disabled="true"] {
   opacity: .48; filter: saturate(.5); cursor: not-allowed;
 }
@@ -3495,6 +3502,22 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 @media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
   .household-plan-visible-details,
   .household-policy-visible-details { display: none; }
+  .match-candidate-card .settcard-head { flex-direction: column; align-items: stretch; }
+  .match-candidate-card .settcard-actions { flex-wrap: wrap; }
+  [data-settlement-grant-candidates] .person-assignment-card {
+    padding: 10px 12px 64px;
+  }
+  [data-settlement-grant-candidates] .person-assignment-shell {
+    display: grid; grid-template-columns: minmax(0, 1fr);
+  }
+  [data-settlement-grant-candidates] .person-assignment-card,
+  [data-settlement-grant-candidates] .person-assignment-actions {
+    grid-column: 1; grid-row: 1;
+  }
+  [data-settlement-grant-candidates] .person-assignment-actions {
+    position: static; justify-self: end; align-self: end; margin: 8px;
+  }
+  [data-settlement-grant-candidates] .person-assignment-name { overflow-wrap: anywhere; }
   .household-plan-action.actionbtn {
     border: 1px solid #826a38; border-radius: 8px;
     background: linear-gradient(135deg, #392e1c, #2c2417);
@@ -3506,11 +3529,18 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
     box-shadow: inset 4px 0 0 #e6c45d, 0 2px 5px rgba(0,0,0,.38);
   }
   .household-plan-action .household-plan-primary { color: var(--ui-accent-hover); }
+  .household-plan-cell.has-details {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start; height: auto;
+  }
   .household-plan-cell.has-details .household-plan-action,
-  .household-plan-cell.has-details .household-plan-static { padding-right: 58px; }
+  .household-plan-cell.has-details .household-plan-static {
+    min-width: 0; min-height: 48px; padding-right: 8px;
+  }
+  .household-plan-cell > .household-plan-details { grid-column: 1 / -1; }
   .household-plan-staffing-entry > .actionbtn { padding-right: 58px; }
   .household-plan-cell > .household-plan-cell-actions {
-    position: absolute; z-index: 2; top: 3px; right: 4px;
+    position: static; padding: 3px 4px; align-self: start;
   }
 }
 
@@ -5365,7 +5395,7 @@ textarea.modjson, textarea.savetext {
     min-height: 48px; padding: 10px; font-size: 14px;
   }
   .household-plan-cell.has-details .household-plan-action,
-  .household-plan-cell.has-details .household-plan-static { padding-right: 58px; }
+  .household-plan-cell.has-details .household-plan-static { padding-right: 8px; }
   .household-plan-person { align-items: center; }
   .equip-picker-overlay.embedded-history-back .equip-picker-heading {
     position: sticky; top: 0; z-index: 2;

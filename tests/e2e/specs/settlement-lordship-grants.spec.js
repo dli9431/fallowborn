@@ -55,6 +55,24 @@ for (const width of [390, 1280]) {
     await site.press('Enter');
     await page.locator('#grant-search').fill('Settlement Candidate');
     const recipient = page.locator('[data-grant-recipient="' + setup.cid + '"]');
+    if (width === 390) {
+      const shell = recipient.locator('..');
+      const help = shell.locator('.settcard-info');
+      await help.scrollIntoViewIfNeeded();
+      const bounds = await shell.evaluate(function (shell) {
+        const name = shell.querySelector('.person-assignment-name').getBoundingClientRect();
+        const help = shell.querySelector('.settcard-info').getBoundingClientRect();
+        const card = shell.querySelector('.person-assignment-card').getBoundingClientRect();
+        return { nameBottom:name.bottom, helpTop:help.top, right:help.right,
+          bottom:help.bottom, cardRight:card.right, cardBottom:card.bottom };
+      });
+      expect(bounds.nameBottom).toBeLessThanOrEqual(bounds.helpTop);
+      expect(bounds.right).toBeLessThanOrEqual(bounds.cardRight);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.cardBottom);
+      await help.click();
+      await expect(shell.locator('.person-assignment-details')).toBeVisible();
+      await help.click();
+    }
     await recipient.press('Enter');
     await expect(page.locator('[data-settlement-grant-summary]')).toContainText('Upkeep transferred');
     await page.locator('#grant-cancel').click();

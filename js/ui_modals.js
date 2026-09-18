@@ -21435,7 +21435,7 @@ window.FB = window.FB || {};
         return;
       }
       UI.refresh();
-      finishLivelihoodsReturn(returnContext);
+      UI.showEnterpriseStaffingPreview(returnContext, FB.T('Household staffing plan applied.'));
     });
     $('enterprise-staffing-back').addEventListener('click', function () {
       finishLivelihoodsReturn(returnContext);

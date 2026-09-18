@@ -10,6 +10,17 @@ One Upgrades card adds native settlement/type selectors and full-width batch act
 Totals and affordability stay visible; shared hover/focus and touch Details itemize
 costs and blocked upgrades. Each click buys one level per eligible business, with
 staffing consequences disclosed. Redraws preserve selection and scroll.
+Upgrade action rows reserve space for the mobile Details control: the action
+shrinks and wraps within the remaining width instead of pushing Details off-screen.
+Applying household staffing refreshes Enterprise Plan in place; Back returns to its
+origin. Compact Household Plan cells give Details its own grid column and include
+the touch target in the row height, so short values cannot overlap the next row.
+Compact match cards place candidate names above their Details and Pledge controls
+to preserve readable names inside narrow dialogs.
+Phone rank comparisons stack Current and New vertically with a downward arrow,
+leaving the full card width available for each rank name.
+Grant settlement recipient cards reserve a bottom row for mobile Details, keeping
+the name and portrait clear; expanded details remain below the selection card.
 
 The Descendant Match Assistant exposes one native age-preference selector:
 highest rank within five years either side, youngest eligible candidate, highest

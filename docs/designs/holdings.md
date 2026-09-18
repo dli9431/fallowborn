@@ -1,5 +1,8 @@
 # Holdings (commoner property)
 
+Applying a household staffing plan keeps Enterprise Plan open with refreshed figures
+and a confirmation. Back retains the original Household Plan or livelihoods return.
+
 ## Moving to a founded seat
 
 Ordinary manor recognition requires a later generation to inherit Freeholder
@@ -318,6 +321,8 @@ spend no day and may increase staffing needs. Selection and scroll survive redra
 Enterprise Plan remains accessible when every enterprise is staffed. Technology
 review `enterprise_batch_upgrades` is **none**: a management shortcut adds no gate;
 individual upgrades retain their authored requirements.
+On compact screens, upgrade actions wrap beside an always-visible Details button;
+expanding the inline disclosure does not move the button outside its card.
 
 The owned-enterprise manager is deliberately terse. Its permanent face contains section
 titles, worker states, and action labels only. Enterprise description, staffing status and

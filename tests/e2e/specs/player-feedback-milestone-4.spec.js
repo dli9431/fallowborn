@@ -43,6 +43,30 @@ function arrangeFamily(page, childAge) {
   }, childAge);
 }
 
+test('phone rank elevation keeps Freeholder on one line', async function ({ page }) {
+  await startDeterministicGame(page);
+  await page.evaluate(function () {
+    FB.state.player.tier = 1;
+    FB.ui.showRankElevation('manor');
+  });
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width:width, height:740 });
+    const current = page.locator('.rank-elevation-path > span').first().locator('b');
+    await expect(current).toHaveText('Freeholder');
+    const layout = await current.evaluate(function (name) {
+      const range = document.createRange();
+      range.selectNodeContents(name);
+      const lines = Array.from(range.getClientRects());
+      const card = name.parentElement.getBoundingClientRect();
+      return { lines:lines.length, right:lines[0].right, cardRight:card.right,
+        overflow:name.scrollWidth - name.clientWidth };
+    });
+    expect(layout.lines).toBe(1);
+    expect(layout.right).toBeLessThanOrEqual(layout.cardRight);
+    expect(layout.overflow).toBeLessThanOrEqual(1);
+  }
+});
+
 test('blocks retirement while imprisoned, at war, traveling, or on campaign',
   async function ({ page }) {
     await startDeterministicGame(page);
@@ -701,6 +725,35 @@ test.describe('sibling and collateral-household agency', function () {
       expect(missingDisclosures).toBe(0);
       await page.locator('#household-plan-close').click();
     });
+
+  test('Household Plan details fit inside their rows on phones', async function ({ page }) {
+    await startDeterministicGame(page);
+    await arrangeFamily(page, 12);
+    await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+    for (const width of [320, 390, 528]) {
+      await page.setViewportSize({ width:width, height:800 });
+      const cells = page.locator('.household-plan-cell.has-details');
+      expect(await cells.count()).toBeGreaterThan(0);
+      for (let i = 0; i < await cells.count(); i++) {
+        const cell = cells.nth(i);
+        const help = cell.locator('.settcard-info');
+        await help.scrollIntoViewIfNeeded();
+        const bounds = await cell.evaluate(function (cell) {
+          const row = cell.getBoundingClientRect();
+          const help = cell.querySelector('.settcard-info').getBoundingClientRect();
+          const content = cell.firstElementChild.getBoundingClientRect();
+          return { bottom:help.bottom, rowBottom:row.bottom, right:help.right,
+            rowRight:row.right, left:help.left, contentRight:content.right };
+        });
+        expect(bounds.bottom).toBeLessThanOrEqual(bounds.rowBottom);
+        expect(bounds.right).toBeLessThanOrEqual(bounds.rowRight);
+        expect(bounds.contentRight).toBeLessThanOrEqual(bounds.left);
+        await help.click();
+        await expect(cell.locator('.household-plan-details')).toBeVisible();
+        await help.click();
+      }
+    }
+  });
 
   test('Household Plan keeps actions visibly button-like on phone and tablet',
     async function ({ page }) {

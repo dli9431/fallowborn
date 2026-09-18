@@ -22,6 +22,36 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+for (const width of [320, 390, 528]) {
+  test('match cards keep names and touch actions readable at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:740 });
+    await page.evaluate(function () { FB.ui.showMatchPicker(window.discoveryChildId); });
+    const cards = page.locator('.match-candidate-card');
+    await expect(cards).toHaveCount(3);
+    for (let i = 0; i < 3; i++) {
+      const card = cards.nth(i);
+      const help = card.locator('.settcard-info');
+      await help.scrollIntoViewIfNeeded();
+      const bounds = await card.evaluate(function (card) {
+        const name = card.querySelector('.settcard-head > b').getBoundingClientRect();
+        const actions = card.querySelector('.settcard-actions').getBoundingClientRect();
+        const copy = card.querySelector('.match-candidate-copy').getBoundingClientRect();
+        return { nameWidth:name.width, copyWidth:copy.width, nameBottom:name.bottom,
+          actionsTop:actions.top, actionsRight:actions.right, viewport:innerWidth,
+          overflow:card.scrollWidth - card.clientWidth };
+      });
+      expect(bounds.nameWidth).toBeGreaterThanOrEqual(bounds.copyWidth - 1);
+      expect(bounds.actionsTop).toBeGreaterThanOrEqual(bounds.nameBottom);
+      expect(bounds.actionsRight).toBeLessThanOrEqual(bounds.viewport);
+      expect(bounds.overflow).toBeLessThanOrEqual(1);
+      await help.click();
+      await expect(card.locator('.settcard-details')).toBeVisible();
+      await help.click();
+      await expect(card.locator('.settcard-details')).toBeHidden();
+    }
+  });
+}
+
 test('match choices expose Q and W action shortcuts for local and dynastic searches', async function ({ page }) {
   await page.evaluate(function () {
     FB.game.setPaused(true);

@@ -1,5 +1,8 @@
 # Marriage & child matches
 
+Compact candidate cards stack the name above Details and Pledge, keeping long
+names readable and both touch controls inside the dialog.
+
 ## Match assistant age preferences
 
 Searches remain available from birth. The saved `agePreference` selects `close`

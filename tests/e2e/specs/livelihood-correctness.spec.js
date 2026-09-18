@@ -89,6 +89,41 @@ test('enterprise batch upgrades reject changed prices and require the full cost'
   await expect(page.locator('#enterprise-upgrade-settlement-summary')).toContainText('Not enough money');
 });
 
+for (const width of [320, 390, 528]) {
+  test('Enterprise Plan upgrade Details fit beside mobile actions at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:844 });
+    await setupEnterpriseUpgradePlan(page);
+    for (const scope of ['settlement', 'type']) {
+      const id = 'enterprise-upgrade-' + scope;
+      const help = page.locator('[aria-controls="' + id + '-details"]');
+      await help.scrollIntoViewIfNeeded();
+      await expect(help).toBeVisible();
+      for (const expanded of [false, true]) {
+        if (expanded) await help.click();
+        const bounds = await help.evaluate(function (button) {
+          const row = button.closest('.settcard-head');
+          const card = row.closest('.settcard').getBoundingClientRect();
+          const action = row.querySelector('.actionbtn').getBoundingClientRect();
+          const r = button.getBoundingClientRect();
+          return { left:r.left, right:r.right, width:r.width, height:r.height,
+            cardRight:card.right, actionLeft:action.left, actionRight:action.right,
+            cardLeft:card.left, viewport:window.innerWidth };
+        });
+        expect(bounds.width).toBeGreaterThanOrEqual(44);
+        expect(bounds.height).toBeGreaterThanOrEqual(44);
+        expect(bounds.actionLeft).toBeGreaterThanOrEqual(bounds.cardLeft);
+        expect(bounds.actionRight).toBeLessThanOrEqual(bounds.left);
+        expect(bounds.right).toBeLessThanOrEqual(bounds.cardRight);
+        expect(bounds.right).toBeLessThanOrEqual(bounds.viewport);
+      }
+      await expect(page.locator('#' + id + '-details')).toBeVisible();
+      await expect(help).toHaveAttribute('aria-expanded', 'true');
+      await help.click();
+      await expect(page.locator('#' + id + '-details')).toBeHidden();
+    }
+  });
+}
+
 test('Enterprise Plan remains accessible when all enterprises are staffed', async function ({ page }) {
   await setupEnterpriseUpgradePlan(page);
   await page.evaluate(function () {
@@ -1213,20 +1248,24 @@ test('Apply plan uses the reviewed assignments without hiring or spending', asyn
     s.player.enterprises = [{ uid:'apply_summary', type:'field_strip',
       provinceId:s.player.provinceId, settlement:0, workerId:null }];
     const plan = FB.enterpriseStaffingPlan(s);
-    FB.ui.showEnterpriseStaffingPreview();
+    FB.ui.showHouseholdPlan();
     return { gold:s.player.gold, turn:s.turn,
       workers:plan.rows[0].proposedWorkerIds,
       hires:FB.enterpriseLaborRecords(s).length };
   });
   expect(before.workers.length).toBeGreaterThan(0);
+  await page.locator('#household-plan-staff-enterprises').click();
   await page.locator('#enterprise-staffing-apply').click();
-  await expect(page.locator('#gm-title')).toContainText('Work & Enterprises');
+  await expect(page.locator('#gm-title')).toContainText('Enterprise Plan');
+  await expect(page.locator('#gm-body')).toContainText('Household staffing plan applied.');
   expect(await page.evaluate(function () {
     const s = FB.state;
     return { gold:s.player.gold, turn:s.turn,
       workers:FB.enterpriseWorkerIds(s.player.enterprises[0]),
       hires:FB.enterpriseLaborRecords(s).length };
   })).toEqual(before);
+  await page.locator('#enterprise-staffing-back').click();
+  await expect(page.locator('#gm-title')).toContainText('Household Plan');
 });
 
 test('staffing assistant completes an upgraded crew instead of scattering partial staffs',
