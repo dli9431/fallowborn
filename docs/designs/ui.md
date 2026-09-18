@@ -1,11 +1,23 @@
 # UI: keyboard & mobile
 
+The map Home control zooms Counts and lower ranks to settlement detail. Counts
+center on their home county; lower ranks center on their exact home settlement,
+falling back to the county at the same detail level if its anchor is unavailable.
+An already closer zoom is preserved. Keyboard and Land-panel Home share this rule;
+Dukes and higher ranks retain the wider county view.
+
 Market legend labels wrap inside their grid cells when the center map column is
 narrow; symbols and labels remain distinct without shrinking the shared text size.
 
 Explicit modal Close discards the dismissed flow's queued and Forward history
 entries as well as its retained snapshot. A later map settlement tap opens the
 settlement sheet afresh; Back within an open grant flow still retains its parent.
+Backdrop dismissal follows the same whole-flow cleanup and required-choice rules
+as Close. A pointer click can activate a modal only if that gesture began in the
+same rendered view; the trailing click of a map tap cannot activate Rename or
+dismiss its newly opened settlement sheet. Keyboard activation remains available.
+Deferred Back focus and scroll restoration is discarded if that view has since
+been closed or replaced.
 
 Venture and return-cargo stake pickers expose a larger treasury-scaled amount alongside
 standard stakes. The explanation identifies the current percentage, whole-coin rounding,

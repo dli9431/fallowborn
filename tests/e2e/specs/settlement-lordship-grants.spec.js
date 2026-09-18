@@ -366,6 +366,55 @@ test('seasonal delegation protects seats and baron development is affordable, bo
   expect(r.deterministic).toBe(true);
 });
 
+for (const width of [390, 1280]) {
+  for (const dismiss of ['close', 'backdrop']) {
+    test('revocation ' + dismiss + ' leaves map settlement gestures fresh at width ' + width, async function ({ page }) {
+      await page.setViewportSize({ width:width, height:844 });
+      const site = await page.evaluate(function () {
+        const s = FB.state, p = s.player, pid = p.provinceId, me = s.chars[p.charId];
+        p.tier = 4; p.provs = [pid]; s.owner[pid] = 'player'; s.holder[pid] = 'player';
+        FB.foundPlayerRealm(s); FB.invalidateSettlementLordships(s, pid);
+        const baron = FB.makeCharacter(s, { station:3, born:s.date.year - 30,
+          culture:me.culture, religion:me.religion, traits:[] });
+        FB.assignSettlementLordship(s, pid, 1, baron.id);
+        FB.ui.showSettlement(pid, 1);
+        return { pid:pid, name:FB.settlementsOf(s, pid)[0].name,
+          holder:FB.settlementHolder(s, pid, 1) };
+      });
+      await page.locator('#settlement-revoke').click();
+      await expect(page.locator('#lordship-change-confirm')).toBeVisible();
+      await page.evaluate(function (args) {
+        const gm = document.getElementById('genmodal');
+        if (args.dismiss === 'close') gm.querySelector('[data-modal-nav="close"]').click();
+        else {
+          gm.dispatchEvent(new PointerEvent('pointerdown', { bubbles:true }));
+          gm.dispatchEvent(new MouseEvent('click', { bubbles:true, detail:1 }));
+        }
+        if (!gm.classList.contains('hidden')) throw new Error('Dismissal left a modal open');
+        // Reopen before pending browser Back events finish. Model the map's
+        // pointerup opening and a compatibility click retargeted at the new UI.
+        document.dispatchEvent(new PointerEvent('pointerdown', { bubbles:true }));
+        const pr = FB.world.byId[args.site.pid];
+        FB.map.onTap(pr, pr.cx, pr.cy, { pid:args.site.pid, index:0 });
+        document.getElementById('settlement-rename').dispatchEvent(
+          new MouseEvent('click', { bubbles:true, cancelable:true, detail:1 }));
+      }, { dismiss:dismiss, site:site });
+      await expect(page.locator('#gm-title')).toContainText(site.name);
+      await expect(page.locator('#settlement-name')).toHaveCount(0);
+      await expect(page.locator('[data-modal-nav="back"]')).toBeDisabled();
+      // A separate, deliberate gesture still opens Rename and retains Back.
+      await page.locator('#settlement-rename').click();
+      await expect(page.locator('#settlement-name')).toBeVisible();
+      await page.locator('[data-modal-nav="back"]').click();
+      await expect(page.locator('#gm-title')).toContainText(site.name);
+      await expect(page.locator('[data-modal-nav="back"]')).toBeDisabled();
+      expect(await page.evaluate(function (site) {
+        return FB.settlementHolder(FB.state, site.pid, 1);
+      }, site)).toEqual(site.holder);
+    });
+  }
+}
+
 test('closing an unsubmitted grant lets mobile map taps open settlement sheets afresh', async function ({ page }) {
   await page.setViewportSize({ width:390, height:844 });
   const site = await page.evaluate(function () {

@@ -192,7 +192,7 @@ window.FB = window.FB || {};
         return;
       }
     }
-    M.centerOn(pid, 2.2);
+    M.centerOn(pid, player.tier <= 4 ? SITE_Z_DETAIL : 2.2);
   };
 
   /* ---------- base image ---------- */

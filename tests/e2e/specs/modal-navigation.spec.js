@@ -168,17 +168,64 @@ test('travel picker separates the return route from closing the planning flow', 
   expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(10000);
 });
 
-test('Close also dismisses a management sheet reopened by outcome acknowledgement', async function ({ page }) {
-  await page.evaluate(function () {
-    window.navigationAcknowledgements = 0;
-    FB.ui.openModal('Settled result', '<p>Decision complete</p>', {
-      onDismiss:function () {
-        window.navigationAcknowledgements++;
-        FB.ui.openModal('Refreshed management', '<p>Updated values</p>');
-      }
+for (const dismissal of ['Close', 'backdrop']) {
+  test(dismissal + ' also dismisses a management sheet reopened by outcome acknowledgement', async function ({ page }) {
+    await page.evaluate(function () {
+      window.navigationAcknowledgements = 0;
+      FB.ui.openModal('Settled result', '<p>Decision complete</p>', {
+        onDismiss:function () {
+          window.navigationAcknowledgements++;
+          FB.ui.openModal('Refreshed management', '<p>Updated values</p>');
+        }
+      });
     });
+    if (dismissal === 'Close') await page.locator('[data-modal-nav="close"]').click();
+    else await page.locator('#genmodal').click({ position:{ x:2, y:2 } });
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    expect(await page.evaluate(function () { return window.navigationAcknowledgements; })).toBe(1);
   });
-  await page.locator('[data-modal-nav="close"]').click();
-  await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-  expect(await page.evaluate(function () { return window.navigationAcknowledgements; })).toBe(1);
+}
+
+test('a trailing backdrop click leaves a new sheet open and keyboard navigation available', async function ({ page }) {
+  await page.evaluate(function () {
+    document.dispatchEvent(new PointerEvent('pointerdown', { bubbles:true }));
+    FB.ui.openModal('Fresh sheet', '<p>Opened on release</p>');
+    document.getElementById('genmodal').dispatchEvent(
+      new MouseEvent('click', { bubbles:true, cancelable:true, detail:1 }));
+  });
+  await expect(page.locator('#gm-title')).toHaveText('Fresh sheet');
+  await expect(page.locator('#genmodal')).toBeVisible();
+  await page.locator('[data-modal-nav="close"]').press('Enter');
+  await expect(page.locator('#genmodal')).toBeHidden();
+});
+
+test('backdrop cannot dismiss a required decision through its child sheet', async function ({ page }) {
+  await page.evaluate(function () {
+    FB.ui.openModal('Required decision', '<p>Choose an outcome</p>', { dismissable:false });
+    FB.ui.openModal('Decision details', '<p>Supporting information</p>', { historyView:true });
+  });
+  await page.locator('#genmodal').click({ position:{ x:2, y:2 } });
+  await expect(page.locator('#gm-title')).toHaveText('Decision details');
+  await page.locator('[data-modal-nav="back"]').click();
+  await expect(page.locator('#gm-title')).toHaveText('Required decision');
+});
+
+test('deferred Back restoration cannot focus or scroll a replacement modal', async function ({ page }) {
+  // Desktop retained history makes Back synchronous, leaving its focus task
+  // pending while another view opens in the same turn.
+  await page.setViewportSize({ width:1280, height:844 });
+  await page.evaluate(function () {
+    let rows = '';
+    for (let i = 0; i < 40; i++) rows += '<p>Retained row ' + i + '</p>';
+    FB.ui.openModal('Parent', rows);
+    document.getElementById('gm-body').scrollTop = 200;
+    FB.ui.openModal('Child', '<p>Details</p>', { historyView:true });
+    FB.ui.backModal();
+    FB.ui.closeModalStack();
+    FB.ui.openModal('Replacement', '<button id="replacement-focus">First</button>' + rows, { noFocus:true });
+    setTimeout(function () { document.getElementById('genmodal').dataset.restoreSettled = 'true'; }, 0);
+  });
+  await expect(page.locator('#genmodal')).toHaveAttribute('data-restore-settled', 'true');
+  await expect(page.locator('#genmodal')).toBeFocused();
+  expect(await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; })).toBe(0);
 });

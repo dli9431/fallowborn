@@ -295,8 +295,10 @@ optional eighth start-code part ([seeds.md](seeds.md)). The go-into-town deed qu
 token); options are require-gated by station.
 The map's Home control uses that exact settlement for characters below Count rank and
 raises the map to the detailed-settlement zoom threshold if necessary, so its marker is
-visible in the detailed settlement layer. Counts and higher ranks continue to recenter on
-the home county as a whole. The H and Home keyboard shortcut and the Land panel's Center
+visible in the detailed settlement layer. Counts recenter on the home county at the same
+detailed-settlement zoom; lower ranks also use this county fallback if their settlement
+anchor is unavailable. Dukes and higher ranks retain the wider county view. Home preserves
+an already closer zoom. The H and Home keyboard shortcut and the Land panel's Center
 on home button use the same rule.
 
 A fort keeps its exact settlement visible even when later development loss would hide

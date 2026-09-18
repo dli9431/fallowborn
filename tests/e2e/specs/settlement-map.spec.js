@@ -876,7 +876,7 @@ test('building development reverses on demolition without inventing legacy loss'
 
 /* ---------- map markers and input ---------- */
 
-test('Home centers lower ranks on their visible settlement and counts on their county',
+test('Home shows settlement detail through Count rank and retains the wider view for Dukes',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
 
@@ -923,12 +923,38 @@ test('Home centers lower ranks on their visible settlement and counts on their c
       document.getElementById('btn-home').click();
       const countCenterX = FB.map.viewX + FB.map.canvas.width / FB.map.zoom / 2;
       const countCenterY = FB.map.viewY + FB.map.canvas.height / FB.map.zoom / 2;
+      const count = {
+        zoom:FB.map.zoom,
+        countyDx:Math.abs(countCenterX - target.province.cx),
+        countyDy:Math.abs(countCenterY - target.province.cy)
+      };
+      FB.map.zoom = 20;
+      document.getElementById('btn-home').click();
+      const closerZoom = FB.map.zoom;
+
+      const fallbacks = [];
+      s.player.homeSettlement = -1;
+      for (let tier = 0; tier < 4; tier++) {
+        s.player.tier = tier;
+        FB.map.zoom = Math.max(FB.map.minZoom, 1);
+        document.getElementById('btn-home').click();
+        fallbacks.push({ zoom:FB.map.zoom,
+          countyDx:Math.abs(FB.map.viewX + FB.map.canvas.width / FB.map.zoom / 2 - target.province.cx),
+          countyDy:Math.abs(FB.map.viewY + FB.map.canvas.height / FB.map.zoom / 2 - target.province.cy) });
+      }
+
+      s.player.tier = 5;
+      FB.map.zoom = Math.max(FB.map.minZoom, 1);
+      document.getElementById('btn-home').click();
       return {
         lower:lower,
-        count:{
+        count:count,
+        closerZoom:closerZoom,
+        fallbacks:fallbacks,
+        duke:{
           zoom:FB.map.zoom,
-          countyDx:Math.abs(countCenterX - target.province.cx),
-          countyDy:Math.abs(countCenterY - target.province.cy)
+          countyDx:Math.abs(FB.map.viewX + FB.map.canvas.width / FB.map.zoom / 2 - target.province.cx),
+          countyDy:Math.abs(FB.map.viewY + FB.map.canvas.height / FB.map.zoom / 2 - target.province.cy)
         }
       };
     });
@@ -937,10 +963,19 @@ test('Home centers lower ranks on their visible settlement and counts on their c
     expect(result.lower.siteDx).toBeLessThan(0.01);
     expect(result.lower.siteDy).toBeLessThan(0.01);
     expect(result.lower.countyDistance).toBeGreaterThan(0.01);
-    expect(result.count.zoom).toBeGreaterThanOrEqual(2.2);
-    expect(result.count.zoom).toBeLessThan(12);
+    expect(result.count.zoom).toBeGreaterThanOrEqual(12);
     expect(result.count.countyDx).toBeLessThan(0.01);
     expect(result.count.countyDy).toBeLessThan(0.01);
+    expect(result.closerZoom).toBe(20);
+    for (const fallback of result.fallbacks) {
+      expect(fallback.zoom).toBeGreaterThanOrEqual(12);
+      expect(fallback.countyDx).toBeLessThan(0.01);
+      expect(fallback.countyDy).toBeLessThan(0.01);
+    }
+    expect(result.duke.zoom).toBeGreaterThanOrEqual(2.2);
+    expect(result.duke.zoom).toBeLessThan(12);
+    expect(result.duke.countyDx).toBeLessThan(0.01);
+    expect(result.duke.countyDy).toBeLessThan(0.01);
   });
 
 test('zoom tiers control settlement hit targets and visibility',

@@ -3270,6 +3270,23 @@ window.FB = window.FB || {};
   let genericNavSnapshot = null;
   let genericViewSerial = 0;
   let modalOpenTrigger = null;
+  let modalPointerSnapshot = null;
+
+  document.addEventListener('pointerdown', function () {
+    modalPointerSnapshot = $('genmodal').classList.contains('hidden')
+      ? null : genericNavSnapshot;
+  }, true);
+  document.addEventListener('click', function (event) {
+    const gm = $('genmodal');
+    // Map taps open sheets on pointerup. Their trailing click must not rename
+    // a settlement or dismiss the newly opened sheet underneath the pointer.
+    // Keyboard and programmatic activation do not belong to a pointer gesture.
+    if (event.detail > 0 && !gm.classList.contains('hidden') &&
+        gm.contains(event.target) && modalPointerSnapshot !== genericNavSnapshot) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  }, true);
 
   function eventControl(target) {
     let node = target;
@@ -3430,7 +3447,9 @@ window.FB = window.FB || {};
       mobilePanePosition:view.mobilePanePosition
     };
     gm.classList.remove('hidden');
+    const restoredSnapshot = genericNavSnapshot;
     setTimeout(function () {
+      if (gm.classList.contains('hidden') || genericNavSnapshot !== restoredSnapshot) return;
       if (view.focus && document.documentElement.contains(view.focus)) {
         view.focus.focus({ preventScroll:true });
       } else if (!view.noFocus) {
@@ -4339,7 +4358,7 @@ window.FB = window.FB || {};
     });
     // clicking the dark backdrop closes a dismissable dialog
     $('genmodal').addEventListener('click', function (e) {
-      if (e.target === this && UI._gmDismiss) UI.closeModal();
+      if (e.target === this && UI._gmDismiss) UI.closeModalStack();
     });
     // instant hover tooltip for the topbar resources and trait/item chips (desktop)
     if (!FB.isTouch) {
