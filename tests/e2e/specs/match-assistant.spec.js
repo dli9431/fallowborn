@@ -249,12 +249,12 @@ test('honors age, faith, close-kin, doctrine, compact, and resource gates',
       candidate.motherId = null;
       candidate.fatherId = null;
 
-      const papacyCelibate = FB.papacyCelibate;
-      FB.papacyCelibate = function (testState, value) {
+      const papacyCelibate = FB.papacyCelibateSnapshot;
+      FB.papacyCelibateSnapshot = function (testState, value) {
         return value && value.id === child.id;
       };
       const doctrine = FB.kinMatchTerms(state, child, candidate).reason;
-      FB.papacyCelibate = papacyCelibate;
+      FB.papacyCelibateSnapshot = papacyCelibate;
 
       candidate.royalLine = { realmId:'test', memberId:'test' };
       const compact = FB.kinMatchTerms(state, child, candidate).reason;
@@ -370,7 +370,9 @@ test('reviews recommendations in shared details and saves directly from Househol
     })).toBeVisible();
     const choices = page.locator('[data-match]');
     await expect(choices.first()).toHaveAttribute('data-match', family.peerId);
-    await expect(choices.first()).toContainText(
+    const recommended = page.locator('.match-candidate-card').first();
+    await recommended.locator('.settcard-info').click();
+    await expect(recommended.locator('.settcard-details')).toContainText(
       'Recommended by your assistant limits');
     await expect(choices).toHaveCount(3);
     await expect(page.locator('[data-match="' + family.highId + '"]'))
@@ -419,8 +421,11 @@ test('reserved descendants stay manual and a sealed match returns to Household P
     await expect(page.locator('[data-match]')).toHaveCount(3);
 
     await protection.uncheck();
+    expect(await page.evaluate(function (ids) {
+      return FB.marriageLineageStatus(FB.state,
+        FB.state.chars[ids.childId], FB.state.chars[ids.peerId]).maternalAllowed;
+    }, family)).toBe(false);
     await page.locator('[data-match="' + family.peerId + '"]').click();
-    await page.locator('#marriage-lineage-confirm').click();
     await expect(page.locator('#gm-title')).toContainText('Household Plan');
     const sealed = await page.evaluate(function (ids) {
       const child = FB.state.chars[ids.childId];

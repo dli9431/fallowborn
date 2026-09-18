@@ -333,6 +333,7 @@ test('a stale or unaffordable offer cannot partially charge the household',
       const p = s.player;
       const requirement = FBDATA.balance.manorPlotRequirement;
       p.tier = 1;
+      p.freeholderGeneration = 0;
       p.gold = 200;
       p.prestige = FBDATA.balance.manorPrestige;
       p.piety = 0;

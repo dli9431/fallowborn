@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/lordships.js', 'js/actions.js', 'js/events.js', 'js/armies.js', 'js/main.js',
   'js/treasury.js', 'js/world.js', 'js/model.js', 'js/items.js', 'js/population.js', 'js/modifiers.js',
-  'js/technology.js', 'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js',
+  'js/technology.js', 'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/mapview.js',
   'data/map_data.js', 'data/actions.js', 'data/technology.js', 'data/events_war.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -364,6 +364,41 @@ test('seasonal delegation protects seats and baron development is affordable, bo
   expect(r.spent).toBeGreaterThan(0);
   expect(r.duplicate).toBe(false); expect(r.seat).toEqual({ kind:'realm', id:r.rid });
   expect(r.deterministic).toBe(true);
+});
+
+test('closing an unsubmitted grant lets mobile map taps open settlement sheets afresh', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
+  const site = await page.evaluate(function () {
+    const s = FB.state, p = s.player, pid = p.provinceId;
+    p.tier = 4; p.provs = [pid]; s.owner[pid] = 'player'; s.holder[pid] = 'player';
+    FB.foundPlayerRealm(s); FB.invalidateSettlementLordships(s, pid);
+    FB.ui.showSettlement(pid, 1);
+    return { pid:pid, name:FB.settlementsOf(s, pid)[1].name,
+      holder:FB.settlementHolder(s, pid, 1) };
+  });
+  await page.locator('#settlement-grant').click();
+  await expect(page.locator('#grant-search')).toBeVisible();
+  // Open the map destination before asynchronous browser history has unwound.
+  await page.evaluate(function (site) {
+    document.querySelector('#gm-body [data-modal-nav="close"]').click();
+    const pr = FB.world.byId[site.pid];
+    FB.map.onTap(pr, pr.cx, pr.cy, { pid:site.pid, index:1 });
+  }, site);
+  await expect(page.locator('#gm-title')).toContainText(site.name);
+  await expect(page.locator('#grant-search')).toHaveCount(0);
+  await expect(page.locator('#settlement-grant')).toBeVisible();
+  await page.locator('#settlement-grant').click();
+  await page.locator('#gm-body [data-modal-nav="close"]').click();
+  await expect(page.locator('#genmodal')).toBeHidden();
+  await page.evaluate(function (site) {
+    const pr = FB.world.byId[site.pid];
+    FB.map.onTap(pr, pr.cx, pr.cy, { pid:site.pid, index:1 });
+  }, site);
+  await expect(page.locator('#gm-title')).toContainText(site.name);
+  await expect(page.locator('#grant-search')).toHaveCount(0);
+  expect(await page.evaluate(function (site) {
+    return FB.settlementHolder(FB.state, site.pid, 1);
+  }, site)).toEqual(site.holder);
 });
 
 for (const mobile of [false, true]) {

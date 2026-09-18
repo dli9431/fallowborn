@@ -668,6 +668,7 @@ body.war-picking #timebtns { visibility: hidden; }
   text-shadow: 0 1px 2px #000;
 }
 .market-price-key b { min-width: 13px; font-size: var(--ui-label-size); text-align: center; }
+.market-price-key > span { min-width: 0; overflow-wrap: anywhere; line-height: 1.2; }
 .county-host-controls { display: flex; align-items: center; gap: 6px; }
 .holy-war-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .holy-war-sides > section { min-width: 0; overflow-wrap: break-word; }

@@ -47,7 +47,7 @@ for (const heirKind of ['sibling', 'child', 'adopted']) {
         me.childrenIds = [];
       } else {
         heir = FB.makeCharacter(s, { name:'Freehold Heir', sex:'m', culture:me.culture,
-          religion:me.religion, born:s.date.year - 20, dyn:me.dyn, traitsN:0,
+          religion:me.religion, born:s.date.year - 20, dyn:me.dyn, traitsN:0, station:1,
           motherId:kind === 'child' ? me.id : null });
         me.childrenIds = [heir.id];
       }

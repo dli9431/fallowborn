@@ -1726,6 +1726,13 @@ window.FB = window.FB || {};
 
   function mobileNavClosedAll(kind, discard) {
     if (mobileNavApplying || !mobileNavReady) return false;
+    if (discard) {
+      mobileNavQueued = mobileNavQueued.filter(function (layer) { return layer.kind !== kind; });
+      // Explicit Close also invalidates Forward entries from this dismissed flow.
+      for (const layer of mobileNavLayers) {
+        if (layer && layer.kind === kind) layer.reopen = null;
+      }
+    }
     let found = false;
     for (let depth = mobileNavDepth; depth > 0; depth--) {
       const layer = mobileNavLayers[depth];
@@ -3823,7 +3830,8 @@ window.FB = window.FB || {};
     }
     closeGenericModalRaw();
     mobileNavClosedAll('modal-view', true);
-    mobileNavClosed('generic-modal', false);
+    mobileNavClosedAll('generic-modal', true);
+    if ($('genmodal').classList.contains('hidden')) genericNavSnapshot = null;
     setTimeout(function () {
       if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
     }, 0);

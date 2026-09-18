@@ -204,7 +204,8 @@ test('seasonal markets conserve flow, use exactly two bounded passes, and remap 
         const county = FB.marketCounty(source, pid);
         initial.goods.forEach(function (id, index) {
           after[id] += source.market.counties[pid][0][index];
-          expectedChange[id] += county.goods[id].production - county.goods[id].demand;
+          expectedChange[id] += county.goods[id].production - county.goods[id].demand -
+            (county.goods[id].spoilage || 0);
           maxPriceMove = Math.max(maxPriceMove,
             Math.abs(source.market.counties[pid][1][index] /
               priorPrices[pid][index] - 1));
@@ -991,8 +992,8 @@ test('the Market lens and sheet are keyboard/touch accessible and storage stays 
     expect(result.selectorAppearance).toBe('none');
     expect(result.selectorBackground).not.toBe('none');
     expect(result.optionBackground).toBe('rgb(42, 34, 24)');
-    expect(result.selectorFontSize).toBe('14px');
-    expect(result.detailsFontSize).toBe('13px');
+    expect(result.selectorFontSize).toBe('16px');
+    expect(result.detailsFontSize).toBe('14px');
     expect(result.legendJustifyItems).toBe('center');
     expect(result.legendAlignItems).toBe('center');
     expect(result.keyJustifyContent).toBe('center');

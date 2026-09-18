@@ -1,5 +1,12 @@
 # UI: keyboard & mobile
 
+Market legend labels wrap inside their grid cells when the center map column is
+narrow; symbols and labels remain distinct without shrinking the shared text size.
+
+Explicit modal Close discards the dismissed flow's queued and Forward history
+entries as well as its retained snapshot. A later map settlement tap opens the
+settlement sheet afresh; Back within an open grant flow still retains its parent.
+
 Venture and return-cargo stake pickers expose a larger treasury-scaled amount alongside
 standard stakes. The explanation identifies the current percentage, whole-coin rounding,
 extra fees and market stock limits. A changed treasury invalidating a reviewed stake

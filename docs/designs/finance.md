@@ -1,5 +1,8 @@
 # Coin & Credit
 
+The Market lens keeps legend labels inside narrow map columns by wrapping text
+beside each price symbol, retaining the shared readable font sizes.
+
 Self-founded trade ventures and return cargo offer a treasury-scaled stake:
 the larger of the highest standard stake and floor(current gold * 0.10).
 `finance.tradeVenture.treasuryStakeShare` controls the share. Standard stakes remain

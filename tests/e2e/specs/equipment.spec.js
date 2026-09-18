@@ -37,7 +37,8 @@ for (const height of [480, 800]) {
             'A broad shield carried through the long campaigns of the northern marches. ') +
             'End of equipment description.';
         }, repeat);
-        await page.locator('#tb-date').hover();
+        await page.mouse.move(0, 0);
+        await expect(tip).toBeHidden();
         await chip.evaluate(function (el) { el.scrollIntoView({ block:'end' }); });
         await chip.hover();
         await expect(tip).toBeVisible();
