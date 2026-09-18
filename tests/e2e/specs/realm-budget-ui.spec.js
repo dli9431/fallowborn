@@ -67,7 +67,7 @@ test('distribution payment revalidates a stale preview', async function ({ page 
   })).toEqual({ gold:0, cooldown:0 });
 });
 
-test('ruler treasury disclosure uses locale routing and leaves balances unchanged', async function ({ page }, testInfo) {
+test('ruler treasury amount uses locale routing without a details tooltip or balance changes', async function ({ page }, testInfo) {
   await page.setViewportSize({ width:390, height:844 });
   const ids = await startWarSafety(page, testInfo);
   const result = await page.evaluate(function (ids) {
@@ -83,10 +83,9 @@ test('ruler treasury disclosure uses locale routing and leaves balances unchange
   }, ids);
   expect(result.unchanged).toBe(true);
   expect(result.seen).toContain('Available treasury');
-  expect(result.seen).toContain('Government administration');
-  await page.locator('[aria-controls="ruler-treasury-details"]').click();
-  await expect(page.locator('#ruler-treasury-details')).toContainText('Reserve target');
-  await expect(page.locator('#ruler-treasury-details')).toContainText('Official court expenses');
+  await expect(page.locator('.realm-ruler-treasury')).toContainText('Available treasury');
+  await expect(page.locator('[aria-controls="ruler-treasury-details"]')).toHaveCount(0);
+  await expect(page.locator('#ruler-treasury-details')).toHaveCount(0);
 });
 
 

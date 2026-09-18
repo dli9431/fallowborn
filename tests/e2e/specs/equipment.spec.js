@@ -14,6 +14,52 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
+for (const height of [480, 800]) {
+  test('Self item tooltips stay inside the viewport with a long character name at height ' + height,
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:1280, height:height });
+      await openGame(page, testInfo);
+      await startDeterministicGame(page);
+      const ref = await page.evaluate(function () {
+        const s = FB.state;
+        s.chars[s.player.charId].name = 'Alexandros Konstantinos Theodoros of the Northern Marches';
+        const ref = FB.grantItem(s, 'round_shield', { quality:'plain', visualSeed:101 });
+        FB.ui.showTab('char');
+        return ref;
+      });
+      await page.locator('#tab-char [data-self-section="possessions"]').click();
+      const chip = page.locator('#tab-char [data-item="' + ref + '"]');
+      const tip = page.locator('#tooltip');
+      for (const repeat of [3, 60]) {
+        await page.evaluate(function (repeat) {
+          // Long translated/modded prose must remain readable, including its final line.
+          FBDATA.items.round_shield.desc = Array(repeat + 1).join(
+            'A broad shield carried through the long campaigns of the northern marches. ') +
+            'End of equipment description.';
+        }, repeat);
+        await page.locator('#tb-date').hover();
+        await chip.evaluate(function (el) { el.scrollIntoView({ block:'end' }); });
+        await chip.hover();
+        await expect(tip).toBeVisible();
+        await expect(tip).toContainText('End of equipment description.');
+        const bounds = await tip.evaluate(function (el) {
+          const r = el.getBoundingClientRect();
+          el.scrollTop = el.scrollHeight;
+          return { top:r.top, bottom:r.bottom, left:r.left, right:r.right,
+            width:window.innerWidth, height:window.innerHeight,
+            scrollable:el.scrollHeight > el.clientHeight,
+            atEnd:Math.abs(el.scrollHeight - el.clientHeight - el.scrollTop) <= 1 };
+        });
+        expect(bounds.top).toBeGreaterThanOrEqual(8);
+        expect(bounds.bottom).toBeLessThanOrEqual(bounds.height - 8);
+        expect(bounds.left).toBeGreaterThanOrEqual(8);
+        expect(bounds.right).toBeLessThanOrEqual(bounds.width - 8);
+        expect(bounds.atEnd).toBe(true);
+        if (repeat === 60) expect(bounds.scrollable).toBe(true);
+      }
+    });
+}
+
 test('serf work and household items cover the tenure duties with supported icons and art',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);

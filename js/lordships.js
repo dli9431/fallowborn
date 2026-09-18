@@ -612,6 +612,7 @@ window.FB = window.FB || {};
     else if (active) reason = FB.T('Your household already has a funded settlement project.');
     else if (reserved && reserved.status === 'building') reason = FB.T('A charter already reserves this county for founding.');
     else if (p.tier !== 2 && !(p.tier >= 4 && rid === 'player')) reason = FB.T('Found as Gentry in your home county, or in a county you directly rule.');
+    else if (p.tier === 2 && !FB.gentryEstablished(state)) reason = FB.T('An heir of a later generation must inherit your Gentry standing before the household can fund a barony charter.');
     else if (p.tier === 2 && (p.travel || p.provinceId !== pid)) reason = FB.T('Return to your home county to charter a settlement.');
     else if (!living(state, p.charId) || p.dead) reason = FB.T('Choose the next household head before founding.');
     else if (!rid || !info || !count) reason = FB.T('A settled county and its current ruler are required.');

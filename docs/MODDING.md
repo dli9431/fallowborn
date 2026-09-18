@@ -3211,6 +3211,7 @@ player-originated loan families, passive trade partnerships, and self-founded ve
   },
   "tradeVenture": {
     "stakes": [10, 20, 50],
+    "treasuryStakeShare": 0.10,
     "activeLimit": 1,
     "minDevelopment": 4,
     "timing": { "minimumDays": 90, "preparationDays": 30 },
@@ -3251,6 +3252,9 @@ player-originated loan families, passive trade partnerships, and self-founded ve
 - A trade partnership consumes `risk` once at maturity; `profitShare` sizes the
   profitable return. The resolved roll and payout are stored in the save.
 - `tradeVenture.stakes`, `activeLimit`, and `minDevelopment` control formation.
+  `treasuryStakeShare` (default 0.10, clamped to 0–1) adds a whole-coin stake based
+  on current positive gold when it exceeds the largest standard stake. Standard
+  stakes remain available; this also applies to return cargo.
   Duration is the larger of `timing.minimumDays` and
   `timing.preparationDays + round-trip route days`.
 - Each ordered outcome band applies when the formation-adjusted roll is below
@@ -4513,9 +4517,11 @@ land refills per day), `armyDemusterKeepOwn` / `armyDemusterKeepRealm` /
 `armyDemusterKeepOther` (the share of a voluntarily de-mustered host preserved for the
 war's next muster — standing on the player's own county / elsewhere in the player's
 sovereign realm / anywhere else; the cap is applied after levy modifiers and the
-ordinary `armyMinMen` floor cannot add replacements), `aiHostPerDev` (AI host size = realm development ×
-`levyPerDev` ×
-this), and `battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's
+ordinary `armyMinMen` floor cannot add replacements), `aiHostPerDev` (default 0.3;
+scales eligible realm development × `levyPerDev` for the combined AI campaign
+force, with county/national modifiers and garrison deductions; personal settlement
+capacity and stacked vassal dues do not discount this aggregate again), and
+`battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's
 scales with how close the fight was).
 Terrain shapes the field through three moddable tables: `terrainBattleFactors`
 (per-terrain per-class battle-quality multipliers for the baseline classes — a class's

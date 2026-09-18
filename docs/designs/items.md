@@ -1,5 +1,9 @@
 # Items, instances, and equipment
 
+Item-chip tooltips, including Self possessions, fit their measured wrapped size
+inside the viewport and scroll internally when necessary. Placement does not assume
+a fixed text height or inherit sizing from previously inspected tooltip types.
+
 ## Exiled household members
 
 An NPC serving a judicial exile remains a living relative but is excluded from

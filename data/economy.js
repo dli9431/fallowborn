@@ -1143,6 +1143,7 @@ FBDATA.finance = {
   },
   tradeVenture: {
     stakes:[10,20,50],
+    treasuryStakeShare:0.10,
     activeLimit:1,
     minDevelopment:4,
     timing:{ minimumDays:90, preparationDays:30 },

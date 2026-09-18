@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/economy.js',
   'js/events.js',
+  'js/main.js', 'js/world.js',
   'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -203,6 +204,7 @@ test('manor recognition is a confirmed 200 gold and 100 prestige claim',
       const p = s.player;
       const requirement = FBDATA.balance.manorPlotRequirement;
       p.tier = 1;
+      p.freeholderGeneration = 0; // This case exercises recognition costs after establishment.
       p.gold = 250;
       p.prestige = FBDATA.balance.manorPrestige;
       p.piety = 0;

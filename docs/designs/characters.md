@@ -1,5 +1,18 @@
 # Characters: skills & growing up
 
+Ordinary character sheets show a clickable immediate-family strip, including
+the player's own children and grandchildren. It lists living spouses, children,
+parents and siblings relative to the displayed character, deduplicated by id.
+Following a family link opens the same character sheet and preserves parent
+scroll and link focus on Back. Royal courts and local-household sheets retain
+their existing specialized family navigators.
+
+Succession eligibility text identifies each close relative individually: son or
+daughter, grandson or granddaughter, father or mother, brother or sister,
+grandfather or grandmother, nephew or niece, and uncle or aunt. Death succession
+and living handover share these localized labels; cousin remains gender-neutral.
+This presentation does not change heir eligibility or ordering.
+
 Settlement-lordship holders, founders, and saved nominees are retained references
 for court compaction. NPC lordships use existing parent/child links, including
 adoption, for deterministic hereditary succession; player lordships follow the

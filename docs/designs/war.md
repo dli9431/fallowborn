@@ -58,7 +58,20 @@ service; household/office sources remain separate. Delegated troops are divided
 between the baron's available troops and customary service to the count. A count
 cannot muster both the site's full levy and its contribution. Direct realm vassals
 similarly provide their own territorial service, without recursively forwarding
-baronial receipts. Existing AI host scaling and national modifiers remain in place.
+baronial receipts. These are personal holding and player muster rules.
+
+AI campaign hosts retain the territorial model: eligible development across the
+whole realm, including its subordinate counties, times `levyPerDev` and the 0.3
+AI campaign factor. This represents the realm's combined war effort, not just the
+sovereign's personal demesne. Do not apply personal settlement capacity penalties
+or multiply feudal service shares down the hierarchy again. Creating baronies or
+inserting intermediate dukes does not shrink this aggregate force. Personal
+settlement income, player troops and contractual dues keep their own accounting.
+County support and levy modifiers, national technology, papal strength, ruler
+captivity, recruitment exclusions, rearming, and holder garrison deductions still
+affect AI hosts. The legacy support-sensitive 60-man floor remains unavailable
+when recruitment is blocked. This restores pre-settlement campaign sizing rather
+than compensating for lost counties with a larger global multiplier.
 
 Player composition itemizes county and settlement capacity losses and service.
 Recruitment eligibility includes directly held baronies, still blocks occupied
@@ -634,7 +647,8 @@ largest is the *primary* host (`FB.hostOf`) that rearm, muster, de-muster, and l
 single-host callers key on; `FB.hostsOf` lists them all. Detachments are ordinary extra
 records in `state.armies` — no save-format change — and `FB.armiesEnsure` drops
 orphaned or invalid hosts (a vanished realm, no men, unknown ground) as it repairs.
-AI sovereigns raise automatically when a war starts (size = realm dev × `levyPerDev` × `balance.aiHostPerDev`); the player's host
+AI sovereigns raise automatically when a war starts (eligible realm development ×
+`levyPerDev` × `balance.aiHostPerDev`, with modifiers and garrison deductions); the player's host
 musters the moment war begins — `FB.warFooting`, which every war-start path calls,
 raises it — and the muster events that follow only decide whether it takes the field
 with hired companies (`war_mercs`, `balance.mercCompanySize` men each) or a great levy

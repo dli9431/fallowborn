@@ -17,6 +17,25 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('return cargo offers ten percent of current gold and scales quantity and fees', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    s.player.gold = 10000;
+    s.player.travel = { purpose:'trade', phase:'arrived', homeId:'london',
+      destinationId:'bruges', currentId:'bruges', outboundRoute:['london', 'bruges'] };
+    const small = FB.tradeVentureReturnPreview(s, 10, 'wares');
+    const large = FB.tradeVentureReturnPreview(s, 1000, 'wares');
+    s.player.gold = 9000;
+    return { ratio:large.quantity / small.quantity, total:large.totalCost,
+      stale:FB.tradeVentureReturnPreview(s, 1000, 'wares'),
+      next:FB.tradeVentureStakes(s) };
+  });
+  expect(result.ratio).toBeCloseTo(100, 6);
+  expect(result.total).toBe(1100);
+  expect(result.stale).toBeNull();
+  expect(result.next).toEqual([10, 20, 50, 900]);
+});
+
 test('return cargo eligibility, goods listing, and price preview calculate correctly',
   async function ({ page }) {
     const result = await page.evaluate(function () {

@@ -1692,6 +1692,10 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .enterprise-staffing-option .kv { gap: 12px; align-items: baseline; }
 .enterprise-staffing-option .kv > b { text-align: right; }
 .enterprise-staffing-option .btn { width: 100%; min-height: 44px; margin-top: 4px; }
+[data-enterprise-upgrade-plan] > label { display: block; margin: 12px 0 6px; }
+[data-enterprise-upgrade-plan] > select { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; }
+[data-enterprise-upgrade-plan] > .settcard { margin-top: 8px; }
+[data-enterprise-upgrade-plan] .settcard-info { width: 44px; margin-top: 0; }
 .enterprise-staffing-verdict { color: var(--ui-accent-color); }
 .enterprise-staffing-summary .enterprise-staffing-totals {
   margin: 12px 0; padding: 0; border: 0; background: none;

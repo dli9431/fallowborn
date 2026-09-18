@@ -1,5 +1,17 @@
 # Game state & saves
 
+## Freeholder establishment
+
+`player.freeholderGeneration` records the line depth at first freedom, using
+the same genealogical comparison as `gentryGeneration`. A later-generation heir
+may claim ordinary Gentry recognition; sibling succession cannot bypass it.
+New Serf starts store null, new Freeholder starts store 1, and higher starts
+store 0. Promotion out of serfdom records the live generation. The marker persists
+through succession and save/load; demotion does not erase family history.
+Older saves missing this additive field retain their existing Freeholder
+eligibility. Already-funded settlement charters remain valid without retroactive
+Gentry-generation checks. No save version changes.
+
 ## County progression saves (Phase 6)
 
 The version-1 settlement lordship table gains optional `countyConsentTurn`,
@@ -1266,9 +1278,11 @@ changes none of `lessonBoost` or `schoolTerms`, and every field is plain JSON pr
 slot saves, autosave, export/import, and succession without migration.
 
 Descendant match recommendations are additive at save version 3.
-`player.matchPolicy:{enabled,minStation,maxDowry,maxGold,maxPrestige}` belongs to the
+`player.matchPolicy:{enabled,agePreference,minStation,maxDowry,maxGold,maxPrestige}` belongs to the
 household and survives protagonist succession. Missing or invalid state normalizes to a
 disabled policy with no caps; finite limits clamp to their valid non-negative ranges. An
+absent or invalid `agePreference` defaults to `close`; other values are
+`youngest`, `same`, and `younger`. It participates in the recommendation signature. An
 eligible descendant may carry
 `matchRecommendation:{candidateId,policyKey}`; the signature prevents duplicate
 Chronicle notices and makes a changed policy invalidate the old marker. Candidate ids

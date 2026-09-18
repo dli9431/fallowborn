@@ -333,10 +333,9 @@ test('county-local holding checks match full holdings and recruitment avoids dom
   expect(result).toEqual({ mismatch:[], scans:0, removed:true });
 });
 
-test('muster shares county population reads without changing troop totals', async function ({ page }) {
+test('settlement fiscal projections share county population reads without changing troop totals', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, f = window.countyFixture, original = FB.settlementPopulationShares;
-    const territory = { rally:f.pid, eligible:[f.pid], counties:[f.pid], blocked:[] };
     function project(uncached) {
       const calls = {};
       FB.settlementPopulationShares = function (state, pid) {
@@ -347,7 +346,15 @@ test('muster shares county population reads without changing troop totals', asyn
       if (uncached) FB.settlementFiscalProjection = function (state, pid, slot, context) {
         return fiscal(state, pid, slot, { capacities:context.capacities });
       };
-      try { return { men:FB.aiBaseHost(s, f.countId, territory, {}, {}), calls:calls }; }
+      try {
+        const context = { capacities:{} };
+        let men = 0;
+        for (let slot = 0; slot < FB.settlementVisibleCount(s, f.pid); slot++) {
+          const a = FB.settlementFiscalProjection(s, f.pid, slot, context).amounts;
+          men += a.availableLevy + a.specialists - a.specialistDues;
+        }
+        return { men:men, calls:calls };
+      }
       finally { FB.settlementFiscalProjection = fiscal; FB.settlementPopulationShares = original; }
     }
     const reference = project(true), optimized = project(false);
@@ -363,40 +370,28 @@ test('muster shares county population reads without changing troop totals', asyn
 });
 
 
-test('military-only muster matches full fiscal troops and refreshes after development and grants', async function ({ page }) {
+test('AI campaign muster bypasses personal fiscal discounts and observes development changes', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, f = window.countyFixture;
-    const original = FB.settlementFiscalProjection, tax = FB.settlementTaxBase;
+    const original = FB.settlementFiscalProjection;
     const territory = { rally:f.pid, eligible:[f.pid], counties:[f.pid], blocked:[] };
-    const phase = {}, pairs = [];
-    let militaryTaxReads = 0;
-    function compare() {
-      FB.settlementTaxBase = function () { militaryTaxReads++; return tax.apply(FB, arguments); };
-      const actual = FB.aiBaseHost(s, f.countId, territory, {}, phase);
-      FB.settlementTaxBase = tax;
-      FB.settlementFiscalProjection = function (state, pid, slot, context) {
-        return original(state, pid, slot, Object.assign({}, context, { militaryOnly:false }));
-      };
-      try { pairs.push([actual, FB.aiBaseHost(s, f.countId, territory, {}, {})]); }
-      finally { FB.settlementFiscalProjection = original; }
-    }
+    let fiscalReads = 0;
+    FB.settlementFiscalProjection = function () {
+      fiscalReads++;
+      return original.apply(FB, arguments);
+    };
     try {
-      compare();
-      s.dev[f.pid] += 3;
-      FB.invalidateSettlementLordships(s, f.pid);
-      compare();
-      FB.revertSettlementLordship(s, f.pid, 1);
-      compare();
-      // Daily callers use a new context even when there is no ownership revision.
       const before = FB.aiBaseHost(s, f.countId, territory, {}, {});
+      FB.revertSettlementLordship(s, f.pid, 1);
+      const reverted = FB.aiBaseHost(s, f.countId, territory, {}, {});
       s.dev[f.pid] += 10;
-      const fresh = FB.aiBaseHost(s, f.countId, territory, {}, {});
-      return { pairs:pairs, taxReads:militaryTaxReads, before:before, fresh:fresh };
-    } finally { FB.settlementFiscalProjection = original; FB.settlementTaxBase = tax; }
+      const developed = FB.aiBaseHost(s, f.countId, territory, {}, {});
+      return { before:before, reverted:reverted, developed:developed, fiscalReads:fiscalReads };
+    } finally { FB.settlementFiscalProjection = original; }
   });
-  for (const pair of result.pairs) expect(pair[0]).toBe(pair[1]);
-  expect(result.taxReads).toBe(0);
-  expect(result.fresh).toBeGreaterThan(result.before);
+  expect(result.fiscalReads).toBe(0);
+  expect(result.reverted).toBe(result.before);
+  expect(result.developed).toBeGreaterThan(result.before);
 });
 
 

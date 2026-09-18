@@ -22,6 +22,75 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('venture stakes scale with treasury while funded cargo and payouts remain fixed', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    s.player.tier = 1;
+    s.player.gold = 10000;
+    const rich = FB.tradeVentureStakes(s);
+    const legacy = FB.tradeVentureStakes();
+    const destination = FB.tradeVentureMarkets(s)[0].destinationId;
+    const small = FB.tradeVenturePreview(s, 10, destination, 'provisions');
+    const large = FB.tradeVenturePreview(s, 1000, destination, 'provisions');
+    FB.marketDeliverStock(s, s.player.provinceId, 'provisions', large.quantity);
+    s.player.gold = 9000;
+    const stale = FB.startTradeVenture(s, 1000, destination, 'cautious', 'test', 'provisions');
+    const afterStale = s.player.gold;
+    s.player.gold = 10000;
+    const inv = FB.startTradeVenture(s, 1000, destination, 'cautious', 'test', 'provisions');
+    const charged = 10000 - s.player.gold;
+    const copy = JSON.parse(JSON.stringify(inv));
+    s.player.gold = 20000;
+    copy.bands = [{ outcome:'profit', multiplier:1.25 }];
+    copy.dueTurn = s.turn;
+    const arrivalPrice = FB.marketPrice(s, destination, 'provisions');
+    FB.resolveTradeVenture(s, copy);
+    const paid = s.player.gold - 20000;
+    FB.resolveTradeVenture(s, copy);
+    const paidTwice = s.player.gold - 20000;
+    s.player.gold = 100;
+    const poor = FB.tradeVentureStakes(s);
+    s.player.gold = -100;
+    const negative = FB.tradeVentureStakes(s);
+    s.player.gold = 10009;
+    const rounded = FB.tradeVentureStakes(s);
+    return { rich:rich, legacy:legacy, poor:poor, negative:negative, rounded:rounded,
+      ratio:large.quantity / small.quantity, stale:stale, afterStale:afterStale,
+      charged:charged, expectedCost:large.totalCost, stake:copy.stake,
+      quantity:copy.quantity, expectedQuantity:large.quantity,
+      paid:paid, paidTwice:paidTwice,
+      expectedPayout:Math.round(large.quantity * arrivalPrice * 1.25 * 100) / 100 };
+  });
+  expect(result.rich).toEqual([10, 20, 50, 1000]);
+  expect(result.legacy).toEqual([10, 20, 50]);
+  expect(result.poor).toEqual(result.legacy);
+  expect(result.negative).toEqual(result.legacy);
+  expect(result.rounded).toEqual(result.rich);
+  expect(result.ratio).toBeCloseTo(100, 6);
+  expect(result.stale).toBeNull();
+  expect(result.afterStale).toBe(9000);
+  expect(result.charged).toBeCloseTo(result.expectedCost, 6);
+  expect(result.stake).toBe(1000);
+  expect(result.quantity).toBe(result.expectedQuantity);
+  expect(result.paid).toBeCloseTo(result.expectedPayout, 2);
+  expect(result.paidTwice).toBe(result.paid);
+});
+
+test('venture setup shows the treasury stake and keeps stock limits', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state;
+    s.player.tier = 2;
+    s.player.gold = 10000;
+    FB.ensureMarket(s);
+    s.market.counties[s.player.provinceId][0].fill(0);
+    FB.ui.showTradeVentureSetup('finance');
+  });
+  await expect(page.locator('[data-venture-stake="1000"]')).toBeDisabled();
+  await expect(page.locator('[data-venture-stake="10"]')).toHaveCount(1);
+  await expect(page.locator('#gm-body')).toContainText('10% of current gold');
+  await expect(page.locator('[data-venture-stake="1000"]')).toContainText('origin stock');
+});
+
 test('historical endowments are authored, capped, bookmark-safe, and RNG-neutral',
   async function ({ page }) {
     const result = await page.evaluate(function () {

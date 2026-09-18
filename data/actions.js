@@ -228,7 +228,7 @@ FBDATA.deeds = [
   { id:'swear_fealty', label:'🤝 Swear fealty…', order:73,
     desc:'Offer your sword and your lands to a higher-ranked neighboring sovereign.', group:'war', flow:'choices', layoutGroup:'ruler', handler:'swear_fealty' },
   { id:'grant_land', label:'🎁 Grant land…', order:74,
-    desc:'Enfeoff a new loyal vassal or an adult relative with a county — or a whole duchy. Vassals pay taxes, send levies — and remember.', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'grant_land' },
+    desc:'Grant a settlement, county or whole duchy. Review the recipient, income and authority transferred before granting.', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'grant_land' },
   { id:'demand_taxes', label:'💰 Demand extraordinary taxes', order:75,
     desc:'Squeeze your vassals for four seasons’ taxes at once. They will not love it.', group:'realm', flow:'immediate', cooldownDays:90, handler:'demand_taxes' },
   { id:'revoke_county', label:'📜 Revoke a county…', order:76,

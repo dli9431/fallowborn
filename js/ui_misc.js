@@ -163,16 +163,23 @@ window.FB = window.FB || {};
   function heirEligibilityText(s, row) {
     if (!row) return '';
     if (row.eligible) {
+      const female = row.character && row.character.sex === 'f';
       const eligible = {
-        child:row.character && row.character.sex === 'f'
+        child:female
           ? FB.T('Eligible: living daughter of the current playable head.')
           : FB.T('Eligible: living son of the current playable head.'),
-        grandchildren:FB.T('Eligible: living grandchild of the family.'),
-        parents:FB.T('Eligible: living parent of the current head.'),
-        siblings:FB.T('Eligible: living sibling of the current head.'),
-        grandparents:FB.T('Eligible: living grandparent of the family.'),
-        nieces_nephews:FB.T('Eligible: living niece or nephew of the family.'),
-        uncles_aunts:FB.T('Eligible: living uncle or aunt of the family.'),
+        grandchildren:female ? FB.T('Eligible: living granddaughter of the family.')
+          : FB.T('Eligible: living grandson of the family.'),
+        parents:female ? FB.T('Eligible: living mother of the current head.')
+          : FB.T('Eligible: living father of the current head.'),
+        siblings:female ? FB.T('Eligible: living sister of the current head.')
+          : FB.T('Eligible: living brother of the current head.'),
+        grandparents:female ? FB.T('Eligible: living grandmother of the family.')
+          : FB.T('Eligible: living grandfather of the family.'),
+        nieces_nephews:female ? FB.T('Eligible: living niece of the family.')
+          : FB.T('Eligible: living nephew of the family.'),
+        uncles_aunts:female ? FB.T('Eligible: living aunt of the family.')
+          : FB.T('Eligible: living uncle of the family.'),
         cousins:FB.T('Eligible: living cousin of the family.'),
         extended_family:FB.T('Eligible: living member of the wider family tree.')
       };
@@ -4569,6 +4576,7 @@ window.FB = window.FB || {};
         const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment], .traitchip[data-item], .traitchip[data-itemview], .modifierchip[data-modifier]');
         if (!chip) { scheduleHideTip(); return; }
         cancelHideTip();
+        resetTipSize();
         if (chip.hasAttribute('data-modifier')) {
           const id = chip.getAttribute('data-modifier');
           const scope = chip.getAttribute('data-modifier-scope') === 'county'
@@ -4621,10 +4629,21 @@ window.FB = window.FB || {};
             dt(FB.state, 'item', item.defId, item.def, 'desc'),
             quality, [ifx, FB.T('worth ~{money:gold}', { gold:item.value })]);
         }
+        const edge = 8;
+        tip.style.maxWidth = Math.max(0, Math.min(320, window.innerWidth - edge * 2)) + 'px';
+        tip.style.maxHeight = Math.max(0, window.innerHeight - edge * 2) + 'px';
+        // Fix the width before measuring: the previous tooltip position must not
+        // change line wrapping after the viewport bounds have been calculated.
+        tip.style.left = edge + 'px';
+        tip.style.top = edge + 'px';
         tip.classList.remove('hidden');
         const r = chip.getBoundingClientRect();
-        tip.style.left = Math.max(4, Math.min(window.innerWidth - 250, r.left)) + 'px';
-        tip.style.top = Math.min(window.innerHeight - 110, r.bottom + 6) + 'px';
+        const bounds = tip.getBoundingClientRect();
+        tip.style.width = bounds.width + 'px';
+        tip.style.left = Math.max(edge, Math.min(
+          window.innerWidth - edge - bounds.width, r.left)) + 'px';
+        tip.style.top = Math.max(edge, Math.min(
+          window.innerHeight - edge - bounds.height, r.bottom + 6)) + 'px';
       }
       document.addEventListener('mouseover', showHoverTip);
       document.addEventListener('click', function (e) {

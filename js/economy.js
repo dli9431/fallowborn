@@ -6856,7 +6856,7 @@ window.FB = window.FB || {};
       def && def.activeLimit, 1)));
   }
 
-  FB.tradeVentureStakes = function () {
+  FB.tradeVentureStakes = function (state) {
     const def = tradeVentureDef();
     const source = def && Array.isArray(def.stakes) ? def.stakes : [10,20,50];
     const out = [];
@@ -6865,6 +6865,12 @@ window.FB = window.FB || {};
       if (stake > 0 && out.indexOf(stake) < 0) out.push(stake);
     }
     out.sort(function (a, b) { return a - b; });
+    if (state && state.player && out.length) {
+      const share = FB.clamp(tradeVentureNumber(def && def.treasuryStakeShare, 0.10), 0, 1);
+      const gold = Math.max(0, tradeVentureNumber(state.player.gold, 0));
+      const scaled = Math.max(out[out.length - 1], Math.floor(gold * share));
+      if (out.indexOf(scaled) < 0) out.push(scaled);
+    }
     return out;
   };
 
@@ -7016,7 +7022,7 @@ window.FB = window.FB || {};
   FB.tradeVenturePreview = function (state, stake, destinationId, goodId) {
     const def = tradeVentureDef();
     stake = Math.floor(Number(stake) || 0);
-    if (!def || FB.tradeVentureStakes().indexOf(stake) < 0) return null;
+    if (!def || FB.tradeVentureStakes(state).indexOf(stake) < 0) return null;
     const market = tradeVentureMarket(state, destinationId);
     if (!market) return null;
     const commodity = goodId && FBDATA.marketGoods && FBDATA.marketGoods[goodId];
@@ -7242,7 +7248,7 @@ window.FB = window.FB || {};
   FB.tradeVentureReturnPreview = function (state, stake, goodId) {
     const def = tradeVentureDef();
     stake = Math.floor(Number(stake) || 0);
-    if (!def || FB.tradeVentureStakes().indexOf(stake) < 0) return null;
+    if (!def || FB.tradeVentureStakes(state).indexOf(stake) < 0) return null;
     const t = state && state.player && state.player.travel;
     if (!t || t.phase !== 'arrived' || t.purpose !== 'trade') return null;
     const destId = t.destinationId || t.currentId;

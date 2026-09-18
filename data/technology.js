@@ -75,6 +75,8 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      enterprise_batch_upgrades:{ mode:'none', rationale:'Grouping existing enterprise upgrades by settlement or type is a household management shortcut. Each individual upgrade retains its exact authored technology requirement; the batch adds no research prerequisite.' },
+      descendant_match_age_preferences:{ mode:'none', rationale:'Preferring nearby ages, the same age, strictly younger candidates or the youngest eligible descendant match are ordinary household decisions, without a research dependency. Existing marriage eligibility and accepted pledges remain unchanged.' },
       county_investiture:{ mode:'none', rationale:'Higher rulers can convey directly held non-seat counties through ordinary political investiture. Land, Standing and investiture resources govern eligibility, not technology.' },
       county_recognition:{ mode:'none', rationale:'A vassal can settle disputed county status through superior recognition without research. Investiture resources, diplomacy and cooldowns govern this recovery route.' },
       county_challenges:{ mode:'none', rationale:'County investiture, inherited claims, authorized challenges, rebellion, usurpation and recognition are ordinary political rights. Land, superior consent, military victory and disclosed political costs govern them without a research prerequisite.' },
@@ -196,7 +198,7 @@ window.FBDATA = window.FBDATA || {};
       },
       rank_elevation_investiture:{
         mode:'none',
-        rationale:'Recognition, investiture, and sacred legitimacy are core political progression rather than optional capabilities unlocked by sovereign research.'
+        rationale:'Recognition, investiture, and sacred legitimacy are core political progression rather than optional capabilities unlocked by sovereign research. Ordinary Gentry recognition requires inherited Freeholder standing from a later generation; ordinary barony petitions and new Gentry charters require inherited Gentry standing. These are family establishment gates, not technology gates.'
       },
       serf_freedom_petition:{
         mode:'none',
@@ -407,6 +409,10 @@ window.FBDATA = window.FBDATA || {};
       descendant_betrothal_replacement:{
         mode:'none',
         rationale:'Arranging a managed descendant’s pledge from birth or revising it later is baseline household and social authority, not a capability created by research.'
+      },
+      collateral_family_matches:{
+        mode:'none',
+        rationale:'Arranging or revising an unmarried niece or nephew\u2019s ordinary match is baseline family authority. It retains marriage, faith, close-kin, captivity and payment checks without expanding household work, education or royal-court authority.'
       },
       betrothal_release:{
         mode:'none',

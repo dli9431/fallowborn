@@ -4115,68 +4115,27 @@ window.FB = window.FB || {};
       FB.intrigueRealmRulerCaptive(state, rid) ? 0.8 : 1;
     const territory = recruitment || (FB.recruitmentTerritory ? FB.recruitmentTerritory(state, rid) : null);
     if (territory && !territory.rally) return 0;
-    let men = 0;
-    const phase = context || {};
-    if (phase.lordshipRevision !== FB.militaryInputRevision) {
-      phase.lordshipRevision = FB.militaryInputRevision;
-      phase.settlementQuotes = {};
-      phase.settlementCapacities = {};
-      phase.settlementPopulations = {};
-      phase.settlementPenalties = {};
-      phase.settlementCountyInputs = {};
-      phase.settlementVisible = {};
-    }
-    const capacities = phase.settlementCapacities || (phase.settlementCapacities = {});
-    const populations = phase.settlementPopulations || (phase.settlementPopulations = {});
-    const penalties = phase.settlementPenalties || (phase.settlementPenalties = {});
-    const fiscalContext = { capacities:capacities, populations:populations,
-      penalties:penalties, militaryOnly:true,
-      visible:phase.settlementVisible || (phase.settlementVisible = {}),
-      countyInputs:phase.settlementCountyInputs || (phase.settlementCountyInputs = {}) };
-    function holdings(id) {
-      const key = 'realm:' + id;
-      if (!capacities[key]) capacities[key] = FB.settlementCapacityProjection(state, id);
-      return capacities[key].settlements;
-    }
-    const quotes = phase.settlementQuotes || (phase.settlementQuotes = {});
-    function amounts(pid, slot) {
-      const key = pid + ':' + slot;
-      if (!quotes[key]) quotes[key] = FB.settlementFiscalProjection(state, pid, slot, fiscalContext).amounts;
-      return quotes[key];
-    }
-    for (const site of holdings(rid)) {
-      if (territory && territory.eligible.indexOf(site.provinceId) < 0) continue;
-      const a = amounts(site.provinceId, site.settlement);
-      men += a.availableLevy + a.specialists - a.specialistDues;
-    }
-    const realm = state.realms[rid];
-    if (realm && realm.liege) {
-      const ownRate = FB.feudalCharterDef(FB.feudalContractOf(state, rid).charterId).levyShare;
-      men *= 1 - ownRate;
-    }
-    // Only a direct vassal's own settlement troops owe service. Receipts from
-    // that vassal's barons are not recursively levied a second time.
-    for (const vid of FB.realmDirectVassals(state, rid)) {
-      const vassal = state.realms[vid];
-      if (!vassal || !vassal.alive || vassal.liege !== rid) continue;
-      const rate = FB.feudalCharterDef(FB.feudalContractOf(state, vid).charterId).levyShare;
-      for (const site of holdings(vid)) {
-        if (territory && territory.eligible.indexOf(site.provinceId) < 0) continue;
-        const a = amounts(site.provinceId, site.settlement);
-        men += (a.availableLevy + a.specialists - a.specialistDues) * rate;
+    // AI hosts represent the whole campaign realm, including subordinate
+    // rulers. Personal settlement capacity and stacked contract dues are not
+    // additional discounts on this already scaled territorial force.
+    let supportDevelopment = 0, development = 0;
+    const levyDevelopment = territory ? territory.eligible.reduce(function (sum, pid) {
+      let input = countyInputs && countyInputs[pid];
+      if (input && FB.game && FB.game._fastForwardTiming) FB.game._fastForwardTiming.count('Muster county phase cache hits');
+      if (!input) {
+        input = militaryCountyInput(state, pid, context);
+        if (countyInputs) countyInputs[pid] = input;
       }
-    }
-    for (const pid of FB.realmHeldCounties(state, rid)) {
-      if (territory && territory.eligible.indexOf(pid) < 0) continue;
-      const n = FB.settlementVisibleCount(state, pid);
-      for (let i = 0; i < n; i++) {
-        const a = amounts(pid, i);
-        men += a.levyDues + a.specialistDues;
-      }
-    }
-    const base = Math.round(men * (FBDATA.balance.aiHostPerDev || 0.3) *
-      (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0)) *
-      (FB.papacyRealmStrengthMultiplier ? FB.papacyRealmStrengthMultiplier(state, rid) : 1));
+      development += state.dev[pid] || 1;
+      supportDevelopment += input.support;
+      return sum + input.levy;
+    }, 0) : 0;
+    const strength = territory ? levyDevelopment * (FB.papacyRealmStrengthMultiplier
+      ? FB.papacyRealmStrengthMultiplier(state, rid) : 1) : FB.realmStrength(state, rid);
+    const minimum = territory ? 60 * Math.min(1, supportDevelopment / Math.max(1, development)) : 60;
+    const base = Math.max(territory && territory.blocked.length ? 0 : minimum, Math.round(strength *
+      FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
+      (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
     const burden = FB.fortGarrisonBurden
       ? FB.fortGarrisonBurden(state, rid, rid, territory) : 0;
     return Math.max(0, Math.round(base * captivePenalty) - burden);

@@ -309,7 +309,8 @@ agreed when it was made; a direct purchase uses the family alive now. Married de
 are included because the family's freedom also ends their inherited servile status.
 The Kin panel remembers how the family first became free, including flight without a
 lawful charter. Freeholders then buy inherited plots settlement by settlement. Land held together grows more
-productive, and five plots in one settlement plus 150 prestige qualify the family to fund
+productive. Once a later generation inherits Freeholder standing, five plots in
+one settlement plus 150 prestige qualify the family to fund
 its 200-gold/100-prestige recognition as gentry through **Rank & Realm**. Standing with a
 lord then lets an established gentle house petition there for a paid barony, normally after
 the manor has passed to an heir. A founder who rose into the gentry
@@ -325,7 +326,7 @@ through whichever weak border county happens to be available.
 A barony is a hereditary settlement holding under its county ruler. You receive
 its local income and building rights and owe charter dues; private plots and
 enterprises remain separate property. Gentry may also fund a new settlement from
-**Deeds**, including in the first generation. Development unlocks founding space;
+**Deeds**, after a later generation inherits Gentry standing. Development unlocks founding space;
 construction and investiture take time and resources.
 
 Counts can retain settlements directly or delegate secondary sites to barons.

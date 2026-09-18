@@ -1809,7 +1809,7 @@ window.FB = window.FB || {};
     if (s.player.tier === 1) {
       const cluster = FB.largestLandCluster(s);
       return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
-        'Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and fund recognition of the manor. Soldiering and the church offer other roads.',
+        'Path: an heir of a later generation must inherit Freeholder standing. Assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and fund recognition of the manor. Soldiering and the church offer other roads.',
         {
           cluster:cluster ? cluster.count : 0,
           needed:FBDATA.balance.manorPlotRequirement,
@@ -1819,7 +1819,7 @@ window.FB = window.FB || {};
     }
     if (s.player.tier === 2) {
       const command = FB.militaryCommandStatus && FB.militaryCommandStatus(s);
-      const foundingPath = FB.T('You may also fund a new settlement charter to become Baron, even in this first generation.');
+      const foundingPath = FB.T('An established gentle house may also fund a new settlement charter to become Baron. Both ordinary routes require an heir of a later generation to inherit Gentry standing.');
       const text = FB.gentryEstablished(s)
         ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for investiture as baron.',
           {

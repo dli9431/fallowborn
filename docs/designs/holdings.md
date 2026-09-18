@@ -2,6 +2,16 @@
 
 ## Moving to a founded seat
 
+Ordinary manor recognition requires a later generation to inherit Freeholder
+standing, in addition to the existing plots, prestige and investiture costs.
+Buying freedom and buying plots remain available in the founding generation.
+New Freeholder starts record that first generation; Gentry starts already have
+the necessary freehold history. Sibling succession does not satisfy the gate.
+The separate Gentry-to-Baron generation gate applies to both ordinary petitions
+and new barony charters. Military rewards, religious offices and actual title
+inheritance keep their existing exceptional rules. Technology remains `none`
+under `rank_elevation_investiture`; establishment is a family requirement.
+
 A funded settlement charter moves only `player.homeSettlement` when established.
 Private manor, plots, enterprises and other household property remain in their
 original settlements. Funding and cancellation do not change property or rank.
@@ -281,8 +291,8 @@ Work & Enterprises list, preserving its view state, scroll, and originating focu
 Managers opened from Household Plan or the staffing preview return to that source instead.
 Failed actions and worker removal keep the enterprise manager open.
 
-The all-enterprise staffing preview uses two option cards: Household plan and Local
-workers. Each contains its action, idle enterprise count before/after (including
+Enterprise Plan uses three cards: Household plan, Local workers, and Upgrades.
+The two staffing cards contain their action, idle enterprise count before/after (including
 partial crews), upfront payment, new seasonal wages, and extra seasonal income.
 Local extra income deducts new wages and is explicitly estimated: the shared yield
 formula uses a skill-4, trait-free journeyman at the required guild rank, or the
@@ -297,6 +307,17 @@ disclosure explains eligibility, locks, reservations, and estimate assumptions.
 Mobile uses the shared full-screen sheet. Individual assignments and hiring remain
 in each enterprise's manager, reached from Work & Enterprises. This is presentation
 of existing actions and needs no new technology gate.
+
+Upgrades provides a settlement selector and a type selector, each with one batch
+button. Each click buys one next level for every eligible enterprise in that scope,
+including remote properties for a type. Fully upgraded and technology-blocked
+enterprises are skipped; Details names missing technologies and itemizes prices.
+The full total must be affordable. Confirmation revalidates the quoted identities,
+levels, blockers and costs before calling the existing upgrade operation. Upgrades
+spend no day and may increase staffing needs. Selection and scroll survive redraws.
+Enterprise Plan remains accessible when every enterprise is staffed. Technology
+review `enterprise_batch_upgrades` is **none**: a management shortcut adds no gate;
+individual upgrades retain their authored requirements.
 
 The owned-enterprise manager is deliberately terse. Its permanent face contains section
 titles, worker states, and action labels only. Enterprise description, staffing status and

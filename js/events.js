@@ -3215,6 +3215,8 @@ window.FB = window.FB || {};
     const station = Number(value.minStation);
     return {
       enabled:!!value.enabled,
+      agePreference:['youngest', 'same', 'younger'].indexOf(value.agePreference) >= 0
+        ? value.agePreference : 'close',
       minStation:FB.clamp(isFinite(station) ? Math.floor(station) : 0, 0, 3),
       maxDowry:matchLimit(value.maxDowry),
       maxGold:matchLimit(value.maxGold),
@@ -3227,6 +3229,7 @@ window.FB = window.FB || {};
     function keyPart(v) { return v === null ? '*' : String(v); }
     return [
       policy.enabled ? '1' : '0',
+      policy.agePreference,
       policy.minStation,
       keyPart(policy.maxDowry),
       keyPart(policy.maxGold),
@@ -3253,6 +3256,18 @@ window.FB = window.FB || {};
     return state.player.matchPolicy;
   };
 
+  /* Marriage authority is narrower than general family visibility and does
+     not enroll collateral kin into the managed workforce or education. */
+  FB.arrangedMatchKind = function (state, cid) {
+    const c = state && state.chars && state.chars[cid];
+    if (!c || c.dead) return null;
+    const descendant = FB.playerDescendantKind(state, cid);
+    if (descendant) return FB.isHouseholdCharacter(state, cid) ? descendant : null;
+    if (c.royalLine || (FB.realmIdForRulerCharacter && FB.realmIdForRulerCharacter(state, c))) return null;
+    const relation = FB.kinOf(state).byId[cid];
+    return relation === 'Nephew' ? 'nephew' : relation === 'Niece' ? 'niece' : null;
+  };
+
   function managedMatchKind(state, descendant, options) {
     const replacingId = options && options.replacingBetrothedId;
     const replacing = replacingId && state && state.chars &&
@@ -3266,10 +3281,8 @@ window.FB = window.FB || {};
           FB.intrigueCaptivityOf(state, descendant.id)) ||
         FB.spousesSnapshot(state, descendant).length ||
         (descendant.betrothedId && !replacingExact) ||
-        (replacingId && !replacingExact) ||
-        (FB.isHouseholdCharacter &&
-          !FB.isHouseholdCharacter(state, descendant.id))) return null;
-    return FB.playerDescendantKind(state, descendant.id);
+        (replacingId && !replacingExact)) return null;
+    return FB.arrangedMatchKind(state, descendant.id);
   }
 
   FB.marriageProspectRefreshDays = function () {
@@ -3346,8 +3359,14 @@ window.FB = window.FB || {};
     };
   };
 
-  function policyReason(policy, terms) {
+  function policyReason(policy, terms, state, child, candidate) {
     if (!terms.ok) return terms.reason;
+    const age = FB.ageOf(candidate, state.date.year);
+    const childAge = FB.ageOf(child, state.date.year);
+    if (policy.agePreference === 'close' &&
+        Math.abs(age - childAge) > 5) return 'age-gap';
+    if (policy.agePreference === 'same' && age !== childAge) return 'same-age';
+    if (policy.agePreference === 'younger' && age >= childAge) return 'younger-only';
     if (terms.station < policy.minStation) return 'minimum-station';
     if (policy.maxDowry !== null &&
         terms.dowry > policy.maxDowry + 0.0001) return 'maximum-dowry';
@@ -3374,12 +3393,17 @@ window.FB = window.FB || {};
         return {
           candidate:candidate,
           terms:terms,
-          reason:policyReason(policy, terms),
+          reason:policyReason(policy, terms, state, child, candidate),
           order:order
         };
       });
     const choices = evaluated.filter(function (entry) { return !entry.reason; });
     choices.sort(function (a, b) {
+      if (policy.agePreference === 'youngest') {
+        const ageDifference = FB.ageOf(a.candidate, state.date.year) -
+          FB.ageOf(b.candidate, state.date.year);
+        if (ageDifference) return ageDifference;
+      }
       if (a.terms.station !== b.terms.station) {
         return b.terms.station - a.terms.station;
       }
@@ -3504,7 +3528,7 @@ window.FB = window.FB || {};
         child.matchIds.indexOf(record.candidateId) < 0) return null;
     const candidate = state.chars[record.candidateId];
     const terms = FB.kinMatchTerms(state, child, candidate);
-    if (policyReason(policy, terms)) return null;
+    if (policyReason(policy, terms, state, child, candidate)) return null;
     return { candidate:candidate, terms:terms };
   };
 
@@ -3608,9 +3632,7 @@ window.FB = window.FB || {};
       ? character : state && state.chars && state.chars[character];
     const partner = state && state.chars && c && c.betrothedId &&
       state.chars[c.betrothedId];
-    const managedDescendant = !!(state && c &&
-      FB.playerDescendantKind(state, c.id) &&
-      FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id));
+    const managedDescendant = !!(state && c && FB.arrangedMatchKind(state, c.id));
     const managedKin = !!(state && c && FB.manageableKinKind &&
       FB.manageableKinKind(state, c.id));
     const controlled = !!(p && c &&
@@ -3724,6 +3746,7 @@ window.FB = window.FB || {};
         FB.preferredMarriageLineage(state, k, sp))) return false;
     const B = FBDATA.balance, p = state.player;
     const descendantKind = FB.playerDescendantKind(state, k.id);
+    const collateralKind = FB.arrangedMatchKind(state, k.id);
     if (!sp.career && sp.epithetMsg && FB.applyMarriageBackground) {
       FB.applyMarriageBackground(sp, FB.stationOf(sp), sp.epithetMsg);
     }
@@ -3744,7 +3767,15 @@ window.FB = window.FB || {};
     if (k.id === state.player.charId && FB.receiveMarriageLivelihood) {
       FB.receiveMarriageLivelihood(state, sp);
     }
-    if (descendantKind === 'grandchild') {
+    if (collateralKind === 'nephew' || collateralKind === 'niece') {
+      FB.news(state, FB.msg('news.event.collateral_wedding', {
+        forms:{ select:'value', param:'sex', cases:{
+          f:'Your niece {child} weds {spouse}, as was pledged.',
+          m:'Your nephew {child} weds {spouse}, as was pledged.',
+          other:'Your relative {child} weds {spouse}, as was pledged.'
+        } }
+      }, { sex:k.sex, child:k.name, spouse:sp.name }));
+    } else if (descendantKind === 'grandchild') {
       FB.news(state, FB.msg('news.event.grandchild_wedding', {
         forms: {
           select: 'value', param: 'sex', cases: {
@@ -5225,6 +5256,30 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* Freehold recognition uses the same genealogical scale as gentle-house
+     establishment. Missing records grandfather pre-gate saves, while new
+     freedom records the generation that actually acquired it. */
+  FB.freeholderEstablished = function (state) {
+    const p = state.player;
+    if (!p || p.tier < 1) return false;
+    if (p.freeholderGeneration === undefined) return true;
+    if (p.freeholderGeneration === null) return false;
+    if (p.lineDepth !== undefined) {
+      const depth = FB.houseLineDepthOf && FB.houseLineDepthOf(state, state.chars[p.charId]);
+      return p.freeholderGeneration < (depth === null || depth === undefined ? p.lineDepth : depth);
+    }
+    return p.freeholderGeneration < state.generation;
+  };
+  FB.markFreeholderRise = function (state) {
+    const p = state.player;
+    if (p.freeholderGeneration === undefined || p.freeholderGeneration === null) {
+      const depth = p.lineDepth !== undefined && FB.houseLineDepthOf
+        ? FB.houseLineDepthOf(state, state.chars[p.charId]) : null;
+      if (depth !== null && depth !== undefined) p.lineDepth = depth;
+      p.freeholderGeneration = p.lineDepth !== undefined ? p.lineDepth : state.generation;
+    }
+  };
+
   /* Ordinary feudal elevation rests on a house, not one remarkable career.
      New games record the line depth that first reaches gentry; an heir of a
      genuinely later generation must inherit that standing before the house
@@ -5507,6 +5562,7 @@ window.FB = window.FB || {};
     if (oldTier === 2 && tier !== 2 && p.militaryCommand) {
       delete p.militaryCommand;
     }
+    if (oldTier < 1 && tier >= 1) FB.markFreeholderRise(state);
     if (oldTier < 2 && tier >= 2) FB.markGentryRise(state);
 
     if (oldTier < 3 && tier >= 3 && opts.stationFarewell !== false) {

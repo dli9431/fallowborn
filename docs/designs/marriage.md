@@ -1,5 +1,37 @@
 # Marriage & child matches
 
+## Match assistant age preferences
+
+Searches remain available from birth. The saved `agePreference` selects `close`
+(default, including older saves): highest rank within an inclusive five-year age
+window; `same`: highest rank of the same current age; `younger`: highest rank
+strictly younger; or `youngest`: lowest eligible age, then rank. The existing
+expense, prestige, age-distance and stable-order tie breaks resolve remaining ties.
+All modes respect ordinary marriage gates and assistant cost/station limits.
+No qualifying candidate means no recommendation, with no age-filter fallback.
+A newborn has no younger candidate. Recommendations can be betrothals; weddings
+retain the existing adulthood rules. These preferences do not guarantee children.
+
+The same persistent three candidates are reused without automatic rerolls. Annual
+reviews and policy changes revalidate ages. Policy signatures include the preference,
+invalidating stale markers. Manual choices and already accepted pledges remain
+unchanged. Technology review `descendant_match_age_preferences` is **none**:
+ordinary household preferences require no research.
+
+## Niece and nephew arrangements
+
+Character sheets offer ordinary arranged matches for living nieces and nephews,
+including those outside the managed household. `FB.arrangedMatchKind` owns this
+authority separately from descendant and household membership. Reigning rulers
+and compact royal-family records retain their separate diplomatic routes.
+The existing candidate search, pledge, replacement, release, dowry and wedding
+transactions apply, including live faith, close-kin, captivity and commitment
+checks. Wedding messages identify nieces and nephews rather than calling them
+the protagonist's children. This does not grant work or education control, add
+collateral kin to the automatic match assistant, or expand royal negotiations.
+Technology review `collateral_family_matches` is **none**: ordinary family
+arrangements do not depend on research.
+
 Generated match shortlists support 1–4 in displayed order, including a fourth
 protagonist prospect when available. Descendant recommendations retain their
 displayed ordering and disabled choices keep their number. The shortcut activates

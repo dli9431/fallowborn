@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/events_paths.js', 'data/events_war.js', 'js/lordships.js', 'js/actions.js',
   'js/events.js',
+  'js/save.js', 'data/technology.js',
   'js/main.js',
   'js/model.js',
   'js/world.js',
@@ -32,6 +33,78 @@ const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+});
+
+for (const heirKind of ['sibling', 'child', 'adopted']) {
+  test('Freeholder establishment distinguishes a ' + heirKind + ' heir', async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function (kind) {
+      const s = FB.state, p = s.player, me = s.chars[p.charId];
+      const start = { generation:p.freeholderGeneration, established:FB.freeholderEstablished(s) };
+      let heir;
+      if (kind === 'sibling') {
+        heir = FB.siblingsOf(s, me).find(function (c) { return !c.dead; });
+        me.childrenIds = [];
+      } else {
+        heir = FB.makeCharacter(s, { name:'Freehold Heir', sex:'m', culture:me.culture,
+          religion:me.religion, born:s.date.year - 20, dyn:me.dyn, traitsN:0,
+          motherId:kind === 'child' ? me.id : null });
+        me.childrenIds = [heir.id];
+      }
+      if (!heir) throw new Error('Expected an heir');
+      FB.game.succeedTo(heir.id);
+      p.gold = 10000; p.prestige = 1000; p.travel = null;
+      p.landPlots = []; p.landPlotMigration = 1;
+      for (let i = 0; i < FBDATA.balance.manorPlotRequirement; i++) {
+        p.landPlots.push({ provinceId:p.provinceId, settlement:0 });
+      }
+      const status = FB.rankElevationStatus(s, null, { route:'manor' });
+      const established = FB.freeholderEstablished(s);
+      const claimed = FB.claimRankElevation(s, FB.rankElevationContext(s, status));
+      return { start:start, established:established, claimed:claimed,
+        tier:p.tier, newlyGentle:claimed && !FB.gentryEstablished(s),
+        tech:FBDATA.techImpactReviews.features.rank_elevation_investiture.mode };
+    }, heirKind);
+    expect(result.start).toEqual({ generation:1, established:false });
+    expect(result.established).toBe(heirKind !== 'sibling');
+    expect(result.claimed).toBe(heirKind !== 'sibling');
+    expect(result.tier).toBe(heirKind === 'sibling' ? 1 : 2);
+    expect(result.newlyGentle).toBe(heirKind !== 'sibling');
+    expect(result.tech).toBe('none');
+  });
+}
+
+test('new freedom records its generation and survives save loading without allowing a manor purchase', async function ({ page }) {
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    let s = FB.state, p = s.player;
+    FB.setPlayerTier(s, 0);
+    p.freeholderGeneration = null;
+    FB.setPlayerTier(s, 1);
+    p.gold = 10000; p.prestige = 1000; p.travel = null;
+    p.landPlots = []; p.landPlotMigration = 1;
+    for (let i = 0; i < FBDATA.balance.manorPlotRequirement; i++) {
+      p.landPlots.push({ provinceId:p.provinceId, settlement:0 });
+    }
+    const recorded = p.freeholderGeneration;
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    s = FB.state; p = s.player;
+    const status = FB.rankElevationStatus(s, null, { route:'manor' });
+    const before = JSON.stringify([p.gold, p.prestige, s.turn, p.cooldowns]);
+    const claimed = FB.claimRankElevation(s, FB.rankElevationContext(s, status));
+    const unchanged = before === JSON.stringify([p.gold, p.prestige, s.turn, p.cooldowns]);
+    const loaded = p.freeholderGeneration;
+    delete p.freeholderGeneration;
+    const legacy = FB.freeholderEstablished(s);
+    const quote = FB.rankElevationContext(s, FB.rankElevationStatus(s, null, { route:'manor' }));
+    p.freeholderGeneration = recorded;
+    const stale = FB.claimRankElevation(s, quote);
+    return { recorded:recorded, loaded:loaded, ready:status.ready,
+      reason:status.reason, claimed:claimed, unchanged:unchanged, legacy:legacy, stale:stale };
+  });
+  expect(result).toMatchObject({ recorded:1, loaded:1, ready:false, claimed:false,
+    unchanged:true, legacy:true, stale:false });
+  expect(result.reason).toContain('later generation');
 });
 
 test('a sibling inheriting a newly gentle house is not yet established',

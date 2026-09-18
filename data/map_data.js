@@ -1467,7 +1467,7 @@ FBDATA.balance = {
   armyDemusterKeepOwn: 1, // a voluntary de-muster on the player's own county preserves this share of the host
   armyDemusterKeepRealm: 0.5, // ...elsewhere in the player's sovereign realm preserves this share
   armyDemusterKeepOther: 0, // ...on foreign soil preserves this share
-  aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
+  aiHostPerDev: 0.3, // AI campaign host = eligible realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
   battleMarPlayer: 14, battleMarAI: 22, // martial divisors in field-battle power (the player's edge)
   /* host composition (levy tiers): a host's men split into classes declared

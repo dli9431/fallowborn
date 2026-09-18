@@ -1,5 +1,17 @@
 # Coin & Credit
 
+Self-founded trade ventures and return cargo offer a treasury-scaled stake:
+the larger of the highest standard stake and floor(current gold * 0.10).
+`finance.tradeVenture.treasuryStakeShare` controls the share. Standard stakes remain
+available for smaller cargoes and markets with limited stock; duplicate amounts
+are omitted. Passing state to `FB.tradeVentureStakes(state)` enables scaling;
+the no-state compatibility call returns only the authored standard stakes.
+Formation revalidates the amount against current gold. Once funded, the saved stake
+and quantity remain fixed through treasury changes, succession and reloads. Payouts
+already scale with quantity and live arrival prices (or stake for legacy records).
+Route overhead, return lading fees, commodity stock limits, risks and eligibility
+remain unchanged. This is numeric stake scaling, with no new technology gate.
+
 ## Settlement income and dues (Phase 3)
 
 `settlementTaxBase` splits county development tax by conserved settlement population
@@ -422,9 +434,8 @@ The API rechecks funds and current holdings; signed shortfalls cannot fund distr
 Technology impact `public_distributions` is `none`: baseline local governance.
 
 Finance separates projected seasonal deployment/provisions from non-food military
-payments already made. AI treasury details disclose the last recurring settlement,
-accrued military bills, reserve target and last distribution; their displayed seasonal
-balance is explicitly before daily food purchases and other transfers.
+payments already made. AI ruler sheets show available treasury as a plain amount,
+without a treasury tooltip or expandable accounting breakdown.
 
 
 ## Seasonal budget subtotals

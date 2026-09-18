@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'js/lordships.js', 'js/actions.js', 'js/events.js', 'js/armies.js', 'js/main.js',
   'js/treasury.js', 'js/world.js', 'js/model.js', 'js/items.js', 'js/population.js', 'js/modifiers.js',
   'js/technology.js', 'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js',
-  'data/map_data.js', 'data/technology.js', 'data/events_war.js', 'css/style.css'
+  'data/map_data.js', 'data/actions.js', 'data/technology.js', 'data/events_war.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -24,6 +24,65 @@ test.beforeEach(async function ({ page }, testInfo) {
       100 - FB.standingOf(s, { kind:'character', id:lord.id }), 'test:grant');
   });
 });
+
+for (const width of [390, 1280]) {
+  test('Grant Land offers settlements to a single-county ruler and retains navigation at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:844 });
+    const setup = await page.evaluate(function () {
+      const s = FB.state, p = s.player, pid = p.provinceId, me = s.chars[p.charId];
+      p.tier = 4; p.provs = [pid]; p.liege = null;
+      s.owner[pid] = 'player'; s.holder[pid] = 'player';
+      FB.foundPlayerRealm(s); FB.invalidateSettlementLordships(s, pid);
+      const c = FB.makeCharacter(s, { name:'Settlement Candidate', station:2,
+        born:s.date.year - 30, culture:me.culture, religion:me.religion, traits:[] });
+      c.homeProvinceId = pid;
+      const sites = FB.settlementGrantSites(s, pid, 'player');
+      const status = FB.instantStatus(s, 'grant_land');
+      FB.runInstant(s, 'grant_land');
+      return { pid:pid, cid:c.id, count:sites.length, ready:status.can,
+        gold:p.gold, turn:s.turn, slot:sites[sites.length - 1].settlement };
+    });
+    expect(setup.ready).toBe(true);
+    expect(setup.count).toBeGreaterThan(0);
+    await expect(page.locator('#gm-title')).toHaveText('Grant Land');
+    await expect(page.locator('[data-grant-land-site]')).toHaveCount(setup.count);
+    await expect(page.locator('[data-grant-land-slot="0"]')).toHaveCount(0);
+    const selector = '[data-grant-land-site="' + setup.pid +
+      '"][data-grant-land-slot="' + setup.slot + '"]';
+    const site = page.locator(selector);
+    await site.focus();
+    const scroll = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
+    await site.press('Enter');
+    await page.locator('#grant-search').fill('Settlement Candidate');
+    const recipient = page.locator('[data-grant-recipient="' + setup.cid + '"]');
+    await recipient.press('Enter');
+    await expect(page.locator('[data-settlement-grant-summary]')).toContainText('Upkeep transferred');
+    await page.locator('#grant-cancel').click();
+    await expect(page.locator('#grant-search')).toHaveValue('Settlement Candidate');
+    await expect(recipient).toBeFocused();
+    await page.locator('#grant-back').click();
+    await expect(page.locator('#gm-title')).toHaveText('Grant Land');
+    await expect(site).toBeFocused();
+    await expect.poll(async function () {
+      return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
+    }).toBe(scroll);
+    await site.press('Enter');
+    await page.locator('#grant-search').fill('Settlement Candidate');
+    await recipient.click();
+    await page.locator('#grant-confirm').click();
+    expect(await page.evaluate(function (setup) {
+      const s = FB.state;
+      return { holder:FB.settlementHolder(s, setup.pid, setup.slot),
+        counties:s.player.provs, gold:s.player.gold, turn:s.turn };
+    }, setup)).toEqual({ holder:{ kind:'character', id:setup.cid },
+      counties:[setup.pid], gold:setup.gold, turn:setup.turn });
+    await page.locator('#grant-cancel').click();
+    await page.locator('#grant-back').click();
+    await expect(page.locator('#gm-title')).toHaveText('Grant Land');
+    await expect(page.locator(selector)).toHaveCount(0);
+    await expect(page.locator('[data-grant-land-site]')).toHaveCount(setup.count - 1);
+  });
+}
 
 for (const width of [390, 1280]) {
   test('county settlement names and holders wrap within the panel at width ' + width, async function ({ page }) {

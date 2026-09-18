@@ -1,5 +1,31 @@
 # UI: keyboard & mobile
 
+Venture and return-cargo stake pickers expose a larger treasury-scaled amount alongside
+standard stakes. The explanation identifies the current percentage, whole-coin rounding,
+extra fees and market stock limits. A changed treasury invalidating a reviewed stake
+requires returning to the stake picker; it never silently increases the charged amount.
+
+Enterprise Plan replaces the enterprise staffing preview title and entry labels.
+One Upgrades card adds native settlement/type selectors and full-width batch actions.
+Totals and affordability stay visible; shared hover/focus and touch Details itemize
+costs and blocked upgrades. Each click buys one level per eligible business, with
+staffing consequences disclosed. Redraws preserve selection and scroll.
+
+The Descendant Match Assistant exposes one native age-preference selector:
+highest rank within five years either side, youngest eligible candidate, highest
+rank of the same age, or highest rank strictly younger. Searches remain available
+from birth. Household Plan summarizes the saved preference; live review explains
+age-filter rejections. Saving changes recommendations only, never existing pledges.
+
+## Immediate-family navigation
+
+Ordinary character sheets use the existing family portrait strip for spouses,
+children, parents and siblings, including the player's descendants. Relations
+are relative to the character being viewed. Each link opens a character sheet;
+Back restores the originating sheet's scroll and link focus at mobile and
+desktop widths. Nieces and nephews expose ordinary arranged-match management
+without acquiring household work or education controls.
+
 ## County progression reviews
 
 The road-to-Count list offers named higher-ruler county grants and challenges in
@@ -17,6 +43,16 @@ settlement revocation/restoration use separate reviews and retained sheet histor
 All new controls use shared cards/buttons, localization and keyboard/mobile flow.
 
 ## Settlement charters
+
+Grant Land includes a settlement section alongside counties and duchies. Settlement
+choices name their county and reuse the searchable recipient picker and grant review.
+Back restores Grant Land scroll and focus; after granting, the list refreshes to
+remove the transferred site. County seats and other holders' settlements are omitted.
+
+Ordinary manor recognition discloses the inherited-Freeholder generation
+requirement. Both barony petitions and new Gentry charters require a later
+generation to inherit Gentry standing; blocked reviews explain the requirement
+without hiding their actions. Family path hints and the Guide use the same rules.
 
 Deeds and the barony review expose both existing-settlement petitions and founding.
 The charter review keeps upfront construction, completion prestige/piety, duration,
@@ -3069,6 +3105,11 @@ This changes presentation only, without altering charges or balance parameters.
 Desktop resource tooltips cap their scroll-box height to the space below their
 actual position, leaving an eight-pixel viewport margin. Long budget breakdowns
 must scroll through the final net row without extending below the screen.
+
+Self possession and other item-chip tooltips measure their wrapped content before
+placement, keeping eight-pixel viewport margins on every edge. Long content scrolls
+inside the tooltip. Each chip resets sizing left by other tooltip types, so long
+character names or a lower position in Self cannot push details off-screen.
 
 Enterprise staffing preview offers **Staff all local** beside Apply staffing plan.
 It shows the worker count and total wages due now and each season, and requires

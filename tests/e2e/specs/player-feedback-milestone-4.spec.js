@@ -594,7 +594,7 @@ test.describe('sibling and collateral-household agency', function () {
       await expect(staffingEntry.locator('.settcard-info')).toBeVisible();
       await staffingEntry.locator('.settcard-info').click();
       await expect(staffingEntry.locator('.settcard-details')).toContainText(
-        'Review a maximum-yield assignment');
+        'Review household staffing, local hiring, and upgrades');
       await page.locator('#household-plan-close').click();
     });
 

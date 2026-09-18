@@ -23,6 +23,103 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+async function setupEnterpriseUpgradePlan(page) {
+  return page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId;
+    s.player.gold = 100000;
+    s.player.enterpriseMigration = 1;
+    s.dev[pid] = 8;
+    FB.rememberSettlementSites(s, pid);
+    const tech = FB.realmTechRecord(s, FB.techRealmId(s));
+    ['heavy_plough', 'three_field', 'improved_husbandry'].forEach(function (id) {
+      if (tech.completed.indexOf(id) < 0) tech.completed.push(id);
+    });
+    s.player.enterprises = [
+      { uid:'batch_field_a', type:'field_strip', provinceId:pid, settlement:0, workerId:null },
+      { uid:'batch_orchard', type:'orchard_business', provinceId:pid, settlement:0, workerId:null },
+      { uid:'batch_field_b', type:'field_strip', provinceId:pid, settlement:1, workerId:null }
+    ];
+    const cost = s.player.enterprises.slice(0, 2).reduce(function (sum, e) {
+      return sum + FB.enterpriseUpgradeCost(s, e);
+    }, 0);
+    FB.ui.showEnterpriseStaffingPreview();
+    return { pid:pid, cost:cost, gold:s.player.gold, turn:s.turn };
+  });
+}
+
+for (const width of [390, 1280]) {
+  test('Enterprise Plan upgrades one level by settlement and type at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:844 });
+    const setup = await setupEnterpriseUpgradePlan(page);
+    await expect(page.locator('#enterprise-upgrade-settlement-summary')).toContainText('2 upgrades');
+    await page.locator('#enterprise-upgrade-settlement').click();
+    expect(await page.evaluate(function () {
+      return { levels:FB.state.player.enterprises.map(FB.enterpriseUpgradeLevel),
+        gold:FB.state.player.gold, turn:FB.state.turn };
+    })).toEqual({ levels:[1, 1, 0], gold:setup.gold - setup.cost, turn:setup.turn });
+    await page.locator('#enterprise-upgrade-type-select').selectOption('field_strip');
+    const before = await page.evaluate(function () {
+      return { gold:FB.state.player.gold, cost:FB.state.player.enterprises.filter(function (e) {
+        return e.type === 'field_strip';
+      }).reduce(function (sum, e) { return sum + FB.enterpriseUpgradeCost(FB.state, e); }, 0) };
+    });
+    await page.locator('#enterprise-upgrade-type').click();
+    expect(await page.evaluate(function () {
+      return { levels:FB.state.player.enterprises.map(FB.enterpriseUpgradeLevel), gold:FB.state.player.gold };
+    })).toEqual({ levels:[2, 1, 1], gold:before.gold - before.cost });
+    await expect(page.locator('#enterprise-upgrade-type-select')).toHaveValue('field_strip');
+    await expect(page.locator('#enterprise-upgrade-type-summary')).toContainText('1 upgrades');
+  });
+}
+
+test('enterprise batch upgrades reject changed prices and require the full cost', async function ({ page }) {
+  const setup = await setupEnterpriseUpgradePlan(page);
+  await page.evaluate(function () { FBDATA.enterprises.field_strip.upgrades[0].cost += 10; });
+  await page.locator('#enterprise-upgrade-settlement').click();
+  await expect(page.locator('.enterprise-staffing-notice')).toContainText('Upgrade terms changed');
+  expect(await page.evaluate(function () {
+    return { levels:FB.state.player.enterprises.map(FB.enterpriseUpgradeLevel), gold:FB.state.player.gold };
+  })).toEqual({ levels:[0, 0, 0], gold:setup.gold });
+  await page.evaluate(function () {
+    const s = FB.state;
+    s.player.gold = FB.enterpriseUpgradeCost(s, s.player.enterprises[0]);
+    FB.ui.showEnterpriseStaffingPreview();
+  });
+  await expect(page.locator('#enterprise-upgrade-settlement')).toBeDisabled();
+  await expect(page.locator('#enterprise-upgrade-settlement-summary')).toContainText('Not enough money');
+});
+
+test('Enterprise Plan remains accessible when all enterprises are staffed', async function ({ page }) {
+  await setupEnterpriseUpgradePlan(page);
+  await page.evaluate(function () {
+    const s = FB.state;
+    for (const e of FB.enterpriseList(s)) FB.hireEnterpriseWorker(s, e.uid);
+    FB.ui.showLivelihoods();
+  });
+  await expect(page.locator('#enterprise-staffing-preview')).toHaveText(/Enterprise Plan/);
+  await page.locator('#enterprise-staffing-preview').click();
+  await expect(page.locator('[data-enterprise-upgrade-plan]')).toBeVisible();
+  await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+  await expect(page.locator('#household-plan-staff-enterprises')).toHaveText(/Enterprise Plan/);
+});
+
+test('enterprise batch upgrades skip missing technology and completed enterprises', async function ({ page }) {
+  await setupEnterpriseUpgradePlan(page);
+  const cost = await page.evaluate(function () {
+    const s = FB.state, tech = FB.realmTechRecord(s, FB.techRealmId(s));
+    tech.completed = tech.completed.filter(function (id) { return id !== 'improved_husbandry'; });
+    s.player.enterprises[2].level = 2;
+    FB.ui.showEnterpriseStaffingPreview();
+    return FB.enterpriseUpgradeCost(s, s.player.enterprises[0]);
+  });
+  await expect(page.locator('#enterprise-upgrade-settlement-summary')).toContainText('1 upgrades');
+  await expect(page.locator('#enterprise-upgrade-settlement-details')).toContainText(/husbandry/i);
+  await page.locator('#enterprise-upgrade-settlement').click();
+  expect(await page.evaluate(function () {
+    return { levels:FB.state.player.enterprises.map(FB.enterpriseUpgradeLevel), gold:FB.state.player.gold };
+  })).toEqual({ levels:[1, 0, 2], gold:100000 - cost });
+});
+
 test('staffing preview summarizes enterprises in a full-screen mobile sheet', async function ({ page }) {
   await page.setViewportSize({ width:390, height:844 });
   const expected = await page.evaluate(function () {
@@ -40,7 +137,8 @@ test('staffing preview summarizes enterprises in a full-screen mobile sheet', as
   });
   const summary = page.locator('.enterprise-staffing-summary');
   await expect(summary).toHaveCount(1);
-  await expect(summary.locator('.enterprise-staffing-option')).toHaveCount(2);
+  await expect(summary.locator('.enterprise-staffing-option')).toHaveCount(3);
+  await expect(page.locator('#gm-title')).toContainText('Enterprise Plan');
   await expect(summary.locator('[data-staffing-option="plan"]')).toContainText(expected.changed + ' enterprises reassigned.');
   await expect(summary).toContainText('Pay now');
   await expect(summary).toContainText('Idle enterprises');

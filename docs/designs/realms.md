@@ -2,6 +2,11 @@
 
 ## Family settlement grants
 
+Grant Land also lists grantable settlements in directly held counties and opens
+the existing recipient picker and hereditary grant review. A ruler with one county
+can access this deed when a non-seat settlement is available. This is another entry
+point to existing settlement grants, with no change to eligibility or technology.
+
 Free adult kin, including Freeholders, may receive settlement grants even when married or living
 outside the managed household. The grant itself raises the recipient to Baron. Unrelated candidates still need
 Gentry rank. Existing ruler exclusions remain. Character sheets
@@ -59,8 +64,10 @@ settlement_lordship review.
 ## Founding a barony (Phase 5)
 
 Gentry have two visible routes: petition for an existing settlement, or fund a
-charter for an unused home-county site. Founding is available in the first Gentry
-generation without the existing-grant petition's Standing and generation gates.
+charter for an unused home-county site. New Gentry charters require the same
+established gentle house as existing-settlement petitions: a later generation
+must inherit Gentry standing. Founding does not require the petition's Standing
+threshold. Already-funded charters retain their original commitments.
 It charges construction first and saved investiture resources at completion.
 The current county holder becomes the new baron's liege; a change of count does
 not revoke a funded charter. Succession transfers sponsorship to the household
@@ -109,6 +116,10 @@ per excess site preserves ownership and excludes received contributions; county
 capacity remains a separate constraint. Customary baronial receipts are not taxed
 again up the realm hierarchy. Concrete grants and autonomous delegation are integrated in
 Phase 4. See development.md, finance.md, and war.md for the live integrations.
+AI campaign hosts are a separate whole-realm projection: subordinate counties
+remain in the campaign pool regardless of intermediate lieges or local barony
+delegation. Personal capacity and contract accounting do not apply a second
+discount to that territorial force; see war.md.
 
 
 
@@ -885,7 +896,7 @@ succession also invalidate an active ruler visit.
 
 **Tiers** 0–7 (serf…emperor) feed the five broader societal roles documented in
 [events.md](events.md). Runtime changes use `FB.setPlayerTier`, which preserves the
-gentry-generation rule while immediately revalidating travel, focus, livelihood
+Freeholder and Gentry generation history while immediately revalidating travel, focus, livelihood
 staffing, and any lower-to-landed farewell. Political vassal/sovereign status remains
 separate from this audience. Map
 ownership only begins at tier 4 (`state.player.provs`); tier 3 (baron) is a status inside a
@@ -895,7 +906,13 @@ to whoever holds his home (`FB.transferProvince`, with a catch-all repair in
 `FB.checkTierPromotions`), never standing "independent" nor kneeling to a lord who no
 longer holds his home. Tier-2 (gentry) content gates on tier alone, not profession, so the clergy careers
 share it: an abbot or qadi keeps the cloth while managing the manor like any gentry.
-Ordinary feudal elevation requires
+Ordinary manor recognition requires an **established freehold**:
+`player.freeholderGeneration` records the line depth that first became free.
+A later-generation heir must inherit Freeholder standing before claiming Gentry;
+plots, prestige and investiture costs remain required. New Freeholder scenarios
+start their first free generation, while existing saves without the field retain
+eligibility. Technology review `rank_elevation_investiture` remains **none**.
+Ordinary elevation from Gentry to Baron requires
 an **established gentle house**: `player.gentryGeneration` records the line depth that
 first reached tier 2, and only a genuinely later generation of the line may petition
 for a barony. Generations are counted by

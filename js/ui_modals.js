@@ -1795,7 +1795,7 @@ window.FB = window.FB || {};
       if (def.targeted || FB.travelEligible(s, id) !== true) continue;
       const destinations = id === 'trade'
         ? FB.tradeVentureMarkets(s) : FB.travelDestinations(s, id);
-      const stakes = id === 'trade' ? FB.tradeVentureStakes() : [];
+      const stakes = id === 'trade' ? FB.tradeVentureStakes(s) : [];
       const affordable = destinations.some(function (item) {
         if (id !== 'trade') return item.cost <= s.player.gold;
         if (FB.tradeVentureEligible(s, 'dispatch') !== true) return false;
@@ -1927,6 +1927,19 @@ window.FB = window.FB || {};
     });
   };
 
+  function ventureStakeScalingText() {
+    const rate = Number(FBDATA.finance.tradeVenture.treasuryStakeShare);
+    return FB.T('A larger stake uses {percent}% of current gold, rounded down, when that exceeds the standard stakes. Smaller stakes remain available. Route or lading fees are extra; market stock still limits cargo.', {
+      percent:Math.round(FB.clamp(isFinite(rate) ? rate : 0.10, 0, 1) * 100)
+    });
+  }
+
+  function currentVentureStake(stake) {
+    if (FB.tradeVentureStakes(FB.state).indexOf(stake) >= 0) return true;
+    UI.toast(FB.T('Your available investment changed. Go back and choose a new stake.'));
+    return false;
+  }
+
   UI.showTradeVentureSetup = function (source) {
     const s = FB.state;
     const eligible = FB.tradeVentureEligible(s, 'dispatch');
@@ -1936,11 +1949,12 @@ window.FB = window.FB || {};
       UI.toast(FB.T('No developed market can be reached.'));
       return;
     }
-    const stakes = FB.tradeVentureStakes();
+    const stakes = FB.tradeVentureStakes(s);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Choose the capital to commit. You will buy a commodity next, select a developed market, then decide whether to dispatch the venture or accompany it personally.')) +
       '</p><p class="hint">' + esc(FB.T(
         'Dispatching remains available during the travel cooldown. Accompanying requires ordinary travel eligibility.')) +
+      '</p><p class="hint">' + esc(ventureStakeScalingText()) +
       '</p></div><div class="gm-list">';
     for (let i = 0; i < stakes.length; i++) {
       const stake = stakes[i];
@@ -1956,7 +1970,7 @@ window.FB = window.FB || {};
         esc(FB.T('Invest {money:stake}…', { stake:stake })) +
         '<span class="adesc">' + esc(affordable
           ? FB.T('Choose from {count} reachable developed markets.', { count:markets.length })
-          : FB.T('The purse cannot cover this stake and any reachable route.')) +
+          : FB.T('Insufficient gold or origin stock for this stake and route.')) +
         '</span></button>';
     }
     h += '</div><div class="gm-footer"><button class="btn" id="venture-setup-back">' +
@@ -2010,7 +2024,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const eligible = FB.tradeVentureEligible(s, 'dispatch');
     if (eligible !== true) { UI.toast(eligible); return; }
-    if (FB.tradeVentureStakes().indexOf(Number(stake)) < 0) {
+    if (FB.tradeVentureStakes(s).indexOf(Number(stake)) < 0) {
       UI.toast(FB.T('That stake is not available.'));
       return;
     }
@@ -2179,6 +2193,7 @@ window.FB = window.FB || {};
     openModal(FB.T('Review your venture'), h,
       {dismissable:false, historyBack:true});
     $('venture-dispatch-cautious').addEventListener('click', function () {
+      if (!currentVentureStake(preview.stake)) return;
       if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
           'cautious', SH.travelPicker.source, preview.goodId)) return;
       UI.cancelTravelPicker(true);
@@ -2186,6 +2201,7 @@ window.FB = window.FB || {};
       UI.refresh();
     });
     $('venture-dispatch-bold').addEventListener('click', function () {
+      if (!currentVentureStake(preview.stake)) return;
       if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
           'bold', SH.travelPicker.source, preview.goodId)) return;
       UI.cancelTravelPicker(true);
@@ -2194,6 +2210,7 @@ window.FB = window.FB || {};
     });
     if (accompany === true) {
       $('venture-accompany').addEventListener('click', function () {
+        if (!currentVentureStake(preview.stake)) return;
         if (!FB.travelStart(s, 'trade', preview.destinationId,
             preview.destinationRealm, {
               kind:'trade_venture', stake:preview.stake,
@@ -2268,7 +2285,7 @@ window.FB = window.FB || {};
     const home = FB.world.byId[t.homeId];
     const destName = dest ? dest.name : '?';
     const homeName = home ? home.name : '?';
-    const stakes = FB.tradeVentureStakes();
+    const stakes = FB.tradeVentureStakes(s);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}.', {
         destination:destName,
@@ -2276,7 +2293,7 @@ window.FB = window.FB || {};
       })) + '</p><p class="hint">' + esc(FB.T(
         'A modest 10% lading fee covers pack supplies and handling. The cargo will be sold in {home} upon your return.', {
           home:homeName
-        })) + '</p></div><div class="gm-list">';
+        })) + '</p><p class="hint">' + esc(ventureStakeScalingText()) + '</p></div><div class="gm-list">';
     for (let i = 0; i < stakes.length; i++) {
       const stake = stakes[i];
       const goods = FB.tradeVentureReturnGoods(s, stake);
@@ -2409,6 +2426,7 @@ window.FB = window.FB || {};
     openModal(FB.T('Review return cargo'), h, { dismissable:false, historyBack:true });
 
     $('return-load-cautious').addEventListener('click', function () {
+      if (!currentVentureStake(preview.stake)) return;
       if (!FB.loadTradeVentureReturn(s, preview.stake, preview.goodId, 'cautious')) return;
       UI.closeModal();
       UI.toast(FB.T('Return cargo loaded. It will be sold upon your return to {home}.', {
@@ -2417,6 +2435,7 @@ window.FB = window.FB || {};
       UI.refresh();
     });
     $('return-load-bold').addEventListener('click', function () {
+      if (!currentVentureStake(preview.stake)) return;
       if (!FB.loadTradeVentureReturn(s, preview.stake, preview.goodId, 'bold')) return;
       UI.closeModal();
       UI.toast(FB.T('Return cargo loaded boldly. It will be sold upon your return to {home}.', {
@@ -3135,6 +3154,8 @@ window.FB = window.FB || {};
       esc(route) + '">' + rankTransitionHtml(currentTitle, nextTitle);
     if (route === 'county' && status.site) h += kv('County granted', esc(FB.world.byId[status.site.provinceId].name)) +
       kv('Granting ruler', esc(s.realms[status.grantorId].name)) + '<p>' + esc(FB.T('Your existing barony and private property remain yours. You become Count under the granting ruler.')) + '</p>';
+    if (route === 'manor') h += kv('Requirements', esc(FB.T(
+      'An heir of a later generation must inherit Freeholder standing before Gentry recognition.')));
     if (route === 'barony') {
       h += kv('Requirements', esc(FB.T(
         'An established gentle house, at least {prestige} prestige, and at least {standing} Standing with your lord.', {
@@ -8551,7 +8572,7 @@ window.FB = window.FB || {};
     return h;
   }
 
-  UI.showSettlementGrant = function (pid, idx, returnOptions) {
+  UI.showSettlementGrant = function (pid, idx, returnOptions, returnToGrantLand) {
     const s = FB.state;
     const originScroll = $('gm-body').scrollTop;
     const openDetails = Array.prototype.map.call($('gm-body').querySelectorAll(
@@ -8599,7 +8620,7 @@ window.FB = window.FB || {};
       '</p><div class="gm-footer"><button type="button" class="btn" id="grant-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Grant settlement'), h, { historyView:true, historyBack:true,
-      historyBackRender:restoreSettlement,
+      historyBackRender:returnToGrantLand || restoreSettlement,
       titleDetailsHtml:'<p>' + esc(FB.T('Choose a free adult relative, gentle household member or noble resident of your directly held counties. The recipient becomes Baron. Review the income and authority transferred before granting. No gold or day cost.')) + '</p>' });
     FB.paintFaces($('gm-body'), s);
     $('grant-search').addEventListener('input', function () {
@@ -11274,6 +11295,7 @@ window.FB = window.FB || {};
      Omitting the displayed character makes the strip a compact local
      navigator: a consort sees their spouse and children, while the ruler sees
      their consort and children. */
+  // Ordinary family sheets reuse this navigator and its retained Back context.
   function baronFamilyStripHtml(s, baron) {
     const rows = [], seen = {};
     function add(c, relation) {
@@ -11287,8 +11309,14 @@ window.FB = window.FB || {};
     for (const child of FB.childrenOf(s, baron)) {
       add(child, FB.T(child.sex === 'f' ? 'Daughter' : 'Son'));
     }
+    for (const parent of FB.parentsOf(s, baron)) {
+      add(parent, FB.T(parent.sex === 'f' ? 'Mother' : 'Father'));
+    }
+    for (const sibling of FB.siblingsOf(s, baron)) {
+      add(sibling, FB.T(sibling.sex === 'f' ? 'Sister' : 'Brother'));
+    }
     if (!rows.length) return '';
-    let h = '<div class="court-strip" data-baron-family role="list" aria-label="' + esc(FB.T('Ruler’s family')) + '">';
+    let h = '<div class="court-strip" data-baron-family role="list" aria-label="' + esc(FB.T('Immediate family')) + '">';
     for (const row of rows) {
       h += '<button type="button" class="ftchip" role="listitem" data-baron-family-cid="' + esc(row.c.id) +
         '" aria-label="' + esc(FB.T('Open {name}’s character sheet', { name:FB.fullName(row.c) })) + '">' +
@@ -11389,22 +11417,7 @@ window.FB = window.FB || {};
     if (!t || t.accountingOnly) return '';
     let h = '<span aria-hidden="true">💰</span> ' + esc(FB.T('Available treasury')) + ': ' +
       '<b class="ruler-resource-amount">' + esc(FB.money(t.available)) + '</b>';
-    const last = t.last;
-    h += cardInfoButton('ruler-treasury-details') + '<div class="settcard-details hidden" id="ruler-treasury-details">' +
-      kv('Accrued military bills', esc(FB.money(t.accrued))) +
-      kv('Reserve target', esc(FB.money(t.reserveTarget)));
-    if (last) {
-      const income = last.income + last.duesIn;
-      const expenses = last.duesOut + last.upkeep + (last.government || 0) + last.military;
-      h += kv('Last seasonal landed receipts', esc(FB.money(income))) +
-        kv('Government administration', esc(FB.money(last.administration || 0))) +
-        kv('Official court expenses', esc(FB.money(last.court || 0))) +
-        kv('Property upkeep and liege dues', esc(FB.money(last.upkeep + last.duesOut))) +
-        kv('Settled non-food military costs', esc(FB.money(last.military))) +
-        kv('Seasonal balance before daily purchases', esc(FB.money(income - expenses)));
-    }
-    if (t.distribution) h += kv('Last public distribution', esc(FB.money(t.distribution.amount)));
-    return h + '</div>';
+    return h;
   }
 
   function showRealmInteractionSheet(rid, returnContext, replaceView) {
@@ -12313,11 +12326,49 @@ window.FB = window.FB || {};
         })) + (reserved ? ' · ' + esc(FB.T('reserved from grants')) : '') +
         '</span></button>' + grantProtectionButton(pid) + '</div>';
     }
+    h += '</div><div class="panelh">' + esc(FB.T('Grant a settlement')) +
+      '</div><div class="gm-list" data-grant-land-settlements>';
+    const sites = [];
+    for (const pid of FB.realmHeldCounties(s, 'player')) {
+      for (const site of FB.settlementGrantSites(s, pid, 'player')) sites.push(site);
+    }
+    for (const site of sites) {
+      h += '<button type="button" class="actionbtn" data-grant-land-site="' +
+        esc(site.provinceId) + '" data-grant-land-slot="' + site.settlement + '">' +
+        esc(FB.T('{settlement} in {county}', {
+          settlement:FB.settlementsOf(s, site.provinceId)[site.settlement].name,
+          county:FB.world.byId[site.provinceId].name
+        })) + '</button>';
+    }
+    if (!sites.length) h += '<p class="hint">' +
+      esc(FB.T('No settlement is available to grant. County seats are protected.')) + '</p>';
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
     const options = managementModalOptions(returnContext) || {};
     options.replaceView = !!replaceView;
     openModal(FB.T('Grant Land'), h, options);
+    $('gm-body').querySelectorAll('[data-grant-land-site]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const pid = button.dataset.grantLandSite;
+        const idx = Number(button.dataset.grantLandSlot);
+        const scroll = $('gm-body').scrollTop;
+        const selector = '[data-grant-land-site="' + pid +
+          '"][data-grant-land-slot="' + idx + '"]';
+        const opened = UI.showSettlementGrant(pid, idx, null, function () {
+          UI.showGrantLand(returnContext);
+          setTimeout(function () {
+            const target = $('gm-body').querySelector(selector) ||
+              $('gm-body').querySelector('[data-grant-land-site]') || $('gm-cancel');
+            if (target) target.focus({ preventScroll:true });
+            $('gm-body').scrollTop = scroll;
+          }, 0);
+        });
+        if (!opened) {
+          toast(FB.T('This grant is no longer available.'));
+          UI.showGrantLand(returnContext, true);
+        }
+      });
+    });
     document.querySelectorAll('[data-did]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         UI.showGrantLandRecipients('duchy', btn.dataset.did, returnContext);
@@ -17345,6 +17396,7 @@ window.FB = window.FB || {};
     const matchPolicyStation = FB.T('Minimum station: {station}', {
       station:FB.stationName(matchPolicy.minStation)
     });
+    const matchPolicyAges = matchAgePreferenceLabel(matchPolicy.agePreference);
     const matchDowrySummary = matchPolicy.maxDowry === null
       ? FB.T('Dowry cap: none')
       : FB.T('Dowry cap: {money:amount}', {
@@ -17372,7 +17424,7 @@ window.FB = window.FB || {};
         FB.T('Manage household education policy'), FB.T('Manage policy…')) +
       householdPolicySummaryHtml(
         'match-policy-summary', FB.T('Descendant Match Assistant'),
-        [matchPolicyState, matchPolicyStation, matchPolicyExpenses],
+        [matchPolicyState, matchPolicyAges, matchPolicyStation, matchPolicyExpenses],
         'household-match-policy-details', 'household-match-policy',
         FB.T('Manage descendant match assistant'), FB.T('Manage assistant…')) +
       (enterprises.length ? enterpriseViewControlsHtml('household', false) : '') +
@@ -17410,14 +17462,14 @@ window.FB = window.FB || {};
         ? '<div class="hint enterprise-staffing-hint">' +
           esc(FB.T('All family enterprises are staffed.')) + '</div>'
         : '') +
-      (idleEnterprises
+      (enterprises.length
         ? '<div class="household-plan-staffing-entry settcard"' +
           (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') +
           ' aria-describedby="household-plan-staffing-details">' +
           '<button type="button" class="actionbtn" ' +
           'id="household-plan-staff-enterprises" ' +
           'aria-describedby="household-plan-staffing-details">' +
-          esc(FB.T('Staff all idle enterprises…')) + '</button>' +
+          esc(FB.T('Enterprise Plan…')) + '</button>' +
           '<span class="settcard-actions"><button type="button" ' +
           'class="btn small settcard-info" aria-expanded="false" ' +
           'aria-controls="household-plan-staffing-details" title="' +
@@ -17425,7 +17477,7 @@ window.FB = window.FB || {};
           esc(FB.T('Details')) + '">?</button></span>' +
           '<div class="settcard-details hidden" ' +
           'id="household-plan-staffing-details">' + esc(FB.T(
-            'Review a maximum-yield assignment across every unlocked enterprise. Applying it spends no day or money.')) +
+            'Review household staffing, local hiring, and upgrades by settlement or enterprise type.')) +
           '</div></div>'
         : '') +
       '</div><div class="gm-footer">' +
@@ -17672,6 +17724,8 @@ window.FB = window.FB || {};
     const station = Number(policy.minStation);
     return {
       enabled:!!policy.enabled,
+      agePreference:['youngest', 'same', 'younger'].indexOf(policy.agePreference) >= 0
+        ? policy.agePreference : 'close',
       minStation:FB.clamp(isFinite(station) ? Math.floor(station) : 0, 0, 3),
       maxDowry:limit(policy.maxDowry),
       maxGold:limit(policy.maxGold),
@@ -17689,6 +17743,20 @@ window.FB = window.FB || {};
     return h;
   }
 
+  function matchAgePreferenceLabel(mode) {
+    if (mode === 'youngest') return FB.T('Youngest eligible candidate');
+    if (mode === 'same') return FB.T('Same age — highest rank');
+    if (mode === 'younger') return FB.T('Younger only — highest rank');
+    return FB.T('Within 5 years — highest rank');
+  }
+
+  function matchAgePreferenceOptions(selected) {
+    return ['close', 'youngest', 'same', 'younger'].map(function (mode) {
+      return '<option value="' + mode + '"' + (mode === selected ? ' selected' : '') +
+        '>' + esc(matchAgePreferenceLabel(mode)) + '</option>';
+    }).join('');
+  }
+
   function matchPolicyInputValue(value) {
     return value === null ? '' : String(value);
   }
@@ -17700,6 +17768,7 @@ window.FB = window.FB || {};
     }
     return matchPolicyDraft({
       enabled:$('match-policy-enabled').checked,
+      agePreference:$('match-policy-age-preference').value,
       minStation:Number($('match-policy-station').value),
       maxDowry:value('match-policy-dowry'),
       maxGold:value('match-policy-gold'),
@@ -17714,7 +17783,7 @@ window.FB = window.FB || {};
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Ask the household to recommend one of the same three families available in manual descendant matching.')) +
       '</p><p class="hint">' + esc(FB.T(
-        'The assistant ranks qualifying families by station, then lower immediate expense. It never pledges a match, spends resources, or advances the day.')) +
+        'Choose which ages to prefer. Searches can begin from birth. The assistant recommends only; it never pledges a match, spends resources, or advances the day.')) +
       '</p></div><div class="education-policy-form match-policy-form">' +
       '<label class="autorow education-policy-check match-policy-check">' +
       '<input type="checkbox" id="match-policy-enabled"' +
@@ -17722,7 +17791,11 @@ window.FB = window.FB || {};
       esc(FB.T('Recommend descendant matches')) +
       '<span class="adesc">' + esc(FB.T(
         'Eligible resident children and grandchildren are reviewed now and each New Year.')) +
-      '</span></label><label class="education-policy-field" for="match-policy-station"><span>' +
+      '</span></label><label class="education-policy-field" for="match-policy-age-preference"><span>' +
+      esc(FB.T('Preferred match age')) + '</span><select id="match-policy-age-preference">' +
+      matchAgePreferenceOptions(draft.agePreference) + '</select><small>' +
+      esc(FB.T('Close age accepts up to 5 years younger or older. Same age and younger only are strict filters. These three modes prefer the highest rank; youngest prefers the lowest age, then rank. Cost limits still apply. No suitable candidate means no recommendation.')) +
+      '</small></label><label class="education-policy-field" for="match-policy-station"><span>' +
       esc(FB.T('Minimum acceptable station')) +
       '</span><select id="match-policy-station">' +
       matchPolicyStationOptions(draft.minStation) + '</select><small>' +
@@ -17774,6 +17847,7 @@ window.FB = window.FB || {};
     function syncFields() {
       const enabled = $('match-policy-enabled').checked;
       for (const id of [
+        'match-policy-age-preference',
         'match-policy-station', 'match-policy-dowry',
         'match-policy-gold', 'match-policy-prestige'
       ]) $(id).disabled = !enabled;
@@ -17790,6 +17864,7 @@ window.FB = window.FB || {};
       syncPreview();
     });
     $('match-policy-station').addEventListener('change', syncPreview);
+    $('match-policy-age-preference').addEventListener('change', syncPreview);
     for (const id of [
       'match-policy-dowry', 'match-policy-gold', 'match-policy-prestige'
     ]) {
@@ -17820,7 +17895,13 @@ window.FB = window.FB || {};
       const reason = rejected.reason;
       if (!reason || seen[reason]) continue;
       seen[reason] = 1;
-      if (reason === 'minimum-station') {
+      if (reason === 'age-gap') {
+        reasons.push(FB.T('At least one candidate is more than 5 years younger or older.'));
+      } else if (reason === 'same-age') {
+        reasons.push(FB.T('At least one candidate is not the same age.'));
+      } else if (reason === 'younger-only') {
+        reasons.push(FB.T('At least one candidate is not younger than the descendant.'));
+      } else if (reason === 'minimum-station') {
         reasons.push(FB.T('At least one family is below the minimum station.'));
       } else if (reason === 'maximum-dowry') {
         reasons.push(FB.T('At least one family is above the dowry cap.'));
@@ -17883,6 +17964,7 @@ window.FB = window.FB || {};
         ? String(terms.prestigeNeed)
         : FB.T('None');
       note = FB.T('Recommendation only · no pledge has been made');
+
     } else if (entry.reason === 'disabled') {
       note = FB.T(
         'The assistant is off. Existing and future descendant matches remain manual.');
@@ -18779,13 +18861,14 @@ window.FB = window.FB || {};
         esc(FB.money(Math.round(enterpriseGold * 10) / 10)));
     let staffingAction = '';
     let enterpriseFooter = '';
-    if (idleEnterprises) {
+    if (enterprises.length) {
       staffingAction += '<button class="actionbtn" id="enterprise-staffing-preview">⚙ ' +
-        esc(FB.T('Staff all idle enterprises…')) +
+        esc(FB.T('Enterprise Plan…')) +
         '<span class="adesc">' + esc(FB.T(
-          'Review a maximum-yield assignment across every unlocked enterprise. Applying it spends no day or money.')) +
+          'Review household staffing, local hiring, and upgrades by settlement or enterprise type.')) +
         '</span></button>';
-    } else if (enterprises.length) {
+    }
+    if (!idleEnterprises && enterprises.length) {
       enterpriseFooter += '<div class="hint enterprise-staffing-hint">' +
         esc(FB.T('All family enterprises are staffed.')) + '</div>';
     }
@@ -21134,6 +21217,56 @@ window.FB = window.FB || {};
 
   const enterpriseStaffingPosition = { state:null, top:0 };
 
+  function enterpriseBatchUpgradeQuote(s, scope, value) {
+    const rows = [], blocked = [];
+    let cost = 0;
+    for (const e of FB.enterpriseList(s)) {
+      const key = scope === 'settlement' ? JSON.stringify([e.provinceId, e.settlement]) : e.type;
+      if (key !== value) continue;
+      const status = FB.enterpriseUpgradeStatus(s, e);
+      if (!status.ready && status.code !== 'funds') {
+        blocked.push({ uid:e.uid, reason:status.reason });
+        continue;
+      }
+      rows.push({ uid:e.uid, level:status.level, cost:status.cost });
+      cost += status.cost;
+    }
+    return { rows:rows, cost:cost, blocked:blocked };
+  }
+
+  function enterpriseUpgradePlanCard(s) {
+    let h = '<section class="enterprise-staffing-option settcard" data-enterprise-upgrade-plan><h4>' +
+      esc(FB.T('Upgrades')) + '</h4><p>' + esc(FB.T(
+        'Upgrade each eligible enterprise by one level. Larger enterprises may need more workers before earning income. No day passes.')) + '</p>';
+    for (const scope of ['settlement', 'type']) {
+      const seen = {}, choices = [];
+      for (const e of FB.enterpriseList(s)) {
+        const key = scope === 'settlement' ? JSON.stringify([e.provinceId, e.settlement]) : e.type;
+        if (seen[key]) continue;
+        seen[key] = true;
+        const site = FB.settlementsOf(s, e.provinceId)[e.settlement];
+        const name = scope === 'settlement' ? FB.T('{settlement} in {county}', {
+          settlement:site.name, county:FB.world.byId[e.provinceId].name
+        }) : dt(s, 'enterprise', e.type, FBDATA.enterprises[e.type], 'name');
+        choices.push({ key:key, name:name });
+      }
+      if (!seen[enterpriseStaffingPosition[scope]]) {
+        enterpriseStaffingPosition[scope] = choices.length ? choices[0].key : '';
+      }
+      const id = 'enterprise-upgrade-' + scope;
+      h += '<label for="' + id + '-select">' + esc(scope === 'settlement'
+        ? FB.T('Settlement') : FB.T('Enterprise type')) + '</label><select id="' + id + '-select">';
+      for (const choice of choices) h += '<option value="' + esc(choice.key) + '"' +
+        (choice.key === enterpriseStaffingPosition[scope] ? ' selected' : '') + '>' + esc(choice.name) + '</option>';
+      h += '</select><div class="settcard" tabindex="0"><div class="settcard-head">' +
+        '<button type="button" class="actionbtn" id="' + id + '" data-action-tooltip="' + id + '-details">' +
+        esc(scope === 'settlement' ? FB.T('Upgrade all in settlement') : FB.T('Upgrade all of this type')) +
+        '</button>' + cardInfoButton(id + '-details') + '</div><p id="' + id + '-summary"></p>' +
+        '<div class="settcard-details hidden" id="' + id + '-details"></div></div>';
+    }
+    return h + '</section>';
+  }
+
   function enterpriseLocalStaffQuote(s) {
     const hires = [];
     let cost = 0, gain = 0, idle = 0;
@@ -21161,6 +21294,8 @@ window.FB = window.FB || {};
     if (enterpriseStaffingPosition.state !== s) {
       enterpriseStaffingPosition.state = s;
       enterpriseStaffingPosition.top = 0;
+      enterpriseStaffingPosition.settlement = '';
+      enterpriseStaffingPosition.type = '';
     }
     const savedScroll = enterpriseStaffingPosition.top;
     const intro = FB.T('Apply plan reassigns eligible resident family, manageable unmarried siblings, and paid retainers to improve enterprise income. Career and guild requirements still apply. Locked pairings, reserved workers, and existing local hires stay fixed.') + ' ' +
@@ -21206,13 +21341,56 @@ window.FB = window.FB || {};
         '{count} hires. Income estimate includes new wages.', { count:local.hires.length })) + '</p>' +
       '<button type="button" class="btn" id="enterprise-staffing-local" aria-describedby="enterprise-staffing-local-terms"' +
       (!localAvailable ? ' disabled' : '') + '>' + esc(FB.T('Staff local')) + '</button></div>' +
+      enterpriseUpgradePlanCard(s) +
       '</div><div class="gm-footer"><button type="button" class="btn" id="enterprise-staffing-back">' +
       esc(FB.T('Back')) + '</button></div>';
     const options = livelihoodsHistoryOptions(returnContext);
     options.modalClass = 'enterprise-staffing-modal fullsheet-modal';
     options.replaceView = !!notice;
     options.titleDetailsHtml = '<p>' + esc(intro) + '</p><p>' + esc(FB.T('Idle includes partially staffed enterprises. Both options compare against current assignments. Local income uses typical worker skills and current production chains; actual hires may earn more or less.')) + '</p>';
-    openModal(FB.T('⚙ Enterprise staffing preview'), h, options);
+    openModal(FB.T('⚙ Enterprise Plan'), h, options);
+    for (const scope of ['settlement', 'type']) {
+      const id = 'enterprise-upgrade-' + scope;
+      let quote;
+      function refreshQuote() {
+        enterpriseStaffingPosition[scope] = $(id + '-select').value;
+        quote = enterpriseBatchUpgradeQuote(s, scope, enterpriseStaffingPosition[scope]);
+        const affordable = s.player.gold + 0.0001 >= quote.cost;
+        $(id).disabled = !quote.rows.length || !affordable;
+        $(id + '-summary').textContent = !quote.rows.length ? FB.T('No upgrades available.') :
+          FB.T('{count} upgrades · Pay {money:cost}', { count:quote.rows.length, cost:quote.cost }) +
+          (affordable ? '' : ' ' + FB.T('Not enough money for all upgrades.'));
+        let details = '<p>' + esc(FB.T('One level per enterprise. Fully upgraded and technology-blocked enterprises are skipped.')) + '</p>';
+        for (const row of quote.rows) {
+          const e = FB.enterpriseList(s).filter(function (item) { return item.uid === row.uid; })[0];
+          details += '<p>' + esc(FB.T('{enterprise}: {money:cost}', {
+            enterprise:FB.T('{enterprise} in {settlement}', {
+              enterprise:dt(s, 'enterprise', e.type, FBDATA.enterprises[e.type], 'name'),
+              settlement:FB.settlementsOf(s, e.provinceId)[e.settlement].name
+            }), cost:row.cost
+          })) + '</p>';
+        }
+        for (const row of quote.blocked) details += '<p>' + esc(row.reason) + '</p>';
+        $(id + '-details').innerHTML = details;
+      }
+      refreshQuote();
+      $(id + '-select').addEventListener('change', refreshQuote);
+      $(id).addEventListener('click', function () {
+        const fresh = enterpriseBatchUpgradeQuote(s, scope, enterpriseStaffingPosition[scope]);
+        if (FB.state !== s || JSON.stringify(fresh) !== JSON.stringify(quote) ||
+            s.player.gold + 0.0001 < fresh.cost) {
+          UI.showEnterpriseStaffingPreview(returnContext, FB.T('Upgrade terms changed. Review the updated costs.'));
+          return;
+        }
+        let count = 0;
+        for (const row of fresh.rows) {
+          if (!FB.upgradeEnterprise(s, row.uid)) break;
+          count++;
+        }
+        UI.refresh();
+        UI.showEnterpriseStaffingPreview(returnContext, FB.T('{count} enterprises upgraded.', { count:count }));
+      });
+    }
     const staffingBody = $('gm-body');
     const staffingSummary = staffingBody.querySelector('.enterprise-staffing-summary');
     staffingBody.scrollTop = savedScroll;
@@ -22995,7 +23173,8 @@ window.FB = window.FB || {};
     }
     const descendantPledge = FB.betrothalBreakStatus
       ? FB.betrothalBreakStatus(s, c) : null;
-    if (descendantKind && household && !FB.spouseSnapshot(s, c) &&
+    const arrangedKind = FB.arrangedMatchKind(s, c.id);
+    if (arrangedKind && !FB.spouseSnapshot(s, c) &&
         (!c.betrothedId || descendantPledge && descendantPledge.ready)) {
       addInteractionAction(model, {
         id:'management.arranged-match',
@@ -23015,7 +23194,7 @@ window.FB = window.FB || {};
         route:'match'
       });
     }
-    if (!descendantKind && descendantPledge && descendantPledge.ready) {
+    if (!arrangedKind && descendantPledge && descendantPledge.ready) {
       addInteractionAction(model, {
         id:'management.break-betrothal',
         group:'management',
@@ -23524,7 +23703,7 @@ window.FB = window.FB || {};
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
     if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
-    else if (FB.directSettlements(s, { kind:'character', id:c.id }).length) {
+    else if (!(FB.localFolkRecord && FB.localFolkRecord(s, c.id))) {
       h += baronFamilyStripHtml(s, c);
     }
     h += localFolkSheetHtml(s, c);
@@ -24865,8 +25044,7 @@ window.FB = window.FB || {};
       former.betrothedId === c.id);
     const matchOptions = replacing
       ? { replacingBetrothedId:former.id } : undefined;
-    if (!c || c.dead || !FB.playerDescendantKind(s, cid) ||
-        !FB.isHouseholdCharacter(s, cid) ||
+    if (!c || c.dead || !FB.arrangedMatchKind(s, cid) ||
         FB.spouseOf(s, c) || (c.betrothedId && !replacing)) return;
     let cands = FB.spawnMatchCandidates(s, c, matchOptions);
     const matchPolicy = FB.ensureMatchPolicy(s);
@@ -24885,12 +25063,12 @@ window.FB = window.FB || {};
       return a.order - b.order;
     }).map(function (entry) { return entry.candidate; });
     const ps = FB.playerStation(s);
-    let h = '<label class="automation-protection"><input type="checkbox" ' +
+    let h = (FB.playerDescendantKind(s, c.id) ? '<label class="automation-protection"><input type="checkbox" ' +
       'id="match-policy-protection"' + (matchProtected ? ' checked' : '') +
       '> <span>' + esc(FB.T('Manage this descendant’s matches manually')) +
       '</span><span class="adesc">' + esc(FB.T(
         'The match assistant will omit this person from future recommendations. Manual matching remains available.')) +
-      '</span></label><div class="gm-body-text"><p>' + esc(FB.T(
+      '</span></label>' : '') + '<div class="gm-body-text"><p>' + esc(FB.T(
       'Families willing to hear an offer for {name}’s hand:', { name: c.name })) +
       '</p>' + (replacing ? '<p class="household-warning op-bad">' + esc(FB.T(
         'Choosing another match sets aside the current pledge to {name}. Any dowry already paid is not refunded.', {
@@ -25015,7 +25193,7 @@ window.FB = window.FB || {};
       if (!FB.refreshMatchCandidates(s, c, matchOptions)) return;
       UI.showMatchPicker(cid, returnContext, true);
     });
-    $('match-policy-protection').addEventListener('change', function () {
+    if ($('match-policy-protection')) $('match-policy-protection').addEventListener('change', function () {
       FB.setProtected(s, 'matchCharacter', c.id, this.checked);
       if (this.checked) delete c.matchRecommendation;
       else if (matchPolicy.enabled) {
@@ -29350,7 +29528,7 @@ window.FB = window.FB || {};
       FB.T('Historical places and growth derived from county development.'),
       guideBody([
         FB.T('Settlements are not founded manually. Significant counties show researched historical places — every realm capital, faith seat, and great city of the start date — while generated local names fill the remaining slots. The same place keeps one identity in both start dates, with a name and standing appropriate to the year.'),
-        FB.T('Development unlocks capacity to found settlements and upgrades leading places to towns or cities. Existing settlements remain established when development falls. A Gentry household can fund a charter from Deeds to build a hereditary barony.'),
+        FB.T('Development unlocks capacity to found settlements and upgrades leading places to towns or cities. Existing settlements remain established when development falls. After a later generation inherits Gentry standing, the household can fund a charter from Deeds to build a hereditary barony.'),
         provinceId ? settlementDevelopmentText(s, provinceId) :
           FB.T('Start a life to see the next threshold for the current county.'),
         provinceId ? bookmarkDevelopmentText(s, provinceId) :

@@ -19,6 +19,7 @@ test.beforeEach(async function ({ page }, testInfo) {
     const s = FB.state, p = s.player;
     FB.game.setPaused(true);
     p.tier = 2; p.provs = []; p.gold = 10000; p.prestige = 1000; p.piety = 1000;
+    p.gentryGeneration = 0; // Founding lifecycle cases begin with an established gentle house.
     // Find an actual compiled unused site without manufacturing world slots.
     const pid = Object.keys(s.owner).sort().find(function (id) {
       if (!FB.world.sitesByProv[id] || !FB.settlementCountyHolder(s, id)) return false;
@@ -304,6 +305,30 @@ test('mobile charter review exposes costs and both routes; cancellation Back ret
   expect(await page.evaluate(function () { return FB.activeSettlementFounding(FB.state); })).toBeNull();
 });
 
+
+test('new barony charters require inherited Gentry and recheck stale reviews before payment', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, pid = p.provinceId;
+    const ready = FB.settlementFoundingEligibility(s, pid);
+    p.gentryGeneration = p.lineDepth;
+    const blocked = FB.settlementFoundingEligibility(s, pid);
+    const before = JSON.stringify([p.gold, p.prestige, p.piety, s.turn]);
+    const stale = FB.beginSettlementFounding(s, ready);
+    const denied = FB.beginSettlementFounding(s, blocked);
+    const unchanged = before === JSON.stringify([p.gold, p.prestige, p.piety, s.turn]);
+    p.gentryGeneration = 0;
+    const funded = FB.beginSettlementFounding(s, FB.settlementFoundingEligibility(s, pid));
+    // Funded commitments from older saves keep their original terms.
+    p.gentryGeneration = p.lineDepth;
+    s.turn = FB.activeSettlementFounding(s).dueTurn;
+    const completed = FB.completeSettlementFounding(s);
+    return { ready:ready.ready, blocked:blocked.ready, reason:blocked.reason,
+      stale:stale, denied:denied, unchanged:unchanged, funded:funded, completed:completed };
+  });
+  expect(result).toMatchObject({ ready:true, blocked:false, stale:false, denied:false,
+    unchanged:true, funded:true, completed:true });
+  expect(result.reason).toContain('later generation');
+});
 
 test('county rulers found direct holdings without moving their seat or changing rank', async function ({ page }) {
   const result = await page.evaluate(function () {

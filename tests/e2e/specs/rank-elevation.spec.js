@@ -43,6 +43,28 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+test('first-generation Freeholder review explains the generation gate and cannot charge', async function ({ page }) {
+  await page.evaluate(function () {
+    const s = FB.state, p = s.player;
+    p.gold = 10000; p.prestige = 1000; p.travel = null;
+    p.landPlots = []; p.landPlotMigration = 1;
+    for (let i = 0; i < FBDATA.balance.manorPlotRequirement; i++) {
+      p.landPlots.push({ provinceId:p.provinceId, settlement:0 });
+    }
+    window.generationGateBefore = JSON.stringify([p.gold, p.prestige, s.turn]);
+    FB.runInstant(s, 'declare_manor');
+  });
+  const sheet = page.locator('[data-rank-elevation-sheet="manor"]');
+  await expect(sheet).toContainText('later generation');
+  await expect(page.locator('#rank-elevation-confirm')).toHaveAttribute('aria-disabled', 'true');
+  await page.locator('#rank-elevation-confirm').focus();
+  await page.keyboard.press('Enter');
+  expect(await page.evaluate(function () {
+    const s = FB.state, p = s.player;
+    return p.tier === 1 && window.generationGateBefore === JSON.stringify([p.gold, p.prestige, s.turn]);
+  })).toBe(true);
+});
+
 test('per-rung prices and multi-rank claims use the complete crossed cost',
   async function ({ page }) {
     const result = await page.evaluate(function () {
@@ -83,6 +105,7 @@ test('opening a rank review is free and confirmation spends the day and cost',
       const p = s.player;
       const requirement = FBDATA.balance.manorPlotRequirement;
       p.tier = 1;
+      p.freeholderGeneration = 0; // This price/confirmation case uses an established freehold.
       p.gold = 200;
       p.prestige = FBDATA.balance.manorPrestige;
       p.piety = 0;

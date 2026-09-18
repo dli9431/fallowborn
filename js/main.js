@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.182.1';
+FB.VERSION = '1.182.2';
 FB.CHANGELOG = [
+  { v: '1.182.2', date: '2026-09-18', changes: [
+    'Family management adds match-age preferences, clearer relationships and settlement grants through Grant Land; Enterprise Plan adds batch upgrades and trade ventures offer larger treasury-based stakes. Progression requires inherited standing, AI campaign levies retain their territorial scale, and equipment tooltips stay on screen.'
+  ] },
   { v: '1.182.1', date: '2026-09-17', changes: [
     'County rulers can found settlements, and direct holders can rename them. Charter, building, muster, war-law and Network screens are clearer, muster plans save automatically, and saved rebellion notices display correctly.'
   ] },
@@ -3069,6 +3072,7 @@ FB.CHANGELOG = [
         foreignPolicy: {},
         warService: startEffects.warService || 0,
         liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
+        freeholderGeneration: sc.tier >= 2 ? 0 : (sc.tier === 1 ? 1 : null),
         developmentBaselineMigration: 1,
         militaryCommand:null,
         lineDepth: 1,
@@ -3382,6 +3386,7 @@ FB.CHANGELOG = [
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {},
         faithStandingMigration:0, realmStandingFaithBases:{},
         warService: 0, liegeGrants: 0, gentryGeneration: null,
+        freeholderGeneration: null,
         developmentBaselineMigration: 1,
         militaryCommand:null,
         lineDepth: 1,

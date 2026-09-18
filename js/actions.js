@@ -4255,7 +4255,13 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'grant_land', opensChoices:true, noConsume: true,
-    show: function (s) { return s.realms.player && s.realms.player.alive && s.player.provs && s.player.provs.length >= 2; },
+    show: function (s) {
+      if (!s.realms.player || !s.realms.player.alive) return false;
+      return (s.player.provs && s.player.provs.length >= 2) ||
+        FB.realmHeldCounties(s, 'player').some(function (pid) {
+          return FB.settlementGrantSites(s, pid, 'player').length > 0;
+        });
+    },
     run: function (s, options) {
       if (FB.ui && FB.ui.showGrantLand) {
         FB.ui.showGrantLand(options && options.returnContext);
@@ -9299,6 +9305,9 @@ window.FB = window.FB || {};
       if (p.tier !== 1) {
         eligible = false;
         reason = FB.T('Only a freeholder may declare a first manor.');
+      } else if (!FB.freeholderEstablished(state)) {
+        eligible = false;
+        reason = FB.T('An heir of a later generation must inherit your Freeholder standing before the household can seek Gentry recognition.');
       } else if (!adult(state)) {
         eligible = false;
         reason = adultDeedReason();

@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/cultures.js',
+  'data/technology.js',
   'js/main.js',
   'js/events.js',
   'css/style.css',
@@ -60,6 +61,101 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('age preferences filter strictly, rank deterministically, and allow searches from birth', async function ({ page }) {
+  const family = await addEligibleDescendant(page);
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state, child = s.chars[ids.childId];
+    const candidates = [ids.lowId, ids.peerId, ids.highId].map(function (id) { return s.chars[id]; });
+    child.sex = 'm';
+    candidates.forEach(function (c) { c.sex = 'f'; });
+    function ages(childAge, values) {
+      child.born = s.date.year - childAge;
+      candidates.forEach(function (c, i) { c.born = s.date.year - values[i]; });
+    }
+    function choose(mode, extra) {
+      const policy = Object.assign({ enabled:true, agePreference:mode }, extra || {});
+      const entry = FB.matchPolicyRecommendation(s, child, policy, candidates);
+      return entry.candidate && entry.candidate.id;
+    }
+    ages(20, [18, 20, 48]);
+    const before = JSON.stringify([s.player.gold, s.player.prestige, s.turn, FB.getRngState()]);
+    const close = choose('close'), youngest = choose('youngest');
+    const same = choose('same'), younger = choose('younger');
+    const noYoungerAboveStation = choose('younger', { minStation:2 });
+    const olderStillManual = FB.kinMatchTerms(s, child, candidates[2]).ok;
+    ages(20, [10, 18, 19]);
+    const youngerRanked = choose('younger');
+    const youngestWithinStation = choose('youngest', { minStation:2 });
+    ages(20, [20, 20, 20]);
+    const sameRanked = choose('same'), youngestTieRanked = choose('youngest');
+    ages(20, [15, 20, 25]);
+    const inclusive = choose('close');
+    ages(20, [14, 26, 48]);
+    const noClose = choose('close'), noSame = choose('same');
+    ages(0, [0, 1, 5]);
+    const newbornClose = choose('close'), newbornYoungest = choose('youngest');
+    const newbornSame = choose('same'), newbornYounger = choose('younger');
+    const after = JSON.stringify([s.player.gold, s.player.prestige, s.turn, FB.getRngState()]);
+    ages(20, [18, 20, 48]);
+    FB.setMatchPolicy(s, { enabled:true, agePreference:'same' });
+    const stored = child.matchRecommendation.policyKey;
+    s.player.matchPolicy.agePreference = 'youngest';
+    const staleHidden = FB.matchRecommendationOf(s, child) === null;
+    FB.recommendDescendantMatches(s, { notify:false });
+    const refreshed = FB.matchRecommendationOf(s, child);
+    const restored = JSON.parse(JSON.stringify(s));
+    const normalized = FB.ensureMatchPolicy(restored, true);
+    return { close:close, youngest:youngest, same:same, younger:younger,
+      noYoungerAboveStation:noYoungerAboveStation, olderStillManual:olderStillManual,
+      youngerRanked:youngerRanked, youngestWithinStation:youngestWithinStation,
+      sameRanked:sameRanked, youngestTieRanked:youngestTieRanked,
+      inclusive:inclusive, noClose:noClose, noSame:noSame,
+      newbornClose:newbornClose, newbornYoungest:newbornYoungest,
+      newbornSame:newbornSame, newbornYounger:newbornYounger,
+      unchanged:before === after, staleHidden:staleHidden,
+      refreshed:refreshed && refreshed.candidate.id,
+      changedKey:stored !== child.matchRecommendation.policyKey,
+      restoredMode:normalized.agePreference,
+      techMode:FBDATA.techImpactReviews.features.descendant_match_age_preferences.mode };
+  }, family);
+  expect(result).toEqual({ close:family.peerId, youngest:family.lowId,
+    same:family.peerId, younger:family.lowId, noYoungerAboveStation:null,
+    olderStillManual:true, inclusive:family.highId, noClose:null, noSame:null,
+    youngerRanked:family.highId, youngestWithinStation:family.peerId,
+    sameRanked:family.highId, youngestTieRanked:family.highId,
+    newbornClose:family.highId, newbornYoungest:family.lowId,
+    newbornSame:family.lowId, newbornYounger:null, unchanged:true,
+    staleHidden:true, refreshed:family.lowId, changedKey:true,
+    restoredMode:'youngest', techMode:'none' });
+});
+
+for (const width of [390, 1280]) {
+  test('match age preference saves and reopens at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:844 });
+    await addEligibleDescendant(page);
+    await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+    await page.locator('#household-match-policy').click();
+    await page.locator('#match-policy-enabled').check();
+    const selector = page.locator('#match-policy-age-preference');
+    await expect(selector.locator('option')).toHaveCount(4);
+    await expect(selector).toHaveValue('close');
+    for (const mode of ['youngest', 'same', 'younger', 'close']) {
+      await selector.selectOption(mode);
+      await page.locator('#match-policy-save').click();
+      expect(await page.evaluate(function () {
+        return FB.state.player.matchPolicy.agePreference;
+      })).toBe(mode);
+      await page.locator('#household-match-policy').click();
+      await expect(selector).toHaveValue(mode);
+    }
+    await selector.selectOption('youngest');
+    await page.locator('#match-policy-back').click();
+    expect(await page.evaluate(function () {
+      return FB.state.player.matchPolicy.agePreference;
+    })).toBe('close');
+  });
+}
+
 test('recommends within saved limits without pledging or spending',
   async function ({ page }) {
     const family = await addEligibleDescendant(page);
@@ -104,6 +200,7 @@ test('recommends within saved limits without pledging or spending',
 
     expect(result.defaults).toEqual({
       enabled:false,
+      agePreference:'close',
       minStation:0,
       maxDowry:null,
       maxGold:null,
@@ -112,6 +209,7 @@ test('recommends within saved limits without pledging or spending',
     expect(result.invalidRecommendationCleared).toBe(true);
     expect(result.policy).toEqual({
       enabled:true,
+      agePreference:'close',
       minStation:2,
       maxDowry:10,
       maxGold:10,
@@ -135,7 +233,7 @@ test('honors age, faith, close-kin, doctrine, compact, and resource gates',
       const child = state.chars[ids.childId];
       const candidate = state.chars[ids.peerId];
       const originalBorn = candidate.born;
-      candidate.born = state.date.year - 11;
+      candidate.born = state.date.year + 1;
       const age = FB.kinMatchTerms(state, child, candidate).reason;
       candidate.born = originalBorn;
 
@@ -255,6 +353,7 @@ test('reviews recommendations in shared details and saves directly from Househol
     }, family.childId);
     expect(saved.policy).toEqual({
       enabled:true,
+      agePreference:'close',
       minStation:2,
       maxDowry:10,
       maxGold:10,

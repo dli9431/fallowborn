@@ -352,7 +352,7 @@ test('large Work roster counts choices, orders attention, and preserves exact en
     })).toBe(true);
 
     await page.locator('#enterprise-staffing-preview').click();
-    await expect(page.locator('.enterprise-staffing-option')).toHaveCount(2);
+    await expect(page.locator('.enterprise-staffing-option')).toHaveCount(3);
     await expect(page.locator('.enterprise-staffing-row')).toHaveCount(0);
     await expect(page.locator('#enterprise-staffing-apply')).toBeVisible();
     await expect(page.locator('#enterprise-staffing-local')).toBeVisible();
