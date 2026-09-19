@@ -1955,3 +1955,14 @@ action disclosures; unavailable actions retain their blocker.
 
 War-law facts keep labels beside values with a 12px gap and wrap on narrow
 screens. Sections use 12px separation; headings and descriptions use 6px gaps.
+
+## Financial settlement restrictions
+
+An active player financial composition blocks new ordinary offensive declarations,
+claim packages, county challenges, player holy-war calls and new attacking holy-war
+pledges. Defense, existing wars, peace and ordinary levies remain possible. The
+composition snapshots paid-class capacity; growth in buildings/technology cannot
+expand those classes until expiry. Existing hosts and replacement commitments are
+preserved. New mercenary hires and paid holy-war reinforcement choices are blocked
+both in reviews and execution, before event fees or chance rolls. This is part of
+ungated fiscal recovery, not a new military technology requirement.

@@ -6,6 +6,11 @@ falling back to the county at the same detail level if its anchor is unavailable
 An already closer zoom is preserved. Keyboard and Land-panel Home share this rule;
 Dukes and higher ranks retain the wider county view.
 
+Chip tooltips never overlap their activating chip. When the content cannot fit
+below, place it above or beside the chip; without side room, constrain its scroll
+box to the larger vertical gap. Keep viewport margins and pointer access to both
+the source chip and the scrollable tooltip.
+
 Market legend labels wrap inside their grid cells when the center map column is
 narrow; symbols and labels remain distinct without shrinking the shared text size.
 
@@ -81,10 +86,26 @@ All new controls use shared cards/buttons, localization and keyboard/mobile flow
 
 ## Settlement charters
 
+Grant Land shows a separate Reserve toggle beside both county and settlement
+rows. Toggling either preserves the scrolling body's position and focus on that
+toggle. Settlement rows use the same protected-choice layout as counties.
+Grant excess counties / settlements opens a review naming every transfer, its
+current net seasonal income, retained protections and any unresolved excess.
+It grants down to the limits, not every unreserved holding. Lowest current net
+income is prioritized; newer holding order breaks ties. Apply revalidates the
+review, and Back restores the Grant Land position. Shared fiscal projections are
+computed only when these lists/reviews are opened or explicitly updated.
+
 Grant Land includes a settlement section alongside counties and duchies. Settlement
 choices name their county and reuse the searchable recipient picker and grant review.
+Settlement buttons use the shared action-row description for local building count
+(excluding strategic forts) and current net local income per season. The character
+settlement picker uses the same summary. Projections share one context per list render.
 Back restores Grant Land scroll and focus; after granting, the list refreshes to
 remove the transferred site. County seats and other holders' settlements are omitted.
+The Grant Land parent is retained through recipient selection and review; a grant
+updates its detached rows and remaining income summaries without adding a history
+entry. Footer and browser Back restore that parent rather than another recipient list.
 
 Ordinary manor recognition discloses the inherited-Freeholder generation
 requirement. Both barony petitions and new Gentry charters require a later
@@ -102,7 +123,10 @@ Controls use shared cards/buttons and localizable text for keyboard and mobile.
 
 Settlement grant reviews reuse the shared modal history and keyboard buttons.
 The searchable recipient list uses shared person cards with Stewardship and
-capacity disclosures, retaining search, scroll, focus and open Details on Cancel or Back; returning to the
+capacity disclosures. The review replaces its intermediate recipient or settlement
+picker in modal history. Back, including browser Back on mobile, returns directly
+to the originating Grant Land, settlement sheet or character sheet, both before
+and after confirmation. The origin retains scroll and focus; returning to the
 settlement refreshes ownership while retaining its scroll position. The essential
 review shows the named settlement/count, local works, gross/upkeep/dues/net or
 transferred income/upkeep/dues, capacity and hereditary construction rights.
@@ -3267,3 +3291,12 @@ on section backgrounds.
 
 Unboxed labels and helper text on Network section backgrounds use main ivory
 for contrast. Inner cards keep their existing label and supporting-text colors.
+
+
+Fiscal condition appears in Finance and government/privilege reviews. It names the
+support and political contributions, next review, recovery progress and continuing
+restrictions. Sales and five-year compositions require explicit review; automation
+cannot choose either. Back restores parent list position and focus on desktop and
+mobile. County support identifies fiscal hardship; the gold breakdown points to
+Coin & Credit. The sale review labels normal county-base estimates rather than
+presenting them as exact after-tax household income.

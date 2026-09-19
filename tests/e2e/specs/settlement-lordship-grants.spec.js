@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/util.js',
   'js/lordships.js', 'js/actions.js', 'js/events.js', 'js/armies.js', 'js/main.js',
   'js/treasury.js', 'js/world.js', 'js/model.js', 'js/items.js', 'js/population.js', 'js/modifiers.js',
   'js/technology.js', 'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/mapview.js',
@@ -37,10 +38,15 @@ for (const width of [390, 1280]) {
         born:s.date.year - 30, culture:me.culture, religion:me.religion, traits:[] });
       c.homeProvinceId = pid;
       const sites = FB.settlementGrantSites(s, pid, 'player');
+      const slot = sites[sites.length - 1].settlement;
+      s.buildings[pid] = [{ s:slot, id:'mill' }];
+      FB.invalidateBuildingIndex(s, pid);
+      const income = FB.settlementFiscalProjection(s, pid, slot).amounts.net;
       const status = FB.instantStatus(s, 'grant_land');
       FB.runInstant(s, 'grant_land');
       return { pid:pid, cid:c.id, count:sites.length, ready:status.can,
-        gold:p.gold, turn:s.turn, slot:sites[sites.length - 1].settlement };
+        gold:p.gold, turn:s.turn, slot:slot,
+        summary:FB.T('Buildings: {count} · Net income / season: {money:amount}', { count:1, amount:income }) };
     });
     expect(setup.ready).toBe(true);
     expect(setup.count).toBeGreaterThan(0);
@@ -50,8 +56,27 @@ for (const width of [390, 1280]) {
     const selector = '[data-grant-land-site="' + setup.pid +
       '"][data-grant-land-slot="' + setup.slot + '"]';
     const site = page.locator(selector);
+    await expect(site.locator('.adesc')).toHaveText(setup.summary);
     await site.focus();
     const scroll = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
+    // Repeated entry must retain the actual parent, not append a recipient view
+    // behind a newly rendered Grant Land sheet. Exercise footer and browser Back.
+    await site.evaluate(function (el) { el.dataset.retainedGrantOrigin = 'yes'; });
+    for (const back of ['footer', 'browser']) {
+      await site.press('Enter');
+      await expect(page.locator('#grant-search')).toBeVisible();
+      if (back === 'footer') await page.locator('#grant-back').click();
+      else await page.evaluate(function (width) {
+        if (width === 390) window.history.back();
+        else FB.ui.backModal();
+      }, width);
+      await expect(page.locator('#gm-title')).toHaveText('Grant Land');
+      await expect(site).toHaveAttribute('data-retained-grant-origin', 'yes');
+      await expect(site).toBeFocused();
+      await expect.poll(async function () {
+        return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
+      }).toBe(scroll);
+    }
     await site.press('Enter');
     await page.locator('#grant-search').fill('Settlement Candidate');
     const recipient = page.locator('[data-grant-recipient="' + setup.cid + '"]');
@@ -80,10 +105,8 @@ for (const width of [390, 1280]) {
     await recipient.press('Enter');
     await expect(page.locator('[data-settlement-grant-summary]')).toContainText('Upkeep transferred');
     await page.locator('#grant-cancel').click();
-    await expect(page.locator('#grant-search')).toHaveValue('Settlement Candidate');
-    await expect(recipient).toBeFocused();
-    await page.locator('#grant-back').click();
     await expect(page.locator('#gm-title')).toHaveText('Grant Land');
+    await expect(page.locator('#grant-search')).toHaveCount(0);
     await expect(site).toBeFocused();
     await expect.poll(async function () {
       return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
@@ -99,10 +122,19 @@ for (const width of [390, 1280]) {
     }, setup)).toEqual({ holder:{ kind:'character', id:setup.cid },
       counties:[setup.pid], gold:setup.gold, turn:setup.turn });
     await page.locator('#grant-cancel').click();
-    await page.locator('#grant-back').click();
     await expect(page.locator('#gm-title')).toHaveText('Grant Land');
     await expect(page.locator(selector)).toHaveCount(0);
     await expect(page.locator('[data-grant-land-site]')).toHaveCount(setup.count - 1);
+    const summaries = await page.evaluate(function () {
+      return Array.from(document.querySelectorAll('[data-grant-land-site]')).map(function (button) {
+        const pid = button.dataset.grantLandSite, slot = Number(button.dataset.grantLandSlot);
+        return { actual:button.querySelector('.adesc').textContent,
+          expected:FB.T('Buildings: {count} · Net income / season: {money:amount}', {
+            count:0, amount:FB.settlementFiscalProjection(FB.state, pid, slot).amounts.net
+          }) };
+      });
+    });
+    for (const row of summaries) expect(row.actual).toBe(row.expected);
   });
 }
 
@@ -163,7 +195,9 @@ test('baron character sheets show linked spouses and children with a retained re
   await expect(child).toBeFocused();
 });
 
-test('married Freeholder kin can receive a settlement from their character sheet', async function ({ page }) {
+for (const width of [390, 1280]) {
+test('married Freeholder kin grant returns to their character sheet at width ' + width, async function ({ page }) {
+  await page.setViewportSize({ width:width, height:844 });
   const cid = await page.evaluate(function () {
     const s = FB.state, p = s.player, me = s.chars[p.charId];
     p.tier = 4; p.provs = [p.provinceId]; p.liege = null;
@@ -178,10 +212,25 @@ test('married Freeholder kin can receive a settlement from their character sheet
     FB.ui.showCharModal(child.id);
     return child.id;
   });
-  await page.locator('[data-interaction-action="management.settlement.grant"]').click();
+  const grant = page.locator('[data-interaction-action="management.settlement.grant"]');
+  await grant.focus();
+  const scroll = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
+  await grant.press('Enter');
+  await page.locator('[data-character-grant-site]').first().click();
+  await page.locator('#grant-cancel').click();
+  await expect(page.locator('#gm-title')).toContainText('Grant Heir');
+  await expect(page.locator('[data-character-grant-site]')).toHaveCount(0);
+  await expect(grant).toBeFocused();
+  await expect.poll(async function () {
+    return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
+  }).toBe(scroll);
+  await grant.press('Enter');
   await page.locator('[data-character-grant-site]').first().click();
   await expect(page.locator('#gm-title')).toContainText('Review settlement grant');
   await page.locator('#grant-confirm').click();
+  await page.locator('#grant-cancel').click();
+  await expect(page.locator('#gm-title')).toContainText('Grant Heir');
+  await expect(grant).toBeFocused();
   const site = await page.evaluate(function (id) {
     const site = FB.directSettlements(FB.state, { kind:'character', id:id })[0];
     FB.ui.showSettlement(site.provinceId, site.settlement);
@@ -191,6 +240,7 @@ test('married Freeholder kin can receive a settlement from their character sheet
   await page.locator('#settlement-holder-link').click();
   await expect(page.locator('#gm-title')).toContainText('Grant Heir');
 });
+}
 
 test('a petition conveys the eligible manor site and local works while retaining private property and county borders', async function ({ page }) {
   const r = await page.evaluate(function () {
@@ -464,6 +514,8 @@ for (const mobile of [false, true]) {
       }
       FB.ui.showSettlement(pid, 1);
     });
+    await page.locator('#settlement-grant').focus();
+    const originScroll = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
     await page.locator('#settlement-grant').press('Enter');
     await page.locator('#grant-search').fill('Candidate');
     if (mobile) {
@@ -502,19 +554,24 @@ for (const mobile of [false, true]) {
     }
     const candidate = page.locator('[data-grant-recipient]:visible').last();
     await candidate.focus();
-    const cid = await candidate.getAttribute('data-grant-recipient');
-    const before = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
     await candidate.press('Enter');
     await expect(page.locator('[data-settlement-grant-summary]')).toContainText('Upkeep transferred');
     await expect(page.locator('[data-settlement-grant-summary]')).toContainText('Direct settlements');
-    await page.locator('#grant-cancel').press('Enter');
-    await expect(page.locator('#grant-search')).toHaveValue('Candidate');
-    await expect(page.locator('[data-grant-recipient="' + cid + '"]')).toBeFocused();
+    if (mobile) await page.evaluate(function () { window.history.back(); });
+    else await page.locator('#grant-cancel').press('Enter');
+    await expect(page.locator('#grant-search')).toHaveCount(0);
+    await expect(page.locator('#settlement-grant')).toBeFocused();
     await expect.poll(async function () {
       return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
-    }).toBe(before);
-    await page.locator('#grant-back').click();
-    await expect(page.locator('#settlement-grant')).toBeFocused();
+    }).toBe(originScroll);
+    await page.locator('#settlement-grant').press('Enter');
+    await page.locator('#grant-search').fill('Candidate');
+    await page.locator('[data-grant-recipient]:visible').last().click();
+    await page.locator('#grant-confirm').click();
+    await page.locator('#grant-cancel').click();
+    await expect(page.locator('#settlement-holder-link')).toBeVisible();
+    await expect(page.locator('#settlement-grant')).toHaveCount(0);
+    await expect(page.locator('#grant-search')).toHaveCount(0);
   });
 }
 

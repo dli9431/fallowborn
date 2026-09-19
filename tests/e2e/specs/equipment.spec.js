@@ -57,7 +57,23 @@ for (const height of [480, 800]) {
         expect(bounds.right).toBeLessThanOrEqual(bounds.width - 8);
         expect(bounds.atEnd).toBe(true);
         if (repeat === 60) expect(bounds.scrollable).toBe(true);
+        const target = await chip.evaluate(function (el) {
+          const r = el.getBoundingClientRect();
+          const tip = document.getElementById('tooltip').getBoundingClientRect();
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          return {
+            uncovered:hit === el || el.contains(hit),
+            separate:tip.right <= r.left || tip.left >= r.right ||
+              tip.bottom <= r.top || tip.top >= r.bottom
+          };
+        });
+        expect(target).toEqual({ uncovered:true, separate:true });
+        // The tooltip remains an interactive scroll box after leaving its chip.
+        await tip.hover();
+        await expect(tip).toBeVisible();
       }
+      await chip.click();
+      await expect(page.locator('#genmodal')).toBeVisible();
     });
 }
 

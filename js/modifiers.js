@@ -135,6 +135,7 @@ window.FB = window.FB || {};
      a county/campaign modifier actually changes. The counter is transient:
      state identity handles loads, while every supported mutation advances it. */
   FB.modifierStateRevision = function () { return modifierRevision; };
+  FB.invalidateFiscalSupport = noteModifierMutation;
 
   function rememberTickState(state) {
     tickState = state;
@@ -505,7 +506,8 @@ window.FB = window.FB || {};
   };
   FB.countyPopularSupport = function (state, pid, records) {
     pid = pid || state.player.provinceId;
-    return FB.countySupportBase(state, pid) + FB.modBonus(state, 'commonVoice', pid, undefined, records);
+    return FB.countySupportBase(state, pid) + FB.modBonus(state, 'commonVoice', pid, undefined, records) +
+      (FB.fiscalSupport ? FB.fiscalSupport(state, pid) : 0);
   };
   // Opt in only canonical readers; replacement mod hooks fall back to live reads.
   FB.countyPopularSupport.militaryCacheSafe = true;

@@ -279,3 +279,11 @@ to directly governed counties after payment. AI uses the same action above its r
 target. A ruler may pay only once per 360 days; larger sums do not stack or improve the
 modifier. It follows normal county ownership and expiry rules. The owning capability
 has technology impact `none`, as ordinary governance requires no research gate.
+
+## Fiscal support
+
+Fiscal pressure is a scalar contribution from `FB.fiscalSupport`, not a growing
+county-modifier list. It follows current direct ownership. Stage changes advance
+the existing modifier revision and the military county signature includes the
+contribution. Emergency extraction uses the ordinary fixed-duration
+`fiscal_extraction` county modifier and existing refresh/expiry behavior.

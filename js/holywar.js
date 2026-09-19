@@ -289,6 +289,7 @@ window.FB = window.FB || {};
   }
 
   FB.canCallGreatHolyWar = function (state, religionId, kingdomId, callerRealm) {
+    if (callerRealm === 'player' && FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     if (!state || state.greatHolyWar || !config(state, religionId)) return false;
     if (callerRealm === 'player' && FB.intrigueCaptivityOf &&
         FB.intrigueCaptivityOf(state, state.player.charId)) return false;
@@ -752,7 +753,8 @@ window.FB = window.FB || {};
   FB.playerGreatHolyWarJoinCamp = function (state) {
     var campaign = state && state.greatHolyWar;
     if (!campaign || campaign.phase !== 'preparation') return null;
-    return playerCompatibleCamp(state, campaign);
+    var camp = playerCompatibleCamp(state, campaign);
+    return camp === 'attackers' && FB.fiscalRestriction && FB.fiscalRestriction(state) ? null : camp;
   };
 
   FB.playerGreatHolyWarCamp = function (state) {
@@ -772,6 +774,7 @@ window.FB = window.FB || {};
       var compatible = playerCompatibleCamp(state, campaign);
       if (!compatible || (camp && camp !== compatible)) return false;
       camp = compatible;
+      if (camp === 'attackers' && FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
       var sovereign = FB.isPlayerSovereign(state);
       var top = FB.playerRealmId(state);
       var mode = sovereign ? 'host'
@@ -3108,14 +3111,17 @@ window.FB = window.FB || {};
       B('greatHolyWarVolunteerMen', 120));
   };
   FB.fns.ghw_recruit_mercenaries = function (state) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     return reinforcePlayerGreatHolyWarHost(state, 'mercs',
       B('mercCompanySize', 150));
   };
   FB.fns.ghw_recruit_knights = function (state) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     return reinforcePlayerGreatHolyWarHost(state, 'cav',
       B('greatHolyWarKnightMen', 75));
   };
   FB.fns.ghw_recruit_adventurers = function (state) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     return reinforcePlayerGreatHolyWarHost(state, 'ret',
       B('greatHolyWarAdventurerMen', 100));
   };

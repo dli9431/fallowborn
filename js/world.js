@@ -4078,6 +4078,7 @@ window.FB = window.FB || {};
     if (reusable) {
       const revolt = FB.countyInOpenRevolt && FB.countyInOpenRevolt(state, pid);
       const parts = [state.dev[pid] || 1, FB.countySupportBase(state, pid),
+        FB.fiscalSupport ? FB.fiscalSupport(state, pid) : 0,
         !!(revolt && revolt.counties[pid].occupied), FBDATA.balance.commonsUprisingMinReduction,
         FBDATA.balance.commonsUprisingSupportThreshold, FBDATA.balance.commonsUprisingFullReductionSupport];
       for (const record of records || []) {
@@ -6851,7 +6852,7 @@ window.FB = window.FB || {};
     const c = FB.playerCompositionBreakdown(state, baseline).units;
     const out = {};
     for (const key in c) out[key] = c[key];
-    return out;
+    return FB.fiscalLimitComposition ? FB.fiscalLimitComposition(state, out) : out;
   };
 
   FB.playerLevy = function (state) {
@@ -8004,6 +8005,7 @@ window.FB = window.FB || {};
     }
   };
   FB.fns.war_mercs = function (state) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     const w = state.player.war; if (!w) return;
     const cs = FBDATA.balance.mercCompanySize || 150;
     w.mercCos = (w.mercCos || 0) + 1;

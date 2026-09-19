@@ -510,6 +510,7 @@
   FB.warDeclarationPreview = function (state, rid, causes, inspection) {
     const out = { valid:false, reason:'', unlawful:false, law:null, key:null };
     function fail(text) { out.reason = text; return out; }
+    if (rid === 'player' && FB.fiscalRestriction && FB.fiscalRestriction(state)) return fail(FB.fiscalRestriction(state));
     const realm = state.realms[rid];
     if (!realm || !realm.alive || !causes || !causes.length) return fail(FB.T('A landed ruler and a war objective are required.'));
     if (rid === 'player' && (state.player.tier < 4 || state.player.flags.in_prison) &&
@@ -707,6 +708,7 @@
     });
   };
   FB.startClaimPackageWar = function (state, causes, options) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     FB.ensureWars(state);
     const preview = FB.warDeclarationPreview(state, 'player', causes);
     options = options || {};

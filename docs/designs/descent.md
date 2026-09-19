@@ -295,3 +295,19 @@ at load and modifier-tick boundaries. Expiry and annual unjust-war recovery rema
 live reads. Boolean privilege eligibility scans active records directly without
 building or sorting the display summary, so expiration and revocation take effect
 immediately during revolt discovery.
+
+## Fiscal pressure and popular resistance
+
+Sustained insolvency feeds the existing county support and noble Standing readers.
+It introduces no automatic demotion or independent revolt simulator. Only directly
+held counties take the fiscal support contribution; subject populations do not
+inherit it merely because their sovereign owes money. Extra taxation during a
+crisis adds `fiscal_extraction` (-10 support, 360 days, refresh without stacking)
+to the taxed vassals' directly held counties.
+
+Existing petitions, 90-day warnings, armed revolt, occupation, independence and
+rank-loss rules remain responsible for defeat. Financial recovery gradually
+removes only its own penalty and never dissolves armed rebellions. Final loss of
+landed office during a crisis settles the failed government's shortfall and fiscal
+composition, without positive cash or forgiveness of signed household loans.
+Technology impact `fiscal_crises` is **none**, a baseline consequence of rule.

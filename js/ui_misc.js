@@ -4665,12 +4665,33 @@ window.FB = window.FB || {};
         tip.style.top = edge + 'px';
         tip.classList.remove('hidden');
         const r = chip.getBoundingClientRect();
-        const bounds = tip.getBoundingClientRect();
+        let bounds = tip.getBoundingClientRect();
         tip.style.width = bounds.width + 'px';
-        tip.style.left = Math.max(edge, Math.min(
-          window.innerWidth - edge - bounds.width, r.left)) + 'px';
-        tip.style.top = Math.max(edge, Math.min(
-          window.innerHeight - edge - bounds.height, r.bottom + 6)) + 'px';
+        let left = Math.max(edge, Math.min(
+          window.innerWidth - edge - bounds.width, r.left));
+        let top = r.bottom + 6;
+        if (top + bounds.height > window.innerHeight - edge) {
+          if (r.top - 6 - bounds.height >= edge) {
+            top = r.top - 6 - bounds.height;
+          } else if (r.right + 6 + bounds.width <= window.innerWidth - edge ||
+              r.left - 6 - bounds.width >= edge) {
+            // A tall scrollable tooltip must not cover its own hover/click target.
+            left = r.right + 6 + bounds.width <= window.innerWidth - edge
+              ? r.right + 6 : r.left - 6 - bounds.width;
+            top = Math.max(edge, Math.min(r.top,
+              window.innerHeight - edge - bounds.height));
+          } else {
+            // Narrow layouts have no side room: scroll within the larger space
+            // above or below the chip instead of clamping across it.
+            const above = Math.max(0, r.top - 6 - edge);
+            const below = Math.max(0, window.innerHeight - edge - r.bottom - 6);
+            tip.style.maxHeight = Math.max(above, below) + 'px';
+            bounds = tip.getBoundingClientRect();
+            top = above > below ? r.top - 6 - bounds.height : r.bottom + 6;
+          }
+        }
+        tip.style.left = left + 'px';
+        tip.style.top = top + 'px';
       }
       document.addEventListener('mouseover', showHoverTip);
       document.addEventListener('click', function (e) {

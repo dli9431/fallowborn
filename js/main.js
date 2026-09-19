@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.182.2';
+FB.VERSION = '1.183.0';
 FB.CHANGELOG = [
+  { v: '1.183.0', date: '2026-09-18', changes: [
+    'Sustained debt causes fiscal crises, with paid land sales and financial settlements available in Coin & Credit. Grant Land adds settlement reservations and excess-holding grants, grant reviews return to their originating screen, and item tooltips stay clear of their buttons.'
+  ] },
   { v: '1.182.2', date: '2026-09-18', changes: [
     'Family management adds match-age preferences, clearer relationships and settlement grants through Grant Land; Enterprise Plan adds batch upgrades and trade ventures offer larger treasury-based stakes. Progression requires inherited standing, AI campaign levies retain their territorial scale, and equipment tooltips stay on screen.'
   ] },
@@ -3584,7 +3587,7 @@ FB.CHANGELOG = [
       'enterpriseUpgradeSeason', 'marketSettleHouseholdNecessities', 'papacySeason',
       'householdStandardsSeason', 'retainerSeason', 'enterpriseLaborSeason', 'educationSeason',
       'realmPolicySeason', 'techSeason', 'playerWarTick', 'devastationSeason',
-      'greatHolyWarSeason', 'sacredCustodySeason', 'tickForeignPolicy', 'financeSeason',
+      'greatHolyWarSeason', 'sacredCustodySeason', 'tickForeignPolicy', 'financeSeason', 'fiscalSeason', 'fiscalDay',
       'tickRivalry', 'financeYear', 'worldTick'].forEach(function (key) { wrap(FB, key, key); });
     ['ensureWars', 'campaignDaily', 'assignCampaignHosts', 'armiesEnsure',
       'recruitmentTerritory', 'aiBaseHost', 'alliedReinforcement', 'fortGarrisonBurden', 'orderArmy', 'armyRegroupGoal',
@@ -3811,6 +3814,7 @@ FB.CHANGELOG = [
       if (FB.sacredCustodySeason) FB.sacredCustodySeason(s);
       FB.tickForeignPolicy(s);
       const seasonEconomy = FB.financeSeason(s);
+      FB.fiscalSeason(s, seasonEconomy);
       FB.tickRivalry(s);
       // the season's ledger: what each stat truly did since the last
       // boundary (focus trickle, upkeep, taxes, events and all) — shown
@@ -3836,6 +3840,7 @@ FB.CHANGELOG = [
       }
     }
 
+    FB.fiscalDay(s);
     birthTick(s);
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);

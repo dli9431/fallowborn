@@ -150,8 +150,9 @@ battle, and siege damage.
 imposed compensation, already-incurred focus or military costs, and narrative choices
 without an affordability gate apply their full authored amount and may take
 `player.gold` below zero. Later income first brings that balance back toward zero.
-The shortfall has no lender, face value, interest, deadline, default, or distraint;
-only a signed finance contract creates those rights and consequences. It therefore
+The shortfall has no lender, face value, interest, loan deadline, default, or distraint;
+only a signed finance contract creates those creditor rights. Landed households
+separately face the fiscal-crisis progression below. It therefore
 is not revalued by the annual coin-price step and is not included in outstanding
 contract debt. Death dues and forced purse confiscation take positive liquid coin
 without forgiving an existing shortfall.
@@ -478,3 +479,60 @@ Military construction reserves are still read again for the distribution pass.
 Profiler counters distinguish annual unchanged-snapshot reuse from a fresh
 post-construction snapshot. This is a read-reuse optimization, with no research gate
 or change to spending eligibility, building choices, simulation order or RNG.
+
+## Fiscal crises and negotiated recovery
+
+`js/fiscal.js` adds player-only consequences for tiers 3?7. AI treasuries keep
+existing recovery rules. A shortfall exceeding two seasons of recurring positive
+receipts (minimum basis 10) starts a 90-day warning. Income excludes windfalls;
+expenses do not shrink the threshold. The basis freezes through warning and crisis.
+The next seasonal review starts pressure at one step, adding one per unresolved
+season to four. Each step contributes -10 county Popular support, -5 Standing with
+the liege/direct vassals, and -5 effective Crown Authority for kings/emperors.
+These are reversible contributions, not permanent repeated deductions.
+
+Nonnegative gold starts recovery immediately. Otherwise, remaining below one
+season of the frozen basis for 90 days does so. One pressure step clears each
+season. Relapse resumes the episode; succession and loading do not reset it.
+
+Coin & Credit offers funded hereditary county sales and a financial composition.
+The composition converts the current negative purse into a fixed obligation,
+leaving liquid gold at zero and signed loans untouched. Over 20 seasons it assigns
+25% of positive civilian surplus after civilian expenses and existing lender
+assignments, before field costs. Collection cannot exceed available coin or the
+remaining obligation; missed collection adds neither interest nor a new shortfall.
+The remaining obligation is discharged at term end, an explicit gameplay
+abstraction of negotiated settlement. Restrictions last the full term even after
+early repayment. No new composition is possible for 40 seasons from acceptance.
+New shortfalls remain outside it. Recovery continues while those new shortfalls
+stay within one season of the frozen basis; deeper renewed spending resumes pressure.
+
+For the term, offensive declarations, extraordinary taxation, voluntary title
+revocation and expansion of paid forces are blocked at authoritative boundaries.
+Existing wars, defensive levies, military replacements and signed commitments
+remain. Kings/emperors also grant the existing enduring office-confirmation
+privilege. Finance and the privilege/government sheets disclose the restrictions.
+Losing the final landed office settles the crisis and composition without positive
+cash; personal loan enforcement remains separate.
+
+Technology reviews `fiscal_crises`, `paid_hereditary_grants` and
+`fiscal_settlements` are all **none**: consequences of rule, ordinary paid patronage,
+and basic financial recovery must not depend on research.
+
+### Performance contract
+
+After one cold initialization, daily work reads scalar gold, dates and thresholds.
+One seasonal civilian-budget projection refreshes the uncommitted income basis or
+collects composition payments. Hot county/Standing/Authority queries read the saved
+stage and ownership. The military county-cache signature includes fiscal support;
+modifier-dependent political projections invalidate only when a stage changes.
+No daily world scan, buyer search, growing history, serialized cache or RNG draw is
+introduced. Candidate generation computes county eligibility once per county and
+buyer funding once per vassal; detailed sale reviews run only on demand.
+
+The local opt-in profiler includes fiscal day/season rows and fiscal projection,
+buyer-search and buyer-budget counters. Owner acceptance compares identical saves
+and seasons in ordinary play, large wartime realms, crisis and annual-boundary
+bursts. Investigate a reproducible median simulation-time regression above 5%; also
+check large-realm sale-screen responsiveness. Wall-clock thresholds are not browser
+regression assertions; tests assert bounded work and deterministic state instead.

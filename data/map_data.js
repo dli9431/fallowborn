@@ -1816,6 +1816,12 @@ FBDATA.balance = {
   aiRaidChance: 0.12
 };
 
+FBDATA.balance.fiscalCrisis = {
+  minimumIncome:10, entrySeasons:2, recoverySeasons:1, graceDays:90,
+  maxSteps:4, supportStep:10, standingStep:5, authorityStep:5,
+  settlementSeasons:20, cooldownSeasons:40, assignmentShare:0.25, saleSeasons:8
+};
+
 FBDATA.raidingTraditions = {
   cultures: ['norse', 'magyar', 'turkic', 'khazar', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'],
   faiths: ['norse_pagan', 'tengri', 'baltic_pagan', 'slavic_pagan'],

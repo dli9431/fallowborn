@@ -8572,8 +8572,27 @@ window.FB = window.FB || {};
     return h;
   }
 
-  UI.showSettlementGrant = function (pid, idx, returnOptions, returnToGrantLand) {
+  function settlementGrantSiteSummary(state, pid, slot, context) {
+    const counts = context.buildingCounts || (context.buildingCounts = {});
+    if (!counts[pid]) {
+      counts[pid] = {};
+      for (const building of state.buildings[pid] || []) {
+        if ((FBDATA.buildings[building.id] || {}).fort) continue;
+        counts[pid][building.s] = (counts[pid][building.s] || 0) + 1;
+      }
+    }
+    const fiscal = FB.settlementFiscalProjection(state, pid, slot, context);
+    return FB.T('Buildings: {count} · Net income / season: {money:amount}', {
+      count:counts[pid][slot] || 0, amount:fiscal ? fiscal.amounts.net : 0
+    });
+  }
+
+  UI.showSettlementGrant = function (pid, idx, returnOptions, onGrantLandChanged) {
     const s = FB.state;
+    if (FB.settlementGrantReserved(s, pid, idx)) {
+      toast(FB.T('This settlement is reserved. Remove its reservation in Grant Land first.'));
+      return false;
+    }
     const originScroll = $('gm-body').scrollTop;
     const openDetails = Array.prototype.map.call($('gm-body').querySelectorAll(
       '.settcard-details:not(.hidden), .event-choice-details:not(.hidden)'), function (node) { return node.id; });
@@ -8620,7 +8639,7 @@ window.FB = window.FB || {};
       '</p><div class="gm-footer"><button type="button" class="btn" id="grant-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Grant settlement'), h, { historyView:true, historyBack:true,
-      historyBackRender:returnToGrantLand || restoreSettlement,
+      historyBackRender:onGrantLandChanged ? undefined : restoreSettlement,
       titleDetailsHtml:'<p>' + esc(FB.T('Choose a free adult relative, gentle household member or noble resident of your directly held counties. The recipient becomes Baron. Review the income and authority transferred before granting. No gold or day cost.')) + '</p>' });
     FB.paintFaces($('gm-body'), s);
     $('grant-search').addEventListener('input', function () {
@@ -8638,7 +8657,10 @@ window.FB = window.FB || {};
     $('gm-body').querySelectorAll('[data-grant-recipient]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (granted) { toast(FB.T('This settlement has already been granted.')); return; }
-        UI.showSettlementGrantReview(pid, idx, button.getAttribute('data-grant-recipient'), function () { granted = true; });
+        UI.showSettlementGrantReview(pid, idx, button.getAttribute('data-grant-recipient'), function () {
+          granted = true;
+          if (onGrantLandChanged) onGrantLandChanged();
+        });
       });
     });
     return true;
@@ -8653,12 +8675,16 @@ window.FB = window.FB || {};
     for (const pid of FB.realmHeldCounties(s, 'player')) {
       for (const site of FB.settlementGrantSites(s, pid, 'player')) sites.push(site);
     }
+    const fiscalContext = {};
     sites.forEach(function (site, i) {
-      h += '<button type="button" class="actionbtn" data-character-grant-site="' + i + '">' +
+      const reserved = FB.settlementGrantReserved(s, site.provinceId, site.settlement);
+      h += '<button type="button" class="actionbtn" data-character-grant-site="' + i + '"' + (reserved ? ' disabled' : '') + '>' +
         esc(FB.T('{settlement} in {county}', {
           settlement:FB.settlementsOf(s, site.provinceId)[site.settlement].name,
           county:FB.world.byId[site.provinceId].name
-        })) + '</button>';
+        })) + '<span class="adesc">' + esc(settlementGrantSiteSummary(s,
+          site.provinceId, site.settlement, fiscalContext)) +
+        (reserved ? ' · ' + esc(FB.T('Reserved')) : '') + '</span></button>';
     });
     if (!sites.length) h += '<p class="hint">' + esc(FB.T('No settlement is available to grant. County seats are protected.')) + '</p>';
     h += '</div><div class="gm-footer"><button type="button" class="btn" id="character-grant-back">' + esc(FB.T('Back')) + '</button></div>';
@@ -8681,7 +8707,9 @@ window.FB = window.FB || {};
       '<p class="warnote" id="grant-status" role="status"></p>' +
       '<div class="gm-footer"><button type="button" class="btn" id="grant-cancel">' + esc(FB.T('Cancel')) +
       '</button><button type="button" class="btn primary" id="grant-confirm">' + esc(FB.T('Grant settlement')) + '</button></div>';
-    openModal(FB.T('Review settlement grant'), h, { historyView:true, historyBack:true,
+    // The picker and its review are one step above the originating sheet.
+    // Retain that parent's history, scroll and focus for every Back route.
+    openModal(FB.T('Review settlement grant'), h, { historyView:true, historyBack:true, replaceView:true,
       titleDetailsHtml:'<p>' + esc(FB.T('Income reflects current buildings, population and administration. Giving up one direct settlement may improve returns from your remaining holdings when you exceed capacity. The baron pays local upkeep and develops the settlement from their own income.')) + '</p>' });
     $('grant-cancel').addEventListener('click', UI.backModal);
     $('grant-confirm').addEventListener('click', function () {
@@ -11933,6 +11961,13 @@ window.FB = window.FB || {};
         '🔓 ' + esc(FB.T('Reserve'))) + '</button>';
   }
 
+  function settlementProtectionButton(pid, slot) {
+    const reserved = FB.settlementGrantReserved(FB.state, pid, slot);
+    return '<button type="button" class="btn small protection-toggle" data-settlement-protection="' +
+      esc(pid) + '" data-settlement-slot="' + slot + '" aria-pressed="' + reserved + '">' +
+      esc(reserved ? FB.T('🔒 Reserved') : FB.T('🔓 Reserve')) + '</button>';
+  }
+
   function feudalTenureText(tenure) {
     if (tenure === 'life') return FB.T('Life');
     if (tenure === 'term') return FB.T('Ten-year');
@@ -12287,16 +12322,15 @@ window.FB = window.FB || {};
      a generated ruler or relative, then the service charter and tenure. */
   UI.showGrantLand = function (returnContext, replaceView) {
     const s = FB.state;
+    const oldScroll = replaceView ? $('gm-body').scrollTop : 0;
+    const active = document.activeElement;
+    const focusCounty = replaceView && active && active.dataset.grantProtection;
+    const focusSettlement = replaceView && active && active.dataset.settlementProtection;
+    const focusSlot = replaceView && active && active.dataset.settlementSlot;
     let h = '<p class="hint">' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals.')) + '</p>';
     const cap = FB.domainCap(s), held = (s.player.provs || []).length;
     h += '<p class="hint">' + esc(FB.T('Held directly: {held} of {cap}.', { held: held, cap: cap })) +
       (held > cap ? ' ⚠ ' + esc(FB.T('Over your limit — your own income and levy are cut until you grant land away.')) : '') + '</p>';
-    if (held > cap) {
-      h += '<button type="button" class="actionbtn" id="grant-cleanup">⚖ ' +
-        esc(FB.T('Review domain cleanup…')) + '<span class="adesc">' +
-        esc(FB.T('Build a complete proposal that skips reserved counties and keeps your capital and home county.')) +
-        '</span></button>';
-    }
     const duchies = FB.grantableDuchies(s);
     if (duchies.length) {
       h += '<div class="panelh">' + esc(FB.T('Grant a duchy you hold in full')) + '</div><div class="gm-list">';
@@ -12332,13 +12366,17 @@ window.FB = window.FB || {};
     for (const pid of FB.realmHeldCounties(s, 'player')) {
       for (const site of FB.settlementGrantSites(s, pid, 'player')) sites.push(site);
     }
+    const fiscalContext = {};
     for (const site of sites) {
-      h += '<button type="button" class="actionbtn" data-grant-land-site="' +
-        esc(site.provinceId) + '" data-grant-land-slot="' + site.settlement + '">' +
+      const reserved = FB.settlementGrantReserved(s, site.provinceId, site.settlement);
+      h += '<div class="protected-choice"><button type="button" class="actionbtn" data-grant-land-site="' +
+        esc(site.provinceId) + '" data-grant-land-slot="' + site.settlement + '"' + (reserved ? ' disabled' : '') + '>' +
         esc(FB.T('{settlement} in {county}', {
           settlement:FB.settlementsOf(s, site.provinceId)[site.settlement].name,
           county:FB.world.byId[site.provinceId].name
-        })) + '</button>';
+        })) + '<span class="adesc">' + esc(settlementGrantSiteSummary(s,
+          site.provinceId, site.settlement, fiscalContext)) + '</span></button>' +
+        settlementProtectionButton(site.provinceId, site.settlement) + '</div>';
     }
     if (!sites.length) h += '<p class="hint">' +
       esc(FB.T('No settlement is available to grant. County seats are protected.')) + '</p>';
@@ -12346,22 +12384,37 @@ window.FB = window.FB || {};
       esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
     const options = managementModalOptions(returnContext) || {};
     options.replaceView = !!replaceView;
+    h = '<button type="button" class="actionbtn" id="grant-excess">' +
+      esc(FB.T('Grant excess counties / settlements')) + '<span class="adesc">' +
+      esc(FB.T('Review grants down to your limits, skipping reserved holdings. Least productive first; newer holdings break ties.')) + '</span></button>' + h;
+    h = '<button class="actionbtn" id="grant-sell-land">' + esc(FB.T('Sell Land for payment')) + '</button>' + h;
     openModal(FB.T('Grant Land'), h, options);
+    $('grant-excess').onclick = function () { UI.showExcessLandGrants(returnContext); };
+    if (replaceView) {
+      const target = focusCounty ? $('gm-body').querySelector('[data-grant-protection="' + focusCounty + '"]') :
+        focusSettlement ? $('gm-body').querySelector('[data-settlement-protection="' + focusSettlement + '"][data-settlement-slot="' + focusSlot + '"]') : null;
+      if (target) target.focus({ preventScroll:true });
+      $('gm-body').scrollTop = oldScroll;
+    }
+    $('grant-sell-land').onclick = function () { UI.showFiscalLandSales(function () { UI.showGrantLand(returnContext); }); };
     $('gm-body').querySelectorAll('[data-grant-land-site]').forEach(function (button) {
       button.addEventListener('click', function () {
         const pid = button.dataset.grantLandSite;
         const idx = Number(button.dataset.grantLandSlot);
-        const scroll = $('gm-body').scrollTop;
-        const selector = '[data-grant-land-site="' + pid +
-          '"][data-grant-land-slot="' + idx + '"]';
+        const row = button.parentNode, list = row.parentNode;
         const opened = UI.showSettlementGrant(pid, idx, null, function () {
-          UI.showGrantLand(returnContext);
-          setTimeout(function () {
-            const target = $('gm-body').querySelector(selector) ||
-              $('gm-body').querySelector('[data-grant-land-site]') || $('gm-cancel');
-            if (target) target.focus({ preventScroll:true });
-            $('gm-body').scrollTop = scroll;
-          }, 0);
+          // Update the retained parent instead of opening another history entry.
+          // Capacity relief can also change the remaining settlements' income.
+          row.remove();
+          const context = {};
+          list.querySelectorAll('[data-grant-land-site]').forEach(function (remaining) {
+            remaining.querySelector('.adesc').textContent = settlementGrantSiteSummary(s,
+              remaining.dataset.grantLandSite, Number(remaining.dataset.grantLandSlot), context);
+          });
+          if (!list.children.length) {
+            list.innerHTML = '<p class="hint">' +
+              esc(FB.T('No settlement is available to grant. County seats are protected.')) + '</p>';
+          }
         });
         if (!opened) {
           toast(FB.T('This grant is no longer available.'));
@@ -12387,9 +12440,12 @@ window.FB = window.FB || {};
         UI.showGrantLand(returnContext, true);
       });
     });
-    const cleanup = $('grant-cleanup');
-    if (cleanup) cleanup.addEventListener('click', function () {
-      UI.showDomainCleanup(returnContext, true);
+    $('gm-body').querySelectorAll('[data-settlement-protection]').forEach(function (btn) {
+      btn.onclick = function () {
+        const pid = btn.dataset.settlementProtection, slot = Number(btn.dataset.settlementSlot);
+        FB.setProtected(s, 'grantSettlement', pid + ':' + slot, !FB.settlementGrantReserved(s, pid, slot));
+        UI.showGrantLand(returnContext, true);
+      };
     });
     $('gm-cancel').addEventListener('click', function () {
       managementBack(returnContext, UI.closeModal);
@@ -12463,6 +12519,45 @@ window.FB = window.FB || {};
     $('grant-recipient-back').addEventListener('click', function () {
       modalHistoryBack(function () { UI.showGrantLand(returnContext); });
     });
+  };
+
+  UI.showExcessLandGrants = function (returnContext, retainedScroll, notice) {
+    const s = FB.state, plan = FB.excessLandGrantPlan(s);
+    const scroll = retainedScroll === undefined ? $('gm-body').scrollTop : retainedScroll;
+    let h = '<p class="hint">' + esc(FB.T('Grant only enough eligible holdings to reach your county and settlement limits. Reserved settlements also protect their county from this batch. Capitals, home counties, county seats and your home settlement are kept.')) + '</p>' +
+      '<p class="hint">' + esc(FB.T('Lowest current net income is selected first. Ties favor later-acquired counties and later settlement slots. Each county goes to a vassal house; each settlement goes to a new local hereditary baron. No gold or day cost.')) + '</p>';
+    if (notice) h += '<p class="warnote" role="status">' + esc(notice) + '</p>';
+    h += kv('Counties to grant', plan.counties.length) + kv('Settlements to grant separately', plan.settlements.length);
+    h += '<div class="gm-list">';
+    for (const row of plan.counties) h += '<div class="actionbtn">' + esc(FB.world.byId[row.provinceId].name) +
+      '<span class="adesc">' + esc(FB.T('County grant · Current net local income / season: {money:amount}', { amount:row.net })) + '</span></div>';
+    for (const row of plan.settlements) h += '<div class="actionbtn">' + esc(FB.T('{settlement} in {county}', {
+      settlement:FB.settlementsOf(s, row.provinceId)[row.settlement].name, county:FB.world.byId[row.provinceId].name
+    })) + '<span class="adesc">' + esc(FB.T('Settlement grant · Current net local income / season: {money:amount}', { amount:row.net })) + '</span></div>';
+    h += '</div><p class="hint">' + esc(FB.T('These amounts describe the holdings being transferred, not your total income change. You retain customary dues and gain administrative capacity; the recipient takes local upkeep and hereditary control.')) + '</p>';
+    if (plan.countyRemaining || plan.settlementRemaining) h += '<p class="warnote">' + esc(FB.T(
+      'Protected or unavailable holdings leave {counties} excess counties and {settlements} excess settlements. Only the listed grants will be applied.',
+      { counties:plan.countyRemaining, settlements:plan.settlementRemaining })) + '</p>';
+    if (!plan.counties.length && !plan.settlements.length) h += '<p class="hint">' +
+      esc(FB.T('No eligible excess holdings to grant.')) + '</p>';
+    h += '<button type="button" class="btn" id="excess-grant-back">' + esc(FB.T('Back')) + '</button>' +
+      '<button type="button" class="btn primary" id="excess-grant-apply"' +
+      (!plan.counties.length && !plan.settlements.length ? ' disabled' : '') + '>' + esc(FB.T('Apply reviewed grants')) + '</button>';
+    openModal(FB.T('Grant excess counties / settlements'), h, { historyView:true, replaceView:!!notice,
+      historyBackRender:function () {
+        UI.showGrantLand(returnContext);
+        $('grant-excess').focus({ preventScroll:true });
+        $('gm-body').scrollTop = scroll;
+      } });
+    $('excess-grant-back').onclick = UI.backModal;
+    $('excess-grant-apply').onclick = function () {
+      if (FB.state !== s || !FB.applyExcessLandGrantPlan(s, plan)) {
+        UI.showExcessLandGrants(returnContext, scroll, FB.T('The holdings changed. Review the updated proposal before applying it.'));
+        return;
+      }
+      UI.refresh();
+      UI.backModal();
+    };
   };
 
   UI.showDomainCleanup = function (returnContext, fromGrantLand, notice) {
@@ -13874,7 +13969,7 @@ window.FB = window.FB || {};
       UI.toast(FB.T('Governance is available only to a territorial landed ruler.'));
       return;
     }
-    let h = '<nav class="governance-nav" role="tablist" aria-label="' +
+    let h = fiscalStatusHtml(s) + '<nav class="governance-nav" role="tablist" aria-label="' +
       esc(FB.T('Governance sections')) + '">';
     const sections = [
       ['position', FB.T('Position')],
@@ -14455,7 +14550,7 @@ window.FB = window.FB || {};
     const records = FB.privilegeSummary ? FB.privilegeSummary(s) : [];
     const demands = FB.collectiveDemandSummary
       ? FB.collectiveDemandSummary(s) : { pending:null, opposition:[] };
-    let h = '<div class="privilege-list">';
+    let h = fiscalStatusHtml(s) + '<div class="privilege-list">';
     if (!records.length) {
       h += '<div class="progressnote">' + esc(FB.T(
         'No active privilege is recorded.')) + '</div>';
@@ -15583,9 +15678,12 @@ window.FB = window.FB || {};
   /* demand a fief back from a vassal */
   UI.showRevoke = function (returnContext) {
     const s = FB.state;
+    if (FB.fiscalRestriction(s)) { UI.toast(FB.fiscalRestriction(s)); return; }
     let h = '<p class="hint">Demand a fief back into your own hand. A contented vassal yields; a bitter one answers with spears.</p><div class="gm-list">';
     for (const vid of FB.playerVassals(s)) {
       const r = s.realms[vid];
+      const refund = FB.realmHeldCounties(s, vid).reduce(function (sum, pid) { return sum + FB.fiscalRevocationRefund(s, pid); }, 0);
+      if (refund) h += '<p class="hint">' + esc(FB.T('Purchased land in {realm}: refund {money:amount} if the fief is returned.', { realm:r.name, amount:refund })) + '</p>';
       h += '<button class="actionbtn" data-rid="' + esc(vid) + '">📜 ' + esc(r.name) +
         '<span class="adesc">' + esc(FB.T('{ruler} · Standing {standing}', {
           ruler:r.ruler.name,
@@ -15598,6 +15696,8 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-rid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const rid = btn.dataset.rid;
+        const reason = FB.fiscalRevocationReason(FB.state, rid);
+        if (reason) { UI.toast(reason); return; }
         FB.state.player.revokeRid = rid;
         FB.queueEvent(FB.state, 'vassal_revoke', { rid:rid });
         managementFinish(returnContext, UI.closeModal);
@@ -15772,6 +15872,97 @@ window.FB = window.FB || {};
     return h + '</div>';
   }
 
+  function fiscalStatusHtml(s) {
+    if (!FB.fiscalCrisisQuote || s.player.tier < 3) return '';
+    const q = FB.fiscalCrisisQuote(s);
+    if (!q.warning && !q.active && !q.settlement) return '';
+    let h = panelh('Fiscal condition') + '<div class="progressnote warnote" data-fiscal-status>' +
+      kv('Treasury shortfall', esc(FB.money(q.debt))) +
+      kv('Seasonal receipts basis', esc(FB.money(q.basis))) +
+      kv('Fiscal pressure', esc(FB.T('{stage}/4', { stage:q.stage }))) +
+      kv('Popular support in directly held counties', esc(String(-q.stage * FBDATA.balance.fiscalCrisis.supportStep))) +
+      kv('Standing with liege and direct vassals', esc(String(-q.stage * FBDATA.balance.fiscalCrisis.standingStep)));
+    if (s.player.tier >= 6) h += kv('Crown Authority adjustment', esc(String(FB.fiscalAuthority(s))));
+    if (q.nextChange !== null) h += kv(q.recovering ? 'Next recovery step' : 'Next fiscal review',
+      esc(FB.T('In {days} days, at the next seasonal settlement', { days:Math.max(0, q.nextChange - s.turn) })));
+    h += '<p>' + esc(q.recovering ? FB.T('Fiscal resentment is easing. Existing grievances and armed rebellions still need to be resolved.') :
+      FB.T('Sustained unpaid obligations reduce popular support and political cooperation. Existing rebellions can cost land and titles; debt alone does not remove your rank.')) + '</p>';
+    if (q.settlement) h += kv('Restructured obligations', esc(FB.money(q.remaining))) +
+      kv('Settlement time remaining', esc(FB.T('{days} days', { days:Math.max(0, q.endTurn - s.turn) }))) +
+      '<p>' + esc(FB.fiscalRestriction(s)) + '</p><p>' + esc(FB.T('One quarter of positive civilian surplus is assigned to the settlement, limited to available coin. Any remainder is discharged at the end. New shortfalls and signed loans remain separate.')) + '</p>';
+    return h + '</div>';
+  }
+  function fiscalReturn(render) {
+    const scroll = $('gm-body').scrollTop;
+    const focusId = document.activeElement && document.activeElement.id;
+    return function () {
+      render();
+      const target = focusId && $(focusId);
+      if (target) target.focus({ preventScroll:true });
+      $('gm-body').scrollTop = scroll;
+    };
+  }
+  UI.showFiscalSettlement = function () {
+    const s = FB.state, q = FB.fiscalSettlementQuote(s);
+    const back = fiscalReturn(UI.showFinance);
+    let h = '<div class="gm-body-text">' +
+      kv('Shortfall restructured', esc(FB.money(q.amount))) +
+      kv('Treasury after acceptance', esc(FB.money(0))) +
+      kv('Term', esc(FB.T('Five years, even if the obligation is repaid earlier'))) +
+      '<p>' + esc(FB.T('Assign 25% of positive recurring civilian surplus, after civilian costs and senior loan assignments, limited to available coin. Field armies do not reduce the assessment. The unpaid remainder is discharged after five years.')) + '</p>' +
+      '<p class="op-bad">' + esc(FB.T('For five years: no new offensive wars, extraordinary taxation, voluntary revocations, or expansion of paid forces. Defense, ordinary levies, peace, and existing commitments remain available.')) + '</p>' +
+      '<p>' + esc(FB.T('Kings and emperors also grant council confirmation of the Treasurer and Constable. That privilege remains after the financial term ends.')) + '</p>' +
+      '<p>' + esc(FB.T('Fiscal pressure begins to ease, but existing wars and rebellions continue. Ongoing military costs can put you below zero again. Signed loans are unchanged. No further settlement is available for ten years.')) + '</p></div>' +
+      '<div class="gm-footer"><button class="btn primary" id="fiscal-settle-confirm"' + (q.ready ? '' : ' disabled') + '>' +
+      esc(FB.T('Accept constrained government')) + '</button><button class="btn" id="fiscal-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Review financial settlement'), h, { historyView:true, historyBackRender:back });
+    $('fiscal-back').onclick = function () { modalHistoryBack(back); };
+    $('fiscal-settle-confirm').onclick = function () {
+      if (!FB.acceptFiscalSettlement(s, q)) { UI.toast(FB.T('The terms changed. Review the current financial position.')); }
+      UI.refresh(); modalHistoryBack(back);
+    };
+  };
+  UI.showFiscalLandSales = function (returnRender) {
+    if (typeof returnRender !== 'function') returnRender = UI.showFinance;
+    const back = fiscalReturn(returnRender), s = FB.state;
+    const rows = FB.fiscalLandSaleCandidates(s);
+    let h = '<p class="hint">' + esc(FB.T('Sell a surplus county to a funded hereditary vassal. The buyer keeps existing service terms. Your capital, last county, protected land, and occupied counties are excluded.')) + '</p><div class="gm-list">';
+    rows.forEach(function (q, i) {
+      h += '<button class="actionbtn" id="fiscal-sale-' + i + '" data-fiscal-sale="' + i + '">' +
+        esc(FB.T('{county} to {realm}', { county:FB.world.byId[q.pid].name, realm:s.realms[q.rid].name })) +
+        '<span class="adesc">' + esc(FB.T('Payment: {money:amount}', { amount:q.price })) + '</span></button>';
+    });
+    if (!rows.length) h += '<p>' + esc(FB.T('No eligible vassal can currently fund a purchase while preserving its reserves. A financial settlement remains the recovery alternative once a crisis begins.')) + '</p>';
+    h += '</div><div class="gm-footer"><button class="btn" id="fiscal-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Sell Land'), h, { historyView:true, historyBackRender:back });
+    $('fiscal-back').onclick = function () { modalHistoryBack(back); };
+    $('gm-body').querySelectorAll('[data-fiscal-sale]').forEach(function (button) {
+      button.onclick = function () {
+        const row = rows[Number(button.dataset.fiscalSale)];
+        const q = FB.fiscalLandSaleQuote(s, row.pid, row.rid);
+        if (!q) { UI.toast(FB.T('This purchase is no longer available.')); return; }
+        const listBack = fiscalReturn(function () { UI.showFiscalLandSales(returnRender); });
+        let review = '<div class="gm-body-text">' +
+          kv('County', esc(FB.world.byId[q.pid].name)) + kv('Buyer', esc(s.realms[q.rid].name)) +
+          kv('Payment', esc(FB.money(q.price))) + kv('Treasury after sale', esc(FB.money(q.gold + q.price))) +
+          kv('Normal county tax base transferred', esc(FB.money(q.normalTax))) +
+          kv('Normal vassal tax share received', esc(FB.money(q.normalDues))) +
+          kv('Land receipts before / after', esc(FB.money(q.projection.beforeTax)) + ' / ' + esc(FB.money(q.projection.afterTax))) +
+          kv('Land troops before / after', esc(String(Math.round(q.projection.beforeLevy))) + ' / ' + esc(String(Math.round(q.projection.afterLevy)))) +
+          kv('Levy share retained', esc(FB.T('{percent}% of the county levy base', { percent:Math.round(q.levyShare * 100) }))) +
+          '<p>' + esc(FB.T('These are normal county-base estimates; household, capacity, national, and temporary effects can change actual receipts and soldiers. The land becomes hereditary and the buyer remains your vassal. Voluntary revocation requires refunding the purchase price.')) + '</p></div>' +
+          '<div class="gm-footer"><button class="btn primary" id="fiscal-sale-confirm">' + esc(FB.T('Sell this county')) +
+          '</button><button class="btn" id="fiscal-sale-back">' + esc(FB.T('Back')) + '</button></div>';
+        openModal(FB.T('Review hereditary sale'), review, { historyView:true, historyBackRender:listBack });
+        $('fiscal-sale-back').onclick = function () { modalHistoryBack(listBack); };
+        $('fiscal-sale-confirm').onclick = function () {
+          if (!FB.sellFiscalLand(s, q)) UI.toast(FB.T('The reviewed terms changed. No sale was made.'));
+          UI.refresh(); modalHistoryBack(listBack);
+        };
+      };
+    });
+  };
+
   UI.showFinance = function () {
     const s = FB.state;
     const e = FB.ensureEconomy(s);
@@ -15789,6 +15980,15 @@ window.FB = window.FB || {};
     const ventureEligible = FB.tradeVentureEligible(s, 'dispatch');
     let h = '';
 
+    h += fiscalStatusHtml(s);
+    if (s.player.tier >= 3) {
+      const fiscal = FB.fiscalCrisisQuote(s);
+      h += '<div class="gm-list"><button class="actionbtn" id="finance-sell-land">' + esc(FB.T('Sell Land')) + '</button>';
+      if (fiscal.canSettle) h += '<button class="actionbtn" id="finance-fiscal-settlement">' + esc(FB.T('Review financial settlement')) + '</button>';
+      else if (fiscal.active && fiscal.nextSettlement > s.turn && !fiscal.settlement) h += '<p class="hint">' +
+        esc(FB.T('Another financial settlement becomes available in {days} days.', { days:fiscal.nextSettlement - s.turn })) + '</p>';
+      h += '</div>';
+    }
     /* Obligations lead the sheet so a narrow phone shows the urgent date
        before background metrics or optional transactions. */
     if (s.player.gold < -0.0001) {
@@ -15797,7 +15997,7 @@ window.FB = window.FB || {};
         esc(FB.T('{money:amount} below zero', {
           amount:financeAmount(Math.abs(s.player.gold))
         })) + '</b><br><span class="hint">' + esc(FB.T(
-          'Losses, incurred obligations, and event commitments without an affordability gate can leave a cash shortfall. Future gold clears it first. It is not a signed loan, accrues no interest, and creates no creditor or default claim.')) +
+          'Losses, incurred obligations, and event commitments without an affordability gate can leave a cash shortfall. Future gold clears it first. It is not a signed loan and accrues no interest. For landed rulers, a sustained severe shortfall can cause a fiscal crisis; signed loans retain their separate default rules.')) +
         '</span></div>';
     }
     if (loans.length) {
@@ -15959,6 +16159,8 @@ window.FB = window.FB || {};
       guide:guideModalOption('finance-guide', 'resources', 'Guide: resources and credit')
     });
     $('finance-close').addEventListener('click', UI.closeModal);
+    if ($('finance-sell-land')) $('finance-sell-land').onclick = function () { UI.showFiscalLandSales(UI.showFinance); };
+    if ($('finance-fiscal-settlement')) $('finance-fiscal-settlement').onclick = UI.showFiscalSettlement;
     const distributionButton = $('finance-distribution');
     if (distributionButton) distributionButton.addEventListener('click', UI.showPublicDistribution);
     const borrow = $('finance-borrow');
@@ -26789,10 +26991,12 @@ window.FB = window.FB || {};
       stat === 'prestige' ? FB.T('⭐ Prestige each season') :
       FB.religionOf(me.religion, s).icon + ' ' + FB.T('Piety each season');
     openModal(title, statBreakdownHtml(stat) +
+      (stat === 'gold' ? '<button class="actionbtn" id="stat-finance">' + esc(FB.T('Open Coin & Credit')) + '</button>' : '') +
       '<button class="btn" id="stat-close">' + esc(FB.T('Close')) + '</button>', {
         guide:guideModalOption('stat-guide', 'resources', 'Guide: resources and reputation')
       });
     $('stat-close').addEventListener('click', UI.closeModal);
+    if ($('stat-finance')) $('stat-finance').onclick = UI.showFinance;
   };
 
   /* ================= death & succession ================= */

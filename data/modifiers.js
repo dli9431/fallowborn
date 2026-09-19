@@ -3,6 +3,8 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.modifiers = {
+  fiscal_extraction:{ name:'Emergency Extraction', icon:'?', scope:'county', days:360,
+    desc:'Extraordinary taxes during a fiscal crisis have deepened local resentment.', fx:{ commonVoice:-10 } },
   public_distribution: {
     name:'Public distributions', icon:'🎁',
     desc:'The ruler distributes coin to local households. Further generosity does not stack this benefit.',

@@ -75,6 +75,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      excess_land_grants:{ mode:'none', rationale:'Reserving holdings and reviewing a batch of ordinary county and settlement grants are baseline management shortcuts. Existing hereditary ownership and administrative limits apply without an additional research requirement.' },
       enterprise_batch_upgrades:{ mode:'none', rationale:'Grouping existing enterprise upgrades by settlement or type is a household management shortcut. Each individual upgrade retains its exact authored technology requirement; the batch adds no research prerequisite.' },
       descendant_match_age_preferences:{ mode:'none', rationale:'Preferring nearby ages, the same age, strictly younger candidates or the youngest eligible descendant match are ordinary household decisions, without a research dependency. Existing marriage eligibility and accepted pledges remain unchanged.' },
       county_investiture:{ mode:'none', rationale:'Higher rulers can convey directly held non-seat counties through ordinary political investiture. Land, Standing and investiture resources govern eligibility, not technology.' },
@@ -228,6 +229,9 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Redeeming a named bound relative from an existing lord is a baseline personal and legal recovery action, not a capability unlocked by sovereign research.'
       },
+      fiscal_crises:{ mode:'none', rationale:'Fiscal hardship and its political consequences are baseline conditions of landed rule.' },
+      paid_hereditary_grants:{ mode:'none', rationale:'Selling hereditary land under existing service terms is ordinary patronage and financial recovery.' },
+      fiscal_settlements:{ mode:'none', rationale:'Negotiated recovery from unpaid obligations must remain available regardless of research.' },
       negative_household_gold:{
         mode:'none',
         rationale:'Household cash shortfalls are a baseline consequence of losses, commitments, and incurred obligations, not an optional capability or a financial technique unlocked by sovereign research.'

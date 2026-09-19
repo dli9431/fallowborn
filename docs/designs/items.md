@@ -3,6 +3,9 @@
 Item-chip tooltips, including Self possessions, fit their measured wrapped size
 inside the viewport and scroll internally when necessary. Placement does not assume
 a fixed text height or inherit sizing from previously inspected tooltip types.
+They stay clear of their source chip: use space above or beside it when a tooltip
+does not fit below, or constrain scrolling to the larger vertical gap when neither
+side fits. The chip remains clickable and the tooltip remains scrollable by pointer.
 
 ## Exiled household members
 

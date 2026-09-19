@@ -658,6 +658,7 @@ state, activates the save's bookmark, writes storage, or otherwise resumes the c
 Management protections are additive player state at save format 3:
 `player.protections[scope]` is an array of stable string ids. The built-in scopes are
 `grantCounty` and `autoBuildCounty` (province ids), `equipmentItem` (exact item references),
+`grantSettlement` (`provinceId:slot` identities),
 `educationCharacter`, `matchCharacter`, and `staffingWorker` (character ids),
 `researchTech` (technology ids), and `councilRealm` (realm ids). `FB.protectionIds` and
 `FB.isProtected` are read-only and return an empty view for missing or malformed old-save
@@ -1658,3 +1659,14 @@ development blockers state both the established count and currently unlocked cou
 New projects save `costsPaid:true` after charging gold, prestige and piety together;
 completion neither checks nor charges those resources again. Missing flags preserve
 legacy completion charges. Cancellation refunds none of the paid resources.
+
+## Fiscal crisis persistence
+
+Optional root `fiscalCrisis` holds one episode: frozen receipt basis, warning/low
+balance dates, pressure stage, next review, recovery status, seasonal idempotence,
+and one composition with amount, dates, remaining obligation and paid-class limits.
+Root placement preserves it across protagonist succession. `fiscalLandSales` stores
+one compact protection record per sold county (price, recipient, refund flag and
+resale deadline), surviving grant/reconquest. No transient projection is serialized.
+Older saves initialize a fresh warning window without retroactive penalties; save
+format remains 3. No RNG is consumed by projections or lifecycle checks.

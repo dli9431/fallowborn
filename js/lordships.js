@@ -463,7 +463,8 @@ window.FB = window.FB || {};
     const sacrilege = !!(me && enemy && FB.sameFaithHeadWarPolicy(state, me.religion, enemy, pid) === 'sacrilege');
     const aggression = !claim && !authorized && enemy ? FB.warCausePreview(state, cause).aggression : null;
     let reason = '';
-    if (!FB.landedBaron(state)) reason = FB.T('You must hold a settlement as Baron to challenge its count.');
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) reason = FB.fiscalRestriction(state);
+    else if (!FB.landedBaron(state)) reason = FB.T('You must hold a settlement as Baron to challenge its count.');
     else if (!FB.directSettlements(state).some(function (site) { return site.provinceId === pid; })) reason = FB.T('You must hold a barony in the target county.');
     else if (!count || !count.alive || countId === 'player') reason = FB.T('There is no count to challenge here.');
     else if (p.travel || p.flags.in_prison || p.dead) reason = FB.T('Return home and be free to command.');
@@ -794,8 +795,86 @@ window.FB = window.FB || {};
     return FB.settlementCountyHolder(state, home) === rid ||
       family || (rid === 'player' && FB.isHouseholdCharacter(state, cid));
   };
+  FB.settlementGrantReserved = function (state, pid, slot) {
+    return FB.isProtected(state, 'grantSettlement', pid + ':' + slot);
+  };
+  // Explicit, read-only batch review. Share fiscal inputs across every holding;
+  // no recipient generation, RNG, daily scan or persistent projection cache.
+  FB.excessLandGrantPlan = function (state) {
+    const p = state.player, held = (p.provs || []).slice(), context = {};
+    const capacity = FB.settlementCapacityProjection(state);
+    const direct = capacity.settlements;
+    const cap = FB.domainCap(state), countyExcess = Math.max(0, held.length - cap);
+    const income = {}, protectedCounties = {}, countyOrder = {};
+    held.forEach(function (pid, i) { countyOrder[pid] = i; income[pid] = 0; });
+    for (const site of direct) {
+      const pid = site.provinceId, slot = site.settlement;
+      income[pid] = (income[pid] || 0) + FB.settlementFiscalProjection(state, pid, slot, context).amounts.net;
+      if (FB.settlementGrantReserved(state, pid, slot)) protectedCounties[pid] = true;
+    }
+    const capital = state.realms.player && state.realms.player.capital;
+    const eligible = held.filter(function (pid) {
+      return p.tier >= 4 && state.holder[pid] === 'player' && pid !== p.provinceId && pid !== capital &&
+        !FB.isProtected(state, 'grantCounty', pid) && !protectedCounties[pid] &&
+        !FB.countyOccupiedOrBesieged(state, pid);
+    }).sort(function (a, b) {
+      return income[a] - income[b] || countyOrder[b] - countyOrder[a] || a.localeCompare(b);
+    });
+    const counties = eligible.slice(0, countyExcess).map(function (pid) {
+      return { provinceId:pid, net:income[pid] };
+    });
+    const selected = {};
+    for (const county of counties) selected[county.provinceId] = true;
+    const remaining = direct.filter(function (site) {
+      // Personal baronies survive a county-title grant; only unassigned sites
+      // follow the new count automatically.
+      return !selected[site.provinceId] || !!FB.settlementLordship(state, site.provinceId, site.settlement);
+    });
+    const settlementExcess = Math.max(0, remaining.length - capacity.limit);
+    const sites = remaining.filter(function (site) {
+      return p.tier >= 4 && site.settlement > 0 && !selected[site.provinceId] && state.holder[site.provinceId] === 'player' &&
+        !(site.provinceId === p.provinceId && site.settlement === (p.homeSettlement || 0)) &&
+        !FB.settlementGrantReserved(state, site.provinceId, site.settlement) &&
+        !FB.countyOccupiedOrBesieged(state, site.provinceId);
+    }).map(function (site) {
+      return { provinceId:site.provinceId, settlement:site.settlement,
+        net:FB.settlementFiscalProjection(state, site.provinceId, site.settlement, context).amounts.net };
+    }).sort(function (a, b) {
+      return a.net - b.net || (countyOrder[b.provinceId] || 0) - (countyOrder[a.provinceId] || 0) ||
+        b.settlement - a.settlement || a.provinceId.localeCompare(b.provinceId);
+    }).slice(0, settlementExcess);
+    return { turn:state.turn, protagonist:p.charId, tier:p.tier, home:p.provinceId,
+      homeSettlement:p.homeSettlement || 0, capital:capital, held:held,
+      countyLimit:cap, settlementLimit:capacity.limit, directCount:direct.length,
+      countyExcess:countyExcess, settlementExcess:settlementExcess,
+      countyRemaining:countyExcess - counties.length, settlementRemaining:settlementExcess - sites.length,
+      reservedCounties:FB.protectionIds(state, 'grantCounty').slice().sort(),
+      reservedSettlements:FB.protectionIds(state, 'grantSettlement').slice().sort(),
+      counties:counties, settlements:sites };
+  };
+  FB.applyExcessLandGrantPlan = function (state, reviewed) {
+    const plan = FB.excessLandGrantPlan(state);
+    if (!reviewed || JSON.stringify(plan) !== JSON.stringify(reviewed)) return false;
+    if (!plan.counties.length && !plan.settlements.length) return false;
+    for (const county of plan.counties) {
+      if (!FB.grantCounty(state, county.provinceId)) return false;
+    }
+    for (const site of plan.settlements) {
+      const pr = FB.world.byId[site.provinceId], me = state.chars[state.player.charId];
+      const c = FB.makeCharacter(state, { culture:me.culture || pr.culture,
+        religion:me.religion || pr.religion, born:state.date.year - FB.ri(22, 45),
+        station:3, role:'notable', dyn:pr.name, quality:2 });
+      c.homeProvinceId = site.provinceId;
+      FB.assignSettlementLordship(state, site.provinceId, site.settlement, c.id);
+      FB.news(state, FB.msg('news.lordship.player_grant', 'You grant {settlement} to {baron} and their heirs.', {
+        settlement:FB.settlementsOf(state, site.provinceId)[site.settlement].name, baron:FB.fullName(c)
+      }));
+    }
+    return true;
+  };
   FB.settlementGrantQuote = function (state, pid, slot, cid, rid) {
     const c = living(state, cid);
+    if (rid === 'player' && FB.settlementGrantReserved(state, pid, slot)) return null;
     if (!c || !FB.settlementGrantSites(state, pid, rid).some(function (site) {
       return site.settlement === slot;
     })) return null;
@@ -946,6 +1025,7 @@ window.FB = window.FB || {};
     return next ? next.id : null;
   };
   FB.revokeSettlementLordship = function (state, pid, slot, expectedHolder) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     const r = record(state, pid, slot);
     if (FB.settlementCountyHolder(state, pid) !== 'player' || !r || r.holderId !== expectedHolder || r.playerHouse) return false;
     const root = table(state);

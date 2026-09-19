@@ -11637,6 +11637,8 @@ window.FB = window.FB || {};
     if (!option) {
       return { visible:false, ready:false, techLocked:false, missingTech:[] };
     }
+    const fiscalReason = FB.fiscalEventRestriction && FB.fiscalEventRestriction(state, option, ctx);
+    if (fiscalReason) return { visible:true, ready:false, fiscalLocked:true, techLocked:false, requiredTech:[], missingTech:[], reason:fiscalReason };
     if (option.effects && option.effects.custom === 'military_settlement_grant') {
       const ready = FB.fns.military_settlement_available(state, ctx);
       return { visible:true, ready:ready, techLocked:false, requiredTech:[], missingTech:[],
@@ -11886,7 +11888,7 @@ window.FB = window.FB || {};
     if (meta.automated && option.manualOnly) return false;
     if (FB.eventOptionStatus) {
       const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);
-      if (optionStatus.techLocked ||
+      if (optionStatus.techLocked || optionStatus.fiscalLocked ||
           (ev && ['commons_uprising_valid', 'commons_uprising_local_valid'].indexOf(ev.contextValidator) >= 0 && !optionStatus.ready) ||
           (option.effects &&
             (option.effects.custom === 'freedom_accept_offer' ||
@@ -13084,6 +13086,10 @@ window.FB = window.FB || {};
   };
   /* a vassal yields his fief peacefully */
   FB.fns.vassal_reclaim = function (state, ctx) {
+    const fiscalRid = state.player.revokeRid || (ctx && ctx.rid);
+    if (FB.fiscalRevocationReason && FB.fiscalRevocationReason(state, fiscalRid)) return false;
+    const fiscalCounties = FB.realmHeldCounties(state, fiscalRid);
+    for (const pid of fiscalCounties) if (FB.fiscalRefundLand && !FB.fiscalRefundLand(state, pid)) return false;
     const p = state.player;
     const rid = p.revokeRid || (ctx && ctx.rid);
     p.revokeRid = null;
@@ -13111,6 +13117,7 @@ window.FB = window.FB || {};
     FB.checkTierPromotions(state);
   };
   FB.fns.vassal_refuse = function (state, ctx) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     const p = state.player;
     const rid = p.revokeRid || (ctx && ctx.rid);
     p.revokeRid = null;

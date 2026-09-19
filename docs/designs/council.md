@@ -255,3 +255,12 @@ In read-only war-law views, only the current level appears as a label/value row.
 Alternative levels remain in the details disclosure, without empty status rows.
 For eligible rulers, alternatives head their visible proclamation controls.
 The shared footer supplies the final divider.
+
+## Fiscal constraints
+
+Fiscal pressure subtracts at most 20 from effective Crown Authority. The stored
+base continues to receive ordinary actions and annual drift; recovery does not
+undo unrelated changes. Consent, charter and political tactic readers use effective
+authority. A five-year fiscal composition blocks extraordinary taxation and
+voluntary title revocation, and grants the existing enduring office-confirmation
+privilege. Fiscal concessions are ungated recovery (`fiscal_settlements`: **none**).

@@ -2,10 +2,39 @@
 
 ## Family settlement grants
 
+Grant Land has county and settlement reservations and a reviewed excess-grant
+batch. It first gives away enough eligible counties to reach the county limit,
+then recalculates excess direct settlements after those county transfers. Only
+enough additional non-seat settlements to reach the settlement limit are selected.
+Capital and home counties, the home settlement, occupied/besieged counties, and
+reserved holdings are omitted. A reserved settlement also prevents its containing
+county from being selected by this batch; a county reservation alone does not
+reserve each separate settlement title. Remaining blocked excess is disclosed;
+the player may apply the listed partial proposal without transferring protections.
+
+Selection uses current net local seasonal income ascending, then reverse county
+acquisition-list order and reverse settlement-slot order for ties. Old saves lack
+complete acquisition dates, so these stable orders are the explicit newer-holding
+fallback. Counties go through ordinary generated vassal grants; individual sites
+receive new local hereditary barons. The preview consumes no RNG and shares one
+fiscal context. Confirmation revalidates the entire proposal before mutations;
+generation happens only on confirmation. No daily work or serialized plan is added.
+Technology impact `excess_land_grants` is **none**: these are ordinary political
+management choices, not a researched capability.
+
+Settlement reservations use `grantSettlement` protection ids (`provinceId:slot`),
+persist with existing household protections and block voluntary settlement quotes
+until unreserved. They do not block conquest, succession, or involuntary loss.
+
 Grant Land also lists grantable settlements in directly held counties and opens
 the existing recipient picker and hereditary grant review. A ruler with one county
 can access this deed when a non-seat settlement is available. This is another entry
 point to existing settlement grants, with no change to eligibility or technology.
+Settlement choices disclose their local building count and current net seasonal
+income before recipient selection. These are holding returns, not a promise of
+extra income from granting; the review separately explains transferred income and dues.
+Back from the review returns directly to the originating Grant Land, settlement
+or character sheet, skipping the intermediate grant picker.
 
 Free adult kin, including Freeholders, may receive settlement grants even when married or living
 outside the managed household. The grant itself raises the recipient to Baron. Unrelated candidates still need
@@ -1313,3 +1342,19 @@ Unconnected trees retain the saved-depth fallback, and legacy saves without
 
 The barony review omits the redundant ready-to-confirm status when eligible;
 blocked petitions retain their visible requirement or cost explanation.
+
+## Paid hereditary county grants
+
+Finance and Grant Land offer surplus counties to existing, funded hereditary direct
+vassals. The player keeps overlordship and the recipient's service charter. Capitals,
+last counties, protected land and besieged/occupied counties cannot be sold. Normal
+county tax base times eight seasons sets the price. The review labels base tax/levy
+estimates separately from actual household, capacity and national adjustments.
+Buyers retain the treasury system's civilian reserve and military commitments.
+
+A fresh quote rechecks ownership, protection, buyer/ruler identity, price and funds
+before the synchronous grant/payment. Purchased counties require their price to be
+refunded on voluntary revocation; revoking a whole fief first checks all refunds.
+A compact per-county record blocks resale for ten years, even after reconquest or
+forfeiture. Conquest and lawful seizure retain their existing rules. Technology
+impact `paid_hereditary_grants` is **none**, ordinary feudal patronage for payment.

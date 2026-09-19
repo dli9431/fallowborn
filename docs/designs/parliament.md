@@ -341,3 +341,12 @@ voting and outgoing service charters. A vassal can seek immediate-liege permissi
 for a specific campaign or deliberately declare unlawfully. The latter produces a
 90-day demand and potential armed enforcement. Ordinary independence remains a
 separate political path. See [war.md](war.md); technology impact is none.
+
+## Financial composition
+
+All landed players can accept the same five-year fiscal composition in Finance,
+including barons without spare counties or wealthy patrons. The government and
+privilege sheets expose its temporary restrictions and remaining obligation.
+Liege Standing receives the capped fiscal contribution while the base remains
+unchanged. Existing incoming Estates obligations and creditor rights still apply.
+This baseline recovery capability has technology impact **none**.

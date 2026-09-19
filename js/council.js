@@ -184,7 +184,7 @@ window.FB = window.FB || {};
     let vassalStanding = 0;
     for (const rid of vassalIds) vassalStanding += standing(state, rid);
     const authority = council && isFinite(Number(council.authority))
-      ? FB.clamp(Number(council.authority), 0, 100) : 60;
+      ? FB.effectiveCrownAuthority(state) : 60;
     return {
       formed:!!council,
       authority:authority,
@@ -247,6 +247,11 @@ window.FB = window.FB || {};
   };
   FB.councilAvgOpinion = FB.councilAvgStanding;
 
+  FB.effectiveCrownAuthority = function (state) {
+    const base = state.council && state.council.authority !== undefined ? state.council.authority : 60;
+    return FB.clamp(base + (FB.fiscalAuthority ? FB.fiscalAuthority(state) : 0), 0, 100);
+  };
+
   FB.councilAuthority = function (state, amt) {
     if (!FB.councilActive(state)) return;
     /* Authority is often changed after an explicit dismissal or punishment.
@@ -262,7 +267,7 @@ window.FB = window.FB || {};
      suffer extraordinary taxes or revoked fiefs */
   FB.councilNeedsConsent = function (state) {
     if (!FB.councilActive(state) || !state.council) return false;
-    return state.council.authority < (FBDATA.balance.councilConsentBelow || 35);
+    return FB.effectiveCrownAuthority(state) < (FBDATA.balance.councilConsentBelow || 35);
   };
 
   /* the slow gravity of custom: over-mighty authority erodes, a cowed crown
@@ -447,7 +452,7 @@ window.FB = window.FB || {};
   FB.fns.council_charter_due = function (state) {
     const c = FB.councilEnsure(state);
     if (!c || !FB.councilMembers(state).length) return false;
-    return c.authority >= (FBDATA.balance.councilCharterAbove || 70) &&
+    return FB.effectiveCrownAuthority(state) >= (FBDATA.balance.councilCharterAbove || 70) &&
       FB.councilAvgStanding(state) < -5;
   };
   FB.fns.council_has_unseated = function (state) {

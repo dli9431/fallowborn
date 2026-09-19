@@ -731,10 +731,10 @@ window.FB = window.FB || {};
       }
     }
     if (active.kind === 'council' && finite(tactic.authority, 0) &&
-        (!state.council || finite(state.council.authority, 0) < tactic.authority)) {
+        (!state.council || FB.effectiveCrownAuthority(state) < tactic.authority)) {
       missing.push(FB.T('Requires {authority} Crown Authority; currently {current}.', {
         authority:tactic.authority,
-        current:Math.round(state.council && state.council.authority || 0)
+        current:Math.round(FB.effectiveCrownAuthority(state))
       }));
     }
     return {
@@ -1558,7 +1558,7 @@ window.FB = window.FB || {};
       total += FB.standingOf(state, { kind:'realm', id:vassals[i] });
     }
     var average = total / vassals.length;
-    var authority = state.council ? finite(state.council.authority, 50) : 50;
+    var authority = FB.effectiveCrownAuthority ? FB.effectiveCrownAuthority(state) : 50;
     var aggression = FB.aggressiveWarHistory
       ? FB.aggressiveWarHistory(state).length : 0;
     var revocations = recentMistreatment(state, 'revocation').length +

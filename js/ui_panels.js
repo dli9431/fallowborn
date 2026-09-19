@@ -7424,6 +7424,7 @@ window.FB = window.FB || {};
         landKv('Faith', faithDetailsLink(s, countyReligion)) +
         landKv('Popular support', '<span data-county-popular-support="' + esc(pid) + '">' +
           esc(signedNumber(FB.countyPopularSupport(s, pid))) + '</span>') +
+        (FB.fiscalSupport && FB.fiscalSupport(s, pid) ? landKv('Fiscal hardship', esc(signedNumber(FB.fiscalSupport(s, pid)))) : '') +
         landKv('Tax and levy from support', esc(FB.T('{percent}% of the county base; other modifiers and rebellion also apply.', {
           percent:Math.round(FB.countySupportFactor(s, pid) * 100)
         }))) +

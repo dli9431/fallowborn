@@ -4142,8 +4142,12 @@ window.FB = window.FB || {};
       { state: s, viewer: s.player.charId });
     },
     show: function (s) { return !!s.player.war; },
-    can: function (s) { return s.player.gold >= 15 ? true : FB.T('Costs {money:15}.'); },
+    can: function (s) {
+      if (FB.fiscalRestriction && FB.fiscalRestriction(s)) return FB.fiscalRestriction(s);
+      return s.player.gold >= 15 ? true : FB.T('Costs {money:15}.');
+    },
     run: function (s) {
+      if (FB.fiscalRestriction && FB.fiscalRestriction(s)) return;
       const w = s.player.war;
       if (!w || s.player.gold < 15) return;
       s.player.gold -= 15;
@@ -4268,11 +4272,13 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'demand_taxes',
+    desc: function (s) { return FB.T('Demand extraordinary taxes from eligible vassals. Their Standing falls by 15. During a fiscal crisis, their directly held counties also lose 10 Popular support for one year; repeated extraction refreshes this penalty.'); },
     show: function (s) { return FB.playerVassals(s).length >= 1; },
     can: function (s) {
+      if (FB.fiscalRestriction && FB.fiscalRestriction(s)) return FB.fiscalRestriction(s);
       if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
         return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their support, or let the crown’s rights mend with time.',
-          { authority: Math.round(s.council.authority) });
+          { authority: Math.round(FB.effectiveCrownAuthority(s)) });
       }
       return true;
     },
@@ -4280,9 +4286,10 @@ window.FB = window.FB || {};
   { id: 'revoke_county', opensChoices:true, noConsume: true,
     show: function (s) { return FB.playerVassals(s).length >= 1 && !s.player.war; },
     can: function (s) {
+      if (FB.fiscalRestriction && FB.fiscalRestriction(s)) return FB.fiscalRestriction(s);
       if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
         return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their support, or let the crown’s rights mend with time.',
-          { authority: Math.round(s.council.authority) });
+          { authority: Math.round(FB.effectiveCrownAuthority(s)) });
       }
       return true;
     },
@@ -6183,7 +6190,7 @@ window.FB = window.FB || {};
      land contributions. Character, household, item, building, office,
      policy, and national multipliers or flat bonuses remain outside this
      deliberately narrow estimate. */
-  function domainLandProjection(state, grantedIds) {
+  function domainLandProjection(state, grantedIds, charterId) {
     const held = (state.player.provs || []).slice();
     const granted = {};
     for (const pid of grantedIds) granted[pid] = 1;
@@ -6201,7 +6208,7 @@ window.FB = window.FB || {};
     const afterSettlementPenalty = Math.pow(1 - (FBDATA.balance.overDomainPenalty || 0.15),
       Math.max(0, afterSites.length - capacity.limit));
     const afterCountyPenalty = FB.domainPenaltyForCount(state, remaining.length);
-    const context = { capacities:{} }, customary = FB.feudalCharterDef('customary_service');
+    const context = { capacities:{} }, customary = FB.feudalCharterDef(charterId || 'customary_service');
     for (const site of sites) {
       const pid = site.provinceId;
       const a = FB.settlementFiscalProjection(state, pid, site.settlement, context).amounts;
@@ -6233,6 +6240,8 @@ window.FB = window.FB || {};
       afterLevy:directLevyAfter + existingLevy + grantedLevy
     };
   }
+
+  FB.landGrantFiscalProjection = domainLandProjection;
 
   /* Deterministic, read-only cleanup proposal. Complete duchies are preferred
      when they fit the exact excess; remaining slots use the least-developed
@@ -6567,33 +6576,41 @@ window.FB = window.FB || {};
   /* Locale-neutral standing seasonal cash flow. Credit capacity and the
      displayed ledger both use this numeric source; neither parses localized
      labels from incomeBreakdown. */
-  FB.reliableGoldIncome = function (state, ignoreAssignments, economy) {
+  FB.playerCivilianBudget = function (state, economy, ignoreAssignments) {
     const p = state.player;
+    let receipts = 0;
     let total = -FB.householdUpkeep(state) - FB.playerGovernmentCosts(state).total;
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
-    if (FB.playerHostUpkeepParts) total -= FB.playerHostUpkeepParts(state).total;
-    if (FB.playerProvisionEstimate) total -= FB.playerProvisionEstimate(state);
     if (FB.modifierUpkeep) total -= FB.modifierUpkeep(state, 'gold');
     if (p.tier >= 3) {
-      total += FB.playerTax(state);
+      const tax = FB.playerTax(state); total += tax; receipts += Math.max(0, tax);
       total -= FB.buildingBonus(state, 'upkeep');
       if (FB.fortUpkeep) total -= FB.fortUpkeep(state);
     }
-    total += FB.holdingBonus(state, 'gold');
-    total += FB.landYield(state);
-    total += FB.itemBonus(state, 'gold');
-    if (FB.positionBonus) total += FB.positionBonus(state, 'gold');
+    { const value = FB.holdingBonus(state, 'gold'); total += value; receipts += Math.max(0, value); }
+    { const value = FB.landYield(state); total += value; receipts += Math.max(0, value); }
+    { const value = FB.itemBonus(state, 'gold'); total += value; receipts += Math.max(0, value); }
+    if (FB.positionBonus) { const value = FB.positionBonus(state, 'gold'); total += value; receipts += Math.max(0, value); }
     if (FB.livelihoodBreakdown) {
-      for (const line of FB.livelihoodBreakdown(state)) total += line.amount;
+      for (const line of FB.livelihoodBreakdown(state)) { total += line.amount; receipts += Math.max(0, line.amount); }
     }
     if (FB.retainerSeasonCost) total -= FB.retainerSeasonCost(state);
     if (FB.enterpriseLaborSeasonCost) total -= FB.enterpriseLaborSeasonCost(state);
     if (FB.schoolingSeasonCost) total -= FB.schoolingSeasonCost(state);
     const focus = FB.focusIncome(state);
-    if (focus && focus.gold) total += focus.gold;
+    if (focus && focus.gold) { total += focus.gold; receipts += Math.max(0, focus.gold); }
     if (!ignoreAssignments && FB.financeAssignedIncomeCost) {
       total -= FB.financeAssignedIncomeCost(state, economy);
     }
+    return { receipts:receipts, surplus:total };
+  };
+
+  FB.reliableGoldIncome = function (state, ignoreAssignments, economy) {
+    const budget = FB.playerCivilianBudget(state, economy, ignoreAssignments);
+    let total = budget.surplus;
+    if (FB.playerHostUpkeepParts) total -= FB.playerHostUpkeepParts(state).total;
+    if (FB.playerProvisionEstimate) total -= FB.playerProvisionEstimate(state);
+    if (!ignoreAssignments && FB.fiscalAssignedIncome) total -= FB.fiscalAssignedIncome(state, budget.surplus);
     return total;
   };
 
@@ -6860,6 +6877,10 @@ window.FB = window.FB || {};
     goldGroup = 'other';
     if (FB.financeAssignedIncomeCost) {
       add('gold', FB.T('Revenue assigned to lenders'), -FB.financeAssignedIncomeCost(state));
+    }
+    if (FB.fiscalSettlementActive && FB.fiscalSettlementActive(state)) {
+      const surplus = lines.gold.reduce(function (sum, line) { return sum + (line.group === 'army' ? 0 : line.amount); }, 0);
+      add('gold', FB.T('Financial settlement assignment'), -FB.fiscalAssignedIncome(state, surplus));
     }
 
     const out = {};
@@ -7310,12 +7331,14 @@ window.FB = window.FB || {};
     if (target.kind === 'realm') {
       if (target.id === 'player') return 0;
       if (FB.realmRulerStandingSnapshot) {
-        return FB.realmRulerStandingSnapshot(state, target.id);
+        return FB.realmRulerStandingSnapshot(state, target.id) +
+          (FB.fiscalStanding ? FB.fiscalStanding(state, target.id) : 0);
       }
       const p = state.player;
       const stored = target.id === p.liege ? p.liegeOp :
         (p.liegeOps && p.liegeOps[target.id]);
-      return faithAdjustedStanding(state, target, stored);
+      return faithAdjustedStanding(state, target, stored) +
+        (FB.fiscalStanding ? FB.fiscalStanding(state, target.id) : 0);
     }
     return 0;
   };
@@ -7343,7 +7366,8 @@ window.FB = window.FB || {};
     }
     if (target.kind === 'realm') {
       if (target.id === 'player') return 0;
-      const value = FB.clamp(FB.standingOf(state, target) + amount,
+      const value = FB.clamp(FB.standingOf(state, target) -
+        (FB.fiscalStanding ? FB.fiscalStanding(state, target.id) : 0) + amount,
         -100, 100);
       if (FB.setRealmRulerStanding) {
         return FB.setRealmRulerStanding(state, target.id, value);
@@ -8261,6 +8285,7 @@ window.FB = window.FB || {};
   /* several seasons' taxes squeezed out of every vassal at once — a skilled
      steward (demandTaxPerSte) wrings out meaningfully more */
   FB.demandTaxes = function (state) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     const B = FBDATA.balance;
     const p = state.player;
     const me = state.chars[p.charId];
@@ -8272,6 +8297,9 @@ window.FB = window.FB || {};
       const charter = FB.feudalCharterDef(contract.charterId);
       if (charter.extraordinaryTaxExempt) continue;
       gold += FB.vassalTaxContribution(state, vid) * seasons;
+      if (FB.fiscalCrisisQuote && FB.fiscalCrisisQuote(state).active) {
+        for (const pid of FB.realmHeldCounties(state, vid)) FB.addModifier(state, 'fiscal_extraction', pid);
+      }
       eligible++;
       FB.adjustStanding(state, { kind:'realm', id:vid }, -15,
         'deed:demand_taxes');
@@ -10170,6 +10198,7 @@ window.FB = window.FB || {};
   };
 
   function diplomacyBlocksWar(state, enemy, readOnly) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return FB.fiscalRestriction(state);
     if (FB.truceExpiry(state, 'player', enemy)) return 'truce';
     if (FB.ordinaryWarBetween && FB.ordinaryWarBetween(state, 'player', enemy)) return 'war';
     if (state.pacts && state.pacts[enemy] > state.turn) return 'pact';
@@ -11905,6 +11934,7 @@ window.FB = window.FB || {};
   };
 
   FB.startPlayerWar = function (state, causeOrTarget, opts) {
+    if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     // Reject an unconfirmed review without repairing campaign save records.
     if (causeOrTarget && causeOrTarget.type === 'aggression' &&
         !(opts && opts.confirmAggression)) return false;
