@@ -182,6 +182,7 @@ test('the prospective review ledger and every gate schema validate together',
       'building_university',
       'building_windmill',
       'chartered_trade_corridors',
+      'collateral_family_matches',
       'commodity_ventures',
       'commoner_frontier_settlement',
       'concentric_fortress_upgrade',
@@ -201,6 +202,7 @@ test('the prospective review ledger and every gate schema validate together',
       'data_defined_deeds',
       'data_defined_focuses',
       'descendant_betrothal_replacement',
+      'descendant_match_age_preferences',
       'direct_vassal_charter_of_liberties',
       'doctrine_communal_worship',
       'doctrine_craft_mentorship',
@@ -209,6 +211,7 @@ test('the prospective review ledger and every gate schema validate together',
       'doctrine_reform',
       'dynastic_alliance_negotiation',
       'earned_starting_stations',
+      'enterprise_batch_upgrades',
       'enterprise_child_labor',
       'enterprise_hired_labor',
       'enterprise_upgrades',
@@ -324,6 +327,8 @@ test('the prospective review ledger and every gate schema validate together',
       'war_justification_selection'
     ]);
     const additiveNoneIds = [
+      'collateral_family_matches', 'descendant_match_age_preferences',
+      'enterprise_batch_upgrades', 'excess_land_grants',
       'fiscal_crises', 'fiscal_settlements', 'paid_hereditary_grants',
       'ai_dejure_expansion_planning',
       'betrothal_release',
@@ -354,11 +359,9 @@ test('the prospective review ledger and every gate schema validate together',
       'serf_harvest_conditions',
       'serf_tenure_authority_review'
     ];
-    expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
-      .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
-        'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
-        'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
-        'none']);
+    for (const id of additiveNoneIds) {
+      expect({ id:id, mode:result.modes[id] }).toEqual({ id:id, mode:'none' });
+    }
     const additiveHardIds = [
       'enterprise_upgrades',
       'ruler_household_establishments'
