@@ -2,7 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/crazygames.js', 'index.html', 'js/util.js', 'js/ui_modals.js', 'js/ui_misc.js',
-  'js/main.js', 'js/save.js', 'js/model.js', 'js/i18n.js'
+  'js/main.js', 'js/save.js', 'js/model.js', 'js/i18n.js',
+  'js/technology.js', 'data/technology.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { mockCrazyGames } = require('../support/crazygames');
@@ -65,14 +66,19 @@ for (const distribution of ['standard', 'crazygames']) {
       if (restricted) {
         await expect(page.locator('#gm-body a[href*="discord.gg"]')).toHaveCount(0);
       }
-      await page.evaluate(function () { FB.ui.closeModal(); FB.ui.showGuide(); });
+      await page.evaluate(function () {
+        FB.ui.closeModal();
+        // Technology Guide entries require Baron rank, independent of distribution.
+        FB.state.player.tier = 3;
+        FB.ui.showGuide();
+      });
       if (restricted) {
         await expect(page.locator('[data-guide-more-info]')).toHaveCount(0);
         await expect(page.locator('#gm-body a[href]')).toHaveCount(0);
       } else {
-        expect(await page.locator('[data-guide-more-info]').count()).toBeGreaterThan(0);
+        await expect(page.locator('[data-guide-more-info]').first()).toBeAttached();
       }
-      expect(await page.locator('[data-guide-tech]').count()).toBeGreaterThan(0);
+      await expect(page.locator('[data-guide-tech="horizontal_loom"]')).toHaveCount(1);
       await page.locator('#guide-search').fill('day');
       await page.locator('[data-guide-entry="day-to-day"]').click();
       await expect(page.locator('#guide-entry-detail-day-to-day')).toBeVisible();
