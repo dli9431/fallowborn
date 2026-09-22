@@ -1504,6 +1504,10 @@ window.FB = window.FB || {};
     else if (form === 'byzantine') result.outcome = 'blinding_deposition';
     else if (form === 'muslim') result.outcome = 'qisas';
     else result.outcome = 'execution';
+    if (FB.platform.isCrazyGames &&
+        ['execution', 'qisas', 'blinding_deposition'].indexOf(result.outcome) >= 0) {
+      result.outcome = 'prison';
+    }
     return result;
   };
 

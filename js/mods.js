@@ -22,11 +22,13 @@ window.FBMODS = window.FBMODS || [];
   }
 
   function readAll() {
+    if (FB.platform.isCrazyGames) return [];
     try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
     catch (e) { return []; }
   }
 
   function readEnabled() {
+    if (FB.platform.isCrazyGames) return [];
     try { return JSON.parse(localStorage.getItem(BKEY) || '[]'); }
     catch (e) { return []; }
   }
@@ -36,6 +38,7 @@ window.FBMODS = window.FBMODS || [];
   M.isEnabled = function (id) { return readEnabled().indexOf(id) !== -1; };
 
   M.toggle = function (id) {
+    if (FB.platform.isCrazyGames) return false;
     const on = readEnabled();
     const i = on.indexOf(id);
     if (i === -1) on.push(id); else on.splice(i, 1);
@@ -84,6 +87,7 @@ window.FBMODS = window.FBMODS || [];
     return _sig;
   };
   function computeSig() {
+    if (FB.platform.isCrazyGames) return 'crazygames-content-1';
     const all = readAll();
     const on = readEnabled().slice().sort();
     if (!all.length && !on.length) return '';
@@ -96,6 +100,7 @@ window.FBMODS = window.FBMODS || [];
   }
 
   M.store = function (jsonText) {
+    if (FB.platform.isCrazyGames) return false;
     let mod;
     try { mod = JSON.parse(jsonText); }
     catch (e) {
@@ -1239,6 +1244,7 @@ window.FBMODS = window.FBMODS || [];
   }
 
   M.apply = function (mod) {
+    if (FB.platform.isCrazyGames) throw new Error('Custom mods are unavailable in this edition.');
     const prepared = validateBeforeApply(mod);
     if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') ||
         own(mod, 'marketEndowments')) {

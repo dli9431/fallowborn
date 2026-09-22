@@ -1032,3 +1032,9 @@ failure. No event catalog record is mutated to store a rendered quote.
 
 News audience preferences control toast presentation only. Chronicle storage and
 both Chronicle views preserve events independently of those preferences.
+
+## Distribution alternatives
+
+See [distribution content profiles](distribution-content.md) for the guarded
+57-event overlay, stable option positions, replacement effects and source-hashed
+English fallback. Technology impact is none; this is a distribution policy.

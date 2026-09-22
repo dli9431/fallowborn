@@ -7,6 +7,7 @@ window.FB = window.FB || {};
   const S = {};
   FB.save = S;
   const PREFIX = 'fb_';
+  const crazy = FB.crazySave || null;
   const START_PROGRESSION_KEY = PREFIX + 'progression';
   const HIGHEST_START_TIER = 3;
   let serializingBuildingRecords = null;
@@ -53,7 +54,7 @@ window.FB = window.FB || {};
 
   function readStartProgression() {
     try {
-      const raw = localStorage.getItem(START_PROGRESSION_KEY);
+      const raw = crazy ? crazy.progress() : localStorage.getItem(START_PROGRESSION_KEY);
       return normalizeStartProgression(raw ? JSON.parse(raw) : null);
     } catch (e) {
       return normalizeStartProgression(null);
@@ -63,7 +64,7 @@ window.FB = window.FB || {};
   let startProgression = readStartProgression();
 
   window.addEventListener('storage', function (event) {
-    if (event.key !== START_PROGRESSION_KEY) return;
+    if (crazy || event.key !== START_PROGRESSION_KEY) return;
     try {
       startProgression = normalizeStartProgression(
         event.newValue ? JSON.parse(event.newValue) : null);
@@ -74,10 +75,11 @@ window.FB = window.FB || {};
 
   function writeStartProgression() {
     try {
-      localStorage.setItem(START_PROGRESSION_KEY,
-        JSON.stringify(startProgression));
+      if (crazy) crazy.setProgress(JSON.stringify(startProgression));
+      else localStorage.setItem(START_PROGRESSION_KEY, JSON.stringify(startProgression));
       return true;
     } catch (e) {
+      if (crazy) reportSaveError(e);
       return false;
     }
   }
@@ -105,6 +107,7 @@ window.FB = window.FB || {};
     }
     const previous = startProgression.highestAchievedTier;
     if (tier <= previous) {
+      if (crazy && stored.highestAchievedTier < previous) writeStartProgression();
       return {
         changed:false, startsChanged:false, previous:previous, tier:previous
       };
@@ -120,10 +123,12 @@ window.FB = window.FB || {};
     };
   };
   SP.reset = function () {
+    const previous = startProgression;
     startProgression = normalizeStartProgression(null);
     try {
-      localStorage.removeItem(START_PROGRESSION_KEY);
-    } catch (e) { /* memory only */ }
+      if (crazy) crazy.setProgress(null);
+      else localStorage.removeItem(START_PROGRESSION_KEY);
+    } catch (e) { if (crazy) { startProgression = previous; reportSaveError(e); } }
     return SP.snapshot();
   };
 
@@ -607,6 +612,7 @@ window.FB = window.FB || {};
      than to lose a dynasty silently. Ephemeral storage (private mode, iframe
      eviction) passes this probe — the export path below is the answer there. */
   S.available = (function () {
+    if (crazy) return false;
     try {
       const k = PREFIX + 'probe';
       localStorage.setItem(k, '1');
@@ -694,6 +700,12 @@ window.FB = window.FB || {};
 
   function reportSaveError(e) {
     if (!FB.ui) return;
+    if (crazy) {
+      FB.ui.toast(e && e.code === 'dataLimitExcedeed'
+        ? 'CrazyGames save space is full. Your previous save is kept. Download this life from Save game to preserve it.'
+        : 'Save failed: {message}', { message:e && e.message || FB.T('CrazyGames saves are unavailable.') });
+      return;
+    }
     if (isQuotaError(e)) FB.ui.toast('⚠ This life’s records have outgrown the browser’s save storage. Use 💾 Download save file in Menu → 💾 Save game.');
     else if (S.available) FB.ui.toast('Save failed: {message}', { message: e.message });
     else FB.ui.toast('⚠ This browser is blocking save storage. Use 💾 Download save file in Menu → 💾 Save game.');
@@ -736,6 +748,14 @@ window.FB = window.FB || {};
   S.initStorage = function (done) {
     if (storageInitialized) { done(); return; }
     storageInitialized = true;
+    if (crazy) {
+      crazy.init({ encode:compressToBase64, decode:decompressFromBase64 }, function (error) {
+        S.available = !error;
+        if (!error) startProgression = readStartProgression();
+        done(error);
+      });
+      return;
+    }
     let finished = false, request;
     function finish(database) {
       if (finished) { if (database && database !== saveDatabase) database.close(); return; }
@@ -795,12 +815,14 @@ window.FB = window.FB || {};
     } catch (error) { finish(null); }
   };
   S.hasSlot = function (slot) {
+    if (crazy) return slot === 'auto' && !!crazy.read();
     const name = key(slot);
     return !!(databaseWrites[name] || databaseSlots[name] || localSlot(name) ||
       (slot === 'auto' && pendingAuto));
   };
   // UTF-16 payload estimates, excluding database indexes and browser overhead.
   S.storageUsage = function (done) {
+    if (crazy) { done({ crazygames:crazy.usage(), limit:1048576 }); return; }
     const usage = { localStorage:null, indexedDB:saveDatabase ? null : 0 };
     try {
       usage.localStorage = 0;
@@ -829,6 +851,15 @@ window.FB = window.FB || {};
   let deletedAutoState = null;
   let deletedAutoTurn = null;
   S.deleteSaves = function (slot, done) {
+    if (crazy) {
+      if (slot !== 'auto' && slot !== 'all') { done(false); return; }
+      try {
+        crazy.remove(); pendingAuto = null; stopAutoCodec();
+        deletedAutoState = FB.state; deletedAutoTurn = FB.state && FB.state.turn;
+        done(true);
+      } catch (error) { reportSaveError(error); done(false); }
+      return;
+    }
     if (deletionBusy) { done(false); return; }
     const all = slot === 'all', names = Object.create(null);
     if (all) {
@@ -879,8 +910,19 @@ window.FB = window.FB || {};
       transaction.onabort = function () { finish(false); };
     } catch (error) { finish(false); }
   };
-  S.storageBackend = function () { return saveDatabase ? 'indexeddb' : 'localstorage'; };
+  S.storageBackend = function () { return crazy ? 'crazygames' : saveDatabase ? 'indexeddb' : 'localstorage'; };
   S.toSlot = function (slot, done) {
+    if (crazy) {
+      if (slot !== 'auto') { if (done) done(false); return false; }
+      try {
+        const json = S.serialize();
+        pendingAuto = null;
+        return crazy.write(json, function (ok, error) {
+          if (error) reportSaveError(error);
+          if (done) done(ok);
+        });
+      } catch (error) { reportSaveError(error); if (done) done(false); return false; }
+    }
     if (deletionBusy) { if (done) done(false); return false; }
     function fallback(json) {
       try {
@@ -964,6 +1006,22 @@ window.FB = window.FB || {};
   function flushAutosave(force) {
     const job = pendingAuto;
     if (!job) return;
+    if (crazy) {
+      if (force === true) {
+        try { if (crazy.flush(job.json)) pendingAuto = null; }
+        catch (error) { reportSaveError(error); }
+      } else if (!job.writing) {
+        job.writing = true;
+        crazy.write(job.json, function (ok, error) {
+          if (pendingAuto === job) {
+            if (ok) pendingAuto = null;
+            else job.writing = false;
+          }
+          if (error) reportSaveError(error);
+        });
+      }
+      return;
+    }
     if (force === true) stopAutoCodec();
     if (force !== true && saveDatabase) {
       if (job.writing) return;
@@ -990,6 +1048,11 @@ window.FB = window.FB || {};
   }
   // A closing page cannot wait for a worker; persist the newest snapshot now.
   S.flushPending = function () {
+    if (crazy) {
+      if (pendingAuto) flushAutosave(true);
+      else { try { crazy.flushLatest(); } catch (error) { reportSaveError(error); } }
+      return;
+    }
     // A closing page cannot await an outstanding manual transaction either.
     for (const name in databaseWrites) {
       if (name === key('auto') && pendingAuto) continue;
@@ -1243,6 +1306,10 @@ window.FB = window.FB || {};
   S.recentChronicle = function () { return recentChronicle; };
 
   S.read = function (slot) {
+    if (crazy) {
+      try { return slot === 'auto' && crazy.read() ? JSON.parse(crazy.read()) : null; }
+      catch (error) { return null; }
+    }
     try {
       const name = key(slot);
       const raw = decodeStored(databaseWrites[name] ? databaseWrites[name].json :
@@ -1272,6 +1339,7 @@ window.FB = window.FB || {};
   /* existence probe for callers that must not pay for a decode (the first-time
      tips upgrade path): true when the autosave or any manual slot holds bytes */
   S.hasAnySave = function () {
+    if (crazy) return !!crazy.read();
     if (Object.keys(databaseSlots).length || Object.keys(databaseWrites).length) return true;
     try {
       for (let i = 0; i < localStorage.length; i++) {
@@ -1290,9 +1358,9 @@ window.FB = window.FB || {};
   };
 
   /* was this save made under a different mod set than the one now stored?
-     (saves from before the stamp carry no `mods` field — let them through) */
+     Standard editions accept pre-stamp saves; restricted editions require their profile. */
   S.otherWorld = function (d) {
-    return !!d && d.mods !== undefined && d.mods !== FB.mods.sig();
+    return !!d && (d.mods !== undefined || FB.platform.isCrazyGames) && d.mods !== FB.mods.sig();
   };
 
   /* Saves from before parents were recorded know the first generation's
@@ -1423,6 +1491,10 @@ window.FB = window.FB || {};
   S.restore = function (data) {
     if (!data || !data.state || typeof data.state !== 'object') {
       throw new Error('The save has no readable game state.');
+    }
+    if ((FB.platform.isCrazyGames || /^crazygames-content-/.test(data.mods || '')) &&
+        data.mods !== FB.mods.sig()) {
+      throw new Error(FB.T('This save belongs to a different edition of the game.'));
     }
     S.lastRestoreWarnings = [];
     FB.setRngState(data.rng);

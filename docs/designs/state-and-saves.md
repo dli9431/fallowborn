@@ -1670,3 +1670,44 @@ one compact protection record per sold county (price, recipient, refund flag and
 resale deadline), surviving grant/reconquest. No transient projection is serialized.
 Older saves initialize a fresh warning window without retroactive penalties; save
 format remains 3. No RNG is consumed by projections or lifecycle checks.
+
+## Distribution compatibility
+
+CrazyGames uses the existing `mods` envelope fingerprint with value
+`crazygames-content-1`. Missing or different profiles fail before RNG/state adoption.
+Standard builds also reject these saves. This requires a new campaign rather than
+rewriting an imported Chronicle or relationships. Save format remains 3.
+See [content profiles](distribution-content.md).
+
+## CrazyGames Data Module
+
+The explicit CrazyGames distribution initializes SDK v3 before enabling the title.
+Its sole campaign key is fb_cg_campaign_v1, with earned starting ranks in
+fb_cg_progression_v1. Manual Save and autosave share Continue; numbered slots
+remain exclusive to standard editions. SDK data is authoritative for both guests
+and accounts. No automatic migration reads ordinary IndexedDB/localStorage saves.
+An earlier restricted build can export and import its matching content-profile life.
+
+The isolated js/crazygames.js I/O boundary uses native CompressionStream gzip and
+base64 (FBG1), verified by decompressing to identical JSON before writing. It
+requires a browser supporting CompressionStream/DecompressionStream; failure,
+corrupt data or unavailable SDK blocks boot without overwriting anything. Promises
+are confined to platform I/O; the simulation and RNG remain synchronous. The
+standard edition neither initializes the SDK nor requires these browser APIs.
+
+The adapter checks the UTF-8 size of the complete owned-key JSON against the
+1,048,576-byte SDK limit, reserving 4 KiB for progression and overhead. Rejection
+keeps the accepted campaign and offers file export; no history is truncated to fit.
+SDK acceptance does not confirm cloud upload: syncing may take up to 30 seconds.
+
+Write revisions cancel stale compression jobs after newer saves, deletion or
+auth changes. Reads use only accepted snapshots. Before every mutation the
+adapter checks that SDK data still matches the loaded session; conflicts require
+a reload. The SDK reloads Data Module games on login/logout; an auth listener
+blocks old-page writes while that reload is pending. Deletes keep earned ranks.
+
+A closing page cannot await gzip. Pending saves attempt the existing verified
+synchronous LZ/base64 encoding (FBL1) if it fits. Otherwise the prior accepted
+snapshot remains; immediate tab closure is not a confirmed save. Both encodings
+load on boot, and portable exports retain FBS2 and the content-profile guard.
+This is persistence only and changes no technology eligibility.

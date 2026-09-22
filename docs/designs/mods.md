@@ -319,3 +319,9 @@ and must also be understood by `js/portrait.js`; exposing only the picker lists 
 pretend unsupported renderer ids were generic data. Cosmetic modding therefore remains
 an independent feature requiring a shared renderer/schema decision, not an unvalidated
 milestone-zero registry.
+
+## Restricted distribution profile
+
+CrazyGames skips stored/bundled mods and rejects apply/store/toggle operations.
+Its fixed save fingerprint is `crazygames-content-1`; ordinary builds retain the
+existing mod lifecycle. See [content profiles](distribution-content.md).

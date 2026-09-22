@@ -1852,6 +1852,7 @@ window.FB = window.FB || {};
       el.classList.remove('asbar');
     }
     $('game').classList.toggle('hidden', id !== null);
+    if (FB.crazySave) FB.crazySave.gameplay(id === null);
     /* Canvas backing stores may be discarded while the title is hidden,
        especially after compiling a world on a memory-constrained phone.
        Repaint on every title transition instead of relying on the boot draw. */

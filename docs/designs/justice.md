@@ -252,3 +252,9 @@ a `FBDATA.techImpactReviews` entry: these are baseline authority, religious,
 personal, and recovery actions with no credible research dependency. Existing
 ransom is reused, not newly gated. Save format remains 3; all additions are
 additive. UI and Chronicle text use structured catalogs/message descriptors.
+
+## Distribution sentencing
+
+The CrazyGames profile normalizes lethal or blinding sentences to imprisonment
+at projection, queue and application boundaries, including AI calls. Its chooser
+omits the original sentence IDs. See [content profiles](distribution-content.md).

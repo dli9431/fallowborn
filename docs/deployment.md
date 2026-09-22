@@ -163,3 +163,41 @@ and from `file://`.
 The committed worker remains a deliberately unsubstituted template and is never registered from
 `file://`; the hosted Docker build is the only path that stamps and activates it. The manifest
 link and theme metadata are also injected only on the play host.
+
+## Explicit distribution configuration
+
+A CrazyGames artifact sets `window.FB_DISTRIBUTION = "crazygames"` in an inline
+script in the document head before loading game scripts. `js/util.js` exposes
+`FB.platform.isCrazyGames` and the `crazygames` platform name. This explicit flag
+also works in local previews without relying on the hosting domain. Missing or
+unknown values retain ordinary host detection and existing UI behavior. The
+committed index does not set this flag; normal itch and play releases keep their
+links. Do not store the distribution in saves, preferences, or query parameters.
+
+CrazyGames rendering omits itch rating links and the saga play URL, and keeps
+Discord in the menu only. The flag is a presentation setting, not an SDK
+integration or a claim of platform approval.
+
+CrazyGames also omits the Guide’s external More info links while retaining
+local explanations and technology navigation. Email support and GitHub Issues
+are menu links on this distribution; the report dialog keeps copying and points
+back to those menu destinations. Other distributions keep support links in the
+report dialog and documentation links in the Guide.
+
+CrazyGames also activates `data/distribution_crazygames.js` before engine startup.
+It is inert in ordinary builds. The profile supplies adapted event data, nonlethal
+sentencing and a distinct save fingerprint; custom mods are disabled. Existing
+standard saves require the standard edition. See
+[content profiles](designs/distribution-content.md) for the behavior contract.
+
+### CrazyGames progress
+
+The CrazyGames package injects the official hosted v3 SDK before game scripts.
+Only this explicit distribution loads the SDK; standard itch/play/file releases
+remain self-contained. Select **Yes, using the Data Module from the CrazyGames SDK**
+in the portal or the storage module is disabled. One compressed campaign and
+earned starts use SDK storage for guests and accounts. See
+[state and saves](designs/state-and-saves.md#crazygames-data-module).
+Verify guest/account reload, another-device resume, rejected writes and portal
+size measurements before submission. Screen entry/exit reports gameplay start/stop;
+Full Launch still needs a broader pause/menu/lifecycle review.

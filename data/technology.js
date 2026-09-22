@@ -75,6 +75,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      crazygames_content_profile:{ mode:'none', rationale:'Distribution content restrictions and their non-wagering, nonlethal alternatives apply independently of in-world research. Existing technology requirements on retained choices remain intact.' },
       excess_land_grants:{ mode:'none', rationale:'Reserving holdings and reviewing a batch of ordinary county and settlement grants are baseline management shortcuts. Existing hereditary ownership and administrative limits apply without an additional research requirement.' },
       enterprise_batch_upgrades:{ mode:'none', rationale:'Grouping existing enterprise upgrades by settlement or type is a household management shortcut. Each individual upgrade retains its exact authored technology requirement; the batch adds no research prerequisite.' },
       descendant_match_age_preferences:{ mode:'none', rationale:'Preferring nearby ages, the same age, strictly younger candidates or the youngest eligible descendant match are ordinary household decisions, without a research dependency. Existing marriage eligibility and accepted pledges remain unchanged.' },

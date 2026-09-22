@@ -3300,3 +3300,35 @@ cannot choose either. Back restores parent list position and focus on desktop an
 mobile. County support identifies fiscal hardship; the gold breakdown points to
 Coin & Credit. The sale review labels normal county-base estimates rather than
 presenting them as exact after-tax household income.
+
+
+## Distribution-specific outbound links
+
+An explicit CrazyGames distribution omits itch rating links from the menu and
+saga dialog, and omits the itch play URL from both the displayed and copied saga
+summary. Its copy description lists only the fields actually included. Discord
+remains in the menu but is not rendered in the saga or report dialog. Missing
+links have no focusable or hidden DOM element; existing optional CTA binding
+handles their absence. Saga copy and Back and report copying retain their normal behavior. Standard distributions retain all existing links.
+
+CrazyGames also omits the Guide’s external More info links while retaining
+local explanations and technology navigation. Email support and GitHub Issues
+are menu links on this distribution; the report dialog keeps copying and points
+back to those menu destinations. Other distributions keep support links in the
+report dialog and documentation links in the Guide.
+
+The CrazyGames profile hides Mods on the title and menu, and its direct Mods entry
+explains that custom mods are unavailable. Justice omits lethal/blinding choices;
+its retained imprisonment flow shows the actual sentence. See
+[content profiles](distribution-content.md) for event and compatibility behavior.
+
+## CrazyGames save surface
+
+The CrazyGames Save/Load dialog shows one saved campaign shared with Continue and
+autosave, plus portable export/import. It explains guest/device versus account
+sync behavior and the sync delay. Storage deletion shows Data Module usage out
+of 1 MiB, preserves ranks, and retains the existing confirmation and Back flow.
+Standard builds retain the three manual slots and browser-storage presentation.
+SDK boot failures remain on the title status with reload guidance and disabled
+start controls. Save failures leave the prior campaign intact and keep export
+available. A save acknowledgement means accepted by the SDK, not cloud-confirmed.

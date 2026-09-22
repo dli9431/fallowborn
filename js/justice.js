@@ -311,7 +311,13 @@
     }
     return { ok:true, captured:caught, impacts:effects };
   }
+  function distributionSentence(sentence) {
+    return FB.platform.isCrazyGames &&
+      ['execution', 'qisas', 'blinding_deposition'].indexOf(sentence) >= 0
+      ? 'imprisonment' : sentence;
+  }
   function queue(s, actor, target, kind, offenseId, sentence) {
+    sentence = distributionSentence(sentence);
     var j = ensure(s);
     if (j.pending) return false;
     j.pending = { id:'justice-response-' + j.nextId++, kind:kind, actorId:actor,
@@ -352,6 +358,7 @@
     return null;
   }
   FB.justicePunishmentProjection = function (s, actor, target, sentence, offenseId) {
+    sentence = distributionSentence(sentence);
     var def = FBDATA.justiceSentences[sentence], row = held(s, actor, target);
     var offense = caseFor(s, actor, target, offenseId), counties = FB.justiceCounties(s, actor);
     var legalForm = live(s, actor) ? form(s, actor) : 'latin';
@@ -394,7 +401,9 @@
       pending:!!(pending && pending.targetId === target) };
   };
   FB.justiceSentenceOptions = function (s, actor, target) {
-    return Object.keys(FBDATA.justiceSentences).map(function (id) {
+    return Object.keys(FBDATA.justiceSentences).filter(function (id) {
+      return distributionSentence(id) === id;
+    }).map(function (id) {
       return FB.justicePunishmentProjection(s, actor, target, id);
     }).filter(function (p) { return p.blocker !== 'regional'; });
   };
@@ -453,6 +462,7 @@
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(s, c.id);
   }
   FB.justiceApplyPunishment = function (s, actor, target, sentence, offenseId, responseId) {
+    sentence = distributionSentence(sentence);
     var p = FB.justicePunishmentProjection(s, actor, target, sentence, offenseId);
     if (!p.ready) return { ok:false, blocker:p.blocker };
     var j = ensure(s), pending = j.pending;
@@ -612,7 +622,7 @@
         !(j.arbitrary[actor] > s.turn) && FB.chance(0.20)) {
       choice = 'execution'; j.arbitrary[actor] = s.turn + 1440;
     }
-    return choice;
+    return distributionSentence(choice);
   }
   FB.justiceSeason = function (s) {
     FB.justiceDay(s);

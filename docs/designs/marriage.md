@@ -578,3 +578,9 @@ Technology reviews `matrilineal_marriage` and `marriage_prospect_culture_persuas
 research dependencies. Succession order, blood claims, and broad playable-heir eligibility
 are unchanged. Missing contracts on existing unions or pledges preserve legacy inheritance;
 existing children are never rewritten.
+
+## Distribution restrictions
+
+CrazyGames disables exceptional sibling courtship and proposals at their shared
+status boundaries, including accepted-record and queued-event paths. Its save
+profile rejects ordinary imported lives. See [content profiles](distribution-content.md).

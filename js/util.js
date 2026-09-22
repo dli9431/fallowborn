@@ -186,8 +186,12 @@ window.FB = window.FB || {};
     const isLocal = isFile || host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
     const isItch = /(^|\.)itch\.(zone|io)$/.test(host) || /(^|\.)hwcdn\.net$/.test(host);
     const isPlay = proto === 'https:' && host === 'play.fallowborn.com';
-    const name = isItch ? 'itch' : (isPlay ? 'play' : (isLocal ? 'local' : 'web'));
-    return { name: name, host: host, isItch: isItch, isPlay: isPlay, isLocal: isLocal, isFile: isFile };
+    // Explicit packaging flag also works in local previews, independent of CDN hosts.
+    const isCrazyGames = window.FB_DISTRIBUTION === 'crazygames';
+    const name = isCrazyGames ? 'crazygames' :
+      (isItch ? 'itch' : (isPlay ? 'play' : (isLocal ? 'local' : 'web')));
+    return { name: name, host: host, isItch: isItch, isPlay: isPlay,
+      isLocal: isLocal, isFile: isFile, isCrazyGames: isCrazyGames };
   })();
 
   /* Install metadata belongs only to the first-party hosted origin. Keeping it
@@ -208,7 +212,7 @@ window.FB = window.FB || {};
   }
 
   /* Per-platform feature switches. Map a feature name to the platforms it is
-     HIDDEN from: an array of platform names ('itch','play','local','web'), or
+     HIDDEN from: an array of platform names ('itch','play','local','web','crazygames'), or
      true to hide everywhere, or a function(platform) returning truthy to hide.
      Anything not listed is enabled everywhere. Gate code with FB.feature(name),
      or read FB.platform.isItch / .isPlay directly. Example:

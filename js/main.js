@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.183.0';
+FB.VERSION = '1.183.1';
 FB.CHANGELOG = [
+  { v: '1.183.1', date: '2026-09-21', changes: [
+    'CrazyGames builds use adapted events and nonlethal court sentences, with CrazyGames account saves and menu-only support links. Standard editions retain their existing content.'
+  ] },
   { v: '1.183.0', date: '2026-09-18', changes: [
     'Sustained debt causes fiscal crises, with paid land sales and financial settlements available in Coin & Credit. Grant Land adds settlement reservations and excess-holding grants, grant reviews return to their originating screen, and item tooltips stay clear of their buttons.'
   ] },
@@ -2255,7 +2258,13 @@ FB.CHANGELOG = [
               $('title-boot-status').textContent = styleError.message;
               return;
             }
-            FB.save.initStorage(readyTitleShell);
+            FB.save.initStorage(function (storageError) {
+              if (storageError) {
+                $('title-boot-status').textContent = FB.T('Save initialization failed: {message}. Reload to try again.', { message:storageError.message });
+                return;
+              }
+              readyTitleShell();
+            });
           });
         });
       }, 0);
@@ -2288,6 +2297,7 @@ FB.CHANGELOG = [
     $('btn-continue').addEventListener('click', function () { G.loadSlot('auto'); });
     $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
     $('btn-chronicle').addEventListener('click', function () { FB.ui.showChronicleLibrary(); });
+    $('btn-mods').classList.toggle('hidden', FB.platform.isCrazyGames);
     $('btn-mods').addEventListener('click', function () { FB.ui.showMods(); });
     $('btn-settings').addEventListener('click', function () { FB.ui.showSettings(); });
     $('btn-help').addEventListener('click', function () { FB.ui.showHelp(); });

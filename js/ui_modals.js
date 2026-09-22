@@ -27216,7 +27216,8 @@ window.FB = window.FB || {};
     if (campaign.seed) {
       text += '\n' + FB.T('Start seed: {seed}', { seed:campaign.seed });
     }
-    return text + '\n' + FB.T('Play Fallowborn: {url}', { url:ITCH_GAME_URL });
+    return FB.platform.isCrazyGames ? text :
+      text + '\n' + FB.T('Play Fallowborn: {url}', { url:ITCH_GAME_URL });
   }
 
   function copySagaText(text, done) {
@@ -27254,8 +27255,11 @@ window.FB = window.FB || {};
       esc(shareText) + '</textarea><div class="gm-list" style="margin-top:8px">' +
       '<button class="actionbtn" id="saga-copy">&#128203; ' +
       esc(FB.T('Copy saga summary')) + '<span class="adesc">' +
-      esc(FB.T('Copy the house, duration, highest rank, start seed, and play link.')) +
-      '</span></button><a class="actionbtn" id="saga-community" href="' +
+      esc(FB.platform.isCrazyGames
+        ? FB.T('Copy the house, duration, highest rank, and start seed.')
+        : FB.T('Copy the house, duration, highest rank, start seed, and play link.')) +
+      '</span></button>' +
+      (FB.platform.isCrazyGames ? '' : '<a class="actionbtn" id="saga-community" href="' +
       COMMUNITY_URL + '" target="_blank" rel="noopener">&#128172; ' +
       esc(FB.T('Community')) + '<span class="adesc">' +
       esc(FB.T('Share your saga with other Fallowborn players on Discord.')) +
@@ -27263,7 +27267,7 @@ window.FB = window.FB || {};
       ITCH_RATE_URL + '" target="_blank" rel="noopener">&#11088; ' +
       esc(FB.T('Rate on itch.io')) + '<span class="adesc">' +
       esc(FB.T('Your rating helps more players find Fallowborn.')) +
-      '</span></a></div><div class="gm-footer"><button class="btn" id="saga-back">' +
+      '</span></a>') + '</div><div class="gm-footer"><button class="btn" id="saga-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Share your saga'), h, {
       dismissable:false,
@@ -27294,18 +27298,23 @@ window.FB = window.FB || {};
       (obs ? '' : '<button class="actionbtn" id="m-load">📂 Load game</button>') +
       '<button class="actionbtn" id="m-settings">⚙ Settings</button>' +
       '<button class="actionbtn" id="m-help">❓ How to play</button>' +
-      (obs ? '' : '<button class="actionbtn" id="m-mods">🧩 Mods</button>') +
+      (obs || FB.platform.isCrazyGames ? '' : '<button class="actionbtn" id="m-mods">🧩 Mods</button>') +
       '<button class="actionbtn" id="m-changes">📜 Changelog</button>' +
       '<a class="actionbtn" id="m-community" href="' + COMMUNITY_URL +
       '" target="_blank" rel="noopener">💬 ' + esc(FB.T('Community')) +
       '<span class="adesc">' +
       esc(FB.T('Share dynasties, ask questions, suggest features, and get help on Discord.')) +
       '</span></a>' +
-      '<a class="actionbtn" id="m-rate" href="' + ITCH_RATE_URL +
+      (FB.platform.isCrazyGames ? '' : '<a class="actionbtn" id="m-rate" href="' + ITCH_RATE_URL +
       '" target="_blank" rel="noopener">⭐ ' + esc(FB.T('Rate on itch.io')) +
       '<span class="adesc">' +
       esc(FB.T('Your rating helps more players find Fallowborn.')) +
-      '</span></a>' +
+      '</span></a>') +
+      (FB.platform.isCrazyGames ?
+        '<a class="actionbtn" id="m-support-email" href="mailto:hello@fallowborn.com">' +
+        esc(FB.T('Email support')) + '</a>' +
+        '<a class="actionbtn" id="m-support-issues" href="https://github.com/dli9431/fallowborn/issues" target="_blank" rel="noopener">' +
+        esc(FB.T('GitHub Issues')) + '</a>' : '') +
       '<button class="actionbtn" id="m-report">🐞 Report a bug</button>' +
       '<button class="actionbtn" id="m-quit">' +
       esc(FB.T(obs ? '🏳 Stop observing' : '🏳 Abandon to title')) + '</button>' +
@@ -27334,7 +27343,7 @@ window.FB = window.FB || {};
     if (!obs) {
       $('m-save').addEventListener('click', function () { UI.showSaveLoad(true); });
       $('m-load').addEventListener('click', function () { UI.showSaveLoad(false); });
-      $('m-mods').addEventListener('click', function () { UI.showMods(); });
+      if ($('m-mods')) $('m-mods').addEventListener('click', function () { UI.showMods(); });
     }
     $('m-settings').addEventListener('click', function () { UI.showSettings(); });
     $('m-help').addEventListener('click', function () { UI.showHelp(); });
@@ -28330,7 +28339,9 @@ window.FB = window.FB || {};
     FB.save.storageUsage(function (sizes) {
       if (!document.body.contains(usage)) return;
       function size(bytes) { return bytes === null ? FB.T('Unavailable') : FB.T('{size} MiB', { size:(bytes / 1048576).toFixed(2) }); }
-      usage.textContent = FB.T('localStorage: {local}; IndexedDB: {database}', {
+      usage.textContent = FB.platform.isCrazyGames
+        ? FB.T('CrazyGames: {used} of {limit}', { used:size(sizes.crazygames), limit:size(sizes.limit) })
+        : FB.T('localStorage: {local}; IndexedDB: {database}', {
         local:size(sizes.localStorage), database:size(sizes.indexedDB)
       });
       confirm.disabled = false;
@@ -28354,7 +28365,9 @@ window.FB = window.FB || {};
 
   UI.showResetStartProgression = function () {
     const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'This browser will return to Serf-only beginnings. Loading a life that genuinely rose above its starting station will restore the ranks it earned.')) +
+      FB.platform.isCrazyGames
+        ? 'Your CrazyGames progress will return to Serf-only beginnings. Loading a life that genuinely rose above its starting station will restore the ranks it earned.'
+        : 'This browser will return to Serf-only beginnings. Loading a life that genuinely rose above its starting station will restore the ranks it earned.')) +
       '</p></div><div class="gm-footer"><button type="button" class="btn danger" ' +
       'id="reset-starts-confirm">' + esc(FB.T('Reset unlocked beginnings')) +
       '</button><button type="button" class="btn" id="reset-starts-back">' +
@@ -29122,7 +29135,11 @@ window.FB = window.FB || {};
       '<button type="button" class="btn danger" data-delete-slot="auto"' +
       (FB.save.hasSlot('auto') ? '' : ' disabled') + ' aria-label="' + esc(FB.T('Delete Autosave')) + '">' +
       esc(FB.T('Delete')) + '</button></div>';
-    for (let i = 1; i <= 3; i++) {
+    if (FB.platform.isCrazyGames) {
+      h += '<p class="hint">' + esc(FB.T('CrazyGames keeps one campaign. Saving replaces Continue and autosave. Signed-in progress syncs through CrazyGames; guest progress stays on this device. Allow time for syncing before closing.')) + '</p>' +
+        '<button class="actionbtn" data-slot="auto">' + esc(FB.T(saving ? 'Save current life' : 'Load saved life')) + '</button>';
+    }
+    for (let i = 1; i <= (FB.platform.isCrazyGames ? 0 : 3); i++) {
       const d = FB.save.read(i); // one parse per slot: late saves are large
       const meta = FB.save.metaOf(d);
       const other = !saving && meta && FB.save.otherWorld(d);
@@ -29165,13 +29182,14 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-slot]').forEach(function (b) {
       b.addEventListener('click', function () {
-        const n = parseInt(b.dataset.slot, 10);
+        const n = b.dataset.slot === 'auto' ? 'auto' : parseInt(b.dataset.slot, 10);
         if (saving) {
           b.disabled = true;
           FB.save.toSlot(n, function (ok) {
             b.disabled = false;
             if (ok) {
-              UI.toast('Saved to slot {slot}.', { slot:n });
+              if (FB.platform.isCrazyGames) UI.toast('Saved through CrazyGames. Account syncing may take up to 30 seconds.');
+              else UI.toast('Saved to slot {slot}.', { slot:n });
               if (document.body.contains(b)) UI.closeModal();
             }
           });
@@ -29310,15 +29328,18 @@ window.FB = window.FB || {};
         'your message + game version') +
       '</span></button>' +
       '</div>' +
-      '<div class="gm-body-text"><p>Then paste it in any of these places:</p></div>' +
+      (FB.platform.isCrazyGames ? '<div class="gm-body-text"><p>' +
+        esc(FB.T('Copy your report, then use a support link in the game menu.')) +
+        '</p></div>' : '<div class="gm-body-text"><p>Then paste it in any of these places:</p></div>') +
       '<div class="gm-list">' +
-      '<a class="actionbtn" id="rp-community" href="' + COMMUNITY_URL +
+      (FB.platform.isCrazyGames ? '' : '<a class="actionbtn" id="rp-community" href="' + COMMUNITY_URL +
       '" target="_blank" rel="noopener">💬 Discord' +
-      '<span class="adesc">discord.gg/G8E67hY2pj — the quickest answer</span></a>' +
+      '<span class="adesc">discord.gg/G8E67hY2pj — the quickest answer</span></a>') +
+      (FB.platform.isCrazyGames ? '' :
       '<a class="actionbtn" href="mailto:hello@fallowborn.com">✉ Email' +
       '<span class="adesc">hello@fallowborn.com</span></a>' +
       '<a class="actionbtn" href="https://github.com/dli9431/fallowborn/issues" target="_blank" rel="noopener">🐙 GitHub Issues' +
-      '<span class="adesc">watch it get fixed</span></a>' +
+      '<span class="adesc">watch it get fixed</span></a>') +
       '</div>' +
       '<button class="btn" id="gm-back">Back</button>';
     openModal('Report a Bug', h, { historyView:true });
@@ -29333,7 +29354,11 @@ window.FB = window.FB || {};
         report += 'Save (Menu → Load game → 📂 Load save file wakes this exact moment):\n' +
           FB.save.exportState() + '\n';
       }
-      const done = function () { UI.toast('📋 Report copied — paste it on Discord, in an email, or a GitHub issue.'); };
+      const done = function () {
+        UI.toast(FB.platform.isCrazyGames
+          ? FB.T('Report copied. Use a support link in the game menu.')
+          : FB.T('📋 Report copied — paste it on Discord, in an email, or a GitHub issue.'));
+      };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(report).then(done, function () {
           legacyCopy(report); done(); // file:// and older browsers
@@ -29875,9 +29900,12 @@ window.FB = window.FB || {};
       } else {
         h += '<div class="guide-entry-actions">';
       }
-      h += '<a class="btn" data-guide-more-info href="' +
-        esc(guideDocUrl(entry)) + '" target="_blank" rel="noopener">' +
-        esc(FB.T('More info')) + '</a></div>';
+      if (!FB.platform.isCrazyGames) {
+        h += '<a class="btn" data-guide-more-info href="' +
+          esc(guideDocUrl(entry)) + '" target="_blank" rel="noopener">' +
+          esc(FB.T('More info')) + '</a>';
+      }
+      h += '</div>';
       h += '</div></div>';
     }
     /* Shared modal history captures the source once, retaining its live
@@ -30037,6 +30065,10 @@ window.FB = window.FB || {};
   };
 
   UI.showMods = function () {
+    if (FB.platform.isCrazyGames) {
+      UI.toast(FB.T('Custom mods are unavailable in this edition.'));
+      return;
+    }
     const bundled = FB.mods.bundled();
     const mods = FB.mods.list();
     let h = '';

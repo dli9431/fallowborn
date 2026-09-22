@@ -313,3 +313,9 @@ Empty or blocked withdrawals cause no penalties. Hostile Standing does not itsel
 declare war. Ordinary AI purchases and enemy requisition remain unchanged.
 Technology impact `forced_army_provisions` is **none**: coercive emergency food
 collection needs no research; paid provisioning remains the ordinary alternative.
+
+## Distribution restrictions
+
+CrazyGames omits assassination and spouse-murder plot definitions and uses prison
+for lethal or blinding intrigue sentences. Forced spouse-plot events close safely.
+See [content profiles](distribution-content.md).

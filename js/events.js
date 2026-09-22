@@ -2277,7 +2277,7 @@ window.FB = window.FB || {};
       targetKeys.push('siblingDynasticAccept');
     }
     const status = {
-      relevant:degree === 'full_sibling' || degree === 'half_sibling',
+      relevant:!FB.platform.isCrazyGames && (degree === 'full_sibling' || degree === 'half_sibling'),
       ready:false,
       code:'unavailable',
       reason:'',
@@ -2423,6 +2423,7 @@ window.FB = window.FB || {};
   };
 
   FB.tickSiblingCourtshipExposure = function (state) {
+    if (FB.platform.isCrazyGames) return false;
     const me = state.chars[state.player.charId];
     const target = state.player.courtingId &&
       state.chars[state.player.courtingId];
@@ -2837,6 +2838,9 @@ window.FB = window.FB || {};
     const siblings = kinship === 'full_sibling' || kinship === 'half_sibling';
     const siblingRecord = siblings
       ? FB.siblingCourtshipRecord(state, me, c) : null;
+    if (siblings && FB.platform.isCrazyGames) {
+      return blocked('close_kin', FB.T('You are too close in blood.'), false);
+    }
     if (siblings && (!siblingRecord || siblingRecord.status !== 'accepted')) {
       return blocked('sibling_consent',
         FB.T('A sibling must first accept the exceptional approach.'), false);
@@ -12306,6 +12310,7 @@ window.FB = window.FB || {};
     return false;
   };
   FB.fns.sibling_exposure_context_valid = function (state, ctx) {
+    if (FB.platform.isCrazyGames) return false;
     const me = state.chars[state.player.charId];
     const target = ctx && ctx.siblingTargetId &&
       state.chars[ctx.siblingTargetId];
