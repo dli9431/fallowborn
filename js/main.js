@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.183.1';
+FB.VERSION = '1.183.2';
 FB.CHANGELOG = [
+  { v: '1.183.2', date: '2026-09-22', changes: [
+    'Land host controls now include De-muster beneath Split the host. Guild, religious and ruling ranks grant yearly prestige bonuses, shown in the prestige breakdown.'
+  ] },
   { v: '1.183.1', date: '2026-09-21', changes: [
     'CrazyGames builds use adapted events and nonlethal court sentences, with CrazyGames account saves and menu-only support links. Standard editions retain their existing content.'
   ] },
@@ -3803,6 +3806,7 @@ FB.CHANGELOG = [
       if (FB.enterpriseLaborSeason) FB.enterpriseLaborSeason(s);
       FB.educationSeason(s);
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
+      if (newYear) p.prestige += FB.rankPrestigeYearly(s).total;
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
       if (p.tier >= 3) {
         p.piety += FB.buildingBonus(s, 'piety') + (FB.councilBonus ? FB.councilBonus(s, 'piety') : 0);

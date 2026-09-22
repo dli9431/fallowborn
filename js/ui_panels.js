@@ -7021,6 +7021,25 @@ window.FB = window.FB || {};
       '<span class="land-market-card-open" aria-hidden="true">›</span></button>';
   }
 
+  function landDemusterStatus(s, host) {
+    if (!host || host.realm !== 'player' || s.armies.indexOf(host) < 0) return null;
+    if (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s)) {
+      return { ok:false, reason:FB.T('This host is bound by its holy-war vow.') };
+    }
+    if (!s.player.war) return { ok:false, reason:FB.T('De-muster requires an ordinary war.') };
+    if (FB.playerHost(s) !== host) return {
+      ok:false, reason:FB.T('Select the primary host to de-muster. Merge this detachment first to send both home.')
+    };
+    const preview = FB.demusterPreview(s);
+    if (!preview) return null;
+    const configured = FBDATA.balance.armyRearmDays;
+    return { ok:true, reason:FB.T(
+      'Send this host home: {men} men return to the rolls ({pct}%). Hired and allied troops leave. Next muster in {days} days. Takes 1 day.', {
+        men:preview.men, pct:Math.round(preview.frac * 100),
+        days:configured === undefined ? 60 : configured
+      }) };
+  }
+
   function renderWarCard(s, selA, pr) {
     if (!selA) return '';
     const isPlayerHost = selA.realm === 'player';
@@ -7228,6 +7247,13 @@ window.FB = window.FB || {};
             ? FB.T('{men} men march under a second banner; supplies divide with them.', {
               men: menText(s, splitStatus.targetMen) })
             : splitStatus.reason) + '</span></button>';
+      }
+      const demusterStatus = landDemusterStatus(s, selA);
+      if (demusterStatus) {
+        cardHtml += '<button type="button" class="actionbtn" id="btn-host-demuster"' +
+          (demusterStatus.ok ? '' : ' disabled') + '>' +
+          esc(FB.T('🏳 De-muster the host')) +
+          '<span class="adesc">' + esc(demusterStatus.reason) + '</span></button>';
       }
       const mergePartner = FB.mergeableHost ? FB.mergeableHost(s, selA) : null;
       if (mergePartner) {
@@ -7715,6 +7741,20 @@ window.FB = window.FB || {};
       if (FB.splitHost) FB.splitHost(s, hostToShow);
       if (FB.map) FB.map.request();
       renderProv();
+    });
+    const hostDemuster = $('btn-host-demuster');
+    if (hostDemuster && hostToShow) hostDemuster.addEventListener('click', function () {
+      if (FB.state !== s) return;
+      const status = landDemusterStatus(s, hostToShow);
+      if (!status || !status.ok) return;
+      const scroll = box.scrollTop;
+      if (!FB.demusterPlayerHost(s)) return;
+      FB.game.passDay({ skipFocus:true });
+      UI.refresh();
+      box.scrollTop = scroll;
+      const picker = $('county-host-picker');
+      if (picker) picker.focus({ preventScroll:true });
+      if (FB.map) FB.map.request();
     });
     const hostMerge = $('btn-host-merge');
     if (hostMerge && hostToShow) hostMerge.addEventListener('click', function () {

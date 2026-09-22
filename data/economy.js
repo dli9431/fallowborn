@@ -124,6 +124,21 @@ FBDATA.religiousPaths = {
   }
 };
 
+/* Flat prestige paid once at the new year for the player's current ranks.
+   Religious standings overlap: only the highest religious amount applies. */
+FBDATA.rankPrestigeYearly = {
+  ruling: { 3:12, 4:24, 5:40, 6:60, 7:90 },
+  guild: { member:2, master:5, officer:10, guildmaster:20 },
+  religious: {
+    almsgiver:1, pilgrim:2, church_patron:4, hajji:2, waqf_patron:4,
+    professed:2, prior:6, abbot:12, bishop:24,
+    acolyte:1, deacon:3, priest:6, archpriest:12,
+    licensed_scholar:3, mudarris:6, mufti:12, qadi:18, chief_qadi:24,
+    muezzin:2, imam:6, khatib:12, chief_imam:18,
+    cardinal:40, pope:60
+  }
+};
+
 FBDATA.careers = {
   farmer: {
     name:'Farming', icon:'🌾', skill:'ste', apprenticeAge:10, apprenticeCost:0, requiresTech:'scratch_plough',

@@ -6889,9 +6889,21 @@ window.FB = window.FB || {};
       for (const ln of lines[k]) total += ln.amount;
       out[k] = { lines: lines[k], total: total };
     }
-    /* Use the shared numeric total for gold even if rounded noble-tax display
-       lines differ by a fraction. Annual coin revaluation is an adjustment,
-       not a recurring source, and is carried separately for the gold sheet. */
+    /* Yearly rank payments stay separate from the seasonal estimate. */
+    const rankPrestige = FB.rankPrestigeYearly(state);
+    out.prestige.annualLines = [];
+    for (const source of [
+      { id:'ruling', label:FB.T('Ruling rank (yearly)') },
+      { id:'guild', label:FB.T('Guild rank (yearly)') },
+      { id:'religious', label:FB.T('Religious rank (yearly)') }
+    ]) {
+      if (rankPrestige[source.id]) out.prestige.annualLines.push({
+        label:source.label, amount:rankPrestige[source.id]
+      });
+    }
+    out.prestige.annualTotal = rankPrestige.total;
+    /* Use the shared numeric gold total even if display lines are rounded.
+       Annual coin revaluation is carried separately for the gold sheet. */
     out.gold.total = FB.reliableGoldIncome(state);
     out.gold.groups = [
       { id:'income', label:FB.T('Income subtotal') },

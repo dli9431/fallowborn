@@ -115,8 +115,14 @@ window.FB = window.FB || {};
     } else {
       for (const line of bd.lines) h += row(line.label, line.amount);
     }
-    if (!bd.lines.length) h += '<div class="bd-note">' + esc(FB.T('No steady income yet.')) + '</div>';
+    if (!bd.lines.length && !bd.annualTotal) h += '<div class="bd-note">' + esc(FB.T('No steady income yet.')) + '</div>';
     if (stat !== 'gold' && bd.lines.length) h += row(FB.T('Each season'), bd.total, 'bd-total');
+    if (stat === 'prestige' && bd.annualTotal) {
+      for (const line of bd.annualLines) h += row(line.label, line.amount);
+      h += row(FB.T('Each new year'), bd.annualTotal, 'bd-total');
+      h += '<div class="bd-note">' + esc(FB.T(
+        'Paid once when the year turns, for ranks held then. Separate ranks add together; religious standings use only the highest bonus.')) + '</div>';
+    }
     if (stat === 'gold' && bd.coinAdjustment) {
       h += '<div class="bd-row"><span>' + esc(FB.T('Annual coin adjustment (not in estimate)')) + '</span>' +
         '<span class="bd-amt ' + (bd.coinAdjustment > 0 ? 'op-good' :

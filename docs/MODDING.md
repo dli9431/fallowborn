@@ -4779,3 +4779,14 @@ one county pass and prevents confusing sovereign ownership with direct fiscal ho
 `FB.countyTaxBase(state, provinceId, rate, optionalLocalTaxBonus)` shares the existing
 county tax formula; the optional bonus supports a batched caller's precomputed inputs.
 See `docs/plans/archive/ai-treasury.md` for the required activation and migration contract.
+
+
+### Annual rank prestige balance
+
+`FBDATA.rankPrestigeYearly` in `data/economy.js` holds three numeric lookup tables:
+`ruling` by player tier, `guild` by saved guild-rank id, and `religious` by stable
+religious step id or `cardinal` / `pope`. Missing or invalid amounts are zero;
+negative amounts clamp to zero. These are flat yearly rewards, independent of
+rank advancement's `prestigeGain` and seasonal `pietyYield`. The highest eligible
+religious amount counts, then ruling and guild amounts add to it. This source
+balance table is not an additional runtime-mod registry.

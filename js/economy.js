@@ -833,6 +833,42 @@ window.FB = window.FB || {};
       path.id + '.ranks.' + path.step.id, path.step, field, {});
   };
 
+  /* Current ranks only; no promotion reward, saved prose, or RNG use. */
+  FB.rankPrestigeYearly = function (state) {
+    const p = state.player, c = playerChar(state);
+    const out = { ruling:0, guild:0, religious:0, total:0 };
+    if (!c || c.dead || p.dead) return out;
+    const rates = FBDATA.rankPrestigeYearly || {};
+    function amount(table, id) {
+      const value = Number(table && table[id]);
+      return isFinite(value) ? Math.max(0, value) : 0;
+    }
+    out.ruling = amount(rates.ruling, p.tier);
+    if (FB.ageOf(c, state.date.year) >= 16) {
+      const career = FB.careerOf(state, c);
+      const def = career && FBDATA.careers[career.profession];
+      if (def && def.guild && career.chosen &&
+          career.rank !== 'apprentice' && career.rank !== 'unassigned') {
+        out.guild = amount(rates.guild, career.guildRank);
+      }
+      for (const standing of FB.religiousStandings(state, c)) {
+        out.religious = Math.max(out.religious,
+          amount(rates.religious, standing.path.step.id));
+      }
+      if (FB.bishopricSnapshot(state, c)) {
+        out.religious = Math.max(out.religious, amount(rates.religious, 'bishop'));
+      }
+      if (FB.isCardinal && FB.isCardinal(state, c)) {
+        out.religious = Math.max(out.religious, amount(rates.religious, 'cardinal'));
+      }
+      if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) {
+        out.religious = Math.max(out.religious, amount(rates.religious, 'pope'));
+      }
+    }
+    out.total = out.ruling + out.guild + out.religious;
+    return out;
+  };
+
   FB.religiousAdvance = function (state, c) {
     if (!managedCareerCharacter(state, c)) return null;
     const path = FB.religiousPathOf(state, c);

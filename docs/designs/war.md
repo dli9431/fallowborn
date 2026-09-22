@@ -1966,3 +1966,15 @@ expand those classes until expiry. Existing hosts and replacement commitments ar
 preserved. New mercenary hires and paid holy-war reinforcement choices are blocked
 both in reviews and execution, before event fees or chance rolls. This is part of
 ungated fiscal recovery, not a new military technology requirement.
+
+
+The Land host card exposes **De-muster the host** immediately below Split the host.
+It uses the existing primary-host de-muster operation and takes one day, matching
+the Deeds and Muster Plan entry points. The visible description previews the exact
+men and share returning to the rolls, excludes hired/allied troops, and names the
+rearm wait. Detachments, vow-bound hosts and hosts without an ordinary war retain
+a disabled button with their blocker; foreign hosts have no button. Activation
+rechecks state identity, host membership, primary status and the holy-war vow so
+a stale card cannot dismiss another banner. Land retains its scroll after the
+refresh. This is an entry point to an existing action, with no technology or
+simulation eligibility expansion. Coverage: `tests/e2e/specs/land-demuster.spec.js`.

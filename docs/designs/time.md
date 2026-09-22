@@ -720,3 +720,11 @@ Military construction reserves are still read again for the distribution pass.
 Profiler counters distinguish annual unchanged-snapshot reuse from a fresh
 post-construction snapshot. This is a read-reuse optimization, with no research gate
 or change to spending eligibility, building choices, simulation order or RNG.
+
+
+Annual rank prestige is paid once at the winter-to-spring boundary, alongside
+ordinary prestige sources and before the completed season's net is recorded.
+The payment reads current ranks through `FB.rankPrestigeYearly`; seasonal income
+estimates carry its yearly categories separately. A restored spring save cannot
+repeat the payment on its next ordinary day. Observe mode skips it. See
+[characters.md](characters.md#annual-rank-prestige) for amounts and eligibility.

@@ -1149,3 +1149,30 @@ continue to use their existing name. Authored portrait profiles remain authorita
 Personal rename mutations are limited to the selected character's `name` and the
 one-time `portraitName` snapshot. They consume no RNG and change no other saved
 state. Invalid input and submitting the existing name leave all state untouched.
+
+
+## Annual rank prestige
+
+At the new year the living player receives a flat prestige bonus for their current
+ruling, guild and religious ranks. Categories add together; only the highest active
+religious standing or office counts. This belongs to the player, not the combined
+household. Guild and religious bonuses require adulthood; inherited ruling rank
+also pays during a minority. Archived occupations do not pay, while a retained
+bishopric still counts as an office. A current working guild rank remains eligible
+when the player also holds a ruling title. Apprentices and unassigned careers do
+not receive guild prestige. Promotions retain their existing one-time rewards.
+
+Values live in `FBDATA.rankPrestigeYearly` in `data/economy.js`:
+
+- Guild member / Master / Officer / Guildmaster: 2 / 5 / 10 / 20 yearly.
+- Baron / Count / Duke / King / Emperor: 12 / 24 / 40 / 60 / 90 yearly.
+- Religious ranks range from 1 for an Almsgiver or Acolyte to 24 for a Bishop
+  or Chief Qadi, 40 for a Cardinal and 60 for a Pope. Missing ranks pay zero.
+
+The prestige breakdown shows each category and its yearly total separately from
+seasonal income. Payment occurs at the year boundary before the seasonal net is
+recorded; later changes of rank affect the next annual payment. Existing saves
+use their current ranks without migration or retroactive rewards. Observe mode
+has no personal payment. This is passive reward balance, with no change to rank
+eligibility or technology gates and no new technology-impact ledger entry.
+Regression coverage: `tests/e2e/specs/rank-prestige.spec.js`.
