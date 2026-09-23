@@ -86,6 +86,13 @@ All new controls use shared cards/buttons, localization and keyboard/mobile flow
 
 ## Settlement charters
 
+Both settlement grant lists use the shared title hover/focus tooltip and compact
+Details disclosure to explain that the direct-settlement total includes county
+seats, which transfer only with their county and are omitted from these lists.
+Other barons’ holdings are also omitted. Reserved settlements stay listed, with
+guidance to remove their reservation in Grant Land before granting.
+This is presentation only; ownership, grant eligibility and technology gates are unchanged.
+
 Grant Land shows a separate Reserve toggle beside both county and settlement
 rows. Toggling either preserves the scrolling body's position and focus on that
 toggle. Settlement rows use the same protected-choice layout as counties.
@@ -891,13 +898,26 @@ decorative and the button expands to the 44 px touch target on compact layouts. 
 form keeps Rename in the body and Back/Close in the shared sticky `.gm-footer`,
 using the shared body-action layout for the form controls.
 
+**Attach tooltip help to the most directly related element.** Use the most specific
+anchor that owns the information: an action button for help about that action,
+a list subheader immediately before the list for help shared by all its items,
+and a section subheader for help about that section. Prefer a button over its
+subheader, and a subheader over the modal title, whenever the explanation has that
+narrower scope. Reserve modal-title tooltips for information that applies to the
+entire modal. Split help with different scopes across the appropriate anchors;
+do not collect unrelated explanations in a convenient title tooltip. The compact
+`?` disclosure belongs beside the same owning element and exposes the same help.
+For example, settlement-list eligibility and omitted county seats belong on the
+settlement list subheader; the costs or consequences of a particular grant belong
+on that grant action.
+
 **Card details follow one tooltip convention per layout — never both.** Any request
 to add a tooltip, including one phrased only as hover behavior, is incomplete until
 both modes are implemented: hover/focus through the shared tooltip on roomy fine-pointer
 layouts, and an enabled, visible, minimum-44-pixel `?` control that toggles the same
 details inline on touch, tablet-width, and short layouts. New tooltip work must use
 the shared layout switch and include regression coverage for both modes; a desktop-only
-tooltip is a UI bug. Generic modal titles may opt into the same system through
+tooltip is a UI bug. For help that applies to the entire modal, generic modal titles may opt into the same system through
 `titleDetailsHtml`: the heading
 becomes the desktop hover/focus anchor, while compact layouts expose the shared
 `?` disclosure and place its details at the top of the modal body. The most

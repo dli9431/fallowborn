@@ -670,3 +670,54 @@ test('large-world seasonal work caps grants and funded building projects', async
   expect(r.fixtures).toBe(30); expect(r.projects).toBe(24);
   expect(r.grants).toBeLessThanOrEqual(12); expect(r.allSeatsProtected).toBe(true);
 });
+
+for (const width of [390, 1280]) {
+  test('settlement grant lists explain omitted seats and reserved holdings at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:844 });
+    const setup = await page.evaluate(function () {
+      const s = FB.state, p = s.player, pid = p.provinceId, me = s.chars[p.charId];
+      p.tier = 4; p.provs = [pid]; p.liege = null;
+      s.owner[pid] = 'player'; s.holder[pid] = 'player';
+      FB.foundPlayerRealm(s); FB.invalidateSettlementLordships(s, pid);
+      const c = FB.makeCharacter(s, { name:'Grant Candidate', station:2,
+        born:s.date.year - 30, culture:me.culture, religion:me.religion, traits:[] });
+      c.homeProvinceId = pid;
+      const site = FB.settlementGrantSites(s, pid, 'player')[0];
+      FB.setProtected(s, 'grantSettlement', pid + ':' + site.settlement, true);
+      FB.ui.showGrantLand();
+      return { cid:c.id, pid:pid, slot:site.settlement,
+        name:FB.settlementsOf(s, pid)[site.settlement].name };
+    });
+    for (const view of ['land', 'character']) {
+      if (view === 'character') await page.evaluate(function (cid) {
+        FB.ui.closeModal(); FB.ui.showCharacterSettlementGrant(cid);
+      }, setup.cid);
+      const heading = page.locator('[data-settlement-grant-list-header]');
+      const details = heading.locator('#settlement-grant-list-details');
+      await expect(heading).toBeVisible();
+      await expect(details).toBeHidden();
+      if (width === 390) {
+        await heading.locator('.settcard-info').click();
+        await expect(details).toBeVisible();
+      } else {
+        await heading.locator('.settcard-head').focus();
+        await expect(page.locator('#tooltip')).toBeVisible();
+        await expect(page.locator('#tooltip')).toContainText('Your settlement total includes county seats.');
+        await expect(page.locator('#tooltip')).toContainText('Remove their reservation in Grant Land to grant them.');
+        await expect(details).toBeHidden();
+      }
+      await expect(details.locator('[data-settlement-grant-help]')).toContainText('Your settlement total includes county seats.');
+      await expect(page.locator('[data-settlement-grant-help]')).toContainText('County seats can only be transferred with their county');
+      await expect(page.locator('[data-settlement-grant-help]')).toContainText('Settlements already held by other barons are also omitted.');
+      await expect(page.locator('#gm-body')).toContainText('Remove their reservation in Grant Land to grant them.');
+      const row = view === 'land'
+        ? page.locator('[data-grant-land-site="' + setup.pid + '"][data-grant-land-slot="' + setup.slot + '"]')
+        : page.locator('[data-character-grant-site]').filter({ hasText:setup.name });
+      await expect(row).toBeVisible();
+      await expect(row).toBeDisabled();
+      expect(await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollWidth <= body.clientWidth;
+      })).toBe(true);
+    }
+  });
+}

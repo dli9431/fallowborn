@@ -5,7 +5,8 @@ how-to. The architecture, catalog shape, and locale lifecycle live in
 [designs/i18n.md](designs/i18n.md); the data schema in [MODDING.md](MODDING.md). Get this right as
 you write the code, not as a later cleanup pass.
 
-The game ships English plus AI **Preview** catalogs (`fr`, `de`, `it`, `es`). The simulation stays
+The game ships English, AI **Preview** catalogs (`fr`, `de`, `it`, `es`), and a
+contributor-translated Brazilian Portuguese **Preview** catalog (`pt-BR`). The simulation stays
 locale-neutral; **only pure-display fields (`title`, `text`, `label`, `desc`, `log`, `worldNews`,
 `name`, and trait `earned`) are ever localized** — ids, effects, triggers, numbers, and generated proper names never
 are. Nothing here breaks `file://`: catalogs are `.js` globals, and any new English self-heals (a
@@ -94,14 +95,16 @@ the "don't run the game" rule):
 
 ```
 python tools/i18n_catalog.py extract               # rebuild data/lang_en.js + tools/i18n_manifest.json
-python tools/i18n_catalog.py translate fr de it es  # AI-translate new/changed records (needs API access)
+python tools/i18n_catalog.py translate fr de it es pt-BR  # reuse caches; new records need API access
 python tools/i18n_catalog.py validate               # coverage, source hashes, tokens, structure
 ```
 
 The pipeline's tracked working state lives under `i18n/`. `extract` refreshes
 `i18n/i18n-coverage.json` and `i18n/i18n-coverage.md`; `translate` reuses and updates
-`i18n/i18n-cache/<locale>.json`. These cache files contain only source-keyed translated catalog
-text, never request headers or credentials, and their changes land with the generated catalogs.
+`i18n/i18n-cache/<locale>.json`. The `pt-BR` cache contains the contributor's in-context
+translations and is reused before any new strings are machine translated. These cache files
+contain only source-keyed translated catalog text, never request headers or credentials, and
+their changes land with the generated catalogs.
 Historical `translate*.log` files are progress output only and are not consumed by the tool.
 
 `extract` and `validate` are network-free, while `translate` calls an unauthenticated translation

@@ -209,7 +209,7 @@ every other branch in flight (parallel worktrees are unaware of each other):
    endpoint is unreliable. A commit or merge request alone does not authorize catalog commands.
    Run them only when the owner also explicitly asks to regenerate or update i18n. Do not run
    `extract`, `translate`, or `validate` during ordinary implementation or review. When requested,
-   run `extract → translate fr de it es → validate` as the final integration step from the fully
+   run `extract → translate fr de it es pt-BR → validate` as the final integration step from the fully
    assembled source tree. `validate` remains the gate for including regenerated artifacts, but an
    unavailable translation service or stale Preview catalog does not block the surrounding code
    commit. If `extract` changed tracked files before `translate` failed, restore or exclude those
@@ -361,7 +361,8 @@ must cover the declared behavior and the technology validator must accept the le
 
 ## Internationalization (i18n)
 
-The game ships English plus AI **Preview** catalogs (`fr`, `de`, `it`, `es`). **Author every
+The game ships English, AI **Preview** catalogs (`fr`, `de`, `it`, `es`), and a
+contributor-translated Brazilian Portuguese **Preview** catalog (`pt-BR`). **Author every
 user-facing string so the localization layer can reach it, as you write the code** — only
 pure-display fields (`title`, `text`, `label`, `desc`, `log`, `worldNews`, `name`) are localized;
 ids, numbers, and generated proper names never are. Route by where the text lives: `FB.T` /
@@ -374,7 +375,7 @@ The catalogs (`data/lang_*.js`, `tools/i18n_manifest.json`) are generated integr
 Do not run any catalog command during uncommitted implementation or review. Catalog regeneration
 is optional for a commit or merge into `main` or `dev` and requires a separate explicit owner
 request. When requested, run it as the final integration step
-(`extract → translate fr de it es → validate`), never on a feature branch, and never hand-merge
+(`extract → translate fr de it es pt-BR → validate`), never on a feature branch, and never hand-merge
 generated files. If translation is unavailable, report it and allow the code integration to
 proceed with English fallback (see *Git workflow*).
 

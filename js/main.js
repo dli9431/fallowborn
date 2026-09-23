@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.183.2';
+FB.VERSION = '1.184.0';
 FB.CHANGELOG = [
+  { v: '1.184.0', date: '2026-09-23', changes: [
+    'Brazilian Portuguese is available as a Preview language in Settings. Settlement grant lists explain county seats, other barons’ holdings, and reserved settlements.'
+  ] },
   { v: '1.183.2', date: '2026-09-22', changes: [
     'Land host controls now include De-muster beneath Split the host. Guild, religious and ruling ranks grant yearly prestige bonuses, shown in the prestige breakdown.'
   ] },

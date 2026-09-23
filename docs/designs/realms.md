@@ -2,6 +2,13 @@
 
 ## Family settlement grants
 
+Both settlement grant lists use the shared title hover/focus tooltip and compact
+Details disclosure to explain that the direct-settlement total includes county
+seats, which transfer only with their county and are omitted from these lists.
+Other barons’ holdings are also omitted. Reserved settlements stay listed, with
+guidance to remove their reservation in Grant Land before granting.
+This is presentation only; ownership, grant eligibility and technology gates are unchanged.
+
 Grant Land has county and settlement reservations and a reviewed excess-grant
 batch. It first gives away enough eligible counties to reach the county limit,
 then recalculates excess direct settlements after those county transfers. Only

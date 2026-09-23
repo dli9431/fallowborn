@@ -25,6 +25,7 @@ window.FBDATA = window.FBDATA || {};
     { code: 'de', name: 'Deutsch', dir: 'ltr', status: 'preview', file: 'data/lang_de.js' },
     { code: 'it', name: 'Italiano', dir: 'ltr', status: 'preview', file: 'data/lang_it.js' },
     { code: 'es', name: 'Español', dir: 'ltr', status: 'preview', file: 'data/lang_es.js' },
+    { code: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr', status: 'preview', file: 'data/lang_pt-BR.js' },
     { code: 'qps', name: 'Pseudo (development)', dir: 'ltr', status: 'development',
       file: 'data/lang_qps.js', development: true }
   ];

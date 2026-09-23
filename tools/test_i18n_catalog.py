@@ -58,5 +58,20 @@ class StructuredDataExtractionTests(unittest.TestCase):
         )
 
 
+class LocaleGenerationTests(unittest.TestCase):
+    def test_hyphenated_locale_uses_matching_catalog_key_and_words(self):
+        source = {'ui:Language': {'text': 'Language'}}
+        translated = {'ui:Language': {'text': 'Idioma'}}
+
+        catalog = i18n_catalog.render_catalog(
+            'pt-BR', 'Português (Brasil)', source, translated
+        )
+
+        self.assertIn('FBDATA.lang["pt-BR"] = {', catalog)
+        self.assertIn('code: "pt-BR",', catalog)
+        self.assertIn('"child":{"m":"filho"', catalog)
+        self.assertIn("n === 1 ? 'one' : 'other'", catalog)
+
+
 if __name__ == '__main__':
     unittest.main()

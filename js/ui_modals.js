@@ -8665,12 +8665,26 @@ window.FB = window.FB || {};
     });
     return true;
   };
+  function settlementGrantListHelp() {
+    return '<p class="hint" data-settlement-grant-help>' + esc(FB.T('Your settlement total includes county seats. County seats can only be transferred with their county, so they are omitted here. Settlements already held by other barons are also omitted.')) +
+      '</p><p class="hint">' + esc(FB.T('Reserved settlements remain listed but cannot be granted. Remove their reservation in Grant Land to grant them.')) + '</p>';
+  }
+  function settlementGrantListHeader() {
+    return '<div class="settcard" data-settlement-grant-list-header>' +
+      '<div class="panelh settcard-head" tabindex="0"><span>' +
+      esc(FB.T('Grant a settlement')) + '</span><span class="settcard-actions">' +
+      '<button type="button" class="btn small settcard-info" aria-expanded="false" ' +
+      'aria-controls="settlement-grant-list-details" title="' + esc(FB.T('Details')) +
+      '" aria-label="' + esc(FB.T('Details')) + '">?</button></span></div>' +
+      '<div id="settlement-grant-list-details" class="settcard-details hidden">' +
+      settlementGrantListHelp() + '</div></div>';
+  }
   UI.showCharacterSettlementGrant = function (cid) {
     const s = FB.state;
     if (!FB.settlementGrantRecipient(s, cid, 'player')) return false;
     let h = '<p class="hint">' + esc(FB.T('Choose a settlement for {name}. Review the transfer before granting.', {
       name:FB.fullName(s.chars[cid])
-    })) + '</p><div class="gm-list">';
+    })) + '</p>' + settlementGrantListHeader() + '<div class="gm-list">';
     const sites = [];
     for (const pid of FB.realmHeldCounties(s, 'player')) {
       for (const site of FB.settlementGrantSites(s, pid, 'player')) sites.push(site);
@@ -12360,8 +12374,8 @@ window.FB = window.FB || {};
         })) + (reserved ? ' · ' + esc(FB.T('reserved from grants')) : '') +
         '</span></button>' + grantProtectionButton(pid) + '</div>';
     }
-    h += '</div><div class="panelh">' + esc(FB.T('Grant a settlement')) +
-      '</div><div class="gm-list" data-grant-land-settlements>';
+    h += '</div>' + settlementGrantListHeader() +
+      '<div class="gm-list" data-grant-land-settlements>';
     const sites = [];
     for (const pid of FB.realmHeldCounties(s, 'player')) {
       for (const site of FB.settlementGrantSites(s, pid, 'player')) sites.push(site);
