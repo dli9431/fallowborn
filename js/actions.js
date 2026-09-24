@@ -9721,8 +9721,13 @@ window.FB = window.FB || {};
     buildingIndexByCounty = Object.create(null);
   }
 
-  FB.invalidateBuildingIndex = function (state, pid) {
-    FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
+  FB.invalidateBuildingIndex = function (state, pid, militaryAlreadyInvalidated) {
+    /* A lordship transaction has already notified military inputs through the
+       world invalidator, with no intervening read. Ordinary building changes
+       keep their own notification. */
+    if (militaryAlreadyInvalidated !== true) {
+      FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
+    }
     const store = state && state.buildings || null;
     if (state && pid !== undefined && buildingIndexState === state &&
         buildingIndexStore === store) {

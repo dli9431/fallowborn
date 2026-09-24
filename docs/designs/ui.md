@@ -3352,3 +3352,12 @@ Standard builds retain the three manual slots and browser-storage presentation.
 SDK boot failures remain on the title status with reload guidance and disabled
 start controls. Save failures leave the prior campaign intact and keep export
 available. A save acknowledgement means accepted by the SDK, not cloud-confirmed.
+
+## Shared political reads (476 Phase 1)
+
+Realm and character interaction cards resolve ruler identity and current feudal
+relationships through FB.political. These reads never create a court or repair
+saved records; explicit court display preparation retains its existing boundary.
+Settlement grant review uses the shared grant permission adapter via the existing
+quote. Text, displayed fiscal terms, focus and return behavior remain unchanged.
+See [authority.md](authority.md) for scope and invalidation rules.

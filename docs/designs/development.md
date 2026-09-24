@@ -436,3 +436,12 @@ visible gap, and the existing detail tooltip retains the full mechanical audit.
 Building Works always shows the current quoted construction price, including
 technology-locked buildings and buildings with no free eligible slot. Requirements
 and capacity remain visible alongside the price; Raise stays disabled.
+
+## Political query invalidation (476 Phase 1)
+
+Settlement lordship changes evict the existing world, holder and county building
+indices immediately. The world invalidator advances militaryInputRevision once;
+the immediately following building-index invalidation receives
+militaryAlreadyInvalidated=true to avoid a second notification. Standalone
+construction/demolition invalidations retain their own military notification.
+No read may intervene between that notification and the building eviction.

@@ -1206,3 +1206,242 @@ window.FB = window.FB || {};
     return summary;
   };
 })();
+
+
+/* Shared political facts. These projections never repair saved records or
+   create courts. Small identity/office views are read afresh; territory uses
+   the world's existing indices. See docs/designs/authority.md. */
+(function () {
+  'use strict';
+  var Q = {};
+  FB.political = Q;
+
+  function own(object, key) {
+    return !!object && Object.prototype.hasOwnProperty.call(object, key);
+  }
+  function detached(value) {
+    return value === undefined ? null : JSON.parse(JSON.stringify(value));
+  }
+  function person(state, id) {
+    var c = state && state.chars && own(state.chars, id) && state.chars[id];
+    return c && !c.dead ? c : null;
+  }
+  function realm(state, id) {
+    var r = state && state.realms && own(state.realms, id) && state.realms[id];
+    return r && r.alive ? r : null;
+  }
+  function validRef(ref, kind) {
+    return !!(ref && ref.kind === kind && typeof ref.id === 'string' && ref.id);
+  }
+  function ruler(state, rid) {
+    if (rid === 'player') return person(state, state.player && state.player.charId);
+    return FB.realmRulerCharacterSnapshot(state, rid);
+  }
+
+  Q.actor = function (state, ref) {
+    if (!state || !state.player) return null;
+    var c = null, r = null, rid = null;
+    if (validRef(ref, 'realm')) {
+      rid = ref.id; r = realm(state, rid);
+      if (!r) return null;
+      c = ruler(state, rid);
+    } else if (validRef(ref, 'character')) {
+      c = person(state, ref.id);
+      if (!c) return null;
+      rid = c.id === state.player.charId
+        ? (realm(state, 'player') ? 'player' : null)
+        : FB.realmIdForRulerCharacter(state, c);
+      r = rid && realm(state, rid);
+    } else return null;
+    var isPlayer = ref.kind === 'character' && ref.id === state.player.charId;
+    var succession = r && r.succession;
+    var home = isPlayer ? state.player.provinceId :
+      (r ? r.capital : c && c.homeProvinceId);
+    var liege = isPlayer ? state.player.liege : r && r.liege;
+    return {
+      ref:{ kind:ref.kind, id:ref.id },
+      characterId:c && c.id || null,
+      realmId:rid || null,
+      /* The legacy player institutional key also appears on incoming
+         relationships before a territorial player realm exists. */
+      relationshipId:isPlayer ? 'player' : rid || null,
+      station:c ? FB.stationOf(c) : null,
+      rank:r && r.rank !== undefined ? r.rank : null,
+      tier:isPlayer ? state.player.tier : null,
+      rulerMemberId:succession && succession.rulerMemberId || null,
+      rulerGeneration:r ? FB.realmRulerGeneration(state, rid) : null,
+      liegeId:liege || null,
+      sovereignId:isPlayer ? FB.playerRealmId(state) : rid
+        ? FB.topRealm(state, rid) : (home && state.owner && state.owner[home] || null),
+      provinceId:home || null,
+      cultureId:c && c.culture || r && r.ruler && r.ruler.culture || null,
+      religionId:c && c.religion || null,
+      realmReligionId:r ? FB.realmReligionId(state, rid) : null
+    };
+  };
+
+  Q.place = function (state, ref) {
+    if (!state || !ref) return null;
+    var site = ref.kind === 'settlement';
+    var pid = site ? ref.provinceId : ref.kind === 'county' ? ref.id : null;
+    if (typeof pid !== 'string' || !FB.world || !own(FB.world.byId, pid)) return null;
+    var holder = site ? FB.settlementHolder(state, pid, ref.settlement) : null;
+    if (site && !holder) return null;
+    var rid = FB.settlementCountyHolder(state, pid);
+    return {
+      ref:site ? { kind:'settlement', provinceId:pid, settlement:ref.settlement }
+        : { kind:'county', id:pid },
+      provinceId:pid,
+      ownerId:state.owner && state.owner[pid] || null,
+      holderId:rid,
+      holder:holder ? detached(holder) : rid ? { kind:'realm', id:rid } : null,
+      ruler:rid ? Q.actor(state, { kind:'realm', id:rid }) : null
+    };
+  };
+
+  Q.relationship = function (state, actorRef, otherRef) {
+    var a = Q.actor(state, actorRef), b = Q.actor(state, otherRef);
+    if (!a || !b) return null;
+    var chain = a.liegeId ? FB.liegeChain(state, a.liegeId) : [];
+    var reverse = b.liegeId ? FB.liegeChain(state, b.liegeId) : [];
+    return {
+      actor:a, other:b,
+      sameActor:actorRef.kind === otherRef.kind && actorRef.id === otherRef.id,
+      sameRealm:!!a.realmId && a.realmId === b.realmId,
+      sameSovereign:!!a.sovereignId && a.sovereignId === b.sovereignId,
+      directLiege:!!b.realmId && a.liegeId === b.realmId,
+      higherLiege:!!b.realmId && chain.indexOf(b.realmId) >= 0,
+      directVassal:!!a.relationshipId && b.liegeId === a.relationshipId,
+      subordinate:!!a.relationshipId && reverse.indexOf(a.relationshipId) >= 0,
+      liegeChain:chain.slice()
+    };
+  };
+
+  Q.territory = function (state, ref, scope) {
+    if (!validRef(ref, 'realm') || !realm(state, ref.id)) return [];
+    if (scope === 'direct') return FB.realmHeldCounties(state, ref.id).slice();
+    if (scope === 'subtree') return FB.realmTerritory(state, ref.id).slice();
+    if (scope === 'sovereign') {
+      return FB.realmProvinces(state, FB.topRealm(state, ref.id)).slice();
+    }
+    return [];
+  };
+
+  Q.role = function (state, roleId, context) {
+    if (!state || typeof roleId !== 'string') return null;
+    context = context || {};
+    if (roleId === 'lord') {
+      var place = Q.place(state, { kind:'county', id:context.provinceId });
+      return place && place.ruler || null;
+    }
+    var cid = state.roles && own(state.roles, roleId) && state.roles[roleId];
+    if (roleId === 'suitor') cid = state.player && state.player.courtingId;
+    if (roleId === 'spouse') {
+      var me = person(state, state.player && state.player.charId);
+      /* spouseOf repairs stale links; a read must leave them for repair. */
+      var spouse = me && person(state, me.spouseId);
+      cid = spouse && spouse.id;
+    }
+    return cid ? Q.actor(state, { kind:'character', id:cid }) : null;
+  };
+
+  /* Office rows describe existing appointments, never grant permission by
+     themselves. Recorded personal/household terms can await normal repair;
+     only the owning operation determines their legal effect. */
+  Q.offices = function (state, ref) {
+    var a = Q.actor(state, ref);
+    if (!a) return [];
+    var out = [], c = a.characterId && person(state, a.characterId);
+    function add(institutionId, officeId, holder, scope, source, terms, status) {
+      out.push({
+        ref:{ kind:'office', institutionId:institutionId, officeId:officeId,
+          source:source, holder:detached(holder) },
+        holder:detached(holder), scope:detached(scope),
+        status:status || 'recorded', terms:detached(terms)
+      });
+    }
+    if (a.realmId) {
+      var summary = FB.councilSummary(state);
+      if (summary) for (var seat of summary.seats) {
+        if (seat.holderId === a.realmId) {
+          add('council:player', seat.id, { kind:'realm', id:a.realmId },
+            { kind:'realm', id:'player' }, 'council.seats', null, 'active');
+        }
+      }
+      var seen = Object.create(null);
+      for (var faithId of FB.religionIds(state)) {
+        var officeId = FB.faithOfficeId(faithId, state);
+        if (!officeId || seen[officeId]) continue;
+        seen[officeId] = true;
+        var head = FB.religiousHeadSnapshot(state, faithId);
+        if (head && head.id === a.realmId) {
+          add('religion:' + officeId, officeId, { kind:'realm', id:a.realmId },
+            { kind:'religious-office', id:officeId }, 'religiousHeads', null, 'active');
+        }
+      }
+    }
+    if (!c) return out;
+    var holder = { kind:'character', id:c.id };
+    var bishop = FB.bishopricSnapshot(state, c);
+    if (bishop) add('see:' + (bishop.seeProvinceId || a.provinceId || c.id),
+      'bishop', holder, { kind:'county', id:bishop.seeProvinceId || a.provinceId },
+      'character.bishopric', bishop, 'active');
+    var papal = FB.papalOfficeOf(state, c);
+    if (papal) add('papacy', papal.office, holder,
+      { kind:'obedience', id:papal.obedienceId || null }, 'papacy.cardinals', papal);
+    var p = state.player;
+    if (c.id === p.charId) {
+      var castellany = FB.castellanyOf(state);
+      if (castellany) add('realm:' + castellany.appointerId, 'castellan', holder,
+        { kind:'county', id:castellany.provinceId }, 'player.castellany', castellany);
+      var command = FB.activeMilitaryCommand(state);
+      if (command) {
+        var commandHost = command.hostId ? null : FB.hostOf(state, command.sovereignRealmId);
+        add('realm:' + command.patronRealmId, 'military_command', holder,
+          { kind:'host', id:command.hostId || commandHost && commandHost.id || null },
+          'player.militaryCommand', command, 'active');
+      }
+    }
+    var family = p.familyOffices || {};
+    for (var id in family) if (own(family, id) && family[id] === c.id) {
+      add('household:player', id, holder, { kind:'household', id:'player' },
+        'player.familyOffices', null);
+    }
+    for (var record of (Array.isArray(p.retainers) ? p.retainers : [])) {
+      if (record && record.charId === c.id) add('household:player', record.office,
+        holder, { kind:'household', id:'player' }, 'player.retainers', record);
+    }
+    /* Guild officers remain career/term records, not territorial rulers. */
+    var career = c.career;
+    if (career && (career.guildRank === 'officer' || career.guildRank === 'guildmaster')) {
+      add('guild:' + career.profession, career.guildRank, holder,
+        { kind:'county', id:p.provinceId }, 'character.career',
+        { profession:career.profession, guildRank:career.guildRank });
+    }
+    return out;
+  };
+
+  Q.office = function (state, ref) {
+    if (!ref || ref.kind !== 'office') return null;
+    var rows = Q.offices(state, ref.holder);
+    for (var row of rows) {
+      if (row.ref.institutionId === ref.institutionId &&
+          row.ref.officeId === ref.officeId && row.ref.source === ref.source) return row;
+    }
+    return null;
+  };
+
+  /* Only converted operations are accepted. Price and the complete stale
+     review signature still belong to the owning subsystem's quote. */
+  Q.permission = function (state, ref, operation, context) {
+    if (operation !== 'grant_settlement') {
+      return { allowed:false, reason:'unsupported_operation' };
+    }
+    if (!validRef(ref, 'realm') || !realm(state, ref.id)) {
+      return { allowed:false, reason:'invalid_actor' };
+    }
+    context = context || {};
+    return FB.settlementGrantEligibility(state, context.provinceId,
+      context.settlement, context.recipientId, ref.id);
+  };
+})();

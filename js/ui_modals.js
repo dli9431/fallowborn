@@ -10649,8 +10649,9 @@ window.FB = window.FB || {};
   }
 
   function interactionRealmRulerCharacter(s, rid) {
-    return FB.realmRulerCharacterSnapshot
-      ? FB.realmRulerCharacterSnapshot(s, rid) : null;
+    if (rid === 'player') return null;
+    const actor = FB.political.actor(s, { kind:'realm', id:rid });
+    return actor && actor.characterId ? s.chars[actor.characterId] : null;
   }
 
   function interactionRivalHeat(s) {
@@ -10757,11 +10758,11 @@ window.FB = window.FB || {};
 
   function realmRelationshipText(s, rid) {
     const p = s.player;
-    const upward = p.liege ? FB.liegeChain(s, p.liege) : [];
-    if (rid === p.liege) return FB.T('Direct liege');
-    if (upward.indexOf(rid) >= 0) return FB.T('Higher liege');
-    if (s.realms[rid] && s.realms[rid].alive &&
-        s.realms[rid].liege === 'player') return FB.T('Direct vassal');
+    const relationship = FB.political.relationship(s,
+      { kind:'character', id:p.charId }, { kind:'realm', id:rid });
+    if (relationship && relationship.directLiege) return FB.T('Direct liege');
+    if (relationship && relationship.higherLiege) return FB.T('Higher liege');
+    if (relationship && relationship.directVassal) return FB.T('Direct vassal');
     if (p.war && p.war.enemy === rid) return FB.T('War enemy');
     if (FB.areAlliedSnapshot(s, 'player', rid)) {
       return FB.T('Defensive ally');
@@ -11056,12 +11057,12 @@ window.FB = window.FB || {};
       });
     }
 
-    const upward = p.liege ? FB.liegeChain(s, p.liege) : [];
-    /* The sheet already has the authoritative realm record. Do not gate its
-       feudal actions through the derived hierarchy cache: a title or
-       inheritance rewrite can make that cache one render behind even though
-       the realm's saved liege relationship is already correct. */
-    const directVassal = realm.liege === 'player';
+    const relationship = FB.political.relationship(s,
+      { kind:'character', id:p.charId }, { kind:'realm', id:rid });
+    const upward = relationship ? relationship.liegeChain : [];
+    /* Shared relationships read the current saved liege, never a stale
+       territory-cache membership after a same-day inheritance or grant. */
+    const directVassal = !!(relationship && relationship.directVassal);
     if (upward.indexOf(rid) >= 0) {
       for (const id of ['pay_homage', 'appeal_lord']) {
         const action = instantInteractionAction(s, id, 'feudal');
@@ -22688,10 +22689,11 @@ window.FB = window.FB || {};
     const residence = residenceId && FB.world.byId[residenceId];
     const hintedRuler = realmIdHint && interactionRealmRulerCharacter(
       s, realmIdHint);
+    const politicalActor = FB.political.actor(s, { kind:'character', id:c.id });
     const reigningRealmId = hintedRuler && hintedRuler.id === c.id
       ? realmIdHint
-      : (FB.realmIdForRulerCharacter &&
-        FB.realmIdForRulerCharacter(s, c));
+      : (politicalActor && politicalActor.realmId !== 'player'
+        ? politicalActor.realmId : null);
     const descendantKind = FB.playerDescendantKind(s, c.id);
     const household = !c.dead && FB.isHouseholdCharacter &&
       FB.isHouseholdCharacter(s, c.id);

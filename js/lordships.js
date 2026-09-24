@@ -46,10 +46,9 @@ window.FB = window.FB || {};
   };
   FB.homeCountyAuthority = function (state) {
     const pid = state && state.player && state.player.provinceId;
-    const rid = pid && FB.settlementCountyHolder(state, pid);
-    const c = rid === 'player' ? living(state, state.player.charId) :
-      (rid && FB.realmRulerCharacterSnapshot(state, rid));
-    return { provinceId:pid || null, realmId:rid || null, characterId:c && c.id || null };
+    const place = pid && FB.political.place(state, { kind:'county', id:pid });
+    return { provinceId:pid || null, realmId:place && place.holderId || null,
+      characterId:place && place.ruler && place.ruler.characterId || null };
   };
   /* Mutation boundary, not a projection. Old story lords remain contacts, but
      never replace the reigning holder merely because their role cache exists. */
@@ -70,10 +69,11 @@ window.FB = window.FB || {};
   FB.invalidateSettlementLordships = function (state, pid) {
     profileCount('holding index invalidations');
     revision++;
-    FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
     holderIndex = null;
+    /* The world invalidator already invalidates military inputs. */
     if (FB.invalidateRealmCache) FB.invalidateRealmCache();
-    if (pid && FB.invalidateBuildingIndex) FB.invalidateBuildingIndex(state, pid);
+    else FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
+    if (pid && FB.invalidateBuildingIndex) FB.invalidateBuildingIndex(state, pid, true);
   };
   FB.settlementLordshipRevision = function () { return revision; };
   FB.settlementEstablishedCount = function (state, pid) {
@@ -872,14 +872,29 @@ window.FB = window.FB || {};
     }
     return true;
   };
-  FB.settlementGrantQuote = function (state, pid, slot, cid, rid) {
+  /* The political adapter and the final quote share this one pure rule.
+     Resource terms remain below, and confirmation always requotes. */
+  FB.settlementGrantEligibility = function (state, pid, slot, cid, rid) {
+    if (!state || !state.player || !state.chars) {
+      return { allowed:false, reason:'invalid_state' };
+    }
     const c = living(state, cid);
-    if (rid === 'player' && FB.settlementGrantReserved(state, pid, slot)) return null;
+    if (rid === 'player' && FB.settlementGrantReserved(state, pid, slot)) {
+      return { allowed:false, reason:'reserved_settlement' };
+    }
     if (!c || !FB.settlementGrantSites(state, pid, rid).some(function (site) {
       return site.settlement === slot;
-    })) return null;
+    })) return { allowed:false, reason:'unavailable_settlement' };
     if (cid === state.player.charId ? (state.player.tier !== 2 || rid === 'player') :
-        !FB.settlementGrantRecipient(state, cid, rid)) return null;
+        !FB.settlementGrantRecipient(state, cid, rid)) {
+      return { allowed:false, reason:'ineligible_recipient' };
+    }
+    return { allowed:true, reason:null };
+  };
+  FB.settlementGrantQuote = function (state, pid, slot, cid, rid) {
+    const permission = FB.political.permission(state, { kind:'realm', id:rid },
+      'grant_settlement', { provinceId:pid, settlement:slot, recipientId:cid });
+    if (!permission.allowed) return null;
     const actor = actorRef(state, { kind:'character', id:cid });
     const capacity = FB.settlementCapacityProjection(state, actor);
     capacity.directCount++;

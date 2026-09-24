@@ -1,5 +1,22 @@
 # Game state & saves
 
+## Political snapshots and future authority state (476 Phases 1–3)
+
+The [authority contract and durable-state diagram](authority.md#durable-state-diagram-proposal-not-a-save-schema)
+separate future appointments, contracts, recognition and customary rights from
+existing county ownership and settlement communities. This is a design proposal,
+not a format change: saves remain version 3. FB.political reads project existing
+records without initializing offices or materializing courts. Its returned objects
+are detached; identity and appointment views are uncached. Territory queries reuse
+the world index, which follows state identity and mutation invalidation. Derived views,
+permission quotes and revision stamps stay out of serialized state.
+
+The [baseline corpus](../plans/v2-476-phase-0/baselines.md) records immutable local
+export hashes and the required owner-run restore/succession comparisons. The
+version-4 migration is prototyped in Phase 3 and published only with the completed
+476 bookmark. Legacy title aliases must resolve before validation; missing
+optional fields cannot invent a political right or duplicate a payment.
+
 ## Freeholder establishment
 
 `player.freeholderGeneration` records the line depth at first freedom, using

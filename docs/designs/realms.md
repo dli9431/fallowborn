@@ -1,5 +1,18 @@
 # Realms, the liege hierarchy & tiers
 
+## Shared political queries (476 Phase 1)
+
+The [authority contract](authority.md) defines the implemented shared actor, place,
+relationship, territory, office and permission reads. It reuses the current
+owner/holder, ruler and settlement indices while separating social station,
+territorial control, personal office and military command. The
+[consumer inventory](../plans/v2-476-phase-0/authority-inventory.md) assigns the
+existing readers and mutation boundaries to their migration owners.
+FB.political supplies pure snapshots to interaction
+cards, home authority and settlement grant eligibility. Current 867/1066 rules,
+prices and confirmation signatures remain with their owning subsystems.
+Generalized Ban, Peace, Revenue and Consent belong to Phase 2, after parity work.
+
 ## Family settlement grants
 
 Both settlement grant lists use the shared title hover/focus tooltip and compact
