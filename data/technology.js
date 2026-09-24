@@ -75,6 +75,13 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      authority_appointments:{ mode:'none', rationale:'Ordinary political officeholding and removal depend on an appointer, a holder and a live scope, not research. A contested honor grants no power until confirmed.' },
+      authority_command_commissions:{ mode:'none', rationale:'Command of an exact host by appointment is baseline military service. It does not grant the commander land, revenue or judicial jurisdiction.' },
+      authority_recognition:{ mode:'none', rationale:'Army, imperial, dynastic, civic and church recognition are political relationships with explicit issuer continuity, not researched techniques.' },
+      authority_federate_service:{ mode:'none', rationale:'Negotiated service, pay, renewal and breach are ordinary political commitments. Both parties consent and existing military and treasury constraints still apply.' },
+      authority_customary_rights:{ mode:'none', rationale:'Rights based on tenure, judgment, recognition or possession accrue through social and legal practice rather than an invention.' },
+      authority_civic_consent:{ mode:'none', rationale:'Consent to local acts follows political representation and scope without a research gate.' },
+      authority_government_forms:{ mode:'none', rationale:'A realm government form identifies whether local civic consent is territorial or delegated. Choosing a form is a political fact rather than a researched technique.' },
       crazygames_content_profile:{ mode:'none', rationale:'Distribution content restrictions and their non-wagering, nonlethal alternatives apply independently of in-world research. Existing technology requirements on retained choices remain intact.' },
       excess_land_grants:{ mode:'none', rationale:'Reserving holdings and reviewing a batch of ordinary county and settlement grants are baseline management shortcuts. Existing hereditary ownership and administrative limits apply without an additional research requirement.' },
       enterprise_batch_upgrades:{ mode:'none', rationale:'Grouping existing enterprise upgrades by settlement or type is a household management shortcut. Each individual upgrade retains its exact authored technology requirement; the batch adds no research prerequisite.' },

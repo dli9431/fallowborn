@@ -1,9 +1,9 @@
 # Shared political facts and authority
 
-Status: Phase 1 implemented over the v1.184.0 baseline, 2026-09-23.
-[Implementation record](../plans/v2-476-phase-1.md). Existing 867/1066 behavior
-remains the compatibility reference. Generalized powers and durable appointments
-below are Phase 2 proposals, not new save fields.
+Status: Phase 1 shared facts and Phase 2 scoped authority are implemented on the
+476 branch. [Phase 1 record](../plans/v2-476-phase-1.md) and
+[Phase 2 record](../plans/v2-476-phase-2.md). Existing 867/1066 behavior remains
+the compatibility reference. Phase 3 owns the final save-v4 migration.
 
 ## Facts, permissions and transactions
 
@@ -126,12 +126,10 @@ as a universal 476 legitimacy value. Station still governs social opportunities
 where genuinely appropriate; only political eligibility moves to authority.
 
 Technology decisions: Phase 0 is documentation and Phase 1 is internal parity
-work, so neither adds a techImpactReviews entry. At Phase 2 implementation,
-independently review appointments, commissions, federate agreements, customary
-rights and recognition in the owning design docs and ledger. Baseline legal
-standing, command by appointment and political recovery have decision **none**;
-any advanced fiscal or administrative technique must retain its own meaningful
-review and ungated fallback. Do not pre-register unimplemented features.
+work, so neither adds a techImpactReviews entry. The implemented appointments, commissions, federate service, customary rights,
+recognition and civic consent each have a **none** entry in the technology
+impact ledger. Legal scope, consent and resources govern them. An advanced
+fiscal or administrative technique needs its own review and ungated fallback.
 
 ## Derived projections and invalidation
 
@@ -177,7 +175,7 @@ an unread cache is rebuilt should produce one rebuild, with no duplicate notices
 charges or RNG calls. Author focused instrumentation assertions for each converted
 boundary without changing unmeasured unrelated caches.
 
-## Durable state diagram (proposal, not a save schema)
+## Durable state diagram (Phase 2 prototype)
 
 ~~~mermaid
 flowchart TD
@@ -198,20 +196,18 @@ flowchart TD
   T --> U
 ~~~
 
-Durable future records need semantic ids, parties, exact scopes, creation/expiry
-turns and explicit transition status. Appointment state is proposed as active,
-contested, expired or removed; a contested honor does not automatically exercise
-its claimed power. Claims, actual appointments and recognition are separate rows.
-Contracts need paid-through/fulfilled stamps so reload or succession never pays
-arrears twice. Recognition records name the issuer and subject claim; issuer
-succession has an authored reaffirmation/continuity policy. Customary rights need
-a basis and transition history sufficient to explain continuation or loss.
+Phase 2 records use semantic IDs, parties, exact scopes, creation/expiry turns
+and transition status. Appointments are active, contested, expired or removed;
+a contested honor exercises no power. Contracts carry paid-through and
+fulfilled-award stamps. Recognition names its issuer and subject and follows a
+source-specific reaffirmation/continuity policy. Customary rights carry basis,
+strength and transition history.
 
-The diagram describes relations, not new county or realm nodes. Civic bodies are
-site-keyed institutions; moving courts retain institutional identity and a
-separate location. Territorial realm nodes still describe territory. Phase 2
-must determine actual field names and validations; Phase 3 prototypes aliases and
-save-v4 migration. Nothing here authorizes serializing an unfinished v4 format.
+The diagram describes relations, not new county or realm nodes. Phase 2 uses
+realm, host and county issuers; site-keyed civic bodies and moving courts are
+Phase 4/5 content. Territorial realm nodes still describe territory. Phase 3
+owns canonical title aliases and the save-v4 migration. Branch-local version-3
+serialization is a prototype and must not be released as an incomplete v4.
 
 Old saves continue to supply their existing owner/holder, succession, communities,
 settlement lordships, Council, Estates, offices, war and treasury records. A
@@ -235,3 +231,51 @@ outcome ordering must match the existing subsystem. Stale confirmation after a
 ruler change must reject before spending. Phase 2 additionally requires cases
 where land, command, jurisdiction and recognition belong to different actors.
 Detailed journeys and pending owner evidence live in the Phase 0 baseline file.
+
+
+## Phase 2 record and transition contract
+
+`js/authority.js` extends the Phase 1 query namespace after `politics.js` loads.
+A realm's government-form record selects territorial or delegated civic
+consent while preserving its owner and holder facts. Omitted 867/1066 records
+project the territorial form. The committed script order therefore resolves
+legacy army, justice and Council
+functions before any authority query runs. No read allocates `state.authority`.
+Successful writes allocate arrays for appointments, recognitions, contracts and
+rights; IDs are monotonic within that state. A failed quote or repeated
+transition leaves state and RNG unchanged.
+
+`power(state, actorRef, power, context)` answers Ban for `hostId`,
+Peace, Revenue or Consent for `provinceId`, and Revenue for a
+`contractId`. It returns an explicit basis; no score or culture label grants
+all powers. `permission` maps exact operations to those powers while the
+legacy settlement grant adapter keeps its original quote. `consent` answers
+the old Council threshold and the two-party federate approval. `legitimacy`
+returns live source records rather than one universal number.
+
+Field command requires the exact live host; realm ownership remains with its
+original realm. Judicial vicar and fiscal agent appointments can belong to
+landless characters, but each has only its named county power. An appointer
+succession suspends appointments with `reaffirm` policy until confirmed.
+A recognition source with that policy likewise needs issuer reaffirmation.
+Conquest or loss of a host makes its appointment ineffective; seasonal cleanup
+records expiration. Recognition loss suspends an appointment tied to it.
+
+A federate offer records pay, exact parties, service host, expiry, optional
+promised settlements and an optional imperial recognition by the patron. Both current rulers must consent. The contract's Revenue
+basis lets the federate collect only its agreed service pay; the patron gains
+Ban on the service host and no Peace or territorial receipts. Seasonal payment
+uses the existing treasury transfer once and stores the paid-through period.
+Settlement fulfillment uses the existing quote and confirmation path, then
+stores a fulfilled stamp. A separate county render uses a reviewed Revenue
+quote, paired treasury transfer and obligation receipt; ordinary tax still
+follows the territorial ledger. Breach, recognition loss, expiry, renewal and succession disable
+the service basis immediately. The 476 story will supply decisions and player-facing
+terms in Phase 4.
+
+Customary rights are separate from de jure geography. A right starts at strength
+50; tenure, judgment, recognition and possession can strengthen it, dispute and
+abandonment erode it. Strength below 50 suspends its named power. Annual
+possession/dispute updates have a year stamp, and revocation or lapse is
+explicit. This is the underlying authority model; contextual sources and
+outcomes arrive with the 476 scenario.

@@ -3361,3 +3361,14 @@ saved records; explicit court display preparation retains its existing boundary.
 Settlement grant review uses the shared grant permission adapter via the existing
 quote. Text, displayed fiscal terms, focus and return behavior remain unchanged.
 See [authority.md](authority.md) for scope and invalidation rules.
+
+
+## Delegated host control (476 Phase 2)
+
+A live host commission or federate service agreement uses the existing
+player-controlled banner crest, visible route and selection ring for the exact
+host under the protagonist's command. Other banners of the same realm keep
+their normal owner presentation. Command loss clears selection through the
+existing selected-host resolver, and AI orders resume only after the shared
+Ban query denies player control. The map still identifies the host's owning
+realm for supply, casualties and diplomacy.

@@ -11,7 +11,8 @@ existing readers and mutation boundaries to their migration owners.
 FB.political supplies pure snapshots to interaction
 cards, home authority and settlement grant eligibility. Current 867/1066 rules,
 prices and confirmation signatures remain with their owning subsystems.
-Generalized Ban, Peace, Revenue and Consent belong to Phase 2, after parity work.
+Phase 2 adds scoped Ban, Peace, Revenue and Consent in authority.js, with
+separate appointments, recognition, federate commitments and customary rights.
 
 ## Family settlement grants
 
@@ -1378,3 +1379,19 @@ refunded on voluntary revocation; revoking a whole fief first checks all refunds
 A compact per-county record blocks resale for ten years, even after reconquest or
 forfeiture. Conquest and lawful seizure retain their existing rules. Technology
 impact `paid_hereditary_grants` is **none**, ordinary feudal patronage for payment.
+
+
+## Scoped political authority (476 Phase 2)
+
+The [Phase 2 authority contract](authority.md#phase-2-record-and-transition-contract)
+keeps landed realm identity separate from appointments, recognition, federate
+service and customary rights. A county continues to name its sovereign owner
+and direct holder. The new records never create a realm node or move a fief
+implicitly. Powers resolve for the exact host, county or contract. An explicit
+realm form can require civic consent through a delegate while old realms
+project territorial consent. Land grants
+still use their existing reviewed quote and confirmation; a federate settlement
+promise must pass that same transaction when fulfilled. Office and patron
+succession are explicit, with reaffirmation where the office definition
+requires it. Technology impact: the political appointments and rights are
+`none` decisions in the ledger.

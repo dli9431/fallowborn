@@ -1978,3 +1978,17 @@ rechecks state identity, host membership, primary status and the holy-war vow so
 a stale card cannot dismiss another banner. Land retains its scroll after the
 refresh. This is an entry point to an existing action, with no technology or
 simulation eligibility expansion. Coverage: `tests/e2e/specs/land-demuster.spec.js`.
+
+
+## Ban and federate service (476 Phase 2)
+
+`FB.political.permission(..., "command_host", {hostId})` answers map host
+control. A live field commission or federate agreement can give a different
+actor command of that exact host while its owning realm continues to pay,
+muster and own the banner. Expiration, loss of host, breach and ruler succession
+remove command immediately. A federate contract needs both realm rulers'
+consent and records its service host, pay period and settlement promises.
+Settlement awards use the ordinary grant quote and confirmation. The AI and
+player host paths consume the same control query at map selection; owner-driven
+musters retain their existing force and finance rules. This baseline commission
+and service capability has technology impact `none`.

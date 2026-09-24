@@ -4790,3 +4790,41 @@ negative amounts clamp to zero. These are flat yearly rewards, independent of
 rank advancement's `prestigeGain` and seasonal `pietyYield`. The highest eligible
 religious amount counts, then ruling and guild amounts add to it. This source
 balance table is not an additional runtime-mod registry.
+
+
+## Scoped authority definitions (476 development branch)
+
+`data/political_institutions.js` defines `FBDATA.authorityOffices`,
+`FBDATA.legitimacySources`, `FBDATA.customaryBases` and
+`FBDATA.governmentForms`. A government form declares whether local civic
+consent follows territorial rule or a delegated office. The `territorial`
+form is required as the legacy fallback. An office ID has
+`powers` (`ban`, `peace`, `revenue`, `consent`), allowed `scopes`
+(`host` or `county`) and `succession` (`reaffirm` or `continues`), plus
+`recognitionSources` naming which legitimacy sources may support it.
+A Ban office must include host scope; Peace, Revenue and Consent need county
+scope. A legitimacy source specifies whether
+issuer succession requires reaffirmation. Customary basis IDs identify the
+recorded legal origin without implying ownership. `FB.validateAuthorityData`
+checks these tables when a bookmark activates. Definitions are semantic; phase
+4 supplies localized period labels.
+
+`state.authority` is a branch-local prototype pending the save-v4 schema.
+`governments` stores explicit realm form choices; omitted realms project the
+legacy territorial form without a new saved record.
+`appointments[]` hold office ID, institution realm ID, typed appointer and
+holder, exact scope, term, status and optional recognition ID. `recognitions[]`
+hold a source, typed issuer/subject, scope and succession stamp.
+`contracts[]` hold patron and federate realm IDs, optional exact host and
+imperial recognition ID, seasonal pay, expiry, ruler approvals and
+paid/fulfilled stamps. A linked recognition must be issued by the patron for
+the federate realm; its loss ends effective service. Optional
+`settlementAwards[]` promise a county site to a named character; the
+ordinary settlement grant quote must still succeed when the award is paid.
+`rights[]` hold beneficiary, issuer, county, power, customary basis,
+strength and transition history. `receipts[]` prevent a reviewed county
+render obligation from being collected twice. Judgment and detached tenure origins require a
+semantic `basisRef`; recognition names its active record ID, and possession needs an
+actual holding. Later positive transitions carry evidence. A record never changes `state.owner` or
+`state.holder` by implication. Omit `state.authority` from old campaigns.
+Derived power, office and consent projections are never saved.

@@ -120,6 +120,10 @@ window.FB = window.FB || {};
       var technologyErrors = FB.validateTechnologyData();
       for (var te = 0; te < technologyErrors.length; te++) errors.push(technologyErrors[te]);
     }
+    if (FB.validateAuthorityData) {
+      var authorityErrors = FB.validateAuthorityData();
+      for (var ae = 0; ae < authorityErrors.length; ae++) errors.push(authorityErrors[ae]);
+    }
     if (FB.validateCultureData) {
       var cultureErrors = FB.validateCultureData();
       for (var ce = 0; ce < cultureErrors.length; ce++) errors.push(cultureErrors[ce]);

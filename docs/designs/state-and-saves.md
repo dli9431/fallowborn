@@ -1728,3 +1728,15 @@ synchronous LZ/base64 encoding (FBL1) if it fits. Otherwise the prior accepted
 snapshot remains; immediate tab closure is not a confirmed save. Both encodings
 load on boot, and portable exports retain FBS2 and the content-profile guard.
 This is persistence only and changes no technology eligibility.
+
+
+## 476 authority prototype on the development branch
+
+Phase 2 creates `state.authority` only after a successful authority
+transaction. It stores semantic IDs and transitions for appointments,
+recognitions, federate contracts, customary rights and render receipts.
+Contract payment, render and settlement-fulfillment stamps prevent duplicate effects. Pure queries and
+rendered terms stay out of state. The existing version-3 serializer carries
+these branch-local records for prototype reloads; the completed 2.0 bookmark
+and canonical title aliases require the Phase 3 save-v4 migration before
+release. Old saves do not acquire fabricated offices or contracts on restore.

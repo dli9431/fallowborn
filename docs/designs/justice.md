@@ -258,3 +258,16 @@ additive. UI and Chronicle text use structured catalogs/message descriptors.
 The CrazyGames profile normalizes lethal or blinding sentences to imprisonment
 at projection, queue and application boundaries, including AI calls. Its chooser
 omits the original sentence IDs. See [content profiles](distribution-content.md).
+
+
+## Delegated Peace (476 Phase 2)
+
+A judicial-vicar appointment or effective customary Peace right names one
+county independently of land. The arrest projection and committing path ask
+the same `FB.political.permission(..., "arrest", {provinceId})` query.
+An appointment makes a living landless character eligible only in its scope.
+Actual custody remains separate and required for sentencing; appointment
+removal, issuer succession, recognition loss or conquest invalidates future
+arrests immediately. The existing territorial and local-lord paths retain
+their 867/1066 outcomes. AI arrest attempts use the same projection.
+Baseline judicial appointment has technology impact `none`.

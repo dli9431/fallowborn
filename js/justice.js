@@ -43,7 +43,8 @@
     return j;
   }
   function authorityKey(s, id) {
-    return realmOf(s, id) || (id === s.player.charId ? 'barony:' + s.player.provinceId : 'character:' + id);
+    return realmOf(s, id) || (id === s.player.charId && s.player.tier >= 3
+      ? 'barony:' + s.player.provinceId : 'character:' + id);
   }
   function authorityMatches(s, actor, key) {
     return key === authorityKey(s, actor) || actor === s.player.charId && s.player.tier >= 3 &&
@@ -52,16 +53,25 @@
   FB.justiceRulerEligible = function (s, id) {
     if (!s || !s.player || !live(s, id)) return false;
     if (id === s.player.charId) return s.player.tier >= 3 &&
-      !!(FB.governanceEligible && FB.governanceEligible(s));
+      !!(FB.governanceEligible && FB.governanceEligible(s)) ||
+      FB.political.grantedCounties(s, { kind:'character', id:id }, 'peace').length > 0;
     var rid = realmOf(s, id), r = rid && s.realms[rid];
-    return !!(r && r.alive && r.rank >= 1) || person(s, id).role === 'lord';
+    return !!(r && r.alive && r.rank >= 1) || person(s, id).role === 'lord' ||
+      FB.political.grantedCounties(s, { kind:'character', id:id }, 'peace').length > 0;
   };
   FB.justiceCounties = function (s, id) {
     if (!FB.justiceRulerEligible(s, id)) return [];
     var rid = realmOf(s, id);
-    if (rid) return FB.realmTerritory(s, rid).slice().sort();
-    var pid = id === s.player.charId ? s.player.provinceId : location(s, id);
-    return pid ? [pid] : [];
+    var counties = rid ? FB.realmTerritory(s, rid).slice() : [];
+    if (!rid && (id === s.player.charId && s.player.tier >= 3 ||
+        person(s, id).role === 'lord')) {
+      var pid = id === s.player.charId ? s.player.provinceId : location(s, id);
+      if (pid) counties.push(pid);
+    }
+    FB.political.grantedCounties(s, { kind:'character', id:id }, 'peace').forEach(function (pid) {
+      if (counties.indexOf(pid) < 0) counties.push(pid);
+    });
+    return counties.sort();
   };
   // Political jurisdiction includes vassals; local popularity belongs to the holder.
   FB.justiceSupportCounties = function (s, id) {
@@ -208,7 +218,8 @@
       !t || t.dead || actor === target ? 'target' :
       FB.justiceCustodyOf(s, actor) || actor === s.player.charId && s.player.flags.in_prison ? 'confined' :
       FB.justiceCustodyOf(s, target) || target === s.player.charId && s.player.flags.in_prison ? 'already_held' :
-      counties.indexOf(location(s, target)) < 0 ? 'outside' :
+      !FB.political.permission(s, { kind:'character', id:actor }, 'arrest',
+        { provinceId:location(s, target) }).allowed ? 'outside' :
       (rid && (!arid || rid === arid || !under(s, rid, arid))) ||
       (targetBaron && !subordinateBaron) || (!arid && t && t.role === 'lord') ? 'authority' :
       cooldown > s.turn ? 'cooldown' :

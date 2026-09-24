@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/authority.js',
   'js/ui_modals.js', 'js/ui_misc.js', 'js/main.js', 'js/armies.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');

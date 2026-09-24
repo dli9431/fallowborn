@@ -4,6 +4,35 @@
    derived by js/institutions.js. */
 window.FBDATA = window.FBDATA || {};
 
+/* Phase 2 authority records name legal capacities rather than landed titles.
+   The institution and scope on each appointment remain separate from owner
+   and holder; these definitions never manufacture a territorial realm. */
+FBDATA.authorityOffices = {
+  field_command:{ powers:['ban'], scopes:['host'], succession:'reaffirm',
+    recognitionSources:['army_acclamation','imperial_commission'] },
+  judicial_vicar:{ powers:['peace'], scopes:['county'], succession:'reaffirm',
+    recognitionSources:['imperial_commission','civic_acceptance'] },
+  fiscal_agent:{ powers:['revenue'], scopes:['county'], succession:'reaffirm',
+    recognitionSources:['imperial_commission','civic_acceptance'] },
+  civic_delegate:{ powers:['consent'], scopes:['county'], succession:'continues',
+    recognitionSources:['civic_acceptance'] }
+};
+FBDATA.legitimacySources = {
+  army_acclamation:{ succession:'reaffirm' },
+  imperial_commission:{ succession:'reaffirm' },
+  dynastic_succession:{ succession:'continues' },
+  civic_acceptance:{ succession:'reaffirm' },
+  church_support:{ succession:'reaffirm' }
+};
+FBDATA.customaryBases = {
+  tenure:{}, judgment:{}, recognition:{}, possession:{}
+};
+FBDATA.governmentForms = {
+  territorial:{ civicConsent:'territorial' },
+  roman_civic:{ civicConsent:'delegated' },
+  federate_polity:{ civicConsent:'delegated' }
+};
+
 /* Great offices are stable save ids. Added seats receive the Council's
    ordinary vacancy, appointment, Standing, and effectiveness behavior;
    special institutional/event consumers continue to name their core ids. */

@@ -258,7 +258,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
 - Engine second, all writing to `window.FB`: `util → messages → i18n →
   model → music → portrait → siteart → world → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
-  technology → council → agency → politics → parliament → institutions →
+  technology → council → agency → politics → authority → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar) → keys → save → mods → main`. The generated English
   catalog is absent from an ordinary English boot; a translated boot dynamically loads it
   before the selected locale. The four `ui_*.js` files are one system split for size:
@@ -396,6 +396,8 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/intrigue.js` — hostile schemes, accomplices, AI intrigue, evidence hearings,
   captivity, leverage, and conduct.
 - `js/council.js` — the royal council (tier 6+): great officers, crown authority, council event customs.
+- `js/authority.js` — scoped Ban, Peace, Revenue and Consent, appointments,
+  recognition, federate contracts, and customary rights.
 - `js/parliament.js` — the estates (vassal tiers 3–5): the liege's aid and scutage terms, yearly sessions, parliament event customs.
 - `js/ui_misc.js` — shared UI helpers, screens, toasts, hint coachmarks, the generic modal engine,
   mobile back navigation, boot wiring; owns `FB.ui._shared`.

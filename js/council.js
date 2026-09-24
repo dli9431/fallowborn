@@ -266,8 +266,8 @@ window.FB = window.FB || {};
   /* below this the great deeds are beyond the crown: the council will not
      suffer extraordinary taxes or revoked fiefs */
   FB.councilNeedsConsent = function (state) {
-    if (!FB.councilActive(state) || !state.council) return false;
-    return FB.effectiveCrownAuthority(state) < (FBDATA.balance.councilConsentBelow || 35);
+    return FB.political.consent(state, { kind:'realm', id:'player' },
+      'extraordinary_tax', {}).reason === 'council_consent';
   };
 
   /* the slow gravity of custom: over-mighty authority erodes, a cowed crown

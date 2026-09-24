@@ -536,3 +536,20 @@ and seasons in ordinary play, large wartime realms, crisis and annual-boundary
 bursts. Investigate a reproducible median simulation-time regression above 5%; also
 check large-realm sale-screen responsiveness. Wall-clock thresholds are not browser
 regression assertions; tests assert bounded work and deterministic state instead.
+
+
+## Federate Revenue (476 Phase 2)
+
+A live federate contract gives its force realm a Revenue basis for the exact
+agreed service payment. The seasonal transaction checks that basis, transfers
+coin between the existing treasury accounts and stamps its paid-through
+period. Repeated settlement in the same period cannot pay again. If funding
+fails, the agreement breaches and command ends. Loss of host, recognition
+or ruler continuity expires effective service. The contract may promise a
+settlement, but the award uses the existing live grant
+quote and confirmation rather than crediting land from a fiscal label.
+A fiscal-agent office may collect a separately reviewed county render. Its
+quote names payer, beneficiary, amount, legal basis and obligation ID; the
+transaction rechecks those terms and stores a once-only receipt. It does not
+redirect the ordinary county tax ledger. Contractual pay and baseline fiscal
+appointments have technology impact `none`.

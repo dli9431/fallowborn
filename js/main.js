@@ -3761,12 +3761,16 @@ FB.CHANGELOG = [
     if (G.observe) {
       if (seasonBoundary && FB.marketSeason) FB.marketSeason(s);
       if (seasonBoundary && FB.treasurySeason) FB.treasurySeason(s);
+      if (seasonBoundary && FB.authoritySeason) FB.authoritySeason(s);
       if (seasonBoundary && newYear && FB.treasuryRevalue) FB.treasuryRevalue(s, 1);
       if (seasonBoundary && FB.intrigueSeason) FB.intrigueSeason(s);
       if (seasonBoundary && FB.techSeason) FB.techSeason(s, false);
       // This resolver owns AI campaigns too, including sieges and exhaustion.
       if (seasonBoundary) FB.playerWarTick(s);
-      if (seasonBoundary && newYear) FB.worldTick(s);
+      if (seasonBoundary && newYear) {
+        FB.worldTick(s);
+        if (FB.authorityYear) FB.authorityYear(s);
+      }
       FB.armyTick(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
       s.eventQueue.length = 0;
@@ -3787,6 +3791,7 @@ FB.CHANGELOG = [
       const taxParts = p.tier >= 3 ? FB.playerTaxParts(s) : null;
       const income = taxParts ? FB.playerTax(s, taxParts) : 0;
       if (FB.treasurySeason) FB.treasurySeason(s, taxParts);
+      if (FB.authoritySeason) FB.authoritySeason(s);
       const buildingUpkeep = p.tier >= 3
         ? FB.buildingBonus(s, 'upkeep') + (FB.fortUpkeep ? FB.fortUpkeep(s) : 0)
         : 0;
@@ -3849,7 +3854,10 @@ FB.CHANGELOG = [
          adjustment is therefore measured in the next spring-to-summer net,
          while Finance and the gold sheet show it immediately. */
       if (newYear) FB.financeYear(s, seasonEconomy);
-      if (newYear) annualContext = FB.worldTick(s);
+      if (newYear) {
+        annualContext = FB.worldTick(s);
+        if (FB.authorityYear) FB.authorityYear(s);
+      }
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
       if (newYear) {
         yearlyLife(s, annualContext);
