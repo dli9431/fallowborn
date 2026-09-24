@@ -205,14 +205,14 @@ strength and transition history.
 
 The diagram describes relations, not new county or realm nodes. Phase 2 uses
 realm, host and county issuers; site-keyed civic bodies and moving courts are
-Phase 4/5 content. Territorial realm nodes still describe territory. Phase 3
-owns canonical title aliases and the save-v4 migration. Branch-local version-3
-serialization is a prototype and must not be released as an incomplete v4.
+Phase 4/5 content. Territorial realm nodes still describe territory. Phase 3 resolves canonical title aliases and exposes an opt-in save-v4 migration
+prototype. Ordinary version-3 serialization remains the active save format until
+the completed 476 release.
 
 Old saves continue to supply their existing owner/holder, succession, communities,
 settlement lordships, Council, Estates, offices, war and treasury records. A
 legacy view can expose these without adding appointments or rights to the save.
-Alias migration later resolves old title ids before validation, writes canonical
+Alias migration resolves old title ids before validation, writes canonical
 ids and rejects ambiguous geography. Do not infer new offices or legitimacy
 from a title string, religion name, culture or tier during repair.
 

@@ -14,6 +14,16 @@ prices and confirmation signatures remain with their owning subsystems.
 Phase 2 adds scoped Ban, Peace, Revenue and Consent in authority.js, with
 separate appointments, recognition, federate commitments and customary rights.
 
+## Canonical de jure title IDs (476 Phase 3)
+
+Each de jure rank has its own ID namespace. The slug `sicily` can denote a
+duchy and a kingdom because the table or field supplies the rank. Authored
+counties use a duchy slug; duchies name a kingdom slug; kingdoms name an empire
+slug. Bookmarks and mods may still provide old `d_`, `k_` and `e_` IDs at typed
+boundaries. Activation resolves them to canonical slugs and rejects alias
+collisions or missing parents. Realm and character identifiers are separate
+and are never rewritten merely because their spelling resembles a title.
+
 ## Family settlement grants
 
 Both settlement grant lists use the shared title hover/focus tooltip and compact

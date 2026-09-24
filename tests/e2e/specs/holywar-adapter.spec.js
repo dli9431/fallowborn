@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/title_ids.js',
   'js/holywar.js',
   'js/messages.js',
   'js/save.js',
@@ -103,7 +104,7 @@ test('only an attacker victory opens a council and asset discovery follows de ju
         seat:null, awardIds:[]
       },
       {
-        id:'duchy:d_damascus', kind:'duchy', rank:2,
+        id:'duchy:damascus', kind:'duchy', rank:2,
         seat:null, awardIds:['damascus', 'homs']
       },
       {
@@ -198,7 +199,7 @@ test('claim bases include service, vow, occupation, right, support, office, and 
       var resolved = FBTEST.resolveGreatHolyWar({
         includePlayer:true,
         playerContribution:50,
-        playerDesire:{ kind:'duchy', id:'d_jerusalem' },
+        playerDesire:{ kind:'duchy', id:'jerusalem' },
         attackers:[{
           realm:'west_francia',
           contribution:50,
@@ -313,7 +314,7 @@ test('AI awards create a realm hierarchy, cover residual land, attach custody, a
         }, {
           realm:'italy',
           contribution:30,
-          desire:{ kind:'duchy', id:'d_damascus' }
+          desire:{ kind:'duchy', id:'damascus' }
         }],
         capturedCounties:captured
       });
@@ -711,7 +712,7 @@ test('settlement Chronicle exports name actual rulers, county grants, custody an
       var captured = ['jerusalem', 'acre', 'damascus', 'homs', 'aleppo'];
       FBTEST.resolveGreatHolyWar({ includePlayer:false,
         attackers:[{ realm:'west_francia', contribution:70, desire:{ kind:'crown', id:null } },
-          { realm:'italy', contribution:30, desire:{ kind:'duchy', id:'d_damascus' } }],
+          { realm:'italy', contribution:30, desire:{ kind:'duchy', id:'damascus' } }],
         capturedCounties:captured });
       function terms() {
         return FB.save.chronicleData(s).entries.filter(function (entry) {

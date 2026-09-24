@@ -3,9 +3,10 @@
 Status: proposed for the v1.184.0 codebase, 2026-09-23. No release date is set.
 Phase 0 decisions and static audit are recorded in the
 [Phase 0 package](v2-476-phase-0/README.md). The owner requested progression using
-the existing notes/ saves and benchmarks. [Phase 1](v2-476-phase-1.md) and the [Phase 2 authority engine](v2-476-phase-2.md)
-are implemented on the 476 branch; runtime parity and device comparisons remain
-owner-controlled.
+the existing notes, saves and benchmarks. [Phase 1](v2-476-phase-1.md), the
+[Phase 2 authority engine](v2-476-phase-2.md) and the
+[Phase 3 migration prototype](v2-476-phase-3.md) are implemented on the 476
+branch; runtime parity and device comparisons remain owner-controlled.
 
 ## Outcome
 
@@ -157,6 +158,8 @@ service. Each case makes a different decision in play. No second feudal-only
 authority path remains authoritative for the converted actions.
 
 ## Phase 3: durable IDs and migration prototype
+
+Implementation record: [canonical IDs, aliases and v4 prototype](v2-476-phase-3.md).
 
 This design starts alongside Phases 1 and 2. Final serialization lands with
 the completed 2.0 release.

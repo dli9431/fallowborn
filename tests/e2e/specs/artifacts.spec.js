@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/title_ids.js',
   'js/modifiers.js',
   'js/items.js',
   'data/actions.js',
@@ -42,23 +43,23 @@ test('gates each artifact by faith, culture, and de jure region',
 
       /* Excalibur: a christian in Britannia only */
       me.religion = 'norse_pagan';
-      move('e_britannia', 'empire');
+      move('britannia', 'empire');
       out.paganInBritannia = FB.artifactEligible(s, 'excalibur');
       me.religion = 'catholic';
       out.catholicInBritannia = FB.artifactEligible(s, 'excalibur');
-      move('e_persia', 'empire');
+      move('persia', 'empire');
       out.catholicInPersia = FB.artifactEligible(s, 'excalibur');
 
       /* Mjölnir: norse pagan in Scandinavia */
       me.religion = 'norse_pagan';
-      move('e_scandinavia', 'empire');
+      move('scandinavia', 'empire');
       out.norseInScandinavia = FB.artifactEligible(s, 'mjolnir_amulet');
       me.religion = 'catholic';
       out.catholicInScandinavia = FB.artifactEligible(s, 'mjolnir_amulet');
 
       /* the Book of Kells adds a culture gate: gaelic only */
       me.religion = 'catholic';
-      move('k_ireland', 'kingdom');
+      move('ireland', 'kingdom');
       const oldCulture = me.culture;
       me.culture = 'frankish';
       out.frankishInIreland = FB.artifactEligible(s, 'book_of_kells');
@@ -68,7 +69,7 @@ test('gates each artifact by faith, culture, and de jure region',
 
       /* the rumor selector sees exactly the eligible set */
       me.religion = 'catholic';
-      move('e_britannia', 'empire');
+      move('britannia', 'empire');
       const rumors = FB.artifactRumorContexts(s).map(function (c) {
         return c.artifact;
       });
@@ -101,7 +102,7 @@ test('claims an artifact exactly once and derives its loss forever',
       const me = s.chars[s.player.charId];
       me.religion = 'catholic';
       s.player.provinceId = FB.world.provs.filter(function (p) {
-        return FB.dejureOf(p.id).empire === 'e_britannia';
+        return FB.dejureOf(p.id).empire === 'britannia';
       })[0].id;
       const out = {};
       out.granted = FB.fns.artifact_grant(s, { artifact:'excalibur' });
@@ -151,7 +152,7 @@ test('the trial offering charges exactly the scaled value once',
       const me = s.chars[s.player.charId];
       me.religion = 'norse_pagan';
       s.player.provinceId = FB.world.provs.filter(function (p) {
-        return FB.dejureOf(p.id).empire === 'e_scandinavia';
+        return FB.dejureOf(p.id).empire === 'scandinavia';
       })[0].id;
       const cost = FB.artifactOfferingCost(s, 'gungnir');
       const expected = Math.max(1, Math.ceil(
@@ -185,7 +186,7 @@ test('a held artifact can be seized and never returns',
       const me = s.chars[s.player.charId];
       me.religion = 'catholic';
       s.player.provinceId = FB.world.provs.filter(function (p) {
-        return FB.dejureOf(p.id).empire === 'e_britannia';
+        return FB.dejureOf(p.id).empire === 'britannia';
       })[0].id;
       const out = {};
       out.seizeUnclaimed = FB.fns.artifact_seize(s, { artifact:'excalibur' });
@@ -214,7 +215,7 @@ test('selling a sacred artifact of your own faith costs the devout',
       const me = s.chars[s.player.charId];
       me.religion = 'catholic';
       s.player.provinceId = FB.world.provs.filter(function (p) {
-        return FB.dejureOf(p.id).empire === 'e_francia';
+        return FB.dejureOf(p.id).empire === 'francia';
       })[0].id;
       s.player.piety = 50;
       FB.setCountySupport(s, s.player.provinceId, 0);
@@ -226,7 +227,7 @@ test('selling a sacred artifact of your own faith costs the devout',
       };
       /* a non-sacred legend parts without the muttering */
       s.player.provinceId = FB.world.provs.filter(function (p) {
-        return FB.dejureOf(p.id).empire === 'e_britannia';
+        return FB.dejureOf(p.id).empire === 'britannia';
       })[0].id;
       s.player.piety = 50;
       FB.setCountySupport(s, s.player.provinceId, 0);
@@ -253,7 +254,7 @@ test('artifact drawbacks flow through the same bonus channels as boons',
       const me = s.chars[s.player.charId];
       me.religion = 'catholic';
       s.player.provinceId = FB.world.provs.filter(function (p) {
-        return FB.dejureOf(p.id).empire === 'e_britannia';
+        return FB.dejureOf(p.id).empire === 'britannia';
       })[0].id;
       FB.fns.artifact_grant(s, { artifact:'excalibur' });
       FB.equipItem(s, s.player.charId, 'rightHand', 'excalibur');

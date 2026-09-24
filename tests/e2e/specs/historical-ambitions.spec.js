@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/title_ids.js',
   'data/ambitions.js', 'data/actions.js', 'data/bookmarks.js', 'data/map_data.js',
   'data/counties.js', 'data/technology.js', 'css/style.css',
   'js/ambitions.js', 'js/actions.js', 'js/main.js', 'js/model.js', 'js/world.js',
@@ -18,7 +19,8 @@ async function ruler(page, regions, tier) {
     FB.game.setPaused(true);
     const counties = [];
     args.regions.forEach(function (region) {
-      const ids = region.indexOf('d_') === 0 ? FB.duchyCounties(region) : FB.kingdomCounties(region);
+      const ids = FBDATA.historicalAmbitions.some(function (d) { return d.region === region && d.tier === 5; })
+        ? FB.duchyCounties(region) : FB.kingdomCounties(region);
       ids.forEach(function (id) { if (counties.indexOf(id) < 0) counties.push(id); });
     });
     p.tier = args.tier;
@@ -47,7 +49,7 @@ test.beforeEach(async function ({ page }, testInfo) {
 });
 
 test('deed opens relevant blocked cards without spending resources or evaluating while closed', async function ({ page }) {
-  await ruler(page, ['d_normandy']);
+  await ruler(page, ['normandy']);
   const result = await page.evaluate(function () {
     const s = FB.state;
     s.player.gold = 0;
@@ -86,7 +88,7 @@ test('deed opens relevant blocked cards without spending resources or evaluating
 });
 
 test('Normandy targets its own duchy, charges once, and returns from one success sheet', async function ({ page }) {
-  await ruler(page, ['d_normandy', 'k_norway']);
+  await ruler(page, ['normandy', 'norway']);
   const before = await page.evaluate(function () {
     const s = FB.state;
     const quote = FB.historicalAmbitionStatus(s, 'normandy');
@@ -118,7 +120,7 @@ test('Normandy targets its own duchy, charges once, and returns from one success
 });
 
 test('all foundations use their geographic conditions and have no historical deadline', async function ({ page }) {
-  await ruler(page, ['d_normandy', 'k_norway', 'k_england', 'k_sicily'], 7);
+  await ruler(page, ['normandy', 'norway', 'england', 'sicily'], 7);
   const result = await page.evaluate(function () {
     const s = FB.state;
     s.date.year = 1400;
@@ -141,7 +143,7 @@ test('all foundations use their geographic conditions and have no historical dea
 
 for (const actor of ['player', 'ai']) {
   test('all foundation announcements preserve the completing ' + actor + ' character name', async function ({ page }) {
-    await ruler(page, ['d_normandy', 'k_norway', 'k_england', 'k_sicily'], 7);
+    await ruler(page, ['normandy', 'norway', 'england', 'sicily'], 7);
     const result = await page.evaluate(function (actor) {
       const s = FB.state;
       let rid = 'player';
@@ -184,7 +186,7 @@ for (const actor of ['player', 'ai']) {
 }
 
 test('stale costs, war, culture, liege, and territorial requirements block without partial effects', async function ({ page }) {
-  await ruler(page, ['d_normandy', 'k_norway', 'k_sicily']);
+  await ruler(page, ['normandy', 'norway', 'sicily']);
   const result = await page.evaluate(function () {
     const s = FB.state, p = s.player;
     const failures = [];
@@ -203,7 +205,7 @@ test('stale costs, war, culture, liege, and territorial requirements block witho
     blocked('norway', function () { p.liege = 'west_francia'; }, function () { p.liege = null; });
     const rouen = s.holder.rouen;
     blocked('normandy', function () { s.holder.rouen = 'west_francia'; }, function () { s.holder.rouen = rouen; });
-    const island = FB.duchyCounties('d_sicily');
+    const island = FB.duchyCounties('sicily');
     blocked('sicily', function () {
       island.forEach(function (pid) { s.holder[pid] = 'west_francia'; });
     }, function () { island.forEach(function (pid) { s.holder[pid] = 'player'; }); });
@@ -223,10 +225,10 @@ test('English message sources exist before completion for saved chronicles with 
 });
 
 test('Norway counts subordinate counties at the exact threshold but excludes a superior realm', async function ({ page }) {
-  await ruler(page, ['k_norway'], 6);
+  await ruler(page, ['norway'], 6);
   const result = await page.evaluate(function () {
     const s = FB.state, p = s.player;
-    const counties = FB.kingdomCounties('k_norway');
+    const counties = FB.kingdomCounties('norway');
     const need = Math.ceil(counties.length * 0.75);
     const outsider = Object.keys(s.realms).filter(function (id) {
       return id !== 'player' && s.realms[id].alive && !s.realms[id].liege;
@@ -255,7 +257,7 @@ test('Norway counts subordinate counties at the exact threshold but excludes a s
 });
 
 test('county rewards change actual tax and levy projections and survive rightful absorption', async function ({ page }) {
-  await ruler(page, ['d_normandy', 'k_norway'], 6);
+  await ruler(page, ['normandy', 'norway'], 6);
   const result = await page.evaluate(function () {
     const s = FB.state;
     const taxBefore = FB.playerTaxParts(s).total, levyBefore = FB.playerLevy(s);
@@ -282,12 +284,12 @@ test('county rewards change actual tax and levy projections and survive rightful
 });
 
 test('regional rewards survive saves and succession, exclude lost land, and expire exactly', async function ({ page }) {
-  await ruler(page, ['d_normandy', 'k_norway'], 6);
+  await ruler(page, ['normandy', 'norway'], 6);
   const result = await page.evaluate(function () {
     let s = FB.state;
     FB.completeHistoricalAmbition(s, 'normandy');
     const completed = FB.completeHistoricalAmbition(s, 'norway');
-    const county = FB.kingdomCounties('k_norway')[0];
+    const county = FB.kingdomCounties('norway')[0];
     const baseline = FB.modBonus(s, 'levy', county);
     FB.save.restore(JSON.parse(FB.save.serialize()));
     s = FB.state;
@@ -319,7 +321,7 @@ test('regional rewards survive saves and succession, exclude lost land, and expi
 });
 
 test('later-bookmark defaults and realm dissolution cannot replay a foundation', async function ({ page }) {
-  await ruler(page, ['d_normandy'], 5);
+  await ruler(page, ['normandy'], 5);
   const result = await page.evaluate(function () {
     const s = FB.state;
     FB.completeHistoricalAmbition(s, 'normandy');
@@ -348,7 +350,7 @@ test('seasonal AI completes once without opening UI and increases ordinary muste
     })[0];
     Object.keys(s.realms).forEach(function (id) { s.realms[id].war = null; });
     s.player.war = null;
-    FB.kingdomCounties('k_norway').forEach(function (pid) {
+    FB.kingdomCounties('norway').forEach(function (pid) {
       s.owner[pid] = rid; s.holder[pid] = rid;
     });
     FB.invalidateRealmCache();
@@ -371,7 +373,7 @@ test('seasonal AI completes once without opening UI and increases ordinary muste
 
 test('compact cards and success Back preserve a nonzero list position and focus', async function ({ page }) {
   await page.setViewportSize({ width:360, height:640 });
-  await ruler(page, ['d_normandy', 'k_norway', 'k_england', 'k_sicily'], 7);
+  await ruler(page, ['normandy', 'norway', 'england', 'sicily'], 7);
   await page.evaluate(function () { FB.ui.showHistoricalAmbitions(); });
   const action = page.locator('[data-ambition-complete="sicily"]');
   await action.scrollIntoViewIfNeeded();
@@ -389,7 +391,7 @@ test('compact cards and success Back preserve a nonzero list position and focus'
 for (const width of [1280, 390]) {
   test('ambitions disclose background while keeping decision facts visible at ' + width, async function ({ page }) {
     await page.setViewportSize({ width:width, height:900 });
-    await ruler(page, ['d_normandy']);
+    await ruler(page, ['normandy']);
     await page.evaluate(function () { FB.ui.showHistoricalAmbitions(); });
     const card = page.locator('[data-ambition-card="normandy"]');
     const details = card.locator('.settcard-details');

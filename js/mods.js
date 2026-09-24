@@ -1246,6 +1246,7 @@ window.FBMODS = window.FBMODS || [];
   M.apply = function (mod) {
     if (FB.platform.isCrazyGames) throw new Error('Custom mods are unavailable in this edition.');
     const prepared = validateBeforeApply(mod);
+    mod = FB.titleIds.normalizeMod(mod);
     if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') ||
         own(mod, 'marketEndowments')) {
       const marketGoods = own(mod, 'marketGoods')

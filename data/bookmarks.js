@@ -329,105 +329,105 @@ window.FBDATA = window.FBDATA || {};
     for (var i = 0; i < ids.length; i++) DUCHY_OWNER[ids[i]] = owner;
   }
 
-  assign('galicia_1066',['d_galicia']);
-  assign('leon_1066',['d_asturias','d_salamanca']);
-  assign('castile_1066',['d_castilla']);
-  assign('navarre_1066',['d_navarra']);
-  assign('sevilla_1066',['d_sevilla','d_algarve']);
-  assign('granada_1066',['d_granada']);
-  assign('toledo_1066',['d_toledo','d_lisboa']);
-  assign('badajoz_1066',['d_badajoz']);
-  assign('valencia_1066',['d_valencia']);
-  assign('zaragoza_1066',['d_zaragoza','d_tortosa','d_baleares']);
-  assign('barcelona_1066',['d_barcelona']);
+  assign('galicia_1066',['galicia']);
+  assign('leon_1066',['asturias','salamanca']);
+  assign('castile_1066',['castilla']);
+  assign('navarre_1066',['navarra']);
+  assign('sevilla_1066',['sevilla','algarve']);
+  assign('granada_1066',['granada']);
+  assign('toledo_1066',['toledo','lisboa']);
+  assign('badajoz_1066',['badajoz']);
+  assign('valencia_1066',['valencia']);
+  assign('zaragoza_1066',['zaragoza','tortosa','baleares']);
+  assign('barcelona_1066',['barcelona']);
 
-  assign('france',['d_ile','d_anjou','d_blois','d_champagne','d_vermandois',
-    'd_flanders','d_burgundy']);
-  assign('normandy',['d_normandy']);
-  assign('brittany_1066',['d_brittany','d_penthievre']);
-  assign('aquitaine_1066',['d_aquitaine','d_poitou','d_toulouse','d_auvergne',
-    'd_gascogne','d_narbonne']);
-  assign('hre',['d_lyonnais','d_provence','d_savoy','d_alsace','d_luxembourg',
-    'd_frisia','d_franconia','d_swabia','d_ostmark','d_carantania','d_thuringia',
-    'd_rhineland','d_piedmont','d_lombardy','d_verona','d_friuli','d_emilia']);
-  assign('lorraine_1066',['d_lorraine']);
-  assign('saxony_1066',['d_saxony']);
-  assign('bavaria_1066',['d_bavaria']);
-  assign('tuscany_1066',['d_tuscany']);
-  assign('venice_1066',['d_veneto']);
-  assign('papacy_1066',['d_spoleto','d_roma']);
-  assign('benevento_1066',['d_benevento']);
-  assign('apulia_1066',['d_apulia']);
-  assign('apulia_1066',['d_calabria']);
-  assign('sicily_1066',['d_sicily']);
-  assign('sardinia_1066',['d_sardinia','d_corsica']);
+  assign('france',['ile','anjou','blois','champagne','vermandois',
+    'flanders','burgundy']);
+  assign('normandy',['normandy']);
+  assign('brittany_1066',['brittany','penthievre']);
+  assign('aquitaine_1066',['aquitaine','poitou','toulouse','auvergne',
+    'gascogne','narbonne']);
+  assign('hre',['lyonnais','provence','savoy','alsace','luxembourg',
+    'frisia','franconia','swabia','ostmark','carantania','thuringia',
+    'rhineland','piedmont','lombardy','verona','friuli','emilia']);
+  assign('lorraine_1066',['lorraine']);
+  assign('saxony_1066',['saxony']);
+  assign('bavaria_1066',['bavaria']);
+  assign('tuscany_1066',['tuscany']);
+  assign('venice_1066',['veneto']);
+  assign('papacy_1066',['spoleto','roma']);
+  assign('benevento_1066',['benevento']);
+  assign('apulia_1066',['apulia']);
+  assign('apulia_1066',['calabria']);
+  assign('sicily_1066',['sicily']);
+  assign('sardinia_1066',['sardinia','corsica']);
 
-  assign('england_1066',['d_wessex','d_devon','d_kent','d_essex','d_sussex',
-    'd_mercia','d_hwicce','d_east_anglia','d_lindsey','d_northampton','d_york',
-    'd_northumbria','d_chester']);
-  assign('gwynedd_1066',['d_gwynedd']);
-  assign('deheubarth_1066',['d_deheubarth']);
-  assign('glamorgan_1066',['d_glamorgan']);
-  assign('scotland_1066',['d_alba','d_moray','d_lothian','d_strathclyde','d_galloway']);
-  assign('isles_1066',['d_isles']);
-  assign('ulaid_1066',['d_ulster']);
-  assign('dublin_1066',['d_meath']);
-  assign('leinster_1066',['d_leinster']);
-  assign('connacht_1066',['d_connacht']);
-  assign('munster_1066',['d_munster']);
-  assign('norway_1066',['d_agder','d_vestland','d_oppland','d_trondelag']);
-  assign('sweden_1066',['d_svealand','d_gotaland','d_smaland','d_gotland','d_norrland']);
-  assign('denmark_1066',['d_jylland','d_sjaelland','d_scania']);
+  assign('england_1066',['wessex','devon','kent','essex','sussex',
+    'mercia','hwicce','east_anglia','lindsey','northampton','york',
+    'northumbria','chester']);
+  assign('gwynedd_1066',['gwynedd']);
+  assign('deheubarth_1066',['deheubarth']);
+  assign('glamorgan_1066',['glamorgan']);
+  assign('scotland_1066',['alba','moray','lothian','strathclyde','galloway']);
+  assign('isles_1066',['isles']);
+  assign('ulaid_1066',['ulster']);
+  assign('dublin_1066',['meath']);
+  assign('leinster_1066',['leinster']);
+  assign('connacht_1066',['connacht']);
+  assign('munster_1066',['munster']);
+  assign('norway_1066',['agder','vestland','oppland','trondelag']);
+  assign('sweden_1066',['svealand','gotaland','smaland','gotland','norrland']);
+  assign('denmark_1066',['jylland','sjaelland','scania']);
 
-  assign('bohemia_1066',['d_bohemia']);
-  assign('poland_1066',['d_moravia','d_slovakia','d_poland','d_mazovia','d_krakow','d_silesia']);
-  assign('pomerania_1066',['d_pomerania']);
-  assign('wends_1066',['d_wendland']);
-  assign('hungary_1066',['d_transdanubia','d_syrmia','d_transylvania','d_etelkoz']);
-  assign('novgorod_1066',['d_novgorod','d_rostov','d_beloozero','d_smolensk']);
-  assign('kiev_1066',['d_kiev']);
-  assign('chernigov_1066',['d_chernigov']);
-  assign('polotsk_1066',['d_polotsk']);
-  assign('turov_1066',['d_turov','d_volhynia']);
-  assign('prussia_1066',['d_prussia']);
-  assign('lithuania_1066',['d_samogitia','d_lithuania']);
-  assign('livonia_1066',['d_latvia','d_estonia']);
-  assign('finland_1066',['d_finland','d_savo']);
-  assign('karelia_1066',['d_karelia']);
-  assign('cumans_1066',['d_itel','d_sarkel','d_tmutarakan','d_samandar']);
-  assign('byzantium_1066',['d_cherson']);
-  assign('volga_bulgaria_1066',['d_bulgar']);
+  assign('bohemia_1066',['bohemia']);
+  assign('poland_1066',['moravia','slovakia','poland','mazovia','krakow','silesia']);
+  assign('pomerania_1066',['pomerania']);
+  assign('wends_1066',['wendland']);
+  assign('hungary_1066',['transdanubia','syrmia','transylvania','etelkoz']);
+  assign('novgorod_1066',['novgorod','rostov','beloozero','smolensk']);
+  assign('kiev_1066',['kiev']);
+  assign('chernigov_1066',['chernigov']);
+  assign('polotsk_1066',['polotsk']);
+  assign('turov_1066',['turov','volhynia']);
+  assign('prussia_1066',['prussia']);
+  assign('lithuania_1066',['samogitia','lithuania']);
+  assign('livonia_1066',['latvia','estonia']);
+  assign('finland_1066',['finland','savo']);
+  assign('karelia_1066',['karelia']);
+  assign('cumans_1066',['itel','sarkel','tmutarakan','samandar']);
+  assign('byzantium_1066',['cherson']);
+  assign('volga_bulgaria_1066',['bulgar']);
 
-  assign('byzantium_1066',['d_thrace','d_macedonia','d_thessaly','d_hellas',
-    'd_peloponnese','d_epirus','d_crete','d_bithynia','d_opsikion','d_thrakesion',
-    'd_kibyrrhaiot','d_lykaonia','d_cappadocia','d_armeniac','d_chaldia',
-    'd_paphlagonia','d_cilicia','d_cyprus','d_moesia','d_thrace_bulg','d_skopje']);
-  assign('serbia_1066',['d_rascia','d_zeta','d_bosnia']);
-  assign('croatia_1066',['d_croatia','d_slavonia']);
-  assign('seljuk_1066',['d_vaspurakan','d_ani','d_ararat']);
-  assign('georgia_1066',['d_kartli','d_abkhazia']);
-  assign('alania_1066',['d_alania']);
+  assign('byzantium_1066',['thrace','macedonia','thessaly','hellas',
+    'peloponnese','epirus','crete','bithynia','opsikion','thrakesion',
+    'kibyrrhaiot','lykaonia','cappadocia','armeniac','chaldia',
+    'paphlagonia','cilicia','cyprus','moesia','thrace_bulg','skopje']);
+  assign('serbia_1066',['rascia','zeta','bosnia']);
+  assign('croatia_1066',['croatia','slavonia']);
+  assign('seljuk_1066',['vaspurakan','ani','ararat']);
+  assign('georgia_1066',['kartli','abkhazia']);
+  assign('alania_1066',['alania']);
 
-  assign('zirid_1066',['d_tunis','d_tripoli']);
-  assign('fatimid_1066',['d_barqa','d_delta','d_cairo','d_fayyum','d_upper_egypt',
-    'd_damascus','d_jerusalem','d_jordan','d_hejaz']);
-  assign('almoravid_1066',['d_fes','d_tlemcen','d_oran','d_morocco','d_sous','d_sijilmasa']);
-  assign('hammadid_1066',['d_tahert','d_algiers']);
-  assign('aleppo_1066',['d_aleppo','d_antioch']);
-  assign('mosul_1066',['d_mosul','d_diyarbakir','d_edessa']);
-  assign('abbasid_1066',['d_baghdad','d_kufa']);
-  assign('seljuk_1066',['d_basra','d_najd','d_bahrain','d_rayy','d_hamadan','d_isfahan',
-    'd_fars','d_kerman','d_nishapur','d_merv','d_herat','d_balkh','d_tabaristan','d_gilan']);
-  assign('yemen_1066',['d_sanaa','d_aden','d_hadhramaut']);
-  assign('oman_1066',['d_oman']);
-  assign('makran_1066',['d_makran']);
-  assign('sindh_1066',['d_sindh']);
-  assign('seljuk_1066',['d_azerbaijan']);
-  assign('sistan_1066',['d_sistan']);
-  assign('karakhanid_1066',['d_transoxiana']);
-  assign('ghaznavid_1066',['d_kabul','d_zabulistan']);
-  assign('makuria_1066',['d_makuria','d_alodia']);
-  assign('abyssinia_1066',['d_axum','d_amhara']);
+  assign('zirid_1066',['tunis','tripoli']);
+  assign('fatimid_1066',['barqa','delta','cairo','fayyum','upper_egypt',
+    'damascus','jerusalem','jordan','hejaz']);
+  assign('almoravid_1066',['fes','tlemcen','oran','morocco','sous','sijilmasa']);
+  assign('hammadid_1066',['tahert','algiers']);
+  assign('aleppo_1066',['aleppo','antioch']);
+  assign('mosul_1066',['mosul','diyarbakir','edessa']);
+  assign('abbasid_1066',['baghdad','kufa']);
+  assign('seljuk_1066',['basra','najd','bahrain','rayy','hamadan','isfahan',
+    'fars','kerman','nishapur','merv','herat','balkh','tabaristan','gilan']);
+  assign('yemen_1066',['sanaa','aden','hadhramaut']);
+  assign('oman_1066',['oman']);
+  assign('makran_1066',['makran']);
+  assign('sindh_1066',['sindh']);
+  assign('seljuk_1066',['azerbaijan']);
+  assign('sistan_1066',['sistan']);
+  assign('karakhanid_1066',['transoxiana']);
+  assign('ghaznavid_1066',['kabul','zabulistan']);
+  assign('makuria_1066',['makuria','alodia']);
+  assign('abyssinia_1066',['axum','amhara']);
 
   var PROVINCE_OWNER = {
     aragon:'aragon_1066', huesca:'aragon_1066',
@@ -444,15 +444,15 @@ window.FBDATA = window.FBDATA || {};
     for (var i = 0; i < ids.length; i++) target[ids[i]] = 1;
   }
   mark(CATHOLIC_DUCHIES,[
-    'd_agder','d_vestland','d_oppland','d_trondelag','d_svealand','d_gotaland',
-    'd_smaland','d_gotland','d_jylland','d_sjaelland','d_scania','d_moravia',
-    'd_slovakia','d_bohemia','d_poland','d_mazovia','d_krakow','d_silesia',
-    'd_pomerania','d_wendland','d_transdanubia','d_syrmia','d_transylvania'
+    'agder','vestland','oppland','trondelag','svealand','gotaland',
+    'smaland','gotland','jylland','sjaelland','scania','moravia',
+    'slovakia','bohemia','poland','mazovia','krakow','silesia',
+    'pomerania','wendland','transdanubia','syrmia','transylvania'
   ]);
   mark(ORTHODOX_DUCHIES,[
-    'd_novgorod','d_rostov','d_beloozero','d_smolensk','d_kiev','d_chernigov',
-    'd_polotsk','d_turov','d_volhynia','d_moesia','d_thrace_bulg','d_skopje',
-    'd_rascia','d_zeta','d_bosnia'
+    'novgorod','rostov','beloozero','smolensk','kiev','chernigov',
+    'polotsk','turov','volhynia','moesia','thrace_bulg','skopje',
+    'rascia','zeta','bosnia'
   ]);
 
   var DEV_1066 = {
@@ -478,7 +478,7 @@ window.FBDATA = window.FBDATA || {};
     out.religion = source.religion;
     out.dev = DEV_1066[source.id] || Math.min(10, (source.dev || 1) + 1);
 
-    if (source.duchy === 'd_normandy') out.culture = 'norman';
+    if (source.duchy === 'normandy') out.culture = 'norman';
 
     if (CATHOLIC_DUCHIES[source.duchy]) out.religion = 'catholic';
     if (ORTHODOX_DUCHIES[source.duchy]) out.religion = 'orthodox';
@@ -847,11 +847,11 @@ window.FBDATA = window.FBDATA || {};
   var empires1066 = copyMap(FBDATA.empires);
   var kingdoms1066 = copyMap(FBDATA.kingdoms);
   var duchies1066 = copyMap(FBDATA.duchies);
-  kingdoms1066.k_asturias.name = 'León and Castile';
-  kingdoms1066.k_west_francia.name = 'France';
-  kingdoms1066.k_east_francia.name = 'Germany';
-  kingdoms1066.k_pannonia.name = 'Hungary';
-  kingdoms1066.k_rus.name = 'Kievan Rus';
+  kingdoms1066.asturias.name = 'León and Castile';
+  kingdoms1066.west_francia.name = 'France';
+  kingdoms1066.east_francia.name = 'Germany';
+  kingdoms1066.pannonia.name = 'Hungary';
+  kingdoms1066.rus.name = 'Kievan Rus';
 
   /* Most technology traditions derive from capital culture and faith. These
      authored overlaps record courts whose working knowledge plainly crossed

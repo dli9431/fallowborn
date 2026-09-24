@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/title_ids.js',
   'js/main.js',
   'js/model.js',
   'js/world.js',
@@ -159,7 +160,7 @@ test('Self tab titles link directly to counties and duchy capital counties',
         };
       }
       // Franconia duchy counties: frankfurt (capital), mainz, wurzburg...
-      const dcs = FB.duchyCounties('d_franconia');
+      const dcs = FB.duchyCounties('franconia');
       s.player.provs = [dcs[0], dcs[1]];
       for (const pid of s.player.provs) {
         s.owner[pid] = 'player';

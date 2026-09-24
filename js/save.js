@@ -668,7 +668,7 @@ window.FB = window.FB || {};
       }
     }
     try {
-      const header = JSON.stringify({ v:3, rng:FB.getRngState(),
+      const header = JSON.stringify({ v:3, titleIds:1, rng:FB.getRngState(),
         uid:FB.getUidCounter(), mods:FB.mods.sig() });
       const meta = JSON.stringify({
         name:FB.fullName(s.chars[s.player.charId]), titleData:FB.titleSnapshot(s),
@@ -1492,6 +1492,15 @@ window.FB = window.FB || {};
     if (!data || !data.state || typeof data.state !== 'object') {
       throw new Error('The save has no readable game state.');
     }
+    if (data.v === 4) throw new Error(FB.T('Save v4 is available only through the 476 migration prototype.'));
+    var restoredState = data.state;
+    if (data.titleIds !== 1) {
+      var bookmarkId = restoredState.start && restoredState.start.id || '867';
+      var bookmark = FBDATA.bookmarks && FBDATA.bookmarks[bookmarkId];
+      if (!bookmark) throw new Error(FB.T('Missing bookmark {id} for title migration.',
+        { id:bookmarkId }));
+      restoredState = FB.titleIds.migrateState(restoredState, bookmark);
+    }
     if ((FB.platform.isCrazyGames || /^crazygames-content-/.test(data.mods || '')) &&
         data.mods !== FB.mods.sig()) {
       throw new Error(FB.T('This save belongs to a different edition of the game.'));
@@ -1499,7 +1508,7 @@ window.FB = window.FB || {};
     S.lastRestoreWarnings = [];
     FB.setRngState(data.rng);
     FB.setUidCounter(data.uid);
-    FB.state = inflateState(data.state);
+    FB.state = inflateState(restoredState);
     if (!FB.state.player || !FB.state.chars || !FB.state.date ||
         !FB.state.realms || !FB.state.owner) {
       throw new Error('The save is missing required world or player records.');

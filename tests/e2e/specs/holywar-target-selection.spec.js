@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/holywar.js', 'data/cultures.js', 'data/map_data.js',
+dependsOnRuntime(__filename, [
+  'js/title_ids.js','js/holywar.js', 'data/cultures.js', 'data/map_data.js',
   'js/model.js', 'js/world.js', 'js/armies.js']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -27,7 +28,7 @@ test('Catholic inaugural eligibility remains Syria until the first launch',
         });
       } finally { FB.realmReligionId = original; }
     });
-    expect(targets).toEqual(['k_syria']);
+    expect(targets).toEqual(['syria']);
   });
 
 test('later AI calls balance sacred importance, coalition strength and decaying failures',
@@ -51,9 +52,9 @@ test('later AI calls balance sacred importance, coalition strength and decaying 
       let powers = { ally:1000, strong:1000, weak:1000 };
       let calls = {}, picked = null, roll = true;
       const targets = [
-        { kingdomId:'k_syria', holyPriority:1, objectiveDevelopment:10,
+        { kingdomId:'syria', holyPriority:1, objectiveDevelopment:10,
           totalDevelopment:10, objectiveCounties:['test_syria', 'test_syria_second'] },
-        { kingdomId:'k_anatolia', holyPriority:0, objectiveDevelopment:10,
+        { kingdomId:'anatolia', holyPriority:0, objectiveDevelopment:10,
           totalDevelopment:10, objectiveCounties:['test_other'] }
       ];
       stub('ensureReligiousHeads', function () {});
@@ -81,7 +82,7 @@ test('later AI calls balance sacred importance, coalition strength and decaying 
         return { target:picked, calls:Object.assign({}, calls) };
       }
       function defeat(years, religion, outcome, reason) {
-        return { target:'k_syria', religion:religion || 'catholic',
+        return { target:'syria', religion:religion || 'catholic',
           outcome:outcome || 'defenders', reason:reason,
           turn:s.turn - years * 360 };
       }
@@ -137,13 +138,13 @@ test('later AI calls balance sacred importance, coalition strength and decaying 
         Object.defineProperty(history, 'campaigns', { configurable:true, value:[], writable:true });
       }
     });
-    expect(result.first).toEqual({ target:'k_syria', calls:{} });
-    expect(result.feasible.target).toBe('k_anatolia');
+    expect(result.first).toEqual({ target:'syria', calls:{} });
+    expect(result.feasible.target).toBe('anatolia');
     for (const key of ['sacred', 'recovered', 'unrelated', 'victory', 'cancelled']) {
-      expect(result[key].target).toBe('k_syria');
+      expect(result[key].target).toBe('syria');
     }
     for (const key of ['recent', 'repeated', 'collapsed']) {
-      expect(result[key].target).toBe('k_anatolia');
+      expect(result[key].target).toBe('anatolia');
     }
     expect(result.sacred.calls).toEqual({ ally:1, strong:1, weak:1 });
     expect(result.deferred.target).toBeNull();

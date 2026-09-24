@@ -1132,7 +1132,7 @@ province objects; mods merge full objects as before:
 
 ```json
 { "provinces": [
-  { "id": "prague2", "name": "Zličané", "x": 15.0, "y": 49.8, "duchy": "d_bohemia",
+  { "id": "prague2", "name": "Zličané", "x": 15.0, "y": 49.8, "duchy": "bohemia",
     "realm": "bohemia", "culture": "slavic", "religion": "slavic_pagan",
     "terrain": "forest", "dev": 2 }
 ] }
@@ -1215,10 +1215,17 @@ pairs. To remove or replace crossings, provide an atomic bookmark with its compl
 Counties → duchies → kingdoms → empires, all plain reference data:
 
 ```json
-{ "empires":  { "e_francia": { "name": "Francia" } },
-  "kingdoms": { "k_west_francia": { "name": "West Francia", "empire": "e_francia" } },
-  "duchies":  { "d_ile": { "name": "Île-de-France", "kingdom": "k_west_francia" } } }
+{ "empires":  { "francia": { "name": "Francia" } },
+  "kingdoms": { "west_francia": { "name": "West Francia", "empire": "francia" } },
+  "duchies":  { "ile": { "name": "Île-de-France", "kingdom": "west_francia" } } }
 ```
+
+Each rank has its own slug namespace, so the same slug may identify a duchy
+and a kingdom. County `duchy`, duchy `kingdom` and kingdom `empire` references
+must resolve within their rank. Old `d_`, `k_` and `e_` aliases are accepted at
+these typed fields and normalized before activation. Alias/canonical duplicate
+keys or missing parents reject the bookmark; realm ids are separate and never
+rewritten by their spelling. New mods should author canonical slugs.
 
 The engine uses it for the player's rank-claim eligibility (majority of a
 duchy/kingdom/empire), realm naming, and the Land panel's hierarchy display. Mods may add
@@ -3026,7 +3033,7 @@ top-level keys. Each supplied table is a **complete atomic replacement**, not a 
     }
   },
   "marketEndowments": {
-    "duchies": { "d_ile": ["grain"] },
+    "duchies": { "ile": ["grain"] },
     "counties": {
       "london": { "add": ["luxury_entrepot"], "suppress": [] }
     }
@@ -4198,16 +4205,16 @@ A centralized religious head may optionally authorize a global, two-camp campaig
   "greatHolyWar": {
     "name": "Crusade",
     "minDate": { "year": 1095, "season": 3, "day": 1 },
-    "firstTarget": "k_syria",
+    "firstTarget": "syria",
     "firstByYear": 1100,
     "yearlyChance": 0.25,
     "crisisChance": 0.75,
-    "crisisKingdoms": ["k_armenia", "k_anatolia"],
+    "crisisKingdoms": ["armenia", "anatolia"],
     "crisisGroup": "muslim",
     "crisisShare": 0.25,
     "lossGuaranteeYears": 10,
     "sacredTargets": [
-      { "kingdom": "k_syria", "counties": ["jerusalem"] }
+      { "kingdom": "syria", "counties": ["jerusalem"] }
     ]
   }
 } } }

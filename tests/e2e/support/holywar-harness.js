@@ -37,7 +37,7 @@
   FBTEST.makeGreatHolyWar = function (options) {
     options = options || {};
     var state = FB.state;
-    var targetKingdom = options.targetKingdom || 'k_syria';
+    var targetKingdom = options.targetKingdom || 'syria';
     var objective = (options.objectiveCounties ||
       FB.kingdomCounties(targetKingdom)).slice();
     var captured = (options.capturedCounties || objective).slice();

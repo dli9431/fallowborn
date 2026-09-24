@@ -1,21 +1,45 @@
 # Game state & saves
 
-## Political snapshots and future authority state (476 Phases 1–3)
+## 476 authority and title migration prototype (Phases 1–3)
 
-The [authority contract and durable-state diagram](authority.md#durable-state-diagram-proposal-not-a-save-schema)
-separate future appointments, contracts, recognition and customary rights from
-existing county ownership and settlement communities. This is a design proposal,
-not a format change: saves remain version 3. FB.political reads project existing
-records without initializing offices or materializing courts. Its returned objects
-are detached; identity and appointment views are uncached. Territory queries reuse
-the world index, which follows state identity and mutation invalidation. Derived views,
-permission quotes and revision stamps stay out of serialized state.
+The [authority contract](authority.md) separates appointments, contracts,
+recognition and customary rights from county ownership and settlement communities.
+The ordinary save and export format remains version 3 while the 476 bookmark is
+incomplete. `FB.save.serialize()` writes `titleIds:1` to mark rank-scoped
+title references. The opt-in `FB.save.prototypeV4` API migrates, serializes,
+validates and restores version-4 envelopes for development; ordinary slot reads
+and imports do not accept v4 yet.
 
-The [baseline corpus](../plans/v2-476-phase-0/baselines.md) records immutable local
-export hashes and the required owner-run restore/succession comparisons. The
-version-4 migration is prototyped in Phase 3 and published only with the completed
-476 bookmark. Legacy title aliases must resolve before validation; missing
-optional fields cannot invent a political right or duplicate a payment.
+De jure IDs are slugs scoped by rank: `duchies.essex`, `kingdoms.england`,
+`empires.britannia`. Legacy `d_essex`, `k_england` and `e_britannia` are
+resolved only where a field is typed as a title. Realm IDs, character IDs and
+other strings retain their exact bytes even when they resemble a title alias.
+Bookmark activation resolves aliases before validation and rejects missing or
+ambiguous county–duchy, duchy–kingdom and kingdom–empire links. Migration copies
+the input before rewriting typed state references, including regional ambitions,
+war casus, holy-war targets and history. It never changes ownership, holders,
+communities, custody, family links, treasuries, buildings or settlement keys.
+
+An optional `state.authority` carries `schema:4`, `nextId`, appointments,
+recognitions, contracts, rights, render receipts, governments and optional
+site-keyed civic actors. Government rows may reserve `eliteCultureId`,
+`eliteFaithId` and `legalIdentityId` separately from county communities; no
+existing save receives these fields by inference. Each row keeps its semantic
+ID, status, scoped references and turn or period stamps. The v4 validator rejects duplicate IDs, duplicate
+render obligations, invalid forms and derived `effective`, `quote` or
+`projection` fields. Absent authority remains absent; migration does not
+invent political records or replay payments. Repeated migration yields the same
+v4 envelope. The prototype requires the active mod fingerprint to match; an
+unknown bookmark, title or malformed authority record fails before state/RNG
+adoption. Existing deterministic optional-field repairs remain in the normal
+restore path.
+
+The [Phase 3 implementation record](../plans/v2-476-phase-3.md) lists the
+prototype boundary and owner-run acceptance evidence. The
+[baseline corpus](../plans/v2-476-phase-0/baselines.md) records local export
+hashes and the required restore/succession comparisons. Derived views,
+permission quotes, render data and revision stamps stay out of serialized
+state.
 
 ## Freeholder establishment
 
@@ -1737,6 +1761,5 @@ transaction. It stores semantic IDs and transitions for appointments,
 recognitions, federate contracts, customary rights and render receipts.
 Contract payment, render and settlement-fulfillment stamps prevent duplicate effects. Pure queries and
 rendered terms stay out of state. The existing version-3 serializer carries
-these branch-local records for prototype reloads; the completed 2.0 bookmark
-and canonical title aliases require the Phase 3 save-v4 migration before
-release. Old saves do not acquire fabricated offices or contracts on restore.
+these branch-local records for prototype reloads; canonical title aliases and an opt-in v4 migration prototype are now
+available; ordinary v4 publication waits for the completed 2.0 bookmark. Old saves do not acquire fabricated offices or contracts on restore.

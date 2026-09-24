@@ -116,6 +116,8 @@ window.FB = window.FB || {};
     var label = definition && definition.id ? definition.id : '?';
     function fault(text) { errors.push('Bookmark ' + label + ': ' + text); }
     if (!definition || typeof definition !== 'object') return ['Bookmark definition is missing.'];
+    try { definition = FB.titleIds.normalizeBookmark(definition); }
+    catch (error) { return [error.message]; }
     if (FB.validateTechnologyData) {
       var technologyErrors = FB.validateTechnologyData();
       for (var te = 0; te < technologyErrors.length; te++) errors.push(technologyErrors[te]);
@@ -919,6 +921,7 @@ window.FB = window.FB || {};
       setTimeout(function () { done(new Error(errors.join('\n'))); }, 0);
       return;
     }
+    definition = FB.titleIds.normalizeBookmark(definition);
     installDefinition(definition);
     if (worldCache[definition.id]) {
       bindWorld(worldCache[definition.id]);

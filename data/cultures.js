@@ -391,12 +391,12 @@ FBDATA.religions = {
         greatHolyWar:{
           name:'Crusade',
           minDate:{ year:1095, season:3, day:1 },
-          firstTarget:'k_syria', firstByYear:1100,
+          firstTarget:'syria', firstByYear:1100,
           yearlyChance:0.25, crisisChance:0.75,
-          crisisKingdoms:['k_armenia','k_anatolia'],
+          crisisKingdoms:['armenia','anatolia'],
           crisisGroup:'muslim', crisisShare:0.25,
           sacredTargets:[
-            { kingdom:'k_syria', counties:['jerusalem'] }
+            { kingdom:'syria', counties:['jerusalem'] }
           ]
         }
       }
@@ -440,9 +440,9 @@ FBDATA.religions = {
           minDate:{ year:1105, season:0, day:1 },
           yearlyChance:0.35, lossGuaranteeYears:10,
           sacredTargets:[
-            { kingdom:'k_syria', counties:['jerusalem'] },
-            { kingdom:'k_iraq', counties:['baghdad'] },
-            { kingdom:'k_arabia', counties:['mecca','medina'] }
+            { kingdom:'syria', counties:['jerusalem'] },
+            { kingdom:'iraq', counties:['baghdad'] },
+            { kingdom:'arabia', counties:['mecca','medina'] }
           ]
         }
       }
