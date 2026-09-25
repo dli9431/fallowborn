@@ -15,7 +15,9 @@ async function startDeterministicGame(page, options) {
      New-player locking has its own focused coverage; established journeys
      explicitly grant the fixture's earned station before using its code. */
   await unlockStartTier(page, 1);
-  await page.getByRole('button', { name:'New Game', exact:true }).click();
+  const fullStartButton = page.locator('#btn-choose-beginning');
+  if (await fullStartButton.isVisible()) await fullStartButton.click();
+  else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await expect(page.getByRole('heading', {
     name:'Choose a Starting Date', exact:true
   })).toBeVisible();

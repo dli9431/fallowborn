@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.184.0';
+FB.VERSION = '1.184.1';
 FB.CHANGELOG = [
+  { v: '1.184.1', date: '2026-09-25', changes: [
+    'CrazyGames opens Osric in one click, guides the first deed, and saves to browser storage for Automatic Progress Save. Other editions keep their existing flow.'
+  ] },
   { v: '1.184.0', date: '2026-09-23', changes: [
     'Brazilian Portuguese is available as a Preview language in Settings. Settlement grant lists explain county seats, other barons’ holdings, and reserved settlements.'
   ] },
@@ -2299,7 +2302,24 @@ FB.CHANGELOG = [
   }
 
   function wireMenus() {
-    $('btn-newgame').addEventListener('click', function () { showNewGame(); });
+    if (FB.platform.isCrazyGames) {
+      const newGameLabel = $('btn-newgame').querySelector('[data-i18n]');
+      newGameLabel.setAttribute('data-i18n', 'Play as Osric');
+      newGameLabel.textContent = FB.T('Play as Osric');
+      $('btn-choose-beginning').classList.remove('hidden');
+    }
+    $('btn-newgame').addEventListener('click', function () {
+      if (!FB.platform.isCrazyGames) { showNewGame(); return; }
+      const definition = (FBDATA.quickStarts || []).filter(function (candidate) {
+        return candidate.id === 'osric_867';
+      })[0];
+      const details = quickStartDetails(definition);
+      if (!details) { showNewGame(); return; }
+      newGameTelemetrySeen = {};
+      G.pending = { seed:freshSeed() };
+      beginQuickStart(definition, details);
+    });
+    $('btn-choose-beginning').addEventListener('click', showNewGame);
     $('btn-continue').addEventListener('click', function () { G.loadSlot('auto'); });
     $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
     $('btn-chronicle').addEventListener('click', function () { FB.ui.showChronicleLibrary(); });
@@ -3033,6 +3053,8 @@ FB.CHANGELOG = [
     // the same seed and making the same picks gets this exact start
     const seedStr = (G.pending && G.pending.seed) || freshSeed();
     const quickStartId = G.pending && G.pending.quickStartId || 'custom';
+    const directCrazyGamesStart = FB.platform.isCrazyGames &&
+      quickStartId === 'osric_867';
     FB.seedRng(FB.hashSeed(seedStr));
     const bookmark = FB.activeBookmark;
     const start = {
@@ -3336,18 +3358,24 @@ FB.CHANGELOG = [
       ? '<p class="hint" data-serf-start-pointer>' + FB.esc(FB.T(
         "Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds.")) + '</p>'
       : '';
-    FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
-      FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
-      '</p><p class="hint">' +
-      FB.esc(introHint) +
-      '</p>' + serfIntroPointer +
-      '</div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
-    $('gm-go').addEventListener('click', function () {
-      FB.ui.closeModal();
-      if (firstPlayerOnboarding && FB.ui.resumeFirstPlayerTip) {
-        FB.ui.resumeFirstPlayerTip();
-      }
-    });
+    if (!directCrazyGamesStart) {
+      FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
+        FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
+        '</p><p class="hint">' +
+        FB.esc(introHint) +
+        '</p>' + serfIntroPointer +
+        '</div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
+      $('gm-go').addEventListener('click', function () {
+        FB.ui.closeModal();
+        if (firstPlayerOnboarding && FB.ui.resumeFirstPlayerTip) {
+          FB.ui.resumeFirstPlayerTip();
+        }
+      });
+    } else if (firstPlayerOnboarding && FB.ui.resumeFirstPlayerTip) {
+      requestAnimationFrame(function () {
+        if (FB.state === state) FB.ui.resumeFirstPlayerTip();
+      });
+    }
     FB.save.autosave();
     FB.save.warnIfBlocked();
     beginTelemetrySession('new-campaign');

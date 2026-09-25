@@ -1679,35 +1679,32 @@ Standard builds also reject these saves. This requires a new campaign rather tha
 rewriting an imported Chronicle or relationships. Save format remains 3.
 See [content profiles](distribution-content.md).
 
-## CrazyGames Data Module
+## CrazyGames save storage
 
-The explicit CrazyGames distribution initializes SDK v3 before enabling the title.
-Its sole campaign key is fb_cg_campaign_v1, with earned starting ranks in
-fb_cg_progression_v1. Manual Save and autosave share Continue; numbered slots
-remain exclusive to standard editions. SDK data is authoritative for both guests
-and accounts. No automatic migration reads ordinary IndexedDB/localStorage saves.
-An earlier restricted build can export and import its matching content-profile life.
+The CrazyGames upload sets `window.FB_CRAZYGAMES_STORAGE = "localstorage"`
+before game scripts. The isolated `js/crazygames.js` adapter still initializes SDK
+v3 for gameplay reporting, but reads and writes the campaign and earned starting
+ranks directly in `localStorage`. Its keys are `fb_cg_aps_campaign_v1` and
+`fb_cg_aps_progression_v1`. Manual Save and autosave share Continue; numbered
+slots remain exclusive to standard editions. The standard edition does not read
+these keys or initialize the SDK. No IndexedDB or SDK Data Module save is
+automatically migrated. A compatible life can be transferred with Save File.
 
-The isolated js/crazygames.js I/O boundary uses native CompressionStream gzip and
-base64 (FBG1), verified by decompressing to identical JSON before writing. It
-requires a browser supporting CompressionStream/DecompressionStream; failure,
-corrupt data or unavailable SDK blocks boot without overwriting anything. Promises
-are confined to platform I/O; the simulation and RNG remain synchronous. The
-standard edition neither initializes the SDK nor requires these browser APIs.
+The adapter verifies gzip/base64 (`FBG1`) by decompressing it back to the exact
+JSON before replacing the browser snapshot. It requires
+`CompressionStream` and `DecompressionStream` on this distribution. The browser
+enforces the shared `localStorage` quota, commonly about 5 MiB per origin; a
+failed write leaves the prior campaign intact and points to file export. A
+closing page cannot await gzip, so a pending snapshot attempts the verified
+synchronous LZ/base64 (`FBL1`) fallback. Both forms load on boot.
 
-The adapter checks the UTF-8 size of the complete owned-key JSON against the
-1,048,576-byte SDK limit, reserving 4 KiB for progression and overhead. Rejection
-keeps the accepted campaign and offers file export; no history is truncated to fit.
-SDK acceptance does not confirm cloud upload: syncing may take up to 30 seconds.
+Writes compare the stored keys before mutation so a stale tab cannot replace a
+newer browser snapshot. Deleting the campaign leaves earned ranks. APS backup
+and cross-device restore require validation in the actual CrazyGames upload;
+local write success alone does not establish cloud sync. Save format remains 3.
 
-Write revisions cancel stale compression jobs after newer saves, deletion or
-auth changes. Reads use only accepted snapshots. Before every mutation the
-adapter checks that SDK data still matches the loaded session; conflicts require
-a reload. The SDK reloads Data Module games on login/logout; an auth listener
-blocks old-page writes while that reload is pending. Deletes keep earned ranks.
-
-A closing page cannot await gzip. Pending saves attempt the existing verified
-synchronous LZ/base64 encoding (FBL1) if it fits. Otherwise the prior accepted
-snapshot remains; immediate tab closure is not a confirmed save. Both encodings
-load on boot, and portable exports retain FBS2 and the content-profile guard.
-This is persistence only and changes no technology eligibility.
+Without the storage flag, the adapter retains its SDK Data Module mode for
+older packages and tests. That mode uses `fb_cg_campaign_v1` and
+`fb_cg_progression_v1`, enforces the 1,048,576-byte module limit with a 4 KiB
+reserve, and blocks writes after account changes until reload. The two modes
+keep separate keys and do not silently copy one mode into the other.

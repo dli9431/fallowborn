@@ -822,7 +822,11 @@ window.FB = window.FB || {};
   };
   // UTF-16 payload estimates, excluding database indexes and browser overhead.
   S.storageUsage = function (done) {
-    if (crazy) { done({ crazygames:crazy.usage(), limit:1048576 }); return; }
+    if (crazy) {
+      if (crazy.backend() === 'localstorage') done({ localStorage:crazy.usage(), indexedDB:0 });
+      else done({ crazygames:crazy.usage(), limit:1048576 });
+      return;
+    }
     const usage = { localStorage:null, indexedDB:saveDatabase ? null : 0 };
     try {
       usage.localStorage = 0;
@@ -910,7 +914,7 @@ window.FB = window.FB || {};
       transaction.onabort = function () { finish(false); };
     } catch (error) { finish(false); }
   };
-  S.storageBackend = function () { return crazy ? 'crazygames' : saveDatabase ? 'indexeddb' : 'localstorage'; };
+  S.storageBackend = function () { return crazy ? crazy.backend() : saveDatabase ? 'indexeddb' : 'localstorage'; };
   S.toSlot = function (slot, done) {
     if (crazy) {
       if (slot !== 'auto') { if (done) done(false); return false; }

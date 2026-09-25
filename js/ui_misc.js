@@ -2779,8 +2779,9 @@ window.FB = window.FB || {};
   };
 
   /* ================= first-time player tips =================
-     A fresh browser profile learns the map, Home, and filters before any
-     other coachmark, then the playable deed/time/event/hostile-deed loop, the new
+     Standard editions teach the map, Home, and filters first. CrazyGames
+     starts at an available deed and defers the map tour until First steps.
+     The playable deed/time/event/hostile-deed loop, the new
      Family & legacy checklist, and Self. Other areas
      teach themselves only when the player deliberately opens them. A tip is
      recorded in browser-local uiPrefs.tipsSeen only after its coachmark is
@@ -3100,10 +3101,26 @@ window.FB = window.FB || {};
         !FB.tutorialLife || !FB.tutorialLife(s)) return false;
     const flags = s.player.flags;
     const seen = FB.game.uiPrefs.tipsSeen || {};
-    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
+    if (!FB.platform.isCrazyGames &&
+        (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters'])) {
       return UI.resumeMapTips();
     }
     if (!flags.tut_deed) {
+      if (FB.platform.isCrazyGames) {
+        if (!UI.tipDue('first-deed')) return false;
+        const status = FB.instantStatus ? FB.instantStatus(s, 'mediate') : null;
+        const exposed = status && status.shown && status.can &&
+          UI.revealDeedAction && UI.revealDeedAction('mediate');
+        const osricStart = s.telemetry && s.telemetry.quickStart === 'osric_867';
+        return UI.maybeTip('first-deed',
+          exposed
+            ? (osricStart
+              ? '💡 You are Osric, a serf in Barcelona. Try Mediate a quarrel as your first deed, then press Play to see what happens next.'
+              : '💡 Try Mediate a quarrel as your first deed, then press Play to see what happens next.')
+            : '💡 Open Deeds and choose an available one-time action, then press Play to see what happens next.',
+          exposed ? '#tab-actions [data-action-id="mediate"]' :
+            '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+      }
       return UI.maybeTip('first-deed',
         '💡 Begin in Deeds below Daily Focus: open a category and choose one one-time deed. Focus repeats as days pass; a deed is a single action.',
         '#sidetabs .tab[data-tab="actions"]', {
@@ -3129,6 +3146,10 @@ window.FB = window.FB || {};
     const flags = (s && s.player && s.player.flags) || {};
     const seen = FB.game.uiPrefs.tipsSeen || {};
     if (!flags.tut_track_first_steps) return false;
+    if (FB.platform.isCrazyGames && flags.tut_event &&
+        !seen['first-event-result']) {
+      return UI.maybeFirstEventResultTip();
+    }
     if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
       return UI.resumeMapTips();
     }

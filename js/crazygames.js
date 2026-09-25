@@ -3,7 +3,9 @@
   'use strict';
   if (!FB.platform.isCrazyGames) return;
   var C = FB.crazySave = {};
-  var KEY = 'fb_cg_campaign_v1', PROGRESS = 'fb_cg_progression_v1';
+  var localMode = window.FB_CRAZYGAMES_STORAGE === 'localstorage';
+  var KEY = localMode ? 'fb_cg_aps_campaign_v1' : 'fb_cg_campaign_v1';
+  var PROGRESS = localMode ? 'fb_cg_aps_progression_v1' : 'fb_cg_progression_v1';
   var LIMIT = 1048576, RESERVE = 4096;
   var sdk = null, ready = false, locked = false, revision = 0;
   var stored = null, campaign = null, progression = null, codec = null;
@@ -12,7 +14,8 @@
   function quota() { return error(FB.T('CrazyGames save space is full. Your previous save is kept. Download this life from Save game to preserve it.')); }
   function sameAccount() {
     if (!ready || locked) throw error(FB.T('CrazyGames saves are unavailable. Reload the game to reconnect.'));
-    if (sdk.data.getItem(KEY) !== stored || sdk.data.getItem(PROGRESS) !== progression) {
+    var current = localMode ? localStorage : sdk.data;
+    if (current.getItem(KEY) !== stored || current.getItem(PROGRESS) !== progression) {
       locked = true; revision++;
       throw error(FB.T('Your CrazyGames save changed. Reload to load it before saving again.'));
     }
@@ -26,6 +29,7 @@
   }
   function bytes(value) { return new TextEncoder().encode(value).length; }
   function fits(value) {
+    if (localMode) return true; // The browser enforces its shared localStorage quota.
     var record = {}; record[KEY] = value; record[PROGRESS] = progression || '';
     return bytes(JSON.stringify(record)) <= LIMIT - RESERVE;
   }
@@ -59,7 +63,13 @@
   function commit(json, value) {
     sameAccount();
     if (!fits(value)) throw quota();
-    sdk.data.setItem(KEY, value);
+    try {
+      if (localMode) localStorage.setItem(KEY, value);
+      else sdk.data.setItem(KEY, value);
+    } catch (e) {
+      if (localMode && (/quota/i.test(String(e && e.name)) || e.code === 22 || e.code === 1014)) throw quota();
+      throw e;
+    }
     stored = value; campaign = json;
     if (latest === json) latest = null;
     var button = document.getElementById('btn-continue');
@@ -95,13 +105,14 @@
       // Promises stay inside this platform I/O boundary, outside game simulation.
       sdk.init().then(function () {
         if (complete) return null;
-        stored = sdk.data.getItem(KEY);
-        progression = sdk.data.getItem(PROGRESS);
+        var current = localMode ? localStorage : sdk.data;
+        stored = current.getItem(KEY);
+        progression = current.getItem(PROGRESS);
         if (progression) {
           var p = JSON.parse(progression);
           if (!p || p.v !== 1 || !isFinite(p.highestAchievedTier)) throw error(FB.T('CrazyGames progress could not be read. Your data has been kept.'));
         }
-        if (sdk.user && sdk.user.isUserAccountAvailable) {
+        if (!localMode && sdk.user && sdk.user.isUserAccountAvailable) {
           sdk.user.addAuthListener(function () {
             // The SDK reloads Data Module games on login. Block old-page writes first.
             locked = true; revision++;
@@ -115,8 +126,9 @@
   C.progress = function () { return progression; };
   C.setProgress = function (value) {
     sameAccount();
-    if (value === null) sdk.data.removeItem(PROGRESS);
-    else sdk.data.setItem(PROGRESS, value);
+    var current = localMode ? localStorage : sdk.data;
+    if (value === null) current.removeItem(PROGRESS);
+    else current.setItem(PROGRESS, value);
     progression = value;
   };
   C.write = function (json, done) {
@@ -140,16 +152,20 @@
   C.flushLatest = function () { if (latest) return C.flush(latest); return true; };
   C.remove = function () {
     sameAccount();
-    sdk.data.removeItem(KEY);
+    if (localMode) localStorage.removeItem(KEY);
+    else sdk.data.removeItem(KEY);
     revision++;
     if (pending) { pending.done(false); pending = null; }
     stored = null; campaign = null; latest = null;
   };
   C.usage = function () {
+    if (localMode) return 2 * (KEY.length + (stored || '').length +
+      PROGRESS.length + (progression || '').length);
     var record = {}; if (stored !== null) record[KEY] = stored;
     if (progression !== null) record[PROGRESS] = progression;
     return bytes(JSON.stringify(record));
   };
+  C.backend = function () { return localMode ? 'localstorage' : 'crazygames'; };
   var playing = false;
   C.gameplay = function (active) {
     if (!ready || locked || playing === active) return;

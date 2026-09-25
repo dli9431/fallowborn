@@ -28353,11 +28353,13 @@ window.FB = window.FB || {};
     FB.save.storageUsage(function (sizes) {
       if (!document.body.contains(usage)) return;
       function size(bytes) { return bytes === null ? FB.T('Unavailable') : FB.T('{size} MiB', { size:(bytes / 1048576).toFixed(2) }); }
-      usage.textContent = FB.platform.isCrazyGames
-        ? FB.T('CrazyGames: {used} of {limit}', { used:size(sizes.crazygames), limit:size(sizes.limit) })
-        : FB.T('localStorage: {local}; IndexedDB: {database}', {
-        local:size(sizes.localStorage), database:size(sizes.indexedDB)
-      });
+      usage.textContent = FB.platform.isCrazyGames && FB.save.storageBackend() === 'localstorage'
+        ? FB.T('CrazyGames browser save: {used}', { used:size(sizes.localStorage) })
+        : FB.platform.isCrazyGames
+          ? FB.T('CrazyGames: {used} of {limit}', { used:size(sizes.crazygames), limit:size(sizes.limit) })
+          : FB.T('localStorage: {local}; IndexedDB: {database}', {
+            local:size(sizes.localStorage), database:size(sizes.indexedDB)
+          });
       confirm.disabled = false;
     });
     cancel.addEventListener('click', function () { modalHistoryBack(back); });
@@ -29150,7 +29152,9 @@ window.FB = window.FB || {};
       (FB.save.hasSlot('auto') ? '' : ' disabled') + ' aria-label="' + esc(FB.T('Delete Autosave')) + '">' +
       esc(FB.T('Delete')) + '</button></div>';
     if (FB.platform.isCrazyGames) {
-      h += '<p class="hint">' + esc(FB.T('CrazyGames keeps one campaign. Saving replaces Continue and autosave. Signed-in progress syncs through CrazyGames; guest progress stays on this device. Allow time for syncing before closing.')) + '</p>' +
+      h += '<p class="hint">' + esc(FB.save.storageBackend() === 'localstorage'
+        ? FB.T('This browser keeps one campaign. CrazyGames Automatic Progress Save may back it up when available. Download a save file for a separate backup.')
+        : FB.T('CrazyGames keeps one campaign. Saving replaces Continue and autosave. Signed-in progress syncs through CrazyGames; guest progress stays on this device. Allow time for syncing before closing.')) + '</p>' +
         '<button class="actionbtn" data-slot="auto">' + esc(FB.T(saving ? 'Save current life' : 'Load saved life')) + '</button>';
     }
     for (let i = 1; i <= (FB.platform.isCrazyGames ? 0 : 3); i++) {
@@ -29202,7 +29206,10 @@ window.FB = window.FB || {};
           FB.save.toSlot(n, function (ok) {
             b.disabled = false;
             if (ok) {
-              if (FB.platform.isCrazyGames) UI.toast('Saved through CrazyGames. Account syncing may take up to 30 seconds.');
+              if (FB.platform.isCrazyGames) {
+                if (FB.save.storageBackend() === 'localstorage') UI.toast('Saved in this browser.');
+                else UI.toast('Saved through CrazyGames. Account syncing may take up to 30 seconds.');
+              }
               else UI.toast('Saved to slot {slot}.', { slot:n });
               if (document.body.contains(b)) UI.closeModal();
             }

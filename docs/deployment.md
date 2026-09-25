@@ -192,12 +192,15 @@ standard saves require the standard edition. See
 
 ### CrazyGames progress
 
-The CrazyGames package injects the official hosted v3 SDK before game scripts.
-Only this explicit distribution loads the SDK; standard itch/play/file releases
-remain self-contained. Select **Yes, using the Data Module from the CrazyGames SDK**
-in the portal or the storage module is disabled. One compressed campaign and
-earned starts use SDK storage for guests and accounts. See
-[state and saves](designs/state-and-saves.md#crazygames-data-module).
-Verify guest/account reload, another-device resume, rejected writes and portal
-size measurements before submission. Screen entry/exit reports gameplay start/stop;
-Full Launch still needs a broader pause/menu/lifecycle review.
+The CrazyGames package injects the official hosted v3 SDK and sets
+`window.FB_CRAZYGAMES_STORAGE = "localstorage"` before game scripts. Only this
+distribution loads the SDK; standard itch/play/file releases remain self-contained.
+The flag selects one compressed campaign and earned starts in `localStorage`,
+without opening the game save database or calling the SDK Data Module. Select
+**Yes, using LocalStorage (Automatic Progress Save)** in the portal. APS support
+and cross-device restore must be verified in the uploaded game. The browser still
+enforces its shared `localStorage` quota. See
+[state and saves](designs/state-and-saves.md#crazygames-save-storage).
+Verify reload, another-device resume, quota rejection and file export before
+submission. Screen entry/exit reports gameplay start/stop; Full Launch still
+needs a broader pause/menu/lifecycle review.

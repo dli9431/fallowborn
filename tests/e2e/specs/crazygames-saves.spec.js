@@ -108,6 +108,75 @@ test('account change cancels writes from the previous session', async function (
   expect(result).toEqual({ ok:false, preserved:true });
 });
 
+async function bootLocal(page, testInfo) {
+  await mockCrazyGames(page);
+  await page.addInitScript(function () {
+    window.FB_DISTRIBUTION = 'crazygames';
+    window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+  });
+  await openGame(page, testInfo);
+}
+
+test('CrazyGames localStorage mode saves one compressed life and earned starts without SDK data', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  await page.evaluate(function () {
+    FB.state.player.gold = 4321;
+    FB.startProgression.noteTier(3);
+  });
+  expect(await save(page)).toBe(true);
+  const before = await page.evaluate(function () {
+    return { backend:FB.save.storageBackend(),
+      campaign:localStorage.getItem('fb_cg_aps_campaign_v1').slice(0, 5),
+      progression:JSON.parse(localStorage.getItem('fb_cg_aps_progression_v1')).highestAchievedTier,
+      sdkInitialized:window.__cgTest.calls.indexOf('init') >= 0,
+      sdkDataCalls:window.__cgTest.calls.filter(function (call) { return /^(get|set):/.test(call); }),
+      sdkData:window.__cgTest.data };
+  });
+  expect(before).toEqual({
+    backend:'localstorage', campaign:'FBG1.', progression:3,
+    sdkInitialized:true, sdkDataCalls:[], sdkData:{}
+  });
+  await page.evaluate(function () { FB.ui.showSaveLoad(true); });
+  await expect(page.locator('#gm-body')).toContainText('Automatic Progress Save may back it up');
+  await page.reload();
+  await page.waitForFunction(function () { return FB.game.bootReady; });
+  const after = await page.evaluate(function () {
+    return { gold:FB.save.read('auto').state.player.gold,
+      tier:FB.startProgression.snapshot().highestAchievedTier,
+      manual:FB.save.hasSlot(1), backend:FB.save.storageBackend(),
+      sdkDataCalls:window.__cgTest.calls.filter(function (call) { return /^(get|set):/.test(call); }) };
+  });
+  expect(after).toEqual({ gold:4321, tier:3, manual:false, backend:'localstorage', sdkDataCalls:[] });
+});
+
+test('CrazyGames localStorage quota rejection retains the last accepted campaign', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  const result = await page.evaluate(async function () {
+    var previous = localStorage.getItem('fb_cg_aps_campaign_v1');
+    var previousGold = FB.save.read('auto').state.player.gold;
+    var original = Storage.prototype.setItem;
+    FB.state.player.gold += 10;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === 'fb_cg_aps_campaign_v1') throw new DOMException('Full', 'QuotaExceededError');
+      return original.call(this, key, value);
+    };
+    try {
+      var ok = await new Promise(function (resolve) { FB.save.toSlot('auto', resolve); });
+      return { ok:ok, preserved:localStorage.getItem('fb_cg_aps_campaign_v1') === previous,
+        gold:FB.save.read('auto').state.player.gold, previousGold:previousGold,
+        sdkDataCalls:window.__cgTest.calls.filter(function (call) { return /^(get|set):/.test(call); }) };
+    } finally { Storage.prototype.setItem = original; }
+  });
+  expect(result.ok).toBe(false);
+  expect(result.preserved).toBe(true);
+  expect(result.gold).toBe(result.previousGold);
+  expect(result.sdkDataCalls).toEqual([]);
+  await expect(page.locator('#toasts')).toContainText('previous save is kept');
+});
+
 test('standard edition never initializes the SDK and retains its manual slots', async function ({ page }, testInfo) {
   await mockCrazyGames(page);
   await openGame(page, testInfo);
