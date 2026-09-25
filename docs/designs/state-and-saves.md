@@ -1690,13 +1690,20 @@ slots remain exclusive to standard editions. The standard edition does not read
 these keys or initialize the SDK. No IndexedDB or SDK Data Module save is
 automatically migrated. A compatible life can be transferred with Save File.
 
-The adapter verifies gzip/base64 (`FBG1`) by decompressing it back to the exact
-JSON before replacing the browser snapshot. It requires
-`CompressionStream` and `DecompressionStream` on this distribution. The browser
-enforces the shared `localStorage` quota, commonly about 5 MiB per origin; a
-failed write leaves the prior campaign intact and points to file export. A
-closing page cannot await gzip, so a pending snapshot attempts the verified
-synchronous LZ/base64 (`FBL1`) fallback. Both forms load on boot.
+For this localStorage mode, the adapter gzips the unchanged save JSON and packs
+the bytes into 15-bit, non-surrogate UTF-16 code units (`FBG2`). A two-unit
+length header removes padding ambiguity. It decompresses the new value back to
+the exact JSON before replacing the browser snapshot. Older gzip/base64
+(`FBG1`) and page-exit LZ/base64 (`FBL1`) values still load, and the next
+normal save writes `FBG2`. SDK Data Module mode continues to write `FBG1`.
+The adapter requires `CompressionStream` and `DecompressionStream`.
+
+The browser enforces the shared `localStorage` quota, commonly about 5 MiB per
+origin; a failed write leaves the prior campaign intact and points to file
+export. The packed form uses fewer UTF-16 code units than gzip/base64, but the
+CrazyGames APS backup size and cross-device behavior must be checked in the
+actual upload. A closing page cannot await gzip, so a pending snapshot attempts
+the verified synchronous `FBL1` fallback.
 
 Writes compare the stored keys before mutation so a stale tab cannot replace a
 newer browser snapshot. Deleting the campaign leaves earned ranks. APS backup

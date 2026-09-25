@@ -40,12 +40,61 @@
     }
     return btoa(parts.join(''));
   }
+  /* Store gzip bytes in 15-bit, non-surrogate UTF-16 code units. Two units
+     carry the byte length, so padding never becomes an extra gzip byte. This
+     changes only the CrazyGames localStorage value, not the save JSON or export. */
+  function pack15(buffer) {
+    var data = new Uint8Array(buffer), length = data.length;
+    if (!length || length > 0x3fffffff) throw error(FB.T('Save compression failed. Your previous save is kept.'));
+    var parts = ['FBG2.', String.fromCharCode(32 + (length >>> 15),
+      32 + (length & 32767))], chars = [];
+    var word = 0, bits = 0;
+    function emit(value) {
+      chars.push(String.fromCharCode(32 + value));
+      if (chars.length === 8192) { parts.push(chars.join('')); chars = []; }
+    }
+    for (var i = 0; i < length; i++) {
+      word = (word << 8) | data[i]; bits += 8;
+      if (bits >= 15) {
+        bits -= 15; emit((word >>> bits) & 32767);
+        word &= (1 << bits) - 1;
+      }
+    }
+    if (bits) emit((word << (15 - bits)) & 32767);
+    if (chars.length) parts.push(chars.join(''));
+    return parts.join('');
+  }
+  function unpack15(raw) {
+    var high = raw.charCodeAt(0) - 32, low = raw.charCodeAt(1) - 32;
+    var length = high * 32768 + low;
+    function invalid() { throw error(FB.T('The CrazyGames save could not be read. Your saved data has been kept.')); }
+    if (raw.length < 3 || high < 0 || high > 32767 || low < 0 || low > 32767 ||
+        !length || raw.length !== 2 + Math.ceil(length * 8 / 15)) invalid();
+    var data = new Uint8Array(length), at = 0, word = 0, bits = 0;
+    for (var i = 2; i < raw.length; i++) {
+      var value = raw.charCodeAt(i) - 32;
+      if (value < 0 || value > 32767) invalid();
+      word = (word << 15) | value; bits += 15;
+      while (bits >= 8) {
+        bits -= 8;
+        if (at >= length) invalid();
+        data[at++] = (word >>> bits) & 255;
+        word &= (1 << bits) - 1;
+      }
+    }
+    if (at !== length || word !== 0) invalid();
+    return data;
+  }
+  function unzipBytes(data) {
+    return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  }
   function unzip(value) {
-    var binary = atob(value), a = new Uint8Array(binary.length);
-    for (var i = 0; i < a.length; i++) a[i] = binary.charCodeAt(i);
-    return new Response(new Blob([a]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    var binary = atob(value), data = new Uint8Array(binary.length);
+    for (var i = 0; i < data.length; i++) data[i] = binary.charCodeAt(i);
+    return unzipBytes(data);
   }
   function unpack(raw) {
+    if (raw.indexOf('FBG2.') === 0) return unzipBytes(unpack15(raw.slice(5)));
     if (raw.indexOf('FBG1.') === 0) return unzip(raw.slice(5));
     if (raw.indexOf('FBL1.') === 0) return Promise.resolve(codec.decode(raw.slice(5)));
     return Promise.reject(error(FB.T('The CrazyGames save format is unsupported. Your saved data has been kept.')));
@@ -53,7 +102,7 @@
   function pack(json) {
     return new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('gzip')))
       .arrayBuffer().then(function (buffer) {
-        var value = 'FBG1.' + base64(buffer);
+        var value = localMode ? pack15(buffer) : 'FBG1.' + base64(buffer);
         return unpack(value).then(function (decoded) {
           if (decoded !== json) throw error(FB.T('Save compression failed. Your previous save is kept.'));
           return value;

@@ -134,9 +134,10 @@ test('CrazyGames localStorage mode saves one compressed life and earned starts w
       sdkData:window.__cgTest.data };
   });
   expect(before).toEqual({
-    backend:'localstorage', campaign:'FBG1.', progression:3,
+    backend:'localstorage', campaign:'FBG2.', progression:3,
     sdkInitialized:true, sdkDataCalls:[], sdkData:{}
   });
+  const savedJson = await page.evaluate(function () { return FB.crazySave.read(); });
   await page.evaluate(function () { FB.ui.showSaveLoad(true); });
   await expect(page.locator('#gm-body')).toContainText('Automatic Progress Save may back it up');
   await page.reload();
@@ -148,6 +149,48 @@ test('CrazyGames localStorage mode saves one compressed life and earned starts w
       sdkDataCalls:window.__cgTest.calls.filter(function (call) { return /^(get|set):/.test(call); }) };
   });
   expect(after).toEqual({ gold:4321, tier:3, manual:false, backend:'localstorage', sdkDataCalls:[] });
+  expect(await page.evaluate(function () { return FB.crazySave.read(); })).toBe(savedJson);
+});
+
+test('CrazyGames localStorage mode migrates a legacy gzip save on the next write', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  await page.evaluate(function () { FB.state.player.gold = 9876; });
+  expect(await save(page)).toBe(true);
+  const legacy = await page.evaluate(async function () {
+    var json = FB.crazySave.read();
+    var buffer = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+    var data = new Uint8Array(buffer), chunks = [];
+    for (var i = 0; i < data.length; i += 8192) {
+      chunks.push(String.fromCharCode.apply(null, data.subarray(i, i + 8192)));
+    }
+    var value = 'FBG1.' + btoa(chunks.join(''));
+    localStorage.setItem('fb_cg_aps_campaign_v1', value);
+    return value;
+  });
+  await page.reload();
+  await page.waitForFunction(function () { return FB.game.bootReady; });
+  expect(await page.evaluate(function () { return FB.save.read('auto').state.player.gold; })).toBe(9876);
+  expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBe(legacy);
+  await page.evaluate(function () { FB.game.loadSlot('auto'); });
+  await page.waitForFunction(function () { return FB.state && FB.state.player.gold === 9876; });
+  expect(await save(page)).toBe(true);
+  expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1').slice(0, 5); })).toBe('FBG2.');
+});
+
+test('CrazyGames localStorage mode keeps a damaged packed save and blocks boot', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  const damaged = await page.evaluate(function () {
+    var value = localStorage.getItem('fb_cg_aps_campaign_v1').slice(0, -1);
+    localStorage.setItem('fb_cg_aps_campaign_v1', value);
+    return value;
+  });
+  await page.reload();
+  await expect(page.locator('#title-boot-status')).toContainText('saved data has been kept');
+  expect(await page.evaluate(function () { return FB.game.bootReady; })).toBe(false);
+  expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBe(damaged);
 });
 
 test('CrazyGames localStorage quota rejection retains the last accepted campaign', async function ({ page }, testInfo) {

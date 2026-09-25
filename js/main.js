@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.184.1';
+FB.VERSION = '1.184.2';
 FB.CHANGELOG = [
+  { v: '1.184.2', date: '2026-09-25', changes: [
+    'CrazyGames browser saves take less space and continue to load older campaigns.'
+  ] },
   { v: '1.184.1', date: '2026-09-25', changes: [
     'CrazyGames opens Osric in one click, guides the first deed, and saves to browser storage for Automatic Progress Save. Other editions keep their existing flow.'
   ] },
