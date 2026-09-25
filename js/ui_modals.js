@@ -28590,7 +28590,7 @@ window.FB = window.FB || {};
         '<label class="autorow"><input type="checkbox" id="set-obsbare"' + (G.obsBare ? ' checked' : '') + '> ' +
         '<b>Hide the Land & Chronicle panel</b><span class="adesc">Only the map and the flow of days remain.</span></label>';
     }
-    h += langSelector();
+    if (!FB.platform.isCrazyGames) h += langSelector();
     h += '<button class="btn" id="gm-back">Back</button>';
     openModal('Settings', h, { historyView:true });
     function speedLabel(i) {

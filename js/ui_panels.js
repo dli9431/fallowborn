@@ -7872,6 +7872,7 @@ window.FB = window.FB || {};
       'data-chronicle-full>' + esc(FB.T('Explore full Chronicle')) + '</button>';
   }
   function fullChronicleNeedsEnglish(state) {
+    if (FB.platform.isCrazyGames) return false;
     const archive = state && state.chronicle;
     if (!archive || !Array.isArray(archive.strings)) return false;
     const generated = FBDATA.lang.en && FBDATA.lang.en.entries;
@@ -7952,7 +7953,7 @@ window.FB = window.FB || {};
       '</div>';
     const box = $('tab-log');
     let missingEnglish = false;
-    if (!FBDATA.lang.en && !chronicleEnglishFailed) {
+    if (!FB.platform.isCrazyGames && !FBDATA.lang.en && !chronicleEnglishFailed) {
       for (let i = s.log.length - 1, seen = 0; i >= 0 && seen < 80; i--) {
         if (!logMatches(s.log[i], SH.logFilter)) continue;
         seen++;

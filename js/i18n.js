@@ -28,7 +28,9 @@ window.FBDATA = window.FBDATA || {};
     { code: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr', status: 'preview', file: 'data/lang_pt-BR.js' },
     { code: 'qps', name: 'Pseudo (development)', dir: 'ltr', status: 'development',
       file: 'data/lang_qps.js', development: true }
-  ];
+  ].filter(function (locale) {
+    return !FB.platform.isCrazyGames || locale.code === 'en';
+  });
   const EN_WORDS = {
     child: { m: 'son', f: 'daughter', x: 'child' },
     parent: { m: 'father', f: 'mother', x: 'parent' },
@@ -841,6 +843,12 @@ window.FBDATA = window.FBDATA || {};
      registers its source in this page session, so Chronicle can request the
      manifest once, without adding it to ordinary English boot. */
   FB.ensureEnglishCatalog = function (done) {
+    // The CrazyGames upload carries a compact English message registry instead
+    // of the generated language catalogs. Never request a file it omits.
+    if (FB.platform.isCrazyGames) {
+      if (done) setTimeout(function () { done(false); }, 0);
+      return false;
+    }
     const ready = FBDATA.lang.en && validateCatalog(FBDATA.lang.en, 'en');
     if (ready) {
       englishCatalogLoadState = 2;
@@ -922,6 +930,7 @@ window.FBDATA = window.FBDATA || {};
     return FB.locale;
   };
   FB.setLocale = function (code) {
+    if (FB.platform.isCrazyGames) return false;
     const def = localeDef(code);
     if (!def || (def.development && !devMode())) return false;
     try { localStorage.setItem(LANG_KEY, code); } catch (e) { return false; }
