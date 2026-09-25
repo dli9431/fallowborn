@@ -1304,6 +1304,10 @@ complete bookmark. Omitting the map falls back to each office's effective `head.
 same realm id exists in every bookmark. Bookmark ids use letters, digits, and
 underscores. Preserve an existing county id when it still denotes the same place; give
 genuinely different geography a new stable id, and never recycle a retired id.
+`greatHolyWars` is an optional bookmark boolean (default `true`). Set it to `false`
+for a bounded world that does not support great holy wars: activation skips the
+global sacred-target checks, and that bookmark cannot start new campaigns. Other
+bookmarks retain their normal target validation and campaign rules.
 
 A legacy mod that changes `provinces`, `realms`, `empires`, `kingdoms`, `duchies`,
 `straits`, `crossingClasses`, `scripted`, `land`, `seas`, or `bounds` without supplying a complete

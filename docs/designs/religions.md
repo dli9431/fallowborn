@@ -56,6 +56,10 @@ The initial property vocabulary is intentionally extensible rather than a closed
 - optional `head` metadata, including a stable office, holder-sex eligibility,
   recovery, and great holy wars.
 
+A bookmark can disable new great holy war calls with `greatHolyWars:false` when its
+regional world does not contain the global campaign targets. This is a bookmark
+rule; the faith definitions and other bookmark campaigns remain intact.
+
 The player-reformable subset is declared separately in
 [doctrines.md](doctrines.md). Its catalog maps options onto these same inherited paths,
 so the details sheet, cost preview, and mechanics cannot drift into separate doctrine

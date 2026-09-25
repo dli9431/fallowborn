@@ -18,6 +18,12 @@ window.FB = window.FB || {};
     return religion && religion.head && religion.head.greatHolyWar || null;
   }
 
+  FB.greatHolyWarsEnabled = function (state) {
+    var bookmark = state && state.start && FB.bookmark
+      ? FB.bookmark(state.start.id) : FB.activeBookmark;
+    return !bookmark || bookmark.greatHolyWars !== false;
+  };
+
   function papalFaith(state, religionId) {
     return FB.faithHasSystem && FB.faithHasSystem(religionId, 'papacy', state);
   }
@@ -241,6 +247,7 @@ window.FB = window.FB || {};
      rank before later heartland reconquests; ties prefer more lost development
      and then the stable kingdom id. */
   FB.greatHolyWarTargets = function (state, religionId) {
+    if (!FB.greatHolyWarsEnabled(state)) return [];
     if (!state || !config(state, religionId) ||
         !callingGroup(state, religionId)) return [];
     var history = ensureHistory(state), conf = config(state, religionId), out = [];
@@ -289,6 +296,7 @@ window.FB = window.FB || {};
   }
 
   FB.canCallGreatHolyWar = function (state, religionId, kingdomId, callerRealm) {
+    if (!FB.greatHolyWarsEnabled(state)) return false;
     if (callerRealm === 'player' && FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     if (!state || state.greatHolyWar || !config(state, religionId)) return false;
     if (callerRealm === 'player' && FB.intrigueCaptivityOf &&
@@ -2957,6 +2965,7 @@ window.FB = window.FB || {};
      global call, uses the saved RNG, and leaves player-controlled heads to
      their explicit deed. */
   FB.greatHolyWarYearly = function (state) {
+    if (!FB.greatHolyWarsEnabled(state) && !state.greatHolyWar) return;
     FB.ensureGreatHolyWar(state);
     trackSacredLosses(state);
     if (state.greatHolyWar) return;
@@ -3137,6 +3146,7 @@ window.FB = window.FB || {};
 
   FB.greatHolyWarTick = function (state) {
     FB.ensureGreatHolyWar(state);
+    if (!FB.greatHolyWarsEnabled(state) && !state.greatHolyWar) return;
     var sacredControlChanged = trackSacredLosses(state);
     var campaign = state.greatHolyWar;
     if (!campaign) {

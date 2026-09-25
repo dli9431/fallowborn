@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'data/technology.js', 'data/political_institutions.js', 'data/units.js',
   'data/economy.js',
   'js/main.js', 'js/situation476.js', 'js/authority.js', 'js/world.js',
+  'js/holywar.js', 'js/actions.js',
   'js/armies.js', 'js/treasury.js', 'js/lordships.js', 'js/model.js',
   'js/politics.js', 'js/technology.js', 'js/settlement.js',
   'js/population.js', 'js/wars.js',
@@ -50,8 +51,23 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
       });
       const before = JSON.stringify(s), rng = FB.getRngState();
       const quote = FB.situation476Quote(s, 'accept_delegate');
+      const ordinary = FB.bookmark('867');
+      const brokenSacred = Object.assign({}, ordinary, {
+        provinces:ordinary.provinces.map(function (province) {
+          return province.id === 'jerusalem'
+            ? Object.assign({}, province, { wasteland:true }) : province;
+        })
+      });
       return {
         errors:FB.validateBookmark(FB.bookmark('476')),
+        greatHolyWarsEnabled:FB.greatHolyWarsEnabled(s),
+        olderHolyWarsEnabled:['867','1066'].every(function (id) {
+          return FB.greatHolyWarsEnabled({ start:{ id:id } });
+        }),
+        rejectsActiveSacredTarget:FB.validateBookmark(brokenSacred).some(function (error) {
+          return error.indexOf('faith catholic greatHolyWar has invalid sacred county ' +
+            'jerusalem for syria') >= 0;
+        }),
         older:['867','1066'].map(function (id) {
           return FB.validateBookmark(FB.bookmark(id));
         }),
@@ -80,6 +96,9 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
       };
     });
     expect(result.errors).toEqual([]);
+    expect(result.greatHolyWarsEnabled).toBe(false);
+    expect(result.olderHolyWarsEnabled).toBe(true);
+    expect(result.rejectsActiveSacredTarget).toBe(true);
     expect(result.older).toEqual([[], []]);
     expect(result.noIslam).toBe(true);
     expect(result.sites).toEqual(['ravenna_476', 'classis_476']);
@@ -97,6 +116,41 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
     expect(result.quotePure).toBe(true);
     expect(result.quoted).toBe(true);
     expect(result.techReview).toEqual([]);
+  });
+
+test('476 does not unlock great holy wars in later years',
+  async function ({ page }, testInfo) {
+    await start476(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state, rng = FB.getRngState();
+      s.date.year = 1200;
+      const targets = FB.greatHolyWarTargets(s, 'catholic');
+      FB.greatHolyWarYearly(s);
+      FB.greatHolyWarTick(s);
+      return { targets:targets, call:FB.canCallGreatHolyWar(s, 'catholic'),
+        campaign:s.greatHolyWar, rngUnchanged:rng === FB.getRngState() };
+    });
+    expect(result).toEqual({ targets:[], call:false, campaign:null,
+      rngUnchanged:true });
+  });
+
+test('invalid bookmark dialog has one Close action',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      FBDATA.bookmarks['476'].realms[0].capital = 'missing_476';
+    });
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill(
+      'RAVENNA476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#gm-title')).toHaveText('Bookmark unavailable');
+    await expect(page.locator('#gm-body').getByRole('button',
+      { name:'Close', exact:true })).toHaveCount(1);
+    await page.locator('#gm-body').getByRole('button',
+      { name:'Close', exact:true }).click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
 test('negotiation uses scoped command, treasury, civic consent and saved contract',

@@ -103,6 +103,11 @@ private intrigue custody intact. Existing anonymous raid captives do not become
 named prisoners. Arrest resistance reuses ordinary independence campaigns;
 ordinary foreign war alone is not a punishable offense. See [justice](justice.md).
 
+An atomic bookmark may set `greatHolyWars:false` when its bounded world does not
+support these campaigns. This blocks new player and AI calls and skips sacred-target
+validation for that bookmark; older starts keep their ordinary date gates. Existing
+saved campaigns, if any, may still resolve.
+
 Generic player-facing wording uses Holy War. Campaign names use the calling
 faith's resolved group: Christian Crusade, Muslim Jihad, pagan Sacred War, and
 Holy War otherwise. Pagan wording is game flavor, not a claim that diverse pagan

@@ -3443,7 +3443,7 @@ window.FB = window.FB || {};
       return FB.T('Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom.');
     },
     show: function (s) {
-      if (s.greatHolyWar) return false;
+      if (s.greatHolyWar || !FB.greatHolyWarsEnabled(s)) return false;
       if (FB.playerPope && FB.playerPope(s)) return true;
       const religionIds = FB.religionIds(s, false);
       for (let i = 0; i < religionIds.length; i++) {

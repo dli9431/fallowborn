@@ -138,6 +138,10 @@ window.FB = window.FB || {};
     var date = definition.date || {};
     if (!isFinite(date.year) || date.season < 0 || date.season > 3 ||
         date.day < 1 || date.day > 90) fault('invalid start date.');
+    if (definition.greatHolyWars !== undefined &&
+        typeof definition.greatHolyWars !== 'boolean') {
+      fault('greatHolyWars must be a boolean.');
+    }
     for (var wf = 0; wf < WORLD_FIELDS.length; wf++) {
       var worldField = WORLD_FIELDS[wf];
       if (worldField === 'crossingClasses') continue;
@@ -394,11 +398,10 @@ window.FB = window.FB || {};
       }
     }
 
-    /* Holy wars are optional head metadata. Their ids must resolve
-       against this exact bookmark so a mod cannot install a campaign whose
-       sacred counties or target kingdoms disappear at activation. */
-    var ghwReligionIds = FB.religionIds ? FB.religionIds(null, false) :
-      Object.keys(FBDATA.religions);
+    /* Enabled campaigns need sacred counties in this bookmark. A bounded
+       world may opt out of this system and its global target definitions. */
+    var ghwReligionIds = definition.greatHolyWars === false ? [] :
+      (FB.religionIds ? FB.religionIds(null, false) : Object.keys(FBDATA.religions));
     for (var ghwReligionIndex = 0; ghwReligionIndex < ghwReligionIds.length;
         ghwReligionIndex++) {
       var ghwReligionId = ghwReligionIds[ghwReligionIndex];

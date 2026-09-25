@@ -2437,9 +2437,7 @@ FB.CHANGELOG = [
       if (error) {
         FB.ui.showScreen('title');
         FB.ui.openModal('Bookmark unavailable',
-          '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>' +
-          '<button class="btn primary" id="gm-go">' + FB.esc(FB.T('Close')) + '</button>');
-        $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
+          '<div class="gm-body-text"><p>' + FB.esc(error.message) + '</p></div>');
         return;
       }
       G.pending = G.pending || {};

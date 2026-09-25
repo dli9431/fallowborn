@@ -146,6 +146,7 @@ window.FBDATA = window.FBDATA || {};
     id:'476', name:'The Last Western Court',
     desc:'An emperor sits at Ravenna while federate soldiers demand a settlement.',
     date:{ year:476, season:0, day:1 }, religiousHeads:{},
+    greatHolyWars:false,
     provinces:provinces, realms:realms,
     duchies:Object.assign({}, base.duchies),
     kingdoms:Object.assign({}, base.kingdoms),
