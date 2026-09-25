@@ -84,8 +84,13 @@
       return !!host(s, issuer.id);
     if (source === 'civic_acceptance' && issuer.kind === 'county')
       return !!scope(s, issuer);
-    if (source === 'church_support' && issuer.kind === 'religious-office')
-      return !!(s.religiousHeads && s.religiousHeads[issuer.id]);
+    if (source === 'church_support' && issuer.kind === 'religious-office') {
+      var holder = s.religiousHeads && s.religiousHeads[issuer.id];
+      var headId = typeof holder === 'string' ? holder : holder && holder.id;
+      return !!(headId && (s.chars && s.chars[headId]
+        ? !s.chars[headId].dead : s.realms && s.realms[headId] &&
+          s.realms[headId].alive));
+    }
     return false;
   }
   function generation(s, issuer) {
@@ -97,6 +102,7 @@
     if (issuer.kind === 'religious-office') {
       var head = s.religiousHeads && s.religiousHeads[issuer.id];
       var headId = typeof head === 'string' ? head : head && head.id;
+      if (headId && s.chars && s.chars[headId]) return headId;
       return headId ? headId + ':' + FB.realmRulerGeneration(s, headId) : null;
     }
     return issuer.kind === 'host' ? issuer.id : null;
@@ -652,12 +658,14 @@
     else for (var id in offices) if (own(offices, id)) {
       var def = offices[id];
       if (!/^[a-z][a-z0-9_]*$/.test(id) || !def ||
-          !Array.isArray(def.powers) || !def.powers.length ||
+          !Array.isArray(def.powers) ||
+          !def.powers.length && (!Array.isArray(def.scopes) ||
+            def.scopes.indexOf('realm') < 0) ||
           !Array.isArray(def.scopes) || !def.scopes.length ||
           def.powers.some(function (power) {
             return ['ban','peace','revenue','consent'].indexOf(power) < 0;
           }) || def.scopes.some(function (kind) {
-            return ['host','county'].indexOf(kind) < 0;
+            return ['host','county','realm'].indexOf(kind) < 0;
           }) || def.powers.indexOf('ban') >= 0 &&
           def.scopes.indexOf('host') < 0 ||
           def.powers.some(function (power) {

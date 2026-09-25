@@ -4333,6 +4333,8 @@ window.FB = window.FB || {};
           state.armyDown[a.realm] = state.turn;
           disband(state, a); continue;
         }
+        if (a.scenarioStanding && state.start && state.start.id === '476' &&
+            state.turn < a.scenarioEndTurn && r && r.alive) continue;
         if (!r || !r.alive || !warring[a.realm]) disband(state, a);
       }
 
@@ -4390,6 +4392,9 @@ window.FB = window.FB || {};
           } else if (a.rebellionId && FB.rebelArmyGoal) {
             const goal = FB.rebelArmyGoal(state, a);
             if (goal && (goal !== a.goal || (!a.path.length && goal !== a.at))) FB.orderArmy(state, a, goal);
+          } else if (a.scenarioCourtEscort && a.goal &&
+                     state.situation476 && state.situation476.courtMove === 'travelling') {
+            /* The dated court escort follows its quoted ordinary route. */
           } else if (a.realm !== 'player' && !commandedByPlayer) {
             let goal = aiGoal(state, a, warring, primaryByRealm);
             if (!(a.broken !== undefined && state.turn - a.broken < 40) &&

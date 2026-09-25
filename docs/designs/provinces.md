@@ -527,3 +527,7 @@ legacy saves need no migration. Geography, county names and site identities rema
 unchanged. Settlement lists, map labels and map search read the saved display name;
 search resolves overrides per query so loading a different save cannot stale names.
 This is cosmetic naming only and introduces no technology eligibility requirement.
+
+## Spring 476 bookmark sites and communities
+
+The bounded [476 prototype](situation-476.md) uses existing county polygons only as spatial anchors. Its separate bookmark records preserve Roman Nicene and Gothic Homoian communities across a federate conquest. Ravenna/Classis, Salona/Spalatum and Carthage/Tunis are distinct site identities; the 476 layout contains no Kairouan site. Outside counties are uninhabited for this slice.

@@ -279,3 +279,7 @@ abandonment erode it. Strength below 50 suspends its named power. Annual
 possession/dispute updates have a year stamp, and revocation or lapse is
 explicit. This is the underlying authority model; contextual sources and
 outcomes arrive with the 476 scenario.
+
+## Spring 476 situation
+
+The first playable client of these records is the [spring 476 prototype](situation-476.md). The western and eastern imperial offices are realm-scoped ceremonial appointments with no Ban, Peace, Revenue or Consent power. Orestes, the federate commander and the Ravenna civic delegate hold distinct scoped offices. The Ravenna contract and its Classis award use the shared consent and grant quotes; Basiliscus and Zeno recognition follows the issuer generation. The bishop of Rome is a living character issuer whose support lapses on death.

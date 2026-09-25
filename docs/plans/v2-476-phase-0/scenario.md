@@ -1,8 +1,9 @@
 # First 476 scenario: a federate household at Ravenna
 
-Status: Phase 0 design decision, not shipped content. Historical anchors are
-sourced below; player, unit, bargain, timing and resource amounts are design
-fixtures. This scenario is the Phase 4 acceptance target.
+Status: Phase 4 prototype implementation. Historical anchors are sourced below;
+player, unit, bargain, timing and resource amounts are design fixtures. The
+implemented behavior and remaining research are in
+[the owning design](../../designs/situation-476.md).
 
 ## Starting state
 

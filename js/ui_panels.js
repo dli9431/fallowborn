@@ -1150,6 +1150,13 @@ window.FB = window.FB || {};
         (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints)) {
       h += tutorialCardHtml(s);
     }
+    if (FB.situation476Status) {
+      const situation = FB.situation476Status(s);
+      if (situation) h += '<button type="button" class="actionbtn" ' +
+        'id="deeds-476-situation"><b>' + esc(FB.T('The Western Court, 476')) +
+        '</b><br><span class="hint">' + esc(situation.name) +
+        '</span></button>';
+    }
     h += ongoingCommitmentsHtml(s);
     if (s.player.tier >= 3) {
       h += renderDeedsWarCard(s);
@@ -1280,6 +1287,10 @@ window.FB = window.FB || {};
       h += nextStepHint(s);
     }
     box.innerHTML = h;
+    const situationButton = $('deeds-476-situation');
+    if (situationButton) situationButton.addEventListener('click', function () {
+      UI.show476Situation();
+    });
     box.querySelectorAll('[data-bldprov]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const pid = btn.dataset.bldprov;

@@ -3372,3 +3372,7 @@ their normal owner presentation. Command loss clears selection through the
 existing selected-host resolver, and AI orders resume only after the shared
 Ban query denies player control. The map still identifies the host's owning
 realm for supply, casualties and diplomacy.
+
+## Spring 476 decision flow
+
+The [476 prototype](situation-476.md) is entered from a Deeds card. Each choice has its effect and conditions in the list, opens a reviewed modal, and rechecks current facts on confirmation. Back returns to the situation list; Close and the outcome acknowledgment return to the Deeds entry with its scroll position and focus. Disabled choices still explain their blocker. The fixed Ravenna start goes straight from beginning selection to character creation, and Back returns to beginning selection.

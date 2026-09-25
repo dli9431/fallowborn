@@ -1992,3 +1992,7 @@ Settlement awards use the ordinary grant quote and confirmation. The AI and
 player host paths consume the same control query at map selection; owner-driven
 musters retain their existing force and finance rules. This baseline commission
 and service capability has technology impact `none`.
+
+## Spring 476 field contest
+
+The [476 prototype](situation-476.md) starts with two saved standing hosts. They remain mustered through the bounded first-year sequence while ordinary movement, supply and battle resolve a contested Ravenna. An Italian court escort follows a reviewed route to Ticinum. A commissioned player may control only the named federate host; a contract or later breach changes the shared Ban query without changing host ownership.

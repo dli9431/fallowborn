@@ -7,6 +7,14 @@ window.FBDATA = window.FBDATA || {};
   'use strict';
 
   FBDATA.startScenarios = [
+    { id:'federate_476', bookmarkIds:['476'], fixedProvinceId:'ravenna',
+      name:'Federate Soldier',
+      desc:'A free soldier near Ravenna. Seek pay and command while the western court bargains for its future.',
+      tier:1, sex:'m', profession:'soldier', gold:20, prestige:5, piety:0,
+      startAge:24, startCulture:'gothic', startReligion:'homoian',
+      startEffects:{ skills:{ mar:2 },
+        items:[{ item:'ash_spear', quality:'plain', equip:'rightHand' }] },
+      intro:'You are {name}, a free federate soldier near Ravenna. Orestes owes the host its pay; the court, the city and Odoacer each want a different settlement.' },
     { id:'serf', name:'Serf',
       desc:'Bound to the land, with no property or freedom.',
       tier:0, profession:'farmer', gold:5, prestige:0, piety:0,

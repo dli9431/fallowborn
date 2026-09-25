@@ -4835,3 +4835,7 @@ semantic `basisRef`; recognition names its active record ID, and possession need
 actual holding. Later positive transitions carry evidence. A record never changes `state.owner` or
 `state.holder` by implication. Omit `state.authority` from old campaigns.
 Derived power, office and consent projections are never saved.
+
+## Spring 476 prototype fields
+
+A bookmark realm may set `nonTerritorial: true` to keep a named political actor and host without claiming its capital county. The capital must still name a settled county as an on-map anchor. The 476 prototype uses this for the federate body; it does not grant tax, court or land. `startScenarios` may set `bookmarkIds`, `fixedProvinceId`, `startAge`, `startCulture` and `startReligion` for an authored beginning. The fixed county and culture/faith pair must be present in that bookmark. `state.situation476` is prototype-specific saved state; use the public authority and army transactions rather than editing its phase flags from a mod. See [the design](designs/situation-476.md).

@@ -184,7 +184,8 @@ window.FB = window.FB || {};
       if (topDefinitionRealm(realms, rid) === null) fault('realm ' + rid + ' has a liege cycle.');
       var capital = provinceIds[realmDef.capital];
       if (!capital || capital.wasteland) fault('realm ' + rid + ' has invalid capital ' + realmDef.capital + '.');
-      if (capital && !capital.wasteland && capital.realm !== rid) {
+      if (capital && !capital.wasteland && capital.realm !== rid &&
+          !realmDef.nonTerritorial) {
         fault('realm ' + rid + ' does not own its capital.');
       }
       if (realmDef.ruler) {
@@ -1451,6 +1452,7 @@ window.FB = window.FB || {};
         id: r.id, name: r.name, color: r.color, capital: r.capital,
         aggression: r.aggression !== undefined ? r.aggression : 1,
         rank: r.rank || 3, liege: r.liege || null,
+        nonTerritorial:r.nonTerritorial === true,
         techTraditions:Array.isArray(r.techTraditions) ? r.techTraditions.slice() : null,
         techSeed:r.techSeed || null,
         religion: r.religion || (cap ? cap.religion : null),
@@ -1465,7 +1467,13 @@ window.FB = window.FB || {};
       state.owner[pr.id] = FB.topRealm(state, pr.realm0);
     }
     // generate the dukes and counts inside each authored realm
-    for (const r of FBDATA.realms) buildVassals(state, r.id);
+    if (FB.activeBookmarkId === '476') {
+      for (const pr of FB.world.provs) {
+        if (!pr.wasteland) state.holder[pr.id] = pr.realm0;
+      }
+    } else {
+      for (const r of FBDATA.realms) buildVassals(state, r.id);
+    }
     FB.invalidateRealmCache();
     FB.ensureReligiousHeads(state);
     FB.ensureDynasticState(state);
@@ -3492,16 +3500,19 @@ window.FB = window.FB || {};
      children, dynasty, career history, betrothal, and relationships. Work,
      household office, retainer, family-agency, tutoring, and armory
      assignments end because the new ruler now governs a separate household. */
-  FB.assignRealmRulerCharacter = function (state, realmId, charId) {
+  FB.assignRealmRulerCharacter = function (state, realmId, charId, options) {
     const realm = state && state.realms && state.realms[realmId];
     const c = state && state.chars && state.chars[charId];
-    if (!realm || !realm.alive || !realm.generated || realmId === 'player' ||
-        !c || c.dead || FB.isReigningRealmRuler(state, c)) return false;
+    if (!realm || !realm.alive ||
+        (!realm.generated && !(options && options.replaceAuthored)) ||
+        realmId === 'player' || !c || c.dead ||
+        FB.isReigningRealmRuler(state, c)) return false;
+    const priorRuler = FB.realmRulerCharacterSnapshot(state, realmId);
     const personalStanding = FB.standingOf
       ? FB.standingOf(state, { kind:'character', id:c.id })
       : FB.clamp(Number(c.opinion) || 0, -100, 100);
-    const generation = realm.ruler && realm.ruler.generation !== undefined
-      ? realm.ruler.generation : 1;
+    const generation = (realm.ruler && realm.ruler.generation !== undefined
+      ? realm.ruler.generation : 1) + (options && options.replaceAuthored ? 1 : 0);
     const rootId = 'royal_' + realmId + '_' + c.id;
     const root = {
       id:rootId, name:c.name, dyn:c.dyn, sex:c.sex, born:c.born, alive:true,
@@ -3543,6 +3554,8 @@ window.FB = window.FB || {};
       }
     }
     succession.heirId = succession.order.length ? succession.order[0] : null;
+    if (options && options.replaceAuthored && priorRuler &&
+        priorRuler.id !== c.id) dropRulerIndex(priorRuler.id);
     realm.succession = succession;
     realm.ruler = {
       name:c.name,

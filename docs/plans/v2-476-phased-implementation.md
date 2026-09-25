@@ -189,6 +189,8 @@ payments or scripted outcomes.
 
 ## Phase 4: one complete 476 vertical slice
 
+Implementation design: [spring 476 prototype](../designs/situation-476.md).
+
 **Work**
 
 - Author the spring 476 start for the bounded test area, including Romulus

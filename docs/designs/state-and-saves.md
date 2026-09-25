@@ -1763,3 +1763,7 @@ Contract payment, render and settlement-fulfillment stamps prevent duplicate eff
 rendered terms stay out of state. The existing version-3 serializer carries
 these branch-local records for prototype reloads; canonical title aliases and an opt-in v4 migration prototype are now
 available; ordinary v4 publication waits for the completed 2.0 bookmark. Old saves do not acquire fabricated offices or contracts on restore.
+
+## Spring 476 situation persistence
+
+The [476 prototype](situation-476.md) stores its actors, phase, court location, claimant choice, contract link, payment allocation and outcome under `state.situation476`. It is created once at a new 476 start, survives the ordinary save envelope, and is not synthesized on old 867/1066 saves. UI quotes and rendered language are recomputed from saved facts. Authored eastern ruler replacement advances its generation so reaffirmation-dependent authority records lapse.

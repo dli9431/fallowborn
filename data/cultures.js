@@ -23,6 +23,12 @@ FBDATA.cultureTraditions = {
 };
 
 FBDATA.cultures = {
+roman: { name:'Roman', tradition:'romance', dyn:'of_place',
+  male:['Marcellus','Flavius','Lucius','Julius','Aurelius','Paulus','Severus','Valerius','Felix','Victor'],
+  female:['Marcia','Flavia','Julia','Aurelia','Paula','Severa','Valeria','Felicia','Victoria','Galla'] },
+gothic: { name:'Gothic', tradition:'west_european', dyn:'of_place',
+  male:['Theoderic','Odoacer','Vidimer','Valamir','Thiudimir','Euric','Alaric','Gundobad'],
+  female:['Amalasuntha','Erelieva','Galla','Amalafrida','Theodora','Thiudigotho'] },
 frankish: { name:'Frankish', tradition:'west_european', dyn:'of_place',
   male:['Charles','Louis','Lothair','Odo','Robert','Hugh','Baldwin','Fulk','Geoffrey','Arnulf','Bernard','Pepin','Gerard','Raoul','Carloman','Drogo','Wido','Adalard','Berengar','Childebrand','Einhard','Gozlin','Heribert','Ingelram','Milo','Nibelung','Otger','Raino','Theuderic','Warin','Adalhard','Angilbert','Boso','Ebles','Gauzlin','Giselbert','Hilduin','Hucbert','Lambert','Leuthard','Matfrid','Nithard','Odalric','Ratbod','Reginhard','Richar','Sigebert','Wala','Wibert','Wulfad'],
   female:['Adelaide','Ermentrude','Judith','Gisela','Bertha','Rothild','Emma','Adela','Hildegard','Richilde','Alpaid','Ansgarde','Aelis','Engelberga','Ermengarde','Fastrada','Gersvinda','Guntrude','Imma','Irmentrude','Madalgarde','Oda','Odila','Rotrude','Waldrada','Adalind','Aregund','Audovera','Basina','Beretrude','Burgundofara','Clothild','Deuteria','Engeltrude','Fara','Genovefa','Ghentrude','Gundlind','Himiltrude','Ingeltrude','Landrada','Marcovefa','Nanthild','Plectrude','Radegund','Rigunth','Rosamund','Teutberga','Ultrogothe','Wisigarde'] },
@@ -375,6 +381,31 @@ FBDATA.religions = {
         abbotM:'Abbot', abbotF:'Abbess' },
       clergyMarriage:false
     } },
+  germanic_pagan: { name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀',
+    properties:{ rankTitles:{
+      m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
+      f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
+    } } },
+  nicene: { name:'Nicene Christianity', group:'christian', relationToParent:'in_fold', icon:'✝',
+    properties:{ rankTitles:{
+      m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
+      f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
+    } } },
+  homoian: { name:'Homoian Christianity', group:'christian', relationToParent:'schismatic', icon:'☧',
+    properties:{ rankTitles:{
+      m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
+      f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
+    } } },
+  chalcedonian: { name:'Chalcedonian Christianity', group:'christian', relationToParent:'in_fold', icon:'☦',
+    properties:{ rankTitles:{
+      m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
+      f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
+    } } },
+  miaphysite: { name:'Miaphysite Christianity', group:'christian', relationToParent:'schismatic', icon:'☧',
+    properties:{ rankTitles:{
+      m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
+      f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
+    } } },
   catholic: { name:'Latin Christianity', group:'christian',
     relationToParent:'schismatic', icon:'✝',
     properties:{

@@ -8,6 +8,8 @@ window.FBDATA = window.FBDATA || {};
    The institution and scope on each appointment remain separate from owner
    and holder; these definitions never manufacture a territorial realm. */
 FBDATA.authorityOffices = {
+  imperial_office:{ powers:[], scopes:['realm'], succession:'reaffirm',
+    recognitionSources:['dynastic_succession','army_acclamation','imperial_commission'] },
   field_command:{ powers:['ban'], scopes:['host'], succession:'reaffirm',
     recognitionSources:['army_acclamation','imperial_commission'] },
   judicial_vicar:{ powers:['peace'], scopes:['county'], succession:'reaffirm',

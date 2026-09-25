@@ -75,6 +75,9 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      period_476_court_escort:{ mode:'none', rationale:'Moving the western court depends on an available route, a live escort and territorial control, not a discovery. Ordinary army path and supply rules remain in force.' },
+      period_476_claimant_recognition:{ mode:'none', rationale:'Backing a living imperial claimant or petitioning a sitting ruler is a political choice. The issuer must hold the office and its recognition lapses on succession without research.' },
+      period_476_city_settlement:{ mode:'none', rationale:'Civic agreement, church mediation and a reviewed Classis allotment use live authority and existing settlement grant rules. The people and site are already present, so no invention is needed.' },
       authority_appointments:{ mode:'none', rationale:'Ordinary political officeholding and removal depend on an appointer, a holder and a live scope, not research. A contested honor grants no power until confirmed.' },
       authority_command_commissions:{ mode:'none', rationale:'Command of an exact host by appointment is baseline military service. It does not grant the commander land, revenue or judicial jurisdiction.' },
       authority_recognition:{ mode:'none', rationale:'Army, imperial, dynastic, civic and church recognition are political relationships with explicit issuer continuity, not researched techniques.' },

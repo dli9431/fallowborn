@@ -15,6 +15,11 @@ Begin in **Spring 867** or **Spring 1066**, then guide one family through the
 generations: from mud-floored huts toward
 manors, baronies, and — if fortune and cunning allow — crowns.
 
+A bounded **Spring 476** prototype is also available from New Game. Choose the
+Federate Soldier beginning at Ravenna, then open **The Western Court, 476** in
+Deeds to negotiate service, seek recognition, escort the court, or contest the
+city. Its counties are a focused test area rather than a complete period map.
+
 ## Play
 
 Open `index.html` in any modern browser. That's it — no build step, no server, no dependencies.

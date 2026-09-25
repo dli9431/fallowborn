@@ -525,3 +525,7 @@ The review names direct-holding benefits, no baronial dues, and capacity consequ
 its county selector uses native keyboard/mobile controls and the existing modal
 history. The settlement_founding technology review remains none, expanded to cover
 ordinary county-ruler founding; administrative capacity retains its soft role.
+
+## 476 capability review
+
+The [spring 476 prototype](situation-476.md) uses the existing period-seeded technology graph. Court escort, claimant recognition and city settlement each have a separate `none` entry in `FBDATA.techImpactReviews`: routes and hosts, living issuers and authority continuity, and civic consent plus an existing site grant are political or physical conditions, not inventions. Existing career and unit technology gates remain unchanged.

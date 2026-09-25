@@ -2002,9 +2002,13 @@ FB.CHANGELOG = [
 
   const START_TIER_NAMES = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
 
-  function scenarioUnlocked(scenario) {
-    return !!scenario && (!FB.startProgression ||
-      FB.startProgression.isTierUnlocked(scenario.tier));
+  function scenarioUnlocked(scenario, bookmarkId) {
+    if (!scenario) return false;
+    const selected = bookmarkId || FB.activeBookmarkId || FBDATA.defaultBookmark;
+    if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(selected) < 0) return false;
+    if (scenario.id === 'federate_476') return selected === '476';
+    return !FB.startProgression ||
+      FB.startProgression.isTierUnlocked(scenario.tier);
   }
 
   function scenarioUnlockText(scenario, startCode) {
@@ -2112,7 +2116,9 @@ FB.CHANGELOG = [
       const sexPart = legacy ? 3 : 4;
       const namePart = legacy ? 4 : 5;
       const scen = FBDATA.startScenarios.filter(function (s) {
-        return s.id === parts[scenarioPart].toLowerCase();
+        return s.id === parts[scenarioPart].toLowerCase() &&
+          (!s.bookmarkIds || s.bookmarkIds.indexOf(bookmarkId) >= 0) &&
+          (!s.fixedProvinceId || s.fixedProvinceId === parts[provincePart].toLowerCase());
       })[0];
       const prov = bookmark && bookmark.provinces.filter(function (p) {
         return p.id === parts[provincePart].toLowerCase();
@@ -2348,7 +2354,11 @@ FB.CHANGELOG = [
         $('cg-name').value = FB.randomName(G.pending.culture, r.value);
       });
     });
-    $('btn-cg-back').addEventListener('click', function () { showPickProv(); });
+    $('btn-cg-back').addEventListener('click', function () {
+      if (G.pending && G.pending.scenario && G.pending.scenario.fixedProvinceId)
+        showScenarios();
+      else showPickProv();
+    });
     $('btn-cg-start').addEventListener('click', function () { beginCampaignStart(); });
   }
 
@@ -2381,7 +2391,7 @@ FB.CHANGELOG = [
     function useSeed() {
       const r = parseSeedInput($('ng-seed').value);
       if (r.error) { $('ng-seed-err').textContent = FB.T(r.error); return; }
-      if (r.scenario && !scenarioUnlocked(r.scenario)) {
+      if (r.scenario && !scenarioUnlocked(r.scenario, r.bookmarkId)) {
         $('ng-seed-err').textContent = scenarioUnlockText(r.scenario, true);
         return;
       }
@@ -2634,6 +2644,9 @@ FB.CHANGELOG = [
     const box = $('scenariolist');
     box.innerHTML = '';
     for (const sc of FBDATA.startScenarios) {
+      if (bookmark.id === '476' && sc.id !== 'federate_476' ||
+          bookmark.id !== '476' && sc.id === 'federate_476' ||
+          sc.bookmarkIds && sc.bookmarkIds.indexOf(bookmark.id) < 0) continue;
       const el = document.createElement('button');
       const locked = !scenarioUnlocked(sc);
       el.type = 'button';
@@ -2655,7 +2668,13 @@ FB.CHANGELOG = [
               scenario:scenario,
               provinceId:null
             };
-            showPickProv();
+            if (scenario.fixedProvinceId) {
+              G.pending.provinceId = scenario.fixedProvinceId;
+              G.pending.culture = scenario.startCulture;
+              G.pending.religion = scenario.startReligion;
+              G.pending.settlementIdx = 0;
+              showChargen();
+            } else showPickProv();
           });
         })(sc);
       }
@@ -2904,18 +2923,22 @@ FB.CHANGELOG = [
     const famBox = $('cg-family');
     famBox.innerHTML = '';
     for (const fp of FBDATA.familyPresets) {
+      if (G.pending.scenario.id === 'federate_476' && fp.id !== 'standard') continue;
       const label = document.createElement('label');
       label.className = 'radio cgfamily-card';
+      const is476Family = G.pending.scenario.id === 'federate_476';
       label.innerHTML = '<input type="radio" name="cg-family" value="' + fp.id + '">' +
-        '<span><b>' + FB.esc(FB.dataText(null, null, 'familyPreset', fp.id,
-          fp, 'name', {})) + '</b> — ' +
-        FB.esc(FB.dataText(null, null, 'familyPreset', fp.id, fp, 'diff', {})) +
+        '<span><b>' + FB.esc(is476Family ? FB.T('Free household') :
+          FB.dataText(null, null, 'familyPreset', fp.id, fp, 'name', {})) + '</b> — ' +
+        FB.esc(is476Family ? FB.T('age 24 · federate service') :
+          FB.dataText(null, null, 'familyPreset', fp.id, fp, 'diff', {})) +
         '<br><span class="hint">' +
         FB.esc(FB.dataText(null, null, 'familyPreset', fp.id, fp, 'desc', {})) +
         '</span></span>';
       famBox.appendChild(label);
     }
-    const wantedPreset = familyPresetById(G.pending.familyPreset) ? G.pending.familyPreset : 'standard';
+    const wantedPreset = G.pending.scenario.id === 'federate_476' ? 'standard' :
+      (familyPresetById(G.pending.familyPreset) ? G.pending.familyPreset : 'standard');
     document.querySelector('input[name=cg-family][value="' + wantedPreset + '"]').checked = true;
     famBox.querySelectorAll('input[name=cg-family]').forEach(function (r) {
       r.addEventListener('change', function () {
@@ -3136,7 +3159,7 @@ FB.CHANGELOG = [
 
     const me = FB.makeCharacter(state, {
       name: name, sex: sex, culture: cultureId, religion: religionId,
-      born: start.year - (preset.age || FBDATA.balance.startAge),
+      born: start.year - (sc.startAge || preset.age || FBDATA.balance.startAge),
       quality: sc.tier >= 2 ? 2 : 0, traitsN: 2,
       station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
     });
@@ -3298,6 +3321,7 @@ FB.CHANGELOG = [
     if (FB.ensureIntrigue) FB.ensureIntrigue(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
+    if (FB.init476) FB.init476(state);
     state.player.focus = startEffects.focus || FB.defaultFocus(state);
     const firstPlayerOnboarding = !G.uiPrefs.tipsGrandfathered &&
       !G.uiPrefs.onboardingStarted;
@@ -3455,6 +3479,7 @@ FB.CHANGELOG = [
       FB.ensureFaithStandingBaselines(state);
     }
 
+    if (FB.init476) FB.init476(state);
     G.observe = true;
     G.paused = false;
     document.body.classList.add('observing');
@@ -3762,6 +3787,7 @@ FB.CHANGELOG = [
       if (seasonBoundary && FB.marketSeason) FB.marketSeason(s);
       if (seasonBoundary && FB.treasurySeason) FB.treasurySeason(s);
       if (seasonBoundary && FB.authoritySeason) FB.authoritySeason(s);
+      if (seasonBoundary && FB.situation476Season) FB.situation476Season(s);
       if (seasonBoundary && newYear && FB.treasuryRevalue) FB.treasuryRevalue(s, 1);
       if (seasonBoundary && FB.intrigueSeason) FB.intrigueSeason(s);
       if (seasonBoundary && FB.techSeason) FB.techSeason(s, false);
@@ -3772,6 +3798,7 @@ FB.CHANGELOG = [
         if (FB.authorityYear) FB.authorityYear(s);
       }
       FB.armyTick(s);
+      if (FB.situation476Day) FB.situation476Day(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
       s.eventQueue.length = 0;
       if (!(opts && opts.deferUi)) {
@@ -3792,6 +3819,7 @@ FB.CHANGELOG = [
       const income = taxParts ? FB.playerTax(s, taxParts) : 0;
       if (FB.treasurySeason) FB.treasurySeason(s, taxParts);
       if (FB.authoritySeason) FB.authoritySeason(s);
+      if (FB.situation476Season) FB.situation476Season(s);
       const buildingUpkeep = p.tier >= 3
         ? FB.buildingBonus(s, 'upkeep') + (FB.fortUpkeep ? FB.fortUpkeep(s) : 0)
         : 0;
@@ -3868,6 +3896,7 @@ FB.CHANGELOG = [
     FB.fiscalDay(s);
     birthTick(s);
     FB.armyTick(s); // hosts march and fight on the map every day
+    if (FB.situation476Day) FB.situation476Day(s);
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
     if (FB.travelTick) FB.travelTick(s);
     if (FB.giftDeliveryTick) FB.giftDeliveryTick(s);
