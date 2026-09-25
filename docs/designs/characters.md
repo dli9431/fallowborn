@@ -1176,3 +1176,12 @@ use their current ranks without migration or retroactive rewards. Observe mode
 has no personal payment. This is passive reward balance, with no change to rank
 eligibility or technology gates and no new technology-impact ledger entry.
 Regression coverage: `tests/e2e/specs/rank-prestige.spec.js`.
+
+## Spring 476 dress and service
+
+The 476 bookmark selects late antique tunics, vertical clavi, mantles and
+clerical vestments from the existing portrait renderer. Station controls the
+mantle palette and brooch, while the visual cache key includes the bookmark
+period so 476 dress cannot leak into later starts. The civic clerk is an ordinary
+career whose local appointment is a separate authority record; the career alone
+does not grant land, revenue or jurisdiction.

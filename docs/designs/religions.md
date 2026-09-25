@@ -214,3 +214,12 @@ central office. Removing the player's final departure returns that character to 
 direct parent. Existing followers and territorial projects keep the campaign child and
 its doctrines until explicit conversion changes them, so a personal return is recognized
 without erasing an established local faith. Full rules: [doctrines.md](doctrines.md).
+
+## Spring 476 paths
+
+Nicene, Homoian, Chalcedonian and Miaphysite faiths use shared late antique lay,
+monastic and clerical progression definitions. The 476 Homoian clerical route
+remains in its own faith while living local and Nicene bishops may recognize a
+mediator. Neither recognition creates a religious head, a papal office or a
+great holy war. The regional Moorish communities use an assignable Amazigh
+traditional faith under the existing pagan root.

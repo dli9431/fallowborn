@@ -26,6 +26,43 @@ FBDATA.freedomBargaining = {
    numeric rank index. Baseline rank order is therefore a compatibility
    boundary even though every rank also has its own stable id. */
 FBDATA.religiousPaths = {
+  late_antique_lay: {
+    kind:'lay', faiths:['nicene','homoian','chalcedonian','miaphysite'],
+    ranks:[
+      { id:'faithful', name:'Faithful', pietyYield:0 },
+      { id:'almsgiver', name:'Almsgiver', age:16, piety:10, gold:5,
+        prestigeGain:2, pietyYield:0.25 },
+      { id:'local_patron', name:'Local Church Patron', age:18, piety:45,
+        gold:35, prestigeGain:6, pietyYield:0.5 }
+    ]
+  },
+  late_antique_monastic: {
+    kind:'vocation', faiths:['nicene','homoian','chalcedonian','miaphysite'],
+    professions:['monk'],
+    ranks:[
+      { id:'novice', name:'Novice', pietyYield:0.25 },
+      { id:'professed', name:'Professed Brother', name_f:'Professed Sister',
+        age:16, years:2, learning:4, piety:25,
+        prestigeGain:3, pietyYield:0.5 },
+      { id:'abbot', name:'Abbot', name_f:'Abbess', age:24, years:10,
+        learning:9, piety:100, prestige:40, prestigeGain:15,
+        pietyYield:1.5, station:2, tier:2, flag:'abbot' }
+    ]
+  },
+  late_antique_clerical: {
+    kind:'vocation', faiths:['nicene','homoian','chalcedonian','miaphysite'],
+    professions:['priest'],
+    ranks:[
+      { id:'clerk', name:'Clerk', pietyYield:0.25 },
+      { id:'deacon', name:'Deacon', age:19, years:3, learning:5,
+        piety:30, prestigeGain:4, pietyYield:0.75 },
+      { id:'priest', name:'Priest', age:24, years:5, learning:7,
+        piety:50, prestigeGain:7, pietyYield:1, station:1 },
+      { id:'bishop', name:'Bishop', age:30, years:14, learning:12,
+        piety:160, prestige:80, prestigeGain:25, pietyYield:2.5,
+        station:3, tier:3, flag:'bishop' }
+    ]
+  },
   catholic_lay: {
     kind:'lay', faiths:['catholic'], systems:['papacy'],
     ranks:[
@@ -191,6 +228,14 @@ FBDATA.careers = {
       }
     },
     desc:'Weights, ledgers, roads, and the trust that lets silver travel.'
+  },
+  civic_clerk: {
+    name:'Civic Service', icon:'🏛', skill:'ste', apprenticeAge:16,
+    bookmarkIds:['476'],
+    apprenticeCost:0, tierMin:1, wage:1.5, masterWage:2.5,
+    ranks:{ apprentice:'Council pupil', journeyman:'Civic clerk',
+      master:'Senior civic clerk' },
+    desc:'Petitions, local judgments, records, and service to a city council.'
   },
   administration: {
     name:'Administration', icon:'📜', skill:'ste', apprenticeAge:12, apprenticeCost:10,

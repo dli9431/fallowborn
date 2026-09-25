@@ -4,9 +4,11 @@ Status: proposed for the v1.184.0 codebase, 2026-09-23. No release date is set.
 Phase 0 decisions and static audit are recorded in the
 [Phase 0 package](v2-476-phase-0/README.md). The owner requested progression using
 the existing notes, saves and benchmarks. [Phase 1](v2-476-phase-1.md), the
-[Phase 2 authority engine](v2-476-phase-2.md) and the
-[Phase 3 migration prototype](v2-476-phase-3.md) are implemented on the 476
-branch; runtime parity and device comparisons remain owner-controlled.
+[Phase 2 authority engine](v2-476-phase-2.md) the
+[Phase 3 migration prototype](v2-476-phase-3.md), and the Phase 4–5 regional
+implementation described in [the 476 design](../designs/situation-476.md) are
+authored on the 476 branch; runtime parity and device comparisons remain
+owner-controlled.
 
 ## Outcome
 
@@ -218,6 +220,8 @@ through ordinary gameplay, while 867 and 1066 still complete their baseline
 journeys. The prototype proves the political model; it is not the release.
 
 ## Phase 5: complete the bounded experience
+
+Implementation design: [the 476 regional campaign](../designs/situation-476.md).
 
 **Work**
 

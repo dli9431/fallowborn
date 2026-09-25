@@ -43,6 +43,32 @@ class StructuredDataExtractionTests(unittest.TestCase):
             'Western & Northern Europe',
         )
 
+    def test_476_bookmark_realm_and_period_place_labels_are_extracted(self):
+        inventory = i18n_catalog.Inventory()
+
+        i18n_catalog.extract_structured(inventory)
+
+        self.assertEqual(
+            inventory.entries["bookmark.476.name.default"]["text"],
+            "The Last Western Court",
+        )
+        self.assertEqual(
+            inventory.entries["realm.476.suebi_476.name.default"]["text"],
+            "Suevic Kingdom",
+        )
+        self.assertEqual(
+            inventory.entries["province.476.fes.name.default"]["text"],
+            "Volubilis",
+        )
+        self.assertEqual(
+            inventory.entries[i18n_catalog.source_key("Salona")]["text"],
+            "Salona",
+        )
+        self.assertNotIn(
+            i18n_catalog.source_key("Suevic Court Delegate"),
+            inventory.entries,
+        )
+
     def test_privilege_display_fields_use_the_privilege_namespace(self):
         inventory = i18n_catalog.Inventory()
 

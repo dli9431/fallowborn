@@ -1,6 +1,5 @@
-/* Spring 476 prototype. The borrowed county grid is a geographic scaffold;
-   only these connected Roman, federate, Gothic, Frankish and Vandal regions
-   are inhabited in this bounded slice. All records are bookmark-local. */
+/* Spring 476 regional bookmark. The borrowed county grid is a geographic
+   scaffold, not a claim that later county borders existed in this period. */
 window.FBDATA = window.FBDATA || {};
 (function () {
   'use strict';
@@ -9,9 +8,38 @@ window.FBDATA = window.FBDATA || {};
     italy:'italy', papacy:'italy', benevento:'italy', venice:'italy',
     sardinia:'italy', croatia:'croatia', byzantium:'byzantium',
     aquitaine:'aquitaine', west_francia:'west_francia', burgundy:'burgundy',
-    aghlabids:'aghlabids', pannonia:'pannonia'
+    aghlabids:'aghlabids', pannonia:'pannonia',
+    brittany:'armorica_476', asturias:'aquitaine', navarra:'aquitaine',
+    cordoba:'aquitaine', rustamids:'mauri_476',
+    idrisids:'mauri_476', lotharingia:'west_francia',
+    bulgaria:'byzantium', serbia:'croatia'
   };
-  var northernFranks = { bruges:1, ghent:1, boulogne:1, arras:1 };
+  var northernFranks = { bruges:1, ghent:1, boulogne:1, arras:1,
+    reims:1, amiens:1, st_quentin:1, laon:1 };
+  var suebi = { coruna:1, santiago:1, ourense:1, lugo:1 };
+  var easternMarch = { pliska:1, silistra:1, vidin:1, serdica:1,
+    philippopolis:1, skopje:1, ohrid:1 };
+  var dalmatianMarch = { kotor:1 };
+  var romanGaul = { paris:1, chartres:1, sens:1, orleans:1,
+    rouen:1, caen:1, evreux:1, bayeux:1, angers:1, tours:1,
+    le_mans:1, blois:1, bourges:1, troyes:1, chalons:1,
+    metz:1, verdun:1, nancy:1 };
+  var alpineBurgundy = { strasbourg:1, basel:1, geneva:1 };
+  var rhenishFranks = { aachen:1, trier:1, luxembourg:1,
+    liege:1, cologne:1 };
+  var curatedSites = {
+    barcelona:'Barcino', tarragona:'Tarraco', toledo:'Toletum',
+    sevilla:'Hispalis', cordoba:'Corduba', merida:'Emerita Augusta',
+    zaragoza:'Caesaraugusta', valencia:'Valentia',
+    coruna:'Brigantium', santiago:'Iria Flavia',
+    fes:'Volubilis', tahert:'Mauretanian highlands',
+    algiers:'Icosium', constantine:'Cirta',
+    nantes:'Condevincum', rennes:'Condate',
+    metz:'Divodurum', trier:'Augusta Treverorum',
+    reims:'Durocortorum', lyon:'Lugdunum',
+    milano:'Mediolanum', torino:'Augusta Taurinorum',
+    siracusa:'Syracuse', pliska:'Abritus'
+  };
   var realms = [
     { id:'italy', name:'Western Roman Court', color:'#9c5647', capital:'ravenna',
       aggression:0, rank:4, religion:'nicene', techTraditions:['latin'],
@@ -40,6 +68,18 @@ window.FBDATA = window.FBDATA || {};
     { id:'pannonia', name:'Ostrogothic Confederation', color:'#809b73', capital:'szekesfehervar',
       aggression:1, rank:3, religion:'homoian',
       ruler:{ name:'Theoderic the Amal', sex:'m', culture:'gothic', born:454, mar:12, trait:'ambitious' } },
+    { id:'suebi_476', name:'Suevic Kingdom', color:'#667b59', capital:'coruna',
+      aggression:0, rank:3, religion:'homoian',
+      ruler:{ name:'Suevic Court Delegate', sex:'m', culture:'gothic', born:440, mar:8, trait:'patient' } },
+    { id:'armorica_476', name:'Armorican Communities', color:'#69908d', capital:'rennes',
+      aggression:0, rank:2, religion:'nicene',
+      ruler:{ name:'Armorican Delegate', sex:'m', culture:'brezhon', born:440, mar:5, trait:'patient' } },
+    { id:'mauri_476', name:'Moorish Communities', color:'#a98255', capital:'constantine',
+      aggression:0, rank:2, religion:'berber_traditional',
+      ruler:{ name:'Moorish Delegate', sex:'m', culture:'berber', born:440, mar:6, trait:'patient' } },
+    { id:'rhein_franks_476', name:'Rhenish Franks', color:'#708f9b', capital:'cologne',
+      aggression:0, rank:2, religion:'germanic_pagan',
+      ruler:{ name:'Rhenish Chieftain', sex:'m', culture:'frankish', born:440, mar:8, trait:'patient' } },
     { id:'federates_476', name:'Federate Host in Italy', color:'#717d65', capital:'pavia',
       nonTerritorial:true, aggression:0, rank:1, religion:'homoian',
       ruler:{ name:'Odoacer', sex:'m', culture:'gothic', born:433, mar:12, trait:'ambitious' } }
@@ -50,12 +90,33 @@ window.FBDATA = window.FBDATA || {};
       return { id:source.id, name:source.name, x:source.x, y:source.y,
         terrain:source.terrain, wasteland:true };
     }
-    p.realm = northernFranks[p.id] ? 'franks_476' : regions[source.realm];
+    p.realm = northernFranks[p.id] ? 'franks_476' :
+      suebi[p.id] ? 'suebi_476' :
+      romanGaul[p.id] ? 'west_francia' :
+      alpineBurgundy[p.id] ? 'burgundy' :
+      rhenishFranks[p.id] ? 'rhein_franks_476' :
+      easternMarch[p.id] ? 'byzantium' :
+      dalmatianMarch[p.id] ? 'croatia' :
+      source.realm === 'west_francia' &&
+        ['barcelona','girona','urgell'].indexOf(p.id) >= 0 ? 'aquitaine' :
+      regions[source.realm];
+    if (source.realm === 'bulgaria' && !easternMarch[p.id] ||
+        source.realm === 'serbia' && !dalmatianMarch[p.id] ||
+        source.realm === 'lotharingia' && !romanGaul[p.id] &&
+          !alpineBurgundy[p.id] && !rhenishFranks[p.id]) {
+      return { id:source.id, name:source.name, x:source.x, y:source.y,
+        terrain:source.terrain, wasteland:true };
+    }
     p.settlements = undefined;
-    p.culture = p.realm === 'franks_476' ? 'frankish' :
+    p.culture = p.realm === 'franks_476' ||
+      p.realm === 'rhein_franks_476' ? 'frankish' :
       p.realm === 'pannonia' ? 'gothic' :
+      p.realm === 'armorica_476' ? 'brezhon' :
+      p.realm === 'mauri_476' ? 'berber' :
       p.realm === 'byzantium' ? 'greek' : 'roman';
-    p.religion = p.realm === 'franks_476' ? 'germanic_pagan' :
+    p.religion = p.realm === 'franks_476' ||
+      p.realm === 'rhein_franks_476' ? 'germanic_pagan' :
+      p.realm === 'mauri_476' ? 'berber_traditional' :
       p.realm === 'pannonia' ? 'homoian' :
       p.realm === 'byzantium' ? 'chalcedonian' : 'nicene';
     p.communities = [{ culture:p.culture, religion:p.religion,
@@ -69,12 +130,42 @@ window.FBDATA = window.FBDATA || {};
       ];
       p.culture = 'roman'; p.religion = 'nicene';
     }
+    if (p.realm === 'suebi_476') {
+      p.communities = [
+        { culture:'roman', religion:'nicene', populationShare0:7500 },
+        { culture:'gothic', religion:'homoian', paired:true, populationShare0:2500 }
+      ];
+      p.culture = 'roman'; p.religion = 'nicene';
+    }
+    if (p.realm === 'mauri_476') {
+      p.communities = [
+        { culture:'berber', religion:'berber_traditional', populationShare0:7000 },
+        { culture:'roman', religion:'nicene', paired:true, populationShare0:3000 }
+      ];
+    }
+    if (p.realm === 'armorica_476') {
+      p.communities = [
+        { culture:'brezhon', religion:'nicene', populationShare0:7000 },
+        { culture:'roman', religion:'nicene', paired:true, populationShare0:3000 }
+      ];
+    }
     if (p.realm === 'croatia') {
       p.communities = [
         { culture:'roman', religion:'nicene', populationShare0:8000 },
         { culture:'slavic', religion:'slavic_pagan', paired:true,
           populationShare0:2000 }
       ];
+    }
+    if (source.realm === 'cordoba' || source.realm === 'asturias' ||
+        source.realm === 'navarra' ||
+        ['barcelona','girona','urgell'].indexOf(p.id) >= 0) {
+      if (p.realm !== 'suebi_476') {
+        p.communities = [
+          { culture:'iberian', religion:'nicene', populationShare0:8000 },
+          { culture:'gothic', religion:'homoian', paired:true, populationShare0:2000 }
+        ];
+        p.culture = 'iberian'; p.religion = 'nicene';
+      }
     }
     if (p.id === 'constantinople') {
       p.communities = [
@@ -118,6 +209,15 @@ window.FBDATA = window.FBDATA || {};
         { site:'ostia', name:'Ostia', kind:'town' }];
       p.dev = 8;
     }
+    if (!p.settlements && curatedSites[p.id]) {
+      p.name = curatedSites[p.id];
+      p.settlements = [{ site:p.id + '_476', name:p.name, kind:'town' }];
+      FBDATA.settlementSites[p.id + '_476'] = { x:p.x, y:p.y };
+      if (p.id === 'fes') FBDATA.settlementSites[p.id + '_476'] =
+        { x:-5.55, y:34.07 };
+      if (p.id === 'pliska') FBDATA.settlementSites[p.id + '_476'] =
+        { x:26.53, y:43.52 };
+    }
     return p;
   });
   FBDATA.settlementSites.ravenna_476 = { x:12.201, y:44.418 };
@@ -142,6 +242,10 @@ window.FBDATA = window.FBDATA || {};
       pair[1] + '|' + pair[0];
     if (base.crossingClasses[key]) crossingClasses[key] = base.crossingClasses[key];
   });
+  if (settled.siracusa && settled.tunis) {
+    keptStraits.push(['siracusa','tunis']);
+    crossingClasses['siracusa|tunis'] = 'open';
+  }
   FBDATA.bookmarks['476'] = {
     id:'476', name:'The Last Western Court',
     desc:'An emperor sits at Ravenna while federate soldiers demand a settlement.',

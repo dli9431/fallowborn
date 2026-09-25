@@ -381,6 +381,8 @@ FBDATA.religions = {
         abbotM:'Abbot', abbotF:'Abbess' },
       clergyMarriage:false
     } },
+  berber_traditional: { name:'Amazigh traditional belief', group:'pagan',
+    relationToParent:'in_fold', icon:'☀' },
   germanic_pagan: { name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀',
     properties:{ rankTitles:{
       m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
@@ -390,22 +392,26 @@ FBDATA.religions = {
     properties:{ rankTitles:{
       m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
       f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
-    } } },
+    }, religiousPaths:{ lay:'late_antique_lay',
+      professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
   homoian: { name:'Homoian Christianity', group:'christian', relationToParent:'schismatic', icon:'☧',
     properties:{ rankTitles:{
       m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
       f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
-    } } },
+    }, religiousPaths:{ lay:'late_antique_lay',
+      professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
   chalcedonian: { name:'Chalcedonian Christianity', group:'christian', relationToParent:'in_fold', icon:'☦',
     properties:{ rankTitles:{
       m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
       f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
-    } } },
+    }, religiousPaths:{ lay:'late_antique_lay',
+      professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
   miaphysite: { name:'Miaphysite Christianity', group:'christian', relationToParent:'schismatic', icon:'☧',
     properties:{ rankTitles:{
       m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
       f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
-    } } },
+    }, religiousPaths:{ lay:'late_antique_lay',
+      professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
   catholic: { name:'Latin Christianity', group:'christian',
     relationToParent:'schismatic', icon:'✝',
     properties:{

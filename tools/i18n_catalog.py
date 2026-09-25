@@ -357,6 +357,37 @@ def find_assignment(path: Path, owner: str, prop: str) -> Node | None:
     return None
 
 
+def find_local_assignment(path: Path, variable: str) -> Node | None:
+    """Read a literal local initializer without evaluating bookmark builders."""
+    tokens = lex_js(path.read_text(encoding="utf-8"))
+    for i in range(len(tokens) - 3):
+        if (
+            tokens[i].value in ("var", "let", "const")
+            and tokens[i + 1].value == variable
+            and tokens[i + 2].value == "="
+        ):
+            parser = Parser(tokens)
+            parser.i = i + 3
+            return parser.parse_value()
+    return None
+
+
+def find_keyed_assignment(path: Path, owner: str, prop: str, key: str) -> Node | None:
+    tokens = lex_js(path.read_text(encoding="utf-8"))
+    for i in range(len(tokens) - 6):
+        if (
+            tokens[i].value == owner and tokens[i + 1].value == "."
+            and tokens[i + 2].value == prop and tokens[i + 3].value == "["
+            and tokens[i + 4].kind == "string"
+            and tokens[i + 4].value == key and tokens[i + 5].value == "]"
+            and tokens[i + 6].value == "="
+        ):
+            parser = Parser(tokens)
+            parser.i = i + 7
+            return parser.parse_value()
+    return None
+
+
 def parse_events(path: Path) -> list[Node]:
     tokens = lex_js(path.read_text(encoding="utf-8"))
     for i in range(len(tokens) - 2):
@@ -990,6 +1021,47 @@ def extract_structured(inv: Inventory) -> None:
                 f"Start bookmark {bookmark_id}, {field}.",
                 (),
             )
+
+    # The 476 bookmark builds its province array from the later grid, but its
+    # authored bookmark, realm, and place labels remain literal source data.
+    # Extract only those labels: ruler profiles are generated proper names.
+    period_path = DATA / "bookmark_476.js"
+    period_rel = period_path.relative_to(ROOT).as_posix()
+    period_bookmark = node_object(
+        find_keyed_assignment(period_path, "FBDATA", "bookmarks", "476")
+    ) or {}
+    for field in ("name", "desc"):
+        for branch, record, line in branch_records(period_bookmark.get(field)):
+            inv.add(
+                f"bookmark.476.{field}.{branch}", record,
+                f"{period_rel}:{line}", f"Start bookmark 476, {field}.", ()
+            )
+    for realm_node in node_array(find_local_assignment(period_path, "realms")) or []:
+        realm = node_object(realm_node) or {}
+        realm_id = node_string(realm.get("id"))
+        if not realm_id:
+            continue
+        for branch, record, line in branch_records(realm.get("name")):
+            inv.add(
+                f"realm.476.{realm_id}.name.{branch}", record,
+                f"{period_rel}:{line}",
+                f"476 realm {realm_id}, display name.", ()
+            )
+    curated = node_object(find_local_assignment(period_path, "curatedSites")) or {}
+    for province_id, place_node in curated.items():
+        for branch, record, line in branch_records(place_node):
+            inv.add(
+                f"province.476.{province_id}.name.{branch}", record,
+                f"{period_rel}:{line}",
+                f"476 province {province_id}, period display name.", ()
+            )
+    period_text = period_path.read_text(encoding="utf-8")
+    province_text = period_text.split("var provinces =", 1)[-1]
+    for place in sorted(set(re.findall(r"\bp\.name\s*=\s*'([^']*)'", province_text))):
+        inv.add(
+            source_key(place), {"text": place}, period_rel,
+            "476 authored province display name.", ()
+        )
 
     currency = node_object(
         find_assignment(DATA / "map_data.js", "FBDATA", "currency")

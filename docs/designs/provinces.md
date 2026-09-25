@@ -531,3 +531,14 @@ This is cosmetic naming only and introduces no technology eligibility requiremen
 ## Spring 476 bookmark sites and communities
 
 The bounded [476 prototype](situation-476.md) uses existing county polygons only as spatial anchors. Its separate bookmark records preserve Roman Nicene and Gothic Homoian communities across a federate conquest. Ravenna/Classis, Salona/Spalatum and Carthage/Tunis are distinct site identities; the 476 layout contains no Kairouan site. Outside counties are uninhabited for this slice.
+
+## Spring 476 regional anchors
+
+The 476 bookmark maps later county polygons to a bounded set of late antique
+political regions. Visigothic Iberia, a separate Suevic northwest, Armorican
+communities, Rhenish Franks, and Moorish communities fill parts of the earlier
+prototype gap. Explicit settlement names replace several visibly later names,
+including Fez and Tahert; the polygon remains an approximate geographic anchor.
+Counties outside the authored regional campaign stay wasteland rather than
+receiving an 867 ruler or faith. The 867 and 1066 province records are not
+modified by the 476 remapping.

@@ -541,7 +541,7 @@ window.FB = window.FB || {};
       lipLine:rgbMixV2(shadeV2(base,-.26),[110,46,46],.5)
     };
   }
-  function clothColors(tier, profession, variation) {
+  function clothColors(tier, profession, variation, period476) {
     var byProfession = {
       monk:{kind:'habit',base:[96,80,58]},priest:{kind:'cassock',base:[60,56,62]},
       soldier:{kind:'gambeson',base:[128,110,80]},
@@ -555,6 +555,15 @@ window.FB = window.FB || {};
       {kind:'royal',base:[106,58,126]},{kind:'royal',base:[88,44,116]}
     ];
     var pick = byProfession[profession] || byTier[tier];
+    if (period476) {
+      if (profession === 'priest' || profession === 'monk')
+        pick = {kind:'lateVestment',base:[164,153,126]};
+      else if (tier >= 6)
+        pick = {kind:'lateMantle',base:[104,65,118]};
+      else if (tier >= 3)
+        pick = {kind:'lateMantle',base:[124,81,69]};
+      else pick = {kind:'lateTunic',base:[129,117,91]};
+    }
     var shift = clampV2(variation, -1, 1) * 12;
     var base = [clampV2(Math.round(pick.base[0] + shift),0,255),
       clampV2(Math.round(pick.base[1] - shift*.25),0,255),
@@ -689,6 +698,14 @@ window.FB = window.FB || {};
     return out;
   }
   function generatedHeadwear(spec, identity) {
+    if (spec.period476) {
+      if (spec.tier >= 6) return 'circlet';
+      if (spec.profession === 'soldier' && !spec.child &&
+          saltedByte(identity,'wardrobe-head',2) > 128) return 'helm';
+      if (spec.female && !spec.child &&
+          saltedByte(identity,'wardrobe-head',1) > 150) return 'veil';
+      return 'none';
+    }
     if (spec.child && spec.tier >= 6) return 'circlet';
     if (spec.faith === 'muslim' && !spec.female && !spec.child &&
         spec.profession !== 'monk') return 'turban';
@@ -780,6 +797,7 @@ window.FB = window.FB || {};
       identity:identity,age:age,child:child,adult:age>=16,
       maturity:smoothV2(3,19,age),elder:smoothV2(48,78,age),
       female:female,sex:c.sex||'m',culture:culture,faith:faith,tier:tier,
+      period476:!!(state && state.start && state.start.id === '476'),
       profession:profession,health:health,expressionClass:expressionClass,
       expression:expressionClass === 'guarded' ? -.52
         : expressionClass === 'warm' ? .45 : neutralExpression,
@@ -813,7 +831,9 @@ window.FB = window.FB || {};
       hwTrim:0,
       bgHue:hashOf(c.dyn||portraitName||'fallow')%360,
       cultureHue:hashOf(culture)%360,skin:skinColors({tone:pigment},health),
-      cloth:clothColors(tier,profession,saltedUnit(identity,'wardrobe-cloth',0)*2-1)
+      cloth:clothColors(tier,profession,
+        saltedUnit(identity,'wardrobe-cloth',0)*2-1,
+        !!(state && state.start && state.start.id === '476'))
     };
     if (authored) {
       ['faceWidth','jaw','chin','cheek','eyeSize','eyeSpacing','browWeight',
@@ -884,7 +904,7 @@ window.FB = window.FB || {};
     }).join(',');
     var parts = ['portrait-v2',frame,keyToken(c.id),keyToken(portraitName),
       keyToken(c.dyn||''),keyToken(c.sex||''),age,keyToken(culture),keyToken(faith),
-      tier,keyToken(profession),health,expressionClass,spec.scarred?1:0,
+      tier,keyToken(profession),spec.period476?1:0,health,expressionClass,spec.scarred?1:0,
       spec.oneEyed?1:0,ailments.sickness||legacyIll?1:0,markKey,
       keyToken(spec.hairStyle),keyToken(spec.beardKind),keyToken(spec.beardCut),
       equipmentKeys.join(','),opts.transparent?'transparent':'opaque',
@@ -1025,7 +1045,8 @@ window.FB = window.FB || {};
     function at(heads){return f.top+(1+(heads-1)*k)*headH;}
     var bw=.86+spec.build*.3,tw=.92+spec.build*.17;
     var leg=.94+spec.stature*.12,kind=spec.cloth.kind;
-    var floor=kind==='habit'||kind==='cassock'||kind==='court'||kind==='royal'||kind==='robe';
+    var floor=kind==='habit'||kind==='cassock'||kind==='court'||kind==='royal'||
+      kind==='robe'||kind==='lateMantle'||kind==='lateVestment';
     return {cx:f.throatX,headH:headH,floorLength:floor,kind:kind,fem:spec.female,
       shoulderY:at(1.3),chestY:at(2),waistY:at(2.82),hipY:at(3.75),
       kneeY:at(3.75+(5.5-3.75)*leg),ankleY:at(7.24),soleY:at(7.5),
@@ -4105,7 +4126,28 @@ window.FB = window.FB || {};
     var kind=b.kind;
     var seam=shadeV2(cl.deep,-.12);
     var i,x,y,n,qx;
-    if(kind==='mail'||kind==='lamellar'||kind==='plate'){
+    if(kind==='lateTunic'||kind==='lateMantle'||kind==='lateVestment'){
+      /* Vertical clavi and a fastened mantle identify late antique rank. */
+      ink(ctx,kind==='lateMantle'?2.4:1.5,cl.trim,.78,q);
+      for(i=-1;i<=1;i+=2){
+        x=b.cx+i*b.waistHalf*.43;
+        ctx.beginPath();ctx.moveTo(x,b.shoulderY+hh*.14);
+        ctx.lineTo(x,b.hemY-hh*.07);ctx.stroke();
+      }
+      if(kind==='lateMantle'){
+        ctx.beginPath();
+        ctx.moveTo(b.cx-b.shoulderHalf*.9,b.shoulderY+hh*.1);
+        ctx.quadraticCurveTo(b.cx,b.chestY+hh*.1,
+          b.cx+b.shoulderHalf*.9,b.shoulderY+hh*.03);
+        ctx.lineTo(b.cx+b.shoulderHalf*.65,b.shoulderY+hh*.26);
+        ctx.quadraticCurveTo(b.cx,b.chestY+hh*.28,
+          b.cx-b.shoulderHalf*.8,b.shoulderY+hh*.26);
+        ctx.closePath();
+        fillStrokeA(ctx,cl.dark,cl.trim,1.4,.8,q);
+        gemDot(ctx,b.cx+b.shoulderHalf*.67,b.shoulderY+hh*.1,
+          hh*.05,cl.trim,q);
+      }
+    }else if(kind==='mail'||kind==='lamellar'||kind==='plate'){
       ink(ctx,1,seam,.75,q);
       if(kind==='plate'){
         ctx.beginPath();ctx.moveTo(b.cx,b.shoulderY);ctx.lineTo(b.cx,b.waistY);ctx.stroke();

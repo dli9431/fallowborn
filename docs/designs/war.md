@@ -2001,3 +2001,13 @@ and service capability has technology impact `none`.
 ## Spring 476 field contest
 
 The [476 prototype](situation-476.md) starts with two saved standing hosts. They remain mustered through the bounded first-year sequence while ordinary movement, supply and battle resolve a contested Ravenna. An Italian court escort follows a reviewed route to Ticinum. A commissioned player may control only the named federate host; a contract or later breach changes the shared Ban query without changing host ownership.
+
+## Conditional 476 campaigns
+
+The 476 situation records Clovis, Theoderic, and eastern reconquest opportunities
+in saved campaign state. Each attempt requires its current ruler and territorial
+predicates, then registers an ordinary one-county objective war. Declaration
+never grants land; hosts, battles, sieges, occupation and peace decide it. A
+failed or diverged attempt is recorded once and never replayed as an automatic
+conquest. The 476 bookmark alone has a Syracuse–Carthage open crossing for the
+African route.

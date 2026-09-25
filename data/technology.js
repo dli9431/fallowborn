@@ -75,6 +75,9 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      period_476_civic_career:{ mode:'none', rationale:'Late antique civic clerk work and a local judicial appointment depend on living council actors, county control and civic recognition. Baseline public service has no credible discovery gate.' },
+      period_476_clerical_mediation:{ mode:'none', rationale:'Service within a local congregation and mediation between living bishops are social and religious choices. Existing education and faith progression still govern later rank.' },
+      period_476_conditional_campaigns:{ mode:'none', rationale:'Frankish, Gothic and eastern reconquest campaigns use ordinary armies, territorial ownership and living rulers. Their political timing is not an invention.' },
       period_476_court_escort:{ mode:'none', rationale:'Moving the western court depends on an available route, a live escort and territorial control, not a discovery. Ordinary army path and supply rules remain in force.' },
       period_476_claimant_recognition:{ mode:'none', rationale:'Backing a living imperial claimant or petitioning a sitting ruler is a political choice. The issuer must hold the office and its recognition lapses on succession without research.' },
       period_476_city_settlement:{ mode:'none', rationale:'Civic agreement, church mediation and a reviewed Classis allotment use live authority and existing settlement grant rules. The people and site are already present, so no invention is needed.' },
