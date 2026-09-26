@@ -625,6 +625,7 @@ window.FB = window.FB || {};
   S.warnIfBlocked = function () {
     if (S.available || S._warned || !FB.ui) return;
     S._warned = true;
+    if (crazy && crazy.recovery()) { FB.ui.toast(crazy.recovery().message); return; }
     FB.ui.toast('⚠ This browser is blocking save storage. Lives won’t persist here, so use Menu → 💾 Save game → 💾 Download save file.');
   };
 
@@ -749,8 +750,9 @@ window.FB = window.FB || {};
     if (storageInitialized) { done(); return; }
     storageInitialized = true;
     if (crazy) {
-      crazy.init({ encode:compressToBase64, decode:decompressFromBase64 }, function (error) {
-        S.available = !error;
+      crazy.init({ encode:compressToBase64, decode:decompressFromBase64,
+        encodeStored:compressToStored, decodeStored:decompressFromStored }, function (error) {
+        S.available = crazy.available();
         if (!error) startProgression = readStartProgression();
         done(error);
       });
@@ -1007,12 +1009,12 @@ window.FB = window.FB || {};
       writeAuto(job, encodeStored(job.json));
     }
   }
-  function flushAutosave(force) {
+  function flushAutosave(force, compactAfter) {
     const job = pendingAuto;
     if (!job) return;
     if (crazy) {
       if (force === true) {
-        try { if (crazy.flush(job.json)) pendingAuto = null; }
+        try { if (crazy.flush(job.json, compactAfter)) pendingAuto = null; }
         catch (error) { reportSaveError(error); }
       } else if (!job.writing) {
         job.writing = true;
@@ -1051,10 +1053,10 @@ window.FB = window.FB || {};
     else compressAuto(job);
   }
   // A closing page cannot wait for a worker; persist the newest snapshot now.
-  S.flushPending = function () {
+  S.flushPending = function (compactAfter) {
     if (crazy) {
-      if (pendingAuto) flushAutosave(true);
-      else { try { crazy.flushLatest(); } catch (error) { reportSaveError(error); } }
+      if (pendingAuto) flushAutosave(true, compactAfter === true);
+      else { try { crazy.flushLatest(compactAfter === true); } catch (error) { reportSaveError(error); } }
       return;
     }
     // A closing page cannot await an outstanding manual transaction either.

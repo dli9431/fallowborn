@@ -9,7 +9,14 @@ const { mockCrazyGames } = require('../support/crazygames');
 async function boot(page, testInfo, options) {
   await mockCrazyGames(page, options);
   await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-  await openGame(page, testInfo);
+  await openCrazyGame(page, testInfo);
+}
+async function openCrazyGame(page, testInfo) {
+  await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+  const silent = page.locator('#music-choice-silent');
+  if (await silent.isVisible()) await silent.click();
+  await expect(page.locator('#btn-newgame')).toContainText('Play as Osric');
 }
 async function save(page) {
   return page.evaluate(function () {
@@ -99,6 +106,7 @@ test('account change cancels writes from the previous session', async function (
   expect(await save(page)).toBe(true);
   const result = await page.evaluate(async function () {
     var before = window.__cgTest.data.fb_cg_campaign_v1;
+    FB.state.player.gold += 1;
     var writing = new Promise(function (resolve) { FB.save.toSlot('auto', resolve); });
     window.__cgTest.auth({ username:'another-player' });
     var ok = await writing;
@@ -108,13 +116,13 @@ test('account change cancels writes from the previous session', async function (
   expect(result).toEqual({ ok:false, preserved:true });
 });
 
-async function bootLocal(page, testInfo) {
-  await mockCrazyGames(page);
+async function bootLocal(page, testInfo, options) {
+  await mockCrazyGames(page, options);
   await page.addInitScript(function () {
     window.FB_DISTRIBUTION = 'crazygames';
     window.FB_CRAZYGAMES_STORAGE = 'localstorage';
   });
-  await openGame(page, testInfo);
+  await openCrazyGame(page, testInfo);
 }
 
 test('CrazyGames localStorage mode saves one compressed life and earned starts without SDK data', async function ({ page }, testInfo) {
@@ -178,7 +186,7 @@ test('CrazyGames localStorage mode migrates a legacy gzip save on the next write
   expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1').slice(0, 5); })).toBe('FBG2.');
 });
 
-test('CrazyGames localStorage mode keeps a damaged packed save and blocks boot', async function ({ page }, testInfo) {
+test('CrazyGames keeps a damaged save and offers recovery without blocking the title', async function ({ page }, testInfo) {
   await bootLocal(page, testInfo);
   await startDeterministicGame(page);
   expect(await save(page)).toBe(true);
@@ -188,9 +196,25 @@ test('CrazyGames localStorage mode keeps a damaged packed save and blocks boot',
     return value;
   });
   await page.reload();
-  await expect(page.locator('#title-boot-status')).toContainText('saved data has been kept');
-  expect(await page.evaluate(function () { return FB.game.bootReady; })).toBe(false);
+  await expect(page.locator('#gm-title')).toContainText('Save recovery');
+  expect(await page.evaluate(function () { return FB.game.bootReady; })).toBe(true);
+  await expect(page.locator('#btn-newgame')).toBeEnabled();
+  await expect(page.locator('#btn-save-recovery')).toBeVisible();
   expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBe(damaged);
+  expect(await page.locator('#recovery-text').inputValue()).toContain('fallowborn-storage-recovery');
+  await page.locator('#recovery-review').click();
+  await expect(page.locator('#gm-body')).toContainText('Starting-rank unlocks will be kept');
+  await page.locator('#recovery-cancel').click();
+  await expect(page.locator('#recovery-text')).toHaveValue(await page.evaluate(function () { return FB.crazySave.recoveryText(); }));
+  await page.locator('#recovery-review').click();
+  await page.locator('#recovery-reset').click();
+  await page.waitForFunction(function () { return FB.game.bootReady && !FB.crazySave.recovery(); });
+  const result = await page.evaluate(function () {
+    return { campaign:localStorage.getItem('fb_cg_aps_campaign_v1'),
+      backup:JSON.parse(localStorage.getItem('fb_cg_aps_recovery_v1')).records.fb_cg_aps_campaign_v1,
+      tier:FB.startProgression.snapshot().highestAchievedTier };
+  });
+  expect(result).toEqual({ campaign:null, backup:damaged, tier:1 });
 });
 
 test('CrazyGames localStorage quota rejection retains the last accepted campaign', async function ({ page }, testInfo) {
@@ -218,6 +242,268 @@ test('CrazyGames localStorage quota rejection retains the last accepted campaign
   expect(result.gold).toBe(result.previousGold);
   expect(result.sdkDataCalls).toEqual([]);
   await expect(page.locator('#toasts')).toContainText('previous save is kept');
+});
+
+test('packed gzip round-trips every length remainder and crosses chunk and length-header boundaries', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  const result = await page.evaluate(async function () {
+    // Legal gzip extra headers vary the compressed byte length independently of
+    // the JSON. The actual game encoder/decoder and native gunzip remain in use.
+    var Native = window.CompressionStream, extra = 0;
+    window.CompressionStream = function (format) {
+      var stream = new Native(format), chunks = [], size = 0, count = extra;
+      return { writable:stream.writable, readable:stream.readable.pipeThrough(new TransformStream({
+        transform:function (chunk) { chunks.push(chunk); size += chunk.length; },
+        flush:function (controller) {
+          var source = new Uint8Array(size), at = 0;
+          chunks.forEach(function (chunk) { source.set(chunk, at); at += chunk.length; });
+          var bytes = new Uint8Array(size + 2 + count);
+          bytes.set(source.subarray(0, 10)); bytes[3] |= 4;
+          bytes[10] = count & 255; bytes[11] = count >>> 8;
+          bytes.set(source.subarray(10), 12 + count);
+          controller.enqueue(bytes);
+        }
+      })) };
+    };
+    var outcomes = [], remainders = [], lengths = [], last;
+    try {
+      for (var i = 0; i < 18; i++) {
+        last = JSON.stringify({ v:3, mods:'crazygames-content-1', state:{ probe:i } });
+        var native = await new Response(new Blob([last]).stream().pipeThrough(new Native('gzip'))).arrayBuffer();
+        extra = i < 15 ? (i - ((native.byteLength + 2) % 15) + 15) % 15 : [15360, 32768, 65500][i - 15];
+        var ok = await new Promise(function (resolve) { FB.crazySave.write(last, resolve); });
+        outcomes.push(ok && FB.crazySave.read() === last);
+        if (ok) {
+          var packed = localStorage.getItem('fb_cg_aps_campaign_v1');
+          var length = (packed.charCodeAt(5) - 32) * 32768 + packed.charCodeAt(6) - 32;
+          lengths.push(length);
+          if (i < 15) remainders.push(length % 15);
+        }
+      }
+    } finally { window.CompressionStream = Native; }
+    return { outcomes:outcomes, remainders:remainders, lengths:lengths, last:last };
+  });
+  expect(result.outcomes).toEqual(Array(18).fill(true));
+  expect(result.remainders).toEqual(Array.from({ length:15 }, function (_, i) { return i; }));
+  expect(result.lengths[16]).toBeGreaterThan(32768);
+  await page.reload();
+  await page.waitForFunction(function () { return FB.game.bootReady; });
+  expect(await page.evaluate(function () { return FB.crazySave.read(); })).toBe(result.last);
+});
+
+test('nonzero packed padding is rejected without replacing the original', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  const damaged = await page.evaluate(async function () {
+    for (var i = 0; i < 60; i++) {
+      var json = JSON.stringify({ v:3, mods:'crazygames-content-1', state:{ probe:'x'.repeat(i) } });
+      await new Promise(function (resolve) { FB.crazySave.write(json, resolve); });
+      var raw = localStorage.getItem('fb_cg_aps_campaign_v1');
+      var length = (raw.charCodeAt(5) - 32) * 32768 + raw.charCodeAt(6) - 32;
+      if (length % 15 === 0) continue;
+      var corrupt = raw.slice(0, -1) + String.fromCharCode(raw.charCodeAt(raw.length - 1) | 1);
+      localStorage.setItem('fb_cg_aps_campaign_v1', corrupt);
+      return corrupt;
+    }
+    throw new Error('No padded gzip fixture found');
+  });
+  await page.reload();
+  await expect(page.locator('#recovery-review')).toBeVisible();
+  expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBe(damaged);
+});
+
+for (const scenario of [
+  { name:'absent', options:{ missingSdk:true } },
+  { name:'rejected', options:{ failInit:true } },
+  { name:'unresponsive', options:{ hangInit:true } }
+]) {
+  test('local saves work with an ' + scenario.name + ' SDK', async function ({ page }, testInfo) {
+    await bootLocal(page, testInfo, scenario.options);
+    await startDeterministicGame(page);
+    expect(await save(page)).toBe(true);
+    await page.reload();
+    await page.waitForFunction(function () { return FB.game.bootReady; });
+    expect(await page.evaluate(function () { return !!FB.save.read('auto') && FB.save.available; })).toBe(true);
+  });
+}
+
+test('late SDK initialization reports the current screen without delaying local saves', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo, { deferInit:true });
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  await page.evaluate(function () { window.__cgTest.resolveInit(); });
+  await expect.poll(function () {
+    return page.evaluate(function () { return window.__cgTest.calls.filter(function (c) { return c === 'start'; }).length; });
+  }).toBe(1);
+});
+
+test('missing compression APIs use compact synchronous saves and still read legacy LZ', async function ({ page }, testInfo) {
+  await page.addInitScript(function () {
+    window.CompressionStream = undefined; window.DecompressionStream = undefined;
+  });
+  await bootLocal(page, testInfo, { missingSdk:true });
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1').slice(0, 5); })).toBe('FBL2.');
+  await page.reload();
+  await page.waitForFunction(function () { return FB.game.bootReady; });
+  expect(await page.evaluate(function () { return !!FB.save.read('auto'); })).toBe(true);
+  await page.evaluate(function () { FB.game.loadSlot('auto'); });
+  await page.waitForFunction(function () { return !!FB.state; });
+  await page.evaluate(function () {
+    localStorage.setItem('fb_cg_aps_campaign_v1', 'FBL1.' + FB.save.exportState().slice(5));
+  });
+  await page.reload();
+  await page.waitForFunction(function () { return FB.game.bootReady; });
+  expect(await page.evaluate(function () { return !!FB.save.read('auto'); })).toBe(true);
+});
+
+test('an existing gzip save remains protected when decompression is unavailable', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  const before = await page.evaluate(function () {
+    FB.state = null; // keep page hiding from deliberately saving a new snapshot
+    return localStorage.getItem('fb_cg_aps_campaign_v1');
+  });
+  await page.addInitScript(function () { window.DecompressionStream = undefined; });
+  await page.reload();
+  await expect(page.locator('#gm-body')).toContainText('cannot open this compressed save');
+  const result = await page.evaluate(function () {
+    return { unsupported:FB.crazySave.recovery().unsupported, ready:FB.game.bootReady,
+      available:FB.save.available, raw:localStorage.getItem('fb_cg_aps_campaign_v1') };
+  });
+  expect(result).toEqual({ unsupported:true, ready:true, available:false, raw:before });
+});
+
+test('unreadable progression does not block a healthy campaign and recovery resets only progression', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  await page.evaluate(function () { localStorage.setItem('fb_cg_aps_progression_v1', 'broken'); });
+  await page.reload();
+  await expect(page.locator('#recovery-review')).toBeVisible();
+  const result = await page.evaluate(async function () {
+    var data = FB.save.read('auto');
+    data.state.player.gold = 789;
+    var ok = await new Promise(function (resolve) { FB.crazySave.write(JSON.stringify(data), resolve); });
+    return { ok:ok, available:FB.save.available, raw:localStorage.getItem('fb_cg_aps_progression_v1') };
+  });
+  expect(result).toEqual({ ok:true, available:true, raw:'broken' });
+  await page.locator('#recovery-review').click();
+  await expect(page.locator('#gm-body')).toContainText('The saved campaign will be kept');
+  await page.locator('#recovery-reset').click();
+  await page.waitForFunction(function () { return FB.game.bootReady && !FB.crazySave.recovery(); });
+  expect(await page.evaluate(function () { return FB.save.read('auto').state.player.gold; })).toBe(789);
+});
+
+test('failed recovery backup preserves original bytes until an explicit discard', async function ({ page }, testInfo) {
+  await page.addInitScript(function () {
+    if (!sessionStorage.getItem('__seeded_bad_cg_save')) {
+      localStorage.setItem('fb_cg_aps_campaign_v1', 'unreadable');
+      sessionStorage.setItem('__seeded_bad_cg_save', '1');
+    }
+  });
+  await bootLocal(page, testInfo);
+  await page.locator('#recovery-review').click();
+  await page.evaluate(function () {
+    var original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.indexOf('fb_cg_aps_recovery_') === 0) throw new DOMException('Full', 'QuotaExceededError');
+      return original.call(this, key, value);
+    };
+  });
+  await page.locator('#recovery-reset').click();
+  await expect(page.locator('#recovery-error')).toContainText('original records are unchanged');
+  expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBe('unreadable');
+  await page.locator('#recovery-discard').click();
+  await page.waitForFunction(function () { return FB.game.bootReady && !FB.crazySave.recovery(); });
+  expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBeNull();
+});
+
+test('blocked localStorage allows unsaved play and file export', async function ({ page }, testInfo) {
+  await page.addInitScript(function () {
+    Object.defineProperty(window, 'localStorage', { configurable:true,
+      get:function () { throw new DOMException('Denied', 'SecurityError'); } });
+  });
+  await bootLocal(page, testInfo, { missingSdk:true });
+  await expect(page.locator('#gm-body')).toContainText('blocking save storage');
+  await page.locator('#recovery-back').click();
+  await page.locator('#btn-newgame').click();
+  await page.waitForFunction(function () { return !!FB.state; });
+  expect(await page.evaluate(function () { return FB.save.exportState().slice(0, 5); })).toBe('FBS2.');
+  expect(await save(page)).toBe(false);
+});
+
+test('tab hiding preserves unchanged gzip and checkpoints changed state before async compaction', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  const result = await page.evaluate(function () {
+    var key = 'fb_cg_aps_campaign_v1', before = localStorage.getItem(key), writes = 0;
+    var original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (name, value) {
+      if (name === key) writes++;
+      return original.call(this, name, value);
+    };
+    Object.defineProperty(document, 'hidden', { configurable:true, value:true });
+    try {
+      document.dispatchEvent(new Event('visibilitychange'));
+      var unchanged = localStorage.getItem(key) === before, unchangedWrites = writes;
+      FB.state.player.gold += 321;
+      document.dispatchEvent(new Event('visibilitychange'));
+      var checkpoint = localStorage.getItem(key);
+      var gold = JSON.parse(FB.crazySave.read()).state.player.gold;
+      window.dispatchEvent(new Event('pagehide'));
+      return { unchanged:unchanged, unchangedWrites:unchangedWrites, checkpoint:checkpoint.slice(0, 5),
+        keptOnPagehide:localStorage.getItem(key) === checkpoint, gold:gold, liveGold:FB.state.player.gold };
+    } finally { Storage.prototype.setItem = original; delete document.hidden; }
+  });
+  expect(result).toMatchObject({ unchanged:true, unchangedWrites:0, checkpoint:'FBL2.', keptOnPagehide:true });
+  expect(result.gold).toBe(result.liveGold);
+  await expect.poll(function () {
+    return page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1').slice(0, 5); });
+  }).toBe('FBG2.');
+});
+
+test('a quota-rejected synchronous checkpoint leaves the in-flight gzip save alive', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  const result = await page.evaluate(async function () {
+    FB.state.player.gold += 99;
+    var original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === 'fb_cg_aps_campaign_v1' && value.indexOf('FBL2.') === 0) throw new DOMException('Full', 'QuotaExceededError');
+      return original.call(this, key, value);
+    };
+    try {
+      var writing = new Promise(function (resolve) { FB.save.toSlot('auto', resolve); });
+      FB.save.flushPending();
+      var ok = await writing;
+      return { ok:ok, gold:FB.save.read('auto').state.player.gold, liveGold:FB.state.player.gold };
+    } finally { Storage.prototype.setItem = original; }
+  });
+  expect(result.ok).toBe(true);
+  expect(result.gold).toBe(result.liveGold);
+});
+
+test('pagehide alone saves the pending life in compact LZ and it reloads without gzip support', async function ({ page }, testInfo) {
+  await bootLocal(page, testInfo);
+  await startDeterministicGame(page);
+  expect(await save(page)).toBe(true);
+  await page.evaluate(function () {
+    FB.state.player.gold = 9182;
+    FB.save.autosave();
+    window.dispatchEvent(new Event('pagehide'));
+    FB.state = null;
+  });
+  expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1').slice(0, 5); })).toBe('FBL2.');
+  await page.addInitScript(function () {
+    window.CompressionStream = undefined; window.DecompressionStream = undefined;
+  });
+  await page.reload();
+  await page.waitForFunction(function () { return FB.game.bootReady; });
+  expect(await page.evaluate(function () { return FB.save.read('auto').state.player.gold; })).toBe(9182);
 });
 
 test('standard edition never initializes the SDK and retains its manual slots', async function ({ page }, testInfo) {

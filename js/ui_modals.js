@@ -29143,8 +29143,71 @@ window.FB = window.FB || {};
     $('gm-back').addEventListener('click', UI.closeModal);
   };
 
+  UI.showSaveRecovery = function () {
+    const adapter = FB.crazySave;
+    const issue = adapter && adapter.recovery();
+    if (!issue) return;
+    const affected = issue.campaign && issue.progression
+      ? FB.T('The saved campaign and starting-rank unlocks will be reset.')
+      : issue.campaign ? FB.T('The saved campaign will be reset. Starting-rank unlocks will be kept.')
+        : FB.T('Starting-rank unlocks will be reset. The saved campaign will be kept.');
+    let h = '<div class="gm-body-text"><p>' + esc(issue.message) + '</p><p>' +
+      esc(FB.T(issue.campaign || issue.unavailable
+        ? 'You can still play, but browser saving is unavailable until this is resolved. Download your current life from Save game to keep it.'
+        : 'You can continue your saved campaign. New starting-rank unlocks cannot be stored until this is resolved.')) + '</p></div>';
+    if (!issue.unavailable) {
+      h += '<div class="gm-list"><button class="actionbtn" id="recovery-download">' +
+        esc(FB.T('Download recovery file')) + '</button>' +
+        '<button class="actionbtn" id="recovery-review">' + esc(FB.T('Review reset')) + '</button></div>' +
+        '<details><summary>' + esc(FB.T('Copy recovery text')) + '</summary>' +
+        '<label for="recovery-text">' + esc(FB.T('Keep this text before resetting. It preserves the original records.')) + '</label>' +
+        '<textarea id="recovery-text" class="savetext" readonly rows="6"></textarea></details>';
+    }
+    h += '<div class="gm-footer"><button class="btn" id="recovery-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal('Save recovery', h, { historyView:true });
+    $('recovery-back').addEventListener('click', function () { modalHistoryBack(UI.closeModal); });
+    if (issue.unavailable) return;
+    const text = adapter.recoveryText();
+    $('recovery-text').value = text;
+    $('recovery-download').addEventListener('click', function () {
+      try {
+        const url = URL.createObjectURL(new Blob([text], { type:'application/json;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url; link.download = 'fallowborn-save-recovery.json';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      } catch (e) { UI.toast('This browser could not download the recovery file. Copy the recovery text instead.'); }
+    });
+    $('recovery-review').addEventListener('click', function () {
+      openModal('Reset saved records', '<div class="gm-body-text"><p>' + esc(affected) + '</p><p>' +
+        esc(FB.T('A browser backup will be kept before resetting. The game will reload. Download the recovery file as a separate backup.')) +
+        '</p><p id="recovery-error" role="status" aria-live="polite"></p></div>' +
+        '<div class="modal-body-actions"><button class="actionbtn" id="recovery-reset">' +
+        esc(FB.T('Back up and reset')) + '</button>' +
+        '<button class="actionbtn hidden" id="recovery-discard">' +
+        esc(FB.T('Reset without a browser backup')) + '</button></div>' +
+        '<div class="gm-footer"><button class="btn" id="recovery-cancel">' + esc(FB.T('Cancel')) + '</button></div>',
+      { historyView:true });
+      function reset(discard) {
+        try {
+          if (adapter.resetRecovery(discard)) { window.location.reload(); return; }
+          $('recovery-error').textContent = FB.T('These records cannot be reset here. Reload and try again.');
+        } catch (e) {
+          $('recovery-error').textContent = e.message;
+          if (e.backupFailed) $('recovery-discard').classList.remove('hidden');
+        }
+      }
+      $('recovery-reset').addEventListener('click', function () { reset(false); });
+      $('recovery-discard').addEventListener('click', function () { reset(true); });
+      $('recovery-cancel').addEventListener('click', function () { modalHistoryBack(UI.showSaveRecovery); });
+    });
+  };
+
   UI.showSaveLoad = function (saving) {
     let h = '<div class="gm-list">';
+    if (FB.crazySave && FB.crazySave.recovery()) {
+      h += '<button class="actionbtn" id="sl-recovery">' + esc(FB.T('Save recovery')) + '</button>';
+    }
     h += '<div class="save-slot-row"><div class="actionbtn save-slot-summary"><b>' +
       esc(FB.T('Autosave (used by Continue)')) + '</b><span class="adesc">' +
       esc(FB.save.slotMeta('auto') || FB.T('Empty')) + '</span></div>' +
@@ -29182,10 +29245,13 @@ window.FB = window.FB || {};
       '<span class="adesc">choose an exported .txt file, or paste older save text</span></button>';
     h += '</div>';
     if (!FB.save.available) {
-      h += '<div class="hint" style="text-align:center;margin:8px auto 0">⚠ This browser is blocking save storage. Slots may vanish, so download a save file.</div>';
+      h += '<div class="hint" style="text-align:center;margin:8px auto 0">' +
+        esc(FB.crazySave && FB.crazySave.recovery() ? FB.crazySave.recovery().message :
+          FB.T('⚠ This browser is blocking save storage. Slots may vanish, so download a save file.')) + '</div>';
     }
     h += '<button class="btn" id="gm-back">Back</button>';
     openModal(saving ? 'Save Game' : 'Load Game', h, { historyView:true });
+    if ($('sl-recovery')) $('sl-recovery').addEventListener('click', UI.showSaveRecovery);
     document.querySelectorAll('[data-delete-slot]').forEach(function (button) {
       button.addEventListener('click', function () {
         const id = button.getAttribute('data-delete-slot'), slot = id === 'auto' ? 'auto' : Number(id);

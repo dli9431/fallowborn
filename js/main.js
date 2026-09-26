@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.184.3';
+FB.VERSION = '1.184.4';
 FB.CHANGELOG = [
+  { v: '1.184.4', date: '2026-09-25', changes: [
+    'CrazyGames saves handle compact data correctly and keep a smaller backup when leaving the game. Browser saving works without a platform connection, and unreadable saves have recovery controls.'
+  ] },
   { v: '1.184.3', date: '2026-09-25', changes: [
     'CrazyGames loads in English with fewer files and no language picker.'
   ] },
@@ -2224,6 +2227,7 @@ FB.CHANGELOG = [
     FB.ui.showScreen('title');
     resolveMusicChoiceShell();
     if (FB.music) FB.music.showTitle();
+    if (FB.crazySave && FB.crazySave.recovery()) FB.ui.showSaveRecovery();
   }
 
   function readyTitleShell() {
@@ -2291,6 +2295,7 @@ FB.CHANGELOG = [
   function refreshTitle() {
     $('title-version').textContent = 'v' + FB.VERSION;
     $('btn-continue').classList.toggle('hidden', !FB.save.hasAuto());
+    if ($('btn-save-recovery')) $('btn-save-recovery').classList.toggle('hidden', !(FB.crazySave && FB.crazySave.recovery()));
     const note = $('title-mods');
     if (!note) return;
     const names = FB.mods.bundled()
@@ -2328,6 +2333,7 @@ FB.CHANGELOG = [
     $('btn-choose-beginning').addEventListener('click', showNewGame);
     $('btn-continue').addEventListener('click', function () { G.loadSlot('auto'); });
     $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
+    if ($('btn-save-recovery')) $('btn-save-recovery').addEventListener('click', function () { FB.ui.showSaveRecovery(); });
     $('btn-chronicle').addEventListener('click', function () { FB.ui.showChronicleLibrary(); });
     $('btn-mods').classList.toggle('hidden', FB.platform.isCrazyGames);
     $('btn-mods').addEventListener('click', function () { FB.ui.showMods(); });
@@ -4601,7 +4607,7 @@ FB.CHANGELOG = [
     // (flush: autosave's storage write is deferred now, and this page may
     // never run another timer)
     FB.save.autosave({ background:true });
-    if (FB.save.flushPending) FB.save.flushPending();
+    if (FB.save.flushPending) FB.save.flushPending(true);
   }
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) pauseForBackground();

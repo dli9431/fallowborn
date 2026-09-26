@@ -3347,13 +3347,10 @@ explains that custom mods are unavailable. Justice omits lethal/blinding choices
 its retained imprisonment flow shows the actual sentence. See
 [content profiles](distribution-content.md) for event and compatibility behavior.
 
-## CrazyGames save surface
+CrazyGames save surface
 
-The CrazyGames Save/Load dialog shows one saved campaign shared with Continue and
-autosave, plus portable export/import. It explains guest/device versus account
-sync behavior and the sync delay. Storage deletion shows Data Module usage out
-of 1 MiB, preserves ranks, and retains the existing confirmation and Back flow.
-Standard builds retain the three manual slots and browser-storage presentation.
-SDK boot failures remain on the title status with reload guidance and disabled
-start controls. Save failures leave the prior campaign intact and keep export
-available. A save acknowledgement means accepted by the SDK, not cloud-confirmed.
+The CrazyGames Save/Load dialog shows one campaign shared with Continue and autosave, plus portable export/import. LocalStorage mode describes browser persistence and possible Automatic Progress Save backup; its size display reports browser-save usage. The older SDK Data Module mode retains its 1 MiB usage and sync-delay explanation. Neither acknowledgement claims confirmed cloud synchronization. Standard builds retain their three manual slots and existing presentation.
+
+LocalStorage mode reaches the title even when SDK initialization, save decoding or storage access fails. Save recovery appears automatically when local records need attention and remains available from the title and Save/Load. The shared modal identifies affected records, distinguishes unsupported compression from unreadable data, explains which saving remains available, and offers a recovery download with selectable copy text. A separate Review reset screen states exactly which records will be reset and which will remain, then offers Back up and reset. A failed browser backup preserves the originals and displays an explicit Reset without a browser backup action beside its loss warning. Successful reset reloads. Cancel and Back restore the recovery or originating Save/Load view, including scroll and focus. Blocked storage allows unsaved play and current-life exports, with no ineffective reset action.
+
+Unreadable progression does not prevent continuing a healthy campaign. Unreadable campaigns remain protected against autosave, manual save and import-triggered persistence until deliberately reset. SDK Data Module initialization failures still block that edition's title until account data is available. All recovery controls use shared buttons, native textarea/details elements, localized text and the existing keyboard/mobile modal navigation.

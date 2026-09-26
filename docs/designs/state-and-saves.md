@@ -1679,39 +1679,18 @@ Standard builds also reject these saves. This requires a new campaign rather tha
 rewriting an imported Chronicle or relationships. Save format remains 3.
 See [content profiles](distribution-content.md).
 
-## CrazyGames save storage
+CrazyGames save storage
 
-The CrazyGames upload sets `window.FB_CRAZYGAMES_STORAGE = "localstorage"`
-before game scripts. The isolated `js/crazygames.js` adapter still initializes SDK
-v3 for gameplay reporting, but reads and writes the campaign and earned starting
-ranks directly in `localStorage`. Its keys are `fb_cg_aps_campaign_v1` and
-`fb_cg_aps_progression_v1`. Manual Save and autosave share Continue; numbered
-slots remain exclusive to standard editions. The standard edition does not read
-these keys or initialize the SDK. No IndexedDB or SDK Data Module save is
-automatically migrated. A compatible life can be transferred with Save File.
+The CrazyGames upload sets window.FB_CRAZYGAMES_STORAGE = "localstorage" before game scripts and loads SDK v3 asynchronously. The isolated js/crazygames.js adapter reads and writes fb_cg_aps_campaign_v1 and fb_cg_aps_progression_v1 independently of SDK telemetry initialization. Missing, rejected or unresponsive SDK initialization cannot block local play or saving. Late successful initialization reports the current screen. Manual Save and autosave share Continue; numbered slots remain exclusive to standard editions. No IndexedDB or SDK Data Module save is automatically migrated. A compatible life can be transferred with Save File.
 
-For this localStorage mode, the adapter gzips the unchanged save JSON and packs
-the bytes into 15-bit, non-surrogate UTF-16 code units (`FBG2`). A two-unit
-length header removes padding ambiguity. It decompresses the new value back to
-the exact JSON before replacing the browser snapshot. Older gzip/base64
-(`FBG1`) and page-exit LZ/base64 (`FBL1`) values still load, and the next
-normal save writes `FBG2`. SDK Data Module mode continues to write `FBG1`.
-The adapter requires `CompressionStream` and `DecompressionStream`.
+Normal local writes gzip the unchanged save JSON and pack the bytes into 15-bit, non-surrogate UTF-16 code units (FBG2). The two-unit header records the byte length. Decoding stops at that byte count and checks that all remaining padding bits are zero. Exact JSON round-trip verification precedes replacement. Older gzip/base64 (FBG1) and LZ/base64 (FBL1) records remain readable. The new FBL2 fallback uses the existing synchronous 15-bit LZ codec, avoiding base64 overhead. Missing compression APIs select FBL2 for new writes; an existing gzip save without decompression support remains protected and is identified as unsupported, not corrupt. Save envelope version remains 3 and portable exports are unchanged.
 
-The browser enforces the shared `localStorage` quota, commonly about 5 MiB per
-origin; a failed write leaves the prior campaign intact and points to file
-export. The packed form uses fewer UTF-16 code units than gzip/base64, but the
-CrazyGames APS backup size and cross-device behavior must be checked in the
-actual upload. A closing page cannot await gzip, so a pending snapshot attempts
-the verified synchronous `FBL1` fallback.
+Visibility hiding and mobile blur retain a synchronous checkpoint because a hidden mobile page may be terminated without pagehide or further asynchronous work. A snapshot identical to the committed JSON is not rewritten. Changed snapshots use verified FBL2, then schedule opportunistic gzip compaction while the page remains alive. Pagehide checkpoints pending work without scheduling compaction. Synchronous replacement invalidates older work only after success, so quota rejection cannot cancel a potentially smaller pending gzip write. All writes compare stored campaign and progression values before mutation. Deletion invalidates pending writes and retains earned ranks.
 
-Writes compare the stored keys before mutation so a stale tab cannot replace a
-newer browser snapshot. Deleting the campaign leaves earned ranks. APS backup
-and cross-device restore require validation in the actual CrazyGames upload;
-local write success alone does not establish cloud sync. Save format remains 3.
+The browser enforces its shared localStorage quota. Failed writes preserve the previous snapshot; downloads remain available. APS payload limits, restoration timing and cross-device behavior require validation in the actual upload. A successful local write does not establish cloud sync.
 
-Without the storage flag, the adapter retains its SDK Data Module mode for
-older packages and tests. That mode uses `fb_cg_campaign_v1` and
-`fb_cg_progression_v1`, enforces the 1,048,576-byte module limit with a 4 KiB
-reserve, and blocks writes after account changes until reload. The two modes
-keep separate keys and do not silently copy one mode into the other.
+Local initialization errors no longer block the title. An unreadable campaign is preserved and protected from ordinary writes, with recovery controls on the title and Save/Load. An unreadable progression record does not prevent a healthy campaign from loading or saving, but rank writes remain blocked until recovery. Denied storage allows unsaved play and file export. Recovery distinguishes missing decompression support from damaged records and offers a raw JSON download/copy plus a separate reset review. Reset copies and verifies only affected records under an unused fb_cg_aps_recovery_v1 key (or numeric suffix) before removing them; healthy records are preserved. Failed backup leaves originals untouched and exposes an explicit reset-without-backup action. Reset rechecks for external changes and locks the old page against writes until reload.
+
+Without the storage flag, the older SDK Data Module mode still waits for SDK initialization and data hydration, uses fb_cg_campaign_v1 and fb_cg_progression_v1, enforces the 1,048,576-byte limit with a 4 KiB reserve, and blocks writes after account changes. It uses FBG1 normally and FBL1 synchronously. It does not apply the local recovery/reset flow to cloud data. Standard itch/play editions retain their existing IndexedDB, localStorage, slots and initialization behavior.
+
+Coverage in tests/e2e/specs/crazygames-saves.spec.js includes all fifteen packed-length remainders, chunk and header boundaries, invalid padding, SDK failure and delay, absent compression APIs, protected unsupported saves, campaign/progression recovery, backup quota failure, denied storage, visibility/pagehide checkpoints, and failed-fallback queue preservation.

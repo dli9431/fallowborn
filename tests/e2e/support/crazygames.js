@@ -8,6 +8,8 @@ async function mockCrazyGames(page, options) {
     window.CrazyGames = { SDK:{
       init:function () {
         api.calls.push('init');
+        if (options.hangInit) return new Promise(function () {});
+        if (options.deferInit) return new Promise(function (resolve) { api.resolveInit = resolve; });
         return options.failInit ? Promise.reject(new Error('SDK connection failed')) : Promise.resolve();
       },
       data:{
@@ -23,6 +25,7 @@ async function mockCrazyGames(page, options) {
       user:{ isUserAccountAvailable:true, addAuthListener:function (fn) { api.auth = fn; } },
       game:{ gameplayStart:function () { api.calls.push('start'); }, gameplayStop:function () { api.calls.push('stop'); } }
     } };
+    if (options.missingSdk) delete window.CrazyGames;
   }, options || {});
 }
 module.exports = { mockCrazyGames };
