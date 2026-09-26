@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.184.4';
+FB.VERSION = '1.184.5';
 FB.CHANGELOG = [
+  { v: '1.184.5', date: '2026-09-26', changes: [
+    'New players start with a suggested first deed, and the map tips now follow the first event. Deed tips keep pointing at the right button when Deeds are regrouped.'
+  ] },
   { v: '1.184.4', date: '2026-09-25', changes: [
     'CrazyGames saves handle compact data correctly and keep a smaller backup when leaving the game. Browser saving works without a platform connection, and unreadable saves have recovery controls.'
   ] },

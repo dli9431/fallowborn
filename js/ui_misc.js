@@ -2297,6 +2297,11 @@ window.FB = window.FB || {};
       item.shownTracked = true;
       coachTelemetry('hint-shown', item);
     }
+    /* A queued deed lesson may appear after Deeds was regrouped or its
+       section collapsed; open the deed's current section before anchoring. */
+    if (item.revealDeed && UI.revealDeedAction) {
+      UI.revealDeedAction(item.revealDeed);
+    }
     coachEl = document.createElement('div');
     coachEl.className = 'coachmark' + (item.overModal ? ' overmodal' : '');
     coachEl.setAttribute('role', 'status');
@@ -2405,10 +2410,29 @@ window.FB = window.FB || {};
     if (!coachEl || !coachItem) return false;
     clearCoachTouch();
     if (coachLit) coachLit.classList.remove('coachmark-lit');
-    coachLit = coachTargetEl(coachItem.target);
-    if (coachLit) coachLit.classList.add('coachmark-lit');
+    coachLit = null;
+    if (coachItem.revealDeed) {
+      /* Regrouping Deeds moves the deed to another section and row, so
+         re-anchor the card and arrow instead of only moving the glow. */
+      const el = document.querySelector(coachItem.target);
+      if (el && !coachTargetOnScreen(el)) el.scrollIntoView({ block:'center' });
+      coachEl.classList.remove('noarrow', 'arrow-top', 'arrow-bottom',
+        'arrow-left', 'arrow-right', 'over-map');
+      coachEl.style.left = coachEl.style.top = coachEl.style.maxWidth = '';
+      const arrow = coachEl.querySelector('.coachmark-arrow');
+      if (arrow) arrow.style.left = arrow.style.top = '';
+      positionCoachmark(coachItem.target);
+    } else {
+      coachLit = coachTargetEl(coachItem.target);
+      if (coachLit) coachLit.classList.add('coachmark-lit');
+    }
     bindCoachTouch(coachItem);
     return !!coachLit;
+  };
+
+  /* the deed an on-screen lesson points at, so Deeds keeps its section open */
+  UI.coachmarkDeedId = function () {
+    return coachEl && coachItem && coachItem.revealDeed || null;
   };
 
   function hasNextLesson() {
@@ -2773,14 +2797,16 @@ window.FB = window.FB || {};
         ? '#tab-actions [data-action-id="review_serf_tenure"]'
         : '#sidetabs .tab[data-tab="actions"]', {
         hintId:'serf-tenure', hintKind:'guide', noNext:true,
-        saveHintId:'serf_tenure', followUp:'serf-tenure'
+        saveHintId:'serf_tenure', followUp:'serf-tenure',
+        revealDeed:exposed ? 'review_serf_tenure' : null
       });
     return true;
   };
 
   /* ================= first-time player tips =================
-     Standard editions teach the map, Home, and filters first. CrazyGames
-     starts at an available deed and defers the map tour until First steps.
+     Every edition starts at an available deed (Mediate a quarrel when it is
+     usable, otherwise the Deeds tab) and defers the map, Home, and filters
+     tour until First steps and its event result.
      The playable deed/time/event/hostile-deed loop, the new
      Family & legacy checklist, and Self. Other areas
      teach themselves only when the player deliberately opens them. A tip is
@@ -2885,7 +2911,9 @@ window.FB = window.FB || {};
     return UI.maybeTip('first-poach',
       '💡 Now try Desperate measures in Work & Wealth. Choose one illegal act, then weigh its possible gain against the risk of being caught.',
       exposed ? '#tab-actions [data-action-id="poach"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? 'poach' : null
+      });
   };
 
   UI.maybeFamilyLegacyGuidanceTip = function () {
@@ -2937,7 +2965,9 @@ window.FB = window.FB || {};
     return UI.maybeTip('family-match',
       '💡 In Life & Family, use Seek a match. Choose someone to pursue so you can begin a household and continue your family line.',
       exposed ? '#tab-actions [data-action-id="seek_match"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? 'seek_match' : null
+      });
   };
 
   UI.maybeFamilyCourtshipTip = function () {
@@ -2969,7 +2999,9 @@ window.FB = window.FB || {};
     return UI.maybeTip('family-propose',
       '💡 Your courtship is ready. In Life & Family, use Propose marriage to try to wed your match and secure your family’s future.',
       exposed ? '#tab-actions [data-action-id="propose"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? 'propose' : null
+      });
   };
 
   UI.maybeAdditionalMarriageTip = function () {
@@ -3028,7 +3060,9 @@ window.FB = window.FB || {};
     return UI.maybeTip('making-enterprise',
       '💡 Next, open Work, training & enterprises in Deeds. Choose an enterprise catalogue for a household settlement to buy your first business.',
       exposed ? '#tab-actions [data-action-id="livelihoods"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? 'livelihoods' : null
+      });
   };
 
   UI.maybeMakingLandTip = function () {
@@ -3041,7 +3075,9 @@ window.FB = window.FB || {};
       : '💡 In Rank & Realm, use Buy a plot of land to purchase your first plot. Plots held together in one settlement are more productive.';
     return UI.maybeTip('making-land', text,
       exposed ? '#tab-actions [data-action-id="' + deed + '"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? deed : null
+      });
   };
 
   UI.resumeMakingLivingTips = function () {
@@ -3100,26 +3136,24 @@ window.FB = window.FB || {};
     if (!s || !s.player || !s.player.flags ||
         !FB.tutorialLife || !FB.tutorialLife(s)) return false;
     const flags = s.player.flags;
-    const seen = FB.game.uiPrefs.tipsSeen || {};
-    if (!FB.platform.isCrazyGames &&
-        (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters'])) {
-      return UI.resumeMapTips();
-    }
     if (!flags.tut_deed) {
-      if (FB.platform.isCrazyGames) {
-        if (!UI.tipDue('first-deed')) return false;
-        const status = FB.instantStatus ? FB.instantStatus(s, 'mediate') : null;
-        const exposed = status && status.shown && status.can &&
-          UI.revealDeedAction && UI.revealDeedAction('mediate');
+      if (!UI.tipDue('first-deed')) return false;
+      const status = FB.instantStatus ? FB.instantStatus(s, 'mediate') : null;
+      const exposed = status && status.shown && status.can &&
+        UI.revealDeedAction && UI.revealDeedAction('mediate');
+      if (exposed) {
         const osricStart = s.telemetry && s.telemetry.quickStart === 'osric_867';
+        return UI.maybeTip('first-deed', osricStart
+          ? '💡 You are Osric, a serf in Barcelona. Try Mediate a quarrel as your first deed, then press Play to see what happens next.'
+          : '💡 Try Mediate a quarrel as your first deed, then press Play to see what happens next.',
+          '#tab-actions [data-action-id="mediate"]', {
+            noNext:true, revealDeed:'mediate'
+          });
+      }
+      if (FB.platform.isCrazyGames) {
         return UI.maybeTip('first-deed',
-          exposed
-            ? (osricStart
-              ? '💡 You are Osric, a serf in Barcelona. Try Mediate a quarrel as your first deed, then press Play to see what happens next.'
-              : '💡 Try Mediate a quarrel as your first deed, then press Play to see what happens next.')
-            : '💡 Open Deeds and choose an available one-time action, then press Play to see what happens next.',
-          exposed ? '#tab-actions [data-action-id="mediate"]' :
-            '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+          '💡 Open Deeds and choose an available one-time action, then press Play to see what happens next.',
+          '#sidetabs .tab[data-tab="actions"]', { noNext:true });
       }
       return UI.maybeTip('first-deed',
         '💡 Begin in Deeds below Daily Focus: open a category and choose one one-time deed. Focus repeats as days pass; a deed is a single action.',
@@ -3146,15 +3180,11 @@ window.FB = window.FB || {};
     const flags = (s && s.player && s.player.flags) || {};
     const seen = FB.game.uiPrefs.tipsSeen || {};
     if (!flags.tut_track_first_steps) return false;
-    if (FB.platform.isCrazyGames && flags.tut_event &&
-        !seen['first-event-result']) {
+    if (flags.tut_event && !seen['first-event-result']) {
       return UI.maybeFirstEventResultTip();
     }
     if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
       return UI.resumeMapTips();
-    }
-    if (flags.tut_event && !seen['first-event-result']) {
-      return UI.maybeFirstEventResultTip();
     }
     if (UI.maybeSerfTenureTip && UI.maybeSerfTenureTip()) return true;
     if (!openingPoachDone(s)) {

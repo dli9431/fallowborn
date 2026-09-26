@@ -37,6 +37,14 @@ async function startFirstCampaign(page) {
   await expect(page.locator('#game:not(.hidden)')).toBeVisible();
 }
 
+async function finishFirstDeedLesson(page) {
+  const deed = page.locator('.coachmark', { hasText:'as your first deed' });
+  await expect(deed).toBeVisible();
+  await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
+    .toHaveClass(/coachmark-lit/);
+  await deed.getByRole('button', { name:'Got it', exact:true }).click();
+}
+
 async function finishOpeningMapTour(page) {
   const map = page.locator('.coachmark', { hasText:'map is yours to explore' });
   await expect(map).toBeVisible();
@@ -45,11 +53,9 @@ async function finishOpeningMapTour(page) {
   const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
   await expect(home).toBeVisible();
   await home.getByRole('button', { name:'Got it', exact:true }).click();
-  const filters = page.locator('.coachmark', { hasText:'Use Map filters' });
+  const filters = page.locator('.coachmark', { hasText:'Open Map filters' });
   await expect(filters).toBeVisible();
   await filters.getByRole('button', { name:'Got it', exact:true }).click();
-  await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
-    .toBeVisible();
 }
 
 async function finishOpeningHandoff(page, skipSelf) {
@@ -68,16 +74,21 @@ async function finishOpeningHandoff(page, skipSelf) {
   }, !!skipSelf);
 }
 
-test('the first prompt begins with the map and is saved only after acknowledgement',
+test('the first prompt points at a deed and is saved only after acknowledgement',
   async function ({ page }, testInfo) {
     await startFirstCampaign(page);
-    const coach = page.locator('.coachmark', { hasText:'map is yours to explore' });
+    const coach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(coach).toBeVisible();
-    await expect(page.locator('#mapwrap'))
+    await expect(coach).toContainText('Try Mediate a quarrel');
+    await expect(page.locator('[data-action-group="life"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
       .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+      .toHaveCount(0);
 
     expect(await page.evaluate(function () {
-      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false);
 
     // A screen reset releases an unread tip instead of consuming it.
@@ -87,21 +98,23 @@ test('the first prompt begins with the map and is saved only after acknowledgeme
     })).toBe(true);
     await expect(coach).toBeVisible();
     expect(await page.evaluate(function () {
-      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false);
 
     await coach.getByRole('button', { name:'Got it', exact:true }).click();
-    const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
-    await expect(home).toBeVisible();
-    await expect(page.locator('#btn-home')).toHaveClass(/coachmark-lit/);
+    const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
+    await expect(flow).toBeVisible();
+    await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
     const learned = await page.evaluate(function () {
       return {
-        memory:FB.game.uiPrefs.tipsSeen['map-controls'],
+        memory:FB.game.uiPrefs.tipsSeen['first-deed'],
         stored:(JSON.parse(localStorage.getItem('fb_ui') || '{}').tipsSeen || {})
-          ['map-controls'],
+          ['first-deed'],
+        map:!!FB.game.uiPrefs.tipsSeen['map-controls'],
         repeats:FB.ui.resumeFirstPlayerTip()
       };
     });
+    expect(learned.map).toBe(false);
     expect(learned.memory).toBe(1);
     expect(learned.repeats).toBe(false);
     if (testInfo.project.name.endsWith('-served')) expect(learned.stored).toBe(1);
@@ -112,25 +125,26 @@ test('an unread first prompt returns after reload and Continue',
     test.skip(testInfo.project.name !== 'chromium-served',
       'The reload storage contract belongs to the served origin.');
     await startFirstCampaign(page);
-    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+    await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
       .toBeVisible();
     expect(await page.evaluate(function () {
-      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false);
 
     await page.reload({ waitUntil:'domcontentloaded' });
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
     await page.locator('#btn-continue').click();
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();
-    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+    await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
       .toBeVisible();
+    await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
+      .toHaveClass(/coachmark-lit/);
   });
 
 test('the Deeds lesson hands the player to the flow of days',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
     await expect(flow).toBeVisible();
     await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
@@ -142,8 +156,7 @@ test('the Deeds lesson hands the player to the flow of days',
 test('the first result leads through desperate measures and back to Family & legacy',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
 
@@ -164,6 +177,8 @@ test('the first result leads through desperate measures and back to Family & leg
     });
     await expect(result).toBeVisible();
     await result.getByRole('button', { name:'Got it', exact:true }).click();
+    // The map tour waits until the first event result has been read.
+    await finishOpeningMapTour(page);
 
     const poach = page.locator('.coachmark', {
       hasText:'try Desperate measures'
@@ -198,14 +213,14 @@ test('the first result leads through desperate measures and back to Family & leg
     })).toBeVisible();
   });
 
-test('the map sequence comes first and Making a living waits for Family & legacy',
+test('the map sequence follows First steps and Making a living waits for Family & legacy',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
     await finishOpeningHandoff(page, false);
+    await finishOpeningMapTour(page);
     const self = page.locator('.coachmark', {
       hasText:'Self shows your character'
     });
@@ -289,15 +304,15 @@ test('the map sequence comes first and Making a living waits for Family & legacy
     })).toEqual({ map:1, home:1, filters:1, enterprise:1, land:1 });
   });
 
-test('compact layouts teach the map before Self through the portrait',
+test('compact layouts teach the map after First steps and Self through the portrait',
   async function ({ page }) {
     await page.setViewportSize({ width:768, height:900 });
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
     await finishOpeningHandoff(page, false);
+    await finishOpeningMapTour(page);
 
     const self = page.locator('.coachmark', {
       hasText:'Tap your portrait to open Self'
@@ -315,8 +330,7 @@ test('compact layouts teach the map before Self through the portrait',
 test('the Kin lesson leads through finding a match and proposing marriage',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
 
@@ -327,6 +341,7 @@ test('the Kin lesson leads through finding a match and proposing marriage',
     })).toBe(false);
 
     await finishOpeningHandoff(page, true);
+    await finishOpeningMapTour(page);
 
     const kin = page.locator('.coachmark', {
       hasText:'Kin is your household and dynasty'
@@ -387,8 +402,7 @@ test('the Kin lesson leads through finding a match and proposing marriage',
 test('an established marriage silently skips Family & legacy guidance',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
 
@@ -412,6 +426,7 @@ test('an established marriage silently skips Family & legacy guidance',
     await expect(page.locator('.coachmark')).toHaveCount(0);
 
     await finishOpeningHandoff(page, true);
+    await finishOpeningMapTour(page);
     const result = await page.evaluate(function () {
       const s = FB.state;
       const flags = s.player.flags;
@@ -465,8 +480,7 @@ test('the land lesson points a freeholder directly at the land market deed',
 
 test('secondary areas teach themselves only when opened', async function ({ page }) {
   await startFirstCampaign(page);
-  await finishOpeningMapTour(page);
-  await page.getByRole('button', { name:'Got it', exact:true }).click();
+  await finishFirstDeedLesson(page);
   await page.locator('.coachmark', { hasText:'unpause with Play' })
     .getByRole('button', { name:'Got it', exact:true }).click();
   await expect(page.locator('.coachmark')).toHaveCount(0);
@@ -513,8 +527,7 @@ test('Stop tips is available in place and clears queued first-time lessons',
 test('a coachmark points, survives refresh, and stills running days',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
     await page.evaluate(function () {
@@ -677,4 +690,68 @@ test('a situational tip fires at its moment and never twice',
     expect(await page.evaluate(function () {
       return FB.ui.tipDue('first-plot');
     })).toBe(false);
+  });
+
+test('the first deed lesson follows Mediate under either Deeds grouping',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      FB.game.uiPrefs.groupDeedsByActionType = true;
+      FB.game.saveUiPrefs();
+    });
+    await startFirstCampaign(page);
+    const coach = page.locator('.coachmark', { hasText:'as your first deed' });
+    const mediate = page.locator('#tab-actions [data-action-id="mediate"]');
+    await expect(coach).toBeVisible();
+    await expect(page.locator('[data-action-group="deeds"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(mediate).toHaveClass(/coachmark-lit/);
+
+    // Switching to thematic sections moves Mediate into Life & Family.
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await page.getByRole('checkbox', { name:'Group Deeds by action type' })
+      .uncheck();
+    await page.evaluate(function () { FB.ui.closeModal(); });
+    await expect(coach).toBeVisible();
+    await expect(page.locator('[data-action-group="life"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(mediate).toHaveClass(/coachmark-lit/);
+
+    // A lesson queued behind a dialog reopens a section collapsed meanwhile.
+    await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      FB.ui.showSettings();
+      FB.ui.resumeFirstPlayerTip();
+      document.querySelector('[data-action-group="life"]').click();
+    });
+    await expect(page.locator('[data-action-group="life"]'))
+      .toHaveAttribute('aria-expanded', 'false');
+    await expect(coach).toHaveCount(0);
+    await page.evaluate(function () { FB.ui.closeModal(); });
+    await expect(coach).toBeVisible();
+    await expect(page.locator('[data-action-group="life"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(mediate).toHaveClass(/coachmark-lit/);
+  });
+
+test('the first deed lesson falls back to the Deeds tab when Mediate is unavailable',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
+      .toBeVisible();
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      FB.ui.coachmarkReset();
+      s.player.cooldowns = s.player.cooldowns || {};
+      s.player.cooldowns.mediate = s.turn;
+      return {
+        usable:FB.instantStatus(s, 'mediate').can,
+        shown:FB.ui.resumeFirstPlayerTip()
+      };
+    })).toEqual({ usable:false, shown:true });
+    await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
+      .toBeVisible();
+    await expect(page.locator('#sidetabs .tab[data-tab="actions"]'))
+      .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+      .toHaveCount(0);
   });

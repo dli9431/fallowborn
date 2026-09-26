@@ -40,20 +40,6 @@ test.beforeEach(async function ({ page }, testInfo) {
   await unlockStartTier(page, 1);
 });
 
-async function finishOpeningMapTour(page) {
-  const map = page.locator('.coachmark', { hasText:'map is yours to explore' });
-  await expect(map).toBeVisible();
-  await map.getByRole('button', { name:'Got it', exact:true }).click();
-  const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
-  await expect(home).toBeVisible();
-  await home.getByRole('button', { name:'Got it', exact:true }).click();
-  const filters = page.locator('.coachmark', { hasText:'Open Map filters' });
-  await expect(filters).toBeVisible();
-  await filters.getByRole('button', { name:'Got it', exact:true }).click();
-  await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
-    .toBeVisible();
-}
-
 test('a new life gets a short intro, a focused orientation, and First steps',
   async function ({ page }) {
     await page.getByRole('button', { name: 'New Game', exact: true }).click();
@@ -78,14 +64,15 @@ test('a new life gets a short intro, a focused orientation, and First steps',
     await expect(page.locator('#gm-body')).not.toContainText('Press Space');
     await page.getByRole('button', { name: 'Begin', exact: true }).click();
 
-    // no orientation sheet — the map tour is the first coachmark sequence
+    // no orientation sheet: the first coachmark points at a usable deed
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
-    await finishOpeningMapTour(page);
-    const firstCoach = page.locator('.coachmark', { hasText:'Begin in Deeds' });
+    const firstCoach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(firstCoach).toBeVisible();
-    await expect(page.locator('#sidetabs .tab[data-tab="actions"]'))
+    await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
       .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+      .toHaveCount(0);
     expect(await page.evaluate(function () {
       return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false); // showing alone does not consume the tip
@@ -168,8 +155,9 @@ test('Daily Focus stays separate and desperate measures commits only after a cho
   async function ({ page }) {
     await page.setViewportSize({ width:1280, height:800 });
     await startDeterministicGame(page, { keepFirstTimeTips:true });
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    const firstDeed = page.locator('.coachmark', { hasText:'as your first deed' });
+    await expect(firstDeed).toBeVisible();
+    await firstDeed.getByRole('button', { name:'Got it', exact:true }).click();
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
     await page.evaluate(function () {
@@ -431,15 +419,19 @@ test('using a highlighted control learns and closes its one-step coachmark',
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
     await page.getByRole('button', { name:'Begin', exact:true }).click();
 
-    await finishOpeningMapTour(page);
-    const coach = page.locator('.coachmark', { hasText:'Begin in Deeds' });
+    const coach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(coach).toBeVisible();
     expect(await page.evaluate(function () {
       return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false);
 
-    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await page.locator('#tab-actions [data-action-id="mediate"]').click();
     await expect(coach).toHaveCount(0);
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!FB.state.player.flags.tut_deed;
+      });
+    }).toBe(true);
     expect(await page.evaluate(function () {
       return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(true);

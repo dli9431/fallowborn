@@ -8,6 +8,9 @@ dependsOnRuntime(__filename, [
   'js/portrait.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
+  'js/actions.js',
+  'data/actions.js',
   'data/bookmarks.js',
   'data/cultures.js',
   'data/events_tutorial.js',
@@ -705,22 +708,27 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
     await page.getByRole('button', { name:'Begin', exact:true }).click();
 
-    for (const text of ['map is yours to explore', 'Use Home to recenter',
-      'Open Map filters']) {
-      const opening = page.locator('.coachmark', { hasText:text });
-      await expect(opening).toBeVisible();
-      await opening.getByRole('button', { name:'Got it', exact:true }).click();
-    }
+    await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
+      .toBeVisible();
     await page.evaluate(function () {
-      /* Isolate this assertion from the earlier map-tour telemetry while
+      /* Isolate this assertion from the first display's telemetry while
          reconstructing the unread Deeds prompt under test. */
       FB.ui.coachmarkReset();
       window.__telemetryEvents = [];
       FB.ui.resumeFirstPlayerTip();
     });
-    const coach = page.locator('.coachmark', { hasText:'Begin in Deeds' });
+    const coach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(coach).toBeVisible();
-    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await page.evaluate(function () {
+      /* Count the highlighted-control click without running the deed, so
+         only the hint telemetry under test is recorded. This capture
+         listener runs after the coachmark's own one on the same button. */
+      document.querySelector('#tab-actions [data-action-id="mediate"]')
+        .addEventListener('click', function (event) {
+          event.stopImmediatePropagation();
+        }, true);
+    });
+    await page.locator('#tab-actions [data-action-id="mediate"]').click();
     await expect(coach).toHaveCount(0);
     const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
     await expect(flow).toBeVisible();

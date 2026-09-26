@@ -1957,16 +1957,23 @@ departed protagonist's portrait. On desktop that retained-panel target uses the 
 over-map placement instead of falling back to the bottom-left toast corner.
 
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
-brand-new player once ever per install rather than once per save. Standard editions
-begin with the map before any other coachmark: map controls hand off in order to the **Home**
+brand-new player once ever per install rather than once per save. Every edition begins
+with a deed: when **Mediate a quarrel** is shown and usable (ranks 0–2, adult), the first
+coachmark opens its Deeds section and points at it, adding an Osric-specific opening line
+for the Osric quick start; otherwise it points at the Deeds tab with the general deed
+lesson. Time and the first event follow, and only after First steps and the event-result
+lesson does the map sequence run: map controls hand off in order to the **Home**
 button (recenter on the exact home settlement below Count rank, or the home county for
 Counts and above) and **Map filters** (cycle realm, personal,
-liege, de jure, and war views); Continue resumes at the first unread lesson in this map
-sequence. CrazyGames begins a fresh Osric life directly from its title button,
-without the opening story modal. It opens Deeds and points to Mediate a quarrel
-first, then teaches time and events; the map controls, Home and filters follow
-after First steps. Its second title button retains the full start selector.
-Itch and play retain the ordinary title, setup and opening story modal.
+liege, de jure, and war views). Continue resumes at the first unread lesson.
+CrazyGames begins a fresh Osric life directly from its title button,
+without the opening story modal, and its second title button retains the full start
+selector. Itch and play retain the ordinary title, setup and opening story modal.
+A lesson that points at a deed carries that deed id (`revealDeed`). The coachmark opens the
+deed's section again when a queued lesson is finally shown, Deeds keeps that section open on
+rebuild while the lesson is on screen, and a rebuild (including switching **Group Deeds by
+action type** in Settings) re-anchors the card and arrow to the deed in its new section, so
+the lesson works under thematic and action-type grouping alike.
 The opening then follows the playable loop: do a one-time deed, let time pass,
 answer the queued welcome event, read its result toast, and, for a serf, try **Desperate measures…**.
 The player must select one of its four hostile acts before the lesson completes. When that deed

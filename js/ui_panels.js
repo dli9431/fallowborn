@@ -1547,11 +1547,18 @@ window.FB = window.FB || {};
       box.appendChild(focusBody);
     }
     const actionGroups = deedActionGroups();
+    /* An on-screen lesson's deed stays reachable under either grouping. */
+    const lessonDeed = UI.coachmarkDeedId ? UI.coachmarkDeedId() : null;
     for (const group of actionGroups) {
       const ga = instants.filter(function (item) {
         return deedGroupForAction(item.a) === group.id;
       });
       if (!ga.length) continue;
+      if (lessonDeed && ga.some(function (item) {
+        return item.a.id === lessonDeed;
+      })) {
+        actionGroupsOpen[group.id] = true;
+      }
       const toggle = document.createElement('button');
       const open = !!actionGroupsOpen[group.id];
       toggle.className = 'actiongroup-toggle';
@@ -1683,6 +1690,7 @@ window.FB = window.FB || {};
     deedStatusRefreshedState = s;
     deedStatusRefreshedTurn = s.turn;
     actionsDirty = false;
+    if (lessonDeed && UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
   }
 
   /* Flowing time changes cooldown and resource eligibility much more often
