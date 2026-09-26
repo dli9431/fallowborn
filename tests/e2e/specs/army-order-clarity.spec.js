@@ -131,14 +131,21 @@ test('siege alternatives respect occupation, reachability, fort force, and campa
       war.occupations.arles = { occupied:true };
       const noForce = FB.armyCampaignAdvanceGoal(s, host);
       FB.fortSiegeStatus = function () { return { canProgress:true }; };
+      const unblocked = FB.armyCampaignAdvanceGoal(s, host);
+      // Blocking forts are hostile and can be besieged outside the objectives.
       FB.fortBlocksArmy = function (state, pid) { return pid === 'le_puy'; };
-      const neutralBlocker = FB.armyCampaignAdvanceGoal(s, host);
+      const routeFort = FB.armyCampaignAdvanceGoal(s, host);
+      FB.fortSiegeStatus = function (state, pid) { return { canProgress:pid !== 'le_puy' }; };
+      const routeNoForce = FB.armyCampaignAdvanceGoal(s, host);
+      FB.fortSiegeStatus = function () { return { canProgress:true }; };
       war.objectives.push({ target:'le_puy' });
       const objectiveFort = FB.armyCampaignAdvanceGoal(s, host);
-      return { first:first, noForce:noForce, neutralBlocker:neutralBlocker, objectiveFort:objectiveFort };
+      return { first:first, noForce:noForce, unblocked:unblocked,
+        routeFort:routeFort, routeNoForce:routeNoForce, objectiveFort:objectiveFort };
     } finally { FB.world = previousWorld; }
   });
-  expect(r).toEqual({ first:'arles', noForce:null, neutralBlocker:null, objectiveFort:'le_puy' });
+  expect(r).toEqual({ first:'arles', noForce:null, unblocked:'vienne',
+    routeFort:'le_puy', routeNoForce:null, objectiveFort:'le_puy' });
 });
 
 test('the saved Avignon to Vienne scenario exposes either a valid march or its first fort', async function ({ page }, testInfo) {

@@ -694,6 +694,7 @@ for (const width of [390, 1280]) {
       }, setup.cid);
       const heading = page.locator('[data-settlement-grant-list-header]');
       const details = heading.locator('#settlement-grant-list-details');
+      const help = details.locator('[data-settlement-grant-help]');
       await expect(heading).toBeVisible();
       await expect(details).toBeHidden();
       if (width === 390) {
@@ -706,9 +707,9 @@ for (const width of [390, 1280]) {
         await expect(page.locator('#tooltip')).toContainText('Remove their reservation in Grant Land to grant them.');
         await expect(details).toBeHidden();
       }
-      await expect(details.locator('[data-settlement-grant-help]')).toContainText('Your settlement total includes county seats.');
-      await expect(page.locator('[data-settlement-grant-help]')).toContainText('County seats can only be transferred with their county');
-      await expect(page.locator('[data-settlement-grant-help]')).toContainText('Settlements already held by other barons are also omitted.');
+      await expect(help).toContainText('Your settlement total includes county seats.');
+      await expect(help).toContainText('County seats can only be transferred with their county');
+      await expect(help).toContainText('Settlements already held by other barons are also omitted.');
       await expect(page.locator('#gm-body')).toContainText('Remove their reservation in Grant Land to grant them.');
       const row = view === 'land'
         ? page.locator('[data-grant-land-site="' + setup.pid + '"][data-grant-land-slot="' + setup.slot + '"]')
