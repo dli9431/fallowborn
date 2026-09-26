@@ -69,7 +69,7 @@ test('a new life gets a short intro, a focused orientation, and First steps',
 
     const firstCoach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(firstCoach).toBeVisible();
-    await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
+    await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
       .toHaveClass(/coachmark-lit/);
     await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
       .toHaveCount(0);
@@ -425,8 +425,12 @@ test('using a highlighted control learns and closes its one-step coachmark',
       return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false);
 
-    await page.locator('#tab-actions [data-action-id="mediate"]').click();
+    await page.locator('#tab-actions [data-action-id="go_to_town"]').click();
     await expect(coach).toHaveCount(0);
+    // The deed completes once the player chooses where to spend the day.
+    await expect(page.getByRole('heading', { name:'Where To?', exact:true }))
+      .toBeVisible();
+    await page.locator('[data-visit]').first().click();
     await expect.poll(function () {
       return page.evaluate(function () {
         return !!FB.state.player.flags.tut_deed;

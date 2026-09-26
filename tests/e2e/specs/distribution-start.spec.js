@@ -34,8 +34,8 @@ test('CrazyGames starts Osric in one click and points to a first deed',
       });
     }).toBe('osric_867');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await expect(page.locator('.coachmark')).toContainText('Try Mediate a quarrel');
-    await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
+    await expect(page.locator('.coachmark')).toContainText('Try Go into town');
+    await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
       .toHaveClass(/coachmark-lit/);
     expect(await page.evaluate(function () {
       return FB.state.date.year === 867 &&

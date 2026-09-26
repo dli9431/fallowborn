@@ -723,12 +723,12 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
       /* Count the highlighted-control click without running the deed, so
          only the hint telemetry under test is recorded. This capture
          listener runs after the coachmark's own one on the same button. */
-      document.querySelector('#tab-actions [data-action-id="mediate"]')
+      document.querySelector('#tab-actions [data-action-id="go_to_town"]')
         .addEventListener('click', function (event) {
           event.stopImmediatePropagation();
         }, true);
     });
-    await page.locator('#tab-actions [data-action-id="mediate"]').click();
+    await page.locator('#tab-actions [data-action-id="go_to_town"]').click();
     await expect(coach).toHaveCount(0);
     const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
     await expect(flow).toBeVisible();

@@ -1958,10 +1958,12 @@ over-map placement instead of falling back to the bottom-left toast corner.
 
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
 brand-new player once ever per install rather than once per save. Every edition begins
-with a deed: when **Mediate a quarrel** is shown and usable (ranks 0–2, adult), the first
-coachmark opens its Deeds section and points at it, adding an Osric-specific opening line
+with a deed: when **Go into town…** is usable (an adult in a county with settlements), the
+first coachmark opens its Deeds section and points at it, adding an Osric-specific opening line
 for the Osric quick start; otherwise it points at the Deeds tab with the general deed
-lesson. Time and the first event follow, and only after First steps and the event-result
+lesson. Going into town asks the player to choose a settlement and then what to do there,
+so the first deed is a real decision rather than an automatic result. Time and the first
+event follow, and only after First steps and the event-result
 lesson does the map sequence run: map controls hand off in order to the **Home**
 button (recenter on the exact home settlement below Count rank, or the home county for
 Counts and above) and **Map filters** (cycle realm, personal,

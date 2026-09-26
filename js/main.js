@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.184.5';
+FB.VERSION = '1.184.6';
 FB.CHANGELOG = [
+  { v: '1.184.6', date: '2026-09-26', changes: [
+    'The suggested first deed is now Go into town, so a new life begins with a choice of where to go and what to do there.'
+  ] },
   { v: '1.184.5', date: '2026-09-26', changes: [
     'New players start with a suggested first deed, and the map tips now follow the first event. Deed tips keep pointing at the right button when Deeds are regrouped.'
   ] },

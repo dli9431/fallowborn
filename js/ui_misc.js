@@ -2804,7 +2804,7 @@ window.FB = window.FB || {};
   };
 
   /* ================= first-time player tips =================
-     Every edition starts at an available deed (Mediate a quarrel when it is
+     Every edition starts at an available deed (Go into town when it is
      usable, otherwise the Deeds tab) and defers the map, Home, and filters
      tour until First steps and its event result.
      The playable deed/time/event/hostile-deed loop, the new
@@ -3138,16 +3138,18 @@ window.FB = window.FB || {};
     const flags = s.player.flags;
     if (!flags.tut_deed) {
       if (!UI.tipDue('first-deed')) return false;
-      const status = FB.instantStatus ? FB.instantStatus(s, 'mediate') : null;
+      /* Going into town asks for real choices (where to go, then what to do
+         there) and is lawful at every rank, so it suits a first deed. */
+      const status = FB.instantStatus ? FB.instantStatus(s, 'go_to_town') : null;
       const exposed = status && status.shown && status.can &&
-        UI.revealDeedAction && UI.revealDeedAction('mediate');
+        UI.revealDeedAction && UI.revealDeedAction('go_to_town');
       if (exposed) {
         const osricStart = s.telemetry && s.telemetry.quickStart === 'osric_867';
         return UI.maybeTip('first-deed', osricStart
-          ? '💡 You are Osric, a serf in Barcelona. Try Mediate a quarrel as your first deed, then press Play to see what happens next.'
-          : '💡 Try Mediate a quarrel as your first deed, then press Play to see what happens next.',
-          '#tab-actions [data-action-id="mediate"]', {
-            noNext:true, revealDeed:'mediate'
+          ? '💡 You are Osric, a serf in Barcelona. Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.'
+          : '💡 Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.',
+          '#tab-actions [data-action-id="go_to_town"]', {
+            noNext:true, revealDeed:'go_to_town'
           });
       }
       if (FB.platform.isCrazyGames) {

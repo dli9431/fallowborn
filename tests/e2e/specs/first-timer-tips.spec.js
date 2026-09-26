@@ -40,7 +40,7 @@ async function startFirstCampaign(page) {
 async function finishFirstDeedLesson(page) {
   const deed = page.locator('.coachmark', { hasText:'as your first deed' });
   await expect(deed).toBeVisible();
-  await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
+  await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
     .toHaveClass(/coachmark-lit/);
   await deed.getByRole('button', { name:'Got it', exact:true }).click();
 }
@@ -79,10 +79,10 @@ test('the first prompt points at a deed and is saved only after acknowledgement'
     await startFirstCampaign(page);
     const coach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(coach).toBeVisible();
-    await expect(coach).toContainText('Try Mediate a quarrel');
-    await expect(page.locator('[data-action-group="life"]'))
+    await expect(coach).toContainText('Try Go into town');
+    await expect(page.locator('[data-action-group="work"]'))
       .toHaveAttribute('aria-expanded', 'true');
-    await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
+    await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
       .toHaveClass(/coachmark-lit/);
     await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
       .toHaveCount(0);
@@ -137,7 +137,7 @@ test('an unread first prompt returns after reload and Continue',
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();
     await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
       .toBeVisible();
-    await expect(page.locator('#tab-actions [data-action-id="mediate"]'))
+    await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
       .toHaveClass(/coachmark-lit/);
   });
 
@@ -692,7 +692,7 @@ test('a situational tip fires at its moment and never twice',
     })).toBe(false);
   });
 
-test('the first deed lesson follows Mediate under either Deeds grouping',
+test('the first deed lesson follows Go into town under either Deeds grouping',
   async function ({ page }) {
     await page.evaluate(function () {
       FB.game.uiPrefs.groupDeedsByActionType = true;
@@ -700,40 +700,41 @@ test('the first deed lesson follows Mediate under either Deeds grouping',
     });
     await startFirstCampaign(page);
     const coach = page.locator('.coachmark', { hasText:'as your first deed' });
-    const mediate = page.locator('#tab-actions [data-action-id="mediate"]');
+    const town = page.locator('#tab-actions [data-action-id="go_to_town"]');
     await expect(coach).toBeVisible();
-    await expect(page.locator('[data-action-group="deeds"]'))
+    // Personal decisions starts collapsed; the lesson opens it.
+    await expect(page.locator('[data-action-group="personal"]'))
       .toHaveAttribute('aria-expanded', 'true');
-    await expect(mediate).toHaveClass(/coachmark-lit/);
+    await expect(town).toHaveClass(/coachmark-lit/);
 
-    // Switching to thematic sections moves Mediate into Life & Family.
+    // Switching to thematic sections moves Go into town into Work & Wealth.
     await page.evaluate(function () { FB.ui.showSettings(); });
     await page.getByRole('checkbox', { name:'Group Deeds by action type' })
       .uncheck();
     await page.evaluate(function () { FB.ui.closeModal(); });
     await expect(coach).toBeVisible();
-    await expect(page.locator('[data-action-group="life"]'))
+    await expect(page.locator('[data-action-group="work"]'))
       .toHaveAttribute('aria-expanded', 'true');
-    await expect(mediate).toHaveClass(/coachmark-lit/);
+    await expect(town).toHaveClass(/coachmark-lit/);
 
     // A lesson queued behind a dialog reopens a section collapsed meanwhile.
     await page.evaluate(function () {
       FB.ui.coachmarkReset();
       FB.ui.showSettings();
       FB.ui.resumeFirstPlayerTip();
-      document.querySelector('[data-action-group="life"]').click();
+      document.querySelector('[data-action-group="work"]').click();
     });
-    await expect(page.locator('[data-action-group="life"]'))
+    await expect(page.locator('[data-action-group="work"]'))
       .toHaveAttribute('aria-expanded', 'false');
     await expect(coach).toHaveCount(0);
     await page.evaluate(function () { FB.ui.closeModal(); });
     await expect(coach).toBeVisible();
-    await expect(page.locator('[data-action-group="life"]'))
+    await expect(page.locator('[data-action-group="work"]'))
       .toHaveAttribute('aria-expanded', 'true');
-    await expect(mediate).toHaveClass(/coachmark-lit/);
+    await expect(town).toHaveClass(/coachmark-lit/);
   });
 
-test('the first deed lesson falls back to the Deeds tab when Mediate is unavailable',
+test('the first deed lesson falls back to the Deeds tab when Go into town is unavailable',
   async function ({ page }) {
     await startFirstCampaign(page);
     await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
@@ -742,9 +743,9 @@ test('the first deed lesson falls back to the Deeds tab when Mediate is unavaila
       const s = FB.state;
       FB.ui.coachmarkReset();
       s.player.cooldowns = s.player.cooldowns || {};
-      s.player.cooldowns.mediate = s.turn;
+      s.player.cooldowns.go_to_town = s.turn;
       return {
-        usable:FB.instantStatus(s, 'mediate').can,
+        usable:FB.instantStatus(s, 'go_to_town').can,
         shown:FB.ui.resumeFirstPlayerTip()
       };
     })).toEqual({ usable:false, shown:true });
