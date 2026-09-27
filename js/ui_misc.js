@@ -650,7 +650,8 @@ window.FB = window.FB || {};
   function socialAttentionSummary(s) {
     const target = FB.socialAttentionTarget(s);
     const capacity = FB.socialAttentionCapacity();
-    const rate = FB.socialAttentionDailyOpinion();
+    const rate = FB.platform.isCrazyGames && target
+      ? FB.socialAttentionStatus(s, target).rate : FB.socialAttentionDailyOpinion();
     const threshold = FB.socialAttentionStandingThreshold
       ? FB.socialAttentionStandingThreshold(s, target)
       : FB.relationshipOpinionThreshold();
@@ -2144,13 +2145,18 @@ window.FB = window.FB || {};
   }
 
   function runCoachFollowUp(followUp, usedControl) {
-    if (followUp === 'first-deed' && UI.maybeFirstTimeFlowTip) {
+    if (followUp === 'crazygames-household' && UI.resumeFirstPlayerTip) {
+      UI.resumeFirstPlayerTip();
+    } else if (followUp === 'first-deed' && UI.maybeFirstTimeFlowTip) {
       UI.maybeFirstTimeFlowTip();
     } else if (followUp === 'map-controls' && UI.maybeMapHomeTip) {
       UI.maybeMapHomeTip();
     } else if (followUp === 'map-home' && UI.maybeMapFiltersTip) {
       UI.maybeMapFiltersTip();
     } else if (followUp === 'map-filters' && UI.resumeFirstPlayerTip) {
+      UI.resumeFirstPlayerTip();
+    } else if (followUp === 'first-plot' && FB.platform.isCrazyGames &&
+        UI.resumeFirstPlayerTip) {
       UI.resumeFirstPlayerTip();
     } else if ((followUp === 'first-event-result' ||
         followUp === 'first-poach') && UI.resumePostFirstStepsTips) {
@@ -2889,6 +2895,10 @@ window.FB = window.FB || {};
   };
 
   UI.maybeFirstEventResultTip = function () {
+    // The portal meeting teaches attention, then Play, before its result lesson.
+    if (FB.platform.isCrazyGames && FB.tutorialLife(FB.state) &&
+        (!FB.state.player.flags.tut_unpause ||
+          !FB.state.player.flags.tut_event)) return false;
     return UI.maybeTip('first-event-result',
       '💡 Your choice changed the story. Its gains and losses are summarized here; return to Deeds when you want your next move.',
       '#toasts', { noNext:true });
@@ -2985,9 +2995,25 @@ window.FB = window.FB || {};
           days:days
         });
     }
+    if (FB.platform.isCrazyGames && target &&
+        FB.socialAttentionStatus(s, target).assigned) {
+      text = mobileLayoutNow()
+        ? FB.T('💡 Your match already has your personal attention. Tap your portrait, open Kin, and tap the person under Courting to review it. Standing grows as days pass while you work or take other actions.')
+        : FB.T('💡 Your match already has your personal attention. Open Kin and tap the person under Courting to review it. Standing grows as days pass while you work or take other actions.');
+      if (days !== null && days > 0) {
+        text += ' ' + (days === 1
+          ? FB.T('About 1 in-game day until their Standing is high enough to propose.')
+          : FB.T('About {days} in-game days until their Standing is high enough to propose.', {
+            days:days
+          }));
+      }
+    }
     return UI.maybeTip('family-courtship',
       text,
-      '#lefttabs .tab[data-tab="family"]', { noNext:true });
+      '#lefttabs .tab[data-tab="family"]', {
+        noNext:true,
+        followUp:FB.platform.isCrazyGames ? 'crazygames-household' : null
+      });
   };
 
   UI.maybeFamilyProposalTip = function () {
@@ -2996,8 +3022,10 @@ window.FB = window.FB || {};
       ? FB.instantStatus(s, 'propose') : null;
     if (!status || !status.shown || !status.can) return false;
     const exposed = UI.revealDeedAction && UI.revealDeedAction('propose');
-    return UI.maybeTip('family-propose',
-      '💡 Your courtship is ready. In Life & Family, use Propose marriage to try to wed your match and secure your family’s future.',
+    const text = FB.crazyGamesFirstCharacter(s)
+      ? FB.T('💡 Your courtship is ready. In Life & Family, use Propose marriage. This proposal will be accepted.')
+      : FB.T('💡 Your courtship is ready. In Life & Family, use Propose marriage to try to wed your match and secure your family’s future.');
+    return UI.maybeTip('family-propose', text,
       exposed ? '#tab-actions [data-action-id="propose"]' :
         '#sidetabs .tab[data-tab="actions"]', {
         noNext:true, revealDeed:exposed ? 'propose' : null
@@ -3065,6 +3093,166 @@ window.FB = window.FB || {};
       });
   };
 
+  /* The portal opening introduces a household business after marriage.
+     Use live purchase rules; neither this recommendation nor
+     its lessons grant money, workers, technology, or a marriage. */
+  function crazyGamesFirstEnterprise(s) {
+    const p = s.player;
+    const sites = FB.settlementsOf(s, p.provinceId);
+    let best = null;
+    for (let i = 0; i < sites.length; i++) {
+      for (const type in FBDATA.enterprises) {
+        const status = FB.enterprisePurchaseStatus(s, type, p.provinceId, i);
+        if (status.blockers.some(function (blocker) {
+          return blocker.code !== 'funds';
+        })) continue;
+        /* Prefer a business the household can staff, then the lowest price. */
+        if (!best || (best.warnings.length && !status.warnings.length) ||
+            (!!best.warnings.length === !!status.warnings.length &&
+              status.cost < best.cost)) best = status;
+      }
+    }
+    return best;
+  }
+
+  function crazyGamesProgressTip(id, text, deed) {
+    if (!UI.tipDue(id)) return true;
+    const exposed = deed && UI.revealDeedAction && UI.revealDeedAction(deed);
+    UI.maybeTip(id, text, deed
+      ? (exposed ? '#tab-actions [data-action-id="' + deed + '"]'
+        : '#sidetabs .tab[data-tab="actions"]') : '#timebtns', {
+        noNext:true, revealDeed:exposed ? deed : null,
+        followUp:'crazygames-household'
+      });
+    return true;
+  }
+
+  function crazyGamesFreedomAndLandTips(s) {
+    const p = s.player;
+    if (p.tier === 0) {
+      const offer = FB.freedomOfferView(s);
+      if (offer && offer.status === 'service') {
+        return crazyGamesProgressTip('cg-freedom-service', FB.T(
+          '💡 Your freedom payment is complete. Finish your final service while your household works: {days} days remain, ending {date}. Use Play to continue; land comes after your release.', {
+            days:offer.serviceDaysRemaining, date:offer.serviceEndLabel
+          }));
+      }
+      if (UI.tipDue('cg-enterprise-income')) {
+        return crazyGamesProgressTip('cg-enterprise-income',
+          FB.T('💡 Your enterprise can help fund your freedom. Open Work, training & enterprises to check its staffing and earnings. Keep an earning Daily Focus and use Play to build your savings.'),
+          'livelihoods');
+      }
+      const purchase = FB.freedomPurchaseStatus(s);
+      if (offer && offer.status === 'offered') {
+        return crazyGamesProgressTip(offer.acceptanceReady
+          ? 'cg-freedom-ready' : 'cg-freedom-offer-saving', FB.T(
+            '💡 Your saved freedom terms cost {money:cost}, followed by {days} days of final service. {status} Open Review station & freedom in Rank & Realm, then review the offer before accepting.', {
+              cost:offer.price, days:offer.serviceDays,
+              status:offer.acceptanceReady
+                ? FB.T('You can accept these terms now.') : offer.acceptanceReason
+            }), 'review_serf_tenure');
+      }
+      const text = purchase.ready
+        ? FB.T('💡 You can now buy your household’s freedom for {money:cost}. Open Review station & freedom in Rank & Realm to buy freedom outright or compare a petition’s payment and final-service terms.', {
+          cost:purchase.quote.price
+        })
+        : FB.T('💡 Your next goal is freedom. Buying freedom outright currently costs {money:cost}; you have {money:funds}. {status} Open Review station & freedom in Rank & Realm to inspect a petition’s terms as well. Keep earning while you prepare.', {
+          cost:purchase.quote.price, funds:purchase.gold, status:purchase.reason
+        });
+      return crazyGamesProgressTip(purchase.ready
+        ? 'cg-freedom-ready' : 'cg-freedom-plan', text, 'review_serf_tenure');
+    }
+    if (FB.landPlots(s).length) return false;
+    const land = FB.instantStatus(s, 'buy_land');
+    if (!land.shown) return false;
+    const cost = FB.landPlotCost(s);
+    return crazyGamesProgressTip(land.can ? 'cg-land-ready' : 'cg-land-saving',
+      land.can
+        ? FB.T('💡 Your household is free and can afford its first land plot for {money:cost}. In Rank & Realm, use Buy a plot of land and choose a settlement. This will be property your family can inherit.', { cost:cost })
+        : FB.T('💡 Your household is free. Save for your first land plot: the current price is {money:cost}; you have {money:funds}. {status} Keep your enterprise staffed and use an earning Daily Focus. Buy a plot of land is in Rank & Realm.', {
+          cost:cost, funds:Math.floor(p.gold), status:FB.translateKnown(land.reason)
+        }), land.can ? 'buy_land' : 'livelihoods');
+  }
+
+  UI.resumeCrazyGamesHouseholdTips = function () {
+    if (!FB.platform.isCrazyGames || tipsSilenced()) return false;
+    const s = FB.state;
+    const p = s && s.player;
+    const flags = p && p.flags || {};
+    const me = p && s.chars[p.charId];
+    if (!FB.tutorialLife(s) || !flags.tut_track_first_steps ||
+        flags.tut_track_making_a_living || p.tier > 2 ||
+        !me || FB.ageOf(me, s.date.year) < 16) return false;
+    if (coachItem || coachQueue.length ||
+        (UI.eventsBusy && UI.eventsBusy()) ||
+        !$('genmodal').classList.contains('hidden')) return true;
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!seen['first-event-result']) {
+      UI.maybeFirstEventResultTip();
+      return true;
+    }
+    // Finish the marriage before introducing saving or buying, even when the
+    // player already has enough money. A proposal click alone is not a wedding.
+    if (!flags.tut_seen_wed && !flags.tut_family_established &&
+        !flags.tut_track_family_legacy && !FB.spousesSnapshot(s, me).length) {
+      if (flags.courting && p.courtingId) {
+        const proposal = FB.instantStatus(s, 'propose');
+        if (proposal.shown && proposal.can) {
+          UI.maybeFamilyProposalTip();
+        } else if (!seen['family-courtship']) {
+          UI.maybeFamilyCourtshipTip();
+        } else {
+          UI.maybeTip('cg-courtship-wait',
+            '💡 Keep courting your match while you work and answer events. Use Play to let your personal attention build Standing; we’ll point you to Propose marriage when your courtship is ready.',
+            '#timebtns', { noNext:true, followUp:'crazygames-household' });
+        }
+        return true;
+      }
+      const match = FB.instantStatus(s, 'seek_match');
+      if (match.shown) {
+        UI.maybeFamilyMatchTip();
+        return true;
+      }
+      return false;
+    }
+    if ((p.enterprises || []).length) return crazyGamesFreedomAndLandTips(s);
+    const status = FB.instantStatus(s, 'livelihoods');
+    if (!status.shown || !status.can) return false;
+    const enterprise = crazyGamesFirstEnterprise(s);
+    // A different start must not strand the tour on an impossible goal.
+    if (!enterprise) return false;
+    const ready = enterprise.ready;
+    const tipId = ready ? 'cg-enterprise-ready' : 'cg-enterprise-plan';
+    if (!seen[tipId] && (ready || !seen['cg-enterprise-ready'])) {
+      const name = FB.dataText(s, p.charId, 'enterprise', enterprise.id,
+        enterprise.def, 'name', {});
+      const text = ready
+        ? FB.T('💡 Start your family business. {enterprise} in {settlement} costs {money:cost}; you have {money:funds}. Open Work, training & enterprises, expand New enterprises, then choose that settlement. Check the staffing so it can earn income.', {
+          enterprise:name, settlement:enterprise.site.name,
+          cost:enterprise.cost, funds:enterprise.funds
+        })
+        : FB.T('💡 Your next goal is a family business. {enterprise} in {settlement} costs {money:cost}; you need {money:shortfall} more. Open Work, training & enterprises, then New enterprises to review its costs and staffing.', {
+          enterprise:name, settlement:enterprise.site.name,
+          cost:enterprise.cost, shortfall:enterprise.shortfall
+        });
+      const exposed = UI.revealDeedAction && UI.revealDeedAction('livelihoods');
+      UI.maybeTip(tipId, text,
+        exposed ? '#tab-actions [data-action-id="livelihoods"]' :
+          '#sidetabs .tab[data-tab="actions"]', {
+          noNext:true, revealDeed:exposed ? 'livelihoods' : null,
+          followUp:'crazygames-household'
+        });
+      return true;
+    }
+    if (!ready && !seen['cg-enterprise-saving']) {
+      UI.maybeTip('cg-enterprise-saving',
+        '💡 Choose an earning Daily Focus in Deeds, then use Play or Skip season to build your savings. Answer events as they arrive; we’ll point you back to the business when you can afford it.',
+        '#timebtns', { noNext:true, followUp:'crazygames-household' });
+      return true;
+    }
+    return true;
+  };
+
   UI.maybeMakingLandTip = function () {
     const s = FB.state;
     const needsFreedom = s && s.player && s.player.tier === 0;
@@ -3082,6 +3270,7 @@ window.FB = window.FB || {};
 
   UI.resumeMakingLivingTips = function () {
     if (tipsSilenced()) return false;
+    if (FB.platform.isCrazyGames) return UI.resumeCrazyGamesHouseholdTips();
     const s = FB.state;
     if (!s || !s.player || s.player.tier > 2) return false;
     const flags = s.player.flags || {};
@@ -3136,8 +3325,27 @@ window.FB = window.FB || {};
     if (!s || !s.player || !s.player.flags ||
         !FB.tutorialLife || !FB.tutorialLife(s)) return false;
     const flags = s.player.flags;
+    if (FB.platform.isCrazyGames && (tipsSilenced() || coachItem ||
+        coachQueue.length || (UI.eventsBusy && UI.eventsBusy()) ||
+        !$('genmodal').classList.contains('hidden'))) return false;
+    if (FB.platform.isCrazyGames && flags.courting && s.player.courtingId &&
+        UI.tipDue('family-courtship')) return UI.maybeFamilyCourtshipTip();
     if (!flags.tut_deed) {
       if (!UI.tipDue('first-deed')) return false;
+      if (FB.platform.isCrazyGames) {
+        const me = s.chars[s.player.charId];
+        const match = FB.instantStatus(s, 'seek_match');
+        if (me && !FB.spousesSnapshot(s, me).length &&
+            match.shown && match.can &&
+            UI.revealDeedAction && UI.revealDeedAction('seek_match')) {
+          return UI.maybeTip('first-deed',
+            '💡 Begin your family story: use Seek a match, choose the local search, then pick someone you would like to marry. Meet them before deciding whether to start a courtship.',
+            '#tab-actions [data-action-id="seek_match"]', {
+              noNext:true, revealDeed:'seek_match',
+              followUp:'crazygames-household'
+            });
+        }
+      }
       /* Going into town asks for real choices (where to go, then what to do
          there) and is lawful at every rank, so it suits a first deed. */
       const status = FB.instantStatus ? FB.instantStatus(s, 'go_to_town') : null;
@@ -3185,11 +3393,12 @@ window.FB = window.FB || {};
     if (flags.tut_event && !seen['first-event-result']) {
       return UI.maybeFirstEventResultTip();
     }
+    if (UI.resumeCrazyGamesHouseholdTips()) return true;
     if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
       return UI.resumeMapTips();
     }
     if (UI.maybeSerfTenureTip && UI.maybeSerfTenureTip()) return true;
-    if (!openingPoachDone(s)) {
+    if (!FB.platform.isCrazyGames && !openingPoachDone(s)) {
       return seen['first-event-result'] ? UI.maybePoachTip() : false;
     }
     const status = FB.tutorialStatus ? FB.tutorialStatus(s) : null;
@@ -3907,6 +4116,9 @@ window.FB = window.FB || {};
     if ($('genmodal').classList.contains('hidden')) genericNavSnapshot = null;
     setTimeout(function () {
       if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
+      if (FB.platform.isCrazyGames && UI.resumeFirstPlayerTip) {
+        UI.resumeFirstPlayerTip();
+      }
     }, 0);
   };
   UI.closeModalStack = function () {

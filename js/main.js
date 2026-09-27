@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.184.6';
+FB.VERSION = '1.184.7';
 FB.CHANGELOG = [
+  { v: '1.184.7', date: '2026-09-27', changes: [
+    'CrazyGames now guides new households through marriage, an enterprise, freedom, and land. The first character courts faster and eligible marriage proposals are always accepted.'
+  ] },
   { v: '1.184.6', date: '2026-09-26', changes: [
     'The suggested first deed is now Go into town, so a new life begins with a choice of where to go and what to do there.'
   ] },
@@ -4296,7 +4299,9 @@ FB.CHANGELOG = [
       note:function (s) {
         const flags = s.player.flags || {};
         if (!flags.tut_successor_child && !flags.tut_successor_relative) {
-          return '';
+          return FB.platform.isCrazyGames
+            ? FB.T('Your family can grow while you build income, secure freedom, and buy land.')
+            : '';
         }
         const me = s.chars[s.player.charId];
         const minor = me && FB.ageOf(me, s.date.year) < 16;
@@ -4335,13 +4340,15 @@ FB.CHANGELOG = [
             ? FB.T('Start or continue a household enterprise')
             : FB.T('Start an enterprise');
         } },
+        { id:'freedom', when:function () { return FB.platform.isCrazyGames; },
+          label:function () { return FB.T('Secure your household’s freedom'); } },
         { id:'land', label:function (s) {
           const flags = s.player.flags || {};
           const successor = flags.tut_successor_child ||
             flags.tut_successor_relative;
           const me = s.chars[s.player.charId];
           const minor = successor && me && FB.ageOf(me, s.date.year) < 16;
-          if (s.player.tier === 0) {
+          if (s.player.tier === 0 && !FB.platform.isCrazyGames) {
             return minor
               ? FB.T('Come of age, petition or buy freedom, then acquire land')
               : FB.T('Petition or buy freedom, then acquire your first land plot');
@@ -4385,6 +4392,7 @@ FB.CHANGELOG = [
       return !!p.profession;
     }
     if (id === 'enterprise') return (p.enterprises || []).length > 0;
+    if (id === 'freedom') return p.tier > 0;
     if (id === 'land') return FB.landPlots(s).length > 0;
     if (id === 'kin_tab') return !!flags.tut_kin_tab;
     if (id === 'wed' || id === 'heir') {
@@ -4432,6 +4440,7 @@ FB.CHANGELOG = [
     const steps = [];
     let done = 0;
     for (const step of track.steps) {
+      if (step.when && !step.when(s)) continue;
       const isDone = tutorialStepDone(s, step.id);
       if (isDone) done++;
       steps.push({ id:step.id, label:step.label(s), done:isDone });
@@ -4439,10 +4448,27 @@ FB.CHANGELOG = [
     return { track:{ id:track.id, icon:track.icon, title:track.title(),
         note:track.note ? track.note(s) : '',
         link:track.link ? track.link(s) : '' },
-      steps:steps, done:done, total:track.steps.length };
+      steps:steps, done:done, total:steps.length };
+  }
+  function crazyGamesLivingTrackReady(s) {
+    const flags = s.player.flags || {};
+    return FB.platform.isCrazyGames && !!flags.tut_track_first_steps &&
+      !!(flags.tut_seen_wed || flags.tut_family_established ||
+        flags.tut_track_family_legacy || tutorialStepDone(s, 'wed'));
   }
   FB.tutorialStatus = function (s) {
     const flags = (s.player && s.player.flags) || {};
+    // The portal's next goals are income, freedom and land. Family progress
+    // remains active alongside them, including the first-child safeguards.
+    if (crazyGamesLivingTrackReady(s) && !flags.tut_track_making_a_living) {
+      const living = TUTORIAL_TRACKS.find(function (track) {
+        return track.id === 'making_a_living';
+      });
+      if (living.when(s)) {
+        const status = tutorialTrackStatus(s, living);
+        if (status.done < status.total) return status;
+      }
+    }
     for (const track of TUTORIAL_TRACKS) {
       if (track.when && !track.when(s)) continue;
       if (flags['tut_track_' + track.id]) continue;
@@ -4463,16 +4489,15 @@ FB.CHANGELOG = [
     let allDone = true;
     for (const track of TUTORIAL_TRACKS) {
       if (track.when && !track.when(s)) continue;
-      /* Tracks are instructional stages, not merely a display order. Do not
-         toast, flag, or launch a later chapter because its live-state goal
-         happened early; it becomes guidance only after the prior track. */
+      /* Standard tracks wait for the preceding chapter. CrazyGames opens
+         Making a living after marriage while Family & legacy continues. */
       if (track.id === 'family_legacy' &&
           !flags.tut_track_first_steps) {
         allDone = false;
         continue;
       }
       if (track.id === 'making_a_living' &&
-          !flags.tut_track_family_legacy) {
+          !flags.tut_track_family_legacy && !crazyGamesLivingTrackReady(s)) {
         allDone = false;
         continue;
       }
@@ -4537,7 +4562,9 @@ FB.CHANGELOG = [
           }));
       }
     }
-    if (FB.ui && FB.ui.resumeFamilyLegacyTips) {
+    if (FB.platform.isCrazyGames && FB.ui && FB.ui.resumeFirstPlayerTip) {
+      FB.ui.resumeFirstPlayerTip();
+    } else if (FB.ui && FB.ui.resumeFamilyLegacyTips) {
       FB.ui.resumeFamilyLegacyTips();
     }
     if (!allDone) return;

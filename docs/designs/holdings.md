@@ -225,6 +225,23 @@ Related: [development.md](development.md) for the tier-3+ equivalent (buildings)
 [realms.md](realms.md) for tiers.
 
 **Productive property is an enterprise, not a unique improvement.**
+CrazyGames-only opening guidance introduces a first business after choosing and
+courting a match, answering a separate event, and successfully marrying. Saving and
+purchase lessons wait for a spouse even when the player can already afford a business;
+childbirth is not required. Its recommendation
+reads `FB.enterprisePurchaseStatus`, keeps all technology and site requirements,
+prefers eligible household staffing, and displays the current cost and any shortfall.
+Players earn and purchase normally; the lesson grants no starter funds or free property.
+The next CrazyGames objectives are enterprise earnings, household freedom, and an owned
+land plot. Hints read current purchase prices, offer acceptance status, and final-service
+progress. Land guidance waits for actual release, then shows the live plot price and an
+affordability reminder. The economic checklist advances after marriage alongside the
+family chapter, so childbirth does not gate enterprise, freedom, or land. Free starts
+skip the freedom goal and existing property satisfies its objective. The map tour follows
+the first plot; the hostile-deed lesson is not part of this distribution's progression.
+Itch and play keep the existing timing. This has no technology impact because it changes
+only guidance, not enterprise, freedom, or land eligibility or economics.
+
 `FBDATA.enterprises` (`data/economy.js`) defines repeatable family businesses. Instances
 live in `player.enterprises` as
 `{uid,type,provinceId,settlement,workerId,workerIds?,workerLocked?,level?,devAppliedLevel?}`

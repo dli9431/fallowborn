@@ -499,7 +499,12 @@ though the class-distance influence penalty remains.
 `player.socialAttention` is not another relationship meter: it names the one character
 whose existing Standing gains `balance.socialAttentionDailyOpinion` (+0.2 by default),
 scaled by ranked access, each ordinary player day. Assignment and withdrawal cost no day,
-and Diplomacy does not change that rate. `FB.characterResidence(state, character)` is the
+and Diplomacy does not change that rate. The explicitly flagged CrazyGames first
+protagonist gains courtship Standing at 10 times that rate; friendship and subsequent
+protagonists keep the ordinary rate. Courtship previews and daily gains share this
+calculation; see [marriage.md](marriage.md) for the generation and eligibility boundaries.
+This numeric pacing change adds no technology dependency.
+`FB.characterResidence(state, character)` is the
 authoritative
 county for social presence: managed household members and retainers live at the
 household home, foreign notables in their saved roster county, royal children and

@@ -1882,6 +1882,12 @@ replaying the deed.
 `UI.refresh` before the repaint, so a finished track disappears in that same frame.
 It does not stamp steps, show completion toasts, or launch chapters from a later track
 until the preceding track is complete, even when the player satisfied that goal early.
+CrazyGames is the explicit exception: once First steps and the first marriage are
+complete, **Making a living** becomes the primary card and can advance alongside
+**Family & legacy**. It adds a separate freedom step before land; the standard card
+keeps its existing three steps. Family/child progress and conception safeguards remain
+active, so a first child neither blocks nor resets the economic goals. Previously
+recorded marriage progress survives widowhood and succession for this guidance.
 Completion detection uses only state reads and no RNG; it toasts each completion
 once (`tut_seen_*` flags survive a hints-off phase), marks each finished track
 (`tut_track_*`) with a chronicle line, and retires the tutorial when every eligible
@@ -1957,7 +1963,7 @@ departed protagonist's portrait. On desktop that retained-panel target uses the 
 over-map placement instead of falling back to the bottom-left toast corner.
 
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
-brand-new player once ever per install rather than once per save. Every edition begins
+brand-new player once ever per install rather than once per save. Standard editions begin
 with a deed: when **Go into town…** is usable (an adult in a county with settlements), the
 first coachmark opens its Deeds section and points at it, adding an Osric-specific opening line
 for the Osric quick start; otherwise it points at the Deeds tab with the general deed
@@ -1971,12 +1977,49 @@ liege, de jure, and war views). Continue resumes at the first unread lesson.
 CrazyGames begins a fresh Osric life directly from its title button,
 without the opening story modal, and its second title button retains the full start
 selector. Itch and play retain the ordinary title, setup and opening story modal.
+Only `FB.platform.isCrazyGames` changes the opening lessons: an unmarried adult
+with an available **Seek a match** begins by choosing a local marriage prospect.
+After **Pursue this match**, the next lesson explains the automatic personal-attention
+assignment and its remaining attention days before introducing Play. On phones it
+points through the portrait to Kin. The meeting does not count as the First steps
+event in CrazyGames: the player must answer a separate event after starting time
+before the event-result lesson and proposal guidance. Merely opening
+or dismissing the picker does not complete the first deed. Starts that cannot seek
+a first spouse retain the ordinary deed fallback.
+After First steps and the event-result lesson, guidance stays on courtship until a
+proposal is eligible, then points at **Propose marriage**. A waiting lesson explains
+that Play advances personal attention alongside work and events. All enterprise
+lessons wait for an actual spouse, even if a business is already affordable or the
+proposal hint has been acknowledged. The wedding then introduces saving for the
+first enterprise before the map tour or the first-child objective. The recommendation
+uses live purchase requirements, prefers a business with eligible household workers,
+and names its settlement, price, and funds or shortfall. An earning-focus/time lesson
+supports saving; a separate reminder appears once a purchase is affordable.
+After buying the enterprise, the next lesson teaches staffing, earnings, and saving
+for freedom. A serf is directed to **Review station & freedom** with the live outright
+purchase price or saved offer terms. Separate reminders distinguish an affordable
+purchase/offer from paid final service; the service lesson gives its actual remaining
+days and completion date. Paying for service does not unlock land guidance. Only
+becoming free does: the next lesson gives the live plot price and saving instructions,
+then points to **Buy a plot of land** when the action is usable. Existing free starts
+skip freedom, and already-owned objectives are skipped.
+
+This progression precedes the map/Home/filter tour, does not require a first child,
+and omits the **Desperate measures** lesson for CrazyGames. The map tour resumes after
+the first plot and its acknowledgement. Married starts without an eligible enterprise
+fall back rather than waiting on an impossible goal. Lessons resume through
+Continue, remain dismissible, and grant no money, property, workers, or technology.
+The first few minutes are a pacing aim, not a wall-clock trigger or guaranteed
+purchase deadline. The first-character proposal lesson confirms acceptance when the
+proposal becomes eligible; its faster progress and guaranteed acceptance are documented
+in [marriage.md](marriage.md). These lessons have no technology impact; itch and play
+retain their existing lesson order and mechanics.
 A lesson that points at a deed carries that deed id (`revealDeed`). The coachmark opens the
 deed's section again when a queued lesson is finally shown, Deeds keeps that section open on
 rebuild while the lesson is on screen, and a rebuild (including switching **Group Deeds by
 action type** in Settings) re-anchors the card and arrow to the deed in its new section, so
 the lesson works under thematic and action-type grouping alike.
-The opening then follows the playable loop: do a one-time deed, let time pass,
+In standard editions the opening follows the playable loop: do a one-time deed, let time pass,
 answer the queued welcome event, read its result toast, and, for a serf, try **Desperate measures…**.
 The player must select one of its four hostile acts before the lesson completes. When that deed
 resolves, the coachmark returns to Deeds and highlights the newly active **Family & legacy**

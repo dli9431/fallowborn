@@ -1707,6 +1707,7 @@ FBDATA.balance = {
   householdMemberUpkeep: [0.1,0.25,0.5], // extra resident: under 6, age 6-15, adult
   householdLifestyleMult: [1,1,1,1.25,1.5,2,2.5,3], // higher stations maintain dependants more richly
   socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
+  crazyGamesFounderCourtshipMultiplier: 10, // first protagonist only; ordinary editions and later heads retain normal progress
   relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
   marriageCultureStandingPremium: 20, // extra proposal Standing for a different culture
   marriageFaithStandingPremium: 30, // extra proposal Standing for a different faith

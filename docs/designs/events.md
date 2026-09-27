@@ -13,6 +13,13 @@ Event choices use QWE/ASD/ZXC, then Shift with the same letters, for their
 action shortcuts. Digits are reserved for UI sections. Details remain ordinary
 Tab stops. Input guards cover these letter keys across choices and outcomes.
 
+In explicitly flagged CrazyGames builds, choosing an option in `meet_suitor`
+belongs to the opening marriage search and does not mark `tut_event`. A separate
+event choice completes that First steps requirement, keeping the opening in the
+order courtship, event, proposal, then enterprise. Standard editions still count
+the match introduction as an event. This changes guidance only, with no technology
+impact or new save field.
+
 Holy-war call and muster events select Crusade, Jihad, Sacred War, or generic
 Holy War wording from the calling faith's group. Their event IDs remain stable;
 the additive `campaignType:'sacred'` case also renders queued pagan campaigns.

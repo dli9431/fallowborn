@@ -1099,7 +1099,10 @@ compact royal family, required direct children are materialized while the RNG
 state is snapshotted and restored, so compatibility repair cannot alter the
 future random sequence.
 New campaigns also record additive `player.houseFounderId` as the first playable
-character solely for the family-tree jump. Older saves need no migration: the UI
+character for the family-tree jump. CrazyGames also uses it alongside generation 1
+to restrict faster courtship and guaranteed eligible proposals to that character;
+older generation-1 saves without the field qualify, but successors never do.
+Older saves need no migration: the family-tree UI
 falls back to the earliest protagonist legend still backed by a character, then
 to the current protagonist. The field never participates in inheritance or
 household membership.

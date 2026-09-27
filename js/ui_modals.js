@@ -1511,7 +1511,11 @@ window.FB = window.FB || {};
     if (FB.eventOptionStatus &&
         !FB.eventOptionStatus(s, ev, opt, ctx).ready) return false;
     if (!s.player.flags) s.player.flags = {};
-    s.player.flags.tut_event = 1; // First-steps checklist: answered an event
+    // The portal introduction belongs to choosing a match. Teach a separate
+    // event choice before moving from courtship to marriage and an enterprise.
+    if (!FB.platform.isCrazyGames || ev.id !== 'meet_suitor') {
+      s.player.flags.tut_event = 1; // First-steps checklist: answered an event
+    }
     if (ev.nameChild && ctx.childId) {
       const nc = s.chars[ctx.childId];
       const inp = $('ev-name');

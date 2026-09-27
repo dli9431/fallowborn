@@ -1236,7 +1236,8 @@ window.FB = window.FB || {};
     });
     out.access = access;
     out.dailyRate = FB.socialAttentionDailyOpinion
-      ? FB.socialAttentionDailyOpinion() * access.standingMultiplier : 0;
+      ? FB.socialAttentionDailyOpinion(state, c, options && options.courtship) *
+        access.standingMultiplier : 0;
     if (!access.ready) {
       out.reason = access.reason;
       return out;

@@ -8,7 +8,15 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { mockCrazyGames } = require('../support/crazygames');
-const { openGame } = require('../support/game/navigation');
+const { openGame, targetUrl } = require('../support/game/navigation');
+
+async function openCrazyGame(page, testInfo) {
+  await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
+  await page.waitForFunction(function () {
+    return window.FB && FB.game && FB.game.bootReady;
+  });
+  await expect(page.locator('#btn-newgame')).toContainText('Play as Osric');
+}
 
 test.beforeEach(async function ({ page }) { await mockCrazyGames(page); });
 
@@ -21,10 +29,10 @@ test('standard title retains the existing new-game route', async function ({ pag
     .toBeVisible();
 });
 
-test('CrazyGames starts Osric in one click and points to a first deed',
+test('CrazyGames starts Osric in one click and points to a first marriage prospect',
   async function ({ page }, testInfo) {
     await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-    await openGame(page, testInfo);
+    await openCrazyGame(page, testInfo);
     await expect(page.locator('#btn-newgame')).toContainText('Play as Osric');
     await expect(page.locator('#btn-choose-beginning')).toBeVisible();
     await page.locator('#btn-newgame').click();
@@ -34,8 +42,8 @@ test('CrazyGames starts Osric in one click and points to a first deed',
       });
     }).toBe('osric_867');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await expect(page.locator('.coachmark')).toContainText('Try Go into town');
-    await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
+    await expect(page.locator('.coachmark')).toContainText('use Seek a match');
+    await expect(page.locator('#tab-actions [data-action-id="seek_match"]'))
       .toHaveClass(/coachmark-lit/);
     expect(await page.evaluate(function () {
       return FB.state.date.year === 867 &&
@@ -45,7 +53,7 @@ test('CrazyGames starts Osric in one click and points to a first deed',
 
 test('CrazyGames still offers the full start selector', async function ({ page }, testInfo) {
   await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-  await openGame(page, testInfo);
+  await openCrazyGame(page, testInfo);
   await page.locator('#btn-choose-beginning').click();
   await expect(page.getByRole('heading', { name:'Choose a Starting Date' }))
     .toBeVisible();

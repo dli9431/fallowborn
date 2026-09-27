@@ -162,8 +162,9 @@ alone. A proposal is unavailable until the suitor reaches the shared
 different culture adds `balance.marriageCultureStandingPremium` (+20), and a different
 faith adds `balance.marriageFaithStandingPremium` (+30); the two requirements stack, so
 personal trust can overcome a mixed match without making every family equally receptive.
-After that readiness gate, the existing proposal probability still weighs Standing, prestige, station, traits, and
-royal-realm Standing. Starting another suit ends the former one with −20 Standing and records the
+After that readiness gate, proposal probability normally weighs Standing, prestige, station, traits, and
+royal-realm Standing; the CrazyGames first-character exception is described below.
+Starting another suit ends the former one with −20 Standing and records the
 same hostile contact as a manual breakoff. Marriage, refusal, breakoff, death, succession,
 and permanent-relocation cleanup release the assignment.
 
@@ -334,6 +335,34 @@ personal attention are required before proposing. A refused first proposal inste
 prospect-search cooldown remains, its detail states the rejection and exact days left.
 This is doctrine-aware presentation over the existing eligibility rules and has no
 technology impact.
+
+The explicitly flagged CrazyGames opening introduces **Seek a match** as the first
+deed for an eligible unmarried adult. The existing local prospect picker and meeting
+event retain their costs, choices, cancellation, and courtship requirements. Immediately
+after choosing **Pursue this match**, the personal-attention lesson explains that the
+assignment is already active and advances alongside normal work. It precedes Play and
+a separate event choice; the match introduction does not satisfy that event lesson.
+After the event result, guidance keeps courtship as the goal until a proposal is
+eligible. Only a successful wedding unlocks the enterprise-saving and purchase
+lessons; acknowledging the proposal hint or opening its event is insufficient.
+The map tour and first-child objective do not delay these opening goals.
+
+Only the original protagonist of an explicitly flagged CrazyGames campaign receives
+`balance.crazyGamesFounderCourtshipMultiplier` (10 by default) on daily courtship
+Standing and a 100% acceptance chance once `FB.proposalStatus` is ready. At equal
+station, a same-culture, same-faith courtship starting at zero Standing therefore needs
+20 attention days instead of 200. Age, kinship, doctrine, marriage capacity, ranked
+access, culture/faith Standing premiums, dowry, and travel/presence rules remain intact.
+Ordinary friendship does not receive the multiplier. Proposal resolution still consumes
+its seeded chance roll. Previews, remaining-day estimates, and actual daily gains use
+the same rate.
+
+The exception requires generation 1 and, when recorded, `player.houseFounderId` matching
+the current character. Older first-generation saves without that field remain eligible;
+succession ends both benefits. It is independent of tutorial and hint preferences and
+survives Continue without new saved state. Standard editions retain their existing
+family lessons, progress rates, and acceptance odds. These are onboarding and numeric
+balance changes with no new capability or technology dependency.
 
 The first browser profile's active **Family & legacy** tutorial receives a bounded
 first-child safeguard. While its eligible protagonist has married, has no child, and is

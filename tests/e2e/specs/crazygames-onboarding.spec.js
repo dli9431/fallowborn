@@ -1,0 +1,735 @@
+'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'index.html', 'css/style.css', 'js/main.js', 'js/ui_misc.js',
+  'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_topbar.js', 'js/actions.js',
+  'js/events.js', 'js/model.js', 'js/economy.js', 'js/technology.js',
+  'js/lordships.js', 'js/world.js', 'js/messages.js', 'js/i18n.js',
+  'js/save.js', 'js/util.js', 'js/travel.js', 'js/crazygames.js', 'data/starts.js',
+  'data/actions.js', 'data/economy.js', 'data/bookmarks.js', 'data/travel.js',
+  'data/map_data.js', 'data/counties.js', 'data/settlements.js',
+  'data/settlements_real.js', 'data/cultures.js',
+  'data/technology.js', 'data/events_common.js', 'data/events_peasant.js', 'data/events_tutorial.js',
+  'data/distribution_crazygames.js'
+]);
+const { test, expect } = require('../support/fixture');
+const { mockCrazyGames } = require('../support/crazygames');
+const { openGame, targetUrl } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+
+async function openPortal(page, testInfo) {
+  await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
+  await page.waitForFunction(function () {
+    return window.FB && FB.game && FB.game.bootReady;
+  });
+  await expect(page.locator('#btn-newgame')).toContainText('Play as Osric');
+}
+
+async function startPortal(page, testInfo) {
+  await mockCrazyGames(page);
+  await page.addInitScript(function () {
+    window.FB_DISTRIBUTION = 'crazygames';
+    window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+  });
+  await openPortal(page, testInfo);
+  await page.evaluate(function () {
+    // Fix only the synchronous freshSeed call, then restore the browser clock.
+    const now = Date.now, random = Math.random;
+    try {
+      Date.now = function () { return 1790467200000; };
+      Math.random = function () { return 0.314159; };
+      document.getElementById('btn-newgame').click();
+    } finally {
+      Date.now = now;
+      Math.random = random;
+    }
+  });
+  await expect(page.locator('.coachmark')).toContainText('use Seek a match');
+}
+
+async function finishOpeningLoop(page, gold) {
+  await page.evaluate(function (funds) {
+    FB.ui.coachmarkReset();
+    const s = FB.state;
+    const flags = s.player.flags;
+    // Isolate the post-event handoff without manufacturing a child.
+    flags.tut_deed = 1;
+    flags.tut_unpause = 1;
+    flags.tut_event = 1;
+    flags.tut_ev_welcome = 1;
+    s.player.gold = funds;
+    const seen = FB.game.uiPrefs.tipsSeen;
+    seen['first-deed'] = 1;
+    seen['first-time-flow'] = 1;
+    seen['first-event-result'] = 1;
+    FB.game.saveUiPrefs();
+    FB.ui.refresh();
+  }, gold);
+}
+
+async function saveAndContinue(page, testInfo) {
+  expect(await page.evaluate(function () {
+    return new Promise(function (resolve) { FB.save.toSlot('auto', resolve); });
+  })).toBe(true);
+  await openPortal(page, testInfo);
+  await page.locator('#btn-continue').click();
+  await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+}
+
+async function marryForEnterprise(page) {
+  expect(await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    const match = FB.makeCharacter(s, {
+      name:'Household Spouse', sex:me.sex === 'm' ? 'f' : 'm',
+      culture:me.culture, religion:me.religion, born:me.born,
+      station:FB.playerStation(s), opinion:100, traitsN:0
+    });
+    return FB.beginCourtship(s, match) && FB.doMarry(s, { settleDowry:false });
+  })).toBe(true);
+}
+
+async function prepareCourtship(page) {
+  return page.evaluate(function () {
+    const s = FB.state, p = s.player, me = s.chars[p.charId];
+    FB.game.uiPrefs.hideTips = true;
+    FB.game.saveUiPrefs();
+    FB.ui.coachmarkReset();
+    p.gold = 1000;
+    const candidate = FB.makeCharacter(s, {
+      name:'Local Match', sex:me.sex === 'm' ? 'f' : 'm',
+      culture:me.culture, religion:me.religion, born:s.date.year - 20,
+      station:FB.playerStation(s),
+      opinion:0, traitsN:0, role:'suitor'
+    });
+    candidate.homeProvinceId = p.provinceId;
+    const ref = { kind:'character', id:candidate.id };
+    // Friendship stays at the ordinary rate even for the portal founder.
+    const friendship = FB.socialAttentionAssign(s, candidate);
+    FB.tickSocialAttention(s);
+    const friendshipGain = FB.standingOf(s, ref);
+    FB.adjustStanding(s, ref, -friendshipGain, 'spec:reset-standing');
+    const rng = FB.getRngState();
+    const preview = FB.socialVisitPreview(s, candidate, { courtship:true, readOnly:true });
+    const days = FB.socialAttentionDaysToThreshold(s, candidate, true);
+    const previewUsedRng = FB.getRngState() !== rng;
+    FB.pickSuitor(s, candidate.id);
+    const began = FB.beginCourtship(s, candidate);
+    return { id:candidate.id, friendship:friendship, friendshipGain:friendshipGain,
+      began:began, previewRate:preview.dailyRate, days:days,
+      previewUsedRng:previewUsedRng, rate:FB.socialAttentionStatus(s, candidate).rate,
+      proposal:FB.canPropose(s) };
+  });
+}
+
+for (const portal of [true, false]) {
+  test((portal ? 'CrazyGames founder' : 'standard build with SDK') +
+    ' applies its courtship rate and acceptance only after eligibility',
+    async function ({ page }, testInfo) {
+      if (portal) await startPortal(page, testInfo);
+      else {
+        await mockCrazyGames(page);
+        await openGame(page, testInfo);
+        await startDeterministicGame(page);
+      }
+      const initial = await prepareCourtship(page);
+      const expectedRate = portal ? 2 : 0.2;
+      const expectedDays = portal ? 20 : 200;
+      expect(initial.friendship).toBe(true);
+      expect(initial.friendshipGain).toBeCloseTo(0.2);
+      expect(initial.began).toBe(true);
+      expect(initial.rate).toBeCloseTo(expectedRate);
+      expect(initial.previewRate).toBeCloseTo(expectedRate);
+      expect(initial.days).toBe(expectedDays);
+      expect(initial.previewUsedRng).toBe(false);
+      expect(initial.proposal).toBe(false);
+      if (portal) await saveAndContinue(page, testInfo);
+      const result = await page.evaluate(function (args) {
+        const s = FB.state, p = s.player, candidate = s.chars[args.id];
+        const ref = { kind:'character', id:candidate.id };
+        const restoredRate = FB.socialAttentionStatus(s, candidate).rate;
+        // Road travel still pauses attention; the opening bonus cannot bypass it.
+        p.travel = { phase:'outbound', currentId:p.provinceId };
+        FB.tickSocialAttention(s);
+        const roadGain = FB.standingOf(s, ref);
+        p.travel = null;
+        const tooSoon = FB.canPropose(s);
+        const earlyChance = FB.namedChance(s, 'proposal');
+        for (let day = 0; day < args.days - 1; day++) {
+          s.turn++;
+          FB.tickSocialAttention(s);
+        }
+        const beforeLastDay = FB.canPropose(s);
+        s.turn++;
+        FB.tickSocialAttention(s);
+        const ready = FB.canPropose(s);
+        const chance = FB.namedChance(s, 'proposal');
+        const standing = FB.standingOf(s, ref);
+        candidate.dead = true;
+        const deadTarget = FB.canPropose(s);
+        candidate.dead = false;
+        const rng = FB.getRngState();
+        const ev = FB.eventById('proposal_made');
+        const receipt = FB.resolveEventOption(s, ev, ev.options[0], {});
+        return { restoredRate:restoredRate, roadGain:roadGain,
+          tooSoon:tooSoon, earlyChance:earlyChance, beforeLastDay:beforeLastDay,
+          ready:ready, chance:chance, standing:standing, deadTarget:deadTarget,
+          result:receipt && receipt.result, usedRng:FB.getRngState() !== rng,
+          spouse:FB.spousesSnapshot(s, s.chars[p.charId]).some(function (c) {
+            return c.id === candidate.id;
+          }) };
+      }, { id:initial.id, days:expectedDays });
+      expect(result.restoredRate).toBeCloseTo(expectedRate);
+      expect(result.roadGain).toBe(0);
+      expect(result.tooSoon).toBe(false);
+      expect(result.earlyChance).toBeLessThan(1);
+      expect(result.beforeLastDay).toBe(false);
+      expect(result.ready).toBe(true);
+      expect(result.standing).toBeCloseTo(40);
+      expect(result.deadTarget).toBe(false);
+      expect(result.usedRng).toBe(true);
+      if (portal) {
+        expect(result.chance).toBe(1);
+        expect(result.result).toBe('success');
+        expect(result.spouse).toBe(true);
+      } else expect(result.chance).toBeLessThan(1);
+    });
+}
+
+test('CrazyGames courtship assistance ends at succession and needs no new save fields',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await prepareCourtship(page);
+    const founder = await page.evaluate(function () {
+      const s = FB.state, p = s.player, old = s.chars[p.charId];
+      const founderId = p.houseFounderId;
+      delete p.houseFounderId;
+      const legacyFirstLife = FB.crazyGamesFirstCharacter(s);
+      p.houseFounderId = 'another_character';
+      const differentCharacter = FB.crazyGamesFirstCharacter(s);
+      p.houseFounderId = founderId;
+      old.born = s.date.year - 40;
+      const child = FB.makeCharacter(s, {
+        name:'Adult Successor', sex:old.sex, culture:old.culture,
+        religion:old.religion, born:s.date.year - 18, dyn:old.dyn, traitsN:0,
+        fatherId:old.sex === 'm' ? old.id : null,
+        motherId:old.sex === 'f' ? old.id : null
+      });
+      old.childrenIds.push(child.id);
+      old.dead = true;
+      p.dead = true;
+      FB.game.succeedTo(child.id);
+      return { legacyFirstLife:legacyFirstLife, differentCharacter:differentCharacter,
+        generation:s.generation, founderId:founderId,
+        retainedFounder:p.houseFounderId, assisted:FB.crazyGamesFirstCharacter(s) };
+    });
+    expect(founder.legacyFirstLife).toBe(true);
+    expect(founder.differentCharacter).toBe(false);
+    expect(founder.generation).toBe(2);
+    expect(founder.retainedFounder).toBe(founder.founderId);
+    expect(founder.assisted).toBe(false);
+    const successor = await prepareCourtship(page);
+    expect(successor.began).toBe(true);
+    expect(successor.rate).toBeCloseTo(0.2);
+    expect(successor.days).toBe(200);
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player;
+      FB.adjustStanding(s, { kind:'character', id:p.courtingId }, 100,
+        'spec:successor-ready');
+      delete p.houseFounderId;
+      return { ready:FB.canPropose(s), chance:FB.namedChance(s, 'proposal'),
+        assisted:FB.crazyGamesFirstCharacter(s),
+        rate:FB.socialAttentionStatus(s, s.chars[p.courtingId]).rate };
+    });
+    expect(result.ready).toBe(true);
+    expect(result.chance).toBeLessThan(1);
+    expect(result.assisted).toBe(false);
+    expect(result.rate).toBeCloseTo(0.2);
+  });
+
+for (const viewport of [
+  { name:'desktop', width:1280, height:800 },
+  { name:'phone', width:390, height:844 }
+]) {
+  test('CrazyGames ' + viewport.name + ' guides match, event, wedding, then enterprise',
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:viewport.width, height:viewport.height });
+      await startPortal(page, testInfo);
+      await expect(page.locator('[data-action-id="seek_match"]'))
+        .toHaveClass(/coachmark-lit/);
+      await page.locator('[data-action-id="seek_match"]').click();
+      await expect(page.locator('#match-local')).toBeVisible();
+      expect(await page.evaluate(function () {
+        return { deed:!!FB.state.player.flags.tut_deed,
+          courting:FB.state.player.courtingId || null,
+          timeLesson:!!FB.game.uiPrefs.tipsSeen['first-time-flow'] };
+      })).toEqual({ deed:false, courting:null, timeLesson:false });
+      // Back from choosing the route must not complete the first action.
+      await page.locator('#gm-cancel').click();
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await expect(page.locator('.coachmark')).toHaveCount(0);
+      await page.locator('[data-action-id="seek_match"]').click();
+      await page.locator('#match-local').click();
+      const prospect = page.locator('[data-suitor]').nth(1);
+      const id = await prospect.getAttribute('data-suitor');
+      await prospect.click();
+      await expect(page.locator('#ev-title')).toContainText('A Possible Match');
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        return { deed:!!s.player.flags.tut_deed, courting:s.player.courtingId,
+          spouses:FB.spousesSnapshot(s, s.chars[s.player.charId]).length };
+      })).toEqual({ deed:true, courting:id, spouses:0 });
+      await expect.poll(function () {
+        return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+      }).toBe(false);
+      await page.locator('#ev-options').getByRole('button', {
+        name:/Pursue this match/
+      }).click();
+      const attention = page.locator('.coachmark');
+      await expect(attention).toContainText('already has your personal attention');
+      if (viewport.name === 'phone') {
+        await expect(attention).toContainText('Tap your portrait');
+      }
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        return { assigned:FB.socialAttentionStatus(s, s.chars[s.player.courtingId]).assigned,
+          timeLesson:!!FB.game.uiPrefs.tipsSeen['first-time-flow'],
+          resultLesson:!!FB.game.uiPrefs.tipsSeen['first-event-result'],
+          answeredEvent:!!s.player.flags.tut_event };
+      })).toEqual({ assigned:true, timeLesson:false, resultLesson:false,
+        answeredEvent:false });
+      await attention.getByRole('button', { name:'Got it', exact:true }).click();
+      await expect(page.locator('.coachmark')).toContainText('unpause with Play');
+      await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+      await page.evaluate(function () {
+        const s = FB.state;
+        // Use the real Play handler, then bound the fixture before a live tick.
+        document.getElementById('btn-endturn').click();
+        FB.game.setPaused(true);
+        s.player.gold = 1000;
+        FB.adjustStanding(s, { kind:'character', id:s.player.courtingId },
+          100, 'spec:proposal-ready-before-event');
+        FB.ui.refresh();
+      });
+      await expect(page.locator('.coachmark')).toHaveCount(0);
+      expect(await page.evaluate(function () {
+        return { event:!!FB.state.player.flags.tut_event,
+          proposalLesson:!!FB.game.uiPrefs.tipsSeen['family-propose'],
+          firstSteps:!!FB.state.player.flags.tut_track_first_steps };
+      })).toEqual({ event:false, proposalLesson:false, firstSteps:false });
+      await page.evaluate(function () {
+        FB.state.player.flags.tut_ev_welcome = 1;
+        FB.ui.runEvents([{ id:'tut_welcome', ctx:{} }]);
+      });
+      await expect(page.locator('#ev-title')).toContainText('A Neighbor’s Welcome');
+      await expect.poll(function () {
+        return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+      }).toBe(false);
+      await page.locator('#ev-options .evopt').first().click();
+      await expect(page.locator('.coachmark')).toContainText('Your choice changed the story');
+      await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+      await expect(page.locator('.coachmark')).toContainText('use Propose marriage');
+      await page.locator('[data-action-id="propose"]').click();
+      await expect(page.locator('#ev-title')).toContainText('The Question Is Asked');
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        return { spouses:FB.spousesSnapshot(s, s.chars[s.player.charId]).length,
+          enterpriseLesson:!!FB.game.uiPrefs.tipsSeen['cg-enterprise-ready'] };
+      })).toEqual({ spouses:0, enterpriseLesson:false });
+      await expect.poll(function () {
+        return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+      }).toBe(false);
+      await page.locator('#ev-options .evopt').first().click();
+      await expect(page.locator('#outcome-continue')).toBeVisible();
+      await expect.poll(function () {
+        return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+      }).toBe(false);
+      await page.locator('#outcome-continue').click();
+      await expect(page.locator('.coachmark')).toContainText('Start your family business');
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        return FB.spousesSnapshot(s, s.chars[s.player.charId]).length;
+      })).toBe(1);
+    });
+
+  test('CrazyGames ' + viewport.name + ' guides enterprise, freedom, and land before childbirth',
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:viewport.width, height:viewport.height });
+      await startPortal(page, testInfo);
+      await marryForEnterprise(page);
+      await finishOpeningLoop(page, 0);
+      const plan = page.locator('.coachmark', { hasText:'Your next goal is a family business' });
+      await expect(plan).toBeVisible();
+      await expect(plan).toContainText('more');
+      await expect(page.locator('.tutorial-card')).toContainText('Making a living');
+      await expect(page.locator('.tutorial-card')).toContainText('Secure your household’s freedom');
+      await expect(page.locator('[data-action-id="livelihoods"]'))
+        .toHaveClass(/coachmark-lit/);
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        return { gold:s.player.gold, enterprises:s.player.enterprises.length,
+          spouses:FB.spousesSnapshot(s, s.chars[s.player.charId]).length,
+          familyDone:!!s.player.flags.tut_track_family_legacy,
+          mapSeen:!!FB.game.uiPrefs.tipsSeen['map-controls'] };
+      })).toEqual({ gold:0, enterprises:0, spouses:1, familyDone:false, mapSeen:false });
+      await plan.getByRole('button', { name:'Got it', exact:true }).click();
+      const saving = page.locator('.coachmark', { hasText:'Choose an earning Daily Focus' });
+      await expect(saving).toBeVisible();
+      await saving.getByRole('button', { name:'Got it', exact:true }).click();
+      await expect(page.locator('.coachmark')).toHaveCount(0);
+
+      const purchase = await page.evaluate(function () {
+        const s = FB.state;
+        const field = FB.enterprisePurchaseStatus(s, 'field_strip',
+          s.player.provinceId, 0);
+        // Funding is a bounded fixture for the reminder, not a simulated grind.
+        s.player.gold = field.cost;
+        FB.ui.refresh();
+        return { cost:field.cost, label:FB.money(field.cost) };
+      });
+      const ready = page.locator('.coachmark', { hasText:'Start your family business' });
+      await expect(ready).toBeVisible();
+      await expect(ready).toContainText(purchase.label);
+      await page.locator('[data-action-id="livelihoods"]').click();
+      const businesses = page.locator('[data-list-section="new-enterprises"] .large-list-section-toggle');
+      if (await businesses.getAttribute('aria-expanded') === 'false') await businesses.click();
+      await page.locator('[data-enterprise-settlement="0"]').click();
+      await expect(page.locator('[data-enterprise-buy="field_strip"]')).toBeEnabled();
+      await page.locator('[data-enterprise-buy="field_strip"]').click();
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        return { gold:s.player.gold, enterprise:s.player.enterprises[0].type,
+          familyDone:!!s.player.flags.tut_track_family_legacy };
+      })).toEqual({ gold:0, enterprise:'field_strip', familyDone:false });
+      // The household goal stays ahead of the map tour and hostile-deed lesson.
+      await page.getByRole('button', { name:'Close', exact:true }).click();
+      await expect(page.locator('.coachmark')).toContainText('enterprise can help fund your freedom');
+      await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+      await expect(page.locator('.coachmark')).toContainText('Your next goal is freedom');
+      const freedomPrice = await page.evaluate(function () {
+        return FB.freedomPurchaseStatus(FB.state).quote.price;
+      });
+      await saveAndContinue(page, testInfo);
+      await expect(page.locator('.coachmark')).toContainText('Your next goal is freedom');
+      expect(await page.evaluate(function () {
+        const s = FB.state, p = s.player;
+        return { tier:p.tier, gold:p.gold, children:s.chars[p.charId].childrenIds.length,
+          map:!!FB.game.uiPrefs.tipsSeen['map-controls'],
+          poach:!!FB.game.uiPrefs.tipsSeen['first-poach'],
+          freedom:FB.tutorialStatus(s).steps.find(function (step) {
+            return step.id === 'freedom';
+          }).done };
+      })).toEqual({ tier:0, gold:0, children:0, map:false, poach:false, freedom:false });
+      await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+      await page.evaluate(function (price) {
+        FB.state.player.gold = price;
+        FB.ui.refresh();
+      }, freedomPrice);
+      await expect(page.locator('.coachmark')).toContainText('You can now buy your household’s freedom');
+      await page.locator('[data-action-id="review_serf_tenure"]').click();
+      await page.locator('#rank-buy-freedom').click();
+      await page.locator('#freedom-purchase-confirm').click();
+      await expect(page.locator('.coachmark')).toContainText('Your household is free. Save for your first land plot');
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        return { tier:s.player.tier, plots:FB.landPlots(s).length,
+          children:s.chars[s.player.charId].childrenIds.length,
+          familyDone:!!s.player.flags.tut_track_family_legacy,
+          freedom:FB.tutorialStatus(s).steps.find(function (step) {
+            return step.id === 'freedom';
+          }).done };
+      })).toEqual({ tier:1, plots:0, children:0, familyDone:false, freedom:true });
+      await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+      const landPrice = await page.evaluate(function () {
+        const price = FB.landPlotCost(FB.state);
+        FB.state.player.gold = price;
+        FB.ui.refresh();
+        return price;
+      });
+      await expect(page.locator('.coachmark')).toContainText('can afford its first land plot');
+      await page.locator('[data-action-id="buy_land"]').click();
+      await page.locator('[data-land-settlement="0"]').click();
+      expect(await page.evaluate(function () {
+        return { plots:FB.landPlots(FB.state).length, gold:FB.state.player.gold,
+          price:FB.landPlotCost(FB.state) };
+      })).toEqual({ plots:1, gold:0, price:landPrice });
+      await page.locator('#gm-cancel').click();
+      await expect(page.locator('.coachmark')).toContainText('Your first plot of land');
+      await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+      await expect(page.locator('.coachmark')).toContainText('map is yours to explore');
+      expect(await page.evaluate(function () {
+        return { livingDone:!!FB.state.player.flags.tut_track_making_a_living,
+          familyDone:!!FB.state.player.flags.tut_track_family_legacy,
+          children:FB.state.chars[FB.state.player.charId].childrenIds.length };
+      })).toEqual({ livingDone:true, familyDone:false, children:0 });
+    });
+}
+
+test('CrazyGames waits through paid final service and resumes land guidance after release',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await marryForEnterprise(page);
+    const terms = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.gold = 1000;
+      const bought = FB.buyEnterprise(s, 'field_strip', 0);
+      const lord = FB.getRole(s, 'lord', true);
+      const ref = { kind:'character', id:lord.id };
+      FB.adjustStanding(s, ref, 60 - FB.standingOf(s, ref), 'spec:freedom-terms');
+      const offer = FB.createFreedomOffer(s, 'petition');
+      return { bought:!!bought, price:offer.price, serviceDays:offer.serviceDays };
+    });
+    expect(terms.bought).toBe(true);
+    expect(terms.serviceDays).toBe(90);
+    await finishOpeningLoop(page, 0);
+    await expect(page.locator('.coachmark')).toContainText('enterprise can help fund your freedom');
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toContainText('Your saved freedom terms cost');
+    await expect(page.locator('.coachmark')).toContainText('90 days of final service');
+    expect(await page.evaluate(function () {
+      return FB.freedomOfferAcceptanceStatus(FB.state).ready;
+    })).toBe(false);
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    await page.evaluate(function (price) {
+      FB.state.player.gold = price;
+      FB.ui.refresh();
+    }, terms.price);
+    await expect(page.locator('.coachmark')).toContainText('You can accept these terms now');
+    await page.locator('[data-action-id="review_serf_tenure"]').click();
+    await page.locator('#rank-petition-freedom').click();
+    await page.locator('#freedom-offer-accept').click();
+    await expect(page.locator('.coachmark')).toContainText('Finish your final service');
+    const paid = await page.evaluate(function () {
+      const s = FB.state;
+      const offer = s.player.freedomOffer;
+      return { tier:s.player.tier, status:offer.status, paid:offer.paidPrice,
+        land:FB.landPlots(s).length, remaining:offer.serviceEndTurn - s.turn };
+    });
+    expect(paid).toMatchObject({ tier:0, status:'service', paid:terms.price, land:0 });
+    expect(paid.remaining).toBeGreaterThan(0);
+    await saveAndContinue(page, testInfo);
+    await expect(page.locator('.coachmark')).toContainText('Finish your final service');
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.turn = s.player.freedomOffer.serviceEndTurn - 1;
+      FB.freedomDay(s);
+      FB.ui.refresh();
+    });
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    expect(await page.evaluate(function () { return FB.state.player.tier; })).toBe(0);
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.turn = s.player.freedomOffer.serviceEndTurn;
+      FB.freedomDay(s);
+      FB.ui.refresh();
+    });
+    await expect(page.locator('.coachmark')).toContainText('Your household is free. Save for your first land plot');
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      return { tier:s.player.tier, land:FB.landPlots(s).length,
+        children:s.chars[s.player.charId].childrenIds.length,
+        track:FB.tutorialStatus(s).track.id };
+    })).toEqual({ tier:1, land:0, children:0, track:'making_a_living' });
+  });
+
+test('CrazyGames skips freedom for a free household and skips already-owned property',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await marryForEnterprise(page);
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      s.player.gold = 1000;
+      return !!FB.buyEnterprise(s, 'field_strip', 0) &&
+        !!FB.resolveSerfFreedom(s, { route:'purchase' }, {});
+    })).toBe(true);
+    await finishOpeningLoop(page, 0);
+    await expect(page.locator('.coachmark')).toContainText('Save for your first land plot');
+    expect(await page.evaluate(function () {
+      const seen = FB.game.uiPrefs.tipsSeen;
+      return { income:!!seen['cg-enterprise-income'],
+        freedom:!!seen['cg-freedom-plan'], ready:!!seen['cg-freedom-ready'] };
+    })).toEqual({ income:false, freedom:false, ready:false });
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      s.player.gold = FB.landPlotCost(s);
+      const bought = FB.buyLandPlot(s, 0);
+      FB.ui.coachmarkReset();
+      FB.ui.refresh();
+      return bought;
+    })).toBe(true);
+    await expect(page.locator('.coachmark')).toContainText('map is yours to explore');
+    expect(await page.evaluate(function () {
+      return !!FB.state.player.flags.tut_track_making_a_living;
+    })).toBe(true);
+  });
+
+test('CrazyGames keeps economic guidance after a child completes the family track',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await marryForEnterprise(page);
+    await page.evaluate(function () {
+      const s = FB.state, p = s.player, me = s.chars[p.charId];
+      p.gold = 1000;
+      FB.buyEnterprise(s, 'field_strip', 0);
+      p.flags.tut_kin_tab = 1;
+      p.flags.tut_family_guidance_started = 1;
+      const child = FB.makeCharacter(s, {
+        name:'First Child', sex:'f', culture:me.culture, religion:me.religion,
+        born:s.date.year, dyn:me.dyn, fatherId:me.id, motherId:me.spouseId, traitsN:0
+      });
+      me.childrenIds.push(child.id);
+    });
+    await finishOpeningLoop(page, 0);
+    await expect(page.locator('.coachmark')).toContainText('enterprise can help fund your freedom');
+    expect(await page.evaluate(function () {
+      return { familyDone:!!FB.state.player.flags.tut_track_family_legacy,
+        track:FB.tutorialStatus(FB.state).track.id };
+    })).toEqual({ familyDone:true, track:'making_a_living' });
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toContainText('Your next goal is freedom');
+  });
+
+test('CrazyGames resumes unread marriage and enterprise prompts and respects Stop tips',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await saveAndContinue(page, testInfo);
+    await expect(page.locator('.coachmark')).toContainText('use Seek a match');
+    await marryForEnterprise(page);
+    await finishOpeningLoop(page, 0);
+    await expect(page.locator('.coachmark')).toContainText('Your next goal is a family business');
+    await saveAndContinue(page, testInfo);
+    await expect(page.locator('.coachmark')).toContainText('Your next goal is a family business');
+    await page.locator('.coachmark').getByRole('button', { name:'Stop tips', exact:true }).click();
+    await page.evaluate(function () {
+      FB.state.player.gold = 1000;
+      FB.ui.refresh();
+    });
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    await saveAndContinue(page, testInfo);
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+  });
+
+test('CrazyGames does not recommend an enterprise with unmet nonfinancial requirements',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await marryForEnterprise(page);
+    await page.evaluate(function () {
+      for (const id in FBDATA.enterprises) FBDATA.enterprises[id].devMin = 999;
+    });
+    await finishOpeningLoop(page, 1000);
+    await expect(page.locator('.coachmark')).toContainText('map is yours to explore');
+    await expect(page.locator('.coachmark')).not.toContainText('family business');
+  });
+
+test('CrazyGames waits for courtship and a successful wedding before any enterprise hint',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    const courtship = await page.evaluate(function () {
+      const s = FB.state;
+      const candidates = FB.spawnSuitor(s);
+      const candidate = candidates[1] || candidates[0];
+      FB.pickSuitor(s, candidate.id);
+      const began = FB.beginCourtship(s, candidate);
+      return { began:began, days:FB.socialAttentionDaysToThreshold(s, candidate, true) };
+    });
+    expect(courtship.began).toBe(true);
+    expect(courtship.days).toBeGreaterThan(0);
+    await finishOpeningLoop(page, 1000);
+    const attention = page.locator('.coachmark', { hasText:'person under Courting' });
+    await expect(attention).toBeVisible();
+    await expect(attention).toContainText('About ' + courtship.days + ' in-game day');
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      return { proposal:FB.instantStatus(s, 'propose').can,
+        business:s.player.enterprises.length,
+        familyIntro:!!FB.game.uiPrefs.tipsSeen['family-guidance'],
+        map:!!FB.game.uiPrefs.tipsSeen['map-controls'] };
+    })).toEqual({ proposal:false, business:0, familyIntro:false, map:false });
+    await attention.getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toContainText('Keep courting your match');
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    await saveAndContinue(page, testInfo);
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    await page.evaluate(function () {
+      const s = FB.state;
+      FB.adjustStanding(s, { kind:'character', id:s.player.courtingId },
+        100, 'spec:crazygames-courtship');
+      FB.ui.refresh();
+    });
+    await expect(page.locator('.coachmark')).toContainText('use Propose marriage');
+    await expect(page.locator('.coachmark')).toContainText('This proposal will be accepted.');
+    await expect(page.locator('[data-action-id="propose"]')).toHaveClass(/coachmark-lit/);
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    await page.evaluate(function () { FB.ui.refresh(); });
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      const seen = FB.game.uiPrefs.tipsSeen;
+      return { plan:!!seen['cg-enterprise-plan'], saving:!!seen['cg-enterprise-saving'],
+        purchase:!!seen['cg-enterprise-ready'],
+        spouses:FB.spousesSnapshot(FB.state,
+          FB.state.chars[FB.state.player.charId]).length };
+    })).toEqual({ plan:false, saving:false, purchase:false, spouses:0 });
+  });
+
+test('CrazyGames falls back to an available deed for an already married start',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      const s = FB.state, me = s.chars[s.player.charId];
+      const spouse = FB.makeCharacter(s, {
+        sex:'f', culture:me.culture, religion:me.religion,
+        born:me.born, role:'spouse'
+      });
+      me.spouseId = spouse.id;
+      spouse.spouseId = me.id;
+      s.roles.spouse = spouse.id;
+      FB.ui.resumeFirstPlayerTip();
+    });
+    await expect(page.locator('.coachmark')).toContainText('Try Go into town');
+    await expect(page.locator('[data-action-id="go_to_town"]')).toHaveClass(/coachmark-lit/);
+  });
+
+test('a standard phone build with an SDK present keeps the town-first and later-enterprise flow',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:844 });
+    await mockCrazyGames(page);
+    await openGame(page, testInfo);
+    await startDeterministicGame(page, { keepFirstTimeTips:true });
+    await expect(page.locator('.coachmark')).toContainText('Try Go into town');
+    await expect(page.locator('[data-action-id="go_to_town"]'))
+      .toHaveClass(/coachmark-lit/);
+    await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      const s = FB.state;
+      const candidate = FB.spawnSuitor(s)[1];
+      FB.pickSuitor(s, candidate.id);
+      FB.ui.runEvents([{ id:'meet_suitor', ctx:{} }]);
+    });
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
+    await page.locator('#ev-options .evopt').first().click();
+    expect(await page.evaluate(function () {
+      return !!FB.state.player.flags.tut_event;
+    })).toBe(true);
+    await finishOpeningLoop(page, 1000);
+    await expect(page.locator('.coachmark')).toContainText('map is yours to explore');
+    expect(await page.evaluate(function () {
+      return { crazy:FB.platform.isCrazyGames,
+        early:!!FB.game.uiPrefs.tipsSeen['cg-enterprise-ready'],
+        handled:FB.ui.resumeCrazyGamesHouseholdTips() };
+    })).toEqual({ crazy:false, early:false, handled:false });
+    await marryForEnterprise(page);
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const before = FB.tutorialStatus(s).track.id;
+      s.player.flags.tut_track_family_legacy = 1;
+      const after = FB.tutorialStatus(s);
+      return { before:before, after:after.track.id,
+        steps:after.steps.map(function (step) { return step.id; }) };
+    })).toEqual({ before:'family_legacy', after:'making_a_living',
+      steps:['livelihood', 'enterprise', 'land'] });
+  });
