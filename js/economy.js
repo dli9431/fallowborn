@@ -697,7 +697,7 @@ window.FB = window.FB || {};
     const playerClericalOffice = (c.id === state.player.charId &&
       (state.player.flags.abbot || state.player.flags.bishop ||
         state.player.flags.qadi || state.player.flags.chief_qadi)) ||
-      !!(FB.bishopricOf && FB.bishopricOf(state, c));
+      !!(FB.bishopricOf && FB.bishopricOf(state, c)) || !!c.abbeyVows;
     const out = [];
     for (const id in FBDATA.careers) {
       const def = FBDATA.careers[id];
@@ -758,6 +758,8 @@ window.FB = window.FB || {};
   }
 
   function religiousPathId(state, c) {
+    if (FB.abbeyOf && FB.abbeyOf(state, c) &&
+        FB.faithHasSystem(c.religion, 'papacy', state)) return 'catholic_monastic';
     const career = c && FB.careerOf(state, c);
     const routes = religiousRoutes(state, c);
     if (!career || !routes) return null;
@@ -824,6 +826,10 @@ window.FB = window.FB || {};
   };
 
   FB.religiousRankTitle = function (state, c, path) {
+    const abbey = FB.abbeyOf && FB.abbeyOf(state, c);
+    if (abbey && (!path || (path.id === 'catholic_monastic' && path.step.id === 'abbot'))) {
+      return FB.abbeyTitle(abbey);
+    }
     if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) return FB.T('Pope');
     if (FB.isCardinal && FB.isCardinal(state, c)) return FB.T('Cardinal');
     path = path || FB.religiousPathOf(state, c);
@@ -858,6 +864,9 @@ window.FB = window.FB || {};
       if (FB.bishopricSnapshot(state, c)) {
         out.religious = Math.max(out.religious, amount(rates.religious, 'bishop'));
       }
+      const abbey = FB.abbeyOf && FB.abbeyOf(state, c);
+      if (abbey && FB.faithHasSystem(c.religion, 'papacy', state)) out.religious = Math.max(out.religious,
+        amount(rates.religious, abbey.privileges.length ? 'cardinal' : 'bishop'));
       if (FB.isCardinal && FB.isCardinal(state, c)) {
         out.religious = Math.max(out.religious, amount(rates.religious, 'cardinal'));
       }
@@ -1079,6 +1088,11 @@ window.FB = window.FB || {};
     const visible = !!(path && path.id === 'catholic_monastic' &&
       step && step.id === 'abbot');
     if (!visible) return { visible:false, ready:false, missing:[] };
+    if (c.sex === 'f' && FB.abbeyAppointmentStatus) {
+      const election = FB.abbeyAppointmentStatus(state, FB.abbeyAt(state, state.player.provinceId), c);
+      election.visible = true; election.path = path; election.step = step;
+      return election;
+    }
     const cfg = catholicOfficeBalance('abbotAppointment');
     const advance = FB.religiousAdvance(state, c);
     const missing = [];
@@ -1129,6 +1143,9 @@ window.FB = window.FB || {};
     c = c || playerChar(state);
     const status = FB.abbotAppointmentStatus(state, c);
     if (!status.ready) return false;
+    if (c.sex === 'f' && FB.seekAbbeyAppointment) {
+      return FB.seekAbbeyAppointment(state, FB.abbeyAt(state, state.player.provinceId), c);
+    }
     if (!FB.chance(status.chance)) {
       c.abbotPetitionRefusedTurn = state.turn;
       state.player.piety += 3;
@@ -5158,6 +5175,10 @@ window.FB = window.FB || {};
       const workMult = profession === 'monk' || profession === 'priest'
         ? FB.householdWorkMultiplier(state, profession) : 1;
       let bestYield = 0;
+      const abbey = FB.abbeyOf && FB.abbeyOf(state, c);
+      if (abbey && FB.faithHasSystem(c.religion, 'papacy', state)) {
+        bestYield = abbey.privileges.length ? 3.5 : 2.5;
+      }
       for (const standing of FB.religiousStandings(state, c)) {
         const raw = standing.path && standing.path.step.pietyYield || 0;
         const yieldAmount = standing.kind === 'vocation' ? raw * workMult : raw;

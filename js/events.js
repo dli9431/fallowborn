@@ -2751,6 +2751,7 @@ window.FB = window.FB || {};
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
     if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(state, c);
     c.dead = true;
+    if (FB.releaseAbbeyOffice) FB.releaseAbbeyOffice(state, c);
     c.died = state.date.year; // remembered on their sheet: born–died
     if (FB.settlementLordshipsCharacterDied) {
       FB.settlementLordshipsCharacterDied(state, c.id);
@@ -2839,7 +2840,8 @@ window.FB = window.FB || {};
         (FB.papacyCelibateSnapshot(state, me) ||
           FB.papacyCelibateSnapshot(state, c))) {
       return blocked('celibate',
-        FB.T('The vows of a Bishop, Cardinal, or Pope forbid marriage.'),
+        me.abbeyVows || c.abbeyVows ? FB.T('Religious office vows forbid marriage.') :
+          FB.T('The vows of a Bishop, Cardinal, or Pope forbid marriage.'),
         false);
     }
     const compact = state.player.royalCompact;
@@ -12923,7 +12925,7 @@ window.FB = window.FB || {};
 
   FB.doIndependence = function (state) {
     const p = state.player;
-    if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
+    if (FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(state)) return false;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
     // The war is fought against the sovereign, but a failed rebellion returns
     // the player to the lord actually renounced (FB.independenceReturnLiege).

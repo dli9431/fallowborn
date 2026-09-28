@@ -75,6 +75,17 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      abbey_appointments:{ mode:'none', rationale:'Religious elections depend on competence, service and community support, without a research gate.' },
+      abbey_foundations:{ mode:'none', rationale:'Founding a religious community is baseline patronage funded by private resources.' },
+      abbey_endowments:{ mode:'none', rationale:'Donating owned unpledged property is baseline institutional patronage; property acquisition retains its gates.' },
+      abbey_residents:{ mode:'none', rationale:'Temporary education, residence and refuge depend on consent and capacity rather than research.' },
+      abbey_estate_management:{ mode:'none', rationale:'Managing institutional rents is ordinary estate administration.' },
+      abbey_schooling:{ mode:'none', rationale:'Community teaching depends on the superior and pupils, not sovereign research.' },
+      abbey_relief:{ mode:'none', rationale:'Local charitable relief is baseline social and religious play.' },
+      abbey_mediation:{ mode:'none', rationale:'Mediating community disputes uses personal diplomacy and resources.' },
+      abbey_patronage:{ mode:'none', rationale:'Soliciting support from connected families is baseline political patronage.' },
+      abbey_privileges:{ mode:'none', rationale:'Royal protection and papal exemption are negotiated institutional rights.' },
+      abbey_succession:{ mode:'none', rationale:'Elective office succession and family nominations are baseline institutional relationships.' },
       household_estate_service:{ mode:'none', rationale:'Serving a local household, maintaining stores and advancing to estate office are baseline personal relationships. Ability, role-specific trait fit, performed work and Standing govern appointment without national research.' },
       household_commercial_service:{ mode:'none', rationale:'Household delivery, purchasing and factor appointments use ordinary local exchange. Personal skills, role-specific trait fit and service govern advancement; existing guild and trade technologies remain separate.' },
       household_military_service:{ mode:'none', rationale:'Household watch and guard appointments are baseline personal service. Martial ability, role-specific trait fit and experience govern advancement without granting an independent army or bypassing equipment and field-command requirements.' },

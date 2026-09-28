@@ -3528,3 +3528,33 @@ The CrazyGames Save/Load dialog shows one campaign shared with Continue and auto
 LocalStorage mode reaches the title even when SDK initialization, save decoding or storage access fails. Save recovery appears automatically when local records need attention and remains available from the title and Save/Load. The shared modal identifies affected records, distinguishes unsupported compression from unreadable data, explains which saving remains available, and offers a recovery download with selectable copy text. A separate Review reset screen states exactly which records will be reset and which will remain, then offers Back up and reset. A failed browser backup preserves the originals and displays an explicit Reset without a browser backup action beside its loss warning. Successful reset reloads. Cancel and Back restore the recovery or originating Save/Load view, including scroll and focus. Blocked storage allows unsaved play and current-life exports, with no ineffective reset action.
 
 Unreadable progression does not prevent continuing a healthy campaign. Unreadable campaigns remain protected against autosave, manual save and import-triggered persistence until deliberately reset. SDK Data Module initialization failures still block that edition's title until account data is available. All recovery controls use shared buttons, native textarea/details elements, localized text and the existing keyboard/mobile modal navigation.
+
+## Abbey management
+
+Abbeys and patronage is available through Deeds, Self and Work. Shared review
+cards show the holder portrait, treasury, seasonal gross revenue, upkeep and
+allowance, community support, dynasty patron, privileges and elective succession.
+Election, endowment, residence and privilege reviews show exact costs, duration,
+probability and irreversible commitments. A labeled cost row distinguishes
+institutional spending (Abbey treasury) from family spending (Family funds). Permanent endowments explicitly warn that property and
+future income leave the family; office acceptance explicitly takes vows.
+
+All named people have portraits and linked character sheets. Retained modal
+history preserves Back, Cancel, Escape and character-sheet journeys; mutation
+returns restore scroll, focus and expanded disclosures. Outcomes use the shared
+religious-office result and receipt, then spend one deed day on acknowledgement.
+Changed terms at confirmation replace the review in place with a warning rather
+than adding a history entry. After the result, the refreshed sheet's Back opens
+its parent (the house list, or Work when opened from Work) instead of closing.
+A blocked action shows its first unmet requirement on the face, and every one in
+Details.
+
+Election candidates and prospective residents use the shared large-list rows:
+portrait, name, chance or first blocker, and a state label, with All, Available
+and Unavailable filters and search once a list is long. The whole row opens its
+review, which names the candidate or resident and every unmet requirement.
+Residents are grouped as Current residents, Offer schooling, Offer residence and
+Offer refuge. Effect numbers in review text come from FBDATA.abbeys, the same
+values the engine applies.
+
+No new visual style or distribution-specific layout is introduced.

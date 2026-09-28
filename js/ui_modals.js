@@ -11387,6 +11387,8 @@ window.FB = window.FB || {};
       UI.showMarriageFinder(null, undefined, true);
     } else if (returnContext.view === 'household-service') {
       UI.showHouseholdService(false, returnContext.restore);
+    } else if (returnContext.view === 'abbeys') {
+      UI.showAbbeys();
     } else if (returnContext.view === 'governance') {
       UI.showGovernance(returnContext.section || 'position');
     } else if (returnContext.view === 'council') {
@@ -19465,6 +19467,8 @@ window.FB = window.FB || {};
     }
     let h = reviewFactsCard(landedSelf ? FB.T('Former calling') : FB.T('Current work'),
       currentWork, ' data-career-current');
+    if (FB.abbeyAccess(s)) h += reviewActionCardHtml({ id:'career-abbeys',
+      label:FB.T('Abbeys and patronage…'), note:FB.T('Religious appointments, foundations and noble residents.') });
     let choiceCards = '';
     for (const item of FB.careerChoices(s, c)) {
       const same = career.chosen && career.profession === item.id;
@@ -19652,7 +19656,10 @@ window.FB = window.FB || {};
     if (religiousAdvance) {
       const faithStep = religiousAdvance.step;
       if (faithStep.maleOnly && c.sex !== 'm') {
-        religiousNote = '<p class="hint">' + esc(FB.T(
+        religiousNote = FB.abbeyAccess(s) && religiousAdvance.path.id === 'catholic_monastic'
+          ? reviewActionCardHtml({ id:'career-abbey-office', label:FB.T('Abbey offices and privileges'),
+            note:FB.T('An abbess can govern an endowed house and seek royal protection and papal exemption.') })
+          : '<p class="hint">' + esc(FB.T(
           'This is the highest religious office open to {name} on this path.', { name:c.name })) +
           '</p>';
       } else {
@@ -19715,7 +19722,9 @@ window.FB = window.FB || {};
             ? (officeStatus.ready
               ? (bishopStatus
                 ? FB.T('A free merit petition weighs Learning, permanent lay standing, investiture policy, and the appointing authority’s support.')
-                : FB.T('The community elects its superior; Learning and permanent lay standing improve the vote.'))
+                : c.sex === 'f'
+                  ? FB.T('The community elects its abbess; Learning, community support and family patronage improve the vote. Acceptance entails permanent vows.')
+                  : FB.T('The community elects its superior; Learning and permanent lay standing improve the vote.'))
               : FB.T('Unmet: {requirements}', {
                 requirements:officeStatus.missing.join('; ')
               }))
@@ -19762,6 +19771,7 @@ window.FB = window.FB || {};
       ? FB.T('Former calling of {name}', { name:c.name })
       : FB.T('Work of {name}', { name:c.name }), h, historyOptions);
     FB.paintFaces($('gm-body'), s);
+    if ($('career-abbeys')) $('career-abbeys').onclick = function () { UI.showAbbeys(null, null, true); };
     document.querySelectorAll('[data-career-choice]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.beginCareer(s, c, b.dataset.careerChoice)) return;
@@ -19835,6 +19845,11 @@ window.FB = window.FB || {};
       });
     });
     const religious = $('career-religious');
+    const abbeyOffice = $('career-abbey-office');
+    if (abbeyOffice) abbeyOffice.addEventListener('click', function () {
+      const house = FB.abbeyOf(s, c);
+      UI.showAbbeys(house && house.id, null, true);
+    });
     if (religious) religious.addEventListener('click', function () {
       const advance = FB.religiousAdvance(s, c);
       if (advance && advance.path.id === 'catholic_monastic' &&
@@ -19868,12 +19883,449 @@ window.FB = window.FB || {};
     });
   };
 
+  function abbeyPerson(c, role) {
+    return c ? reviewPersonHtml(c, role, 'abbey-person-' + c.id + '-' + encodeURIComponent(role || ''))
+      .replace('type="button"', 'type="button" data-abbey-character="' + esc(c.id) + '"') : '';
+  }
+  function openAbbeyModal(title, body, opts) {
+    openModal(title, body, opts);
+    $('gm-body').querySelectorAll('[data-abbey-character]').forEach(function (button) {
+      button.onclick = function () { UI.showCharModal(button.getAttribute('data-abbey-character'), { view:'abbeys' }); };
+    });
+    FB.paintFaces($('gm-body'), FB.state);
+  }
+  function abbeyName(h) {
+    return FB.T('Abbey of {county}', { county:FB.world.byId[h.provinceId].name });
+  }
+  /* Abbey treasuries accrue fractional yield; every money row uses one rounding. */
+  function abbeyMoney(amount) {
+    return FB.T('{money:amount}', { amount:Math.round(amount * 10) / 10 });
+  }
+  function abbeyMoneySeason(amount) {
+    return FB.T('{money:amount} each season', { amount:Math.round(amount * 10) / 10 });
+  }
+  function abbeyUnmet(missing) {
+    return missing.length ? '<div>' + esc(FB.T('Unmet: {requirements}', {
+      requirements:missing.join('; ')
+    })) + '</div>' : '';
+  }
+  function abbeyView() {
+    const controls = Array.from($('gm-body').querySelectorAll('button:not([disabled])'));
+    return { top:$('gm-body').scrollTop,
+      focus:document.activeElement && document.activeElement.id,
+      index:controls.indexOf(document.activeElement),
+      opened:Array.from($('gm-body').querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (b) {
+        return b.getAttribute('aria-controls');
+      }) };
+  }
+  function restoreAbbeyView(view) {
+    if (!view) return;
+    const marker = $('gm-body').querySelector('[data-abbey-view]');
+    setTimeout(function () {
+      if ($('gm-body').querySelector('[data-abbey-view]') !== marker) return;
+      (view.opened || []).forEach(function (id) {
+        const button = $('gm-body').querySelector('[aria-controls="' + id + '"]');
+        if (button && button.getAttribute('aria-expanded') !== 'true') button.click();
+      });
+      const controls = $('gm-body').querySelectorAll('button:not([disabled])');
+      const focus = (view.focus && $(view.focus)) ||
+        (view.index >= 0 && controls[Math.min(view.index, controls.length - 1)]);
+      if (focus) focus.focus({ preventScroll:true });
+      $('gm-body').scrollTop = view.top;
+    }, 0);
+  }
+  function abbeyFooter(label) {
+    return '<div class="gm-footer"><button type="button" class="btn" id="abbey-back">' +
+      esc(label || FB.T('Back')) + '</button></div>';
+  }
+  /* Work opens the abbey screens as a nested view. A mutation closes the modal
+     for its result, so the refreshed screen rebuilds that parent explicitly. */
+  function abbeyParent(houseId, fromWork) {
+    if (houseId) return function () { UI.showAbbeys(null, null, fromWork); };
+    if (fromWork) return function () { UI.showCareerPicker(FB.state.player.charId); };
+    return UI.closeModal;
+  }
+  /* One large-list row: the whole card opens its review, where every blocker
+     is listed; the face shows the first blocker and a state label. */
+  function abbeyRowHtml(opts) {
+    const detailsId = opts.id + '-details';
+    return '<div class="large-list-work-card settcard"><button type="button" ' +
+      'class="actionbtn large-list-row large-list-person-row" id="' + esc(opts.id) + '"' +
+      largeListRowAttrs({ states:[opts.state], identity:opts.identity, focusKey:opts.id }) +
+      ' aria-describedby="' + esc(detailsId) + '"><span class="large-list-row-main">' +
+      FB.faceTag(opts.person, 34, 40) + '<span class="large-list-row-copy">' +
+      '<span class="large-list-row-title">' + esc(FB.fullName(opts.person)) + '</span>' +
+      '<span class="adesc' + (opts.state === 'unavailable' ? ' review-note-warn' : '') + '">' +
+      esc(opts.note) + '</span></span></span><span class="large-list-face-state">' +
+      esc(opts.stateLabel) + '</span></button><span class="settcard-actions large-list-work-actions">' +
+      '<button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+      esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+      '">?</button></span><div class="settcard-details large-list-work-details hidden" id="' +
+      esc(detailsId) + '">' + opts.details + '</div></div>';
+  }
+  function abbeyListFilters() {
+    return [
+      { id:'all', label:FB.T('All') },
+      { id:'available', label:FB.T('Available') },
+      { id:'unavailable', label:FB.T('Unavailable') }
+    ];
+  }
+  function resetAbbeyList(surface, view) {
+    if (view) return;
+    largeListViews[surface].scrollTop = 0;
+    largeListViews[surface].focusKey = null;
+  }
+  /* opts: house, label, summary, quote, commit, person, role, cost (a label and
+     text row naming who pays), back, fromWork and stale (terms changed). */
+  function abbeyReview(opts) {
+    const s = FB.state, actor = s.player.charId, h = opts.house;
+    const back = opts.back || function () { UI.showAbbeys(h && h.id, null, opts.fromWork); };
+    const q = opts.quote();
+    const shown = opts.person !== undefined ? opts.person : s.chars[actor];
+    let facts = reviewPeopleHtml(abbeyPerson(shown, opts.role || FB.T('Acting for the family'))) +
+      kv('Consequences', esc(opts.summary));
+    if (opts.cost) facts += rawKv(opts.cost.label, esc(opts.cost.text));
+    facts += kv('Time', esc(FB.T('1 day')));
+    if (q.chance !== undefined) facts += kv('Chance', esc(FB.T('{chance}%', { chance:Math.round(q.chance * 100) })));
+    let body = '<div data-abbey-view>';
+    if (opts.stale) body += '<p class="warnote">' + esc(FB.T('The terms changed. Review the updated terms before confirming.')) + '</p>';
+    body += reviewFactsCard('', facts) + reviewActionsHtml(reviewActionCardHtml({
+      id:'abbey-confirm', label:opts.label, disabled:!q.ready,
+      note:q.ready ? '' : q.missing[0], warn:!q.ready,
+      details:q.ready ? '' : abbeyUnmet(q.missing)
+    })) + '</div>' + abbeyFooter(FB.T('Cancel'));
+    openAbbeyModal(opts.label, body, { historyView:true, replaceView:!!opts.stale });
+    $('abbey-back').onclick = function () { modalHistoryBack(back); };
+    $('abbey-confirm').onclick = function () {
+      if (FB.state !== s || actor !== s.player.charId) { UI.closeModal(); return; }
+      const fresh = opts.quote();
+      if (!fresh.ready || fresh.cost !== q.cost || fresh.chance !== q.chance) {
+        abbeyReview(Object.assign({}, opts, { back:back, stale:true })); return;
+      }
+      const before = promotionResources(s);
+      const estateBefore = h ? { treasury:h.treasury, support:h.support } : null;
+      const result = opts.commit();
+      if (!result) { back(); return; }
+      markActionsDirty();
+      const target = result.house || (result.id ? result : h);
+      const finance = target && FB.abbeyFinance(s, target);
+      const outcome = result.accepted === false ? FB.T('The attempt did not succeed.') : FB.T('The decision is complete.');
+      const benefit = finance && estateBefore ? FB.T('Abbey treasury: {before} → {after}. Community support: {oldSupport} → {support}.', {
+        before:abbeyMoney(estateBefore.treasury), after:abbeyMoney(target.treasury),
+        oldSupport:estateBefore.support, support:target.support
+      }) : finance ? FB.T('Abbey treasury: {treasury}. Community support: {support}.', {
+        treasury:abbeyMoney(target.treasury), support:target.support
+      }) : opts.summary;
+      religiousOfficeSuccess(opts.person || s.chars[actor], opts.label, outcome, benefit, function () {
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(null, function () {
+          if (h) back(); else UI.showAbbeys(target && target.id, null, opts.fromWork);
+        });
+      }, before);
+    };
+  }
+  function abbeyActionNote(id) {
+    const d = FBDATA.abbeys.actions[id];
+    if (id === 'rents') return FB.T('Abbey treasury +{money:gain}; community support −{loss}.', { gain:d.treasury, loss:-d.support });
+    if (id === 'school') return FB.T('Spend {money:cost} from the abbey; teach each pupil Learning +{learning}, subject to the skill cap; support +{support}.', d);
+    if (id === 'relief') return FB.T('Spend {money:cost} from the abbey; support +{support}, Popular support +{popular}, piety +{piety}.', d);
+    if (id === 'mediate') return FB.T('Spend {money:cost} from the abbey; support +{support}, prestige +{prestige}, connections +{standing} Standing. Settling a current dispute gives the lord Standing +{lord}.', {
+      cost:d.cost, support:d.support, prestige:d.prestige, standing:d.standing, lord:d.lordStanding });
+    if (id === 'patronage') return FB.T('Spend {money:cost} from the abbey; connected patrons subscribe {money:capital} to its permanent endowment; prestige +{prestige}.', d);
+    if (id === 'defend') return FB.T('Spend {money:cost} from the abbey. Success gives support +{support} and lord Standing −{lord}; failure loses up to {money:loss} more, support −{failSupport} and lord Standing −{failLord}.', {
+      cost:d.cost, support:d.support, lord:-d.lordStanding, loss:d.failLoss,
+      failSupport:-d.failSupport, failLord:-d.failLordStanding });
+    return FB.T('Spend {money:cost} from the abbey; support −{loss} and lord Standing +{lord}. End the dispute.', {
+      cost:d.cost, loss:-d.support, lord:d.lordStanding });
+  }
+  function abbeyElectionSummary() {
+    return FB.T('No fee. Success grants the abbey office, an estate allowance and prestige +{prestige}, and commits the candidate to permanent religious vows. Refusal delays another election for one year.', {
+      prestige:FBDATA.abbeys.electionPrestige });
+  }
+  UI.showAbbeys = function (houseId, view, fromWork) {
+    const s = FB.state;
+    if (!s || !FB.abbeyAccess(s)) return;
+    const A = FBDATA.abbeys;
+    const houses = FB.abbeyHouses(s);
+    const h = houses.filter(function (row) { return row.id === houseId; })[0];
+    const bindings = [];
+    function action(id, label, note, run, q) {
+      bindings.push({ id:id, run:run });
+      const blocked = !!(q && !q.ready);
+      return reviewActionCardHtml({ id:id, label:label,
+        note:blocked ? q.missing[0] : note, warn:blocked,
+        details:blocked ? '<div>' + esc(note) + '</div>' + abbeyUnmet(q.missing) : '',
+        disabled:blocked });
+    }
+    function review(opts) {
+      const old = abbeyView();
+      abbeyReview(Object.assign({ house:h, fromWork:fromWork, back:function () {
+        UI.showAbbeys(h ? h.id : null, old, fromWork);
+      } }, opts));
+    }
+    let body = '<div data-abbey-view>';
+    if (!h) {
+      body += reviewFactsCard('', kv('Religious houses', esc(FB.T('{count} / {max}', {
+        count:houses.length, max:A.maxHouses
+      }))));
+      houses.forEach(function (house) {
+        body += action('abbey-open-' + house.provinceId, abbeyName(house),
+          house.holderId ? FB.T('Office occupied') : FB.T('Vacant abbacy'), function () {
+            UI.showAbbeys(house.id, null, fromWork);
+          });
+      });
+      const foundation = FB.abbeyFoundationStatus(s);
+      const foundationText = FB.T('Pay {money:cost} from family funds; prestige +{prestige}. Create a permanent endowment of {money:capital} and family patronage rights; the abbacy remains vacant.', {
+        cost:foundation.cost, prestige:A.foundationPrestige, capital:A.foundationCapital });
+      body += action('abbey-found', FB.T('Found a religious house'), foundationText, function () {
+        review({ house:null, label:FB.T('Found a religious house'), summary:foundationText,
+          cost:{ label:FB.T('Family funds'), text:abbeyMoney(foundation.cost) },
+          quote:function () { return FB.abbeyFoundationStatus(s); },
+          commit:function () { return FB.foundAbbey(s); } });
+      }, foundation);
+      if (!FB.abbeyAt(s, s.player.provinceId)) body += action('abbey-apply-local', FB.T('Seek an existing local abbacy'),
+        FB.T('A contested election. No land or gold donation is required.'), function () {
+          UI.showAbbeyCandidates(null, null, fromWork);
+        });
+    } else {
+      const f = FB.abbeyFinance(s, h);
+      let facts = h.holderId && s.chars[h.holderId] ? reviewPeopleHtml(abbeyPerson(s.chars[h.holderId], FB.abbeyTitle(h))) : kv('Office', esc(FB.T('Vacant')));
+      facts += kv('Abbey treasury', esc(abbeyMoney(h.treasury))) +
+        kv('Permanent capital', esc(abbeyMoney(h.capital))) +
+        kv('Donated freehold plots', esc(String(h.plots.reduce(function (n, g) { return n + g.count; }, 0)))) +
+        kv('Estate revenue', esc(abbeyMoneySeason(f.revenue))) +
+        kv('Community upkeep', esc(abbeyMoneySeason(f.upkeep))) +
+        kv('Office allowance', esc(abbeyMoneySeason(f.allowance))) +
+        kv('Community support', esc(String(h.support))) +
+        kv('Patron dynasty', esc(h.patronDyn || FB.T('No family patron'))) +
+        kv('Privileges', esc(h.privileges.map(function (id) { return id === 'royal' ? FB.T('Royal protection') : FB.T('Papal exemption'); }).join(', ') || FB.T('None'))) +
+        kv('Succession', esc(FB.T('Election; endowed property stays with the house')));
+      body += reviewFactsCard('', facts);
+      if (h.connections.length) {
+        body += reviewFactsCard(FB.T('Lasting connections'), h.connections.map(function (r) {
+          const c = s.chars[r.charId];
+          return c && !c.dead ? reviewPeopleHtml(abbeyPerson(c, FB.T('Standing {value}', {
+            value:Math.round(FB.standingOf(s, { kind:'character', id:c.id }))
+          }))) : '';
+        }).join(''));
+      }
+      if (!h.holderId) body += action('abbey-candidates', FB.T('Stand or nominate a relative'),
+        FB.T('A contested election. Unattended vacancies are filled after one year; a recent petitioner has one season to retry after the election cooldown.'), function () {
+          UI.showAbbeyCandidates(h.id, null, fromWork);
+        });
+      body += action('abbey-endowments', FB.T('Endow the house'), FB.T('Permanently transfer family funds or unpledged freehold land.'), function () {
+        UI.showAbbeyEndowments(h.id, null, fromWork);
+      });
+      if (h.holderId === s.player.charId) {
+        body += action('abbey-residents', FB.T('Residents and hospitality'), FB.T('{count} / {max} places · {money:cost} upkeep per resident each season', {
+          count:h.residents.length, max:A.residentCapacity + h.privileges.length, cost:A.residentUpkeep
+        }), function () { UI.showAbbeyResidents(h.id, null, fromWork); });
+        if (h.dispute) {
+          const l = s.chars[h.dispute.lordId];
+          body += reviewFactsCard(FB.T('Disputed rights'), reviewPeopleHtml(abbeyPerson(l, FB.T('Challenges the abbey'))) +
+            kv('Lost rents', esc(FB.T('Up to {money:loss} each season until the dispute is settled', { loss:A.disputeLoss }))));
+        }
+        const acts = [
+          ['rents', FB.T('Manage rents')],
+          ['school', FB.T('Fund schooling')],
+          ['relief', FB.T('Distribute relief')],
+          ['mediate', FB.T('Mediate disputes')],
+          ['patronage', FB.T('Solicit an endowment')]
+        ];
+        if (h.dispute) acts.push(['defend', FB.T('Defend the charter')], ['concede', FB.T('Concede the dispute')]);
+        acts.forEach(function (row) {
+          const q = FB.abbeyActionStatus(s, h, row[0]);
+          const effects = abbeyActionNote(row[0]);
+          const note = effects + ' ' + FB.T('1 day · {days}-day cooldown', { days:q.days });
+          body += action('abbey-action-' + row[0], row[1], note, function () {
+            review({ label:row[1], summary:effects,
+              cost:{ label:FB.T('Abbey treasury'), text:abbeyMoney(q.cost) },
+              quote:function () { return FB.abbeyActionStatus(s, h, row[0]); },
+              commit:function () { return FB.runAbbeyAction(s, h, row[0]); } });
+          }, q);
+        });
+        ['royal','papal'].forEach(function (id) {
+          if (h.privileges.indexOf(id) >= 0) return;
+          const q = FB.abbeyPrivilegeStatus(s, h, id);
+          const label = id === 'royal' ? FB.T('Seek royal protection') : FB.T('Seek papal exemption');
+          const note = FB.T('Abbey pays {money:cost} on success or refusal. Gain station 4, prestige +{prestige}, one resident place, {troops} household troops, and {money:income} revenue and allowance each season. Fewer encroachments. Two-year petition cooldown.', {
+            cost:q.cost, prestige:A.privilegePrestige, troops:A.privilegeTroops, income:A.privilegeIncome });
+          body += action('abbey-privilege-' + id, label, note, function () {
+            review({ label:label, summary:note, person:q.authority, role:FB.T('Granting authority'),
+              cost:{ label:FB.T('Abbey treasury'), text:abbeyMoney(q.cost) },
+              quote:function () { return FB.abbeyPrivilegeStatus(s, h, id); },
+              commit:function () { return FB.seekAbbeyPrivilege(s, h, id); } });
+          }, q);
+        });
+      }
+    }
+    body += '</div>' + abbeyFooter(h || fromWork ? FB.T('Back') : FB.T('Close'));
+    openAbbeyModal(h ? abbeyName(h) : FB.T('Abbeys and patronage'), body, {
+      historyView:!!h || !!fromWork, modalClass:'fullsheet-modal',
+      titleDetailsHtml:'<p>' + esc(FB.T('The community owns its endowments. The abbacy is a personal office with permanent vows; patrons and temporary residents take no vows. Private family property remains separate. Political privileges grant no county or hereditary title.')) + '</p>'
+    });
+    bindings.forEach(function (b) { if ($(b.id)) $(b.id).onclick = b.run; });
+    const parent = abbeyParent(h && h.id, fromWork);
+    $('abbey-back').onclick = h || fromWork ? function () { modalHistoryBack(parent); } : UI.closeModal;
+    restoreAbbeyView(view);
+  };
+  UI.showAbbeyCandidates = function (hid, view, fromWork) {
+    const s = FB.state, h = FB.abbeyHouses(s).filter(function (row) { return row.id === hid; })[0] || null;
+    resetAbbeyList('abbeyCandidates', view);
+    const candidates = Object.keys(s.chars).sort().map(function (id) { return s.chars[id]; }).filter(function (c) {
+      return !c.dead && c.sex === 'f' && FB.abbeyCandidateFamily(s, c) && FB.ageOf(c, s.date.year) >= 24;
+    });
+    const rows = candidates.map(function (c) {
+      const q = FB.abbeyAppointmentStatus(s, h, c);
+      return { available:q.ready, html:abbeyRowHtml({ id:'abbey-candidate-' + c.id, person:c, identity:c.id,
+        state:q.ready ? 'available' : 'unavailable',
+        stateLabel:q.ready ? FB.T('Available') : FB.T('Unavailable'),
+        note:q.ready ? FB.T('{chance}% chance · no fee · permanent vows on acceptance', { chance:Math.round(q.chance * 100) }) : q.missing[0],
+        details:'<div>' + esc(FB.T('The office entails permanent religious vows.')) + '</div>' + abbeyUnmet(q.missing) }) };
+    });
+    const body = '<div data-abbey-view>' + largeListSurfaceHtml('abbeyCandidates', [{
+      id:'candidates', title:FB.T('Candidates'), rows:rows,
+      empty:FB.T('No adult female candidate in your dynasty. Religious service and mature noble stewardship both provide routes to office.')
+    }], abbeyListFilters(), {}) + '</div>' + abbeyFooter();
+    openAbbeyModal(FB.T('Abbey election'), body, { historyView:true, modalClass:'fullsheet-modal', noFocus:!!view });
+    initLargeListSurface('abbeyCandidates', { restoreFocus:!!view });
+    restoreAbbeyView(view);
+    $('abbey-back').onclick = function () { modalHistoryBack(function () { UI.showAbbeys(hid, null, fromWork); }); };
+    candidates.forEach(function (c) {
+      $('abbey-candidate-' + c.id).onclick = function () {
+        const old = abbeyView();
+        abbeyReview({ house:h, fromWork:fromWork, label:FB.T('Seek election'), summary:abbeyElectionSummary(),
+          person:c, role:FB.T('Candidate'), cost:{ label:FB.T('Cost'), text:FB.T('No gold') },
+          quote:function () { return FB.abbeyAppointmentStatus(s, h, c); },
+          commit:function () { return FB.seekAbbeyAppointment(s, h, c); },
+          back:function () { UI.showAbbeyCandidates(hid, old, fromWork); } });
+      };
+    });
+  };
+  UI.showAbbeyEndowments = function (hid, view, fromWork) {
+    const s = FB.state, h = FB.abbeyHouses(s).filter(function (row) { return row.id === hid; })[0];
+    if (!h) return;
+    const A = FBDATA.abbeys;
+    const groups = [null].concat(FB.landBreakdown(s));
+    const note = FB.T('Permanent transfer; piety +{piety} and community support +{support}. The family loses the property and its future income. A manor on these plots is surrendered.', {
+      piety:A.endowmentPiety, support:A.endowmentSupport });
+    function label(g, q) {
+      return g ? FB.T('Endow {count} plots at {place}', { count:g.count, place:g.settlementName })
+        : FB.T('Endow {money:cost}', { cost:q.cost });
+    }
+    let body = '<div data-abbey-view>';
+    groups.forEach(function (g, i) {
+      const q = FB.abbeyEndowmentStatus(s, h, g);
+      body += reviewActionCardHtml({ id:'abbey-endow-' + i, label:label(g, q), disabled:!q.ready,
+        note:q.ready ? note : q.missing[0], warn:!q.ready,
+        details:q.ready ? '' : '<div>' + esc(note) + '</div>' + abbeyUnmet(q.missing) });
+    });
+    openAbbeyModal(FB.T('Endow the abbey'), body + '</div>' + abbeyFooter(), { historyView:true, modalClass:'fullsheet-modal' });
+    restoreAbbeyView(view);
+    $('abbey-back').onclick = function () { modalHistoryBack(function () { UI.showAbbeys(hid, null, fromWork); }); };
+    groups.forEach(function (g, i) {
+      $('abbey-endow-' + i).onclick = function () {
+        const old = abbeyView();
+        const q = FB.abbeyEndowmentStatus(s, h, g);
+        abbeyReview({ house:h, fromWork:fromWork, label:label(g, q),
+          summary:FB.T('This gift is permanent. Its income goes to the abbey, and heirs cannot recover it. Gain piety +{piety} and community support +{support}.', {
+            piety:A.endowmentPiety, support:A.endowmentSupport }),
+          cost:{ label:FB.T('Family funds'), text:g ? FB.T('{count} freehold plots and their income', { count:g.count }) : abbeyMoney(q.cost) },
+          quote:function () { return FB.abbeyEndowmentStatus(s, h, g); },
+          commit:function () { return FB.endowAbbey(s, h, g); },
+          back:function () { UI.showAbbeyEndowments(hid, old, fromWork); } });
+      };
+    });
+  };
+  UI.showAbbeyResidents = function (hid, view, fromWork) {
+    const s = FB.state, h = FB.abbeyHouses(s).filter(function (row) { return row.id === hid; })[0];
+    if (!h) return;
+    const A = FBDATA.abbeys;
+    resetAbbeyList('abbeyResidents', view);
+    const reviews = [];
+    const current = { id:'current', title:FB.T('Current residents'), rows:[],
+      empty:FB.T('No one is staying at the abbey.'),
+      summary:kv('Resident places', esc(FB.T('{count} / {max}', { count:h.residents.length, max:A.residentCapacity + h.privileges.length }))) };
+    h.residents.forEach(function (r) {
+      const c = s.chars[r.charId];
+      if (!c) return;
+      const id = 'abbey-dismiss-' + c.id;
+      const summary = FB.T('The resident returns home. Sponsor Standing −{loss}; no payment.', { loss:A.dismissStanding });
+      current.rows.push({ available:true, html:abbeyRowHtml({ id:id, person:c, identity:c.id, state:'available',
+        stateLabel:FB.T('Resident'),
+        note:FB.T('{days} days remaining', { days:Math.max(0, r.endTurn - s.turn) }),
+        details:'<b>' + esc(FB.T('End the stay')) + '</b><div>' + esc(summary) + '</div><div>' +
+          esc(FB.T('No vows or marriage restrictions.')) + '</div>' }) });
+      reviews.push({ id:id, run:function (old) {
+        abbeyReview({ house:h, fromWork:fromWork, label:FB.T('End the stay'), summary:summary,
+          person:c, role:FB.T('Resident'),
+          quote:function () { return { ready:h.residents.indexOf(r) >= 0, missing:[], cost:0 }; },
+          commit:function () { return FB.dismissAbbeyResident(s, h, r.charId); },
+          back:function () { UI.showAbbeyResidents(hid, old, fromWork); } });
+      } });
+    });
+    const candidates = Object.keys(s.chars).sort().map(function (id) { return s.chars[id]; }).filter(function (c) {
+      return !c.dead && c.sex === 'f' && c.id !== s.player.charId && FB.stationOf(c) >= 2 &&
+        FB.ageOf(c, s.date.year) >= 6 && !FB.abbeyResidentHouse(s, c.id) &&
+        FB.characterResidence(s, c) === h.provinceId && !FB.isHouseholdCharacter(s, c.id);
+    });
+    const sections = {
+      pupil:{ id:'pupil', title:FB.T('Offer schooling'), rows:[], empty:FB.T('No prospective pupils are known in this county.') },
+      guest:{ id:'guest', title:FB.T('Offer residence'), rows:[], empty:FB.T('No prospective noble residents are known in this county.') },
+      refuge:{ id:'refuge', title:FB.T('Offer refuge'), rows:[], empty:FB.T('No prospective noble residents are known in this county.') }
+    };
+    candidates.forEach(function (c) {
+      (FB.ageOf(c, s.date.year) < 16 ? ['pupil'] : ['guest','refuge']).forEach(function (kind) {
+        const q = FB.abbeyResidentStatus(s, h, c, kind);
+        const label = sections[kind].title;
+        const summary = FB.T('{days} days · {chance}% acceptance · no vows', {
+          days:q.days, chance:Math.round(q.chance * 100) });
+        let details = '<div>' + esc(FB.T('Invitations to this person have a {days}-day cooldown, including refusals.', { days:A.invitationCooldown })) + '</div>';
+        if (kind === 'refuge') details += '<div>' + esc(FB.T('Refuge can provoke the local lord: Standing −{loss} and disputed rights.', { loss:A.refugeStanding })) + '</div>';
+        const id = 'abbey-invite-' + kind + '-' + c.id;
+        sections[kind].rows.push({ available:q.ready, html:abbeyRowHtml({ id:id, person:c, identity:c.id + ':' + kind,
+          state:q.ready ? 'available' : 'unavailable',
+          stateLabel:q.ready ? FB.T('Available') : FB.T('Unavailable'),
+          note:q.ready ? summary : q.missing[0], details:details + abbeyUnmet(q.missing) }) });
+        reviews.push({ id:id, run:function (old) {
+          abbeyReview({ house:h, fromWork:fromWork, label:label,
+            summary:summary + ' ' + (kind === 'refuge' ? FB.T('Refuge can provoke the local lord: Standing −{loss} and disputed rights.', { loss:A.refugeStanding }) : ''),
+            person:c, role:FB.T('Prospective resident'),
+            cost:{ label:FB.T('Abbey treasury'), text:FB.T('{money:cost} upkeep each season', { cost:q.cost }) },
+            quote:function () { return FB.abbeyResidentStatus(s, h, c, kind); },
+            commit:function () { return FB.inviteAbbeyResident(s, h, c, kind); },
+            back:function () { UI.showAbbeyResidents(hid, old, fromWork); } });
+        } });
+      });
+    });
+    const body = '<div data-abbey-view>' + largeListSurfaceHtml('abbeyResidents',
+      [current, sections.pupil, sections.guest, sections.refuge], abbeyListFilters(), {}) +
+      '</div>' + abbeyFooter();
+    openAbbeyModal(FB.T('Residents and hospitality'), body, { historyView:true, modalClass:'fullsheet-modal', noFocus:!!view });
+    initLargeListSurface('abbeyResidents', { restoreFocus:!!view });
+    restoreAbbeyView(view);
+    $('abbey-back').onclick = function () { modalHistoryBack(function () { UI.showAbbeys(hid, null, fromWork); }); };
+    reviews.forEach(function (r) {
+      $(r.id).onclick = function () { r.run(abbeyView()); };
+    });
+  };
+
   UI.showAbbotElection = function (cid, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
     const status = c && FB.abbotAppointmentStatus &&
       FB.abbotAppointmentStatus(s, c);
     if (!status || !status.visible) return;
+    if (c.sex === 'f') {
+      const house = FB.abbeyAt(s, s.player.provinceId);
+      abbeyReview({ house:house, fromWork:true, label:FB.T('Seek election as abbess'),
+        summary:abbeyElectionSummary(), person:c, role:FB.T('Candidate'),
+        cost:{ label:FB.T('Cost'), text:FB.T('No gold') },
+        quote:function () { return FB.abbeyAppointmentStatus(s, house, c); },
+        commit:function () { return FB.seekAbbeyAppointment(s, house, c); },
+        back:function () { UI.showCareerPicker(cid, returnContext); } });
+      return;
+    }
     let facts = kv('Election chance', esc(FB.T('{chance}%', {
         chance:Math.round(status.chance * 100)
       }))) + kv('Cost', esc(FB.T('No gold')));
@@ -24360,6 +24812,7 @@ window.FB = window.FB || {};
       historyView:!!returnContext && !royalCourt,
       replaceView:!!replaceView,
       historyBackRender:returnContext && (returnContext.view === 'marriage-finder' ||
+        returnContext.view === 'abbeys' ||
         returnContext.view === 'religious-office-result' ||
         returnContext.view === 'settlement-founding')
         ? null : function () {

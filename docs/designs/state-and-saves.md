@@ -1747,3 +1747,23 @@ Local initialization errors no longer block the title. An unreadable campaign is
 Without the storage flag, the older SDK Data Module mode still waits for SDK initialization and data hydration, uses fb_cg_campaign_v1 and fb_cg_progression_v1, enforces the 1,048,576-byte limit with a 4 KiB reserve, and blocks writes after account changes. It uses FBG1 normally and FBL1 synchronously. It does not apply the local recovery/reset flow to cloud data. Standard itch/play editions retain their existing IndexedDB, localStorage, slots and initialization behavior.
 
 Coverage in tests/e2e/specs/crazygames-saves.spec.js includes all fifteen packed-length remainders, chunk and header boundaries, invalid padding, SDK failure and delay, absent compression APIs, protected unsupported saves, campaign/progression recovery, backup quota failure, denied storage, visibility/pagehide checkpoints, and failed-fallback queue preservation.
+
+## Endowed abbeys (format 3)
+
+Optional `state.abbeys:{v:1,houses:[]}` holds at most twelve institutions, one per
+county. Each house stores its stable id, county, founding faith/culture, founder
+dynasty, current holder and appointment/vacancy turns, treasury, capital, base
+rents, donated plot groups, support, privileges, temporary residents, bounded
+connections, cooldowns and last seasonal settlement. A dispute references its
+exact living lord. Resident rows store character/sponsor ids, kind and end turn;
+ordinary residence stays on the character and is restored by removing the row.
+
+`character.abbeyVows` is personal and permanent. The legacy monastic numeric
+rank prefix stays unchanged. Old rank-only abbesses gain no invented assets on
+load; they can seek office normally. Restore repairs records without creating
+people, houses or RNG draws. An existing holder's office is reactivated before
+legacy settlement-lordship migration, which excludes abbey-only officeholders.
+Full character retention includes holders, residents, contacts and dispute
+participants. A seasonal vacancy lasting 360 days receives an appointed NPC
+superior unless a recent petitioner is still within the cooldown or its one-season
+retry window; the stored faith and culture outlive the player's conversion.

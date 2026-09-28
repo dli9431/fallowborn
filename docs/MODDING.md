@@ -611,7 +611,7 @@ A focus override accepts `id` plus any of `label`, `desc`, `order`, and
   `action.<id>.desc`; a translation catalogue whose source hash no longer matches
   falls back to the mod's English.
 - `order` is a unique integer from 0 through 27 for focuses. Deed order runs from 0
-  through the effective deed count minus one (0 through 82 without added deeds). The
+  through the effective deed count minus one (0 through 84 without added deeds). The
   complete effective catalogue must remain a permutation, so moving one action generally
   requires giving the displaced action the old order in the same mod, as in the focus
   example above.
@@ -738,7 +738,7 @@ checks are composed into that same status. These checks and the preview are pure
 no RNG draws.
 
 `order` participates in the complete effective deed permutation. The first added deed is
-normally 80, the next 81, and so on; later mods adding deeds append after every effective
+normally 85, the next 86, and so on; later mods adding deeds append after every effective
 definition. A later mod replacing a declarative deed must restate the complete record.
 This avoids silently inheriting costs or effects from a different mod load order.
 

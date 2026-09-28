@@ -364,8 +364,8 @@ window.FB = window.FB || {};
 
   { id: 'copy_books',
     show: function (s) {
-      return s.player.tier <= 2 &&
-        (s.player.profession === 'monk' || s.player.profession === 'priest');
+      return !!(FB.abbeyOf && FB.abbeyOf(s)) || (s.player.tier <= 2 &&
+        (s.player.profession === 'monk' || s.player.profession === 'priest'));
     },
     tick: function (s) {
       s.player.piety += 2 / D;
@@ -375,8 +375,8 @@ window.FB = window.FB || {};
     gain: function () { return { piety: 2 }; } },
   { id: 'serve_church',
     show: function (s) {
-      return s.player.tier <= 2 &&
-        (s.player.profession === 'monk' || s.player.profession === 'priest');
+      return !!(FB.abbeyOf && FB.abbeyOf(s)) || (s.player.tier <= 2 &&
+        (s.player.profession === 'monk' || s.player.profession === 'priest'));
     },
     tick: function (s) {
       s.player.piety += 4 / D;
@@ -549,7 +549,7 @@ window.FB = window.FB || {};
   { id: 'govern',
     show: function (s) {
       return s.player.tier >= 3 &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     tick: function (s) {
       s.player.gold += FB.playerTax(s) * 0.15 / D;
@@ -3663,7 +3663,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return !!FB.guildMonopolyCareer(s) &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
       const status = FB.guildMonopolyPetitionStatus(s, true);
@@ -3824,13 +3824,13 @@ window.FB = window.FB || {};
   { id: 'hold_court',
     show: function (s) {
       return s.player.tier >= 3 &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     run: function (s) { FB.queueEvent(s, 'hold_court_event', {}); } },
   { id: 'squeeze_taxes',
     show: function (s) {
       return s.player.tier >= 3 &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     run: function (s) {
       const tax = Math.max(4, Math.round(FB.playerTax(s) * 0.8));
@@ -3852,7 +3852,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return s.player.tier >= 3 &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
       const status = FB.guildMonopolyIssueStatus(s);
@@ -3879,6 +3879,9 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showBishopric) FB.ui.showBishopric();
     } },
+  { id:'abbeys', opensChoices:true, noConsume:true,
+    show:function (s) { return !!(FB.abbeyAccess && FB.abbeyAccess(s)); },
+    run:function () { if (FB.ui && FB.ui.showAbbeys) FB.ui.showAbbeys(); } },
   { id: 'visit_diocese',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
@@ -3953,7 +3956,7 @@ window.FB = window.FB || {};
     show: function (s) {
       return s.player.tier >= 3 && s.player.tier <= 5 &&
         (s.player.tier === 3 || !!s.player.liege) &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
       if (s.player.tier === 3) return true;
@@ -4182,7 +4185,7 @@ window.FB = window.FB || {};
   { id: 'declare_war', opensChoices:true, noConsume: true,
     show: function (s) {
       const me = s.chars[s.player.charId];
-      return !(FB.playerBishopricOnly && FB.playerBishopricOnly(s)) &&
+      return !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s)) &&
         (s.player.tier >= 3 || !!(me && me.restorationRight));
     },
     can: function (s) {
@@ -4245,7 +4248,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return s.player.tier >= 3 && !!s.player.liege &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
       const sovereign = FB.topRealm(s, s.player.liege);
@@ -6137,6 +6140,7 @@ window.FB = window.FB || {};
       rents += 6 * Math.max(0, 1 + FB.modBonus(state, 'tax', p.provinceId));
     }
     const bishopric = FB.bishopricIncome ? FB.bishopricIncome(state) : 0;
+    const abbey = FB.abbeyIncome ? FB.abbeyIncome(state) : 0;
     const rentBase = rents;
     const rentTraits = [];
     const me = state.chars[p.charId];
@@ -6162,7 +6166,7 @@ window.FB = window.FB || {};
     const papacy = taxable *
       (FB.papacyInvestitureTaxRate ? FB.papacyInvestitureTaxRate(state) : 0);
     const beforeLiege = taxable + national + council + positions + monopoly +
-      papacy + bishopric + dues;
+      papacy + bishopric + abbey + dues;
     const countyLiege = p.liege && (p.provs || []).length
       ? -(taxable + national + council + positions + monopoly + papacy + bishopric) *
         (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
@@ -6172,7 +6176,7 @@ window.FB = window.FB || {};
       countyLoss:fiscal.countyLoss, settlementLoss:fiscal.settlementLoss,
       dues:dues, tolls:tolls, taxable:taxable,
       national:national, council:council, positions:positions,
-      monopoly:monopoly, papacy:papacy, bishopric:bishopric,
+      monopoly:monopoly, papacy:papacy, bishopric:bishopric, abbey:abbey,
       liege:liege, countyLiege:countyLiege, settlementDues:fiscal.duesOut, total:beforeLiege + liege
     };
   };
@@ -6413,6 +6417,7 @@ window.FB = window.FB || {};
     const p = state.player;
     if (p.dead || p.tier < 3) return false;
     if (p.provs && p.provs.length) return true;
+    if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) return false;
     const me = state.chars && state.chars[p.charId];
     const ranks = me && me.religiousRanks || {};
     const seeOnly = !!(me && FB.faithHasSystem(me.religion, 'papacy', state) &&
@@ -6719,6 +6724,7 @@ window.FB = window.FB || {};
       add('gold', FB.T('Guild monopoly tolls'), tax.monopoly);
       add('gold', FB.T('Investiture policy'), tax.papacy);
       add('gold', FB.T('Episcopal temporalities'), tax.bishopric);
+      add('gold', FB.T('Abbey office allowance'), tax.abbey);
       if (FB.positionContributions) {
         for (const source of FB.positionContributions(state, 'tax')) {
           const local = source.kind === 'local-ordinance';
@@ -11983,7 +11989,7 @@ window.FB = window.FB || {};
     if (causeOrTarget && causeOrTarget.type === 'aggression' &&
         !(opts && opts.confirmAggression)) return false;
     FB.ensureWars(state);
-    if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
+    if (FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(state)) return false;
     opts = opts || {};
     const playerRealm = 'player';
     let cause = causeOrTarget && typeof causeOrTarget === 'object' ? causeOrTarget : null;
@@ -12248,6 +12254,7 @@ window.FB = window.FB || {};
     if (!adult(state)) want = 'study';
     else if (afield(state)) want = 'drill'; // disguised in the ranks — train at arms
     else if (FB.householdServiceStatus(state).workReady) want = 'toil';
+    else if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) want = 'serve_church';
     else if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) {
       want = 'shepherd_diocese';
     }

@@ -3437,6 +3437,12 @@ window.FB = window.FB || {};
           'Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements.')) +
         '</span></button>';
     }
+    if (FB.abbeyAccess && FB.abbeyAccess(s)) {
+      h += '<button type="button" class="actionbtn" id="self-abbeys">⛪ ' +
+        esc(FB.T('Abbeys and patronage…')) + '<span class="adesc">' + esc(FB.T(
+          'Found or endow a religious house, seek an abbacy, and govern its estates, residents and privileges.')) +
+        '</span></button>';
+    }
     if (standardSummaryParts.length) {
       h += selfHouseholdStandardsHtml(standardSummaryParts);
     }
@@ -3496,6 +3502,8 @@ window.FB = window.FB || {};
     });
     const bishopric = $('self-bishopric');
     if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
+    const abbeys = $('self-abbeys');
+    if (abbeys) abbeys.addEventListener('click', function () { UI.showAbbeys(); });
     const betrothedPerson = $('self-betrothed-person');
     if (betrothedPerson) betrothedPerson.addEventListener('click', function () {
       UI.showCharModal(betrothalStatus.partner.id, { view:'self' });
@@ -4065,6 +4073,7 @@ window.FB = window.FB || {};
     if (entry.kind === 'barony_retinue') return FB.T('Standing barony household');
     if (entry.kind === 'castellany_retinue') return FB.T('Castellan’s household guard');
     if (entry.kind === 'episcopal_household') return FB.T('Episcopal household');
+    if (entry.kind === 'abbey_household') return FB.T('Abbey household');
     if (entry.kind === 'local-ordinance') {
       const motion = FBDATA.localCouncilMotions[entry.positionId];
       return motion

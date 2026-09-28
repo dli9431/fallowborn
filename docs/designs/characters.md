@@ -1305,3 +1305,21 @@ use their current ranks without migration or retroactive rewards. Observe mode
 has no personal payment. This is passive reward balance, with no change to rank
 eligibility or technology gates and no new technology-impact ledger entry.
 Regression coverage: `tests/e2e/specs/rank-prestige.spec.js`.
+
+## Abbey office and religious vows
+
+The monastic ladder now feeds a separate endowed abbacy for Catholic women.
+A serving prioress with ten vocational years, an existing abbess, or a mature
+noble woman with administrative experience can seek a contested appointment.
+Candidates must be free, at least 24, unmarried or widowed without a betrothal,
+and have Learning 9; the mature route additionally needs age 35, station 2 and
+Stewardship 10. Household support requires 100 piety and 40 prestige. Related
+women may be nominated even when their dynasty name differs from the player.
+
+An appointed woman retains her previous career history but uses the monastic
+religious path. `abbeyVows` permanently blocks courtship, marriage and occupation
+changes. Temporary residents and lay patrons acquire no vows. The personal
+office gives tier-3 compatibility, 80 household troops and 2.5 seasonal piety;
+privileges increase capacity, allowance and religious prestige. The estate
+survives death and retirement without passing its office to the dynasty heir.
+See [abbeys.md](abbeys.md) for the separate technology decisions and lifecycle.

@@ -1609,6 +1609,9 @@ window.FB = window.FB || {};
     if (FB.ensurePapacyState) restoreRepair('papacy state', function () {
       FB.ensurePapacyState(FB.state);
     });
+    if (FB.repairAbbeys) restoreRepair('abbey institutions', function () {
+      FB.repairAbbeys(FB.state);
+    });
     /* Dynasty scholarship and innovations from older version-3 lives become
        the effective sovereign nation's first technology record. */
     if (FB.ensureRealmTech) restoreRepair('realm technology', function () {

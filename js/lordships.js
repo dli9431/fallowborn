@@ -1167,7 +1167,8 @@ window.FB = window.FB || {};
     const p = state.player, c = p && state.chars && state.chars[p.charId];
     if (!p || p.tier !== 3 || !c || p.castellany || (p.provs && p.provs.length)) return false;
     const flags = p.flags || {}, ranks = c.religiousRanks || {};
-    return !c.bishopric && !c.papalOffice && !flags.bishop && !flags.pope &&
+    return !(FB.abbeyOf && FB.abbeyOf(state, c)) &&
+      !c.bishopric && !c.papalOffice && !flags.bishop && !flags.pope &&
       !flags.chief_qadi && (ranks.catholic_monastic || 0) < 4 &&
       (ranks.catholic_clerical || 0) < 5 && (ranks.muslim_scholar || 0) < 5;
   }

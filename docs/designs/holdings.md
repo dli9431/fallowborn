@@ -489,3 +489,14 @@ The Network Household section body forms one bordered card below the section
 toggle. It contains counts, costs, active standards, Household Plan, Hire a retainer
 when available, character cards and Show all. The generic introductory sentence
 is omitted. Collapsing the section hides the entire card.
+
+## Permanent abbey endowments
+
+A Catholic patron can donate 100 family gold or the complete reviewed group of
+freehold plots at one settlement to an existing abbey. Revalidation requires
+the same plot count and no active collateral pledge. The family loses those
+plots, their income and any manor at that site; the institution receives the
+plots and their existing consolidated yield. This never transfers county or
+settlement lordship, holdings, enterprises or another person's property. Gifts
+remain with the religious community through dynasty succession. Cash enlarges
+the permanent endowment rather than the spendable treasury. See [abbeys.md](abbeys.md).

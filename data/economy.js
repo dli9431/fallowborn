@@ -22,6 +22,29 @@ FBDATA.freedomBargaining = {
   finalServiceDays:90
 };
 
+/* Religious houses own their endowments separately from family property. */
+FBDATA.abbeys = {
+  maxHouses:12, foundationCost:160, foundationCapital:80,
+  donation:100, capitalYield:0.05, existingRent:12, upkeep:4,
+  allowance:6, residentUpkeep:2, residentCapacity:3,
+  electionCooldown:360, invitationCooldown:180, vacancyDays:360,
+  guestDays:360, pupilDays:720, privilegeCost:30,
+  /* Effect sizes shared by the engine and its review text. */
+  disputeLoss:2, electionPrestige:15, foundationPrestige:10,
+  endowmentPiety:8, endowmentSupport:5, dismissStanding:5, refugeStanding:10,
+  privilegeIncome:2, privilegePrestige:20, privilegeTroops:20,
+  actions:{
+    rents:{ cost:0, days:360, treasury:8, support:-8 },
+    school:{ cost:8, days:180, support:5, learning:1 },
+    relief:{ cost:10, days:180, support:8, popular:3, piety:3 },
+    mediate:{ cost:4, days:180, support:4, prestige:6, standing:4, lordStanding:5 },
+    patronage:{ cost:4, days:360, capital:20, prestige:4, standing:2 },
+    defend:{ cost:12, days:0, support:8, lordStanding:-5,
+      failLoss:8, failSupport:-8, failLordStanding:-10 },
+    concede:{ cost:8, days:0, support:-5, lordStanding:8 }
+  }
+};
+
 /* Religious progression is character state keyed by path id and a legacy
    numeric rank index. Baseline rank order is therefore a compatibility
    boundary even though every rank also has its own stable id. */

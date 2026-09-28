@@ -823,7 +823,9 @@ window.FB = window.FB || {};
       enterpriseGroup:'none', enterpriseSort:'attention'
     },
     network:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
-    service:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null }
+    service:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
+    abbeyCandidates:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
+    abbeyResidents:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null }
   };
   UI.largeListDefaults = {
     threshold:LARGE_LIST_THRESHOLD,

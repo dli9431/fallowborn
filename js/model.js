@@ -2115,6 +2115,9 @@ window.FB = window.FB || {};
       if (reigningRealm && reigningRealm.capital && FB.world &&
           FB.world.byId[reigningRealm.capital]) return reigningRealm.capital;
     }
+    const abbey = (c.id !== state.player.charId && FB.abbeyOf && FB.abbeyOf(state, c)) ||
+      (FB.abbeyResidentHouse && FB.abbeyResidentHouse(state, c.id));
+    if (abbey) return abbey.provinceId;
     if (c.id === state.player.charId ||
         (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {
       return state.player.provinceId;
@@ -2716,8 +2719,8 @@ window.FB = window.FB || {};
     }
     if (FB.stationOf(c) >= 2 || c.role === 'lord' || c.role === 'notable' ||
         c.royalLine) return 'landed';
-    if (c.career && (c.career.profession === 'monk' ||
-        c.career.profession === 'priest')) return 'vowed';
+    if (c.abbeyVows || (c.career && (c.career.profession === 'monk' ||
+        c.career.profession === 'priest'))) return 'vowed';
     if (FB.characterResidence(state, c) !== state.player.provinceId) {
       return 'away';
     }
@@ -2900,6 +2903,7 @@ window.FB = window.FB || {};
     if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
     if (FB.castellanyOf && FB.castellanyOf(state)) return FB.T('Castellan');
     let t = FB.titleWordFor(state, p.tier);
+    if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) return FB.abbeyTitle(FB.abbeyOf(state));
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
       const profNames = {
         craftsman:'Craftsman', merchant:'Merchant', soldier:'Soldier'
@@ -2987,7 +2991,12 @@ window.FB = window.FB || {};
         snap.special = p.profession;
       }
     }
-    if (p.flags.bishop &&
+    if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) {
+      snap.special = 'abbess';
+      snapshotFaithRole(snap, state, me.religion, 'abbotF');
+      snap.place = FB.world.byId[FB.abbeyOf(state).provinceId].name;
+    }
+    else if (p.flags.bishop &&
         (!FB.playerBishopricOnly || FB.playerBishopricOnly(state))) {
       snap.special = 'bishop';
       snapshotFaithRole(snap, state, me.religion, 'bishop');

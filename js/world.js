@@ -3383,6 +3383,7 @@ window.FB = window.FB || {};
         FB.isHouseholdCharacter(state, c.id, familyLinks)) return true;
     if (FB.retainerRecord && FB.retainerRecord(state, c.id)) return true;
     if (FB.papalOfficeOf && FB.papalOfficeOf(state, c)) return true;
+    if (FB.abbeyRetainsCharacter && FB.abbeyRetainsCharacter(state, c.id)) return true;
     if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) return true;
     if (p.royalCompact && c.royalLine &&
         p.royalCompact.realmId === c.royalLine.realmId) return true;
@@ -6754,6 +6755,7 @@ window.FB = window.FB || {};
       add('ret', 'episcopal_household',
         FB.bishopricRetinue ? FB.bishopricRetinue(state) : 120);
     }
+    if (FB.abbeyRetinue) add('ret', 'abbey_household', FB.abbeyRetinue(state));
     if (FB.enterpriseUpgradeEffect) {
       const privateCounties = {};
       for (const enterprise of FB.enterpriseList(state)) privateCounties[enterprise.provinceId] = true;
@@ -8936,7 +8938,13 @@ window.FB = window.FB || {};
       bishopTitle.special = 'bishop';
       bishopEntry = { d:'Bishopric', titleData:bishopTitle, pid:bishopric.seeProvinceId };
     }
-    if (p.tier === 3 && !bishopric) {
+    const abbey = FB.abbeyOf && FB.abbeyOf(state);
+    if (abbey) {
+      const title = FB.rankTitleSnapshot(state, 3, FB.world.byId[abbey.provinceId].name);
+      title.special = 'abbess';
+      out.push({ d:'Abbey', titleData:title, pid:abbey.provinceId });
+    }
+    if (p.tier === 3 && !bishopric && !abbey) {
       const pr = FB.world && FB.world.byId[p.provinceId];
       out.push({
         d: 'Barony',

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.186.5';
+FB.VERSION = '1.187.0';
 FB.CHANGELOG = [
+  { v: '1.187.0', date: '2026-09-28', changes: [
+    'Catholic women can govern endowed abbeys, host noble residents, and seek royal and papal privileges. Find abbey elections, patronage, and estate management in Work, Self, and Deeds.'
+  ] },
   { v: '1.186.5', date: '2026-09-28', changes: [
     'CrazyGames health guidance now follows the Daily Focus and saving lesson.'
   ] },
@@ -3927,6 +3930,7 @@ FB.CHANGELOG = [
         FB.marketSettleHouseholdNecessities(s);
       } else p.gold -= Math.min(Math.max(0, p.gold), FB.householdUpkeep(s));
       if (FB.papacySeason) FB.papacySeason(s);
+      if (FB.abbeySeason) FB.abbeySeason(s);
       if (FB.householdStandardsSeason) FB.householdStandardsSeason(s);
       if (FB.retainerSeason) FB.retainerSeason(s);
       if (FB.enterpriseLaborSeason) FB.enterpriseLaborSeason(s);
@@ -5509,6 +5513,7 @@ FB.CHANGELOG = [
     if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(s, me);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
+    if (FB.releaseAbbeyOffice) FB.releaseAbbeyOffice(s, me);
     if (FB.noteLifeDeath) FB.noteLifeDeath(s, me);
     if (FB.endRoyalCompact) FB.endRoyalCompact(s);
     if (FB.breakAlliance) FB.breakAlliance(s, 'player');
@@ -5778,7 +5783,7 @@ FB.CHANGELOG = [
     let inheritedHoldings = (papalCustody &&
       Array.isArray(papalCustody.holdings)
       ? papalCustody.holdings : FB.holdingList(s)).slice();
-    const successionTier = outgoingTier <= 1
+    const successionTier = FB.playerAbbeyOnly && FB.playerAbbeyOnly(s) ? 2 : outgoingTier <= 1
       ? (FB.isUnfreeCharacter(s, heir)
         ? 0 : FB.clamp(FB.stationOf(heir), 0, 1)) : outgoingTier;
     const tutorialCarry = FB.tutorialActive(s) ? {} : null;
@@ -5795,6 +5800,7 @@ FB.CHANGELOG = [
     if (FB.releaseBishopric) {
       FB.releaseBishopric(s, old, { succession:true });
     }
+    if (FB.releaseAbbeyOffice) FB.releaseAbbeyOffice(s, old);
     if (FB.travelCancel) FB.travelCancel(s, '', true);
     if (livingAbdication) {
       if (FB.endRoyalCompact) FB.endRoyalCompact(s);
@@ -5934,6 +5940,7 @@ FB.CHANGELOG = [
     if (FB.activateBishopricForPlayer) {
       FB.activateBishopricForPlayer(s, heir);
     }
+    if (FB.activateAbbeyForPlayer) FB.activateAbbeyForPlayer(s, heir);
     /* Most once-only events belong to one protagonist. The Old Custom is a
        household landmark: once any head has faced it, succession must not
        offer the same case to every later serf heir. Retaining this one fired
