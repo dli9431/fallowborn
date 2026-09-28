@@ -6341,10 +6341,36 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 #tab-network .large-list-section-body > .hint {
   color:var(--main-text-color);
 }
-/* Life histories reuse character cards and Chronicle rows. */
-.life-history-actions { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+/* Household service and life histories reuse Governance fact cards, Work
+   list rows and Chronicle entries; only spacing and a few accents are local. */
+.household-service-modal .governance-card,
+.life-history-modal .governance-card { margin: 0 0 12px; }
+.service-people { display: grid; gap: 8px; margin-bottom: 10px; }
+.service-people .large-list-row { width: 100%; margin: 0; }
+div.service-person {
+  padding: 8px 10px; border: 1px solid var(--ui-border-color); border-radius: 8px;
+  background: var(--ui-card-color);
+}
+.household-service-modal .modal-body-actions { display: flex; gap: 8px; margin-top: 10px; }
+.large-list-row .adesc.service-blocker { color: var(--ui-warning-color); }
+.large-list-face-state.service-current { color: var(--ui-accent-color); font-weight: bold; }
+.service-requirements { margin: 0; padding-left: 20px; color: var(--ui-warning-color); }
+.service-requirements li + li { margin-top: 4px; }
+.life-history-modal .modal-body-actions { display: flex; gap: 8px; margin-top: 10px; }
+.life-history-release { margin-top: 10px; }
+.life-history-release > summary {
+  min-height: 44px; box-sizing: border-box; padding: 10px 12px; cursor: pointer;
+  border: 1px solid var(--ui-border-color); border-radius: 8px;
+  color: var(--ui-danger-color); font-weight: bold;
+}
+.life-history-release > summary:hover { border-color: var(--ui-danger-color); }
+.life-history-release > p { margin: 10px 0 0; }
+.life-history-actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 0; }
 .life-history-actions .btn { flex:1 1 180px; min-height:44px; white-space:normal; }
-.life-history-person { display:flex; align-items:center; gap:12px; }
-.life-history-person canvas, .life-history-identity canvas { flex-shrink:0; }
-.life-history-person > span, .life-history-identity > div { min-width:0; overflow-wrap:break-word; }
-.life-history-timeline { margin-top:16px; }
+.life-history-identity { margin-bottom: 12px; }
+.life-history-identity canvas { flex-shrink:0; }
+.life-history-identity > div { min-width:0; overflow-wrap:break-word; }
+.life-history-list .large-list-row { width: 100%; }
+.life-history-list .large-list-row canvas { flex-shrink: 0; }
+.chronicle-viewer-entry-meta > b { color: var(--main-text-color); }
+.life-history-timeline > .hint { margin: 8px 0 0; }

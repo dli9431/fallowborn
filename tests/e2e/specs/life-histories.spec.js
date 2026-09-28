@@ -410,4 +410,45 @@ test('real field combat records pre-casualty forces without changing the simulat
   expect(result.player[0].msg.params.enemyMen).toBe(100);
   expect(result.enemy).toHaveLength(1);
   expect(result.enemy[0].msg.params.men).toBe(100);
+
+  test('life history presents record facts, categorized accomplishments and disclosed actions', async function ({ page }) {
+    await page.setViewportSize({ width:390, height:844 });
+    await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId];
+      const followed = FB.makeCharacter(s, { name:'Recorded captain', sex:'m', born:s.date.year - 30,
+        dyn:'Other house', culture:me.culture, religion:me.religion, traitsN:0 });
+      FB.followLifeHistory(s, followed.id, true);
+      FB.noteLifeEvent(s, followed.id, 'conquest', { place:'Layout county' });
+      FB.noteLifeEvent(s, followed.id, 'rank', {
+        title:{ $title:FB.characterRankTitleSnapshot(s, followed, 4, 'Layout seat') }
+      });
+      FB.ui.showLifeHistory(followed.id);
+    });
+    await expect(page.locator('.life-history-identity canvas.pface')).toHaveCount(1);
+    await expect(page.locator('.life-history-record')).toContainText('Preserved life');
+    await expect(page.locator('.life-history-record')).toContainText('Recording new accomplishments');
+    await expect(page.locator('[data-life-entry][data-category="war"]')).toHaveCount(1);
+    await expect(page.locator('[data-life-entry][data-category="rank"]')).toHaveCount(1);
+    await expect(page.locator('#life-follow')).toHaveText('Stop following');
+    await expect(page.locator('#life-follow-details')).toBeHidden();
+    await expect(page.locator('#life-follow-details')).toContainText('stops recording new accomplishments');
+    await expect(page.locator('#gm-title-details')).toBeHidden();
+    await expect(page.locator('#gm-title-details')).toContainText('This life is preserved');
+    await page.locator('#life-back').click();
+    await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId];
+      for (let i = FB.preservedLifeCount(s); i < FB.LIFE_HISTORY_LIMITS.preserved; i++) {
+        const c = FB.makeCharacter(s, { name:'Filler ' + i, sex:'m', born:s.date.year - 25,
+          dyn:'Other house', culture:me.culture, religion:me.religion, traitsN:0 });
+        FB.followLifeHistory(s, c.id, true);
+      }
+      const extra = FB.makeCharacter(s, { name:'Unrecorded neighbor', sex:'m', born:s.date.year - 25,
+        dyn:'Other house', culture:me.culture, religion:me.religion, traitsN:0 });
+      FB.ui.showLifeHistory(extra.id);
+    });
+    await expect(page.locator('#life-preserve')).toBeDisabled();
+    await expect(page.locator('.modal-action-card[tabindex="0"]')).toHaveCount(1);
+    await expect(page.locator('#gm-body .warnote')).toContainText('The collection is full');
+    await expect(page.locator('#life-preserve-details')).toContainText('Free');
+  });
 });

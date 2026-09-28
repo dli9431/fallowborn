@@ -349,8 +349,10 @@ for (const width of [1280, 390]) {
   test('service review retains list details, scroll and focus at width ' + width, async function ({ page }) {
     await page.setViewportSize({width:width,height:720});
     await page.evaluate(function () { FB.ui.showHouseholdService(); });
+    // Desktop pointers read card Details through the hover tooltip; compact layouts use the ? control.
+    const compact = width < 1100;
     const info = page.locator('[aria-controls="service-details-captain"]');
-    await info.click();
+    if (compact) await info.click();
     const review = page.locator('#service-review-captain');
     await review.scrollIntoViewIfNeeded();
     const scroll = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
@@ -359,12 +361,12 @@ for (const width of [1280, 390]) {
     await expect(page.locator('#gm-body')).toContainText('Requires 1080 working days');
     await page.locator('#service-cancel').click();
     await expect(review).toBeFocused();
-    await expect(info).toHaveAttribute('aria-expanded', 'true');
+    if (compact) await expect(info).toHaveAttribute('aria-expanded', 'true');
     await expect.poll(function () { return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; }); }).toBe(scroll);
     await review.click();
     await page.keyboard.press('Escape');
     await expect(review).toBeFocused();
-    await expect(info).toHaveAttribute('aria-expanded', 'true');
+    if (compact) await expect(info).toHaveAttribute('aria-expanded', 'true');
     const overflow = await page.locator('#gm-body').evaluate(function (el) { return el.scrollWidth > el.clientWidth + 1; });
     expect(overflow).toBe(false);
   });
@@ -407,4 +409,39 @@ test('accept and leave reviews charge one day and update the focus and character
     return {turn:s.turn,status:s.player.householdService.status,
       label:FB.focusLabel(s, FB.focusStatus(s, s.player.focus).action)};
   })).toMatchObject({turn:turn + 2,status:'ended',label:'Work the fields'});
+});
+
+test('service list and review keep portraits, pay and blockers on the face with rules behind Details', async function ({ page }) {
+  await page.setViewportSize({width:390,height:844});
+  const expected = await page.evaluate(function () {
+    const s = FB.state;
+    FB.ui.showHouseholdService();
+    return {pay:FB.T('{money:pay} per 90 working days', {pay:FBDATA.householdServiceRoles.captain.wage}),
+      blocker:FB.householdServiceStatus(s, 'captain').missing[0],
+      missing:FB.householdServiceStatus(s, 'captain').missing.length};
+  });
+  await expect(page.locator('#service-patron canvas.pface')).toHaveCount(1);
+  await expect(page.locator('[data-list-section^="service-path-"]')).toHaveCount(4);
+  const captain = page.locator('#service-review-captain');
+  await expect(captain).toContainText(expected.pay);
+  await expect(captain).toContainText(expected.blocker);
+  await expect(captain.locator('.large-list-face-state')).toHaveText('Unavailable');
+  await expect(page.locator('#service-details-captain')).toBeHidden();
+  await expect(page.locator('#gm-title-details')).toBeHidden();
+  await expect(page.locator('#gm-title-details')).toContainText('Travel, captivity and campaigning pause service.');
+  await page.locator('[data-list-filter="available"]').click();
+  await expect(captain).toBeHidden();
+  await expect(page.locator('#service-review-helper')).toBeVisible();
+  await page.locator('[data-list-filter="all"]').click();
+  await captain.click();
+  await expect(page.locator('[data-service-review-sheet] .service-people canvas.pface')).toHaveCount(1);
+  await expect(page.locator('.service-requirements li')).toHaveCount(expected.missing);
+  await expect(page.locator('#service-confirm')).toBeDisabled();
+  await expect(page.locator('.modal-action-card[tabindex="0"]')).toHaveCount(1);
+  await page.locator('#service-cancel').click();
+  await page.locator('#service-review-helper').click();
+  await expect(page.locator('#service-confirm')).toBeEnabled();
+  await expect(page.locator('#service-confirm')).toContainText('Takes 1 day');
+  await expect(page.locator('[data-service-review-sheet] .kv').first()).toContainText('Pay');
+  await expect(page.locator('.service-requirements')).toHaveCount(0);
 });

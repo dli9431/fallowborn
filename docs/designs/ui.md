@@ -12,6 +12,16 @@ close the flow, advance one deed day and refresh the contextual Daily Focus.
 Freedom terms remain available separately; a household appointment does not free
 the family. These screens and behaviors are shared across every distribution.
 
+Service household uses the Work & Enterprises and Governance layouts, not prose
+blocks. A Governance-style fact card shows the patron and household officer as
+portrait rows, then the appointment, pay, completed working days and status as
+label/value rows, with the first blocker as a warning note. Each service path is
+a collapsible large-list section with All, Available and Unavailable filters.
+Role cards show icon, name, pay, the first blocker or progress, and a state label.
+The review sheet repeats the patron portrait, keeps pay, training, Daily Focus
+and term Standing as rows, and lists unmet requirements in their own card. Term
+rules, duty coverage and role descriptions live in the title Details control.
+
 The map Home control zooms Counts and lower ranks to settlement detail. Counts
 center on their home county; lower ranks center on their exact home settlement,
 falling back to the county at the same detail level if its anchor is unavailable.
@@ -87,6 +97,16 @@ Stop following keeps the collected history. Remove preservation is an explicit
 inline disclosure with its destructive retention consequence, confirmation and
 Cancel; Cancel does not leave the history. Empty/condensed histories explain their
 limits without inventing missing events. All editions use the same controls.
+
+Life history keeps the portrait identity card on top, then a Record fact card
+showing how the life is kept, when recording began, following state, the number of
+accomplishments and preserved places used. Follow, Preserve and Stop/Resume are
+full-width action cards whose consequences use the shared Details disclosure. A full
+collection keeps a disabled action focusable and shows its warning on the face.
+Accomplishments render as Chronicle entries with the year and a category (titles
+and office, war, or life). Remembered lives opens with a collection fact card and
+lists portrait rows with dates, accomplishment count and a state label. Archive
+rules move to the title Details control.
 
 Ordinary character sheets use the existing family portrait strip for spouses,
 children, parents and siblings, including the player's descendants. Relations

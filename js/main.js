@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.185.0';
+FB.VERSION = '1.185.1';
 FB.CHANGELOG = [
+  { v: '1.185.1', date: '2026-09-27', changes: [
+    'Household service and life history screens now use clear fact cards, portraits and role cards instead of long text.'
+  ] },
   { v: '1.185.0', date: '2026-09-27', changes: [
     'Character sheets and the family tree now show life histories, with selected lives preserved across generations.',
     'Commoners can seek household service through Deeds and earn appointments, pay and advancement in their lord’s household.'

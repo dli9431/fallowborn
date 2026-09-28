@@ -819,7 +819,8 @@ window.FB = window.FB || {};
       search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null,
       enterpriseGroup:'none', enterpriseSort:'attention'
     },
-    network:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null }
+    network:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
+    service:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null }
   };
   UI.largeListDefaults = {
     threshold:LARGE_LIST_THRESHOLD,
