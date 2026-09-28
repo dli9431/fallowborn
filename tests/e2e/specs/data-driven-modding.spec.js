@@ -1030,7 +1030,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 83]);
+    expect(result.counts).toEqual([28, 84]);
     expect(result.lordshipDeeds).toEqual([true, true, true]);
     expect(result.initialized).toEqual(['function', 'function', true]);
     expect(result.validation).toEqual([]);

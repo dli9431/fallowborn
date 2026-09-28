@@ -359,6 +359,7 @@ test('justice previews are read-only and every new capability declares no techno
 test('exile moves the prisoner out of the realm and blocks voluntary return', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, f = window.justiceFixture;
+    FB.followLifeHistory(s, f.target, true);
     FB.captureIntrigue(s, f.actor, f.target, 'abduction', 'player');
     const p = FB.justicePunishmentProjection(s, f.actor, f.target, 'exile');
     const outcome = FB.justiceApplyPunishment(s, f.actor, f.target, 'exile');
@@ -366,10 +367,12 @@ test('exile moves the prisoner out of the realm and blocks voluntary return', as
     const blocked = FB.justiceExileBlocks(s, f.target, f.home);
     s.turn += 1800; FB.justiceDay(s);
     return { ok:outcome.ok, destination:p.destination, where:where, blocked:blocked,
+      history:FB.lifeHistory(s, f.target).entries.map(function (e) { return e.msg.key; }),
       freed:!FB.justiceCustodyOf(s, f.target), expired:!FB.justiceExileBlocks(s, f.target, f.home) };
   });
   expect(result).toMatchObject({ ok:true, blocked:true, freed:true, expired:true });
   expect(result.where).toBe(result.destination);
+  expect(result.history).toEqual(['news.biography.captivity', 'news.biography.exile']);
 });
 
 test('justice card grid sorts current titles and names while retaining filtered rows', async function ({ page }) {

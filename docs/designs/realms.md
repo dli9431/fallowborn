@@ -1,5 +1,10 @@
 # Realms, the liege hierarchy & tiers
 
+Tracked biographies record genuine royal accessions, living abdication and ducal recognition with
+the person and title at that boundary; repair-only succession does not add a
+dated accomplishment. Crown lapse records the outgoing dignity. Histories do not
+prevent dead court compaction or transfer achievements to a later ruler.
+
 ## Family settlement grants
 
 Both settlement grant lists use the shared title hover/focus tooltip and compact

@@ -202,6 +202,7 @@ window.FB = window.FB || {};
   let serializingCompletedTech = null;
   function saveReplacer(key, value) {
     const holder = this;
+    if (holder && holder.lifeIdentity === true) return value;
     if (!SAVE_COMPACT_KEYS[key]) return value;
     if (key === 'royalLine' && value && holder &&
         typeof holder.id === 'string' && holder.id.indexOf('ro_') === 0 &&
@@ -1513,6 +1514,8 @@ window.FB = window.FB || {};
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }
+    // Repairs establish present facts, never invented historical achievements.
+    if (FB.suspendLifeHistories) FB.suspendLifeHistories(FB.state);
     if (FB.ensureChronicle) restoreRepair('Chronicle archive', function () {
       FB.ensureChronicle(FB.state, { legacy:true });
     });
@@ -1739,6 +1742,12 @@ window.FB = window.FB || {};
     }
     if (FB.treasuryInitialize) restoreRepair('AI treasuries', function () {
       FB.treasuryInitialize(FB.state);
+    });
+    if (FB.repairLifeHistories) restoreRepair('life histories', function () {
+      FB.repairLifeHistories(FB.state);
+    });
+    if (FB.repairHouseholdService) restoreRepair('household service', function () {
+      FB.repairHouseholdService(FB.state);
     });
     return FB.state;
   };

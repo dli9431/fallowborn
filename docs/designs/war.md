@@ -1,5 +1,14 @@
 # Wars
 
+Tracked life histories take compact field-battle facts from the resolved camps
+before casualties or host deletion: each ruler's own participating soldiers,
+opposing-camp strength, place, date and outcome. Allied soldiers are not credited
+as personal troops. Personal command wording is reserved for the active player
+main banner or exact entrusted command; other records describe the ruler's force.
+Ordinary-war county awards record conquest only at committed peace/land transfer,
+not occupation or a general-purpose peaceful province transfer. These records are
+independent of expiring detailed hostile reports and add no daily archive work.
+
 ## County replacement campaigns
 
 `county_replacement` is an ordinary territorial campaign with exactly one county

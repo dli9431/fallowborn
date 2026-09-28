@@ -3085,6 +3085,16 @@ window.FB = window.FB || {};
     if (!state || !c) return false;
     let changed = false;
     const tier = Number(statusTier);
+    const priorTier = c.statusTier;
+    if (FB.refineLifeRank && titleData) FB.refineLifeRank(state, c, titleData);
+    if (priorTier !== undefined && isFinite(tier) && tier !== priorTier &&
+        FB.noteLifeEvent) {
+      const title = tier < priorTier
+        ? FB.characterRankTitleSnapshot(state, c, priorTier,
+          c.highestTitleData && c.highestTitleData.tier === priorTier ? c.highestTitleData.place : '')
+        : titleData || FB.characterRankTitleSnapshot(state, c, tier, '');
+      FB.noteLifeEvent(state, c.id, tier < priorTier ? 'loss' : 'rank', { title:{ $title:title } });
+    }
     if (isFinite(tier)) {
       const nextTier = FB.clamp(Math.floor(tier), 0, 7);
       if (c.statusTier !== nextTier) {
@@ -3227,6 +3237,329 @@ window.FB = window.FB || {};
     if (royal) return FB.T(character.sex === 'f' ? 'Princess' : 'Prince');
     return FB.T(character.sex === 'f' ? 'Lady' : 'Lord');
   };
+
+  /* Life histories are presentation records, never simulated characters. All
+     writes happen at committed event boundaries; readers do not repair state.
+     Temporary kin and preserved lives have campaign-wide limits, including dead
+     people. Only the played line grows with the number of lives actually played. */
+  const LIFE_LIMITS = { family:128, familyEntries:8, preserved:50,
+    preservedEntries:32, playedEntries:40 };
+  FB.LIFE_HISTORY_LIMITS = Object.freeze(LIFE_LIMITS);
+  const lifeMessages = {
+    rank:FB.msg('news.biography.rank', 'Became {title}.', {}),
+    accession:FB.msg('news.biography.accession', 'Acceded as {title}.', {}),
+    loss:FB.msg('news.biography.loss', 'Lost the title of {title}.', {}),
+    conquest:FB.msg('news.biography.conquest', 'Conquered {place}.', {}),
+    battle:FB.msg('news.biography.battle', 'Their force of {men} soldiers won at {place}, against {enemyMen}.', {}),
+    defeat:FB.msg('news.biography.defeat', 'Their force of {men} soldiers was defeated at {place}, against {enemyMen}.', {}),
+    command:FB.msg('news.biography.command', 'Led {men} soldiers to victory at {place}, against {enemyMen}.', {}),
+    command_defeat:FB.msg('news.biography.command_defeat', 'Led {men} soldiers in defeat at {place}, against {enemyMen}.', {}),
+    foundation:FB.msg('news.biography.foundation', 'Established {foundation}.', {}),
+    death:FB.msg('news.biography.death', 'Died at the age of {age}.', {}),
+    retirement:FB.msg('news.biography.retirement', 'Retired from leading the household.', {}),
+    appointment:FB.msg('news.biography.appointment', 'Appointed as {office} in the household of {patron}.', {}),
+    captivity:FB.msg('news.biography.captivity', 'Taken captive.', {}),
+    exile:FB.msg('news.biography.exile', 'Sent into exile.', {})
+  };
+  const lifeWeights = { rank:80, accession:90, loss:85, conquest:70,
+    battle:30, defeat:30, command:30, command_defeat:30,
+    foundation:90, death:100, retirement:95, appointment:65, captivity:65, exile:75 };
+  const lifeIndexes = new WeakMap();
+  const lifeKinIndexes = new WeakMap();
+  const lifeRestoring = new WeakSet();
+  FB.suspendLifeHistories = function (state) { lifeRestoring.add(state); };
+  function lifeArchive(state) {
+    const archive = state && state.lifeHistories;
+    return archive && archive.v === 1 && archive.people &&
+      typeof archive.people === 'object' && !Array.isArray(archive.people) ? archive : null;
+  }
+  function lifeIndex(archive) {
+    let index = lifeIndexes.get(archive);
+    if (!index) {
+      index = { family:[], preserved:[] };
+      Object.keys(archive.people).forEach(function (id) {
+        const record = archive.people[id];
+        if (!record || !record.identity || !Array.isArray(record.entries) || record.played) return;
+        (record.preserved ? index.preserved : index.family).push(id);
+      });
+      lifeIndexes.set(archive, index);
+    }
+    return index;
+  }
+  function lifeKin(state) {
+    const head = state.player && state.player.charId;
+    const revision = FB.familyRevision();
+    let index = lifeKinIndexes.get(state);
+    if (index && index.head === head && index.revision === revision) return index.ids;
+    const ids = Object.create(null);
+    const me = state.chars && state.chars[head];
+    if (me) {
+      ids[head] = true;
+      const kin = FB.kinOf(state);
+      ['parents', 'grandparents', 'siblings', 'children', 'grandchildren'].forEach(function (group) {
+        (kin[group] || []).forEach(function (row) { ids[row.c.id] = true; });
+      });
+      (FB.spousesSnapshot ? FB.spousesSnapshot(state, me) : []).forEach(function (c) { ids[c.id] = true; });
+    }
+    lifeKinIndexes.set(state, { head:head, revision:revision, ids:ids });
+    return ids;
+  }
+  function lifeIdentity(c) {
+    // Save's ordinary character compactor must not strip this detached id.
+    const identity = { lifeIdentity:true };
+    ['id', 'name', 'byname', 'dyn', 'sex', 'culture', 'religion', 'born', 'died',
+      'dead', 'station', 'portraitName', 'portraitProfile', 'health',
+      'highestTitleData'].forEach(function (key) {
+      if (c[key] !== undefined) identity[key] = FB.messageParams({ value:c[key] }).value;
+    });
+    identity.traits = (c.traits || []).slice(0, 24);
+    if (c.career && c.career.profession) identity.career = { profession:c.career.profession };
+    return identity;
+  }
+  function lifeClose(state, c) {
+    const me = state.chars[state.player.charId];
+    if (!me || !c) return false;
+    if (c.id === me.id || c.spouseId === me.id || me.spouseId === c.id) return true;
+    function child(parent, person) {
+      return !!(parent && person && (person.fatherId === parent.id ||
+        person.motherId === parent.id || (parent.childrenIds || []).indexOf(person.id) >= 0));
+    }
+    if (child(me, c) || child(c, me)) return true;
+    const mine = [state.chars[me.fatherId], state.chars[me.motherId]];
+    const theirs = [state.chars[c.fatherId], state.chars[c.motherId]];
+    for (const parent of mine) if (child(parent, c) || child(c, parent)) return true;
+    for (const parent of theirs) if (child(parent, me) || child(me, parent)) return true;
+    // Adoption can leave parentage only on the adopter's childrenIds. The
+    // indexed fallback is reserved for our house; unrelated court mortality
+    // must not rebuild the world's family graph for each dying stranger.
+    return !!(me.dyn && c.dyn === me.dyn && lifeKin(state)[c.id]);
+  }
+  function lifeEntryLimit(record) {
+    return record.played ? LIFE_LIMITS.playedEntries :
+      record.preserved ? LIFE_LIMITS.preservedEntries : LIFE_LIMITS.familyEntries;
+  }
+  function trimLife(record) {
+    const limit = lifeEntryLimit(record);
+    while (record.entries.length > limit) {
+      let weakest = 0;
+      for (let i = 1; i < record.entries.length; i++) {
+        const a = record.entries[i], b = record.entries[weakest];
+        // Keep earlier defining milestones; among battles keep the largest.
+        if (a.weight < b.weight || (a.weight === b.weight &&
+            ((a.size || 0) < (b.size || 0) ||
+            ((a.size || 0) === (b.size || 0) && a.turn > b.turn)))) weakest = i;
+      }
+      record.entries.splice(weakest, 1);
+      record.condensed = true;
+    }
+  }
+  function trimFamilyLives(state, archive) {
+    const index = lifeIndex(archive);
+    if (index.family.length <= LIFE_LIMITS.family) return;
+    const kin = Object.create(null);
+    for (const id of index.family) kin[id] = lifeClose(state, state.chars[id]);
+    index.family.sort(function (a, b) {
+      const left = archive.people[a], right = archive.people[b];
+      const lc = !!kin[a], rc = !!kin[b];
+      if (lc !== rc) return lc ? 1 : -1;
+      if (!!left.identity.dead !== !!right.identity.dead) return left.identity.dead ? -1 : 1;
+      return left.touched - right.touched || (a < b ? -1 : a > b ? 1 : 0);
+    });
+    while (index.family.length > LIFE_LIMITS.family) delete archive.people[index.family.shift()];
+  }
+  function newLife(state, c, archive) {
+    const index = lifeIndex(archive);
+    const record = { identity:lifeIdentity(c), since:state.date.year,
+      touched:state.turn || 0, entries:[] };
+    archive.people[c.id] = record;
+    index.family.push(c.id);
+    return record;
+  }
+  FB.lifeHistory = function (state, id) {
+    const archive = lifeArchive(state);
+    return archive && Object.prototype.hasOwnProperty.call(archive.people, id)
+      ? archive.people[id] : null;
+  };
+  FB.lifeHistoryCollection = function (state) {
+    const archive = lifeArchive(state);
+    return archive ? Object.keys(archive.people).filter(function (id) {
+      const row = archive.people[id]; return row.played || row.preserved;
+    }).map(function (id) { return archive.people[id]; }) : [];
+  };
+  FB.preservedLifeCount = function (state) {
+    const archive = lifeArchive(state);
+    return archive ? lifeIndex(archive).preserved.length : 0;
+  };
+  FB.lifeHistoryPlayed = function (state, c) {
+    const archive = lifeArchive(state);
+    if (!archive || !c) return null;
+    let record = FB.lifeHistory(state, c.id);
+    if (!record || !record.identity || !Array.isArray(record.entries)) record = newLife(state, c, archive);
+    record.played = true;
+    delete record.preserved; delete record.paused;
+    record.identity = lifeIdentity(c);
+    const index = lifeIndex(archive);
+    index.family = index.family.filter(function (id) { return id !== c.id; });
+    index.preserved = index.preserved.filter(function (id) { return id !== c.id; });
+    return record;
+  };
+  FB.ensureLifeHistories = function (state) {
+    if (!state || !state.player || !state.chars) return null;
+    let archive = lifeArchive(state);
+    if (!archive) {
+      archive = state.lifeHistories = { v:1, people:{} };
+      lifeIndexes.set(archive, { family:[], preserved:[] });
+    }
+    FB.lifeHistoryPlayed(state, state.chars[state.player.charId]);
+    return archive;
+  };
+  FB.noteLifeEvent = function (state, id, kind, params) {
+    const archive = lifeArchive(state);
+    const c = state && state.chars && state.chars[id];
+    if (!archive || lifeRestoring.has(state) || !c || !lifeMessages[kind]) return null;
+    let record = FB.lifeHistory(state, id);
+    if (record && record.preserved && record.paused && kind !== 'death') return null;
+    if (!(record && (record.played || record.preserved)) && !lifeClose(state, c)) return null;
+    if (!record) record = newLife(state, c, archive);
+    record.identity = lifeIdentity(c);
+    if ((kind === 'rank' || kind === 'accession') && params && params.title && params.title.$title &&
+        (!record.identity.highestTitleData ||
+          params.title.$title.tier >= record.identity.highestTitleData.tier)) {
+      record.identity.highestTitleData = FB.messageParams(params.title).$title;
+    }
+    record.touched = state.turn || 0;
+    const msg = FB.message(lifeMessages[kind].key, params || {});
+    // Event handlers and presentation repairs may reassert the same fact.
+    const signature = JSON.stringify(msg);
+    for (let i = 0; i < record.entries.length; i++) {
+      const old = record.entries[i];
+      if (old.turn === state.turn && JSON.stringify(old.msg) === signature) return record;
+      if ((kind === 'rank' || kind === 'accession') && old.turn === state.turn &&
+          (old.msg.key === lifeMessages.rank.key || old.msg.key === lifeMessages.accession.key) &&
+          old.msg.params.title.$title.tier === params.title.$title.tier) {
+        old.msg = msg; old.weight = lifeWeights[kind];
+        return record;
+      }
+    }
+    record.entries.push({ turn:state.turn || 0, year:state.date.year,
+      msg:msg, weight:lifeWeights[kind], size:params && params.men || 0 });
+    trimLife(record);
+    trimFamilyLives(state, archive);
+    return FB.lifeHistory(state, id);
+  };
+  FB.preserveLifeHistory = function (state, id, preserve) {
+    const archive = FB.ensureLifeHistories(state);
+    if (!archive) return false;
+    let record = FB.lifeHistory(state, id);
+    const c = state.chars[id];
+    if (record && record.played) return false;
+    if (preserve) {
+      if (record && record.preserved) return true;
+      if (FB.preservedLifeCount(state) >= LIFE_LIMITS.preserved || (!record && !c)) return false;
+      if (!record) record = newLife(state, c, archive);
+      record.preserved = true;
+      if (c) record.identity = lifeIdentity(c);
+    } else {
+      if (!record || !record.preserved) return false;
+      delete record.preserved; delete record.paused;
+      if (!c || !lifeClose(state, c)) delete archive.people[id];
+      else trimLife(record);
+    }
+    lifeIndexes.delete(archive);
+    trimFamilyLives(state, archive);
+    return true;
+  };
+  FB.followLifeHistory = function (state, id, follow) {
+    let record = FB.lifeHistory(state, id);
+    const c = state.chars[id];
+    if (!c || c.dead || record && record.played) return false;
+    if ((!record || !record.preserved) && !FB.preserveLifeHistory(state, id, true)) return false;
+    record = FB.lifeHistory(state, id);
+    record.paused = !follow;
+    return true;
+  };
+  FB.noteLifeDeath = function (state, c) {
+    if (!c || lifeRestoring.has(state)) return;
+    FB.noteLifeEvent(state, c.id, 'death', { age:Math.max(0, state.date.year - c.born) });
+    const record = FB.lifeHistory(state, c.id);
+    if (record) {
+      record.identity = lifeIdentity(c);
+      record.identity.dead = true; record.identity.died = state.date.year;
+    }
+  };
+  FB.lifeHistoryRulerId = function (state, realmId) {
+    if (realmId === 'player') return state.player.charId;
+    // Read the existing court only. Recording must never materialize a person.
+    const realm = state.realms && state.realms[realmId];
+    const court = realm && realm.succession;
+    const member = court && court.members && court.members[court.rulerMemberId];
+    return member && member.charId || null;
+  };
+  FB.noteLifeConquest = function (state, realmId, pid) {
+    const id = FB.lifeHistoryRulerId(state, realmId);
+    const place = FB.world && FB.world.byId[pid];
+    if (id && place) FB.noteLifeEvent(state, id, 'conquest', { place:place.name });
+  };
+  FB.noteLifeAccession = function (state, c, title) {
+    if (!c || !title) return;
+    FB.noteCharacterStatus(state, c, title.tier, title);
+    FB.noteLifeEvent(state, c.id, 'accession', { title:{ $title:title } });
+  };
+  FB.refineLifeRank = function (state, c, title) {
+    const record = FB.lifeHistory(state, c.id);
+    if (!record || !title || lifeRestoring.has(state)) return;
+    for (const entry of record.entries) {
+      if (entry.turn === state.turn && entry.msg.key === lifeMessages.rank.key &&
+          entry.msg.params.title.$title.tier === title.tier) {
+        entry.msg = FB.message(lifeMessages.rank.key, { title:{ $title:title } });
+      }
+    }
+  };
+  FB.repairLifeHistories = function (state) {
+    try { repairLifeHistories(state); }
+    finally { lifeRestoring.delete(state); }
+  };
+  function repairLifeHistories(state) {
+    lifeKinIndexes.delete(state);
+    const archive = FB.ensureLifeHistories(state);
+    if (!archive) return;
+    const played = Object.create(null);
+    played[state.player.charId] = true;
+    (state.legends || []).forEach(function (legend) { played[legend.id] = true; });
+    const heads = state.chronicle && state.chronicle.heads || [];
+    heads.forEach(function (head) { if (Array.isArray(head) && head[1]) played[head[1]] = true; });
+    Object.keys(archive.people).forEach(function (id) {
+      const row = archive.people[id];
+      if (!row || !row.identity || row.identity.id !== id || !Array.isArray(row.entries)) {
+        delete archive.people[id]; return;
+      }
+      // Chronicle heads include retired lives absent from the death-only roll.
+      row.played = !!played[id];
+      row.entries = row.entries.filter(function (entry) {
+        return entry && isFinite(entry.turn) && isFinite(entry.year) &&
+          entry.msg && typeof entry.msg.key === 'string' &&
+          Object.keys(lifeMessages).some(function (kind) { return lifeMessages[kind].key === entry.msg.key; }) &&
+          entry.msg.params && typeof entry.msg.params === 'object' && isFinite(entry.weight) &&
+          (entry.msg.key !== lifeMessages.rank.key && entry.msg.key !== lifeMessages.accession.key &&
+            entry.msg.key !== lifeMessages.loss.key || entry.msg.params.title && entry.msg.params.title.$title);
+      });
+      trimLife(row);
+      if (!isFinite(row.touched)) row.touched = 0;
+      if (!isFinite(row.since)) row.since = state.date.year;
+    });
+    lifeIndexes.delete(archive);
+    const index = lifeIndex(archive);
+    // Legacy/malformed excess records become temporary, never active people.
+    while (index.preserved.length > LIFE_LIMITS.preserved) {
+      const id = index.preserved.pop();
+      delete archive.people[id].preserved; delete archive.people[id].paused;
+      trimLife(archive.people[id]); index.family.push(id);
+    }
+    Object.keys(played).forEach(function (id) {
+      if (state.chars[id]) FB.lifeHistoryPlayed(state, state.chars[id]);
+    });
+    trimFamilyLives(state, archive);
+  }
 
   /* words for text templating */
   FB.holyWord = function (religionId, state) {

@@ -7798,6 +7798,307 @@ window.FB = window.FB || {};
     }, { count:inherited.length, amount:Math.round(total * 10) / 10 }));
   };
 
+  /* Service in another household is one bounded personal appointment. It is
+     independent of occupation, freedom and the player's own paid retainers. */
+  function serviceDef(id) {
+    return Object.prototype.hasOwnProperty.call(FBDATA.householdServiceRoles, id)
+      ? FBDATA.householdServiceRoles[id] : null;
+  }
+  function serviceHome(p) { return p.provinceId; }
+  function serviceSettlement(p) {
+    return p.homeSettlement === undefined ? (p.settlement || 0) : p.homeSettlement;
+  }
+  function servicePatron(state) {
+    const authority = FB.homeCountyAuthority && FB.homeCountyAuthority(state);
+    const id = authority ? authority.characterId : state.roles && state.roles.lord;
+    const c = id && state.chars[id];
+    return c && !c.dead && c.id !== state.player.charId ? c : null;
+  }
+  FB.householdServiceRecord = function (state) {
+    const r = state && state.player && state.player.householdService;
+    return r && r.v === 1 && r.charId === state.player.charId && serviceDef(r.roleId) ? r : null;
+  };
+  FB.householdServiceName = function (state, roleId) {
+    const def = serviceDef(roleId);
+    if (!def) return '';
+    if (roleId === 'reeve') {
+      const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+      if (tenure && tenure.archetypeId === 'latin_manorial') return FB.T('Reeve');
+    }
+    return FB.dataText(state, state.player.charId, 'position', def.position,
+      FBDATA.positions[def.position], 'name', {});
+  };
+  FB.householdServicePathName = function (path) {
+    if (path === 'estate') return FB.T('Estate work');
+    if (path === 'letters') return FB.T('Accounts and teaching');
+    if (path === 'trade') return FB.T('Purchasing and deliveries');
+    return FB.T('Household guard');
+  };
+  FB.householdServiceFocusLabel = function (state) {
+    const r = FB.householdServiceRecord(state);
+    if (!r || r.status === 'ended') return '';
+    switch (r.roleId) {
+      case 'helper': return FB.T('Help on the lord’s estate');
+      case 'storekeeper': return FB.T('Tend the household stores');
+      case 'reeve': return FB.T('Oversee estate work');
+      case 'steward': return FB.T('Manage the lord’s household');
+      case 'tally': return FB.T('Assist with household tallies');
+      case 'clerk': return FB.T('Keep household accounts');
+      case 'tutor': return FB.T('Teach the household’s children');
+      case 'carrier': return FB.T('Carry household deliveries');
+      case 'buyer': return FB.T('Buy household provisions');
+      case 'factor': return FB.T('Manage household purchasing');
+      case 'watch': return FB.T('Keep the household watch');
+      case 'guard': return FB.T('Stand household guard');
+      default: return FB.T('Drill the household guard');
+    }
+  };
+  FB.householdServiceStatus = function (state, roleId) {
+    const p = state.player, c = state.chars[p.charId];
+    const r = FB.householdServiceRecord(state), patron = servicePatron(state);
+    const def = roleId && serviceDef(roleId);
+    const out = { record:r, patron:patron, definition:def, missing:[], ready:false,
+      workReady:false, reason:'', renewal:!!(r && r.status !== 'ended' && roleId === r.roleId &&
+        (r.status === 'review' || r.employerId !== (patron && patron.id))) };
+    if (!c || c.dead || p.dead) out.reason = FB.T('This life has ended.');
+    else if (p.tier >= 3) out.reason = FB.T('A landed ruler cannot hold a household service appointment.');
+    else if (FB.ageOf(c, state.date.year) < 16) out.reason = FB.T('Household service begins at age 16.');
+    else if (p.travel) out.reason = FB.T('Return home to serve this household.');
+    else if (p.flags.in_prison) out.reason = FB.T('Service is suspended during captivity.');
+    else if (p.flags.on_campaign || p.flags.polly_1 || p.flags.polly_2 || p.flags.polly_3 || p.flags.polly_4 || p.flags.polly_reunion || p.militaryCommand) {
+      out.reason = FB.T('Return from military service before taking up household duties.');
+    } else if (!patron) out.reason = FB.T('There is no living local patron available.');
+    else if (FB.standingOf(state, {kind:'character', id:patron.id}) <= -40) {
+      out.reason = FB.T('This patron will not employ you while Standing is -40 or lower.');
+    }
+    if (out.reason) out.missing.push(out.reason);
+    const matching = r && r.employerId === (patron && patron.id) &&
+      r.provinceId === serviceHome(p) && r.settlement === serviceSettlement(p);
+    out.workReady = !out.reason && !!(matching && r.status === 'active');
+    if (!roleId) {
+      if (!out.reason && r && r.status !== 'ended' && (!matching || r.status === 'review')) {
+        out.reason = FB.T('Ask the new patron to renew your appointment.');
+      }
+      return out;
+    }
+    if (!def) out.missing.push(FB.T('This appointment is unavailable.'));
+    else {
+      if (r && r.status === 'active' && r.roleId === roleId && matching) out.missing.push(FB.T('You already hold this appointment.'));
+      if (def.maleOnly && c && c.sex !== 'm') out.missing.push(FB.T('This household guard appointment is available to men.'));
+      if (def.lettered && c && c.traits.indexOf('literate') < 0) out.missing.push(FB.T('Requires Lettered. Tally assistance teaches letters after 720 working days.'));
+      for (const skill of Object.keys(def.skills)) {
+        if (c && FB.skillOf(c, skill) < def.skills[skill]) {
+          const names = {ste:FB.T('Stewardship'),lea:FB.T('Learning'),mar:FB.T('Martial'),dip:FB.T('Diplomacy')};
+          out.missing.push(FB.T('Requires {skill} {value}.', {skill:names[skill], value:def.skills[skill]}));
+        }
+      }
+      // Appointment experience belongs to this life; renewal retains it, and
+      // promotion never duplicates the appointment currently held by the player.
+      const held = r && r.held && r.held[roleId];
+      const experience = r && r.experience && r.experience[def.previous] || 0;
+      if (def.previous && !held && experience < def.days) out.missing.push(FB.T(
+        'Requires {days} working days as {office}; completed {done}.', {
+          days:def.days, office:FB.householdServiceName(state, def.previous), done:experience
+        }));
+      const needed = out.renewal ? 0 : def.standing || 0;
+      if (patron && FB.standingOf(state, {kind:'character',id:patron.id}) < needed) out.missing.push(FB.T(
+        'Requires {standing} Standing with {patron}.', {standing:needed,patron:FB.fullName(patron)}));
+    }
+    out.ready = !out.missing.length;
+    return out;
+  };
+  FB.acceptHouseholdService = function (state, roleId, expected) {
+    const status = FB.householdServiceStatus(state, roleId);
+    const prior = status.record;
+    if (!status.ready || !expected || expected.employerId !== status.patron.id ||
+        expected.charId !== state.player.charId || expected.serial !== (prior ? prior.serial : 0)) return false;
+    const p = state.player;
+    const r = prior || {v:1,charId:p.charId,serial:0,experience:{},held:{},workedDays:0,
+      learnedDays:0,nextCaseDay:180,caseNo:0,lastWorkedTurn:-1,valueDelivered:0};
+    r.serial++;
+    r.roleId = roleId; r.status = 'active'; delete r.reason;
+    r.employerId = status.patron.id;
+    const officer = FB.getRole(state, 'steward', true);
+    r.officerId = officer && officer.id || null;
+    r.provinceId = serviceHome(p); r.settlement = serviceSettlement(p);
+    r.startedTurn = state.turn; r.appointedYear = state.date.year;
+    r.pending = null; r.reliefUntil = -1;
+    r.held[roleId] = true;
+    p.householdService = r;
+    p.focus = 'toil';
+    const params = {patron:FB.fullName(status.patron), office:FB.dataParam('position', serviceDef(roleId).position)};
+    FB.news(state, status.renewal
+      ? FB.msg('news.service.renewed', '{patron} renewed your appointment as {office}.', params)
+      : FB.msg('news.service.appointed', '{patron} appointed you as {office}.', params));
+    if (!status.renewal && FB.noteLifeEvent) FB.noteLifeEvent(state, p.charId, 'appointment', params);
+    return true;
+  };
+  FB.endHouseholdService = function (state, reason, silent) {
+    const r = FB.householdServiceRecord(state);
+    if (!r || r.status === 'ended') return false;
+    r.serial++; r.status = 'ended'; r.reason = reason;
+    r.pending = null; r.reliefUntil = -1;
+    if (!silent) FB.news(state, FB.msg('news.service.ended', 'Your household appointment as {office} ended.', {
+      office:FB.dataParam('position', serviceDef(r.roleId).position)
+    }));
+    if (state.player.focus === 'toil' && FB.defaultFocus) state.player.focus = FB.defaultFocus(state);
+    return true;
+  };
+  FB.householdServiceDay = function (state, silent) {
+    const r = FB.householdServiceRecord(state);
+    if (!r || r.status === 'ended') return;
+    const p = state.player, c = state.chars[p.charId];
+    if (!c || c.dead || p.dead || p.tier >= 3 ||
+        r.provinceId !== serviceHome(p) || r.settlement !== serviceSettlement(p)) {
+      FB.endHouseholdService(state, 'circumstances', silent); return;
+    }
+    const patron = servicePatron(state), old = state.chars[r.employerId];
+    if (!old || old.dead || !patron || patron.id !== r.employerId) {
+      if (r.status !== 'review') {
+        r.status = 'review'; r.serial++; r.pending = null; r.reliefUntil = -1;
+        if (!silent) FB.news(state, FB.msg('news.service.review',
+          'A change of patron suspended your household appointment. Seek renewal in Service household.', {}));
+      }
+      return;
+    }
+    if (FB.standingOf(state, {kind:'character',id:r.employerId}) <= -40) {
+      FB.endHouseholdService(state, 'dismissed', silent); return;
+    }
+    const officer = state.roles.steward && state.chars[state.roles.steward];
+    if (officer && !officer.dead) r.officerId = officer.id;
+    // A temporarily invalidated event (travel, captivity) may have left the
+    // queue. Keep its one case number and offer it again on returning home.
+    if (!silent && (r.pending || r.workedDays >= r.nextCaseDay) && FB.householdServiceStatus(state).workReady &&
+        !(state.eventQueue || []).some(function (e) {
+          return e.id === 'household_service_duty' && e.ctx &&
+            e.ctx.serviceSerial === r.serial && e.ctx.serviceCase === r.pending;
+        })) {
+      const def = serviceDef(r.roleId);
+      if (!r.pending) { r.pending = ++r.caseNo; r.nextCaseDay = r.workedDays + 180; }
+      const queued = FB.queueEvent(state, 'household_service_duty', {
+        serviceSerial:r.serial, serviceCase:r.pending, serviceCharId:r.charId,
+        serviceEmployerId:r.employerId, servicePath:def.path,
+        servicePatron:FB.fullName(old), serviceOffice:FB.dataParam('position',def.position)
+      });
+      if (!queued) r.pending = null;
+    }
+  };
+  FB.tickHouseholdService = function (state) {
+    const status = FB.householdServiceStatus(state), r = status.record;
+    if (!status.workReady || state.player.focus !== 'toil' || r.lastWorkedTurn === state.turn) return false;
+    const def = serviceDef(r.roleId);
+    const wage = def.wage / 90, value = def.value / 90;
+    const payer = FB.treasuryCharacterRealm(state, r.employerId);
+    // Productive work and avoided losses fund the patron's compensation and
+    // surplus. Local non-ruling patrons use the existing household source.
+    if (payer && !FB.treasuryTransfer(state, null, payer, wage + value, false)) return false;
+    // Compensation is funded by this work even when the patron has military
+    // arrears reserved against its treasury; do not credit failed retries.
+    if (!FB.treasuryTransfer(state, payer, 'player', wage, true)) return false;
+    r.lastWorkedTurn = state.turn;
+    r.workedDays++;
+    r.experience[r.roleId] = (r.experience[r.roleId] || 0) + 1;
+    r.valueDelivered += value;
+    if (def.path === 'letters') {
+      r.learnedDays++;
+      if (r.learnedDays >= 720 && state.chars[r.charId].traits.indexOf('literate') < 0) {
+        FB.addTrait(state.chars[r.charId], 'literate');
+        FB.news(state, FB.msg('news.service.lettered', 'Household service taught you to read and write.', {}));
+      }
+    }
+    if (r.workedDays % 90 === 0) {
+      FB.adjustStanding(state, {kind:'character',id:r.employerId}, 2, 'household-service');
+      const officer = r.officerId && state.chars[r.officerId];
+      if (officer && !officer.dead && officer.id !== r.employerId) FB.adjustStanding(state,
+        {kind:'character',id:officer.id}, 3, 'household-service');
+      const skill = def.training[(r.workedDays / 90 - 1) % def.training.length];
+      if (FB.chance(0.5)) FB.gainSkill(state.chars[r.charId], skill, 1);
+      if (r.roleId === 'tutor') {
+        const children = status.patron.childrenIds || [];
+        for (let i = 0; i < children.length; i++) {
+          const child = state.chars[children[i]];
+          if (child && !child.dead && FB.ageOf(child, state.date.year) >= 6 && FB.ageOf(child, state.date.year) < 16) {
+            if (FB.chance(0.5)) FB.gainSkill(child, 'lea', 1);
+            break;
+          }
+        }
+      }
+      // One completed term substitutes one ordinary work duty. The credit
+      // expires, cannot stack, and never excuses taxes or extraordinary dues.
+      r.reliefUntil = state.turn + 180;
+    }
+    return true;
+  };
+  FB.householdServiceCoversDuty = function (state, duty) {
+    const r = FB.householdServiceRecord(state);
+    return !!(r && r.status === 'active' && r.reliefUntil >= state.turn &&
+      FB.householdServiceStatus(state).workReady && duty && !duty.commutationGold &&
+      ['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'].indexOf(duty.id) >= 0);
+  };
+  FB.repairHouseholdService = function (state) {
+    const raw = state.player.householdService;
+    if (!raw) return;
+    const r = FB.householdServiceRecord(state);
+    if (!r || ['active','review','ended'].indexOf(r.status) < 0 ||
+        typeof r.employerId !== 'string' || typeof r.provinceId !== 'string' ||
+        !Number.isInteger(r.serial) || r.serial < 1 || !Number.isInteger(r.settlement) ||
+        !r.experience || typeof r.experience !== 'object' || Array.isArray(r.experience)) {
+      delete state.player.householdService; return;
+    }
+    const experience = {}, held = {};
+    for (const id of Object.keys(FBDATA.householdServiceRoles)) {
+      if (Number.isInteger(r.experience[id]) && r.experience[id] >= 0) experience[id] = r.experience[id];
+      if (r.held && r.held[id] === true) held[id] = true;
+    }
+    r.experience = experience; r.held = held;
+    for (const key of ['workedDays','learnedDays','caseNo','nextCaseDay','startedTurn','appointedYear']) {
+      if (!Number.isInteger(r[key]) || r[key] < 0) r[key] = key === 'nextCaseDay' ? r.workedDays + 180 : 0;
+    }
+    if (!isFinite(r.valueDelivered) || r.valueDelivered < 0) r.valueDelivered = 0;
+    if (!Number.isInteger(r.lastWorkedTurn)) r.lastWorkedTurn = -1;
+    if (!Number.isInteger(r.reliefUntil)) r.reliefUntil = -1;
+    if (!Number.isInteger(r.pending) || r.pending < 1 || r.pending > r.caseNo) r.pending = null;
+    FB.householdServiceDay(state, true);
+  };
+  FB.fns = FB.fns || {};
+  FB.fns.household_service_valid = function (state, ctx) {
+    const r = FB.householdServiceRecord(state);
+    return !!(r && ctx && r.pending > 0 && r.serial === ctx.serviceSerial && r.pending === ctx.serviceCase &&
+      r.charId === ctx.serviceCharId && r.employerId === ctx.serviceEmployerId &&
+      FB.householdServiceStatus(state).workReady);
+  };
+  ['careful','kind','routine'].forEach(function (choice) {
+    FB.fns['household_service_' + choice] = function (state, ctx) {
+      if (!FB.fns.household_service_valid(state, ctx)) return false;
+      const r = FB.householdServiceRecord(state);
+      r.pending = null;
+      if (choice === 'careful') FB.adjustStanding(state, {kind:'character',id:r.employerId}, 3, 'service-duty');
+      if (choice === 'kind') FB.adjustCountySupport(state, r.provinceId, 3);
+      return true;
+    };
+  });
+  FB.eventImpactAdapters = FB.eventImpactAdapters || {};
+  ['careful','kind','routine'].forEach(function (choice) {
+    function value(state, ctx) {
+      return choice === 'careful' ? FB.standingOf(state, {kind:'character',id:ctx.serviceEmployerId})
+        : FB.countyPopularSupport(state, state.player.provinceId);
+    }
+    function impacts(state, ctx, amount) {
+      amount = amount === undefined ? 3 : amount;
+      if (!amount) return [];
+      if (choice === 'careful') return [{type:'standing',targetKind:'character',targetId:ctx.serviceEmployerId,amount:amount,reward:amount > 0}];
+      if (choice === 'kind') return [{type:'commonVoice',amount:amount,reward:amount > 0}];
+      return [];
+    }
+    FB.eventImpactAdapters['household_service_' + choice] = {
+      preview:function (state, ctx) { return impacts(state, ctx); },
+      capture:function (state, ctx) { return {valid:FB.fns.household_service_valid(state, ctx),value:value(state, ctx)}; },
+      report:function (state, before, ctx) {
+        return before && before.valid ? impacts(state, ctx, value(state, ctx) - before.value) : [];
+      }
+    };
+  });
+
   /* Existing caravan content enters the same timed, once-resolved investment
      system as the Finance panel. The registry exists before events.js loads. */
   FB.fns = FB.fns || {};

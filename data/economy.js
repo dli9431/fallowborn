@@ -292,6 +292,16 @@ FBDATA.careers = {
    and the player's station. Earned positions come from events; retainer
    offices are filled by paid named characters in the household network. */
 FBDATA.positions = {
+  service_helper:{ name:'Estate Assistant', icon:'🌾', kind:'service', desc:'Helps with harvest work, stores and the everyday needs of an estate.' },
+  service_storekeeper:{ name:'Household Storekeeper', icon:'🗝', kind:'service', desc:'Accounts for deliveries and keeps provisions safe from waste.' },
+  service_reeve:{ name:'Estate Overseer', icon:'🌾', kind:'service', desc:'Organizes estate work and answers for its results. Manorial households call this officer a reeve.' },
+  service_tally:{ name:'Tally Assistant', icon:'📜', kind:'service', desc:'Counts deliveries, checks tallies and learns letters alongside the household officer.' },
+  service_clerk:{ name:'Household Clerk', icon:'📜', kind:'service', desc:'Keeps written household accounts and prepares records for the patron.' },
+  service_carrier:{ name:'Household Carrier', icon:'📦', kind:'service', desc:'Carries goods and messages between the household and its local suppliers.' },
+  service_buyer:{ name:'Household Purchasing Agent', icon:'📒', kind:'service', desc:'Buys provisions and checks the quality and price of deliveries.' },
+  service_watch:{ name:'Household Watch', icon:'🛡', kind:'service', desc:'Watches the stores, gates and local deliveries under the household officer.' },
+  service_guard:{ name:'Household Guardsman', icon:'🛡', kind:'service', desc:'Protects household goods and escorts its local deliveries.' },
+  service_sergeant:{ name:'Household Sergeant', icon:'⚔', kind:'service', desc:'Trains and supervises the household guard.' },
   councilman: {
     name:'Town Councilman', icon:'⚖', kind:'earned',
     desc:'A place on the town bench brings commissions, introductions, and a voice in local affairs.',
@@ -326,6 +336,25 @@ FBDATA.positions = {
     desc:'A resident learned servant who may be assigned to a child’s lessons without a second fee.',
     fx:{}
   }
+};
+
+/* Personal appointments in a patron's household. These reuse position names,
+   but never grant the employer-facing retainer bonuses to the employee. */
+FBDATA.householdServiceRoles = {
+  helper:{ position:'service_helper', path:'estate', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
+  storekeeper:{ position:'service_storekeeper', path:'estate', previous:'helper', days:90, standing:10, wage:3, value:1, training:['ste','dip'], skills:{ste:4} },
+  reeve:{ position:'service_reeve', path:'estate', previous:'storekeeper', days:360, standing:25, wage:4, value:1.5, training:['ste','dip'], skills:{ste:7,dip:4} },
+  steward:{ position:'steward', path:'estate', previous:'reeve', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:10,lea:6}, lettered:true },
+  tally:{ position:'service_tally', path:'letters', wage:2.5, value:0.5, training:['lea','ste'], skills:{lea:4} },
+  clerk:{ position:'service_clerk', path:'letters', previous:'tally', days:180, standing:15, wage:3.5, value:1, training:['lea','ste'], skills:{lea:6,ste:4}, lettered:true },
+  tutor:{ position:'tutor', path:'letters', previous:'clerk', days:720, standing:40, wage:5, value:1.5, training:['lea','dip'], skills:{lea:10,dip:6}, lettered:true },
+  carrier:{ position:'service_carrier', path:'trade', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
+  buyer:{ position:'service_buyer', path:'trade', previous:'carrier', days:180, standing:15, wage:3.5, value:1, training:['ste','dip'], skills:{ste:4,dip:4} },
+  factor:{ position:'factor', path:'trade', previous:'buyer', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:9,dip:7}, lettered:true },
+  watch:{ position:'service_watch', path:'arms', wage:2.5, value:0.5, training:['mar','dip'], skills:{mar:4}, maleOnly:true },
+  guard:{ position:'service_guard', path:'arms', previous:'watch', days:180, standing:15, wage:3.5, value:1, training:['mar','dip'], skills:{mar:6}, maleOnly:true },
+  sergeant:{ position:'service_sergeant', path:'arms', previous:'guard', days:360, standing:25, wage:4, value:1.5, training:['mar','dip'], skills:{mar:9,dip:4}, maleOnly:true },
+  captain:{ position:'captain', path:'arms', previous:'sergeant', days:1080, standing:45, wage:5, value:2, training:['mar','dip'], skills:{mar:12,dip:6}, maleOnly:true }
 };
 
 /* A town councillor may carry one local ordinance at a time. These are

@@ -75,6 +75,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      household_estate_service:{ mode:'none', rationale:'Serving a local household, maintaining stores and advancing to estate office are baseline personal relationships. Ability, performed work and Standing govern appointment without national research.' },
+      household_commercial_service:{ mode:'none', rationale:'Household delivery, purchasing and factor appointments use ordinary local exchange. Personal skills and service govern advancement; existing guild and trade technologies remain separate.' },
+      household_military_service:{ mode:'none', rationale:'Household watch and guard appointments are baseline personal service. Martial ability and experience govern advancement without granting an independent army or bypassing equipment and field-command requirements.' },
+      household_learned_service:{ mode:'none', rationale:'Tally assistance, household clerical work and private tutoring depend on personal learning and literacy. They confer no professional license and do not bypass the technology requirements of learned careers.' },
       crazygames_content_profile:{ mode:'none', rationale:'Distribution content restrictions and their non-wagering, nonlethal alternatives apply independently of in-world research. Existing technology requirements on retained choices remain intact.' },
       excess_land_grants:{ mode:'none', rationale:'Reserving holdings and reviewing a batch of ordinary county and settlement grants are baseline management shortcuts. Existing hereditary ownership and administrative limits apply without an additional research requirement.' },
       enterprise_batch_upgrades:{ mode:'none', rationale:'Grouping existing enterprise upgrades by settlement or type is a household management shortcut. Each individual upgrade retains its exact authored technology requirement; the batch adds no research prerequisite.' },

@@ -1,5 +1,14 @@
 # Events are data
 
+`household_service_duty` is explicitly queued after each 180 completed working
+days. Its localized forms follow the service path; exact saved protagonist,
+employer, appointment serial and case number guard all outcomes. A temporarily
+invalidated case is offered again on returning home, while renewal, resignation
+or succession makes old contexts permanently invalid. The three owning custom
+handlers clear the pending case once; their preview/report adapters show exact
+patron Standing or county Common Voice changes and report the actual clamped
+change. Repeated handling cannot award the same benefit twice.
+
 The `lord` role resolves the actual holder of the household's home county through
 `FB.homeCountyAuthority`, rather than generating a separate landless character.
 Read resolution does not create a court or rewrite the role index; creating resolution

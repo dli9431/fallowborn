@@ -1,5 +1,9 @@
 # Historical ambitions
 
+Successful foundations also append one locale-neutral highlight to the founder's
+life history when that person is tracked. Failed previews and repeated completion
+attempts record nothing; history retention does not alter rewards or eligibility.
+
 Historical ambitions recognize significant regional foundations in an alternate
 campaign. They are optional ruler decisions, not accepted quests or dated conquests.
 The existing scripted-history scheduler remains separate.

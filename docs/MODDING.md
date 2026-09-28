@@ -2792,7 +2792,10 @@ as councilman and sergeant, or paid household service:
 } } }
 ```
 
-- `kind` is `earned` or `retainer`. An earned position is active while its matching
+- `kind` is `earned`, `retainer`, or `service`. Service positions supply localized
+  names/descriptions for the protagonist's appointment in a patron's household;
+  they do not activate `fx` or appear in the player's retainer hiring roster.
+  An earned position is active while its matching
   `player.flags` id is true; a retainer position is active while a paid contract exists.
   The core `councilman` id is special: its flag is compatibility state, while
   `player.localCouncil` validates locality and carries the active motion.
@@ -2813,6 +2816,26 @@ as councilman and sergeant, or paid household service:
 - Capacity and the default contract economy are controlled by `retainerCapacity` and
   the `pay` values in the position definitions. Contracts pass to the next head, but
   personal friendship does not.
+
+### Personal household service
+
+The core `FBDATA.householdServiceRoles` table references position ids for display.
+Each role defines `path` (`estate`, `letters`, `trade`, `arms`), `wage` and patron
+surplus `value` per 90 worked days, two `training` skill ids, and a `skills`
+minimum map. Optional `previous`/`days`, `standing`, `lettered` and `maleOnly`
+govern appointment eligibility. This table is authored core data, not a new mod
+merge key. Service uses the existing `toil` handler contextually and the
+`household_service` choice-backed Deed. Reused senior retainer position ids supply
+only their display name; their retainer `fx` do not accrue to the employee.
+
+The event `household_service_duty` uses `household_service_valid` as its context
+validator. Its `serviceSerial`, `serviceCase`, `serviceCharId` and
+`serviceEmployerId` must match the active personal appointment; `servicePath`,
+`serviceOffice` (a position data descriptor) and `servicePatron` (a proper name)
+are display parameters. Owning custom effects `household_service_careful`,
+`household_service_kind` and `household_service_routine` resolve that case once.
+Ordinary mods may replace the event's display content without weakening this
+lifecycle check. No new generic effect or trigger key is introduced.
 
 ### Local council motions
 

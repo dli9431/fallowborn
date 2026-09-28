@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.184.7';
+FB.VERSION = '1.185.0';
 FB.CHANGELOG = [
+  { v: '1.185.0', date: '2026-09-27', changes: [
+    'Character sheets and the family tree now show life histories, with selected lives preserved across generations.',
+    'Commoners can seek household service through Deeds and earn appointments, pay and advancement in their lord’s household.'
+  ] },
   { v: '1.184.7', date: '2026-09-27', changes: [
     'CrazyGames now guides new households through marriage, an enterprise, freedom, and land. The first character courts faster and eligible marriage proposals are always accepted.'
   ] },
@@ -3352,6 +3356,7 @@ FB.CHANGELOG = [
     state.peakTitleData = FB.playerStatusTitleSnapshot
       ? FB.playerStatusTitleSnapshot(state) : FB.titleSnapshot(state);
     if (FB.notePlayerStatus) FB.notePlayerStatus(state, state.peakTitleData);
+    if (FB.ensureLifeHistories) FB.ensureLifeHistories(state);
     G.paused = true;
 
     FB.ui.mapDirty();
@@ -3772,6 +3777,7 @@ FB.CHANGELOG = [
 
     if (!G.observe) {
       FB.learnMaternalCustoms(s);
+      if (FB.householdServiceDay) FB.householdServiceDay(s);
       if (!p.travel) {
         if (!(opts && opts.skipFocus)) FB.tickFocus(s);
         else FB.validateFocus(s);
@@ -3917,6 +3923,7 @@ FB.CHANGELOG = [
     }
 
     if (FB.freedomDay) FB.freedomDay(s);
+    if (FB.householdServiceDay) FB.householdServiceDay(s);
     if (FB.tenureDay) FB.tenureDay(s);
     if (FB.reconcileSerfStory) FB.reconcileSerfStory(s);
     if (FB.reconcileSerfNeighborConsequence) {
@@ -5432,6 +5439,7 @@ FB.CHANGELOG = [
     if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(s, me);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
+    if (FB.noteLifeDeath) FB.noteLifeDeath(s, me);
     if (FB.endRoyalCompact) FB.endRoyalCompact(s);
     if (FB.breakAlliance) FB.breakAlliance(s, 'player');
     if (FB.papacyCharacterDied) FB.papacyCharacterDied(s, me, { preserve:true });
@@ -5769,6 +5777,8 @@ FB.CHANGELOG = [
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     FB.learnMaternalCustoms(s);
     p.charId = heir.id;
+    delete p.householdService; // appointments are personal; heirs may seek their own
+    if (FB.lifeHistoryPlayed) FB.lifeHistoryPlayed(s, heir);
     if (FB.settlementLordshipsPlayerSuccession) {
       FB.settlementLordshipsPlayerSuccession(s, old.id, heir.id);
     }
@@ -5939,6 +5949,9 @@ FB.CHANGELOG = [
     }
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     if (FB.papacyPlayerSuccession) FB.papacyPlayerSuccession(s, old.id);
+    if (p.tier >= 3 && FB.noteLifeAccession) {
+      FB.noteLifeAccession(s, heir, FB.playerStatusTitleSnapshot(s));
+    }
     p.holdings = inheritedHoldings.slice();
     if (FB.enterpriseList) FB.enterpriseList(s);
     if (FB.repairAlliances) FB.repairAlliances(s);
@@ -6078,6 +6091,7 @@ FB.CHANGELOG = [
        ordinary family. Retirement grants no benefits, so there is nothing a
        repeat could duplicate; the marker is for display and clarity. */
     old.retired = true;
+    if (FB.noteLifeEvent) FB.noteLifeEvent(s, old.id, 'retirement', {});
     // the old head stays at the family home rather than following the roster
     if (!old.homeProvinceId) old.homeProvinceId = p.provinceId;
     return G.succeedTo(heirId, {

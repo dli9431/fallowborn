@@ -19,6 +19,8 @@ window.FB = window.FB || {};
   }
   function female(state) { return me(state).sex === 'f'; }
   function vocationalMultiplier(state, focus) {
+    const service = FB.householdServiceRecord && FB.householdServiceRecord(state);
+    if (focus && focus.id === 'toil' && service && service.status === 'active') return 1;
     if (!focus || !focus.vocational || !FB.householdWorkMultiplier) return 1;
     const profession = state.player.profession;
     const relevant = Array.isArray(focus.vocational)
@@ -203,8 +205,20 @@ window.FB = window.FB || {};
     },
     gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
   { id: 'toil',
-    show: function (s) { return s.player.tier === 0 && adult(s); },
+    show: function (s) {
+      const service = FB.householdServiceRecord(s);
+      return adult(s) && (s.player.tier === 0 || service && service.status === 'active');
+    },
+    can: function (s) {
+      const service = FB.householdServiceRecord(s);
+      if (!service || service.status !== 'active') return true;
+      const status = FB.householdServiceStatus(s);
+      return status.record && status.record.status === 'active' && !status.workReady
+        ? status.reason || FB.T('This appointment is suspended.') : true;
+    },
     tick: function (s) {
+      const service = FB.householdServiceRecord(s);
+      if (service && service.status === 'active') { FB.tickHouseholdService(s); return; }
       const base = FB.rf(FBDATA.balance.serfWage[0], FBDATA.balance.serfWage[1]);
       s.player.gold += FB.serfHarvestQuote(s, base).gold / D;
       if (dch(0.1)) {
@@ -213,6 +227,8 @@ window.FB = window.FB || {};
       }
     },
     gain: function (s) {
+      const service = FB.householdServiceRecord(s);
+      if (service && service.status === 'active') return {gold:FBDATA.householdServiceRoles[service.roleId].wage};
       return { gold: FB.serfHarvestQuote(s).gold };
     } },
   { id: 'militia',
@@ -3672,6 +3688,16 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showRankDetails) FB.ui.showRankDetails();
     } },
 
+  { id:'household_service', opensChoices:true, noConsume:true,
+    uiLabel:function (s) {
+      const r = FB.householdServiceRecord(s);
+      return r && r.status !== 'ended' ? FB.T('Review household service…') : FB.T('Offer household service…');
+    },
+    show:function (s) { return s.player.tier <= 2; },
+    run:function (s) {
+      if (FB.ui && FB.ui.showHouseholdService) FB.ui.showHouseholdService();
+    } },
+
   { id: 'buy_land', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
       return FB.T('{money:gold} per plot. Land held together in one settlement is more productive.',
@@ -5400,6 +5426,8 @@ window.FB = window.FB || {};
   FB.focusLabel = function (state, focus) {
     focus = focusDefinitionRecord(focus);
     if (!focus) return '';
+    const service = FB.householdServiceRecord(state);
+    if (focus.id === 'toil' && service && service.status === 'active') return FB.householdServiceFocusLabel(state);
     const contextual = contextualTenureFocusText(state, focus,
       'workLabel', 'workLabelKey');
     if (contextual) return contextual;
@@ -5410,6 +5438,10 @@ window.FB = window.FB || {};
   FB.focusDescription = function (state, focus) {
     focus = focusDefinitionRecord(focus);
     if (!focus) return '';
+    const service = FB.householdServiceRecord(state);
+    if (focus.id === 'toil' && service && service.status === 'active') return FB.T(
+      'Earn {money:pay} per 90 working days. Every 90 working days brings training, patron Standing and credit for one ordinary labor duty due within 180 days. Other dues remain. Rest and other focuses keep the appointment but earn no service pay or progress.',
+      {pay:FBDATA.householdServiceRoles[service.roleId].wage});
     const contextual = contextualTenureFocusText(state, focus,
       'workDescription', 'workDescriptionKey');
     let desc = contextual || (typeof focus.desc === 'function' ? focus.desc(state) :
@@ -12215,6 +12247,7 @@ window.FB = window.FB || {};
     let want;
     if (!adult(state)) want = 'study';
     else if (afield(state)) want = 'drill'; // disguised in the ranks — train at arms
+    else if (FB.householdServiceStatus(state).workReady) want = 'toil';
     else if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) {
       want = 'shepherd_diocese';
     }

@@ -1,5 +1,51 @@
 # Game state & saves
 
+## Personal household service
+
+Optional `player.householdService` is a version-1 appointment for the current
+`charId`, naming `employerId`, `officerId`, `provinceId`, `settlement` and `roleId`.
+Its `status` is `active`, `review` or `ended`; a monotonic `serial` invalidates old
+offers and cases. Numeric work totals, per-role `experience`, previously `held`
+roles, literacy progress, the last paid turn, and an expiring labor-duty credit
+are bounded to this one life. There is at most one pending case number, with the
+next case's work threshold. No daily ledger, rendered office name or AI household
+roster is serialized. A new appointment preserves personal experience; succession
+deletes the entire record. Significant appointments survive in the life archive.
+
+Restore leaves legacy saves without the field untouched, rejects malformed or
+wrong-protagonist records, removes unknown experience/held keys, normalizes
+counters and silently reconciles changed patrons/home/rank. A departed patron
+suspends service pending explicit renewal. A temporarily invalid case can be
+requeued under its original number when work becomes possible again. All editions
+share this schema and lifecycle.
+
+## Character life-history archive
+
+Additive `state.lifeHistories` schema 1 keeps `{v:1, people:{characterId:record}}`
+inside ordinary save format 3. Each record stores a detached `identity`, recording
+start year, last touched turn, bounded `entries`, and played/preserved/paused or
+condensed flags. Entries hold exact turn/year, a locale-neutral message descriptor,
+and deterministic retention weights. English biography templates register at boot,
+so saved entries render without a generated English catalog in every edition.
+Historical title parameters use the existing `$title` snapshot; other proper
+names and battle headcounts are frozen at the actual event boundary.
+
+Detached identities carry `lifeIdentity:true` to bypass the ordinary character
+wire compactor: their IDs and defaults cannot be reconstructed from `state.chars`
+after court cleanup. They contain no live character references. Restoring validates
+entry shapes and limits, derives played identities from the protagonist, legends
+and Chronicle heads (including retired heads), and never recreates a full person.
+Missing/unknown archives begin with identity summaries and no invented events.
+History recording is suspended during load repairs so repaired titles are not
+misdated as new achievements. Family/protection indexes remain transient.
+
+The temporary family pool is capped at 128 biographies / eight highlights each;
+50 manually preserved lives keep 32 each, with deceased and paused records still
+counting. Played protagonists keep 40 each and grow only with actual played lives.
+Only saves/exported save files contain these biographies; standalone Chronicle
+JSON remains the existing news/choice artifact. See [characters](characters.md#life-histories)
+for retention and recording scope.
+
 ## Freeholder establishment
 
 `player.freeholderGeneration` records the line depth at first freedom, using

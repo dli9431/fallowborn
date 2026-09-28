@@ -6,6 +6,24 @@ FBDATA.events = FBDATA.events || [];
 
 FBDATA.events.push(
 
+{ id:'household_service_duty', title:'A Household Responsibility',
+  trigger:{never:true}, contextValidator:'household_service_valid',
+  text:{forms:{select:'value',param:'servicePath',cases:{
+    estate:'As {serviceOffice} in {servicePatron}’s household, you must settle a shortage in the stores. Some measures were careless; some mouths have gone hungry.',
+    letters:'The records entrusted to you as {serviceOffice} in {servicePatron}’s household disagree with a servant’s account. Patient questions could put the matter right.',
+    trade:'A delivery for {servicePatron} is late. As {serviceOffice}, you can inspect the goods yourself or give the supplier time to replace the damaged portion.',
+    arms:'The household watch brings a hungry trespasser before you. Your post as {serviceOffice} under {servicePatron} gives you a little discretion over what happens next.',
+    other:'Your household appointment brings a matter that needs your judgment.'
+  }}},
+  options:[
+    {label:'Investigate carefully and report fairly.', desc:'Establish what happened and give the patron a reliable account.',
+      effects:{custom:'household_service_careful',log:'Settled a household responsibility with a careful account.'}},
+    {label:'Use your discretion to grant relief.', desc:'Give the people involved a chance to put matters right.',
+      effects:{custom:'household_service_kind',log:'Used a household appointment to grant a little relief.'}},
+    {label:'Refer it to the household officer.', desc:'Continue your ordinary duties and leave the decision to your superior.',
+      effects:{custom:'household_service_routine',log:'Referred a household difficulty to the responsible officer.'}}
+  ]},
+
 /* ---------- authority and customary tenure ---------- */
 { id:'serf_tenure_review',
   title:{ forms:{ select:'value', param:'proposalKind', cases:{

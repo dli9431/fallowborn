@@ -2737,6 +2737,8 @@ window.FB = window.FB || {};
     const reigningRealmId = FB.realmIdForRulerCharacter
       ? FB.realmIdForRulerCharacter(state, c) : null;
     const me = state.chars[state.player.charId];
+    // Capture family eligibility and portrait before cleanup severs the links.
+    if (FB.noteLifeDeath) FB.noteLifeDeath(state, c);
     const papalClaimant = FB.isPapalClaimant && FB.isPapalClaimant(state, c);
     FB.socialAttentionWithdraw(state, c.id, true);
     if (state.roles.friend === c.id) FB.clearFriendship(state, false);
@@ -7797,6 +7799,20 @@ window.FB = window.FB || {};
 
     const dueTurn = candidate.isConditional ? candidate.duty.pendingTurn : candidate.duty.nextDueTurn;
 
+    if (!candidate.isConditional && FB.householdServiceCoversDuty &&
+        FB.householdServiceCoversDuty(state, candidate.duty)) {
+      const interval = FB.serfTenureDutyInterval(tenure, candidate.duty);
+      while (candidate.duty.nextDueTurn <= state.turn) candidate.duty.nextDueTurn += interval;
+      candidate.duty.lastResolvedTurn = state.turn;
+      state.player.householdService.reliefUntil = -1;
+      FB.refreshSerfTenureDueCache(state, tenure);
+      FB.news(state, FB.msg('news.service.duty_covered',
+        'Your completed household service discharged the scheduled {duty}.', {
+          duty:FB.dataParam('tenureDuty', candidate.duty.id)
+        }));
+      return;
+    }
+
     FB.queueEvent(state, candidate.duty.eventId, {
       tenureFormedTurn: tenure.formedTurn,
       tenureRevision: tenure.revision,
@@ -9139,6 +9155,7 @@ window.FB = window.FB || {};
      registry. Adapters may be replaced by an owning system with a more exact
      pure preview/report pair before an event is shown. */
   const CORE_CUSTOM_EFFECT_IDS = (
+    'household_service_careful household_service_kind household_service_routine ' +
     'academy_introduction academy_student_dip academy_student_focus academy_student_int academy_student_lea academy_student_ste academy_withdraw auction_invitation_available auction_invitation_open ' +
     'agency_family_counsel agency_family_refuse agency_family_support agency_marriage_accept agency_marriage_decline agency_overture_gift agency_overture_rebuff agency_overture_welcome agency_rebel_buyoff agency_rebel_expose ' +
     'annul_granted appeal_lose appeal_win artifact_grant artifact_offering artifact_rumor_pursue artifact_seize attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +

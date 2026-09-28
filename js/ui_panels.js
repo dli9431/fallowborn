@@ -3374,6 +3374,10 @@ window.FB = window.FB || {};
       houseRow +
       kv('Generation', (s.generation || 1));
     h += panelh('Livelihood') + livelihoodNote(s, me, true);
+    const service = FB.householdServiceRecord(s);
+    if (service && service.status !== 'ended') h += '<button type="button" class="actionbtn" id="self-service">' +
+      esc(FB.householdServiceName(s, service.roleId)) + '<span class="adesc">' +
+      esc(FB.T('Review household service…')) + '</span></button>';
     if (betrothalStatus && betrothalStatus.ready) {
       h += '<button class="actionbtn" id="self-break-betrothal">💔 ' +
         esc(FB.T('Break betrothal…')) + '<span class="adesc">' +
@@ -3410,6 +3414,7 @@ window.FB = window.FB || {};
     bindCultureDetails(box);
     bindSelfWorkButton();
     const rankDetails = $('self-rank-details');
+    if ($('self-service')) $('self-service').onclick = function () { UI.showHouseholdService(); };
     if (rankDetails) rankDetails.addEventListener('click', UI.showRankDetails);
     const equipmentTriggers = box.querySelectorAll(
       '#self-equipment-portrait, #self-equipment');
@@ -4381,6 +4386,13 @@ window.FB = window.FB || {};
       '📋 ' + esc(FB.T('Household Plan…')),
       esc(FB.T(
         'Review education, work, assignments, matches, and equipment for every managed person.')));
+    if (s.player.tier <= 2) {
+      const service = FB.householdServiceRecord(s);
+      householdSummary += networkActionHtml('service-household',
+        'id="network-service" data-network-action', esc(FB.T('Service household…')),
+        esc(service && service.status !== 'ended' ? FB.householdServiceName(s, service.roleId) :
+          FB.T('Seek paid work and earn an appointment in your lord’s household.')));
+    }
     if (!capacity) {
       householdSummary += '<div class="hint">' + esc(FB.T(
         'A serf household cannot yet maintain paid servants.')) + '</div>';
@@ -5323,6 +5335,7 @@ window.FB = window.FB || {};
     refreshNetworkPanelShortcuts();
 
     const householdPlan = $('network-household-plan');
+    if ($('network-service')) $('network-service').onclick = function () { UI.showHouseholdService(); };
     if (householdPlan) {
       householdPlan.addEventListener('click', UI.showHouseholdPlan);
     }
@@ -7877,7 +7890,9 @@ window.FB = window.FB || {};
         (active ? ' class="active"' : '') + '>' + esc(filters[i].label) + '</button>';
     }
     return h + '</div><button type="button" class="btn chronicle-full-link" ' +
-      'data-chronicle-full>' + esc(FB.T('Explore full Chronicle')) + '</button>';
+      'data-chronicle-full>' + esc(FB.T('Explore full Chronicle')) + '</button>' +
+      '<button type="button" class="btn chronicle-full-link" data-life-collection>' +
+      esc(FB.T('Remembered lives')) + '</button>';
   }
   function fullChronicleNeedsEnglish(state) {
     if (FB.platform.isCrazyGames) return false;
@@ -7926,6 +7941,11 @@ window.FB = window.FB || {};
     open();
   }
   function wireLogControls(box) {
+    const lives = box.querySelector('[data-life-collection]');
+    if (lives && !lives.getAttribute('data-life-wired')) {
+      lives.setAttribute('data-life-wired', 'true');
+      lives.onclick = function () { UI.showLifeHistoryCollection(); };
+    }
     box.querySelectorAll('[data-chronicle-filter]').forEach(function (button) {
       if (button.getAttribute('data-chronicle-filter-wired')) return;
       button.setAttribute('data-chronicle-filter-wired', 'true');

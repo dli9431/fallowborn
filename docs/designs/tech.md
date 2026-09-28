@@ -1,5 +1,11 @@
 # National technology
 
+Household estate, commercial, military and learned service each have a **none**
+impact review. Useful personal work and promotion depend on experience, skills,
+Standing and (for senior literate offices) Lettered. These social appointments
+remain available without national research. They confer neither a professional
+license nor an independent army; existing career and military gates still apply.
+
 ## County progression (Phase 6)
 
 county_investiture, county_challenges and county_recognition each have a **none**

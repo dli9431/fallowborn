@@ -3511,6 +3511,32 @@ window.FB = window.FB || {};
      rout singly toward a reachable friendly county; a host ground below
      balance.armyMinMen shatters, and one shattered while cut off
      (FB.hostCutOff) is destroyed outright. */
+  function lifeBattleParticipants(state, side, primary) {
+    const rows = Object.create(null);
+    const command = FB.activeMilitaryCommand(state);
+    for (const host of side) {
+      const id = FB.lifeHistoryRulerId(state, host.realm);
+      if (id) {
+        if (!rows[id]) rows[id] = { id:id, men:0, hosts:0, personal:false };
+        rows[id].men += host.men; rows[id].hosts++;
+        if (host === primary && state.player.focus === 'lead_host' &&
+            !state.player.travel && !(state.player.flags && state.player.flags.in_prison)) rows[id].personal = true;
+      }
+      if (command && host.id === command.hostId && command.charId !== id) {
+        rows[command.charId] = { id:command.charId, men:host.men, hosts:1, personal:true };
+      }
+    }
+    return Object.keys(rows).map(function (id) { return rows[id]; });
+  }
+  function recordLifeBattle(state, rows, pid, won, enemyMen) {
+    const place = FB.world.byId[pid];
+    if (!place) return;
+    for (const row of rows) {
+      const personal = row.personal && row.hosts === 1;
+      FB.noteLifeEvent(state, row.id, personal ? (won ? 'command' : 'command_defeat') :
+        (won ? 'battle' : 'defeat'), { place:place.name, men:row.men, enemyMen:enemyMen });
+    }
+  }
   function resolveBattle(state, pid, sideA, sideB) {
     const timing = FB.game && FB.game._fastForwardTiming;
     if (!timing) return resolveBattleUntimed(state, pid, sideA, sideB);
@@ -3577,6 +3603,8 @@ window.FB = window.FB || {};
     }
     const winner = leadHost(winnerSide), loser = leadHost(loserSide);
     const winnerBefore = sideMen(winnerSide), loserBefore = sideMen(loserSide);
+    const winnerLives = lifeBattleParticipants(state, winnerSide, primaryPlayerHost);
+    const loserLives = lifeBattleParticipants(state, loserSide, primaryPlayerHost);
     const sw = Math.max(sa, sb), sl = Math.min(sa, sb);
     const powerRatio = sw / Math.max(1, sl);
     const numRatio = winnerBefore / Math.max(1, loserBefore);
@@ -3608,6 +3636,8 @@ window.FB = window.FB || {};
     const winnerLosses = spreadLosses(state, winnerSide, winnerLoss);
     for (const h of winnerSide) if (h.men < 1) h.men = 1;
     const loserLosses = spreadLosses(state, loserSide, loserLoss);
+    recordLifeBattle(state, winnerLives, pid, true, loserBefore);
+    recordLifeBattle(state, loserLives, pid, false, winnerBefore);
     const pInvolved = sideHasRealm(winnerSide, 'player') ||
       sideHasRealm(loserSide, 'player');
     const playerWon = pInvolved && sideHasRealm(winnerSide, 'player');

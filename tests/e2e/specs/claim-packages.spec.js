@@ -1,6 +1,6 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/wars.js', 'js/world.js', 'js/actions.js',
+dependsOnRuntime(__filename, ['js/wars.js', 'js/world.js', 'js/actions.js', 'js/model.js',
   'js/fortifications.js', 'js/mapview.js', 'js/ui_wars.js', 'js/ui_modals.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
@@ -88,12 +88,20 @@ test('partial occupation grants no land and completing the package transfers bot
     const w = FB.realmWars(s, 'player')[0];
     w.occupations[ids.targets[0]] = { occupied:true, progress:0 };
     const partial = ids.targets.every(function (pid) { return s.owner[pid] === ids.enemy; });
+    const beforePeace = FB.lifeHistory(s, s.player.charId).entries.filter(function (e) {
+      return e.msg.key === 'news.biography.conquest';
+    }).length;
     w.occupations[ids.targets[1]] = { occupied:true, progress:0 };
     FB.withOrdinaryWar(s, w.id, function () { FB.warCapture(s); });
     return { started:started, partial:partial, awarded:ids.targets.every(function (pid) { return s.holder[pid] === 'player'; }),
-      ended:!FB.ordinaryWarById(s, w.id), claims:FB.fabricatedClaimsOf(s).length };
+      ended:!FB.ordinaryWarById(s, w.id), claims:FB.fabricatedClaimsOf(s).length,
+      beforePeace:beforePeace, conquests:FB.lifeHistory(s, s.player.charId).entries.filter(function (e) {
+        return e.msg.key === 'news.biography.conquest';
+      }).map(function (e) { return e.msg.params.place; }).sort(),
+      places:ids.targets.map(function (pid) { return FB.world.byId[pid].name; }).sort() };
   }, ids);
-  expect(result).toEqual({ started:true, partial:true, awarded:true, ended:true, claims:0 });
+  expect(result).toMatchObject({ started:true, partial:true, awarded:true, ended:true, claims:0, beforePeace:0 });
+  expect(result.conquests).toEqual(result.places);
 });
 
 test('existing target list highlights compatible claims and retains checks through review', async function ({ page }, testInfo) {

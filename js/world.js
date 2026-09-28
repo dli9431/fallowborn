@@ -3913,6 +3913,9 @@ window.FB = window.FB || {};
        FB.realmRulerCharacter stays the one place that pushes character fields
        back onto r.ruler, keeping the stub a projection and not a rival truth. */
     const playerCrowned = !!(c && c.id === state.player.charId);
+    if (!opts.repair && !playerCrowned && FB.noteLifeAccession) {
+      FB.noteLifeAccession(state, c, FB.realmRulerTitleSnapshot(state, r, c));
+    }
     if (!playerCrowned) {
       const crowned = FB.materializeRealmRuler(state, rid);
       if (crowned) FB.realmRulerCharacter(state, rid);
@@ -4986,6 +4989,9 @@ window.FB = window.FB || {};
       }
     }
     const oldName = r.name;
+    const oldLifeRuler = FB.lifeHistoryRulerId && FB.lifeHistoryRulerId(state, rid);
+    const oldLifeTitle = oldLifeRuler && state.chars[oldLifeRuler] &&
+      FB.realmRulerTitleSnapshot(state, r, state.chars[oldLifeRuler]);
     let newRank;
     if (bestDuchy) {
       r.name = 'Duchy of ' + (FBDATA.duchies[bestDuchy].name || bestDuchy);
@@ -4995,6 +5001,8 @@ window.FB = window.FB || {};
       newRank = 1;
     }
     r.rank = newRank;
+    if (oldLifeTitle && FB.noteLifeEvent) FB.noteLifeEvent(state, oldLifeRuler,
+      'loss', { title:{ $title:oldLifeTitle } });
     /* peers cannot kneel to a peer: vassals of equal or greater rank reattach
        to the fallen crown's own liege, or stand independent (mirrors the
        player hollow-crown lapse). A vassal going independent takes his
@@ -5077,6 +5085,9 @@ window.FB = window.FB || {};
     realm.rank = 2;
     realm.name = 'Duchy of ' + duchyName;
     if (!options.silent) {
+      const rulerId = FB.lifeHistoryRulerId(state, rid);
+      if (rulerId) FB.noteLifeAccession(state, state.chars[rulerId],
+        FB.realmRulerTitleSnapshot(state, realm, state.chars[rulerId]));
       FB.news(state, FB.msg('news.realm.vassal_promoted_duchy', {
         forms:{
           select:'value', param:'sex', cases:{
@@ -7368,6 +7379,7 @@ window.FB = window.FB || {};
     if (pid && state.owner[pid] === w.enemy) {
       if (!(state.realms.player && state.realms.player.alive)) FB.foundPlayerRealm(state);
       FB.transferProvince(state, pid, FB.playerRealmId(state) || 'player');
+      if (FB.noteLifeConquest) FB.noteLifeConquest(state, 'player', pid);
       if (state.holder) state.holder[pid] = 'player'; // the player's own demesne
       FB.invalidateRealmCache(); // transferProvince rebuilt before the holder rewrite
       p.provs = p.provs || [];
@@ -7443,6 +7455,7 @@ window.FB = window.FB || {};
       FB.damageCountyDevelopment(state, lost);
       if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, lost, 'war_loss');
       FB.transferProvince(state, lost, w.enemy);
+      if (FB.noteLifeConquest) FB.noteLifeConquest(state, w.enemy, lost);
       FB.news(state, FB.msg('news.war.province_lost',
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }), {
           outcomeImpacts:[{ type:'land', action:'lose', pid:lost }]
@@ -7633,6 +7646,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.war.captured',
       '⛓ Taken in the rout! You are a prisoner of {enemy}.',
       { enemy: state.realms[w.enemy] ? state.realms[w.enemy].name : '' }));
+    if (FB.noteLifeEvent) FB.noteLifeEvent(state, p.charId, 'captivity', {});
     FB.queueWarEvent(state, 'prison_ransom', {});
   };
   function prisonRansom(state) {
@@ -8566,9 +8580,9 @@ window.FB = window.FB || {};
     state.realms[rid] = realm;
     if (FB.treasuryCreateRealm) FB.treasuryCreateRealm(state, rid, null, 0);
     if (FB.noteCharacterStatus && FB.realmRulerTitleSnapshot) {
-      FB.noteCharacterStatus(state, heir,
-        FB.clamp((realm.rank || 1) + 3, 4, 7),
-        FB.realmRulerTitleSnapshot(state, realm, heir));
+      const title = FB.realmRulerTitleSnapshot(state, realm, heir);
+      FB.noteCharacterStatus(state, heir, title.tier, title);
+      if (FB.noteLifeAccession) FB.noteLifeAccession(state, heir, title);
     }
     for (const pid in state.owner) {
       if (state.owner[pid] === 'player') state.owner[pid] = rid;

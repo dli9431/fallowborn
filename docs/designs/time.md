@@ -1,5 +1,15 @@
 # Time, focuses & automation
 
+Household service reuses `toil` with an appointment-specific label, income and
+training; it adds no focus slot. Accepting, renewing or leaving an appointment
+spends one day with `skipFocus:true`. Read-only offers and canceled reviews spend
+nothing. The appointment is reconciled before focus work and after world/travel
+changes, with an immediate return when no appointment exists. Daily wages and
+experience have a once-per-turn guard, including a same-day promotion. Rest,
+study, travel and captivity earn no service progress; promotions require explicit
+review. Completed terms can discharge a scheduled ordinary tenure labor duty,
+without consuming the seasonal story slot or excusing cash/extraordinary dues.
+
 Canceling the Go into town settlement picker clears its provisional cooldown
 through the shared modal dismissal callback, including Close, Escape and browser
 Back. It spends no day and grants no tutorial deed credit. Selecting a settlement

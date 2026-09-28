@@ -1243,6 +1243,7 @@ window.FB = window.FB || {};
     };
     if (FB.justiceInitializeCaptive) FB.justiceInitializeCaptive(state, record);
     intrigue.captives.push(record);
+    if (FB.noteLifeEvent) FB.noteLifeEvent(state, captiveId, 'captivity', {});
     if (captiveId === state.player.charId) {
       state.player.flags.in_prison = 1;
       state.player.flags.intrigue_captive = 1;

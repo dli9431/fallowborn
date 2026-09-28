@@ -6341,3 +6341,10 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 #tab-network .large-list-section-body > .hint {
   color:var(--main-text-color);
 }
+/* Life histories reuse character cards and Chronicle rows. */
+.life-history-actions { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.life-history-actions .btn { flex:1 1 180px; min-height:44px; white-space:normal; }
+.life-history-person { display:flex; align-items:center; gap:12px; }
+.life-history-person canvas, .life-history-identity canvas { flex-shrink:0; }
+.life-history-person > span, .life-history-identity > div { min-width:0; overflow-wrap:break-word; }
+.life-history-timeline { margin-top:16px; }

@@ -101,10 +101,18 @@ test('Normandy targets its own duchy, charges once, and returns from one success
     const s = FB.state;
     return { tier:s.player.tier, gold:s.player.gold, prestige:s.player.prestige,
       title:FB.titleSnapshot(s).place, repeat:FB.completeHistoricalAmbition(s, 'normandy'),
+      lifeFoundations:FB.lifeHistory(s, s.player.charId).entries.filter(function (e) {
+        return e.msg.key === 'news.biography.foundation';
+      }).length,
+      lifeTitle:FB.lifeHistory(s, s.player.charId).entries.filter(function (e) {
+        return e.msg.key === 'news.biography.rank' && e.msg.params.title.$title.tier === 5;
+      }).map(function (e) { return e.msg.params.title.$title.place; }),
       duplicate:s.eventQueue.filter(function (e) { return e.id === 'rank_elevation_result'; }).length };
   });
   expect(after.tier).toBe(5);
   expect(after.title).toBe('Normandy');
+  expect(after.lifeFoundations).toBe(1);
+  expect(after.lifeTitle).toEqual(['Normandy']);
   expect(after.gold).toBe(before.gold - before.cost.gold);
   expect(after.prestige).toBe(before.prestige - before.cost.prestige + 150);
   expect(after.repeat).toBeNull();

@@ -245,5 +245,8 @@ FBDATA.deeds = [
     desc:'Your great officers of the crown — their offices, their tempers, and the weight they throw around.', group:'realm', flow:'choices', layoutGroup:'ruler', handler:'royal_council' },
   { id:'historical_ambitions', label:'📜 Historical ambitions…', order:82,
     desc:'Establish regional foundations and claim their rewards.',
-    group:'realm', flow:'choices', handler:'historical_ambitions' }
+    group:'realm', flow:'choices', handler:'historical_ambitions' },
+  { id:'household_service', label:'🤝 Offer household service…', order:83,
+    desc:'Seek a household appointment, review your service or pursue advancement.',
+    group:'work', flow:'choices', handler:'household_service' }
 ];

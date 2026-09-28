@@ -737,6 +737,7 @@
     if (!w.objectives.length || !w.objectives.every(function (o) { return w.occupations[o.target] && w.occupations[o.target].occupied; })) return false;
     if (w.countyChallenge) {
       if (!FB.completeCountyChallenge(state, w)) return FB.settleOrdinaryWar(state, w.id, 'invalid');
+      if (FB.noteLifeConquest) FB.noteLifeConquest(state, w.attacker, w.objectives[0].target);
     } else if (w.enforcementOf) {
       FB.settleOrdinaryWar(state, w.enforcementOf, 'white_peace', w.id);
       if (w.defender === 'player') state.player.prestige = Math.max(0, state.player.prestige - 50);
@@ -747,6 +748,7 @@
         const sovereign = FB.topRealm(state, w.attacker);
         FB.transferProvince(state, o.target, sovereign);
         state.holder[o.target] = w.attacker;
+        if (FB.noteLifeConquest) FB.noteLifeConquest(state, w.attacker, o.target);
         if (w.attacker === 'player') {
           if (state.player.provs.indexOf(o.target) < 0) state.player.provs.push(o.target);
           state.player.prestige += o.type === 'aggression' ? 0 : 50;

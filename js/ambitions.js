@@ -138,6 +138,12 @@ window.FB = window.FB || {};
     const result = { realmId:rid, turn:state.turn, endTurn:state.turn + d.days,
       cost:status.cost, prestige:player ? d.prestige : 0 };
     state.historicalAmbitions[id] = result;
+    if (FB.noteLifeEvent) {
+      const founderId = FB.lifeHistoryRulerId(state, rid);
+      if (founderId) FB.noteLifeEvent(state, founderId, 'foundation', {
+        foundation:FB.dataParam('ambition', id, 'name')
+      });
+    }
     if (player) state.player.prestige += d.prestige;
     FB.invalidateRealmCache();
     if (player && FB.notePlayerStatus) FB.notePlayerStatus(state);

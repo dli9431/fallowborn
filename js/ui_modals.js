@@ -11237,6 +11237,8 @@ window.FB = window.FB || {};
     }
     if (returnContext.view === 'marriage-finder') {
       UI.showMarriageFinder(null, undefined, true);
+    } else if (returnContext.view === 'household-service') {
+      UI.showHouseholdService(false, returnContext.restore);
     } else if (returnContext.view === 'governance') {
       UI.showGovernance(returnContext.section || 'position');
     } else if (returnContext.view === 'council') {
@@ -23927,6 +23929,13 @@ window.FB = window.FB || {};
       h += baronFamilyStripHtml(s, c);
     }
     h += localFolkSheetHtml(s, c);
+    h += '<button type="button" class="btn chronicle-full-link" id="cm-life-history">' +
+      esc(FB.T('Life history')) + '</button>';
+    const servicePatron = s.player.tier <= 2 && FB.householdServiceStatus(s).patron;
+    if (!c.dead && servicePatron && (c.id === servicePatron.id || c.id === s.roles.steward || c.id === s.player.charId)) {
+      h += '<button type="button" class="actionbtn" id="cm-household-service">' +
+        esc(FB.T('Service household…')) + '</button>';
+    }
     if (!c.dead) {
       const access = FB.rankAccessStatus(s, { kind:'character', id:c.id });
       if (!access.ready && access.neededStation !== null) {
@@ -23977,6 +23986,8 @@ window.FB = window.FB || {};
       }
     });
     const intermediary = $('gm-body').querySelector('[data-social-intermediary]');
+    $('cm-life-history').onclick = function () { UI.showLifeHistory(c.id); };
+    if ($('cm-household-service')) $('cm-household-service').onclick = function () { UI.showHouseholdService(); };
     if (intermediary) intermediary.addEventListener('click', function () {
       UI.showCharModal(intermediary.dataset.socialIntermediary, {
         view:'character', characterId:c.id, returnContext:returnContext
@@ -24830,7 +24841,305 @@ window.FB = window.FB || {};
     armEventGuard();
   }
 
+  function serviceViewPosition(focusId) {
+    return { scrollTop:$('gm-body').scrollTop, focusId:focusId,
+      opened:Array.from($('gm-body').querySelectorAll('.settcard-info[aria-expanded="true"]'))
+        .map(function (b) { return b.getAttribute('aria-controls'); }) };
+  }
+  function serviceRoleDescription(s, id) {
+    if (id === 'steward') return FB.T('Direct estate work, accounts and household provisions for your patron.');
+    if (id === 'factor') return FB.T('Manage the patron’s local purchases and protect the household from waste.');
+    if (id === 'captain') return FB.T('Train and supervise the patron’s household guards. This post does not raise an army or grant troops of your own.');
+    if (id === 'tutor') return FB.T('Teach the patron’s children. Each 90 working days gives one living child aged 6–15 a chance to improve Learning.');
+    const def = FBDATA.householdServiceRoles[id];
+    return dt(s, 'position', def.position, FBDATA.positions[def.position], 'desc');
+  }
+  function serviceRoleBenefits(def) {
+    const names = {ste:FB.T('Stewardship'),lea:FB.T('Learning'),dip:FB.T('Diplomacy'),mar:FB.T('Martial')};
+    return '<p>' + esc(FB.T('Pay: {money:pay} per 90 working days; paid daily.', {pay:def.wage})) + '</p><p>' +
+      esc(FB.T('Value to patron: {money:value} per 90 working days after your pay.', {value:def.value})) + '</p><p>' +
+      esc(FB.T('Training: {first} and {second}.', {first:names[def.training[0]],second:names[def.training[1]]})) + '</p>';
+  }
+  function serviceDecisionHtml(label, enabled) {
+    return '<div class="settcard" data-action-tooltip="service-decision-details" tabindex="0">' +
+      '<div class="settcard-head"><span>' + esc(FB.T('Time: 1 day · No gold fee')) + '</span>' +
+      '<span class="settcard-actions"><button type="button" class="btn small settcard-info" aria-expanded="false" ' +
+      'aria-controls="service-decision-details" aria-label="' + esc(FB.T('Details')) + '">?</button></span></div>' +
+      '<div class="settcard-details hidden" id="service-decision-details"><p>' +
+      esc(FB.T('The appointment changes now. One day passes without focus earnings or service progress.')) + '</p></div>' +
+      '<button type="button" class="actionbtn" id="service-confirm"' + (enabled ? '' : ' disabled') + '>' +
+      esc(label) + '</button></div>';
+  }
+  UI.showHouseholdService = function (replace, view) {
+    const s = FB.state;
+    if (!s) return;
+    const status = FB.householdServiceStatus(s), r = status.record;
+    const employed = r && r.status !== 'ended';
+    let h = '<div data-service-list><p>' + esc(FB.T('Earn a place in your local lord’s household through useful work.')) + '</p>';
+    if (status.patron) h += '<button type="button" class="btn" id="service-patron">' +
+      esc(FB.T('Patron: {name}', {name:FB.fullName(status.patron)})) + '</button>';
+    const officer = s.chars[employed && r.officerId || s.roles.steward];
+    if (officer && !officer.dead) h += '<button type="button" class="btn" id="service-officer">' +
+      esc(FB.T('Household officer: {name}', {name:FB.fullName(officer)})) + '</button>';
+    if (employed) {
+      h += '<p><b>' + esc(FB.T('Current appointment: {office}', {office:FB.householdServiceName(s, r.roleId)})) + '</b></p>' +
+        '<p>' + esc(FB.T('Completed service: {days} working days.', {days:r.workedDays})) + '</p>';
+      if (status.reason) h += '<p class="progressnote">' + esc(status.reason) + '</p>';
+      else if (s.player.focus !== 'toil') h += '<p>' + esc(FB.T('Your focus is elsewhere. Pay and service progress are paused.')) + '</p>';
+      h += '<button type="button" class="btn" id="service-leave">' + esc(FB.T('Leave appointment…')) + '</button>';
+    } else if (status.reason) h += '<p class="progressnote">' + esc(status.reason) + '</p>';
+    h += '<p>' + esc(FB.T('Service does not change your station or free your family.')) + '</p>';
+    if (s.player.tier === 0) h += '<button type="button" class="btn" id="service-freedom">' + esc(FB.T('Review freedom terms…')) + '</button>';
+    let path = '';
+    Object.keys(FBDATA.householdServiceRoles).forEach(function (id) {
+      const def = FBDATA.householdServiceRoles[id], offer = FB.householdServiceStatus(s, id);
+      if (path !== def.path) { path = def.path; h += '<h3>' + esc(FB.householdServicePathName(path)) + '</h3>'; }
+      h += '<section class="settcard" data-service-role="' + id + '"><div class="settcard-head" tabindex="0"><h4>' +
+        esc(FB.householdServiceName(s, id)) + '</h4><span class="settcard-actions"><button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="service-details-' + id + '" aria-label="' + esc(FB.T('Details')) + '">?</button></span></div>' +
+        '<div class="settcard-details hidden" id="service-details-' + id + '"><p>' + esc(serviceRoleDescription(s, id)) + '</p>' +
+        serviceRoleBenefits(def) + '</div><p>' + esc(FB.T('{money:pay} per 90 working days', {pay:def.wage})) + '</p>';
+      if (offer.missing.length) h += '<p>' + esc(offer.missing[0]) + '</p>';
+      else h += '<p>' + esc(offer.renewal ? FB.T('Available for renewal') : FB.T('Requirements met')) + '</p>';
+      h += '<button type="button" class="actionbtn" id="service-review-' + id + '" data-service-review="' + id + '">' +
+        esc(offer.renewal ? FB.T('Review renewal…') : FB.T('Review appointment…')) + '</button></section>';
+    });
+    h += '</div><div class="gm-footer"><button type="button" class="btn" id="service-close">' + esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Service household'), h, {modalClass:'fullsheet-modal',historyView:true,replaceView:!!replace,
+      noFocus:!!view, titleDetailsHtml:'<p>' + esc(FB.T('Promotions require completed work, relevant skills and Standing. Every 90 working days improves Standing with the patron and officer, offers training and covers one ordinary labor duty within the next 180 days. Taxes and extraordinary dues remain payable.')) + '</p><p>' +
+        esc(FB.T('Travel, captivity and campaigning pause service. A new patron must renew your appointment. Moving home or becoming a landed ruler ends it. Your heir does not inherit the job.')) + '</p>'});
+    const root = $('gm-body').querySelector('[data-service-list]');
+    $('service-close').onclick = UI.closeModal;
+    root.querySelectorAll('[data-service-review]').forEach(function (button) {
+      button.onclick = function () { showServiceReview(button.dataset.serviceReview, false, serviceViewPosition(button.id)); };
+    });
+    if ($('service-leave')) $('service-leave').onclick = function () { showServiceReview(r.roleId, true, serviceViewPosition('service-leave')); };
+    if ($('service-freedom')) $('service-freedom').onclick = function () { UI.showFreedomPetition(); };
+    ['patron','officer'].forEach(function (kind) {
+      const button = $('service-' + kind), person = kind === 'patron' ? status.patron : officer;
+      if (button) button.onclick = function () {
+        UI.showCharModal(person.id, {view:'household-service',restore:serviceViewPosition(button.id)});
+      };
+    });
+    if (view) setTimeout(function () {
+      if ($('gm-body').querySelector('[data-service-list]') !== root) return;
+      (view.opened || []).forEach(function (id) {
+        const button = root.querySelector('[aria-controls="' + id + '"]');
+        if (button && button.getAttribute('aria-expanded') !== 'true') button.click();
+      });
+      const focus = view.focusId && $(view.focusId);
+      if (focus) focus.focus({preventScroll:true});
+      $('gm-body').scrollTop = view.scrollTop;
+    }, 0);
+  };
+  function showServiceReview(roleId, leaving, view, replace) {
+    const s = FB.state, status = FB.householdServiceStatus(s, roleId), r = status.record;
+    const def = FBDATA.householdServiceRoles[roleId];
+    const expected = {charId:s.player.charId,employerId:status.patron && status.patron.id,serial:r ? r.serial : 0};
+    const eventBusy = UI.eventsBusy();
+    const ready = !eventBusy && (leaving ? !!(r && r.status !== 'ended') : status.ready);
+    let h = '<div data-service-review-sheet><h3>' + esc(FB.householdServiceName(s, roleId)) + '</h3>';
+    if (leaving) h += '<p>' + esc(FB.T('Leave this appointment and return to your ordinary livelihood. Your completed experience remains available during this life.')) + '</p>';
+    else {
+      if (status.patron) h += '<p>' + esc(FB.T('Patron: {name}', {name:FB.fullName(status.patron)})) + '</p>';
+      h += '<p>' + esc(serviceRoleDescription(s, roleId)) + '</p>' + serviceRoleBenefits(def) +
+        '<p>' + esc(FB.T('Accepting switches your Daily Focus to this work. Other focuses pause its pay and progress.')) + '</p>' +
+        '<p>' + esc(FB.T('Each 90 working days: +2 Standing with the patron, +3 with the household officer, and a 50% chance of gaining one point in the next training skill.')) + '</p>' +
+        '<p>' + esc(FB.T('Each completed term covers one ordinary labor duty within 180 days. Taxes and extraordinary dues remain payable. Every 180 working days brings a household responsibility to resolve.')) + '</p>';
+      if (def.path === 'letters') h += '<p>' + esc(FB.T('Complete 720 working days in accounts or teaching to become Lettered.')) + '</p>';
+      if (status.missing.length) h += '<ul>' + status.missing.map(function (reason) { return '<li>' + esc(reason) + '</li>'; }).join('') + '</ul>';
+    }
+    if (eventBusy) h += '<p class="progressnote">' + esc(FB.T('Resolve the current event before changing household service.')) + '</p>';
+    h += serviceDecisionHtml(leaving ? FB.T('Leave appointment') : status.renewal ? FB.T('Renew appointment') : FB.T('Accept appointment'), ready) +
+      '</div><div class="gm-footer"><button type="button" class="btn" id="service-cancel">' + esc(FB.T('Not now')) + '</button></div>';
+    function back() { UI.showHouseholdService(false, view); }
+    openModal(leaving ? FB.T('Leave household service') : FB.T('Review household appointment'), h, {
+      modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back,replaceView:!!replace});
+    $('service-cancel').onclick = function () { modalHistoryBack(back); };
+    $('service-confirm').onclick = function () {
+      if (FB.state !== s || s.player.charId !== expected.charId) { UI.closeModal(); return; }
+      if (UI.eventsBusy()) { showServiceReview(roleId, leaving, view, true); return; }
+      const current = FB.householdServiceRecord(s);
+      const changed = leaving
+        ? current && current.serial === expected.serial && FB.endHouseholdService(s, 'left')
+        : FB.acceptHouseholdService(s, roleId, expected);
+      if (!changed) { showServiceReview(roleId, leaving, view, true); return; }
+      UI.closeModal();
+      markActionsDirty();
+      if (FB.noteDeedCompleted) FB.noteDeedCompleted(s, 'household_service');
+      FB.game.passDay({skipFocus:true});
+      UI.refresh();
+    };
+  }
+
+  function lifeIdentityHtml(c) {
+    let meta = c.dead
+      ? c.died !== undefined
+        ? FB.T('Born {born} · Died {died}', { born:c.born, died:c.died })
+        : FB.T('Deceased · Born {year}', { year:c.born })
+      : FB.T('Born {year}', { year:c.born });
+    return '<div class="charcard life-history-identity">' + FB.faceTag(c, 64, 76) +
+      '<div><div class="ccname">' + esc(FB.fullName(c)) + '</div><div class="ccmeta">' +
+      esc(meta) + '</div>' + (c.highestTitleData
+        ? kv(FB.T('Highest title achieved'), esc(FB.renderTitleSnapshot(c.highestTitleData))) : '') +
+      '</div></div>';
+  }
+  function paintLifeFaces(root, fallback) {
+    const s = FB.state;
+    root.querySelectorAll('canvas.pface[data-cid]').forEach(function (canvas) {
+      const id = canvas.getAttribute('data-cid');
+      const record = FB.lifeHistory(s, id);
+      const c = s.chars[id] || record && record.identity || fallback && fallback.id === id && fallback;
+      if (c) FB.paintPortrait(canvas, c, c.dead ? c.died || s.date.year : s.date.year,
+        { state:s, loadout:{} });
+    });
+  }
+  UI.showLifeHistory = function (cid, replace, options) {
+    options = options || {};
+    const s = FB.state;
+    const record = FB.lifeHistory(s, cid);
+    const c = s.chars[cid] || record && record.identity || options.identity;
+    if (!c) return;
+    const played = record && record.played;
+    const preserved = record && record.preserved;
+    const count = FB.preservedLifeCount(s);
+    const limit = FB.LIFE_HISTORY_LIMITS.preserved;
+    let h = lifeIdentityHtml(c);
+    h += '<p>' + esc(played
+      ? FB.T('This played life’s selected highlights are kept across generations.')
+      : preserved
+        ? FB.T('This life is preserved, including after death.')
+        : FB.T('Family highlights share a limited archive and may be condensed as generations pass.')) + '</p>';
+    if (record) h += '<p>' + esc(FB.T('Highlights recorded since {year}. Earlier events are not reconstructed.',
+      { year:record.since })) + '</p>';
+    if (!played) {
+      h += '<p>' + esc(FB.T('Preserved lives: {count}/{limit}. Deceased lives also use a place.',
+        { count:count, limit:limit })) + '</p><div class="life-history-actions">';
+      if (preserved) {
+        if (!c.dead && s.chars[cid]) h += '<button type="button" class="btn" id="life-follow">' +
+          esc(record.paused ? FB.T('Resume following') : FB.T('Stop following')) + '</button>';
+      } else if (!c.dead || record && record.entries.length) {
+        h += '<button type="button" class="btn" id="life-preserve"' +
+          (count >= limit ? ' disabled' : '') + '>' +
+          esc(c.dead ? FB.T('Preserve this life') : FB.T('Follow life')) + '</button>';
+      }
+      h += '</div>';
+      if (preserved) h += '<details class="life-history-release"><summary id="life-release">' +
+        esc(FB.T('Remove preservation')) + '</summary><p>' + esc(FB.T(
+          'Removing preservation stops following and frees one place. A current close relative returns to the smaller temporary family archive; other detailed histories are discarded.')) +
+        '</p><div class="life-history-actions"><button type="button" class="btn" id="life-release-keep">' +
+        esc(FB.T('Cancel')) + '</button><button type="button" class="btn" id="life-release-confirm">' +
+        esc(FB.T('Remove preservation')) + '</button></div></details>';
+      if (!preserved && count >= limit) h += '<p>' + esc(FB.T(
+        'The collection is full. Remove preservation from another life to make room.')) + '</p>';
+      if (preserved && record.paused && !c.dead) h += '<p>' + esc(FB.T(
+        'Following is paused. Collected highlights remain preserved; new accomplishments are not recorded.')) + '</p>';
+      else if (!preserved && !c.dead) h += '<p>' + esc(FB.T(
+        'Following preserves collected highlights and records future accomplishments. It is free and does not change this person’s behavior.')) + '</p>';
+    }
+    const entries = record ? record.entries.slice().sort(function (a, b) { return a.turn - b.turn; }) : [];
+    h += '<section class="life-history-timeline"><h4>' + esc(FB.T('Selected accomplishments')) + '</h4>';
+    if (!entries.length) h += '<p>' + esc(FB.T(
+      'No detailed accomplishments remain, or recording has not begun. Known family dates and titles are shown above.')) + '</p>';
+    for (const entry of entries) {
+      h += '<article class="chronicle-viewer-entry" data-life-entry data-i18n-ignore>' +
+        '<div class="chronicle-viewer-entry-meta">' + esc(FB.T('{year} AD', { year:entry.year })) +
+        '</div><p>' + esc(FB.renderMessage(entry.msg, { state:s, viewer:s.player.charId })) + '</p></article>';
+    }
+    if (record && record.condensed) h += '<p>' + esc(FB.T(
+      'Lesser or repeated events have been condensed to keep this life’s defining moments.')) + '</p>';
+    h += '</section><div class="gm-footer"><button type="button" class="btn" id="life-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Life history'), h, { historyView:!replace, replaceView:!!replace,
+      historyBack:true, historyBackRender:options.back || null,
+      modalClass:'fullsheet-modal life-history-modal', noFocus:!!replace });
+    paintLifeFaces($('gm-body'), c);
+    $('life-back').onclick = function () { modalHistoryBack(UI.closeModal); };
+    function refreshLife(focusId) {
+      const scroll = $('gm-body').scrollTop;
+      UI.showLifeHistory(cid, true, { identity:c, back:options.back });
+      $('gm-body').scrollTop = scroll;
+      const back = $('life-back');
+      setTimeout(function () {
+        if ($('life-back') !== back || $('genmodal').classList.contains('hidden')) return;
+        const focus = $(focusId) || back;
+        focus.focus({ preventScroll:true }); $('gm-body').scrollTop = scroll;
+      }, 0);
+    }
+    if ($('life-preserve')) $('life-preserve').onclick = function () {
+      if (FB.preserveLifeHistory(s, cid, true)) refreshLife('life-follow');
+    };
+    if ($('life-follow')) $('life-follow').onclick = function () {
+      if (FB.followLifeHistory(s, cid, !!record.paused)) refreshLife('life-follow');
+    };
+    if ($('life-release')) {
+      $('life-release-keep').onclick = function () {
+        $('life-release').parentNode.open = false;
+        $('life-release').focus({ preventScroll:true });
+      };
+      $('life-release-confirm').onclick = function () {
+        if (!FB.preserveLifeHistory(s, cid, false)) return;
+        refreshLife('life-preserve');
+      };
+    }
+  };
+  UI.showLifeHistoryCollection = function (page, replace, view) {
+    const s = FB.state;
+    const rows = FB.lifeHistoryCollection(s).sort(function (a, b) {
+      return (b.identity.born || 0) - (a.identity.born || 0) ||
+        (a.identity.id < b.identity.id ? -1 : 1);
+    });
+    const pages = Math.max(1, Math.ceil(rows.length / 20));
+    page = Math.max(0, Math.min(pages - 1, Number(page) || 0));
+    let h = '<p>' + esc(FB.T('Played lives and people you chose to preserve remain here after death.')) +
+      '</p><p>' + esc(FB.T('Preserved lives: {count}/{limit}. Deceased lives also use a place.', {
+        count:FB.preservedLifeCount(s), limit:FB.LIFE_HISTORY_LIMITS.preserved
+      })) + '</p><div class="gm-list">';
+    for (const row of rows.slice(page * 20, page * 20 + 20)) {
+      const c = s.chars[row.identity.id] || row.identity;
+      h += '<button type="button" class="actionbtn life-history-person" data-life-open="' +
+        esc(c.id) + '">' + FB.faceTag(c, 44, 50) + '<span>' + esc(FB.fullName(c)) +
+        '<span class="adesc">' + esc(row.played ? FB.T('Played life') : FB.T('Preserved life')) +
+        (c.dead ? ' · ' + esc(FB.T('Deceased')) : '') + '</span></span></button>';
+    }
+    h += '</div><div class="gm-footer"><button type="button" class="btn" id="life-list-back">' +
+      esc(FB.T('Back')) + '</button><button type="button" class="btn" id="life-list-prev"' +
+      (page ? '' : ' disabled') + '>' + esc(FB.T('Previous')) + '</button><span>' +
+      esc(FB.T('Page {page} of {pages}', { page:page + 1, pages:pages })) +
+      '</span><button type="button" class="btn" id="life-list-next"' +
+      (page + 1 < pages ? '' : ' disabled') + '>' + esc(FB.T('Next')) + '</button></div>';
+    openModal(FB.T('Remembered lives'), h, { historyView:!replace, replaceView:!!replace,
+      historyBack:true, modalClass:'fullsheet-modal life-history-modal', noFocus:!!view });
+    paintLifeFaces($('gm-body'));
+    $('life-list-back').onclick = function () { modalHistoryBack(UI.closeModal); };
+    $('life-list-prev').onclick = function () { UI.showLifeHistoryCollection(page - 1, true); };
+    $('life-list-next').onclick = function () { UI.showLifeHistoryCollection(page + 1, true); };
+    $('gm-body').querySelectorAll('[data-life-open]').forEach(function (button, index) {
+      button.onclick = function () {
+        const remembered = { scroll:$('gm-body').scrollTop,
+          id:button.getAttribute('data-life-open'), index:index };
+        UI.showLifeHistory(remembered.id, false, { back:function () {
+          UI.showLifeHistoryCollection(page, false, remembered);
+        } });
+      };
+    });
+    if (view) {
+      const body = $('gm-body'), back = $('life-list-back');
+      setTimeout(function () {
+        if ($('life-list-back') !== back || $('genmodal').classList.contains('hidden')) return;
+        const buttons = body.querySelectorAll('[data-life-open]');
+        let focus = null;
+        for (const button of buttons) if (button.getAttribute('data-life-open') === view.id) focus = button;
+        focus = focus || buttons[Math.min(view.index, buttons.length - 1)] || back;
+        focus.focus({ preventScroll:true }); body.scrollTop = view.scroll;
+      }, 0);
+    }
+  };
+
   UI.showCharModal = function (cid, returnContext, replaceView, realmIdHint) {
+    if (FB.state && !FB.state.chars[cid] && FB.lifeHistory(FB.state, cid)) {
+      return UI.showLifeHistory(cid, replaceView);
+    }
     return showCharacterInteractionSheet(cid, returnContext, replaceView,
       realmIdHint);
   };

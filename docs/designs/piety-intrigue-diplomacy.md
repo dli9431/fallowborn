@@ -1,5 +1,9 @@
 # Piety, intrigue & diplomacy
 
+Successful shared captivity records a turning point in the captive's tracked
+life history. Failed or repeated capture attempts add nothing. This presentation
+does not change custody, ransom, character retention or technology requirements.
+
 ## Baronial county claims
 
 Landed barons may use the existing Fabricate a County Claim plot against a county

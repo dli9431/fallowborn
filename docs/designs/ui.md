@@ -1,5 +1,17 @@
 # UI: keyboard & mobile
 
+Service household opens from the commoner Deed, Network, the active appointment
+in Self, and the local patron/officer's character sheet. The list groups four
+service paths, names the patron and contact, and keeps pay and the first blocker
+visible. Shared card Details disclose the role's work, training and contribution.
+Review shows every missing requirement and the one-day acceptance/renewal cost;
+the action retains a focusable cost-disclosure wrapper when disabled. Leaving
+requires its own review. Cancel, Not now, Escape and person-sheet Back restore
+list scroll, expanded details and the originating control. Confirmed appointments
+close the flow, advance one deed day and refresh the contextual Daily Focus.
+Freedom terms remain available separately; a household appointment does not free
+the family. These screens and behaviors are shared across every distribution.
+
 The map Home control zooms Counts and lower ranks to settlement detail. Counts
 center on their home county; lower ranks center on their exact home settlement,
 falling back to the county at the same detail level if its anchor is unavailable.
@@ -60,6 +72,21 @@ from birth. Household Plan summarizes the saved preference; live review explains
 age-filter rejections. Saving changes recommendations only, never existing pledges.
 
 ## Immediate-family navigation
+
+Every character sheet exposes Life history, including the read-only sheets reached
+from deceased family-tree portraits. History uses the same identity/portrait and
+Chronicle entry styles; Back and Escape retain the sheet and the originating tree
+position and branch state. Chronicle also exposes Remembered lives, a paged list
+of played and manually preserved biographies. Archived people open from their
+detached identity without recreating a character. Collection returns preserve page,
+scroll and focus, choosing a nearby surviving row after removal.
+
+Follow life and Preserve this life disclose the 50-life collection capacity,
+including dead people, and that only future events can be newly recorded.
+Stop following keeps the collected history. Remove preservation is an explicit
+inline disclosure with its destructive retention consequence, confirmation and
+Cancel; Cancel does not leave the history. Empty/condensed histories explain their
+limits without inventing missing events. All editions use the same controls.
 
 Ordinary character sheets use the existing family portrait strip for spouses,
 children, parents and siblings, including the player's descendants. Relations
