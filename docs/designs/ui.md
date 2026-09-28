@@ -2049,9 +2049,12 @@ selector. Itch and play retain the ordinary title, setup and opening story modal
 Only `FB.platform.isCrazyGames` changes the opening lessons: an unmarried adult
 with an available **Seek a match** begins by choosing a local marriage prospect.
 After **Pursue this match**, the next lesson explains the automatic personal-attention
-assignment and its remaining attention days before introducing Play. On phones it
-points through the portrait to Kin. The meeting does not count as the First steps
-event in CrazyGames: the player must answer a separate event after starting time
+assignment and its remaining attention days, and points directly to Play on desktop
+and phones. An assigned courtship needs no Kin visit or second cultivation action.
+Continue uses the same time-control target for this unread lesson; if attention is
+unassigned, the existing Kin guidance still explains how to assign it. The meeting
+does not count as the First steps event in CrazyGames: the player must answer a
+separate event after starting time
 before the event-result lesson and proposal guidance. Merely opening
 or dismissing the picker does not complete the first deed. Starts that cannot seek
 a first spouse retain the ordinary deed fallback.
@@ -3002,6 +3005,16 @@ Both desktop hover/focus and compact disclosures share this concise copy.
 The shop exposes a keyboard-accessible native Regional arms and armor disclosure listing equipment and exact technology, historical date, or region locks. Technology sheets include item production unlocks. Equipped mail, lamellar, plate, and coifs have distinct procedural details; appearance still requires owner visual review.
 
 ## Marriage finder and diplomatic partners
+
+The local Seeking a Match shortlist shows each generated candidate's procedural
+portrait, five effective skills and localized trait buttons alongside identity,
+Standing requirements and dowry in every distribution. Each portrait uses that
+candidate's own saved gender and appearance. Skills and traits wrap across the card; on compact
+screens, trait buttons and action controls retain 44px targets. Meet spans the
+available action row and shows its one-day cost; the shared Details control keeps
+fertility and family consequences accessible. Opening a trait retains the list DOM,
+scroll, expanded Details and originating focus for Back or Escape. Closing and
+reopening the shortlist reuses the same candidates, portraits, stats and traits.
 
 **Find a marriage...** appears in rulers' Deeds **Seek a match** route chooser,
 and descendant match pickers, and managed descendant character sheets. A descendant

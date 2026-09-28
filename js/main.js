@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.186.2';
+FB.VERSION = '1.186.3';
 FB.CHANGELOG = [
+  { v: '1.186.3', date: '2026-09-28', changes: [
+    'Seeking a Match shows each prospect’s portrait, skills and traits in every edition. CrazyGames courtship guidance points to Play once personal attention is assigned.'
+  ] },
   { v: '1.186.2', date: '2026-09-28', changes: [
     'Seek a match now offers dynastic searches only to rulers of Baron rank or higher.'
   ] },

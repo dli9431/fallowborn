@@ -26571,29 +26571,53 @@ window.FB = window.FB || {};
         s, s.chars[s.player.charId], m, true));
       const name = (epithetText(s, m) ? epithetText(s, m) + ' - ' : '') +
         m.name;
+      let skills = '', traits = '';
+      for (const skill of FB.SKILLS) {
+        skills += '<span class="suitor-skill" data-suitor-skill="' + esc(skill) +
+          '"><span>' + esc(FB.skillName(skill)) + '</span><b>' +
+          esc(FB.skillSnapshot(s, m, skill)) + '</b></span>';
+      }
+      for (const id of (m.traits || [])) {
+        const trait = FBDATA.traits[id];
+        if (!trait) continue;
+        const traitName = dt(s, 'trait', id, trait, 'name');
+        traits += '<button type="button" class="traitchip" data-trait="' + esc(id) +
+          '" aria-label="' + esc(FB.T('{trait}, {className}', {
+            trait:traitName, className:traitClassName(trait)
+          })) + '">' + esc(trait.icon || '') + (trait.icon ? ' ' : '') +
+          esc(traitName) + '</button>';
+      }
       h += '<div class="asset-owned-row settcard suitor-card" ' +
         'data-suitor-card="' + esc(m.id) + '">' +
-        '<div class="settcard-head"><b>💍 ' + esc(name) + '</b>' +
-        '<span class="settcard-actions">' +
-        '<button type="button" class="btn small settcard-info" ' +
-        'aria-expanded="false" aria-controls="' + esc(detId) + '" ' +
-        'title="' + esc(FB.T('Details')) + '" aria-label="' +
-        esc(FB.T('Details')) + '">?</button>' +
-        '<button type="button" class="btn small settcard-raise" ' +
-        'data-suitor="' + esc(m.id) + '" aria-label="' +
-        esc(FB.T('Meet {name}', { name:m.name })) + '">' +
-        esc(FB.T('Meet')) + '</button></span></div>' +
+        '<div class="suitor-person">' + FB.faceTag(m, 64, 72) +
+        '<div class="suitor-copy"><div class="settcard-head"><b>💍 ' +
+        esc(name) + '</b></div>' +
         '<div class="settcard-meta">' + esc(identity) + '</div>' +
         '<div class="settcard-fx">' + esc(FB.T('{station} · age {age}', {
           station:FB.stationName(st), age:age
-        })) + '</div>' +
+        })) + '</div></div></div>' +
+        '<div class="suitor-skills" role="group" aria-label="' +
+        esc(FB.T('Skills')) + '">' + skills + '</div>' +
+        '<div class="suitor-traits" role="group" aria-label="' +
+        esc(FB.T('Traits')) + '">' + (traits || '<span class="cmeta">' +
+          esc(FB.T('No notable traits.')) + '</span>') + '</div>' +
         '<div class="suitor-essentials">' + esc(essentials.join(' · ')) +
-        '</div><div class="settcard-details hidden" id="' + esc(detId) +
+        '</div><div class="suitor-actions"><button type="button" class="actionbtn" ' +
+        'data-suitor="' + esc(m.id) + '" aria-label="' +
+        esc(FB.T('Meet {name}', { name:m.name })) + '">' +
+        esc(FB.T('Meet')) + '<span class="adesc">' +
+        esc(FB.T('Takes 1 day')) + '</span></button>' +
+        '<span class="settcard-actions"><button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detId) + '" ' +
+        'title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span></div>' +
+        '<div class="settcard-details hidden" id="' + esc(detId) +
         '"><div class="settdesc">' + esc(details.join(' · ')) +
         '</div></div></div>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Decide nothing today')) + '</button>';
     openModal(FB.T('Seeking a Match'), h, { historyView:true });
+    FB.paintFaces($('gm-body'), s);
     bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-suitor]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -27830,10 +27854,11 @@ window.FB = window.FB || {};
     const grouped = traitGroupedEffects(t);
     for (const effect of grouped) fx += kv(effect.label, esc(effect.value));
     const justiceOrigin = $('genmodal').classList.contains('justice-modal');
+    const suitorOrigin = !!$('gm-body').querySelector('.suitor-list');
     openModal(t.icon + ' ' + traitName,
       '<div class="gm-body-text"><p><i>' + esc(traitDesc) + '</i></p>' + meta +
       (fx || '<p class="hint">No lasting effects — only a story people tell about you.</p>') +
-      '</div><button class="btn" id="tm-close">' + esc(FB.T('Close')) + '</button>', { historyView:justiceOrigin });
+      '</div><button class="btn" id="tm-close">' + esc(FB.T('Close')) + '</button>', { historyView:justiceOrigin || suitorOrigin });
     $('tm-close').addEventListener('click', UI.closeModal);
   };
 

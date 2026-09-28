@@ -1307,6 +1307,29 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .declarative-choice-details .cmeta { margin: 0 0 7px; }
 .suitor-list { display: grid; gap: 8px; }
 .suitor-card { margin: 0; }
+.suitor-person {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px; align-items: center;
+}
+.suitor-copy { min-width: 0; overflow-wrap: anywhere; }
+.suitor-skills, .suitor-traits {
+  display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 8px;
+}
+.suitor-skill { display: inline-flex; align-items: baseline; gap: 6px; }
+.suitor-skill > span { color: var(--helper-text-color); font-size: var(--ui-label-size); }
+.suitor-skill > b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.suitor-traits { gap: 4px; }
+.suitor-traits .traitchip { margin: 0; max-width: 100%; white-space: normal; }
+.suitor-actions {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center; gap: 8px; margin-top: 8px;
+}
+.suitor-actions > .actionbtn { width: 100%; min-width: 0; margin: 0; }
+@media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
+  .suitor-skill > span { font-size: 14px; }
+  .suitor-skill > b { font-size: 16px; }
+  .suitor-traits .traitchip { min-height: 44px; }
+}
 .match-candidate-card { margin: 0 0 8px; }
 .match-candidate-main {
   display: grid; grid-template-columns: auto minmax(0, 1fr);

@@ -368,9 +368,11 @@ test('the Kin lesson leads through finding a match and proposing marriage',
       const began = FB.beginCourtship(s, suitor);
       const days = FB.socialAttentionDaysToThreshold(s, suitor, true);
       FB.ui.refresh();
-      return { began:began, days:days };
+      return { began:began, days:days, portal:FB.platform.isCrazyGames,
+        assigned:FB.socialAttentionStatus(s, suitor).assigned };
     });
     expect(courtshipSetup.began).toBe(true);
+    expect(courtshipSetup).toMatchObject({portal:false,assigned:true});
     expect(courtshipSetup.days).toBeGreaterThan(0);
     const courtship = page.locator('.coachmark', {
       hasText:'person under Courting'
@@ -380,6 +382,7 @@ test('the Kin lesson leads through finding a match and proposing marriage',
       'about ' + courtshipSetup.days + ' days before you can propose marriage');
     await expect(page.locator('#lefttabs .tab[data-tab="family"]'))
       .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('#timebtns')).not.toHaveClass(/coachmark-lit/);
     await courtship.getByRole('button', { name:'Got it', exact:true }).click();
 
     await page.evaluate(function () {

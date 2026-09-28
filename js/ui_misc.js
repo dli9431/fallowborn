@@ -3060,6 +3060,7 @@ window.FB = window.FB || {};
       s.chars[s.player.courtingId];
     const days = target && FB.socialAttentionDaysToThreshold
       ? FB.socialAttentionDaysToThreshold(s, target, true) : null;
+    let hintTarget = '#lefttabs .tab[data-tab="family"]';
     let text = FB.T(
       '💡 Open Kin and tap the person under Courting. Give them personal attention until your Standing is high enough to propose.');
     if (days !== null && days > 0) {
@@ -3071,9 +3072,8 @@ window.FB = window.FB || {};
     }
     if (FB.platform.isCrazyGames && target &&
         FB.socialAttentionStatus(s, target).assigned) {
-      text = mobileLayoutNow()
-        ? FB.T('💡 Your match already has your personal attention. Tap your portrait, open Kin, and tap the person under Courting to review it. Standing grows as days pass while you work or take other actions.')
-        : FB.T('💡 Your match already has your personal attention. Open Kin and tap the person under Courting to review it. Standing grows as days pass while you work or take other actions.');
+      hintTarget = '#timebtns';
+      text = FB.T('💡 Your match already has your personal attention. Use Play to let Standing grow as days pass while you work or take other actions.');
       if (days !== null && days > 0) {
         text += ' ' + (days === 1
           ? FB.T('About 1 in-game day until their Standing is high enough to propose.')
@@ -3084,7 +3084,7 @@ window.FB = window.FB || {};
     }
     return UI.maybeTip('family-courtship',
       text,
-      '#lefttabs .tab[data-tab="family"]', {
+      hintTarget, {
         noNext:true,
         followUp:FB.platform.isCrazyGames ? 'crazygames-household' : null
       });
@@ -4771,7 +4771,7 @@ window.FB = window.FB || {};
       }
       const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment]');
       if (chip) {
-        if (chip.closest('#genmodal.justice-modal')) {
+        if (chip.closest('#genmodal.justice-modal, #genmodal .suitor-list')) {
           chip.setAttribute('tabindex', '0');
           chip.focus({ preventScroll:true });
         }

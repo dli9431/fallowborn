@@ -3,12 +3,12 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'css/style.css', 'js/main.js', 'js/ui_misc.js',
   'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_topbar.js', 'js/actions.js',
-  'js/events.js', 'js/model.js', 'js/economy.js', 'js/technology.js',
+  'js/events.js', 'js/model.js', 'js/portrait.js', 'js/economy.js', 'js/technology.js',
   'js/lordships.js', 'js/world.js', 'js/messages.js', 'js/i18n.js',
   'js/save.js', 'js/util.js', 'js/travel.js', 'js/crazygames.js', 'data/starts.js',
   'data/actions.js', 'data/economy.js', 'data/bookmarks.js', 'data/travel.js',
   'data/map_data.js', 'data/counties.js', 'data/settlements.js',
-  'data/settlements_real.js', 'data/cultures.js',
+  'data/settlements_real.js', 'data/cultures.js', 'data/traits.js',
   'data/technology.js', 'data/events_common.js', 'data/events_peasant.js', 'data/events_tutorial.js',
   'data/distribution_crazygames.js'
 ]);
@@ -270,8 +270,31 @@ for (const viewport of [
       await expect(page.locator('.coachmark')).toHaveCount(0);
       await page.locator('[data-action-id="seek_match"]').click();
       await page.locator('#match-local').click();
+      await expect(page.locator('[data-suitor-card]')).toHaveCount(3);
+      await expect(page.locator('[data-suitor-card] canvas.pface')).toHaveCount(3);
+      await expect(page.locator('[data-suitor-card] [data-suitor-skill]')).toHaveCount(15);
+      await expect.poll(function () {
+        return page.locator('[data-suitor-card]').evaluateAll(function (cards) {
+          return cards.every(function (card) {
+            const face = card.querySelector('canvas.pface');
+            const s = FB.state, c = s.chars[card.dataset.suitorCard];
+            const look = c && FB.characterLook(c, s.date.year, s);
+            return c && c.sex === 'f' && look.female &&
+              face && face._fbPortraitStamp &&
+              face._fbPortraitStamp.indexOf('|' + FB.characterVisualKey(s, c) + '@') >= 0 &&
+              face.dataset.cid === card.dataset.suitorCard &&
+              card.querySelectorAll('button[data-trait]').length > 0;
+          });
+        });
+      }).toBe(true);
       const prospect = page.locator('[data-suitor]').nth(1);
       const id = await prospect.getAttribute('data-suitor');
+      const preview = await page.evaluate(function (id) {
+        const s = FB.state, c = s.chars[id];
+        return { ids:s.player.suitorIds.slice(), character:{ id:c.id, name:c.name, sex:c.sex,
+          born:c.born, culture:c.culture, religion:c.religion,
+          skills:c.skills, traits:c.traits } };
+      }, id);
       await prospect.click();
       await expect(page.locator('#ev-title')).toContainText('A Possible Match');
       expect(await page.evaluate(function () {
@@ -279,6 +302,9 @@ for (const viewport of [
         return { deed:!!s.player.flags.tut_deed, courting:s.player.courtingId,
           spouses:FB.spousesSnapshot(s, s.chars[s.player.charId]).length };
       })).toEqual({ deed:true, courting:id, spouses:0 });
+      expect(await page.evaluate(function (ids) {
+        return ids.filter(function (id) { return !!FB.state.chars[id]; });
+      }, preview.ids)).toEqual([id]);
       await expect.poll(function () {
         return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
       }).toBe(false);
@@ -287,9 +313,12 @@ for (const viewport of [
       }).click();
       const attention = page.locator('.coachmark');
       await expect(attention).toContainText('already has your personal attention');
-      if (viewport.name === 'phone') {
-        await expect(attention).toContainText('Tap your portrait');
-      }
+      await expect(attention).toContainText('Use Play');
+      await expect(attention).not.toContainText('Kin');
+      await expect(attention).not.toContainText('Tap your portrait');
+      await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
+      await expect(page.locator('#lefttabs .tab[data-tab="family"]'))
+        .not.toHaveClass(/coachmark-lit/);
       expect(await page.evaluate(function () {
         const s = FB.state;
         return { assigned:FB.socialAttentionStatus(s, s.chars[s.player.courtingId]).assigned,
@@ -348,8 +377,46 @@ for (const viewport of [
       await expect(page.locator('.coachmark')).toContainText('Start your family business');
       expect(await page.evaluate(function () {
         const s = FB.state;
-        return FB.spousesSnapshot(s, s.chars[s.player.charId]).length;
-      })).toBe(1);
+        return FB.spousesSnapshot(s, s.chars[s.player.charId]).map(function (c) {
+          return { id:c.id, name:c.name, sex:c.sex, born:c.born, culture:c.culture,
+            religion:c.religion, skills:c.skills, traits:c.traits };
+        });
+      })).toEqual([preview.character]);
+    });
+
+  test('CrazyGames ' + viewport.name + ' resumes an assigned courtship hint at Play',
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:viewport.width, height:viewport.height });
+      await startPortal(page, testInfo);
+      expect(await page.evaluate(function () {
+        FB.ui.coachmarkReset();
+        const s = FB.state, candidates = FB.spawnSuitor(s);
+        const candidate = candidates[1] || candidates[0];
+        FB.pickSuitor(s, candidate.id);
+        const began = FB.beginCourtship(s, candidate);
+        s.player.flags.tut_deed = 1;
+        FB.ui.resumeFirstPlayerTip();
+        return began;
+      })).toBe(true);
+      await expect(page.locator('.coachmark')).toContainText('already has your personal attention');
+      await saveAndContinue(page, testInfo);
+      const attention = page.locator('.coachmark');
+      await expect(attention).toContainText('Use Play');
+      await expect(attention).not.toContainText('Kin');
+      await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
+      await expect(page.locator('body')).not.toHaveClass(/showself/);
+      const played = await page.locator('#btn-endturn').evaluate(function (button) {
+        const s = FB.state, before = JSON.stringify(s.player.socialAttention);
+        button.click();
+        const result = {running:!FB.game.paused,unpaused:!!s.player.flags.tut_unpause,
+          learned:!!FB.game.uiPrefs.tipsSeen['family-courtship'],
+          sameAssignment:before === JSON.stringify(s.player.socialAttention)};
+        // Exercise the real control while keeping the fixture before its first tick.
+        FB.game.setPaused(true);
+        return result;
+      });
+      expect(played).toEqual({running:true,unpaused:true,learned:true,sameAssignment:true});
+      await expect(page.locator('.coachmark')).toHaveCount(0);
     });
 
   test('CrazyGames ' + viewport.name + ' guides enterprise, freedom, and land before childbirth',
@@ -637,9 +704,12 @@ test('CrazyGames waits for courtship and a successful wedding before any enterpr
     expect(courtship.began).toBe(true);
     expect(courtship.days).toBeGreaterThan(0);
     await finishOpeningLoop(page, 1000);
-    const attention = page.locator('.coachmark', { hasText:'person under Courting' });
+    const attention = page.locator('.coachmark', { hasText:'already has your personal attention' });
     await expect(attention).toBeVisible();
     await expect(attention).toContainText('About ' + courtship.days + ' in-game day');
+    await expect(attention).toContainText('Use Play');
+    await expect(attention).not.toContainText('Kin');
+    await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
     expect(await page.evaluate(function () {
       const s = FB.state;
       return { proposal:FB.instantStatus(s, 'propose').can,
@@ -672,6 +742,24 @@ test('CrazyGames waits for courtship and a successful wedding before any enterpr
         spouses:FB.spousesSnapshot(FB.state,
           FB.state.chars[FB.state.player.charId]).length };
     })).toEqual({ plan:false, saving:false, purchase:false, spouses:0 });
+  });
+
+test('CrazyGames still explains assigning attention when courtship has no assignment',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    expect(await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      const s = FB.state, candidates = FB.spawnSuitor(s);
+      const candidate = candidates[1] || candidates[0];
+      FB.pickSuitor(s, candidate.id);
+      if (!FB.beginCourtship(s, candidate)) return false;
+      FB.socialAttentionWithdraw(s, candidate.id, true);
+      return FB.ui.maybeFamilyCourtshipTip();
+    })).toBe(true);
+    await expect(page.locator('.coachmark')).toContainText('Give them personal attention');
+    await expect(page.locator('.coachmark')).not.toContainText('already has your personal attention');
+    await expect(page.locator('#lefttabs .tab[data-tab="family"]')).toHaveClass(/coachmark-lit/);
+    await expect(page.locator('#timebtns')).not.toHaveClass(/coachmark-lit/);
   });
 
 test('CrazyGames falls back to an available deed for an already married start',

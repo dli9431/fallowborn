@@ -263,7 +263,18 @@ people currently present may be drawn: 867 Dublin begins with Norse Pagan and Ga
 Catholic prospects, but matchmaking never invents Norse Catholic or Gaelic Norse Pagan
 residents by recombining those axes. A single-community county stays homogeneous.
 The picker keeps each prospect's culture, faith, station, age, exact Standing
-requirement, and dowry direction visible at a glance. Fertility, station-gap
+requirement, and dowry direction visible at a glance. Each candidate is already a
+full generated character: the card paints that character's procedural portrait and
+shows all five effective skills and every known trait. This presentation is shared
+by every distribution. Portraits resolve the candidate's own saved sex and appearance,
+independently of the protagonist's gender. Trait buttons use the shared
+explanation sheet; Back and Escape retain shortlist scroll, expanded Details and
+focus. Meet is a separate full-width action with its one-day cost visible.
+Rendering and trait inspection do not reroll candidates or consume simulation RNG.
+The selected identity, skills and traits carry into meeting, courtship and marriage; the
+existing search/selection cleanup discards unchosen records. No portrait bitmap or
+duplicate preview character is stored. This is presentation of existing character
+data, with no new gameplay capability or technology requirement. Fertility, station-gap
 interpretation, and the prospective child's identity move into the shared card
 tooltip on desktop or `?` disclosure on touch and compact layouts. Once the protagonist is forty, a fourth step-down
 family offers a very young adult aged sixteen to twenty-four. The available candidates persist on
@@ -343,6 +354,10 @@ event retain their costs, choices, cancellation, and courtship requirements. Imm
 after choosing **Pursue this match**, the personal-attention lesson explains that the
 assignment is already active and advances alongside normal work. It precedes Play and
 a separate event choice; the match introduction does not satisfy that event lesson.
+For an assigned courtship, this CrazyGames lesson points at the time controls and
+invites the player to use Play, including after Continue. It never asks for a Kin
+visit or another cultivation assignment. The standard editions retain their family
+guidance, and an unassigned courtship retains its assignment guidance.
 After the event result, guidance keeps courtship as the goal until a proposal is
 eligible. Only a successful wedding unlocks the enterprise-saving and purchase
 lessons; acknowledging the proposal hint or opening its event is insufficient.
