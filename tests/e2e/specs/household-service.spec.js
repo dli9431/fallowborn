@@ -445,3 +445,29 @@ test('service list and review keep portraits, pay and blockers on the face with 
   await expect(page.locator('[data-service-review-sheet] .kv').first()).toContainText('Pay');
   await expect(page.locator('.service-requirements')).toHaveCount(0);
 });
+
+for (const width of [390, 690]) {
+  test('service role state labels never split a word at width ' + width, async function ({ page }) {
+    await page.setViewportSize({ width:width, height:800 });
+    await page.evaluate(function () { FB.ui.showHouseholdService(); });
+    const labels = await page.locator('.large-list-face-state').evaluateAll(function (nodes) {
+      return nodes.map(function (node) {
+        // Each word must render on a single line box.
+        const text = node.firstChild;
+        const words = [];
+        const re = /\S+/g;
+        let match;
+        while ((match = re.exec(text.textContent))) {
+          const range = document.createRange();
+          range.setStart(text, match.index);
+          range.setEnd(text, match.index + match[0].length);
+          const tops = Array.from(range.getClientRects()).map(function (r) { return Math.round(r.top); });
+          words.push(new Set(tops).size);
+        }
+        return { text:node.textContent, split:words.some(function (lines) { return lines > 1; }) };
+      });
+    });
+    expect(labels.length).toBeGreaterThan(0);
+    expect(labels.filter(function (label) { return label.split; })).toEqual([]);
+  });
+}
