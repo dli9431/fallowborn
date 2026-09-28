@@ -2885,10 +2885,11 @@ window.FB = window.FB || {};
   };
 
   /* ================= first-time player tips =================
-     Every edition warns once about low health, then starts at an available
+     Standard editions warn once about low health, then start at an available
      deed (Go into town when it is
-     usable, otherwise the Deeds tab) and defers the map, Home, and filters
+     usable, otherwise the Deeds tab) and defer the map, Home, and filters
      tour until First steps and its event result.
+     CrazyGames puts the health warning after its Daily Focus/saving lesson.
      The playable deed/time/event/hostile-deed loop, the new
      Family & legacy checklist, and Self. Other areas
      teach themselves only when the player deliberately opens them. A tip is
@@ -3511,7 +3512,9 @@ window.FB = window.FB || {};
     if (FB.platform.isCrazyGames && (tipsSilenced() || coachItem ||
         coachQueue.length || (UI.eventsBusy && UI.eventsBusy()) ||
         !$('genmodal').classList.contains('hidden'))) return false;
-    if (UI.tipDue('health-warning') || tipPending['health-warning']) {
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    if ((!FB.platform.isCrazyGames || seen['cg-enterprise-saving']) &&
+        (UI.tipDue('health-warning') || tipPending['health-warning'])) {
       const me = s.chars[s.player.charId];
       return UI.maybeTip('health-warning',
         me && FB.ageOf(me, s.date.year) >= 16

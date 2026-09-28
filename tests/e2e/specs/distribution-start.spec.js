@@ -66,8 +66,6 @@ test('CrazyGames starts Osric in one click and points to a first marriage prospe
       });
     }).toBe('osric_867');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await expect(page.locator('.coachmark')).toContainText('Low health greatly increases');
-    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
     await expect(page.locator('.coachmark')).toContainText('use Seek a match');
     await expect(page.locator('#tab-actions [data-action-id="seek_match"]'))
       .toHaveClass(/coachmark-lit/);

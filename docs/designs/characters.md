@@ -465,8 +465,9 @@ unrelated characters do not use it.
 
 The first-life onboarding warns once per browser profile that low health greatly
 increases the chance of dying, with an adult-only pointer to Rest and mend. This
-startup coachmark uses existing tip acknowledgement and opt-outs; later health
-losses do not repeat it. Mortality and recovery mechanics are unchanged.
+coachmark appears at startup in standard editions and after the Daily Focus/saving
+lesson in CrazyGames. It uses existing tip acknowledgement and opt-outs; later
+health losses do not repeat it. Mortality and recovery mechanics are unchanged.
 
 **Wounds & sickness have names.** Beneath the 0–10 health number, the player carries
 `c.ails` — a short list (≤3) of ailment ids into `FBDATA.ailments` (data/traits.js).

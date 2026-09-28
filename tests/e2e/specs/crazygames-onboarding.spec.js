@@ -44,11 +44,10 @@ async function startPortal(page, testInfo) {
       Math.random = random;
     }
   });
-  const health = page.locator('.coachmark', { hasText:'Low health greatly increases' });
-  await expect(health).toContainText('chance of dying');
-  await expect(page.locator('#tb-health')).toHaveClass(/coachmark-lit/);
-  await health.getByRole('button', { name:'Got it', exact:true }).click();
   await expect(page.locator('.coachmark')).toContainText('use Seek a match');
+  expect(await page.evaluate(function () {
+    return !!FB.game.uiPrefs.tipsSeen['health-warning'];
+  })).toBe(false);
 }
 
 async function finishOpeningLoop(page, gold) {
@@ -446,7 +445,38 @@ for (const viewport of [
       await plan.getByRole('button', { name:'Got it', exact:true }).click();
       const saving = page.locator('.coachmark', { hasText:'Choose an earning Daily Focus' });
       await expect(saving).toBeVisible();
+      await expect(saving).toContainText('Play or Skip season');
+      expect(await page.evaluate(function () {
+        const seen = FB.game.uiPrefs.tipsSeen;
+        return { saving:!!seen['cg-enterprise-saving'], health:!!seen['health-warning'] };
+      })).toEqual({ saving:false, health:false });
+      // An unread saving lesson stays ahead of health through Continue.
+      await saveAndContinue(page, testInfo);
+      await expect(saving).toBeVisible();
       await saving.getByRole('button', { name:'Got it', exact:true }).click();
+      const health = page.locator('.coachmark', { hasText:'Low health greatly increases' });
+      await expect(health).toContainText('chance of dying');
+      await expect(health).toContainText('Rest and mend under Daily Focus in Deeds');
+      await expect(page.locator('#tb-health')).toHaveClass(/coachmark-lit/);
+      expect(await page.evaluate(function () {
+        const seen = FB.game.uiPrefs.tipsSeen;
+        return { saving:!!seen['cg-enterprise-saving'], health:!!seen['health-warning'] };
+      })).toEqual({ saving:true, health:false });
+      // Continue resumes the warning until acknowledged, then health changes
+      // must not repeat this once-per-profile lesson.
+      await saveAndContinue(page, testInfo);
+      await expect(health).toBeVisible();
+      await health.getByRole('button', { name:'Got it', exact:true }).click();
+      expect(await page.evaluate(function () {
+        const me = FB.state.chars[FB.state.player.charId];
+        const previousHealth = me.health;
+        me.health = 4;
+        FB.ui.refresh();
+        FB.ui.resumeFirstPlayerTip();
+        me.health = previousHealth;
+        return { memory:FB.game.uiPrefs.tipsSeen['health-warning'],
+          stored:JSON.parse(localStorage.getItem('fb_ui')).tipsSeen['health-warning'] };
+      })).toEqual({ memory:1, stored:1 });
       await expect(page.locator('.coachmark')).toHaveCount(0);
 
       const purchase = await page.evaluate(function () {

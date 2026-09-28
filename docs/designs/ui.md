@@ -2032,13 +2032,15 @@ departed protagonist's portrait. On desktop that retained-panel target uses the 
 over-map placement instead of falling back to the bottom-left toast corner.
 
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
-brand-new player once ever per install rather than once per save. Every edition
-begins with one health coachmark anchored to the topbar health value: low health
-greatly increases the chance of dying. Adults also receive a pointer to **Rest and
-mend** under Daily Focus in Deeds. Acknowledgement or use of the highlighted health
+brand-new player once ever per install rather than once per save. One health
+coachmark anchored to the topbar health value warns that low health greatly
+increases the chance of dying. Adults also receive a pointer to **Rest and mend**
+under Daily Focus in Deeds. Standard editions show it before the first deed;
+CrazyGames waits until the Daily Focus/saving lesson has been acknowledged or its
+highlighted time controls used. Acknowledgement or use of the highlighted health
 control records `tipsSeen['health-warning']` in the existing browser preference and
-hands off to the first deed. Later health losses do not repeat it; the ordinary hint
-opt-outs apply. It adds no health threshold trigger or gameplay change.
+resumes the opening guidance. Later health losses do not repeat it; the ordinary
+hint opt-outs apply. It adds no health threshold trigger or gameplay change.
 
 Standard editions then begin with a deed: when **Go into town…** is usable (an adult
 in a county with settlements), the deed coachmark opens its Deeds section and points
@@ -2074,7 +2076,9 @@ proposal hint has been acknowledged. The wedding then introduces saving for the
 first enterprise before the map tour or the first-child objective. The recommendation
 uses live purchase requirements, prefers a business with eligible household workers,
 and names its settlement, price, and funds or shortfall. An earning-focus/time lesson
-supports saving; a separate reminder appears once a purchase is affordable.
+supports saving with **Play or Skip season**; the one-time health warning follows
+that lesson. Continue preserves this order and resumes an unread health warning.
+A separate reminder appears once a purchase is affordable.
 After buying the enterprise, the next lesson teaches staffing, earnings, and saving
 for freedom. A serf is directed to **Review station & freedom** with the live outright
 purchase price or saved offer terms. Separate reminders distinguish an affordable

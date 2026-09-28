@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.186.4';
+FB.VERSION = '1.186.5';
 FB.CHANGELOG = [
+  { v: '1.186.5', date: '2026-09-28', changes: [
+    'CrazyGames health guidance now follows the Daily Focus and saving lesson.'
+  ] },
   { v: '1.186.4', date: '2026-09-28', changes: [
     'Startup guidance now warns once about low health and points adults to Rest and mend.'
   ] },
