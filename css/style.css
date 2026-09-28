@@ -2210,6 +2210,9 @@ button.modifierchip:hover, button.modifierchip:focus-visible {
    repeats here so it beats the `.kv > b` value styling (equal specificity,
    later rule wins) */
 button.linklike { background: none; border: 0; padding: 0; font: inherit; color: var(--ui-accent-color); }
+/* A realm link and its trailing punctuation wrap as one unit; long names still wrap. */
+.war-realm-nowrap { white-space: nowrap; }
+.war-realm-nowrap > .war-realm-link { white-space: normal; }
 .identity-conversion-actions { display: grid; gap: 8px; }
 .identity-conversion-action {
   display: flex; flex-wrap: wrap; align-items: stretch; overflow: hidden;
@@ -6137,8 +6140,6 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 .marriage-lineage-field select { width: 100%; min-width: 0; }
 
 /* Episcopal petitions keep long cost/chance labels aligned at every width. */
-.bishop-appointment-actions { display:grid; grid-template-columns:minmax(0, 1fr); gap:8px; margin-top:16px; }
-.bishop-appointment-actions > .btn { width:100%; min-height:44px; white-space:normal; }
 
 /* Native campaign controls follow the shared field and touch-target skin. */
 .war-host-assignment, .war-claim-row, .war-law-row {
@@ -6341,22 +6342,28 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 #tab-network .large-list-section-body > .hint {
   color:var(--main-text-color);
 }
-/* Household service and life histories reuse Governance fact cards, Work
-   list rows and Chronicle entries; only spacing and a few accents are local. */
-.household-service-modal .governance-card,
-.life-history-modal .governance-card { margin: 0 0 12px; }
-.service-people { display: grid; gap: 8px; margin-bottom: 10px; }
-.service-people .large-list-row { width: 100%; margin: 0; }
-div.service-person {
-  padding: 8px 10px; border: 1px solid var(--ui-border-color); border-radius: 8px;
-  background: var(--ui-card-color);
+/* Decision reviews (household service, life histories, journeys, settlements,
+   grants, retirement, careers) share Governance fact cards, Work list rows and
+   full-width action cards; only spacing and a few accents are local. */
+.review-fact-card { margin: 0 0 12px; }
+.review-fact-card > .progressnote, .review-fact-card > .warnote { margin: 8px 0 0; }
+.review-people { display: grid; gap: 8px; margin-bottom: 10px; }
+.review-people .large-list-row { box-sizing: border-box; width: 100%; margin: 0; }
+div.review-person, .review-static-row {
+  box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--ui-border-color);
+  border-radius: 8px; background: var(--ui-card-color);
 }
-.household-service-modal .modal-body-actions { display: flex; gap: 8px; margin-top: 10px; }
+.review-static-row { display: flex; align-items: center; gap: 8px; }
+.review-rows { display: grid; gap: 8px; }
+.review-actions { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 0; }
+.review-actions + .panelh, .review-fact-card + .panelh { margin-top: 16px; }
+.review-actions .actionbtn canvas { vertical-align: middle; }
+.adesc.review-note-warn { color: var(--ui-warning-color); }
+.review-list { margin: 0; padding-left: 20px; }
+.review-list li + li { margin-top: 4px; }
+.review-list-risk { color: var(--ui-warning-color); }
 .large-list-row .adesc.service-blocker { color: var(--ui-warning-color); }
 .large-list-face-state.service-current { color: var(--ui-accent-color); font-weight: bold; }
-.service-requirements { margin: 0; padding-left: 20px; color: var(--ui-warning-color); }
-.service-requirements li + li { margin-top: 4px; }
-.life-history-modal .modal-body-actions { display: flex; gap: 8px; margin-top: 10px; }
 .life-history-release { margin-top: 10px; }
 .life-history-release > summary {
   min-height: 44px; box-sizing: border-box; padding: 10px 12px; cursor: pointer;

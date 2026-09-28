@@ -58,7 +58,8 @@ FBDATA.events.push(
       effects:{ custom:'war_hunt' } },
     { label:'Reorganize the campaign.', desc:'Combat-effectiveness modifier: up to +15 percentage points for this campaign, capped at 110%, and +1 health. The host keeps its position, orders, and provisions.',
       effects:{ custom:'war_hold', health:1 } },
-    { label:'Seek terms.', desc:'End the war now, at a price.', confirm:'war_end', effects:{ custom:'war_terms' } }
+    { label:'Seek terms.', desc:'End the war now, at a price.', require:{ custom:'war_terms_affordable' },
+      confirm:'war_end', effects:{ custom:'war_terms' } }
   ]},
 { id:'war_tribute_offer', title:'Envoys Under a White Flag', trigger:{ never:true }, wartime:true, warStatus:true,
   contextValidator:'war_event_context_valid',

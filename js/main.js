@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.185.1';
+FB.VERSION = '1.186.0';
 FB.CHANGELOG = [
+  { v: '1.186.0', date: '2026-09-27', changes: [
+    'Campaigns can now end by negotiation: propose white peace, demand tribute or recognition, cede objectives, or submit, guided by a visible war balance. Withdrawing or buying peace now costs much more.',
+    'Failed rebellions return you to the lord you renounced, and decision screens across the game show terms, costs and people more clearly.'
+  ] },
   { v: '1.185.1', date: '2026-09-27', changes: [
     'Household service and life history screens now use clear fact cards, portraits and role cards instead of long text.'
   ] },

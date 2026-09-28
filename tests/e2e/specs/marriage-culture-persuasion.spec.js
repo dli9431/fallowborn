@@ -134,7 +134,9 @@ test('invitation confirmation discloses consequences and spends exactly one day'
     FB.ui.showMarriageCultureInvitation(id, FB.state.player.charId);
     return FB.state.turn;
   }, id);
-  await expect(page.locator('#gm-body')).toContainText('Acceptance: 35%');
+  await expect(page.locator('[data-culture-invitation] .kv').filter({ hasText:'Acceptance chance' }))
+    .toContainText('35%');
+  await expect(page.locator('[data-culture-invitation] canvas.pface')).toHaveCount(1);
   await expect(page.locator('#gm-body')).toContainText('120 prestige and one day');
   await expect(page.locator('#gm-body')).toContainText('Faith, dynasty, relatives, territory, and marriage status');
   await page.locator('#culture-invitation-confirm').click();

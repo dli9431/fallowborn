@@ -194,6 +194,12 @@ window.FB = window.FB || {};
   const openModal = SH.openModal;
   const panelh = SH.panelh;
   const personAssignmentCard = SH.personAssignmentCard;
+  const rawKv = SH.rawKv;
+  const reviewFactsCard = SH.reviewFactsCard;
+  const reviewPersonHtml = SH.reviewPersonHtml;
+  const reviewPeopleHtml = SH.reviewPeopleHtml;
+  const reviewActionCardHtml = SH.reviewActionCardHtml;
+  const reviewActionsHtml = SH.reviewActionsHtml;
   const positionDesc = SH.positionDesc;
   const positionEffectText = SH.positionEffectText;
   const positionName = SH.positionName;
@@ -2138,11 +2144,7 @@ window.FB = window.FB || {};
     const personalDays = preview.roundTripDays +
       (FBDATA.balance.travelMinStayDays || 90);
     const currentBoldChance = Math.round(FB.namedChance(s, 'travel_trade') * 100);
-    let h = '<div class="gm-body-text">' +
-      '<p><b>' + esc(FB.T('Your venture to {destination}', {
-        destination:pr.name
-      })) + '</b></p>' +
-      kv('Stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
+    const facts = kv('Stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
       kv('Commodity', esc((FBDATA.marketGoods[preview.goodId].icon || '') + ' ' +
         FB.dataText(s, s.player.charId, 'marketGood', preview.goodId,
           FBDATA.marketGoods[preview.goodId], 'name', {}))) +
@@ -2163,39 +2165,41 @@ window.FB = window.FB || {};
       }))) +
       kv('Captured roll adjustment', esc(FB.T('{amount}%', {
         amount:(modifier > 0 ? '+' : '') + modifier
-      }))) +
-      '<p class="hint">' + esc(FB.T(
-        'The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture.')) +
-      '</p></div><div class="gm-list">' +
-      '<button class="actionbtn" id="venture-dispatch-cautious">🧭 ' +
-      esc(FB.T('Dispatch cautiously')) +
-      '<span class="adesc">' + esc(FB.T(
-        '{risk}% risk of total loss. You remain home and continue normal work.', {
-          risk:cautiousRisk
-        }) + ' ' + ventureReturnsText(preview.strategies.cautious)) +
-      '</span></button>' +
-      '<button class="actionbtn" id="venture-dispatch-bold">⚖ ' +
-      esc(FB.T('Dispatch boldly')) +
-      '<span class="adesc">' + esc(FB.T(
-        '{risk}% risk of total loss, with larger gains and harsher losses. You remain home.', {
-          risk:boldRisk
-        }) + ' ' + ventureReturnsText(preview.strategies.bold)) +
-      '</span></button>' +
-      '<button class="actionbtn" id="venture-accompany"' +
-      (accompany === true ? '' : ' disabled') + '>🧭 ' +
-      esc(FB.T('Accompany personally')) +
-      '<span class="adesc">' + esc(accompany === true
-        ? FB.T('At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success).', {
+      })));
+    const h = reviewFactsCard(FB.T('Your venture to {destination}', { destination:pr.name }),
+      facts, ' data-venture-review') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'venture-dispatch-cautious', labelHtml:'🧭 ' + esc(FB.T('Dispatch cautiously')),
+        note:FB.T('{risk}% risk of total loss · you stay home', { risk:cautiousRisk }),
+        details:'<p>' + esc(FB.T(
+          '{risk}% risk of total loss. You remain home and continue normal work.', {
+            risk:cautiousRisk
+          })) + '</p><p>' + esc(ventureReturnsText(preview.strategies.cautious)) + '</p>'
+      }) + reviewActionCardHtml({
+        id:'venture-dispatch-bold', labelHtml:'⚖ ' + esc(FB.T('Dispatch boldly')),
+        note:FB.T('{risk}% risk of total loss · you stay home', { risk:boldRisk }),
+        details:'<p>' + esc(FB.T(
+          '{risk}% risk of total loss, with larger gains and harsher losses. You remain home.', {
+            risk:boldRisk
+          })) + '</p><p>' + esc(ventureReturnsText(preview.strategies.bold)) + '</p>'
+      }) + reviewActionCardHtml({
+        id:'venture-accompany', labelHtml:'🧭 ' + esc(FB.T('Accompany personally')),
+        disabled:accompany !== true, warn:accompany !== true,
+        note:accompany === true
+          ? FB.T('At least {days} days away · personal work pauses', { days:personalDays })
+          : accompany,
+        details:'<p>' + esc(FB.T('At least {days} days away. Personal work pauses; at the market you choose a guaranteed cautious return or a bold bargain (currently {chance}% success).', {
           days:personalDays, chance:currentBoldChance
-        }) + ' ' + FB.T(
-          'Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure.')
-        : accompany) + '</span></button>' +
-      '<button class="actionbtn" id="venture-market-details">⚖ ' +
-      esc(FB.T('Inspect destination market')) + '</button>' +
-      '<button class="actionbtn" id="venture-review-back">' +
+        })) + '</p><p>' + esc(FB.T(
+          'Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure.')) + '</p>'
+      }) + reviewActionCardHtml({
+        id:'venture-market-details', labelHtml:'⚖ ' + esc(FB.T('Inspect destination market'))
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="venture-review-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Review your venture'), h,
-      {dismissable:false, historyBack:true});
+      {dismissable:false, historyBack:true, titleDetailsHtml:'<p>' + esc(FB.T(
+        'The adjustment captures Stewardship, guild standing, a Trading House, national trade knowledge, destination development, and route risk now. Later changes do not alter a dispatched venture.')) + '</p>'});
     $('venture-dispatch-cautious').addEventListener('click', function () {
       if (!currentVentureStake(preview.stake)) return;
       if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
@@ -2242,30 +2246,28 @@ window.FB = window.FB || {};
     const home = FB.world.byId[t.homeId];
     const destName = dest ? dest.name : '?';
     const homeName = home ? home.name : '?';
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+    const h = reviewFactsCard(FB.T('Road home'), kv('Buy in', esc(destName)) +
+      kv('Sell in', esc(homeName)), ' data-return-cargo-prompt') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'return-cargo-load', labelHtml:'📦 ' + esc(FB.T('Buy return cargo…')),
+        note:FB.T('Select commodities from {destination} to sell in {home}.', {
+          destination:destName, home:homeName
+        })
+      }) + reviewActionCardHtml({
+        id:'return-cargo-unladen', labelHtml:'↩ ' + esc(FB.T('Return unladen (empty-handed)')),
+        note:FB.T('Travel home without cargo. No investment at risk on the return road.')
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="return-cargo-cancel">' +
+      esc(FB.T('Stay longer')) + '</button></div>';
+    openModal(FB.T('Prepare for the road home'), h, { historyBack:true, titleDetailsHtml:'<p>' + esc(FB.T(
       'Your business in {destination} is concluded. Before taking the road home, would you like to purchase a return cargo from this market to transport and sell in {home}, or return unladen?', {
         destination:destName,
         home:homeName
-      })) + '</p><p class="hint">' + esc(FB.T(
+      })) + '</p><p>' + esc(FB.T(
         'Returning with cargo allows you to profit from price differences between {destination} and {home}, but carries road risk.', {
           destination:destName,
           home:homeName
-        })) + '</p></div><div class="gm-list">' +
-      '<button class="actionbtn" id="return-cargo-load">📦 ' +
-      esc(FB.T('Buy return cargo…')) +
-      '<span class="adesc">' + esc(FB.T(
-        'Select commodities from {destination} to sell in {home}.', {
-          destination:destName,
-          home:homeName
-        })) + '</span></button>' +
-      '<button class="actionbtn" id="return-cargo-unladen">↩ ' +
-      esc(FB.T('Return unladen (empty-handed)')) +
-      '<span class="adesc">' + esc(FB.T(
-        'Travel home without cargo. No investment at risk on the return road.')) +
-      '</span></button>' +
-      '<button class="actionbtn" id="return-cargo-cancel">' +
-      esc(FB.T('Stay longer')) + '</button></div>';
-    openModal(FB.T('Prepare for the road home'), h, { historyBack:true });
+        })) + '</p>' });
     $('return-cargo-load').addEventListener('click', function () {
       UI.closeModal();
       UI.showReturnCargoSetup();
@@ -2290,14 +2292,7 @@ window.FB = window.FB || {};
     const destName = dest ? dest.name : '?';
     const homeName = home ? home.name : '?';
     const stakes = FB.tradeVentureStakes(s);
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}.', {
-        destination:destName,
-        home:homeName
-      })) + '</p><p class="hint">' + esc(FB.T(
-        'A modest 10% lading fee covers pack supplies and handling. The cargo will be sold in {home} upon your return.', {
-          home:homeName
-        })) + '</p><p class="hint">' + esc(ventureStakeScalingText()) + '</p></div><div class="gm-list">';
+    let cards = '';
     for (let i = 0; i < stakes.length; i++) {
       const stake = stakes[i];
       const goods = FB.tradeVentureReturnGoods(s, stake);
@@ -2305,20 +2300,29 @@ window.FB = window.FB || {};
         const preview = FB.tradeVentureReturnPreview(s, stake, good.id);
         return preview && preview.stockAvailable && preview.totalCost <= s.player.gold;
       });
-      h += '<button class="actionbtn" data-return-stake="' + stake + '"' +
-        (affordable ? '' : ' disabled') + '>⚖ ' +
-        esc(FB.T('Invest {money:stake} in return cargo…', { stake:stake })) +
-        '<span class="adesc">' + esc(affordable
+      cards += reviewActionCardHtml({
+        data:{ returnStake:stake }, disabled:!affordable, warn:!affordable,
+        labelHtml:'⚖ ' + esc(FB.T('Invest {money:stake} in return cargo…', { stake:stake })),
+        note:affordable
           ? FB.T('{count} commodity baskets available in {destination}.', {
             count:goods.filter(function (g) { return g.available; }).length,
             destination:destName
           })
-          : FB.T('Insufficient gold or destination stock for this stake.')) +
-        '</span></button>';
+          : FB.T('Insufficient gold or destination stock for this stake.')
+      });
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="return-setup-back">' +
+    const h = reviewFactsCard('', kv('Buy in', esc(destName)) + kv('Sell in', esc(homeName)) +
+      kv('Lading fee', esc(FB.T('10% of the stake')))) + reviewActionsHtml(cards) +
+      '<div class="gm-footer"><button type="button" class="btn" id="return-setup-back">' +
       esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Load return cargo'), h);
+    openModal(FB.T('Load return cargo'), h, { titleDetailsHtml:'<p>' + esc(FB.T(
+      'Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}.', {
+        destination:destName,
+        home:homeName
+      })) + '</p><p>' + esc(FB.T(
+        'A modest 10% lading fee covers pack supplies and handling. The cargo will be sold in {home} upon your return.', {
+          home:homeName
+        })) + '</p><p>' + esc(ventureStakeScalingText()) + '</p>' });
     document.querySelectorAll('[data-return-stake]').forEach(function (button) {
       button.addEventListener('click', function () {
         const stake = parseInt(button.dataset.returnStake, 10);
@@ -2339,21 +2343,25 @@ window.FB = window.FB || {};
     const destName = dest ? dest.name : '?';
     const homeName = home ? home.name : '?';
     const goods = FB.tradeVentureReturnGoods(s, stake);
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Select a commodity to buy in {destination} and transport back to {home}.', {
-        destination:destName,
-        home:homeName
-      })) + '</p></div><div class="gm-list">';
+    let cards = '';
     for (let i = 0; i < goods.length; i++) {
       const good = goods[i];
       const preview = FB.tradeVentureReturnPreview(s, stake, good.id);
       const canAfford = preview && preview.totalCost <= s.player.gold;
       const enabled = good.available && canAfford;
       const ratio = Math.round(good.priceRatio * 100);
-      h += '<button class="actionbtn" data-return-good="' + esc(good.id) + '"' +
-        (enabled ? '' : ' disabled') + '>' + esc((good.def.icon || '') +
-          ' ' + FB.dataText(s, s.player.charId, 'marketGood', good.id,
-            good.def, 'name', {})) + '<span class="adesc">' + esc(FB.T(
+      cards += reviewActionCardHtml({
+        data:{ returnGood:good.id }, detailsId:'return-good-details-' + good.id,
+        disabled:!enabled, warn:!enabled,
+        labelHtml:esc((good.def.icon || '') + ' ' + FB.dataText(s, s.player.charId,
+          'marketGood', good.id, good.def, 'name', {})),
+        note:!good.available ? FB.T('insufficient local stock')
+          : !canAfford ? FB.T('cannot afford total cost')
+          : FB.T('{quantity} units · buy {destPrice}× · sell {homePrice}×', {
+            quantity:Math.round(good.quantity * 10) / 10,
+            destPrice:good.destPrice, homePrice:good.homePrice
+          }),
+        details:'<p>' + esc(FB.T(
           '{quantity} units · Buy at {destPrice}× in {dest} · Sell at {homePrice}× in {home} ({ratio}% price comparison).', {
             quantity:Math.round(good.quantity * 10) / 10,
             destPrice:good.destPrice,
@@ -2361,12 +2369,17 @@ window.FB = window.FB || {};
             homePrice:good.homePrice,
             home:homeName,
             ratio:ratio
-          })) + (good.available ? (canAfford ? '' : ' · ' + esc(FB.T('cannot afford total cost'))) : ' · ' + esc(FB.T('insufficient local stock'))) +
-        '</span></button>';
+          })) + '</p>'
+      });
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="return-good-back">' +
+    const h = reviewActionsHtml(cards) +
+      '<div class="gm-footer"><button type="button" class="btn" id="return-good-back">' +
       esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Choose return cargo'), h);
+    openModal(FB.T('Choose return cargo'), h, { titleDetailsHtml:'<p>' + esc(FB.T(
+      'Select a commodity to buy in {destination} and transport back to {home}.', {
+        destination:destName,
+        home:homeName
+      })) + '</p>' });
     document.querySelectorAll('[data-return-good]').forEach(function (button) {
       button.addEventListener('click', function () {
         const goodId = button.getAttribute('data-return-good');
@@ -2394,9 +2407,7 @@ window.FB = window.FB || {};
       FB.dataText(s, s.player.charId, 'marketGood', preview.goodId, goodDef, 'name', {});
     const boldChance = Math.round(preview.boldChance * 100);
 
-    let h = '<div class="gm-body-text">' +
-      '<p><b>' + esc(FB.T('Return Cargo: {good}', { good:goodName })) + '</b></p>' +
-      kv('Purchase market', esc(destName)) +
+    const facts = kv('Purchase market', esc(destName)) +
       kv('Selling market (Home)', esc(homeName)) +
       kv('Return stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
       kv('Lading fee (10%)', esc(FB.T('{money:amount}', { amount:preview.ladingFee }))) +
@@ -2408,26 +2419,30 @@ window.FB = window.FB || {};
       kv('Estimated bold payout', esc(FB.T('{money:success} on success / {money:failure} on failure', {
         success:preview.estimatedPayoutBoldSuccess,
         failure:preview.estimatedPayoutBoldFailure
-      }))) +
-      '<p class="hint">' + esc(FB.T(
-        'Return cargo is carried on the road home and sold in {home} upon your arrival. Cautious delivery guarantees safe arrival; bold delivery tests your Stewardship ({chance}% success) for a greater margin.', {
-          home:homeName, chance:boldChance
-        })) + '</p></div><div class="gm-list">' +
-      '<button class="actionbtn" id="return-load-cautious">🧭 ' +
-      esc(FB.T('Load cautiously')) +
-      '<span class="adesc">' + esc(FB.T(
-        'Careful packing and cautious transport. Delivers return cargo reliably at 1.20× margin.')) +
-      '</span></button>' +
-      '<button class="actionbtn" id="return-load-bold">⚖ ' +
-      esc(FB.T('Load boldly')) +
-      '<span class="adesc">' + esc(FB.T(
-        'Maximum lading and rapid pace ({chance}% success). Returns 2.25× on success or 0.35× on spoilage.', {
-          chance:boldChance
-        })) + '</span></button>' +
-      '<button class="actionbtn" id="return-review-back">' +
+      })));
+    const h = reviewFactsCard(FB.T('Return Cargo: {good}', { good:goodName }), facts,
+      ' data-return-cargo-review') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'return-load-cautious', labelHtml:'🧭 ' + esc(FB.T('Load cautiously')),
+        note:FB.T('Reliable delivery · 1.20× margin'),
+        details:'<p>' + esc(FB.T(
+          'Careful packing and cautious transport. Delivers return cargo reliably at 1.20× margin.')) + '</p>'
+      }) + reviewActionCardHtml({
+        id:'return-load-bold', labelHtml:'⚖ ' + esc(FB.T('Load boldly')),
+        note:FB.T('{chance}% success · 2.25× or 0.35×', { chance:boldChance }),
+        details:'<p>' + esc(FB.T(
+          'Maximum lading and rapid pace ({chance}% success). Returns 2.25× on success or 0.35× on spoilage.', {
+            chance:boldChance
+          })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="return-review-back">' +
       esc(FB.T('Back')) + '</button></div>';
 
-    openModal(FB.T('Review return cargo'), h, { dismissable:false, historyBack:true });
+    openModal(FB.T('Review return cargo'), h, { dismissable:false, historyBack:true,
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        'Return cargo is carried on the road home and sold in {home} upon your arrival. Cautious delivery guarantees safe arrival; bold delivery tests your Stewardship ({chance}% success) for a greater margin.', {
+          home:homeName, chance:boldChance
+        })) + '</p>' });
 
     $('return-load-cautious').addEventListener('click', function () {
       if (!currentVentureStake(preview.stake)) return;
@@ -2462,42 +2477,44 @@ window.FB = window.FB || {};
     const s = FB.state;
     const def = FBDATA.travelPurposes[SH.travelPicker.purpose];
     const pr = FB.world.byId[item.destinationId];
-    let h = '<div class="gm-body-text">' +
-      '<p><b>' + esc((def.icon || '🧭') + ' ' +
-        travelPurposeText(s, SH.travelPicker.purpose, 'name')) + '</b></p>' +
-      '<p>' + esc(FB.T(
-        '{destination} lies {legs} county legs away. The outbound road takes {outbound} days and the return takes {returnDays} days before encounters or decisions.', {
-          destination:pr.name,
-          legs:item.legs,
-          outbound:item.days,
-          returnDays:item.days
-        })) + '</p>' +
-      '<p>' + esc(s.player.tier >= 3
-        ? FB.T('At the destination you must remain in guest residence for at least {days} days before returning home.', {
-          days:FBDATA.balance.travelMinStayDays || 90
-        })
-        : FB.T('At the destination you must stay and find local work for at least {days} days before returning home.', {
-          days:FBDATA.balance.travelMinStayDays || 90
-        })) + '</p>' +
-      (s.player.tier >= 3
-        ? '<p>' + esc(FB.T('This is a temporary ruler’s journey; it cannot relocate your court or household.')) + '</p>'
-        : '<p>' + esc(s.player.travelSettlement
-          ? FB.T('This character has already made their one permanent move; this journey cannot relocate the household again.')
-          : FB.T('After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.')) + '</p>') +
-      (SH.travelPicker.purpose === 'frontier' && item.gatewayId
-        ? '<p><b>' + esc(FB.T('The road stays on settled land to {gateway}; only the last leg enters the waste.', {
-            gateway:(FB.world.byId[item.gatewayId] || {}).name || item.gatewayId
-          })) + '</b> ' + esc(FB.T('Arrival begins a year of survival and work, not an immediate move. With {days} days of residence and {count} proven frontier works, the homestead can become a permanent development-1 county under the lord of {gateway} — a commoner home with a starter land plot, never a title.', {
-            days:FBDATA.balance.travelSettleOfferDays || 360,
-            count:FBDATA.balance.frontierMilestonesRequired || 4,
-            gateway:(FB.world.byId[item.gatewayId] || {}).name || item.gatewayId
-          })) + '</p>'
-        : '') +
-      '<p><b>' + esc(FB.T('Exact upfront cost: {money:cost}.', {cost:item.cost})) +
-      '</b> ' + esc(FB.T('Turning back refunds nothing.')) + '</p></div>' +
-      '<div class="gm-list"><button class="actionbtn" id="travel-depart">🧭 ' +
-      esc(FB.T('Depart for {destination}', {destination:pr.name})) +
-      '</button><button class="actionbtn" id="travel-review-back">' +
+    const minimumStay = FBDATA.balance.travelMinStayDays || 90;
+    const ruler = s.player.tier >= 3;
+    const gateway = SH.travelPicker.purpose === 'frontier' && item.gatewayId
+      ? (FB.world.byId[item.gatewayId] || {}).name || item.gatewayId : '';
+    let facts = kv('Destination', esc(pr.name)) +
+      kv('Distance', esc(FB.T('{legs} county legs', { legs:item.legs }))) +
+      kv('Travel time', esc(FB.T('{days} days each way', { days:item.days }))) +
+      kv('Minimum stay', esc(FB.T('{days} days', { days:minimumStay }))) +
+      kv('Upfront cost', esc(FB.T('{money:cost}', { cost:item.cost }))) +
+      kv('Permanent move', esc(ruler
+        ? FB.T('Not possible on a ruler’s journey')
+        : s.player.travelSettlement
+          ? FB.T('Already used by this character')
+          : FB.T('May open after a year of local life')));
+    if (gateway) facts += kv('Route', esc(FB.T('Settled land to {gateway}; last leg enters the waste', { gateway:gateway })));
+    let details = '<p>' + esc(ruler
+      ? FB.T('At the destination you must remain in guest residence for at least {days} days before returning home.', { days:minimumStay })
+      : FB.T('At the destination you must stay and find local work for at least {days} days before returning home.', { days:minimumStay })) +
+      '</p><p>' + esc(ruler
+      ? FB.T('This is a temporary ruler’s journey; it cannot relocate your court or household.')
+      : s.player.travelSettlement
+        ? FB.T('This character has already made their one permanent move; this journey cannot relocate the household again.')
+        : FB.T('After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.')) + '</p>';
+    if (gateway) details += '<p>' + esc(FB.T('Arrival begins a year of survival and work, not an immediate move. With {days} days of residence and {count} proven frontier works, the homestead can become a permanent development-1 county under the lord of {gateway} — a commoner home with a starter land plot, never a title.', {
+      days:FBDATA.balance.travelSettleOfferDays || 360,
+      count:FBDATA.balance.frontierMilestonesRequired || 4,
+      gateway:gateway
+    })) + '</p>';
+    details += '<p>' + esc(FB.T('Turning back refunds nothing.')) + '</p>';
+    const h = reviewFactsCard((def.icon || '🧭') + ' ' +
+      travelPurposeText(s, SH.travelPicker.purpose, 'name'), facts, ' data-travel-review') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'travel-depart',
+        labelHtml:'🧭 ' + esc(FB.T('Depart for {destination}', { destination:pr.name })),
+        note:FB.T('{money:cost} upfront · no refund if you turn back', { cost:item.cost }),
+        details:details
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="travel-review-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal('Review journey', h, {dismissable:false, historyBack:true});
     $('travel-depart').addEventListener('click', function () {
@@ -2550,27 +2567,34 @@ window.FB = window.FB || {};
         name:c.name, destination:destination.name })
       : FB.T('Spend time with {name} in {destination}.', {
         name:c.name, destination:destination.name });
-    const readiness = preview.daysToThreshold === null
-      ? FB.T('Standing is not currently improving.')
-      : !preview.daysToThreshold
-        ? FB.T('Required Standing already reached: +{threshold}.', { threshold:threshold })
-        : FB.T('Estimated time to +{threshold} Standing: {days} days from departure.', {
-          threshold:threshold, days:preview.daysFromDeparture });
     const details = '<p>' + esc(estimate) + '</p><p>' + esc(FB.T(
       'Personal attention moves to this person. Standing improves only while together, not on the road.')) + '</p>' +
       (options.courtship ? '<p>' + esc(FB.T('Reaching the required Standing allows a proposal; acceptance is not guaranteed.')) + '</p>' : '') +
       (options.courtship && s.player.tier >= 3 ? '<p>' + esc(FB.T(
         'After marriage, you may review abdication and residence choices.')) + '</p>' : '');
-    let h = '<div class="gm-body-text social-visit-summary"><p>' + esc(benefit) +
-      '</p><p><b>' + esc(FB.T('Cost: {money:cost} upfront.', { cost:preview.cost })) +
-      '</b></p><p>' + esc(FB.T('{days} travel days each way; minimum stay {stay} days.', {
-        days:preview.days, stay:preview.minimumStay })) + '</p><p>' + esc(readiness) + '</p>' +
-      (options.courtship ? '<p>' + esc(FB.T('Uses your personal attention. Marriage is not guaranteed.')) + '</p>' : '') +
-      (preview.cost > s.player.gold ? '<p>' + esc(FB.T('You have only {money:gold}.', {
-        gold:Math.floor(s.player.gold) })) + '</p>' : '') +
-      '</div><div class="gm-list"><button class="actionbtn" id="social-visit-depart"' +
-      (preview.cost > s.player.gold ? ' disabled' : '') + '>' + esc(FB.T('Depart')) +
-      '</button><button class="actionbtn" id="social-visit-cancel">' +
+    const short = preview.cost > s.player.gold;
+    let facts = reviewPeopleHtml(reviewPersonHtml(c, benefit, null)) +
+      kv('Destination', esc(destination.name)) +
+      kv('Cost', esc(FB.T('{money:cost} upfront', { cost:preview.cost }))) +
+      kv('Travel time', esc(FB.T('{days} days each way', { days:preview.days }))) +
+      kv('Minimum stay', esc(FB.T('{days} days', { days:preview.minimumStay }))) +
+      kv('Standing needed', esc(FB.T('+{threshold}', { threshold:threshold }))) +
+      kv('Readiness', esc(preview.daysToThreshold === null
+        ? FB.T('Standing is not currently improving.')
+        : !preview.daysToThreshold
+          ? FB.T('Already reached')
+          : FB.T('About {days} days from departure', { days:preview.daysFromDeparture })));
+    if (options.courtship) {
+      facts += kv('Personal attention', esc(FB.T('Moves to {name}', { name:c.name }))) +
+        kv('Marriage', esc(FB.T('Not guaranteed')));
+    }
+    if (short) facts += '<div class="progressnote warnote">' + esc(FB.T('You have only {money:gold}.', {
+      gold:Math.floor(s.player.gold) })) + '</div>';
+    let h = reviewFactsCard(options.courtship ? FB.T('Courtship visit') : FB.T('Social visit'),
+      facts, ' data-social-visit-summary') +
+      reviewActionsHtml(reviewActionCardHtml({ id:'social-visit-depart', label:FB.T('Depart'),
+        disabled:short })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="social-visit-cancel">' +
       esc(FB.T('Not now')) + '</button></div>';
     function returnToVisitSource() {
       if (options.returnContext && options.returnContext.view === 'marriage-finder') {
@@ -2589,6 +2613,7 @@ window.FB = window.FB || {};
         historyBack:true,
         historyBackRender:returnToVisitSource
       });
+    FB.paintFaces($('gm-body'), s);
     const depart = $('social-visit-depart');
     if (depart) depart.addEventListener('click', function () {
       if (!FB.socialVisitStart(s, c, { courtship:!!options.courtship })) {
@@ -2694,10 +2719,11 @@ window.FB = window.FB || {};
       freedomBenefitHtml() +
       freedomRelativeChoicesHtml(s) +
       '<p class="progressnote" data-freedom-purchase-status></p>' +
-      '</div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="freedom-purchase-confirm">' +
-      esc(FB.T('Buy the selected charter')) + '</button>' +
-      '<button type="button" class="actionbtn" id="freedom-purchase-close">' +
+      '</div>' + reviewActionsHtml(reviewActionCardHtml({
+        id:'freedom-purchase-confirm', label:FB.T('Buy the selected charter'),
+        note:FB.T('Pays the total price · takes 1 day')
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="freedom-purchase-close">' +
       esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Buy freedom'), h, {
       historyView:true, historyBack:true
@@ -2772,22 +2798,25 @@ window.FB = window.FB || {};
             })) + '</b><p class="hint">' + esc(bandText) + '</p></div>';
         }
       }
-      h += '</div><div class="gm-list"><button type="button" class="actionbtn" ' +
-        'id="freedom-petition-create"' + (petition.ready ? '' : ' disabled') + '>' +
-        esc(advocates.length ? FB.T('Ask without a supporter')
-          : FB.T('Ask for exact terms')) + '</button>';
+      let petitionCards = reviewActionCardHtml({
+        id:'freedom-petition-create', disabled:!petition.ready,
+        label:advocates.length ? FB.T('Ask without a supporter') : FB.T('Ask for exact terms'),
+        note:petition.ready ? FB.T('Free · the lord names a price and any final service') : ''
+      });
       for (let advocateButtonIndex = 0;
            advocateButtonIndex < advocates.length; advocateButtonIndex++) {
-        h += '<button type="button" class="actionbtn freedom-advocate-select" ' +
-          'data-freedom-advocate="' + esc(advocates[advocateButtonIndex].id) + '">' +
-          esc(FB.T('Ask with {name}’s support', {
+        petitionCards += reviewActionCardHtml({
+          data:{ freedomAdvocate:advocates[advocateButtonIndex].id },
+          label:FB.T('Ask with {name}’s support', {
             name:advocates[advocateButtonIndex].name
-          })) + '</button>';
+          })
+        });
       }
-      h +=
-        (view ? '<button type="button" class="actionbtn" id="freedom-petition-review">' +
-          esc(FB.T('Review the saved offer')) + '</button>' : '') +
-        '<button type="button" class="actionbtn" id="freedom-petition-close">' +
+      if (view) petitionCards += reviewActionCardHtml({
+        id:'freedom-petition-review', label:FB.T('Review the saved offer')
+      });
+      h += '</div>' + reviewActionsHtml(petitionCards) +
+        '<div class="gm-footer"><button type="button" class="btn" id="freedom-petition-close">' +
         esc(FB.T('Not now')) + '</button></div>';
       openModal(FB.T('Petition for terms of freedom'), h, {
         historyView:true, historyBack:true
@@ -2805,7 +2834,7 @@ window.FB = window.FB || {};
         }
         UI.showFreedomPetition();
       });
-      document.querySelectorAll('.freedom-advocate-select').forEach(function (button) {
+      document.querySelectorAll('[data-freedom-advocate]').forEach(function (button) {
         button.addEventListener('click', function () {
           const created = FB.createFreedomOffer(
             s, 'petition', button.dataset.freedomAdvocate,
@@ -2868,20 +2897,23 @@ window.FB = window.FB || {};
         'You may petition again in {days} days.', { days:view.cooldownDays
         })) + '</p>';
     }
-    h += '</div></div><div class="gm-list">';
+    h += '</div></div>';
     if (view.status === 'offered') {
-      h += '<button type="button" class="actionbtn" id="freedom-offer-accept"' +
-        (view.acceptanceReady ? '' : ' disabled') + '>' +
-        esc(view.serviceDays ? FB.T('Accept and begin final service')
-          : FB.T('Pay and accept lawful freedom')) + '</button>';
+      h += reviewActionsHtml(reviewActionCardHtml({
+        id:'freedom-offer-accept', disabled:!view.acceptanceReady,
+        label:view.serviceDays ? FB.T('Accept and begin final service')
+          : FB.T('Pay and accept lawful freedom'),
+        note:FB.T('Pays {money:price} now', { price:view.price })
+      }));
     } else if ((view.status === 'expired' || view.status === 'invalid') &&
         view.cooldownDays === 0) {
-      h += '<button type="button" class="actionbtn" id="freedom-offer-new">' +
-        esc(FB.T('Ask for new terms')) + '</button>';
+      h += reviewActionsHtml(reviewActionCardHtml({
+        id:'freedom-offer-new', label:FB.T('Ask for new terms')
+      }));
     }
-    h += '<button type="button" class="actionbtn" id="freedom-offer-back">' +
+    h += '<div class="gm-footer"><button type="button" class="btn" id="freedom-offer-back">' +
       esc(FB.T('Back')) + '</button>' +
-      '<button type="button" class="actionbtn" id="freedom-offer-close">' +
+      '<button type="button" class="btn" id="freedom-offer-close">' +
       esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Terms of freedom'), h, {
       historyView:true, historyBack:true
@@ -3024,16 +3056,28 @@ window.FB = window.FB || {};
     const last = s.settlementLordships.countyConsentTurn;
     const consentReady = q.ready && q.superior && !q.authorized && (last === undefined || s.turn - last >= FB.countyPetitionDays());
     h += '</div>';
-    if (q.superior && !q.authorized) h += '<p>' + esc(FB.T('Authorization requires a county claim and 65 Standing with the superior. Requests are free; retry after {days} days.', { days:FB.countyPetitionDays() })) + '</p>';
-    h += '</div><div class="gm-footer">';
-    if (q.superior && !q.authorized) h += '<button class="btn" id="county-consent"' + (consentReady ? '' : ' disabled') + '>' + esc(FB.T('Request authorization')) + '</button>';
-    h += '<button class="btn danger" id="county-declare"' + (q.ready ? '' : ' disabled') + '>' + esc(FB.T('Declare county challenge')) + '</button></div>';
+    h += '</div>';
+    let challengeCards = '';
+    if (q.superior && !q.authorized) challengeCards += reviewActionCardHtml({
+      id:'county-consent', label:FB.T('Request authorization'), disabled:!consentReady,
+      note:FB.T('Free · requires a county claim and 65 Standing'),
+      details:'<p>' + esc(FB.T('Authorization requires a county claim and 65 Standing with the superior. Requests are free; retry after {days} days.', { days:FB.countyPetitionDays() })) + '</p>'
+    });
+    challengeCards += reviewActionCardHtml({
+      id:'county-declare', label:FB.T('Declare county challenge'), danger:true,
+      disabled:!q.ready,
+      note:q.ready ? FB.T('Starts a war for this county') : ''
+    });
+    h += '</div>' + reviewActionsHtml(challengeCards) +
+      '<div class="gm-footer"><button type="button" class="btn" id="county-challenge-back">' +
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('County challenge'), h, { historyView:true, replaceView:!!replace, noFocus:true,
       titleDetailsHtml:'<p>' + esc(FB.T('The objective is this county only. The count’s direct settlements pass with the county; unrelated baronies and private holdings do not. Authorization is tied to the named incumbent, superior and challenger. An unauthorized claim does not prevent superior opposition.')) + '</p>' });
     if ($('county-consent')) $('county-consent').onclick = function () {
       if (!FB.requestCountyChallenge(FB.state, q)) toast(FB.T('Terms changed. Review the current challenge.'));
       UI.showCountyChallenge(pid, true);
     };
+    $('county-challenge-back').onclick = UI.backModal;
     $('county-declare').onclick = function () {
       if (!FB.beginCountyChallenge(FB.state, q)) { toast(FB.T('Terms changed. Review the current challenge.')); UI.showCountyChallenge(pid, true); return; }
       UI.closeModal(); UI.refresh();
@@ -3045,9 +3089,16 @@ window.FB = window.FB || {};
       kv('County', esc(FB.world.byId[pid].name)) + kv('Superior', esc(q.superior ? s.realms[q.superior].name : FB.T('None'))) +
       kv('Cost if accepted', esc(rankElevationCostValue(q.cost))) +
       kv('Acceptance chance', esc(FB.T('{chance}%', { chance:Math.round(q.chance * 100) }))) +
-      '<p>' + esc(FB.T('Acceptance removes disputed status. Rival claims survive. Refusal leaves control intact and costs no investiture resources; retry after {days} days.', { days:FB.countyPetitionDays() })) + '</p>' +
-      (q.reason ? '<p class="warnote">' + esc(q.reason) + '</p>' : '') + '</div></div><div class="gm-footer"><button class="btn primary" id="county-recognize"' + (q.ready ? '' : ' disabled') + '>' + esc(FB.T('Petition for recognition')) + '</button></div>';
+      (q.reason ? '<p class="warnote">' + esc(q.reason) + '</p>' : '') + '</div></div>' +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'county-recognize', label:FB.T('Petition for recognition'), disabled:!q.ready,
+        note:FB.T('{chance}% chance · cost charged only if accepted', { chance:Math.round(q.chance * 100) }),
+        details:'<p>' + esc(FB.T('Acceptance removes disputed status. Rival claims survive. Refusal leaves control intact and costs no investiture resources; retry after {days} days.', { days:FB.countyPetitionDays() })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="county-recognition-back">' +
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('County recognition'), h, { historyView:true, replaceView:!!replace, noFocus:true });
+    $('county-recognition-back').onclick = UI.backModal;
     $('county-recognize').onclick = function () {
       const result = FB.petitionCountyRecognition(FB.state, q);
       if (result && result.accepted) { UI.closeModal(); UI.refresh(); }
@@ -3157,7 +3208,8 @@ window.FB = window.FB || {};
     let h = '<div class="gm-body-text" data-rank-elevation-sheet="' +
       esc(route) + '">' + rankTransitionHtml(currentTitle, nextTitle);
     if (route === 'county' && status.site) h += kv('County granted', esc(FB.world.byId[status.site.provinceId].name)) +
-      kv('Granting ruler', esc(s.realms[status.grantorId].name)) + '<p>' + esc(FB.T('Your existing barony and private property remain yours. You become Count under the granting ruler.')) + '</p>';
+      kv('Granting ruler', esc(s.realms[status.grantorId].name)) +
+      kv('Existing holdings', esc(FB.T('Your existing barony and private property remain yours. You become Count under the granting ruler.')));
     if (route === 'manor') h += kv('Requirements', esc(FB.T(
       'An heir of a later generation must inherit Freeholder standing before Gentry recognition.')));
     if (route === 'barony') {
@@ -3167,7 +3219,6 @@ window.FB = window.FB || {};
           standing:FBDATA.balance.baronyOpinion
         })));
     }
-    if (route === 'barony') h += '<p><button class="actionbtn" id="rank-founding">' + esc(FB.T('Found a new settlement instead')) + '</button></p>';
     if (status.settlementGrant) h += settlementGrantSummary(s, status.settlementGrant, false);
     h += kv(route === 'barony' ? FB.T('Cost if granted') : FB.T('Cost'),
       esc(rankElevationCostValue(status.cost))) +
@@ -3198,7 +3249,10 @@ window.FB = window.FB || {};
       esc(rankElevationConfirmLabel(route)) + '</button>' + cardInfoButton(detailsId) + '</div>' +
       '<div class="settcard-details hidden" id="' + detailsId + '">' +
       '<div class="modal-action-terms">' + kv(route === 'barony' ? 'Cost if granted' : 'Cost', esc(rankElevationCostValue(status.cost))) +
-      '<p>' + esc(status.ready ? FB.T('Confirm this elevation under the terms shown above.') : reason) + '</p></div></div></div></div>';
+      kv('Benefits', esc(rankElevationBenefit(status.targetTier))) +
+      (status.ready ? '' : '<p>' + esc(reason) + '</p>') + '</div></div></div>' +
+      (route === 'barony' ? reviewActionCardHtml({ id:'rank-founding',
+        label:FB.T('Found a new settlement instead') }) : '') + '</div>';
     openModal(FB.T('Rank elevation'), h, {
       modalClass:'rank-elevation-modal',
       historyView:true,
@@ -3285,19 +3339,23 @@ window.FB = window.FB || {};
     const c = s.chars[s.player.charId];
     const destination = FB.world.byId[t.destinationId];
     if (!c || !destination) return;
-    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Move the household home to {destination}. Existing land, enterprises, culture, and faith will not move or change.', {
-        destination:destination.name
-      })) + '</p>' +
+    const h = reviewFactsCard(FB.T('Permanent home'), kv('New home', esc(destination.name)) +
+      kv('Stays behind', esc(FB.T('Existing land, enterprises, culture and faith'))) +
       enterpriseRelocationWarningHtml(s, t.destinationId) +
-      '<p class="warnote"><b>' + esc(FB.T(
+      '<div class="progressnote warnote"><b>' + esc(FB.T(
       'This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again.', {
         name:FB.fullName(c)
-      })) + '</b></p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="travel-settle-confirm">🏠 ' +
-      esc(FB.T('Make {destination} our permanent home', {
-        destination:destination.name
-      })) + '</button><button type="button" class="actionbtn" id="travel-settle-cancel">' +
+      })) + '</b></div>', ' data-travel-settlement') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'travel-settle-confirm',
+        labelHtml:'🏠 ' + esc(FB.T('Make {destination} our permanent home', { destination:destination.name })),
+        note:FB.T('Permanent · uses {name}’s only household move', { name:c.name }), warn:true,
+        details:'<p>' + esc(FB.T(
+          'Move the household home to {destination}. Existing land, enterprises, culture, and faith will not move or change.', {
+            destination:destination.name
+          })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="travel-settle-cancel">' +
       esc(FB.T('Keep staying for now')) + '</button></div>';
     openModal(FB.T('Settle permanently in {destination}?', {
       destination:destination.name
@@ -3326,28 +3384,40 @@ window.FB = window.FB || {};
     const holderId = s.holder && s.holder[frontier.gatewayId];
     const holderRealm = holderId && s.realms[holderId];
     const status = FB.frontierStatus ? FB.frontierStatus(s) : null;
-    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'The proving is complete: {residence} days lived from this land and {milestones} frontier works endured. {destination} becomes a real frontier county — development 1, of your own culture and faith, belonging to no de jure duchy.', {
-        residence:status ? status.stayDays : 0,
-        milestones:status ? status.milestones : 0,
-        destination:destination.name
-      })) + '</p><p>' + esc(holderRealm
-      ? FB.T('The new land answers to {holder}, the lord of {gateway}. Your household receives a starter land plot there — a commoner homestead, never a county title.', {
-        holder:holderRealm.name,
-        gateway:gateway.name
-      })
-      : FB.T('The new land answers to the lord of {gateway}. Your household receives a starter land plot there — a commoner homestead, never a county title.', {
-        gateway:gateway.name
-      })) + '</p>' +
+    const lord = holderRealm
+      ? FB.T('{holder}, lord of {gateway}', { holder:holderRealm.name, gateway:gateway.name })
+      : FB.T('The lord of {gateway}', { gateway:gateway.name });
+    const facts = kv('Residence', esc(FB.T('{days} days lived', { days:status ? status.stayDays : 0 }))) +
+      kv('Frontier works', esc(FB.T('{count} endured', { count:status ? status.milestones : 0 }))) +
+      kv('New county', esc(FB.T('{destination} · development 1 · your culture and faith', { destination:destination.name }))) +
+      kv('Answers to', esc(lord)) +
+      kv('Household receives', esc(FB.T('A starter land plot, not a county title'))) +
       enterpriseRelocationWarningHtml(s, t.destinationId) +
-      '<p class="warnote"><b>' + esc(FB.T(
+      '<div class="progressnote warnote"><b>' + esc(FB.T(
       'This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again.', {
         name:FB.fullName(c)
-      })) + '</b></p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="frontier-settle-confirm">🛖 ' +
-      esc(FB.T('Found the homestead in {destination}', {
-        destination:destination.name
-      })) + '</button><button type="button" class="actionbtn" id="frontier-settle-cancel">' +
+      })) + '</b></div>';
+    const h = reviewFactsCard(FB.T('Proving complete'), facts, ' data-frontier-settlement') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'frontier-settle-confirm',
+        labelHtml:'🛖 ' + esc(FB.T('Found the homestead in {destination}', { destination:destination.name })),
+        note:FB.T('Permanent · uses {name}’s only household move', { name:c.name }),
+        warn:true,
+        details:'<p>' + esc(FB.T(
+          'The proving is complete: {residence} days lived from this land and {milestones} frontier works endured. {destination} becomes a real frontier county — development 1, of your own culture and faith, belonging to no de jure duchy.', {
+            residence:status ? status.stayDays : 0,
+            milestones:status ? status.milestones : 0,
+            destination:destination.name
+          })) + '</p><p>' + esc(holderRealm
+          ? FB.T('The new land answers to {holder}, the lord of {gateway}. Your household receives a starter land plot there — a commoner homestead, never a county title.', {
+            holder:holderRealm.name,
+            gateway:gateway.name
+          })
+          : FB.T('The new land answers to the lord of {gateway}. Your household receives a starter land plot there — a commoner homestead, never a county title.', {
+            gateway:gateway.name
+          })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="frontier-settle-cancel">' +
       esc(FB.T('Keep proving the land')) + '</button></div>';
     openModal(FB.T('Found a homestead in {destination}?', {
       destination:destination.name
@@ -3424,32 +3494,46 @@ window.FB = window.FB || {};
           }))
       : FB.T('A living lawful heir is required to continue the story.');
 
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'The wedding is complete, but the household has not yet left {destination}. Choose whether this marriage changes who rules and where the family lives.', {
-        destination:destination.name
-      })) + '</p><p><b>' + esc(currentHeir) + '</b></p>' +
-      selfEnterpriseImpact + '</div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="marriage-residence-self"' +
-      (selfEligible === true ? '' : ' disabled') + '>👤 ' +
-      esc(FB.T('Abdicate and continue as {name}', {
-        name:FB.fullName(protagonist)
-      })) + '<span class="adesc">' + esc(selfEligible === true
-        ? selfDetail : selfEligible || selfDetail) + '</span></button>' +
-      '<button type="button" class="actionbtn" id="marriage-residence-heir"' +
-      (heirEligible === true ? '' : ' disabled') + '>👑 ' +
-      esc(heir
-        ? FB.T('Abdicate and continue as {heir}', { heir:heirName })
-        : FB.T('Abdicate and continue as the heir')) +
-      '<span class="adesc">' + esc(heirEligible === true
-        ? heirDetail : heirEligible || heirDetail) + '</span></button>' +
-      '<button type="button" class="actionbtn" id="marriage-residence-defer">🧭 ' +
-      esc(FB.T('Decide later')) + '<span class="adesc">' + esc(FB.T(
-        'Keep the ordinary stay and return journey. The Stay after marriage deed remains available until this journey ends.')) +
-      '</span></button></div>';
+    let people = reviewPersonHtml(protagonist, FB.T('You'), null) +
+      reviewPersonHtml(spouse, FB.T('Spouse'), null);
+    if (heir) people += reviewPersonHtml(heir, FB.T('Current lawful heir'), null);
+    let h = reviewFactsCard(FB.T('Wedding in {destination}', { destination:destination.name }),
+      reviewPeopleHtml(people) +
+      (heir ? '' : kv('Lawful heir', esc(FB.T('No lawful heir is living.')))) +
+      selfEnterpriseImpact, ' data-marriage-residence') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'marriage-residence-self', disabled:selfEligible !== true,
+        labelHtml:'👤 ' + esc(FB.T('Abdicate and continue as {name}', { name:FB.fullName(protagonist) })),
+        note:selfEligible === true
+          ? FB.T('Becomes landless gentry in {destination}', { destination:destination.name })
+          : selfEligible || selfDetail,
+        warn:selfEligible !== true,
+        details:'<p>' + esc(selfDetail) + '</p>'
+      }) + reviewActionCardHtml({
+        id:'marriage-residence-heir', disabled:heirEligible !== true,
+        labelHtml:'👑 ' + esc(heir
+          ? FB.T('Abdicate and continue as {heir}', { heir:heirName })
+          : FB.T('Abdicate and continue as the heir')),
+        note:heirEligible === true
+          ? FB.T('The heir keeps the realm and family home')
+          : heirEligible || heirDetail,
+        warn:heirEligible !== true,
+        details:'<p>' + esc(heirDetail) + '</p>'
+      }) + reviewActionCardHtml({
+        id:'marriage-residence-defer',
+        labelHtml:'🧭 ' + esc(FB.T('Decide later')),
+        note:FB.T('Keep the ordinary stay and return journey'),
+        details:'<p>' + esc(FB.T(
+          'Keep the ordinary stay and return journey. The Stay after marriage deed remains available until this journey ends.')) + '</p>'
+      }));
 
     openModal(FB.T('Stay in {destination} after the wedding?', {
       destination:destination.name
-    }), h, { dismissable:false });
+    }), h, { dismissable:false, titleDetailsHtml:'<p>' + esc(FB.T(
+      'The wedding is complete, but the household has not yet left {destination}. Choose whether this marriage changes who rules and where the family lives.', {
+        destination:destination.name
+      })) + '</p><p>' + esc(currentHeir) + '</p>' });
+    FB.paintFaces($('gm-body'), s);
     const selfButton = $('marriage-residence-self');
     if (selfButton) selfButton.addEventListener('click', function () {
       const eligible = FB.travelMarriageResidenceEligible(s, 'self');
@@ -3491,15 +3575,23 @@ window.FB = window.FB || {};
   UI.showAbsolution = function () {
     const s = FB.state;
     if (!s || !FB.canSeekAbsolution(s)) return;
-    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {standing} Standing with every Catholic realm.', {
-        gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100),
-        piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100),
-        standing:FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20)
-      })) + '</p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="absolution-confirm">🕊 ' +
-      esc(FB.T('Accept the Pope’s absolution')) + '</button>' +
-      '<button type="button" class="actionbtn" id="absolution-cancel">' +
+    const gold = FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100);
+    const piety = FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100);
+    const standing = FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20);
+    const h = reviewFactsCard(FB.T('Absolution'), kv('Cost', esc(FB.T('{money:gold} and {piety} piety', {
+        gold:gold, piety:piety }))) +
+      kv('Excommunication', esc(FB.T('Lifted'))) +
+      kv('Catholic realms', esc(FB.T('+{standing} Standing with each', { standing:standing }))),
+      ' data-absolution') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'absolution-confirm', labelHtml:'🕊 ' + esc(FB.T('Accept the Pope’s absolution')),
+        note:FB.T('{money:gold} and {piety} piety now', { gold:gold, piety:piety }),
+        details:'<p>' + esc(FB.T(
+          'The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {standing} Standing with every Catholic realm.', {
+            gold:gold, piety:piety, standing:standing
+          })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="absolution-cancel">' +
       esc(FB.T('Not yet')) + '</button></div>';
     openModal(FB.T('Seek absolution?'), h);
     $('absolution-confirm').addEventListener('click', function () {
@@ -3516,18 +3608,26 @@ window.FB = window.FB || {};
     const meta = FB.religionOf(religionId, s).head;
     const seat = FB.world.byId[meta.seat];
     const title = FB.religiousHeadTitle(s, religionId);
-    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Grant {seat} away permanently as an independent realm of rank {rank}. A new {title} and succession will be established there.', {
-        seat:seat.name, rank:meta.restoredRank || 3, title:title
-      })) + '</p><p>' + esc(FB.T(
-      'You gain {piety} piety and {prestige} prestige, recover {standing} Standing with Catholic rulers, and any excommunication is cleared.', {
-        piety:FB.religiousHeadBalance('religiousHeadRestorePiety', 200),
-        prestige:FB.religiousHeadBalance('religiousHeadRestorePrestige', 150),
-        standing:FB.religiousHeadBalance('religiousHeadRestoreOpinion', 15)
-      })) + '</p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="head-restore-confirm">✝ ' +
-      esc(FB.T('Grant {seat} and restore the Papacy', { seat:seat.name })) +
-      '</button><button type="button" class="actionbtn" id="head-restore-cancel">' +
+    const piety = FB.religiousHeadBalance('religiousHeadRestorePiety', 200);
+    const prestige = FB.religiousHeadBalance('religiousHeadRestorePrestige', 150);
+    const standing = FB.religiousHeadBalance('religiousHeadRestoreOpinion', 15);
+    const h = reviewFactsCard(FB.T('Restoration'), kv('You give up', esc(FB.T('{seat}, permanently', { seat:seat.name }))) +
+      kv('New realm', esc(FB.T('Independent, rank {rank}', { rank:meta.restoredRank || 3 }))) +
+      kv('You gain', esc(FB.T('+{piety} piety, +{prestige} prestige', { piety:piety, prestige:prestige }))) +
+      kv('Catholic rulers', esc(FB.T('+{standing} Standing; excommunication cleared', { standing:standing }))),
+      ' data-head-restoration') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'head-restore-confirm', labelHtml:'✝ ' + esc(FB.T('Grant {seat} and restore the Papacy', { seat:seat.name })),
+        note:FB.T('Permanent · {seat} leaves your realm', { seat:seat.name }), warn:true,
+        details:'<p>' + esc(FB.T(
+          'Grant {seat} away permanently as an independent realm of rank {rank}. A new {title} and succession will be established there.', {
+            seat:seat.name, rank:meta.restoredRank || 3, title:title
+          })) + '</p><p>' + esc(FB.T(
+          'You gain {piety} piety and {prestige} prestige, recover {standing} Standing with Catholic rulers, and any excommunication is cleared.', {
+            piety:piety, prestige:prestige, standing:standing
+          })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="head-restore-cancel">' +
       esc(FB.T('Keep {seat}', { seat:seat.name })) + '</button></div>';
     openModal(FB.T('Restore the Papacy?'), h);
     $('head-restore-confirm').addEventListener('click', function () {
@@ -3542,16 +3642,23 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || !FB.canClaimReligiousHead(s, religionId, 'player')) return;
     const title = FB.religiousHeadTitle(s, religionId);
-    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent. Your demesne must hold at least {counties} counties.', {
-        piety:FB.religiousHeadBalance('religiousHeadClaimPiety', 300),
-        title:title,
-        prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
-        counties:FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6)
-      })) + '</p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="head-claim-confirm">☪ ' +
-      esc(FB.T('Claim the Caliphate')) + '</button>' +
-      '<button type="button" class="actionbtn" id="head-claim-cancel">' +
+    const piety = FB.religiousHeadBalance('religiousHeadClaimPiety', 300);
+    const h = reviewFactsCard(FB.T('Vacant office'), kv('Office', esc(title)) +
+      kv('Cost', esc(FB.T('{piety} piety', { piety:piety }))) +
+      kv('Territory', esc(FB.T('No county changes hands'))),
+      ' data-head-claim') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'head-claim-confirm', labelHtml:'☪ ' + esc(FB.T('Claim the Caliphate')),
+        note:FB.T('{piety} piety now', { piety:piety }),
+        details:'<p>' + esc(FB.T(
+          'Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent. Your demesne must hold at least {counties} counties.', {
+            piety:piety,
+            title:title,
+            prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
+            counties:FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6)
+          })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="head-claim-cancel">' +
       esc(FB.T('Not yet')) + '</button></div>';
     openModal(FB.T('Claim the Caliphate?'), h);
     $('head-claim-confirm').addEventListener('click', function () {
@@ -3570,15 +3677,23 @@ window.FB = window.FB || {};
     if (!cause) return;
     const enemy = s.realms[cause.enemy];
     const capital = FB.world.byId[cause.target];
-    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+    const warDetails = FB.T(
       'Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it by siege and the Caliphate passes to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands — the loser keeps their kingdom, but not the office.', {
         realm:enemy ? enemy.name : '',
         title:FB.religiousHeadTitle(s, 'sunni'),
         capital:capital ? capital.name : ''
-      })) + '</p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="caliph-war-confirm">⚔ ' +
-      esc(FB.T('Declare the succession war')) + '</button>' +
-      '<button type="button" class="actionbtn" id="caliph-war-cancel">' +
+      });
+    const h = reviewFactsCard(FB.T('Succession war'), kv('Enemy', esc(enemy ? enemy.name : '')) +
+      kv('Objective', esc(FB.T('Take {capital} by siege', { capital:capital ? capital.name : '' }))) +
+      kv('Prize', esc(FB.religiousHeadTitle(s, 'sunni'))) +
+      kv('Territory', esc(FB.T('No land changes hands'))),
+      ' data-caliph-war') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'caliph-war-confirm', labelHtml:'⚔ ' + esc(FB.T('Declare the succession war')),
+        danger:true, note:FB.T('Starts a war with {realm}', { realm:enemy ? enemy.name : '' }),
+        details:'<p>' + esc(warDetails) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="caliph-war-cancel">' +
       esc(FB.T('Not yet')) + '</button></div>';
     openModal(FB.T('Contest the Caliphate?'), h);
     $('caliph-war-confirm').addEventListener('click', function () {
@@ -4131,18 +4246,22 @@ window.FB = window.FB || {};
         lines.push(FB.T(
           'Your realm becomes a lawful target for the holy wars of your old faith.'));
       }
-      let h = '<div class="gm-body-text"><p>' + esc(lead) + '</p><p>' +
-        esc(returning
-          ? FB.T('Only your character returns to the parent identity. The branch’s doctrines, other followers, communities, and active projects remain unchanged.')
-          : conversionScopeDesc(kind, scope)) + '</p>' +
-        '<p class="conversion-confirm-cost"><b>' + esc(FB.T('Cost:')) + '</b> <span class="cost-highlight">' + esc(conversionCostText(st)) + '</span></p>';
-      for (let i = 0; i < lines.length; i++) {
-        h += '<p>' + esc(lines[i]) + '</p>';
+      let facts = '<div class="kv conversion-confirm-cost"><span>' + esc(FB.T('Cost')) +
+        '</span><b><span class="cost-highlight">' + esc(conversionCostText(st)) + '</span></b></div>';
+      if (lines.length) {
+        facts += '<ul class="review-list review-list-risk">' + lines.map(function (line) {
+          return '<li>' + esc(line) + '</li>';
+        }).join('') + '</ul>';
       }
-      h += '</div><div class="gm-list">' +
-        '<button type="button" class="actionbtn" id="conv-confirm">' +
-        esc(kind === 'faith' ? FB.T('Convert') : FB.T('Adopt')) + '</button>' +
-        '<button type="button" class="actionbtn" id="conv-cancel">' +
+      const h = reviewFactsCard('', facts, ' data-conversion-review') +
+        reviewActionsHtml(reviewActionCardHtml({
+          id:'conv-confirm', label:kind === 'faith' ? FB.T('Convert') : FB.T('Adopt'),
+          note:conversionCostText(st),
+          details:'<p>' + esc(lead) + '</p><p>' + esc(returning
+            ? FB.T('Only your character returns to the parent identity. The branch’s doctrines, other followers, communities, and active projects remain unchanged.')
+            : conversionScopeDesc(kind, scope)) + '</p>'
+        })) +
+        '<div class="gm-footer"><button type="button" class="btn" id="conv-cancel">' +
         esc(FB.T('Not yet')) + '</button></div>';
       openModal(kind === 'faith'
         ? FB.T('Convert to {target}?', { target:name })
@@ -4494,34 +4613,32 @@ window.FB = window.FB || {};
       const summary = FB.T('{county} will pursue {target} through {policy}.', {
         county:province.name, target:target, policy:policy
       });
-      let h = '<div class="gm-body-text county-project-confirm"><p>' +
-        esc(summary) + '</p>' +
-        '<p><b>' + esc(FB.T('Estimated direction:')) + '</b> ' + esc(FB.T(
+      let facts = kv('Estimated direction', esc(FB.T(
           'about {count} people per year at current conditions; resistance is {percent}%.', {
             count:Math.round(preview.potential),
             percent:Math.round(preview.resistance * 100)
-          })) + '</p>' +
-        '<p><b>' + esc(FB.T('Piety:')) + '</b> 0 · <b>' +
-          esc(FB.T('Prestige:')) + '</b> 0</p>' +
-        '<p><b>' + esc(FB.T('Standing and relationships:')) + '</b> ' +
-          esc(FB.T('No immediate change.')) + '</p>' +
-        '<p><b>' + esc(FB.T('County Popular support and unrest:')) + '</b> ' +
-          esc(policyEffectText(policyId, preview)) + '</p>' +
-        (active ? '<p>' + esc(FB.T('This replaces the county’s current {kind} project.', {
+          }))) +
+        kv('Piety and prestige', esc(FB.T('No cost'))) +
+        kv('Standing and relationships', esc(FB.T('No immediate change.'))) +
+        kv('County Popular support and unrest', esc(policyEffectText(policyId, preview)));
+      if (active) {
+        facts += '<div class="progressnote warnote">' + esc(FB.T('This replaces the county’s current {kind} project.', {
             kind:kind === 'faith' ? FB.T('faith') : FB.T('culture')
-          })) + '</p>' +
-          (active.policy !== policyId &&
+          })) + '</div>';
+      }
+      const h = reviewFactsCard(summary, facts, ' data-county-project-review') +
+        reviewActionsHtml(reviewActionCardHtml({
+          id:'county-project-confirm',
+          label:FB.T('Confirm project in {county}', { county:province.name }),
+          note:FB.T('Resolved annually; no completion date is promised.'),
+          details:(active && active.policy !== policyId &&
               FBDATA.countyCommunityPolicies[active.policy] &&
               FBDATA.countyCommunityPolicies[active.policy].modifier
-            ? '<p>' + esc(FB.T(
-              'Its existing county modifier continues until the displayed expiry.')) +
-              '</p>' : '') : '') +
-        '<p class="adesc">' + esc(FB.T(
-          'Opening this review costs nothing and changes no population. Results are resolved annually; no completion date is promised.')) +
-        '</p></div><div class="gm-list"><button type="button" ' +
-        'class="actionbtn" id="county-project-confirm">' +
-        esc(FB.T('Confirm project in {county}', { county:province.name })) +
-        '</button><button type="button" class="actionbtn" ' +
+            ? '<p>' + esc(FB.T('Its existing county modifier continues until the displayed expiry.')) + '</p>' : '') +
+            '<p>' + esc(FB.T(
+              'Opening this review costs nothing and changes no population. Results are resolved annually; no completion date is promised.')) + '</p>'
+        })) +
+        '<div class="gm-footer"><button type="button" class="btn" ' +
         'id="county-project-confirm-back">' + esc(FB.T('Not yet')) +
         '</button></div>';
       openModal(title(FB.T('Confirm county project')), h, {
@@ -4759,24 +4876,25 @@ window.FB = window.FB || {};
     }
 
     function showService() {
-      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'Take a vow for the {side} camp of the {campaign}. {service}', {
-          side:side, campaign:greatHolyWarName(s, campaign), service:service
-        })) + '</p><p>' + esc(FB.T(
-        'Promise one, two, or three years of seasonal service. If the campaign ends earlier, remaining continuously enrolled through its resolution keeps the vow.')) +
-        '</p></div><div class="gm-list">';
+      let h = reviewFactsCard('', kv('Camp', esc(camp === 'attackers' ? FB.T('Attackers') : FB.T('Defenders'))) +
+        kv('Service', esc(service)), ' data-ghw-join-summary');
       const terms = [
         { seasons:4, label:FB.T('One year · 4 seasons') },
         { seasons:8, label:FB.T('Two years · 8 seasons') },
         { seasons:12, label:FB.T('Three years · 12 seasons') }
       ];
-      for (const term of terms) {
-        h += '<button class="actionbtn" data-ghw-seasons="' + term.seasons +
-          '">📯 ' + esc(term.label) + '</button>';
-      }
-      h += '<button class="actionbtn" id="ghw-join-cancel">' +
+      h += panelh('Promised service') + reviewActionsHtml(terms.map(function (term) {
+        return reviewActionCardHtml({ data:{ ghwSeasons:term.seasons },
+          labelHtml:'📯 ' + esc(term.label) });
+      }).join('')) +
+        '<div class="gm-footer"><button type="button" class="btn" id="ghw-join-cancel">' +
         esc(FB.T('Not now')) + '</button></div>';
-      openModal(title(), h);
+      openModal(title(), h, { titleDetailsHtml:'<p>' + esc(FB.T(
+        'Take a vow for the {side} camp of the {campaign}. {service}', {
+          side:side, campaign:greatHolyWarName(s, campaign), service:service
+        })) + '</p><p>' + esc(FB.T(
+        'Promise one, two, or three years of seasonal service. If the campaign ends earlier, remaining continuously enrolled through its resolution keeps the vow.')) +
+        '</p>' });
       document.querySelectorAll('[data-ghw-seasons]').forEach(function (button) {
         button.addEventListener('click', function () {
           draft.seasons = parseInt(button.dataset.ghwSeasons, 10);
@@ -4787,9 +4905,6 @@ window.FB = window.FB || {};
     }
 
     function showDesire() {
-      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'Name what this service is meant to secure. A precise vow strengthens that claim and weakens unrelated claims.')) +
-        '</p></div><div class="gm-list">';
       const desires = camp === 'attackers' ? [
         { kind:'crown', label:FB.T('The target crown') },
         { kind:'sacred', label:FB.T('Custody of the sacred places') },
@@ -4799,13 +4914,16 @@ window.FB = window.FB || {};
       ] : [
         { kind:'honor', label:FB.T('Defend the faith for honor') }
       ];
-      for (const desire of desires) {
-        h += '<button class="actionbtn" data-ghw-desire="' +
-          esc(desire.kind) + '">' + esc(desire.label) + '</button>';
-      }
-      h += '<button class="actionbtn" id="ghw-join-back">' +
+      let h = reviewFactsCard('', kv('Promised service', esc(FB.T('{seasons} seasons', { seasons:draft.seasons }))),
+        ' data-ghw-join-summary') +
+        panelh('Vow') + reviewActionsHtml(desires.map(function (desire) {
+          return reviewActionCardHtml({ data:{ ghwDesire:desire.kind }, label:desire.label });
+        }).join('')) +
+        '<div class="gm-footer"><button type="button" class="btn" id="ghw-join-back">' +
         esc(FB.T('Back')) + '</button></div>';
-      openModal(title(), h);
+      openModal(title(), h, { titleDetailsHtml:'<p>' + esc(FB.T(
+        'Name what this service is meant to secure. A precise vow strengthens that claim and weakens unrelated claims.')) +
+        '</p>' });
       document.querySelectorAll('[data-ghw-desire]').forEach(function (button) {
         button.addEventListener('click', function () {
           draft.desire = { kind:button.dataset.ghwDesire, id:null };
@@ -4820,14 +4938,11 @@ window.FB = window.FB || {};
 
     function showLandTarget() {
       const targets = FB.greatHolyWarDesireTargets(s, draft.desire.kind);
-      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'Choose the exact land named in the vow.')) +
-        '</p></div><div class="gm-list">';
-      for (const target of targets) {
-        h += '<button class="actionbtn" data-ghw-vow-target="' +
-          esc(target.id) + '">' + esc(target.name) + '</button>';
-      }
-      h += '<button class="actionbtn" id="ghw-target-back">' +
+      const h = panelh('Land named in the vow') +
+        reviewActionsHtml(targets.map(function (target) {
+          return reviewActionCardHtml({ data:{ ghwVowTarget:target.id }, label:target.name });
+        }).join('')) +
+        '<div class="gm-footer"><button type="button" class="btn" id="ghw-target-back">' +
         esc(FB.T('Back')) + '</button></div>';
       openModal(title(), h);
       document.querySelectorAll('[data-ghw-vow-target]').forEach(function (button) {
@@ -4841,20 +4956,21 @@ window.FB = window.FB || {};
 
     function showBeneficiary() {
       const candidates = FB.greatHolyWarVowBeneficiaries(s);
-      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'You may name one living adult close relative to rule a won duchy or county. If they die or take another throne before settlement, the grant returns to you.')) +
-        '</p></div><div class="gm-list">' +
-        '<button class="actionbtn" data-ghw-beneficiary="">' +
-        esc(FB.T('Claim it for yourself')) + '</button>';
+      let cards = reviewActionCardHtml({ data:{ ghwBeneficiary:'' },
+        labelHtml:FB.faceTag(s.chars[s.player.charId], 32, 38) + ' ' +
+          esc(FB.T('Claim it for yourself')) });
       for (const row of candidates) {
-        h += '<button class="actionbtn" data-ghw-beneficiary="' +
-          esc(row.c.id) + '">' + esc(FB.T('{name} · {relation}', {
-            name:FB.fullName(row.c), relation:FB.T(row.rel)
-          })) + '</button>';
+        cards += reviewActionCardHtml({ data:{ ghwBeneficiary:row.c.id },
+          labelHtml:FB.faceTag(row.c, 32, 38) + ' ' + esc(FB.fullName(row.c)),
+          note:FB.T(row.rel) });
       }
-      h += '<button class="actionbtn" id="ghw-beneficiary-back">' +
+      const h = panelh('Ruler of won land') + reviewActionsHtml(cards) +
+        '<div class="gm-footer"><button type="button" class="btn" id="ghw-beneficiary-back">' +
         esc(FB.T('Back')) + '</button></div>';
-      openModal(title(), h);
+      openModal(title(), h, { titleDetailsHtml:'<p>' + esc(FB.T(
+        'You may name one living adult close relative to rule a won duchy or county. If they die or take another throne before settlement, the grant returns to you.')) +
+        '</p>' });
+      FB.paintFaces($('gm-body'), s);
       document.querySelectorAll('[data-ghw-beneficiary]').forEach(function (button) {
         button.addEventListener('click', function () {
           draft.beneficiary = button.dataset.ghwBeneficiary || null;
@@ -4877,15 +4993,21 @@ window.FB = window.FB || {};
           seasons:draft.seasons,
           desire:greatHolyWarDesireName(s, campaign, draft.desire)
         });
-      let h = '<div class="gm-body-text"><p>' + esc(vowSummary) +
-        '</p><p>' + esc(FB.T(
-        'Withdrawal costs piety and prestige. Breaking an unfinished vow increases the cost, and active campaign effects determine the final amount.')) +
-        '</p></div><div class="gm-list">' +
-        '<button class="actionbtn" id="ghw-join-confirm">📯 ' +
-        esc(FB.T('Take this vow')) + '</button>' +
-        '<button class="actionbtn" id="ghw-review-back">' +
+      let facts = kv('Camp', esc(camp === 'attackers' ? FB.T('Attackers') : FB.T('Defenders'))) +
+        kv('Promised service', esc(FB.T('{seasons} seasons', { seasons:draft.seasons }))) +
+        kv('Desire', esc(greatHolyWarDesireName(s, campaign, draft.desire)));
+      if (beneficiary) facts += reviewPeopleHtml(reviewPersonHtml(beneficiary, FB.T('Receives any land won'), null));
+      const h = reviewFactsCard(FB.T('Your vow'), facts, ' data-ghw-vow-review') +
+        reviewActionsHtml(reviewActionCardHtml({
+          id:'ghw-join-confirm', labelHtml:'📯 ' + esc(FB.T('Take this vow')),
+          note:FB.T('Withdrawal later costs piety and prestige'),
+          details:'<p>' + esc(vowSummary) + '</p><p>' + esc(FB.T(
+            'Withdrawal costs piety and prestige. Breaking an unfinished vow increases the cost, and active campaign effects determine the final amount.')) + '</p>'
+        })) +
+        '<div class="gm-footer"><button type="button" class="btn" id="ghw-review-back">' +
         esc(FB.T('Back')) + '</button></div>';
       openModal(title(), h);
+      FB.paintFaces($('gm-body'), s);
       $('ghw-join-confirm').addEventListener('click', function () {
         FB.joinGreatHolyWar(s, camp, 'player', draft);
         UI.closeModal();
@@ -5185,7 +5307,7 @@ window.FB = window.FB || {};
     const cost = FB.greatHolyWarWithdrawalCost
       ? FB.greatHolyWarWithdrawalCost(s)
       : { piety:100, prestige:50, inherited:!!pledge.renewalRequired, broken:false };
-    const h = '<div class="gm-body-text"><p>' + esc(cost.inherited
+    const detail = cost.inherited
       ? FB.T('Decline the inherited vow without a personal piety or prestige penalty. The dynasty’s contribution remains in the record, but it cannot claim land.')
       : cost.broken
         ? FB.T('Your promised term is not fulfilled. Withdrawal costs {piety} piety and {prestige} prestige and records a broken vow.', {
@@ -5193,11 +5315,20 @@ window.FB = window.FB || {};
         })
         : FB.T('Your promised term is fulfilled. Withdrawal costs {piety} piety and {prestige} prestige without recording a broken vow.', {
           piety:cost.piety, prestige:cost.prestige
-        })) +
-      '</p></div><div class="gm-list">' +
-      '<button class="actionbtn danger" id="ghw-withdraw-confirm">🏳 ' +
-      esc(FB.T('Withdraw from the campaign')) + '</button>' +
-      '<button class="actionbtn" id="ghw-withdraw-cancel">' +
+        });
+    const h = reviewFactsCard('', kv('Cost', esc(cost.inherited ? FB.T('None')
+        : FB.T('{piety} piety and {prestige} prestige', { piety:cost.piety, prestige:cost.prestige }))) +
+      kv('Vow', esc(cost.inherited ? FB.T('Inherited') : cost.broken ? FB.T('Recorded as broken')
+        : FB.T('Fulfilled'))) +
+      kv('Land claim', esc(FB.T('Lost'))), ' data-ghw-withdraw') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'ghw-withdraw-confirm', labelHtml:'🏳 ' + esc(FB.T('Withdraw from the campaign')),
+        danger:true, warn:!!cost.broken,
+        note:cost.inherited ? FB.T('No penalty') : FB.T('{piety} piety and {prestige} prestige', {
+          piety:cost.piety, prestige:cost.prestige }),
+        details:'<p>' + esc(detail) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="ghw-withdraw-cancel">' +
       esc(FB.T('Keep the vow')) + '</button></div>';
     openModal(FB.T('Withdraw from the {campaign}?', {
       campaign:greatHolyWarName(s, campaign)
@@ -5214,14 +5345,16 @@ window.FB = window.FB || {};
     const s = FB.state, campaign = s && s.greatHolyWar;
     const pledge = s && s.player.greatHolyWar;
     if (!campaign || !pledge || !pledge.renewalRequired) return;
-    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+    const h = reviewActionsHtml(reviewActionCardHtml({
+        id:'ghw-renew-confirm', labelHtml:'📯 ' + esc(FB.T('Renew the vow')),
+        note:FB.T('Keeps your eligibility for land')
+      }) + reviewActionCardHtml({
+        id:'ghw-renew-decline', labelHtml:'🏳 ' + esc(FB.T('Decline the inherited vow')),
+        note:FB.T('No withdrawal penalty · no land claim')
+      }));
+    openModal(FB.T('An inherited campaign vow'), h, { noFocus:true, titleDetailsHtml:'<p>' + esc(FB.T(
       'Your predecessor’s vow and contribution pass to you. Renew it to remain eligible for land, or decline it without the ordinary withdrawal penalty.')) +
-      '</p></div><div class="gm-list">' +
-      '<button class="actionbtn" id="ghw-renew-confirm">📯 ' +
-      esc(FB.T('Renew the vow')) + '</button>' +
-      '<button class="actionbtn" id="ghw-renew-decline">🏳 ' +
-      esc(FB.T('Decline the inherited vow')) + '</button></div>';
-    openModal(FB.T('An inherited campaign vow'), h, { noFocus:true });
+      '</p>' });
     $('ghw-renew-confirm').addEventListener('click', function () {
       FB.renewGreatHolyWarVow(s);
       UI.closeModal();
@@ -5377,20 +5510,17 @@ window.FB = window.FB || {};
         consequence = FB.T(
           'Accepting founds a new playable landed realm for your household.');
       }
-      const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'The council offers you a {award}: {counties}. {consequence}', {
-          award:greatHolyWarRewardName(pending.kind),
-          counties:counties.join(', '),
-          consequence:consequence
-        })) + '</p><p>' + esc(FB.T(
-        'Declining grants the land to a generated cadet ruler and converts your service into piety and prestige.')) +
-        '</p></div>' + panelh('Final settlement') +
+      const h = reviewFactsCard(FB.T('Council offer'), kv('Award', esc(greatHolyWarRewardName(pending.kind))) +
+        kv('Counties', esc(counties.join(', '))), ' data-ghw-settlement') +
+        panelh('Final settlement') +
         greatHolyWarAwardList(s, settlementCase) +
-        '<div class="gm-list">' +
-        '<button class="actionbtn" id="ghw-settlement-accept">👑 ' +
-        esc(FB.T('Accept the territorial grant')) + '</button>' +
-        '<button class="actionbtn" id="ghw-settlement-decline">🕊 ' +
-        esc(FB.T('Decline for honor')) + '</button></div>';
+        reviewActionsHtml(reviewActionCardHtml({
+          id:'ghw-settlement-accept', labelHtml:'👑 ' + esc(FB.T('Accept the territorial grant')),
+          note:consequence
+        }) + reviewActionCardHtml({
+          id:'ghw-settlement-decline', labelHtml:'🕊 ' + esc(FB.T('Decline for honor')),
+          note:FB.T('Declining grants the land to a generated cadet ruler and converts your service into piety and prestige.')
+        }));
       openModal(FB.T('The council’s final settlement'), h, {
         dismissable:false, noFocus:true, modalClass:'fullsheet-modal'
       });
@@ -5409,10 +5539,7 @@ window.FB = window.FB || {};
 
     const view = FB.settlement.current(settlementCase);
     if (!view) return;
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Resolve each asset in order. Claims combine service, vows, occupation, rights, local support, and religious standing. Land winners may receive only one territorial award.')) +
-      '</p></div>';
-    h += kv('Current asset',
+    let h = kv('Current asset',
       esc(greatHolyWarCouncilAssetName(s, view.asset)));
     h += kv('Council standing',
       esc(FB.T('{points}/2 points', { points:settlementCase.standing })));
@@ -5450,7 +5577,7 @@ window.FB = window.FB || {};
         '</b><small>' + esc(greatHolyWarBasisText(claim.basis)) +
         '</small></div>';
     }
-    h += panelh('Your moves') + '<div class="gm-list">';
+    h += panelh('Your moves') + '<div class="modal-body-actions review-actions">';
     h += '<button class="actionbtn" data-ghw-council-move="acquiesce">' +
       esc(view.leader ? FB.T('Acquiesce · award {claimant}', {
         claimant:greatHolyWarCouncilClaimantName(
@@ -5507,7 +5634,10 @@ window.FB = window.FB || {};
       greatHolyWarAwardList(s, settlementCase);
     openModal(FB.T('Settlement council · {asset}', {
       asset:greatHolyWarCouncilAssetName(s, view.asset)
-    }), h, { dismissable:false, noFocus:true, modalClass:'fullsheet-modal' });
+    }), h, { dismissable:false, noFocus:true, modalClass:'fullsheet-modal',
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        'Resolve each asset in order. Claims combine service, vows, occupation, rights, local support, and religious standing. Land winners may receive only one territorial award.')) +
+        '</p>' });
     document.querySelectorAll('[data-ghw-council-move]').forEach(function (button) {
       button.addEventListener('click', function () {
         const move = {
@@ -5549,18 +5679,15 @@ window.FB = window.FB || {};
       consequence = FB.T(
         'Accepting founds a new playable landed realm for your household.');
     }
-    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Your contribution earns a {award}: {counties}. {consequence}', {
-        award:greatHolyWarRewardName(award.kind),
-        counties:counties.join(', '),
-        consequence:consequence
-      })) + '</p><p>' + esc(FB.T(
-      'Declining grants the land to a generated cadet ruler and converts your share into piety and prestige.')) +
-      '</p></div><div class="gm-list">' +
-      '<button class="actionbtn" id="ghw-settlement-accept">👑 ' +
-      esc(FB.T('Accept the territorial grant')) + '</button>' +
-      '<button class="actionbtn" id="ghw-settlement-decline">🕊 ' +
-      esc(FB.T('Decline for honor')) + '</button></div>';
+    const h = reviewFactsCard(FB.T('Your share'), kv('Award', esc(greatHolyWarRewardName(award.kind))) +
+      kv('Counties', esc(counties.join(', '))), ' data-ghw-settlement') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'ghw-settlement-accept', labelHtml:'👑 ' + esc(FB.T('Accept the territorial grant')),
+        note:consequence
+      }) + reviewActionCardHtml({
+        id:'ghw-settlement-decline', labelHtml:'🕊 ' + esc(FB.T('Decline for honor')),
+        note:FB.T('Declining grants the land to a generated cadet ruler and converts your share into piety and prestige.')
+      }));
     openModal(FB.T('The campaign’s partition'), h, {
       dismissable:false, noFocus:true
     });
@@ -7510,11 +7637,18 @@ window.FB = window.FB || {};
         sovereign: sovereign,
         theirs: menText(s, enMen), yours: menText(s, FB.playerLevy(s))
       });
-    const h = '<div class="gm-body-text"><p>' + esc(independenceText) + '</p></div>' +
-      '<button class="btn primary" id="gm-indep">' +
-      esc(FB.T('Raise my banner')) + '</button> ' +
-      '<button class="btn" id="gm-cancel">' +
-      esc(returnContext ? FB.T('Back') : FB.T('Stay sworn')) + '</button>';
+    const h = reviewFactsCard(FB.T('Independence war'),
+      kv('Renounce', esc(lg ? lg.name : FB.T('your liege'))) +
+      kv('Enemy', esc(sovereign)) +
+      kv('Their army', esc('~' + menText(s, enMen))) +
+      kv('Your levy', esc('~' + menText(s, FB.playerLevy(s)))), ' data-independence-review') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'gm-indep', label:FB.T('Raise my banner'), danger:true,
+        note:FB.T('Starts a war with {sovereign}', { sovereign:sovereign }),
+        details:'<p>' + esc(independenceText) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Stay sworn')) + '</button></div>';
     openModal(FB.T('Declare Independence'), h,
       managementModalOptions(returnContext));
     $('gm-indep').addEventListener('click', function () {
@@ -8721,10 +8855,13 @@ window.FB = window.FB || {};
     if (!quote) { toast(FB.T('This grant is no longer available.')); return false; }
     let h = '<div class="gm-body-text">' + kv('New baron', esc(FB.fullName(s.chars[cid]))) + '</div>' +
       settlementGrantSummary(s, quote, true) +
-      '<p class="hint">' + esc(FB.T('No gold or day cost. This hereditary grant takes effect immediately.')) + '</p>' +
       '<p class="warnote" id="grant-status" role="status"></p>' +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'grant-confirm', label:FB.T('Grant settlement'),
+        note:FB.T('No gold or day cost. This hereditary grant takes effect immediately.')
+      })) +
       '<div class="gm-footer"><button type="button" class="btn" id="grant-cancel">' + esc(FB.T('Cancel')) +
-      '</button><button type="button" class="btn primary" id="grant-confirm">' + esc(FB.T('Grant settlement')) + '</button></div>';
+      '</button></div>';
     // The picker and its review are one step above the originating sheet.
     // Retain that parent's history, scroll and focus for every Back route.
     openModal(FB.T('Review settlement grant'), h, { historyView:true, historyBack:true, replaceView:true,
@@ -9059,8 +9196,15 @@ window.FB = window.FB || {};
         '<div class="gm-body-text">' + kv('Settlement', esc(st.name)) +
         kv('Local gross income / season', esc(FB.T('{money:amount}', { amount:fiscal.amounts.gross }))) +
         kv('Building upkeep / season', esc(FB.T('{money:amount}', { amount:fiscal.amounts.upkeep }))) +
-        '<p>' + esc(message) + '</p></div><div class="gm-footer"><button class="btn primary" id="lordship-change-confirm">' + esc(restoring ? FB.T('Restore barony') : FB.T('Revoke barony')) + '</button></div>',
+        '</div>' + reviewActionsHtml(reviewActionCardHtml({
+          id:'lordship-change-confirm', danger:!restoring,
+          label:restoring ? FB.T('Restore barony') : FB.T('Revoke barony'),
+          note:restoring ? FB.T('You keep only customary dues') : FB.T('Up to 40 Standing lost · counts as mistreatment'),
+          warn:!restoring, details:'<p>' + esc(message) + '</p>'
+        })) + '<div class="gm-footer"><button type="button" class="btn" id="lordship-change-back">' +
+        esc(FB.T('Back')) + '</button></div>',
         { historyView:true, noFocus:true, historyBackRender:returnToSettlement });
+      $('lordship-change-back').onclick = UI.backModal;
       $('lordship-change-confirm').onclick = function () {
         changed = restoring ? FB.restoreSettlementLordship(FB.state, pid, idx, restorationHolder) :
           FB.revokeSettlementLordship(FB.state, pid, idx, delegated.holderId);
@@ -9844,9 +9988,7 @@ window.FB = window.FB || {};
   /* ================= envoy picker ================= */
   UI.showEnvoys = function (focusRealmId, returnContext) {
     const s = FB.state;
-    let h = '<p class="hint">' + esc(FB.T(
-      'A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+.')) +
-      '</p><div class="gm-list">';
+    let h = '';
     const targets = Object.keys(s.realms).filter(function (rid) {
       const r = s.realms[rid];
       return rid !== 'player' && r.alive &&
@@ -9854,64 +9996,67 @@ window.FB = window.FB || {};
           (s.pacts && s.pacts[rid] > s.turn) ||
           (FB.allianceSnapshot(s, 'player') && FB.areAlliedSnapshot(s, 'player', rid)));
     });
-    const pactTargets = targets, allianceTargets = targets;
     for (const rid of targets) {
       const focusedEnvoy = FB.envoyStatus(s, rid);
       const focusedAlliance = FB.allianceOfferStatus(s, rid);
       const r = s.realms[rid];
-      h += '<h3>' + esc(s.realms[rid].name) + '</h3><p>' + esc(FB.T('Peace envoy: {money:pact}. Alliance envoy: {money:alliance}.', { pact:focusedEnvoy.cost, alliance:focusedAlliance.cost })) + '</p>';
-      if (s.pacts && s.pacts[rid] > s.turn) h += '<p>' + esc(FB.T('Peace pact: {days} days remaining.', { days:s.pacts[rid] - s.turn })) + '</p>';
-      if (FB.areAlliedSnapshot(s, 'player', rid)) h += '<p>' + esc(FB.T('Current defensive ally')) + '</p>';
-      const tie = FB.dynasticAllianceTieSnapshot(s, rid);
-      h += '<p>' + esc(tie.qualifying ? FB.T('Family marriage: +{bonus} percentage points to alliance negotiations.', { bonus:Math.round(tie.bonus * 100) }) : FB.T('No qualifying family marriage.')) + '</p><button class="btn" data-envoy-marriages="' + esc(rid) + '">' + esc(FB.T('Marriage candidates…')) + '</button>';
-      for (const marriage of tie.marriages) {
-        h += '<p>' + esc(FB.T('{first} married to {second}', {
-          first:FB.fullName(s.chars[marriage.subjectId]),
-          second:FB.fullName(s.chars[marriage.partnerId])
-        })) + '</p>';
-      }
       const men = FB.aiBaseHost(s, rid);
       const standing = FB.standingOf(s, { kind:'realm', id:rid });
-      if (pactTargets.indexOf(rid) >= 0) {
-        const pactBlocked = focusedEnvoy && !focusedEnvoy.ready;
-        h += '<button class="actionbtn" data-envoy="' + esc(rid) + '"' +
-          (pactBlocked || s.player.gold < 10 ? ' disabled' : '') + '>🕊 ' +
-          esc(FB.T('Peace pact with {realm}', { realm: r.name })) +
-          '<span class="adesc">' + esc(FB.T('{ruler} · {counties} · fields ~{men} · Standing {standing} · chance ~{chance}%', {
-            ruler: r.ruler.name,
-            counties: countyCountText(s, FB.realmProvinces(s, rid).length),
-            men: menText(s, men),
-            standing: standingText(standing),
-            chance: Math.round(FB.envoyChance(s, rid) * 100)
-          }) + (pactBlocked
-            ? ' · ' + FB.T('Unavailable: {reason}', {
-              reason:focusedEnvoy.reason
-            }) : '')) + '</span></button>';
+      const tie = FB.dynasticAllianceTieSnapshot(s, rid);
+      let facts = kv('Ruler', esc(r.ruler.name)) +
+        kv('Territory', esc(countyCountText(s, FB.realmProvinces(s, rid).length))) +
+        kv('Army', esc('~' + menText(s, men))) +
+        kv('Standing', esc(standingText(standing)));
+      if (s.pacts && s.pacts[rid] > s.turn) {
+        facts += kv('Peace pact', esc(FB.T('{days} days remaining', { days:s.pacts[rid] - s.turn })));
       }
-      if (allianceTargets.indexOf(rid) >= 0) {
-        const allianceBlocked = focusedAlliance && !focusedAlliance.ready;
-        h += '<button class="actionbtn" data-alliance-offer="' + esc(rid) + '"' +
-          (allianceBlocked || s.player.gold < 25 ? ' disabled' : '') + '>🤝 ' +
-          esc(FB.T('Defensive alliance with {realm}', { realm: r.name })) +
-          '<span class="adesc">' + esc(FB.T('{ruler} · Standing {standing} · chance ~{chance}% · their aid would add up to ~{men} defenders', {
-            ruler: r.ruler.name,
-            standing: standingText(standing),
-            chance: Math.round(focusedAlliance.chance * 100),
-            men: menText(s, Math.round(Math.min(
-              men * 0.25, FB.playerLevy(s) * 0.5)))
-          }) + (allianceBlocked
-            ? ' · ' + FB.T('Unavailable: {reason}', {
-              reason:focusedAlliance.reason
-            }) : '')) + '</span></button>';
+      if (FB.areAlliedSnapshot(s, 'player', rid)) facts += kv('Alliance', esc(FB.T('Current defensive ally')));
+      facts += kv('Family marriage', esc(tie.qualifying
+        ? FB.T('+{bonus} percentage points to alliance negotiations', { bonus:Math.round(tie.bonus * 100) })
+        : FB.T('None qualifying')));
+      if (tie.marriages.length) {
+        facts += kv('Marriages', esc(tie.marriages.map(function (marriage) {
+          return FB.T('{first} married to {second}', {
+            first:FB.fullName(s.chars[marriage.subjectId]),
+            second:FB.fullName(s.chars[marriage.partnerId])
+          });
+        }).join('; ')));
       }
+      const pactBlocked = focusedEnvoy && !focusedEnvoy.ready;
+      const allianceBlocked = focusedAlliance && !focusedAlliance.ready;
+      const pactShort = s.player.gold < 10, allianceShort = s.player.gold < 25;
+      const cards = reviewActionCardHtml({
+        data:{ envoy:rid }, disabled:pactBlocked || pactShort, warn:pactBlocked,
+        labelHtml:'🕊 ' + esc(FB.T('Peace pact with {realm}', { realm:r.name })),
+        note:pactBlocked
+          ? FB.T('Unavailable: {reason}', { reason:focusedEnvoy.reason })
+          : FB.T('{money:cost} · chance ~{chance}%', {
+            cost:focusedEnvoy.cost, chance:Math.round(FB.envoyChance(s, rid) * 100)
+          })
+      }) + reviewActionCardHtml({
+        data:{ allianceOffer:rid }, disabled:allianceBlocked || allianceShort, warn:allianceBlocked,
+        labelHtml:'🤝 ' + esc(FB.T('Defensive alliance with {realm}', { realm:r.name })),
+        note:allianceBlocked
+          ? FB.T('Unavailable: {reason}', { reason:focusedAlliance.reason })
+          : FB.T('{money:cost} · chance ~{chance}% · up to ~{men} defenders', {
+            cost:focusedAlliance.cost,
+            chance:Math.round(focusedAlliance.chance * 100),
+            men:menText(s, Math.round(Math.min(men * 0.25, FB.playerLevy(s) * 0.5)))
+          })
+      }) + reviewActionCardHtml({
+        data:{ envoyMarriages:rid }, label:FB.T('Marriage candidates…')
+      });
+      h += reviewFactsCard(r.name, facts + reviewActionsHtml(cards), ' data-envoy-realm="' + esc(rid) + '"');
     }
     if (!targets.length) {
       h += '<div class="hint">' + esc(FB.T(
         'No neighboring court has an available offer.')) + '</div>';
     }
-    h += '</div><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Not now')) + '</button>';
+    h += '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Alliances & pacts…'), h, {
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        'A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+.')) + '</p>',
       historyView:!!returnContext,
       historyBackRender:function () {
         interactionReturn(returnContext);
@@ -11815,7 +11960,7 @@ window.FB = window.FB || {};
     }
     function termsSummary() {
       return FB.T(
-        '{years} years · receive {money:fee} now · +{tax}% tax · +{enterprise}% matching enterprise profit · {opinion} popular opinion',
+        '{years} years · receive {money:fee} now · +{tax}% tax · +{enterprise}% matching enterprise profit · {opinion} Popular support',
         {
           years:status.terms.years,
           fee:status.terms.rulerFee,
@@ -11825,18 +11970,16 @@ window.FB = window.FB || {};
         });
     }
     if (profession !== 'craftsman' && profession !== 'merchant') {
-      let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'Choose the profession that receives exclusive local privilege. One outgoing charter may exist at a time, alongside any incoming charter held by the household.')) +
-        '</p></div><div class="gm-list">';
-      for (const id of ['craftsman', 'merchant']) {
+      const h = reviewActionsHtml(['craftsman', 'merchant'].map(function (id) {
         const def = FBDATA.careers[id];
-        h += '<button class="actionbtn" data-monopoly-profession="' + id + '">' +
-          esc(def.icon + ' ' + professionName(id)) +
-          '<span class="adesc">' + esc(termsSummary()) + '</span></button>';
-      }
-      h += '</div><button class="btn" id="gm-cancel">' +
-        esc(FB.T('Not now')) + '</button>';
-      openModal(FB.T('Grant a Guild Monopoly'), h);
+        return reviewActionCardHtml({ data:{ monopolyProfession:id },
+          labelHtml:esc(def.icon + ' ' + professionName(id)), note:termsSummary() });
+      }).join('')) +
+        '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+        esc(FB.T('Not now')) + '</button></div>';
+      openModal(FB.T('Grant a Guild Monopoly'), h, { titleDetailsHtml:'<p>' + esc(FB.T(
+        'Choose the profession that receives exclusive local privilege. One outgoing charter may exist at a time, alongside any incoming charter held by the household.')) +
+        '</p>' });
       document.querySelectorAll('[data-monopoly-profession]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           UI.showGuildMonopolyGrant(btn.dataset.monopolyProfession);
@@ -11856,43 +11999,54 @@ window.FB = window.FB || {};
       return career && career.profession === profession &&
         career.guildRank === 'guildmaster';
     })[0];
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Grant the local {profession} guild exclusive privilege?', {
-        profession:professionName(profession)
-      })) + '</p>' +
-      (advocate ? '<p>' + esc(FB.T(
-        '{advocate}, a household guildmaster, will present the guild’s case; the charter belongs to the local guild, not to that person.', {
-          advocate:FB.fullName(advocate)
-        })) + '</p>' : '') +
-      '<p>' + esc(FB.T(
-        'The treasury receives {money:fee} immediately. For {years} years, your tax income rises by {tax}% and matching staffed family enterprises gain {enterprise}% profit. Popular opinion changes by {opinion}.',
-        {
-          fee:status.terms.rulerFee,
-          years:status.terms.years,
-          tax:Math.round(status.terms.taxBonus * 100),
-          enterprise:Math.round(status.terms.enterpriseBonus * 100),
-          opinion:status.terms.popularOpinion > 0
-            ? '+' + status.terms.popularOpinion : status.terms.popularOpinion
-        })) + '</p><p>' + esc(spec.mode === 'corridor'
-          ? FB.T('{good} trade on the corridor to {destination} gains distribution capacity and qualifying venture returns.', {
-            good:guildMonopolyGoodName(s, spec.goodId),
-            destination:FB.world.byId[spec.destinationId].name
-          })
-          : FB.T('The privilege applies to {good} in the local county.', {
-            good:guildMonopolyGoodName(s, spec.goodId)
-          })) + '</p><p class="hint">' + esc(FB.T(
-          'The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority.')) +
-      '</p></div><button class="btn primary" id="gm-confirm-monopoly">' +
-      esc(FB.T('Grant the {profession} monopoly', {
-        profession:professionName(profession)
-      })) + '</button> <button class="btn" id="gm-back">' +
-      esc(FB.T('Back')) + '</button>';
+    const scope = spec.mode === 'corridor'
+      ? FB.T('{good} trade on the corridor to {destination} gains distribution capacity and qualifying venture returns.', {
+        good:guildMonopolyGoodName(s, spec.goodId),
+        destination:FB.world.byId[spec.destinationId].name
+      })
+      : FB.T('The privilege applies to {good} in the local county.', {
+        good:guildMonopolyGoodName(s, spec.goodId)
+      });
+    const facts = (advocate ? reviewPeopleHtml(reviewPersonHtml(advocate,
+        FB.T('Household guildmaster presenting the case'), null)) : '') +
+      kv('Treasury now', esc(FB.T('+{money:fee}', { fee:status.terms.rulerFee }))) +
+      kv('Term', esc(FB.T('{years} years', { years:status.terms.years }))) +
+      kv('Tax income', esc(FB.T('+{tax}%', { tax:Math.round(status.terms.taxBonus * 100) }))) +
+      kv('Matching enterprises', esc(FB.T('+{enterprise}% profit', {
+        enterprise:Math.round(status.terms.enterpriseBonus * 100) }))) +
+      kv('Popular support', esc(status.terms.popularOpinion > 0
+        ? '+' + status.terms.popularOpinion : String(status.terms.popularOpinion))) +
+      kv('Scope', esc(scope));
+    const h = reviewFactsCard(FB.T('Charter terms'), facts, ' data-monopoly-review') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'gm-confirm-monopoly',
+        label:FB.T('Grant the {profession} monopoly', { profession:professionName(profession) }),
+        note:FB.T('Takes 1 day · cannot be revoked before it ends'),
+        details:'<p>' + esc(FB.T(
+          'The treasury receives {money:fee} immediately. For {years} years, your tax income rises by {tax}% and matching staffed family enterprises gain {enterprise}% profit. Popular opinion changes by {opinion}.',
+          {
+            fee:status.terms.rulerFee,
+            years:status.terms.years,
+            tax:Math.round(status.terms.taxBonus * 100),
+            enterprise:Math.round(status.terms.enterpriseBonus * 100),
+            opinion:status.terms.popularOpinion > 0
+              ? '+' + status.terms.popularOpinion : status.terms.popularOpinion
+          })) + '</p><p>' + esc(FB.T(
+          'The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority.')) + '</p>' +
+          (advocate ? '<p>' + esc(FB.T(
+            '{advocate}, a household guildmaster, will present the guild’s case; the charter belongs to the local guild, not to that person.', {
+              advocate:FB.fullName(advocate)
+            })) + '</p>' : '')
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-back">' +
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('{profession} Monopoly', {
       profession:professionName(profession)
     }), h, {
       historyView:true,
       historyBackRender:function () { UI.showGuildMonopolyGrant(); }
     });
+    FB.paintFaces($('gm-body'), s);
     $('gm-confirm-monopoly').addEventListener('click', function () {
       if (!FB.issueGuildMonopoly(FB.state, profession, spec)) return;
       UI.closeModal();
@@ -11909,10 +12063,9 @@ window.FB = window.FB || {};
     const seat = FB.localCouncilOf(s);
     if (!status.ready || !seat) return;
     const province = FB.world.byId[seat.provinceId];
-    let h = '<p class="hint">' + esc(FB.T(
-      'The seeded vote chance is {chance}% for every motion: Diplomacy and Stewardship shape your case, while popular opinion shapes the room.', {
+    let h = reviewFactsCard('', kv('Vote chance', esc(FB.T('{chance}%', {
         chance:Math.round(status.chance * 100)
-      })) + '</p><div class="gm-list">';
+      }))) + kv('Time', esc(FB.T('1 day')))) + '<div class="gm-list">';
     for (const id in FBDATA.localCouncilMotions) {
       const def = FBDATA.localCouncilMotions[id];
       h += '<button type="button" class="actionbtn" data-local-motion="' +
@@ -11926,7 +12079,10 @@ window.FB = window.FB || {};
       'id="local-motion-cancel">' + esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Council of {province}', {
       province:province ? province.name : seat.provinceId
-    }), h, { noFocus:true });
+    }), h, { noFocus:true, titleDetailsHtml:'<p>' + esc(FB.T(
+      'The seeded vote chance is {chance}% for every motion: Diplomacy and Stewardship shape your case, while popular opinion shapes the room.', {
+        chance:Math.round(status.chance * 100)
+      })) + '</p>' });
     document.querySelectorAll('[data-local-motion]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (!FB.proposeLocalCouncilMotion(s, button.dataset.localMotion)) return;
@@ -12149,7 +12305,7 @@ window.FB = window.FB || {};
     const countyNames = selection.countyIds.map(function (pid) {
       return FB.L(FB.world.byId[pid].name);
     }).join(', ');
-    let h = '<p class="hint">' + esc(kind === 'duchy' ? FB.T(
+    const summary = kind === 'duchy' ? FB.T(
       'Grant every county still in your hand within {duchy} to {ruler} of {realm}.', {
         duchy:FB.L(selection.name),
         ruler:realm.ruler.name,
@@ -12159,20 +12315,20 @@ window.FB = window.FB || {};
         county:FB.L(selection.name),
         ruler:realm.ruler.name,
         realm:FB.L(realm.name)
-      })) + '</p><div class="progressnote"><b>' +
-      esc(FB.T('Counties transferred')) + '</b><br>' + esc(countyNames) +
-      '<br><br><b>' + esc(FB.T('Terms retained')) + '</b><br>' + esc(FB.T(
-        '{charter} · {tenure} tenure', {
-          charter:feudalCharterName(s, contract.charterId),
-          tenure:feudalTenureText(contract.tenure)
-        })) + (selection.promotesDuchy
-          ? '<br><br><b>' + esc(FB.T('Rank gained')) + '</b><br>' +
-            esc(FB.T('This complete duchy raises the ruler to duke tier.'))
-          : '') + '<br><br><b>' + esc(FB.T('Standing')) + '</b><br>+' +
-      esc(selection.standingGain) + '</div><div class="gm-footer">' +
-      '<button type="button" class="btn primary" id="vassal-grant-confirm">' +
-      esc(FB.T('Confirm grant')) + '</button>' +
-      '<button type="button" class="btn" id="vassal-grant-confirm-back">' +
+      });
+    const h = reviewFactsCard(FB.T('Grant'),
+      kv('Recipient', esc(FB.T('{ruler} of {realm}', { ruler:realm.ruler.name, realm:FB.L(realm.name) }))) +
+      kv('Counties transferred', esc(countyNames)) +
+      kv('Terms retained', esc(FB.T('{charter} · {tenure} tenure', {
+        charter:feudalCharterName(s, contract.charterId),
+        tenure:feudalTenureText(contract.tenure)
+      }))) +
+      (selection.promotesDuchy ? kv('Rank gained', esc(FB.T('This complete duchy raises the ruler to duke tier.'))) : '') +
+      kv('Standing', esc('+' + selection.standingGain)), ' data-vassal-grant-review') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'vassal-grant-confirm', label:FB.T('Confirm grant'), note:summary
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="vassal-grant-confirm-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Confirm Land Grant'), h, {
       historyView:!replaceView,
@@ -12225,9 +12381,7 @@ window.FB = window.FB || {};
       : ((FB.world.byId[id] || {}).name || id);
     const charterLabel = FB.T('Service charter');
     const tenureLabel = FB.T('Tenure');
-    let h = '<p class="hint">' + esc(FB.T(
-      'Choose what this vassal chiefly provides. Service and tenure are separate and cannot be renegotiated after the grant.')) + '</p>' +
-      '<div class="panelh">' + esc(charterLabel) + '</div>' +
+    let h = '<div class="panelh">' + esc(charterLabel) + '</div>' +
       '<div class="gm-list" role="group" aria-label="' +
       esc(charterLabel) + '">';
     for (const cid in FBDATA.feudalServiceCharters) {
@@ -12277,21 +12431,22 @@ window.FB = window.FB || {};
         esc(item.desc) + '</span></button>';
     }
     const selectedDef = FBDATA.feudalServiceCharters[charterId];
-    h += '</div><div class="progressnote"><b>' + esc(FB.T('Grant preview')) +
-      '</b><br>' + esc(FB.T(
-        '{target}: {money:gold} each season · {men} soldiers · initial Standing +{standing} · breakaway ×{multiplier}.', {
-          target:target,
-          gold:Math.round(selected.tax * 100) / 100,
-          men:Math.round(selected.levy),
-          standing:selected.initialStanding,
-          multiplier:selected.breakawayMultiplier
-        })) + (selectedDef.extraordinaryTaxExempt
-          ? '<br>' + esc(FB.T('This vassal is exempt from extraordinary taxes.'))
-          : '') + '</div><div class="gm-footer"><button type="button" ' +
-      'class="btn primary" id="grant-terms-confirm">' +
-      esc(FB.T('Confirm grant')) + '</button><button type="button" class="btn" ' +
+    h += '</div>' + reviewFactsCard(FB.T('Grant preview'),
+      kv('Tax', esc(FB.T('{money:gold} each season', { gold:Math.round(selected.tax * 100) / 100 }))) +
+      kv('Levy', esc(FB.T('{men} soldiers', { men:Math.round(selected.levy) }))) +
+      kv('Initial Standing', esc('+' + selected.initialStanding)) +
+      kv('Breakaway risk', esc('×' + selected.breakawayMultiplier)) +
+      (selectedDef.extraordinaryTaxExempt
+        ? kv('Extraordinary taxes', esc(FB.T('Exempt'))) : ''), ' data-grant-terms-preview') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'grant-terms-confirm', label:FB.T('Confirm grant'),
+        note:FB.T('Service and tenure cannot be renegotiated after the grant.')
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" ' +
       'id="grant-terms-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Terms for {target}', { target:target }), h, {
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        'Choose what this vassal chiefly provides. Service and tenure are separate and cannot be renegotiated after the grant.')) + '</p>',
       historyView:!replaceView,
       replaceView:!!replaceView,
       historyBackRender:function () {
@@ -12347,10 +12502,11 @@ window.FB = window.FB || {};
     const focusCounty = replaceView && active && active.dataset.grantProtection;
     const focusSettlement = replaceView && active && active.dataset.settlementProtection;
     const focusSlot = replaceView && active && active.dataset.settlementSlot;
-    let h = '<p class="hint">' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals.')) + '</p>';
     const cap = FB.domainCap(s), held = (s.player.provs || []).length;
-    h += '<p class="hint">' + esc(FB.T('Held directly: {held} of {cap}.', { held: held, cap: cap })) +
-      (held > cap ? ' ⚠ ' + esc(FB.T('Over your limit — your own income and levy are cut until you grant land away.')) : '') + '</p>';
+    let h = '';
+    const domainFacts = kv('Held directly', esc(FB.T('{held} of {cap}', { held:held, cap:cap }))) +
+      (held > cap ? '<div class="progressnote warnote">' +
+        esc(FB.T('Over your limit — your own income and levy are cut until you grant land away.')) + '</div>' : '');
     const duchies = FB.grantableDuchies(s);
     if (duchies.length) {
       h += '<div class="panelh">' + esc(FB.T('Grant a duchy you hold in full')) + '</div><div class="gm-list">';
@@ -12400,14 +12556,18 @@ window.FB = window.FB || {};
     }
     if (!sites.length) h += '<p class="hint">' +
       esc(FB.T('No settlement is available to grant. County seats are protected.')) + '</p>';
-    h += '</div><button class="btn" id="gm-cancel">' +
-      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button>';
+    h += '</div><div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(returnContext ? FB.T('Back') : FB.T('Not now')) + '</button></div>';
     const options = managementModalOptions(returnContext) || {};
     options.replaceView = !!replaceView;
-    h = '<button type="button" class="actionbtn" id="grant-excess">' +
-      esc(FB.T('Grant excess counties / settlements')) + '<span class="adesc">' +
-      esc(FB.T('Review grants down to your limits, skipping reserved holdings. Least productive first; newer holdings break ties.')) + '</span></button>' + h;
-    h = '<button class="actionbtn" id="grant-sell-land">' + esc(FB.T('Sell Land for payment')) + '</button>' + h;
+    options.titleDetailsHtml = '<p>' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals.')) + '</p>';
+    h = reviewFactsCard('', domainFacts, ' data-grant-land-domain') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'grant-excess', label:FB.T('Grant excess counties / settlements'),
+        note:FB.T('Review grants down to your limits, skipping reserved holdings. Least productive first; newer holdings break ties.')
+      }) + reviewActionCardHtml({
+        id:'grant-sell-land', label:FB.T('Sell Land for payment')
+      })) + h;
     openModal(FB.T('Grant Land'), h, options);
     $('grant-excess').onclick = function () { UI.showExcessLandGrants(returnContext); };
     if (replaceView) {
@@ -12544,26 +12704,42 @@ window.FB = window.FB || {};
   UI.showExcessLandGrants = function (returnContext, retainedScroll, notice) {
     const s = FB.state, plan = FB.excessLandGrantPlan(s);
     const scroll = retainedScroll === undefined ? $('gm-body').scrollTop : retainedScroll;
-    let h = '<p class="hint">' + esc(FB.T('Grant only enough eligible holdings to reach your county and settlement limits. Reserved settlements also protect their county from this batch. Capitals, home counties, county seats and your home settlement are kept.')) + '</p>' +
-      '<p class="hint">' + esc(FB.T('Lowest current net income is selected first. Ties favor later-acquired counties and later settlement slots. Each county goes to a vassal house; each settlement goes to a new local hereditary baron. No gold or day cost.')) + '</p>';
-    if (notice) h += '<p class="warnote" role="status">' + esc(notice) + '</p>';
-    h += kv('Counties to grant', plan.counties.length) + kv('Settlements to grant separately', plan.settlements.length);
-    h += '<div class="gm-list">';
-    for (const row of plan.counties) h += '<div class="actionbtn">' + esc(FB.world.byId[row.provinceId].name) +
-      '<span class="adesc">' + esc(FB.T('County grant · Current net local income / season: {money:amount}', { amount:row.net })) + '</span></div>';
-    for (const row of plan.settlements) h += '<div class="actionbtn">' + esc(FB.T('{settlement} in {county}', {
-      settlement:FB.settlementsOf(s, row.provinceId)[row.settlement].name, county:FB.world.byId[row.provinceId].name
-    })) + '<span class="adesc">' + esc(FB.T('Settlement grant · Current net local income / season: {money:amount}', { amount:row.net })) + '</span></div>';
-    h += '</div><p class="hint">' + esc(FB.T('These amounts describe the holdings being transferred, not your total income change. You retain customary dues and gain administrative capacity; the recipient takes local upkeep and hereditary control.')) + '</p>';
-    if (plan.countyRemaining || plan.settlementRemaining) h += '<p class="warnote">' + esc(FB.T(
+    const total = plan.counties.length + plan.settlements.length;
+    let summary = kv('Counties to grant', esc(String(plan.counties.length))) +
+      kv('Settlements to grant separately', esc(String(plan.settlements.length))) +
+      kv('Cost', esc(FB.T('No gold or day cost')));
+    if (notice) summary += '<div class="progressnote warnote" role="status">' + esc(notice) + '</div>';
+    if (plan.countyRemaining || plan.settlementRemaining) summary += '<div class="progressnote warnote">' + esc(FB.T(
       'Protected or unavailable holdings leave {counties} excess counties and {settlements} excess settlements. Only the listed grants will be applied.',
-      { counties:plan.countyRemaining, settlements:plan.settlementRemaining })) + '</p>';
-    if (!plan.counties.length && !plan.settlements.length) h += '<p class="hint">' +
-      esc(FB.T('No eligible excess holdings to grant.')) + '</p>';
-    h += '<button type="button" class="btn" id="excess-grant-back">' + esc(FB.T('Back')) + '</button>' +
-      '<button type="button" class="btn primary" id="excess-grant-apply"' +
-      (!plan.counties.length && !plan.settlements.length ? ' disabled' : '') + '>' + esc(FB.T('Apply reviewed grants')) + '</button>';
+      { counties:plan.countyRemaining, settlements:plan.settlementRemaining })) + '</div>';
+    let rows = '';
+    for (const row of plan.counties) rows += '<div class="large-list-row review-static-row"><span class="large-list-row-main">' +
+      '<span class="large-list-enterprise-icon" aria-hidden="true">🏰</span><span class="large-list-row-copy">' +
+      '<span class="large-list-row-title">' + esc(FB.world.byId[row.provinceId].name) + '</span><span class="adesc">' +
+      esc(FB.T('Net local income: {money:amount} per season', { amount:row.net })) + '</span></span></span>' +
+      '<span class="large-list-face-state">' + esc(FB.T('County')) + '</span></div>';
+    for (const row of plan.settlements) rows += '<div class="large-list-row review-static-row"><span class="large-list-row-main">' +
+      '<span class="large-list-enterprise-icon" aria-hidden="true">🏘</span><span class="large-list-row-copy">' +
+      '<span class="large-list-row-title">' + esc(FB.T('{settlement} in {county}', {
+        settlement:FB.settlementsOf(s, row.provinceId)[row.settlement].name, county:FB.world.byId[row.provinceId].name
+      })) + '</span><span class="adesc">' +
+      esc(FB.T('Net local income: {money:amount} per season', { amount:row.net })) + '</span></span></span>' +
+      '<span class="large-list-face-state">' + esc(FB.T('Settlement')) + '</span></div>';
+    let h = reviewFactsCard(FB.T('Proposal'), summary, ' data-excess-grant-summary') +
+      reviewFactsCard(FB.T('Holdings to grant'), rows
+        ? '<div class="review-rows">' + rows + '</div>'
+        : '<p class="hint">' + esc(FB.T('No eligible excess holdings to grant.')) + '</p>') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'excess-grant-apply', label:FB.T('Apply reviewed grants'),
+        note:total ? FB.T('{count} holdings leave your direct control now', { count:total }) : '',
+        disabled:!total,
+        details:'<p>' + esc(FB.T('Each county goes to a vassal house; each settlement goes to a new local hereditary baron. No gold or day cost.')) + '</p><p>' +
+          esc(FB.T('These amounts describe the holdings being transferred, not your total income change. You retain customary dues and gain administrative capacity; the recipient takes local upkeep and hereditary control.')) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="excess-grant-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Grant excess counties / settlements'), h, { historyView:true, replaceView:!!notice,
+      titleDetailsHtml:'<p>' + esc(FB.T('Grant only enough eligible holdings to reach your county and settlement limits. Reserved settlements also protect their county from this batch. Capitals, home counties, county seats and your home settlement are kept.')) + '</p><p>' +
+        esc(FB.T('Lowest current net income is selected first. Ties favor later-acquired counties and later settlement slots. Each county goes to a vassal house; each settlement goes to a new local hereditary baron. No gold or day cost.')) + '</p>',
       historyBackRender:function () {
         UI.showGrantLand(returnContext);
         $('grant-excess').focus({ preventScroll:true });
@@ -12583,11 +12759,7 @@ window.FB = window.FB || {};
   UI.showDomainCleanup = function (returnContext, fromGrantLand, notice) {
     const s = FB.state;
     const plan = FB.domainCleanupPlan(s);
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Review a deterministic grant proposal. It never selects reserved counties, your capital, or your home county, and nothing changes until you apply it.')) +
-      '</p><p>' + esc(FB.T(
-        'Tax and levy comparisons cover base land contributions; personal and realm-wide modifiers remain outside the estimate.')) +
-      '</p></div>';
+    let h = '';
     if (notice) h += '<div class="progressnote warnote">' + esc(notice) + '</div>';
     if (!plan.excess) {
       h += '<p class="hint">' + esc(FB.T('Your directly held domain is already within its limit.')) + '</p>';
@@ -12600,15 +12772,17 @@ window.FB = window.FB || {};
         const label = grant.kind === 'duchy'
           ? ((FBDATA.duchies[grant.id] || {}).name || grant.id)
           : ((FB.world.byId[grant.id] || {}).name || grant.id);
-        h += '<div class="actionbtn domain-cleanup-row">' +
-          (grant.kind === 'duchy' ? '👑 ' : '🏰 ') + esc(label) +
-          '<span class="adesc">' + esc(grant.kind === 'duchy'
+        h += '<div class="large-list-row review-static-row domain-cleanup-row"><span class="large-list-row-main">' +
+          '<span class="large-list-enterprise-icon" aria-hidden="true">' +
+          (grant.kind === 'duchy' ? '👑' : '🏰') + '</span><span class="large-list-row-copy">' +
+          '<span class="large-list-row-title">' + esc(label) + '</span><span class="adesc">' +
+          esc(grant.kind === 'duchy'
             ? FB.T('Grant as a complete duchy · {count} counties', {
               count:grant.countyIds.length
             })
             : FB.T('Grant as a county vassal · development {development}', {
               development:s.dev[grant.id] || 1
-            })) + '</span></div>';
+            })) + '</span></span></span></div>';
       }
       h += '</div>' + kv('Land tax estimate', esc(FB.T('{before} before → {after} after', {
         before:Math.round(plan.projection.beforeTax * 10) / 10,
@@ -12624,13 +12798,18 @@ window.FB = window.FB || {};
           })) + '</div>';
       }
     }
-    h += '<div class="gm-footer">' +
-      '<button type="button" class="btn primary" id="domain-cleanup-apply"' +
-      (!plan.excess || !plan.grants.length || plan.unresolved ? ' disabled' : '') + '>' +
-      esc(FB.T('Apply reviewed grants')) + '</button>' +
-      '<button type="button" class="btn" id="domain-cleanup-back">' +
+    h += reviewActionsHtml(reviewActionCardHtml({
+      id:'domain-cleanup-apply', label:FB.T('Apply reviewed grants'),
+      disabled:!plan.excess || !plan.grants.length || !!plan.unresolved,
+      note:plan.grants.length ? FB.T('{count} grants apply now', { count:plan.grants.length }) : ''
+    })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="domain-cleanup-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Domain Cleanup'), h, {
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        'Review a deterministic grant proposal. It never selects reserved counties, your capital, or your home county, and nothing changes until you apply it.')) +
+        '</p><p>' + esc(FB.T(
+        'Tax and levy comparisons cover base land contributions; personal and realm-wide modifiers remain outside the estimate.')) + '</p>',
       historyView:true,
       replaceView:!!notice,
       modalClass:'fullsheet-modal domain-cleanup-modal',
@@ -14370,13 +14549,14 @@ window.FB = window.FB || {};
               requirements:status.missing.join('; ')
             }))) + '</span></button>';
     }
-    h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
-      'id="election-back">' + esc(FB.T('Back')) + '</button>' +
-      '<button type="button" class="btn" id="election-withdraw">' +
-      esc(FB.T('Withdraw')) + '</button>' +
-      '<button type="button" class="btn primary" id="election-resolve"' +
-      (active.tacticId ? '' : ' disabled') + '>' +
-      esc(FB.T('Hold the election')) + '</button></div>';
+    h += '</div>' + reviewActionsHtml(reviewActionCardHtml({
+        id:'election-resolve', label:FB.T('Hold the election'), disabled:!active.tacticId,
+        note:active.tacticId ? '' : FB.T('Choose one campaign approach first'), warn:!active.tacticId
+      }) + reviewActionCardHtml({
+        id:'election-withdraw', label:FB.T('Withdraw'), danger:true
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" ' +
+      'id="election-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal((def.icon || '🗳') + ' ' + electionDefinitionText(
       s, active.definitionId, def, 'name'), h, {
       historyView:true,
@@ -14633,10 +14813,11 @@ window.FB = window.FB || {};
     const localUprisingCtx = localUprising && FB.commonsUprisingLocalContext(s);
     if (uprising) {
       const relief = FBDATA.privileges[uprising.privilegeId].effect.id;
-      h += '<div class="progressnote warnote" id="commons-uprising-status">';
+      h += '<section class="governance-card review-fact-card" id="commons-uprising-status"><h4>' +
+        esc(FB.T('Commons uprising')) + '</h4><ul class="review-list review-list-risk">';
       uprising.counties.forEach(function (entry) {
         const name = FB.world.byId[entry.id].name;
-        h += '<p>' + esc(FB.countyInOpenRevolt && FB.countyInOpenRevolt(s, entry.id)
+        h += '<li>' + esc(FB.countyInOpenRevolt && FB.countyInOpenRevolt(s, entry.id)
           ? FB.T('{county}: armed revolt. Defeat the rebel hosts or settle the uprising; it will not expire on its own.', { county:name })
           : entry.phase === 'active'
           ? FB.T('{county}: tax and levy reduced by {reduction}%; {days} days of disruption remain.', {
@@ -14646,34 +14827,54 @@ window.FB = window.FB || {};
               county:name, days:entry.days
             }) : FB.T('{county}: warning, {days} days to grant the concession or restore Popular support above {support}.', {
               county:name, days:entry.days, support:FBDATA.balance.commonsUprisingRecoverySupport
-            })) + '</p>';
+            })) + '</li>';
       });
-      h += '<p>' + esc(FB.T('At Popular support of {support} or lower, active resistance can threaten one neighboring county every {days} days, including vassal lands under your authority.', {
-        support:FBDATA.balance.commonsUprisingSupportThreshold, days:FBDATA.balance.commonsUprisingSpreadDays
-      })) + '</p>';
-      if (uprising.spreadPaused) h += '<p>' + esc(FB.T('Spread is paused while Popular support is above the spread threshold.')) + '</p>';
-      else if (uprising.spreadDays !== null) h += '<p>' + esc(FB.T('Next spread check in {days} days.', { days:uprising.spreadDays })) + '</p>';
+      h += '</ul>' + kv('Spread', esc(uprising.spreadPaused
+        ? FB.T('Spread is paused while Popular support is above the spread threshold.')
+        : uprising.spreadDays !== null
+          ? FB.T('Next spread check in {days} days.', { days:uprising.spreadDays })
+          : FB.T('None')));
       const revoltQuote = FB.revoltResponseTerms(s, uprising.countyIds, 'player');
-      h += '<p>' + esc(FB.T('Settle every listed county: {money:cost} and {prestige} prestige. Five-year concessions reduce county taxes and levies by 25% and grant +10 Popular support. Unjust-war penalties remain.', {
-        cost:revoltQuote.concede, prestige:revoltQuote.prestige
-      })) + '</p><button type="button" class="btn" id="commons-uprising-concede"' +
-        (s.player.gold < revoltQuote.concede ? ' disabled' : '') + '>' +
-        esc(FB.T('Grant {privilege}', { privilege:privilegeDisplayName(s, uprising.privilegeId) })) + '</button>';
+      let uprisingCards = reviewActionCardHtml({
+        id:'commons-uprising-concede', detailsId:'commons-uprising-concede-details',
+        disabled:s.player.gold < revoltQuote.concede,
+        label:FB.T('Grant {privilege}', { privilege:privilegeDisplayName(s, uprising.privilegeId) }),
+        note:FB.T('{money:cost} and {prestige} prestige · settles every listed county', {
+          cost:revoltQuote.concede, prestige:revoltQuote.prestige
+        }),
+        details:'<p>' + esc(FB.T('Settle every listed county: {money:cost} and {prestige} prestige. Five-year concessions reduce county taxes and levies by 25% and grant +10 Popular support. Unjust-war penalties remain.', {
+          cost:revoltQuote.concede, prestige:revoltQuote.prestige
+        })) + '</p><p>' + esc(FB.T('At Popular support of {support} or lower, active resistance can threaten one neighboring county every {days} days, including vassal lands under your authority.', {
+          support:FBDATA.balance.commonsUprisingSupportThreshold, days:FBDATA.balance.commonsUprisingSpreadDays
+        })) + '</p>'
+      });
+      let localHtml = '';
       if (localUprising) {
-        h += '<div id="commons-uprising-local"><p>' + esc(FB.T('Local talks cover only your directly held counties: {counties}.', {
-          counties:localUprising.countyIds.map(function (pid) { return FB.world.byId[pid].name; }).join(', ')
-        })) + '</p><p>' + esc(FB.T('Costs {money:cost} and {prestige} prestige; {chance}% chance to grant {privilege} here, with five years of reduced tax and levy. Failure preserves current deadlines. One local attempt per uprising. A merged armed uprising requires a full settlement.', {
-          cost:localUprising.cost, prestige:localUprising.prestige, chance:Math.round(localUprising.chance * 100),
-          privilege:privilegeDisplayName(s, uprising.privilegeId),
-          effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
-        })) + '</p>';
-        if (localUprising.attempted) h += '<p>' + esc(FB.T('Your local negotiation attempt has been used. The wider settlement remains available.')) + '</p>';
-        else if (!localUprising.affordable) h += '<p>' + esc(FB.T('You need {money:cost} for local talks.', { cost:localUprising.cost })) + '</p>';
-        h += '<button type="button" class="btn" id="commons-uprising-negotiate-local"' +
-          (!localUprising.eligible || !localUprising.affordable ? ' disabled' : '') + '>' +
-          esc(FB.T('Negotiate in my counties')) + '</button></div>';
+        const localBlocker = localUprising.attempted
+          ? FB.T('Your local negotiation attempt has been used. The wider settlement remains available.')
+          : !localUprising.affordable
+            ? FB.T('You need {money:cost} for local talks.', { cost:localUprising.cost }) : '';
+        localHtml = '<div id="commons-uprising-local">' + kv('Local talks cover', esc(localUprising.countyIds.map(function (pid) {
+            return FB.world.byId[pid].name;
+          }).join(', '))) + reviewActionCardHtml({
+          id:'commons-uprising-negotiate-local', detailsId:'commons-uprising-local-details',
+          disabled:!localUprising.eligible || !localUprising.affordable,
+          warn:!!localBlocker,
+          label:FB.T('Negotiate in my counties'),
+          note:localBlocker || FB.T('{money:cost} and {prestige} prestige · {chance}% chance', {
+            cost:localUprising.cost, prestige:localUprising.prestige,
+            chance:Math.round(localUprising.chance * 100)
+          }),
+          details:'<p>' + esc(FB.T('Local talks cover only your directly held counties: {counties}.', {
+            counties:localUprising.countyIds.map(function (pid) { return FB.world.byId[pid].name; }).join(', ')
+          })) + '</p><p>' + esc(FB.T('Costs {money:cost} and {prestige} prestige; {chance}% chance to grant {privilege} here, with five years of reduced tax and levy. Failure preserves current deadlines. One local attempt per uprising. A merged armed uprising requires a full settlement.', {
+            cost:localUprising.cost, prestige:localUprising.prestige, chance:Math.round(localUprising.chance * 100),
+            privilege:privilegeDisplayName(s, uprising.privilegeId),
+            effects:modifierEffectText(s, relief), days:FBDATA.modifiers[relief].days
+          })) + '</p>'
+        }) + '</div>';
       }
-      h += '</div>';
+      h += reviewActionsHtml(uprisingCards) + localHtml + '</section>';
     }
     if (!demands.opposition.length) {
       h += '<div class="hint">' + esc(FB.T(
@@ -15925,16 +16126,27 @@ window.FB = window.FB || {};
   UI.showFiscalSettlement = function () {
     const s = FB.state, q = FB.fiscalSettlementQuote(s);
     const back = fiscalReturn(UI.showFinance);
-    let h = '<div class="gm-body-text">' +
-      kv('Shortfall restructured', esc(FB.money(q.amount))) +
+    let terms = kv('Shortfall restructured', esc(FB.money(q.amount))) +
       kv('Treasury after acceptance', esc(FB.money(0))) +
       kv('Term', esc(FB.T('Five years, even if the obligation is repaid earlier'))) +
-      '<p>' + esc(FB.T('Assign 25% of positive recurring civilian surplus, after civilian costs and senior loan assignments, limited to available coin. Field armies do not reduce the assessment. The unpaid remainder is discharged after five years.')) + '</p>' +
-      '<p class="op-bad">' + esc(FB.T('For five years: no new offensive wars, extraordinary taxation, voluntary revocations, or expansion of paid forces. Defense, ordinary levies, peace, and existing commitments remain available.')) + '</p>' +
-      '<p>' + esc(FB.T('Kings and emperors also grant council confirmation of the Treasurer and Constable. That privilege remains after the financial term ends.')) + '</p>' +
-      '<p>' + esc(FB.T('Fiscal pressure begins to ease, but existing wars and rebellions continue. Ongoing military costs can put you below zero again. Signed loans are unchanged. No further settlement is available for ten years.')) + '</p></div>' +
-      '<div class="gm-footer"><button class="btn primary" id="fiscal-settle-confirm"' + (q.ready ? '' : ' disabled') + '>' +
-      esc(FB.T('Accept constrained government')) + '</button><button class="btn" id="fiscal-back">' + esc(FB.T('Back')) + '</button></div>';
+      kv('Assessment', esc(FB.T('25% of positive recurring civilian surplus')));
+    if (s.player.tier >= 6) terms += kv('Council privilege', esc(FB.T('Treasurer and Constable need council confirmation')));
+    const h = reviewFactsCard(FB.T('Terms'), terms, ' data-fiscal-settlement-terms') +
+      reviewFactsCard(FB.T('Restrictions for five years'), '<ul class="review-list review-list-risk">' +
+        [FB.T('No new offensive wars'), FB.T('No extraordinary taxation'),
+          FB.T('No voluntary revocations'), FB.T('No expansion of paid forces')].map(function (line) {
+          return '<li>' + esc(line) + '</li>';
+        }).join('') + '</ul>') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'fiscal-settle-confirm', label:FB.T('Accept constrained government'),
+        note:FB.T('Treasury resets to {money:gold} · no further settlement for ten years', { gold:0 }),
+        disabled:!q.ready,
+        details:'<p>' + esc(FB.T('Assign 25% of positive recurring civilian surplus, after civilian costs and senior loan assignments, limited to available coin. Field armies do not reduce the assessment. The unpaid remainder is discharged after five years.')) + '</p><p>' +
+          esc(FB.T('For five years: no new offensive wars, extraordinary taxation, voluntary revocations, or expansion of paid forces. Defense, ordinary levies, peace, and existing commitments remain available.')) + '</p>' +
+          (s.player.tier >= 6 ? '<p>' + esc(FB.T('Kings and emperors also grant council confirmation of the Treasurer and Constable. That privilege remains after the financial term ends.')) + '</p>' : '') +
+          '<p>' + esc(FB.T('Fiscal pressure begins to ease, but existing wars and rebellions continue. Ongoing military costs can put you below zero again. Signed loans are unchanged. No further settlement is available for ten years.')) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="fiscal-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Review financial settlement'), h, { historyView:true, historyBackRender:back });
     $('fiscal-back').onclick = function () { modalHistoryBack(back); };
     $('fiscal-settle-confirm').onclick = function () {
@@ -15946,7 +16158,7 @@ window.FB = window.FB || {};
     if (typeof returnRender !== 'function') returnRender = UI.showFinance;
     const back = fiscalReturn(returnRender), s = FB.state;
     const rows = FB.fiscalLandSaleCandidates(s);
-    let h = '<p class="hint">' + esc(FB.T('Sell a surplus county to a funded hereditary vassal. The buyer keeps existing service terms. Your capital, last county, protected land, and occupied counties are excluded.')) + '</p><div class="gm-list">';
+    let h = '<div class="gm-list">';
     rows.forEach(function (q, i) {
       h += '<button class="actionbtn" id="fiscal-sale-' + i + '" data-fiscal-sale="' + i + '">' +
         esc(FB.T('{county} to {realm}', { county:FB.world.byId[q.pid].name, realm:s.realms[q.rid].name })) +
@@ -15954,7 +16166,8 @@ window.FB = window.FB || {};
     });
     if (!rows.length) h += '<p>' + esc(FB.T('No eligible vassal can currently fund a purchase while preserving its reserves. A financial settlement remains the recovery alternative once a crisis begins.')) + '</p>';
     h += '</div><div class="gm-footer"><button class="btn" id="fiscal-back">' + esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Sell Land'), h, { historyView:true, historyBackRender:back });
+    openModal(FB.T('Sell Land'), h, { historyView:true, historyBackRender:back,
+      titleDetailsHtml:'<p>' + esc(FB.T('Sell a surplus county to a funded hereditary vassal. The buyer keeps existing service terms. Your capital, last county, protected land, and occupied counties are excluded.')) + '</p>' });
     $('fiscal-back').onclick = function () { modalHistoryBack(back); };
     $('gm-body').querySelectorAll('[data-fiscal-sale]').forEach(function (button) {
       button.onclick = function () {
@@ -15970,9 +16183,12 @@ window.FB = window.FB || {};
           kv('Land receipts before / after', esc(FB.money(q.projection.beforeTax)) + ' / ' + esc(FB.money(q.projection.afterTax))) +
           kv('Land troops before / after', esc(String(Math.round(q.projection.beforeLevy))) + ' / ' + esc(String(Math.round(q.projection.afterLevy)))) +
           kv('Levy share retained', esc(FB.T('{percent}% of the county levy base', { percent:Math.round(q.levyShare * 100) }))) +
-          '<p>' + esc(FB.T('These are normal county-base estimates; household, capacity, national, and temporary effects can change actual receipts and soldiers. The land becomes hereditary and the buyer remains your vassal. Voluntary revocation requires refunding the purchase price.')) + '</p></div>' +
-          '<div class="gm-footer"><button class="btn primary" id="fiscal-sale-confirm">' + esc(FB.T('Sell this county')) +
-          '</button><button class="btn" id="fiscal-sale-back">' + esc(FB.T('Back')) + '</button></div>';
+          '</div>' + reviewActionsHtml(reviewActionCardHtml({
+            id:'fiscal-sale-confirm', label:FB.T('Sell this county'),
+            note:FB.T('Receives {money:amount} now · the buyer holds it hereditarily', { amount:q.price }),
+            details:'<p>' + esc(FB.T('These are normal county-base estimates; household, capacity, national, and temporary effects can change actual receipts and soldiers. The land becomes hereditary and the buyer remains your vassal. Voluntary revocation requires refunding the purchase price.')) + '</p>'
+          })) +
+          '<div class="gm-footer"><button type="button" class="btn" id="fiscal-sale-back">' + esc(FB.T('Back')) + '</button></div>';
         openModal(FB.T('Review hereditary sale'), review, { historyView:true, historyBackRender:listBack });
         $('fiscal-sale-back').onclick = function () { modalHistoryBack(listBack); };
         $('fiscal-sale-confirm').onclick = function () {
@@ -16297,26 +16513,26 @@ window.FB = window.FB || {};
     }
     if (!offer) { UI.showFinance(); return; }
     const preview = FB.financeLoanPreview(s, offer);
-    let h = '<div class="gm-body-text">' +
-      '<p><b>' + esc(financeKindName(kind)) + '</b></p>' +
-      kv('Receive now', esc(FB.T('{money:amount}', { amount:offer.principal }))) +
+    const facts = kv('Receive now', esc(FB.T('{money:amount}', { amount:offer.principal }))) +
       kv('Current value due', esc(FB.T('{money:amount}', {
         amount:financeAmount(preview.dueNow)
       }))) +
       kv('Due', esc(financeDate(preview.dueSeason, preview.dueYear))) +
       kv('Pledged collateral', esc(financeAssetName(s, offer.collateral))) +
-      '<p>' + esc(preview.denomination === 'real'
-        ? FB.T('This contract is reckoned by weight: price changes do not change the amount due.')
-        : FB.T('Face value: {money:face} in nominal coin. What that face value can buy may rise or fall with prices.', {
-          face:financeAmount(preview.face)
-        })) + '</p>' +
-      '<p><b>' + esc(FB.T('First missed payment:')) + '</b> ' +
-      esc(FB.T('10% is added to the signed face and the deadline moves two seasons.')) + '</p>' +
-      '<p><b>' + esc(FB.T('Second missed payment:')) + '</b> ' +
-      esc(financeDefaultText(s, preview)) + '</p></div>' +
-      '<div class="gm-list"><button class="actionbtn" id="finance-sign">📜 ' +
-      esc(FB.T('Sign and receive {money:amount}', { amount:offer.principal })) +
-      '</button></div><button class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button>';
+      kv('First missed payment', esc(FB.T('10% is added to the signed face and the deadline moves two seasons.'))) +
+      kv('Second missed payment', esc(financeDefaultText(s, preview)));
+    const h = reviewFactsCard(financeKindName(kind), facts, ' data-finance-loan-review') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'finance-sign',
+        labelHtml:'📜 ' + esc(FB.T('Sign and receive {money:amount}', { amount:offer.principal })),
+        note:FB.T('Due {date}', { date:financeDate(preview.dueSeason, preview.dueYear) }),
+        details:'<p>' + esc(preview.denomination === 'real'
+          ? FB.T('This contract is reckoned by weight: price changes do not change the amount due.')
+          : FB.T('Face value: {money:face} in nominal coin. What that face value can buy may rise or fall with prices.', {
+            face:financeAmount(preview.face)
+          })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="finance-cancel">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Confirm the contract'), h);
     $('finance-sign').addEventListener('click', function () {
       if (FB.takeFinanceLoan(s, kind, collateral)) UI.showFinance();
@@ -18615,11 +18831,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const used = FB.retainerRecords(s).length;
     const capacity = FB.retainerCapacity(s);
-    let h = '<p class="hint">' + esc(FB.T(
-      'Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile Standing ends service.')) +
-      '</p>' + kv('Household capacity', esc(FB.T('{used} of {capacity}', {
-        used:used, capacity:capacity
-      }))) + '<div class="gm-list">';
+    let cards = '';
     for (const id in FBDATA.positions) {
       const def = FBDATA.positions[id];
       if (def.kind !== 'retainer') continue;
@@ -18628,30 +18840,35 @@ window.FB = window.FB || {};
         s.player.gold < (def.pay || 0);
       const occupied = FB.retainerOfficeRecord(s, id) ||
         (FB.familyOfficeHolder && FB.familyOfficeHolder(s, id));
-      h += '<button class="actionbtn" data-retainer-office="' + esc(id) + '"' +
-        (blockedTier || blockedGold || occupied || used >= capacity ? ' disabled' : '') + '>' +
-        esc(def.icon + ' ' + positionName(s, id)) +
-        '<span class="adesc">' + esc(positionDesc(s, id)) + ' ' +
-        esc(occupied
-          ? FB.T('This household office is already filled.')
-          : blockedTier
-          ? FB.T('Requires station {station}.', {
-            station:FB.stationName(def.minTier || 0)
-          })
+      const blocker = occupied
+        ? FB.T('This household office is already filled.')
+        : blockedTier
+          ? FB.T('Requires station {station}.', { station:FB.stationName(def.minTier || 0) })
           : blockedGold
             ? FB.T('Requires the first seasonal pay of {money:pay}.', { pay:def.pay || 0 })
-            : FB.T('{money:pay} each season; the first season is paid on entry.', {
-              pay:def.pay || 0
-            })) + '</span></button>';
+            : used >= capacity ? FB.T('Household retainer capacity is full.') : '';
+      cards += reviewActionCardHtml({
+        data:{ retainerOffice:id }, detailsId:'retainer-office-details-' + id,
+        disabled:!!blocker, warn:!!blocker,
+        labelHtml:esc(def.icon + ' ' + positionName(s, id)),
+        note:blocker || FB.T('{money:pay} each season; the first season is paid on entry.', { pay:def.pay || 0 }),
+        details:'<p>' + esc(positionDesc(s, id)) + '</p>'
+      });
     }
-    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
-    openModal(FB.T('🗝 Hire a Retainer'), h,
-      returnsToInteractionManagement(returnContext) ? {
-        historyView:true,
-        historyBackRender:function () {
-          interactionReturn(returnContext);
-        }
-      } : undefined);
+    const h = reviewFactsCard('', kv('Household capacity', esc(FB.T('{used} of {capacity}', {
+        used:used, capacity:capacity
+      })))) + reviewActionsHtml(cards) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(FB.T('Close')) + '</button></div>';
+    const hireOptions = returnsToInteractionManagement(returnContext) ? {
+      historyView:true,
+      historyBackRender:function () {
+        interactionReturn(returnContext);
+      }
+    } : {};
+    hireOptions.titleDetailsHtml = '<p>' + esc(FB.T(
+      'Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile Standing ends service.')) + '</p>';
+    openModal(FB.T('🗝 Hire a Retainer'), h, hireOptions);
     document.querySelectorAll('[data-retainer-office]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showRetainerCandidates(button.dataset.retainerOffice,
@@ -18701,10 +18918,10 @@ window.FB = window.FB || {};
       }
       return '';
     }
-    let h = '<p class="hint">' + esc(positionDesc(s, office)) + ' ' +
-      esc(FB.T('Hiring settles the first seasonal pay of {money:pay} and spends the day.', {
+    let h = reviewFactsCard('', kv('Pay', esc(pay)) +
+      kv('Hiring', esc(FB.T('Hiring settles the first seasonal pay of {money:pay} and spends the day.', {
         pay:def.pay || 0
-      })) + '</p><div class="gm-list">';
+      })))) + '<div class="gm-list">';
     for (const c of candidates) {
       const blocked = hireBlockReason(c.id);
       h += personAssignmentCard({
@@ -18744,9 +18961,10 @@ window.FB = window.FB || {};
           value:FB.T('A new named character enters the chronicle in this office.') }
       ]
     });
-    h += '</div><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Back')) + '</button>';
-    openModal(def.icon + ' ' + positionName(s, office), h);
+    h += '</div><div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(def.icon + ' ' + positionName(s, office), h, {
+      titleDetailsHtml:'<p>' + esc(positionDesc(s, office)) + '</p>' });
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-retainer-candidate]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -18766,34 +18984,36 @@ window.FB = window.FB || {};
     const record = FB.retainerRecord(s, cid);
     const c = record && s.chars[cid];
     if (!record || !c) return;
-    let h = UI.charCardHtml(s, c) +
-      '<div class="gm-body-text"><p>' + esc(positionDesc(s, record.office)) + '</p></div>' +
-      kv('Household office', esc(positionName(s, record.office))) +
-      kv('Seasonal pay', esc(FB.money(record.pay || 0))) +
-      kv('Occupation', esc(FB.careerTitle(s, c))) +
-      (positionEffectText(record.office)
-        ? kv('Office effects', esc(positionEffectText(record.office))) : '') +
+    const h = UI.charCardHtml(s, c) +
+      reviewFactsCard(FB.T('Household office'), kv('Household office', esc(positionName(s, record.office))) +
+        kv('Seasonal pay', esc(FB.money(record.pay || 0))) +
+        kv('Occupation', esc(FB.careerTitle(s, c))) +
+        (positionEffectText(record.office)
+          ? kv('Office effects', esc(positionEffectText(record.office))) : '')) +
       '<label class="automation-protection"><input type="checkbox" ' +
       'id="staffing-worker-protection"' +
       (FB.isProtected(s, 'staffingWorker', cid) ? ' checked' : '') + '> <span>' +
       esc(FB.T('Reserve this person from the staffing assistant')) + '</span>' +
       '<span class="adesc">' + esc(FB.T(
         'Their current enterprise assignment will be preserved, or they will remain available only for manual assignment.')) +
-      '</span></label><div class="gm-list"><button class="actionbtn" id="retainer-career">🧰 ' +
-      esc(FB.T('Change occupation or training…')) + '<span class="adesc">' +
-      esc(FB.T('The household office remains an additive appointment.')) +
-      '</span></button><button class="actionbtn danger" id="retainer-dismiss">' +
-      esc(FB.T('Dismiss from household service…')) + '<span class="adesc">' +
-      esc(FB.T('The retainer leaves immediately and remembers the slight.')) +
-      '</span></button></div><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Service of {name}', { name:c.name }), h,
-      returnsToInteractionManagement(returnContext) ? {
-        historyView:true,
-        historyBackRender:function () {
-          interactionReturn(returnContext);
-        }
-      } : undefined);
+      '</span></label>' + reviewActionsHtml(reviewActionCardHtml({
+        id:'retainer-career', labelHtml:'🧰 ' + esc(FB.T('Change occupation or training…')),
+        note:FB.T('The household office remains an additive appointment.')
+      }) + reviewActionCardHtml({
+        id:'retainer-dismiss', danger:true,
+        labelHtml:esc(FB.T('Dismiss from household service…')),
+        note:FB.T('The retainer leaves immediately and remembers the slight.')
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button></div>';
+    const manageOptions = returnsToInteractionManagement(returnContext) ? {
+      historyView:true,
+      historyBackRender:function () {
+        interactionReturn(returnContext);
+      }
+    } : {};
+    manageOptions.titleDetailsHtml = '<p>' + esc(positionDesc(s, record.office)) + '</p>';
+    openModal(FB.T('Service of {name}', { name:c.name }), h, manageOptions);
     FB.paintFaces($('gm-body'), s);
     $('staffing-worker-protection').addEventListener('change', function (event) {
       FB.setProtected(s, 'staffingWorker', cid, event.target.checked);
@@ -18824,14 +19044,20 @@ window.FB = window.FB || {};
     const record = FB.retainerRecord(s, cid);
     const c = record && s.chars[cid];
     if (!record || !c) return;
-    const h = '<p>' + esc(FB.T(
-      'Dismiss {name} as {position}? Enterprise work, tutoring, and household equipment assignments will end.',
-      { name:c.name, position:positionName(s, record.office) })) +
-      '</p><button class="btn danger" id="retainer-dismiss-confirm">' +
-      esc(FB.T('Dismiss {name}', { name:c.name })) +
-      '</button> <button class="btn" id="gm-cancel">' + esc(FB.T('Keep in service')) +
-      '</button>';
+    const h = reviewFactsCard('', reviewPeopleHtml(reviewPersonHtml(c, positionName(s, record.office), null)) +
+      kv('Ends', esc(FB.T('Enterprise work, tutoring and household equipment assignments')))) +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'retainer-dismiss-confirm', danger:true,
+        label:FB.T('Dismiss {name}', { name:c.name }),
+        note:FB.T('The retainer leaves immediately and remembers the slight.'),
+        details:'<p>' + esc(FB.T(
+          'Dismiss {name} as {position}? Enterprise work, tutoring, and household equipment assignments will end.',
+          { name:c.name, position:positionName(s, record.office) })) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(FB.T('Keep in service')) + '</button></div>';
     openModal(FB.T('Dismiss Retainer'), h);
+    FB.paintFaces($('gm-body'), s);
     $('retainer-dismiss-confirm').addEventListener('click', function () {
       if (!FB.removeRetainer(s, cid, 'dismissed')) return;
       UI.closeModal();
@@ -19207,13 +19433,36 @@ window.FB = window.FB || {};
     const career = FB.careerOf(s, c);
     const activeCareerDef = career && FBDATA.careers[career.profession];
     const landedSelf = c.id === s.player.charId && s.player.tier >= 3;
-    let h = livelihoodNote(s, c) + '<div class="gm-body-text"><p>' + esc(FB.T(
-      landedSelf
-        ? 'This calling is part of your life history. A landed ruler may patronize former peers, but does not change occupation or work the trade personally.'
-        : (age < 16
-          ? 'Choose an apprenticeship. It teaches a trade until age sixteen and may cost an entry fee.'
-          : 'Choose their occupation. Changing work spends the day; experience in the old trade is set aside.'))) +
-      '</p></div><div class="gm-list">';
+    /* Work & Enterprises grammar: a current-work fact card, then option cards
+       whose face keeps name, fee and first blocker; descriptions and full
+       requirement audits sit behind each card's Details. */
+    const intro = FB.T(landedSelf
+      ? 'This calling is part of your life history. A landed ruler may patronize former peers, but does not change occupation or work the trade personally.'
+      : (age < 16
+        ? 'Choose an apprenticeship. It teaches a trade until age sixteen and may cost an entry fee.'
+        : 'Choose their occupation. Changing work spends the day; experience in the old trade is set aside.'));
+    let currentWork = reviewPeopleHtml(reviewPersonHtml(c, FB.T('Age {age}', { age:age }), null)) +
+      kv(landedSelf ? 'Former calling' : 'Occupation', esc(FB.careerTitle(s, c)));
+    if (activeCareerDef && activeCareerDef.guild && career.guildRank !== 'none') {
+      currentWork += kv('Guild rank', esc(FB.T('{rank} · Guild Standing {standing}', {
+        rank:FB.guildTitle(career), standing:Math.round(career.guildStanding || 0)
+      })));
+    }
+    const standings = FB.religiousStandings ? FB.religiousStandings(s, c) : [];
+    for (const standing of standings) {
+      currentWork += kv(standing.kind === 'lay' ? 'Lay standing' : 'Vocation',
+        esc(FB.religiousRankTitle(s, c, standing.path)));
+    }
+    const bishopric = FB.bishopricOf && FB.bishopricOf(s, c);
+    if (bishopric) {
+      const see = FB.world.byId[bishopric.seeProvinceId];
+      currentWork += kv('Episcopal office', esc(FB.T('Bishop of {see}', {
+        see:see ? see.name : bishopric.seeProvinceId
+      })));
+    }
+    let h = reviewFactsCard(landedSelf ? FB.T('Former calling') : FB.T('Current work'),
+      currentWork, ' data-career-current');
+    let choiceCards = '';
     for (const item of FB.careerChoices(s, c)) {
       const same = career.chosen && career.profession === item.id;
       const short = s.player.gold < item.cost;
@@ -19231,14 +19480,23 @@ window.FB = window.FB || {};
           standing:item.restoredStanding
         })
         : '';
-      h += '<button class="actionbtn" data-career-choice="' + item.id + '"' +
-        (same || short ? ' disabled' : '') + '>' +
-        esc(item.def.icon + ' ' + dt(s, 'career', item.id, item.def, 'name') +
-          (item.cost ? FB.T(' — {money:gold}', { gold:item.cost }) : '')) +
-        '<span class="adesc">' + esc(dt(s, 'career', item.id, item.def, 'desc')) +
-        (resumeDetail ? ' ' + esc(resumeDetail) : '') +
-        (same ? ' ' + esc(FB.T('(current)')) : short ? ' ' + esc(FB.T('(not enough money)')) : '') +
-        '</span></button>';
+      choiceCards += reviewActionCardHtml({
+        data:{ careerChoice:item.id }, detailsId:'career-choice-details-' + item.id,
+        disabled:same || short, warn:short && !same,
+        labelHtml:esc(item.def.icon + ' ' + dt(s, 'career', item.id, item.def, 'name')),
+        note:same ? FB.T('Current occupation')
+          : short ? FB.T('Requires {money:gold}; you have {money:current}.', {
+            gold:item.cost, current:Math.floor(s.player.gold)
+          })
+          : item.resuming ? FB.T('Resume the former trade · no fee · takes 1 day')
+          : item.cost ? FB.T('Entry fee {money:gold} · takes 1 day', { gold:item.cost })
+          : FB.T('No fee · takes 1 day'),
+        details:'<p>' + esc(dt(s, 'career', item.id, item.def, 'desc')) + '</p>' +
+          (resumeDetail ? '<p>' + esc(resumeDetail) + '</p>' : '')
+      });
+    }
+    if (choiceCards) {
+      h += panelh(age < 16 ? 'Apprenticeships' : 'Occupations') + reviewActionsHtml(choiceCards);
     }
     if (activeCareerDef && activeCareerDef.learned && activeCareerDef.license) {
       const license = activeCareerDef.license;
@@ -19252,15 +19510,13 @@ window.FB = window.FB || {};
         licenseSkills.push(techRequirementText(s,
           activeCareerDef.requiresTech));
       }
-      h += '</div><div class="panelh">' + esc(FB.T('Learned career path')) +
-        '</div><div class="gm-body-text"><p>' + esc(FB.T(
-          'Trainee → {license} from age {age}, after {years} vocational years, Lettered, and {requirements}.', {
-            license:dt(s, 'career', career.profession, activeCareerDef,
-              'license.name'),
-            age:Math.max(16, Number(license.age) || 0),
-            years:license.years,
-            requirements:licenseSkills.join(', ')
-          })) + '</p><ul>';
+      let path = rawKv(FB.T('Trainee → {license}', {
+        license:dt(s, 'career', career.profession, activeCareerDef, 'license.name')
+      }), esc(FB.T('Age {age} · {years} vocational years · Lettered · {requirements}', {
+        age:Math.max(16, Number(license.age) || 0),
+        years:license.years,
+        requirements:licenseSkills.join(', ')
+      })));
       for (const specializationId in (activeCareerDef.specializations || {})) {
         const specialization = activeCareerDef.specializations[specializationId];
         const requirements = [];
@@ -19272,71 +19528,78 @@ window.FB = window.FB || {};
         if (specialization.requiresTech) {
           requirements.push(techRequirementText(s, specialization.requiresTech));
         }
-        h += '<li>' + esc(FB.T(
-          '{specialization}: {years} vocational years, {requirements}.', {
-            specialization:dt(s, 'career', career.profession, activeCareerDef,
-              'specializations.' + specializationId + '.name'),
+        path += rawKv(dt(s, 'career', career.profession, activeCareerDef,
+          'specializations.' + specializationId + '.name'),
+          esc(FB.T('{years} vocational years · {requirements}', {
             years:specialization.years,
             requirements:requirements.join(', ')
-          })) + '</li>';
+          })));
       }
-      h += '</ul></div><div class="gm-list">';
+      h += reviewFactsCard(FB.T('Learned career path'), path, ' data-career-learned-path');
     }
+    let advancement = '';
     const careerExams = FB.careerExamOptions ?
       FB.careerExamOptions(s, c) : [];
     for (const exam of careerExams) {
       const label = exam.specialization
         ? FB.T('Qualify as {rank}', { rank:exam.name })
         : FB.T('Attempt {examination}', { examination:exam.name });
-      h += '<button class="actionbtn" data-career-exam="' +
-        esc(exam.id) + '"' + (exam.ready ? '' : ' disabled') + '>📚 ' +
-        esc(FB.T('{examination} — {chance}% ({money:gold})', {
-          examination:label, chance:Math.round(exam.chance * 100),
-          gold:exam.cost
-        })) + '<span class="adesc">' + esc(exam.ready
+      advancement += reviewActionCardHtml({
+        data:{ careerExam:exam.id }, detailsId:'career-exam-details-' + exam.id,
+        disabled:!exam.ready, warn:!exam.ready,
+        labelHtml:'📚 ' + esc(label),
+        note:exam.ready
+          ? FB.T('{chance}% chance · {money:gold} fee · takes 1 day', {
+            chance:Math.round(exam.chance * 100), gold:exam.cost
+          })
+          : FB.T('Unmet: {requirements}', { requirements:exam.missing[0] }),
+        details:'<p>' + esc(exam.ready
           ? FB.T('The fee is spent on the attempt. Failure requires waiting {days} days before another professional examination.', {
             days:FBDATA.balance.careerExamCooldownDays || 360
           })
           : FB.T('Unmet: {requirements}', {
             requirements:exam.missing.join('; ')
-          })) + '</span></button>';
+          })) + '</p>'
+      });
     }
     const careerSpecializations = FB.careerSpecializationOptions ?
       FB.careerSpecializationOptions(s, c) : [];
     const guildSpecializations = careerSpecializations.filter(function (option) {
       return option.method === 'induction';
     });
-    if (guildSpecializations.length) {
-      h += '</div><div class="panelh">' + esc(FB.T('Guild path')) +
-        '</div><div class="gm-body-text"><p>' + esc(FB.T(
-          'An established guildmaster may take one permanent specialty. Each path lists its exact rank, standing, skill, technology, and induction-fee requirements.')) +
-        '</p></div><div class="gm-list">';
-      for (const option of guildSpecializations) {
-        h += '<button class="actionbtn" data-career-specialization="' +
-          esc(option.specialization) + '"' + (option.ready ? '' : ' disabled') +
-          '>🏅 ' + esc(FB.T('Induct as {specialization} — {money:gold}', {
-            specialization:option.name, gold:option.cost
-          })) + '<span class="adesc">' + esc(option.ready
-            ? FB.T('Requires: {requirements}. This becomes the vocation’s permanent title.', {
-              requirements:option.requirements.join('; ')
-            })
-            : FB.T('Unmet: {requirements}', {
-              requirements:option.missing.join('; ')
-            })) + '</span></button>';
-      }
+    let guildPath = '';
+    for (const option of guildSpecializations) {
+      guildPath += reviewActionCardHtml({
+        data:{ careerSpecialization:option.specialization },
+        detailsId:'career-specialization-details-' + option.specialization,
+        disabled:!option.ready, warn:!option.ready,
+        labelHtml:'🏅 ' + esc(FB.T('Induct as {specialization} — {money:gold}', {
+          specialization:option.name, gold:option.cost
+        })),
+        note:option.ready ? FB.T('Permanent specialty · takes 1 day')
+          : FB.T('Unmet: {requirements}', { requirements:option.missing[0] }),
+        details:'<p>' + esc(option.ready
+          ? FB.T('Requires: {requirements}. This becomes the vocation’s permanent title.', {
+            requirements:option.requirements.join('; ')
+          })
+          : FB.T('Unmet: {requirements}', {
+            requirements:option.missing.join('; ')
+          })) + '</p>'
+      });
     }
     const step = FB.guildAdvance(s, c);
     const activeGuildElection = FB.activeElectionForCharacter &&
       FB.activeElectionForCharacter(s, c.id);
     if (activeGuildElection) {
       const electionDef = FBDATA.elections[activeGuildElection.definitionId] || {};
-      h += '<button class="actionbtn" id="career-election">🗳 ' +
-        esc(FB.T('Manage active election — {office}', {
+      advancement += reviewActionCardHtml({
+        id:'career-election',
+        labelHtml:'🗳 ' + esc(FB.T('Manage active election — {office}', {
           office:dt(s, 'election', activeGuildElection.definitionId,
             electionDef, 'name')
-        })) + '<span class="adesc">' + esc(FB.T(
-          'Review the electorate, candidates, term, support, and campaign approach.')) +
-        '</span></button>';
+        })),
+        note:FB.T('Review the electorate, candidates, term, support, and campaign approach.')
+      });
     } else if (step) {
       const blocked = step.blocked || s.player.gold < step.cost;
       const guildRequirements = [
@@ -19358,30 +19621,37 @@ window.FB = window.FB || {};
           gold:step.cost, current:Math.floor(s.player.gold)
         }));
       }
-      h += '<button class="actionbtn" id="career-guild"' + (blocked ? ' disabled' : '') + '>🏅 ' +
-        esc(step.election
+      advancement += reviewActionCardHtml({
+        id:'career-guild', disabled:blocked, warn:blocked,
+        labelHtml:'🏅 ' + esc(step.election
           ? FB.T('Stand for election as {rank} ({money:gold})', {
             rank:FB.guildTitle({ guildRank:step.to }), gold:step.cost
           })
           : FB.T('Seek the next guild rank — {rank} ({money:gold})', {
-          rank:FB.guildTitle({ guildRank:step.to }), gold:step.cost
-        })) + '<span class="adesc">' +
-        esc(blocked
+            rank:FB.guildTitle({ guildRank:step.to }), gold:step.cost
+          })),
+        note:blocked
+          ? FB.T('Unmet: {requirements}', { requirements:guildMissing[0] })
+          : FB.T('Requires {requirements} · takes 1 day', {
+            requirements:guildRequirements.join(', ')
+          }),
+        details:'<p>' + esc(blocked
           ? FB.T('Unmet: {requirements}', {
             requirements:guildMissing.join('; ')
           })
           : (step.election
             ? FB.T('A vacancy, visible constituencies, one campaign approach, a recorded result, and a protected fixed term replace automatic promotion.')
-            : FB.T('Guild standing brings commissions, enterprise access, and better profits.'))) +
-        '</span></button>';
+            : FB.T('Guild standing brings commissions, enterprise access, and better profits.'))) + '</p>'
+      });
     }
     const religiousAdvance = FB.religiousAdvance(s, c);
+    let religiousNote = '';
     if (religiousAdvance) {
       const faithStep = religiousAdvance.step;
       if (faithStep.maleOnly && c.sex !== 'm') {
-        h += '<div class="hint">' + esc(FB.T(
+        religiousNote = '<p class="hint">' + esc(FB.T(
           'This is the highest religious office open to {name} on this path.', { name:c.name })) +
-          '</div>';
+          '</p>';
       } else {
         const faithTitle = FB.religiousRankTitle(s, c, {
           id:religiousAdvance.path.id, step:faithStep
@@ -19413,10 +19683,32 @@ window.FB = window.FB || {};
             })
             : FB.T('Seek the next religious rank — {rank}', { rank:faithTitle });
         }
-        h += '<button class="actionbtn" id="career-religious"' +
-          (blocked ? ' disabled' : '') + '>🛐 ' + esc(buttonLabel) +
-          '<span class="adesc">' +
-          esc(officeStatus
+        const requirementText = religiousAdvance.path.kind === 'lay'
+          ? FB.T('Requires age {age}, {piety} piety, {prestige} prestige, and {money:gold} from the household.', {
+            age:faithStep.age || 0, piety:faithStep.piety || 0,
+            prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
+          })
+          : FB.T('Requires age {age}, Learning {learning}, {years} years in this vocation, {piety} piety, {prestige} prestige, and {money:gold} from the household.', {
+            age:faithStep.age || 0, learning:faithStep.learning || 0,
+            years:faithStep.years || 0, piety:faithStep.piety || 0,
+            prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
+          });
+        const recognition = faithStep.station !== undefined || faithStep.tier
+          ? FB.T('Recognition adds {piety} piety each season and raises social station.', {
+            piety:faithStep.pietyYield || 0
+          })
+          : FB.T('Recognition adds {piety} piety each season.', {
+            piety:faithStep.pietyYield || 0
+          });
+        advancement += reviewActionCardHtml({
+          id:'career-religious', disabled:blocked, warn:blocked ||
+            !!(officeStatus && !officeStatus.ready),
+          labelHtml:'🛐 ' + esc(buttonLabel),
+          note:officeStatus
+            ? (officeStatus.ready ? FB.T('Review the appointment')
+              : FB.T('Unmet: {requirements}', { requirements:officeStatus.missing[0] }))
+            : (blocked ? requirementText : recognition),
+          details:'<p>' + esc(officeStatus
             ? (officeStatus.ready
               ? (bishopStatus
                 ? FB.T('A free merit petition weighs Learning, permanent lay standing, investiture policy, and the appointing authority’s support.')
@@ -19424,44 +19716,38 @@ window.FB = window.FB || {};
               : FB.T('Unmet: {requirements}', {
                 requirements:officeStatus.missing.join('; ')
               }))
-            : religiousAdvance.path.kind === 'lay'
-            ? FB.T('Requires age {age}, {piety} piety, {prestige} prestige, and {money:gold} from the household.', {
-              age:faithStep.age || 0, piety:faithStep.piety || 0,
-              prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
-            })
-            : FB.T('Requires age {age}, Learning {learning}, {years} years in this vocation, {piety} piety, {prestige} prestige, and {money:gold} from the household.', {
-              age:faithStep.age || 0, learning:faithStep.learning || 0,
-              years:faithStep.years || 0, piety:faithStep.piety || 0,
-              prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
-            })) + (officeStatus ? '' : ' ' +
-          esc(faithStep.station !== undefined || faithStep.tier
-            ? FB.T('Recognition adds {piety} piety each season and raises social station.', {
-              piety:faithStep.pietyYield || 0
-            })
-            : FB.T('Recognition adds {piety} piety each season.', {
-              piety:faithStep.pietyYield || 0
-            }))) +
-          '</span></button>';
+            : requirementText + ' ' + recognition) + '</p>'
+        });
       }
     }
     const cardinalPetition = FB.cardinalPetitionStatus &&
       FB.cardinalPetitionStatus(s, c);
     if (cardinalPetition && cardinalPetition.visible) {
-      h += '<button class="actionbtn" id="career-cardinal"' +
-        (cardinalPetition.ready ? '' : ' disabled') + '>⛪ ' +
-        esc(FB.T('Petition for the red hat · {money:gold}', {
+      advancement += reviewActionCardHtml({
+        id:'career-cardinal', disabled:!cardinalPetition.ready,
+        warn:!cardinalPetition.ready,
+        labelHtml:'⛪ ' + esc(FB.T('Petition for the red hat · {money:gold}', {
           gold:cardinalPetition.cost
-        })) + '<span class="adesc">' +
-        esc(cardinalPetition.ready
-          ? FB.T('Ask the Pope to appoint {name} to the College of Cardinals.', {
-            name:c.name
-          })
-          : FB.T('Unmet: {requirements}', {
-            requirements:cardinalPetition.missing.join('; ')
-          })) + '</span></button>';
+        })),
+        note:cardinalPetition.ready
+          ? FB.T('Ask the Pope to appoint {name} to the College of Cardinals.', { name:c.name })
+          : FB.T('Unmet: {requirements}', { requirements:cardinalPetition.missing[0] }),
+        details:cardinalPetition.ready ? '' : '<p>' + esc(FB.T('Unmet: {requirements}', {
+          requirements:cardinalPetition.missing.join('; ')
+        })) + '</p>'
+      });
     }
-    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    if (advancement || religiousNote) {
+      h += panelh('Advancement') + reviewActionsHtml(advancement) + religiousNote;
+    }
+    if (guildPath) h += panelh('Guild path') + reviewActionsHtml(guildPath);
+    h += '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button></div>';
     const historyOptions = livelihoodsHistoryOptions(returnContext);
+    historyOptions.titleDetailsHtml = '<p>' + esc(intro) + '</p>' + (guildPath
+      ? '<p>' + esc(FB.T(
+        'An established guildmaster may take one permanent specialty. Each path lists its exact rank, standing, skill, technology, and induction-fee requirements.')) + '</p>'
+      : '');
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
     } else if (returnsToInteractionManagement(returnContext)) {
@@ -19472,6 +19758,7 @@ window.FB = window.FB || {};
     openModal(landedSelf
       ? FB.T('Former calling of {name}', { name:c.name })
       : FB.T('Work of {name}', { name:c.name }), h, historyOptions);
+    FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-career-choice]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.beginCareer(s, c, b.dataset.careerChoice)) return;
@@ -19584,23 +19871,25 @@ window.FB = window.FB || {};
     const status = c && FB.abbotAppointmentStatus &&
       FB.abbotAppointmentStatus(s, c);
     if (!status || !status.visible) return;
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'The religious community elects its superior. The vote costs no gold; Learning and permanent lay standing improve the chance. A refusal closes the election for one year.')) +
-      '</p></div>' +
-      kv('Election chance', esc(FB.T('{chance}%', {
+    let facts = kv('Election chance', esc(FB.T('{chance}%', {
         chance:Math.round(status.chance * 100)
-      })));
+      }))) + kv('Cost', esc(FB.T('No gold')));
     if (status.missing.length) {
-      h += '<div class="progressnote">' + esc(FB.T('Unmet: {requirements}', {
+      facts += '<div class="progressnote warnote">' + esc(FB.T('Unmet: {requirements}', {
         requirements:status.missing.join('; ')
       })) + '</div>';
     }
-    h += '<div class="modal-actions"><button class="btn primary" id="abbot-election"' +
-      (status.ready ? '' : ' disabled') + '>' +
-      esc(FB.T('Stand for election')) +
-      '</button><button class="btn" id="gm-cancel">' +
+    const h = reviewFactsCard('', facts, ' data-abbot-election') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'abbot-election', label:FB.T('Stand for election'), disabled:!status.ready,
+        note:FB.T('{chance}% chance · a refusal closes the election for one year', {
+          chance:Math.round(status.chance * 100) })
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button></div>';
-    const historyOptions = { historyView:true };
+    const historyOptions = { historyView:true, titleDetailsHtml:'<p>' + esc(FB.T(
+      'The religious community elects its superior. The vote costs no gold; Learning and permanent lay standing improve the chance. A refusal closes the election for one year.')) +
+      '</p>' };
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
     }
@@ -19719,10 +20008,7 @@ window.FB = window.FB || {};
       concordat:'Pope and temporal sovereign',
       chapter:'Cathedral chapter'
     };
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'A bishopric is a non-hereditary church office. A merit petition is free; a disclosed cathedral endowment improves the lawful appointment chance but is spent whether the petition succeeds or fails.')) +
-      '</p></div>' +
-      kv('Investiture policy', esc(policy
+    let h = kv('Investiture policy', esc(policy
         ? dt(s, 'papalInvestiturePolicy', status.policyId, policy, 'name')
         : status.policyId)) +
       kv('Appointing authority', esc(FB.T(
@@ -19742,21 +20028,24 @@ window.FB = window.FB || {};
         requirements:status.missing.join('; ')
       })) + '</div>';
     }
-    h += '<div class="bishop-appointment-actions">' +
-      '<button class="btn primary" id="bishop-merit"' +
-      (status.ready ? '' : ' disabled') + '>' +
-      esc(FB.T('Petition on merit — {chance}%', {
-        chance:Math.round(status.chance * 100)
-      })) + '</button>' +
-      '<button class="btn" id="bishop-endow"' +
-      (status.ready && status.canEndow ? '' : ' disabled') + '>' +
-      esc(FB.T('Endow the cathedral ({money:gold}) — {chance}%', {
-        gold:status.endowmentGold,
-        chance:Math.round(status.endowedChance * 100)
-      })) + '</button>' +
-      '<button class="btn" id="gm-cancel">' + esc(FB.T('Back')) +
+    h = reviewFactsCard('', h, ' data-bishop-appointment') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'bishop-merit', disabled:!status.ready,
+        label:FB.T('Petition on merit — {chance}%', { chance:Math.round(status.chance * 100) }),
+        note:FB.T('Free')
+      }) + reviewActionCardHtml({
+        id:'bishop-endow', disabled:!(status.ready && status.canEndow),
+        label:FB.T('Endow the cathedral ({money:gold}) — {chance}%', {
+          gold:status.endowmentGold,
+          chance:Math.round(status.endowedChance * 100)
+        }),
+        note:FB.T('The endowment is spent whether the petition succeeds or fails.')
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' + esc(FB.T('Back')) +
       '</button></div>';
-    const historyOptions = { historyView:true };
+    const historyOptions = { historyView:true, titleDetailsHtml:'<p>' + esc(FB.T(
+      'A bishopric is a non-hereditary church office. A merit petition is free; a disclosed cathedral endowment improves the lawful appointment chance but is spent whether the petition succeeds or fails.')) +
+      '</p>' };
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
     }
@@ -19919,20 +20208,24 @@ window.FB = window.FB || {};
     const status = c && FB.cardinalPetitionStatus &&
       FB.cardinalPetitionStatus(s, c);
     if (!status || !status.visible) return;
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'A petition asks the reigning Pope for a personal appointment. The office grants station 4 and 3.5 piety each season, but no county or secular promotion.')) +
-      '</p></div>';
+    let facts = kv('Cost', esc(FB.T('{money:gold}', { gold:status.cost }))) +
+      kv('Office grants', esc(FB.T('Station 4 and 3.5 piety each season')));
     if (status.missing.length) {
-      h += '<div class="progressnote">' + esc(FB.T('Unmet: {requirements}', {
+      facts += '<div class="progressnote warnote">' + esc(FB.T('Unmet: {requirements}', {
         requirements:status.missing.join('; ')
       })) + '</div>';
     }
-    h += '<div class="modal-actions"><button class="btn primary" id="papal-petition"' +
-      (status.ready ? '' : ' disabled') + '>' +
-      esc(FB.T('Petition for {money:gold}', { gold:status.cost })) +
-      '</button><button class="btn" id="gm-cancel">' +
+    const h = reviewFactsCard('', facts, ' data-cardinal-petition') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'papal-petition', disabled:!status.ready,
+        label:FB.T('Petition for {money:gold}', { gold:status.cost }),
+        note:FB.T('No county or secular promotion')
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button></div>';
-    const historyOptions = { historyView:true };
+    const historyOptions = { historyView:true, titleDetailsHtml:'<p>' + esc(FB.T(
+      'A petition asks the reigning Pope for a personal appointment. The office grants station 4 and 3.5 piety each season, but no county or secular promotion.')) +
+      '</p>' };
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
     }
@@ -22290,26 +22583,25 @@ window.FB = window.FB || {};
           'Automation will skip this technology. You may still begin it manually.')) +
         '</span></label>';
     }
-    h += '<div class="tech-detail-actions">';
+    let techCards = '';
     if (canChoose && item.available &&
         record.active.length < FB.techSlotCount(s, rid)) {
-      h += '<button class="btn primary" id="tech-start">' +
-        esc(FB.T('Begin research')) + '</button>';
+      techCards += reviewActionCardHtml({ id:'tech-start', label:FB.T('Begin research') });
     }
     if (canChoose && item.available &&
         record.active.length >= FB.techSlotCount(s, rid)) {
-      h += '<button class="btn primary" id="tech-switch">' +
-        esc(FB.T('Switch research')) + '</button>';
+      techCards += reviewActionCardHtml({ id:'tech-switch', label:FB.T('Switch research'),
+        note:FB.T('Choose which active project to replace') });
     }
     if (canChoose && item.active) {
-      h += '<button class="btn" id="tech-pause">' +
-        esc(FB.T('Pause research')) + '</button>';
+      techCards += reviewActionCardHtml({ id:'tech-pause', label:FB.T('Pause research') });
     }
     if (FB.canAdvocateTech(s, id)) {
-      h += '<button class="btn primary" id="tech-advocate">' +
-        esc(FB.T('Advocate · {money:20} · Standing −15')) + '</button>';
+      techCards += reviewActionCardHtml({ id:'tech-advocate',
+        label:FB.T('Advocate · {money:20} · Standing −15') });
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="tech-back">' +
+    h += '<div class="tech-detail-actions">' + reviewActionsHtml(techCards) +
+      '</div><div class="gm-footer"><button type="button" class="btn" id="tech-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(def.icon + ' ' + dt(s, 'tech', id, def, 'name'), h,
       {
@@ -22461,15 +22753,23 @@ window.FB = window.FB || {};
       : FB.T('Name {name} as your friend? Events and oaths that call on your friend will now use this exact person.', {
         name:c.name
       });
-    const h = '<p>' + esc(prompt) + '</p><button class="btn primary" id="friend-confirm">' +
-      esc(FB.T('Call {name} friend', { name:c.name })) +
-      '</button> <button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
+    let people = reviewPersonHtml(c, FB.T('New friend'), null);
+    if (former && former.id !== c.id) people += reviewPersonHtml(former, FB.T('Current friend'), null);
+    const h = reviewFactsCard('', reviewPeopleHtml(people) +
+      (former && former.id !== c.id ? kv('Sworn brotherhood', esc(FB.T('Ends with the former friend'))) : ''),
+      ' data-friend-review') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'friend-confirm', label:FB.T('Call {name} friend', { name:c.name }),
+        note:FB.T('Takes 1 day'), details:'<p>' + esc(prompt) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Name a Friend'), h, {
       historyView:true,
       historyBackRender:function () {
         UI.showCharModal(cid, returnContext);
       }
     });
+    FB.paintFaces($('gm-body'), s);
     $('friend-confirm').addEventListener('click', function () {
       if (!FB.nameFriend(s, c)) return;
       UI.closeModal();
@@ -22565,18 +22865,29 @@ window.FB = window.FB || {};
       (FB.faithHasSystem(s.chars[s.player.charId].religion, 'papacy', s)
         ? FB.T('You also lose 20 Papal Standing, the recognized obedience loses 8 authority, and it gains grounds to excommunicate you.')
         : FB.T('Rulers of your faith also lose 8 Standing.'));
-    const h = '<p>' + esc(FB.T('Propose marriage to {name}?', {
-      name:FB.fullName(c)
-    })) + '</p><div class="decision-cost"><b>' +
-      esc(FB.T('Acceptance chance')) + ':</b> ' +
-      esc(Math.round(FB.siblingProposalChance(s, c) * 100)) + '%</div>' +
-      '<p>' + esc(consequence) + '</p>' +
-      (authority ? '<p>' + esc(authority) + '</p>' : '') +
-      '<p class="muted">' + esc(FB.T(
-        'Children of full siblings have a 20% close-kin health-risk roll; children of half siblings have 10%. Recorded close-kin ancestry raises later risk, to a 35% cap.')) +
-      '</p><div class="gm-list"><button class="actionbtn" ' +
-      'id="sibling-proposal-confirm">' + esc(FB.T('Ask for the vows')) +
-      '</button></div><div class="gm-footer"><button class="btn" ' +
+    const chance = Math.round(FB.siblingProposalChance(s, c) * 100);
+    const costs = status.route !== 'illicit'
+      ? FB.T('{piety} piety and {money:gold}', { piety:status.piety, gold:status.gold })
+      : FB.T('{piety} piety and {prestige} prestige', { piety:status.piety, prestige:status.prestige });
+    let facts = reviewPeopleHtml(reviewPersonHtml(c, FB.T('Proposed spouse'), null)) +
+      kv('Acceptance chance', esc(FB.T('{chance}%', { chance:chance }))) +
+      kv('Cost', esc(costs));
+    if (status.route === 'illicit') {
+      facts += kv('Popular support', esc('-' + status.commonVoice)) +
+        kv('Liege Standing', esc('-' + status.liegeStanding)) +
+        kv('Both spouses', esc(FB.T('Scandalous Union')));
+    }
+    facts += kv('Dowry, compact or alliance', esc(FB.T('None')));
+    const h = reviewFactsCard('', facts, ' data-sibling-proposal') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'sibling-proposal-confirm', label:FB.T('Ask for the vows'),
+        note:FB.T('{chance}% chance · takes 1 day', { chance:chance }),
+        details:'<p>' + esc(consequence) + '</p>' +
+          (authority ? '<p>' + esc(authority) + '</p>' : '') +
+          '<p>' + esc(FB.T(
+            'Children of full siblings have a 20% close-kin health-risk roll; children of half siblings have 10%. Recorded close-kin ancestry raises later risk, to a 35% cap.')) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" ' +
       'id="gm-cancel">' + esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('An Exceptional Marriage'), h, {
       historyView:true, noFocus:true,
@@ -22584,6 +22895,7 @@ window.FB = window.FB || {};
         UI.showCharModal(cid, returnContext);
       }
     });
+    FB.paintFaces($('gm-body'), s);
     $('sibling-proposal-confirm').addEventListener('click', function () {
       if (!FB.siblingProposalStatus(s, c).ready) return;
       UI.closeModal();
@@ -24874,29 +25186,12 @@ window.FB = window.FB || {};
       first:serviceSkillName(def.training[0]), second:serviceSkillName(def.training[1])
     });
   }
-  /* Portrait rows for the patron and household officer. Linked rows open the
-     character sheet; static rows keep the identity visible inside a review. */
-  function servicePersonHtml(person, role, id) {
-    const inner = '<span class="large-list-row-main">' + FB.faceTag(person, 34, 40) +
-      '<span class="large-list-row-copy"><span class="large-list-row-title">' +
-      esc(FB.fullName(person)) + '</span><span class="adesc">' + esc(role) +
-      '</span></span></span>';
-    return id
-      ? '<button type="button" class="actionbtn large-list-row service-person" id="' + id + '">' +
-        inner + '</button>'
-      : '<div class="large-list-row service-person">' + inner + '</div>';
-  }
   function serviceDecisionHtml(label, enabled, detailsHtml) {
-    return '<div class="modal-body-actions"><div class="settcard modal-action-card"' +
-      (enabled ? '' : ' tabindex="0"') + ' aria-describedby="service-decision-details">' +
-      '<div class="settcard-head"><button type="button" class="actionbtn" id="service-confirm" ' +
-      'data-action-tooltip data-tooltip-anchor="control" aria-describedby="service-decision-details"' +
-      (enabled ? '' : ' disabled') + '>' + esc(label) + '<span class="adesc">' +
-      esc(FB.T('Takes 1 day · no gold fee')) + '</span></button>' +
-      cardInfoButton('service-decision-details') + '</div>' +
-      '<div class="settcard-details hidden" id="service-decision-details">' +
-      kv('Time', esc(FB.T('1 day'))) + kv('Gold', esc(FB.T('None'))) + detailsHtml +
-      '</div></div></div>';
+    return reviewActionsHtml(reviewActionCardHtml({
+      id:'service-confirm', detailsId:'service-decision-details', label:label,
+      note:FB.T('Takes 1 day · no gold fee'), disabled:!enabled,
+      details:kv('Time', esc(FB.T('1 day'))) + kv('Gold', esc(FB.T('None'))) + detailsHtml
+    }));
   }
   function serviceRoleCardHtml(s, id, record, employed) {
     const def = FBDATA.householdServiceRoles[id], offer = FB.householdServiceStatus(s, id);
@@ -24945,13 +25240,11 @@ window.FB = window.FB || {};
     const employed = !!(r && r.status !== 'ended');
     const officer = s.chars[employed && r.officerId || s.roles.steward];
     if (!view) { largeListViews.service.scrollTop = 0; largeListViews.service.focusKey = null; }
-    let h = '<div data-service-list><section class="governance-card service-status-card"><h4>' +
+    let h = '<div data-service-list><section class="governance-card review-fact-card service-status-card"><h4>' +
       esc(employed ? FB.T('Your appointment') : FB.T('Your prospects')) + '</h4>';
     if (status.patron || officer && !officer.dead) {
-      h += '<div class="service-people">';
-      if (status.patron) h += servicePersonHtml(status.patron, FB.T('Patron'), 'service-patron');
-      if (officer && !officer.dead) h += servicePersonHtml(officer, FB.T('Household officer'), 'service-officer');
-      h += '</div>';
+      h += reviewPeopleHtml((status.patron ? reviewPersonHtml(status.patron, FB.T('Patron'), 'service-patron') : '') +
+        (officer && !officer.dead ? reviewPersonHtml(officer, FB.T('Household officer'), 'service-officer') : ''));
     }
     if (employed) {
       const def = FBDATA.householdServiceRoles[r.roleId];
@@ -24966,7 +25259,7 @@ window.FB = window.FB || {};
     if (s.player.tier === 0) h += kv('Family freedom', esc(FB.T('Not granted by service')));
     if (status.reason) h += '<div class="progressnote warnote">' + esc(status.reason) + '</div>';
     if (employed || s.player.tier === 0) {
-      h += '<div class="modal-body-actions">';
+      h += '<div class="modal-body-actions review-actions">';
       if (employed) h += '<button type="button" class="actionbtn" id="service-leave">' +
         esc(FB.T('Leave appointment…')) + '</button>';
       if (s.player.tier === 0) h += '<button type="button" class="actionbtn" id="service-freedom">' +
@@ -25032,10 +25325,9 @@ window.FB = window.FB || {};
     const expected = {charId:s.player.charId,employerId:status.patron && status.patron.id,serial:r ? r.serial : 0};
     const eventBusy = UI.eventsBusy();
     const ready = !eventBusy && (leaving ? !!(r && r.status !== 'ended') : status.ready);
-    let h = '<div data-service-review-sheet><section class="governance-card"><h4>' +
+    let h = '<div data-service-review-sheet><section class="governance-card review-fact-card"><h4>' +
       esc(serviceRoleIcon(roleId) + ' ' + FB.householdServiceName(s, roleId)) + '</h4>';
-    if (status.patron) h += '<div class="service-people">' +
-      servicePersonHtml(status.patron, FB.T('Patron'), null) + '</div>';
+    if (status.patron) h += reviewPeopleHtml(reviewPersonHtml(status.patron, FB.T('Patron'), null));
     if (leaving) {
       h += kv('Completed service', esc(FB.T('{days} working days', { days:r ? r.workedDays : 0 }))) +
         kv('Pay lost', esc(servicePayText(def))) +
@@ -25049,8 +25341,8 @@ window.FB = window.FB || {};
     }
     h += '</section>';
     if (!leaving && status.missing.length) {
-      h += '<section class="governance-card"><h4>' + esc(FB.T('Unmet requirements')) +
-        '</h4><ul class="service-requirements">' + status.missing.map(function (reason) {
+      h += '<section class="governance-card review-fact-card"><h4>' + esc(FB.T('Unmet requirements')) +
+        '</h4><ul class="review-list review-list-risk service-requirements">' + status.missing.map(function (reason) {
           return '<li>' + esc(reason) + '</li>';
         }).join('') + '</ul></section>';
     }
@@ -25129,13 +25421,7 @@ window.FB = window.FB || {};
     });
   }
   function lifeActionCardHtml(id, label, detailsHtml, disabled) {
-    const detailsId = id + '-details';
-    return '<div class="settcard modal-action-card"' + (disabled ? ' tabindex="0"' : '') +
-      ' aria-describedby="' + detailsId + '"><div class="settcard-head">' +
-      '<button type="button" class="actionbtn" id="' + id + '" data-action-tooltip ' +
-      'data-tooltip-anchor="control" aria-describedby="' + detailsId + '"' +
-      (disabled ? ' disabled' : '') + '>' + esc(label) + '</button>' + cardInfoButton(detailsId) +
-      '</div><div class="settcard-details hidden" id="' + detailsId + '">' + detailsHtml + '</div></div>';
+    return reviewActionCardHtml({ id:id, label:label, details:detailsHtml, disabled:disabled });
   }
   UI.showLifeHistory = function (cid, replace, options) {
     options = options || {};
@@ -25148,7 +25434,7 @@ window.FB = window.FB || {};
     const count = FB.preservedLifeCount(s);
     const limit = FB.LIFE_HISTORY_LIMITS.preserved;
     const entries = record ? record.entries.slice().sort(function (a, b) { return a.turn - b.turn; }) : [];
-    let h = lifeIdentityHtml(c) + '<section class="governance-card life-history-record"><h4>' +
+    let h = lifeIdentityHtml(c) + '<section class="governance-card review-fact-card life-history-record"><h4>' +
       esc(FB.T('Record')) + '</h4>' +
       kv('Kept as', esc(played ? FB.T('Played life') : preserved ? FB.T('Preserved life')
         : record ? FB.T('Family archive') : FB.T('Not recorded'))) +
@@ -25176,7 +25462,7 @@ window.FB = window.FB || {};
       }
       if (full) h += '<div class="progressnote warnote">' + esc(FB.T(
         'The collection is full. Remove preservation from another life to make room.')) + '</div>';
-      if (actions) h += '<div class="modal-body-actions">' + actions + '</div>';
+      h += reviewActionsHtml(actions);
       if (preserved) h += '<details class="life-history-release"><summary id="life-release">' +
         esc(FB.T('Remove preservation')) + '</summary><p class="warnote">' + esc(FB.T(
           'Removing preservation stops following and frees one place. A current close relative returns to the smaller temporary family archive; other detailed histories are discarded.')) +
@@ -25184,7 +25470,7 @@ window.FB = window.FB || {};
         esc(FB.T('Cancel')) + '</button><button type="button" class="btn danger" id="life-release-confirm">' +
         esc(FB.T('Remove preservation')) + '</button></div></details>';
     }
-    h += '</section><section class="governance-card life-history-timeline"><h4>' +
+    h += '</section><section class="governance-card review-fact-card life-history-timeline"><h4>' +
       esc(FB.T('Selected accomplishments')) + '</h4>';
     if (!entries.length) h += '<p class="hint">' + esc(FB.T(
       'No detailed accomplishments remain, or recording has not begun. Known family dates and titles are shown above.')) + '</p>';
@@ -25256,7 +25542,7 @@ window.FB = window.FB || {};
     page = Math.max(0, Math.min(pages - 1, Number(page) || 0));
     let playedCount = 0;
     for (const row of rows) if (row.played) playedCount++;
-    let h = '<section class="governance-card life-history-record"><h4>' + esc(FB.T('Collection')) + '</h4>' +
+    let h = '<section class="governance-card review-fact-card life-history-record"><h4>' + esc(FB.T('Collection')) + '</h4>' +
       kv('Preserved lives', esc(FB.T('{count} of {limit} places', {
         count:FB.preservedLifeCount(s), limit:FB.LIFE_HISTORY_LIMITS.preserved
       }))) + kv('Played lives', esc(String(playedCount))) + '</section>';
@@ -25928,27 +26214,40 @@ window.FB = window.FB || {};
     const status = FB.marriageCulturePersuasionStatus(s, target, partner, matchOptions);
     if (!target || !partner) return;
     const culture = FB.cultureOf(s.chars[s.player.charId].culture, s);
-    let h = '<p>' + esc(FB.T(
+    let facts = reviewPeopleHtml(reviewPersonHtml(target, FB.T('Invited'), null)) +
+      kv('Adopts', esc(culture.name)) +
+      kv('Acceptance chance', esc(FB.T('{chance}%', { chance:Math.round(status.chance * 10000) / 100 }))) +
+      kv('Standing needed', esc('+' + status.threshold)) +
+      kv('Cost', esc(FB.T('{prestige} prestige and one day, whether accepted or refused', {
+        prestige:status.prestigeCost }))) +
+      kv('If refused', esc(FB.T('-{standing} Standing', {
+        standing:FBDATA.balance.marriageCulturePersuasionRefusalStanding })));
+    if (status.heir) facts += kv('Designated heir', esc(FB.T('Chance capped at {cap}%', {
+      cap:FBDATA.balance.marriageCulturePersuasionHeirCap * 100 })));
+    if (status.reason) facts += '<div class="progressnote' + (status.ready ? '' : ' warnote') + '">' +
+      esc(status.reason) + '</div>';
+    const h = reviewFactsCard('', facts, ' data-culture-invitation') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'culture-invitation-confirm', label:FB.T('Invite to adopt your culture'),
+        disabled:!status.ready,
+        note:FB.T('{prestige} prestige · takes 1 day', { prestige:status.prestigeCost })
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button></div>';
+    let rules = '<p>' + esc(FB.T(
       'Only {name} will adopt {culture}, including all its doctrines. Faith, dynasty, relatives, territory, and marriage status stay as they are.', {
         name:target.name, culture:culture.name
-      })) + '</p><p>' + esc(FB.T(
-      'Acceptance: {chance}%. Requires +{standing} Standing. An attempt costs {prestige} prestige and one day, whether accepted or refused.', {
-        chance:Math.round(status.chance * 10000) / 100,
-        standing:status.threshold, prestige:status.prestigeCost
       })) + '</p>';
-    if (status.heir) h += '<p>' + esc(FB.T(
+    if (status.heir) rules += '<p>' + esc(FB.T(
       'Designated heir: dynastic resistance lowers the ordinary chance to {percent}% of its value, capped at {cap}%.', {
         percent:FBDATA.balance.marriageCulturePersuasionHeirMult * 100,
         cap:FBDATA.balance.marriageCulturePersuasionHeirCap * 100
       })) + '</p>';
-    h += '<p>' + esc(FB.T(
+    rules += '<p>' + esc(FB.T(
       'One invitation per protagonist and prospect. Refusal costs {standing} Standing. Acceptance begins the personal culture-adoption cooldown; marriage remains a separate proposal.', {
         standing:FBDATA.balance.marriageCulturePersuasionRefusalStanding
-      })) +
-      '</p><p>' + esc(status.reason) + '</p><button class="actionbtn" id="culture-invitation-confirm"' +
-      (status.ready ? '' : ' disabled') + '>' + esc(FB.T('Invite to adopt your culture')) +
-      '</button><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Cultural invitation'), h, { historyView:true });
+      })) + '</p>';
+    openModal(FB.T('Cultural invitation'), h, { historyView:true, titleDetailsHtml:rules });
+    FB.paintFaces($('gm-body'), s);
     $('culture-invitation-confirm').addEventListener('click', function () {
       const result = FB.persuadeMarriageCulture(s, target, partner, matchOptions);
       if (!result.resolved) {
@@ -27337,12 +27636,10 @@ window.FB = window.FB || {};
       esc(FB.T('Close')) + '</button></div>';
 
     if (!preview.eligible) {
-      let blocked = '<div class="gm-body-text"><p>' + esc(FB.T(
-        'Handing the house over while you live is not yet possible:')) + '</p>';
-      for (const reason of preview.blockers) {
-        blocked += '<p>• ' + esc(reason) + '</p>';
-      }
-      blocked += '</div>';
+      const blocked = reviewFactsCard(FB.T('Handing the house over while you live is not yet possible:'),
+        '<ul class="review-list review-list-risk">' + preview.blockers.map(function (reason) {
+          return '<li>' + esc(reason) + '</li>';
+        }).join('') + '</ul>', ' data-retire-blockers');
       openModal(FB.T('👴 Hand over the house'), blocked + closeFooter, {
         guide:guideModalOption('retire-guide', 'inheritance',
           'Guide: inheritance')
@@ -27351,19 +27648,15 @@ window.FB = window.FB || {};
       return true;
     }
 
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      '{name} is old enough to lay down the headship. Choose the adult successor who continues the family’s story.', {
-        name: FB.fullName(me)
-      })) + '</p><p>' + esc(FB.T(
-      'The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory.')) +
-      '</p><p>' + esc(FB.T(
-      'Personal prestige, piety, and Popular support are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end.')) +
-      '</p><p>' + esc(FB.T(
-      '{name} remains in your family at home as a retired elder — still visible in Kin, but no longer under your control.', {
-        name: FB.fullName(me)
-      })) + '</p></div><div class="gm-list">';
+    let h = reviewFactsCard(FB.T('Handing over'), reviewPeopleHtml(reviewPersonHtml(me,
+      FB.T('Becomes a retired elder at home'), null)) +
+      kv('New head receives', esc(FB.T('Money in full (no death dues), land, realm, property, enterprises and armory'))) +
+      kv('Succession loss', esc(FB.T('Prestige, piety and Popular support, by the ordinary rule'))) +
+      kv('Ends', esc(FB.T('Personal offices, guild monopolies, courtship, plots and personal standings'))),
+      ' data-retire-summary');
     const reviewById = {};
     for (const row of preview.review) reviewById[row.character.id] = row;
+    let heirCards = '';
     for (const c of preview.heirs) {
       const details = FB.T('Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}', {
         age: FB.ageOf(c, s.date.year),
@@ -27371,18 +27664,31 @@ window.FB = window.FB || {};
         ste: FB.skillName('ste'), steValue: FB.skillOf(c, 'ste'),
         dip: FB.skillName('dip'), dipValue: FB.skillOf(c, 'dip')
       });
-      h += '<button type="button" class="actionbtn" data-retire-heir="' + c.id + '">' +
-        FB.faceTag(c, 32, 38) + ' ' +
-        (s.player.namedHeirId === c.id ? '★ ' : '') + esc(FB.T(
-          'Retire and continue as {name}', { name: FB.fullName(c) })) +
-        '<span class="adesc">' + esc(details + ' · ' +
-          heirEligibilityText(s, reviewById[c.id])) + '</span></button>';
+      heirCards += reviewActionCardHtml({
+        data:{ retireHeir:c.id },
+        labelHtml:FB.faceTag(c, 32, 38) + ' ' + (s.player.namedHeirId === c.id ? '★ ' : '') +
+          esc(FB.T('Retire and continue as {name}', { name: FB.fullName(c) })),
+        note:details + ' · ' + heirEligibilityText(s, reviewById[c.id])
+      });
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="retire-cancel">' +
+    h += '<div class="panelh">' + esc(FB.T('Choose the adult successor')) + '</div>' +
+      reviewActionsHtml(heirCards) +
+      '<div class="gm-footer"><button class="btn" id="retire-cancel">' +
       esc(FB.T('Cancel')) + '</button></div>';
     openModal(FB.T('👴 Hand over the house'), h, {
       guide:guideModalOption('retire-guide', 'inheritance',
-        'Guide: inheritance')
+        'Guide: inheritance'),
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        '{name} is old enough to lay down the headship. Choose the adult successor who continues the family’s story.', {
+          name: FB.fullName(me)
+        })) + '</p><p>' + esc(FB.T(
+        'The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory.')) +
+        '</p><p>' + esc(FB.T(
+        'Personal prestige, piety, and Popular support are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end.')) +
+        '</p><p>' + esc(FB.T(
+        '{name} remains in your family at home as a retired elder — still visible in Kin, but no longer under your control.', {
+          name: FB.fullName(me)
+        })) + '</p>'
     });
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-retire-heir]').forEach(function (b) {

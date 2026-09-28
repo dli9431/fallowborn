@@ -603,7 +603,8 @@ test('milestone-two religious paths route, advance, localize, and restore by ind
       });
       FB.ui.showCareerPicker(me.id);
       const layButton = document.getElementById('career-religious');
-      const layHelp = layButton ? layButton.textContent : '';
+      // Requirements appear on the card face or behind its Details disclosure.
+      const layHelp = layButton ? layButton.closest('.settcard').textContent : '';
       FB.ui.closeModal();
       me.career.profession = 'monk';
       me.career.rank = 'journeyman';

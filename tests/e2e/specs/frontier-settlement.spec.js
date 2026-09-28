@@ -16,7 +16,8 @@ dependsOnRuntime(__filename, [
   'data/events_travel.js',
   'data/counties.js',
   'data/map_data.js',
-  'data/technology.js'
+  'data/technology.js',
+  'js/ui_misc.js', 'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -327,6 +328,40 @@ test('residence and work milestones gate the permanent homestead',
     expect(result.priestRole).toBe(true);
     expect(result.chronicle).toBe(true);
     expect(result.routeNow).toBe(true);
+  });
+
+test('the homestead review keeps the new county terms and permanent-move risk on its face',
+  async function ({ page }) {
+    await page.setViewportSize({ width:390, height:844 });
+    const ready = await page.evaluate(function () {
+      const state = FB.state;
+      state.player.gold = 5000;
+      state.player.tier = 1;
+      const destination = FB.travelDestinations(state, 'frontier')[0];
+      if (!destination) return false;
+      FB.travelStart(state, 'frontier', destination.destinationId, null);
+      state.player.travel.remainingRoute = [];
+      state.player.travel.legDaysLeft = 0;
+      FB.travelTick(state);
+      const capstoneItem = state.eventQueue.filter(function (item) {
+        return item.id === 'travel_capstone_frontier';
+      })[0];
+      const capstone = FB.eventById('travel_capstone_frontier');
+      FB.resolveEventOption(state, capstone, capstone.options[0],
+        capstoneItem.ctx, { automated:false });
+      for (let i = 0; i < FBDATA.balance.frontierMilestonesRequired; i++) FB.fns.frontier_milestone(state);
+      state.turn += FBDATA.balance.travelSettleOfferDays;
+      FB.ui.showFrontierSettlement();
+      return FB.frontierSettlementEligible(state) === true;
+    });
+    expect(ready).toBe(true);
+    const facts = page.locator('[data-frontier-settlement]');
+    await expect(facts).toContainText('development 1');
+    await expect(facts).toContainText('A starter land plot, not a county title');
+    await expect(facts.locator('.warnote')).toContainText('only permanent move');
+    await expect(page.locator('#frontier-settle-confirm .adesc')).toHaveClass(/review-note-warn/);
+    await expect(page.locator('#frontier-settle-confirm-details')).toBeHidden();
+    await expect(page.locator('#gm-body .gm-footer #frontier-settle-cancel')).toHaveCount(1);
   });
 
 test('a second permanent move in the same life is refused',

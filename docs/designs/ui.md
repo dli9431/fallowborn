@@ -3360,6 +3360,32 @@ its own tooltip/disclosure, rather than repeating those rows in the review card.
 The disabled action retains a focusable details wrapper. Other blockers stay inline.
 
 
+## Decision review layout
+
+Decision reviews use the shared review helpers in `ui_misc.js` instead of stacked
+paragraphs. A Governance-style fact card (`reviewFactsCard`) holds label/value
+rows for destination, cost, duration, commitment and consequences, plus a warning
+note for the first blocker or a permanent risk. Every named person appears as a
+portrait row (`reviewPersonHtml`). Each gameplay action is a full-width action card
+(`reviewActionCardHtml`) with its short cost, state or first blocker on the face and
+its consequence audit behind the card's Details; a disabled action's card stays
+focusable. Background rules move to the title Details control, and Back, Cancel or
+Not now sit in the shared footer. Journey, social visit, financial settlement,
+excess land grants, capital relocation, retirement, post-marriage residence, frontier
+homestead and the Work career picker follow this layout; the career picker keeps a
+current-work card and option cards with fees and first blockers on their faces.
+
+Other gameplay confirmations use the same button rules even when their layout
+differs: trade ventures and return cargo, freedom purchase and petitions, county
+challenge and recognition, holy-war vows and settlements, religious-head and
+absolution confirmations, conversion, land and settlement grants, domain cleanup,
+land sales, elections, retainers, church appointments, technology actions, friend,
+sibling marriage, cultural invitation, loans, commons uprisings, envoys, county
+community projects, the local council and rank elevation. Committing actions are
+full-width action cards, never narrow footer buttons; Back, Cancel, Not now and
+Close go in the footer, which `normalizeModalFooter` standardizes. Settings, saves,
+mods and inline editing controls keep their compact controls.
+
 ## Default modal action buttons
 
 Gameplay actions inside modals use the plot picker's full-width, left-aligned

@@ -69,15 +69,138 @@
         (w.unlawful ? ' · ' + FB.T('Unlawful') : '');
     });
   };
+  function signed(value) { return (value > 0 ? '+' : '') + value; }
+  function balanceText(balance) {
+    return FB.T('{value} · {state}', { value:signed(balance.total),
+      state:balance.total >= 25 ? FB.T('winning') : balance.total <= -25 ? FB.T('losing') : FB.T('even') });
+  }
+  function percent(chance) { return Math.round(chance * 100); }
+  /* The campaign's Peace section. Each settlement is a full-width action card
+     with its immediate cost or first blocker on the face and its consequence
+     behind Details. Offers the enemy may refuse show their acceptance chance. */
+  function campaignPeaceHtml(s, w) {
+    const options = FB.warPeaceOptions(s, w.id);
+    const enemy = name(s, w.enemy);
+    const terms = options.terms;
+    const back = options.returnLiege ? name(s, options.returnLiege) : '';
+    const returnNote = back ? FB.T('You return to {liege} as their vassal.', { liege:back }) : '';
+    let cards = SH.reviewActionCardHtml({
+      id:'campaign-white-peace', detailsId:'campaign-white-peace-details',
+      label:FB.T('Propose white peace'), disabled:!options.white.ready, warn:!options.white.ready,
+      note:options.white.ready
+        ? FB.T('{chance}% chance · takes 1 day', { chance:percent(options.white.chance) }) : options.white.reason,
+      details:'<p>' + esc(FB.T('Ends the war with no land, gold or prestige changing hands. A refusal spends the day and the enemy will not hear another offer for a season.')) + '</p>' +
+        (returnNote ? '<p>' + esc(returnNote) + '</p>' : '') +
+        '<p>' + esc(FB.T('Acceptance rises with the war balance and with the length of the war.')) + '</p>'
+    });
+    const demandLabel = options.demand.kind === 'recognition' ? FB.T('Demand recognition of independence')
+      : options.demand.kind === 'reparations' ? FB.T('Demand reparations') : FB.T('Demand tribute');
+    cards += SH.reviewActionCardHtml({
+      id:'campaign-demand', detailsId:'campaign-demand-details',
+      label:demandLabel, disabled:!options.demand.ready, warn:!options.demand.ready,
+      note:!options.demand.ready ? options.demand.reason
+        : options.demand.kind === 'recognition'
+          ? FB.T('+{prestige} prestige · {chance}% chance', { prestige:options.demand.prestige, chance:percent(options.demand.chance) })
+          : FB.T('{money:gold} · +{prestige} prestige · {chance}% chance', {
+            gold:options.demand.gold, prestige:options.demand.prestige, chance:percent(options.demand.chance) }),
+      details:'<p>' + esc(options.demand.kind === 'recognition'
+        ? FB.T('{enemy} accepts your independence and the war ends. Winning in the field also secures it.', { enemy:enemy })
+        : FB.T('{enemy} pays what its treasury can spare, up to {money:gold}, and the war ends without land changing hands. A refusal spends the day and the enemy will not hear another offer for a season.', {
+          enemy:enemy, gold:25 })) + '</p>' +
+        (w.defending ? '' : '<p>' + esc(FB.T('Conquest still requires occupying every objective together.')) + '</p>')
+    });
+    if (options.concede) {
+      const counties = options.concede.counties.map(function (pid) { return FB.world.byId[pid].name; }).join(', ');
+      cards += SH.reviewActionCardHtml({
+        id:'campaign-concede', detailsId:'campaign-concede-details', danger:true,
+        label:FB.T('Cede the objectives'), disabled:!options.concede.ready,
+        note:FB.T('{counties} pass to {enemy} · −{prestige} prestige', {
+          counties:counties, enemy:enemy, prestige:options.concede.prestige }),
+        details:'<p>' + esc(FB.T('The war ends at once and {enemy} takes exactly the contested objectives. The rest of your land is untouched.', { enemy:enemy })) + '</p>'
+      });
+    }
+    if (options.submit) {
+      const liege = back || enemy;
+      cards += SH.reviewActionCardHtml({
+        id:'campaign-submit', detailsId:'campaign-submit-details', danger:true,
+        label:FB.T('Submit to {enemy}', { enemy:liege }),
+        note:FB.T('Become their vassal and keep your land · −{prestige} prestige', { prestige:options.submit.prestige }),
+        details:'<p>' + esc(FB.T('The war ends at once. Your lands remain yours — held now from {enemy}.', { enemy:liege })) + '</p>'
+      });
+    }
+    const short = s.player.gold < terms.gold;
+    const unilateral = w.defending
+      ? (options.rebellion ? FB.T('Abandon the rebellion') : FB.T('Buy peace'))
+      : FB.T('Withdraw');
+    const price = w.defending
+      ? FB.T('{money:gold} and {prestige} prestige', { gold:terms.gold, prestige:terms.prestige })
+      : FB.T('{prestige} prestige and {support} Popular support in each county', {
+        prestige:terms.prestige, support:terms.support });
+    cards += SH.reviewActionCardHtml({
+      id:'campaign-peace', detailsId:'campaign-peace-action-details', danger:true,
+      disabled:short, warn:short,
+      label:unilateral,
+      note:short
+        ? FB.T('Requires {money:gold}; you have {money:current}.', { gold:terms.gold, current:Math.floor(s.player.gold) })
+        : FB.T('{price} · always accepted', { price:price }),
+      details:'<p>' + esc(w.defending
+        ? FB.T('{enemy} is paid {money:gold}: {money:perRank} per rank of its realm and {money:perLoss} per field defeat, at least {money:minimum}. You also lose {prestige} prestige. No land changes hands.', {
+          enemy:enemy, gold:terms.gold, perRank:FBDATA.balance.warBuyPeaceGoldPerRank || 40,
+          perLoss:FBDATA.balance.warBuyPeaceGoldPerLoss || 10, minimum:FBDATA.balance.warBuyPeaceMinGold || 50,
+          prestige:terms.prestige })
+        : FB.T('Abandoning the campaign costs {prestige} prestige and {support} Popular support in every county you hold directly. No land changes hands.', {
+          prestige:terms.prestige, support:terms.support })) + '</p>' +
+        (returnNote ? '<p>' + esc(returnNote) + '</p>' : '')
+    });
+    return SH.reviewActionsHtml(cards);
+  }
+  function bindCampaignPeace(s, id) {
+    function afterOffer(result) {
+      if (!result) { UI.showCampaign(id); return; }
+      FB.game.passDay({ skipFocus:true });
+      if (result.accepted) { UI.closeModal(); UI.refresh(); return; }
+      UI.toast(FB.T('The enemy refuses. The war goes on.'));
+      UI.refresh();
+      if (FB.ordinaryWarById(s, id)) UI.showCampaign(id);
+    }
+    bind('campaign-white-peace', function () { afterOffer(FB.proposeWarPeace(s, id, 'white')); });
+    bind('campaign-demand', function () { afterOffer(FB.proposeWarPeace(s, id, 'demand')); });
+    bind('campaign-concede', function () {
+      if (!FB.concedeWarObjectives(s, id)) { UI.showCampaign(id); return; }
+      UI.closeModal(); UI.refresh();
+    });
+    bind('campaign-submit', function () {
+      if (!FB.submitInWar(s, id)) { UI.showCampaign(id); return; }
+      UI.closeModal(); UI.refresh();
+    });
+    bind('campaign-peace', function () {
+      const live = FB.ordinaryWarById(s, id);
+      if (!live || s.player.gold < FB.warTermsCost(s, live).gold) { UI.showCampaign(id); return; }
+      FB.withOrdinaryWar(s, id, function () { FB.fns.war_terms(s); });
+      UI.closeModal(); UI.refresh();
+    });
+  }
   UI.showCampaign = function (id) {
     const s = FB.state, w = FB.ordinaryWarById(s, id);
     if (!w) { UI.toast(FB.T('This campaign has ended.')); return; }
     FB.game.setPaused(true);
+    const need = FBDATA.balance.warWinsToTakeProvince;
     let h = '<div class="war-sheet" data-campaign-detail="' + esc(id) + '">' +
-      fact(FB.T('Opponent'), name(s, w.enemy)) + fact(FB.T('Declaration'), w.countyChallenge ?
+      fact(FB.T('Opponent'), name(s, w.enemy)) +
+      fact(FB.T('Your side'), w.defending ? FB.T('Defending') : FB.T('Attacking')) +
+      fact(FB.T('Declaration'), w.countyChallenge ?
         w.countyChallenge.justification === 'sanctioned' ? FB.T('Superior-authorized challenge') :
           w.countyChallenge.justification === 'claim' ? FB.T('Claim-backed rebellion') : FB.T('Unclaimed usurpation') :
-        w.unlawful ? FB.T('Unlawful') : FB.T('Lawful'));
+        w.unlawful ? FB.T('Unlawful') : FB.T('Lawful')) +
+      fact(FB.T('Field battles'), FB.T('{wins} won · {losses} lost', { wins:w.wins || 0, losses:w.losses || 0 })) +
+      fact(FB.T('Duration'), FB.T('{seasons} of 32 seasons', { seasons:w.seasons || 0 }));
+    const balance = FB.warBalance(s, id);
+    if (balance) h += section('campaign-balance-details', FB.T('War balance'),
+      fact(FB.T('War balance'), balanceText(balance)),
+      SH.kv('From objectives', esc(signed(balance.occupation))) +
+      SH.kv('From field battles', esc(signed(balance.battles))) +
+      SH.kv('From relative strength', esc(signed(balance.strength))) +
+      '<p>' + esc(FB.T('From −100 to +100. Positive values favor you. The enemy weighs it, along with the length of the war, when answering your offers.')) + '</p>');
     let objectives = '';
     w.objectives.forEach(function (o) {
       const occupied = w.occupations[o.target] && w.occupations[o.target].occupied;
@@ -94,8 +217,12 @@
       : special === 'caliphate' ? FB.T('Gain the Caliphate office.')
       : special === 'restoration' ? FB.T('Restore the crown and its vassals.')
       : FB.T('Occupy all objectives to gain them at peace.');
-    h += section('campaign-goal-details', FB.T('Objectives'), (UI.campaignObjectivesHtml(s, w) || objectives) + '<p>' + esc(victory) + '</p>',
-      '<p>' + esc(FB.T('Occupation is temporary until peace. All territorial objectives must remain occupied together. Office and independence wars follow their own terms.')) + '</p>');
+    h += section('campaign-goal-details', FB.T('Objectives'), objectives + fact(FB.T('Victory'), victory),
+      '<p>' + esc(FB.T('Occupation is temporary until peace. All territorial objectives must remain occupied together. Office and independence wars follow their own terms.')) + '</p>' +
+      '<p>' + esc(w.defending
+        ? FB.T('{wins} field victories force the attacker to sue for peace; {wins} defeats can cost you an objective.', { wins:need })
+        : FB.T('{wins} field defeats break the campaign; field victories can bring tribute offers but never take an objective.', { wins:need })) + '</p>' +
+      '<p>' + esc(FB.T('After 32 seasons the war ends in white peace.')) + '</p>');
     let hostHtml = '';
     const hosts = (s.armies || []).filter(function (a) { return a.realm === 'player'; });
     hosts.forEach(function (a, i) {
@@ -107,19 +234,19 @@
       if (FB.greatHolyWarCamp(s, 'player')) hostHtml += '<option value="holy"' + (a.warId === 'holy' ? ' selected' : '') + '>' + esc(FB.T('Holy war')) + '</option>';
       hostHtml += '</select></label>';
     });
-    if (!hosts.length) hostHtml += '<p>' + esc(FB.T('No host is currently raised.')) + '</p>';
-    hostHtml += button('campaign-muster-plan', FB.T('Muster plan'));
+    if (!hosts.length) hostHtml += fact(FB.T('Field hosts'), FB.T('No host is currently raised.'));
     hostHtml += fact(FB.T('Total upkeep'), FB.T('{money:cost} per season', { cost:FB.playerHostUpkeepParts(s).total }));
-    hostHtml += '<p class="hint">' + esc(FB.T('Changing assignment cancels the host’s route.')) + '</p>';
+    hostHtml += SH.reviewActionsHtml(SH.reviewActionCardHtml({
+      id:'campaign-muster-plan', label:FB.T('Muster plan'),
+      note:hosts.length ? FB.T('Raise more troops or de-muster a host') : FB.T('Raise a host for this war')
+    }));
     h += section('campaign-host-details', FB.T('Hosts'), hostHtml,
-      '<p>' + esc(FB.T('Hosts share troops, supplies, and upkeep across all campaigns. Reassignment keeps the host’s men and supplies.')) + '</p>');
-    const cost = w.defending ? 15 + 5 * (w.losses || 0) : 0;
-    h += section('campaign-peace-details', FB.T('Peace'),
-      fact(FB.T('Cost'), w.defending ? FB.T('{money:cost} and 10 prestige', { cost:cost }) : FB.T('8 prestige')) +
-      '<p>' + esc(FB.T('No land changes hands.')) + '</p>' +
-      button('campaign-peace', w.defending ? FB.T('Buy peace') : FB.T('Withdraw')),
+      '<p>' + esc(FB.T('Hosts share troops, supplies, and upkeep across all campaigns. Reassignment keeps the host’s men and supplies.')) + '</p>' +
+      '<p>' + esc(FB.T('Changing assignment cancels the host’s route.')) + '</p>');
+    h += section('campaign-peace-details', FB.T('Peace'), campaignPeaceHtml(s, w),
       '<p>' + esc(FB.T('Ends this campaign only. Other campaigns and their assigned hosts continue.')) + '</p>');
-    h += button('campaign-back', FB.T('Back')) + '</div>';
+    h += '<div class="gm-footer"><button type="button" class="btn" id="campaign-back">' +
+      esc(FB.T('Back')) + '</button></div></div>';
     const fromPanel = document.getElementById('genmodal').classList.contains('hidden');
     SH.openModal(FB.T('Campaign'), h, { historyView:true, modalClass:'war-sheet-modal',
       historyBackRender:fromPanel ? function () { UI.closeModal(); } : null });
@@ -129,14 +256,7 @@
         if (host) FB.assignHostCampaign(s, host.id, el.value);
       });
     });
-    const peace = document.getElementById('campaign-peace');
-    if (peace) peace.disabled = s.player.gold < cost;
-    bind('campaign-peace', function () {
-      const live = FB.ordinaryWarById(s, id);
-      if (!live || s.player.gold < (live.defending ? 15 + 5 * live.losses : 0)) return;
-      FB.withOrdinaryWar(s, id, function () { FB.fns.war_terms(s); });
-      UI.closeModal(); UI.refresh();
-    });
+    bindCampaignPeace(s, id);
     bind('campaign-back', back);
     bind('campaign-muster-plan', function () { UI.showMusterPlan(); });
   };
@@ -173,21 +293,31 @@
     h += section('muster-cost-details', FB.T('Estimated cost'), '<div id="muster-costs" aria-live="polite"></div>',
       '<div id="muster-cost-breakdown"></div><p>' + esc(FB.T('Costs use current prices where each host starts. Food costs depend on available stocks and your supply settings. Moving, winter and price changes can raise the bill.')) + '</p>' +
       '<p>' + esc(FB.T('There is no fee to raise troops. You pay to keep them in the field. Existing contracts and replacement training may cost extra.')) + '</p>');
-    h += '<p class="hint">' + esc(FB.T('Changes save automatically and apply to future musters.')) + '</p><p id="muster-blocker" class="warnote"></p>';
-    h += '<div class="modal-body-actions"><div class="settcard modal-action-card" tabindex="0" aria-describedby="muster-action-details"><div class="settcard-head">' +
-      '<button type="button" class="actionbtn" id="muster-raise" data-action-tooltip data-tooltip-anchor="control" aria-describedby="muster-action-details">' + esc(FB.T('Muster')) + '</button>' +
+    h += '<p id="muster-blocker" class="progressnote warnote" hidden></p>';
+    h += '<div class="modal-body-actions review-actions"><div class="settcard modal-action-card review-action-card" tabindex="0" aria-describedby="muster-action-details"><div class="settcard-head">' +
+      '<button type="button" class="actionbtn" id="muster-raise" data-action-tooltip data-tooltip-anchor="control" aria-describedby="muster-action-details">' + esc(FB.T('Muster')) +
+      '<span class="adesc" id="muster-raise-note"></span></button>' +
       '<span class="settcard-actions"><button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="muster-action-details" aria-label="' + esc(FB.T('Details')) + '">?</button></span></div>' +
       '<div class="settcard-details hidden" id="muster-action-details"></div></div></div>';
     const demuster = FB.demusterPreview(s);
     if (demuster && !(FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))) {
+      const rearm = FBDATA.balance.armyRearmDays || 60;
       h += section('muster-dismiss-details', FB.T('Current host'),
+        fact(FB.T('Troops returning'), FB.T('{men} troops', { men:demuster.men })) +
+        fact(FB.T('Next muster'), FB.T('Wait {days} days', { days:rearm })) +
+        SH.reviewActionsHtml(SH.reviewActionCardHtml({
+          id:'muster-dismiss', label:FB.T('De-muster current host'),
+          note:FB.T('Stops field upkeep · takes 1 day')
+        })),
         '<p>' + esc(FB.T('De-muster to stop this host’s field upkeep. {men} troops return to the rolls; the next muster must wait {days} days.', {
-          men:demuster.men, days:FBDATA.balance.armyRearmDays || 60 })) + '</p>' + button('muster-dismiss', FB.T('De-muster current host')),
+          men:demuster.men, days:rearm })) + '</p>' +
         '<p>' + esc(FB.T('Sends your main host home. Other hosts stay in the field. All troops can return when dismissed on your own land; elsewhere, some or all are lost.')) + '</p>');
     }
-    h += button('muster-back', FB.T('Back')) + '</div>';
+    h += '<div class="gm-footer"><button type="button" class="btn" id="muster-back">' +
+      esc(FB.T('Back')) + '</button></div></div>';
     const fromPanel = document.getElementById('genmodal').classList.contains('hidden');
     SH.openModal(FB.T('Muster plan'), h, { historyView:true, modalClass:'war-sheet-modal',
+      titleDetailsHtml:'<p>' + esc(FB.T('Changes save automatically and apply to future musters.')) + '</p>',
       historyBackRender:fromPanel ? function () { UI.closeModal(); } : null });
     const countyHeading = document.querySelector('#muster-county-details-section h3');
     countyHeading.innerHTML = '<button type="button" class="large-list-section-toggle" id="muster-counties-toggle" aria-expanded="true" aria-controls="muster-counties"><span class="large-list-section-title">' + esc(FB.T('County troops')) + '</span><span class="large-list-section-caret" aria-hidden="true">&#9662;</span></button>';
@@ -230,6 +360,8 @@
         fact(FB.T('Muster time'), FB.T('1 day')) +
         '<p>' + esc(FB.T('There is no fee to raise troops. You pay to keep them in the field.')) + '</p></div>';
       document.getElementById('muster-raise').disabled = !quote.canRaise;
+      document.getElementById('muster-raise-note').textContent = quote.canRaise
+        ? FB.T('{money:cost} per season · takes 1 day', { cost:quote.total }) : '';
       document.querySelectorAll('[data-muster-cost]').forEach(function (el) {
         const row = quote.rows.filter(function (entry) { return entry.pid === el.dataset.musterCost; })[0];
         const county = quote.estimates[el.dataset.musterCost];
@@ -237,10 +369,12 @@
           quote.total * (row ? row.additional : 0) / Math.max(1, quote.men);
         el.textContent = FB.T('About {money:cost} per season', { cost:cost });
       });
-      document.getElementById('muster-blocker').textContent = quote.days ? FB.T('Ready to muster in {days} days.', { days:quote.days }) :
+      const blocker = document.getElementById('muster-blocker');
+      blocker.textContent = quote.days ? FB.T('Ready to muster in {days} days.', { days:quote.days }) :
         !quote.men ? FB.T('No additional troops are available under this plan. Troops already fielded and their replacement ranks count toward the target.') :
         !quote.valid ? FB.T('Each host needs at least {men} troops. Choose more troops or gather at the rally point.', { men:quote.minimum }) :
         !quote.canRaise ? FB.T('Available when war begins.') : '';
+      blocker.hidden = !blocker.textContent;
     }
     function syncCountyControls() {
       document.querySelectorAll('[data-muster-county], [data-muster-slider]').forEach(function (input) {
@@ -319,23 +453,40 @@
       h += '<section class="war-sheet-section" id="war-law-details-' + id + '-section" tabindex="-1"><div class="war-sheet-heading"><h3>' +
         esc(FB.dataText(s, s.player.charId, 'policy', id, def, 'name', {})) + '</h3></div>' + rows + '</section>';
     });
-    if (canProclaim) h += '<p class="hint">' + esc(FB.T('One change per law each year. Existing wars keep their terms.')) + '</p>';
+
     Object.keys(s.warPermissionRequests || {}).forEach(function (key, i) {
       const request = s.warPermissionRequests[key];
       if (request.liege !== 'player') return;
-      h += '<p>' + esc(FB.T('{realm} requests permission to fight {enemy} for {objectives}.', {
-        realm:name(s, request.attacker), enemy:name(s, request.causes[0].enemy), objectives:request.causes.map(objectiveName).join(', ') })) + '</p>' +
-        '<button class="actionbtn" data-permission-grant="' + i + '">' + esc(FB.T('Grant permission')) + '</button>' +
-        '<button class="actionbtn" data-permission-deny="' + i + '">' + esc(FB.T('Deny permission')) + '</button>';
+      h += '<section class="war-sheet-section" data-war-permission-request><div class="war-sheet-heading"><h3>' +
+        esc(FB.T('Permission request')) + '</h3></div>' +
+        fact(FB.T('Vassal'), name(s, request.attacker)) +
+        fact(FB.T('Enemy'), name(s, request.causes[0].enemy)) +
+        fact(FB.T('Objectives'), request.causes.map(objectiveName).join(', ')) +
+        SH.reviewActionsHtml(SH.reviewActionCardHtml({
+          data:{ permissionGrant:i }, label:FB.T('Grant permission'),
+          note:FB.T('{realm} requests permission to fight {enemy} for {objectives}.', {
+            realm:name(s, request.attacker), enemy:name(s, request.causes[0].enemy),
+            objectives:request.causes.map(objectiveName).join(', ') })
+        }) + SH.reviewActionCardHtml({
+          data:{ permissionDeny:i }, label:FB.T('Deny permission')
+        })) + '</section>';
     });
     Object.keys(s.wars || {}).forEach(function (id) {
       const w = FB.ordinaryWarById(s, id);
       if (!w || !w.peaceDemand || w.peaceDemand.liege !== 'player' || w.peaceDemand.status !== 'refused') return;
-      h += '<p>' + esc(FB.T('{realm} refuses the demand for peace. Enforcement victory ends that campaign and costs them 50 prestige.', { realm:name(s, w.attacker) })) + '</p>' +
-        '<button class="actionbtn" data-enforce-peace="' + esc(id) + '">' + esc(FB.T('Enforce the peace by war')) + '</button>';
+      h += '<section class="war-sheet-section" data-war-peace-refusal><div class="war-sheet-heading"><h3>' +
+        esc(FB.T('Refused peace demand')) + '</h3></div>' +
+        fact(FB.T('Vassal'), name(s, w.attacker)) +
+        SH.reviewActionsHtml(SH.reviewActionCardHtml({
+          data:{ enforcePeace:id }, danger:true, label:FB.T('Enforce the peace by war'),
+          note:FB.T('{realm} refuses the demand for peace. Enforcement victory ends that campaign and costs them 50 prestige.', { realm:name(s, w.attacker) })
+        })) + '</section>';
     });
-    h += button('war-laws-back', FB.T('Back')) + '</div>';
-    SH.openModal(FB.T('War laws & permissions'), h, { historyView:true, replaceView:!!view, noFocus:!!view, modalClass:'war-sheet-modal' });
+    h += '<div class="gm-footer"><button type="button" class="btn" id="war-laws-back">' +
+      esc(FB.T('Back')) + '</button></div></div>';
+    SH.openModal(FB.T('War laws & permissions'), h, { historyView:true, replaceView:!!view, noFocus:!!view,
+      modalClass:'war-sheet-modal', titleDetailsHtml:canProclaim
+        ? '<p>' + esc(FB.T('One change per law each year. Existing wars keep their terms.')) + '</p>' : '' });
     function refreshed(fn, control) {
       const body = document.getElementById('gm-body');
       const scroll = body && body.scrollTop;

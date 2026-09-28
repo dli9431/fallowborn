@@ -1552,6 +1552,52 @@ the destination against the sum of all hostile defending hosts there, including 
 It needs a 110% advantage. Otherwise it regroups on reachable friendly ground that is
 not occupied by an overwhelming enemy. Forced retreats and fort pinning keep priority.
 
+## Player-initiated settlements
+
+The campaign sheet's Peace section lets the player end an ordinary war without
+waiting for a war event. `FB.warBalance` is a read-only projection from the
+player's side, bounded from -100 to +100: up to 50 for the share of occupied
+objectives (positive when attacking, negative when defending), up to 30 for field
+wins minus losses relative to `warWinsToTakeProvince`, and up to 20 for relative
+realm strength. The sheet shows the total with its components behind Details.
+
+`FB.warPeaceOptions` quotes each settlement. **Propose white peace** succeeds with
+a chance of 0.15 + 0.6 x balance/100 + 0.35 x (seasons/32), clamped to 2-95%.
+**Demand tribute** (attacking) or **Demand reparations** (defending) requires a
+balance of +25 and succeeds with (balance - 20)/80 x 0.8 + 0.2 x (seasons/32),
+clamped to 5-90%. It transfers what the enemy treasury can spare, up to 25 gold,
+through the paired treasury path, awards the existing tribute prestige (10 for
+reparations) and ends the war in white peace. Both offers spend a day in the UI
+and use the seeded `FB.chance`. Either answer records `peaceOfferTurn` on the war,
+and no further offer is heard for 90 days. Old saves without the field have no
+cooldown.
+
+A defender in a territorial war may **Cede the objectives**: the named objectives
+transfer through the ordinary objective-award path, the war ends and the player
+loses up to 5 prestige. The rest of the realm is untouched. **Submit** appears when
+`FB.submissionOfferEligible(state, true)` holds. It ignores the once-per-war
+offered flag and applies the existing submission effects.
+
+Withdraw, Buy peace and the war council's Seek terms are always accepted, so they
+are deliberately expensive (`FB.warTermsCost`, knobs in `FBDATA.balance`). An
+attacker who withdraws loses 30 prestige and 5 Popular support in every directly
+held county. A defender who buys peace pays the enemy 40 gold per rank of its
+realm plus 10 per field defeat, at least 50, and loses 20 prestige. Seek terms
+requires that gold (`war_terms_affordable`). The confirmation quote uses the same
+helper.
+
+A player rebellion is fought against the sovereign, but `doIndependence` records
+the lord actually renounced as `casus.formerLiege`. Independence is secured only
+by winning in the field or by an accepted **Demand recognition of independence**
+(the rebellion's demand, with no gold). Every other ending (abandoning the
+rebellion, white peace or submission) returns the player to that lord while
+they live inside the same realm (`FB.independenceReturnLiege`), otherwise to the
+sovereign. The player's counties are owned by the new top realm again. Invalid
+endings, where the enemy realm disappears, leave the player independent. Conquest still requires every objective to be held
+together; no settlement awards land to the player. Captivity blocks negotiation.
+Technology review: `war_white_peace_offers`, `war_victory_demands`,
+`war_objective_concessions` and `war_player_submission` are all `none`.
+
 ## Territorial recruitment
 
 `FB.recruitmentTerritory` is a read-only military projection of eligible and blocked

@@ -171,12 +171,11 @@ test('county controls retain context, preview consequences, and start change and
 
     await page.locator('[data-county-project-target="norse"]').click();
     await page.locator('[data-county-project-policy="voluntary"]').click();
-    await expect(page.locator('#gm-body')).toContainText('Piety: 0');
-    await expect(page.locator('#gm-body')).toContainText('Prestige: 0');
-    await expect(page.locator('#gm-body'))
-      .toContainText('Standing and relationships: No immediate change.');
-    await expect(page.locator('#gm-body'))
-      .toContainText('County Popular support and unrest:');
+    const review = page.locator('[data-county-project-review]');
+    await expect(review.locator('.kv').filter({ hasText:'Piety and prestige' })).toContainText('No cost');
+    await expect(review.locator('.kv').filter({ hasText:'Standing and relationships' }))
+      .toContainText('No immediate change.');
+    await expect(review.locator('.kv').filter({ hasText:'County Popular support and unrest' })).toHaveCount(1);
     await expect(page.locator('#county-project-confirm'))
       .toContainText(setup.county);
     const reviewed = await page.evaluate(function (pid) {

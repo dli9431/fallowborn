@@ -434,7 +434,7 @@ test('service list and review keep portraits, pay and blockers on the face with 
   await expect(page.locator('#service-review-helper')).toBeVisible();
   await page.locator('[data-list-filter="all"]').click();
   await captain.click();
-  await expect(page.locator('[data-service-review-sheet] .service-people canvas.pface')).toHaveCount(1);
+  await expect(page.locator('[data-service-review-sheet] .review-people canvas.pface')).toHaveCount(1);
   await expect(page.locator('.service-requirements li')).toHaveCount(expected.missing);
   await expect(page.locator('#service-confirm')).toBeDisabled();
   await expect(page.locator('.modal-action-card[tabindex="0"]')).toHaveCount(1);

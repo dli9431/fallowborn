@@ -24,6 +24,12 @@ window.FB = window.FB || {};
   const householdStandardsSummaryParts = SH.householdStandardsSummaryParts;
   const initLargeListSurface = SH.initLargeListSurface;
   const kv = SH.kv;
+  const rawKv = SH.rawKv;
+  const reviewFactsCard = SH.reviewFactsCard;
+  const reviewPersonHtml = SH.reviewPersonHtml;
+  const reviewPeopleHtml = SH.reviewPeopleHtml;
+  const reviewActionCardHtml = SH.reviewActionCardHtml;
+  const reviewActionsHtml = SH.reviewActionsHtml;
   const largeListRowAttrs = SH.largeListRowAttrs;
   const largeListSurfaceHtml = SH.largeListSurfaceHtml;
   const menText = SH.menText;
@@ -6832,47 +6838,33 @@ window.FB = window.FB || {};
     const vassalNames = status.vassals.map(function (vassal) {
       return vassal.name;
     });
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Move the capital and permanent household home from {from} to {destination}?',
-      {
-        from:from.name,
-        destination:destination.name
-      })) + '</p><p>' + esc(FB.T(
-      'This immediately costs {prestige} prestige. Popular opinion changes by {opinion}, and every direct vassal’s Standing changes by {standing}.',
-      {
-        prestige:status.prestigeCost,
-        opinion:signedNumber(status.popularOpinion),
-        standing:standingValue(status.vassalFavor)
-      })) + '</p>';
+    let facts = kv('From', esc(from.name)) + kv('To', esc(destination.name)) +
+      kv('Prestige', esc(signedNumber(-status.prestigeCost))) +
+      kv('Popular support', esc(signedNumber(status.popularOpinion))) +
+      kv('Standing with every direct vassal', esc(vassalNames.length
+        ? standingValue(status.vassalFavor) : FB.T('No direct vassals')));
     if (vassalNames.length) {
-      h += standingEffectRow(FB.T('Standing with every direct vassal'),
-        status.vassalFavor);
-      h += '<p>' + esc(FB.T(
-        'Affected direct vassals ({count}): {vassals}.', {
-          count:vassalNames.length,
-          vassals:vassalNames.join(', ')
-        })) + '</p>';
-    } else {
-      h += '<p>' + esc(FB.T(
-        'You have no direct vassals, so no vassal Standing will change.')) + '</p>';
+      facts += rawKv(FB.T('Affected direct vassals ({count})', { count:vassalNames.length }),
+        esc(vassalNames.join(', ')));
     }
     if (status.incomingMonopoly) {
-      h += '<p class="op-bad">' + esc(FB.T(
+      facts += '<div class="progressnote warnote">' + esc(FB.T(
         'Your incoming {profession} monopoly is tied to {province} and will end immediately when the household leaves.',
         {
           profession:capitalRelocationMonopolyName(
             s, status.incomingMonopoly),
           province:from.name
-        })) + '</p>';
+        })) + '</div>';
     }
-    h += '<p class="hint">' + esc(FB.T(
-      'This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household.')) +
-      '</p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="capital-relocation-confirm">' +
-      esc(FB.T('Move the capital to {destination}', {
-        destination:destination.name
-      })) + '</button>' +
-      '<button type="button" class="actionbtn" id="capital-relocation-cancel">' +
+    let h = reviewFactsCard(FB.T('Capital and household home'), facts, ' data-capital-relocation') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'capital-relocation-confirm',
+        label:FB.T('Move the capital to {destination}', { destination:destination.name }),
+        note:FB.T('{prestige} prestige now · this ruler’s only voluntary move', { prestige:status.prestigeCost }),
+        details:'<p>' + esc(FB.T(
+          'This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household.')) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="capital-relocation-cancel">' +
       esc(FB.T('Keep the capital in {from}', { from:from.name })) +
       '</button></div>';
     openModal(FB.T('Move capital to {destination}?', {

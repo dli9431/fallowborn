@@ -12925,6 +12925,9 @@ window.FB = window.FB || {};
     const p = state.player;
     if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
+    // The war is fought against the sovereign, but a failed rebellion returns
+    // the player to the lord actually renounced (FB.independenceReturnLiege).
+    const formerLiege = p.liege || null;
     if (oldLiege && (FB.ordinaryWarBetween(state, 'player', oldLiege) ||
         FB.truceExpiry(state, 'player', oldLiege))) return false;
     if (oldLiege && FB.justiceRecordRebellion) {
@@ -12943,7 +12946,7 @@ window.FB = window.FB || {};
     if (oldLiege && FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', oldLiege);
     if (oldLiege && state.realms[oldLiege] && state.realms[oldLiege].alive) {
       p.war = { enemy: oldLiege, target: null, wins: 0, losses: 0, seasons: 0,
-        defending: true, casus: { type: 'independence' } };
+        defending: true, casus: { type: 'independence', formerLiege: formerLiege } };
       FB.news(state, FB.msg('news.event.independence_war',
         '⚔ {realm} will not let you go without a fight!',
         { realm: state.realms[oldLiege].name }));

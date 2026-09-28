@@ -317,6 +317,10 @@
   FB.fns.war_event_context_valid = function (state, ctx) {
     ctx = ctx || {};
     const list = FB.realmWars(state, 'player');
+    const bound = ctx.warId === undefined && ctx.warEventId === undefined && context(state);
+    if (bound) return list.some(function (w) {
+      return w.id === bound.id && (ctx.warEnemyId === undefined || ctx.warEnemyId === w.enemy);
+    });
     return list.some(function (w) {
       if (ctx.warId !== undefined) return w.id === ctx.warId && (!ctx.warEnemyId || ctx.warEnemyId === w.enemy);
       return (ctx.warEventId === undefined ? list.length === 1 : ctx.warEventId === w.eventId) &&
@@ -391,6 +395,8 @@
     const c = context(state), list = FB.realmWars(state, 'player');
     const w = warId ? FB.ordinaryWarById(state, warId) : c ? current(state, 'player') : list.length === 1 ? list[0] : null;
     if (!w) return false;
+    // Decide before the war closes: the renounced lord must still be alive.
+    const returnLiege = !invalid && FB.independenceReturnLiege ? FB.independenceReturnLiege(state, w) : null;
     const retainedFocus = state.player.focus, retainedBack = state.player.focusBack;
     const result = FB.withOrdinaryWar(state, w.id, function () {
       const flags = state.player.flags || {};
@@ -407,6 +413,7 @@
     });
     w.occupations = {};
     if (w.countyChallenge) FB.finishCountyChallenge(state, w);
+    if (returnLiege) FB.restoreRenouncedLiege(state, returnLiege);
     if (FB.realmWars(state, 'player').length || FB.greatHolyWarCamp(state, 'player')) {
       state.player.focus = retainedFocus; state.player.focusBack = retainedBack;
     } else delete (state.military || {}).player;
@@ -432,6 +439,140 @@
       FB.settleOrdinaryWar(state, other.id, 'invalid');
     });
     return true;
+  };
+
+  /* Player-initiated settlements (docs/designs/war.md). The war balance is a
+     read-only projection from the player's side of occupied objectives, field
+     battles and relative strength. White peace and victory demands may be
+     refused: each attempt spends a day and starts a one-season cooldown on the
+     war record. Conceding objectives and submission are always accepted.
+     Conquest still requires every objective; nothing here awards land to the
+     player. */
+  const PEACE_OFFER_COOLDOWN = 90;
+  const PEACE_DEMAND_BALANCE = 25;
+  function warEnemy(w) { return w.attacker === 'player' ? w.defender : w.attacker; }
+  function peaceOfferCooldown(state, w) {
+    return typeof w.peaceOfferTurn === 'number'
+      ? Math.max(0, w.peaceOfferTurn + PEACE_OFFER_COOLDOWN - state.turn) : 0;
+  }
+  FB.warBalance = function (state, id) {
+    const w = FB.ordinaryWarById(state, id);
+    if (!w || !endpoint(w, 'player')) return null;
+    const need = Math.max(1, Number(FBDATA.balance.warWinsToTakeProvince) || 3);
+    const objectives = w.objectives || [];
+    const occupied = objectives.filter(function (o) {
+      return w.occupations[o.target] && w.occupations[o.target].occupied;
+    }).length;
+    const occupation = objectives.length
+      ? Math.round(50 * occupied / objectives.length) * (w.attacker === 'player' ? 1 : -1) : 0;
+    const battles = Math.round(FB.clamp(((w.wins || 0) - (w.losses || 0)) / need, -1, 1) * 30);
+    const mine = state.realms.player && state.realms.player.alive ? FB.realmStrength(state, 'player') : 0;
+    const theirs = FB.realmStrength(state, warEnemy(w));
+    const strength = Math.round(FB.clamp((Math.max(1, mine) / Math.max(1, theirs) - 1) * 20, -20, 20));
+    return {
+      total:FB.clamp(occupation + battles + strength, -100, 100),
+      occupation:occupation, battles:battles, strength:strength,
+      occupied:occupied, objectives:objectives.length, seasons:w.seasons || 0
+    };
+  };
+  FB.warPeaceOptions = function (state, id) {
+    const w = FB.ordinaryWarById(state, id);
+    const balance = w && FB.warBalance(state, id);
+    if (!balance) return null;
+    const enemy = warEnemy(w);
+    const captive = !!(state.player.flags && state.player.flags.in_prison);
+    const cooldown = peaceOfferCooldown(state, w);
+    const exhaustion = Math.min(1, balance.seasons / 32);
+    const offerReason = captive ? FB.T('You cannot negotiate while held captive.')
+      : cooldown ? FB.T('The enemy will hear another offer in {days} days.', { days:cooldown }) : '';
+    const rebellion = !!(w.defending && w.casus && w.casus.type === 'independence');
+    const out = { balance:balance, enemy:enemy, cooldown:cooldown, rebellion:rebellion,
+      // who the player answers to if this war ends without securing independence
+      returnLiege:FB.independenceReturnLiege ? FB.independenceReturnLiege(state, w) : null,
+      terms:FB.warTermsCost ? FB.warTermsCost(state, w) : null };
+    out.white = {
+      chance:FB.clamp(0.15 + balance.total / 100 * 0.6 + exhaustion * 0.35, 0.02, 0.95),
+      ready:!offerReason, reason:offerReason
+    };
+    const demandReason = offerReason || (balance.total < PEACE_DEMAND_BALANCE
+      ? FB.T('Requires war balance of +{balance}.', { balance:PEACE_DEMAND_BALANCE }) : '');
+    out.demand = {
+      kind:rebellion ? 'recognition' : w.defending ? 'reparations' : 'tribute',
+      gold:rebellion ? 0 : FB.treasuryOffer(state, enemy, 25),
+      prestige:w.defending ? 10 : FB.warPrestigeReward(w, 'tribute'),
+      chance:FB.clamp((balance.total - 20) / 80 * 0.8 + exhaustion * 0.2, 0.05, 0.9),
+      minimum:PEACE_DEMAND_BALANCE, ready:!demandReason, reason:demandReason
+    };
+    if (w.defending && territorial(w) && w.objectives.length) {
+      out.concede = {
+        counties:w.objectives.map(function (o) { return o.target; }),
+        prestige:Math.min(state.player.prestige, 5),
+        ready:!captive, reason:captive ? FB.T('You cannot negotiate while held captive.') : ''
+      };
+    }
+    if (w.defending) {
+      const eligible = FB.withOrdinaryWar(state, id, function () {
+        return FB.submissionOfferEligible ? FB.submissionOfferEligible(state, true) : false;
+      });
+      if (eligible) out.submit = { liege:enemy, prestige:Math.min(state.player.prestige, 15), ready:true };
+    }
+    return out;
+  };
+  FB.proposeWarPeace = function (state, id, kind) {
+    const options = FB.warPeaceOptions(state, id);
+    const option = options && (kind === 'demand' ? options.demand : options.white);
+    if (!option || !option.ready) return null;
+    const w = FB.ordinaryWarById(state, id), enemy = state.realms[options.enemy];
+    w.peaceOfferTurn = state.turn;
+    if (!FB.chance(option.chance)) {
+      FB.news(state, FB.msg(kind === 'demand' ? 'news.war.demand_refused' : 'news.war.white_peace_refused',
+        kind === 'demand' ? '{enemy} refuses your terms. The war goes on.' : '{enemy} refuses peace. The war goes on.',
+        { enemy:enemy ? enemy.name : '' }));
+      return { accepted:false, kind:kind };
+    }
+    let gold = 0, prestige = 0;
+    if (kind === 'demand' && option.kind === 'recognition') {
+      w.independenceSecured = 1;
+      prestige = option.prestige;
+      state.player.prestige += prestige;
+      FB.news(state, FB.msg('news.war.independence_recognized',
+        '👑 {enemy} recognizes your independence and the war ends.', { enemy:enemy ? enemy.name : '' }));
+    } else if (kind === 'demand') {
+      gold = option.gold;
+      if (gold && !FB.treasuryTransfer(state, FB.treasuryCounterparty(state, options.enemy), 'player', gold)) gold = 0;
+      prestige = option.prestige;
+      state.player.prestige += prestige;
+      FB.news(state, FB.msg(option.kind === 'reparations' ? 'news.war.reparations_accepted' : 'news.war.tribute_accepted',
+        option.kind === 'reparations' ? '🕊 {enemy} pays {money:gold} in reparations and the war ends.'
+          : '🕊 {enemy} pays {money:gold} in tribute and the war ends.',
+        { enemy:enemy ? enemy.name : '', gold:gold }), gold ? { outcomeImpacts:[{ type:'gold', amount:gold }] } : undefined);
+    } else {
+      FB.news(state, FB.msg('news.war.white_peace_accepted',
+        '🕊 {enemy} accepts white peace. No land changes hands.', { enemy:enemy ? enemy.name : '' }));
+    }
+    FB.settleOrdinaryWar(state, id, 'white_peace');
+    return { accepted:true, kind:kind, gold:gold, prestige:prestige };
+  };
+  FB.concedeWarObjectives = function (state, id) {
+    const options = FB.warPeaceOptions(state, id);
+    if (!options || !options.concede || !options.concede.ready) return false;
+    const w = FB.ordinaryWarById(state, id);
+    state.player.prestige = Math.max(0, state.player.prestige - options.concede.prestige);
+    FB.news(state, FB.msg('news.war.objectives_conceded',
+      '🏳 You cede {counties} to {enemy} to end the war.', {
+        counties:options.concede.counties.map(function (pid) { return FB.world.byId[pid].name; }).join(', '),
+        enemy:state.realms[options.enemy] ? state.realms[options.enemy].name : ''
+      }));
+    w.objectives.forEach(function (o) {
+      w.occupations[o.target] = Object.assign({}, w.occupations[o.target], { occupied:true });
+    });
+    return finishObjectives(state, w);
+  };
+  FB.submitInWar = function (state, id) {
+    const options = FB.warPeaceOptions(state, id);
+    if (!options || !options.submit) return false;
+    FB.withOrdinaryWar(state, id, function () { FB.fns.war_submit(state, { warId:id }); });
+    return !FB.ordinaryWarById(state, id);
   };
 
   FB.fabricatedClaimsOf = function (state) {

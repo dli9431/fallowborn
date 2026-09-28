@@ -7600,9 +7600,10 @@ window.FB = window.FB || {};
     for (const pid of (p.provs || [])) s += state.dev[pid] || 1;
     return s;
   }
-  FB.submissionOfferEligible = function (state) {
+  FB.submissionOfferEligible = function (state, playerInitiated) {
     const p = state.player, w = p.war;
-    if (!w || !w.defending || w.submissionOffered) return false;
+    // The queued offer comes once per war; the player may still ask to kneel.
+    if (!w || !w.defending || (w.submissionOffered && !playerInitiated)) return false;
     if (p.tier < 4 || (p.flags && p.flags.in_prison)) return false;
     const enemy = state.realms[w.enemy];
     if (!enemy || !enemy.alive) return false;
@@ -7756,6 +7757,8 @@ window.FB = window.FB || {};
       }
     } else if (w.wins >= NEED) {
       if (w.defending) {
+        // a rebel who wins the field keeps the crown they declared
+        w.independenceSecured = 1;
         FB.news(state, FB.msg('news.war.defensive_victory', {
           forms: {
             select: 'value', param: 'named', cases: {
@@ -8258,13 +8261,15 @@ window.FB = window.FB || {};
     if (custom === 'war_accept_tribute') {
       terms.gold = FB.treasuryOffer(state, w.enemy, 25); terms.prestige = FB.warPrestigeReward(w, 'tribute');
     } else if (custom === 'war_terms') {
-      terms.gold = w.defending ? -(15 + 5 * (w.losses || 0)) : 0;
-      terms.prestige = -Math.min(p.prestige, w.defending ? 10 : 8);
+      const cost = FB.warTermsCost(state, w);
+      terms.gold = -cost.gold;
+      terms.prestige = -cost.prestige;
+      if (cost.returnLiege) terms.liege = cost.returnLiege;
     } else if (custom === 'war_negotiated_withdrawal') {
       terms.prestige = -Math.min(p.prestige, 4);
     } else if (custom === 'war_submit') {
       terms.prestige = -Math.min(p.prestige, 15);
-      terms.liege = w.enemy;
+      terms.liege = FB.independenceReturnLiege(state, w) || w.enemy;
       const standing = FB.standingOf ? FB.standingOf(state, { kind:'realm', id:w.enemy }) : 0;
       terms.standing = Math.min(100, standing + 10) - standing;
     } else if (custom === 'war_submission_tribute') {
@@ -8306,14 +8311,69 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.tributeDeclined = 1;
   };
+  /* The price of unilateral peace. Always accepted, so it is deliberately
+     heavy: a defender pays the enemy per rank of its realm and per field
+     defeat; an attacker who abandons the campaign loses prestige and the
+     Popular support of every directly held county. A failed rebellion also
+     returns the player to the renounced lord (FB.independenceReturnLiege). */
+  /* A rebellion is secured only by winning it (or by the sovereign accepting
+     a demand for recognition, w.independenceSecured). Any other ending returns
+     the player to the lord actually renounced when that lord still lives
+     inside the same realm; otherwise to the sovereign fought. Null means the
+     war is not a failed player rebellion. */
+  FB.independenceReturnLiege = function (state, w) {
+    if (!w || !w.defending || !w.casus || w.casus.type !== 'independence' ||
+        w.independenceSecured || w.rebellionSettled) return null;
+    const former = w.casus.formerLiege;
+    if (former && former !== 'player' && state.realms[former] && state.realms[former].alive &&
+        FB.topRealm(state, former) === w.enemy) return former;
+    return state.realms[w.enemy] && state.realms[w.enemy].alive ? w.enemy : null;
+  };
+  FB.restoreRenouncedLiege = function (state, rid) {
+    const p = state.player;
+    if (!rid || !state.realms[rid] || !state.realms[rid].alive) return false;
+    FB.changePlayerLiege(state, rid, 'war:independence_failed');
+    if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
+    state.realms.player.liege = rid;
+    const top = FB.topRealm(state, rid);
+    for (const pid of (p.provs || [])) { state.owner[pid] = top; state.holder[pid] = 'player'; }
+    for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = top;
+    FB.invalidateRealmCache();
+    FB.news(state, FB.msg('news.war.independence_failed',
+      '🛡 The rebellion ends. You kneel again to {liege}.', { liege:state.realms[rid].name }));
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    FB.checkTierPromotions(state);
+    return true;
+  };
+  FB.warTermsCost = function (state, w) {
+    const p = state.player, b = FBDATA.balance;
+    if (!w) return null;
+    const enemy = state.realms[w.enemy];
+    const returnLiege = FB.independenceReturnLiege ? FB.independenceReturnLiege(state, w) : null;
+    if (w.defending) {
+      const gold = Math.max(b.warBuyPeaceMinGold || 50,
+        (b.warBuyPeaceGoldPerRank || 40) * ((enemy && enemy.rank) || 1) +
+        (b.warBuyPeaceGoldPerLoss || 10) * (w.losses || 0));
+      return { gold:gold, prestige:Math.min(p.prestige, b.warBuyPeacePrestige || 20),
+        support:0, counties:[], returnLiege:returnLiege };
+    }
+    return { gold:0, prestige:Math.min(p.prestige, b.warWithdrawPrestige || 30),
+      support:b.warWithdrawCountySupport || -5, counties:(p.provs || []).slice(), returnLiege:null };
+  };
+  FB.fns.war_terms_affordable = function (state) {
+    const w = state.player.war, cost = FB.warTermsCost(state, w);
+    return !!cost && state.player.gold >= cost.gold;
+  };
   FB.fns.war_terms = function (state) {
     const p = state.player;
     const w = p.war; if (!w) return;
     const enemy = state.realms[w.enemy];
+    const terms = FB.warTermsCost(state, w);
     if (w.defending) {
-      const cost = 15 + 5 * (w.losses || 0);
+      const cost = terms.gold;
+      if (p.gold < cost) return false;
       FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, w.enemy), cost, true);
-      p.prestige = Math.max(0, p.prestige - 10);
+      p.prestige = Math.max(0, p.prestige - terms.prestige);
       FB.news(state, FB.msg('news.war.peace_bought', {
         forms: {
           select: 'value', param: 'named', cases: {
@@ -8323,7 +8383,8 @@ window.FB = window.FB || {};
         }
       }, { named: enemy ? 'yes' : 'other', enemy: enemy ? enemy.name : '', cost: cost }));
     } else {
-      p.prestige = Math.max(0, p.prestige - 8);
+      p.prestige = Math.max(0, p.prestige - terms.prestige);
+      terms.counties.forEach(function (pid) { FB.adjustCountySupport(state, pid, terms.support); });
       FB.news(state, FB.msg('news.war.abandoned',
         '🕊 The campaign is abandoned. The banners come home.', {}));
     }
@@ -8356,7 +8417,9 @@ window.FB = window.FB || {};
     const p = state.player, w = p.war;
     if (!w || !FB.fns.war_submission_valid(state)) return;
     const enemy = state.realms[w.enemy]; if (!enemy || !enemy.alive) return;
-    const rid = w.enemy;
+    // A rebel who kneels returns to the lord renounced, not over their head.
+    const rid = FB.independenceReturnLiege(state, w) || w.enemy;
+    w.rebellionSettled = 1; // the oath below replaces the generic return
     FB.endPlayerWar(state);
     FB.changePlayerLiege(state, rid, 'war:submission');
     if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);

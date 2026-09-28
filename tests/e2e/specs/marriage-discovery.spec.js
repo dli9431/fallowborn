@@ -438,11 +438,14 @@ test('travel review keeps decision terms visible and calculations in Details', a
     try { FB.ui.showSocialVisit(window.discoveryChildId, { courtship:true }); }
     finally { FB.socialVisitPreview = original; }
   });
-  const summary = page.locator('.social-visit-summary');
-  await expect(summary).toContainText('Cost: 3 gold upfront');
-  await expect(summary).toContainText('9 travel days each way; minimum stay 90 days');
-  await expect(summary).toContainText('204 days from departure');
-  await expect(summary).toContainText('Marriage is not guaranteed');
+  const summary = page.locator('[data-social-visit-summary]');
+  await expect(summary.locator('canvas.pface')).toHaveCount(1);
+  await expect(summary).toContainText('3 gold upfront');
+  await expect(summary).toContainText('9 days each way');
+  await expect(summary).toContainText('90 days');
+  await expect(summary).toContainText('About 204 days from departure');
+  await expect(summary).toContainText('Not guaranteed');
+  await expect(page.locator('#gm-body .gm-footer #social-visit-cancel')).toHaveCount(1);
   await expect(page.locator('#gm-title-details')).toBeHidden();
   await page.locator('.modal-title-info').click();
   await expect(page.locator('#gm-title-details')).toBeVisible();

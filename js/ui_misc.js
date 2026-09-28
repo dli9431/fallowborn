@@ -770,7 +770,10 @@ window.FB = window.FB || {};
         '">' + esc(linkedRealm.name) + '</button>';
       html = html.split(entry.token).join(link);
     }
-    return html;
+    /* Link buttons are atomic inlines, so a line may break between a realm
+       name and the punctuation after it. Keep the two together. */
+    return html.replace(/(<button type="button" class="linklike war-realm-link"[^>]*>[^<]*<\/button>)([^\s<]+)/g,
+      '<span class="war-realm-nowrap">$1$2</span>');
   };
   function foreignPolicyStatusText(s, rid) {
     const truce = FB.truceText && FB.truceText(s, 'player', rid);
@@ -1424,6 +1427,63 @@ window.FB = window.FB || {};
     return h;
   }
   UI.personAssignmentCard = personAssignmentCard;
+
+  /* Shared decision-review layout. Facts sit in a Governance-style card of
+     label/value rows, named people keep their portraits, and every gameplay
+     action is a full-width card whose short cost or state stays on its face
+     while the consequence audit lives in the shared Details tooltip or ?
+     disclosure. A disabled action's card stays focusable for keyboard users. */
+  function rawKv(label, valueHtml) {
+    return '<div class="kv"><span>' + esc(label) + '</span><b>' + valueHtml + '</b></div>';
+  }
+  function reviewFactsCard(title, bodyHtml, attrs) {
+    return '<section class="governance-card review-fact-card"' + (attrs || '') + '>' +
+      (title ? '<h4>' + esc(title) + '</h4>' : '') + bodyHtml + '</section>';
+  }
+  function reviewPersonHtml(person, role, id) {
+    const inner = '<span class="large-list-row-main">' + FB.faceTag(person, 34, 40) +
+      '<span class="large-list-row-copy"><span class="large-list-row-title">' +
+      esc(FB.fullName(person)) + '</span>' +
+      (role ? '<span class="adesc">' + esc(role) + '</span>' : '') + '</span></span>';
+    return id
+      ? '<button type="button" class="actionbtn large-list-row review-person" id="' +
+        esc(id) + '">' + inner + '</button>'
+      : '<div class="large-list-row review-person">' + inner + '</div>';
+  }
+  function reviewPeopleHtml(rows) {
+    return rows ? '<div class="review-people">' + rows + '</div>' : '';
+  }
+  function reviewActionCardHtml(opts) {
+    const detailsId = opts.detailsId || (opts.id ? opts.id + '-details' : '');
+    const hasDetails = !!(opts.details && detailsId);
+    let attrs = opts.id ? ' id="' + esc(opts.id) + '"' : '';
+    const data = opts.data || {};
+    for (const key in data) {
+      if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+      attrs += ' data-' + String(key).replace(/([A-Z])/g, '-$1').toLowerCase() +
+        '="' + esc(data[key]) + '"';
+    }
+    if (hasDetails) {
+      attrs += ' data-action-tooltip data-tooltip-anchor="control" aria-describedby="' +
+        esc(detailsId) + '"';
+    }
+    return '<div class="settcard modal-action-card review-action-card"' +
+      (opts.disabled && hasDetails ? ' tabindex="0" aria-describedby="' + esc(detailsId) + '"' : '') +
+      '><div class="settcard-head"><button type="button" class="actionbtn' +
+      (opts.danger ? ' danger' : '') + '"' + attrs + (opts.disabled ? ' disabled' : '') + '>' +
+      (opts.labelHtml || esc(opts.label)) +
+      (opts.note ? '<span class="adesc' + (opts.warn ? ' review-note-warn' : '') + '">' +
+        esc(opts.note) + '</span>' : '') + '</button>' +
+      (hasDetails ? '<span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+        esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span>' : '') + '</div>' +
+      (hasDetails ? '<div class="settcard-details hidden" id="' + esc(detailsId) + '">' +
+        opts.details + '</div>' : '') + '</div>';
+  }
+  function reviewActionsHtml(cardsHtml) {
+    return cardsHtml ? '<div class="modal-body-actions review-actions">' + cardsHtml + '</div>' : '';
+  }
 
   const INTERACTION_GROUP_ORDER = [
     'relationship', 'gift', 'travel', 'diplomacy',
@@ -5221,6 +5281,12 @@ window.FB = window.FB || {};
   SH.openModal = openModal;
   SH.panelh = panelh;
   SH.personAssignmentCard = personAssignmentCard;
+  SH.rawKv = rawKv;
+  SH.reviewFactsCard = reviewFactsCard;
+  SH.reviewPersonHtml = reviewPersonHtml;
+  SH.reviewPeopleHtml = reviewPeopleHtml;
+  SH.reviewActionCardHtml = reviewActionCardHtml;
+  SH.reviewActionsHtml = reviewActionsHtml;
   SH.positionDesc = positionDesc;
   SH.positionEffectText = positionEffectText;
   SH.positionName = positionName;
