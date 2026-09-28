@@ -3003,7 +3003,7 @@ The shop exposes a keyboard-accessible native Regional arms and armor disclosure
 
 ## Marriage finder and diplomatic partners
 
-**Find a marriage...** appears in the Deeds **Seek a match** route chooser,
+**Find a marriage...** appears in rulers' Deeds **Seek a match** route chooser,
 and descendant match pickers, and managed descendant character sheets. A descendant
 entry preselects that person. The modal uses native labeled search, number, select,
 and checkbox controls in the existing scrolling bottom sheet, with full-width
@@ -3018,8 +3018,10 @@ future negotiation benefits, and the existing personal royal-marriage alliance r
 New display text routes through `FB.T`; catalogs remain integration-owned.
 
 
-The Deeds **Seek a match** entry first offers local prospects or **Find a dynastic
-match**. Choosing the route spends nothing and does not refresh prospects; only
+The Deeds **Seek a match** entry offers local prospects to everyone, with **Find a
+dynastic match** also available to rulers (Baron or higher). Non-rulers have no
+dynastic button, explanatory text or `W` shortcut; `Q` still seeks local prospects.
+Choosing the route spends nothing and does not refresh prospects; only
 choosing local matchmaking invokes the existing search and cooldown. The separate
 Deeds finder button is removed. Descendant shortcuts remain available; Kin has no
 standalone finder button above the family list.

@@ -9795,19 +9795,22 @@ window.FB = window.FB || {};
 
   UI.showMatchChoices = function () {
     if (!FB.state || UI.eventsBusy()) return;
+    const ruler = FB.state.player.tier >= 3;
     openModal(FB.T('Seek a match'),
       '<div class="gm-list"><button class="btn actionbtn" id="match-local">' +
       esc(FB.T('Seek a match')) + '</button><p class="hint">' +
       esc(FB.T('Meet three or four local prospects.')) +
-      '</p><button class="btn actionbtn" id="match-dynastic">' +
+      '</p>' + (ruler ? '<button class="btn actionbtn" id="match-dynastic">' +
       esc(FB.T('Find a dynastic match')) + '</button><p class="hint">' +
       esc(FB.T('Browse courts for yourself or your family.')) +
-      '</p></div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>',
+      '</p>' : '') + '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>',
       { historyView:true });
     $('match-local').onclick = function () {
       FB.runInstant(FB.state, 'seek_match', { localMatch:true });
     };
-    $('match-dynastic').onclick = function () { UI.showMarriageFinder(null, null); };
+    if ($('match-dynastic')) $('match-dynastic').onclick = function () {
+      if (FB.state && FB.state.player.tier >= 3) UI.showMarriageFinder(null, null);
+    };
     $('gm-cancel').onclick = function () { modalHistoryBack(UI.closeModal); };
   };
 

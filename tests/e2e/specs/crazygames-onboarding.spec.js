@@ -258,6 +258,7 @@ for (const viewport of [
         .toHaveClass(/coachmark-lit/);
       await page.locator('[data-action-id="seek_match"]').click();
       await expect(page.locator('#match-local')).toBeVisible();
+      await expect(page.locator('#match-dynastic')).toHaveCount(0);
       expect(await page.evaluate(function () {
         return { deed:!!FB.state.player.flags.tut_deed,
           courting:FB.state.player.courtingId || null,

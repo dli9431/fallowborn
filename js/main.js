@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.186.1';
+FB.VERSION = '1.186.2';
 FB.CHANGELOG = [
+  { v: '1.186.2', date: '2026-09-28', changes: [
+    'Seek a match now offers dynastic searches only to rulers of Baron rank or higher.'
+  ] },
   { v: '1.186.1', date: '2026-09-28', changes: [
     'Daily Focus animations show work on the Play button, and household service appointments account for role-specific traits.',
     'CrazyGames prepares the opening world from the title, adds business reviews, live household goals and Continue previews, and resumes time after events by default for new preferences.'

@@ -52,9 +52,10 @@ for (const width of [320, 390, 528]) {
   });
 }
 
-test('match choices expose Q and W action shortcuts for local and dynastic searches', async function ({ page }) {
+test('ruler match choices expose Q and W action shortcuts for local and dynastic searches', async function ({ page }) {
   await page.evaluate(function () {
     FB.game.setPaused(true);
+    FB.setPlayerTier(FB.state, 3);
     window.matchShortcutCalls = [];
     window.matchOriginalInstant = FB.runInstant;
     FB.runInstant = function (state, id, options) {
@@ -345,9 +346,10 @@ test('descendant sheets link to the preselected finder without changing the game
 });
 
 
-test('seek a match chooses a route before generating prospects', async function ({ page }) {
+test('rulers seek a match by choosing a route before generating prospects', async function ({ page }) {
   const before = await page.evaluate(function () {
     const s = FB.state;
+    FB.setPlayerTier(s, 3);
     if (s.player.cooldowns) delete s.player.cooldowns.seek_match;
     const before = { state:JSON.stringify(s), rng:FB.getRngState() };
     FB.runInstant(s, 'seek_match');
@@ -365,6 +367,47 @@ test('seek a match chooses a route before generating prospects', async function 
   const count = await page.locator('[data-suitor-card]').count();
   expect(count).toBeGreaterThanOrEqual(3);
   expect(count).toBeLessThanOrEqual(4);
+});
+
+for (const tier of [0, 1, 2]) {
+  test('non-ruler tier ' + tier + ' sees only local matchmaking in Seek a match', async function ({ page }) {
+    const before = await page.evaluate(function (tier) {
+      const s = FB.state;
+      FB.game.setPaused(true);
+      FB.setPlayerTier(s, tier);
+      if (s.player.cooldowns) delete s.player.cooldowns.seek_match;
+      const before = {state:JSON.stringify(s),rng:FB.getRngState()};
+      FB.runInstant(s, 'seek_match');
+      return before;
+    }, tier);
+    await expect(page.locator('#match-local')).toBeVisible();
+    await expect(page.locator('#match-local .keyhint')).toHaveText('Q');
+    await expect(page.locator('#match-dynastic')).toHaveCount(0);
+    await expect(page.locator('#gm-body')).not.toContainText('Browse courts for yourself or your family.');
+    await page.keyboard.press('w');
+    await expect(page.locator('#finder-subject')).toHaveCount(0);
+    await expect(page.locator('#match-local')).toBeVisible();
+    expect(await page.evaluate(function () {
+      return {state:JSON.stringify(FB.state),rng:FB.getRngState()};
+    })).toEqual(before);
+    await page.keyboard.press('q');
+    const count = await page.locator('[data-suitor-card]').count();
+    expect(count).toBeGreaterThanOrEqual(3);
+    expect(count).toBeLessThanOrEqual(4);
+  });
+}
+
+test('a stale ruler match choice cannot open the dynastic finder after losing rank', async function ({ page }) {
+  await page.evaluate(function () {
+    FB.game.setPaused(true);
+    FB.setPlayerTier(FB.state, 3);
+    FB.ui.showMatchChoices();
+  });
+  await expect(page.locator('#match-dynastic')).toBeVisible();
+  await page.evaluate(function () { FB.setPlayerTier(FB.state, 2); });
+  await page.locator('#match-dynastic').click();
+  await expect(page.locator('#finder-subject')).toHaveCount(0);
+  await expect(page.locator('#match-local')).toBeVisible();
 });
 
 test('all court candidates have portraits without materializing characters', async function ({ page }) {

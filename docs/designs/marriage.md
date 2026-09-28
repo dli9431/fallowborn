@@ -48,7 +48,8 @@ Standalone marriage terms and culture invitations have no parent: Back is disabl
 and Close dismisses them.
 
 The Seek a match choice sheet uses the standard action shortcuts: `Q` seeks
-local prospects and `W` opens the dynastic marriage finder. Desktop buttons display
+local prospects and, for rulers (Baron or higher), `W` opens the dynastic marriage
+finder. Non-rulers have no dynastic option, description or `W` shortcut. Desktop buttons display
 their letter badges; candidate lists never receive shortcuts. Back retains the
 ordinary modal-history behavior.
 
@@ -529,8 +530,9 @@ ordinary close-family weddings can improve later defensive-alliance negotiations
 (see the diplomacy design). They do not grant descendant weddings an automatic alliance.
 
 
-The Deeds **Seek a match** entry first offers local prospects or **Find a dynastic
-match**. Choosing the route spends nothing and does not refresh prospects; only
+The Deeds **Seek a match** entry offers local prospects to everyone, with **Find a
+dynastic match** also available to rulers (Baron or higher). Choosing the route
+spends nothing and does not refresh prospects; only
 choosing local matchmaking invokes the existing search and cooldown. The separate
 Deeds finder button is removed. Descendant shortcuts remain available; the standalone
 Kin finder button is removed.
