@@ -21254,10 +21254,26 @@ window.FB = window.FB || {};
       esc(detailsId) + '">' + details + '</div></div>';
   }
 
-  UI.showEnterpriseRequirements = function (type, settlement, returnContext) {
+  /* origin: the control to refocus on close. The coachmark passes none, so
+     closing never scrolls Deeds away from the deed it pointed at. */
+  UI.showRecommendedEnterprise = function (origin) {
+    if (!FB.platform.isCrazyGames || !FB.state || FB.state.player.dead) return;
+    const goal = UI.crazyGamesObjective(FB.state);
+    if (!goal || goal.id !== 'enterprise') {
+      UI.toast('Your household’s next objective has changed.');
+      UI.refresh();
+      return;
+    }
+    UI.showEnterpriseRequirements(goal.type, goal.settlement, null,
+      { returnFocus:origin || null });
+  };
+
+  UI.showEnterpriseRequirements = function (type, settlement, returnContext, purchaseReview, replaceView) {
     const s = FB.state;
+    const protagonist = s.player.charId;
+    const provinceId = s.player.provinceId;
     const status = FB.enterprisePurchaseStatus(
-      s, type, s.player.provinceId, settlement);
+      s, type, provinceId, settlement);
     if (!status.def) return;
     const name = dt(s, 'enterprise', type, status.def, 'name');
     const place = status.site ? status.site.name : FB.T('Unknown place');
@@ -21301,12 +21317,61 @@ window.FB = window.FB || {};
           })) + '</button>';
       }
     }
+    if (purchaseReview) {
+      const preview = { type:type, provinceId:provinceId, settlement:settlement };
+      h += '<section class="governance-card review-fact-card">' +
+        kv('Purchase price', esc(FB.money(status.cost))) +
+        kv('Your funds', esc(FB.money(status.funds))) +
+        kv('Eligible workers', esc(String(status.workers.length))) +
+        kv('Base seasonal income', esc(FB.money(status.def.yield || 0))) +
+        '</section>' + reviewActionsHtml(reviewActionCardHtml({
+          id:'enterprise-review-buy', label:FB.T('Buy {enterprise}', { enterprise:name }),
+          disabled:!status.ready,
+          note:status.ready ? FB.T('Costs {money:cost} and one deed day.', { cost:status.cost })
+            : status.primary.reason,
+          warn:!status.ready,
+          details:assetEffectSummary({
+            scope:enterprisePlace(s, preview),
+            setupCost:assetMoneyCost(status.cost, status.shortfall <= 0.000001),
+            recurringCost:enterpriseRecurringCost(),
+            effect:enterpriseEffectText(s, preview, status.def, true),
+            transferRule:enterpriseTransferRule(), expiry:FB.T('No fixed end')
+          })
+        }));
+    }
     h += '<div class="gm-footer"><button type="button" class="btn" ' +
-      'id="enterprise-requirements-back">' + esc(FB.T('Back')) +
+      'id="enterprise-requirements-back">' +
+      esc(FB.T(purchaseReview ? 'Close' : 'Back')) +
       '</button></div>';
-    openModal(FB.T('{enterprise} requirements', { enterprise:name }), h, {
-      historyView:true
+    openModal(purchaseReview ? FB.T('Review {enterprise}', { enterprise:name })
+      : FB.T('{enterprise} requirements', { enterprise:name }), h, {
+      historyView:true, replaceView:!!replaceView,
+      returnFocus:purchaseReview ? purchaseReview.returnFocus : null
     });
+    if (purchaseReview) {
+      $('enterprise-review-buy').addEventListener('click', function () {
+        if (s !== FB.state || s.player.charId !== protagonist || s.player.dead ||
+            s.player.provinceId !== provinceId) {
+          UI.closeModal();
+          UI.toast('Your household’s next objective has changed.');
+          return;
+        }
+        const live = FB.enterprisePurchaseStatus(s, type, provinceId, settlement);
+        if (!live.ready || live.cost !== status.cost ||
+            live.workers.map(function (w) { return w.id; }).join('|') !==
+              status.workers.map(function (w) { return w.id; }).join('|') ||
+            live.warnings.map(function (w) { return w.code; }).join('|') !==
+              status.warnings.map(function (w) { return w.code; }).join('|')) {
+          UI.toast('Enterprise requirements changed. Review the updated status.');
+          UI.showEnterpriseRequirements(type, settlement, returnContext, purchaseReview, true);
+          return;
+        }
+        if (!FB.buyEnterprise(s, type, settlement)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+        UI.refresh();
+      });
+    }
     document.querySelectorAll('[data-enterprise-requirement-tech]').forEach(
       function (button) {
         button.addEventListener('click', function () {
@@ -21314,6 +21379,7 @@ window.FB = window.FB || {};
         });
       });
     $('enterprise-requirements-back').addEventListener('click', function () {
+      if (purchaseReview) { UI.closeModal(); return; }
       modalHistoryBack(function () {
         UI.showEnterpriseMarket(settlement, returnContext);
         setTimeout(function () {
@@ -25186,6 +25252,29 @@ window.FB = window.FB || {};
       first:serviceSkillName(def.training[0]), second:serviceSkillName(def.training[1])
     });
   }
+  function serviceTraitRule() {
+    return FB.T('Role-specific traits adjust each required skill by at most 2 points either way, in addition to their usual stat effects. Experience, literacy and Standing still apply.');
+  }
+  function serviceQualificationHtml(s, status) {
+    const fit = status.qualification;
+    if (!fit.skills.length) return '';
+    const bonus = (fit.traitBonus > 0 ? '+' : '') + fit.traitBonus;
+    const traits = fit.traits.map(function (item) {
+      return FB.T('{trait} {amount}', {
+        trait:dt(s, 'trait', item.id, FBDATA.traits[item.id], 'name'),
+        amount:(item.amount > 0 ? '+' : '') + item.amount
+      });
+    });
+    let h = '<div data-service-qualification>' + kv('Trait fit', esc(bonus));
+    if (traits.length) h += kv('Contributing traits', esc(traits.join(' · ')));
+    for (const check of fit.skills) {
+      h += kv(serviceSkillName(check.id), esc(FB.T(
+        '{total} / {required} required (skill {skill}, trait fit {traits})', {
+          total:check.total, required:check.required, skill:check.value, traits:bonus
+        })));
+    }
+    return h + '</div>';
+  }
   function serviceDecisionHtml(label, enabled, detailsHtml) {
     return reviewActionsHtml(reviewActionCardHtml({
       id:'service-confirm', detailsId:'service-decision-details', label:label,
@@ -25209,7 +25298,8 @@ window.FB = window.FB || {};
     let details = '<b>' + esc(label) + '</b><div>' + esc(serviceRoleDescription(s, id)) + '</div>' +
       '<div>' + esc(FB.T('Pay: {pay}; paid daily.', { pay:servicePayText(def) })) + '</div>' +
       '<div>' + esc(FB.T('Value to patron: {money:value} per 90 working days after your pay.', { value:def.value })) + '</div>' +
-      '<div>' + esc(FB.T('Training: {skills}.', { skills:serviceTrainingText(def) })) + '</div>';
+      '<div>' + esc(FB.T('Training: {skills}.', { skills:serviceTrainingText(def) })) + '</div>' +
+      serviceQualificationHtml(s, offer);
     if (!current && offer.missing.length) {
       details += '<div>' + esc(FB.T('Unmet: {requirements}', { requirements:offer.missing.join(' ') })) + '</div>';
     }
@@ -25291,7 +25381,8 @@ window.FB = window.FB || {};
     h += '</div><div class="gm-footer"><button type="button" class="btn" id="service-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Service household'), h, {modalClass:'fullsheet-modal household-service-modal',historyView:true,replaceView:!!replace,
       noFocus:!!view, titleDetailsHtml:'<p>' + esc(FB.T('Earn a place in your local lord’s household through useful work. Service does not change your station or free your family.')) + '</p><p>' +
-        esc(FB.T('Promotions require completed work, relevant skills and Standing. Every 90 working days improves Standing with the patron and officer, offers training and covers one ordinary labor duty within the next 180 days. Taxes and extraordinary dues remain payable.')) + '</p><p>' +
+        esc(FB.T('Promotions require completed work, relevant skills, trait fit and Standing. Every 90 working days improves Standing with the patron and officer, offers training and covers one ordinary labor duty within the next 180 days. Taxes and extraordinary dues remain payable.')) + '</p><p>' +
+        esc(serviceTraitRule()) + '</p><p>' +
         esc(FB.T('Travel, captivity and campaigning pause service. A new patron must renew your appointment. Moving home or becoming a landed ruler ends it. Your heir does not inherit the job.')) + '</p>'});
     FB.paintFaces($('gm-body'), s);
     const root = $('gm-body').querySelector('[data-service-list]');
@@ -25340,6 +25431,10 @@ window.FB = window.FB || {};
         kv('Each 90 working days', esc(FB.T('+2 Standing with the patron, +3 with the officer')));
     }
     h += '</section>';
+    if (!leaving && status.qualification.skills.length) {
+      h += '<section class="governance-card review-fact-card"><h4>' + esc(FB.T('Appointment fit')) +
+        '</h4>' + serviceQualificationHtml(s, status) + '</section>';
+    }
     if (!leaving && status.missing.length) {
       h += '<section class="governance-card review-fact-card"><h4>' + esc(FB.T('Unmet requirements')) +
         '</h4><ul class="review-list review-list-risk service-requirements">' + status.missing.map(function (reason) {
@@ -25353,6 +25448,7 @@ window.FB = window.FB || {};
         : FB.T('The appointment changes now. One day passes without focus earnings or service progress.')) + '</p>') +
       '</div><div class="gm-footer"><button type="button" class="btn" id="service-cancel">' + esc(FB.T('Not now')) + '</button></div>';
     let details = '<p>' + esc(serviceRoleDescription(s, roleId)) + '</p><p>' +
+      esc(serviceTraitRule()) + '</p><p>' +
       esc(FB.T('Value to patron: {money:value} per 90 working days after your pay.', { value:def.value })) + '</p><p>' +
       esc(FB.T('Each 90 working days: +2 Standing with the patron, +3 with the household officer, and a 50% chance of gaining one point in the next training skill.')) + '</p><p>' +
       esc(FB.T('Each completed term covers one ordinary labor duty within 180 days. Taxes and extraordinary dues remain payable. Every 180 working days brings a household responsibility to resolve.')) + '</p>';

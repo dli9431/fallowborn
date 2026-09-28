@@ -7853,11 +7853,32 @@ window.FB = window.FB || {};
       default: return FB.T('Drill the household guard');
     }
   };
+  function serviceQualification(state, c, def) {
+    const out = {traitBonus:0, traits:[], skills:[]};
+    if (!c || !def) return out;
+    const weights = def.traitFit || {};
+    for (const id of Object.keys(weights)) {
+      if (!FBDATA.traits[id] || c.traits.indexOf(id) < 0) continue;
+      const amount = weights[id];
+      if (typeof amount !== 'number' || !isFinite(amount) || !amount) continue;
+      out.traits.push({id:id, amount:amount});
+      out.traitBonus += amount;
+    }
+    out.traitBonus = FB.clamp(out.traitBonus, -2, 2);
+    for (const skill of Object.keys(def.skills)) {
+      const value = FB.skillSnapshot(state, c, skill);
+      const total = Math.max(0, value + out.traitBonus);
+      out.skills.push({id:skill, value:value, total:total,
+        required:def.skills[skill], met:total >= def.skills[skill]});
+    }
+    return out;
+  }
   FB.householdServiceStatus = function (state, roleId) {
     const p = state.player, c = state.chars[p.charId];
     const r = FB.householdServiceRecord(state), patron = servicePatron(state);
     const def = roleId && serviceDef(roleId);
     const out = { record:r, patron:patron, definition:def, missing:[], ready:false,
+      qualification:serviceQualification(state, c, def),
       workReady:false, reason:'', renewal:!!(r && r.status !== 'ended' && roleId === r.roleId &&
         (r.status === 'review' || r.employerId !== (patron && patron.id))) };
     if (!c || c.dead || p.dead) out.reason = FB.T('This life has ended.');
@@ -7886,10 +7907,12 @@ window.FB = window.FB || {};
       if (r && r.status === 'active' && r.roleId === roleId && matching) out.missing.push(FB.T('You already hold this appointment.'));
       if (def.maleOnly && c && c.sex !== 'm') out.missing.push(FB.T('This household guard appointment is available to men.'));
       if (def.lettered && c && c.traits.indexOf('literate') < 0) out.missing.push(FB.T('Requires Lettered. Tally assistance teaches letters after 720 working days.'));
-      for (const skill of Object.keys(def.skills)) {
-        if (c && FB.skillOf(c, skill) < def.skills[skill]) {
+      for (const check of out.qualification.skills) {
+        if (!check.met) {
           const names = {ste:FB.T('Stewardship'),lea:FB.T('Learning'),mar:FB.T('Martial'),dip:FB.T('Diplomacy')};
-          out.missing.push(FB.T('Requires {skill} {value}.', {skill:names[skill], value:def.skills[skill]}));
+          out.missing.push(FB.T('Requires {skill} {value} after trait fit; current {current}.', {
+            skill:names[check.id], value:check.required, current:check.total
+          }));
         }
       }
       // Appointment experience belongs to this life; renewal retains it, and

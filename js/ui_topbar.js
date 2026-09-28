@@ -153,10 +153,118 @@ window.FB = window.FB || {};
     return h;
   }
 
+  /* The Play button shows one decorative scene of the current Daily Focus.
+     Its CSS loop runs only while days pass, so pressing Play visibly sets the
+     character to work. The label and scene are separate retained children:
+     label updates never restart the animation. */
+  const focusArtKinds = {
+    study:'studying', play:'play', rest:'rest', pray:'prayer', work_land:'fieldwork',
+    market:'market', keep_house:'household', trade_run:'caravan', practice_physic:'physic',
+    craft_work:'crafting', keep_records:'writing', copy_books:'writing',
+    scholarly_work:'studying', militia:'training', drill:'training',
+    train_arms:'training', stand_guard:'guard', serve_church:'faithful',
+    manage_manor:'manor', serve_lord:'hall', courtly_graces:'court', lead_host:'command',
+    scheming:'intrigue', shepherd_diocese:'diocese', administer_temporalities:'temporalities',
+    govern:'govern', patronize:'patronage'
+  };
+  const serviceFocusArtKinds = {
+    helper:'service', storekeeper:'household', reeve:'manor', steward:'manor',
+    tally:'writing', clerk:'writing', tutor:'tutoring', carrier:'carrying',
+    buyer:'market', factor:'caravan', watch:'guard', guard:'guard',
+    sergeant:'training', captain:'training'
+  };
+  const tenureFocusArtKinds = {
+    latin_manorial:'fieldwork', irrigated_fellah:'irrigation',
+    norse_coastal_service:'boats', pastoral_steppe:'herding',
+    woodland_dependence:'woodland', pagan_household_service:'service',
+    dependent_farming:'fieldwork'
+  };
+  let endTurnLabel = null, endTurnHtml = '', focusArt = null, focusArtFitKey = '';
+  function endTurnParts() {
+    const btn = $('btn-endturn');
+    if (!endTurnLabel || endTurnLabel.parentNode !== btn) {
+      btn.textContent = '';
+      endTurnLabel = document.createElement('span');
+      endTurnLabel.className = 'endturn-label';
+      focusArt = document.createElement('span');
+      focusArt.id = 'focus-art';
+      focusArt.className = 'focus-art';
+      focusArt.setAttribute('aria-hidden', 'true');
+      btn.appendChild(endTurnLabel);
+      btn.appendChild(focusArt);
+      endTurnHtml = '';
+      focusArtFitKey = '';
+    }
+    return btn;
+  }
+  function setEndTurnLabel(html) {
+    endTurnParts();
+    if (endTurnHtml !== html) endTurnLabel.innerHTML = endTurnHtml = html;
+  }
+  function currentFocusArt(s) {
+    const game = FB.game;
+    if (!s || !s.player || s.player.dead || s.player.travel ||
+        (game && (game.observe || game.pickMode))) return '';
+    const id = s.player.focus;
+    let kind = '';
+    if (id !== 'toil') {
+      kind = Object.prototype.hasOwnProperty.call(focusArtKinds, id) ? focusArtKinds[id] : '';
+    } else {
+      const service = FB.householdServiceRecord && FB.householdServiceRecord(s);
+      const tenure = FB.activeSerfTenure && FB.activeSerfTenure(s);
+      if (service && service.status === 'active') {
+        kind = Object.prototype.hasOwnProperty.call(serviceFocusArtKinds, service.roleId)
+          ? serviceFocusArtKinds[service.roleId] : '';
+      } else if (!tenure) kind = 'fieldwork';
+      else if (Object.prototype.hasOwnProperty.call(tenureFocusArtKinds, tenure.archetypeId)) {
+        kind = tenureFocusArtKinds[tenure.archetypeId];
+      }
+    }
+    if (kind && FB.focusStatus && !FB.focusStatus(s, id).can) kind = '';
+    return kind;
+  }
+  function refreshFocusArtClock() {
+    if (!focusArt) return;
+    const game = FB.game;
+    focusArt.classList.toggle('is-playing', !!(game && !game.paused &&
+      !game.fastForwarding && !game.observe && !game.pickMode && !document.hidden));
+  }
+  /* Show the scene only where the label still fits beside it: first with the
+     Space keyhint, then without it (Space stays in the keyboard help). Layout
+     is measured only when the scene, label, or viewport changes. */
+  function refreshFocusArt(s) {
+    const btn = endTurnParts();
+    const kind = currentFocusArt(s);
+    if (focusArt.getAttribute('data-focus-art') !== kind) focusArt.setAttribute('data-focus-art', kind);
+    const fitKey = kind && [kind, endTurnHtml, window.innerWidth, window.innerHeight].join('|');
+    if (fitKey !== focusArtFitKey) {
+      focusArtFitKey = fitKey;
+      btn.classList.remove('has-focus-art', 'focus-art-compact');
+      // A hidden time bar has no width to measure: try again on a later refresh.
+      if (kind && !btn.clientWidth) focusArtFitKey = '';
+      else if (kind) {
+        const fits = function () { return endTurnLabel.scrollWidth <= endTurnLabel.clientWidth + 1; };
+        btn.classList.add('has-focus-art');
+        if (!fits()) {
+          btn.classList.add('focus-art-compact');
+          if (!fits()) btn.classList.remove('has-focus-art', 'focus-art-compact');
+        }
+      }
+    }
+    refreshFocusArtClock();
+  }
+  document.addEventListener('visibilitychange', refreshFocusArtClock);
+  window.addEventListener('resize', function () {
+    if (focusArtFitKey) refreshFocusArt(FB.state);
+  });
+
   SH.crestKey = '';
   function refreshNow(liveTick) {
     const s = FB.state;
-    if (!s || s.player.dead) return;
+    if (!s || s.player.dead) {
+      if (s && focusArt) refreshFocusArt(s);
+      return;
+    }
     if (UI.isMapFilterOverlayOpen && UI.isMapFilterOverlayOpen() &&
         UI.renderMapFilterOverlay) UI.renderMapFilterOverlay();
     // the fast-forward button's F hotkey badge (desktop only) — rendered every
@@ -170,8 +278,9 @@ window.FB = window.FB || {};
       $('tb-date').innerHTML = '<span class="mono">' + esc(FB.T('{season} {day} · {year} AD', {
         season: FB.seasonName(s.date.season), day: dd, year: s.date.year
       })) + '</span>';
-      $('btn-endturn').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Space</span> ') +
-        '<span class="pp">' + esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
+      setEndTurnLabel((FB.isTouch ? '' : '<span class="keyhint">Space</span> ') +
+        '<span class="pp">' + esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>');
+      refreshFocusArt(s);
       renderActiveTab(liveTick ? { liveTick:true } : undefined);
       if (UI.refreshSerfTenureSheet) UI.refreshSerfTenureSheet();
       return;
@@ -212,8 +321,9 @@ window.FB = window.FB || {};
     $('tb-health').innerHTML = '❤️ <span class="mono">' + Math.round(me.health) + '</span>';
     $('tb-date').innerHTML = '<span class="mono">' + dateStr + '</span>';
     const kh = FB.isTouch ? '' : '<span class="keyhint">Space</span> ';
-    $('btn-endturn').innerHTML = kh + '<span class="pp">' +
-      esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
+    setEndTurnLabel(kh + '<span class="pp">' +
+      esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>');
+    refreshFocusArt(s);
     const autoAccess = automationAccess(s);
     $('btn-auto').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">V</span> ') + '⚙' +
       (FB.game.auto && (FB.game.auto.minor || FB.game.auto.major || FB.game.auto.war || FB.game.auto.all ||

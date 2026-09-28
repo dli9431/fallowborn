@@ -1,5 +1,13 @@
 # UI: keyboard & mobile
 
+CrazyGames household objectives and returning players
+
+The CrazyGames checklist includes a persistent current-objective block for courtship, the first enterprise, freedom funding or final service, and the first land plot. It reads the same live status and quote functions as the normal reviews. Natural-day refreshes update its text without replacing the checklist or its controls; enterprise progress reprices the displayed recommendation rather than scanning every business on each day. Exact refreshes and review clicks choose a current recommendation again. Dismiss and Disable guide hints retain their existing effect. This is presentation only, with no technology or eligibility change.
+
+The first-business coachmark and checklist provide Review this business. It opens the existing enterprise requirements sheet with a purchase review naming the settlement, price, funds, eligible workers, staffing warnings and base seasonal income. Buying is a separate explicit action, uses the normal purchase gate and deed day, and requires a fresh review if its price, eligible workers or warning categories change. Opened from Deeds it is a root sheet, so its footer offers Close; Close and Escape return to the existing panel without moving its scroll position, and focus returns to the checklist button only when that button opened it. Normal requirements sheets retain Back and their catalogue navigation. Review never grants funds, labor, technology or property.
+
+Continue gains a compact CrazyGames-only preview of the saved character, household achievements and unfinished objective. Text is rendered from locale-neutral save metadata without starting a campaign or needing the saved world to be active. Older saves show identity and available household facts until their next save adds objective metadata. After a living tutorial campaign loads, its current objective is restored in Deeds unless the checklist was dismissed or guide hints are disabled. Death still opens the existing succession recovery. Other distributions retain their title and tutorial behavior.
+
 Service household opens from the commoner Deed, Network, the active appointment
 in Self, and the local patron/officer's character sheet. The list groups four
 service paths, names the patron and contact, and keeps pay and the first blocker
@@ -21,6 +29,13 @@ Role cards show icon, name, pay, the first blocker or progress, and a state labe
 The review sheet repeats the patron portrait, keeps pay, training, Daily Focus
 and term Standing as rows, and lists unmet requirements in their own card. Term
 rules, duty coverage and role descriptions live in the title Details control.
+
+Service role Details and the review's Appointment fit card show the net trait
+adjustment, localized contributing trait names with signed weights, and every
+effective skill plus trait fit against its required value. The ±2 cap and the
+distinction from ordinary trait stat effects belong in the title Details.
+Unmet requirements use the same adjusted totals as acceptance, and stay visible
+on the card face and review. Entry jobs with no skill minima omit the fit card.
 
 The map Home control zooms Counts and lower ranks to settlement detail. Counts
 center on their home county; lower ranks center on their exact home settlement,
@@ -601,7 +616,8 @@ Plate Sabatons as steel foot plates, and the Knightly Bascinet as a visored helm
 The existing Feet and Head controls equip them with the standard keyboard and touch flow.
 
 Settings places **Automatically resume after events** beside the speed control. This
-keyboard-accessible checkbox defaults to enabled and persists in browser-local `fb_ui`.
+keyboard-accessible checkbox defaults to enabled on CrazyGames and disabled elsewhere, and
+persists in browser-local `fb_ui`.
 Turning it off leaves time paused after a visible event's final choice; Play continues
 the game. The first-event hint follows the preference.
 
@@ -1035,6 +1051,12 @@ health change, and exact 90-day training chances use the same preview-chip treat
 declarative deed transactions. Network management actions match the Deeds action-name size
 and weight and likewise keep helper, eligibility, cost, and duration prose in their desktop
 tooltip or compact `?` disclosure instead of beneath the button label.
+
+Daily Focus art experiment
+
+The active Daily Focus has one decorative scene at the right end of the Play button, visible across panels on desktop and phones. Thirty eight-frame loops cover every built-in focus, including Rest, childhood play, all professions, noble and clerical duties, command, intrigue, and government. All fourteen household-service roles select matching work scenes. Serf work reflects the active tenure: farming, irrigation, boats, herding, woodland work, or household service. Related focuses share appropriate scenes, such as writing for accounts and manuscripts or training for the household guard. Unsupported mod focuses, unavailable focuses, travel, observation, and the birthplace picker hide the scene. Deeds retains its compact text buttons, selection markers, keyboard shortcuts, eligibility, localized text, and separate Details controls. This is cosmetic and introduces no technology gate, simulation effect, RNG draw, or saved-state field.
+
+The scene is drawn at 1x through an 82x46 CSS-pixel window that crops each 96x64 atlas frame to its drawn band (x 7-88, y 16-61). It is absolutely positioned and pointer-transparent, so it never resizes the time bar or intercepts the button. The label keeps its own retained element: a label change never restarts the loop. The scene shows only where the label still fits beside it, first with the Space keyhint and then without it (Space remains in the keyboard help); where even the bare label would truncate, the scene is hidden. That fit is measured only when the scene, label, or viewport changes. Changing panels does not move or pause it. CSS runs the 1.44-second loop only with game time running; pause, fast-forward, and background visibility stop it, and reduced motion shows the first frame. The 768x1920 atlas ships at static/sprites/daily-focus.png; css/style.css references it with a relative URL and selects the appropriate row. Release builds version-stamp that URL, and the hosted worker precaches the PNG. No authoring tools are needed at runtime. Regression coverage lives in tests/e2e/specs/daily-focus-art.spec.js.
 
 The only mod-authored action route is Phase 4E's generic `resource_choice` sheet. It renders
 one to 12 native choice buttons with exact cost/effect chips and disabled reasons, opens

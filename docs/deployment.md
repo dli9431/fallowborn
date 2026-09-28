@@ -21,6 +21,8 @@ contextual banks. The staged generated catalog describes the complete copied sou
 fail-closed process is the artifact boundary. Test files, Node packages, reports, and repository
 metadata must not be added to it.
 
+Sprite atlases ship as PNGs under static/sprites/. Stylesheets reference them with relative, query-free URLs in the committed game so file:// works. Release staging stamps those CSS image URLs with the same version as the document assets; hosted builds use the deployment fingerprint and include the referenced sprites in the worker's versioned precache. The generated PNG ships through the existing static/ allowlist. Editable art and authoring tools remain outside the game repository.
+
 The itch page does not register a service worker or advertise the hosted web-app manifest.
 `FB.platform.isPlay` is false inside the itch-owned iframe, so the root-scoped offline shell
 cannot compete with itch's CDN or depend on third-party iframe storage.
@@ -112,7 +114,7 @@ the selected bookmark before any campaign date exists.
 is on `https://play.fallowborn.com`. The worker derives its versioned precache list during the
 Docker build from every `css/js/data/mods` reference in the unstamped `index.html`, including
 the inert deferred `ui_modals.js` asset pointer, plus every shipped `data/lang_*.js` catalog. It also
-precaches all three intro themes, but not the full
+precaches PNG sprite URLs referenced by css/style.css and all three intro themes, but not the full
 soundtrack. Installation activates only after that whole bundle and the unversioned HTML,
 manifest, favicons, install icons, and intros have cached successfully.
 

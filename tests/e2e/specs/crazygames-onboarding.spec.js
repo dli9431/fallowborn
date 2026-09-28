@@ -732,4 +732,261 @@ test('a standard phone build with an SDK present keeps the town-first and later-
         steps:after.steps.map(function (step) { return step.id; }) };
     })).toEqual({ before:'family_legacy', after:'making_a_living',
       steps:['livelihood', 'enterprise', 'land'] });
+    await expect(page.locator('#tutorial-objective')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return JSON.parse(FB.save.serialize()).meta.household || null;
+    })).toBe(null);
+  });
+
+for (const width of [907, 390]) {
+  test('business shortcut reviews costs before buying at width ' + width,
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:width, height:width === 907 ? 510 : 844 });
+      await startPortal(page, testInfo);
+      await marryForEnterprise(page);
+      await finishOpeningLoop(page, 0);
+      const before = await page.evaluate(function () {
+        return { turn:FB.state.turn, rng:FB.getRngState() };
+      });
+      /* the coachmark path returns to the deed it pointed at: record the
+         Deeds scroll owner's offset so closing cannot jump to the checklist */
+      const deedsScroll = function (restore) {
+        let node = document.querySelector('#tab-actions [data-action-id="livelihoods"]') ||
+          document.getElementById('tab-actions');
+        while (node && node !== document.body) {
+          const style = getComputedStyle(node);
+          if (/(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight) {
+            if (restore === undefined) return node.scrollTop;
+            return Math.abs(node.scrollTop - restore) <= 1;
+          }
+          node = node.parentElement;
+        }
+        return restore === undefined ? 0 : true;
+      };
+      const scrollBefore = await page.evaluate(deedsScroll);
+      await page.locator('.coachmark-enterprise').click();
+      await expect(page.locator('#enterprise-review-buy')).toBeDisabled();
+      await expect(page.locator('[data-enterprise-blocker="funds"]')).toBeVisible();
+      expect(await page.evaluate(function () {
+        return { turn:FB.state.turn, rng:FB.getRngState(), gold:FB.state.player.gold,
+          enterprises:FB.state.player.enterprises.length };
+      })).toEqual({ turn:before.turn, rng:before.rng, gold:0, enterprises:0 });
+      // a root review sheet leaves the modal stack with Close, not Back
+      await expect(page.locator('#enterprise-requirements-back')).toHaveText('Close');
+      await page.locator('#enterprise-requirements-back').click();
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await expect(page.locator('#tutorial-business-review')).toBeVisible();
+      await expect(page.locator('#tutorial-business-review')).not.toBeFocused();
+      expect(await page.evaluate(deedsScroll, scrollBefore)).toBe(true);
+      expect(await page.evaluate(function () {
+        const button = document.getElementById('tutorial-business-review');
+        return button.getBoundingClientRect().height >= 44;
+      })).toBe(true);
+      const quote = await page.evaluate(function () {
+        FB.game.uiPrefs.hideTips = true;
+        FB.game.uiPrefs.autoResumeAfterEvents = false;
+        FB.ui.coachmarkReset();
+        const s = FB.state, offer = FB.ui.crazyGamesFirstEnterprise(s);
+        s.player.gold = offer.cost;
+        FB.ui.refresh();
+        return { cost:offer.cost, type:offer.id, settlement:offer.settlement, turn:s.turn };
+      });
+      await page.locator('#tutorial-business-review').click();
+      await expect(page.locator('#enterprise-review-buy')).toBeEnabled();
+      await expect(page.locator('#genmodal')).toContainText('Eligible workers');
+      await page.keyboard.press('Escape');
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await expect(page.locator('#tutorial-business-review')).toBeFocused();
+      await page.locator('#tutorial-business-review').press('Enter');
+      await expect(page.locator('#enterprise-review-buy')).toBeEnabled();
+      expect(await page.evaluate(function () {
+        const node = document.getElementById('enterprise-review-buy');
+        const rect = node.getBoundingClientRect();
+        return rect.left >= 0 && rect.right <= innerWidth;
+      })).toBe(true);
+      await page.locator('#enterprise-review-buy').click();
+      expect(await page.evaluate(function () {
+        const s = FB.state, e = s.player.enterprises[0];
+        return { gold:s.player.gold, turn:s.turn, count:s.player.enterprises.length,
+          type:e.type, settlement:e.settlement };
+      })).toEqual({ gold:0, turn:quote.turn + 1, count:1,
+        type:quote.type, settlement:quote.settlement });
+    });
+}
+
+test('a changed business quote requires another review and never silently charges more',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await marryForEnterprise(page);
+    await finishOpeningLoop(page, 1000);
+    await page.locator('.coachmark-enterprise').click();
+    const before = await page.evaluate(function () {
+      const oldCost = FB.enterpriseCost;
+      FB.enterpriseCost = function () { return oldCost.apply(this, arguments) + 1; };
+      return { gold:FB.state.player.gold, turn:FB.state.turn };
+    });
+    await page.locator('#enterprise-review-buy').click();
+    await expect(page.locator('#genmodal')).toBeVisible();
+    await expect(page.locator('#toasts')).toContainText('requirements changed');
+    expect(await page.evaluate(function () {
+      return { gold:FB.state.player.gold, turn:FB.state.turn,
+        count:FB.state.player.enterprises.length };
+    })).toEqual({ gold:before.gold, turn:before.turn, count:0 });
+  });
+
+test('objective progress updates during live days without replacing the checklist',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    const courtship = await prepareCourtship(page);
+    await finishOpeningLoop(page, 0);
+    await page.evaluate(function () { FB.ui.showTab('actions'); });
+    await expect(page.locator('[data-objective-detail]')).toContainText('20 attention days');
+    const after = await page.evaluate(function () {
+      const s = FB.state, card = document.getElementById('tutorial-objective');
+      const rng = FB.getRngState();
+      FB.tickSocialAttention(s);
+      FB.ui._shared.renderActiveTab({ liveTick:true });
+      return { same:card === document.getElementById('tutorial-objective'),
+        rngSame:rng === FB.getRngState(),
+        days:FB.socialAttentionDaysToThreshold(s, s.chars[s.player.courtingId], true) };
+    });
+    expect(after).toEqual({ same:true, rngSame:true, days:courtship.days - 1 });
+    await expect(page.locator('[data-objective-detail]')).toContainText('19 attention days');
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      FB.adjustStanding(s, { kind:'character', id:s.player.courtingId }, 100, 'spec:ready');
+      return FB.doMarry(s, { settleDowry:false });
+    })).toBe(true);
+    await finishOpeningLoop(page, 0);
+    const funds = await page.evaluate(function () {
+      const s = FB.state, card = document.getElementById('tutorial-objective');
+      s.player.gold = 3;
+      FB.ui._shared.renderActiveTab({ liveTick:true });
+      return { same:card === document.getElementById('tutorial-objective'), text:FB.money(3) };
+    });
+    expect(funds.same).toBe(true);
+    await expect(page.locator('[data-objective-detail]')).toContainText(funds.text);
+  });
+
+test('Continue previews saved achievements and restores the unfinished household objective',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:844 });
+    await startPortal(page, testInfo);
+    await marryForEnterprise(page);
+    await finishOpeningLoop(page, 1000);
+    const saved = await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.saveUiPrefs();
+      FB.ui.coachmarkReset();
+      const s = FB.state;
+      const offer = FB.ui.crazyGamesFirstEnterprise(s);
+      FB.buyEnterprise(s, offer.id, offer.settlement);
+      s.player.gold = 7;
+      FB.ui.showTab('log');
+      const rng = FB.getRngState(), turn = s.turn;
+      const meta = JSON.parse(FB.save.serialize()).meta;
+      return { meta:meta, rngSame:rng === FB.getRngState(), turnSame:turn === s.turn };
+    });
+    expect(saved.rngSame).toBe(true);
+    expect(saved.turnSame).toBe(true);
+    expect(saved.meta.household.enterprises).toBe(1);
+    expect(saved.meta.household.objective.id).toBe('freedom');
+    expect(saved.meta.household.objective.funds).toBe(7);
+    expect(saved.meta.household.objective).not.toHaveProperty('text');
+    expect(await page.evaluate(function () {
+      return new Promise(function (resolve) { FB.save.toSlot('auto', resolve); });
+    })).toBe(true);
+    await openPortal(page, testInfo);
+    await expect(page.locator('#continue-preview')).toContainText(saved.meta.name);
+    await expect(page.locator('#continue-preview')).toContainText('Family businesses established: 1');
+    await expect(page.locator('[data-continue-objective]')).toContainText('Save for freedom');
+    expect(await page.locator('#continue-preview').evaluate(function (node) {
+      const rect = node.getBoundingClientRect();
+      return rect.left >= 0 && rect.right <= innerWidth && node.scrollWidth <= node.clientWidth;
+    })).toBe(true);
+    expect(await page.evaluate(function () { return FB.state; })).toBe(null);
+    await page.locator('#btn-continue').click();
+    await expect(page.locator('#tutorial-objective')).toBeVisible();
+    await expect(page.locator('[data-objective-title]')).toHaveText('Save for freedom');
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+  });
+
+test('freedom funding switches to final-service days without claiming early release',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await marryForEnterprise(page);
+    await finishOpeningLoop(page, 1000);
+    const offer = await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = true;
+      FB.ui.coachmarkReset();
+      const s = FB.state;
+      FB.buyEnterprise(s, 'field_strip', 0);
+      const lord = FB.getRole(s, 'lord', true);
+      const ref = { kind:'character', id:lord.id };
+      FB.adjustStanding(s, ref, 60 - FB.standingOf(s, ref), 'spec:terms');
+      const terms = FB.createFreedomOffer(s, 'petition');
+      s.player.gold = terms.price;
+      FB.ui.refresh();
+      return { price:terms.price, days:terms.serviceDays };
+    });
+    await expect(page.locator('[data-objective-detail]')).toContainText('for your saved terms');
+    expect(await page.evaluate(function () {
+      const accepted = FB.beginFreedomFinalService(FB.state);
+      FB.ui.refresh();
+      return !!accepted;
+    })).toBe(true);
+    await expect(page.locator('[data-objective-title]')).toHaveText('Finish your final service');
+    const remaining = await page.evaluate(function () {
+      const s = FB.state;
+      s.turn += 1;
+      FB.ui._shared.renderActiveTab({ liveTick:true });
+      return { tier:s.player.tier };
+    });
+    expect(remaining.tier).toBe(0);
+    await expect(page.locator('[data-objective-detail]')).toContainText(String(offer.days - 1) + ' in-game days remain');
+  });
+
+test('an old save without preview metadata still offers Continue and gains a live objective',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    await marryForEnterprise(page);
+    await finishOpeningLoop(page, 0);
+    expect(await page.evaluate(function () {
+      // Keep any page-hide checkpoint in the old metadata shape as well.
+      FB.ui.crazyGamesCampaignSummary = function () { return null; };
+      const data = JSON.parse(FB.save.serialize());
+      delete data.meta.household;
+      return new Promise(function (resolve) {
+        FB.crazySave.write(JSON.stringify(data), function (ok) { resolve(ok); });
+      });
+    })).toBe(true);
+    await openPortal(page, testInfo);
+    await expect(page.locator('#continue-preview')).toBeVisible();
+    await expect(page.locator('[data-continue-objective]')).toHaveCount(0);
+    await page.locator('#btn-continue').click();
+    await expect(page.locator('[data-objective-title]')).toHaveText('Start a family business');
+  });
+
+test('optional preview failures cannot prevent saving and hidden guidance stays hidden on Continue',
+  async function ({ page }, testInfo) {
+    await startPortal(page, testInfo);
+    const result = await page.evaluate(function () {
+      const summary = FB.ui.crazyGamesCampaignSummary;
+      let data;
+      try {
+        FB.ui.crazyGamesCampaignSummary = function () { throw new Error('preview unavailable'); };
+        data = JSON.parse(FB.save.serialize());
+      } finally { FB.ui.crazyGamesCampaignSummary = summary; }
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.saveUiPrefs();
+      FB.ui.coachmarkReset();
+      return { character:data.state.player.charId,
+        expected:FB.state.player.charId, summary:data.meta.household || null };
+    });
+    expect(result.character).toBe(result.expected);
+    expect(result.summary).toBe(null);
+    await saveAndContinue(page, testInfo);
+    await expect(page.locator('#tutorial-objective')).toHaveCount(0);
+    await expect(page.locator('.coachmark')).toHaveCount(0);
   });

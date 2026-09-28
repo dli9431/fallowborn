@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'data/actions.js', 'data/economy.js', 'data/events_peasant.js', 'data/technology.js',
+  'data/actions.js', 'data/economy.js', 'data/events_peasant.js', 'data/technology.js', 'data/traits.js',
   'js/actions.js', 'js/economy.js', 'js/events.js', 'js/main.js', 'js/model.js',
   'js/lordships.js', 'js/world.js', 'js/treasury.js', 'js/save.js', 'js/technology.js',
   'js/messages.js', 'js/i18n.js', 'js/ui_misc.js', 'js/ui_modals.js', 'js/ui_panels.js',
@@ -17,6 +17,19 @@ async function accept(page, roleId) {
     return FB.acceptHouseholdService(s, id, {charId:s.player.charId,
       employerId:status.patron && status.patron.id, serial:status.record ? status.record.serial : 0});
   }, roleId);
+}
+
+// Hold effective stats constant to distinguish role fit from traits' usual
+// stat modifiers (and any starting equipment).
+async function setServiceTraits(page, traits, skills) {
+  await page.evaluate(function (args) {
+    const s = FB.state, c = s.chars[s.player.charId];
+    c.traits = args.traits;
+    for (const key of Object.keys(args.skills)) {
+      c.skills[key] = 100;
+      c.skills[key] = args.skills[key] - (FB.skillSnapshot(s, c, key) - 100);
+    }
+  }, {traits:traits, skills:skills});
 }
 
 test.beforeEach(async function ({ page }, testInfo) {
@@ -125,6 +138,149 @@ test('promotion requires actual predecessor experience, ability, literacy and St
   expect(result).toMatchObject({early:false,offer:true,promoted:true,duplicate:true,unlettered:false,lettered:true,
     guardForWoman:false,guardForMan:true,captainTooEarly:false,tier:0,label:'Tend the household stores'});
   expect(result.literacyReason).toContain('Lettered');
+});
+
+test('traits distinguish equally skilled applicants across all four service paths', async function ({ page }) {
+  expect(await accept(page, 'helper')).toBe(true);
+  await page.evaluate(function () {
+    const s = FB.state, r = s.player.householdService;
+    s.chars[s.player.charId].sex = 'm';
+    r.experience.helper = 90;
+    r.experience.carrier = 180;
+    FB.adjustStanding(s, {kind:'character',id:r.employerId}, 80, 'fixture');
+  });
+  const cases = [
+    {role:'storekeeper', good:'honest', bad:'deceitful', skill:'ste'},
+    {role:'tally', good:'patient', bad:'wrathful', skill:'lea'},
+    {role:'buyer', good:'roadwise', bad:'greedy', skill:'ste'},
+    {role:'watch', good:'brave', bad:'craven', skill:'mar'}
+  ];
+  for (const row of cases) {
+    const skills = {ste:20,lea:20,dip:20,mar:20};
+    skills[row.skill] = 3;
+    await setServiceTraits(page, [], skills);
+    expect(await page.evaluate(function (id) {
+      return FB.householdServiceStatus(FB.state, id).ready;
+    }, row.role)).toBe(false);
+    await setServiceTraits(page, [row.good], skills);
+    const helpful = await page.evaluate(function (args) {
+      const s = FB.state, status = FB.householdServiceStatus(s, args.role);
+      return {ready:status.ready, bonus:status.qualification.traitBonus,
+        check:status.qualification.skills.filter(function (check) { return check.id === args.skill; })[0]};
+    }, row);
+    expect(helpful).toEqual({ready:true,bonus:1,
+      check:{id:row.skill,value:3,total:4,required:4,met:true}});
+    // Poor suitability can block an applicant who meets the ordinary stat minimum.
+    skills[row.skill] = 4;
+    await setServiceTraits(page, [row.bad], skills);
+    const harmful = await page.evaluate(function (id) {
+      const status = FB.householdServiceStatus(FB.state, id);
+      return {ready:status.ready,bonus:status.qualification.traitBonus,missing:status.missing};
+    }, row.role);
+    expect(harmful.ready).toBe(false);
+    expect(harmful.bonus).toBe(-1);
+    expect(harmful.missing.join(' ')).toContain('after trait fit; current 3');
+    expect(await accept(page, row.role)).toBe(false);
+    skills[row.skill] = 3;
+    await setServiceTraits(page, [row.good], skills);
+    expect(await accept(page, row.role)).toBe(true);
+  }
+});
+
+test('trait fit is bounded, role-specific, read-only and leaves basic entry work open', async function ({ page }) {
+  const skills = {ste:20,lea:20,dip:20,mar:20};
+  await setServiceTraits(page, ['brave','veteran','muster_bred'], skills);
+  const positive = await page.evaluate(function () {
+    return FB.householdServiceStatus(FB.state, 'captain').qualification;
+  });
+  expect(positive.traitBonus).toBe(2);
+  expect(positive.traits).toHaveLength(3);
+  expect(positive.skills[0]).toMatchObject({id:'mar',value:20,total:22});
+  await setServiceTraits(page, ['greedy','deceitful','drunkard'], {ste:1,lea:1,dip:1,mar:1});
+  const negative = await page.evaluate(function () {
+    const s = FB.state, before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const fit = FB.householdServiceStatus(s, 'storekeeper').qualification;
+    const repeated = FB.householdServiceStatus(s, 'storekeeper').qualification;
+    const helper = FB.householdServiceStatus(s, 'helper');
+    const carrier = FB.householdServiceStatus(s, 'carrier');
+    return {fit:fit,repeated:repeated,helper:helper.ready,carrier:carrier.ready,
+      helperSkills:helper.qualification.skills,carrierSkills:carrier.qualification.skills,
+      unchanged:JSON.stringify(s) === before && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(negative.fit.traitBonus).toBe(-2);
+  expect(negative.fit.skills[0]).toMatchObject({value:1,total:0,met:false});
+  expect(negative.repeated).toEqual(negative.fit);
+  expect(negative).toMatchObject({helper:true,carrier:true,helperSkills:[],carrierSkills:[],unchanged:true});
+  await setServiceTraits(page, ['kind','patient','hearth_steady','literate'], skills);
+  const tutoring = await page.evaluate(function () {
+    const s = FB.state;
+    return {tutor:FB.householdServiceStatus(s, 'tutor').qualification.traitBonus,
+      watch:FB.householdServiceStatus(s, 'watch').qualification.traitBonus};
+  });
+  expect(tutoring).toEqual({tutor:2,watch:0});
+  await setServiceTraits(page, ['cruel'], skills);
+  expect(await page.evaluate(function () {
+    return FB.householdServiceStatus(FB.state, 'tutor').qualification.traitBonus;
+  })).toBe(-2);
+  await setServiceTraits(page, ['honest','honest'], skills);
+  expect(await page.evaluate(function () {
+    return FB.householdServiceStatus(FB.state, 'storekeeper').qualification.traitBonus;
+  })).toBe(1);
+});
+
+test('favorable traits preserve experience, Standing, literacy and military gates', async function ({ page }) {
+  expect(await accept(page, 'helper')).toBe(true);
+  await setServiceTraits(page, ['honest','patient','rent_shrewd'], {ste:20,lea:20,dip:20,mar:20});
+  const gates = await page.evaluate(function () {
+    const s = FB.state, c = s.chars[s.player.charId], r = s.player.householdService;
+    const first = FB.householdServiceStatus(s, 'steward');
+    r.experience.reeve = 720;
+    FB.adjustStanding(s, {kind:'character',id:r.employerId}, 60, 'fixture');
+    const unlettered = FB.householdServiceStatus(s, 'steward');
+    FB.addTrait(c, 'literate');
+    const lettered = FB.householdServiceStatus(s, 'steward').ready;
+    c.traits = ['brave','veteran','muster_bred'];
+    c.sex = 'f';
+    const military = FB.householdServiceStatus(s, 'watch');
+    return {bonus:first.qualification.traitBonus,first:first.missing,
+      unlettered:unlettered.ready,lettered:lettered,military:military.ready,
+      militaryReason:military.missing.join(' ')};
+  });
+  expect(gates).toMatchObject({bonus:2,unlettered:false,lettered:true,military:false});
+  expect(gates.first.join(' ')).toContain('Requires 720 working days');
+  expect(gates.first.join(' ')).toContain('Requires 40 Standing');
+  expect(gates.first.join(' ')).toContain('Requires Lettered');
+  expect(gates.militaryReason).toContain('available to men');
+});
+
+test('acceptance rechecks trait fit while an existing appointment keeps paying after traits change', async function ({ page }) {
+  await setServiceTraits(page, ['patient'], {lea:3});
+  const quote = await page.evaluate(function () {
+    const s = FB.state, offer = FB.householdServiceStatus(s, 'tally');
+    return {charId:s.player.charId,employerId:offer.patron.id,serial:0};
+  });
+  await setServiceTraits(page, [], {lea:3});
+  const stale = await page.evaluate(function (expected) {
+    const s = FB.state, before = JSON.stringify(s), rng = FB.getRngState();
+    const accepted = FB.acceptHouseholdService(s, 'tally', expected);
+    return {accepted:accepted,unchanged:before === JSON.stringify(s) && rng === FB.getRngState()};
+  }, quote);
+  expect(stale).toEqual({accepted:false,unchanged:true});
+  await setServiceTraits(page, ['patient'], {lea:3});
+  expect(await accept(page, 'tally')).toBe(true);
+  await setServiceTraits(page, ['wrathful'], {lea:4});
+  const employed = await page.evaluate(function () {
+    const s = FB.state, r = s.player.householdService, gold = s.player.gold;
+    FB.householdServiceDay(s);
+    const ready = FB.householdServiceStatus(s).workReady;
+    s.turn++;
+    const worked = FB.tickHouseholdService(s);
+    return {ready:ready,worked:worked,status:r.status,days:r.workedDays,pay:s.player.gold - gold,
+      fit:FB.householdServiceStatus(s, 'tally').qualification.traitBonus,
+      savedFit:Object.prototype.hasOwnProperty.call(r, 'qualification')};
+  });
+  expect(employed).toMatchObject({ready:true,worked:true,status:'active',days:1,fit:-1,savedFit:false});
+  expect(employed.pay).toBeCloseTo(2.5 / 90, 8);
 });
 
 test('tally work teaches literacy after completed service without changing profession or granting a license', async function ({ page }) {
@@ -346,6 +502,60 @@ test('save repair keeps bounded experience, while retirement and relocation end 
 });
 
 for (const width of [1280, 390]) {
+  test('service trait breakdown and stale review retain navigation at width ' + width, async function ({ page }) {
+    await page.setViewportSize({width:width,height:720});
+    expect(await accept(page, 'helper')).toBe(true);
+    await setServiceTraits(page, ['honest'], {ste:3});
+    const turn = await page.evaluate(function () {
+      const s = FB.state, r = s.player.householdService;
+      r.experience.helper = 90;
+      FB.adjustStanding(s, {kind:'character',id:r.employerId}, 20, 'fixture');
+      FB.ui.showHouseholdService();
+      return s.turn;
+    });
+    const review = page.locator('#service-review-storekeeper');
+    const info = page.locator('[aria-controls="service-details-storekeeper"]');
+    if (width < 1100) await info.click();
+    const details = page.locator('#service-details-storekeeper');
+    await expect(details).toContainText('Honest +1');
+    await expect(details).toContainText('4 / 4 required (skill 3, trait fit +1)');
+    await expect(review.locator('.large-list-face-state')).toHaveText('Available');
+    await review.scrollIntoViewIfNeeded();
+    const scroll = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
+    await review.focus();
+    await page.keyboard.press('Enter');
+    const fit = page.locator('[data-service-review-sheet] [data-service-qualification]');
+    await expect(fit).toBeVisible();
+    await expect(fit).toContainText('Honest +1');
+    await expect(fit).toContainText('4 / 4 required (skill 3, trait fit +1)');
+    await expect(page.locator('#service-confirm')).toBeEnabled();
+    await expect(page.locator('#gm-title-details')).toContainText('at most 2 points either way');
+    // A changed trait must invalidate the rendered offer before a day is spent.
+    await setServiceTraits(page, ['deceitful'], {ste:3});
+    await page.locator('#service-confirm').click();
+    await expect(page.locator('#service-confirm')).toBeDisabled();
+    await expect(fit).toContainText('Deceitful -1');
+    await expect(fit).toContainText('2 / 4 required (skill 3, trait fit -1)');
+    await expect(page.locator('.service-requirements')).toContainText(
+      'Requires Stewardship 4 after trait fit; current 2.');
+    expect(await page.evaluate(function () {
+      return {turn:FB.state.turn,role:FB.state.player.householdService.roleId};
+    })).toEqual({turn:turn,role:'helper'});
+    expect(await page.locator('#gm-body').evaluate(function (el) {
+      return el.scrollWidth > el.clientWidth + 1;
+    })).toBe(false);
+    await page.locator('#service-cancel').click();
+    await expect(review).toBeFocused();
+    await expect(review).toContainText('Requires Stewardship 4 after trait fit; current 2.');
+    if (width < 1100) await expect(info).toHaveAttribute('aria-expanded', 'true');
+    await expect.poll(function () {
+      return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
+    }).toBe(scroll);
+    await review.click();
+    await page.keyboard.press('Escape');
+    await expect(review).toBeFocused();
+  });
+
   test('service review retains list details, scroll and focus at width ' + width, async function ({ page }) {
     await page.setViewportSize({width:width,height:720});
     await page.evaluate(function () { FB.ui.showHouseholdService(); });

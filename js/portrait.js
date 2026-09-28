@@ -366,8 +366,8 @@ window.FB = window.FB || {};
   }
 
   /* PORTRAIT V2 START
-     Court Illustration v2 shipping engine. The development oracle under
-     tools/portrait-reference uses hidden mesh geometry; this renderer
+     Court Illustration v2 shipping engine. The original development reference
+     uses hidden mesh geometry; this renderer
      intentionally resolves only the named anchors the illustration reads. */
   var TAU = Math.PI * 2;
   /* Portrait backing stores render at device resolution so HiDPI screens

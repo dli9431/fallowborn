@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.186.0';
+FB.VERSION = '1.186.1';
 FB.CHANGELOG = [
+  { v: '1.186.1', date: '2026-09-28', changes: [
+    'Daily Focus animations show work on the Play button, and household service appointments account for role-specific traits.',
+    'CrazyGames prepares the opening world from the title, adds business reviews, live household goals and Continue previews, and resumes time after events by default for new preferences.'
+  ] },
   { v: '1.186.0', date: '2026-09-27', changes: [
     'Campaigns can now end by negotiation: propose white peace, demand tribute or recognition, cede objectives, or submit, guided by a visible war balance. Withdrawing or buying peace now costs much more.',
     'Failed rebellions return you to the lord you renounced, and decision screens across the game show terms, costs and people more clearly.'
@@ -2264,6 +2268,16 @@ FB.CHANGELOG = [
       button.disabled = false;
     });
     G.bootReady = true;
+    /* CrazyGames: build Play as Osric's world after the title paints, so the
+       click only sets up the campaign. The title itself stays world-free. */
+    if (FB.platform.isCrazyGames) {
+      const osric = (FBDATA.quickStarts || []).filter(function (candidate) {
+        return candidate.id === 'osric_867';
+      })[0];
+      if (osric) requestAnimationFrame(function () {
+        setTimeout(function () { FB.prepareBookmark(osric.bookmarkId); }, 0);
+      });
+    }
     if (FB.music && FB.music.offerBootChoice(finishTitleBoot)) return;
     finishTitleBoot();
   }
@@ -2314,7 +2328,42 @@ FB.CHANGELOG = [
      (bundled or stored), new lives and the map behind the menu are modded ones */
   function refreshTitle() {
     $('title-version').textContent = 'v' + FB.VERSION;
-    $('btn-continue').classList.toggle('hidden', !FB.save.hasAuto());
+    const saved = FB.save.read('auto');
+    $('btn-continue').classList.toggle('hidden', !saved);
+    const preview = $('continue-preview');
+    if (preview) {
+      preview.classList.add('hidden');
+      preview.textContent = '';
+    }
+    $('btn-continue').removeAttribute('aria-describedby');
+    if (preview && FB.platform.isCrazyGames && saved && saved.meta) {
+      const p = saved.state && saved.state.player;
+      const summary = saved.meta.household || (p ? {
+        version:1, tier:p.tier, plots:(p.landPlots || []).length,
+        enterprises:(p.enterprises || []).length,
+        married:!!(p.flags && (p.flags.tut_seen_wed || p.flags.tut_family_established)),
+        objective:p.dead ? { id:'succession' } : null
+      } : null);
+      const identity = document.createElement('p');
+      identity.textContent = FB.save.metaOf(saved);
+      preview.appendChild(identity);
+      if (summary && summary.version === 1) {
+        const achievement = document.createElement('p');
+        achievement.textContent = FB.ui.crazyGamesAchievementText(summary);
+        preview.appendChild(achievement);
+        const goal = FB.ui.crazyGamesObjectiveText(summary.objective);
+        if (goal) {
+          const objective = document.createElement('p');
+          objective.setAttribute('data-continue-objective', '');
+          objective.textContent = FB.T('Next: {goal} {progress}', {
+            goal:goal.title, progress:goal.detail
+          });
+          preview.appendChild(objective);
+        }
+      }
+      preview.classList.remove('hidden');
+      $('btn-continue').setAttribute('aria-describedby', 'continue-preview');
+    }
     if ($('btn-save-recovery')) $('btn-save-recovery').classList.toggle('hidden', !(FB.crazySave && FB.crazySave.recovery()));
     const note = $('title-mods');
     if (!note) return;
@@ -4064,7 +4113,7 @@ FB.CHANGELOG = [
     hideTips:false,
     eventToastOpensChronicle:false,
     newsFamily:true, newsRealm:true, newsAll:false,
-    autoResumeAfterEvents:false,
+    autoResumeAfterEvents:!!FB.platform.isCrazyGames,
     tipsSeen:{},
     tipsGrandfathered:false,
     onboardingStarted:false,
@@ -4114,7 +4163,9 @@ FB.CHANGELOG = [
       G.uiPrefs.newsFamily = storedUiPrefs.newsFamily !== false;
       G.uiPrefs.newsRealm = storedUiPrefs.newsRealm !== false;
       G.uiPrefs.newsAll = storedUiPrefs.newsAll === true;
-      G.uiPrefs.autoResumeAfterEvents = storedUiPrefs.autoResumeAfterEvents === true;
+      if (typeof storedUiPrefs.autoResumeAfterEvents === 'boolean') {
+        G.uiPrefs.autoResumeAfterEvents = storedUiPrefs.autoResumeAfterEvents;
+      }
       if (storedUiPrefs.tipsSeen && typeof storedUiPrefs.tipsSeen === 'object') {
         G.uiPrefs.tipsSeen = storedUiPrefs.tipsSeen;
       }
@@ -6195,6 +6246,12 @@ FB.CHANGELOG = [
           FB.map.select(null);
         });
         resumeRepair('interface refresh', function () { FB.ui.refresh(); });
+        if (FB.platform.isCrazyGames && !FB.state.player.dead &&
+            !G.uiPrefs.hideBeginnerHints && FB.tutorialActive(FB.state)) {
+          resumeRepair('household objective', function () {
+            if (FB.ui.crazyGamesObjective(FB.state)) FB.ui.showTab('actions');
+          });
+        }
         if (!FB.state.player.dead) {
           resumeRepair('resume notice', function () {
             FB.ui.toast('The chronicle resumes — {season} {year} AD.', {

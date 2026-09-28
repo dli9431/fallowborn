@@ -1299,6 +1299,11 @@ window.FB = window.FB || {};
         renderActions();
       });
     }
+    if ($('tutorial-business-review')) {
+      $('tutorial-business-review').addEventListener('click', function () {
+        UI.showRecommendedEnterprise($('tutorial-business-review'));
+      });
+    }
     const tutorialTenure = $('tutorial-serf-tenure');
     if (tutorialTenure) {
       tutorialTenure.addEventListener('click', function () {
@@ -1725,6 +1730,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const box = $('tab-actions');
     if (!s || SH.activeTab !== 'actions' || !box || !box.hasChildNodes()) return;
+    refreshTutorialObjective(s);
     const force = !!(options && options.force);
     /* Coming of age changes the focus catalogue and every requiresAdult deed
        at once. It is a lifecycle boundary, not an ordinary cooldown update:
@@ -1791,6 +1797,39 @@ window.FB = window.FB || {};
      Track and step state live in FB.tutorialStatus (main.js); completion
      toasts fire from FB.tutorialCheck on the coalesced refresh, so this
      render stays pure. */
+  let tutorialObjectiveState = null, tutorialObjectiveGoal = null;
+  function tutorialObjectiveHtml(s) {
+    if (!FB.platform.isCrazyGames) return '';
+    const goal = UI.crazyGamesObjective(s);
+    tutorialObjectiveState = s;
+    tutorialObjectiveGoal = goal;
+    const text = UI.crazyGamesObjectiveText(goal);
+    return '<div id="tutorial-objective" class="tutorial-objective' +
+      (text ? '' : ' hidden') + '"><b data-objective-title>' +
+      esc(text ? text.title : '') + '</b><p data-objective-detail>' +
+      esc(text ? text.detail : '') + '</p><button type="button" ' +
+      'id="tutorial-business-review" class="btn small' +
+      (goal && goal.id === 'enterprise' ? '' : ' hidden') + '">' +
+      esc(FB.T('Review this business')) + '</button></div>';
+  }
+
+  function refreshTutorialObjective(s) {
+    const box = $('tutorial-objective');
+    if (!box || !FB.platform.isCrazyGames) return;
+    const goal = UI.crazyGamesObjective(s,
+      tutorialObjectiveState === s ? tutorialObjectiveGoal : null);
+    tutorialObjectiveState = s;
+    tutorialObjectiveGoal = goal;
+    const text = UI.crazyGamesObjectiveText(goal);
+    box.classList.toggle('hidden', !text);
+    if (!text) return;
+    const title = box.querySelector('[data-objective-title]');
+    const detail = box.querySelector('[data-objective-detail]');
+    if (title.textContent !== text.title) title.textContent = text.title;
+    if (detail.textContent !== text.detail) detail.textContent = text.detail;
+    $('tutorial-business-review').classList.toggle('hidden', goal.id !== 'enterprise');
+  }
+
   function tutorialCardHtml(s) {
     const status = FB.tutorialStatus(s);
     if (!status) return ''; // every track finished; the card retires this frame
@@ -1811,7 +1850,7 @@ window.FB = window.FB || {};
       h += '<li' + (step.done ? ' class="done"' : '') + '>' +
         (step.done ? '✓ ' : '○ ') + esc(step.label) + '</li>';
     }
-    return h + '</ul></div>';
+    return h + '</ul>' + tutorialObjectiveHtml(s) + '</div>';
   }
 
   function nextStepHint(s) {

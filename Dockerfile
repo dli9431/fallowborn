@@ -26,7 +26,7 @@ COPY static/ /usr/share/nginx/html/static/
 COPY --from=music-catalog /catalog/data/music_catalog.js /usr/share/nginx/html/data/music_catalog.js
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Derive the offline asset list, including every intro theme, before stamping
+# Derive the offline asset list, including sprites and every intro theme, before stamping
 # index.html (the match excludes
 # query strings), then stamp the worker and document with one deployment
 # fingerprint. Uses only BusyBox-compatible shell tools from nginx:alpine.
@@ -40,6 +40,8 @@ RUN set -eu; \
     { grep -o -E '(src|href)="(css|js|data|mods)/[^"?#]+"' "$root/index.html" \
         | sed -r 's/^(src|href)="//; s/"$//'; \
       ls "$root"/data/lang_*.js | sed "s|^$root/||"; \
+      grep -o -E 'url\("\.\./static/sprites/[^"?#]+\.png"\)' "$root/css/style.css" \
+        | sed -r 's|^url\("\.\./||; s|"\)$||'; \
       grep -o -E '"src": "music/intro/[^"]+\.opus"' "$root/data/music_catalog.js" \
         | sed -r 's/^"src": "//; s/"$//'; \
     } | awk '!seen[$0]++' | sed "s|.*|  '/&',|" > /tmp/fb-assets.txt; \
@@ -48,6 +50,7 @@ RUN set -eu; \
            -e "/'__FB_ASSET_LIST__'/d" "$root/sw.js"; \
     sed -i "s/__FB_CACHE_KEY__/$V/g" "$root/sw.js"; \
     sed -i -r "s@(src|href)=\"((css|js|data|mods)/[^\"?#]+)\"@\1=\"\2?v=$V\"@g" "$root/index.html"; \
+    sed -i -r "s@url\(\"(\.\./static/sprites/[^\"?#]+\.png)\"\)@url(\"\1?v=$V\")@g" "$root/css/style.css"; \
     rm -f /tmp/fb-assets.txt; \
     echo "stamped ?v=$V, precaching $ASSET_COUNT versioned assets"
 

@@ -475,10 +475,7 @@ to `Treasury counterparty transfers: 4770`; ruler deaths or moved capitals can c
 returns instead. Compare repeated runs of this revised save, not its old financial
 outcomes. Ransom and peace choices still require separate coverage.
 
-The data-only preparation command is
-`python tools/treasury_stage3_save.py --add-counterparty-transfers`; it refuses a
-second application of this revision or mismatched existing payment metadata.
-Runtime verification remains owner-controlled.
+The owner-local data-only preparation tool can add counterparty transfers to the fixture; it refuses a second application of this revision or mismatched existing payment metadata. Runtime verification remains owner-controlled.
 
 | Existing path | Payer → recipient | Timing and duplicate boundary |
 | --- | --- | --- |
@@ -698,11 +695,7 @@ regeneration or deployment is included in this implementation handoff.
 
 ### Treasury UI inspection fixture
 
-`python tools/treasury_stage3_save.py --prepare-ui` updates the owner-local
-`logistics-stress-save-stage3.txt` and its metadata with synthetic historical
-display samples. The player remains a serf; all 4,770 pending gifts are preserved.
-Import and inspect while paused. This fixture changes account balances and is a
-different performance baseline from the earlier reports.
+The owner-local treasury fixture tool can update an existing Stage 3 export and its metadata with synthetic historical display samples. The player remains a serf; all 4,770 pending gifts are preserved. Import and inspect while paused. This fixture changes account balances and is a different performance baseline from the earlier reports.
 
 Open Network > Trade & Guild > Finance for Last season's army trade: producer
 income 12, requisition loss 5 and net adjustment 7. Open its Details disclosure.

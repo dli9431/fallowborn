@@ -989,6 +989,34 @@ a.actionbtn { text-decoration: none; }
 .network-action-entry .network-main-action {
   min-width: 0; margin-bottom: 0; font-size: 16px; font-weight: 600;
 }
+/* The Play button's right end shows the current Daily Focus as a 1x pixel
+   scene. The 82x46 window crops each 96x64 atlas frame to its drawn band
+   (x 7-88, y 16-61), so the scene fits the 48px button without scaling.
+   It is absolutely placed: it never changes the time bar's size. */
+#btn-endturn { position: relative; }
+.endturn-label { display: block; overflow: hidden; text-overflow: ellipsis; }
+#btn-endturn.has-focus-art { padding-right: 92px; }
+#btn-endturn.focus-art-compact .keyhint { display: none; }
+.focus-art {
+  display: none; position: absolute; right: 4px; top: 50%;
+  width: 82px; height: 46px; margin-top: -23px; pointer-events: none;
+  background-repeat: no-repeat;
+  background-position-x: -7px;
+  image-rendering: pixelated;
+  animation: daily-focus-work 1.44s steps(8, end) infinite;
+  animation-play-state: paused;
+}
+#btn-endturn.has-focus-art .focus-art { display: block; }
+body:not(.picking) #game:not(.hidden) #btn-endturn.has-focus-art .focus-art.is-playing {
+  animation-play-state: running;
+}
+@keyframes daily-focus-work {
+  from { background-position-x: -7px; }
+  to { background-position-x: -775px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .focus-art { animation: none; }
+}
 .deed-entry[data-deed-flow="now"] .deed-main-action {
   border-color: #a77f2e; box-shadow: inset 3px 0 0 var(--ui-accent-color);
 }
@@ -6384,3 +6412,43 @@ div.review-person, .review-static-row {
 .life-history-list .large-list-row canvas { flex-shrink: 0; }
 .chronicle-viewer-entry-meta > b { color: var(--main-text-color); }
 .life-history-timeline > .hint { margin: 8px 0 0; }
+
+.continue-preview { text-align: left; padding: 8px 12px; border: 1px solid var(--ui-border-color, #55452a); border-radius: 8px; color: var(--helper-text-color); font-size: 14px; overflow-wrap: break-word; }
+.continue-preview p { margin: 4px 0; }
+.tutorial-objective { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--ui-border-color, #55452a); }
+.tutorial-objective p { margin: 4px 0 8px; }
+.tutorial-objective .btn { width: 100%; min-height: 44px; white-space: normal; }
+
+/* BEGIN DAILY FOCUS ATLAS */
+.focus-art { background-image: url("../static/sprites/daily-focus.png"); background-size: 768px 1920px; }
+.focus-art[data-focus-art="fieldwork"] { background-position-y: -16px; }
+.focus-art[data-focus-art="crafting"] { background-position-y: -80px; }
+.focus-art[data-focus-art="writing"] { background-position-y: -144px; }
+.focus-art[data-focus-art="studying"] { background-position-y: -208px; }
+.focus-art[data-focus-art="prayer"] { background-position-y: -272px; }
+.focus-art[data-focus-art="training"] { background-position-y: -336px; }
+.focus-art[data-focus-art="rest"] { background-position-y: -400px; }
+.focus-art[data-focus-art="play"] { background-position-y: -464px; }
+.focus-art[data-focus-art="market"] { background-position-y: -528px; }
+.focus-art[data-focus-art="household"] { background-position-y: -592px; }
+.focus-art[data-focus-art="caravan"] { background-position-y: -656px; }
+.focus-art[data-focus-art="physic"] { background-position-y: -720px; }
+.focus-art[data-focus-art="guard"] { background-position-y: -784px; }
+.focus-art[data-focus-art="faithful"] { background-position-y: -848px; }
+.focus-art[data-focus-art="manor"] { background-position-y: -912px; }
+.focus-art[data-focus-art="hall"] { background-position-y: -976px; }
+.focus-art[data-focus-art="court"] { background-position-y: -1040px; }
+.focus-art[data-focus-art="command"] { background-position-y: -1104px; }
+.focus-art[data-focus-art="intrigue"] { background-position-y: -1168px; }
+.focus-art[data-focus-art="diocese"] { background-position-y: -1232px; }
+.focus-art[data-focus-art="temporalities"] { background-position-y: -1296px; }
+.focus-art[data-focus-art="govern"] { background-position-y: -1360px; }
+.focus-art[data-focus-art="patronage"] { background-position-y: -1424px; }
+.focus-art[data-focus-art="boats"] { background-position-y: -1488px; }
+.focus-art[data-focus-art="herding"] { background-position-y: -1552px; }
+.focus-art[data-focus-art="irrigation"] { background-position-y: -1616px; }
+.focus-art[data-focus-art="service"] { background-position-y: -1680px; }
+.focus-art[data-focus-art="carrying"] { background-position-y: -1744px; }
+.focus-art[data-focus-art="tutoring"] { background-position-y: -1808px; }
+.focus-art[data-focus-art="woodland"] { background-position-y: -1872px; }
+/* END DAILY FOCUS ATLAS */

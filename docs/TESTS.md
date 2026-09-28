@@ -1,5 +1,7 @@
 # Testing Fallowborn
 
+CrazyGames onboarding coverage in tests/e2e/specs/crazygames-onboarding.spec.js includes the first-business review at desktop and phone widths, stale quotes, live savings and courtship progress, paid final service, saved-campaign previews, older metadata, optional preview failure and hidden guidance on Continue. tests/e2e/specs/distribution-start.spec.js covers fresh and older preference defaults plus explicitly saved event-resume choices in both distributions. Execution remains owner-controlled.
+
 `ai-treasury-transfers.spec.js` covers paired balances, accrued-bill protection,
 compulsory shortfalls, live peace quotes, noncash peace, prepaid saved courier gifts,
 serialized payment guards and binding ruler ransom demands. Execution remains
@@ -430,11 +432,7 @@ comparison; advancing an already-played copy changes the workload.
 
 The export was prepared as data, not by running game logic. Import, route validity,
 campaign survival, and timing remain owner-verified through the approved harness.
-To regenerate from another suitable owner save without running the game:
-
-```powershell
-python tools/logistics_stress_save.py "notes/fallowborn-save (5).txt" --output notes/logistics-stress-save-new.txt
-```
+Regeneration uses the owner-local offline save-preparation tools, maintained separately from the game repository.
 
 The tool requires at least 15 Catholic and eight Muslim sovereigns, suitable march
 corridors, and opposing control of Antioch. It refuses to overwrite exports. Normal
@@ -484,9 +482,7 @@ process and rerun the test.
 
 ### Stage 3 treasury performance fixture
 
-`python tools/treasury_stage3_save.py` prepares the root
-`notes/logistics-stress-save-stage3.txt` and its JSON metadata from the earlier logistics
-fixture. It transforms data only and refuses to overwrite existing outputs.
+The owner-local Stage 3 preparation tool creates a treasury performance export and its JSON metadata from the earlier logistics fixture. It transforms data only and refuses to overwrite existing outputs.
 The fixture has 53 hosts, 134,100 soldiers, 260 active accounts, three missing
 hosts, damaged hosts and unfunded professional replacements. Rich (5,000),
 constrained (80) and insolvent (-50) balances exercise distinct fiscal paths.

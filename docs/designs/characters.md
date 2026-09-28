@@ -803,6 +803,22 @@ training, predecessor experience, skills, literacy and Standing requirements.
 Promotions are explicitly accepted. Previously held roles retain experience for
 this life; completed work never automatically changes the role.
 
+Appointments also consider role-specific character fit through each role's
+`traitFit` map. Matching trait weights sum to a bonus or penalty capped at ±2,
+added to each required effective skill for appointment eligibility only (floored
+at zero). Effective skills already include ordinary trait and equipment effects;
+this extra adjustment represents suitability for entrusted work, not skill growth.
+Honesty and temperance help with stores; honesty and patience with accounts and
+purchasing; kindness and patience with tutoring; courage and veteran experience
+with guard work. Opposing dispositions and unreliable conduct can hinder those
+roles. Earned estate, road and household traits help where relevant.
+Estate assistant and carrier remain open entry jobs without skill or trait gates.
+Experience, literacy, Standing and military eligibility still apply independently.
+Trait changes never suspend an accepted job or alter pay, training or duty credit;
+new appointments, promotions and renewals recheck current fit on acceptance.
+Role Details and appointment reviews show contributing traits and each adjusted
+skill against its requirement. Fit is derived, consumes no RNG, and is not saved.
+
 Acceptance changes the existing `toil` Daily Focus from regional fieldwork to
 the appointed work, and promotion changes its label again. Wages are paid per
 working day (2.5–5 gold per 90 days); that productive work also delivers a small
@@ -829,7 +845,9 @@ employment or experience. Appointments enter life history; routine work does not
 
 Technology impact: estate, commercial, military and learned household service
 are four independently reviewed **none** capabilities. Personal work, literacy,
-ability and relationships govern access. These baseline social opportunities
+ability, role-specific trait fit and relationships govern access. The same four
+**none** decisions cover trait-aware appointments: personality and earned
+reputation have no national research dependency. These baseline social opportunities
 do not depend on the patron's national research; existing professional,
 equipment and military technology gates remain in force.
 

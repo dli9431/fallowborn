@@ -672,10 +672,15 @@ window.FB = window.FB || {};
     try {
       const header = JSON.stringify({ v:3, rng:FB.getRngState(),
         uid:FB.getUidCounter(), mods:FB.mods.sig() });
-      const meta = JSON.stringify({
+      const metaData = {
         name:FB.fullName(s.chars[s.player.charId]), titleData:FB.titleSnapshot(s),
         year:s.date.year, season:s.date.season
-      }, saveReplacer);
+      };
+      if (FB.platform.isCrazyGames && FB.ui.crazyGamesCampaignSummary) {
+        try { metaData.household = FB.ui.crazyGamesCampaignSummary(s); }
+        catch (error) { /* Optional preview must never prevent a campaign save. */ }
+      }
+      const meta = JSON.stringify(metaData, saveReplacer);
       let stateJson = JSON.stringify(s, function (key, value) {
         return this === s && key === 'chronicle' ? undefined : saveReplacer.call(this, key, value);
       });

@@ -339,22 +339,36 @@ FBDATA.positions = {
 };
 
 /* Personal appointments in a patron's household. These reuse position names,
-   but never grant the employer-facing retainer bonuses to the employee. */
+   but never grant the employer-facing retainer bonuses to the employee.
+   traitFit is role suitability beyond ordinary skill effects: its sum is
+   capped at +/-2 and applied only to appointment skill checks. */
 FBDATA.householdServiceRoles = {
   helper:{ position:'service_helper', path:'estate', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
-  storekeeper:{ position:'service_storekeeper', path:'estate', previous:'helper', days:90, standing:10, wage:3, value:1, training:['ste','dip'], skills:{ste:4} },
-  reeve:{ position:'service_reeve', path:'estate', previous:'storekeeper', days:360, standing:25, wage:4, value:1.5, training:['ste','dip'], skills:{ste:7,dip:4} },
-  steward:{ position:'steward', path:'estate', previous:'reeve', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:10,lea:6}, lettered:true },
-  tally:{ position:'service_tally', path:'letters', wage:2.5, value:0.5, training:['lea','ste'], skills:{lea:4} },
-  clerk:{ position:'service_clerk', path:'letters', previous:'tally', days:180, standing:15, wage:3.5, value:1, training:['lea','ste'], skills:{lea:6,ste:4}, lettered:true },
-  tutor:{ position:'tutor', path:'letters', previous:'clerk', days:720, standing:40, wage:5, value:1.5, training:['lea','dip'], skills:{lea:10,dip:6}, lettered:true },
+  storekeeper:{ position:'service_storekeeper', path:'estate', previous:'helper', days:90, standing:10, wage:3, value:1, training:['ste','dip'], skills:{ste:4},
+    traitFit:{honest:1,temperate:1,greedy:-1,deceitful:-1,drunkard:-1} },
+  reeve:{ position:'service_reeve', path:'estate', previous:'storekeeper', days:360, standing:25, wage:4, value:1.5, training:['ste','dip'], skills:{ste:7,dip:4},
+    traitFit:{honest:1,patient:1,rent_shrewd:1,cruel:-1,deceitful:-1,wrathful:-1} },
+  steward:{ position:'steward', path:'estate', previous:'reeve', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:10,lea:6}, lettered:true,
+    traitFit:{honest:1,patient:1,rent_shrewd:1,deceitful:-1,greedy:-1,drunkard:-1} },
+  tally:{ position:'service_tally', path:'letters', wage:2.5, value:0.5, training:['lea','ste'], skills:{lea:4},
+    traitFit:{patient:1,honest:1,wrathful:-1,deceitful:-1} },
+  clerk:{ position:'service_clerk', path:'letters', previous:'tally', days:180, standing:15, wage:3.5, value:1, training:['lea','ste'], skills:{lea:6,ste:4}, lettered:true,
+    traitFit:{patient:1,honest:1,rent_shrewd:1,deceitful:-1,drunkard:-1} },
+  tutor:{ position:'tutor', path:'letters', previous:'clerk', days:720, standing:40, wage:5, value:1.5, training:['lea','dip'], skills:{lea:10,dip:6}, lettered:true,
+    traitFit:{kind:1,patient:1,hearth_steady:1,cruel:-2,wrathful:-1} },
   carrier:{ position:'service_carrier', path:'trade', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
-  buyer:{ position:'service_buyer', path:'trade', previous:'carrier', days:180, standing:15, wage:3.5, value:1, training:['ste','dip'], skills:{ste:4,dip:4} },
-  factor:{ position:'factor', path:'trade', previous:'buyer', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:9,dip:7}, lettered:true },
-  watch:{ position:'service_watch', path:'arms', wage:2.5, value:0.5, training:['mar','dip'], skills:{mar:4}, maleOnly:true },
-  guard:{ position:'service_guard', path:'arms', previous:'watch', days:180, standing:15, wage:3.5, value:1, training:['mar','dip'], skills:{mar:6}, maleOnly:true },
-  sergeant:{ position:'service_sergeant', path:'arms', previous:'guard', days:360, standing:25, wage:4, value:1.5, training:['mar','dip'], skills:{mar:9,dip:4}, maleOnly:true },
-  captain:{ position:'captain', path:'arms', previous:'sergeant', days:1080, standing:45, wage:5, value:2, training:['mar','dip'], skills:{mar:12,dip:6}, maleOnly:true }
+  buyer:{ position:'service_buyer', path:'trade', previous:'carrier', days:180, standing:15, wage:3.5, value:1, training:['ste','dip'], skills:{ste:4,dip:4},
+    traitFit:{honest:1,patient:1,roadwise:1,greedy:-1,deceitful:-1} },
+  factor:{ position:'factor', path:'trade', previous:'buyer', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:9,dip:7}, lettered:true,
+    traitFit:{honest:1,patient:1,roadwise:1,greedy:-1,deceitful:-1} },
+  watch:{ position:'service_watch', path:'arms', wage:2.5, value:0.5, training:['mar','dip'], skills:{mar:4}, maleOnly:true,
+    traitFit:{brave:1,veteran:1,muster_bred:1,craven:-1,drunkard:-1} },
+  guard:{ position:'service_guard', path:'arms', previous:'watch', days:180, standing:15, wage:3.5, value:1, training:['mar','dip'], skills:{mar:6}, maleOnly:true,
+    traitFit:{brave:1,veteran:1,muster_bred:1,craven:-1,drunkard:-1} },
+  sergeant:{ position:'service_sergeant', path:'arms', previous:'guard', days:360, standing:25, wage:4, value:1.5, training:['mar','dip'], skills:{mar:9,dip:4}, maleOnly:true,
+    traitFit:{brave:1,veteran:1,patient:1,craven:-1,wrathful:-1,drunkard:-1} },
+  captain:{ position:'captain', path:'arms', previous:'sergeant', days:1080, standing:45, wage:5, value:2, training:['mar','dip'], skills:{mar:12,dip:6}, maleOnly:true,
+    traitFit:{brave:1,veteran:1,patient:1,muster_bred:1,craven:-1,wrathful:-1,drunkard:-1} }
 };
 
 /* A town councillor may carry one local ordinance at a time. These are

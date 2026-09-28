@@ -1,5 +1,9 @@
 # Holdings (commoner property)
 
+CrazyGames first-business review
+
+The opening recommendation has a direct Review this business action in its coachmark and live checklist. This opens the enterprise requirements sheet with current price, funds, worker eligibility, staffing warnings and base seasonal income, followed by a separate purchase action. The recommendation does not bypass ordinary purchase eligibility, staffing or technology. A changed price, worker set or warning category requires another review before purchase; successful confirmation still spends the ordinary deed day. This is an existing-action shortcut and has no new technology impact.
+
 Applying a household staffing plan keeps Enterprise Plan open with refreshed figures
 and a confirmation. Back retains the original Household Plan or livelihoods return.
 On compact screens, enterprise purchase Details sits below the name and cost,

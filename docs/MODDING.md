@@ -2822,7 +2822,16 @@ as councilman and sergeant, or paid household service:
 The core `FBDATA.householdServiceRoles` table references position ids for display.
 Each role defines `path` (`estate`, `letters`, `trade`, `arms`), `wage` and patron
 surplus `value` per 90 worked days, two `training` skill ids, and a `skills`
-minimum map. Optional `previous`/`days`, `standing`, `lettered` and `maleOnly`
+minimum map. Optional `traitFit` maps known trait ids to signed numeric suitability
+weights. Held traits contribute once each; their sum is clamped to −2…+2, then
+added to each effective skill (with a zero floor) for appointment checks only.
+Ordinary trait skill effects still apply through the effective skill. Missing
+`traitFit` means zero adjustment; roles without skill minima remain open entry
+jobs. Fit does not change wages, training, saved skills or an existing job's work
+eligibility. `FB.householdServiceStatus(...).qualification` exposes `traitBonus`,
+contributing `traits` (`id`, `amount`) and `skills` (`id`, `value`, `total`,
+`required`, `met`) for read-only previews; acceptance rechecks current traits.
+Optional `previous`/`days`, `standing`, `lettered` and `maleOnly` independently
 govern appointment eligibility. This table is authored core data, not a new mod
 merge key. Service uses the existing `toil` handler contextually and the
 `household_service` choice-backed Deed. Reused senior retainer position ids supply

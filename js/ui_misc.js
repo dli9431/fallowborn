@@ -2385,6 +2385,19 @@ window.FB = window.FB || {};
     textEl.textContent = FB.T(displayText);
     const actions = document.createElement('div');
     actions.className = 'coachmark-actions';
+    if (item.reviewEnterprise && FB.platform.isCrazyGames) {
+      const review = document.createElement('button');
+      review.type = 'button';
+      review.className = 'btn small coachmark-enterprise';
+      review.textContent = FB.T('Review this business');
+      review.addEventListener('click', function () {
+        rememberFirstTimeTip(item);
+        coachTelemetry('hint-interacted', item);
+        dismissCoachmark();
+        UI.showRecommendedEnterprise();
+      });
+      actions.appendChild(review);
+    }
     const dismiss = document.createElement('button');
     dismiss.type = 'button';
     dismiss.className = 'btn small coachmark-dismiss';
@@ -3176,6 +3189,112 @@ window.FB = window.FB || {};
     return best;
   }
 
+  UI.crazyGamesFirstEnterprise = crazyGamesFirstEnterprise;
+
+  /* Detached, locale-neutral progress for the checklist and save preview.
+     Purchase and release rules remain owned by their normal status readers. */
+  UI.crazyGamesObjective = function (s, previous) {
+    if (!FB.platform.isCrazyGames || !s || !s.player) return null;
+    const p = s.player, flags = p.flags || {};
+    const me = s.chars && s.chars[p.charId];
+    if (!me) return null;
+    if (p.dead || me.dead) return { id:'succession' };
+    const age = FB.ageOf(me, s.date.year);
+    if (age < 16) return { id:'adulthood', age:age };
+    const offer = p.tier === 0 ? FB.freedomOfferView(s) : null;
+    if (offer && offer.status === 'service') {
+      return { id:'service', days:offer.serviceDaysRemaining };
+    }
+    if (p.tier > 2) return null;
+    if (!flags.tut_seen_wed && !flags.tut_family_established &&
+        !flags.tut_track_family_legacy && !FB.spousesSnapshot(s, me).length) {
+      const match = flags.courting && p.courtingId && s.chars[p.courtingId];
+      if (!match || match.dead) return { id:'marriage' };
+      return { id:'courtship',
+        days:FB.socialAttentionDaysToThreshold(s, match, true),
+        ready:!!FB.instantStatus(s, 'propose').can };
+    }
+    if (!(p.enterprises || []).length) {
+      /* Live days reprice the displayed recommendation without rescanning the
+         whole catalogue. Exact panel refreshes and review clicks choose anew. */
+      let enterprise = previous && previous.id === 'enterprise' &&
+        previous.provinceId === p.provinceId
+        ? FB.enterprisePurchaseStatus(s, previous.type, p.provinceId, previous.settlement)
+        : null;
+      if (!enterprise || enterprise.blockers.some(function (blocker) {
+        return blocker.code !== 'funds';
+      })) enterprise = crazyGamesFirstEnterprise(s);
+      return enterprise ? { id:'enterprise', type:enterprise.id,
+        provinceId:enterprise.provinceId, settlement:enterprise.settlement,
+        place:enterprise.site.name, funds:enterprise.funds, cost:enterprise.cost }
+        : { id:'work' };
+    }
+    if (p.tier === 0) {
+      if (offer && offer.status === 'offered') {
+        return { id:'freedom-offer', funds:Math.floor(p.gold), cost:offer.price,
+          days:offer.serviceDays };
+      }
+      const purchase = FB.freedomPurchaseStatus(s);
+      return { id:'freedom', funds:purchase.gold, cost:purchase.quote.price };
+    }
+    if (!(p.landPlots || []).length) {
+      return { id:'land', funds:Math.floor(p.gold), cost:FB.landPlotCost(s) };
+    }
+    return null;
+  };
+
+  UI.crazyGamesObjectiveText = function (goal) {
+    if (!goal) return null;
+    switch (goal.id) {
+      case 'succession': return { title:FB.T('Continue the dynasty'),
+        detail:FB.T('Review the succession and choose who continues the household.') };
+      case 'adulthood': return { title:FB.T('Come of age'),
+        detail:FB.T('Age {age} / 16. Adult deeds unlock at sixteen.', { age:goal.age }) };
+      case 'marriage': return { title:FB.T('Establish your household'),
+        detail:FB.T('Use Seek a match to begin your first courtship.') };
+      case 'courtship': return { title:FB.T('Marry your match'),
+        detail:goal.ready ? FB.T('Your proposal is ready. Use Propose marriage.')
+          : goal.days === null ? FB.T('Review personal attention in Kin to advance this courtship.')
+          : goal.days > 0 ? FB.T('{days} attention days until the required Standing. Use Play to advance time.', { days:goal.days })
+          : FB.T('The required Standing is reached. Review the remaining proposal requirements.') };
+      case 'enterprise': return { title:FB.T('Start a family business'),
+        detail:FB.T('{money:funds} / {money:cost} saved for a business in {settlement}.', {
+          funds:goal.funds, cost:goal.cost, settlement:goal.place }) };
+      case 'freedom-offer': return { title:FB.T('Secure your freedom'),
+        detail:FB.T('{money:funds} / {money:cost} for your saved terms, then {days} days of final service.', {
+          funds:goal.funds, cost:goal.cost, days:goal.days }) };
+      case 'freedom': return { title:FB.T('Save for freedom'),
+        detail:FB.T('{money:funds} / {money:cost} for outright freedom. Review station & freedom to compare terms.', {
+          funds:goal.funds, cost:goal.cost }) };
+      case 'service': return { title:FB.T('Finish your final service'),
+        detail:FB.T('Freedom is paid for. {days} in-game days remain; use Play to continue.', { days:goal.days }) };
+      case 'land': return { title:FB.T('Buy your first land'),
+        detail:FB.T('{money:funds} / {money:cost} saved for your first plot.', {
+          funds:goal.funds, cost:goal.cost }) };
+      case 'work': return { title:FB.T('Build your livelihood'),
+        detail:FB.T('Review Work, training & enterprises for available work and business requirements.') };
+      default: return null;
+    }
+  };
+
+  UI.crazyGamesCampaignSummary = function (s) {
+    if (!FB.platform.isCrazyGames || !s || !s.player) return null;
+    const p = s.player, me = s.chars[p.charId];
+    return { version:1, tier:p.tier, enterprises:(p.enterprises || []).length,
+      plots:(p.landPlots || []).length,
+      married:!!(me && FB.spousesSnapshot(s, me).length),
+      objective:UI.crazyGamesObjective(s) };
+  };
+
+  UI.crazyGamesAchievementText = function (summary) {
+    if (!summary) return '';
+    if (summary.plots) return FB.T('Family property: land plots {plots}, enterprises {enterprises}.', summary);
+    if (summary.tier > 0) return FB.T('Your household is free. Enterprises: {enterprises}.', summary);
+    if (summary.enterprises) return FB.T('Family businesses established: {enterprises}.', summary);
+    return summary.married ? FB.T('Your household is established.')
+      : FB.T('Your household’s story has begun.');
+  };
+
   function crazyGamesProgressTip(id, text, deed) {
     if (!UI.tipDue(id)) return true;
     const exposed = deed && UI.revealDeedAction && UI.revealDeedAction(deed);
@@ -3301,6 +3420,7 @@ window.FB = window.FB || {};
         exposed ? '#tab-actions [data-action-id="livelihoods"]' :
           '#sidetabs .tab[data-tab="actions"]', {
           noNext:true, revealDeed:exposed ? 'livelihoods' : null,
+          reviewEnterprise:true,
           followUp:'crazygames-household'
         });
       return true;

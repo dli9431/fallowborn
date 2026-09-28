@@ -10,6 +10,8 @@ window.FB = window.FB || {};
   FB.activeBookmarkDiagnostics = [];
 
   var worldCache = {};
+  var activation = null;
+  var queuedActivations = [];
   var WORLD_FIELDS = [
     'provinces','realms','duchies','kingdoms','empires','straits',
     'crossingClasses','scripted'
@@ -882,10 +884,17 @@ window.FB = window.FB || {};
 
     let si = 0;
     function step() {
-      while (si < steps.length) {
-        const res = steps[si]();
-        if (res !== 'repeat') si++;
-        if (si < steps.length) { setTimeout(step, 0); return; }
+      /* A throwing step must still finish the build, or activations queued
+         behind it would wait forever. */
+      try {
+        while (si < steps.length) {
+          const res = steps[si]();
+          if (res !== 'repeat') si++;
+          if (si < steps.length) { setTimeout(step, 0); return; }
+        }
+      } catch (error) {
+        done(error);
+        return;
       }
       progress(1, 'The world is made.');
       if (siteFaults.length) {
@@ -915,19 +924,69 @@ window.FB = window.FB || {};
       setTimeout(function () { done(new Error(errors.join('\n'))); }, 0);
       return;
     }
-    installDefinition(definition);
-    if (worldCache[definition.id]) {
-      bindWorld(worldCache[definition.id]);
-      progress(1, 'The world is made.');
-      setTimeout(function () { done(null, definition); }, 0);
+    /* Activation installs its definition into FBDATA and a build yields
+       between steps, so activations run one at a time. A caller for the
+       bookmark already being built follows its progress and finishes with
+       it; any other caller waits until the current one's done has run. */
+    if (activation) {
+      if (activation.building && activation.id === definition.id) {
+        activation.listeners.push(progress);
+        activation.callbacks.push(done);
+        progress(activation.frac, activation.msg);
+      } else {
+        queuedActivations.push([requestedId, progress, done]);
+      }
       return;
     }
-    buildWorld(progress, function (error, world) {
-      if (error) { done(error); return; }
-      worldCache[definition.id] = world;
-      bindWorld(world);
-      done(null, definition);
-    });
+    var current = activation = {
+      id:definition.id, building:false, frac:0, msg:'Drawing the known world…',
+      listeners:[progress], callbacks:[done]
+    };
+    function finish(error) {
+      for (var i = 0; i < current.callbacks.length; i++) {
+        try {
+          if (error) current.callbacks[i](error);
+          else current.callbacks[i](null, definition);
+        } catch (callbackError) {
+          setTimeout(function () { throw callbackError; }, 0);
+        }
+      }
+      activation = null;
+      var next = queuedActivations.shift();
+      if (next) FB.activateBookmark(next[0], next[1], next[2]);
+    }
+    try {
+      installDefinition(definition);
+      if (worldCache[definition.id]) {
+        bindWorld(worldCache[definition.id]);
+        progress(1, 'The world is made.');
+        setTimeout(function () { finish(null); }, 0);
+        return;
+      }
+      current.building = true;
+      buildWorld(function (frac, msg) {
+        current.frac = frac; current.msg = msg;
+        for (var i = 0; i < current.listeners.length; i++) current.listeners[i](frac, msg);
+      }, function (error, world) {
+        if (!error) {
+          worldCache[definition.id] = world;
+          bindWorld(world);
+        }
+        finish(error);
+      });
+    } catch (error) {
+      // a synchronous failure must still release the queue
+      current.building = false;
+      setTimeout(function () { finish(error); }, 0);
+    }
+  };
+
+  /* Idle warm-up: build a bookmark's world while the title waits, so the
+     first click reuses it. No-op when it is cached or an activation runs. */
+  FB.prepareBookmark = function (id) {
+    var definition = FB.bookmark(id);
+    if (!definition || worldCache[definition.id] || activation) return;
+    FB.activateBookmark(definition.id);
   };
 
   /* Compatibility for old callers and mods: generate the public/default 867
