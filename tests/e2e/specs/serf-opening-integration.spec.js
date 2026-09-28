@@ -143,6 +143,7 @@ test('the tenure coach follows First steps, precedes optional deeds, and acknowl
       FB.game.uiPrefs.hideBeginnerHints = false;
       FB.game.uiPrefs.tipsGrandfathered = false;
       FB.game.uiPrefs.tipsSeen = {
+        'health-warning':1,
         'map-controls':1, 'map-home':1, 'map-filters':1,
         'first-event-result':1
       };

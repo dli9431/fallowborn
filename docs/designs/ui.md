@@ -2032,9 +2032,17 @@ departed protagonist's portrait. On desktop that retained-panel target uses the 
 over-map placement instead of falling back to the bottom-left toast corner.
 
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
-brand-new player once ever per install rather than once per save. Standard editions begin
-with a deed: when **Go into town…** is usable (an adult in a county with settlements), the
-first coachmark opens its Deeds section and points at it, adding an Osric-specific opening line
+brand-new player once ever per install rather than once per save. Every edition
+begins with one health coachmark anchored to the topbar health value: low health
+greatly increases the chance of dying. Adults also receive a pointer to **Rest and
+mend** under Daily Focus in Deeds. Acknowledgement or use of the highlighted health
+control records `tipsSeen['health-warning']` in the existing browser preference and
+hands off to the first deed. Later health losses do not repeat it; the ordinary hint
+opt-outs apply. It adds no health threshold trigger or gameplay change.
+
+Standard editions then begin with a deed: when **Go into town…** is usable (an adult
+in a county with settlements), the deed coachmark opens its Deeds section and points
+at it, adding an Osric-specific opening line
 for the Osric quick start; otherwise it points at the Deeds tab with the general deed
 lesson. Going into town asks the player to choose a settlement and then what to do there,
 so the first deed is a real decision rather than an automatic result. Time and the first

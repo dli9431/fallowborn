@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
   'js/events.js',
+  'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -26,7 +27,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
 });
 
-async function startFirstCampaign(page) {
+async function startFirstCampaign(page, keepHealthWarning) {
   await unlockStartTier(page, 1);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
@@ -35,6 +36,10 @@ async function startFirstCampaign(page) {
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
   await page.getByRole('button', { name:'Begin', exact:true }).click();
   await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+  if (!keepHealthWarning) {
+    await page.locator('.coachmark', { hasText:'Low health greatly increases' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+  }
 }
 
 async function finishFirstDeedLesson(page) {
@@ -74,7 +79,42 @@ async function finishOpeningHandoff(page, skipSelf) {
   }, !!skipSelf);
 }
 
-test('the first prompt points at a deed and is saved only after acknowledgement',
+for (const width of [1280, 390]) {
+  test('the startup health warning is learned once before deeds at ' + width + 'px',
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:width, height:844 });
+      await startFirstCampaign(page, true);
+      const warning = page.locator('.coachmark', { hasText:'Low health greatly increases' });
+      await expect(warning).toContainText('chance of dying');
+      await expect(warning).toContainText('Rest and mend under Daily Focus in Deeds');
+      await expect(page.locator('#tb-health')).toHaveClass(/coachmark-lit/);
+      expect(await page.evaluate(function () {
+        return { learned:!!FB.game.uiPrefs.tipsSeen['health-warning'],
+          duplicated:FB.ui.resumeFirstPlayerTip() };
+      })).toEqual({ learned:false, duplicated:false });
+      await expect(page.locator('.coachmark')).toHaveCount(1);
+      await warning.getByRole('button', { name:'Got it', exact:true }).click();
+      await expect(page.locator('.coachmark')).toContainText('as your first deed');
+      const learned = await page.evaluate(function () {
+        return { memory:FB.game.uiPrefs.tipsSeen['health-warning'],
+          stored:(JSON.parse(localStorage.getItem('fb_ui') || '{}').tipsSeen || {})
+            ['health-warning'] };
+      });
+      expect(learned.memory).toBe(1);
+      if (testInfo.project.name.endsWith('-served')) expect(learned.stored).toBe(1);
+      await page.evaluate(function () {
+        FB.state.chars[FB.state.player.charId].health = 2;
+        FB.ui.coachmarkReset();
+        FB.ui.refresh();
+        FB.ui.resumeFirstPlayerTip();
+      });
+      await waitForUiRefresh(page);
+      await expect(warning).toHaveCount(0);
+      await expect(page.locator('.coachmark')).toContainText('as your first deed');
+    });
+}
+
+test('the first deed prompt is saved only after acknowledgement',
   async function ({ page }, testInfo) {
     await startFirstCampaign(page);
     const coach = page.locator('.coachmark', { hasText:'as your first deed' });
@@ -120,6 +160,19 @@ test('the first prompt points at a deed and is saved only after acknowledgement'
     if (testInfo.project.name.endsWith('-served')) expect(learned.stored).toBe(1);
   });
 
+test('the startup health warning does not direct a child to an adult focus',
+  async function ({ page }) {
+    await startFirstCampaign(page, true);
+    await page.evaluate(function () {
+      const s = FB.state;
+      FB.ui.coachmarkReset();
+      s.chars[s.player.charId].born = s.date.year - 12;
+      FB.ui.resumeFirstPlayerTip();
+    });
+    await expect(page.locator('.coachmark')).toContainText('Low health greatly increases');
+    await expect(page.locator('.coachmark')).not.toContainText('Rest and mend');
+  });
+
 test('an unread first prompt returns after reload and Continue',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
@@ -135,6 +188,9 @@ test('an unread first prompt returns after reload and Continue',
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
     await page.locator('#btn-continue').click();
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function () {
+      return FB.game.uiPrefs.tipsSeen['health-warning'];
+    })).toBe(1);
     await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
       .toBeVisible();
     await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))

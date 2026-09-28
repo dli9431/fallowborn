@@ -64,8 +64,10 @@ test('a new life gets a short intro, a focused orientation, and First steps',
     await expect(page.locator('#gm-body')).not.toContainText('Press Space');
     await page.getByRole('button', { name: 'Begin', exact: true }).click();
 
-    // no orientation sheet: the first coachmark points at a usable deed
+    // The startup warning precedes the first playable deed lesson.
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await page.locator('.coachmark', { hasText:'Low health greatly increases' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
 
     const firstCoach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(firstCoach).toBeVisible();
@@ -155,6 +157,8 @@ test('Daily Focus stays separate and desperate measures commits only after a cho
   async function ({ page }) {
     await page.setViewportSize({ width:1280, height:800 });
     await startDeterministicGame(page, { keepFirstTimeTips:true });
+    await page.locator('.coachmark', { hasText:'Low health greatly increases' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
     const firstDeed = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(firstDeed).toBeVisible();
     await firstDeed.getByRole('button', { name:'Got it', exact:true }).click();
@@ -418,6 +422,8 @@ test('using a highlighted control learns and closes its one-step coachmark',
     await page.getByRole('button', { name:/Use this seed/ }).click();
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
     await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await page.locator('.coachmark', { hasText:'Low health greatly increases' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
 
     const coach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(coach).toBeVisible();

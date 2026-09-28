@@ -2206,7 +2206,8 @@ window.FB = window.FB || {};
   }
 
   function runCoachFollowUp(followUp, usedControl) {
-    if (followUp === 'crazygames-household' && UI.resumeFirstPlayerTip) {
+    if ((followUp === 'health-warning' || followUp === 'crazygames-household') &&
+        UI.resumeFirstPlayerTip) {
       UI.resumeFirstPlayerTip();
     } else if (followUp === 'first-deed' && UI.maybeFirstTimeFlowTip) {
       UI.maybeFirstTimeFlowTip();
@@ -2884,7 +2885,8 @@ window.FB = window.FB || {};
   };
 
   /* ================= first-time player tips =================
-     Every edition starts at an available deed (Go into town when it is
+     Every edition warns once about low health, then starts at an available
+     deed (Go into town when it is
      usable, otherwise the Deeds tab) and defers the map, Home, and filters
      tour until First steps and its event result.
      The playable deed/time/event/hostile-deed loop, the new
@@ -3509,6 +3511,14 @@ window.FB = window.FB || {};
     if (FB.platform.isCrazyGames && (tipsSilenced() || coachItem ||
         coachQueue.length || (UI.eventsBusy && UI.eventsBusy()) ||
         !$('genmodal').classList.contains('hidden'))) return false;
+    if (UI.tipDue('health-warning') || tipPending['health-warning']) {
+      const me = s.chars[s.player.charId];
+      return UI.maybeTip('health-warning',
+        me && FB.ageOf(me, s.date.year) >= 16
+          ? '💡 Low health greatly increases your chance of dying. Use Rest and mend under Daily Focus in Deeds to recover health as days pass.'
+          : '💡 Low health greatly increases your chance of dying. Keep an eye on your health as your story unfolds.',
+        '#tb-health', { noNext:true, followUp:'health-warning' });
+    }
     if (FB.platform.isCrazyGames && flags.courting && s.player.courtingId &&
         UI.tipDue('family-courtship')) return UI.maybeFamilyCourtshipTip();
     if (!flags.tut_deed) {

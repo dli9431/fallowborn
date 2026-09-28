@@ -708,6 +708,8 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
     await page.getByRole('button', { name:'Begin', exact:true }).click();
 
+    await page.locator('.coachmark', { hasText:'Low health greatly increases' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
     await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
       .toBeVisible();
     await page.evaluate(function () {

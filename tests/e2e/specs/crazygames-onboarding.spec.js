@@ -44,6 +44,10 @@ async function startPortal(page, testInfo) {
       Math.random = random;
     }
   });
+  const health = page.locator('.coachmark', { hasText:'Low health greatly increases' });
+  await expect(health).toContainText('chance of dying');
+  await expect(page.locator('#tb-health')).toHaveClass(/coachmark-lit/);
+  await health.getByRole('button', { name:'Got it', exact:true }).click();
   await expect(page.locator('.coachmark')).toContainText('use Seek a match');
 }
 
@@ -787,6 +791,8 @@ test('a standard phone build with an SDK present keeps the town-first and later-
     await mockCrazyGames(page);
     await openGame(page, testInfo);
     await startDeterministicGame(page, { keepFirstTimeTips:true });
+    await page.locator('.coachmark', { hasText:'Low health greatly increases' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
     await expect(page.locator('.coachmark')).toContainText('Try Go into town');
     await expect(page.locator('[data-action-id="go_to_town"]'))
       .toHaveClass(/coachmark-lit/);
