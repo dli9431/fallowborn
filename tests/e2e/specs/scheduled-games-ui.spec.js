@@ -50,6 +50,7 @@ test('Events is an independent keyboard-accessible overlay with exact settlement
   },id);
   await page.locator('#btn-events').focus();await page.locator('#btn-events').press('Enter');
   await expect(page.locator('#btn-events')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('#btn-events')).toHaveClass(/(^|\s)on(\s|$)/);
   await page.waitForFunction(()=>FB.map.visibleEvents.length>0);
   const after=await page.evaluate(function(id){
     var M=FB.map,e=FB.tournaments.get(FB.state,id),site=FB.world.sitesByProv[e.provinceId].list[e.settlement],marker=M.visibleEvents.filter(v=>v.ids.indexOf(id)>=0)[0];

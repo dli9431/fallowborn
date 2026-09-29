@@ -4397,7 +4397,8 @@ window.FB = window.FB || {};
       const next = Math.max(sizes.panel, Math.min(sizes.map, height));
       main.style.setProperty('--mobile-map-height', Math.round(next) + 'px');
       document.body.classList.toggle('mobile-pane-map-compact', next < 186);
-      document.body.classList.toggle('mobile-pane-map-tall', next >= 324);
+      // One rail of eight 44px HUD targets, seven 2px gaps and the rail insets.
+      document.body.classList.toggle('mobile-pane-map-tall', next >= 370);
       handle.dataset.snap = state || 'custom';
       setAccessibility(state, next, sizes);
       if (UI.layoutMapToasts) UI.layoutMapToasts();
@@ -4640,6 +4641,7 @@ window.FB = window.FB || {};
     $('btn-events').addEventListener('click', function () {
       FB.map.eventsOverlay = !FB.map.eventsOverlay;
       this.setAttribute('aria-pressed', String(FB.map.eventsOverlay));
+      this.classList.toggle('on', FB.map.eventsOverlay);
       FB.map.request();
     });
     const btnFind = $('btn-find');

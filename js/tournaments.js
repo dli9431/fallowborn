@@ -70,6 +70,7 @@ window.FB = window.FB || {};
     return null;
   };
   T.active = function (s) { return root(s).events.filter(live); };
+  T.available = function (s, id) { return available(s, id); };
   T.venueName = function (e) {
     var site = settlement(e), county = FB.world.byId[e.provinceId];
     return site && site.name || county && county.name || e.provinceId;

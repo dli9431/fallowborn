@@ -9216,7 +9216,14 @@ window.FB = window.FB || {};
     if ($('settlement-revoke')) $('settlement-revoke').onclick = function () { reviewLordshipChange(false); };
     if ($('settlement-restore')) $('settlement-restore').onclick = function () { reviewLordshipChange(true); };
     const grantButton = $('settlement-grant');
-    if ($('settlement-host-games')) $('settlement-host-games').onclick = function () { UI.showHostGames(pid, idx); };
+    if ($('settlement-host-games')) $('settlement-host-games').onclick = function () {
+      const scroll = $('gm-body').scrollTop;
+      UI.showHostGames(pid, idx, function () {
+        UI.showSettlement(pid, idx, options);
+        if ($('settlement-host-games')) $('settlement-host-games').focus({ preventScroll:true });
+        $('gm-body').scrollTop = scroll;
+      });
+    };
     if (grantButton) grantButton.addEventListener('click', function () { UI.showSettlementGrant(pid, idx, options); });
     const folkButtons = $('gm-body').querySelectorAll('[data-settlement-folk]');
     for (let folkButtonIndex = 0; folkButtonIndex < folkButtons.length;

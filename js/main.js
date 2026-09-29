@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.188.0';
+FB.VERSION = '1.188.1';
 FB.CHANGELOG = [
+  { v: '1.188.1', date: '2026-09-29', changes: [
+    'Games sheets now stay current after entering, travelling or funding, and show injury risk, portraits and blockers up front. The Events map button shows when it is active.'
+  ] },
   { v: '1.188.0', date: '2026-09-29', changes: [
     'Host scheduled regional games or travel the circuit to compete, perform, trade, and work. Find gatherings in the Events calendar and map overlay; war interrupts bookings and sends travellers home.'
   ] },

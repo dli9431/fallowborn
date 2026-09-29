@@ -641,7 +641,7 @@ test('context banks, playback controls, and listening history stay consistent',
     await expect(musicBtn).toHaveAttribute('title', 'Music');
     expect(await page.locator('#maphud .hudbtn').evaluateAll(function (buttons) {
       return buttons.map(function (b) { return b.id; });
-    })).toEqual(['btn-music', 'btn-zoomin', 'btn-zoomout', 'btn-home', 'btn-mapmode', 'btn-marketlens', 'btn-find']);
+    })).toEqual(['btn-music', 'btn-zoomin', 'btn-zoomout', 'btn-home', 'btn-mapmode', 'btn-marketlens', 'btn-events', 'btn-find']);
 
     const musicControls = page.locator('#music-controls');
     await expect(musicControls).toBeHidden();
@@ -1009,7 +1009,7 @@ test('context banks, playback controls, and listening history stay consistent',
       hudButtonHeight:44,
       hudColumns:2,
       hudButtonsVertical:false,
-      hudButtonOrder:['btn-music', 'btn-zoomin', 'btn-zoomout', 'btn-home', 'btn-mapmode', 'btn-marketlens', 'btn-find'],
+      hudButtonOrder:['btn-music', 'btn-zoomin', 'btn-zoomout', 'btn-home', 'btn-mapmode', 'btn-marketlens', 'btn-events', 'btn-find'],
       clearsHud:true
     });
     /* Toast clearance is asserted on the settled layout: measured in the same

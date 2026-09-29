@@ -1016,6 +1016,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       }
       return {
         counts:[FBDATA.focuses.length, FBDATA.deeds.length],
+        gamesOrder:FBDATA.deeds.slice(6, 10).map(function (def) { return def.id; }),
         lordshipDeeds:['found_settlement', 'county_challenge', 'county_recognition'].map(function (id) {
           const definition = FBDATA.deeds.find(function (def) { return def.id === id; });
           const projected = definition && FB.instants[definition.order];
@@ -1031,7 +1032,10 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 84]);
+    expect(result.counts).toEqual([28, 87]);
+    expect(result.gamesOrder).toEqual([
+      'take_road', 'games_calendar', 'host_games', 'travel_turn_back'
+    ]);
     expect(result.lordshipDeeds).toEqual([true, true, true]);
     expect(result.initialized).toEqual(['function', 'function', true]);
     expect(result.validation).toEqual([]);

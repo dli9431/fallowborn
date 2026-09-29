@@ -1313,7 +1313,8 @@ starting development; broader duchy and kingdom results remain map-navigation
 aids rather than silently choosing an arbitrary county.
 The map overlays and Market lens are mutually exclusive so their controls never
 compete for the map corner. Portrait maps reserve enough height to keep the
-seven 44-pixel HUD targets in one rail; shallow landscape maps use a compact
+eight 44-pixel HUD targets (music, zoom in, zoom out, home, map filters,
+Market lens, Events, find) in one rail; shallow landscape maps use a compact
 two-column HUD cluster while preserving the same touch floor.
 
 Surface-specific browser behavior is centralized in `FB.platform`, initialized by
@@ -3560,4 +3561,8 @@ values the engine applies.
 No new visual style or distribution-specific layout is introduced.
 
 
-The Events map button toggles an independent overlay without changing political filters or the market lens. Its distant markers cluster and its detailed markers anchor to settlements. The matching Deeds calendar exposes Upcoming, Reachable, Local and My bookings. Calendar, hosting setup, funding review, activity review and journey review use shared modal history, Details cards and native labeled selectors. Funding allocations, remaining treasury, return allowance and specific wartime blockers are visible before confirmation; Back restores the source view. See tournaments.md.
+The Events map button toggles an independent overlay without changing political filters or the market lens; like the other HUD toggles it shows its active state with the shared on style as well as aria-pressed. Its distant markers cluster and its detailed markers anchor to settlements. A cluster opens the calendar limited to its gatherings; that subset survives filter changes until Show the full calendar. The matching Deeds calendar exposes Upcoming, Reachable, Local and My bookings as review cards whose face shows date, scale, headline purse and the first blocker, booking state or journey length.
+
+Calendar, gathering, hosting setup, funding review, activity review, round tactics and journey review use shared modal history, Details cards and native labeled selectors. Each child sheet returns through a renderer that rebuilds its parent from current engine state and restores scroll, open Details and focus, so Back never shows terms or controls a confirmed transaction has changed. Confirmations (entry, journey, withdrawal, cancellation, stopping annual recurrence and the funded return home) return one level to that refreshed parent; funding an edition replaces the hosting form with the announced gathering. Rest, practice, introductions and gifts refresh the gathering in place at the same scroll position with focus on the acted card.
+
+Funding allocations, remaining treasury, return allowance, entry payments, injury and severe-wound risk, and specific wartime or funding blockers are visible before confirmation. Funding formulas, renewal timing and onward-journey rules live in the title Details. Hosts, local guests, real entrants and known circuit contacts appear with portraits; generated entrants without a character record remain names. Contest fields are information cards that use the side tooltip on roomy pointer layouts and the compact question-mark disclosure elsewhere. See tournaments.md.
