@@ -1323,3 +1323,6 @@ office gives tier-3 compatibility, 80 household troops and 2.5 seasonal piety;
 privileges increase capacity, allowance and religious prestige. The estate
 survives death and retirement without passing its office to the dynasty heir.
 See [abbeys.md](abbeys.md) for the separate technology decisions and lifecycle.
+
+
+Scheduled games retain bounded protagonist circuit totals and at most eight recurring contact snapshots, without a permanent career. Major victories and completed hosting add tournament and games_hosted life facts. Individual performance uses skills, traits, worn equipment, health and fatigue; acreage and troop numbers confer no bonus. Tournament health damage uses ordinary health effects, and skill gain is capped to one per completed edition. See tournaments.md.

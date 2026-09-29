@@ -151,3 +151,6 @@ the owner requested i18n regeneration, regenerate from the *merged source*
 side and let current English fallback cover missing or stale records until a later successful
 regeneration. `validate` is the gate for regenerated artifacts, not for the surrounding source
 integration.
+
+
+Scheduled games structured labels in data/tournaments.js are extracted under tournament_scales, tournament_programmes, tournament_tracks and tournament_tactics. Render them through FB.dataText. Incident events are individually authored literal records with stable ids and option indices; saved tournament messages register literal news.tournament fallbacks at boot. Ordinary catalog generation remains subject to the separate owner-requested integration workflow.

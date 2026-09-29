@@ -2033,3 +2033,6 @@ rechecks state identity, host membership, primary status and the holy-war vow so
 a stale card cannot dismiss another banner. Land retains its scroll after the
 refresh. This is an entry point to an existing action, with no technology or
 simulation eligibility expansion. Coverage: `tests/e2e/specs/land-demuster.spec.js`.
+
+
+Hosting and every scheduled-games attendance track require peace throughout personal, home, host and venue ruling chains. Ordinary campaigns, active holy wars and armed revolts count; holy-war preparation, threats and truces do not. War cancels an ineligible host edition or withdraws only affected visitors, releases reserved capacity, preserves earned rewards and refunds unused commitments. Tournament travellers physically return using their prepaid allowance before generic travel cancellation. See tournaments.md.

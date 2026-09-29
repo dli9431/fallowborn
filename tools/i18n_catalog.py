@@ -665,6 +665,17 @@ def extract_structured(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]),
                         )
 
+    tournament_path = ROOT / "data" / "tournaments.js"
+    tournament = node_object(find_assignment(tournament_path, "FBDATA", "tournaments")) or {}
+    for group in ("scales", "programmes", "tracks", "tactics"):
+        for item_id, item_node in (node_object(tournament.get(group)) or {}).items():
+            item = node_object(item_node) or {}
+            for field in ("name", "desc"):
+                for branch, record, line in branch_records(item.get(field)):
+                    inv.add(f"tournament_{group}.{item_id}.{field}.{branch}", record,
+                            f"data/tournaments.js:{line}", f"Games {group} {item_id}, {field}.",
+                            TOKEN_RE.findall(record["text"]))
+
     ambition_path = ROOT / "data" / "ambitions.js"
     for item_node in node_array(find_assignment(ambition_path, "FBDATA", "historicalAmbitions")) or []:
         item = node_object(item_node) or {}

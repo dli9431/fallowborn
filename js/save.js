@@ -1702,6 +1702,10 @@ window.FB = window.FB || {};
     if (FB.ensureJustice) restoreRepair('justice state', function () {
       FB.ensureJustice(FB.state);
     });
+    if (FB.tournaments) restoreRepair('scheduled games', function () {
+      FB.tournaments.ensure(FB.state);
+      FB.tournaments.reconcile(FB.state);
+    });
     if (FB.fabricatedClaimOf) restoreRepair('fabricated claims', function () {
       FB.fabricatedClaimOf(FB.state);
     });

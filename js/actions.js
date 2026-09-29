@@ -3086,6 +3086,15 @@ window.FB = window.FB || {};
         if (FB.ui && FB.ui.showAuction) FB.ui.showAuction();
       }
     } },
+  { id:'games_calendar', opensChoices:true, noConsume:true,
+    desc:function () { return FB.T('Browse funded games, admission, purses and travel dates.'); },
+    show:function () { return true; }, can:function () { return true; },
+    run:function () { FB.ui.showGames(); } },
+  { id:'host_games', opensChoices:true, noConsume:true, requiresAdult:true,
+    desc:function () { return FB.T('Fund a seven-day gathering at a settlement you directly own.'); },
+    show:function (s) { return s.player.tier >= 3; },
+    can:function (s) { var q = FB.tournaments.eligibility(s,s.player.charId); return q.ok || q.reason; },
+    run:function () { FB.ui.showHostGames(); } },
   { id: 'take_road', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () { return FB.T('Choose a purpose and travel county by county over game time.'); },
     show: function (s) {
@@ -6613,7 +6622,7 @@ window.FB = window.FB || {};
   /* Locale-neutral standing seasonal cash flow. Credit capacity and the
      displayed ledger both use this numeric source; neither parses localized
      labels from incomeBreakdown. */
-  FB.playerCivilianBudget = function (state, economy, ignoreAssignments) {
+  FB.playerCivilianBudget = function (state, economy, ignoreAssignments, options) {
     const p = state.player;
     let receipts = 0;
     let total = -FB.householdUpkeep(state) - FB.playerGovernmentCosts(state).total;
@@ -6634,7 +6643,7 @@ window.FB = window.FB || {};
     if (FB.retainerSeasonCost) total -= FB.retainerSeasonCost(state);
     if (FB.enterpriseLaborSeasonCost) total -= FB.enterpriseLaborSeasonCost(state);
     if (FB.schoolingSeasonCost) total -= FB.schoolingSeasonCost(state);
-    const focus = FB.focusIncome(state);
+    const focus = options && options.excludeFocus ? null : FB.focusIncome(state);
     if (focus && focus.gold) { total += focus.gold; receipts += Math.max(0, focus.gold); }
     if (!ignoreAssignments && FB.financeAssignedIncomeCost) {
       total -= FB.financeAssignedIncomeCost(state, economy);
@@ -12221,7 +12230,7 @@ window.FB = window.FB || {};
     const out = [];
     for (const a of FB.instants) {
       if (state.player.travel &&
-        ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
+        ['games_calendar', 'host_games', 'travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
           'travel_settle_here', 'frontier_settle_here', 'review_serf_tenure', 'declare_manor', 'petition_barony', 'found_settlement',
           'petition_liege', 'claim_higher_title'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;

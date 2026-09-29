@@ -10883,6 +10883,18 @@ window.FB = window.FB || {};
     });
     if (record.type === 'worldNews') return FB.T('World news follows');
     if (record.type === 'system') {
+      if (record.system === 'tournament') {
+        if (record.field === 'fatigue') return FB.T('Games fatigue {change}',{change:numberText(amount)});
+        if (record.field === 'preparation') return FB.T('Games preparation {change}',{change:numberText(amount)});
+        if (record.field === 'reputation') return FB.T('Circuit reputation {change}',{change:numberText(amount)});
+        if (record.field === 'round') {
+          const contest = record.scored
+            ? FB.T('Score base {power}, plus a roll from 0 to 12',{power:Math.round(record.power * 10) / 10})
+            : FB.T('Round win chance {chance}%',{chance:Math.round(record.chance * 100)});
+          return FB.T('{contest}; fatigue +{fatigue}; injury {injury}% including {severe}% severe wounds',{
+            contest:contest,fatigue:record.fatigue,injury:Math.round(record.injury * 1000) / 10,severe:Math.round(record.severe * 1000) / 10});
+        }
+      }
       if (record.system === 'justice') {
         if (record.action === 'custody') return FB.T('Enter custody for up to {days} days', { days:record.days || 90 });
         if (record.action === 'resist') return FB.T('Risk of capture: {chance}%', { chance:Math.round((record.chance || 0) * 100) });

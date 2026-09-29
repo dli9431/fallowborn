@@ -3255,6 +3255,8 @@ window.FB = window.FB || {};
     preservedEntries:32, playedEntries:40 };
   FB.LIFE_HISTORY_LIMITS = Object.freeze(LIFE_LIMITS);
   const lifeMessages = {
+    tournament:FB.msg('news.biography.tournament', 'Won a competition at the games in {venue}.', {}),
+    games_hosted:FB.msg('news.biography.games_hosted', 'Hosted games at {venue}.', {}),
     rank:FB.msg('news.biography.rank', 'Became {title}.', {}),
     accession:FB.msg('news.biography.accession', 'Acceded as {title}.', {}),
     loss:FB.msg('news.biography.loss', 'Lost the title of {title}.', {}),
@@ -3271,6 +3273,7 @@ window.FB = window.FB || {};
     exile:FB.msg('news.biography.exile', 'Sent into exile.', {})
   };
   const lifeWeights = { rank:80, accession:90, loss:85, conquest:70,
+    tournament:45, games_hosted:40,
     battle:30, defeat:30, command:30, command_defeat:30,
     foundation:90, death:100, retirement:95, appointment:65, captivity:65, exile:75 };
   const lifeIndexes = new WeakMap();

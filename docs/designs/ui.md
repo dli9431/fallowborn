@@ -3558,3 +3558,6 @@ Offer refuge. Effect numbers in review text come from FBDATA.abbeys, the same
 values the engine applies.
 
 No new visual style or distribution-specific layout is introduced.
+
+
+The Events map button toggles an independent overlay without changing political filters or the market lens. Its distant markers cluster and its detailed markers anchor to settlements. The matching Deeds calendar exposes Upcoming, Reachable, Local and My bookings. Calendar, hosting setup, funding review, activity review and journey review use shared modal history, Details cards and native labeled selectors. Funding allocations, remaining treasury, return allowance and specific wartime blockers are visible before confirmation; Back restores the source view. See tournaments.md.

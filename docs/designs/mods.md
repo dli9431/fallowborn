@@ -325,3 +325,6 @@ milestone-zero registry.
 CrazyGames skips stored/bundled mods and rejects apply/store/toggle operations.
 Its fixed save fingerprint is `crazygames-content-1`; ordinary builds retain the
 existing mod lifecycle. See [content profiles](distribution-content.md).
+
+
+The tournaments runtime-mod root can override existing ids within scales, programmes, tracks and tactics. Definitions are merged into the existing tables so engine and UI share the effective values. Structural duration, notice, capacity and retention bounds remain engine-owned. New track ids require an engine extension rather than being silently admitted. Structured display fields localize through tournament_scales, tournament_programmes, tournament_tracks and tournament_tactics. See ../MODDING.md and tournaments.md.

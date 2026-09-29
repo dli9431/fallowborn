@@ -161,6 +161,7 @@
     });
     state.wars[id] = war;
     invalidateWars(state);
+    if (FB.tournaments) FB.tournaments.reconcile(state);
     return war;
   };
   FB.ordinaryWarParticipants = function (state, owner, war) {

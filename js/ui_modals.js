@@ -8911,6 +8911,7 @@ window.FB = window.FB || {};
       esc(FB.T('{kind} in {county} county · held by {holder}', {
         kind:settlementKindName(st.kind), county:FB.L(pr.name), holder:'__settlement_holder__'
       })).replace('__settlement_holder__', holderMarkup) + '</p></div>';
+    if (managesSettlement && s.player.tier >= 3) h += '<button type="button" class="actionbtn" id="settlement-host-games">' + esc(FB.T('Host games…')) + '</button>';
     const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
     h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
       (s.realms[holdId] ? s.realms[holdId].name : FB.T('None')))) + '</div>';
@@ -9215,6 +9216,7 @@ window.FB = window.FB || {};
     if ($('settlement-revoke')) $('settlement-revoke').onclick = function () { reviewLordshipChange(false); };
     if ($('settlement-restore')) $('settlement-restore').onclick = function () { reviewLordshipChange(true); };
     const grantButton = $('settlement-grant');
+    if ($('settlement-host-games')) $('settlement-host-games').onclick = function () { UI.showHostGames(pid, idx); };
     if (grantButton) grantButton.addEventListener('click', function () { UI.showSettlementGrant(pid, idx, options); });
     const folkButtons = $('gm-body').querySelectorAll('[data-settlement-folk]');
     for (let folkButtonIndex = 0; folkButtonIndex < folkButtons.length;

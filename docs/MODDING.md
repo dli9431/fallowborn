@@ -4822,3 +4822,10 @@ negative amounts clamp to zero. These are flat yearly rewards, independent of
 rank advancement's `prestigeGain` and seasonal `pietyYield`. The highest eligible
 religious amount counts, then ruling and guild amounts add to it. This source
 balance table is not an additional runtime-mod registry.
+
+
+Scheduled games extension interface
+
+FBDATA.tournaments is loaded from data/tournaments.js. The tournaments runtime-mod root merges fields into existing scales (local, regional, grand), programmes (martial, mounted, lists), tracks (joust, melee, archery, wrestling, perform, trade, carrying, kitchens, stables, repairs, guarding, treatment, watch), and tactics (conservative, balanced, aggressive, assist). Keep ids, prize-bucket mappings, skill keys and character eligibility semantic; localize only name/desc. The duration, notice, world-capacity and record-retention constants are not exposed through this mod root. New activity ids require matching engine implementation.
+
+FB.tournaments exposes pure quote, entry, roundPreview, travelQuote, capacity, eligibility and calendar reads, with separate book, enter, resolveRound, depart, cancel, withdraw, tick and reconcile mutations. Never charge or roll from a preview. Confirmation must pass the exact review signature. Scheduled event records use contextValidator scheduled_games_valid and tournamentId, tournamentCharId, tournamentTrack, tournamentRound, tournamentKind. Each custom effect has its own impact adapter. Legacy invitation ids and option indices remain valid for queued saves. Full schemas and formulas are in designs/tournaments.md and plans/tournaments-and-regional-games.md.

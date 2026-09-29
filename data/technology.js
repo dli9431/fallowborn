@@ -75,6 +75,11 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      scheduled_games:{ mode:'none', rationale:'Hosting civic and courtly games, annual intentions and regional capacity require peace, ownership and funding, not an invention.' },
+      tournament_circuit_travel:{ mode:'none', rationale:'Targeted repeatable festival journeys are baseline personal travel with a reserved physical return.' },
+      regional_open_games:{ mode:'none', rationale:'Martial exercises, archery and wrestling predate formal western tournaments and remain available from 867.' },
+      tournament_sponsorship:{ mode:'none', rationale:'Event-specific backing for a trained commoner is social patronage, not a research unlock or promotion.' },
+      festival_livelihoods:{ mode:'none', rationale:'Performance, festival contracts, market trading and patronage reuse existing personal skills and career restrictions.' },
       abbey_appointments:{ mode:'none', rationale:'Religious elections depend on competence, service and community support, without a research gate.' },
       abbey_foundations:{ mode:'none', rationale:'Founding a religious community is baseline patronage funded by private resources.' },
       abbey_endowments:{ mode:'none', rationale:'Donating owned unpledged property is baseline institutional patronage; property acquisition retains its gates.' },
@@ -388,7 +393,7 @@ window.FBDATA = window.FBDATA || {};
       },
       tournament_jousting:{
         mode:'hard', tech:['cavalry_lances'], fallback:'melee_attendance_patronage_or_wagers',
-        rationale:'Formal couched-lance competition depends on the matching cavalry practice.'
+        rationale:'Formal couched-lance competition requires the venue sovereign to know cavalry_lances. Accepted entries are grandfathered; melee, open games and social attendance remain available.'
       },
       guild_smith_path:{
         mode:'none',

@@ -1767,3 +1767,6 @@ Full character retention includes holders, residents, contacts and dispute
 participants. A seasonal vacancy lasting 360 days receives an appointed NPC
 superior unless a recent petitioner is still within the cooldown or its one-season
 retry window; the stored faith and culture outlive the player's conversion.
+
+
+Scheduled games add state.tournaments and player.circuit without changing save format 3. Frozen budgets, finite payment keys, exact participants and round contexts survive restoration. Restoration reconciles host and visitor eligibility before travel; cancelled editions never revive at peace. Full editions expire after closure and the return window; summaries, four income samples and eight circuit contacts are bounded. Active host/participant ids protect court records until their commitments end. See tournaments.md.

@@ -177,7 +177,7 @@ window.FBMODS = window.FBMODS || [];
     positions:true, localCouncilMotions:true, feudalServiceCharters:true,
     schooling:true, enterprises:true, auctionLotTypes:true,
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
-    marketEndowments:true, travelPurposes:true, travelSites:true,
+    marketEndowments:true, travelPurposes:true, travelSites:true, tournaments:true,
     finance:true, plots:true, intrigue:true, items:true, itemPools:true,
     rulerTraits:true, raidingTraditions:true, councilSeats:true,
     councilRules:true, politicalBlocs:true,
@@ -1441,6 +1441,16 @@ window.FBMODS = window.FBMODS || [];
       for (const k in mod.travelPurposes) FBDATA.travelPurposes[k] = mod.travelPurposes[k];
     }
     if (mod.travelSites) mergeById(FBDATA.travelSites, mod.travelSites, 'id');
+    if (mod.tournaments) {
+      ['scales','programmes','tracks','tactics'].forEach(function (group) {
+        if (!mod.tournaments[group]) return;
+        for (const id in mod.tournaments[group]) {
+          if (Object.prototype.hasOwnProperty.call(FBDATA.tournaments[group],id)) {
+            Object.assign(FBDATA.tournaments[group][id],mod.tournaments[group][id]);
+          }
+        }
+      });
+    }
     if (mod.finance) for (const k in mod.finance) FBDATA.finance[k] = mod.finance[k];
     if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];
     if (mod.items) for (const k in mod.items) FBDATA.items[k] = mod.items[k];

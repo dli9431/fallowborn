@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.187.0';
+FB.VERSION = '1.188.0';
 FB.CHANGELOG = [
+  { v: '1.188.0', date: '2026-09-29', changes: [
+    'Host scheduled regional games or travel the circuit to compete, perform, trade, and work. Find gatherings in the Events calendar and map overlay; war interrupts bookings and sends travellers home.'
+  ] },
   { v: '1.187.0', date: '2026-09-28', changes: [
     'Catholic women can govern endowed abbeys, host noble residents, and seek royal and papal privileges. Find abbey elections, patronage, and estate management in Work, Self, and Deeds.'
   ] },
@@ -3895,6 +3898,11 @@ FB.CHANGELOG = [
       if (seasonBoundary && newYear) FB.worldTick(s);
       FB.armyTick(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
+      if (FB.tournaments) {
+        FB.tournaments.reconcile(s);
+        if (seasonBoundary) FB.tournaments.season(s);
+        FB.tournaments.tick(s);
+      }
       s.eventQueue.length = 0;
       if (!(opts && opts.deferUi)) {
         FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
@@ -3912,6 +3920,7 @@ FB.CHANGELOG = [
       if (FB.marketSeason) FB.marketSeason(s);
       const taxParts = p.tier >= 3 ? FB.playerTaxParts(s) : null;
       const income = taxParts ? FB.playerTax(s, taxParts) : 0;
+      if (FB.tournaments) FB.tournaments.samplePlayer(s);
       if (FB.treasurySeason) FB.treasurySeason(s, taxParts);
       const buildingUpkeep = p.tier >= 3
         ? FB.buildingBonus(s, 'upkeep') + (FB.fortUpkeep ? FB.fortUpkeep(s) : 0)
@@ -3977,6 +3986,7 @@ FB.CHANGELOG = [
          while Finance and the gold sheet show it immediately. */
       if (newYear) FB.financeYear(s, seasonEconomy);
       if (newYear) annualContext = FB.worldTick(s);
+      if (FB.tournaments) FB.tournaments.season(s);
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
       if (newYear) {
         yearlyLife(s, annualContext);
@@ -3988,7 +3998,9 @@ FB.CHANGELOG = [
     birthTick(s);
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
+    if (FB.tournaments) FB.tournaments.reconcile(s);
     if (FB.travelTick) FB.travelTick(s);
+    if (FB.tournaments) FB.tournaments.tick(s);
     if (FB.giftDeliveryTick) FB.giftDeliveryTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
@@ -5533,6 +5545,7 @@ FB.CHANGELOG = [
     if (!heirs.length && FB.settlementLordshipsPlayerSuccession) {
       FB.settlementLordshipsPlayerSuccession(s, me.id, null);
     }
+    if (FB.tournaments) FB.tournaments.reconcile(s);
     const deathTelemetry = {
       entry_type:telemetryEntryType,
       active_seconds:activeSeconds,
@@ -6080,6 +6093,7 @@ FB.CHANGELOG = [
       FB.ui.maybeTip('succession', successionTip,
         '#sidetabs .tab[data-tab="log"]');
     }
+    if (FB.tournaments) FB.tournaments.reconcile(s);
     G.paused = true; // a new life begins at rest
     FB.ui.refresh();
     FB.save.autosave();

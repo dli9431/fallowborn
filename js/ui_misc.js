@@ -4637,6 +4637,11 @@ window.FB = window.FB || {};
     $('btn-marketlens').addEventListener('click', function () {
       UI.setMarketLens(!FB.map.marketGood);
     });
+    $('btn-events').addEventListener('click', function () {
+      FB.map.eventsOverlay = !FB.map.eventsOverlay;
+      this.setAttribute('aria-pressed', String(FB.map.eventsOverlay));
+      FB.map.request();
+    });
     const btnFind = $('btn-find');
     if (btnFind) {
       btnFind.addEventListener('click', function () {

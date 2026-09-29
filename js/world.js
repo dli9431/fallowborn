@@ -3345,6 +3345,7 @@ window.FB = window.FB || {};
     if (!state || !c || !state.player) return false;
     if (FB.settlementLordshipReferencesCharacter &&
         FB.settlementLordshipReferencesCharacter(state, c.id)) return true;
+    if (FB.tournaments && FB.tournaments.referencesCharacter(state, c.id)) return true;
     const p = state.player;
     if (c.id === p.charId || p.courtingId === c.id) return true;
     if (c.items && c.items.length) return true;

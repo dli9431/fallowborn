@@ -206,3 +206,6 @@ enforces its shared `localStorage` quota. See
 Verify reload, another-device resume, quota rejection and file export before
 submission. Screen entry/exit reports gameplay start/stop; Full Launch still
 needs a broader pause/menu/lifecycle review.
+
+
+Scheduled games adds data/tournaments.js, js/tournaments.js and js/ui_tournaments.js as classic local script references in index.html. The existing data/js directory allowlists cover these files in standard and CrazyGames packaging; the offline asset list is derived from the same index references. No new asset directory or external resource is required. New files must be tracked before a tracked-file package is assembled. No private workspace or site source is included.

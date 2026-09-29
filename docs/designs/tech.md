@@ -531,3 +531,6 @@ The review names direct-holding benefits, no baronial dues, and capacity consequ
 its county selector uses native keyboard/mobile controls and the existing modal
 history. The settlement_founding technology review remains none, expanded to cover
 ordinary county-ruler founding; administrative capacity retains its soft role.
+
+
+Scheduled games, circuit travel, regional open games, event sponsorship and festival livelihoods each have a none impact decision in FBDATA.techImpactReviews. Formal jousting retains the hard cavalry_lances gate under the venue sovereign; accepted entries are grandfathered. Melee, archery, wrestling, work, performance and company remain alternatives. Existing specialist career and equipment-production requirements are unchanged. See tournaments.md.

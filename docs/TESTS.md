@@ -513,3 +513,6 @@ the aggregate work required to build each world.
 Generic modals retain their DOM after closing. Acknowledgement regressions assert
 that the result is hidden, rather than that its node was removed. Synchronous
 input-guard checks use rendered visibility and retain the one-time payment checks.
+
+
+Scheduled-games coverage is authored in tests/e2e/specs/scheduled-games.spec.js, scheduled-games-lifecycle.spec.js and scheduled-games-ui.spec.js, with a scenario-local support/game/tournaments.js helper. It covers reserved funding, de jure capacity, wartime interruptions, physical return, annual intentions, exact rounds, admissions, technology grandfathering, save compatibility and the calendar/overlay. tournaments.spec.js retains legacy queued-invitation coverage while asserting exclusion from new random selection. Execution remains owner-controlled.

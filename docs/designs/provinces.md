@@ -535,3 +535,6 @@ legacy saves need no migration. Geography, county names and site identities rema
 unchanged. Settlement lists, map labels and map search read the saved display name;
 search resolves overrides per query so loading a different save cannot stale names.
 This is cosmetic naming only and introduces no technology eligibility requirement.
+
+
+Scheduled Events markers use compiled settlement coordinates. At distant zoom they cluster within 48-pixel screen cells; detailed zoom retains one marker per funded edition at its exact settlement. Hit targets open an event or matching calendar subset. The overlay has independent session state and does not modify political or market views. Capacity uses settled counties in the active de jure kingdom, independently of current owners. See tournaments.md.

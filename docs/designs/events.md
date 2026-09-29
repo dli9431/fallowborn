@@ -1054,3 +1054,6 @@ both Chronicle views preserve events independently of those preferences.
 See [distribution content profiles](distribution-content.md) for the guarded
 57-event overlay, stable option positions, replacement effects and source-hashed
 English fallback. Technology impact is none; this is a distribution policy.
+
+
+Scheduled games use exact edition, protagonist, track and round/incident contexts from js/tournaments.js. The two legacy instant invitations now have never triggers but keep their ids and option indices for queued saves. Scheduled custom handlers validate before effects and register preview/report adapters; war invalidates both queued records and retained modal copies. See tournaments.md and ../plans/tournaments-and-regional-games.md.

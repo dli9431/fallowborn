@@ -727,3 +727,6 @@ The payment reads current ranks through `FB.rankPrestigeYearly`; seasonal income
 estimates carry its yearly categories separately. A restored spring save cannot
 repeat the payment on its next ordinary day. Observe mode skips it. See
 [characters.md](characters.md#annual-rank-prestige) for amounts and eligibility.
+
+
+Scheduled games reconcile war and lifecycle eligibility before travel, then progress after travel and before daily event selection. Ordinary war registration, holy-war launch and armed revolt creation also reconcile immediately. Season boundaries sample recurring income and plan AI editions; annual intentions renew at their saved opening minus 60 days. Observe mode resolves fields without player modal chains. See tournaments.md.
