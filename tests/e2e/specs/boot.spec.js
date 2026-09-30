@@ -312,6 +312,7 @@ test('title menu gives every action a decorative icon and a clean accessible nam
     const expected = [
       ['btn-continue', 'Continue'],
       ['btn-newgame', 'New Game'],
+      ['btn-choose-beginning', 'Choose another beginning'],
       ['btn-load', 'Load Game'],
       ['btn-chronicle', 'View Chronicle'],
       ['btn-mods', 'Mods'],
@@ -326,10 +327,12 @@ test('title menu gives every action a decorative icon and a clean accessible nam
     });
     expect(iconLabels.every(function (icon) { return icon.length > 0; })).toBe(true);
     expect(new Set(iconLabels).size).toBe(expected.length);
-    // A display:none control is correctly absent from the accessibility tree.
-    // Expose Continue so its eventual player-facing name can be inspected too.
-    await page.locator('#btn-continue').evaluate(function (button) {
-      button.classList.remove('hidden');
+    // Hidden controls are absent from the accessibility tree until shown.
+    // Expose both conditional actions to inspect their eventual names.
+    await page.locator('#btn-continue, #btn-choose-beginning').evaluateAll(function (buttons) {
+      buttons.forEach(function (button) {
+        button.classList.remove('hidden');
+      });
     });
     for (const item of expected) {
       const button = page.locator('#' + item[0]);

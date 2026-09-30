@@ -1950,7 +1950,7 @@ test('profiling captures workload changes and scoped fiscal inputs without retai
   expect(result.workload.end.starvingArmies).toBe(1);
   expect(result.workload.end.soldiers).toBe(900);
   expect(result.workload.start.soldiers).toBe(1000);
-  expect(result.rows['Treasury input: countyTaxBase'].calls).toBeGreaterThan(0);
+  expect(result.rows['Treasury input: countyModifierSnapshot'].calls).toBeGreaterThan(0);
   expect(result.rows['Logistics operation: armyProvisionQuote'].calls).toBe(2);
   expect(result.rows['Provisioning input: armyProvisionUse'].calls).toBe(2);
   expect(result.counters['Provision quotes: host and county distinct same day']).toBe(1);

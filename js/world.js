@@ -6422,6 +6422,10 @@ window.FB = window.FB || {};
     let phase = timing && timing.enter('World annual phase: preparation');
     try {
       const B = FBDATA.balance;
+      /* A direct annual step can precede the first daily campaign tick.
+         Bind the compatibility war setters before building annual indexes
+         or declaring breakaway wars, just as restore already does. */
+      if (FB.ensureWars) FB.ensureWars(state);
       FB.ensureDynasticState(state, { yearly:true });
       FB.checkAllCrownRecognition(state);
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: fortifications and population'); }

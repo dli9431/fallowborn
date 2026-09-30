@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/map_data.js',
   'js/actions.js',
+  'js/lordships.js',
   'js/population.js',
   'js/settlement.js',
   'js/world.js',
@@ -647,8 +648,7 @@ test('building weight changes and migration reconcile exact matrix axes',
       s.dev[destination] = Math.max(5, s.dev[destination] || 1);
       s.player.tier = 4;
       s.player.provs = [source];
-      s.owner[source] = 'player';
-      s.holder[source] = 'player';
+      FB.foundPlayerRealm(s);
       s.player.gold = 1000000;
       s.buildings[source] = [];
       FB.invalidateBuildingIndex(s, source);

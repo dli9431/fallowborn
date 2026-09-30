@@ -495,6 +495,13 @@ to an exact campaign; it never reads UI selection. Non-enumerable `player.war` a
 realm `war` compatibility views are not second saved stores. Ambiguous legacy peace
 mutations fail closed. New callers use an explicit war ID.
 
+The annual world step initializes campaign bindings before building its war
+index or rolling vassal breakaways. A fresh world can reach this boundary before
+its first daily campaign tick. Successful breakaways must enter `state.wars`
+immediately, so rebuilding the annual index keeps both sides at war and skips
+further breakaway and alliance rolls for them. Restore and uninterrupted play
+therefore consume the same seeded random sequence.
+
 Ordinary-war queries share an unsaved index of active campaigns, endpoint lists,
 legacy owners, and stable campaign order. Registration, legacy replacement/end,
 settlement, realm remapping, and repair invalidate it immediately; replacing the

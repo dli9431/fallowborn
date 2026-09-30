@@ -430,8 +430,9 @@ test('personal award accept and refusal complete the Chronicle path',
       await expect(page.getByRole('heading', {
         name:/final settlement/
       })).toBeVisible();
-      await expect(page.getByRole('dialog').getByText(
-        /The council offers you/)).toBeVisible();
+      await expect(page.getByRole('dialog').getByRole('heading', {
+        name:'Council offer'
+      })).toBeVisible();
       const choice = accept
         ? page.getByRole('button', { name:/Accept the territorial grant/ })
         : page.getByRole('button', { name:/Decline for honor/ });
@@ -449,13 +450,15 @@ test('personal award accept and refusal complete the Chronicle path',
           active:FB.state.greatHolyWar,
           history:history,
           holder:FB.state.holder.acre,
-          log:JSON.stringify(FB.state.log.slice(-3))
+          victoryLogged:FB.state.log.some(function (entry) {
+            return entry.msg && entry.msg.key === 'news.holywar.victory_partitioned';
+          })
         };
       });
       expect(outcome.active).toBeNull();
       expect(outcome.history.outcome).toBe('attackers');
       expect(outcome.history.awards[0].claimant).toBe('player');
-      expect(outcome.log).toContain('victory_partitioned');
+      expect(outcome.victoryLogged).toBe(true);
       expect(outcome.holder === 'player').toBe(accept);
       await expectOutcomeSurvivesReload(
         page, accept ? 'personal award acceptance' : 'personal award refusal');
@@ -547,12 +550,14 @@ test('a named beneficiary can be chosen and installed through the council',
         award:award,
         holder:holder,
         ruler:(FB.realmRulerCharacter(FB.state, holder) || {}).id || null,
-        chronicle:JSON.stringify(FB.state.log.slice(-3))
+        victoryLogged:FB.state.log.some(function (entry) {
+          return entry.msg && entry.msg.key === 'news.holywar.victory_partitioned';
+        })
       };
     });
     expect(outcome.award.beneficiary).toBe(beneficiary.id);
     expect(outcome.holder).not.toBe('player');
     expect(outcome.ruler).toBe(beneficiary.id);
-    expect(outcome.chronicle).toContain('victory_partitioned');
+    expect(outcome.victoryLogged).toBe(true);
     await expectOutcomeSurvivesReload(page, 'named beneficiary award');
   });
