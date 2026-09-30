@@ -5,7 +5,8 @@ dependsOnRuntime(__filename, [
   'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_topbar.js', 'js/actions.js',
   'js/events.js', 'js/model.js', 'js/portrait.js', 'js/economy.js', 'js/technology.js',
   'js/lordships.js', 'js/world.js', 'js/messages.js', 'js/i18n.js',
-  'js/save.js', 'js/util.js', 'js/travel.js', 'js/crazygames.js', 'data/starts.js',
+  'js/save.js', 'js/util.js', 'js/travel.js', 'js/crazygames.js', 'js/music.js',
+  'data/music_catalog.js', 'data/starts.js',
   'data/actions.js', 'data/economy.js', 'data/bookmarks.js', 'data/travel.js',
   'data/map_data.js', 'data/counties.js', 'data/settlements.js',
   'data/settlements_real.js', 'data/cultures.js', 'data/traits.js',
@@ -22,7 +23,11 @@ async function openPortal(page, testInfo) {
   await page.waitForFunction(function () {
     return window.FB && FB.game && FB.game.bootReady;
   });
+  // The harness loads the standard tree, which includes music omitted by the packager.
+  const silent = page.locator('#music-choice-silent');
+  if (await silent.isVisible()) await silent.click();
   await expect(page.locator('#btn-newgame')).toContainText('Play as Osric');
+  await expect(page.locator('#btn-newgame')).toBeVisible();
 }
 
 async function startPortal(page, testInfo) {
@@ -79,9 +84,21 @@ async function saveAndContinue(page, testInfo) {
   await expect(page.locator('#game:not(.hidden)')).toBeVisible();
 }
 
+async function continueDecisionOutcome(page) {
+  await expect(page.locator('#eventmodal')).toHaveClass(/decision-outcome-modal/);
+  await expect(page.locator('#outcome-continue')).toBeVisible();
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+  }).toBe(false);
+  await page.locator('#outcome-continue').click();
+}
+
 async function marryForEnterprise(page) {
   expect(await page.evaluate(function () {
     const s = FB.state, me = s.chars[s.player.charId];
+    // Model a marriage made during guidance, not an already-established household
+    // that correctly skips the entire Family & legacy track on its first check.
+    s.player.flags.tut_family_guidance_started = 1;
     const match = FB.makeCharacter(s, {
       name:'Household Spouse', sex:me.sex === 'm' ? 'f' : 'm',
       culture:me.culture, religion:me.religion, born:me.born,
@@ -257,6 +274,11 @@ for (const viewport of [
     async function ({ page }, testInfo) {
       await page.setViewportSize({ width:viewport.width, height:viewport.height });
       await startPortal(page, testInfo);
+      await page.evaluate(function () {
+        // This journey teaches an explicit Play click. Automatic event resume
+        // already satisfies that checklist step and correctly skips its hint.
+        FB.game.uiPrefs.autoResumeAfterEvents = false;
+      });
       await expect(page.locator('[data-action-id="seek_match"]'))
         .toHaveClass(/coachmark-lit/);
       await page.locator('[data-action-id="seek_match"]').click();
@@ -267,8 +289,9 @@ for (const viewport of [
           courting:FB.state.player.courtingId || null,
           timeLesson:!!FB.game.uiPrefs.tipsSeen['first-time-flow'] };
       })).toEqual({ deed:false, courting:null, timeLesson:false });
-      // Back from choosing the route must not complete the first action.
-      await page.locator('#gm-cancel').click();
+      // Closing the root route picker must not complete the first action.
+      await expect(page.locator('#gm-cancel')).toBeDisabled();
+      await page.locator('#genmodal [data-modal-nav="close"]').click();
       await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
       await expect(page.locator('.coachmark')).toHaveCount(0);
       await page.locator('[data-action-id="seek_match"]').click();
@@ -330,6 +353,9 @@ for (const viewport of [
           answeredEvent:!!s.player.flags.tut_event };
       })).toEqual({ assigned:true, timeLesson:false, resultLesson:false,
         answeredEvent:false });
+      expect(await page.evaluate(function () {
+        return { paused:FB.game.paused, unpaused:!!FB.state.player.flags.tut_unpause };
+      })).toEqual({ paused:true, unpaused:false });
       await attention.getByRole('button', { name:'Got it', exact:true }).click();
       await expect(page.locator('.coachmark')).toContainText('unpause with Play');
       await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
@@ -372,11 +398,7 @@ for (const viewport of [
         return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
       }).toBe(false);
       await page.locator('#ev-options .evopt').first().click();
-      await expect(page.locator('#outcome-continue')).toBeVisible();
-      await expect.poll(function () {
-        return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
-      }).toBe(false);
-      await page.locator('#outcome-continue').click();
+      await continueDecisionOutcome(page);
       await expect(page.locator('.coachmark')).toContainText('Start your family business');
       expect(await page.evaluate(function () {
         const s = FB.state;
@@ -426,6 +448,12 @@ for (const viewport of [
     async function ({ page }, testInfo) {
       await page.setViewportSize({ width:viewport.width, height:viewport.height });
       await startPortal(page, testInfo);
+      await page.evaluate(function () {
+        // Keep event answers from advancing extra days between the bounded
+        // purchases, including after the journey saves and continues.
+        FB.game.uiPrefs.autoResumeAfterEvents = false;
+        FB.game.saveUiPrefs();
+      });
       await marryForEnterprise(page);
       await finishOpeningLoop(page, 0);
       const plan = page.locator('.coachmark', { hasText:'Your next goal is a family business' });
@@ -502,8 +530,22 @@ for (const viewport of [
         return { gold:s.player.gold, enterprise:s.player.enterprises[0].type,
           familyDone:!!s.player.flags.tut_track_family_legacy };
       })).toEqual({ gold:0, enterprise:'field_strip', familyDone:false });
+      await page.locator('#genmodal [data-modal-nav="close"]').click();
+      // Buying spends a day, so the fixture's marriage dues now come due.
+      // Guidance must wait for that real event, then resume the household goal.
+      await expect(page.locator('#ev-title')).toHaveText('Leave to Wed');
+      expect(await page.evaluate(function () {
+        return { busy:FB.ui.eventsBusy(),
+          learned:!!FB.game.uiPrefs.tipsSeen['cg-enterprise-income'] };
+      })).toEqual({ busy:true, learned:false });
+      await expect.poll(function () {
+        return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+      }).toBe(false);
+      await page.locator('#ev-options').getByRole('button', {
+        name:/Work the fine in extra days/
+      }).click();
+      await expect(page.locator('#eventmodal')).toHaveClass(/hidden/);
       // The household goal stays ahead of the map tour and hostile-deed lesson.
-      await page.getByRole('button', { name:'Close', exact:true }).click();
       await expect(page.locator('.coachmark')).toContainText('enterprise can help fund your freedom');
       await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
       await expect(page.locator('.coachmark')).toContainText('Your next goal is freedom');
@@ -530,6 +572,7 @@ for (const viewport of [
       await page.locator('[data-action-id="review_serf_tenure"]').click();
       await page.locator('#rank-buy-freedom').click();
       await page.locator('#freedom-purchase-confirm').click();
+      await continueDecisionOutcome(page);
       await expect(page.locator('.coachmark')).toContainText('Your household is free. Save for your first land plot');
       expect(await page.evaluate(function () {
         const s = FB.state;
@@ -554,7 +597,7 @@ for (const viewport of [
         return { plots:FB.landPlots(FB.state).length, gold:FB.state.player.gold,
           price:FB.landPlotCost(FB.state) };
       })).toEqual({ plots:1, gold:0, price:landPrice });
-      await page.locator('#gm-cancel').click();
+      await page.locator('#genmodal [data-modal-nav="close"]').click();
       await expect(page.locator('.coachmark')).toContainText('Your first plot of land');
       await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
       await expect(page.locator('.coachmark')).toContainText('map is yours to explore');
@@ -569,6 +612,11 @@ for (const viewport of [
 test('CrazyGames waits through paid final service and resumes land guidance after release',
   async function ({ page }, testInfo) {
     await startPortal(page, testInfo);
+    await page.evaluate(function () {
+      // Final service advances only at the explicit turn boundaries below.
+      FB.game.uiPrefs.autoResumeAfterEvents = false;
+      FB.game.saveUiPrefs();
+    });
     await marryForEnterprise(page);
     const terms = await page.evaluate(function () {
       const s = FB.state;
@@ -599,6 +647,7 @@ test('CrazyGames waits through paid final service and resumes land guidance afte
     await page.locator('[data-action-id="review_serf_tenure"]').click();
     await page.locator('#rank-petition-freedom').click();
     await page.locator('#freedom-offer-accept').click();
+    await continueDecisionOutcome(page);
     await expect(page.locator('.coachmark')).toContainText('Finish your final service');
     const paid = await page.evaluate(function () {
       const s = FB.state;
@@ -778,6 +827,99 @@ test('CrazyGames waits for courtship and a successful wedding before any enterpr
     })).toEqual({ plan:false, saving:false, purchase:false, spouses:0 });
   });
 
+for (const viewport of [
+  { name:'phone portrait', width:390, height:844 },
+  { name:'phone landscape', width:844, height:390 },
+  { name:'tablet', width:768, height:1024 }
+]) {
+  test('CrazyGames ' + viewport.name + ' keeps Kin guidance through the portrait and drawer',
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:viewport.width, height:viewport.height });
+      await startPortal(page, testInfo);
+      expect(await page.evaluate(function () {
+        FB.ui.coachmarkReset();
+        FB.state.player.flags.tut_track_first_steps = 1;
+        return FB.ui.maybeTabTip('family');
+      })).toBe(true);
+      const hint = page.locator('.coachmark');
+      const portrait = page.locator('#tb-portrait');
+      const kin = page.locator('#lefttabs .tab[data-tab="family"]');
+      await expect(hint).toContainText('Tap your portrait, then choose Kin.');
+      await expect(hint).not.toHaveClass(/noarrow/);
+      await expect(portrait).toHaveClass(/coachmark-lit/);
+      await expect(kin).not.toBeVisible();
+      const portraitBox = await portrait.boundingBox();
+      const hintBox = await hint.boundingBox();
+      expect(hintBox.y).toBeGreaterThanOrEqual(portraitBox.y + portraitBox.height);
+      expect(hintBox.x).toBeGreaterThanOrEqual(0);
+      expect(hintBox.x + hintBox.width).toBeLessThanOrEqual(viewport.width);
+      expect(hintBox.y + hintBox.height).toBeLessThanOrEqual(viewport.height);
+
+      await portrait.click();
+      await expect(page.locator('body')).toHaveClass(/showself/);
+      await expect(hint).toContainText('Kin is your household and dynasty');
+      await expect(hint).not.toContainText('Tap your portrait');
+      await expect(kin).toHaveClass(/coachmark-lit/);
+      await expect(portrait).not.toHaveClass(/coachmark-lit/);
+      expect(await page.evaluate(function () {
+        return { kin:!!FB.game.uiPrefs.tipsSeen['area-kin'],
+          self:!!FB.game.uiPrefs.tipsSeen['area-self'] };
+      })).toEqual({ kin:false, self:false });
+      const kinBox = await kin.boundingBox();
+      const drawerHintBox = await hint.boundingBox();
+      expect(drawerHintBox.y).toBeGreaterThanOrEqual(kinBox.y + kinBox.height);
+
+      await page.locator('#btn-closeself').click();
+      await expect(hint).toContainText('Tap your portrait, then choose Kin.');
+      await expect(portrait).toHaveClass(/coachmark-lit/);
+      await expect(kin).not.toHaveClass(/coachmark-lit/);
+      await portrait.click();
+      await kin.click();
+      await expect(page.locator('#tab-family')).toBeVisible();
+      await expect(hint).toHaveCount(0);
+      expect(await page.evaluate(function () {
+        return !!FB.game.uiPrefs.tipsSeen['area-kin'];
+      })).toBe(true);
+    });
+
+  test('CrazyGames ' + viewport.name + ' reanchors Self guidance as the layout changes',
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:viewport.width, height:viewport.height });
+      await startPortal(page, testInfo);
+      expect(await page.evaluate(function () {
+        FB.ui.coachmarkReset();
+        return FB.ui.maybeSelfTip();
+      })).toBe(true);
+      const hint = page.locator('.coachmark');
+      const portrait = page.locator('#tb-portrait');
+      const self = page.locator('#lefttabs .tab[data-tab="char"]');
+      await expect(hint).toContainText('Tap your portrait to open Self');
+      await expect(portrait).toHaveClass(/coachmark-lit/);
+
+      await page.setViewportSize({ width:1280, height:800 });
+      await expect(self).toHaveClass(/coachmark-lit/);
+      await expect(portrait).not.toHaveClass(/coachmark-lit/);
+      await expect(hint).toContainText('Self shows your character');
+      await expect(hint).toHaveClass(/over-map/);
+      await page.setViewportSize({ width:viewport.width, height:viewport.height });
+      await expect(hint).toContainText('Tap your portrait to open Self');
+      await expect(hint).not.toHaveClass(/over-map|noarrow/);
+      await expect(portrait).toHaveClass(/coachmark-lit/);
+
+      // Opening the drawer through navigation must update an already-open hint too.
+      await page.evaluate(function () { FB.ui.showTab('char'); });
+      await expect(hint).toContainText('Self shows your character');
+      await expect(hint).not.toContainText('Tap your portrait');
+      await expect(self).toHaveClass(/coachmark-lit/);
+      await page.locator('#btn-closeself').click();
+      await expect(portrait).toHaveClass(/coachmark-lit/);
+      await expect(hint).toContainText('Tap your portrait to open Self');
+      await portrait.click();
+      await expect(hint).toHaveCount(0);
+      await expect(page.locator('#tab-char')).toBeVisible();
+    });
+}
+
 test('CrazyGames still explains assigning attention when courtship has no assignment',
   async function ({ page }, testInfo) {
     await startPortal(page, testInfo);
@@ -896,9 +1038,10 @@ for (const width of [907, 390]) {
         return { turn:FB.state.turn, rng:FB.getRngState(), gold:FB.state.player.gold,
           enterprises:FB.state.player.enterprises.length };
       })).toEqual({ turn:before.turn, rng:before.rng, gold:0, enterprises:0 });
-      // a root review sheet leaves the modal stack with Close, not Back
-      await expect(page.locator('#enterprise-requirements-back')).toHaveText('Close');
-      await page.locator('#enterprise-requirements-back').click();
+      // Root reviews use the shared disabled Back and enabled Close footer.
+      await expect(page.locator('#enterprise-requirements-back')).toHaveText('Back');
+      await expect(page.locator('#enterprise-requirements-back')).toBeDisabled();
+      await page.locator('#genmodal [data-modal-nav="close"]').click();
       await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
       await expect(page.locator('#tutorial-business-review')).toBeVisible();
       await expect(page.locator('#tutorial-business-review')).not.toBeFocused();

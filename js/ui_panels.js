@@ -8145,12 +8145,14 @@ window.FB = window.FB || {};
       renderTab(activeLeftTab);
       updateTabNudges(FB.state);
     }
+    if (UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
   }
 
   function closeSelfDrawerRaw() {
     document.body.classList.remove('showself');
     restoreAfterSelfDrawer();
     if ($('tb-portrait').offsetParent !== null) $('tb-portrait').focus();
+    if (UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
   }
 
   function closeSelfDrawer() {
@@ -8220,6 +8222,7 @@ window.FB = window.FB || {};
       FB.state.player.flags.tut_kin_tab = 1;
     }
     if (UI.maybeTabTip) UI.maybeTabTip(name);
+    if (UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
   }
 
   UI.cycleTab = function (dir) {

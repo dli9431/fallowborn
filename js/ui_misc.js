@@ -2359,6 +2359,7 @@ window.FB = window.FB || {};
   };
 
   function showCoachmark(item) {
+    if (SH.hideTooltip) SH.hideTooltip();
     coachItem = item;
     coachDripIdx = (typeof item.dripIdx === 'number') ? item.dripIdx : null;
     if (coachDripIdx === -1) coachFirstItem = item; // the map lesson itself
@@ -2379,13 +2380,7 @@ window.FB = window.FB || {};
     arrow.className = 'coachmark-arrow';
     const textEl = document.createElement('div');
     textEl.className = 'coachmark-text';
-    let displayText = item.text;
-    const displayTarget = coachTargetEl(item.target);
-    if (item.tipId === 'area-self' && displayTarget &&
-        displayTarget.id === 'tb-portrait') {
-      displayText = '💡 Tap your portrait to open Self, where you can review your skills, traits, equipment, faith, and standing.';
-    }
-    textEl.textContent = FB.T(displayText);
+    textEl.textContent = coachDisplayText(item);
     const actions = document.createElement('div');
     actions.className = 'coachmark-actions';
     if (item.reviewEnterprise && FB.platform.isCrazyGames) {
@@ -2486,9 +2481,9 @@ window.FB = window.FB || {};
     }
   }
 
-  /* Deeds and Land refresh by rebuilding their panel DOM. Keep an open
-     lesson attached to the replacement control instead of leaving its glow
-     and capture listeners on the detached node. */
+  /* Panel rebuilds, drawer navigation, and viewport changes can replace or
+     hide a lesson's control. Refresh its wording, position, glow, and capture
+     listeners together against the currently visible target. */
   UI.refreshCoachmarkTarget = function () {
     if (!coachEl || !coachItem) return false;
     clearCoachTouch();
@@ -2499,16 +2494,14 @@ window.FB = window.FB || {};
          re-anchor the card and arrow instead of only moving the glow. */
       const el = document.querySelector(coachItem.target);
       if (el && !coachTargetOnScreen(el)) el.scrollIntoView({ block:'center' });
-      coachEl.classList.remove('noarrow', 'arrow-top', 'arrow-bottom',
-        'arrow-left', 'arrow-right', 'over-map');
-      coachEl.style.left = coachEl.style.top = coachEl.style.maxWidth = '';
-      const arrow = coachEl.querySelector('.coachmark-arrow');
-      if (arrow) arrow.style.left = arrow.style.top = '';
-      positionCoachmark(coachItem.target);
-    } else {
-      coachLit = coachTargetEl(coachItem.target);
-      if (coachLit) coachLit.classList.add('coachmark-lit');
     }
+    coachEl.querySelector('.coachmark-text').textContent = coachDisplayText(coachItem);
+    coachEl.classList.remove('noarrow', 'arrow-top', 'arrow-bottom',
+      'arrow-left', 'arrow-right', 'over-map');
+    coachEl.style.left = coachEl.style.top = coachEl.style.maxWidth = '';
+    const arrow = coachEl.querySelector('.coachmark-arrow');
+    if (arrow) arrow.style.left = arrow.style.top = '';
+    positionCoachmark(coachItem.target);
     bindCoachTouch(coachItem);
     return !!coachLit;
   };
@@ -2548,6 +2541,10 @@ window.FB = window.FB || {};
      listeners stay until the lesson closes — a menu lesson's follow-up needs
      the click after the pointerdown. */
   function coachTouched(ev) {
+    /* Opening Self only reveals the route to Kin. Keep the Kin lesson
+       unread until its own tab/panel is used, or the player acknowledges it. */
+    if (coachItem && coachFamilyTarget(coachItem.target) && coachLit &&
+        coachLit.id === 'tb-portrait') return;
     if (coachItem && !coachItem.interactedTracked) {
       coachItem.interactedTracked = true;
       rememberFirstTimeTip(coachItem);
@@ -2788,15 +2785,32 @@ window.FB = window.FB || {};
      control that reveals it instead. */
   const COACH_ALT_TARGETS = {
     '#lefttabs .tab[data-tab="char"]':'#tb-portrait',
-    '#lefttabs .tab[data-tab="family"]':'#tb-portrait'
+    '#lefttabs .tab[data-tab="family"]':'#tb-portrait',
+    '#tab-char':'#lefttabs .tab[data-tab="char"]',
+    '#tab-family':'#lefttabs .tab[data-tab="family"]'
   };
+  function coachFamilyTarget(target) {
+    return target === '#tab-family' ||
+      target === '#lefttabs .tab[data-tab="family"]';
+  }
+  function coachDisplayText(item) {
+    const target = coachTargetEl(item.target);
+    if (item.tipId === 'area-self' && target && target.id === 'tb-portrait') {
+      return FB.T('💡 Tap your portrait to open Self, where you can review your skills, traits, equipment, faith, and standing.');
+    }
+    if (coachFamilyTarget(item.target) && target && target.id === 'tb-portrait') {
+      return FB.T('Tap your portrait, then choose Kin. {lesson}', {
+        lesson:FB.T(item.text)
+      });
+    }
+    return FB.T(item.text);
+  }
   function coachTargetEl(targetSel) {
     if (typeof targetSel !== 'string') return null;
     const el = document.querySelector(targetSel);
     if (coachTargetOnScreen(el)) return el;
     const alt = COACH_ALT_TARGETS[targetSel];
-    const altEl = alt ? document.querySelector(alt) : null;
-    return coachTargetOnScreen(altEl) ? altEl : null;
+    return alt ? coachTargetEl(alt) : null;
   }
   function coachTargetOnScreen(el) {
     if (!el) return false;
@@ -3021,10 +3035,7 @@ window.FB = window.FB || {};
     const entry = dripEntryById('area-self');
     const tip = entry && entry.tip;
     if (!tip) return false;
-    const text = mobileLayoutNow()
-      ? '💡 Tap your portrait to open Self, where you can review your skills, traits, equipment, faith, and standing.'
-      : tip.text;
-    return UI.maybeTip(tip.id, text, tip.target, tip);
+    return UI.maybeTip(tip.id, tip.text, tip.target, tip);
   };
 
   UI.maybeMapControlsTip = function () {
@@ -3136,6 +3147,10 @@ window.FB = window.FB || {};
     const seen = FB.game.uiPrefs.tipsSeen || {};
     if (!flags.tut_track_first_steps) return false;
     if (!seen['family-guidance']) return false;
+    // Early Kin visits must not queue a family lesson between the map,
+    // Home, and filters lessons when First steps completes.
+    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters'] ||
+        !seen['area-self']) return false;
     if (flags.tut_family_established || flags.tut_track_family_legacy) {
       return false;
     }
@@ -3487,6 +3502,10 @@ window.FB = window.FB || {};
   };
 
   UI.maybeTabTip = function (tab) {
+    // A portrait tap on the way to Kin must not queue an unrelated Self lesson.
+    if (tab === 'char' && coachItem && coachFamilyTarget(coachItem.target)) {
+      return false;
+    }
     if (tab === 'family' && FB.state && FB.state.player) {
       const flags = FB.state.player.flags || {};
       const me = FB.state.chars &&
@@ -4577,6 +4596,9 @@ window.FB = window.FB || {};
     FB.sizeFaceCanvas($('tb-portrait'), 30, 34);
     $('btn-closeself').addEventListener('click', SH.closeSelfDrawer);
     wireMobilePaneResizer();
+    window.addEventListener('resize', function () {
+      window.requestAnimationFrame(function () { UI.refreshCoachmarkTarget(); });
+    });
     window.addEventListener('popstate', mobileNavPop);
     if (!FB.isTouch) {
       const tabKeys = {
@@ -4856,6 +4878,7 @@ window.FB = window.FB || {};
         tip.classList.add('hidden');
         resetTipSize();
       }
+      SH.hideTooltip = hideTipImmediately;
       tip.addEventListener('mouseenter', cancelHideTip);
       tip.addEventListener('mouseleave', scheduleHideTip);
       function resetTipSize() {
@@ -5012,6 +5035,10 @@ window.FB = window.FB || {};
         }
       });
       function showHoverTip(e) {
+        if (coachEl && !coachmarkBlocked(coachItem)) {
+          hideTipImmediately();
+          return;
+        }
         if (focusedCardTip) return;
         tipPointerX = e.clientX; tipPointerY = e.clientY;
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
@@ -5200,6 +5227,10 @@ window.FB = window.FB || {};
         }
       });
       document.addEventListener('focusin', function (e) {
+        if (coachEl && !coachmarkBlocked(coachItem)) {
+          hideTipImmediately();
+          return;
+        }
         if (!e.target || !e.target.closest) return;
         if (e.target.closest('#tooltip')) {
           cancelHideTip();

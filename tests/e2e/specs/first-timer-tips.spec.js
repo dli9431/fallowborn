@@ -10,6 +10,7 @@ dependsOnRuntime(__filename, [
   'js/ui_topbar.js',
   'js/save.js',
   'data/map_data.js',
+  'data/economy.js',
   'data/actions.js',
   'data/events_peasant.js',
   'js/actions.js',
@@ -296,7 +297,8 @@ test('the map sequence follows First steps and Making a living waits for Family 
       const me = s.chars[s.player.charId];
       /* This journey exercises the serf branch even when the deterministic
          start seed changes station or carries legacy land. */
-      s.player.tier = 0;
+      FB.setPlayerTier(s, 0, { tenureFormationReason:'rank_change' });
+      FB.ensureSerfTenure(s, 'rank_change');
       s.player.landPlots = [];
       s.player.landPlotMigration = 1;
       s.player.flags.tut_kin_tab = 1;
@@ -326,6 +328,17 @@ test('the map sequence follows First steps and Making a living waits for Family 
       FB.ui.coachmarkReset();
       return FB.ui.resumeFirstPlayerTip();
     })).toBe(true);
+    // The fixture just changed a free start into a serf. Resuming correctly
+    // introduces that new tenure before returning to the unread enterprise tip.
+    const tenure = page.locator('.coachmark', {
+      hasText:'Rank & Realm contains your station, home, lord'
+    });
+    await expect(tenure).toBeVisible();
+    await tenure.getByRole('button', { name:'Got it', exact:true }).click();
+    expect(await page.evaluate(function () {
+      return { tenure:!!FB.state.player.flags.hint_serf_tenure,
+        enterprise:!!FB.game.uiPrefs.tipsSeen['making-enterprise'] };
+    })).toEqual({ tenure:true, enterprise:false });
     await expect(enterprise).toBeVisible();
     await enterprise.getByRole('button', { name:'Got it', exact:true }).click();
     await expect(page.locator('.coachmark')).toHaveCount(0);
@@ -397,6 +410,10 @@ test('the Kin lesson leads through finding a match and proposing marriage',
     })).toBe(false);
 
     await finishOpeningHandoff(page, true);
+    expect(await page.evaluate(function () {
+      return { resumed:FB.ui.resumeFamilyLegacyTips(),
+        learned:!!FB.game.uiPrefs.tipsSeen['area-kin'] };
+    })).toEqual({ resumed:false, learned:false });
     await finishOpeningMapTour(page);
 
     const kin = page.locator('.coachmark', {
@@ -515,6 +532,32 @@ test('an established marriage silently skips Family & legacy guidance',
     await enterprise.getByRole('button', { name:'Got it', exact:true }).click();
     await page.locator('#lefttabs .tab[data-tab="family"]').click();
     await expect(page.locator('.coachmark')).toHaveCount(0);
+  });
+
+test('coachmarks retire hover tooltips and keep their controls clickable',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () { FB.ui.revealDeedAction('livelihoods'); });
+    const deed = page.locator('[data-action-id="livelihoods"]');
+    const tooltip = page.locator('#tooltip');
+    await deed.hover();
+    await expect(tooltip).toBeVisible();
+    expect(await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = false;
+      return FB.ui.maybeTip('spec-tooltip-lesson', 'Inspect the highlighted deed.',
+        '#tab-actions [data-action-id="livelihoods"]', { noNext:true });
+    })).toBe(true);
+    await expect(tooltip).toBeHidden();
+    // Pointer and keyboard focus must not bring a tooltip back over the lesson.
+    await page.mouse.move(0, 0);
+    await deed.hover();
+    await expect(tooltip).toBeHidden();
+    await deed.focus();
+    await expect(tooltip).toBeHidden();
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    await deed.hover();
+    await expect(tooltip).toBeVisible();
   });
 
 test('the land lesson points a freeholder directly at the land market deed',
@@ -693,6 +736,14 @@ test('a hidden drawer target falls back to the portrait on phones',
     await expect(page.locator('#tb-portrait')).toHaveClass(/coachmark-lit/);
     await expect(page.locator('#lefttabs .tab[data-tab="char"]'))
       .not.toHaveClass(/coachmark-lit/);
+    await page.setViewportSize({ width:1280, height:844 });
+    await expect(page.locator('#lefttabs .tab[data-tab="char"]'))
+      .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('#tb-portrait')).not.toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark')).toHaveClass(/over-map/);
+    await page.setViewportSize({ width:390, height:844 });
+    await expect(page.locator('#tb-portrait')).toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark')).not.toHaveClass(/over-map|noarrow/);
     await page.locator('#tb-portrait').click();
     await expect(page.locator('body')).toHaveClass(/showself/);
     expect(await page.evaluate(function () {

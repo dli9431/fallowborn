@@ -4,7 +4,7 @@ CrazyGames household objectives and returning players
 
 The CrazyGames checklist includes a persistent current-objective block for courtship, the first enterprise, freedom funding or final service, and the first land plot. It reads the same live status and quote functions as the normal reviews. Natural-day refreshes update its text without replacing the checklist or its controls; enterprise progress reprices the displayed recommendation rather than scanning every business on each day. Exact refreshes and review clicks choose a current recommendation again. Dismiss and Disable guide hints retain their existing effect. This is presentation only, with no technology or eligibility change.
 
-The first-business coachmark and checklist provide Review this business. It opens the existing enterprise requirements sheet with a purchase review naming the settlement, price, funds, eligible workers, staffing warnings and base seasonal income. Buying is a separate explicit action, uses the normal purchase gate and deed day, and requires a fresh review if its price, eligible workers or warning categories change. Opened from Deeds it is a root sheet, so its footer offers Close; Close and Escape return to the existing panel without moving its scroll position, and focus returns to the checklist button only when that button opened it. Normal requirements sheets retain Back and their catalogue navigation. Review never grants funds, labor, technology or property.
+The first-business coachmark and checklist provide Review this business. It opens the existing enterprise requirements sheet with a purchase review naming the settlement, price, funds, eligible workers, staffing warnings and base seasonal income. Buying is a separate explicit action, uses the normal purchase gate and deed day, and requires a fresh review if its price, eligible workers or warning categories change. Opened from Deeds it is a root sheet, so its shared footer has disabled Back and enabled Close; Close and Escape return to the existing panel without moving its scroll position, and focus returns to the checklist button only when that button opened it. Normal requirements sheets retain Back and their catalogue navigation. Review never grants funds, labor, technology or property.
 
 Continue gains a compact CrazyGames-only preview of the saved character, household achievements and unfinished objective. Text is rendered from locale-neutral save metadata without starting a campaign or needing the saved world to be active. Older saves show identity and available household facts until their next save adds objective metadata. After a living tutorial campaign loads, its current objective is restored in Deeds unless the checklist was dismissed or guide hints are disabled. Death still opens the existing succession recovery. Other distributions retain their title and tutorial behavior.
 
@@ -1993,7 +1993,10 @@ A lesson fired to the screen shows as a **coachmark** (`UI.coachmark` in
 so each coachmark is a tooltip anchored to the button or area it teaches (the
 time buttons, a tab, a topbar stat, the map), with that target lit by a pulsing
 outline. The player moves on with **Got it** or chooses **Stop tips** directly on
-the coachmark. Clicking the highlighted control learns and immediately closes a
+the coachmark. Showing a lesson retires any desktop hover tooltip, and hover/focus
+tooltips wait while the lesson is visible so they cannot obscure its controls.
+Tooltips in an open modal remain available while that modal covers a waiting lesson.
+Clicking the highlighted control learns and immediately closes a
 one-step tip before the control's own handler runs; this lets the requested deed or
 time action respond to that first click and prevents a lesson hidden behind a picker
 from silently blocking fast-forward.
@@ -2014,8 +2017,14 @@ close path) rather than fighting the modal. A missing or hidden target drops
 the arrow and rests by the toast corner, except targets with a natural
 revealer: on small layouts the Self/Kin tabs live in a drawer that a portrait
 tap exposes, so their lessons point at the topbar portrait instead
-(`COACH_ALT_TARGETS`). The Self lesson explicitly tells compact-layout players to tap
-that portrait; using it leaves the drawer open for inspection, while **Got it** closes the
+(`COACH_ALT_TARGETS`). Hidden Self/Kin panel targets first fall back to their tab,
+then to the portrait when the drawer is closed. Kin lessons explain the portrait -> Kin
+route; opening the portrait keeps that lesson unread and moves its arrow to Kin until
+the player uses Kin or acknowledges the lesson, without queuing a Self lesson en route.
+Drawer navigation and viewport changes
+refresh the text, arrow, glow, and interaction target together. The Self lesson tells
+players to tap the portrait only while that is the visible target; using it leaves the
+drawer open for inspection, while **Got it** closes the
 drawer before family guidance continues. Only a truly tall area
 (the map) is pointed at near its top edge;
 a lesson targeting either retained side panel places its card in the adjacent visible map
@@ -2128,7 +2137,9 @@ marriages are optional while the Deeds action changes to **Seek an additional sp
 A refused proposal changes it to **Seek another match…** and exposes any remaining search
 cooldown in the same guidance. The Kin panel's beginner courtship line follows the same
 gate. If Kin was opened early, its coachmark resumes once the gate clears instead of being
-lost. After the checklist handoff and Self, the Family & legacy action guidance begins
+lost. Resumed family lessons also wait for the map, Home, filters, and Self lessons;
+an early Kin visit cannot insert a queued family hint into that orientation sequence.
+After the checklist handoff and Self, the Family & legacy action guidance begins
 when the player acknowledges
 the Kin-area lesson: it opens **Life & Family** and points to **Seek a match**, then sends an
 active courtship back to the Kin panel for personal attention. Once the authoritative
