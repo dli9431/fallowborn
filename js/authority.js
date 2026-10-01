@@ -62,7 +62,10 @@
     if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
     var a = records(s), stored = a && a.governments &&
       own(a.governments, realmRef.id) ? a.governments[realmRef.id] : null;
-    var formId = stored && stored.formId || 'territorial';
+    /* A realm without a row takes the campaign's stamped default form;
+       saves without that stamp keep the legacy territorial fallback. */
+    var formId = stored && stored.formId ||
+      s.start && s.start.defaultGovernment || 'territorial';
     var rules = FBDATA.governmentForms[formId];
     return rules ? { realmId:realmRef.id, formId:formId,
       rules:copy(rules), sinceTurn:stored && stored.sinceTurn !== undefined

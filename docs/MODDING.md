@@ -4853,8 +4853,8 @@ checks these tables when a bookmark activates. Definitions are semantic; phase
 4 supplies localized period labels.
 
 `state.authority` uses the optional v4 authority schema. Normal save/export
-writes envelope `v:4`, `titleIds:1`, `authoritySchema:4`; supported v3 data migrates
-without inventing authority records. Mods must preserve the saved fingerprint,
+writes envelope `v:4`, `titleIds:1`, `authoritySchema:4`, `platformSchema:1`;
+supported v3 data migrates without inventing authority records. Mods must preserve the saved fingerprint,
 rank-scoped title references and durable authority IDs. Unknown formats, ambiguous
 titles and malformed authority records fail before state adoption. See the
 [Phase 6 compatibility contract](plans/v2-476-phase-6.md).

@@ -38,6 +38,57 @@
       check(value, where);
     });
   }
+  /* Platform id families resolve through their registries at validation
+     time. A registry that has not been loaded knows no ids, so a present id
+     fails closed instead of being adopted unchecked. */
+  var families = {
+    era:function (id) { return own(FBDATA.eras, id); },
+    geography:function (id) { return own(FBDATA.geographies, id); },
+    government:function (id) { return own(FBDATA.governmentForms, id); },
+    story:function (id) {
+      return !!(FB.stories && typeof FB.stories.get === 'function' &&
+        FB.stories.get(id));
+    }
+  };
+  function known(family, id) {
+    return typeof id === 'string' && !!id && families[family](id);
+  }
+  function unknown(family, id) {
+    var args = { id:String(id) };
+    if (family === 'era') throw new Error(FB.T('Unknown era {id} in this save.', args));
+    if (family === 'geography')
+      throw new Error(FB.T('Unknown geography {id} in this save.', args));
+    if (family === 'government')
+      throw new Error(FB.T('Unknown government form {id} in this save.', args));
+    throw new Error(FB.T('Unknown story {id} in this save.', args));
+  }
+  function field(where) {
+    throw new Error(FB.T('Invalid v4 save field at {path}.', { path:where }));
+  }
+  function stamp(start, key, family) {
+    if (!own(start, key)) return;
+    if (typeof start[key] !== 'string' || !start[key]) field('state.start.' + key);
+    if (!known(family, start[key])) unknown(family, start[key]);
+  }
+  /* Optional platform fields (state-and-saves.md, Save v4 platform schema).
+     Absent fields stay valid; present ids must resolve. */
+  P.validatePlatform = function (state) {
+    if (plain(state.start)) {
+      stamp(state.start, 'era', 'era');
+      stamp(state.start, 'geography', 'geography');
+      stamp(state.start, 'defaultGovernment', 'government');
+    }
+    if (state.stories === undefined) return true;
+    if (!plain(state.stories)) field('state.stories');
+    if (state.situation476 !== undefined) field('state.situation476');
+    for (var id in state.stories) if (own(state.stories, id)) {
+      if (!known('story', id)) unknown('story', id);
+      if (!plain(state.stories[id])) field('state.stories.' + id);
+      var story = FB.stories.get(id);
+      if (typeof story.validate === 'function') story.validate(state.stories[id], state);
+    }
+    return true;
+  };
   P.validateAuthority = function (authority, state) {
     if (authority === undefined) return true;
     if (!plain(authority) || authority.schema !== undefined &&
@@ -131,6 +182,8 @@
     });
     for (var rid in authority.governments) if (own(authority.governments, rid)) {
       var form = authority.governments[rid];
+      if (plain(form) && typeof form.formId === 'string' &&
+          !known('government', form.formId)) unknown('government', form.formId);
       if (!own(state.realms, rid) || !plain(form) ||
           !FBDATA.governmentForms[form.formId] ||
           !Number.isInteger(form.sinceTurn) ||
@@ -178,10 +231,19 @@
     if (!bookmark) throw new Error(FB.T(
       'Missing bookmark {id} for title migration.', { id:bookmarkId }));
     var state = FB.titleIds.migrateState(data.state, bookmark);
+    /* A campaign keeps the era and geography it first ran under. Older saves
+       take them once from their bookmark; a stamped value is never replaced.
+       The default government form is stamped only at creation: deriving it
+       here would change realms that older saves resolve as territorial. */
+    if (plain(state.start)) ['era','geography'].forEach(function (key) {
+      if (!own(state.start, key) && typeof bookmark[key] === 'string')
+        state.start[key] = bookmark[key];
+    });
     P.validateAuthority(state.authority, state);
+    P.validatePlatform(state);
     if (state.authority) state.authority.schema = 4;
     return Object.assign({}, data, { v:4, titleIds:1, authoritySchema:4,
-      state:state });
+      platformSchema:1, state:state });
   };
   P.serialize = function () {
     return FB.save.serialize();

@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/save.js', 'js/save_v4.js', 'js/title_ids.js',
   'js/main.js', 'js/world.js', 'js/model.js', 'js/mods.js', 'js/messages.js',
-  'js/authority.js', 'js/situation476.js', 'js/ui_modals.js',
+  'js/authority.js', 'js/politics.js', 'js/situation476.js', 'js/ui_modals.js',
   'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -35,6 +35,7 @@ for (const bookmark of ['476', '867', '1066']) {
         legacy.v = 3;
         delete legacy.titleIds;
         delete legacy.authoritySchema;
+        delete legacy.platformSchema;
         if (legacy.state.authority) delete legacy.state.authority.schema;
         function facts(state) {
           return JSON.stringify({
@@ -67,7 +68,8 @@ for (const bookmark of ['476', '867', '1066']) {
         const slot = FB.save.read(1);
         const chronicle = FB.save.chronicleFromSave(slot);
         return {
-          header:[source.v, source.titleIds, source.authoritySchema],
+          header:[source.v, source.titleIds, source.authoritySchema, source.platformSchema],
+          migratedHeader:migrated.platformSchema,
           serializerPure:serializerPure,
           immutable:original === JSON.stringify(legacy),
           idempotent:JSON.stringify(migrated) === JSON.stringify(twice),
@@ -81,7 +83,8 @@ for (const bookmark of ['476', '867', '1066']) {
         };
       });
       expect(result).toEqual({
-        header:[4, 1, 4], serializerPure:true, immutable:true, idempotent:true, facts:true,
+        header:[4, 1, 4, 1], migratedHeader:1, serializerPure:true, immutable:true,
+        idempotent:true, facts:true,
         rng:true, uid:true, saved:true, slotVersion:4, exportVersion:4,
         bookmark:bookmark, authority:bookmark === '476', chronicle:true
       });
@@ -117,7 +120,17 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
         function (d) { d.state.authority.appointments[0].quote = {}; },
         function (d) {
           d.state.authority.appointments.push(d.state.authority.appointments[0]);
-        }
+        },
+        function (d) { d.platformSchema = 2; },
+        function (d) { d.state.start.era = 'missing_era'; },
+        function (d) { d.state.start.geography = 'missing_geography'; },
+        function (d) {
+          const rid = Object.keys(d.state.authority.governments)[0];
+          d.state.authority.governments[rid].formId = 'missing_form';
+        },
+        function (d) { d.state.stories = { missing_story:{} }; },
+        function (d) { d.state.stories = {}; },
+        function (d) { d.state.start.defaultGovernment = 'missing_default'; }
       ];
       return changes.map(function (change) {
         const input = JSON.parse(stored);
@@ -131,7 +144,7 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
           JSON.stringify(input) === bytes && JSON.stringify(FB.save.read(1)) === stored };
       });
     });
-    expect(errors).toHaveLength(10);
+    expect(errors).toHaveLength(17);
     for (const error of errors) {
       expect(error.message).not.toBe('');
       expect(error.unchanged).toBe(true);
@@ -140,6 +153,119 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
     expect(errors[4].message).toContain('different mod set');
     expect(errors[6].message).toContain('authority.nextId');
     expect(errors[9].message).toContain('Duplicate v4 authority id');
+    expect(errors[11].message).toContain('Unknown era missing_era');
+    expect(errors[12].message).toContain('Unknown geography missing_geography');
+    expect(errors[13].message).toContain('Unknown government form missing_form');
+    expect(errors[14].message).toContain('Unknown story missing_story');
+    expect(errors[15].message).toContain('state.situation476');
+    expect(errors[16].message).toContain('Unknown government form missing_default');
+  });
+
+test('optional platform fields round trip absent, stamped and present',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo, '867');
+    const result = await page.evaluate(function () {
+      const own = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+      const bookmark = FBDATA.bookmarks['867'];
+      const saved = { eras:FBDATA.eras, geographies:FBDATA.geographies, stories:FB.stories,
+        era:[own(bookmark, 'era'), bookmark.era],
+        geography:[own(bookmark, 'geography'), bookmark.geography] };
+      const original = FB.save.serialize();
+      function clean() {
+        const data = JSON.parse(original);
+        delete data.state.start.era;
+        delete data.state.start.geography;
+        delete data.state.start.defaultGovernment;
+        delete data.state.stories;
+        return data;
+      }
+      function roundTrip(data) {
+        FB.save.restore(data);
+        return JSON.parse(FB.save.serialize());
+      }
+      function fields(data) {
+        return { platformSchema:data.platformSchema, era:data.state.start.era,
+          geography:data.state.start.geography,
+          defaultGovernment:data.state.start.defaultGovernment,
+          stories:data.state.stories };
+      }
+      function forms() {
+        const a = FB.state.authority, unique = {};
+        Object.keys(FB.state.realms).forEach(function (id) {
+          if (!FB.state.realms[id].alive || a && a.governments && own(a.governments, id)) return;
+          const form = FB.political.government(FB.state, { kind:'realm', id:id });
+          if (form) unique[form.formId] = true;
+        });
+        return Object.keys(unique).sort();
+      }
+      try {
+        FBDATA.eras = Object.assign({}, saved.eras, {
+          save_test_era:{ defaultGovernment:'roman_civic' },
+          save_test_later_era:{ defaultGovernment:'roman_civic' }
+        });
+        FBDATA.geographies = Object.assign({}, saved.geographies,
+          { save_test_geography:{} });
+        FB.stories = Object.assign(Object.create(saved.stories || null), {
+          get:function (id) {
+            if (id === 'save_test_story') return { id:id, validate:function (record) {
+              if (record.phase !== 2) throw new Error('Invalid test story record.');
+            } };
+            return saved.stories && saved.stories.get ? saved.stories.get(id) : null;
+          }
+        });
+        delete bookmark.era;
+        delete bookmark.geography;
+        const absent = roundTrip(clean());
+        const absentForms = forms();
+        bookmark.era = 'save_test_era';
+        bookmark.geography = 'save_test_geography';
+        const migrated = FB.save.v4.migrate(clean());
+        const stamped = roundTrip(clean());
+        bookmark.era = 'save_test_later_era';
+        const kept = roundTrip(stamped);
+        const present = clean();
+        present.state.start.era = 'save_test_era';
+        present.state.start.geography = 'save_test_geography';
+        present.state.start.defaultGovernment = 'roman_civic';
+        present.state.stories = { save_test_story:{ phase:2 } };
+        const once = FB.save.v4.migrate(present);
+        const twice = FB.save.v4.migrate(once);
+        const restored = roundTrip(present);
+        const presentForms = forms();
+        const bad = JSON.parse(JSON.stringify(present));
+        bad.state.stories.save_test_story.phase = 3;
+        const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+        let message = '';
+        try { FB.save.restore(bad); } catch (error) { message = error.message; }
+        return {
+          absent:fields(absent), migrated:fields(migrated), stamped:fields(stamped),
+          kept:fields(kept), present:fields(restored),
+          absentForms:absentForms, presentForms:presentForms,
+          idempotent:JSON.stringify(once) === JSON.stringify(twice),
+          rejected:message, unchanged:FB.state === live &&
+            FB.getRngState() === rng && FB.getUidCounter() === uid
+        };
+      } finally {
+        if (saved.era[0]) bookmark.era = saved.era[1]; else delete bookmark.era;
+        if (saved.geography[0]) bookmark.geography = saved.geography[1];
+        else delete bookmark.geography;
+        FBDATA.eras = saved.eras;
+        FBDATA.geographies = saved.geographies;
+        FB.stories = saved.stories;
+        FB.save.restore(JSON.parse(original));
+      }
+    });
+    const none = { platformSchema:1, era:undefined, geography:undefined,
+      defaultGovernment:undefined, stories:undefined };
+    const stampedFields = { platformSchema:1, era:'save_test_era',
+      geography:'save_test_geography', defaultGovernment:undefined, stories:undefined };
+    expect(result).toEqual({
+      absent:none, migrated:stampedFields, stamped:stampedFields, kept:stampedFields,
+      present:Object.assign({}, stampedFields, { defaultGovernment:'roman_civic',
+        stories:{ save_test_story:{ phase:2 } } }),
+      absentForms:['territorial'], presentForms:['roman_civic'],
+      idempotent:true, rejected:'Invalid test story record.', unchanged:true
+    });
   });
 
 test('invalid live authority cannot overwrite an accepted slot',
