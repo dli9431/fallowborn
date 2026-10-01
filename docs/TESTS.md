@@ -397,15 +397,15 @@ Snapshots. tests/e2e/support/game/parity.js captures a compact world snapshot in
 
 Fresh journeys start 867 and 1066 with every ordinary start scenario and 476 with its federate start, all from seed PARITY, and snapshot at day 0, at the next season boundary and at the next year boundary after that. Automation preferences are fixed and events resolve with their first option. A day that cannot pass, or the player's death, ends the journey early and is recorded in that checkpoint's advance field. The coverage check fails when a start scenario is added or retargeted without a matching journey.
 
-Corpus journeys import each save listed in docs/plans/v2-476-phase-0/save-manifest.json through the ordinary loader and snapshot on load, at the next season boundary and at the next year boundary. Each export is hashed first; one that no longer matches its manifest SHA-256 fails the journey. The exports are not part of this repository. FB_PARITY_CORPUS (or --corpus) names the directory the manifest paths are relative to and defaults to the parent of the game checkout. A missing export is skipped with its expected path.
+Corpus journeys import each save listed in docs/plans/v2-476-phase-0/save-manifest.json through the ordinary loader and snapshot on load, at the next season boundary and at the next year boundary. Each export is hashed first; one that no longer matches its manifest SHA-256 fails the journey. The exports live in the checkout's ignored saves/ folder and are not part of this repository. Manifest paths are relative to the game checkout; FB_PARITY_CORPUS (or --corpus) names another checkout that holds them, such as the primary checkout when running from a worktree. A missing export is skipped with its expected path.
 
 Baselines are JSON files in tests/e2e/fixtures/parity/, one per journey, written so a changed province or realm is a one-line diff. The owner captures the first baselines on the integration branch tip and commits them.
 
 Owner commands, run from tests/e2e/. Paths may be absolute or relative to tests/e2e/. Playwright options such as --workers=2 or -g "fresh-867" pass through.
 
-npm run parity:capture -- --dir <candidate checkout>/tests/e2e/fixtures/parity --corpus <directory containing notes/>
+npm run parity:capture -- --dir <candidate checkout>/tests/e2e/fixtures/parity --corpus <checkout containing saves/>
 
-npm run parity:compare -- --corpus <directory containing notes/>
+npm run parity:compare -- --corpus <checkout containing saves/>
 
 npm run ids:update
 
@@ -448,7 +448,7 @@ agent test-execution restrictions apply to this diagnostic too.
 
 ### Army logistics and treasury stress save
 
-`notes/logistics-stress-save.txt` is an owner-local FBS1 export,
+`saves/logistics-stress-save.txt` is an owner-local FBS1 export,
 derived from a supplied life. Its adjacent JSON records source/output SHA-256 and
 scenario counts. Both are ignored by Git and excluded by deployment allowlists.
 The prepared winter-949 scenario has 36 attacking and 20 defending sovereigns,
@@ -469,7 +469,7 @@ save repair initializes active treasury accounts when importing the fixture.
 For the matched owner measurements, from `tests/e2e/`:
 
 ```powershell
-$env:FB_PROFILE_SAVE = (Resolve-Path ../../notes/logistics-stress-save.txt).Path
+$env:FB_PROFILE_SAVE = (Resolve-Path ../../saves/logistics-stress-save.txt).Path
 npx.cmd playwright test specs/save-season-profile.spec.js --project=chromium-served --workers=1 --output=test-results/treasury-active
 Remove-Item Env:FB_PROFILE_SAVE
 ```

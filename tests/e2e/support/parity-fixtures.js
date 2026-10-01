@@ -110,17 +110,18 @@ async function settleParityFixture(testInfo, name, journey, checkpoints) {
 function corpusRoot() {
   return process.env.FB_PARITY_CORPUS
     ? path.resolve(process.env.FB_PARITY_CORPUS)
-    : path.resolve(gameRoot, '..');
+    : gameRoot;
 }
 
 function corpusSlug(file) {
-  return file.replace(/^notes\//, '').replace(/\.[^./]+$/, '').toLowerCase()
+  return file.replace(/^saves\//, '').replace(/\.[^./]+$/, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 /* The Phase 0 corpus as recorded in the public manifest. The exports
-   themselves stay outside the repository; FB_PARITY_CORPUS names the
-   directory the manifest paths are relative to. */
+   themselves stay in the ignored saves/ folder, never in the repository;
+   manifest paths are relative to the game checkout, or to FB_PARITY_CORPUS
+   when another checkout holds them. */
 function corpusEntries() {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   return manifest.files.map(function (entry) {

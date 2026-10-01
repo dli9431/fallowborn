@@ -11,10 +11,10 @@ contains no inferred timings or unobserved gameplay results.
 format, bookmark, current date, tier, direct counties and workload metadata for
 15 selected exports. Static decoding used the existing data-only FBS1/FBS2 reader
 in tools/logistics_stress_save.py; game scripts were not executed. Compact default
-fields were not repaired. Original exports remain untouched under ignored notes/.
+fields were not repaired. Original exports remain untouched under ignored saves/.
 Do not add megabytes of private campaign saves to the game distribution.
 
-| Corpus id | Local source under notes/ | Static role | Export bytes | Evidence limit |
+| Corpus id | Local source under saves/ | Static role | Export bytes | Evidence limit |
 | --- | --- | --- | ---: | --- |
 | S1 | fallowborn-save.txt | 867 bookmark, year 875, Serf at Barcelona | 593269 | Owner export; baseline import pending |
 | S2 | fallowborn-save (1).txt | Same bookmark/seed, year 905, Serf | 832453 | Owner export; winter-to-spring timing must use an actual prepared capture |
@@ -43,19 +43,19 @@ bytes separately when measuring the running game.
 
 ## Phase 1 baseline adoption (2026-09-23)
 
-The owner identified the saves and benchmarks in notes/ and explicitly requested
+The owner identified the saves and benchmarks in saves/ and explicitly requested
 Phase 1. Use the existing corpus and the following benchmark inputs for later
 comparisons; additional device/journey captures do not block implementation.
 The manifest's phase1BenchmarkInputs records current byte hashes separately from
 the original Phase 0 inventory, since the logistics fixture was revised.
 
 - Settlement comparisons: 01-control, 02-dense-direct and 03-dense-delegated under
-  notes/settlement-performance/, with the procedure in that directory's README.
+  saves/settlement-performance/, with the procedure in that directory's README.
   The dense pair has eight sites per county; the delegated case assigns six.
   Shared date, RNG, characters and population make this a bounded scaling probe.
-- Annual starting save: notes/settlement-performance/yearly baseline.txt.
-- Revised logistics stress: notes/logistics-stress-save-stage3.txt, described by
-  notes/logistics-stress-save-stage3.json. Current SHA-256 is
+- Annual starting save: saves/settlement-performance/yearly baseline.txt.
+- Revised logistics stress: saves/logistics-stress-save-stage3.txt, described by
+  saves/logistics-stress-save-stage3.json. Current SHA-256 is
   8c87170bb2bb389234c4312518ccc1f8b11e91aff10c7ab049dc7982b2678c54.
   Its metadata specifies winter 949, turn 29790, 53 hosts, 134100 soldiers and
   260 accounts. It schedules 53 transfers/day for 90 days (up to 4770 arrivals)
@@ -81,7 +81,7 @@ a supported old/modded save with its definition fingerprint; and cold boot,
 year-boundary, storage and mobile/iframe measurements. S9's Council field alone
 does not prove that a Council decision is active or usable after restore.
 
-Place new owner captures under notes/476-baselines/ with a manifest of hashes,
+Place new owner captures under saves/476-baselines/ with a manifest of hashes,
 code commit, bookmark, setup provenance, environment and capture date. Keep source
 exports immutable. Separate derived fixtures from natural-play exports. Add a
 tracked summary/evidence location here once captured; do not publish private

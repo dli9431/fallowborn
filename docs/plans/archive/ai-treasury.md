@@ -65,7 +65,7 @@ old accounting-only gameplay hashes are no longer expected to match.
    Inspect nested modifier/settlement reads as well as top-level counters. Stop and
    optimize if median simulation time rises over 5%, or year-boundary time over 10%.
    Thresholds are provisional and require comparison against baseline noise.
-   The prepared `notes/logistics-stress-save.txt` supplies 56 holy-war hosts and a
+   The prepared `saves/logistics-stress-save.txt` supplies 56 holy-war hosts and a
    winter/year-boundary workload. See [the stress-save recipe](../../TESTS.md#army-logistics-and-treasury-stress-save)
    for matched treasury-disabled/accounting runs and the workload/hash checks.
 2. **Stage 2: implemented; validate logistics and producer receipts.** Replace

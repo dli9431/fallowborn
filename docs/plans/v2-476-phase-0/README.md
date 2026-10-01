@@ -5,7 +5,7 @@ FB.VERSION 1.184.0. This is the first phase of the
 [476 implementation plan](../v2-476-phased-implementation.md).
 
 Status: inventory, decisions and baseline inputs recorded. On 2026-09-23 the
-owner identified the existing notes/ saves and benchmarks and requested Phase 1.
+owner identified the existing saves/ exports and benchmarks and requested Phase 1.
 Those inputs are adopted for comparison; additional runtime/device captures do
 not block that implementation. Static export inspection is not a passing journey.
 

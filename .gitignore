@@ -52,11 +52,13 @@ music/**/*.aif
 music/**/*.aiff
 music/**/*.wma
 
-# Developer notes — local-only working files (deploy scripts, devlogs, planning,
-# site mockups). Never shipped and not part of the game. Kept out of the repo.
-# Localization caches and reports are the exception: they live in tracked i18n/.
-# (Committed here so the rule travels to every clone/worktree; the old
-# .git/info/exclude entry was local-only and let files slip in via merges.)
+# Owner-local save exports and test-save fixtures. Never shipped and not part
+# of the game. The parity corpus manifest (docs/plans/v2-476-phase-0) names
+# paths under saves/.
+saves/
+
+# Private workspace notes must never land here. They live beside this repo,
+# not in it; this guard keeps a stray copy from being committed.
 notes/
 
 # Owner-derived local stress exports; root placement makes manual import easy.

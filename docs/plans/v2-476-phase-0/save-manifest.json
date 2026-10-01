@@ -4,7 +4,7 @@
   "sourceCommit": "e178db16cdd10a624c134dbebb75fcdd27df4db2",
   "sourceVersion": "1.184.0",
   "method": "Read-only export decoding with tools/logistics_stress_save.py decode_export; SHA-256 of original bytes. No game scripts loaded or executed.",
-  "scope": "Selected local owner exports and edited fixtures; not an exhaustive search of every local save. Files remain in ignored notes and are not copied into the shipped game.",
+  "scope": "Selected local owner exports and edited fixtures; not an exhaustive search of every local save. Files remain in the ignored saves folder and are not copied into the shipped game.",
   "runtimeAcceptance": "pending_owner_capture",
   "notes": [
     "start.id identifies the bookmark; current year alone does not.",
@@ -14,7 +14,7 @@
   ],
   "files": [
     {
-      "path": "notes/fallowborn-save.txt",
+      "path": "saves/fallowborn-save.txt",
       "sha256": "b84234dd9b848f842a8e5441b2f3c0358d2e7ee1d399dd0aa706fab5243987d1",
       "bytes": 593269,
       "format": 3,
@@ -48,7 +48,7 @@
       "encoding": "FBS2"
     },
     {
-      "path": "notes/fallowborn-save (1).txt",
+      "path": "saves/fallowborn-save (1).txt",
       "sha256": "989a4c910bc43c65ab3e6b05cf064a131c418e04cb167c0f62f9a2badcd5caf6",
       "bytes": 832453,
       "format": 3,
@@ -82,7 +82,7 @@
       "encoding": "FBS2"
     },
     {
-      "path": "notes/fallowborn-save (2).txt",
+      "path": "saves/fallowborn-save (2).txt",
       "sha256": "92d6f3203833c1104a7013749190c944cf0fb496b687a0e92d1c7934292bb27c",
       "bytes": 960421,
       "format": 3,
@@ -116,7 +116,7 @@
       "encoding": "FBS2"
     },
     {
-      "path": "notes/fallowborn-save (3).txt",
+      "path": "saves/fallowborn-save (3).txt",
       "sha256": "e8fa48146e6a4011efd14f192c35fcbb08da163cfb37a9021656eddd6b360e0e",
       "bytes": 1045469,
       "format": 3,
@@ -150,7 +150,7 @@
       "encoding": "FBS2"
     },
     {
-      "path": "notes/fallowborn-save (4).txt",
+      "path": "saves/fallowborn-save (4).txt",
       "sha256": "745facd0d3f973d809266d2c58e130cb2cf3c69346495ce988c129ca127dd99e",
       "bytes": 1006673,
       "format": 3,
@@ -184,7 +184,7 @@
       "encoding": "FBS2"
     },
     {
-      "path": "notes/fallowborn-save (5).txt",
+      "path": "saves/fallowborn-save (5).txt",
       "sha256": "c657d525bc43567fb552d6bcdfb5cc6843b395ffa6a04e9dc975fd970c210acc",
       "bytes": 1013969,
       "format": 3,
@@ -218,7 +218,7 @@
       "encoding": "FBS2"
     },
     {
-      "path": "notes/v1.182.2-test-saves/01-wealthy-freeholder.txt",
+      "path": "saves/v1.182.2-test-saves/01-wealthy-freeholder.txt",
       "sha256": "7acd874695c893ad3d817cc7075318f4be1b9575f5bc5b560c1cd57e0e6be323",
       "bytes": 5270321,
       "format": 3,
@@ -252,7 +252,7 @@
       "encoding": "FBS1"
     },
     {
-      "path": "notes/v1.182.2-test-saves/02-count-and-settlements.txt",
+      "path": "saves/v1.182.2-test-saves/02-count-and-settlements.txt",
       "sha256": "43a814d133f03871aae373b3e4e95732b2ddf06c391254ccf4cd3d8162b09111",
       "bytes": 5270753,
       "format": 3,
@@ -286,7 +286,7 @@
       "encoding": "FBS1"
     },
     {
-      "path": "notes/settlement-lordship-test-saves/03-landed-baron.txt",
+      "path": "saves/settlement-lordship-test-saves/03-landed-baron.txt",
       "sha256": "4200f0f2bcf1e24ccc4f79e0f69c4f8d6051d636c6b0aed027bfe0841344af46",
       "bytes": 4498129,
       "format": 3,
@@ -320,7 +320,7 @@
       "encoding": "FBS1"
     },
     {
-      "path": "notes/settlement-lordship-test-saves/08-count-delegated.txt",
+      "path": "saves/settlement-lordship-test-saves/08-count-delegated.txt",
       "sha256": "4f2c06205636f8ab91bb34946e9491074934fe86f30784c9ba3afce059e1c58d",
       "bytes": 4499433,
       "format": 3,
@@ -354,7 +354,7 @@
       "encoding": "FBS1"
     },
     {
-      "path": "notes/settlement-lordship-test-saves/10-legacy-landless-baron.txt",
+      "path": "saves/settlement-lordship-test-saves/10-legacy-landless-baron.txt",
       "sha256": "2d9165ec1344431244fe1d56b0877dc65def61bca5c677a8d5b6defe86d53050",
       "bytes": 4497689,
       "format": 3,
@@ -388,7 +388,7 @@
       "encoding": "FBS1"
     },
     {
-      "path": "notes/fiscal-test-saves/01-king-crisis.txt",
+      "path": "saves/fiscal-test-saves/01-king-crisis.txt",
       "sha256": "3bf69fb0f017a2c335ab1383e57036ac2d5782f5c066159cb618de8dbcce7ee1",
       "bytes": 5036341,
       "format": 3,
@@ -422,7 +422,7 @@
       "encoding": "FBS1"
     },
     {
-      "path": "notes/logistics-stress-save.txt",
+      "path": "saves/logistics-stress-save.txt",
       "sha256": "3a8d8c73474bb6deb1f7b2488cf249ef647b647d772f27dffbba5aeab00af3d7",
       "bytes": 5113865,
       "format": 3,
@@ -456,7 +456,7 @@
       "encoding": "FBS1"
     },
     {
-      "path": "notes/settlement-performance/01-control.txt",
+      "path": "saves/settlement-performance/01-control.txt",
       "sha256": "0c4ab46a7db5164a634dc31a9760c36a3ae2c42d8d8cd16c3848efe378176210",
       "bytes": 4696829,
       "format": 3,
@@ -490,7 +490,7 @@
       "encoding": "FBS1"
     },
     {
-      "path": "notes/settlement-performance/03-dense-delegated.txt",
+      "path": "saves/settlement-performance/03-dense-delegated.txt",
       "sha256": "0240142b98f5b2864d4817b59b142252b7b05c025402f95bf431160a7599db72",
       "bytes": 5613077,
       "format": 3,
@@ -524,40 +524,40 @@
       "encoding": "FBS1"
     }
   ],
-  "phase1Authorization": "Owner identified notes saves and benchmarks and requested the next phase on 2026-09-23; existing inputs adopted for comparison, not a claim of runtime parity.",
+  "phase1Authorization": "Owner identified the local saves and benchmarks and requested the next phase on 2026-09-23; existing inputs adopted for comparison, not a claim of runtime parity.",
   "phase1BenchmarkInputs": [
     {
-      "path": "notes/logistics-stress-save.txt",
+      "path": "saves/logistics-stress-save.txt",
       "bytes": 5113865,
       "sha256": "3a8d8c73474bb6deb1f7b2488cf249ef647b647d772f27dffbba5aeab00af3d7"
     },
     {
-      "path": "notes/logistics-stress-save-stage3.json",
+      "path": "saves/logistics-stress-save-stage3.json",
       "bytes": 21391,
       "sha256": "cee18b06f8cecec153252cb9dfe6918006e2751d53e9dba61b02b86283d93d93"
     },
     {
-      "path": "notes/settlement-performance/01-control.txt",
+      "path": "saves/settlement-performance/01-control.txt",
       "bytes": 4696829,
       "sha256": "0c4ab46a7db5164a634dc31a9760c36a3ae2c42d8d8cd16c3848efe378176210"
     },
     {
-      "path": "notes/settlement-performance/02-dense-direct.txt",
+      "path": "saves/settlement-performance/02-dense-direct.txt",
       "bytes": 4723849,
       "sha256": "e5e9b8e5e29566310dc8a85deacd5b9766ea1dcbc51e4bc38618c83de69e958d"
     },
     {
-      "path": "notes/settlement-performance/03-dense-delegated.txt",
+      "path": "saves/settlement-performance/03-dense-delegated.txt",
       "bytes": 5613077,
       "sha256": "0240142b98f5b2864d4817b59b142252b7b05c025402f95bf431160a7599db72"
     },
     {
-      "path": "notes/settlement-performance/yearly baseline.txt",
+      "path": "saves/settlement-performance/yearly baseline.txt",
       "bytes": 948493,
       "sha256": "89fb100418d9ff11a352251252cda584ee4a6a012c10cfdae88dd8254439d499"
     },
     {
-      "path": "notes/logistics-stress-save-stage3.txt",
+      "path": "saves/logistics-stress-save-stage3.txt",
       "bytes": 7482909,
       "sha256": "8c87170bb2bb389234c4312518ccc1f8b11e91aff10c7ab049dc7982b2678c54"
     }

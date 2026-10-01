@@ -70,7 +70,7 @@ Existing interaction-cards.spec.js and settlement-lordship-grants.spec.js now
 include politics.js in their runtime dependency metadata. They retain their UI,
 price, navigation, purity and transaction regressions.
 
-The owner requested progression using the existing notes/ saves and benchmarks.
+The owner requested progression using the existing saves/ exports and benchmarks.
 Their exact inputs, including the revised stage3 logistics export hash, are in
 [the baseline record](v2-476-phase-0/baselines.md#phase-1-baseline-adoption-2026-09-23).
 Use identical exports and season boundaries for before/after profiling. Runtime

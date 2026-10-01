@@ -424,7 +424,7 @@ Tasks:
 Authored in the Phase 7 source pass:
 
 - [x] Prepare twelve independent save imports and a scenario guide in
-  `notes/settlement-lordship-test-saves/`, including near-complete founding.
+  `saves/settlement-lordship-test-saves/`, including near-complete founding.
 - [x] Fix title-only Governance eligibility and residence/county-wide local
   community-project authority; update their regression fixtures.
 - [x] Update the exact technology-ledger regression for all six review entries.
