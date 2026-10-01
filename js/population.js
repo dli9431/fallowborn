@@ -661,8 +661,7 @@ window.FB = window.FB || {};
       for (var bi = 0; bi < built.length; bi++) {
         var entry = built[bi];
         if (entry && entry.s === i && !entry.ruined &&
-            (entry.id === 'mill' || entry.id === 'bridge' ||
-             entry.id === 'market' || entry.id === 'harbor')) weight++;
+            (FBDATA.buildings[entry.id] || {}).settlementDraw === true) weight++;
       }
       weights.push(weight);
       sumWeights += weight;

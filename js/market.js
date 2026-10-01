@@ -735,8 +735,8 @@
       const buildings = state.buildings && state.buildings[pid] || [];
       for (let i = 0; i < buildings.length; i++) {
         const entry = buildings[i];
-        if (typeof entry === 'string') building += entry === 'walls' ? 0 : 0.012;
-        else if (entry && !entry.ruined && entry.id !== 'walls') building += 0.012;
+        if (typeof entry === 'string') building += FB.isFortificationBuilding(entry) ? 0 : 0.012;
+        else if (entry && !entry.ruined && !FB.isFortificationBuilding(entry.id)) building += 0.012;
       }
     }
     const out = [];

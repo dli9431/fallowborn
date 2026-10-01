@@ -1,4 +1,5 @@
-/* Fallowborn — county fortifications. Settlement-scoped `walls` records are
+/* Fallowborn — county fortifications. Settlement-scoped records of the
+   fortification-role building (`walls` in the shipped data) are
    strategic strongpoints: construction is sequential, garrisons reduce the
    field levy, and an unbreached hostile fort stops a host at the county.
    Everything stored here is plain additive save data. */
@@ -21,6 +22,79 @@ window.FB = window.FB || {};
 
   FB.fortLevelDef = levelDef;
 
+  /* Building roles. A building says what it is; engine code asks for the
+     role, never a building id, so a period or regional building is data.
+     Role names deliberately differ from building ids. A building without a
+     role (legacy runtime mods) is a fortification when it sets fort, and
+     otherwise "unassigned". Exactly one building may be the fortification: the
+     strategic strongpoint whose saved records these helpers manage. */
+  FB.BUILDING_ROLES = {
+    fortification:1, milling:1, food_store:1, crossing:1, marketplace:1,
+    worship:1, port:1, shipyard:1, scholarship:1, stronghold:1, garrison:1,
+    training:1, civic:1, industry:1, care:1, banking:1, unassigned:1
+  };
+
+  FB.buildingRole = function (id) {
+    var def = FBDATA.buildings && Object.prototype.hasOwnProperty.call(FBDATA.buildings, id)
+      ? FBDATA.buildings[id] : null;
+    if (!def) return null;
+    if (typeof def.role === 'string' && def.role) return def.role;
+    return def.fort ? 'fortification' : 'unassigned';
+  };
+
+  FB.isFortificationBuilding = function (id) {
+    return FB.buildingRole(id) === 'fortification';
+  };
+
+  /* The single fortification building's id; data validation guarantees one. */
+  FB.fortificationBuildingId = function () {
+    var table = FBDATA.buildings || {};
+    for (var id in table) {
+      if (Object.prototype.hasOwnProperty.call(table, id) &&
+          FB.isFortificationBuilding(id)) return id;
+    }
+    return null;
+  };
+
+  /* Validation errors for a buildings table (an empty list when valid).
+     requireRole: shipped data must declare every role explicitly. */
+  FB.validateBuildingData = function (table, requireRole) {
+    var errors = [];
+    var forts = [];
+    for (var id in table || {}) {
+      if (!Object.prototype.hasOwnProperty.call(table, id)) continue;
+      var def = table[id];
+      if (!def || typeof def !== 'object' || Array.isArray(def)) {
+        errors.push('Building ' + id + ' must be an object.');
+        continue;
+      }
+      if (def.role !== undefined &&
+          (typeof def.role !== 'string' || !FB.BUILDING_ROLES[def.role])) {
+        errors.push('Building ' + id + ' has unknown role ' + def.role + '.');
+      } else if (def.role === undefined && requireRole) {
+        errors.push('Building ' + id + ' needs a role.');
+      }
+      var role = typeof def.role === 'string' && def.role ? def.role
+        : (def.fort ? 'fortification' : 'unassigned');
+      if ((role === 'fortification') !== !!def.fort) {
+        errors.push('Building ' + id + ' must set fort exactly when its role is fortification.');
+      }
+      if (role === 'fortification') forts.push(id);
+      if (def.aiBuildOrder !== undefined &&
+          (typeof def.aiBuildOrder !== 'number' || !isFinite(def.aiBuildOrder))) {
+        errors.push('Building ' + id + ' aiBuildOrder must be a finite number.');
+      }
+      if (def.settlementDraw !== undefined && typeof def.settlementDraw !== 'boolean') {
+        errors.push('Building ' + id + ' settlementDraw must be true or false.');
+      }
+    }
+    if (forts.length !== 1) {
+      errors.push('Exactly one building must have the fortification role; found ' +
+        (forts.length ? forts.join(', ') : 'none') + '.');
+    }
+    return errors;
+  };
+
   FB.fortLevelName = function (state, level, viewer) {
     var def = levelDef(level);
     if (!def) return '';
@@ -37,13 +111,14 @@ window.FB = window.FB || {};
   function rebuildIndex(state) {
     var next = { byCounty:{}, countyForts:{}, bySite:{}, forts:[], projects:[] };
     var buildings = state && state.buildings || {};
+    var fortId = FB.fortificationBuildingId();
     for (var pid in buildings) {
       if (!Object.prototype.hasOwnProperty.call(buildings, pid)) continue;
       var list = buildings[pid];
       if (!Array.isArray(list)) continue;
       for (var i = 0; i < list.length; i++) {
         var record = list[i];
-        if (!record || typeof record !== 'object' || record.id !== 'walls') continue;
+        if (!record || typeof record !== 'object' || record.id !== fortId) continue;
         var indexed = { pid:pid, record:record };
         next.forts.push(indexed);
         (next.countyForts[pid] || (next.countyForts[pid] = [])).push(indexed);
@@ -105,8 +180,9 @@ window.FB = window.FB || {};
     var current = indexOf(state).byCounty[pid] || null;
     if (current || !includeRuined) return current;
     var list = rawBuildings(state, pid);
+    var fortId = FB.fortificationBuildingId();
     for (var i = 0; i < list.length; i++) {
-      if (list[i] && typeof list[i] === 'object' && list[i].id === 'walls') {
+      if (list[i] && typeof list[i] === 'object' && list[i].id === fortId) {
         return list[i];
       }
     }
@@ -200,7 +276,7 @@ window.FB = window.FB || {};
       var level = highestSupportedLevel(state, rid);
       if (!level || !siteExists(realm.capital, 0)) continue;
       state.buildings[realm.capital] = state.buildings[realm.capital] || [];
-      var fort = { s:0, id:'walls', level:level };
+      var fort = { s:0, id:FB.fortificationBuildingId(), level:level };
       state.buildings[realm.capital].push(fort);
       syncIndexedRecord(state, realm.capital, fort, true, false);
       changed = true;
@@ -217,6 +293,7 @@ window.FB = window.FB || {};
     if (!state) return;
     state.buildings = state.buildings || {};
     var changed = false;
+    var fortId = FB.fortificationBuildingId();
     for (var pid in state.buildings) {
       if (!Object.prototype.hasOwnProperty.call(state.buildings, pid) ||
           !Array.isArray(state.buildings[pid])) continue;
@@ -226,7 +303,7 @@ window.FB = window.FB || {};
           list[i] = { s:0, id:list[i] };
           changed = true;
         }
-        if (list[i] && list[i].id === 'walls' && normalizeRecord(state, pid, list[i])) {
+        if (list[i] && list[i].id === fortId && normalizeRecord(state, pid, list[i])) {
           changed = true;
         }
       }
@@ -312,7 +389,7 @@ window.FB = window.FB || {};
     if (realmId === 'player') state.player.gold -= status.cost;
     if (!fort) {
       state.buildings[pid] = state.buildings[pid] || [];
-      fort = { s:settlement | 0, id:'walls', level:0 };
+      fort = { s:settlement | 0, id:FB.fortificationBuildingId(), level:0 };
       state.buildings[pid].push(fort);
     }
     fort.targetLevel = status.targetLevel;

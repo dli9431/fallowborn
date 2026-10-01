@@ -1167,6 +1167,18 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  /* Mod buildings merge by id, so check the composed table: known roles,
+     fort set exactly for the fortification role, and still exactly one
+     fortification. A legacy building without a role is accepted. */
+  function validateBuildings(mod) {
+    if (!plainObject(mod.buildings)) fail('buildings', 'must be an object.');
+    const composed = {};
+    for (const k in FBDATA.buildings) if (own(FBDATA.buildings, k)) composed[k] = FBDATA.buildings[k];
+    for (const k in mod.buildings) if (own(mod.buildings, k)) composed[k] = mod.buildings[k];
+    const errors = FB.validateBuildingData(composed, false);
+    if (errors.length) fail('buildings', 'are invalid: ' + errors[0]);
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1189,6 +1201,7 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'councilSeats') || own(mod, 'councilRules')) {
       validateCouncilDefinitions(mod);
     }
+    if (own(mod, 'buildings')) validateBuildings(mod);
     validateCommunityPolicies(mod);
     validateCommunityEvents(mod);
     validateSerfFreedomEventEffects(mod);

@@ -195,7 +195,7 @@
           count('building reads');
           const building = typeof raw === 'string' ? { id:raw } : raw;
           if (!building || building.ruined) continue;
-          if (building.id === 'walls') {
+          if (FB.isFortificationBuilding(building.id)) {
             const def = FB.fortLevelDef(typeof raw === 'string' ? FBDATA.forts.legacyLevel : building.level || 0);
             if (def) row.upkeep += typeof raw === 'string' || (building.maintenanceGraceUntil !== undefined &&
               state.turn <= building.maintenanceGraceUntil) ? (FBDATA.forts.legacyUpkeep || 1) : positive(def.upkeep);

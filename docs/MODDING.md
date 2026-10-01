@@ -1410,6 +1410,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `healthMax` | player health at or below (0–10) |
 | `flags` / `notFlags` | player flags set by other events |
 | `buildings` / `notBuildings` | building ids standing (or not) anywhere in the player's demesne |
+| `buildingRoles` / `notBuildingRoles` | building roles with a standing building (or none) anywhere in the player's demesne |
 | `techs` / `notTechs` | technology ids completed (or not) by the player's effective sovereign nation |
 | `holdings` / `notHoldings` | household holding ids owned (or not) by the family |
 | `religionGroup` | any faith id in the player's inheritance lineage |
@@ -2509,6 +2510,9 @@ a province:
   and `communityFaithPressure` (annual pressure for a same-faith project sponsored by
   the county's ruler).
 - `name`/`desc` accept text tokens and religion-variant objects (see the Great {temple}).
+- role: what the building is, one of fortification, milling, food_store, crossing, marketplace, worship, port, shipyard, scholarship, stronghold, garrison, training, civic, industry, care or banking. Shipped buildings must declare it; the engine checks roles, never building ids. A mod building without a role is treated as a fortification when it sets fort and as unassigned otherwise. Exactly one building may have the fortification role, and fort must be set exactly when the role is fortification; mods that break either rule are rejected.
+- aiBuildOrder: optional number ranking what AI rulers raise first (lower first); without it AI rulers never autobuild the building. settlementDraw: optional true for buildings that add weight to their settlement's share of county population growth.
+- Events gate on roles with buildingRoles / notBuildingRoles (the famine relief option requires a food_store), so a regional granary works without new event data.
 - The `walls` id is reserved for the strategic fortification system below. It is excluded
   from ordinary building pickers, repeat pricing, the Raise ledger, and autobuild.
 

@@ -5109,6 +5109,10 @@ window.FB = window.FB || {};
       snapshot, 'buildings', b, function () { return FB.hasBuilding(state, b); })) return false;
     if (tg.notBuildings) for (const b of tg.notBuildings) if (triggerSnapshotLookup(
       snapshot, 'buildings', b, function () { return FB.hasBuilding(state, b); })) return false;
+    if (tg.buildingRoles) for (const role of tg.buildingRoles) if (!triggerSnapshotLookup(
+      snapshot, 'buildingRoles', role, function () { return FB.hasBuildingRole(state, role); })) return false;
+    if (tg.notBuildingRoles) for (const role of tg.notBuildingRoles) if (triggerSnapshotLookup(
+      snapshot, 'buildingRoles', role, function () { return FB.hasBuildingRole(state, role); })) return false;
     if (tg.hasModifier !== undefined) {
       const spec = typeof tg.hasModifier === 'string'
         ? { id:tg.hasModifier } : tg.hasModifier;
