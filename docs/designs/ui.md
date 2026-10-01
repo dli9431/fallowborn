@@ -1996,6 +1996,9 @@ outline. The player moves on with **Got it** or chooses **Stop tips** directly o
 the coachmark. Showing a lesson retires any desktop hover tooltip, and hover/focus
 tooltips wait while the lesson is visible so they cannot obscure its controls.
 Tooltips in an open modal remain available while that modal covers a waiting lesson.
+Closing a generic sheet over a waiting event clears its tooltip and returns focus
+to that event, retaining its originating event control when available. It must not
+focus a background Deed whose tooltip could cover the unanswered choices.
 Clicking the highlighted control learns and immediately closes a
 one-step tip before the control's own handler runs; this lets the requested deed or
 time action respond to that first click and prevents a lesson hidden behind a picker

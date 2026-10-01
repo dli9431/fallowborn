@@ -93,6 +93,17 @@ async function continueDecisionOutcome(page) {
   await page.locator('#outcome-continue').click();
 }
 
+async function answerMarriageDues(page) {
+  await expect(page.locator('#ev-title')).toHaveText('Leave to Wed');
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+  }).toBe(false);
+  await page.locator('#ev-options').getByRole('button', {
+    name:/Work the fine in extra days/
+  }).click();
+  await expect(page.locator('#eventmodal')).toHaveClass(/hidden/);
+}
+
 async function marryForEnterprise(page) {
   expect(await page.evaluate(function () {
     const s = FB.state, me = s.chars[s.player.charId];
@@ -534,17 +545,15 @@ for (const viewport of [
       // Buying spends a day, so the fixture's marriage dues now come due.
       // Guidance must wait for that real event, then resume the household goal.
       await expect(page.locator('#ev-title')).toHaveText('Leave to Wed');
+      await expect(page.locator('#eventmodal')).toBeFocused();
+      if (viewport.name === 'desktop') {
+        await expect(page.locator('#tooltip')).toBeHidden();
+      }
       expect(await page.evaluate(function () {
         return { busy:FB.ui.eventsBusy(),
           learned:!!FB.game.uiPrefs.tipsSeen['cg-enterprise-income'] };
       })).toEqual({ busy:true, learned:false });
-      await expect.poll(function () {
-        return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
-      }).toBe(false);
-      await page.locator('#ev-options').getByRole('button', {
-        name:/Work the fine in extra days/
-      }).click();
-      await expect(page.locator('#eventmodal')).toHaveClass(/hidden/);
+      await answerMarriageDues(page);
       // The household goal stays ahead of the map tour and hostile-deed lesson.
       await expect(page.locator('.coachmark')).toContainText('enterprise can help fund your freedom');
       await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
@@ -648,6 +657,12 @@ test('CrazyGames waits through paid final service and resumes land guidance afte
     await page.locator('#rank-petition-freedom').click();
     await page.locator('#freedom-offer-accept').click();
     await continueDecisionOutcome(page);
+    // Accepting spends the fixture's first day. The queued marriage duty
+    // follows the payment outcome and must be answered before guidance resumes.
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['cg-freedom-service'];
+    })).toBe(false);
+    await answerMarriageDues(page);
     await expect(page.locator('.coachmark')).toContainText('Finish your final service');
     const paid = await page.evaluate(function () {
       const s = FB.state;

@@ -349,6 +349,47 @@ test('a losing salvage auction bid leaves the household gold untouched',
     expect(result.outcome).toContain('never leaves your purse');
   });
 
+test('closing a sheet over an event clears its tooltip and restores event focus',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await openChildFever(page);
+    const choice = page.locator('#ev-options .event-choice .evopt').first();
+    const tooltip = page.locator('#tooltip');
+    for (const origin of ['background', 'event']) {
+      await page.evaluate(function (origin) {
+        // Reproduce a generic sheet covering a pending event, once from a
+        // background control and once from a control within the event itself.
+        FB.ui.openModal('Review fixture',
+          '<button type="button" id="spec-review-details" data-action-tooltip="spec-review-tip" ' +
+          'aria-describedby="spec-review-tip">Review details</button>' +
+          '<div id="spec-review-tip" class="event-choice-details hidden">Sheet-only details</div>', {
+            returnFocus:origin === 'background'
+              ? document.getElementById('btn-endturn')
+              : document.querySelector('#ev-options .event-choice .evopt')
+          });
+      }, origin);
+      await page.locator('#spec-review-details').focus();
+      await expect(tooltip).toBeVisible();
+      await expect(tooltip).toContainText('Sheet-only details');
+      await page.locator('#genmodal [data-modal-nav="close"]').click();
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      if (origin === 'background') {
+        await expect(page.locator('#eventmodal')).toBeFocused();
+        await expect(tooltip).toBeHidden();
+      } else {
+        await expect(choice).toBeFocused();
+        await expect(tooltip).toBeVisible();
+        await expect(tooltip).toContainText('If failed');
+        await expect(tooltip).not.toContainText('Sheet-only details');
+      }
+    }
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
+    await choice.click();
+    await expect(page.locator('#outcome-continue')).toBeVisible();
+  });
+
 test('desktop choices keep side tooltips visible and separate from resolution',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);

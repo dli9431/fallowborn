@@ -4132,6 +4132,16 @@ window.FB = window.FB || {};
     if (mobilePanePosition && UI.restoreMobilePanePosition) {
       UI.restoreMobilePanePosition(mobilePanePosition);
     }
+    const eventModal = $('eventmodal');
+    if ($('genmodal').classList.contains('hidden') &&
+        !eventModal.classList.contains('hidden')) {
+      // A deed can open an event beneath its review sheet. Returning to the
+      // background deed would put its focused tooltip over the waiting choice.
+      if (SH.hideTooltip) SH.hideTooltip();
+      const eventBack = back && eventModal.contains(back) ? back : eventModal;
+      eventBack.focus({ preventScroll:true });
+      return;
+    }
     if (back && document.documentElement.contains(back)) {
       back.focus();
       return;
