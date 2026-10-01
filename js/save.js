@@ -8,7 +8,8 @@ window.FB = window.FB || {};
   FB.save = S;
   S.isSupported = function (data) {
     return !!data && (data.v === 3 || data.v === 4 &&
-      data.titleIds === 1 && data.authoritySchema === 4);
+      data.titleIds === 1 && data.authoritySchema === 4 &&
+      (data.platformSchema === undefined || data.platformSchema === 1));
   };
   const PREFIX = 'fb_';
   const crazy = FB.crazySave || null;
@@ -661,6 +662,7 @@ window.FB = window.FB || {};
   S.serialize = function () {
     const s = FB.state;
     S.v4.validateAuthority(s.authority, s);
+    S.v4.validatePlatform(s);
     if (FB.pruneChronicle) FB.pruneChronicle(s);
     serializingBuildingRecords = new WeakSet();
     serializingCompletedTech = new WeakMap();
@@ -675,8 +677,8 @@ window.FB = window.FB || {};
       }
     }
     try {
-      const header = JSON.stringify({ v:4, titleIds:1, authoritySchema:4, rng:FB.getRngState(),
-        uid:FB.getUidCounter(), mods:FB.mods.sig() });
+      const header = JSON.stringify({ v:4, titleIds:1, authoritySchema:4, platformSchema:1,
+        rng:FB.getRngState(), uid:FB.getUidCounter(), mods:FB.mods.sig() });
       const metaData = {
         name:FB.fullName(s.chars[s.player.charId]), titleData:FB.titleSnapshot(s),
         year:s.date.year, season:s.date.season

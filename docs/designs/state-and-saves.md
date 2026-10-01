@@ -4,8 +4,9 @@
 
 The [authority contract](authority.md) separates appointments, contracts,
 recognition and customary rights from county ownership and settlement communities.
-The 476 branch now writes version-4 saves with `titleIds:1` and
-`authoritySchema:4` through the normal serializer, slots, autosave and export.
+The 476 branch now writes version-4 saves with `titleIds:1`,
+`authoritySchema:4` and `platformSchema:1` through the normal serializer, slots,
+autosave and export.
 Version-3 slots and FBS1/FBS2 exports remain readable and migrate on restore;
 reading a slot or showing its metadata never rewrites the campaign. The next
 successful save writes v4. `FB.save.v4.migrate` is the detached compatibility
@@ -54,6 +55,99 @@ state.
 CrazyGames Continue preview
 
 The version-3 save envelope may carry optional meta.household with version 1, numeric tier, enterprise and land counts, a marriage boolean, and a detached objective record. Objectives store stable phase and enterprise IDs, settlement index and proper name, money amounts, readiness booleans and remaining in-game days. They never store localized prose, UI nodes or callbacks. The preview is generated from the live campaign at serialization and rendered in the active locale on the title. It is informational; loading reconstructs progress from authoritative state. Missing preview metadata is compatible with older saves, and a preview calculation failure cannot prevent the campaign from saving. Standard distributions do not add this metadata. The save version and campaign simulation are unchanged.
+
+## Save v4 platform schema
+
+This contract fixes which bookmark-platform facts a campaign saves and which it
+derives, so every system that adds saved state writes against one schema and v4
+keeps a single migration. `FB.save.v4.validatePlatform` accepts the optional
+fields described here; the registries that resolve their ids arrive with the
+systems that use them.
+
+Envelope. `platformSchema:1` sits beside `authoritySchema:4`. The serializer
+writes it and migration adds it. A v4 envelope without it, written before this
+schema, remains supported and gains it on its next save; any other value is an
+unsupported format. Adding an optional field does not bump the number; changing
+the meaning of an existing saved field does, together with a migration.
+
+Saved facts:
+
+- `state.start.era` and `state.start.geography` are stamped at creation from
+  the bookmark, beside the unchanged `id`, `year`, `season` and `day`. A save
+  without them takes them once during migration from its bookmark, when the
+  bookmark declares them, and the next save writes them. A stamped value is
+  never replaced, so a later edit to bookmark data cannot move a running
+  campaign to another era or map.
+- A realm's government form is saved, never read from current data. Realm
+  records carry no government field. Creation stamps the campaign's default
+  form as `state.start.defaultGovernment`, taken from the era default, and
+  writes a row in `state.authority.governments` only for a realm whose form
+  differs from that stamp. Creation seeds both from bookmark data, not from
+  story code. A realm without a row resolves to the stamped default; a save
+  without the stamp resolves it to `territorial`. A later edit to an era's
+  default therefore cannot change a running campaign, and 867 and 1066
+  campaigns, whose default is `territorial`, may omit the stamp and still save
+  no authority records. A realm created during play takes the stamped default
+  unless its creation chooses another form, such as its parent's, and writes a
+  row. Migration never adds the stamp: existing saves resolve realms without a
+  row as `territorial`, and deriving a different default would change them.
+- `state.stories` is keyed by story id. Each value is the plain record of one
+  registered story; a world story and a player track are separate keys (the 476
+  pair is `western_court_476` and `federate_track_476`). Only a story's own
+  start hook creates its record; restore never synthesizes one. A registration
+  may provide `validate(record, state)`, which throws for an invalid record.
+- Durable player and realm choices (offices, recognitions, contracts, customary
+  rights and render receipts) stay authority records with their existing
+  schema. Later choices that must survive a reload follow the same rule:
+  semantic ids, status and turn stamps, no rendered text.
+
+Derived, never saved: system availability, content roles, lexicon terms and
+labels, climate zones and local season kinds, balance layers, wardrobe and
+appearance, architecture style and currency labels, government strategy
+dispatch and requirement-check results. These are recomputed from the stamped
+era and geography, the realm's saved form and current data. The stamp, not a
+snapshot of every derived rule, is what keeps a campaign stable. Any exception
+must be listed here with its reason; there is none.
+
+Stable id families:
+
+- Bookmark: `FBDATA.bookmarks`, saved as `state.start.id`.
+- Era: `FBDATA.eras`, saved as `state.start.era`.
+- Geography: `FBDATA.geographies`, saved as `state.start.geography`.
+- Government form: `FBDATA.governmentForms`, saved as
+  `state.start.defaultGovernment` and
+  `state.authority.governments[realmId].formId`.
+- Government strategy: named by government-form data for each behavior slot;
+  referenced by data and mods, not saved.
+- Story: resolved by `FB.stories.get(id)`, saved as the keys of
+  `state.stories`.
+- System: `FBDATA.systems`; referenced by availability data, not saved.
+- Start scenario: `FBDATA.startScenarios`; carried by start codes and the
+  starting-rank progression record.
+
+New ids in these families are lowercase slugs (`^[a-z][a-z0-9_]*$`); bookmark
+ids keep their numeric form. Once an id has appeared in a released save, start
+code or data file, it never changes and is never reused with another meaning.
+Display names change through labels and the lexicon. Removing an id needs a
+migration that maps it to its successor; without one, the save fails with the
+specific error below.
+
+Validation runs on the detached copy before state, RNG or the uid counter is
+adopted, and again in the serializer so an invalid live state cannot replace an
+accepted slot. A present id that its registry does not know fails with
+"Unknown era", "Unknown geography", "Unknown government form" or "Unknown
+story"; a registry that has not loaded knows no ids. A malformed field fails
+with its path. `state.stories` and the legacy `state.situation476` cannot both
+be present.
+
+Migration from version 3 adds no authority, government, office, contract, right
+or story record and no default government stamp; it only takes the era and
+geography from the bookmark as above. Branch saves that still hold `state.situation476` move it, in the
+detached copy, to the two 476 story keys and drop the old field, only when
+neither key exists; other campaigns receive no story. Until the story registry
+owns that state, `state.situation476` remains the live 476 path. Repeated
+migration returns the same envelope, and repeated restore of one input yields
+the same state.
 
 ## Personal household service
 
