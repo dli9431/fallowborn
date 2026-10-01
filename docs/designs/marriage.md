@@ -48,7 +48,8 @@ Standalone marriage terms and culture invitations have no parent: Back is disabl
 and Close dismisses them.
 
 The Seek a match choice sheet uses the standard action shortcuts: `Q` seeks
-local prospects and `W` opens the dynastic marriage finder. Desktop buttons display
+local prospects and, for rulers (Baron or higher), `W` opens the dynastic marriage
+finder. Non-rulers have no dynastic option, description or `W` shortcut. Desktop buttons display
 their letter badges; candidate lists never receive shortcuts. Back retains the
 ordinary modal-history behavior.
 
@@ -162,8 +163,9 @@ alone. A proposal is unavailable until the suitor reaches the shared
 different culture adds `balance.marriageCultureStandingPremium` (+20), and a different
 faith adds `balance.marriageFaithStandingPremium` (+30); the two requirements stack, so
 personal trust can overcome a mixed match without making every family equally receptive.
-After that readiness gate, the existing proposal probability still weighs Standing, prestige, station, traits, and
-royal-realm Standing. Starting another suit ends the former one with −20 Standing and records the
+After that readiness gate, proposal probability normally weighs Standing, prestige, station, traits, and
+royal-realm Standing; the CrazyGames first-character exception is described below.
+Starting another suit ends the former one with −20 Standing and records the
 same hostile contact as a manual breakoff. Marriage, refusal, breakoff, death, succession,
 and permanent-relocation cleanup release the assignment.
 
@@ -261,7 +263,18 @@ people currently present may be drawn: 867 Dublin begins with Norse Pagan and Ga
 Catholic prospects, but matchmaking never invents Norse Catholic or Gaelic Norse Pagan
 residents by recombining those axes. A single-community county stays homogeneous.
 The picker keeps each prospect's culture, faith, station, age, exact Standing
-requirement, and dowry direction visible at a glance. Fertility, station-gap
+requirement, and dowry direction visible at a glance. Each candidate is already a
+full generated character: the card paints that character's procedural portrait and
+shows all five effective skills and every known trait. This presentation is shared
+by every distribution. Portraits resolve the candidate's own saved sex and appearance,
+independently of the protagonist's gender. Trait buttons use the shared
+explanation sheet; Back and Escape retain shortlist scroll, expanded Details and
+focus. Meet is a separate full-width action with its one-day cost visible.
+Rendering and trait inspection do not reroll candidates or consume simulation RNG.
+The selected identity, skills and traits carry into meeting, courtship and marriage; the
+existing search/selection cleanup discards unchosen records. No portrait bitmap or
+duplicate preview character is stored. This is presentation of existing character
+data, with no new gameplay capability or technology requirement. Fertility, station-gap
 interpretation, and the prospective child's identity move into the shared card
 tooltip on desktop or `?` disclosure on touch and compact layouts. Once the protagonist is forty, a fourth step-down
 family offers a very young adult aged sixteen to twenty-four. The available candidates persist on
@@ -334,6 +347,38 @@ personal attention are required before proposing. A refused first proposal inste
 prospect-search cooldown remains, its detail states the rejection and exact days left.
 This is doctrine-aware presentation over the existing eligibility rules and has no
 technology impact.
+
+The explicitly flagged CrazyGames opening introduces **Seek a match** as the first
+deed for an eligible unmarried adult. The existing local prospect picker and meeting
+event retain their costs, choices, cancellation, and courtship requirements. Immediately
+after choosing **Pursue this match**, the personal-attention lesson explains that the
+assignment is already active and advances alongside normal work. It precedes Play and
+a separate event choice; the match introduction does not satisfy that event lesson.
+For an assigned courtship, this CrazyGames lesson points at the time controls and
+invites the player to use Play, including after Continue. It never asks for a Kin
+visit or another cultivation assignment. The standard editions retain their family
+guidance, and an unassigned courtship retains its assignment guidance.
+After the event result, guidance keeps courtship as the goal until a proposal is
+eligible. Only a successful wedding unlocks the enterprise-saving and purchase
+lessons; acknowledging the proposal hint or opening its event is insufficient.
+The map tour and first-child objective do not delay these opening goals.
+
+Only the original protagonist of an explicitly flagged CrazyGames campaign receives
+`balance.crazyGamesFounderCourtshipMultiplier` (10 by default) on daily courtship
+Standing and a 100% acceptance chance once `FB.proposalStatus` is ready. At equal
+station, a same-culture, same-faith courtship starting at zero Standing therefore needs
+20 attention days instead of 200. Age, kinship, doctrine, marriage capacity, ranked
+access, culture/faith Standing premiums, dowry, and travel/presence rules remain intact.
+Ordinary friendship does not receive the multiplier. Proposal resolution still consumes
+its seeded chance roll. Previews, remaining-day estimates, and actual daily gains use
+the same rate.
+
+The exception requires generation 1 and, when recorded, `player.houseFounderId` matching
+the current character. Older first-generation saves without that field remain eligible;
+succession ends both benefits. It is independent of tutorial and hint preferences and
+survives Continue without new saved state. Standard editions retain their existing
+family lessons, progress rates, and acceptance odds. These are onboarding and numeric
+balance changes with no new capability or technology dependency.
 
 The first browser profile's active **Family & legacy** tutorial receives a bounded
 first-child safeguard. While its eligible protagonist has married, has no child, and is
@@ -500,8 +545,9 @@ ordinary close-family weddings can improve later defensive-alliance negotiations
 (see the diplomacy design). They do not grant descendant weddings an automatic alliance.
 
 
-The Deeds **Seek a match** entry first offers local prospects or **Find a dynastic
-match**. Choosing the route spends nothing and does not refresh prospects; only
+The Deeds **Seek a match** entry offers local prospects to everyone, with **Find a
+dynastic match** also available to rulers (Baron or higher). Choosing the route
+spends nothing and does not refresh prospects; only
 choosing local matchmaking invokes the existing search and cooldown. The separate
 Deeds finder button is removed. Descendant shortcuts remain available; the standalone
 Kin finder button is removed.

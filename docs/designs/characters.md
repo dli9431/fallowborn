@@ -1,5 +1,59 @@
 # Characters: skills & growing up
 
+## Life histories
+
+Life history is a shared feature of every edition. Character sheets, including
+deceased relatives opened from the family tree, lead to a dated selection of
+accomplishments and turning points. Chronicle's Remembered lives collection
+keeps played protagonists and explicitly preserved people reachable even when
+an unrelated dead court character has been compacted out of `state.chars`.
+
+Histories live separately in `state.lifeHistories`; they are never participants
+in simulation or a reason to retain a full court record. Existing family-tree
+identity, dates and highest title continue to use the ordinary character rules.
+An archived identity keeps the name, dates, procedural portrait inputs and highest
+known title needed for read-only presentation, without a skill sheet, equipment
+inventory, relationships, or AI state. Recording never materializes a person.
+
+Retention is bounded in two dimensions:
+
+- Every played protagonist has at most 40 highlights and remains preserved.
+  This one collection grows with actual played lives, including retirement.
+- Close family shares at most 128 temporary biographies, each with eight entries,
+  across the entire campaign. Scope follows the current head: spouses, parents,
+  grandparents, siblings, children and grandchildren, including recorded adoption.
+  Death does not itself erase a biography. When capacity is needed, distant kin
+  precede current close kin for eviction, deceased precede living within that
+  priority, and the oldest touched biography goes first. Tree nodes are untouched.
+- Up to 50 manually preserved lives, living or dead, each keep 32 highlights.
+  Follow life preserves existing highlights and records future accomplishments.
+  Stop following retains the biography and still records its eventual death.
+  Removing preservation explicitly frees a slot; current close family returns
+  to the smaller pool, while other detailed histories are discarded. A successor
+  promoted into the played collection frees their manually preserved slot.
+
+Within each biography, defining life/title milestones outrank routine victories;
+equally ranked battles keep the largest force, with earlier entries breaking ties.
+Condensation is disclosed in the viewer. No per-generation pool, daily history
+polling, Chronicle text search, new RNG draw, or uid allocation is introduced.
+Unrelated court deaths reject through local kin checks without rebuilding the
+world's family graph. The indexed adoption fallback is cached by head and family
+revision. Pool eviction runs only when a write needs space.
+
+The first event set covers rank changes, royal accessions and crown lapse,
+ordinary-war county conquests, field battles, regional historical foundations,
+captivity through war/intrigue, judicial exile, retirement and death. Counts are
+captured before battle losses; an individual realm's force never borrows allied
+headcounts. Personal command wording requires the player's main host with active
+Lead host and no travel/prison, or the exact entrusted military-command host.
+Other rulers receive “their force” wording. Read-only rank reassertions do not
+duplicate entries, and final title snapshots refine the same-turn promotion.
+Opening a history, following someone, and restoring a save do not invent earlier
+achievements or dates. Recording starts at the saved `since` year.
+
+This is presentation of existing events, with no gameplay eligibility or research
+change; the technology-impact ledger's presentation exemption applies.
+
 Ordinary character sheets show a clickable immediate-family strip, including
 the player's own children and grandchildren. It lists living spouses, children,
 parents and siblings relative to the displayed character, deduplicated by id.
@@ -409,6 +463,12 @@ positive event Standing only when the target is a spouse or blood relative. It a
 the existing root trait-Standing multiplier before the one final rounding; losses and
 unrelated characters do not use it.
 
+The first-life onboarding warns once per browser profile that low health greatly
+increases the chance of dying, with an adult-only pointer to Rest and mend. This
+coachmark appears at startup in standard editions and after the Daily Focus/saving
+lesson in CrazyGames. It uses existing tip acknowledgement and opt-outs; later
+health losses do not repeat it. Mortality and recovery mechanics are unchanged.
+
 **Wounds & sickness have names.** Beneath the 0–10 health number, the player carries
 `c.ails` — a short list (≤3) of ailment ids into `FBDATA.ailments` (data/traits.js).
 Hard blows (`fx.health` ≤ −2) add a random wound, severity 2 at −4 or worse;
@@ -499,7 +559,12 @@ though the class-distance influence penalty remains.
 `player.socialAttention` is not another relationship meter: it names the one character
 whose existing Standing gains `balance.socialAttentionDailyOpinion` (+0.2 by default),
 scaled by ranked access, each ordinary player day. Assignment and withdrawal cost no day,
-and Diplomacy does not change that rate. `FB.characterResidence(state, character)` is the
+and Diplomacy does not change that rate. The explicitly flagged CrazyGames first
+protagonist gains courtship Standing at 10 times that rate; friendship and subsequent
+protagonists keep the ordinary rate. Courtship previews and daily gains share this
+calculation; see [marriage.md](marriage.md) for the generation and eligibility boundaries.
+This numeric pacing change adds no technology dependency.
+`FB.characterResidence(state, character)` is the
 authoritative
 county for social presence: managed household members and retainers live at the
 household home, foreign notables in their saved roster county, royal children and
@@ -727,6 +792,70 @@ road cost atomically. The quoted visit keeps the traveler at least 90 days;
 Standing starts changing on arrival, stops during the return, and resumes on a later visit.
 Naming a qualified friend and marriage proposals remain deliverable at distance. Gifts
 may instead require the saved courier journey described above.
+
+### Serving another household
+
+Adults at Serf, Freeholder and Gentry station may **Offer household service** to
+the actual ruler of their home county. **Review household service** then manages
+one personal appointment, separate from career, station, family freedom and the
+player's own retainers. No AI-wide household roster or daily character scan is
+created. The existing local steward is the named household contact.
+
+The four paths are estate assistant → storekeeper → reeve/estate overseer →
+steward; tally assistant → clerk → tutor; carrier → purchasing agent → factor;
+and watch → guardsman → sergeant → captain. Guard appointments follow the game's
+existing male military eligibility. `FBDATA.householdServiceRoles` owns wages,
+training, predecessor experience, skills, literacy and Standing requirements.
+Promotions are explicitly accepted. Previously held roles retain experience for
+this life; completed work never automatically changes the role.
+
+Appointments also consider role-specific character fit through each role's
+`traitFit` map. Matching trait weights sum to a bonus or penalty capped at ±2,
+added to each required effective skill for appointment eligibility only (floored
+at zero). Effective skills already include ordinary trait and equipment effects;
+this extra adjustment represents suitability for entrusted work, not skill growth.
+Honesty and temperance help with stores; honesty and patience with accounts and
+purchasing; kindness and patience with tutoring; courage and veteran experience
+with guard work. Opposing dispositions and unreliable conduct can hinder those
+roles. Earned estate, road and household traits help where relevant.
+Estate assistant and carrier remain open entry jobs without skill or trait gates.
+Experience, literacy, Standing and military eligibility still apply independently.
+Trait changes never suspend an accepted job or alter pay, training or duty credit;
+new appointments, promotions and renewals recheck current fit on acceptance.
+Role Details and appointment reviews show contributing traits and each adjusted
+skill against its requirement. Fit is derived, consumes no RNG, and is not saved.
+
+Acceptance changes the existing `toil` Daily Focus from regional fieldwork to
+the appointed work, and promotion changes its label again. Wages are paid per
+working day (2.5–5 gold per 90 days); that productive work also delivers a small
+net treasury surplus to the patron. There is no simultaneous harvest income or
+equipment multiplier. Every 90 worked days gives +2 patron Standing, +3 officer
+Standing and a 50% skill-training chance, alternating the role's two skills.
+Accounts service teaches Lettered after 720 worked days. Tutors also offer
+Learning training to one living child of the patron aged 6–15 per term. No
+appointment grants career licenses, private troops or independent field command.
+
+Each completed term supplies one non-stacking credit for an ordinary labor
+duty, expiring after 180 days. It never excuses taxes, cash commutations or
+extraordinary dues. Every 180 worked days brings a bounded household case:
+careful handling improves patron Standing; relief improves county support;
+referral leaves those scores unchanged. The case binds to the exact protagonist,
+patron and appointment revision and can resolve only once.
+
+Rest or another focus retains the job but earns no service wage or experience.
+Travel, captivity and campaigning suspend work. Patron replacement/death requires
+explicit renewal with the successor (neutral Standing suffices for the same
+appointment); Standing at −40 dismisses the employee. Moving home, taking landed
+rank or ending this life terminates service. Player succession does not inherit
+employment or experience. Appointments enter life history; routine work does not.
+
+Technology impact: estate, commercial, military and learned household service
+are four independently reviewed **none** capabilities. Personal work, literacy,
+ability, role-specific trait fit and relationships govern access. The same four
+**none** decisions cover trait-aware appointments: personality and earned
+reputation have no national research dependency. These baseline social opportunities
+do not depend on the patron's national research; existing professional,
+equipment and military technology gates remain in force.
 
 **Paid retainers are managed people, not family members.** `player.retainers` stores
 compact contracts pointing to ordinary characters. The office is additive to the
@@ -1185,3 +1314,24 @@ mantle palette and brooch, while the visual cache key includes the bookmark
 period so 476 dress cannot leak into later starts. The civic clerk is an ordinary
 career whose local appointment is a separate authority record; the career alone
 does not grant land, revenue or jurisdiction.
+
+## Abbey office and religious vows
+
+The monastic ladder now feeds a separate endowed abbacy for Catholic women.
+A serving prioress with ten vocational years, an existing abbess, or a mature
+noble woman with administrative experience can seek a contested appointment.
+Candidates must be free, at least 24, unmarried or widowed without a betrothal,
+and have Learning 9; the mature route additionally needs age 35, station 2 and
+Stewardship 10. Household support requires 100 piety and 40 prestige. Related
+women may be nominated even when their dynasty name differs from the player.
+
+An appointed woman retains her previous career history but uses the monastic
+religious path. `abbeyVows` permanently blocks courtship, marriage and occupation
+changes. Temporary residents and lay patrons acquire no vows. The personal
+office gives tier-3 compatibility, 80 household troops and 2.5 seasonal piety;
+privileges increase capacity, allowance and religious prestige. The estate
+survives death and retirement without passing its office to the dynasty heir.
+See [abbeys.md](abbeys.md) for the separate technology decisions and lifecycle.
+
+
+Scheduled games retain bounded protagonist circuit totals and at most eight recurring contact snapshots, without a permanent career. Major victories and completed hosting add tournament and games_hosted life facts. Individual performance uses skills, traits, worn equipment, health and fatigue; acreage and troop numbers confer no bonus. Tournament health damage uses ordinary health effects, and skill gain is capped to one per completed edition. See tournaments.md.

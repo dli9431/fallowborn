@@ -1,5 +1,15 @@
 # Time, focuses & automation
 
+Household service reuses `toil` with an appointment-specific label, income and
+training; it adds no focus slot. Accepting, renewing or leaving an appointment
+spends one day with `skipFocus:true`. Read-only offers and canceled reviews spend
+nothing. The appointment is reconciled before focus work and after world/travel
+changes, with an immediate return when no appointment exists. Daily wages and
+experience have a once-per-turn guard, including a same-day promotion. Rest,
+study, travel and captivity earn no service progress; promotions require explicit
+review. Completed terms can discharge a scheduled ordinary tenure labor duty,
+without consuming the seasonal story slot or excusing cash/extraordinary dues.
+
 Canceling the Go into town settlement picker clears its provisional cooldown
 through the shared modal dismissal callback, including Close, Escape and browser
 Back. It spends no day and grants no tutorial deed credit. Selecting a settlement
@@ -188,10 +198,10 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 `FB.worldTick` + mortality. Days auto-advance on an adjustable interval (`G.SPEEDS` /
 `G.setSpeed`, +/- keys or menu → Settings) while unpaused (`G.paused` / `G.togglePause`); death, succession,
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
-modals/dialogs. Resolving a visible event's final modal leaves time paused by default
-until the player uses Play. The browser-local Settings switch **Automatically resume after events**
-(`uiPrefs.autoResumeAfterEvents`, stored in `fb_ui`) defaults to disabled, including
-older preferences without this setting; explicitly saved choices are preserved.
+modals/dialogs.
+
+The browser-local Automatically resume after events setting (autoResumeAfterEvents in fb_ui) defaults to enabled for the explicitly flagged CrazyGames build and disabled in other distributions. Older preferences without a boolean value use that distribution default; explicitly saved true and false values are preserved. With the setting disabled, resolving the final event modal leaves time paused until the player uses Play.
+
 Enabling it resumes time regardless of whether normal flow, fast-forward, or a manual pause
 reached the event; the first-event
 hint reflects this preference. An autoresolved batch opens no modal and preserves its caller's pause state.
@@ -660,18 +670,7 @@ Boundary workload snapshots report recorded established/delegated sites, account
 founding projects without normalizing state. They count saved records, not map markers.
 These diagnostics change no gameplay eligibility and require no technology gate.
 
-`tools/settlement_performance_saves.py` prepares matched control, dense-direct and
-dense-delegated exports under `notes/settlement-performance/` from the existing source
-used for lordship scenarios. All share characters, population, date and RNG; dense
-variants set eight established sites per owned county, and delegation gives six to a
-funded synthetic baron. Import reconciliation and subsequent AI decisions can change
-counts, so inspect both workload snapshots. This offline fixture preparation does not
-run the game. Owner-controlled measurements should reload each export, hold viewport,
-selected panel and Observe mode constant, and compare equal-day seasonal bursts.
-Measure year-boundary bursts separately. Import and deferred paint are not measured.
-Source-level suspects are repeated holding scans within recruitment/fiscal reads and
-per-candidate ruler resolution during seasonal grants; timings are needed before
-attributing the regression or changing cache/invalidation behavior.
+The owner-local settlement fixture tools prepare matched control, dense-direct and dense-delegated exports from the existing source used for lordship scenarios. All share characters, population, date and RNG; dense variants set eight established sites per owned county, and delegation gives six to a funded synthetic baron. Import reconciliation and subsequent AI decisions can change counts, so inspect both workload snapshots. This offline fixture preparation does not run the game. Owner-controlled measurements should reload each export, hold viewport, selected panel and Observe mode constant, and compare equal-day seasonal bursts. Measure year-boundary bursts separately. Import and deferred paint are not measured. Source-level suspects are repeated holding scans within recruitment/fiscal reads and per-candidate ruler resolution during seasonal grants; timings are needed before attributing the regression or changing cache/invalidation behavior.
 
 
 Wartime settlement scaling: recruitment's personal-holding check examines only the
@@ -728,3 +727,6 @@ The payment reads current ranks through `FB.rankPrestigeYearly`; seasonal income
 estimates carry its yearly categories separately. A restored spring save cannot
 repeat the payment on its next ordinary day. Observe mode skips it. See
 [characters.md](characters.md#annual-rank-prestige) for amounts and eligibility.
+
+
+Scheduled games reconcile war and lifecycle eligibility before travel, then progress after travel and before daily event selection. Ordinary war registration, holy-war launch and armed revolt creation also reconcile immediately. Season boundaries sample recurring income and plan AI editions; annual intentions renew at their saved opening minus 60 days. Observe mode resolves fields without player modal chains. See tournaments.md.

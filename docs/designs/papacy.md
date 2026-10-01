@@ -262,3 +262,15 @@ Abbot and Abbess elections and ordinary religious rank advances also show congra
 Promotion result dialogs guard acknowledgement for 350 ms and reject held shortcuts
 and in-flight pointer activation. Character-sheet returns retain the existing receipt.
 Money, prestige, and piety receipts use before/after transaction values.
+
+## Women's religious houses
+
+Abbey leadership uses its own institutional record and election, preserving the
+existing Bishop/Cardinal/Pope eligibility rules. An abbess can petition the local
+sovereign for royal protection and then her recognized Pope for exemption. Both
+require a year in office, community support 60, 160 piety and 80 prestige. Each
+petition spends 30 from the abbey treasury on success or refusal and has a
+two-year cooldown. A grant adds 20 prestige, raises personal station to at least
+4, and increases resident capacity by one, retinue by 20, and seasonal estate
+revenue and the allowance ceiling by 2. Privileges reduce encroachment chance.
+These are rights of the house and survive a change of abbess. See [abbeys.md](abbeys.md).

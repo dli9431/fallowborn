@@ -10,6 +10,8 @@ window.FB = window.FB || {};
   FB.activeBookmarkDiagnostics = [];
 
   var worldCache = {};
+  var activation = null;
+  var queuedActivations = [];
   var WORLD_FIELDS = [
     'provinces','realms','duchies','kingdoms','empires','straits',
     'crossingClasses','scripted'
@@ -892,10 +894,17 @@ window.FB = window.FB || {};
 
     let si = 0;
     function step() {
-      while (si < steps.length) {
-        const res = steps[si]();
-        if (res !== 'repeat') si++;
-        if (si < steps.length) { setTimeout(step, 0); return; }
+      /* A throwing step must still finish the build, or activations queued
+         behind it would wait forever. */
+      try {
+        while (si < steps.length) {
+          const res = steps[si]();
+          if (res !== 'repeat') si++;
+          if (si < steps.length) { setTimeout(step, 0); return; }
+        }
+      } catch (error) {
+        done(error);
+        return;
       }
       progress(1, 'The world is made.');
       if (siteFaults.length) {
@@ -925,20 +934,70 @@ window.FB = window.FB || {};
       setTimeout(function () { done(new Error(errors.join('\n'))); }, 0);
       return;
     }
-    definition = FB.titleIds.normalizeBookmark(definition);
-    installDefinition(definition);
-    if (worldCache[definition.id]) {
-      bindWorld(worldCache[definition.id]);
-      progress(1, 'The world is made.');
-      setTimeout(function () { done(null, definition); }, 0);
+    /* Activation installs its definition into FBDATA and a build yields
+       between steps, so activations run one at a time. A caller for the
+       bookmark already being built follows its progress and finishes with
+       it; any other caller waits until the current one's done has run. */
+    if (activation) {
+      if (activation.building && activation.id === definition.id) {
+        activation.listeners.push(progress);
+        activation.callbacks.push(done);
+        progress(activation.frac, activation.msg);
+      } else {
+        queuedActivations.push([requestedId, progress, done]);
+      }
       return;
     }
-    buildWorld(progress, function (error, world) {
-      if (error) { done(error); return; }
-      worldCache[definition.id] = world;
-      bindWorld(world);
-      done(null, definition);
-    });
+    var current = activation = {
+      id:definition.id, building:false, frac:0, msg:'Drawing the known world…',
+      listeners:[progress], callbacks:[done]
+    };
+    function finish(error) {
+      for (var i = 0; i < current.callbacks.length; i++) {
+        try {
+          if (error) current.callbacks[i](error);
+          else current.callbacks[i](null, definition);
+        } catch (callbackError) {
+          setTimeout(function () { throw callbackError; }, 0);
+        }
+      }
+      activation = null;
+      var next = queuedActivations.shift();
+      if (next) FB.activateBookmark(next[0], next[1], next[2]);
+    }
+    try {
+      definition = FB.titleIds.normalizeBookmark(definition);
+      installDefinition(definition);
+      if (worldCache[definition.id]) {
+        bindWorld(worldCache[definition.id]);
+        progress(1, 'The world is made.');
+        setTimeout(function () { finish(null); }, 0);
+        return;
+      }
+      current.building = true;
+      buildWorld(function (frac, msg) {
+        current.frac = frac; current.msg = msg;
+        for (var i = 0; i < current.listeners.length; i++) current.listeners[i](frac, msg);
+      }, function (error, world) {
+        if (!error) {
+          worldCache[definition.id] = world;
+          bindWorld(world);
+        }
+        finish(error);
+      });
+    } catch (error) {
+      // a synchronous failure must still release the queue
+      current.building = false;
+      setTimeout(function () { finish(error); }, 0);
+    }
+  };
+
+  /* Idle warm-up: build a bookmark's world while the title waits, so the
+     first click reuses it. No-op when it is cached or an activation runs. */
+  FB.prepareBookmark = function (id) {
+    var definition = FB.bookmark(id);
+    if (!definition || worldCache[definition.id] || activation) return;
+    FB.activateBookmark(definition.id);
   };
 
   /* Compatibility for old callers and mods: generate the public/default 867
@@ -3304,6 +3363,7 @@ window.FB = window.FB || {};
     if (!state || !c || !state.player) return false;
     if (FB.settlementLordshipReferencesCharacter &&
         FB.settlementLordshipReferencesCharacter(state, c.id)) return true;
+    if (FB.tournaments && FB.tournaments.referencesCharacter(state, c.id)) return true;
     const p = state.player;
     if (c.id === p.charId || p.courtingId === c.id) return true;
     if (c.items && c.items.length) return true;
@@ -3342,6 +3402,7 @@ window.FB = window.FB || {};
         FB.isHouseholdCharacter(state, c.id, familyLinks)) return true;
     if (FB.retainerRecord && FB.retainerRecord(state, c.id)) return true;
     if (FB.papalOfficeOf && FB.papalOfficeOf(state, c)) return true;
+    if (FB.abbeyRetainsCharacter && FB.abbeyRetainsCharacter(state, c.id)) return true;
     if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) return true;
     if (p.royalCompact && c.royalLine &&
         p.royalCompact.realmId === c.royalLine.realmId) return true;
@@ -3936,6 +3997,9 @@ window.FB = window.FB || {};
        FB.realmRulerCharacter stays the one place that pushes character fields
        back onto r.ruler, keeping the stub a projection and not a rival truth. */
     const playerCrowned = !!(c && c.id === state.player.charId);
+    if (!opts.repair && !playerCrowned && FB.noteLifeAccession) {
+      FB.noteLifeAccession(state, c, FB.realmRulerTitleSnapshot(state, r, c));
+    }
     if (!playerCrowned) {
       const crowned = FB.materializeRealmRuler(state, rid);
       if (crowned) FB.realmRulerCharacter(state, rid);
@@ -5009,6 +5073,9 @@ window.FB = window.FB || {};
       }
     }
     const oldName = r.name;
+    const oldLifeRuler = FB.lifeHistoryRulerId && FB.lifeHistoryRulerId(state, rid);
+    const oldLifeTitle = oldLifeRuler && state.chars[oldLifeRuler] &&
+      FB.realmRulerTitleSnapshot(state, r, state.chars[oldLifeRuler]);
     let newRank;
     if (bestDuchy) {
       r.name = 'Duchy of ' + (FBDATA.duchies[bestDuchy].name || bestDuchy);
@@ -5018,6 +5085,8 @@ window.FB = window.FB || {};
       newRank = 1;
     }
     r.rank = newRank;
+    if (oldLifeTitle && FB.noteLifeEvent) FB.noteLifeEvent(state, oldLifeRuler,
+      'loss', { title:{ $title:oldLifeTitle } });
     /* peers cannot kneel to a peer: vassals of equal or greater rank reattach
        to the fallen crown's own liege, or stand independent (mirrors the
        player hollow-crown lapse). A vassal going independent takes his
@@ -5100,6 +5169,9 @@ window.FB = window.FB || {};
     realm.rank = 2;
     realm.name = 'Duchy of ' + duchyName;
     if (!options.silent) {
+      const rulerId = FB.lifeHistoryRulerId(state, rid);
+      if (rulerId) FB.noteLifeAccession(state, state.chars[rulerId],
+        FB.realmRulerTitleSnapshot(state, realm, state.chars[rulerId]));
       FB.news(state, FB.msg('news.realm.vassal_promoted_duchy', {
         forms:{
           select:'value', param:'sex', cases:{
@@ -6373,6 +6445,10 @@ window.FB = window.FB || {};
     let phase = timing && timing.enter('World annual phase: preparation');
     try {
       const B = FBDATA.balance;
+      /* A direct annual step can precede the first daily campaign tick.
+         Bind the compatibility war setters before building annual indexes
+         or declaring breakaway wars, just as restore already does. */
+      if (FB.ensureWars) FB.ensureWars(state);
       FB.ensureDynasticState(state, { yearly:true });
       FB.checkAllCrownRecognition(state);
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: fortifications and population'); }
@@ -6707,6 +6783,7 @@ window.FB = window.FB || {};
       add('ret', 'episcopal_household',
         FB.bishopricRetinue ? FB.bishopricRetinue(state) : 120);
     }
+    if (FB.abbeyRetinue) add('ret', 'abbey_household', FB.abbeyRetinue(state));
     if (FB.enterpriseUpgradeEffect) {
       const privateCounties = {};
       for (const enterprise of FB.enterpriseList(state)) privateCounties[enterprise.provinceId] = true;
@@ -7391,6 +7468,7 @@ window.FB = window.FB || {};
     if (pid && state.owner[pid] === w.enemy) {
       if (!(state.realms.player && state.realms.player.alive)) FB.foundPlayerRealm(state);
       FB.transferProvince(state, pid, FB.playerRealmId(state) || 'player');
+      if (FB.noteLifeConquest) FB.noteLifeConquest(state, 'player', pid);
       if (state.holder) state.holder[pid] = 'player'; // the player's own demesne
       FB.invalidateRealmCache(); // transferProvince rebuilt before the holder rewrite
       p.provs = p.provs || [];
@@ -7466,6 +7544,7 @@ window.FB = window.FB || {};
       FB.damageCountyDevelopment(state, lost);
       if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, lost, 'war_loss');
       FB.transferProvince(state, lost, w.enemy);
+      if (FB.noteLifeConquest) FB.noteLifeConquest(state, w.enemy, lost);
       FB.news(state, FB.msg('news.war.province_lost',
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }), {
           outcomeImpacts:[{ type:'land', action:'lose', pid:lost }]
@@ -7610,9 +7689,10 @@ window.FB = window.FB || {};
     for (const pid of (p.provs || [])) s += state.dev[pid] || 1;
     return s;
   }
-  FB.submissionOfferEligible = function (state) {
+  FB.submissionOfferEligible = function (state, playerInitiated) {
     const p = state.player, w = p.war;
-    if (!w || !w.defending || w.submissionOffered) return false;
+    // The queued offer comes once per war; the player may still ask to kneel.
+    if (!w || !w.defending || (w.submissionOffered && !playerInitiated)) return false;
     if (p.tier < 4 || (p.flags && p.flags.in_prison)) return false;
     const enemy = state.realms[w.enemy];
     if (!enemy || !enemy.alive) return false;
@@ -7656,6 +7736,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.war.captured',
       '⛓ Taken in the rout! You are a prisoner of {enemy}.',
       { enemy: state.realms[w.enemy] ? state.realms[w.enemy].name : '' }));
+    if (FB.noteLifeEvent) FB.noteLifeEvent(state, p.charId, 'captivity', {});
     FB.queueWarEvent(state, 'prison_ransom', {});
   };
   function prisonRansom(state) {
@@ -7765,6 +7846,8 @@ window.FB = window.FB || {};
       }
     } else if (w.wins >= NEED) {
       if (w.defending) {
+        // a rebel who wins the field keeps the crown they declared
+        w.independenceSecured = 1;
         FB.news(state, FB.msg('news.war.defensive_victory', {
           forms: {
             select: 'value', param: 'named', cases: {
@@ -8267,13 +8350,15 @@ window.FB = window.FB || {};
     if (custom === 'war_accept_tribute') {
       terms.gold = FB.treasuryOffer(state, w.enemy, 25); terms.prestige = FB.warPrestigeReward(w, 'tribute');
     } else if (custom === 'war_terms') {
-      terms.gold = w.defending ? -(15 + 5 * (w.losses || 0)) : 0;
-      terms.prestige = -Math.min(p.prestige, w.defending ? 10 : 8);
+      const cost = FB.warTermsCost(state, w);
+      terms.gold = -cost.gold;
+      terms.prestige = -cost.prestige;
+      if (cost.returnLiege) terms.liege = cost.returnLiege;
     } else if (custom === 'war_negotiated_withdrawal') {
       terms.prestige = -Math.min(p.prestige, 4);
     } else if (custom === 'war_submit') {
       terms.prestige = -Math.min(p.prestige, 15);
-      terms.liege = w.enemy;
+      terms.liege = FB.independenceReturnLiege(state, w) || w.enemy;
       const standing = FB.standingOf ? FB.standingOf(state, { kind:'realm', id:w.enemy }) : 0;
       terms.standing = Math.min(100, standing + 10) - standing;
     } else if (custom === 'war_submission_tribute') {
@@ -8315,14 +8400,69 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.tributeDeclined = 1;
   };
+  /* The price of unilateral peace. Always accepted, so it is deliberately
+     heavy: a defender pays the enemy per rank of its realm and per field
+     defeat; an attacker who abandons the campaign loses prestige and the
+     Popular support of every directly held county. A failed rebellion also
+     returns the player to the renounced lord (FB.independenceReturnLiege). */
+  /* A rebellion is secured only by winning it (or by the sovereign accepting
+     a demand for recognition, w.independenceSecured). Any other ending returns
+     the player to the lord actually renounced when that lord still lives
+     inside the same realm; otherwise to the sovereign fought. Null means the
+     war is not a failed player rebellion. */
+  FB.independenceReturnLiege = function (state, w) {
+    if (!w || !w.defending || !w.casus || w.casus.type !== 'independence' ||
+        w.independenceSecured || w.rebellionSettled) return null;
+    const former = w.casus.formerLiege;
+    if (former && former !== 'player' && state.realms[former] && state.realms[former].alive &&
+        FB.topRealm(state, former) === w.enemy) return former;
+    return state.realms[w.enemy] && state.realms[w.enemy].alive ? w.enemy : null;
+  };
+  FB.restoreRenouncedLiege = function (state, rid) {
+    const p = state.player;
+    if (!rid || !state.realms[rid] || !state.realms[rid].alive) return false;
+    FB.changePlayerLiege(state, rid, 'war:independence_failed');
+    if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
+    state.realms.player.liege = rid;
+    const top = FB.topRealm(state, rid);
+    for (const pid of (p.provs || [])) { state.owner[pid] = top; state.holder[pid] = 'player'; }
+    for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = top;
+    FB.invalidateRealmCache();
+    FB.news(state, FB.msg('news.war.independence_failed',
+      '🛡 The rebellion ends. You kneel again to {liege}.', { liege:state.realms[rid].name }));
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    FB.checkTierPromotions(state);
+    return true;
+  };
+  FB.warTermsCost = function (state, w) {
+    const p = state.player, b = FBDATA.balance;
+    if (!w) return null;
+    const enemy = state.realms[w.enemy];
+    const returnLiege = FB.independenceReturnLiege ? FB.independenceReturnLiege(state, w) : null;
+    if (w.defending) {
+      const gold = Math.max(b.warBuyPeaceMinGold || 50,
+        (b.warBuyPeaceGoldPerRank || 40) * ((enemy && enemy.rank) || 1) +
+        (b.warBuyPeaceGoldPerLoss || 10) * (w.losses || 0));
+      return { gold:gold, prestige:Math.min(p.prestige, b.warBuyPeacePrestige || 20),
+        support:0, counties:[], returnLiege:returnLiege };
+    }
+    return { gold:0, prestige:Math.min(p.prestige, b.warWithdrawPrestige || 30),
+      support:b.warWithdrawCountySupport || -5, counties:(p.provs || []).slice(), returnLiege:null };
+  };
+  FB.fns.war_terms_affordable = function (state) {
+    const w = state.player.war, cost = FB.warTermsCost(state, w);
+    return !!cost && state.player.gold >= cost.gold;
+  };
   FB.fns.war_terms = function (state) {
     const p = state.player;
     const w = p.war; if (!w) return;
     const enemy = state.realms[w.enemy];
+    const terms = FB.warTermsCost(state, w);
     if (w.defending) {
-      const cost = 15 + 5 * (w.losses || 0);
+      const cost = terms.gold;
+      if (p.gold < cost) return false;
       FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, w.enemy), cost, true);
-      p.prestige = Math.max(0, p.prestige - 10);
+      p.prestige = Math.max(0, p.prestige - terms.prestige);
       FB.news(state, FB.msg('news.war.peace_bought', {
         forms: {
           select: 'value', param: 'named', cases: {
@@ -8332,7 +8472,8 @@ window.FB = window.FB || {};
         }
       }, { named: enemy ? 'yes' : 'other', enemy: enemy ? enemy.name : '', cost: cost }));
     } else {
-      p.prestige = Math.max(0, p.prestige - 8);
+      p.prestige = Math.max(0, p.prestige - terms.prestige);
+      terms.counties.forEach(function (pid) { FB.adjustCountySupport(state, pid, terms.support); });
       FB.news(state, FB.msg('news.war.abandoned',
         '🕊 The campaign is abandoned. The banners come home.', {}));
     }
@@ -8365,7 +8506,9 @@ window.FB = window.FB || {};
     const p = state.player, w = p.war;
     if (!w || !FB.fns.war_submission_valid(state)) return;
     const enemy = state.realms[w.enemy]; if (!enemy || !enemy.alive) return;
-    const rid = w.enemy;
+    // A rebel who kneels returns to the lord renounced, not over their head.
+    const rid = FB.independenceReturnLiege(state, w) || w.enemy;
+    w.rebellionSettled = 1; // the oath below replaces the generic return
     FB.endPlayerWar(state);
     FB.changePlayerLiege(state, rid, 'war:submission');
     if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
@@ -8589,9 +8732,9 @@ window.FB = window.FB || {};
     state.realms[rid] = realm;
     if (FB.treasuryCreateRealm) FB.treasuryCreateRealm(state, rid, null, 0);
     if (FB.noteCharacterStatus && FB.realmRulerTitleSnapshot) {
-      FB.noteCharacterStatus(state, heir,
-        FB.clamp((realm.rank || 1) + 3, 4, 7),
-        FB.realmRulerTitleSnapshot(state, realm, heir));
+      const title = FB.realmRulerTitleSnapshot(state, realm, heir);
+      FB.noteCharacterStatus(state, heir, title.tier, title);
+      if (FB.noteLifeAccession) FB.noteLifeAccession(state, heir, title);
     }
     for (const pid in state.owner) {
       if (state.owner[pid] === 'player') state.owner[pid] = rid;
@@ -8823,7 +8966,13 @@ window.FB = window.FB || {};
       bishopTitle.special = 'bishop';
       bishopEntry = { d:'Bishopric', titleData:bishopTitle, pid:bishopric.seeProvinceId };
     }
-    if (p.tier === 3 && !bishopric) {
+    const abbey = FB.abbeyOf && FB.abbeyOf(state);
+    if (abbey) {
+      const title = FB.rankTitleSnapshot(state, 3, FB.world.byId[abbey.provinceId].name);
+      title.special = 'abbess';
+      out.push({ d:'Abbey', titleData:title, pid:abbey.provinceId });
+    }
+    if (p.tier === 3 && !bishopric && !abbey) {
       const pr = FB.world && FB.world.byId[p.provinceId];
       out.push({
         d: 'Barony',

@@ -427,7 +427,15 @@ and the settlement sea-margin walk never crosses water to drag it back ashore.
 `FB.activateBookmark` validates the complete
 definition, installs it in the legacy top-level fields, and lazily caches one raster per
 bookmark id. Switching dates replaces `FB.world` and the map's backing canvases but
-does not install a second set of pointer or keyboard listeners.
+does not install a second set of pointer or keyboard listeners. Activations run one at
+a time, because a build installs its definition and yields between steps: a caller for
+the bookmark already being built follows its progress and finishes with it, and any
+other caller waits until the current activation's callback has run. A step that throws
+ends the build with an error rather than leaving later activations waiting.
+`FB.prepareBookmark` builds a bookmark's raster in the background when nothing is
+cached or running. Only the CrazyGames title uses it, for Play as Osric's 867 world,
+once the title has painted. Other titles still build no world until a start or save is
+chosen.
 
 At minimum zoom, a mobile viewport can be larger than the permitted map span on one
 axis. `mapview.js` centers that surplus axis instead of passing reversed bounds to the
@@ -542,3 +550,6 @@ including Fez and Tahert; the polygon remains an approximate geographic anchor.
 Counties outside the authored regional campaign stay wasteland rather than
 receiving an 867 ruler or faith. The 867 and 1066 province records are not
 modified by the 476 remapping.
+
+
+Scheduled Events markers use compiled settlement coordinates. At distant zoom they cluster within 48-pixel screen cells; detailed zoom retains one marker per funded edition at its exact settlement. Hit targets open an event or matching calendar subset. The overlay has independent session state and does not modify political or market views. Capacity uses settled counties in the active de jure kingdom, independently of current owners. See tournaments.md.

@@ -1,5 +1,14 @@
 # Wars
 
+Tracked life histories take compact field-battle facts from the resolved camps
+before casualties or host deletion: each ruler's own participating soldiers,
+opposing-camp strength, place, date and outcome. Allied soldiers are not credited
+as personal troops. Personal command wording is reserved for the active player
+main banner or exact entrusted command; other records describe the ruler's force.
+Ordinary-war county awards record conquest only at committed peace/land transfer,
+not occupation or a general-purpose peaceful province transfer. These records are
+independent of expiring detailed hostile reports and add no daily archive work.
+
 ## County replacement campaigns
 
 `county_replacement` is an ordinary territorial campaign with exactly one county
@@ -490,6 +499,13 @@ campaign/event progress. `FB.realmWars`, `FB.ordinaryWarById`, and
 to an exact campaign; it never reads UI selection. Non-enumerable `player.war` and
 realm `war` compatibility views are not second saved stores. Ambiguous legacy peace
 mutations fail closed. New callers use an explicit war ID.
+
+The annual world step initializes campaign bindings before building its war
+index or rolling vassal breakaways. A fresh world can reach this boundary before
+its first daily campaign tick. Successful breakaways must enter `state.wars`
+immediately, so rebuilding the annual index keeps both sides at war and skips
+further breakaway and alliance rolls for them. Restore and uninterrupted play
+therefore consume the same seeded random sequence.
 
 Ordinary-war queries share an unsaved index of active campaigns, endpoint lists,
 legacy owners, and stable campaign order. Registration, legacy replacement/end,
@@ -1548,6 +1564,52 @@ the destination against the sum of all hostile defending hosts there, including 
 It needs a 110% advantage. Otherwise it regroups on reachable friendly ground that is
 not occupied by an overwhelming enemy. Forced retreats and fort pinning keep priority.
 
+## Player-initiated settlements
+
+The campaign sheet's Peace section lets the player end an ordinary war without
+waiting for a war event. `FB.warBalance` is a read-only projection from the
+player's side, bounded from -100 to +100: up to 50 for the share of occupied
+objectives (positive when attacking, negative when defending), up to 30 for field
+wins minus losses relative to `warWinsToTakeProvince`, and up to 20 for relative
+realm strength. The sheet shows the total with its components behind Details.
+
+`FB.warPeaceOptions` quotes each settlement. **Propose white peace** succeeds with
+a chance of 0.15 + 0.6 x balance/100 + 0.35 x (seasons/32), clamped to 2-95%.
+**Demand tribute** (attacking) or **Demand reparations** (defending) requires a
+balance of +25 and succeeds with (balance - 20)/80 x 0.8 + 0.2 x (seasons/32),
+clamped to 5-90%. It transfers what the enemy treasury can spare, up to 25 gold,
+through the paired treasury path, awards the existing tribute prestige (10 for
+reparations) and ends the war in white peace. Both offers spend a day in the UI
+and use the seeded `FB.chance`. Either answer records `peaceOfferTurn` on the war,
+and no further offer is heard for 90 days. Old saves without the field have no
+cooldown.
+
+A defender in a territorial war may **Cede the objectives**: the named objectives
+transfer through the ordinary objective-award path, the war ends and the player
+loses up to 5 prestige. The rest of the realm is untouched. **Submit** appears when
+`FB.submissionOfferEligible(state, true)` holds. It ignores the once-per-war
+offered flag and applies the existing submission effects.
+
+Withdraw, Buy peace and the war council's Seek terms are always accepted, so they
+are deliberately expensive (`FB.warTermsCost`, knobs in `FBDATA.balance`). An
+attacker who withdraws loses 30 prestige and 5 Popular support in every directly
+held county. A defender who buys peace pays the enemy 40 gold per rank of its
+realm plus 10 per field defeat, at least 50, and loses 20 prestige. Seek terms
+requires that gold (`war_terms_affordable`). The confirmation quote uses the same
+helper.
+
+A player rebellion is fought against the sovereign, but `doIndependence` records
+the lord actually renounced as `casus.formerLiege`. Independence is secured only
+by winning in the field or by an accepted **Demand recognition of independence**
+(the rebellion's demand, with no gold). Every other ending (abandoning the
+rebellion, white peace or submission) returns the player to that lord while
+they live inside the same realm (`FB.independenceReturnLiege`), otherwise to the
+sovereign. The player's counties are owned by the new top realm again. Invalid
+endings, where the enemy realm disappears, leave the player independent. Conquest still requires every objective to be held
+together; no settlement awards land to the player. Captivity blocks negotiation.
+Technology review: `war_white_peace_offers`, `war_victory_demands`,
+`war_objective_concessions` and `war_player_submission` are all `none`.
+
 ## Territorial recruitment
 
 `FB.recruitmentTerritory` is a read-only military projection of eligible and blocked
@@ -2011,3 +2073,5 @@ never grants land; hosts, battles, sieges, occupation and peace decide it. A
 failed or diverged attempt is recorded once and never replayed as an automatic
 conquest. The 476 bookmark alone has a Syracuse–Carthage open crossing for the
 African route.
+
+Hosting and every scheduled-games attendance track require peace throughout personal, home, host and venue ruling chains. Ordinary campaigns, active holy wars and armed revolts count; holy-war preparation, threats and truces do not. War cancels an ineligible host edition or withdraws only affected visitors, releases reserved capacity, preserves earned rewards and refunds unused commitments. Tournament travellers physically return using their prepaid allowance before generic travel cancellation. See tournaments.md.

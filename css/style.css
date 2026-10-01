@@ -989,6 +989,34 @@ a.actionbtn { text-decoration: none; }
 .network-action-entry .network-main-action {
   min-width: 0; margin-bottom: 0; font-size: 16px; font-weight: 600;
 }
+/* The Play button's right end shows the current Daily Focus as a 1x pixel
+   scene. The 82x46 window crops each 96x64 atlas frame to its drawn band
+   (x 7-88, y 16-61), so the scene fits the 48px button without scaling.
+   It is absolutely placed: it never changes the time bar's size. */
+#btn-endturn { position: relative; }
+.endturn-label { display: block; overflow: hidden; text-overflow: ellipsis; }
+#btn-endturn.has-focus-art { padding-right: 92px; }
+#btn-endturn.focus-art-compact .keyhint { display: none; }
+.focus-art {
+  display: none; position: absolute; right: 4px; top: 50%;
+  width: 82px; height: 46px; margin-top: -23px; pointer-events: none;
+  background-repeat: no-repeat;
+  background-position-x: -7px;
+  image-rendering: pixelated;
+  animation: daily-focus-work 1.44s steps(8, end) infinite;
+  animation-play-state: paused;
+}
+#btn-endturn.has-focus-art .focus-art { display: block; }
+body:not(.picking) #game:not(.hidden) #btn-endturn.has-focus-art .focus-art.is-playing {
+  animation-play-state: running;
+}
+@keyframes daily-focus-work {
+  from { background-position-x: -7px; }
+  to { background-position-x: -775px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .focus-art { animation: none; }
+}
 .deed-entry[data-deed-flow="now"] .deed-main-action {
   border-color: #a77f2e; box-shadow: inset 3px 0 0 var(--ui-accent-color);
 }
@@ -1279,6 +1307,29 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .declarative-choice-details .cmeta { margin: 0 0 7px; }
 .suitor-list { display: grid; gap: 8px; }
 .suitor-card { margin: 0; }
+.suitor-person {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px; align-items: center;
+}
+.suitor-copy { min-width: 0; overflow-wrap: anywhere; }
+.suitor-skills, .suitor-traits {
+  display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 8px;
+}
+.suitor-skill { display: inline-flex; align-items: baseline; gap: 6px; }
+.suitor-skill > span { color: var(--helper-text-color); font-size: var(--ui-label-size); }
+.suitor-skill > b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.suitor-traits { gap: 4px; }
+.suitor-traits .traitchip { margin: 0; max-width: 100%; white-space: normal; }
+.suitor-actions {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center; gap: 8px; margin-top: 8px;
+}
+.suitor-actions > .actionbtn { width: 100%; min-width: 0; margin: 0; }
+@media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
+  .suitor-skill > span { font-size: 14px; }
+  .suitor-skill > b { font-size: 16px; }
+  .suitor-traits .traitchip { min-height: 44px; }
+}
 .match-candidate-card { margin: 0 0 8px; }
 .match-candidate-main {
   display: grid; grid-template-columns: auto minmax(0, 1fr);
@@ -2210,6 +2261,9 @@ button.modifierchip:hover, button.modifierchip:focus-visible {
    repeats here so it beats the `.kv > b` value styling (equal specificity,
    later rule wins) */
 button.linklike { background: none; border: 0; padding: 0; font: inherit; color: var(--ui-accent-color); }
+/* A realm link and its trailing punctuation wrap as one unit; long names still wrap. */
+.war-realm-nowrap { white-space: nowrap; }
+.war-realm-nowrap > .war-realm-link { white-space: normal; }
 .identity-conversion-actions { display: grid; gap: 8px; }
 .identity-conversion-action {
   display: flex; flex-wrap: wrap; align-items: stretch; overflow: hidden;
@@ -3056,9 +3110,12 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   display: inline-flex; flex: 0 0 32px; min-height: 32px;
   align-items: center; justify-content: center; font-size: 22px;
 }
+/* The state label never shrinks below its words; the row copy wraps instead.
+   Multi-word states still wrap between words within the 130px cap. */
 .large-list-face-state {
-  flex: 0 1 auto; max-width: 130px; color: var(--helper-text-color);
-  font-size: var(--ui-label-size); line-height: 1.3; text-align: right; overflow-wrap: anywhere;
+  flex: 0 0 auto; max-width: 130px; color: var(--helper-text-color);
+  font-size: var(--ui-label-size); line-height: 1.3; text-align: right;
+  overflow-wrap: normal; word-break: normal; hyphens: manual;
 }
 .large-list-face-state.needs-attention { color: var(--ui-warning-color); }
 /* Keep card disclosures below the Work sheet's pinned navigation. */
@@ -6137,8 +6194,6 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 .marriage-lineage-field select { width: 100%; min-width: 0; }
 
 /* Episcopal petitions keep long cost/chance labels aligned at every width. */
-.bishop-appointment-actions { display:grid; grid-template-columns:minmax(0, 1fr); gap:8px; margin-top:16px; }
-.bishop-appointment-actions > .btn { width:100%; min-height:44px; white-space:normal; }
 
 /* Native campaign controls follow the shared field and touch-target skin. */
 .war-host-assignment, .war-claim-row, .war-law-row {
@@ -6341,3 +6396,82 @@ select, input:not([type]), input[type="text"], input[type="search"], input[type=
 #tab-network .large-list-section-body > .hint {
   color:var(--main-text-color);
 }
+/* Decision reviews (household service, life histories, journeys, settlements,
+   grants, retirement, careers) share Governance fact cards, Work list rows and
+   full-width action cards; only spacing and a few accents are local. */
+.review-fact-card { margin: 0 0 12px; }
+.review-fact-card > .progressnote, .review-fact-card > .warnote { margin: 8px 0 0; }
+.review-people { display: grid; gap: 8px; margin-bottom: 10px; }
+.review-people .large-list-row { box-sizing: border-box; width: 100%; margin: 0; }
+div.review-person, .review-static-row {
+  box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--ui-border-color);
+  border-radius: 8px; background: var(--ui-card-color);
+}
+.review-static-row { display: flex; align-items: center; gap: 8px; }
+.review-rows { display: grid; gap: 8px; }
+.review-actions { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 0; }
+.review-actions + .panelh, .review-fact-card + .panelh { margin-top: 16px; }
+.review-actions .actionbtn canvas { vertical-align: middle; }
+.adesc.review-note-warn { color: var(--ui-warning-color); }
+.review-list { margin: 0; padding-left: 20px; }
+.review-list li + li { margin-top: 4px; }
+.review-list-risk { color: var(--ui-warning-color); }
+.large-list-row .adesc.service-blocker { color: var(--ui-warning-color); }
+.large-list-face-state.service-current { color: var(--ui-accent-color); font-weight: bold; }
+.life-history-release { margin-top: 10px; }
+.life-history-release > summary {
+  min-height: 44px; box-sizing: border-box; padding: 10px 12px; cursor: pointer;
+  border: 1px solid var(--ui-border-color); border-radius: 8px;
+  color: var(--ui-danger-color); font-weight: bold;
+}
+.life-history-release > summary:hover { border-color: var(--ui-danger-color); }
+.life-history-release > p { margin: 10px 0 0; }
+.life-history-actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 0; }
+.life-history-actions .btn { flex:1 1 180px; min-height:44px; white-space:normal; }
+.life-history-identity { margin-bottom: 12px; }
+.life-history-identity canvas { flex-shrink:0; }
+.life-history-identity > div { min-width:0; overflow-wrap:break-word; }
+.life-history-list .large-list-row { width: 100%; }
+.life-history-list .large-list-row canvas { flex-shrink: 0; }
+.chronicle-viewer-entry-meta > b { color: var(--main-text-color); }
+.life-history-timeline > .hint { margin: 8px 0 0; }
+
+.continue-preview { text-align: left; padding: 8px 12px; border: 1px solid var(--ui-border-color, #55452a); border-radius: 8px; color: var(--helper-text-color); font-size: 14px; overflow-wrap: break-word; }
+.continue-preview p { margin: 4px 0; }
+.tutorial-objective { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--ui-border-color, #55452a); }
+.tutorial-objective p { margin: 4px 0 8px; }
+.tutorial-objective .btn { width: 100%; min-height: 44px; white-space: normal; }
+
+/* BEGIN DAILY FOCUS ATLAS */
+.focus-art { background-image: url("../static/sprites/daily-focus.png"); background-size: 768px 1920px; }
+.focus-art[data-focus-art="fieldwork"] { background-position-y: -16px; }
+.focus-art[data-focus-art="crafting"] { background-position-y: -80px; }
+.focus-art[data-focus-art="writing"] { background-position-y: -144px; }
+.focus-art[data-focus-art="studying"] { background-position-y: -208px; }
+.focus-art[data-focus-art="prayer"] { background-position-y: -272px; }
+.focus-art[data-focus-art="training"] { background-position-y: -336px; }
+.focus-art[data-focus-art="rest"] { background-position-y: -400px; }
+.focus-art[data-focus-art="play"] { background-position-y: -464px; }
+.focus-art[data-focus-art="market"] { background-position-y: -528px; }
+.focus-art[data-focus-art="household"] { background-position-y: -592px; }
+.focus-art[data-focus-art="caravan"] { background-position-y: -656px; }
+.focus-art[data-focus-art="physic"] { background-position-y: -720px; }
+.focus-art[data-focus-art="guard"] { background-position-y: -784px; }
+.focus-art[data-focus-art="faithful"] { background-position-y: -848px; }
+.focus-art[data-focus-art="manor"] { background-position-y: -912px; }
+.focus-art[data-focus-art="hall"] { background-position-y: -976px; }
+.focus-art[data-focus-art="court"] { background-position-y: -1040px; }
+.focus-art[data-focus-art="command"] { background-position-y: -1104px; }
+.focus-art[data-focus-art="intrigue"] { background-position-y: -1168px; }
+.focus-art[data-focus-art="diocese"] { background-position-y: -1232px; }
+.focus-art[data-focus-art="temporalities"] { background-position-y: -1296px; }
+.focus-art[data-focus-art="govern"] { background-position-y: -1360px; }
+.focus-art[data-focus-art="patronage"] { background-position-y: -1424px; }
+.focus-art[data-focus-art="boats"] { background-position-y: -1488px; }
+.focus-art[data-focus-art="herding"] { background-position-y: -1552px; }
+.focus-art[data-focus-art="irrigation"] { background-position-y: -1616px; }
+.focus-art[data-focus-art="service"] { background-position-y: -1680px; }
+.focus-art[data-focus-art="carrying"] { background-position-y: -1744px; }
+.focus-art[data-focus-art="tutoring"] { background-position-y: -1808px; }
+.focus-art[data-focus-art="woodland"] { background-position-y: -1872px; }
+/* END DAILY FOCUS ATLAS */

@@ -24,6 +24,11 @@ boundaries. Activation resolves them to canonical slugs and rejects alias
 collisions or missing parents. Realm and character identifiers are separate
 and are never rewritten merely because their spelling resembles a title.
 
+Tracked biographies record genuine royal accessions, living abdication and ducal recognition with
+the person and title at that boundary; repair-only succession does not add a
+dated accomplishment. Crown lapse records the outgoing dignity. Histories do not
+prevent dead court compaction or transfer achievements to a later ruler.
+
 ## Family settlement grants
 
 Both settlement grant lists use the shared title hover/focus tooltip and compact

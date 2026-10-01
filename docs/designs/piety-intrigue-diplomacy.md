@@ -1,5 +1,9 @@
 # Piety, intrigue & diplomacy
 
+Successful shared captivity records a turning point in the captive's tracked
+life history. Failed or repeated capture attempts add nothing. This presentation
+does not change custody, ransom, character retention or technology requirements.
+
 ## Baronial county claims
 
 Landed barons may use the existing Fabricate a County Claim plot against a county
@@ -319,3 +323,14 @@ collection needs no research; paid provisioning remains the ordinary alternative
 CrazyGames omits assassination and spouse-murder plot definitions and uses prison
 for lethal or blinding intrigue sentences. Forced spouse-plot events close safely.
 See [content profiles](distribution-content.md).
+
+## Endowed abbeys
+
+[Abbeys and noble women's communities](abbeys.md) extend the Catholic monastic
+route with real institutional finances, guests, elections and privilege petitions.
+Religious service and mature noble stewardship are alternative qualifications.
+Donations do not purchase office. The Abbeys deed, Work and Self share one
+management surface. Royal protection and papal exemption improve the institution
+without ordination, a secular county grant or an independent realm. Private-war,
+independence and generic baron-government shortcuts use the shared church-only
+office guard. Territorial secular titles may still coexist with an abbacy.

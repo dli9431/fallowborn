@@ -3,12 +3,14 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
   'js/events.js',
+  'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
   'js/ui_topbar.js',
   'js/save.js',
   'data/map_data.js',
+  'data/economy.js',
   'data/actions.js',
   'data/events_peasant.js',
   'js/actions.js',
@@ -26,7 +28,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
 });
 
-async function startFirstCampaign(page) {
+async function startFirstCampaign(page, keepHealthWarning) {
   await unlockStartTier(page, 1);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
@@ -35,6 +37,18 @@ async function startFirstCampaign(page) {
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
   await page.getByRole('button', { name:'Begin', exact:true }).click();
   await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+  if (!keepHealthWarning) {
+    await page.locator('.coachmark', { hasText:'Low health greatly increases' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+  }
+}
+
+async function finishFirstDeedLesson(page) {
+  const deed = page.locator('.coachmark', { hasText:'as your first deed' });
+  await expect(deed).toBeVisible();
+  await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
+    .toHaveClass(/coachmark-lit/);
+  await deed.getByRole('button', { name:'Got it', exact:true }).click();
 }
 
 async function finishOpeningMapTour(page) {
@@ -45,11 +59,9 @@ async function finishOpeningMapTour(page) {
   const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
   await expect(home).toBeVisible();
   await home.getByRole('button', { name:'Got it', exact:true }).click();
-  const filters = page.locator('.coachmark', { hasText:'Use Map filters' });
+  const filters = page.locator('.coachmark', { hasText:'Open Map filters' });
   await expect(filters).toBeVisible();
   await filters.getByRole('button', { name:'Got it', exact:true }).click();
-  await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
-    .toBeVisible();
 }
 
 async function finishOpeningHandoff(page, skipSelf) {
@@ -68,16 +80,56 @@ async function finishOpeningHandoff(page, skipSelf) {
   }, !!skipSelf);
 }
 
-test('the first prompt begins with the map and is saved only after acknowledgement',
+for (const width of [1280, 390]) {
+  test('the startup health warning is learned once before deeds at ' + width + 'px',
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:width, height:844 });
+      await startFirstCampaign(page, true);
+      const warning = page.locator('.coachmark', { hasText:'Low health greatly increases' });
+      await expect(warning).toContainText('chance of dying');
+      await expect(warning).toContainText('Rest and mend under Daily Focus in Deeds');
+      await expect(page.locator('#tb-health')).toHaveClass(/coachmark-lit/);
+      expect(await page.evaluate(function () {
+        return { learned:!!FB.game.uiPrefs.tipsSeen['health-warning'],
+          duplicated:FB.ui.resumeFirstPlayerTip() };
+      })).toEqual({ learned:false, duplicated:false });
+      await expect(page.locator('.coachmark')).toHaveCount(1);
+      await warning.getByRole('button', { name:'Got it', exact:true }).click();
+      await expect(page.locator('.coachmark')).toContainText('as your first deed');
+      const learned = await page.evaluate(function () {
+        return { memory:FB.game.uiPrefs.tipsSeen['health-warning'],
+          stored:(JSON.parse(localStorage.getItem('fb_ui') || '{}').tipsSeen || {})
+            ['health-warning'] };
+      });
+      expect(learned.memory).toBe(1);
+      if (testInfo.project.name.endsWith('-served')) expect(learned.stored).toBe(1);
+      await page.evaluate(function () {
+        FB.state.chars[FB.state.player.charId].health = 2;
+        FB.ui.coachmarkReset();
+        FB.ui.refresh();
+        FB.ui.resumeFirstPlayerTip();
+      });
+      await waitForUiRefresh(page);
+      await expect(warning).toHaveCount(0);
+      await expect(page.locator('.coachmark')).toContainText('as your first deed');
+    });
+}
+
+test('the first deed prompt is saved only after acknowledgement',
   async function ({ page }, testInfo) {
     await startFirstCampaign(page);
-    const coach = page.locator('.coachmark', { hasText:'map is yours to explore' });
+    const coach = page.locator('.coachmark', { hasText:'as your first deed' });
     await expect(coach).toBeVisible();
-    await expect(page.locator('#mapwrap'))
+    await expect(coach).toContainText('Try Go into town');
+    await expect(page.locator('[data-action-group="work"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
       .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+      .toHaveCount(0);
 
     expect(await page.evaluate(function () {
-      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false);
 
     // A screen reset releases an unread tip instead of consuming it.
@@ -87,24 +139,39 @@ test('the first prompt begins with the map and is saved only after acknowledgeme
     })).toBe(true);
     await expect(coach).toBeVisible();
     expect(await page.evaluate(function () {
-      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false);
 
     await coach.getByRole('button', { name:'Got it', exact:true }).click();
-    const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
-    await expect(home).toBeVisible();
-    await expect(page.locator('#btn-home')).toHaveClass(/coachmark-lit/);
+    const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
+    await expect(flow).toBeVisible();
+    await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
     const learned = await page.evaluate(function () {
       return {
-        memory:FB.game.uiPrefs.tipsSeen['map-controls'],
+        memory:FB.game.uiPrefs.tipsSeen['first-deed'],
         stored:(JSON.parse(localStorage.getItem('fb_ui') || '{}').tipsSeen || {})
-          ['map-controls'],
+          ['first-deed'],
+        map:!!FB.game.uiPrefs.tipsSeen['map-controls'],
         repeats:FB.ui.resumeFirstPlayerTip()
       };
     });
+    expect(learned.map).toBe(false);
     expect(learned.memory).toBe(1);
     expect(learned.repeats).toBe(false);
     if (testInfo.project.name.endsWith('-served')) expect(learned.stored).toBe(1);
+  });
+
+test('the startup health warning does not direct a child to an adult focus',
+  async function ({ page }) {
+    await startFirstCampaign(page, true);
+    await page.evaluate(function () {
+      const s = FB.state;
+      FB.ui.coachmarkReset();
+      s.chars[s.player.charId].born = s.date.year - 12;
+      FB.ui.resumeFirstPlayerTip();
+    });
+    await expect(page.locator('.coachmark')).toContainText('Low health greatly increases');
+    await expect(page.locator('.coachmark')).not.toContainText('Rest and mend');
   });
 
 test('an unread first prompt returns after reload and Continue',
@@ -112,25 +179,29 @@ test('an unread first prompt returns after reload and Continue',
     test.skip(testInfo.project.name !== 'chromium-served',
       'The reload storage contract belongs to the served origin.');
     await startFirstCampaign(page);
-    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+    await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
       .toBeVisible();
     expect(await page.evaluate(function () {
-      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(false);
 
     await page.reload({ waitUntil:'domcontentloaded' });
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
     await page.locator('#btn-continue').click();
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();
-    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+    expect(await page.evaluate(function () {
+      return FB.game.uiPrefs.tipsSeen['health-warning'];
+    })).toBe(1);
+    await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
       .toBeVisible();
+    await expect(page.locator('#tab-actions [data-action-id="go_to_town"]'))
+      .toHaveClass(/coachmark-lit/);
   });
 
 test('the Deeds lesson hands the player to the flow of days',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
     await expect(flow).toBeVisible();
     await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
@@ -142,8 +213,7 @@ test('the Deeds lesson hands the player to the flow of days',
 test('the first result leads through desperate measures and back to Family & legacy',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
 
@@ -164,6 +234,8 @@ test('the first result leads through desperate measures and back to Family & leg
     });
     await expect(result).toBeVisible();
     await result.getByRole('button', { name:'Got it', exact:true }).click();
+    // The map tour waits until the first event result has been read.
+    await finishOpeningMapTour(page);
 
     const poach = page.locator('.coachmark', {
       hasText:'try Desperate measures'
@@ -198,14 +270,14 @@ test('the first result leads through desperate measures and back to Family & leg
     })).toBeVisible();
   });
 
-test('the map sequence comes first and Making a living waits for Family & legacy',
+test('the map sequence follows First steps and Making a living waits for Family & legacy',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
     await finishOpeningHandoff(page, false);
+    await finishOpeningMapTour(page);
     const self = page.locator('.coachmark', {
       hasText:'Self shows your character'
     });
@@ -225,7 +297,8 @@ test('the map sequence comes first and Making a living waits for Family & legacy
       const me = s.chars[s.player.charId];
       /* This journey exercises the serf branch even when the deterministic
          start seed changes station or carries legacy land. */
-      s.player.tier = 0;
+      FB.setPlayerTier(s, 0, { tenureFormationReason:'rank_change' });
+      FB.ensureSerfTenure(s, 'rank_change');
       s.player.landPlots = [];
       s.player.landPlotMigration = 1;
       s.player.flags.tut_kin_tab = 1;
@@ -255,6 +328,17 @@ test('the map sequence comes first and Making a living waits for Family & legacy
       FB.ui.coachmarkReset();
       return FB.ui.resumeFirstPlayerTip();
     })).toBe(true);
+    // The fixture just changed a free start into a serf. Resuming correctly
+    // introduces that new tenure before returning to the unread enterprise tip.
+    const tenure = page.locator('.coachmark', {
+      hasText:'Rank & Realm contains your station, home, lord'
+    });
+    await expect(tenure).toBeVisible();
+    await tenure.getByRole('button', { name:'Got it', exact:true }).click();
+    expect(await page.evaluate(function () {
+      return { tenure:!!FB.state.player.flags.hint_serf_tenure,
+        enterprise:!!FB.game.uiPrefs.tipsSeen['making-enterprise'] };
+    })).toEqual({ tenure:true, enterprise:false });
     await expect(enterprise).toBeVisible();
     await enterprise.getByRole('button', { name:'Got it', exact:true }).click();
     await expect(page.locator('.coachmark')).toHaveCount(0);
@@ -289,15 +373,15 @@ test('the map sequence comes first and Making a living waits for Family & legacy
     })).toEqual({ map:1, home:1, filters:1, enterprise:1, land:1 });
   });
 
-test('compact layouts teach the map before Self through the portrait',
+test('compact layouts teach the map after First steps and Self through the portrait',
   async function ({ page }) {
     await page.setViewportSize({ width:768, height:900 });
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
     await finishOpeningHandoff(page, false);
+    await finishOpeningMapTour(page);
 
     const self = page.locator('.coachmark', {
       hasText:'Tap your portrait to open Self'
@@ -315,8 +399,7 @@ test('compact layouts teach the map before Self through the portrait',
 test('the Kin lesson leads through finding a match and proposing marriage',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
 
@@ -327,6 +410,11 @@ test('the Kin lesson leads through finding a match and proposing marriage',
     })).toBe(false);
 
     await finishOpeningHandoff(page, true);
+    expect(await page.evaluate(function () {
+      return { resumed:FB.ui.resumeFamilyLegacyTips(),
+        learned:!!FB.game.uiPrefs.tipsSeen['area-kin'] };
+    })).toEqual({ resumed:false, learned:false });
+    await finishOpeningMapTour(page);
 
     const kin = page.locator('.coachmark', {
       hasText:'Kin is your household and dynasty'
@@ -353,9 +441,11 @@ test('the Kin lesson leads through finding a match and proposing marriage',
       const began = FB.beginCourtship(s, suitor);
       const days = FB.socialAttentionDaysToThreshold(s, suitor, true);
       FB.ui.refresh();
-      return { began:began, days:days };
+      return { began:began, days:days, portal:FB.platform.isCrazyGames,
+        assigned:FB.socialAttentionStatus(s, suitor).assigned };
     });
     expect(courtshipSetup.began).toBe(true);
+    expect(courtshipSetup).toMatchObject({portal:false,assigned:true});
     expect(courtshipSetup.days).toBeGreaterThan(0);
     const courtship = page.locator('.coachmark', {
       hasText:'person under Courting'
@@ -365,6 +455,7 @@ test('the Kin lesson leads through finding a match and proposing marriage',
       'about ' + courtshipSetup.days + ' days before you can propose marriage');
     await expect(page.locator('#lefttabs .tab[data-tab="family"]'))
       .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('#timebtns')).not.toHaveClass(/coachmark-lit/);
     await courtship.getByRole('button', { name:'Got it', exact:true }).click();
 
     await page.evaluate(function () {
@@ -387,8 +478,7 @@ test('the Kin lesson leads through finding a match and proposing marriage',
 test('an established marriage silently skips Family & legacy guidance',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
 
@@ -412,6 +502,7 @@ test('an established marriage silently skips Family & legacy guidance',
     await expect(page.locator('.coachmark')).toHaveCount(0);
 
     await finishOpeningHandoff(page, true);
+    await finishOpeningMapTour(page);
     const result = await page.evaluate(function () {
       const s = FB.state;
       const flags = s.player.flags;
@@ -443,6 +534,32 @@ test('an established marriage silently skips Family & legacy guidance',
     await expect(page.locator('.coachmark')).toHaveCount(0);
   });
 
+test('coachmarks retire hover tooltips and keep their controls clickable',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () { FB.ui.revealDeedAction('livelihoods'); });
+    const deed = page.locator('[data-action-id="livelihoods"]');
+    const tooltip = page.locator('#tooltip');
+    await deed.hover();
+    await expect(tooltip).toBeVisible();
+    expect(await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = false;
+      return FB.ui.maybeTip('spec-tooltip-lesson', 'Inspect the highlighted deed.',
+        '#tab-actions [data-action-id="livelihoods"]', { noNext:true });
+    })).toBe(true);
+    await expect(tooltip).toBeHidden();
+    // Pointer and keyboard focus must not bring a tooltip back over the lesson.
+    await page.mouse.move(0, 0);
+    await deed.hover();
+    await expect(tooltip).toBeHidden();
+    await deed.focus();
+    await expect(tooltip).toBeHidden();
+    await page.locator('.coachmark').getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    await deed.hover();
+    await expect(tooltip).toBeVisible();
+  });
+
 test('the land lesson points a freeholder directly at the land market deed',
   async function ({ page }) {
     await startDeterministicGame(page);
@@ -465,8 +582,7 @@ test('the land lesson points a freeholder directly at the land market deed',
 
 test('secondary areas teach themselves only when opened', async function ({ page }) {
   await startFirstCampaign(page);
-  await finishOpeningMapTour(page);
-  await page.getByRole('button', { name:'Got it', exact:true }).click();
+  await finishFirstDeedLesson(page);
   await page.locator('.coachmark', { hasText:'unpause with Play' })
     .getByRole('button', { name:'Got it', exact:true }).click();
   await expect(page.locator('.coachmark')).toHaveCount(0);
@@ -513,8 +629,7 @@ test('Stop tips is available in place and clears queued first-time lessons',
 test('a coachmark points, survives refresh, and stills running days',
   async function ({ page }) {
     await startFirstCampaign(page);
-    await finishOpeningMapTour(page);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await finishFirstDeedLesson(page);
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
     await page.evaluate(function () {
@@ -621,6 +736,14 @@ test('a hidden drawer target falls back to the portrait on phones',
     await expect(page.locator('#tb-portrait')).toHaveClass(/coachmark-lit/);
     await expect(page.locator('#lefttabs .tab[data-tab="char"]'))
       .not.toHaveClass(/coachmark-lit/);
+    await page.setViewportSize({ width:1280, height:844 });
+    await expect(page.locator('#lefttabs .tab[data-tab="char"]'))
+      .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('#tb-portrait')).not.toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark')).toHaveClass(/over-map/);
+    await page.setViewportSize({ width:390, height:844 });
+    await expect(page.locator('#tb-portrait')).toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark')).not.toHaveClass(/over-map|noarrow/);
     await page.locator('#tb-portrait').click();
     await expect(page.locator('body')).toHaveClass(/showself/);
     expect(await page.evaluate(function () {
@@ -677,4 +800,69 @@ test('a situational tip fires at its moment and never twice',
     expect(await page.evaluate(function () {
       return FB.ui.tipDue('first-plot');
     })).toBe(false);
+  });
+
+test('the first deed lesson follows Go into town under either Deeds grouping',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      FB.game.uiPrefs.groupDeedsByActionType = true;
+      FB.game.saveUiPrefs();
+    });
+    await startFirstCampaign(page);
+    const coach = page.locator('.coachmark', { hasText:'as your first deed' });
+    const town = page.locator('#tab-actions [data-action-id="go_to_town"]');
+    await expect(coach).toBeVisible();
+    // Personal decisions starts collapsed; the lesson opens it.
+    await expect(page.locator('[data-action-group="personal"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(town).toHaveClass(/coachmark-lit/);
+
+    // Switching to thematic sections moves Go into town into Work & Wealth.
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await page.getByRole('checkbox', { name:'Group Deeds by action type' })
+      .uncheck();
+    await page.evaluate(function () { FB.ui.closeModal(); });
+    await expect(coach).toBeVisible();
+    await expect(page.locator('[data-action-group="work"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(town).toHaveClass(/coachmark-lit/);
+
+    // A lesson queued behind a dialog reopens a section collapsed meanwhile.
+    await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      FB.ui.showSettings();
+      FB.ui.resumeFirstPlayerTip();
+      document.querySelector('[data-action-group="work"]').click();
+    });
+    await expect(page.locator('[data-action-group="work"]'))
+      .toHaveAttribute('aria-expanded', 'false');
+    await expect(coach).toHaveCount(0);
+    await page.evaluate(function () { FB.ui.closeModal(); });
+    await expect(coach).toBeVisible();
+    await expect(page.locator('[data-action-group="work"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(town).toHaveClass(/coachmark-lit/);
+  });
+
+test('the first deed lesson falls back to the Deeds tab when Go into town is unavailable',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    await expect(page.locator('.coachmark', { hasText:'as your first deed' }))
+      .toBeVisible();
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      FB.ui.coachmarkReset();
+      s.player.cooldowns = s.player.cooldowns || {};
+      s.player.cooldowns.go_to_town = s.turn;
+      return {
+        usable:FB.instantStatus(s, 'go_to_town').can,
+        shown:FB.ui.resumeFirstPlayerTip()
+      };
+    })).toEqual({ usable:false, shown:true });
+    await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
+      .toBeVisible();
+    await expect(page.locator('#sidetabs .tab[data-tab="actions"]'))
+      .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+      .toHaveCount(0);
   });

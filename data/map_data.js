@@ -1440,6 +1440,13 @@ FBDATA.balance = {
   artifactOfferingRatio: 1.5, // trial offering cost against artifact value
   wivesByGroup: { muslim: 4, pagan: 3 }, // deprecated fallback; faith properties own doctrine
   warWinsToTakeProvince: 3, aiWarChance: 0.14,
+  /* unilateral peace (Withdraw / Buy peace / Seek terms): always accepted, so
+     deliberately expensive. Buy peace pays the enemy per rank of its realm and
+     per field defeat; withdrawing costs prestige and every direct county's
+     Popular support. */
+  warWithdrawPrestige: 30, warWithdrawCountySupport: -5,
+  warBuyPeaceGoldPerRank: 40, warBuyPeaceGoldPerLoss: 10, warBuyPeaceMinGold: 50,
+  warBuyPeacePrestige: 20,
   /* unjustified player wars: the current ruler's recent declarations make
      each new political cost harsher and keep vassal breakaway pressure high */
   warAggressionMemoryDays: 2880,
@@ -1707,6 +1714,7 @@ FBDATA.balance = {
   householdMemberUpkeep: [0.1,0.25,0.5], // extra resident: under 6, age 6-15, adult
   householdLifestyleMult: [1,1,1,1.25,1.5,2,2.5,3], // higher stations maintain dependants more richly
   socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
+  crazyGamesFounderCourtshipMultiplier: 10, // first protagonist only; ordinary editions and later heads retain normal progress
   relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
   marriageCultureStandingPremium: 20, // extra proposal Standing for a different culture
   marriageFaithStandingPremium: 30, // extra proposal Standing for a different faith

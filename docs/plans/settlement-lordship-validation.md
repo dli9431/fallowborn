@@ -2,17 +2,9 @@
 
 ## Prepared saves
 
-Owner-local imports are in `notes/settlement-lordship-test-saves/`. The directory
-contains twelve independent `.txt` exports, a scenario-by-scenario `README.md`,
-and a SHA-256 manifest. `notes/` is ignored by Git. Original exports are untouched.
+The owner-local scenario pack is maintained outside the game repository. It contains twelve independent .txt exports, a scenario-by-scenario README.md, and a SHA-256 manifest. Original exports are untouched.
 
-The preparation tool only edits JSON data and writes FBS1 interchange exports;
-it does not execute the game or establish that an import works. Recreate this
-specific scenario pack from the repository root with:
-
-```powershell
-python tools/settlement_lordship_saves.py "notes/fallowborn-save (1).txt"
-```
+The separately maintained preparation tool only edits JSON data and writes FBS1 interchange exports; it does not execute the game or establish that an import works. Its local documentation contains the regeneration commands.
 
 The source needs the Barcelona holder and West Francia realms. The pack gives
 generous resources/Standing and clears active wars. It is for focused feature

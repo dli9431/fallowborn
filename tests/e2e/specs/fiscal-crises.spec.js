@@ -6,7 +6,8 @@ dependsOnRuntime(__filename, [
   'js/modifiers.js', 'js/treasury.js', 'js/council.js', 'js/institutions.js',
   'js/lordships.js', 'js/armies.js', 'js/wars.js', 'js/holywar.js',
   'js/rebellions.js', 'js/main.js', 'js/save.js', 'js/ui_modals.js',
-  'js/ui_panels.js', 'js/ui_topbar.js'
+  'js/ui_panels.js', 'js/ui_topbar.js',
+  'js/ui_misc.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -256,7 +257,11 @@ for (const width of [390, 1280]) {
       FB.ui.showFinance();
     });
     await page.locator('#finance-fiscal-settlement').click();
-    await expect(page.locator('#gm-body')).toContainText('25%');
+    await expect(page.locator('[data-fiscal-settlement-terms]')).toContainText('25%');
+    await expect(page.locator('.review-list-risk li')).toHaveCount(4);
+    await expect(page.locator('#fiscal-settle-confirm')).toContainText('no further settlement for ten years');
+    await expect(page.locator('#fiscal-settle-confirm-details')).toBeHidden();
+    await expect(page.locator('#fiscal-settle-confirm-details')).toContainText('Signed loans are unchanged');
     await expect(page.locator('#fiscal-settle-confirm')).toBeEnabled();
     await page.locator('#fiscal-back').click();
     await expect(page.locator('#finance-fiscal-settlement')).toBeFocused();

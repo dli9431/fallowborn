@@ -1,5 +1,42 @@
 # UI: keyboard & mobile
 
+CrazyGames household objectives and returning players
+
+The CrazyGames checklist includes a persistent current-objective block for courtship, the first enterprise, freedom funding or final service, and the first land plot. It reads the same live status and quote functions as the normal reviews. Natural-day refreshes update its text without replacing the checklist or its controls; enterprise progress reprices the displayed recommendation rather than scanning every business on each day. Exact refreshes and review clicks choose a current recommendation again. Dismiss and Disable guide hints retain their existing effect. This is presentation only, with no technology or eligibility change.
+
+The first-business coachmark and checklist provide Review this business. It opens the existing enterprise requirements sheet with a purchase review naming the settlement, price, funds, eligible workers, staffing warnings and base seasonal income. Buying is a separate explicit action, uses the normal purchase gate and deed day, and requires a fresh review if its price, eligible workers or warning categories change. Opened from Deeds it is a root sheet, so its shared footer has disabled Back and enabled Close; Close and Escape return to the existing panel without moving its scroll position, and focus returns to the checklist button only when that button opened it. Normal requirements sheets retain Back and their catalogue navigation. Review never grants funds, labor, technology or property.
+
+Continue gains a compact CrazyGames-only preview of the saved character, household achievements and unfinished objective. Text is rendered from locale-neutral save metadata without starting a campaign or needing the saved world to be active. Older saves show identity and available household facts until their next save adds objective metadata. After a living tutorial campaign loads, its current objective is restored in Deeds unless the checklist was dismissed or guide hints are disabled. Death still opens the existing succession recovery. Other distributions retain their title and tutorial behavior.
+
+Service household opens from the commoner Deed, Network, the active appointment
+in Self, and the local patron/officer's character sheet. The list groups four
+service paths, names the patron and contact, and keeps pay and the first blocker
+visible. Shared card Details disclose the role's work, training and contribution.
+Review shows every missing requirement and the one-day acceptance/renewal cost;
+the action retains a focusable cost-disclosure wrapper when disabled. Leaving
+requires its own review. Cancel, Not now, Escape and person-sheet Back restore
+list scroll, expanded details and the originating control. Confirmed appointments
+close the flow, advance one deed day and refresh the contextual Daily Focus.
+Freedom terms remain available separately; a household appointment does not free
+the family. These screens and behaviors are shared across every distribution.
+
+Service household uses the Work & Enterprises and Governance layouts, not prose
+blocks. A Governance-style fact card shows the patron and household officer as
+portrait rows, then the appointment, pay, completed working days and status as
+label/value rows, with the first blocker as a warning note. Each service path is
+a collapsible large-list section with All, Available and Unavailable filters.
+Role cards show icon, name, pay, the first blocker or progress, and a state label.
+The review sheet repeats the patron portrait, keeps pay, training, Daily Focus
+and term Standing as rows, and lists unmet requirements in their own card. Term
+rules, duty coverage and role descriptions live in the title Details control.
+
+Service role Details and the review's Appointment fit card show the net trait
+adjustment, localized contributing trait names with signed weights, and every
+effective skill plus trait fit against its required value. The ±2 cap and the
+distinction from ordinary trait stat effects belong in the title Details.
+Unmet requirements use the same adjusted totals as acceptance, and stay visible
+on the card face and review. Entry jobs with no skill minima omit the fit card.
+
 The map Home control zooms Counts and lower ranks to settlement detail. Counts
 center on their home county; lower ranks center on their exact home settlement,
 falling back to the county at the same detail level if its anchor is unavailable.
@@ -60,6 +97,31 @@ from birth. Household Plan summarizes the saved preference; live review explains
 age-filter rejections. Saving changes recommendations only, never existing pledges.
 
 ## Immediate-family navigation
+
+Every character sheet exposes Life history, including the read-only sheets reached
+from deceased family-tree portraits. History uses the same identity/portrait and
+Chronicle entry styles; Back and Escape retain the sheet and the originating tree
+position and branch state. Chronicle also exposes Remembered lives, a paged list
+of played and manually preserved biographies. Archived people open from their
+detached identity without recreating a character. Collection returns preserve page,
+scroll and focus, choosing a nearby surviving row after removal.
+
+Follow life and Preserve this life disclose the 50-life collection capacity,
+including dead people, and that only future events can be newly recorded.
+Stop following keeps the collected history. Remove preservation is an explicit
+inline disclosure with its destructive retention consequence, confirmation and
+Cancel; Cancel does not leave the history. Empty/condensed histories explain their
+limits without inventing missing events. All editions use the same controls.
+
+Life history keeps the portrait identity card on top, then a Record fact card
+showing how the life is kept, when recording began, following state, the number of
+accomplishments and preserved places used. Follow, Preserve and Stop/Resume are
+full-width action cards whose consequences use the shared Details disclosure. A full
+collection keeps a disabled action focusable and shows its warning on the face.
+Accomplishments render as Chronicle entries with the year and a category (titles
+and office, war, or life). Remembered lives opens with a collection fact card and
+lists portrait rows with dates, accomplishment count and a state label. Archive
+rules move to the title Details control.
 
 Ordinary character sheets use the existing family portrait strip for spouses,
 children, parents and siblings, including the player's descendants. Relations
@@ -554,7 +616,8 @@ Plate Sabatons as steel foot plates, and the Knightly Bascinet as a visored helm
 The existing Feet and Head controls equip them with the standard keyboard and touch flow.
 
 Settings places **Automatically resume after events** beside the speed control. This
-keyboard-accessible checkbox defaults to enabled and persists in browser-local `fb_ui`.
+keyboard-accessible checkbox defaults to enabled on CrazyGames and disabled elsewhere, and
+persists in browser-local `fb_ui`.
 Turning it off leaves time paused after a visible event's final choice; Play continues
 the game. The first-event hint follows the preference.
 
@@ -989,6 +1052,12 @@ declarative deed transactions. Network management actions match the Deeds action
 and weight and likewise keep helper, eligibility, cost, and duration prose in their desktop
 tooltip or compact `?` disclosure instead of beneath the button label.
 
+Daily Focus art experiment
+
+The active Daily Focus has one decorative scene at the right end of the Play button, visible across panels on desktop and phones. Thirty eight-frame loops cover every built-in focus, including Rest, childhood play, all professions, noble and clerical duties, command, intrigue, and government. All fourteen household-service roles select matching work scenes. Serf work reflects the active tenure: farming, irrigation, boats, herding, woodland work, or household service. Related focuses share appropriate scenes, such as writing for accounts and manuscripts or training for the household guard. Unsupported mod focuses, unavailable focuses, travel, observation, and the birthplace picker hide the scene. Deeds retains its compact text buttons, selection markers, keyboard shortcuts, eligibility, localized text, and separate Details controls. This is cosmetic and introduces no technology gate, simulation effect, RNG draw, or saved-state field.
+
+The scene is drawn at 1x through an 82x46 CSS-pixel window that crops each 96x64 atlas frame to its drawn band (x 7-88, y 16-61). It is absolutely positioned and pointer-transparent, so it never resizes the time bar or intercepts the button. The label keeps its own retained element: a label change never restarts the loop. The scene shows only where the label still fits beside it, first with the Space keyhint and then without it (Space remains in the keyboard help); where even the bare label would truncate, the scene is hidden. That fit is measured only when the scene, label, or viewport changes. Changing panels does not move or pause it. CSS runs the 1.44-second loop only with game time running; pause, fast-forward, and background visibility stop it, and reduced motion shows the first frame. The 768x1920 atlas ships at static/sprites/daily-focus.png; css/style.css references it with a relative URL and selects the appropriate row. Release builds version-stamp that URL, and the hosted worker precaches the PNG. No authoring tools are needed at runtime. Regression coverage lives in tests/e2e/specs/daily-focus-art.spec.js.
+
 The only mod-authored action route is Phase 4E's generic `resource_choice` sheet. It renders
 one to 12 native choice buttons with exact cost/effect chips and disabled reasons, opens
 without focusing a substantive choice, and keeps Back/Close in the normalized footer. Opening
@@ -1244,7 +1313,8 @@ starting development; broader duchy and kingdom results remain map-navigation
 aids rather than silently choosing an arbitrary county.
 The map overlays and Market lens are mutually exclusive so their controls never
 compete for the map corner. Portrait maps reserve enough height to keep the
-seven 44-pixel HUD targets in one rail; shallow landscape maps use a compact
+eight 44-pixel HUD targets (music, zoom in, zoom out, home, map filters,
+Market lens, Events, find) in one rail; shallow landscape maps use a compact
 two-column HUD cluster while preserving the same touch floor.
 
 Surface-specific browser behavior is centralized in `FB.platform`, initialized by
@@ -1882,6 +1952,12 @@ replaying the deed.
 `UI.refresh` before the repaint, so a finished track disappears in that same frame.
 It does not stamp steps, show completion toasts, or launch chapters from a later track
 until the preceding track is complete, even when the player satisfied that goal early.
+CrazyGames is the explicit exception: once First steps and the first marriage are
+complete, **Making a living** becomes the primary card and can advance alongside
+**Family & legacy**. It adds a separate freedom step before land; the standard card
+keeps its existing three steps. Family/child progress and conception safeguards remain
+active, so a first child neither blocks nor resets the economic goals. Previously
+recorded marriage progress survives widowhood and succession for this guidance.
 Completion detection uses only state reads and no RNG; it toasts each completion
 once (`tut_seen_*` flags survive a hints-off phase), marks each finished track
 (`tut_track_*`) with a chronicle line, and retires the tutorial when every eligible
@@ -1917,7 +1993,13 @@ A lesson fired to the screen shows as a **coachmark** (`UI.coachmark` in
 so each coachmark is a tooltip anchored to the button or area it teaches (the
 time buttons, a tab, a topbar stat, the map), with that target lit by a pulsing
 outline. The player moves on with **Got it** or chooses **Stop tips** directly on
-the coachmark. Clicking the highlighted control learns and immediately closes a
+the coachmark. Showing a lesson retires any desktop hover tooltip, and hover/focus
+tooltips wait while the lesson is visible so they cannot obscure its controls.
+Tooltips in an open modal remain available while that modal covers a waiting lesson.
+Closing a generic sheet over a waiting event clears its tooltip and returns focus
+to that event, retaining its originating event control when available. It must not
+focus a background Deed whose tooltip could cover the unanswered choices.
+Clicking the highlighted control learns and immediately closes a
 one-step tip before the control's own handler runs; this lets the requested deed or
 time action respond to that first click and prevents a lesson hidden behind a picker
 from silently blocking fast-forward.
@@ -1938,8 +2020,14 @@ close path) rather than fighting the modal. A missing or hidden target drops
 the arrow and rests by the toast corner, except targets with a natural
 revealer: on small layouts the Self/Kin tabs live in a drawer that a portrait
 tap exposes, so their lessons point at the topbar portrait instead
-(`COACH_ALT_TARGETS`). The Self lesson explicitly tells compact-layout players to tap
-that portrait; using it leaves the drawer open for inspection, while **Got it** closes the
+(`COACH_ALT_TARGETS`). Hidden Self/Kin panel targets first fall back to their tab,
+then to the portrait when the drawer is closed. Kin lessons explain the portrait -> Kin
+route; opening the portrait keeps that lesson unread and moves its arrow to Kin until
+the player uses Kin or acknowledges the lesson, without queuing a Self lesson en route.
+Drawer navigation and viewport changes
+refresh the text, arrow, glow, and interaction target together. The Self lesson tells
+players to tap the portrait only while that is the visible target; using it leaves the
+drawer open for inspection, while **Got it** closes the
 drawer before family guidance continues. Only a truly tall area
 (the map) is pointed at near its top edge;
 a lesson targeting either retained side panel places its card in the adjacent visible map
@@ -1957,12 +2045,78 @@ departed protagonist's portrait. On desktop that retained-panel target uses the 
 over-map placement instead of falling back to the bottom-left toast corner.
 
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
-brand-new player once ever per install rather than once per save. The opening tips
-begin with the map before any other coachmark: map controls hand off in order to the **Home**
+brand-new player once ever per install rather than once per save. One health
+coachmark anchored to the topbar health value warns that low health greatly
+increases the chance of dying. Adults also receive a pointer to **Rest and mend**
+under Daily Focus in Deeds. Standard editions show it before the first deed;
+CrazyGames waits until the Daily Focus/saving lesson has been acknowledged or its
+highlighted time controls used. Acknowledgement or use of the highlighted health
+control records `tipsSeen['health-warning']` in the existing browser preference and
+resumes the opening guidance. Later health losses do not repeat it; the ordinary
+hint opt-outs apply. It adds no health threshold trigger or gameplay change.
+
+Standard editions then begin with a deed: when **Go into town…** is usable (an adult
+in a county with settlements), the deed coachmark opens its Deeds section and points
+at it, adding an Osric-specific opening line
+for the Osric quick start; otherwise it points at the Deeds tab with the general deed
+lesson. Going into town asks the player to choose a settlement and then what to do there,
+so the first deed is a real decision rather than an automatic result. Time and the first
+event follow, and only after First steps and the event-result
+lesson does the map sequence run: map controls hand off in order to the **Home**
 button (recenter on the exact home settlement below Count rank, or the home county for
 Counts and above) and **Map filters** (cycle realm, personal,
-liege, de jure, and war views); Continue resumes at the first unread lesson in this map
-sequence. The opening then follows the playable loop: do a one-time deed, let time pass,
+liege, de jure, and war views). Continue resumes at the first unread lesson.
+CrazyGames begins a fresh Osric life directly from its title button,
+without the opening story modal, and its second title button retains the full start
+selector. Itch and play retain the ordinary title, setup and opening story modal.
+Only `FB.platform.isCrazyGames` changes the opening lessons: an unmarried adult
+with an available **Seek a match** begins by choosing a local marriage prospect.
+After **Pursue this match**, the next lesson explains the automatic personal-attention
+assignment and its remaining attention days, and points directly to Play on desktop
+and phones. An assigned courtship needs no Kin visit or second cultivation action.
+Continue uses the same time-control target for this unread lesson; if attention is
+unassigned, the existing Kin guidance still explains how to assign it. The meeting
+does not count as the First steps event in CrazyGames: the player must answer a
+separate event after starting time
+before the event-result lesson and proposal guidance. Merely opening
+or dismissing the picker does not complete the first deed. Starts that cannot seek
+a first spouse retain the ordinary deed fallback.
+After First steps and the event-result lesson, guidance stays on courtship until a
+proposal is eligible, then points at **Propose marriage**. A waiting lesson explains
+that Play advances personal attention alongside work and events. All enterprise
+lessons wait for an actual spouse, even if a business is already affordable or the
+proposal hint has been acknowledged. The wedding then introduces saving for the
+first enterprise before the map tour or the first-child objective. The recommendation
+uses live purchase requirements, prefers a business with eligible household workers,
+and names its settlement, price, and funds or shortfall. An earning-focus/time lesson
+supports saving with **Play or Skip season**; the one-time health warning follows
+that lesson. Continue preserves this order and resumes an unread health warning.
+A separate reminder appears once a purchase is affordable.
+After buying the enterprise, the next lesson teaches staffing, earnings, and saving
+for freedom. A serf is directed to **Review station & freedom** with the live outright
+purchase price or saved offer terms. Separate reminders distinguish an affordable
+purchase/offer from paid final service; the service lesson gives its actual remaining
+days and completion date. Paying for service does not unlock land guidance. Only
+becoming free does: the next lesson gives the live plot price and saving instructions,
+then points to **Buy a plot of land** when the action is usable. Existing free starts
+skip freedom, and already-owned objectives are skipped.
+
+This progression precedes the map/Home/filter tour, does not require a first child,
+and omits the **Desperate measures** lesson for CrazyGames. The map tour resumes after
+the first plot and its acknowledgement. Married starts without an eligible enterprise
+fall back rather than waiting on an impossible goal. Lessons resume through
+Continue, remain dismissible, and grant no money, property, workers, or technology.
+The first few minutes are a pacing aim, not a wall-clock trigger or guaranteed
+purchase deadline. The first-character proposal lesson confirms acceptance when the
+proposal becomes eligible; its faster progress and guaranteed acceptance are documented
+in [marriage.md](marriage.md). These lessons have no technology impact; itch and play
+retain their existing lesson order and mechanics.
+A lesson that points at a deed carries that deed id (`revealDeed`). The coachmark opens the
+deed's section again when a queued lesson is finally shown, Deeds keeps that section open on
+rebuild while the lesson is on screen, and a rebuild (including switching **Group Deeds by
+action type** in Settings) re-anchors the card and arrow to the deed in its new section, so
+the lesson works under thematic and action-type grouping alike.
+In standard editions the opening follows the playable loop: do a one-time deed, let time pass,
 answer the queued welcome event, read its result toast, and, for a serf, try **Desperate measures…**.
 The player must select one of its four hostile acts before the lesson completes. When that deed
 resolves, the coachmark returns to Deeds and highlights the newly active **Family & legacy**
@@ -1986,7 +2140,9 @@ marriages are optional while the Deeds action changes to **Seek an additional sp
 A refused proposal changes it to **Seek another match…** and exposes any remaining search
 cooldown in the same guidance. The Kin panel's beginner courtship line follows the same
 gate. If Kin was opened early, its coachmark resumes once the gate clears instead of being
-lost. After the checklist handoff and Self, the Family & legacy action guidance begins
+lost. Resumed family lessons also wait for the map, Home, filters, and Self lessons;
+an early Kin visit cannot insert a queued family hint into that orientation sequence.
+After the checklist handoff and Self, the Family & legacy action guidance begins
 when the player acknowledges
 the Kin-area lesson: it opens **Life & Family** and points to **Seek a match**, then sends an
 active courtship back to the Kin panel for personal attention. Once the authoritative
@@ -2877,7 +3033,17 @@ The shop exposes a keyboard-accessible native Regional arms and armor disclosure
 
 ## Marriage finder and diplomatic partners
 
-**Find a marriage...** appears in the Deeds **Seek a match** route chooser,
+The local Seeking a Match shortlist shows each generated candidate's procedural
+portrait, five effective skills and localized trait buttons alongside identity,
+Standing requirements and dowry in every distribution. Each portrait uses that
+candidate's own saved gender and appearance. Skills and traits wrap across the card; on compact
+screens, trait buttons and action controls retain 44px targets. Meet spans the
+available action row and shows its one-day cost; the shared Details control keeps
+fertility and family consequences accessible. Opening a trait retains the list DOM,
+scroll, expanded Details and originating focus for Back or Escape. Closing and
+reopening the shortlist reuses the same candidates, portraits, stats and traits.
+
+**Find a marriage...** appears in rulers' Deeds **Seek a match** route chooser,
 and descendant match pickers, and managed descendant character sheets. A descendant
 entry preselects that person. The modal uses native labeled search, number, select,
 and checkbox controls in the existing scrolling bottom sheet, with full-width
@@ -2892,8 +3058,10 @@ future negotiation benefits, and the existing personal royal-marriage alliance r
 New display text routes through `FB.T`; catalogs remain integration-owned.
 
 
-The Deeds **Seek a match** entry first offers local prospects or **Find a dynastic
-match**. Choosing the route spends nothing and does not refresh prospects; only
+The Deeds **Seek a match** entry offers local prospects to everyone, with **Find a
+dynastic match** also available to rulers (Baron or higher). Non-rulers have no
+dynastic button, explanatory text or `W` shortcut; `Q` still seeks local prospects.
+Choosing the route spends nothing and does not refresh prospects; only
 choosing local matchmaking invokes the existing search and cooldown. The separate
 Deeds finder button is removed. Descendant shortcuts remain available; Kin has no
 standalone finder button above the family list.
@@ -3256,6 +3424,32 @@ its own tooltip/disclosure, rather than repeating those rows in the review card.
 The disabled action retains a focusable details wrapper. Other blockers stay inline.
 
 
+## Decision review layout
+
+Decision reviews use the shared review helpers in `ui_misc.js` instead of stacked
+paragraphs. A Governance-style fact card (`reviewFactsCard`) holds label/value
+rows for destination, cost, duration, commitment and consequences, plus a warning
+note for the first blocker or a permanent risk. Every named person appears as a
+portrait row (`reviewPersonHtml`). Each gameplay action is a full-width action card
+(`reviewActionCardHtml`) with its short cost, state or first blocker on the face and
+its consequence audit behind the card's Details; a disabled action's card stays
+focusable. Background rules move to the title Details control, and Back, Cancel or
+Not now sit in the shared footer. Journey, social visit, financial settlement,
+excess land grants, capital relocation, retirement, post-marriage residence, frontier
+homestead and the Work career picker follow this layout; the career picker keeps a
+current-work card and option cards with fees and first blockers on their faces.
+
+Other gameplay confirmations use the same button rules even when their layout
+differs: trade ventures and return cargo, freedom purchase and petitions, county
+challenge and recognition, holy-war vows and settlements, religious-head and
+absolution confirmations, conversion, land and settlement grants, domain cleanup,
+land sales, elections, retainers, church appointments, technology actions, friend,
+sibling marriage, cultural invitation, loans, commons uprisings, envoys, county
+community projects, the local council and rank elevation. Committing actions are
+full-width action cards, never narrow footer buttons; Back, Cancel, Not now and
+Close go in the footer, which `normalizeModalFooter` standardizes. Settings, saves,
+mods and inline editing controls keep their compact controls.
+
 ## Default modal action buttons
 
 Gameplay actions inside modals use the plot picker's full-width, left-aligned
@@ -3342,16 +3536,50 @@ explains that custom mods are unavailable. Justice omits lethal/blinding choices
 its retained imprisonment flow shows the actual sentence. See
 [content profiles](distribution-content.md) for event and compatibility behavior.
 
-## CrazyGames save surface
+CrazyGames save surface
 
-The CrazyGames Save/Load dialog shows one saved campaign shared with Continue and
-autosave, plus portable export/import. It explains guest/device versus account
-sync behavior and the sync delay. Storage deletion shows Data Module usage out
-of 1 MiB, preserves ranks, and retains the existing confirmation and Back flow.
-Standard builds retain the three manual slots and browser-storage presentation.
-SDK boot failures remain on the title status with reload guidance and disabled
-start controls. Save failures leave the prior campaign intact and keep export
-available. A save acknowledgement means accepted by the SDK, not cloud-confirmed.
+The CrazyGames Save/Load dialog shows one campaign shared with Continue and autosave, plus portable export/import. LocalStorage mode describes browser persistence and possible Automatic Progress Save backup; its size display reports browser-save usage. The older SDK Data Module mode retains its 1 MiB usage and sync-delay explanation. Neither acknowledgement claims confirmed cloud synchronization. Standard builds retain their three manual slots and existing presentation.
+
+LocalStorage mode reaches the title even when SDK initialization, save decoding or storage access fails. Save recovery appears automatically when local records need attention and remains available from the title and Save/Load. The shared modal identifies affected records, distinguishes unsupported compression from unreadable data, explains which saving remains available, and offers a recovery download with selectable copy text. A separate Review reset screen states exactly which records will be reset and which will remain, then offers Back up and reset. A failed browser backup preserves the originals and displays an explicit Reset without a browser backup action beside its loss warning. Successful reset reloads. Cancel and Back restore the recovery or originating Save/Load view, including scroll and focus. Blocked storage allows unsaved play and current-life exports, with no ineffective reset action.
+
+Unreadable progression does not prevent continuing a healthy campaign. Unreadable campaigns remain protected against autosave, manual save and import-triggered persistence until deliberately reset. SDK Data Module initialization failures still block that edition's title until account data is available. All recovery controls use shared buttons, native textarea/details elements, localized text and the existing keyboard/mobile modal navigation.
+
+## Abbey management
+
+Abbeys and patronage is available through Deeds, Self and Work. Shared review
+cards show the holder portrait, treasury, seasonal gross revenue, upkeep and
+allowance, community support, dynasty patron, privileges and elective succession.
+Election, endowment, residence and privilege reviews show exact costs, duration,
+probability and irreversible commitments. A labeled cost row distinguishes
+institutional spending (Abbey treasury) from family spending (Family funds). Permanent endowments explicitly warn that property and
+future income leave the family; office acceptance explicitly takes vows.
+
+All named people have portraits and linked character sheets. Retained modal
+history preserves Back, Cancel, Escape and character-sheet journeys; mutation
+returns restore scroll, focus and expanded disclosures. Outcomes use the shared
+religious-office result and receipt, then spend one deed day on acknowledgement.
+Changed terms at confirmation replace the review in place with a warning rather
+than adding a history entry. After the result, the refreshed sheet's Back opens
+its parent (the house list, or Work when opened from Work) instead of closing.
+A blocked action shows its first unmet requirement on the face, and every one in
+Details.
+
+Election candidates and prospective residents use the shared large-list rows:
+portrait, name, chance or first blocker, and a state label, with All, Available
+and Unavailable filters and search once a list is long. The whole row opens its
+review, which names the candidate or resident and every unmet requirement.
+Residents are grouped as Current residents, Offer schooling, Offer residence and
+Offer refuge. Effect numbers in review text come from FBDATA.abbeys, the same
+values the engine applies.
+
+No new visual style or distribution-specific layout is introduced.
+
+
+The Events map button toggles an independent overlay without changing political filters or the market lens; like the other HUD toggles it shows its active state with the shared on style as well as aria-pressed. Its distant markers cluster and its detailed markers anchor to settlements. A cluster opens the calendar limited to its gatherings; that subset survives filter changes until Show the full calendar. The matching Deeds calendar exposes Upcoming, Reachable, Local and My bookings as review cards whose face shows date, scale, headline purse and the first blocker, booking state or journey length.
+
+Calendar, gathering, hosting setup, funding review, activity review, round tactics and journey review use shared modal history, Details cards and native labeled selectors. Each child sheet returns through a renderer that rebuilds its parent from current engine state and restores scroll, open Details and focus, so Back never shows terms or controls a confirmed transaction has changed. Confirmations (entry, journey, withdrawal, cancellation, stopping annual recurrence and the funded return home) return one level to that refreshed parent; funding an edition replaces the hosting form with the announced gathering. Rest, practice, introductions and gifts refresh the gathering in place at the same scroll position with focus on the acted card.
+
+Funding allocations, remaining treasury, return allowance, entry payments, injury and severe-wound risk, and specific wartime or funding blockers are visible before confirmation. Funding formulas, renewal timing and onward-journey rules live in the title Details. Hosts, local guests, real entrants and known circuit contacts appear with portraits; generated entrants without a character record remain names. Contest fields are information cards that use the side tooltip on roomy pointer layouts and the compact question-mark disclosure elsewhere. See tournaments.md.
 
 ## Shared political reads (476 Phase 1)
 

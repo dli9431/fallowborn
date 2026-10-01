@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/model.js',
   'js/save.js',
   'js/world.js',
+  'js/wars.js',
   'data/bookmarks.js'
 ]);
 
@@ -1045,19 +1046,100 @@ test('two worlds on one seed produce identical courts',
     }
   });
 
+test('an annual step registers a breakaway before checking its county vassals',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      /* A detached live snapshot has no campaign accessors, matching a new
+         world before its first daily campaign tick. Do not initialize wars
+         in the setup: the annual simulation owns that boundary. */
+      const s = JSON.parse(JSON.stringify(FB.state));
+      FB.state = s;
+      s.wars = {};
+      s.warSerial = 0;
+      s.player.war = null;
+      Object.keys(s.realms).forEach(function (rid) { s.realms[rid].war = null; });
+      FB.invalidateRealmCache();
+      const rebelId = 'd_apulia';
+      const formerTop = FB.topRealm(s, rebelId);
+      const countyVassals = Object.keys(s.realms).filter(function (rid) {
+        return s.realms[rid].alive && s.realms[rid].liege === rebelId;
+      });
+      const candidates = [];
+      const originalChance = FB.vassalBreakawayChance;
+      FB.vassalBreakawayChance = function (state, rid) {
+        candidates.push(rid);
+        return rid === rebelId ? 1 : 0;
+      };
+      try {
+        s.date.year++;
+        s.turn += 360;
+        FB.worldTick(s);
+      } finally {
+        FB.vassalBreakawayChance = originalChance;
+      }
+      const war = FB.ordinaryWarBetween(s, formerTop, rebelId);
+      const saved = JSON.parse(FB.save.serialize()).state;
+      return {
+        formerTop:formerTop,
+        countyCount:countyVassals.length,
+        independent:s.realms[rebelId].liege === null,
+        registered:!!war && s.wars[war.id] === war,
+        saved:!!war && !!saved.wars[war.id],
+        repeatedCountyRolls:countyVassals.filter(function (rid) {
+          return candidates.indexOf(rid) >= 0;
+        })
+      };
+    });
+    expect(result.formerTop).toBe('byzantium');
+    expect(result.countyCount).toBeGreaterThan(0);
+    expect(result.independent).toBe(true);
+    expect(result.registered).toBe(true);
+    expect(result.saved).toBe(true);
+    expect(result.repeatedCountyRolls).toEqual([]);
+  });
+
 test('a save-load-forward run matches an uninterrupted one',
   async function ({ page }) {
     /* This is what catches an ensure chain that consumes unscoped randomness
        on load: it fails loudly only if the assertion exists. */
-    expect(await page.evaluate(function () {
+    const result = await page.evaluate(function () {
+      function differences(a, b, path, out, limit) {
+        if (out.length >= limit || a === b) return out;
+        if (/\.exposed$/.test(path) && Array.isArray(a) && Array.isArray(b) &&
+            a.length === b.length && a.every(function (id) {
+              return b.indexOf(id) >= 0;
+            })) return out;
+        if (a === undefined && (b === 0 || b === null ||
+            b && typeof b === 'object' && !Object.keys(b).length)) return out;
+        if (path === 'state.player.circuit' && a === undefined && b &&
+            !b.victories && !b.openWins && !b.earnings && !b.reputation &&
+            !b.contacts.length) return out;
+        if (path === 'state.player.matchPolicy.agePreference' &&
+            a === undefined && b === 'close') return out;
+        if (path === 'state.player.war' && a === null && b === undefined) return out;
+        if (/\.war$/.test(path) && (a === null || a === undefined) &&
+            (b === null || b === undefined)) return out;
+        if (!a || !b || typeof a !== 'object' || typeof b !== 'object') {
+          out.push({ path:path, before:a, after:b });
+          return out;
+        }
+        const keys = Array.from(new Set(Object.keys(a).concat(Object.keys(b)))).sort();
+        for (const key of keys) {
+          if (out.length >= limit) break;
+          differences(a[key], b[key], path + '.' + key, out, limit);
+        }
+        return out;
+      }
       function runForward(years) {
-        const marks = [];
+        const marks = [], states = [];
         for (let i = 0; i < years; i++) {
           FB.state.date.year++;
+          FB.state.turn += 360;
           FB.worldTick(FB.state);
-          marks.push(FB.getRngState());
+          marks.push({ rng:FB.getRngState(), uid:FB.getUidCounter() });
+          states.push(JSON.parse(JSON.stringify(FB.state)));
         }
-        return marks;
+        return { marks:marks, states:states };
       }
       const checkpoint = FB.save.serialize();
       const checkpointRng = FB.getRngState();
@@ -1065,12 +1147,35 @@ test('a save-load-forward run matches an uninterrupted one',
 
       FB.save.restore(JSON.parse(checkpoint));
       const rngRestored = FB.getRngState() === checkpointRng;
+      const restored = FB.save.serialize();
+      const restoreDiff = differences(JSON.parse(checkpoint).state,
+        JSON.parse(restored).state, 'state', [], 20);
       const afterLoad = runForward(12);
+      const firstMismatch = uninterrupted.marks.findIndex(function (mark, i) {
+        return mark.rng !== afterLoad.marks[i].rng ||
+          mark.uid !== afterLoad.marks[i].uid;
+      });
       return {
-        same:JSON.stringify(uninterrupted) === JSON.stringify(afterLoad),
-        rngRestored:rngRestored
+        same:firstMismatch < 0,
+        rngRestored:rngRestored,
+        diagnostic:firstMismatch < 0 ? null : {
+          firstMismatchYear:firstMismatch + 1,
+          before:uninterrupted.marks[firstMismatch],
+          after:afterLoad.marks[firstMismatch],
+          restoreDiff:restoreDiff,
+          priorYearDiff:firstMismatch ? differences(
+            uninterrupted.states[firstMismatch - 1],
+            afterLoad.states[firstMismatch - 1], 'state', [], 30) : [],
+          yearDiff:differences(uninterrupted.states[firstMismatch],
+            afterLoad.states[firstMismatch], 'state', [], 8),
+          restoreWarnings:(FB.save.lastRestoreWarnings || []).map(function (warning) {
+            return warning.stage;
+          })
+        }
       };
-    })).toEqual({ same:true, rngRestored:true });
+    });
+    expect(result.rngRestored).toBe(true);
+    expect(result.same, JSON.stringify(result.diagnostic)).toBe(true);
   });
 
 test('a realm link opens the ruler character sheet with its court strip', async function ({ page }) {

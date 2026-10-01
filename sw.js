@@ -8,7 +8,7 @@ var MUSIC_CACHE_NAME = 'fallowborn-music-v1';
 var VERSION_QUERY = '?v=' + encodeURIComponent(BUILD_KEY);
 
 /* Replaced at build time with one quoted, root-relative path per line, derived
-   from index.html and the shipped language catalogs. Left unsubstituted, this
+   from index.html, CSS sprite URLs, language catalogs, and intro themes. Left unsubstituted, this
    path 404s, cache.addAll() rejects, and the worker does not activate. */
 var VERSIONED_ASSETS = [
   '__FB_ASSET_LIST__'

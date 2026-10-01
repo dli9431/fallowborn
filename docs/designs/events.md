@@ -1,5 +1,14 @@
 # Events are data
 
+`household_service_duty` is explicitly queued after each 180 completed working
+days. Its localized forms follow the service path; exact saved protagonist,
+employer, appointment serial and case number guard all outcomes. A temporarily
+invalidated case is offered again on returning home, while renewal, resignation
+or succession makes old contexts permanently invalid. The three owning custom
+handlers clear the pending case once; their preview/report adapters show exact
+patron Standing or county Common Voice changes and report the actual clamped
+change. Repeated handling cannot award the same benefit twice.
+
 The `lord` role resolves the actual holder of the household's home county through
 `FB.homeCountyAuthority`, rather than generating a separate landless character.
 Read resolution does not create a court or rewrite the role index; creating resolution
@@ -12,6 +21,13 @@ See [realms](realms.md) for the ownership foundation and later integration bound
 Event choices use QWE/ASD/ZXC, then Shift with the same letters, for their
 action shortcuts. Digits are reserved for UI sections. Details remain ordinary
 Tab stops. Input guards cover these letter keys across choices and outcomes.
+
+In explicitly flagged CrazyGames builds, choosing an option in `meet_suitor`
+belongs to the opening marriage search and does not mark `tut_event`. A separate
+event choice completes that First steps requirement, keeping the opening in the
+order courtship, event, proposal, then enterprise. Standard editions still count
+the match introduction as an event. This changes guidance only, with no technology
+impact or new save field.
 
 Holy-war call and muster events select Crusade, Jihad, Sacred War, or generic
 Holy War wording from the calling faith's group. Their event IDs remain stable;
@@ -1038,3 +1054,6 @@ both Chronicle views preserve events independently of those preferences.
 See [distribution content profiles](distribution-content.md) for the guarded
 57-event overlay, stable option positions, replacement effects and source-hashed
 English fallback. Technology impact is none; this is a distribution policy.
+
+
+Scheduled games use exact edition, protagonist, track and round/incident contexts from js/tournaments.js. The two legacy instant invitations now have never triggers but keep their ids and option indices for queued saves. Scheduled custom handlers validate before effects and register preview/report adapters; war invalidates both queued records and retained modal copies. See tournaments.md and ../plans/tournaments-and-regional-games.md.

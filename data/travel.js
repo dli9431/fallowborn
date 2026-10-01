@@ -2,6 +2,10 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.travelPurposes = {
+  tournament: {
+    name:'Scheduled games', icon:'🏆', desc:'Travel to a funded gathering, with the return journey reserved.',
+    cost:0, minTier:1, maxTier:7, targeted:true, repeatable:true
+  },
   pilgrimage: {
     name:'Pilgrimage',
     icon:'🕯',

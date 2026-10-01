@@ -33,7 +33,7 @@ async function startTournamentGame(page, testInfo) {
   });
 }
 
-test('tournament invitations obey rank, season, and social gates',
+test('legacy tournament invitations remain addressable but never enter new random selection',
   async function ({ page }, testInfo) {
     await startTournamentGame(page, testInfo);
     const result = await page.evaluate(function () {
@@ -73,15 +73,15 @@ test('tournament invitations obey rank, season, and social gates',
     });
 
     expect(result.exists).toBe(true);
-    expect(result.gentrySpring).toBe(true);
+    expect(result.gentrySpring).toBe(false);
     expect(result.landedBelowTier).toBe(false);
     expect(result.gentryAutumn).toBe(false);
     expect(result.gentryWinter).toBe(false);
     expect(result.gentryCraftsman).toBe(false);
     expect(result.commoner).toBe(false);
     expect(result.gentryAboveTier).toBe(false);
-    expect(result.landedBaron).toBe(true);
-    expect(result.landedEmperor).toBe(true);
+    expect(result.landedBaron).toBe(false);
+    expect(result.landedEmperor).toBe(false);
     expect(result.landedWinter).toBe(false);
   });
 

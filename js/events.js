@@ -5,6 +5,12 @@ window.FB = window.FB || {};
   'use strict';
 
   /* ---------- supporting cast (roles) ---------- */
+  FB.crazyGamesFirstCharacter = function (state) {
+    const p = state && state.player;
+    return !!(FB.platform.isCrazyGames && p && Number(state.generation) === 1 &&
+      (!p.houseFounderId || p.houseFounderId === p.charId));
+  };
+
   FB.relationshipOpinionThreshold = function () {
     const b = FBDATA.balance;
     if (b.relationshipOpinionThreshold !== undefined) {
@@ -506,7 +512,8 @@ window.FB = window.FB || {};
       characterId:c && c.id || null,
       capacity:FB.socialAttentionCapacity(),
       rate:access.ready
-        ? FB.socialAttentionDailyOpinion() * access.standingMultiplier : 0,
+        ? FB.socialAttentionDailyOpinion(state, c, opts.courtship) *
+          access.standingMultiplier : 0,
       access:access,
       reason:''
     };
@@ -558,9 +565,17 @@ window.FB = window.FB || {};
     state.player.socialAttention = {};
   };
 
-  FB.socialAttentionDailyOpinion = function () {
+  FB.socialAttentionDailyOpinion = function (state, target, courtship) {
     const value = FBDATA.balance.socialAttentionDailyOpinion;
-    return value === undefined ? 0.2 : value;
+    let rate = value === undefined ? 0.2 : value;
+    const p = state && state.player;
+    const courting = target && p && (courtship ||
+      (p.flags && p.flags.courting && p.courtingId === target.id));
+    if (courting && FB.crazyGamesFirstCharacter(state)) {
+      const multiplier = Number(FBDATA.balance.crazyGamesFounderCourtshipMultiplier);
+      rate *= isFinite(multiplier) && multiplier >= 1 ? multiplier : 10;
+    }
+    return rate;
   };
 
   FB.socialAttentionStandingThreshold = function (state, c, courtship) {
@@ -572,7 +587,7 @@ window.FB = window.FB || {};
   };
 
   FB.socialAttentionDaysToThreshold = function (state, c, courtship) {
-    const rate = FB.socialAttentionStatus(state, c).rate;
+    const rate = FB.socialAttentionStatus(state, c, { courtship:!!courtship }).rate;
     const need = FB.socialAttentionStandingThreshold(state, c, courtship) -
       characterStanding(state, c);
     if (need <= 0) return 0;
@@ -2722,6 +2737,8 @@ window.FB = window.FB || {};
     const reigningRealmId = FB.realmIdForRulerCharacter
       ? FB.realmIdForRulerCharacter(state, c) : null;
     const me = state.chars[state.player.charId];
+    // Capture family eligibility and portrait before cleanup severs the links.
+    if (FB.noteLifeDeath) FB.noteLifeDeath(state, c);
     const papalClaimant = FB.isPapalClaimant && FB.isPapalClaimant(state, c);
     FB.socialAttentionWithdraw(state, c.id, true);
     if (state.roles.friend === c.id) FB.clearFriendship(state, false);
@@ -2734,6 +2751,7 @@ window.FB = window.FB || {};
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
     if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(state, c);
     c.dead = true;
+    if (FB.releaseAbbeyOffice) FB.releaseAbbeyOffice(state, c);
     c.died = state.date.year; // remembered on their sheet: born–died
     if (FB.settlementLordshipsCharacterDied) {
       FB.settlementLordshipsCharacterDied(state, c.id);
@@ -2822,7 +2840,8 @@ window.FB = window.FB || {};
         (FB.papacyCelibateSnapshot(state, me) ||
           FB.papacyCelibateSnapshot(state, c))) {
       return blocked('celibate',
-        FB.T('The vows of a Bishop, Cardinal, or Pope forbid marriage.'),
+        me.abbeyVows || c.abbeyVows ? FB.T('Religious office vows forbid marriage.') :
+          FB.T('The vows of a Bishop, Cardinal, or Pope forbid marriage.'),
         false);
     }
     const compact = state.player.royalCompact;
@@ -4613,6 +4632,8 @@ window.FB = window.FB || {};
       }
       case 'proposal': {
         const s = FB.getRole(state, 'suitor', false);
+        if (FB.crazyGamesFirstCharacter(state) && s &&
+            FB.proposalStatus(state, s).ready) return 1;
         let c = 0.3 + characterStanding(state, s) / 180 +
           p.prestige / 600 + p.tier * 0.05;
         const gap = s ? FB.stationOf(s) - FB.playerStation(state) : 0;
@@ -7780,6 +7801,20 @@ window.FB = window.FB || {};
 
     const dueTurn = candidate.isConditional ? candidate.duty.pendingTurn : candidate.duty.nextDueTurn;
 
+    if (!candidate.isConditional && FB.householdServiceCoversDuty &&
+        FB.householdServiceCoversDuty(state, candidate.duty)) {
+      const interval = FB.serfTenureDutyInterval(tenure, candidate.duty);
+      while (candidate.duty.nextDueTurn <= state.turn) candidate.duty.nextDueTurn += interval;
+      candidate.duty.lastResolvedTurn = state.turn;
+      state.player.householdService.reliefUntil = -1;
+      FB.refreshSerfTenureDueCache(state, tenure);
+      FB.news(state, FB.msg('news.service.duty_covered',
+        'Your completed household service discharged the scheduled {duty}.', {
+          duty:FB.dataParam('tenureDuty', candidate.duty.id)
+        }));
+      return;
+    }
+
     FB.queueEvent(state, candidate.duty.eventId, {
       tenureFormedTurn: tenure.formedTurn,
       tenureRevision: tenure.revision,
@@ -9122,6 +9157,7 @@ window.FB = window.FB || {};
      registry. Adapters may be replaced by an owning system with a more exact
      pure preview/report pair before an event is shown. */
   const CORE_CUSTOM_EFFECT_IDS = (
+    'household_service_careful household_service_kind household_service_routine ' +
     'academy_introduction academy_student_dip academy_student_focus academy_student_int academy_student_lea academy_student_ste academy_withdraw auction_invitation_available auction_invitation_open ' +
     'agency_family_counsel agency_family_refuse agency_family_support agency_marriage_accept agency_marriage_decline agency_overture_gift agency_overture_rebuff agency_overture_welcome agency_rebel_buyoff agency_rebel_expose ' +
     'annul_granted appeal_lose appeal_win artifact_grant artifact_offering artifact_rumor_pursue artifact_seize attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +
@@ -10847,6 +10883,18 @@ window.FB = window.FB || {};
     });
     if (record.type === 'worldNews') return FB.T('World news follows');
     if (record.type === 'system') {
+      if (record.system === 'tournament') {
+        if (record.field === 'fatigue') return FB.T('Games fatigue {change}',{change:numberText(amount)});
+        if (record.field === 'preparation') return FB.T('Games preparation {change}',{change:numberText(amount)});
+        if (record.field === 'reputation') return FB.T('Circuit reputation {change}',{change:numberText(amount)});
+        if (record.field === 'round') {
+          const contest = record.scored
+            ? FB.T('Score base {power}, plus a roll from 0 to 12',{power:Math.round(record.power * 10) / 10})
+            : FB.T('Round win chance {chance}%',{chance:Math.round(record.chance * 100)});
+          return FB.T('{contest}; fatigue +{fatigue}; injury {injury}% including {severe}% severe wounds',{
+            contest:contest,fatigue:record.fatigue,injury:Math.round(record.injury * 1000) / 10,severe:Math.round(record.severe * 1000) / 10});
+        }
+      }
       if (record.system === 'justice') {
         if (record.action === 'custody') return FB.T('Enter custody for up to {days} days', { days:record.days || 90 });
         if (record.action === 'resist') return FB.T('Risk of capture: {chance}%', { chance:Math.round((record.chance || 0) * 100) });
@@ -12889,8 +12937,11 @@ window.FB = window.FB || {};
 
   FB.doIndependence = function (state) {
     const p = state.player;
-    if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
+    if (FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(state)) return false;
     const oldLiege = p.liege ? FB.topRealm(state, p.liege) : state.owner[p.provinceId];
+    // The war is fought against the sovereign, but a failed rebellion returns
+    // the player to the lord actually renounced (FB.independenceReturnLiege).
+    const formerLiege = p.liege || null;
     if (oldLiege && (FB.ordinaryWarBetween(state, 'player', oldLiege) ||
         FB.truceExpiry(state, 'player', oldLiege))) return false;
     if (oldLiege && FB.justiceRecordRebellion) {
@@ -12909,7 +12960,7 @@ window.FB = window.FB || {};
     if (oldLiege && FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', oldLiege);
     if (oldLiege && state.realms[oldLiege] && state.realms[oldLiege].alive) {
       p.war = { enemy: oldLiege, target: null, wins: 0, losses: 0, seasons: 0,
-        defending: true, casus: { type: 'independence' } };
+        defending: true, casus: { type: 'independence', formerLiege: formerLiege } };
       FB.news(state, FB.msg('news.event.independence_war',
         '⚔ {realm} will not let you go without a fight!',
         { realm: state.realms[oldLiege].name }));

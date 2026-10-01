@@ -56,6 +56,10 @@ for (const width of [390, 1280]) {
     await expect(page.locator('[data-grant-land-site]').last()).toBeDisabled();
     await page.locator('#grant-excess').click();
     await expect(page.locator('#gm-title')).toHaveText('Grant excess counties / settlements');
+    await expect(page.locator('[data-excess-grant-summary] .kv')).toHaveCount(3);
+    await expect(page.locator('#gm-body div.actionbtn')).toHaveCount(0);
+    await expect(page.locator('#gm-title-details')).toBeHidden();
+    await expect(page.locator('#gm-title-details')).toContainText('Lowest current net income is selected first.');
     await page.locator('#excess-grant-back').click();
     await expect(page.locator('#gm-title')).toHaveText('Grant Land');
     await expect(page.locator('#grant-excess')).toBeFocused();

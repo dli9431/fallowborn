@@ -345,3 +345,6 @@ unconnected casts outside home and the new location; return performs the same cl
 home. This does not add a new travel purpose in the first release.
 
 A daily courier batch normalizes the delivery list once, records completed deliveries in a transient set, and removes them together at the end. Returning cash and items still settle in original delivery order, and pending-delivery queries exclude completed records during the batch. The removal set is cleared even when an effect throws and is never saved.
+
+
+The targeted repeatable tournament purpose permits free adults through tier 7. It preserves household home, reuses routes, transport and road incidents, and exempts only its own journeys from the yearly departure cooldown and 90-day stay. Its quote reserves a physical return and requotes onward legs from the current venue. War starts that return before generic cancellation; return movement remains permitted during war, while death, captivity and succession keep priority. Exile still blocks entry into a prohibited county. Local attendance never replaces another journey. See tournaments.md.

@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/items.js',
   'js/world.js',
+  'js/treasury.js',
   'js/papacy.js',
   'js/events.js'
 ]);
@@ -402,6 +403,11 @@ test('annual AI construction snapshots holdings before development invalidation'
       s.turn++;
       for (const pid in s.dev) s.dev[pid] = 1;
       s.buildings = {};
+      FB.treasuryInitialize(s);
+      for (const rid in s.realms) {
+        const treasury = s.realms[rid] && s.realms[rid].treasury;
+        if (treasury && treasury.version === 1) treasury.gold = 1000000;
+      }
       FBDATA.buildings = { mill:{ dev:1 } };
       FB.settlementsOf = function () {
         return [{ site:'test', name:'Test', kind:'village' }];

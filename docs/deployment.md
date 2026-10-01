@@ -21,6 +21,8 @@ contextual banks. The staged generated catalog describes the complete copied sou
 fail-closed process is the artifact boundary. Test files, Node packages, reports, and repository
 metadata must not be added to it.
 
+Sprite atlases ship as PNGs under static/sprites/. Stylesheets reference them with relative, query-free URLs in the committed game so file:// works. Release staging stamps those CSS image URLs with the same version as the document assets; hosted builds use the deployment fingerprint and include the referenced sprites in the worker's versioned precache. The generated PNG ships through the existing static/ allowlist. Editable art and authoring tools remain outside the game repository.
+
 The itch page does not register a service worker or advertise the hosted web-app manifest.
 `FB.platform.isPlay` is false inside the itch-owned iframe, so the root-scoped offline shell
 cannot compete with itch's CDN or depend on third-party iframe storage.
@@ -112,7 +114,7 @@ the selected bookmark before any campaign date exists.
 is on `https://play.fallowborn.com`. The worker derives its versioned precache list during the
 Docker build from every `css/js/data/mods` reference in the unstamped `index.html`, including
 the inert deferred `ui_modals.js` asset pointer, plus every shipped `data/lang_*.js` catalog. It also
-precaches all three intro themes, but not the full
+precaches PNG sprite URLs referenced by css/style.css and all three intro themes, but not the full
 soundtrack. Installation activates only after that whole bundle and the unversioned HTML,
 manifest, favicons, install icons, and intros have cached successfully.
 
@@ -192,12 +194,18 @@ standard saves require the standard edition. See
 
 ### CrazyGames progress
 
-The CrazyGames package injects the official hosted v3 SDK before game scripts.
-Only this explicit distribution loads the SDK; standard itch/play/file releases
-remain self-contained. Select **Yes, using the Data Module from the CrazyGames SDK**
-in the portal or the storage module is disabled. One compressed campaign and
-earned starts use SDK storage for guests and accounts. See
-[state and saves](designs/state-and-saves.md#crazygames-data-module).
-Verify guest/account reload, another-device resume, rejected writes and portal
-size measurements before submission. Screen entry/exit reports gameplay start/stop;
-Full Launch still needs a broader pause/menu/lifecycle review.
+The CrazyGames package injects the official hosted v3 SDK and sets
+`window.FB_CRAZYGAMES_STORAGE = "localstorage"` before game scripts. Only this
+distribution loads the SDK; standard itch/play/file releases remain self-contained.
+The flag selects one compressed campaign and earned starts in `localStorage`,
+without opening the game save database or calling the SDK Data Module. Select
+**Yes, using LocalStorage (Automatic Progress Save)** in the portal. APS support
+and cross-device restore must be verified in the uploaded game. The browser still
+enforces its shared `localStorage` quota. See
+[state and saves](designs/state-and-saves.md#crazygames-save-storage).
+Verify reload, another-device resume, quota rejection and file export before
+submission. Screen entry/exit reports gameplay start/stop; Full Launch still
+needs a broader pause/menu/lifecycle review.
+
+
+Scheduled games adds data/tournaments.js, js/tournaments.js and js/ui_tournaments.js as classic local script references in index.html. The existing data/js directory allowlists cover these files in standard and CrazyGames packaging; the offline asset list is derived from the same index references. No new asset directory or external resource is required. New files must be tracked before a tracked-file package is assembled. No private workspace or site source is included.

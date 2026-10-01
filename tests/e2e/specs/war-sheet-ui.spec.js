@@ -11,7 +11,7 @@ test('campaign facts stay visible and supporting details disclose on mobile', as
   const sheet = page.locator('[data-campaign-detail]');
   await expect(sheet.locator('.kv').filter({ hasText:'Opponent' })).toBeVisible();
   await expect(sheet.locator('.kv').filter({ hasText:'Total upkeep' })).toContainText('per season');
-  await expect(sheet.locator('.kv').filter({ hasText:'Cost' })).toContainText('8 prestige');
+  await expect(page.locator('#campaign-peace')).toContainText('30 prestige');
   await expect(page.locator('#campaign-host-details')).toBeHidden();
   const help = page.locator('[aria-controls="campaign-host-details"]');
   await help.click();
@@ -83,3 +83,53 @@ for (const width of [390, 1280]) {
     await expect(page.locator('.war-laws-sheet .war-law-description').first()).toHaveCSS('margin-top', '6px');
   });
 }
+
+test('campaign and muster sheets keep status rows, action cards and footer navigation', async function ({ page }, testInfo) {
+  await page.setViewportSize({ width:390, height:740 });
+  await startWarSafety(page, testInfo);
+  await page.evaluate(function () { FB.ui.showCampaign(FB.realmWars(FB.state, 'player')[0].id); });
+  const sheet = page.locator('[data-campaign-detail]');
+  await expect(sheet.locator('.kv').filter({ hasText:'Field battles' })).toContainText('won');
+  await expect(sheet.locator('.kv').filter({ hasText:'Duration' })).toContainText('of 32 seasons');
+  await expect(sheet.locator('.kv').filter({ hasText:'Victory' })).toHaveCount(1);
+  await expect(page.locator('.review-action-card #campaign-peace')).toContainText('always accepted');
+  await expect(page.locator('.review-action-card #campaign-muster-plan')).toBeVisible();
+  await expect(page.locator('#gm-body > .gm-footer [data-modal-nav="back"]')).toHaveCount(1);
+  await expect(sheet.locator(':scope > p, .war-sheet-section > p')).toHaveCount(0);
+
+  await page.locator('#campaign-muster-plan').click();
+  await expect(page.locator('#gm-title')).toHaveText('Muster plan');
+  const blocker = page.locator('#muster-blocker');
+  if (!(await blocker.textContent()).trim()) await expect(blocker).toBeHidden();
+  await expect(page.locator('#gm-title-details')).toContainText('Changes save automatically');
+  await expect(page.locator('.war-sheet > p.hint')).toHaveCount(0);
+});
+
+test('war status links keep trailing punctuation on the same line', async function ({ page }, testInfo) {
+  await page.setViewportSize({ width:390, height:740 });
+  await startWarSafety(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, rid = FB.realmWars(s, 'player')[0].enemy;
+    const box = document.createElement('div');
+    box.className = 'progressnote warnote land-current-war';
+    document.body.appendChild(box);
+    const html = FB.warStatusLinkHtml(s, rid);
+    const rows = [];
+    // Sweep widths so at least one places the final link at a line end.
+    for (let width = 120; width <= 360; width += 4) {
+      box.style.width = width + 'px';
+      box.innerHTML = '⚔ ' + html;
+      const group = box.querySelector('.war-realm-nowrap:last-of-type');
+      const link = group.querySelector('.war-realm-link');
+      const tail = group.lastChild;
+      const range = document.createRange();
+      range.selectNodeContents(tail);
+      const linkRects = link.getClientRects(), tailRect = range.getClientRects()[0];
+      rows.push(Math.abs(linkRects[linkRects.length - 1].top - tailRect.top) < 2);
+    }
+    box.remove();
+    return { grouped:/<span class="war-realm-nowrap">[\s\S]*<\/button>\.<\/span>$/.test(html),
+      sameLine:rows.every(Boolean) };
+  });
+  expect(result).toEqual({ grouped:true, sameLine:true });
+});

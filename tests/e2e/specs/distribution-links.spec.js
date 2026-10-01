@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/crazygames.js', 'index.html', 'js/util.js', 'js/ui_modals.js', 'js/ui_misc.js',
   'js/main.js', 'js/save.js', 'js/model.js', 'js/i18n.js',
+  'js/ui_panels.js', 'js/messages.js',
   'js/technology.js', 'data/technology.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -126,6 +127,40 @@ for (const distribution of ['standard', 'crazygames']) {
     });
 }
 
+test('CrazyGames uses English without catalog requests or a language picker', async function ({ page }, testInfo) {
+  await page.addInitScript(function () {
+    window.FB_DISTRIBUTION = 'crazygames';
+    localStorage.setItem('fb_lang', 'fr');
+  });
+  await openGame(page, testInfo);
+  const boot = await page.evaluate(function () {
+    return { locale:FB.locale, stored:localStorage.getItem('fb_lang'),
+      choices:FB.availableLocales().map(function (item) { return item.code; }),
+      scripts:Array.from(document.scripts).filter(function (script) {
+        return /\/data\/lang_[^/]+\.js(?:\?|$)/.test(script.src || '');
+      }).length };
+  });
+  expect(boot).toEqual({ locale:'en', stored:'en', choices:['en'], scripts:0 });
+  await startDeterministicGame(page);
+  await page.evaluate(function () { FB.ui.showSettings(); });
+  await expect(page.locator('#set-lang')).toHaveCount(0);
+  const blocked = await page.evaluate(function () {
+    return { french:FB.setLocale('fr'), english:FB.setLocale('en'),
+      stored:localStorage.getItem('fb_lang'), active:FB.locale };
+  });
+  expect(blocked).toEqual({ french:false, english:false, stored:'en', active:'en' });
+  const fallback = await page.evaluate(function () {
+    return new Promise(function (resolve) {
+      const immediate = FB.ensureEnglishCatalog(function (loaded) {
+        resolve({ immediate:immediate, loaded:loaded,
+          scripts:Array.from(document.scripts).filter(function (script) {
+            return /\/data\/lang_[^/]+\.js(?:\?|$)/.test(script.src || '');
+          }).length });
+      });
+    });
+  });
+  expect(fallback).toEqual({ immediate:false, loaded:false, scripts:0 });
+});
 test('unknown distribution flags preserve standard links', async function ({ page }, testInfo) {
   await page.addInitScript(function () { window.FB_DISTRIBUTION = 'unknown'; });
   await openGame(page, testInfo);

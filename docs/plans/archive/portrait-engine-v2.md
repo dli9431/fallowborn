@@ -2,12 +2,7 @@
 
 Date: 2026-07-31
 
-Status: implementation prepared; owner-run automated, visual, mobile, and integration
-gates remain. The visual direction and runtime architecture are decided below. The
-approved Court Illustration v2 renderer is included at
-[tools/portrait-reference](../../tools/portrait-reference/README.md). Use it as the
-visual and behavioral reference. Do not approximate or redesign the selected look from
-this plan alone.
+Status: implementation prepared; owner-run automated, visual, mobile, and integration gates remain. The visual direction and runtime architecture are decided below. The approved Court Illustration v2 reference renderer is maintained separately from the game repository. Use it as the visual and behavioral reference. Do not approximate or redesign the selected look from this plan alone.
 
 Related design:
 [characters](../designs/characters.md),
@@ -50,9 +45,7 @@ specialized analytic scaffold and pixel caches below.
 
 ## Reference renderer contract
 
-The development-only reference lives under `tools/portrait-reference/` and is not loaded
-by the game. Open its `index.html` directly from `file://` to render one deterministic
-character as both a 256x288 portrait and a 256x480 standing figure.
+The development-only reference is maintained separately and is not loaded by the game. Open its index.html directly from file:// to render one deterministic character as both a 256x288 portrait and a 256x480 standing figure.
 
 The stable adapter is `window.FBCourtReference`:
 
@@ -552,7 +545,6 @@ Acceptance:
 Files:
 
 - `js/portrait.js`
-- [reference renderer](../../tools/portrait-reference/README.md), read-only visual oracle
 - temporary development-only comparison fixture, kept outside the shipped runtime path
 
 Work:

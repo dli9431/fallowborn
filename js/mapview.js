@@ -30,6 +30,7 @@ window.FB = window.FB || {};
     countyBorderCache: null,
     onTap: null, dirty: true,
     marketGood: null,
+    eventsOverlay: false, visibleEvents: [],
     warTargets: null, warSelected: null, warTargetMap: null,
     visibleSites: [], _sitePool: [], _labelRects: [], _rectCount: 0,
     pointers: {}, pinchD: 0, downX: 0, downY: 0, moved: false, dpr: 1,
@@ -1414,6 +1415,29 @@ window.FB = window.FB || {};
     if (FB.state && FB.renderArmies) FB.renderArmies(ctx, toScreen, z, M.dpr);
     // overland journeys: valid destination rings, route, and traveler
     if (FB.state && FB.renderTravel) FB.renderTravel(ctx, toScreen, z, M.dpr);
+    M.visibleEvents.length = 0;
+    if (FB.state && M.eventsOverlay && FB.tournaments) {
+      const clusters = {};
+      FB.tournaments.active(FB.state).forEach(function (event) {
+        const group = FB.world.sitesByProv[event.provinceId];
+        const site = group && group.list[event.settlement];
+        if (!site) return;
+        const point = toScreen(site.x, site.y);
+        if (point[0] < 0 || point[1] < 0 || point[0] > M.canvas.width || point[1] > M.canvas.height) return;
+        const key = z >= SITE_Z_DETAIL ? event.id : Math.floor(point[0] / (48 * M.dpr)) + ':' + Math.floor(point[1] / (48 * M.dpr));
+        const cluster = clusters[key] || (clusters[key] = { x:point[0], y:point[1], ids:[] });
+        cluster.ids.push(event.id);
+      });
+      ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = 'bold ' + (12 * M.dpr) + 'px sans-serif';
+      Object.keys(clusters).forEach(function (key) {
+        const c = clusters[key]; M.visibleEvents.push(c);
+        ctx.beginPath(); ctx.arc(c.x, c.y, 12 * M.dpr, 0, Math.PI * 2);
+        ctx.fillStyle = '#ecd292'; ctx.fill(); ctx.strokeStyle = '#3a2a18'; ctx.lineWidth = 2 * M.dpr; ctx.stroke();
+        ctx.fillStyle = '#20160c'; ctx.fillText(c.ids.length > 1 ? String(c.ids.length) : '⚑', c.x, c.y);
+      });
+      ctx.restore();
+    }
     // raiding expedition map overlay: reachable targets and selected target route
     if (FB.state && FB.renderRaidOverlay) FB.renderRaidOverlay(ctx, toScreen, z, M.dpr);
     // war declaration map overlay: available objectives and selected conquest
@@ -1505,6 +1529,17 @@ window.FB = window.FB || {};
     if (e.type === 'pointercancel') return;
     if (wasSingle && !M.moved) {
       const p = ptr(e);
+      if (M.eventsOverlay && FB.ui && FB.ui.showGames) {
+        const hit = M.visibleEvents.filter(function (v) {
+          const dx = v.x - p[0], dy = v.y - p[1];
+          return dx * dx + dy * dy <= Math.pow(18 * M.dpr, 2);
+        })[0];
+        if (hit) {
+          if (hit.ids.length === 1) FB.ui.showTournament(hit.ids[0]);
+          else FB.ui.showGames('upcoming', false, hit.ids);
+          return;
+        }
+      }
       const wx = M.viewX + p[0] / M.zoom, wy = M.viewY + p[1] / M.zoom;
       const pr = FB.provinceAtGrid(wx, wy);
       const site = hitSite(p[0], p[1], e.pointerType);

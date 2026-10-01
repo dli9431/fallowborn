@@ -33,6 +33,20 @@ source-hashed localization. A changed English source cannot reuse an old
 translation; missing alternatives fall back to English. Catalog regeneration
 remains owner-initiated.
 
+Opening guidance also checks `FB.platform.isCrazyGames`: choose a match, explain
+the assigned personal attention, then teach Play, a separate event choice, and a
+marriage proposal. Enterprise saving and purchase guidance begins only after the
+wedding succeeds, followed by enterprise earnings, freedom, and the first land plot.
+The economic checklist progresses alongside family growth. Current costs and existing
+purchase/petition rules remain authoritative, and paid final service must actually end
+before land guidance begins. Map lessons come afterward; the hostile-deed lesson is
+omitted. Existing free starts and owned property skip completed objectives.
+The first playable character alone gains 10 times normal courtship Standing per day
+and guaranteed acceptance of an eligible proposal. Existing marriage prerequisites
+remain authoritative, and successors and standard editions keep ordinary rates and
+odds. These numeric pacing and presentation changes add no technology requirement.
+See [marriage](marriage.md) and [UI](ui.md) for the exact boundaries and lesson order.
+
 CrazyGames disables runtime/bundled mods and uses the save fingerprint
 `crazygames-content-1`. Saves without that profile, including older silent builds,
 are rejected before state/RNG adoption. Standard builds also reject CrazyGames

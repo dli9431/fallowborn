@@ -265,8 +265,9 @@ for (const resolution of ['enforced', 'bought']) {
       FB.answerPeaceDemand(s, unlawful.id, false);
       FB.startPeaceEnforcement(s, unlawful.id);
       const war = FB.realmWars(s, 'player').find(function (w) { return w.enforcementOf === unlawful.id; });
-      s.eventQueue = []; s.player.prestige = 7; s.player.gold = 100;
+      s.eventQueue = []; s.player.prestige = 7; s.player.gold = 1000;
       war.losses = 1;
+      const quoted = FB.warTermsCost(s, war);
       if (input.resolution === 'enforced') {
         war.occupations[war.target] = { occupied:true, progress:0 };
         FB.withOrdinaryWar(s, war.id, function () { FB.warCapture(s); });
@@ -277,10 +278,12 @@ for (const resolution of ['enforced', 'bought']) {
       s.player.gold = 500; s.player.prestige = 90;
       const event = s.eventQueue.find(function (e) { return e.id === 'decision_outcome'; });
       FB.ui.runEvents([event]);
-      return { terms:terms, reportId:report.id, unlawful:!!FB.ordinaryWarById(s, unlawful.id) };
+      return { terms:terms, reportId:report.id, unlawful:!!FB.ordinaryWarById(s, unlawful.id),
+        quotedGold:quoted.gold };
     }, { ids:ids, resolution:resolution });
     expect(result.terms.prestige).toBe(-7);
-    expect(result.terms.gold).toBe(resolution === 'bought' ? -20 : 0);
+    expect(result.terms.gold).toBe(resolution === 'bought' ? -result.quotedGold : 0);
+    if (resolution === 'bought') expect(result.quotedGold).toBeGreaterThanOrEqual(50);
     expect(result.terms.lost).toEqual([]);
     expect(result.unlawful).toBe(resolution === 'bought');
     const terms = page.locator('#ev-text .war-peace-terms');

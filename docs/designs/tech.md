@@ -1,5 +1,11 @@
 # National technology
 
+Household estate, commercial, military and learned service each have a **none**
+impact review. Useful personal work and promotion depend on experience, skills,
+Standing and (for senior literate offices) Lettered. These social appointments
+remain available without national research. They confer neither a professional
+license nor an independent army; existing career and military gates still apply.
+
 ## County progression (Phase 6)
 
 county_investiture, county_challenges and county_recognition each have a **none**
@@ -529,3 +535,6 @@ ordinary county-ruler founding; administrative capacity retains its soft role.
 ## 476 capability review
 
 The [spring 476 prototype](situation-476.md) uses the existing period-seeded technology graph. Court escort, claimant recognition and city settlement each have a separate `none` entry in `FBDATA.techImpactReviews`: routes and hosts, living issuers and authority continuity, and civic consent plus an existing site grant are political or physical conditions, not inventions. Existing career and unit technology gates remain unchanged.
+
+
+Scheduled games, circuit travel, regional open games, event sponsorship and festival livelihoods each have a none impact decision in FBDATA.techImpactReviews. Formal jousting retains the hard cavalry_lances gate under the venue sovereign; accepted entries are grandfathered. Melee, archery, wrestling, work, performance and company remain alternatives. Existing specialist career and equipment-production requirements are unchanged. See tournaments.md.

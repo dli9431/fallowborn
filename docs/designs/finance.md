@@ -553,3 +553,5 @@ quote names payer, beneficiary, amount, legal basis and obligation ID; the
 transaction rechecks those terms and stores a once-only receipt. It does not
 redirect the ordinary county tax ledger. Contractual pay and baseline fiscal
 appointments have technology impact `none`.
+
+Tournament funding quotes use recurring civilian seasonal net, excluding focus and temporary military spending. The playerCivilianBudget options.excludeFocus flag leaves ordinary ledgers unchanged. Four bounded recurring samples smooth host quotes; loans, gifts, sales and tournament awards do not enter this history. Funding debits real household, realm or barony accounts and freezes prize/service commitments. Work installments, unused refunds, return reserves and awards settle once under edition-local keys. See tournaments.md.

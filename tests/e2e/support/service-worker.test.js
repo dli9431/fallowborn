@@ -207,3 +207,42 @@ test('the worker reports its stamped build key to a controlled page', function (
   assert.equal(harness.clientMessages[0].type, 'fallowborn-build-key-response');
   assert.equal(harness.clientMessages[0].buildKey, '__FB_CACHE_KEY__');
 });
+
+test('a precached sprite is available offline before any scene has been displayed', async function () {
+  const listeners = {}, cachedPaths = new Set();
+  const spritePath = '/static/sprites/daily-focus.png?v=sprite-release';
+  const sprite = { id:'daily-focus-atlas', ok:true };
+  let activated = false;
+  const source = workerSource.replace('__FB_CACHE_KEY__', 'sprite-release')
+    .replace("'__FB_ASSET_LIST__'", "'/static/sprites/daily-focus.png'");
+  vm.runInNewContext(source, {
+    URL:URL, Promise:Promise, encodeURIComponent:encodeURIComponent,
+    caches:{ open:function () { return Promise.resolve({
+      addAll:function (paths) {
+        for (const asset of paths) cachedPaths.add(asset);
+        return Promise.resolve();
+      },
+      match:function (request) {
+        const url = new URL(request.url);
+        return Promise.resolve(cachedPaths.has(url.pathname + url.search) ? sprite : undefined);
+      }
+    }); } },
+    fetch:function () { throw new Error('A precached sprite must not need the network'); },
+    self:{
+      location:{ origin:'https://play.fallowborn.com' },
+      addEventListener:function (type, handler) { listeners[type] = handler; },
+      skipWaiting:function () { activated = true; return Promise.resolve(); }
+    }
+  }, { filename:workerPath });
+  let installed;
+  listeners.install({ waitUntil:function (promise) { installed = promise; } });
+  await installed;
+  assert.equal(activated, true);
+  assert.ok(cachedPaths.has(spritePath));
+  let response;
+  listeners.fetch({
+    request:{ method:'GET', mode:'no-cors', url:'https://play.fallowborn.com' + spritePath },
+    respondWith:function (promise) { response = promise; }
+  });
+  assert.strictEqual(await response, sprite);
+});

@@ -107,6 +107,21 @@ if (fingerprints.size !== 1) {
   fail('index.html must use one deployment fingerprint for every runtime asset.');
 }
 
+const spriteAssets = [];
+const css = fs.readFileSync(path.join(root, 'css', 'style.css'), 'utf8');
+const spritePattern = /url\("(\.\.\/static\/sprites\/[^"?#]+\.png)([^"]*)"\)/g;
+while ((match = spritePattern.exec(css))) {
+  const asset = match[1].slice(3);
+  if (!/^static\/sprites\/[a-z0-9_-]+\.png$/.test(asset) ||
+      !fs.existsSync(path.join(root, asset))) {
+    fail('missing or invalid sprite asset: ' + asset + '.');
+  }
+  if (match[2] !== '?v=' + Array.from(fingerprints)[0]) {
+    fail('sprite URL must use the document deployment fingerprint: ' + asset + '.');
+  }
+  spriteAssets.push(asset);
+}
+
 const musicCatalogPath = path.join(root, 'data', 'music_catalog.js');
 if (!fs.existsSync(musicCatalogPath)) fail('data/music_catalog.js is missing.');
 const musicData = {};
@@ -244,12 +259,13 @@ if (hasWorker) {
   }
   for (const asset of versionedAssets) {
     if (!/^\/(?:css|data|js|mods)\/[^?#]+$/.test(asset) &&
+        !/^\/static\/sprites\/[a-z0-9_-]+\.png$/.test(asset) &&
         !/^\/music\/intro\/[a-z0-9-]+\.opus$/.test(asset)) {
       fail('invalid service-worker asset path: ' + asset + '.');
     }
   }
 
-  const expectedAssets = documentAssets.map(function (asset) {
+  const expectedAssets = documentAssets.concat(spriteAssets).map(function (asset) {
     return '/' + asset;
   });
   for (const filename of fs.readdirSync(path.join(root, 'data')).sort()) {
@@ -267,7 +283,7 @@ if (hasWorker) {
     const extra = actualUnique.filter(function (asset) {
       return !expectedUnique.includes(asset);
     });
-    fail('sw.js asset list differs from index.html plus language catalogs' +
+    fail('sw.js asset list differs from document assets, sprites, language catalogs, and intros' +
       (missing.length ? '; missing [' + missing.join(', ') + ']' : '') +
       (extra.length ? '; extra [' + extra.join(', ') + ']' : '') + '.');
   }

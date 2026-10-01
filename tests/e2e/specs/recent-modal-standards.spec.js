@@ -69,7 +69,10 @@ test('sibling confirmations keep choices in the body and exits in the footer',
     });
 
     await expect(page.locator(
-      '#gm-body > .gm-list > #sibling-proposal-confirm')).toBeVisible();
+      '#gm-body > .review-actions #sibling-proposal-confirm')).toBeVisible();
+    await expect(page.locator('[data-sibling-proposal] canvas.pface')).toHaveCount(1);
+    await expect(page.locator('[data-sibling-proposal]')).toContainText('50%');
+    await expect(page.locator('#sibling-proposal-confirm-details')).toContainText('close-kin health-risk');
     await expect(page.locator(
       '#gm-body > .gm-footer > #gm-cancel')).toBeVisible();
     await expect.poll(async function () {

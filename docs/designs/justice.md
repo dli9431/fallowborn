@@ -1,5 +1,9 @@
 # Ruler justice
 
+Committed exile and shared intrigue-custody capture append turning points for
+tracked life histories. Arrest/sentence previews do not. Biography preservation
+does not keep an unrelated dead prisoner's full character in the simulation.
+
 On compact/touch layouts, each roster card's Details control sits inside the
 card to the right of its text. It remains a sibling button, so opening details
 never activates character review. Text reserves room for its 44px touch target.

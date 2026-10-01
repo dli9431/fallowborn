@@ -24,6 +24,12 @@ window.FB = window.FB || {};
   const householdStandardsSummaryParts = SH.householdStandardsSummaryParts;
   const initLargeListSurface = SH.initLargeListSurface;
   const kv = SH.kv;
+  const rawKv = SH.rawKv;
+  const reviewFactsCard = SH.reviewFactsCard;
+  const reviewPersonHtml = SH.reviewPersonHtml;
+  const reviewPeopleHtml = SH.reviewPeopleHtml;
+  const reviewActionCardHtml = SH.reviewActionCardHtml;
+  const reviewActionsHtml = SH.reviewActionsHtml;
   const largeListRowAttrs = SH.largeListRowAttrs;
   const largeListSurfaceHtml = SH.largeListSurfaceHtml;
   const menText = SH.menText;
@@ -1304,6 +1310,11 @@ window.FB = window.FB || {};
         renderActions();
       });
     }
+    if ($('tutorial-business-review')) {
+      $('tutorial-business-review').addEventListener('click', function () {
+        UI.showRecommendedEnterprise($('tutorial-business-review'));
+      });
+    }
     const tutorialTenure = $('tutorial-serf-tenure');
     if (tutorialTenure) {
       tutorialTenure.addEventListener('click', function () {
@@ -1558,11 +1569,18 @@ window.FB = window.FB || {};
       box.appendChild(focusBody);
     }
     const actionGroups = deedActionGroups();
+    /* An on-screen lesson's deed stays reachable under either grouping. */
+    const lessonDeed = UI.coachmarkDeedId ? UI.coachmarkDeedId() : null;
     for (const group of actionGroups) {
       const ga = instants.filter(function (item) {
         return deedGroupForAction(item.a) === group.id;
       });
       if (!ga.length) continue;
+      if (lessonDeed && ga.some(function (item) {
+        return item.a.id === lessonDeed;
+      })) {
+        actionGroupsOpen[group.id] = true;
+      }
       const toggle = document.createElement('button');
       const open = !!actionGroupsOpen[group.id];
       toggle.className = 'actiongroup-toggle';
@@ -1694,6 +1712,7 @@ window.FB = window.FB || {};
     deedStatusRefreshedState = s;
     deedStatusRefreshedTurn = s.turn;
     actionsDirty = false;
+    if (lessonDeed && UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
   }
 
   /* Flowing time changes cooldown and resource eligibility much more often
@@ -1722,6 +1741,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const box = $('tab-actions');
     if (!s || SH.activeTab !== 'actions' || !box || !box.hasChildNodes()) return;
+    refreshTutorialObjective(s);
     const force = !!(options && options.force);
     /* Coming of age changes the focus catalogue and every requiresAdult deed
        at once. It is a lifecycle boundary, not an ordinary cooldown update:
@@ -1788,6 +1808,39 @@ window.FB = window.FB || {};
      Track and step state live in FB.tutorialStatus (main.js); completion
      toasts fire from FB.tutorialCheck on the coalesced refresh, so this
      render stays pure. */
+  let tutorialObjectiveState = null, tutorialObjectiveGoal = null;
+  function tutorialObjectiveHtml(s) {
+    if (!FB.platform.isCrazyGames) return '';
+    const goal = UI.crazyGamesObjective(s);
+    tutorialObjectiveState = s;
+    tutorialObjectiveGoal = goal;
+    const text = UI.crazyGamesObjectiveText(goal);
+    return '<div id="tutorial-objective" class="tutorial-objective' +
+      (text ? '' : ' hidden') + '"><b data-objective-title>' +
+      esc(text ? text.title : '') + '</b><p data-objective-detail>' +
+      esc(text ? text.detail : '') + '</p><button type="button" ' +
+      'id="tutorial-business-review" class="btn small' +
+      (goal && goal.id === 'enterprise' ? '' : ' hidden') + '">' +
+      esc(FB.T('Review this business')) + '</button></div>';
+  }
+
+  function refreshTutorialObjective(s) {
+    const box = $('tutorial-objective');
+    if (!box || !FB.platform.isCrazyGames) return;
+    const goal = UI.crazyGamesObjective(s,
+      tutorialObjectiveState === s ? tutorialObjectiveGoal : null);
+    tutorialObjectiveState = s;
+    tutorialObjectiveGoal = goal;
+    const text = UI.crazyGamesObjectiveText(goal);
+    box.classList.toggle('hidden', !text);
+    if (!text) return;
+    const title = box.querySelector('[data-objective-title]');
+    const detail = box.querySelector('[data-objective-detail]');
+    if (title.textContent !== text.title) title.textContent = text.title;
+    if (detail.textContent !== text.detail) detail.textContent = text.detail;
+    $('tutorial-business-review').classList.toggle('hidden', goal.id !== 'enterprise');
+  }
+
   function tutorialCardHtml(s) {
     const status = FB.tutorialStatus(s);
     if (!status) return ''; // every track finished; the card retires this frame
@@ -1808,7 +1861,7 @@ window.FB = window.FB || {};
       h += '<li' + (step.done ? ' class="done"' : '') + '>' +
         (step.done ? '✓ ' : '○ ') + esc(step.label) + '</li>';
     }
-    return h + '</ul></div>';
+    return h + '</ul>' + tutorialObjectiveHtml(s) + '</div>';
   }
 
   function nextStepHint(s) {
@@ -3377,6 +3430,10 @@ window.FB = window.FB || {};
       houseRow +
       kv('Generation', (s.generation || 1));
     h += panelh('Livelihood') + livelihoodNote(s, me, true);
+    const service = FB.householdServiceRecord(s);
+    if (service && service.status !== 'ended') h += '<button type="button" class="actionbtn" id="self-service">' +
+      esc(FB.householdServiceName(s, service.roleId)) + '<span class="adesc">' +
+      esc(FB.T('Review household service…')) + '</span></button>';
     if (betrothalStatus && betrothalStatus.ready) {
       h += '<button class="actionbtn" id="self-break-betrothal">💔 ' +
         esc(FB.T('Break betrothal…')) + '<span class="adesc">' +
@@ -3389,6 +3446,12 @@ window.FB = window.FB || {};
         esc(FB.T('Open the Bishopric')) +
         '<span class="adesc">' + esc(FB.T(
           'Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements.')) +
+        '</span></button>';
+    }
+    if (FB.abbeyAccess && FB.abbeyAccess(s)) {
+      h += '<button type="button" class="actionbtn" id="self-abbeys">⛪ ' +
+        esc(FB.T('Abbeys and patronage…')) + '<span class="adesc">' + esc(FB.T(
+          'Found or endow a religious house, seek an abbacy, and govern its estates, residents and privileges.')) +
         '</span></button>';
     }
     if (standardSummaryParts.length) {
@@ -3413,6 +3476,7 @@ window.FB = window.FB || {};
     bindCultureDetails(box);
     bindSelfWorkButton();
     const rankDetails = $('self-rank-details');
+    if ($('self-service')) $('self-service').onclick = function () { UI.showHouseholdService(); };
     if (rankDetails) rankDetails.addEventListener('click', UI.showRankDetails);
     const equipmentTriggers = box.querySelectorAll(
       '#self-equipment-portrait, #self-equipment');
@@ -3449,6 +3513,8 @@ window.FB = window.FB || {};
     });
     const bishopric = $('self-bishopric');
     if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
+    const abbeys = $('self-abbeys');
+    if (abbeys) abbeys.addEventListener('click', function () { UI.showAbbeys(); });
     const betrothedPerson = $('self-betrothed-person');
     if (betrothedPerson) betrothedPerson.addEventListener('click', function () {
       UI.showCharModal(betrothalStatus.partner.id, { view:'self' });
@@ -4018,6 +4084,7 @@ window.FB = window.FB || {};
     if (entry.kind === 'barony_retinue') return FB.T('Standing barony household');
     if (entry.kind === 'castellany_retinue') return FB.T('Castellan’s household guard');
     if (entry.kind === 'episcopal_household') return FB.T('Episcopal household');
+    if (entry.kind === 'abbey_household') return FB.T('Abbey household');
     if (entry.kind === 'local-ordinance') {
       const motion = FBDATA.localCouncilMotions[entry.positionId];
       return motion
@@ -4384,6 +4451,13 @@ window.FB = window.FB || {};
       '📋 ' + esc(FB.T('Household Plan…')),
       esc(FB.T(
         'Review education, work, assignments, matches, and equipment for every managed person.')));
+    if (s.player.tier <= 2) {
+      const service = FB.householdServiceRecord(s);
+      householdSummary += networkActionHtml('service-household',
+        'id="network-service" data-network-action', esc(FB.T('Service household…')),
+        esc(service && service.status !== 'ended' ? FB.householdServiceName(s, service.roleId) :
+          FB.T('Seek paid work and earn an appointment in your lord’s household.')));
+    }
     if (!capacity) {
       householdSummary += '<div class="hint">' + esc(FB.T(
         'A serf household cannot yet maintain paid servants.')) + '</div>';
@@ -5326,6 +5400,7 @@ window.FB = window.FB || {};
     refreshNetworkPanelShortcuts();
 
     const householdPlan = $('network-household-plan');
+    if ($('network-service')) $('network-service').onclick = function () { UI.showHouseholdService(); };
     if (householdPlan) {
       householdPlan.addEventListener('click', UI.showHouseholdPlan);
     }
@@ -6822,47 +6897,33 @@ window.FB = window.FB || {};
     const vassalNames = status.vassals.map(function (vassal) {
       return vassal.name;
     });
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Move the capital and permanent household home from {from} to {destination}?',
-      {
-        from:from.name,
-        destination:destination.name
-      })) + '</p><p>' + esc(FB.T(
-      'This immediately costs {prestige} prestige. Popular opinion changes by {opinion}, and every direct vassal’s Standing changes by {standing}.',
-      {
-        prestige:status.prestigeCost,
-        opinion:signedNumber(status.popularOpinion),
-        standing:standingValue(status.vassalFavor)
-      })) + '</p>';
+    let facts = kv('From', esc(from.name)) + kv('To', esc(destination.name)) +
+      kv('Prestige', esc(signedNumber(-status.prestigeCost))) +
+      kv('Popular support', esc(signedNumber(status.popularOpinion))) +
+      kv('Standing with every direct vassal', esc(vassalNames.length
+        ? standingValue(status.vassalFavor) : FB.T('No direct vassals')));
     if (vassalNames.length) {
-      h += standingEffectRow(FB.T('Standing with every direct vassal'),
-        status.vassalFavor);
-      h += '<p>' + esc(FB.T(
-        'Affected direct vassals ({count}): {vassals}.', {
-          count:vassalNames.length,
-          vassals:vassalNames.join(', ')
-        })) + '</p>';
-    } else {
-      h += '<p>' + esc(FB.T(
-        'You have no direct vassals, so no vassal Standing will change.')) + '</p>';
+      facts += rawKv(FB.T('Affected direct vassals ({count})', { count:vassalNames.length }),
+        esc(vassalNames.join(', ')));
     }
     if (status.incomingMonopoly) {
-      h += '<p class="op-bad">' + esc(FB.T(
+      facts += '<div class="progressnote warnote">' + esc(FB.T(
         'Your incoming {profession} monopoly is tied to {province} and will end immediately when the household leaves.',
         {
           profession:capitalRelocationMonopolyName(
             s, status.incomingMonopoly),
           province:from.name
-        })) + '</p>';
+        })) + '</div>';
     }
-    h += '<p class="hint">' + esc(FB.T(
-      'This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household.')) +
-      '</p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="capital-relocation-confirm">' +
-      esc(FB.T('Move the capital to {destination}', {
-        destination:destination.name
-      })) + '</button>' +
-      '<button type="button" class="actionbtn" id="capital-relocation-cancel">' +
+    let h = reviewFactsCard(FB.T('Capital and household home'), facts, ' data-capital-relocation') +
+      reviewActionsHtml(reviewActionCardHtml({
+        id:'capital-relocation-confirm',
+        label:FB.T('Move the capital to {destination}', { destination:destination.name }),
+        note:FB.T('{prestige} prestige now · this ruler’s only voluntary move', { prestige:status.prestigeCost }),
+        details:'<p>' + esc(FB.T(
+          'This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household.')) + '</p>'
+      })) +
+      '<div class="gm-footer"><button type="button" class="btn" id="capital-relocation-cancel">' +
       esc(FB.T('Keep the capital in {from}', { from:from.name })) +
       '</button></div>';
     openModal(FB.T('Move capital to {destination}?', {
@@ -7880,9 +7941,12 @@ window.FB = window.FB || {};
         (active ? ' class="active"' : '') + '>' + esc(filters[i].label) + '</button>';
     }
     return h + '</div><button type="button" class="btn chronicle-full-link" ' +
-      'data-chronicle-full>' + esc(FB.T('Explore full Chronicle')) + '</button>';
+      'data-chronicle-full>' + esc(FB.T('Explore full Chronicle')) + '</button>' +
+      '<button type="button" class="btn chronicle-full-link" data-life-collection>' +
+      esc(FB.T('Remembered lives')) + '</button>';
   }
   function fullChronicleNeedsEnglish(state) {
+    if (FB.platform.isCrazyGames) return false;
     const archive = state && state.chronicle;
     if (!archive || !Array.isArray(archive.strings)) return false;
     const generated = FBDATA.lang.en && FBDATA.lang.en.entries;
@@ -7928,6 +7992,11 @@ window.FB = window.FB || {};
     open();
   }
   function wireLogControls(box) {
+    const lives = box.querySelector('[data-life-collection]');
+    if (lives && !lives.getAttribute('data-life-wired')) {
+      lives.setAttribute('data-life-wired', 'true');
+      lives.onclick = function () { UI.showLifeHistoryCollection(); };
+    }
     box.querySelectorAll('[data-chronicle-filter]').forEach(function (button) {
       if (button.getAttribute('data-chronicle-filter-wired')) return;
       button.setAttribute('data-chronicle-filter-wired', 'true');
@@ -7963,7 +8032,7 @@ window.FB = window.FB || {};
       '</div>';
     const box = $('tab-log');
     let missingEnglish = false;
-    if (!FBDATA.lang.en && !chronicleEnglishFailed) {
+    if (!FB.platform.isCrazyGames && !FBDATA.lang.en && !chronicleEnglishFailed) {
       for (let i = s.log.length - 1, seen = 0; i >= 0 && seen < 80; i--) {
         if (!logMatches(s.log[i], SH.logFilter)) continue;
         seen++;
@@ -8087,12 +8156,14 @@ window.FB = window.FB || {};
       renderTab(activeLeftTab);
       updateTabNudges(FB.state);
     }
+    if (UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
   }
 
   function closeSelfDrawerRaw() {
     document.body.classList.remove('showself');
     restoreAfterSelfDrawer();
     if ($('tb-portrait').offsetParent !== null) $('tb-portrait').focus();
+    if (UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
   }
 
   function closeSelfDrawer() {
@@ -8162,6 +8233,7 @@ window.FB = window.FB || {};
       FB.state.player.flags.tut_kin_tab = 1;
     }
     if (UI.maybeTabTip) UI.maybeTabTip(name);
+    if (UI.refreshCoachmarkTarget) UI.refreshCoachmarkTarget();
   }
 
   UI.cycleTab = function (dir) {

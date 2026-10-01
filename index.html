@@ -257,13 +257,21 @@
               >&#9654;&#65039;</span
             ><span data-i18n="Continue">Continue</span>
           </button>
+          <div id="continue-preview" class="continue-preview hidden"></div>
           <button id="btn-newgame" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true">&#127793;</span
             ><span data-i18n="New Game">New Game</span>
           </button>
+          <button id="btn-choose-beginning" class="bigbtn hidden" disabled>
+            <span class="title-menu-icon" aria-hidden="true">&#128506;</span
+            ><span data-i18n="Choose another beginning">Choose another beginning</span>
+          </button>
           <button id="btn-load" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true">&#128194;</span
             ><span data-i18n="Load Game">Load Game</span>
+          </button>
+          <button id="btn-save-recovery" class="bigbtn hidden" disabled>
+            <span data-i18n="Save recovery">Save recovery</span>
           </button>
           <button id="btn-chronicle" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true">&#128220;</span
@@ -556,6 +564,7 @@
               >
                 &#9878;
               </button>
+              <button id="btn-events" class="btn hudbtn" title="Events" aria-label="Events" aria-pressed="false" data-i18n-title="Events" data-i18n-aria-label="Events">&#127942;</button>
               <button
                 id="btn-find"
                 class="btn hudbtn"
@@ -925,6 +934,7 @@
     <script src="data/modifiers.js"></script>
     <script src="data/intrigue.js"></script>
     <script src="data/travel.js"></script>
+    <script src="data/tournaments.js"></script>
     <script src="data/political_blocs.js"></script>
     <script src="data/policies.js"></script>
     <script src="data/political_institutions.js"></script>
@@ -966,6 +976,7 @@
     <script src="js/population.js"></script>
     <script src="js/modifiers.js"></script>
     <script src="js/economy.js"></script>
+    <script src="js/abbeys.js"></script>
     <script src="js/market.js"></script>
     <script src="js/papacy.js"></script>
     <script src="js/armies.js"></script>
@@ -989,11 +1000,13 @@
     <script src="js/rebellions.js"></script>
     <script src="js/logistics.js"></script>
     <script src="js/treasury.js"></script>
+    <script src="js/tournaments.js"></script>
     <script src="js/fiscal.js"></script>
     <script src="js/ui_misc.js"></script>
     <script src="js/ui_panels.js"></script>
     <script src="js/ui_topbar.js"></script>
     <script src="js/ui_wars.js"></script>
+    <script src="js/ui_tournaments.js"></script>
     <script src="js/keys.js"></script>
     <script src="js/crazygames.js"></script>
     <script src="js/save.js"></script>

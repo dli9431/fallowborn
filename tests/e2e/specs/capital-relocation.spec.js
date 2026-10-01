@@ -6,7 +6,8 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/mapview.js',
   'js/world.js',
-  'js/ui_modals.js'
+  'js/ui_modals.js',
+  'js/ui_panels.js', 'js/ui_misc.js', 'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -510,10 +511,14 @@ test('Land relocation confirmation supports cancel, keyboard focus, and the life
     await expect(page.getByRole('heading', {
       name:'Move capital to Canterbury?'
     })).toBeVisible();
-    await expect(page.locator('#gm-body')).toContainText(
-      'from London to Canterbury');
-    await expect(page.locator('#gm-body')).toContainText(
-      'Popular opinion changes by -15');
+    const capitalFacts = page.locator('[data-capital-relocation]');
+    await expect(capitalFacts).toContainText('London');
+    await expect(capitalFacts).toContainText('Canterbury');
+    await expect(capitalFacts).toContainText('Popular support');
+    await expect(capitalFacts).toContainText('-15');
+    await expect(page.locator('#capital-relocation-confirm')).toContainText(
+      'only voluntary move');
+    await expect(page.locator('#capital-relocation-confirm-details')).toBeHidden();
     await expect(page.locator('#gm-body')).toContainText(
       'Ashdown, Briarwood');
     await expect(page.locator('#gm-body')).toContainText(

@@ -22,6 +22,29 @@ FBDATA.freedomBargaining = {
   finalServiceDays:90
 };
 
+/* Religious houses own their endowments separately from family property. */
+FBDATA.abbeys = {
+  maxHouses:12, foundationCost:160, foundationCapital:80,
+  donation:100, capitalYield:0.05, existingRent:12, upkeep:4,
+  allowance:6, residentUpkeep:2, residentCapacity:3,
+  electionCooldown:360, invitationCooldown:180, vacancyDays:360,
+  guestDays:360, pupilDays:720, privilegeCost:30,
+  /* Effect sizes shared by the engine and its review text. */
+  disputeLoss:2, electionPrestige:15, foundationPrestige:10,
+  endowmentPiety:8, endowmentSupport:5, dismissStanding:5, refugeStanding:10,
+  privilegeIncome:2, privilegePrestige:20, privilegeTroops:20,
+  actions:{
+    rents:{ cost:0, days:360, treasury:8, support:-8 },
+    school:{ cost:8, days:180, support:5, learning:1 },
+    relief:{ cost:10, days:180, support:8, popular:3, piety:3 },
+    mediate:{ cost:4, days:180, support:4, prestige:6, standing:4, lordStanding:5 },
+    patronage:{ cost:4, days:360, capital:20, prestige:4, standing:2 },
+    defend:{ cost:12, days:0, support:8, lordStanding:-5,
+      failLoss:8, failSupport:-8, failLordStanding:-10 },
+    concede:{ cost:8, days:0, support:-5, lordStanding:8 }
+  }
+};
+
 /* Religious progression is character state keyed by path id and a legacy
    numeric rank index. Baseline rank order is therefore a compatibility
    boundary even though every rank also has its own stable id. */
@@ -337,6 +360,16 @@ FBDATA.careers = {
    and the player's station. Earned positions come from events; retainer
    offices are filled by paid named characters in the household network. */
 FBDATA.positions = {
+  service_helper:{ name:'Estate Assistant', icon:'🌾', kind:'service', desc:'Helps with harvest work, stores and the everyday needs of an estate.' },
+  service_storekeeper:{ name:'Household Storekeeper', icon:'🗝', kind:'service', desc:'Accounts for deliveries and keeps provisions safe from waste.' },
+  service_reeve:{ name:'Estate Overseer', icon:'🌾', kind:'service', desc:'Organizes estate work and answers for its results. Manorial households call this officer a reeve.' },
+  service_tally:{ name:'Tally Assistant', icon:'📜', kind:'service', desc:'Counts deliveries, checks tallies and learns letters alongside the household officer.' },
+  service_clerk:{ name:'Household Clerk', icon:'📜', kind:'service', desc:'Keeps written household accounts and prepares records for the patron.' },
+  service_carrier:{ name:'Household Carrier', icon:'📦', kind:'service', desc:'Carries goods and messages between the household and its local suppliers.' },
+  service_buyer:{ name:'Household Purchasing Agent', icon:'📒', kind:'service', desc:'Buys provisions and checks the quality and price of deliveries.' },
+  service_watch:{ name:'Household Watch', icon:'🛡', kind:'service', desc:'Watches the stores, gates and local deliveries under the household officer.' },
+  service_guard:{ name:'Household Guardsman', icon:'🛡', kind:'service', desc:'Protects household goods and escorts its local deliveries.' },
+  service_sergeant:{ name:'Household Sergeant', icon:'⚔', kind:'service', desc:'Trains and supervises the household guard.' },
   councilman: {
     name:'Town Councilman', icon:'⚖', kind:'earned',
     desc:'A place on the town bench brings commissions, introductions, and a voice in local affairs.',
@@ -371,6 +404,39 @@ FBDATA.positions = {
     desc:'A resident learned servant who may be assigned to a child’s lessons without a second fee.',
     fx:{}
   }
+};
+
+/* Personal appointments in a patron's household. These reuse position names,
+   but never grant the employer-facing retainer bonuses to the employee.
+   traitFit is role suitability beyond ordinary skill effects: its sum is
+   capped at +/-2 and applied only to appointment skill checks. */
+FBDATA.householdServiceRoles = {
+  helper:{ position:'service_helper', path:'estate', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
+  storekeeper:{ position:'service_storekeeper', path:'estate', previous:'helper', days:90, standing:10, wage:3, value:1, training:['ste','dip'], skills:{ste:4},
+    traitFit:{honest:1,temperate:1,greedy:-1,deceitful:-1,drunkard:-1} },
+  reeve:{ position:'service_reeve', path:'estate', previous:'storekeeper', days:360, standing:25, wage:4, value:1.5, training:['ste','dip'], skills:{ste:7,dip:4},
+    traitFit:{honest:1,patient:1,rent_shrewd:1,cruel:-1,deceitful:-1,wrathful:-1} },
+  steward:{ position:'steward', path:'estate', previous:'reeve', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:10,lea:6}, lettered:true,
+    traitFit:{honest:1,patient:1,rent_shrewd:1,deceitful:-1,greedy:-1,drunkard:-1} },
+  tally:{ position:'service_tally', path:'letters', wage:2.5, value:0.5, training:['lea','ste'], skills:{lea:4},
+    traitFit:{patient:1,honest:1,wrathful:-1,deceitful:-1} },
+  clerk:{ position:'service_clerk', path:'letters', previous:'tally', days:180, standing:15, wage:3.5, value:1, training:['lea','ste'], skills:{lea:6,ste:4}, lettered:true,
+    traitFit:{patient:1,honest:1,rent_shrewd:1,deceitful:-1,drunkard:-1} },
+  tutor:{ position:'tutor', path:'letters', previous:'clerk', days:720, standing:40, wage:5, value:1.5, training:['lea','dip'], skills:{lea:10,dip:6}, lettered:true,
+    traitFit:{kind:1,patient:1,hearth_steady:1,cruel:-2,wrathful:-1} },
+  carrier:{ position:'service_carrier', path:'trade', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
+  buyer:{ position:'service_buyer', path:'trade', previous:'carrier', days:180, standing:15, wage:3.5, value:1, training:['ste','dip'], skills:{ste:4,dip:4},
+    traitFit:{honest:1,patient:1,roadwise:1,greedy:-1,deceitful:-1} },
+  factor:{ position:'factor', path:'trade', previous:'buyer', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:9,dip:7}, lettered:true,
+    traitFit:{honest:1,patient:1,roadwise:1,greedy:-1,deceitful:-1} },
+  watch:{ position:'service_watch', path:'arms', wage:2.5, value:0.5, training:['mar','dip'], skills:{mar:4}, maleOnly:true,
+    traitFit:{brave:1,veteran:1,muster_bred:1,craven:-1,drunkard:-1} },
+  guard:{ position:'service_guard', path:'arms', previous:'watch', days:180, standing:15, wage:3.5, value:1, training:['mar','dip'], skills:{mar:6}, maleOnly:true,
+    traitFit:{brave:1,veteran:1,muster_bred:1,craven:-1,drunkard:-1} },
+  sergeant:{ position:'service_sergeant', path:'arms', previous:'guard', days:360, standing:25, wage:4, value:1.5, training:['mar','dip'], skills:{mar:9,dip:4}, maleOnly:true,
+    traitFit:{brave:1,veteran:1,patient:1,craven:-1,wrathful:-1,drunkard:-1} },
+  captain:{ position:'captain', path:'arms', previous:'sergeant', days:1080, standing:45, wage:5, value:2, training:['mar','dip'], skills:{mar:12,dip:6}, maleOnly:true,
+    traitFit:{brave:1,veteran:1,patient:1,muster_bred:1,craven:-1,wrathful:-1,drunkard:-1} }
 };
 
 /* A town councillor may carry one local ordinance at a time. These are

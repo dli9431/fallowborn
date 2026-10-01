@@ -10,8 +10,65 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.184.0';
+FB.VERSION = '1.188.1';
 FB.CHANGELOG = [
+  { v: '1.188.1', date: '2026-09-29', changes: [
+    'Games sheets now stay current after entering, travelling or funding, and show injury risk, portraits and blockers up front. The Events map button shows when it is active.'
+  ] },
+  { v: '1.188.0', date: '2026-09-29', changes: [
+    'Host scheduled regional games or travel the circuit to compete, perform, trade, and work. Find gatherings in the Events calendar and map overlay; war interrupts bookings and sends travellers home.'
+  ] },
+  { v: '1.187.0', date: '2026-09-28', changes: [
+    'Catholic women can govern endowed abbeys, host noble residents, and seek royal and papal privileges. Find abbey elections, patronage, and estate management in Work, Self, and Deeds.'
+  ] },
+  { v: '1.186.5', date: '2026-09-28', changes: [
+    'CrazyGames health guidance now follows the Daily Focus and saving lesson.'
+  ] },
+  { v: '1.186.4', date: '2026-09-28', changes: [
+    'Startup guidance now warns once about low health and points adults to Rest and mend.'
+  ] },
+  { v: '1.186.3', date: '2026-09-28', changes: [
+    'Seeking a Match shows each prospect’s portrait, skills and traits in every edition. CrazyGames courtship guidance points to Play once personal attention is assigned.'
+  ] },
+  { v: '1.186.2', date: '2026-09-28', changes: [
+    'Seek a match now offers dynastic searches only to rulers of Baron rank or higher.'
+  ] },
+  { v: '1.186.1', date: '2026-09-28', changes: [
+    'Daily Focus animations show work on the Play button, and household service appointments account for role-specific traits.',
+    'CrazyGames prepares the opening world from the title, adds business reviews, live household goals and Continue previews, and resumes time after events by default for new preferences.'
+  ] },
+  { v: '1.186.0', date: '2026-09-27', changes: [
+    'Campaigns can now end by negotiation: propose white peace, demand tribute or recognition, cede objectives, or submit, guided by a visible war balance. Withdrawing or buying peace now costs much more.',
+    'Failed rebellions return you to the lord you renounced, and decision screens across the game show terms, costs and people more clearly.'
+  ] },
+  { v: '1.185.1', date: '2026-09-27', changes: [
+    'Household service and life history screens now use clear fact cards, portraits and role cards instead of long text.'
+  ] },
+  { v: '1.185.0', date: '2026-09-27', changes: [
+    'Character sheets and the family tree now show life histories, with selected lives preserved across generations.',
+    'Commoners can seek household service through Deeds and earn appointments, pay and advancement in their lord’s household.'
+  ] },
+  { v: '1.184.7', date: '2026-09-27', changes: [
+    'CrazyGames now guides new households through marriage, an enterprise, freedom, and land. The first character courts faster and eligible marriage proposals are always accepted.'
+  ] },
+  { v: '1.184.6', date: '2026-09-26', changes: [
+    'The suggested first deed is now Go into town, so a new life begins with a choice of where to go and what to do there.'
+  ] },
+  { v: '1.184.5', date: '2026-09-26', changes: [
+    'New players start with a suggested first deed, and the map tips now follow the first event. Deed tips keep pointing at the right button when Deeds are regrouped.'
+  ] },
+  { v: '1.184.4', date: '2026-09-25', changes: [
+    'CrazyGames saves handle compact data correctly and keep a smaller backup when leaving the game. Browser saving works without a platform connection, and unreadable saves have recovery controls.'
+  ] },
+  { v: '1.184.3', date: '2026-09-25', changes: [
+    'CrazyGames loads in English with fewer files and no language picker.'
+  ] },
+  { v: '1.184.2', date: '2026-09-25', changes: [
+    'CrazyGames browser saves take less space and continue to load older campaigns.'
+  ] },
+  { v: '1.184.1', date: '2026-09-25', changes: [
+    'CrazyGames opens Osric in one click, guides the first deed, and saves to browser storage for Automatic Progress Save. Other editions keep their existing flow.'
+  ] },
   { v: '1.184.0', date: '2026-09-23', changes: [
     'Brazilian Portuguese is available as a Preview language in Settings. Settlement grant lists explain county seats, other barons’ holdings, and reserved settlements.'
   ] },
@@ -2221,6 +2278,7 @@ FB.CHANGELOG = [
     FB.ui.showScreen('title');
     resolveMusicChoiceShell();
     if (FB.music) FB.music.showTitle();
+    if (FB.crazySave && FB.crazySave.recovery()) FB.ui.showSaveRecovery();
   }
 
   function readyTitleShell() {
@@ -2237,6 +2295,16 @@ FB.CHANGELOG = [
       button.disabled = false;
     });
     G.bootReady = true;
+    /* CrazyGames: build Play as Osric's world after the title paints, so the
+       click only sets up the campaign. The title itself stays world-free. */
+    if (FB.platform.isCrazyGames) {
+      const osric = (FBDATA.quickStarts || []).filter(function (candidate) {
+        return candidate.id === 'osric_867';
+      })[0];
+      if (osric) requestAnimationFrame(function () {
+        setTimeout(function () { FB.prepareBookmark(osric.bookmarkId); }, 0);
+      });
+    }
     if (FB.music && FB.music.offerBootChoice(finishTitleBoot)) return;
     finishTitleBoot();
   }
@@ -2287,7 +2355,43 @@ FB.CHANGELOG = [
      (bundled or stored), new lives and the map behind the menu are modded ones */
   function refreshTitle() {
     $('title-version').textContent = 'v' + FB.VERSION;
-    $('btn-continue').classList.toggle('hidden', !FB.save.hasAuto());
+    const saved = FB.save.read('auto');
+    $('btn-continue').classList.toggle('hidden', !saved);
+    const preview = $('continue-preview');
+    if (preview) {
+      preview.classList.add('hidden');
+      preview.textContent = '';
+    }
+    $('btn-continue').removeAttribute('aria-describedby');
+    if (preview && FB.platform.isCrazyGames && saved && saved.meta) {
+      const p = saved.state && saved.state.player;
+      const summary = saved.meta.household || (p ? {
+        version:1, tier:p.tier, plots:(p.landPlots || []).length,
+        enterprises:(p.enterprises || []).length,
+        married:!!(p.flags && (p.flags.tut_seen_wed || p.flags.tut_family_established)),
+        objective:p.dead ? { id:'succession' } : null
+      } : null);
+      const identity = document.createElement('p');
+      identity.textContent = FB.save.metaOf(saved);
+      preview.appendChild(identity);
+      if (summary && summary.version === 1) {
+        const achievement = document.createElement('p');
+        achievement.textContent = FB.ui.crazyGamesAchievementText(summary);
+        preview.appendChild(achievement);
+        const goal = FB.ui.crazyGamesObjectiveText(summary.objective);
+        if (goal) {
+          const objective = document.createElement('p');
+          objective.setAttribute('data-continue-objective', '');
+          objective.textContent = FB.T('Next: {goal} {progress}', {
+            goal:goal.title, progress:goal.detail
+          });
+          preview.appendChild(objective);
+        }
+      }
+      preview.classList.remove('hidden');
+      $('btn-continue').setAttribute('aria-describedby', 'continue-preview');
+    }
+    if ($('btn-save-recovery')) $('btn-save-recovery').classList.toggle('hidden', !(FB.crazySave && FB.crazySave.recovery()));
     const note = $('title-mods');
     if (!note) return;
     const names = FB.mods.bundled()
@@ -2305,9 +2409,27 @@ FB.CHANGELOG = [
   }
 
   function wireMenus() {
-    $('btn-newgame').addEventListener('click', function () { showNewGame(); });
+    if (FB.platform.isCrazyGames) {
+      const newGameLabel = $('btn-newgame').querySelector('[data-i18n]');
+      newGameLabel.setAttribute('data-i18n', 'Play as Osric');
+      newGameLabel.textContent = FB.T('Play as Osric');
+      $('btn-choose-beginning').classList.remove('hidden');
+    }
+    $('btn-newgame').addEventListener('click', function () {
+      if (!FB.platform.isCrazyGames) { showNewGame(); return; }
+      const definition = (FBDATA.quickStarts || []).filter(function (candidate) {
+        return candidate.id === 'osric_867';
+      })[0];
+      const details = quickStartDetails(definition);
+      if (!details) { showNewGame(); return; }
+      newGameTelemetrySeen = {};
+      G.pending = { seed:freshSeed() };
+      beginQuickStart(definition, details);
+    });
+    $('btn-choose-beginning').addEventListener('click', showNewGame);
     $('btn-continue').addEventListener('click', function () { G.loadSlot('auto'); });
     $('btn-load').addEventListener('click', function () { FB.ui.showSaveLoad(false); });
+    if ($('btn-save-recovery')) $('btn-save-recovery').addEventListener('click', function () { FB.ui.showSaveRecovery(); });
     $('btn-chronicle').addEventListener('click', function () { FB.ui.showChronicleLibrary(); });
     $('btn-mods').classList.toggle('hidden', FB.platform.isCrazyGames);
     $('btn-mods').addEventListener('click', function () { FB.ui.showMods(); });
@@ -3054,6 +3176,8 @@ FB.CHANGELOG = [
     // the same seed and making the same picks gets this exact start
     const seedStr = (G.pending && G.pending.seed) || freshSeed();
     const quickStartId = G.pending && G.pending.quickStartId || 'custom';
+    const directCrazyGamesStart = FB.platform.isCrazyGames &&
+      quickStartId === 'osric_867';
     FB.seedRng(FB.hashSeed(seedStr));
     const bookmark = FB.activeBookmark;
     const start = {
@@ -3331,6 +3455,7 @@ FB.CHANGELOG = [
     state.peakTitleData = FB.playerStatusTitleSnapshot
       ? FB.playerStatusTitleSnapshot(state) : FB.titleSnapshot(state);
     if (FB.notePlayerStatus) FB.notePlayerStatus(state, state.peakTitleData);
+    if (FB.ensureLifeHistories) FB.ensureLifeHistories(state);
     G.paused = true;
 
     FB.ui.mapDirty();
@@ -3358,18 +3483,24 @@ FB.CHANGELOG = [
       ? '<p class="hint" data-serf-start-pointer>' + FB.esc(FB.T(
         "Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds.")) + '</p>'
       : '';
-    FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
-      FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
-      '</p><p class="hint">' +
-      FB.esc(introHint) +
-      '</p>' + serfIntroPointer +
-      '</div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
-    $('gm-go').addEventListener('click', function () {
-      FB.ui.closeModal();
-      if (firstPlayerOnboarding && FB.ui.resumeFirstPlayerTip) {
-        FB.ui.resumeFirstPlayerTip();
-      }
-    });
+    if (!directCrazyGamesStart) {
+      FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
+        FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
+        '</p><p class="hint">' +
+        FB.esc(introHint) +
+        '</p>' + serfIntroPointer +
+        '</div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
+      $('gm-go').addEventListener('click', function () {
+        FB.ui.closeModal();
+        if (firstPlayerOnboarding && FB.ui.resumeFirstPlayerTip) {
+          FB.ui.resumeFirstPlayerTip();
+        }
+      });
+    } else if (firstPlayerOnboarding && FB.ui.resumeFirstPlayerTip) {
+      requestAnimationFrame(function () {
+        if (FB.state === state) FB.ui.resumeFirstPlayerTip();
+      });
+    }
     FB.save.autosave();
     FB.save.warnIfBlocked();
     beginTelemetrySession('new-campaign');
@@ -3746,6 +3877,7 @@ FB.CHANGELOG = [
 
     if (!G.observe) {
       FB.learnMaternalCustoms(s);
+      if (FB.householdServiceDay) FB.householdServiceDay(s);
       if (!p.travel) {
         if (!(opts && opts.skipFocus)) FB.tickFocus(s);
         else FB.validateFocus(s);
@@ -3798,6 +3930,11 @@ FB.CHANGELOG = [
       FB.armyTick(s);
       if (FB.situation476Day) FB.situation476Day(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
+      if (FB.tournaments) {
+        FB.tournaments.reconcile(s);
+        if (seasonBoundary) FB.tournaments.season(s);
+        FB.tournaments.tick(s);
+      }
       s.eventQueue.length = 0;
       if (!(opts && opts.deferUi)) {
         FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
@@ -3815,6 +3952,7 @@ FB.CHANGELOG = [
       if (FB.marketSeason) FB.marketSeason(s);
       const taxParts = p.tier >= 3 ? FB.playerTaxParts(s) : null;
       const income = taxParts ? FB.playerTax(s, taxParts) : 0;
+      if (FB.tournaments) FB.tournaments.samplePlayer(s);
       if (FB.treasurySeason) FB.treasurySeason(s, taxParts);
       if (FB.authoritySeason) FB.authoritySeason(s);
       if (FB.situation476Season) FB.situation476Season(s);
@@ -3835,6 +3973,7 @@ FB.CHANGELOG = [
         FB.marketSettleHouseholdNecessities(s);
       } else p.gold -= Math.min(Math.max(0, p.gold), FB.householdUpkeep(s));
       if (FB.papacySeason) FB.papacySeason(s);
+      if (FB.abbeySeason) FB.abbeySeason(s);
       if (FB.householdStandardsSeason) FB.householdStandardsSeason(s);
       if (FB.retainerSeason) FB.retainerSeason(s);
       if (FB.enterpriseLaborSeason) FB.enterpriseLaborSeason(s);
@@ -3884,6 +4023,7 @@ FB.CHANGELOG = [
         annualContext = FB.worldTick(s);
         if (FB.authorityYear) FB.authorityYear(s);
       }
+      if (FB.tournaments) FB.tournaments.season(s);
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
       if (newYear) {
         yearlyLife(s, annualContext);
@@ -3896,13 +4036,16 @@ FB.CHANGELOG = [
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.situation476Day) FB.situation476Day(s);
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
+    if (FB.tournaments) FB.tournaments.reconcile(s);
     if (FB.travelTick) FB.travelTick(s);
+    if (FB.tournaments) FB.tournaments.tick(s);
     if (FB.giftDeliveryTick) FB.giftDeliveryTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }
 
     if (FB.freedomDay) FB.freedomDay(s);
+    if (FB.householdServiceDay) FB.householdServiceDay(s);
     if (FB.tenureDay) FB.tenureDay(s);
     if (FB.reconcileSerfStory) FB.reconcileSerfStory(s);
     if (FB.reconcileSerfNeighborConsequence) {
@@ -4036,7 +4179,7 @@ FB.CHANGELOG = [
     hideTips:false,
     eventToastOpensChronicle:false,
     newsFamily:true, newsRealm:true, newsAll:false,
-    autoResumeAfterEvents:false,
+    autoResumeAfterEvents:!!FB.platform.isCrazyGames,
     tipsSeen:{},
     tipsGrandfathered:false,
     onboardingStarted:false,
@@ -4086,7 +4229,9 @@ FB.CHANGELOG = [
       G.uiPrefs.newsFamily = storedUiPrefs.newsFamily !== false;
       G.uiPrefs.newsRealm = storedUiPrefs.newsRealm !== false;
       G.uiPrefs.newsAll = storedUiPrefs.newsAll === true;
-      G.uiPrefs.autoResumeAfterEvents = storedUiPrefs.autoResumeAfterEvents === true;
+      if (typeof storedUiPrefs.autoResumeAfterEvents === 'boolean') {
+        G.uiPrefs.autoResumeAfterEvents = storedUiPrefs.autoResumeAfterEvents;
+      }
       if (storedUiPrefs.tipsSeen && typeof storedUiPrefs.tipsSeen === 'object') {
         G.uiPrefs.tipsSeen = storedUiPrefs.tipsSeen;
       }
@@ -4285,7 +4430,9 @@ FB.CHANGELOG = [
       note:function (s) {
         const flags = s.player.flags || {};
         if (!flags.tut_successor_child && !flags.tut_successor_relative) {
-          return '';
+          return FB.platform.isCrazyGames
+            ? FB.T('Your family can grow while you build income, secure freedom, and buy land.')
+            : '';
         }
         const me = s.chars[s.player.charId];
         const minor = me && FB.ageOf(me, s.date.year) < 16;
@@ -4324,13 +4471,15 @@ FB.CHANGELOG = [
             ? FB.T('Start or continue a household enterprise')
             : FB.T('Start an enterprise');
         } },
+        { id:'freedom', when:function () { return FB.platform.isCrazyGames; },
+          label:function () { return FB.T('Secure your household’s freedom'); } },
         { id:'land', label:function (s) {
           const flags = s.player.flags || {};
           const successor = flags.tut_successor_child ||
             flags.tut_successor_relative;
           const me = s.chars[s.player.charId];
           const minor = successor && me && FB.ageOf(me, s.date.year) < 16;
-          if (s.player.tier === 0) {
+          if (s.player.tier === 0 && !FB.platform.isCrazyGames) {
             return minor
               ? FB.T('Come of age, petition or buy freedom, then acquire land')
               : FB.T('Petition or buy freedom, then acquire your first land plot');
@@ -4374,6 +4523,7 @@ FB.CHANGELOG = [
       return !!p.profession;
     }
     if (id === 'enterprise') return (p.enterprises || []).length > 0;
+    if (id === 'freedom') return p.tier > 0;
     if (id === 'land') return FB.landPlots(s).length > 0;
     if (id === 'kin_tab') return !!flags.tut_kin_tab;
     if (id === 'wed' || id === 'heir') {
@@ -4421,6 +4571,7 @@ FB.CHANGELOG = [
     const steps = [];
     let done = 0;
     for (const step of track.steps) {
+      if (step.when && !step.when(s)) continue;
       const isDone = tutorialStepDone(s, step.id);
       if (isDone) done++;
       steps.push({ id:step.id, label:step.label(s), done:isDone });
@@ -4428,10 +4579,27 @@ FB.CHANGELOG = [
     return { track:{ id:track.id, icon:track.icon, title:track.title(),
         note:track.note ? track.note(s) : '',
         link:track.link ? track.link(s) : '' },
-      steps:steps, done:done, total:track.steps.length };
+      steps:steps, done:done, total:steps.length };
+  }
+  function crazyGamesLivingTrackReady(s) {
+    const flags = s.player.flags || {};
+    return FB.platform.isCrazyGames && !!flags.tut_track_first_steps &&
+      !!(flags.tut_seen_wed || flags.tut_family_established ||
+        flags.tut_track_family_legacy || tutorialStepDone(s, 'wed'));
   }
   FB.tutorialStatus = function (s) {
     const flags = (s.player && s.player.flags) || {};
+    // The portal's next goals are income, freedom and land. Family progress
+    // remains active alongside them, including the first-child safeguards.
+    if (crazyGamesLivingTrackReady(s) && !flags.tut_track_making_a_living) {
+      const living = TUTORIAL_TRACKS.find(function (track) {
+        return track.id === 'making_a_living';
+      });
+      if (living.when(s)) {
+        const status = tutorialTrackStatus(s, living);
+        if (status.done < status.total) return status;
+      }
+    }
     for (const track of TUTORIAL_TRACKS) {
       if (track.when && !track.when(s)) continue;
       if (flags['tut_track_' + track.id]) continue;
@@ -4452,16 +4620,15 @@ FB.CHANGELOG = [
     let allDone = true;
     for (const track of TUTORIAL_TRACKS) {
       if (track.when && !track.when(s)) continue;
-      /* Tracks are instructional stages, not merely a display order. Do not
-         toast, flag, or launch a later chapter because its live-state goal
-         happened early; it becomes guidance only after the prior track. */
+      /* Standard tracks wait for the preceding chapter. CrazyGames opens
+         Making a living after marriage while Family & legacy continues. */
       if (track.id === 'family_legacy' &&
           !flags.tut_track_first_steps) {
         allDone = false;
         continue;
       }
       if (track.id === 'making_a_living' &&
-          !flags.tut_track_family_legacy) {
+          !flags.tut_track_family_legacy && !crazyGamesLivingTrackReady(s)) {
         allDone = false;
         continue;
       }
@@ -4526,7 +4693,9 @@ FB.CHANGELOG = [
           }));
       }
     }
-    if (FB.ui && FB.ui.resumeFamilyLegacyTips) {
+    if (FB.platform.isCrazyGames && FB.ui && FB.ui.resumeFirstPlayerTip) {
+      FB.ui.resumeFirstPlayerTip();
+    } else if (FB.ui && FB.ui.resumeFamilyLegacyTips) {
       FB.ui.resumeFamilyLegacyTips();
     }
     if (!allDone) return;
@@ -4602,7 +4771,7 @@ FB.CHANGELOG = [
     // (flush: autosave's storage write is deferred now, and this page may
     // never run another timer)
     FB.save.autosave({ background:true });
-    if (FB.save.flushPending) FB.save.flushPending();
+    if (FB.save.flushPending) FB.save.flushPending(true);
   }
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) pauseForBackground();
@@ -5394,6 +5563,8 @@ FB.CHANGELOG = [
     if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(s, me);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
+    if (FB.releaseAbbeyOffice) FB.releaseAbbeyOffice(s, me);
+    if (FB.noteLifeDeath) FB.noteLifeDeath(s, me);
     if (FB.endRoyalCompact) FB.endRoyalCompact(s);
     if (FB.breakAlliance) FB.breakAlliance(s, 'player');
     if (FB.papacyCharacterDied) FB.papacyCharacterDied(s, me, { preserve:true });
@@ -5412,6 +5583,7 @@ FB.CHANGELOG = [
     if (!heirs.length && FB.settlementLordshipsPlayerSuccession) {
       FB.settlementLordshipsPlayerSuccession(s, me.id, null);
     }
+    if (FB.tournaments) FB.tournaments.reconcile(s);
     const deathTelemetry = {
       entry_type:telemetryEntryType,
       active_seconds:activeSeconds,
@@ -5662,7 +5834,7 @@ FB.CHANGELOG = [
     let inheritedHoldings = (papalCustody &&
       Array.isArray(papalCustody.holdings)
       ? papalCustody.holdings : FB.holdingList(s)).slice();
-    const successionTier = outgoingTier <= 1
+    const successionTier = FB.playerAbbeyOnly && FB.playerAbbeyOnly(s) ? 2 : outgoingTier <= 1
       ? (FB.isUnfreeCharacter(s, heir)
         ? 0 : FB.clamp(FB.stationOf(heir), 0, 1)) : outgoingTier;
     const tutorialCarry = FB.tutorialActive(s) ? {} : null;
@@ -5679,6 +5851,7 @@ FB.CHANGELOG = [
     if (FB.releaseBishopric) {
       FB.releaseBishopric(s, old, { succession:true });
     }
+    if (FB.releaseAbbeyOffice) FB.releaseAbbeyOffice(s, old);
     if (FB.travelCancel) FB.travelCancel(s, '', true);
     if (livingAbdication) {
       if (FB.endRoyalCompact) FB.endRoyalCompact(s);
@@ -5731,6 +5904,8 @@ FB.CHANGELOG = [
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     FB.learnMaternalCustoms(s);
     p.charId = heir.id;
+    delete p.householdService; // appointments are personal; heirs may seek their own
+    if (FB.lifeHistoryPlayed) FB.lifeHistoryPlayed(s, heir);
     if (FB.settlementLordshipsPlayerSuccession) {
       FB.settlementLordshipsPlayerSuccession(s, old.id, heir.id);
     }
@@ -5816,6 +5991,7 @@ FB.CHANGELOG = [
     if (FB.activateBishopricForPlayer) {
       FB.activateBishopricForPlayer(s, heir);
     }
+    if (FB.activateAbbeyForPlayer) FB.activateAbbeyForPlayer(s, heir);
     /* Most once-only events belong to one protagonist. The Old Custom is a
        household landmark: once any head has faced it, succession must not
        offer the same case to every later serf heir. Retaining this one fired
@@ -5901,6 +6077,9 @@ FB.CHANGELOG = [
     }
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     if (FB.papacyPlayerSuccession) FB.papacyPlayerSuccession(s, old.id);
+    if (p.tier >= 3 && FB.noteLifeAccession) {
+      FB.noteLifeAccession(s, heir, FB.playerStatusTitleSnapshot(s));
+    }
     p.holdings = inheritedHoldings.slice();
     if (FB.enterpriseList) FB.enterpriseList(s);
     if (FB.repairAlliances) FB.repairAlliances(s);
@@ -5952,6 +6131,7 @@ FB.CHANGELOG = [
       FB.ui.maybeTip('succession', successionTip,
         '#sidetabs .tab[data-tab="log"]');
     }
+    if (FB.tournaments) FB.tournaments.reconcile(s);
     G.paused = true; // a new life begins at rest
     FB.ui.refresh();
     FB.save.autosave();
@@ -6040,6 +6220,7 @@ FB.CHANGELOG = [
        ordinary family. Retirement grants no benefits, so there is nothing a
        repeat could duplicate; the marker is for display and clarity. */
     old.retired = true;
+    if (FB.noteLifeEvent) FB.noteLifeEvent(s, old.id, 'retirement', {});
     // the old head stays at the family home rather than following the roster
     if (!old.homeProvinceId) old.homeProvinceId = p.provinceId;
     return G.succeedTo(heirId, {
@@ -6136,6 +6317,12 @@ FB.CHANGELOG = [
           FB.map.select(null);
         });
         resumeRepair('interface refresh', function () { FB.ui.refresh(); });
+        if (FB.platform.isCrazyGames && !FB.state.player.dead &&
+            !G.uiPrefs.hideBeginnerHints && FB.tutorialActive(FB.state)) {
+          resumeRepair('household objective', function () {
+            if (FB.ui.crazyGamesObjective(FB.state)) FB.ui.showTab('actions');
+          });
+        }
         if (!FB.state.player.dead) {
           resumeRepair('resume notice', function () {
             FB.ui.toast('The chronicle resumes — {season} {year} AD.', {

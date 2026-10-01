@@ -202,6 +202,7 @@ window.FB = window.FB || {};
   let serializingCompletedTech = null;
   function saveReplacer(key, value) {
     const holder = this;
+    if (holder && holder.lifeIdentity === true) return value;
     if (!SAVE_COMPACT_KEYS[key]) return value;
     if (key === 'royalLine' && value && holder &&
         typeof holder.id === 'string' && holder.id.indexOf('ro_') === 0 &&
@@ -625,6 +626,7 @@ window.FB = window.FB || {};
   S.warnIfBlocked = function () {
     if (S.available || S._warned || !FB.ui) return;
     S._warned = true;
+    if (crazy && crazy.recovery()) { FB.ui.toast(crazy.recovery().message); return; }
     FB.ui.toast('⚠ This browser is blocking save storage. Lives won’t persist here, so use Menu → 💾 Save game → 💾 Download save file.');
   };
 
@@ -670,10 +672,15 @@ window.FB = window.FB || {};
     try {
       const header = JSON.stringify({ v:3, titleIds:1, rng:FB.getRngState(),
         uid:FB.getUidCounter(), mods:FB.mods.sig() });
-      const meta = JSON.stringify({
+      const metaData = {
         name:FB.fullName(s.chars[s.player.charId]), titleData:FB.titleSnapshot(s),
         year:s.date.year, season:s.date.season
-      }, saveReplacer);
+      };
+      if (FB.platform.isCrazyGames && FB.ui.crazyGamesCampaignSummary) {
+        try { metaData.household = FB.ui.crazyGamesCampaignSummary(s); }
+        catch (error) { /* Optional preview must never prevent a campaign save. */ }
+      }
+      const meta = JSON.stringify(metaData, saveReplacer);
       let stateJson = JSON.stringify(s, function (key, value) {
         return this === s && key === 'chronicle' ? undefined : saveReplacer.call(this, key, value);
       });
@@ -749,8 +756,9 @@ window.FB = window.FB || {};
     if (storageInitialized) { done(); return; }
     storageInitialized = true;
     if (crazy) {
-      crazy.init({ encode:compressToBase64, decode:decompressFromBase64 }, function (error) {
-        S.available = !error;
+      crazy.init({ encode:compressToBase64, decode:decompressFromBase64,
+        encodeStored:compressToStored, decodeStored:decompressFromStored }, function (error) {
+        S.available = crazy.available();
         if (!error) startProgression = readStartProgression();
         done(error);
       });
@@ -822,7 +830,11 @@ window.FB = window.FB || {};
   };
   // UTF-16 payload estimates, excluding database indexes and browser overhead.
   S.storageUsage = function (done) {
-    if (crazy) { done({ crazygames:crazy.usage(), limit:1048576 }); return; }
+    if (crazy) {
+      if (crazy.backend() === 'localstorage') done({ localStorage:crazy.usage(), indexedDB:0 });
+      else done({ crazygames:crazy.usage(), limit:1048576 });
+      return;
+    }
     const usage = { localStorage:null, indexedDB:saveDatabase ? null : 0 };
     try {
       usage.localStorage = 0;
@@ -910,7 +922,7 @@ window.FB = window.FB || {};
       transaction.onabort = function () { finish(false); };
     } catch (error) { finish(false); }
   };
-  S.storageBackend = function () { return crazy ? 'crazygames' : saveDatabase ? 'indexeddb' : 'localstorage'; };
+  S.storageBackend = function () { return crazy ? crazy.backend() : saveDatabase ? 'indexeddb' : 'localstorage'; };
   S.toSlot = function (slot, done) {
     if (crazy) {
       if (slot !== 'auto') { if (done) done(false); return false; }
@@ -1003,12 +1015,12 @@ window.FB = window.FB || {};
       writeAuto(job, encodeStored(job.json));
     }
   }
-  function flushAutosave(force) {
+  function flushAutosave(force, compactAfter) {
     const job = pendingAuto;
     if (!job) return;
     if (crazy) {
       if (force === true) {
-        try { if (crazy.flush(job.json)) pendingAuto = null; }
+        try { if (crazy.flush(job.json, compactAfter)) pendingAuto = null; }
         catch (error) { reportSaveError(error); }
       } else if (!job.writing) {
         job.writing = true;
@@ -1047,10 +1059,10 @@ window.FB = window.FB || {};
     else compressAuto(job);
   }
   // A closing page cannot wait for a worker; persist the newest snapshot now.
-  S.flushPending = function () {
+  S.flushPending = function (compactAfter) {
     if (crazy) {
-      if (pendingAuto) flushAutosave(true);
-      else { try { crazy.flushLatest(); } catch (error) { reportSaveError(error); } }
+      if (pendingAuto) flushAutosave(true, compactAfter === true);
+      else { try { crazy.flushLatest(compactAfter === true); } catch (error) { reportSaveError(error); } }
       return;
     }
     // A closing page cannot await an outstanding manual transaction either.
@@ -1516,6 +1528,8 @@ window.FB = window.FB || {};
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }
+    // Repairs establish present facts, never invented historical achievements.
+    if (FB.suspendLifeHistories) FB.suspendLifeHistories(FB.state);
     if (FB.ensureChronicle) restoreRepair('Chronicle archive', function () {
       FB.ensureChronicle(FB.state, { legacy:true });
     });
@@ -1603,6 +1617,9 @@ window.FB = window.FB || {};
        reigning Roman Pope and receive a date-appropriate College around him. */
     if (FB.ensurePapacyState) restoreRepair('papacy state', function () {
       FB.ensurePapacyState(FB.state);
+    });
+    if (FB.repairAbbeys) restoreRepair('abbey institutions', function () {
+      FB.repairAbbeys(FB.state);
     });
     /* Dynasty scholarship and innovations from older version-3 lives become
        the effective sovereign nation's first technology record. */
@@ -1694,6 +1711,10 @@ window.FB = window.FB || {};
     if (FB.ensureJustice) restoreRepair('justice state', function () {
       FB.ensureJustice(FB.state);
     });
+    if (FB.tournaments) restoreRepair('scheduled games', function () {
+      FB.tournaments.ensure(FB.state);
+      FB.tournaments.reconcile(FB.state);
+    });
     if (FB.fabricatedClaimOf) restoreRepair('fabricated claims', function () {
       FB.fabricatedClaimOf(FB.state);
     });
@@ -1742,6 +1763,12 @@ window.FB = window.FB || {};
     }
     if (FB.treasuryInitialize) restoreRepair('AI treasuries', function () {
       FB.treasuryInitialize(FB.state);
+    });
+    if (FB.repairLifeHistories) restoreRepair('life histories', function () {
+      FB.repairLifeHistories(FB.state);
+    });
+    if (FB.repairHouseholdService) restoreRepair('household service', function () {
+      FB.repairHouseholdService(FB.state);
     });
     return FB.state;
   };

@@ -7,9 +7,11 @@ dependsOnRuntime(__filename, [
   'data/cultures.js',
   'data/map_data.js',
   'data/actions.js',
+  'data/traits.js',
   'js/actions.js',
   'js/events.js',
   'js/model.js',
+  'js/portrait.js',
   'js/population.js',
   'js/travel.js',
   'js/ui_misc.js',
@@ -56,6 +58,153 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
 });
+
+async function suitorPortraits(page) {
+  return page.locator('[data-suitor-card] canvas.pface').evaluateAll(function (faces) {
+    return faces.map(function (canvas) {
+      const pixels = canvas.getContext('2d').getImageData(
+        0, 0, canvas.width, canvas.height).data;
+      let hash = 2166136261, painted = false;
+      for (let i = 0; i < pixels.length; i++) {
+        hash = Math.imul(hash ^ pixels[i], 16777619);
+        if (i % 4 === 3 && pixels[i]) painted = true;
+      }
+      return { id:canvas.dataset.cid, painted:painted, hash:hash >>> 0 };
+    });
+  });
+}
+
+for (const width of [1280, 320]) {
+  const playerSex = width === 1280 ? 'f' : 'm';
+  const candidateSex = playerSex === 'f' ? 'm' : 'f';
+  test('standard ' + (candidateSex === 'f' ? 'female' : 'male') +
+    ' prospects show stable real portraits, skills and traits at ' + width + 'px',
+    async function ({ page }) {
+      await page.setViewportSize({ width:width, height:800 });
+      const initial = await page.evaluate(function (sex) {
+        const s = FB.state;
+        s.chars[s.player.charId].sex = sex;
+        const candidates = FB.spawnSuitor(s);
+        const result = {
+          crazyGames:FB.platform.isCrazyGames,
+          records:JSON.stringify(candidates), rng:FB.getRngState(),
+          candidates:candidates.map(function (c) {
+            return {
+              id:c.id, name:c.name, sex:c.sex,
+              skills:FB.SKILLS.map(function (skill) {
+                return { id:skill, name:FB.skillName(skill),
+                  value:String(FB.skillSnapshot(s, c, skill)) };
+              }),
+              traits:c.traits.map(function (id) {
+                return { id:id, name:FBDATA.traits[id].name };
+              })
+            };
+          })
+        };
+        FB.ui.showSuitorPicker();
+        return result;
+      }, playerSex);
+      expect(initial.crazyGames).toBe(false);
+      await expect(page.locator('[data-suitor-card]')).toHaveCount(3);
+      for (const candidate of initial.candidates) {
+        expect(candidate.sex).toBe(candidateSex);
+        const card = page.locator('[data-suitor-card="' + candidate.id + '"]');
+        await expect(card.locator('canvas.pface')).toHaveAttribute('data-cid', candidate.id);
+        await expect(card.locator('canvas.pface')).toBeVisible();
+        await expect(card.locator('[data-suitor-skill]')).toHaveCount(5);
+        for (const skill of candidate.skills) {
+          const row = card.locator('[data-suitor-skill="' + skill.id + '"]');
+          await expect(row.locator('span')).toHaveText(skill.name);
+          await expect(row.locator('b')).toHaveText(skill.value);
+        }
+        expect(candidate.traits.length).toBeGreaterThan(0);
+        await expect(card.locator('button[data-trait]')).toHaveCount(candidate.traits.length);
+        for (const trait of candidate.traits) {
+          await expect(card.locator('button[data-trait="' + trait.id + '"]'))
+            .toContainText(trait.name);
+        }
+        await expect(card.locator('[data-suitor]')).toHaveAccessibleName('Meet ' + candidate.name);
+        await expect(card.locator('[data-suitor]')).toContainText('Takes 1 day');
+      }
+      await expect.poll(async function () {
+        return (await suitorPortraits(page)).every(function (face) { return face.painted; });
+      }).toBe(true);
+      const portraits = await suitorPortraits(page);
+      expect(new Set(portraits.map(function (face) { return face.hash; })).size).toBe(3);
+      // Compare the actual shortlist canvas with a direct render of its own
+      // character, not the protagonist or a separate preview character.
+      expect(await page.locator('[data-suitor-card] canvas.pface')
+        .evaluateAll(function (faces) {
+          const s = FB.state;
+          return faces.map(function (canvas) {
+            const c = s.chars[canvas.dataset.cid];
+            const look = FB.characterLook(c, s.date.year, s);
+            const reference = document.createElement('canvas');
+            reference.width = canvas.width;
+            reference.height = canvas.height;
+            FB.paintPortrait(reference, c, s.date.year, { state:s });
+            return { sex:look.sex, female:look.female,
+              matchesCharacter:canvas.toDataURL() === reference.toDataURL() };
+          });
+        })).toEqual(initial.candidates.map(function () {
+          return { sex:candidateSex, female:candidateSex === 'f', matchesCharacter:true };
+        }));
+      expect(await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollWidth <= body.clientWidth + 1;
+      })).toBe(true);
+      if (width === 320) {
+        expect(await page.locator('.suitor-traits button, .suitor-actions button')
+          .evaluateAll(function (buttons) {
+            return buttons.every(function (button) {
+              const box = button.getBoundingClientRect();
+              return box.width >= 44 && box.height >= 44;
+            });
+          })).toBe(true);
+      }
+
+      await page.locator('#gm-cancel').click();
+      await page.evaluate(function () { FB.ui.showSuitorPicker(); });
+      await expect.poll(function () { return suitorPortraits(page); }).toEqual(portraits);
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        return { records:JSON.stringify(s.player.suitorIds.map(function (id) {
+          return s.chars[id];
+        })), rng:FB.getRngState() };
+      })).toEqual({ records:initial.records, rng:initial.rng });
+    });
+}
+
+test('trait Back and Escape retain the shortlist, expanded details and focus',
+  async function ({ page }) {
+    await page.setViewportSize({ width:390, height:640 });
+    await page.evaluate(function () { FB.ui.showSuitorPicker(); });
+    const card = page.locator('[data-suitor-card]').last();
+    await card.locator('.settcard-info').click();
+    const trait = card.locator('button[data-trait]').first();
+    await trait.scrollIntoViewIfNeeded();
+    const before = await page.evaluate(function () {
+      return { scroll:document.getElementById('gm-body').scrollTop,
+        ids:FB.state.player.suitorIds.slice(), rng:FB.getRngState() };
+    });
+    expect(before.scroll).toBeGreaterThan(0);
+    for (const route of ['back', 'escape']) {
+      if (route === 'back') await trait.click();
+      else await trait.press('Enter');
+      await expect(page.locator('#tm-close')).toBeVisible();
+      if (route === 'back') await page.locator('[data-modal-nav="back"]').click();
+      else await page.keyboard.press('Escape');
+      await expect(page.locator('#gm-title')).toHaveText('Seeking a Match');
+      await expect(trait).toBeFocused();
+      await expect(card.locator('.settcard-info')).toHaveAttribute('aria-expanded', 'true');
+      await expect(card.locator('.settcard-details')).toBeVisible();
+      await expect.poll(function () {
+        return page.evaluate(function () {
+          return { scroll:document.getElementById('gm-body').scrollTop,
+            ids:FB.state.player.suitorIds.slice(), rng:FB.getRngState() };
+        });
+      }).toEqual(before);
+    }
+  });
 
 test('Seek a match replaces all three prospects only after its cooldown',
   async function ({ page }) {
@@ -304,7 +453,7 @@ test('Seek a match draws only live culture-faith pairs and raises mixed proposal
       'Meet ' + reopened.peerName);
     await page.setViewportSize({ width:390, height:740 });
     await expect(peerCard.locator('.settcard-info')).toBeVisible();
-    expect(await peerCard.locator('.settcard-actions .btn').evaluateAll(
+    expect(await peerCard.locator('.suitor-actions button').evaluateAll(
       function (buttons) {
         return buttons.every(function (button) {
           const box = button.getBoundingClientRect();

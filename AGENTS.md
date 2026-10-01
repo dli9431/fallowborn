@@ -141,6 +141,28 @@ working directly on `main`, but leave `FB.VERSION`/`FB.CHANGELOG` untouched on a
 and let the merge assign them (see *Git workflow*) — otherwise parallel branches all grab the
 same number and collide.
 
+## Distribution isolation
+
+The CrazyGames upload is assembled by the private workspace packager in notes/.
+Only that packager injects window.FB_DISTRIBUTION = "crazygames" and
+window.FB_CRAZYGAMES_STORAGE = "localstorage" into its copied index.html.
+Shared runtime differences must check FB.platform.isCrazyGames, derived from
+the explicit distribution flag. Do not infer CrazyGames from screen size or host.
+
+The CrazyGames package is silent and English-only. Its in-game Settings must
+hide the language control, and locale-change calls must reject. Its packager
+omits music, docs/, and generated data/lang_*.js catalogs, and adds a compact English
+message registry so older Chronicle entries remain readable. It must not
+change tracked game sources while packaging. The ordinary itch and
+play.fallowborn.com editions keep their music, documentation, language
+catalogs, and existing storage/UI behavior. Do not apply CrazyGames package
+exclusions or content rules to those editions, and do not pull itch/play-only
+assets or flows into the CrazyGames upload.
+
+When changing shared scripts or the upload allowlist, review both paths:
+CrazyGames flag on with its generated package, and standard flag off from the
+unchanged game tree. Keep the private workspace files out of all public
+packages and commits.
 ## Git workflow
 
 **Default: commit directly onto `main`.** In the primary working directory, just commit your

@@ -19,6 +19,8 @@ window.FB = window.FB || {};
   }
   function female(state) { return me(state).sex === 'f'; }
   function vocationalMultiplier(state, focus) {
+    const service = FB.householdServiceRecord && FB.householdServiceRecord(state);
+    if (focus && focus.id === 'toil' && service && service.status === 'active') return 1;
     if (!focus || !focus.vocational || !FB.householdWorkMultiplier) return 1;
     const profession = state.player.profession;
     const relevant = Array.isArray(focus.vocational)
@@ -203,8 +205,20 @@ window.FB = window.FB || {};
     },
     gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
   { id: 'toil',
-    show: function (s) { return s.player.tier === 0 && adult(s); },
+    show: function (s) {
+      const service = FB.householdServiceRecord(s);
+      return adult(s) && (s.player.tier === 0 || service && service.status === 'active');
+    },
+    can: function (s) {
+      const service = FB.householdServiceRecord(s);
+      if (!service || service.status !== 'active') return true;
+      const status = FB.householdServiceStatus(s);
+      return status.record && status.record.status === 'active' && !status.workReady
+        ? status.reason || FB.T('This appointment is suspended.') : true;
+    },
     tick: function (s) {
+      const service = FB.householdServiceRecord(s);
+      if (service && service.status === 'active') { FB.tickHouseholdService(s); return; }
       const base = FB.rf(FBDATA.balance.serfWage[0], FBDATA.balance.serfWage[1]);
       s.player.gold += FB.serfHarvestQuote(s, base).gold / D;
       if (dch(0.1)) {
@@ -213,6 +227,8 @@ window.FB = window.FB || {};
       }
     },
     gain: function (s) {
+      const service = FB.householdServiceRecord(s);
+      if (service && service.status === 'active') return {gold:FBDATA.householdServiceRoles[service.roleId].wage};
       return { gold: FB.serfHarvestQuote(s).gold };
     } },
   { id: 'militia',
@@ -348,8 +364,8 @@ window.FB = window.FB || {};
 
   { id: 'copy_books',
     show: function (s) {
-      return s.player.tier <= 2 &&
-        (s.player.profession === 'monk' || s.player.profession === 'priest');
+      return !!(FB.abbeyOf && FB.abbeyOf(s)) || (s.player.tier <= 2 &&
+        (s.player.profession === 'monk' || s.player.profession === 'priest'));
     },
     tick: function (s) {
       s.player.piety += 2 / D;
@@ -359,8 +375,8 @@ window.FB = window.FB || {};
     gain: function () { return { piety: 2 }; } },
   { id: 'serve_church',
     show: function (s) {
-      return s.player.tier <= 2 &&
-        (s.player.profession === 'monk' || s.player.profession === 'priest');
+      return !!(FB.abbeyOf && FB.abbeyOf(s)) || (s.player.tier <= 2 &&
+        (s.player.profession === 'monk' || s.player.profession === 'priest'));
     },
     tick: function (s) {
       s.player.piety += 4 / D;
@@ -533,7 +549,7 @@ window.FB = window.FB || {};
   { id: 'govern',
     show: function (s) {
       return s.player.tier >= 3 &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     tick: function (s) {
       s.player.gold += FB.playerTax(s) * 0.15 / D;
@@ -3070,6 +3086,15 @@ window.FB = window.FB || {};
         if (FB.ui && FB.ui.showAuction) FB.ui.showAuction();
       }
     } },
+  { id:'games_calendar', opensChoices:true, noConsume:true,
+    desc:function () { return FB.T('Browse funded games, admission, purses and travel dates.'); },
+    show:function () { return true; }, can:function () { return true; },
+    run:function () { FB.ui.showGames(); } },
+  { id:'host_games', opensChoices:true, noConsume:true, requiresAdult:true,
+    desc:function () { return FB.T('Fund a seven-day gathering at a settlement you directly own.'); },
+    show:function (s) { return s.player.tier >= 3; },
+    can:function (s) { var q = FB.tournaments.eligibility(s,s.player.charId); return q.ok || q.reason; },
+    run:function () { FB.ui.showHostGames(); } },
   { id: 'take_road', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () { return FB.T('Choose a purpose and travel county by county over game time.'); },
     show: function (s) {
@@ -3647,7 +3672,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return !!FB.guildMonopolyCareer(s) &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
       const status = FB.guildMonopolyPetitionStatus(s, true);
@@ -3670,6 +3695,16 @@ window.FB = window.FB || {};
     },
     run:function () {
       if (FB.ui && FB.ui.showRankDetails) FB.ui.showRankDetails();
+    } },
+
+  { id:'household_service', opensChoices:true, noConsume:true,
+    uiLabel:function (s) {
+      const r = FB.householdServiceRecord(s);
+      return r && r.status !== 'ended' ? FB.T('Review household service…') : FB.T('Offer household service…');
+    },
+    show:function (s) { return s.player.tier <= 2; },
+    run:function (s) {
+      if (FB.ui && FB.ui.showHouseholdService) FB.ui.showHouseholdService();
     } },
 
   { id: 'buy_land', opensChoices:true, noConsume: true, requiresAdult:true,
@@ -3798,13 +3833,13 @@ window.FB = window.FB || {};
   { id: 'hold_court',
     show: function (s) {
       return s.player.tier >= 3 &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     run: function (s) { FB.queueEvent(s, 'hold_court_event', {}); } },
   { id: 'squeeze_taxes',
     show: function (s) {
       return s.player.tier >= 3 &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     run: function (s) {
       const tax = Math.max(4, Math.round(FB.playerTax(s) * 0.8));
@@ -3826,7 +3861,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return s.player.tier >= 3 &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
       const status = FB.guildMonopolyIssueStatus(s);
@@ -3853,6 +3888,9 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showBishopric) FB.ui.showBishopric();
     } },
+  { id:'abbeys', opensChoices:true, noConsume:true,
+    show:function (s) { return !!(FB.abbeyAccess && FB.abbeyAccess(s)); },
+    run:function () { if (FB.ui && FB.ui.showAbbeys) FB.ui.showAbbeys(); } },
   { id: 'visit_diocese',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
@@ -3927,7 +3965,7 @@ window.FB = window.FB || {};
     show: function (s) {
       return s.player.tier >= 3 && s.player.tier <= 5 &&
         (s.player.tier === 3 || !!s.player.liege) &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
       if (s.player.tier === 3) return true;
@@ -4156,7 +4194,7 @@ window.FB = window.FB || {};
   { id: 'declare_war', opensChoices:true, noConsume: true,
     show: function (s) {
       const me = s.chars[s.player.charId];
-      return !(FB.playerBishopricOnly && FB.playerBishopricOnly(s)) &&
+      return !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s)) &&
         (s.player.tier >= 3 || !!(me && me.restorationRight));
     },
     can: function (s) {
@@ -4219,7 +4257,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return s.player.tier >= 3 && !!s.player.liege &&
-        !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
+        !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
       const sovereign = FB.topRealm(s, s.player.liege);
@@ -5400,6 +5438,8 @@ window.FB = window.FB || {};
   FB.focusLabel = function (state, focus) {
     focus = focusDefinitionRecord(focus);
     if (!focus) return '';
+    const service = FB.householdServiceRecord(state);
+    if (focus.id === 'toil' && service && service.status === 'active') return FB.householdServiceFocusLabel(state);
     const contextual = contextualTenureFocusText(state, focus,
       'workLabel', 'workLabelKey');
     if (contextual) return contextual;
@@ -5410,6 +5450,10 @@ window.FB = window.FB || {};
   FB.focusDescription = function (state, focus) {
     focus = focusDefinitionRecord(focus);
     if (!focus) return '';
+    const service = FB.householdServiceRecord(state);
+    if (focus.id === 'toil' && service && service.status === 'active') return FB.T(
+      'Earn {money:pay} per 90 working days. Every 90 working days brings training, patron Standing and credit for one ordinary labor duty due within 180 days. Other dues remain. Rest and other focuses keep the appointment but earn no service pay or progress.',
+      {pay:FBDATA.householdServiceRoles[service.roleId].wage});
     const contextual = contextualTenureFocusText(state, focus,
       'workDescription', 'workDescriptionKey');
     let desc = contextual || (typeof focus.desc === 'function' ? focus.desc(state) :
@@ -6105,6 +6149,7 @@ window.FB = window.FB || {};
       rents += 6 * Math.max(0, 1 + FB.modBonus(state, 'tax', p.provinceId));
     }
     const bishopric = FB.bishopricIncome ? FB.bishopricIncome(state) : 0;
+    const abbey = FB.abbeyIncome ? FB.abbeyIncome(state) : 0;
     const rentBase = rents;
     const rentTraits = [];
     const me = state.chars[p.charId];
@@ -6130,7 +6175,7 @@ window.FB = window.FB || {};
     const papacy = taxable *
       (FB.papacyInvestitureTaxRate ? FB.papacyInvestitureTaxRate(state) : 0);
     const beforeLiege = taxable + national + council + positions + monopoly +
-      papacy + bishopric + dues;
+      papacy + bishopric + abbey + dues;
     const countyLiege = p.liege && (p.provs || []).length
       ? -(taxable + national + council + positions + monopoly + papacy + bishopric) *
         (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
@@ -6140,7 +6185,7 @@ window.FB = window.FB || {};
       countyLoss:fiscal.countyLoss, settlementLoss:fiscal.settlementLoss,
       dues:dues, tolls:tolls, taxable:taxable,
       national:national, council:council, positions:positions,
-      monopoly:monopoly, papacy:papacy, bishopric:bishopric,
+      monopoly:monopoly, papacy:papacy, bishopric:bishopric, abbey:abbey,
       liege:liege, countyLiege:countyLiege, settlementDues:fiscal.duesOut, total:beforeLiege + liege
     };
   };
@@ -6381,6 +6426,7 @@ window.FB = window.FB || {};
     const p = state.player;
     if (p.dead || p.tier < 3) return false;
     if (p.provs && p.provs.length) return true;
+    if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) return false;
     const me = state.chars && state.chars[p.charId];
     const ranks = me && me.religiousRanks || {};
     const seeOnly = !!(me && FB.faithHasSystem(me.religion, 'papacy', state) &&
@@ -6576,7 +6622,7 @@ window.FB = window.FB || {};
   /* Locale-neutral standing seasonal cash flow. Credit capacity and the
      displayed ledger both use this numeric source; neither parses localized
      labels from incomeBreakdown. */
-  FB.playerCivilianBudget = function (state, economy, ignoreAssignments) {
+  FB.playerCivilianBudget = function (state, economy, ignoreAssignments, options) {
     const p = state.player;
     let receipts = 0;
     let total = -FB.householdUpkeep(state) - FB.playerGovernmentCosts(state).total;
@@ -6597,7 +6643,7 @@ window.FB = window.FB || {};
     if (FB.retainerSeasonCost) total -= FB.retainerSeasonCost(state);
     if (FB.enterpriseLaborSeasonCost) total -= FB.enterpriseLaborSeasonCost(state);
     if (FB.schoolingSeasonCost) total -= FB.schoolingSeasonCost(state);
-    const focus = FB.focusIncome(state);
+    const focus = options && options.excludeFocus ? null : FB.focusIncome(state);
     if (focus && focus.gold) { total += focus.gold; receipts += Math.max(0, focus.gold); }
     if (!ignoreAssignments && FB.financeAssignedIncomeCost) {
       total -= FB.financeAssignedIncomeCost(state, economy);
@@ -6687,6 +6733,7 @@ window.FB = window.FB || {};
       add('gold', FB.T('Guild monopoly tolls'), tax.monopoly);
       add('gold', FB.T('Investiture policy'), tax.papacy);
       add('gold', FB.T('Episcopal temporalities'), tax.bishopric);
+      add('gold', FB.T('Abbey office allowance'), tax.abbey);
       if (FB.positionContributions) {
         for (const source of FB.positionContributions(state, 'tax')) {
           const local = source.kind === 'local-ordinance';
@@ -11956,7 +12003,7 @@ window.FB = window.FB || {};
     if (causeOrTarget && causeOrTarget.type === 'aggression' &&
         !(opts && opts.confirmAggression)) return false;
     FB.ensureWars(state);
-    if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) return false;
+    if (FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(state)) return false;
     opts = opts || {};
     const playerRealm = 'player';
     let cause = causeOrTarget && typeof causeOrTarget === 'object' ? causeOrTarget : null;
@@ -12188,7 +12235,7 @@ window.FB = window.FB || {};
     const out = [];
     for (const a of FB.instants) {
       if (state.player.travel &&
-        ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
+        ['games_calendar', 'host_games', 'travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
           'travel_settle_here', 'frontier_settle_here', 'review_serf_tenure', 'declare_manor', 'petition_barony', 'found_settlement',
           'petition_liege', 'claim_higher_title'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;
@@ -12220,6 +12267,8 @@ window.FB = window.FB || {};
     let want;
     if (!adult(state)) want = 'study';
     else if (afield(state)) want = 'drill'; // disguised in the ranks — train at arms
+    else if (FB.householdServiceStatus(state).workReady) want = 'toil';
+    else if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) want = 'serve_church';
     else if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) {
       want = 'shepherd_diocese';
     }

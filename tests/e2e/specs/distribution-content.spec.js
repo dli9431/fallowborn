@@ -194,7 +194,7 @@ test('CrazyGames sentencing preview and execution both use imprisonment', async 
   await expect(page.locator('[data-justice-sentence="blinding_deposition"]')).toHaveCount(0);
 });
 
-test('CrazyGames replacement prose falls back to English in a stale French catalog', async function ({ page }, testInfo) {
+test('CrazyGames resets a saved French preference and keeps replacement prose in English', async function ({ page }, testInfo) {
   await restrictedBoot(page, testInfo);
   const result = await page.evaluate(function () {
     localStorage.setItem('fb_lang', 'fr');
@@ -212,6 +212,6 @@ test('CrazyGames replacement prose falls back to English in a stale French catal
     });
   });
   expect(result).toEqual({
-    locale:'fr', label:'Trade stories with the veterans.', trait:'Overindulgent'
+    locale:'en', label:'Trade stories with the veterans.', trait:'Overindulgent'
   });
 });

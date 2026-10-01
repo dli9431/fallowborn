@@ -41,6 +41,56 @@ hashes and the required restore/succession comparisons. Derived views,
 permission quotes, render data and revision stamps stay out of serialized
 state.
 
+CrazyGames Continue preview
+
+The version-3 save envelope may carry optional meta.household with version 1, numeric tier, enterprise and land counts, a marriage boolean, and a detached objective record. Objectives store stable phase and enterprise IDs, settlement index and proper name, money amounts, readiness booleans and remaining in-game days. They never store localized prose, UI nodes or callbacks. The preview is generated from the live campaign at serialization and rendered in the active locale on the title. It is informational; loading reconstructs progress from authoritative state. Missing preview metadata is compatible with older saves, and a preview calculation failure cannot prevent the campaign from saving. Standard distributions do not add this metadata. The save version and campaign simulation are unchanged.
+
+## Personal household service
+
+Optional `player.householdService` is a version-1 appointment for the current
+`charId`, naming `employerId`, `officerId`, `provinceId`, `settlement` and `roleId`.
+Its `status` is `active`, `review` or `ended`; a monotonic `serial` invalidates old
+offers and cases. Numeric work totals, per-role `experience`, previously `held`
+roles, literacy progress, the last paid turn, and an expiring labor-duty credit
+are bounded to this one life. There is at most one pending case number, with the
+next case's work threshold. No daily ledger, rendered office name or AI household
+roster is serialized. A new appointment preserves personal experience; succession
+deletes the entire record. Significant appointments survive in the life archive.
+
+Restore leaves legacy saves without the field untouched, rejects malformed or
+wrong-protagonist records, removes unknown experience/held keys, normalizes
+counters and silently reconciles changed patrons/home/rank. A departed patron
+suspends service pending explicit renewal. A temporarily invalid case can be
+requeued under its original number when work becomes possible again. All editions
+share this schema and lifecycle.
+
+## Character life-history archive
+
+Additive `state.lifeHistories` schema 1 keeps `{v:1, people:{characterId:record}}`
+inside ordinary save format 3. Each record stores a detached `identity`, recording
+start year, last touched turn, bounded `entries`, and played/preserved/paused or
+condensed flags. Entries hold exact turn/year, a locale-neutral message descriptor,
+and deterministic retention weights. English biography templates register at boot,
+so saved entries render without a generated English catalog in every edition.
+Historical title parameters use the existing `$title` snapshot; other proper
+names and battle headcounts are frozen at the actual event boundary.
+
+Detached identities carry `lifeIdentity:true` to bypass the ordinary character
+wire compactor: their IDs and defaults cannot be reconstructed from `state.chars`
+after court cleanup. They contain no live character references. Restoring validates
+entry shapes and limits, derives played identities from the protagonist, legends
+and Chronicle heads (including retired heads), and never recreates a full person.
+Missing/unknown archives begin with identity summaries and no invented events.
+History recording is suspended during load repairs so repaired titles are not
+misdated as new achievements. Family/protection indexes remain transient.
+
+The temporary family pool is capped at 128 biographies / eight highlights each;
+50 manually preserved lives keep 32 each, with deceased and paused records still
+counting. Played protagonists keep 40 each and grow only with actual played lives.
+Only saves/exported save files contain these biographies; standalone Chronicle
+JSON remains the existing news/choice artifact. See [characters](characters.md#life-histories)
+for retention and recording scope.
+
 ## Freeholder establishment
 
 `player.freeholderGeneration` records the line depth at first freedom, using
@@ -1140,7 +1190,10 @@ compact royal family, required direct children are materialized while the RNG
 state is snapshotted and restored, so compatibility repair cannot alter the
 future random sequence.
 New campaigns also record additive `player.houseFounderId` as the first playable
-character solely for the family-tree jump. Older saves need no migration: the UI
+character for the family-tree jump. CrazyGames also uses it alongside generation 1
+to restrict faster courtship and guaranteed eligible proposals to that character;
+older generation-1 saves without the field qualify, but successors never do.
+Older saves need no migration: the family-tree UI
 falls back to the earliest protagonist legend still backed by a character, then
 to the current protagonist. The field never participates in inheritance or
 household membership.
@@ -1720,39 +1773,44 @@ Standard builds also reject these saves. This requires a new campaign rather tha
 rewriting an imported Chronicle or relationships. Save format remains 3.
 See [content profiles](distribution-content.md).
 
-## CrazyGames Data Module
+CrazyGames save storage
 
-The explicit CrazyGames distribution initializes SDK v3 before enabling the title.
-Its sole campaign key is fb_cg_campaign_v1, with earned starting ranks in
-fb_cg_progression_v1. Manual Save and autosave share Continue; numbered slots
-remain exclusive to standard editions. SDK data is authoritative for both guests
-and accounts. No automatic migration reads ordinary IndexedDB/localStorage saves.
-An earlier restricted build can export and import its matching content-profile life.
+The CrazyGames upload sets window.FB_CRAZYGAMES_STORAGE = "localstorage" before game scripts and loads SDK v3 asynchronously. The isolated js/crazygames.js adapter reads and writes fb_cg_aps_campaign_v1 and fb_cg_aps_progression_v1 independently of SDK telemetry initialization. Missing, rejected or unresponsive SDK initialization cannot block local play or saving. Late successful initialization reports the current screen. Manual Save and autosave share Continue; numbered slots remain exclusive to standard editions. No IndexedDB or SDK Data Module save is automatically migrated. A compatible life can be transferred with Save File.
 
-The isolated js/crazygames.js I/O boundary uses native CompressionStream gzip and
-base64 (FBG1), verified by decompressing to identical JSON before writing. It
-requires a browser supporting CompressionStream/DecompressionStream; failure,
-corrupt data or unavailable SDK blocks boot without overwriting anything. Promises
-are confined to platform I/O; the simulation and RNG remain synchronous. The
-standard edition neither initializes the SDK nor requires these browser APIs.
+Normal local writes gzip the unchanged save JSON and pack the bytes into 15-bit, non-surrogate UTF-16 code units (FBG2). The two-unit header records the byte length. Decoding stops at that byte count and checks that all remaining padding bits are zero. Exact JSON round-trip verification precedes replacement. Older gzip/base64 (FBG1) and LZ/base64 (FBL1) records remain readable. The new FBL2 fallback uses the existing synchronous 15-bit LZ codec, avoiding base64 overhead. Missing compression APIs select FBL2 for new writes; an existing gzip save without decompression support remains protected and is identified as unsupported, not corrupt. Save envelope version remains 3 and portable exports are unchanged.
 
-The adapter checks the UTF-8 size of the complete owned-key JSON against the
-1,048,576-byte SDK limit, reserving 4 KiB for progression and overhead. Rejection
-keeps the accepted campaign and offers file export; no history is truncated to fit.
-SDK acceptance does not confirm cloud upload: syncing may take up to 30 seconds.
+Visibility hiding and mobile blur retain a synchronous checkpoint because a hidden mobile page may be terminated without pagehide or further asynchronous work. A snapshot identical to the committed JSON is not rewritten. Changed snapshots use verified FBL2, then schedule opportunistic gzip compaction while the page remains alive. Pagehide checkpoints pending work without scheduling compaction. Synchronous replacement invalidates older work only after success, so quota rejection cannot cancel a potentially smaller pending gzip write. All writes compare stored campaign and progression values before mutation. Deletion invalidates pending writes and retains earned ranks.
 
-Write revisions cancel stale compression jobs after newer saves, deletion or
-auth changes. Reads use only accepted snapshots. Before every mutation the
-adapter checks that SDK data still matches the loaded session; conflicts require
-a reload. The SDK reloads Data Module games on login/logout; an auth listener
-blocks old-page writes while that reload is pending. Deletes keep earned ranks.
+The browser enforces its shared localStorage quota. Failed writes preserve the previous snapshot; downloads remain available. APS payload limits, restoration timing and cross-device behavior require validation in the actual upload. A successful local write does not establish cloud sync.
 
-A closing page cannot await gzip. Pending saves attempt the existing verified
-synchronous LZ/base64 encoding (FBL1) if it fits. Otherwise the prior accepted
-snapshot remains; immediate tab closure is not a confirmed save. Both encodings
-load on boot, and portable exports retain FBS2 and the content-profile guard.
-This is persistence only and changes no technology eligibility.
+Local initialization errors no longer block the title. An unreadable campaign is preserved and protected from ordinary writes, with recovery controls on the title and Save/Load. An unreadable progression record does not prevent a healthy campaign from loading or saving, but rank writes remain blocked until recovery. Denied storage allows unsaved play and file export. Recovery distinguishes missing decompression support from damaged records and offers a raw JSON download/copy plus a separate reset review. Reset copies and verifies only affected records under an unused fb_cg_aps_recovery_v1 key (or numeric suffix) before removing them; healthy records are preserved. Failed backup leaves originals untouched and exposes an explicit reset-without-backup action. Reset rechecks for external changes and locks the old page against writes until reload.
 
+Without the storage flag, the older SDK Data Module mode still waits for SDK initialization and data hydration, uses fb_cg_campaign_v1 and fb_cg_progression_v1, enforces the 1,048,576-byte limit with a 4 KiB reserve, and blocks writes after account changes. It uses FBG1 normally and FBL1 synchronously. It does not apply the local recovery/reset flow to cloud data. Standard itch/play editions retain their existing IndexedDB, localStorage, slots and initialization behavior.
+
+Coverage in tests/e2e/specs/crazygames-saves.spec.js includes all fifteen packed-length remainders, chunk and header boundaries, invalid padding, SDK failure and delay, absent compression APIs, protected unsupported saves, campaign/progression recovery, backup quota failure, denied storage, visibility/pagehide checkpoints, and failed-fallback queue preservation.
+
+## Endowed abbeys (format 3)
+
+Optional `state.abbeys:{v:1,houses:[]}` holds at most twelve institutions, one per
+county. Each house stores its stable id, county, founding faith/culture, founder
+dynasty, current holder and appointment/vacancy turns, treasury, capital, base
+rents, donated plot groups, support, privileges, temporary residents, bounded
+connections, cooldowns and last seasonal settlement. A dispute references its
+exact living lord. Resident rows store character/sponsor ids, kind and end turn;
+ordinary residence stays on the character and is restored by removing the row.
+
+`character.abbeyVows` is personal and permanent. The legacy monastic numeric
+rank prefix stays unchanged. Old rank-only abbesses gain no invented assets on
+load; they can seek office normally. Restore repairs records without creating
+people, houses or RNG draws. An existing holder's office is reactivated before
+legacy settlement-lordship migration, which excludes abbey-only officeholders.
+Full character retention includes holders, residents, contacts and dispute
+participants. A seasonal vacancy lasting 360 days receives an appointed NPC
+superior unless a recent petitioner is still within the cooldown or its one-season
+retry window; the stored faith and culture outlive the player's conversion.
+
+
+Scheduled games add state.tournaments and player.circuit without changing save format 3. Frozen budgets, finite payment keys, exact participants and round contexts survive restoration. Restoration reconciles host and visitor eligibility before travel; cancelled editions never revive at peace. Full editions expire after closure and the return window; summaries, four income samples and eight circuit contacts are bounded. Active host/participant ids protect court records until their commitments end. See tournaments.md.
 
 ## 476 authority prototype on the development branch
 

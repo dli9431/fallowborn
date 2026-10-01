@@ -611,7 +611,7 @@ A focus override accepts `id` plus any of `label`, `desc`, `order`, and
   `action.<id>.desc`; a translation catalogue whose source hash no longer matches
   falls back to the mod's English.
 - `order` is a unique integer from 0 through 27 for focuses. Deed order runs from 0
-  through the effective deed count minus one (0 through 82 without added deeds). The
+  through the effective deed count minus one (0 through 84 without added deeds). The
   complete effective catalogue must remain a permutation, so moving one action generally
   requires giving the displaced action the old order in the same mod, as in the focus
   example above.
@@ -738,7 +738,7 @@ checks are composed into that same status. These checks and the preview are pure
 no RNG draws.
 
 `order` participates in the complete effective deed permutation. The first added deed is
-normally 80, the next 81, and so on; later mods adding deeds append after every effective
+normally 85, the next 86, and so on; later mods adding deeds append after every effective
 definition. A later mod replacing a declarative deed must restate the complete record.
 This avoids silently inheriting costs or effects from a different mod load order.
 
@@ -2803,7 +2803,10 @@ as councilman and sergeant, or paid household service:
 } } }
 ```
 
-- `kind` is `earned` or `retainer`. An earned position is active while its matching
+- `kind` is `earned`, `retainer`, or `service`. Service positions supply localized
+  names/descriptions for the protagonist's appointment in a patron's household;
+  they do not activate `fx` or appear in the player's retainer hiring roster.
+  An earned position is active while its matching
   `player.flags` id is true; a retainer position is active while a paid contract exists.
   The core `councilman` id is special: its flag is compatibility state, while
   `player.localCouncil` validates locality and carries the active motion.
@@ -2824,6 +2827,35 @@ as councilman and sergeant, or paid household service:
 - Capacity and the default contract economy are controlled by `retainerCapacity` and
   the `pay` values in the position definitions. Contracts pass to the next head, but
   personal friendship does not.
+
+### Personal household service
+
+The core `FBDATA.householdServiceRoles` table references position ids for display.
+Each role defines `path` (`estate`, `letters`, `trade`, `arms`), `wage` and patron
+surplus `value` per 90 worked days, two `training` skill ids, and a `skills`
+minimum map. Optional `traitFit` maps known trait ids to signed numeric suitability
+weights. Held traits contribute once each; their sum is clamped to −2…+2, then
+added to each effective skill (with a zero floor) for appointment checks only.
+Ordinary trait skill effects still apply through the effective skill. Missing
+`traitFit` means zero adjustment; roles without skill minima remain open entry
+jobs. Fit does not change wages, training, saved skills or an existing job's work
+eligibility. `FB.householdServiceStatus(...).qualification` exposes `traitBonus`,
+contributing `traits` (`id`, `amount`) and `skills` (`id`, `value`, `total`,
+`required`, `met`) for read-only previews; acceptance rechecks current traits.
+Optional `previous`/`days`, `standing`, `lettered` and `maleOnly` independently
+govern appointment eligibility. This table is authored core data, not a new mod
+merge key. Service uses the existing `toil` handler contextually and the
+`household_service` choice-backed Deed. Reused senior retainer position ids supply
+only their display name; their retainer `fx` do not accrue to the employee.
+
+The event `household_service_duty` uses `household_service_valid` as its context
+validator. Its `serviceSerial`, `serviceCase`, `serviceCharId` and
+`serviceEmployerId` must match the active personal appointment; `servicePath`,
+`serviceOffice` (a position data descriptor) and `servicePatron` (a proper name)
+are display parameters. Owning custom effects `household_service_careful`,
+`household_service_kind` and `household_service_routine` resolve that case once.
+Ordinary mods may replace the event's display content without weakening this
+lifecycle check. No new generic effect or trigger key is introduced.
 
 ### Local council motions
 
@@ -4843,3 +4875,9 @@ Derived power, office and consent projections are never saved.
 ## 476 regional campaign fields
 
 A bookmark realm may set `nonTerritorial: true` to keep a named political actor and host without claiming its capital county. The capital must still name a settled county as an on-map anchor. The 476 prototype uses this for the federate body; it does not grant tax, court or land. `startScenarios` may set `bookmarkIds`, `fixedProvinceId`, `startAge`, `startCulture` and `startReligion` for an authored beginning. The fixed county and culture/faith pair must be present in that bookmark. `state.situation476` saves its choice phase, current actors, local office and right ids, court displacement, and historical campaign statuses. The `historical` object stores each campaign status and ordinary war id; it is a record of attempted history, not a command to transfer counties. The bookmark may add scenario-only sea crossings in `straits` with matching `crossingClasses` entries. Late antique faiths select ordinary `religiousPaths` from their inherited faith properties. The `civic_clerk` career is a baseline service path without a research gate, scoped to the 476 bookmark with the optional career `bookmarkIds` array. `FB.setCareer` and the choice list both enforce that scope. Use public authority, war, career and settlement transactions rather than editing these flags from a mod. See [the design](designs/situation-476.md).
+
+Scheduled games extension interface
+
+FBDATA.tournaments is loaded from data/tournaments.js. The tournaments runtime-mod root merges fields into existing scales (local, regional, grand), programmes (martial, mounted, lists), tracks (joust, melee, archery, wrestling, perform, trade, carrying, kitchens, stables, repairs, guarding, treatment, watch), and tactics (conservative, balanced, aggressive, assist). Keep ids, prize-bucket mappings, skill keys and character eligibility semantic; localize only name/desc. The duration, notice, world-capacity and record-retention constants are not exposed through this mod root. New activity ids require matching engine implementation.
+
+FB.tournaments exposes pure quote, entry, roundPreview, travelQuote, capacity, eligibility and calendar reads, with separate book, enter, resolveRound, depart, cancel, withdraw, tick and reconcile mutations. Never charge or roll from a preview. Confirmation must pass the exact review signature. Scheduled event records use contextValidator scheduled_games_valid and tournamentId, tournamentCharId, tournamentTrack, tournamentRound, tournamentKind. Each custom effect has its own impact adapter. Legacy invitation ids and option indices remain valid for queued saves. Full schemas and formulas are in designs/tournaments.md and plans/tournaments-and-regional-games.md.

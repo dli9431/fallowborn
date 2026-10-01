@@ -219,14 +219,14 @@ window.FB = window.FB || {};
   FB.papacyCelibate = function (state, value) {
     var record = FB.papalOfficeOf(state, value);
     var c = typeof value === 'string' ? state.chars[value] : value;
-    return !!((FB.bishopricOf && FB.bishopricOf(state, c)) ||
+    return !!((c && c.abbeyVows) || (FB.bishopricOf && FB.bishopricOf(state, c)) ||
       (record && (record.office === 'cardinal' || record.office === 'pope')));
   };
 
   FB.papacyCelibateSnapshot = function (state, value) {
     var record = FB.papalOfficeOf(state, value);
     var c = typeof value === 'string' ? state.chars[value] : value;
-    return !!((FB.bishopricSnapshot && FB.bishopricSnapshot(state, c)) ||
+    return !!((c && c.abbeyVows) || (FB.bishopricSnapshot && FB.bishopricSnapshot(state, c)) ||
       (c && (c.papalOffice === 'cardinal' || c.papalOffice === 'pope')) ||
       (record && (record.office === 'cardinal' || record.office === 'pope')));
   };

@@ -650,7 +650,8 @@ window.FB = window.FB || {};
   function socialAttentionSummary(s) {
     const target = FB.socialAttentionTarget(s);
     const capacity = FB.socialAttentionCapacity();
-    const rate = FB.socialAttentionDailyOpinion();
+    const rate = FB.platform.isCrazyGames && target
+      ? FB.socialAttentionStatus(s, target).rate : FB.socialAttentionDailyOpinion();
     const threshold = FB.socialAttentionStandingThreshold
       ? FB.socialAttentionStandingThreshold(s, target)
       : FB.relationshipOpinionThreshold();
@@ -769,7 +770,10 @@ window.FB = window.FB || {};
         '">' + esc(linkedRealm.name) + '</button>';
       html = html.split(entry.token).join(link);
     }
-    return html;
+    /* Link buttons are atomic inlines, so a line may break between a realm
+       name and the punctuation after it. Keep the two together. */
+    return html.replace(/(<button type="button" class="linklike war-realm-link"[^>]*>[^<]*<\/button>)([^\s<]+)/g,
+      '<span class="war-realm-nowrap">$1$2</span>');
   };
   function foreignPolicyStatusText(s, rid) {
     const truce = FB.truceText && FB.truceText(s, 'player', rid);
@@ -818,7 +822,10 @@ window.FB = window.FB || {};
       search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null,
       enterpriseGroup:'none', enterpriseSort:'attention'
     },
-    network:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null }
+    network:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
+    service:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
+    abbeyCandidates:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null },
+    abbeyResidents:{ search:'', filter:'all', sections:{}, scrollTop:0, focusKey:null }
   };
   UI.largeListDefaults = {
     threshold:LARGE_LIST_THRESHOLD,
@@ -1422,6 +1429,63 @@ window.FB = window.FB || {};
     return h;
   }
   UI.personAssignmentCard = personAssignmentCard;
+
+  /* Shared decision-review layout. Facts sit in a Governance-style card of
+     label/value rows, named people keep their portraits, and every gameplay
+     action is a full-width card whose short cost or state stays on its face
+     while the consequence audit lives in the shared Details tooltip or ?
+     disclosure. A disabled action's card stays focusable for keyboard users. */
+  function rawKv(label, valueHtml) {
+    return '<div class="kv"><span>' + esc(label) + '</span><b>' + valueHtml + '</b></div>';
+  }
+  function reviewFactsCard(title, bodyHtml, attrs) {
+    return '<section class="governance-card review-fact-card"' + (attrs || '') + '>' +
+      (title ? '<h4>' + esc(title) + '</h4>' : '') + bodyHtml + '</section>';
+  }
+  function reviewPersonHtml(person, role, id) {
+    const inner = '<span class="large-list-row-main">' + FB.faceTag(person, 34, 40) +
+      '<span class="large-list-row-copy"><span class="large-list-row-title">' +
+      esc(FB.fullName(person)) + '</span>' +
+      (role ? '<span class="adesc">' + esc(role) + '</span>' : '') + '</span></span>';
+    return id
+      ? '<button type="button" class="actionbtn large-list-row review-person" id="' +
+        esc(id) + '">' + inner + '</button>'
+      : '<div class="large-list-row review-person">' + inner + '</div>';
+  }
+  function reviewPeopleHtml(rows) {
+    return rows ? '<div class="review-people">' + rows + '</div>' : '';
+  }
+  function reviewActionCardHtml(opts) {
+    const detailsId = opts.detailsId || (opts.id ? opts.id + '-details' : '');
+    const hasDetails = !!(opts.details && detailsId);
+    let attrs = opts.id ? ' id="' + esc(opts.id) + '"' : '';
+    const data = opts.data || {};
+    for (const key in data) {
+      if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+      attrs += ' data-' + String(key).replace(/([A-Z])/g, '-$1').toLowerCase() +
+        '="' + esc(data[key]) + '"';
+    }
+    if (hasDetails) {
+      attrs += ' data-action-tooltip data-tooltip-anchor="control" aria-describedby="' +
+        esc(detailsId) + '"';
+    }
+    return '<div class="settcard modal-action-card review-action-card"' +
+      (opts.disabled && hasDetails ? ' tabindex="0" aria-describedby="' + esc(detailsId) + '"' : '') +
+      '><div class="settcard-head"><button type="button" class="actionbtn' +
+      (opts.danger ? ' danger' : '') + '"' + attrs + (opts.disabled ? ' disabled' : '') + '>' +
+      (opts.labelHtml || esc(opts.label)) +
+      (opts.note ? '<span class="adesc' + (opts.warn ? ' review-note-warn' : '') + '">' +
+        esc(opts.note) + '</span>' : '') + '</button>' +
+      (hasDetails ? '<span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+        esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span>' : '') + '</div>' +
+      (hasDetails ? '<div class="settcard-details hidden" id="' + esc(detailsId) + '">' +
+        opts.details + '</div>' : '') + '</div>';
+  }
+  function reviewActionsHtml(cardsHtml) {
+    return cardsHtml ? '<div class="modal-body-actions review-actions">' + cardsHtml + '</div>' : '';
+  }
 
   const INTERACTION_GROUP_ORDER = [
     'relationship', 'gift', 'travel', 'diplomacy',
@@ -2144,13 +2208,19 @@ window.FB = window.FB || {};
   }
 
   function runCoachFollowUp(followUp, usedControl) {
-    if (followUp === 'first-deed' && UI.maybeFirstTimeFlowTip) {
+    if ((followUp === 'health-warning' || followUp === 'crazygames-household') &&
+        UI.resumeFirstPlayerTip) {
+      UI.resumeFirstPlayerTip();
+    } else if (followUp === 'first-deed' && UI.maybeFirstTimeFlowTip) {
       UI.maybeFirstTimeFlowTip();
     } else if (followUp === 'map-controls' && UI.maybeMapHomeTip) {
       UI.maybeMapHomeTip();
     } else if (followUp === 'map-home' && UI.maybeMapFiltersTip) {
       UI.maybeMapFiltersTip();
     } else if (followUp === 'map-filters' && UI.resumeFirstPlayerTip) {
+      UI.resumeFirstPlayerTip();
+    } else if (followUp === 'first-plot' && FB.platform.isCrazyGames &&
+        UI.resumeFirstPlayerTip) {
       UI.resumeFirstPlayerTip();
     } else if ((followUp === 'first-event-result' ||
         followUp === 'first-poach') && UI.resumePostFirstStepsTips) {
@@ -2289,6 +2359,7 @@ window.FB = window.FB || {};
   };
 
   function showCoachmark(item) {
+    if (SH.hideTooltip) SH.hideTooltip();
     coachItem = item;
     coachDripIdx = (typeof item.dripIdx === 'number') ? item.dripIdx : null;
     if (coachDripIdx === -1) coachFirstItem = item; // the map lesson itself
@@ -2297,6 +2368,11 @@ window.FB = window.FB || {};
       item.shownTracked = true;
       coachTelemetry('hint-shown', item);
     }
+    /* A queued deed lesson may appear after Deeds was regrouped or its
+       section collapsed; open the deed's current section before anchoring. */
+    if (item.revealDeed && UI.revealDeedAction) {
+      UI.revealDeedAction(item.revealDeed);
+    }
     coachEl = document.createElement('div');
     coachEl.className = 'coachmark' + (item.overModal ? ' overmodal' : '');
     coachEl.setAttribute('role', 'status');
@@ -2304,15 +2380,22 @@ window.FB = window.FB || {};
     arrow.className = 'coachmark-arrow';
     const textEl = document.createElement('div');
     textEl.className = 'coachmark-text';
-    let displayText = item.text;
-    const displayTarget = coachTargetEl(item.target);
-    if (item.tipId === 'area-self' && displayTarget &&
-        displayTarget.id === 'tb-portrait') {
-      displayText = '💡 Tap your portrait to open Self, where you can review your skills, traits, equipment, faith, and standing.';
-    }
-    textEl.textContent = FB.T(displayText);
+    textEl.textContent = coachDisplayText(item);
     const actions = document.createElement('div');
     actions.className = 'coachmark-actions';
+    if (item.reviewEnterprise && FB.platform.isCrazyGames) {
+      const review = document.createElement('button');
+      review.type = 'button';
+      review.className = 'btn small coachmark-enterprise';
+      review.textContent = FB.T('Review this business');
+      review.addEventListener('click', function () {
+        rememberFirstTimeTip(item);
+        coachTelemetry('hint-interacted', item);
+        dismissCoachmark();
+        UI.showRecommendedEnterprise();
+      });
+      actions.appendChild(review);
+    }
     const dismiss = document.createElement('button');
     dismiss.type = 'button';
     dismiss.className = 'btn small coachmark-dismiss';
@@ -2398,17 +2481,34 @@ window.FB = window.FB || {};
     }
   }
 
-  /* Deeds and Land refresh by rebuilding their panel DOM. Keep an open
-     lesson attached to the replacement control instead of leaving its glow
-     and capture listeners on the detached node. */
+  /* Panel rebuilds, drawer navigation, and viewport changes can replace or
+     hide a lesson's control. Refresh its wording, position, glow, and capture
+     listeners together against the currently visible target. */
   UI.refreshCoachmarkTarget = function () {
     if (!coachEl || !coachItem) return false;
     clearCoachTouch();
     if (coachLit) coachLit.classList.remove('coachmark-lit');
-    coachLit = coachTargetEl(coachItem.target);
-    if (coachLit) coachLit.classList.add('coachmark-lit');
+    coachLit = null;
+    if (coachItem.revealDeed) {
+      /* Regrouping Deeds moves the deed to another section and row, so
+         re-anchor the card and arrow instead of only moving the glow. */
+      const el = document.querySelector(coachItem.target);
+      if (el && !coachTargetOnScreen(el)) el.scrollIntoView({ block:'center' });
+    }
+    coachEl.querySelector('.coachmark-text').textContent = coachDisplayText(coachItem);
+    coachEl.classList.remove('noarrow', 'arrow-top', 'arrow-bottom',
+      'arrow-left', 'arrow-right', 'over-map');
+    coachEl.style.left = coachEl.style.top = coachEl.style.maxWidth = '';
+    const arrow = coachEl.querySelector('.coachmark-arrow');
+    if (arrow) arrow.style.left = arrow.style.top = '';
+    positionCoachmark(coachItem.target);
     bindCoachTouch(coachItem);
     return !!coachLit;
+  };
+
+  /* the deed an on-screen lesson points at, so Deeds keeps its section open */
+  UI.coachmarkDeedId = function () {
+    return coachEl && coachItem && coachItem.revealDeed || null;
   };
 
   function hasNextLesson() {
@@ -2441,6 +2541,10 @@ window.FB = window.FB || {};
      listeners stay until the lesson closes — a menu lesson's follow-up needs
      the click after the pointerdown. */
   function coachTouched(ev) {
+    /* Opening Self only reveals the route to Kin. Keep the Kin lesson
+       unread until its own tab/panel is used, or the player acknowledges it. */
+    if (coachItem && coachFamilyTarget(coachItem.target) && coachLit &&
+        coachLit.id === 'tb-portrait') return;
     if (coachItem && !coachItem.interactedTracked) {
       coachItem.interactedTracked = true;
       rememberFirstTimeTip(coachItem);
@@ -2681,15 +2785,32 @@ window.FB = window.FB || {};
      control that reveals it instead. */
   const COACH_ALT_TARGETS = {
     '#lefttabs .tab[data-tab="char"]':'#tb-portrait',
-    '#lefttabs .tab[data-tab="family"]':'#tb-portrait'
+    '#lefttabs .tab[data-tab="family"]':'#tb-portrait',
+    '#tab-char':'#lefttabs .tab[data-tab="char"]',
+    '#tab-family':'#lefttabs .tab[data-tab="family"]'
   };
+  function coachFamilyTarget(target) {
+    return target === '#tab-family' ||
+      target === '#lefttabs .tab[data-tab="family"]';
+  }
+  function coachDisplayText(item) {
+    const target = coachTargetEl(item.target);
+    if (item.tipId === 'area-self' && target && target.id === 'tb-portrait') {
+      return FB.T('💡 Tap your portrait to open Self, where you can review your skills, traits, equipment, faith, and standing.');
+    }
+    if (coachFamilyTarget(item.target) && target && target.id === 'tb-portrait') {
+      return FB.T('Tap your portrait, then choose Kin. {lesson}', {
+        lesson:FB.T(item.text)
+      });
+    }
+    return FB.T(item.text);
+  }
   function coachTargetEl(targetSel) {
     if (typeof targetSel !== 'string') return null;
     const el = document.querySelector(targetSel);
     if (coachTargetOnScreen(el)) return el;
     const alt = COACH_ALT_TARGETS[targetSel];
-    const altEl = alt ? document.querySelector(alt) : null;
-    return coachTargetOnScreen(altEl) ? altEl : null;
+    return alt ? coachTargetEl(alt) : null;
   }
   function coachTargetOnScreen(el) {
     if (!el) return false;
@@ -2773,14 +2894,19 @@ window.FB = window.FB || {};
         ? '#tab-actions [data-action-id="review_serf_tenure"]'
         : '#sidetabs .tab[data-tab="actions"]', {
         hintId:'serf-tenure', hintKind:'guide', noNext:true,
-        saveHintId:'serf_tenure', followUp:'serf-tenure'
+        saveHintId:'serf_tenure', followUp:'serf-tenure',
+        revealDeed:exposed ? 'review_serf_tenure' : null
       });
     return true;
   };
 
   /* ================= first-time player tips =================
-     A fresh browser profile learns the map, Home, and filters before any
-     other coachmark, then the playable deed/time/event/hostile-deed loop, the new
+     Standard editions warn once about low health, then start at an available
+     deed (Go into town when it is
+     usable, otherwise the Deeds tab) and defer the map, Home, and filters
+     tour until First steps and its event result.
+     CrazyGames puts the health warning after its Daily Focus/saving lesson.
+     The playable deed/time/event/hostile-deed loop, the new
      Family & legacy checklist, and Self. Other areas
      teach themselves only when the player deliberately opens them. A tip is
      recorded in browser-local uiPrefs.tipsSeen only after its coachmark is
@@ -2862,6 +2988,10 @@ window.FB = window.FB || {};
   };
 
   UI.maybeFirstEventResultTip = function () {
+    // The portal meeting teaches attention, then Play, before its result lesson.
+    if (FB.platform.isCrazyGames && FB.tutorialLife(FB.state) &&
+        (!FB.state.player.flags.tut_unpause ||
+          !FB.state.player.flags.tut_event)) return false;
     return UI.maybeTip('first-event-result',
       '💡 Your choice changed the story. Its gains and losses are summarized here; return to Deeds when you want your next move.',
       '#toasts', { noNext:true });
@@ -2884,7 +3014,9 @@ window.FB = window.FB || {};
     return UI.maybeTip('first-poach',
       '💡 Now try Desperate measures in Work & Wealth. Choose one illegal act, then weigh its possible gain against the risk of being caught.',
       exposed ? '#tab-actions [data-action-id="poach"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? 'poach' : null
+      });
   };
 
   UI.maybeFamilyLegacyGuidanceTip = function () {
@@ -2903,10 +3035,7 @@ window.FB = window.FB || {};
     const entry = dripEntryById('area-self');
     const tip = entry && entry.tip;
     if (!tip) return false;
-    const text = mobileLayoutNow()
-      ? '💡 Tap your portrait to open Self, where you can review your skills, traits, equipment, faith, and standing.'
-      : tip.text;
-    return UI.maybeTip(tip.id, text, tip.target, tip);
+    return UI.maybeTip(tip.id, tip.text, tip.target, tip);
   };
 
   UI.maybeMapControlsTip = function () {
@@ -2936,7 +3065,9 @@ window.FB = window.FB || {};
     return UI.maybeTip('family-match',
       '💡 In Life & Family, use Seek a match. Choose someone to pursue so you can begin a household and continue your family line.',
       exposed ? '#tab-actions [data-action-id="seek_match"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? 'seek_match' : null
+      });
   };
 
   UI.maybeFamilyCourtshipTip = function () {
@@ -2945,6 +3076,7 @@ window.FB = window.FB || {};
       s.chars[s.player.courtingId];
     const days = target && FB.socialAttentionDaysToThreshold
       ? FB.socialAttentionDaysToThreshold(s, target, true) : null;
+    let hintTarget = '#lefttabs .tab[data-tab="family"]';
     let text = FB.T(
       '💡 Open Kin and tap the person under Courting. Give them personal attention until your Standing is high enough to propose.');
     if (days !== null && days > 0) {
@@ -2954,9 +3086,24 @@ window.FB = window.FB || {};
           days:days
         });
     }
+    if (FB.platform.isCrazyGames && target &&
+        FB.socialAttentionStatus(s, target).assigned) {
+      hintTarget = '#timebtns';
+      text = FB.T('💡 Your match already has your personal attention. Use Play to let Standing grow as days pass while you work or take other actions.');
+      if (days !== null && days > 0) {
+        text += ' ' + (days === 1
+          ? FB.T('About 1 in-game day until their Standing is high enough to propose.')
+          : FB.T('About {days} in-game days until their Standing is high enough to propose.', {
+            days:days
+          }));
+      }
+    }
     return UI.maybeTip('family-courtship',
       text,
-      '#lefttabs .tab[data-tab="family"]', { noNext:true });
+      hintTarget, {
+        noNext:true,
+        followUp:FB.platform.isCrazyGames ? 'crazygames-household' : null
+      });
   };
 
   UI.maybeFamilyProposalTip = function () {
@@ -2965,10 +3112,14 @@ window.FB = window.FB || {};
       ? FB.instantStatus(s, 'propose') : null;
     if (!status || !status.shown || !status.can) return false;
     const exposed = UI.revealDeedAction && UI.revealDeedAction('propose');
-    return UI.maybeTip('family-propose',
-      '💡 Your courtship is ready. In Life & Family, use Propose marriage to try to wed your match and secure your family’s future.',
+    const text = FB.crazyGamesFirstCharacter(s)
+      ? FB.T('💡 Your courtship is ready. In Life & Family, use Propose marriage. This proposal will be accepted.')
+      : FB.T('💡 Your courtship is ready. In Life & Family, use Propose marriage to try to wed your match and secure your family’s future.');
+    return UI.maybeTip('family-propose', text,
       exposed ? '#tab-actions [data-action-id="propose"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? 'propose' : null
+      });
   };
 
   UI.maybeAdditionalMarriageTip = function () {
@@ -2996,6 +3147,10 @@ window.FB = window.FB || {};
     const seen = FB.game.uiPrefs.tipsSeen || {};
     if (!flags.tut_track_first_steps) return false;
     if (!seen['family-guidance']) return false;
+    // Early Kin visits must not queue a family lesson between the map,
+    // Home, and filters lessons when First steps completes.
+    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters'] ||
+        !seen['area-self']) return false;
     if (flags.tut_family_established || flags.tut_track_family_legacy) {
       return false;
     }
@@ -3027,7 +3182,276 @@ window.FB = window.FB || {};
     return UI.maybeTip('making-enterprise',
       '💡 Next, open Work, training & enterprises in Deeds. Choose an enterprise catalogue for a household settlement to buy your first business.',
       exposed ? '#tab-actions [data-action-id="livelihoods"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? 'livelihoods' : null
+      });
+  };
+
+  /* The portal opening introduces a household business after marriage.
+     Use live purchase rules; neither this recommendation nor
+     its lessons grant money, workers, technology, or a marriage. */
+  function crazyGamesFirstEnterprise(s) {
+    const p = s.player;
+    const sites = FB.settlementsOf(s, p.provinceId);
+    let best = null;
+    for (let i = 0; i < sites.length; i++) {
+      for (const type in FBDATA.enterprises) {
+        const status = FB.enterprisePurchaseStatus(s, type, p.provinceId, i);
+        if (status.blockers.some(function (blocker) {
+          return blocker.code !== 'funds';
+        })) continue;
+        /* Prefer a business the household can staff, then the lowest price. */
+        if (!best || (best.warnings.length && !status.warnings.length) ||
+            (!!best.warnings.length === !!status.warnings.length &&
+              status.cost < best.cost)) best = status;
+      }
+    }
+    return best;
+  }
+
+  UI.crazyGamesFirstEnterprise = crazyGamesFirstEnterprise;
+
+  /* Detached, locale-neutral progress for the checklist and save preview.
+     Purchase and release rules remain owned by their normal status readers. */
+  UI.crazyGamesObjective = function (s, previous) {
+    if (!FB.platform.isCrazyGames || !s || !s.player) return null;
+    const p = s.player, flags = p.flags || {};
+    const me = s.chars && s.chars[p.charId];
+    if (!me) return null;
+    if (p.dead || me.dead) return { id:'succession' };
+    const age = FB.ageOf(me, s.date.year);
+    if (age < 16) return { id:'adulthood', age:age };
+    const offer = p.tier === 0 ? FB.freedomOfferView(s) : null;
+    if (offer && offer.status === 'service') {
+      return { id:'service', days:offer.serviceDaysRemaining };
+    }
+    if (p.tier > 2) return null;
+    if (!flags.tut_seen_wed && !flags.tut_family_established &&
+        !flags.tut_track_family_legacy && !FB.spousesSnapshot(s, me).length) {
+      const match = flags.courting && p.courtingId && s.chars[p.courtingId];
+      if (!match || match.dead) return { id:'marriage' };
+      return { id:'courtship',
+        days:FB.socialAttentionDaysToThreshold(s, match, true),
+        ready:!!FB.instantStatus(s, 'propose').can };
+    }
+    if (!(p.enterprises || []).length) {
+      /* Live days reprice the displayed recommendation without rescanning the
+         whole catalogue. Exact panel refreshes and review clicks choose anew. */
+      let enterprise = previous && previous.id === 'enterprise' &&
+        previous.provinceId === p.provinceId
+        ? FB.enterprisePurchaseStatus(s, previous.type, p.provinceId, previous.settlement)
+        : null;
+      if (!enterprise || enterprise.blockers.some(function (blocker) {
+        return blocker.code !== 'funds';
+      })) enterprise = crazyGamesFirstEnterprise(s);
+      return enterprise ? { id:'enterprise', type:enterprise.id,
+        provinceId:enterprise.provinceId, settlement:enterprise.settlement,
+        place:enterprise.site.name, funds:enterprise.funds, cost:enterprise.cost }
+        : { id:'work' };
+    }
+    if (p.tier === 0) {
+      if (offer && offer.status === 'offered') {
+        return { id:'freedom-offer', funds:Math.floor(p.gold), cost:offer.price,
+          days:offer.serviceDays };
+      }
+      const purchase = FB.freedomPurchaseStatus(s);
+      return { id:'freedom', funds:purchase.gold, cost:purchase.quote.price };
+    }
+    if (!(p.landPlots || []).length) {
+      return { id:'land', funds:Math.floor(p.gold), cost:FB.landPlotCost(s) };
+    }
+    return null;
+  };
+
+  UI.crazyGamesObjectiveText = function (goal) {
+    if (!goal) return null;
+    switch (goal.id) {
+      case 'succession': return { title:FB.T('Continue the dynasty'),
+        detail:FB.T('Review the succession and choose who continues the household.') };
+      case 'adulthood': return { title:FB.T('Come of age'),
+        detail:FB.T('Age {age} / 16. Adult deeds unlock at sixteen.', { age:goal.age }) };
+      case 'marriage': return { title:FB.T('Establish your household'),
+        detail:FB.T('Use Seek a match to begin your first courtship.') };
+      case 'courtship': return { title:FB.T('Marry your match'),
+        detail:goal.ready ? FB.T('Your proposal is ready. Use Propose marriage.')
+          : goal.days === null ? FB.T('Review personal attention in Kin to advance this courtship.')
+          : goal.days > 0 ? FB.T('{days} attention days until the required Standing. Use Play to advance time.', { days:goal.days })
+          : FB.T('The required Standing is reached. Review the remaining proposal requirements.') };
+      case 'enterprise': return { title:FB.T('Start a family business'),
+        detail:FB.T('{money:funds} / {money:cost} saved for a business in {settlement}.', {
+          funds:goal.funds, cost:goal.cost, settlement:goal.place }) };
+      case 'freedom-offer': return { title:FB.T('Secure your freedom'),
+        detail:FB.T('{money:funds} / {money:cost} for your saved terms, then {days} days of final service.', {
+          funds:goal.funds, cost:goal.cost, days:goal.days }) };
+      case 'freedom': return { title:FB.T('Save for freedom'),
+        detail:FB.T('{money:funds} / {money:cost} for outright freedom. Review station & freedom to compare terms.', {
+          funds:goal.funds, cost:goal.cost }) };
+      case 'service': return { title:FB.T('Finish your final service'),
+        detail:FB.T('Freedom is paid for. {days} in-game days remain; use Play to continue.', { days:goal.days }) };
+      case 'land': return { title:FB.T('Buy your first land'),
+        detail:FB.T('{money:funds} / {money:cost} saved for your first plot.', {
+          funds:goal.funds, cost:goal.cost }) };
+      case 'work': return { title:FB.T('Build your livelihood'),
+        detail:FB.T('Review Work, training & enterprises for available work and business requirements.') };
+      default: return null;
+    }
+  };
+
+  UI.crazyGamesCampaignSummary = function (s) {
+    if (!FB.platform.isCrazyGames || !s || !s.player) return null;
+    const p = s.player, me = s.chars[p.charId];
+    return { version:1, tier:p.tier, enterprises:(p.enterprises || []).length,
+      plots:(p.landPlots || []).length,
+      married:!!(me && FB.spousesSnapshot(s, me).length),
+      objective:UI.crazyGamesObjective(s) };
+  };
+
+  UI.crazyGamesAchievementText = function (summary) {
+    if (!summary) return '';
+    if (summary.plots) return FB.T('Family property: land plots {plots}, enterprises {enterprises}.', summary);
+    if (summary.tier > 0) return FB.T('Your household is free. Enterprises: {enterprises}.', summary);
+    if (summary.enterprises) return FB.T('Family businesses established: {enterprises}.', summary);
+    return summary.married ? FB.T('Your household is established.')
+      : FB.T('Your household’s story has begun.');
+  };
+
+  function crazyGamesProgressTip(id, text, deed) {
+    if (!UI.tipDue(id)) return true;
+    const exposed = deed && UI.revealDeedAction && UI.revealDeedAction(deed);
+    UI.maybeTip(id, text, deed
+      ? (exposed ? '#tab-actions [data-action-id="' + deed + '"]'
+        : '#sidetabs .tab[data-tab="actions"]') : '#timebtns', {
+        noNext:true, revealDeed:exposed ? deed : null,
+        followUp:'crazygames-household'
+      });
+    return true;
+  }
+
+  function crazyGamesFreedomAndLandTips(s) {
+    const p = s.player;
+    if (p.tier === 0) {
+      const offer = FB.freedomOfferView(s);
+      if (offer && offer.status === 'service') {
+        return crazyGamesProgressTip('cg-freedom-service', FB.T(
+          '💡 Your freedom payment is complete. Finish your final service while your household works: {days} days remain, ending {date}. Use Play to continue; land comes after your release.', {
+            days:offer.serviceDaysRemaining, date:offer.serviceEndLabel
+          }));
+      }
+      if (UI.tipDue('cg-enterprise-income')) {
+        return crazyGamesProgressTip('cg-enterprise-income',
+          FB.T('💡 Your enterprise can help fund your freedom. Open Work, training & enterprises to check its staffing and earnings. Keep an earning Daily Focus and use Play to build your savings.'),
+          'livelihoods');
+      }
+      const purchase = FB.freedomPurchaseStatus(s);
+      if (offer && offer.status === 'offered') {
+        return crazyGamesProgressTip(offer.acceptanceReady
+          ? 'cg-freedom-ready' : 'cg-freedom-offer-saving', FB.T(
+            '💡 Your saved freedom terms cost {money:cost}, followed by {days} days of final service. {status} Open Review station & freedom in Rank & Realm, then review the offer before accepting.', {
+              cost:offer.price, days:offer.serviceDays,
+              status:offer.acceptanceReady
+                ? FB.T('You can accept these terms now.') : offer.acceptanceReason
+            }), 'review_serf_tenure');
+      }
+      const text = purchase.ready
+        ? FB.T('💡 You can now buy your household’s freedom for {money:cost}. Open Review station & freedom in Rank & Realm to buy freedom outright or compare a petition’s payment and final-service terms.', {
+          cost:purchase.quote.price
+        })
+        : FB.T('💡 Your next goal is freedom. Buying freedom outright currently costs {money:cost}; you have {money:funds}. {status} Open Review station & freedom in Rank & Realm to inspect a petition’s terms as well. Keep earning while you prepare.', {
+          cost:purchase.quote.price, funds:purchase.gold, status:purchase.reason
+        });
+      return crazyGamesProgressTip(purchase.ready
+        ? 'cg-freedom-ready' : 'cg-freedom-plan', text, 'review_serf_tenure');
+    }
+    if (FB.landPlots(s).length) return false;
+    const land = FB.instantStatus(s, 'buy_land');
+    if (!land.shown) return false;
+    const cost = FB.landPlotCost(s);
+    return crazyGamesProgressTip(land.can ? 'cg-land-ready' : 'cg-land-saving',
+      land.can
+        ? FB.T('💡 Your household is free and can afford its first land plot for {money:cost}. In Rank & Realm, use Buy a plot of land and choose a settlement. This will be property your family can inherit.', { cost:cost })
+        : FB.T('💡 Your household is free. Save for your first land plot: the current price is {money:cost}; you have {money:funds}. {status} Keep your enterprise staffed and use an earning Daily Focus. Buy a plot of land is in Rank & Realm.', {
+          cost:cost, funds:Math.floor(p.gold), status:FB.translateKnown(land.reason)
+        }), land.can ? 'buy_land' : 'livelihoods');
+  }
+
+  UI.resumeCrazyGamesHouseholdTips = function () {
+    if (!FB.platform.isCrazyGames || tipsSilenced()) return false;
+    const s = FB.state;
+    const p = s && s.player;
+    const flags = p && p.flags || {};
+    const me = p && s.chars[p.charId];
+    if (!FB.tutorialLife(s) || !flags.tut_track_first_steps ||
+        flags.tut_track_making_a_living || p.tier > 2 ||
+        !me || FB.ageOf(me, s.date.year) < 16) return false;
+    if (coachItem || coachQueue.length ||
+        (UI.eventsBusy && UI.eventsBusy()) ||
+        !$('genmodal').classList.contains('hidden')) return true;
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!seen['first-event-result']) {
+      UI.maybeFirstEventResultTip();
+      return true;
+    }
+    // Finish the marriage before introducing saving or buying, even when the
+    // player already has enough money. A proposal click alone is not a wedding.
+    if (!flags.tut_seen_wed && !flags.tut_family_established &&
+        !flags.tut_track_family_legacy && !FB.spousesSnapshot(s, me).length) {
+      if (flags.courting && p.courtingId) {
+        const proposal = FB.instantStatus(s, 'propose');
+        if (proposal.shown && proposal.can) {
+          UI.maybeFamilyProposalTip();
+        } else if (!seen['family-courtship']) {
+          UI.maybeFamilyCourtshipTip();
+        } else {
+          UI.maybeTip('cg-courtship-wait',
+            '💡 Keep courting your match while you work and answer events. Use Play to let your personal attention build Standing; we’ll point you to Propose marriage when your courtship is ready.',
+            '#timebtns', { noNext:true, followUp:'crazygames-household' });
+        }
+        return true;
+      }
+      const match = FB.instantStatus(s, 'seek_match');
+      if (match.shown) {
+        UI.maybeFamilyMatchTip();
+        return true;
+      }
+      return false;
+    }
+    if ((p.enterprises || []).length) return crazyGamesFreedomAndLandTips(s);
+    const status = FB.instantStatus(s, 'livelihoods');
+    if (!status.shown || !status.can) return false;
+    const enterprise = crazyGamesFirstEnterprise(s);
+    // A different start must not strand the tour on an impossible goal.
+    if (!enterprise) return false;
+    const ready = enterprise.ready;
+    const tipId = ready ? 'cg-enterprise-ready' : 'cg-enterprise-plan';
+    if (!seen[tipId] && (ready || !seen['cg-enterprise-ready'])) {
+      const name = FB.dataText(s, p.charId, 'enterprise', enterprise.id,
+        enterprise.def, 'name', {});
+      const text = ready
+        ? FB.T('💡 Start your family business. {enterprise} in {settlement} costs {money:cost}; you have {money:funds}. Open Work, training & enterprises, expand New enterprises, then choose that settlement. Check the staffing so it can earn income.', {
+          enterprise:name, settlement:enterprise.site.name,
+          cost:enterprise.cost, funds:enterprise.funds
+        })
+        : FB.T('💡 Your next goal is a family business. {enterprise} in {settlement} costs {money:cost}; you need {money:shortfall} more. Open Work, training & enterprises, then New enterprises to review its costs and staffing.', {
+          enterprise:name, settlement:enterprise.site.name,
+          cost:enterprise.cost, shortfall:enterprise.shortfall
+        });
+      const exposed = UI.revealDeedAction && UI.revealDeedAction('livelihoods');
+      UI.maybeTip(tipId, text,
+        exposed ? '#tab-actions [data-action-id="livelihoods"]' :
+          '#sidetabs .tab[data-tab="actions"]', {
+          noNext:true, revealDeed:exposed ? 'livelihoods' : null,
+          reviewEnterprise:true,
+          followUp:'crazygames-household'
+        });
+      return true;
+    }
+    if (!ready && !seen['cg-enterprise-saving']) {
+      UI.maybeTip('cg-enterprise-saving',
+        '💡 Choose an earning Daily Focus in Deeds, then use Play or Skip season to build your savings. Answer events as they arrive; we’ll point you back to the business when you can afford it.',
+        '#timebtns', { noNext:true, followUp:'crazygames-household' });
+      return true;
+    }
+    return true;
   };
 
   UI.maybeMakingLandTip = function () {
@@ -3040,11 +3464,14 @@ window.FB = window.FB || {};
       : '💡 In Rank & Realm, use Buy a plot of land to purchase your first plot. Plots held together in one settlement are more productive.';
     return UI.maybeTip('making-land', text,
       exposed ? '#tab-actions [data-action-id="' + deed + '"]' :
-        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+        '#sidetabs .tab[data-tab="actions"]', {
+        noNext:true, revealDeed:exposed ? deed : null
+      });
   };
 
   UI.resumeMakingLivingTips = function () {
     if (tipsSilenced()) return false;
+    if (FB.platform.isCrazyGames) return UI.resumeCrazyGamesHouseholdTips();
     const s = FB.state;
     if (!s || !s.player || s.player.tier > 2) return false;
     const flags = s.player.flags || {};
@@ -3075,6 +3502,10 @@ window.FB = window.FB || {};
   };
 
   UI.maybeTabTip = function (tab) {
+    // A portrait tap on the way to Kin must not queue an unrelated Self lesson.
+    if (tab === 'char' && coachItem && coachFamilyTarget(coachItem.target)) {
+      return false;
+    }
     if (tab === 'family' && FB.state && FB.state.player) {
       const flags = FB.state.player.flags || {};
       const me = FB.state.chars &&
@@ -3099,11 +3530,56 @@ window.FB = window.FB || {};
     if (!s || !s.player || !s.player.flags ||
         !FB.tutorialLife || !FB.tutorialLife(s)) return false;
     const flags = s.player.flags;
+    if (FB.platform.isCrazyGames && (tipsSilenced() || coachItem ||
+        coachQueue.length || (UI.eventsBusy && UI.eventsBusy()) ||
+        !$('genmodal').classList.contains('hidden'))) return false;
     const seen = FB.game.uiPrefs.tipsSeen || {};
-    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
-      return UI.resumeMapTips();
+    if ((!FB.platform.isCrazyGames || seen['cg-enterprise-saving']) &&
+        (UI.tipDue('health-warning') || tipPending['health-warning'])) {
+      const me = s.chars[s.player.charId];
+      return UI.maybeTip('health-warning',
+        me && FB.ageOf(me, s.date.year) >= 16
+          ? '💡 Low health greatly increases your chance of dying. Use Rest and mend under Daily Focus in Deeds to recover health as days pass.'
+          : '💡 Low health greatly increases your chance of dying. Keep an eye on your health as your story unfolds.',
+        '#tb-health', { noNext:true, followUp:'health-warning' });
     }
+    if (FB.platform.isCrazyGames && flags.courting && s.player.courtingId &&
+        UI.tipDue('family-courtship')) return UI.maybeFamilyCourtshipTip();
     if (!flags.tut_deed) {
+      if (!UI.tipDue('first-deed')) return false;
+      if (FB.platform.isCrazyGames) {
+        const me = s.chars[s.player.charId];
+        const match = FB.instantStatus(s, 'seek_match');
+        if (me && !FB.spousesSnapshot(s, me).length &&
+            match.shown && match.can &&
+            UI.revealDeedAction && UI.revealDeedAction('seek_match')) {
+          return UI.maybeTip('first-deed',
+            '💡 Begin your family story: use Seek a match, choose the local search, then pick someone you would like to marry. Meet them before deciding whether to start a courtship.',
+            '#tab-actions [data-action-id="seek_match"]', {
+              noNext:true, revealDeed:'seek_match',
+              followUp:'crazygames-household'
+            });
+        }
+      }
+      /* Going into town asks for real choices (where to go, then what to do
+         there) and is lawful at every rank, so it suits a first deed. */
+      const status = FB.instantStatus ? FB.instantStatus(s, 'go_to_town') : null;
+      const exposed = status && status.shown && status.can &&
+        UI.revealDeedAction && UI.revealDeedAction('go_to_town');
+      if (exposed) {
+        const osricStart = s.telemetry && s.telemetry.quickStart === 'osric_867';
+        return UI.maybeTip('first-deed', osricStart
+          ? '💡 You are Osric, a serf in Barcelona. Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.'
+          : '💡 Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.',
+          '#tab-actions [data-action-id="go_to_town"]', {
+            noNext:true, revealDeed:'go_to_town'
+          });
+      }
+      if (FB.platform.isCrazyGames) {
+        return UI.maybeTip('first-deed',
+          '💡 Open Deeds and choose an available one-time action, then press Play to see what happens next.',
+          '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+      }
       return UI.maybeTip('first-deed',
         '💡 Begin in Deeds below Daily Focus: open a category and choose one one-time deed. Focus repeats as days pass; a deed is a single action.',
         '#sidetabs .tab[data-tab="actions"]', {
@@ -3129,14 +3605,15 @@ window.FB = window.FB || {};
     const flags = (s && s.player && s.player.flags) || {};
     const seen = FB.game.uiPrefs.tipsSeen || {};
     if (!flags.tut_track_first_steps) return false;
-    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
-      return UI.resumeMapTips();
-    }
     if (flags.tut_event && !seen['first-event-result']) {
       return UI.maybeFirstEventResultTip();
     }
+    if (UI.resumeCrazyGamesHouseholdTips()) return true;
+    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
+      return UI.resumeMapTips();
+    }
     if (UI.maybeSerfTenureTip && UI.maybeSerfTenureTip()) return true;
-    if (!openingPoachDone(s)) {
+    if (!FB.platform.isCrazyGames && !openingPoachDone(s)) {
       return seen['first-event-result'] ? UI.maybePoachTip() : false;
     }
     const status = FB.tutorialStatus ? FB.tutorialStatus(s) : null;
@@ -3655,6 +4132,16 @@ window.FB = window.FB || {};
     if (mobilePanePosition && UI.restoreMobilePanePosition) {
       UI.restoreMobilePanePosition(mobilePanePosition);
     }
+    const eventModal = $('eventmodal');
+    if ($('genmodal').classList.contains('hidden') &&
+        !eventModal.classList.contains('hidden')) {
+      // A deed can open an event beneath its review sheet. Returning to the
+      // background deed would put its focused tooltip over the waiting choice.
+      if (SH.hideTooltip) SH.hideTooltip();
+      const eventBack = back && eventModal.contains(back) ? back : eventModal;
+      eventBack.focus({ preventScroll:true });
+      return;
+    }
     if (back && document.documentElement.contains(back)) {
       back.focus();
       return;
@@ -3854,6 +4341,9 @@ window.FB = window.FB || {};
     if ($('genmodal').classList.contains('hidden')) genericNavSnapshot = null;
     setTimeout(function () {
       if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
+      if (FB.platform.isCrazyGames && UI.resumeFirstPlayerTip) {
+        UI.resumeFirstPlayerTip();
+      }
     }, 0);
   };
   UI.closeModalStack = function () {
@@ -3936,7 +4426,8 @@ window.FB = window.FB || {};
       const next = Math.max(sizes.panel, Math.min(sizes.map, height));
       main.style.setProperty('--mobile-map-height', Math.round(next) + 'px');
       document.body.classList.toggle('mobile-pane-map-compact', next < 186);
-      document.body.classList.toggle('mobile-pane-map-tall', next >= 324);
+      // One rail of eight 44px HUD targets, seven 2px gaps and the rail insets.
+      document.body.classList.toggle('mobile-pane-map-tall', next >= 370);
       handle.dataset.snap = state || 'custom';
       setAccessibility(state, next, sizes);
       if (UI.layoutMapToasts) UI.layoutMapToasts();
@@ -4115,6 +4606,9 @@ window.FB = window.FB || {};
     FB.sizeFaceCanvas($('tb-portrait'), 30, 34);
     $('btn-closeself').addEventListener('click', SH.closeSelfDrawer);
     wireMobilePaneResizer();
+    window.addEventListener('resize', function () {
+      window.requestAnimationFrame(function () { UI.refreshCoachmarkTarget(); });
+    });
     window.addEventListener('popstate', mobileNavPop);
     if (!FB.isTouch) {
       const tabKeys = {
@@ -4175,6 +4669,12 @@ window.FB = window.FB || {};
     }
     $('btn-marketlens').addEventListener('click', function () {
       UI.setMarketLens(!FB.map.marketGood);
+    });
+    $('btn-events').addEventListener('click', function () {
+      FB.map.eventsOverlay = !FB.map.eventsOverlay;
+      this.setAttribute('aria-pressed', String(FB.map.eventsOverlay));
+      this.classList.toggle('on', FB.map.eventsOverlay);
+      FB.map.request();
     });
     const btnFind = $('btn-find');
     if (btnFind) {
@@ -4325,7 +4825,7 @@ window.FB = window.FB || {};
       }
       const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment]');
       if (chip) {
-        if (chip.closest('#genmodal.justice-modal')) {
+        if (chip.closest('#genmodal.justice-modal, #genmodal .suitor-list')) {
           chip.setAttribute('tabindex', '0');
           chip.focus({ preventScroll:true });
         }
@@ -4388,6 +4888,7 @@ window.FB = window.FB || {};
         tip.classList.add('hidden');
         resetTipSize();
       }
+      SH.hideTooltip = hideTipImmediately;
       tip.addEventListener('mouseenter', cancelHideTip);
       tip.addEventListener('mouseleave', scheduleHideTip);
       function resetTipSize() {
@@ -4544,6 +5045,10 @@ window.FB = window.FB || {};
         }
       });
       function showHoverTip(e) {
+        if (coachEl && !coachmarkBlocked(coachItem)) {
+          hideTipImmediately();
+          return;
+        }
         if (focusedCardTip) return;
         tipPointerX = e.clientX; tipPointerY = e.clientY;
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
@@ -4732,6 +5237,10 @@ window.FB = window.FB || {};
         }
       });
       document.addEventListener('focusin', function (e) {
+        if (coachEl && !coachmarkBlocked(coachItem)) {
+          hideTipImmediately();
+          return;
+        }
         if (!e.target || !e.target.closest) return;
         if (e.target.closest('#tooltip')) {
           cancelHideTip();
@@ -4955,6 +5464,12 @@ window.FB = window.FB || {};
   SH.openModal = openModal;
   SH.panelh = panelh;
   SH.personAssignmentCard = personAssignmentCard;
+  SH.rawKv = rawKv;
+  SH.reviewFactsCard = reviewFactsCard;
+  SH.reviewPersonHtml = reviewPersonHtml;
+  SH.reviewPeopleHtml = reviewPeopleHtml;
+  SH.reviewActionCardHtml = reviewActionCardHtml;
+  SH.reviewActionsHtml = reviewActionsHtml;
   SH.positionDesc = positionDesc;
   SH.positionEffectText = positionEffectText;
   SH.positionName = positionName;
