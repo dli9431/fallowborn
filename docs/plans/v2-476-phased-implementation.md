@@ -12,6 +12,8 @@ owner-controlled. Phase 6 save integration and acceptance coverage are now
 authored; see [the Phase 6 record](v2-476-phase-6.md). Publication and runtime
 acceptance are still pending.
 
+Bookmark platform prerequisite (2026-10-01): before the remaining Phase 4 and 5 content is completed, the engine moves bookmark-specific rules into declared, validated data. A bookmark declares its era, its geography, each realm's government form, its stories and its starts; the engine checks every declared rule before generating the world. This covers eras, government forms with registered strategies, a story and Deeds registry, system availability by era, government and faith, content roles for careers, buildings and units, legal traditions, layered balance, era-scoped content and presentation, and named station and rank queries. Engine behavior keys on roles, kinds and available systems rather than on bookmark, culture, faith or other content ids. The 476 bookmark is authored through this platform, and its saved ids are part of the version-4 save schema. Each part adds or updates its design doc under docs/designs/ when it lands.
+
 ## Outcome
 
 Ship a spring 476 bookmark in which the deposition of Romulus Augustulus can
@@ -267,6 +269,8 @@ Implementation and outstanding acceptance: [Phase 6 record](v2-476-phase-6.md).
 **Release gate:** all bounded 476 chains and period systems are complete;
 migration preserves supported histories; 867/1066 remain playable; target
 devices pass the agreed performance and interaction checks.
+
+The release gate also requires the completed bookmark platform: 867, 1066 and 476 are ordinary declarations that pass the bookmark requirement check, and no engine code selects rules by bookmark id or by a content id outside an explicit allowlist of engine hooks.
 
 ## Reuse after 2.0
 
