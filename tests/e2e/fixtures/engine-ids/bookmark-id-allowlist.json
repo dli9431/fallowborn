@@ -9,12 +9,6 @@
       "reason": "A save without start data belongs to the original 867 bookmark."
     },
     {
-      "file": "js/armies.js",
-      "source": "if (a.scenarioStanding && state.start && state.start.id === '476' &&",
-      "kind": "pending",
-      "reason": "Scenario standing hosts are tied to the 476 start instead of bookmark or story data."
-    },
-    {
       "file": "js/events.js",
       "source": "const bookmarkId = (state.start && state.start.id) || '867';",
       "kind": "identity_key",
@@ -139,12 +133,6 @@
       "source": "? '867' : String(FBDATA.defaultBookmark);",
       "kind": "legacy_default",
       "reason": "Data without a declared default bookmark falls back to 867."
-    },
-    {
-      "file": "js/world.js",
-      "source": "if (FB.activeBookmarkId === '476') {",
-      "kind": "pending",
-      "reason": "County holder generation skips vassals for the 476 bookmark."
     },
     {
       "file": "js/world.js",

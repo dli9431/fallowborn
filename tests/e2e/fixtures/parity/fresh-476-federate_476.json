@@ -35,7 +35,7 @@
         "government": {
           "home": "roman_civic",
           "sovereign": "roman_civic",
-          "forms": {"federate_polity":1,"roman_civic":3,"territorial":10}
+          "forms": {"federate_polity":1,"regnum":10,"roman_civic":3}
         },
         "power": {
           "player.peace": {"allowed":false,"reason":"no_peace","basis":[]},
@@ -359,7 +359,7 @@
         "government": {
           "home": "roman_civic",
           "sovereign": "roman_civic",
-          "forms": {"federate_polity":1,"roman_civic":3,"territorial":10}
+          "forms": {"federate_polity":1,"regnum":10,"roman_civic":3}
         },
         "power": {
           "player.peace": {"allowed":false,"reason":"no_peace","basis":[]},
@@ -683,7 +683,7 @@
         "government": {
           "home": "roman_civic",
           "sovereign": "roman_civic",
-          "forms": {"federate_polity":1,"roman_civic":3,"territorial":10}
+          "forms": {"federate_polity":1,"regnum":10,"roman_civic":3}
         },
         "power": {
           "player.peace": {"allowed":false,"reason":"no_peace","basis":[]},

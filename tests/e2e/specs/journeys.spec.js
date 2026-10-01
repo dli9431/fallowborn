@@ -5,7 +5,9 @@ dependsOnRuntime(__filename, [
   'js/travel.js',
   'js/ui_modals.js',
   'data/starts.js',
-  'data/events_travel.js'
+  'data/events_travel.js',
+  'data/eras.js',
+  'js/world.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -24,7 +26,8 @@ test('a full start code creates the expected deterministic new game',
     const snapshot = await lifeSnapshot(page);
 
     expect(snapshot.seed).toBe(START_CODE);
-    expect(snapshot.start).toEqual({ id: '867', year: 867, season: 0, day: 1 });
+    expect(snapshot.start).toEqual({ id: '867', year: 867, season: 0, day: 1,
+      era: 'early_medieval', defaultGovernment: 'territorial' });
     expect(snapshot.date).toEqual({ year: 867, season: 0, day: 1 });
     expect(snapshot.turn).toBe(0);
     expect(snapshot.player).toMatchObject({

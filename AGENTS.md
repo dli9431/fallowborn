@@ -270,6 +270,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   metadata projected through private handlers in `js/actions.js`), `data/ambitions.js`
   (regional historical foundations), `data/units.js` (the unit-class table:
   composition quality, upkeep, casualty order, counters, and tech/culture gates),
+  `data/eras.js` (eras: year windows, default government form and culture),
   `data/bookmarks.js` (the atomic 867/1066 world
   definitions), `data/settlements.js` (the shared physical-site table plus the per-bookmark
   county settlement layouts it clones onto those bookmark provinces),
@@ -280,7 +281,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   after `events_paths.js`, and
   `events_intrigue.js` after tournament events and before ruler-agency events).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → title_ids →
-  model → music → portrait → siteart → world → settlement → fortifications → holywar → population → modifiers →
+  model → music → portrait → siteart → governments → world → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
   technology → council → agency → politics → authority → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar) → keys → save → save_v4 → mods → main`. The generated English
@@ -420,6 +421,8 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/intrigue.js` — hostile schemes, accomplices, AI intrigue, evidence hearings,
   captivity, leverage, and conduct.
 - `js/council.js` — the royal council (tier 6+): great officers, crown authority, council event customs.
+- `js/governments.js`: the government strategy registry. Each government form names
+  a registered strategy per behavior slot (holders, succession, consent, ...).
 - `js/authority.js` — scoped Ban, Peace, Revenue and Consent, appointments,
   recognition, federate contracts, and customary rights.
 - `js/parliament.js` — the estates (vassal tiers 3–5): the liege's aid and scutage terms, yearly sessions, parliament event customs.

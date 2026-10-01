@@ -2062,7 +2062,7 @@ and service capability has technology impact `none`.
 
 ## Spring 476 field contest
 
-The [476 prototype](situation-476.md) starts with two saved standing hosts. They remain mustered through the bounded first-year sequence while ordinary movement, supply and battle resolve a contested Ravenna. An Italian court escort follows a reviewed route to Ticinum. A commissioned player may control only the named federate host; a contract or later breach changes the shared Ban query without changing host ownership.
+The [476 prototype](situation-476.md) starts with two saved standing hosts. They remain mustered through the bounded first-year sequence while ordinary movement, supply and battle resolve a contested Ravenna. Each host carries its own `scenarioStanding` flag and `scenarioEndTurn`; the army phase reads those fields, not the bookmark. An Italian court escort follows a reviewed route to Ticinum while its own `scenarioCourtEscort` flag is set; the situation clears it when the court arrives, its route breaks or the court is displaced. A commissioned player may control only the named federate host; a contract or later breach changes the shared Ban query without changing host ownership.
 
 ## Conditional 476 campaigns
 

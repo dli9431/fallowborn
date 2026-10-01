@@ -14,6 +14,60 @@ prices and confirmation signatures remain with their owning subsystems.
 Phase 2 adds scoped Ban, Peace, Revenue and Consent in authority.js, with
 separate appointments, recognition, federate commitments and customary rights.
 
+## Eras and government forms
+
+Every bookmark declares an `era` from `FBDATA.eras` (`data/eras.js`):
+`late_antique` (375–649), `early_medieval` (650–999) and `high_medieval`
+(1000–1300). 867 is early medieval, 1066 high medieval and 476 late antique. An era
+holds an inclusive year window, a default government form and a default culture,
+plus slots that later period systems fill (costume, vocabulary, ladder, systems,
+technology, event eras, currency and architecture). A bookmark without an `era`,
+such as an older mod, runs in the era whose window holds its start year, or the
+nearest era when none does; a declared era must hold the start year.
+
+Each authored realm may declare a `government` form; a realm without one takes its
+era's `defaultGovernment`. A form names one strategy per behavior slot, and engine
+code dispatches through the realm's form instead of choosing rules by bookmark.
+`js/governments.js` holds the registry (`FB.governments.register`, `strategy`,
+`resolve`, `forRealm`). The slots are holders, succession, territory, consent, levy,
+revenue, council, diplomacy, ai, vocabulary and ladder. Every form names its
+holders, succession, territory and consent strategies; a slot it omits resolves to
+`engine_default`, today's shared code path, until a later change converts that
+consumer. Strategy ids are referenced by data and are never saved.
+
+| Form | Holders | Succession | Territory | Consent |
+| --- | --- | --- | --- | --- |
+| `territorial` (867, 1066) | `feudal_vassals` | `dynastic` | `fixed` | `territorial` |
+| `regnum` (late antique kingdoms) | `direct` | `dynastic` | `fixed` | `territorial` |
+| `roman_civic` | `direct` | `office` | `fixed` | `delegated` |
+| `federate_polity` | `direct` | `acclamation` | `non_territorial` | `delegated` |
+
+Holders and consent dispatch through the form today. At creation each authored
+realm's holders strategy places its counties: `feudal_vassals` keeps the capital
+duchy as the ruler's demesne and generates dukes and counts for the rest;
+`direct` leaves every county of the realm in its own hand. The consent strategy
+decides whether a realm's territorial rule answers local civic consent
+(`territorial`) or leaves it to a delegated office (`delegated`). The other
+registered strategies still run the shared code.
+
+Creation stamps `state.start.era`, `state.start.geography` once a bookmark
+declares one, and `state.start.defaultGovernment` from the era. `FB.initPolitics`
+then writes an authority government row only for a realm whose declared form
+differs from that stamp; 476 seeds its Roman courts (`roman_civic`) and federate
+body (`federate_polity`) this way, while its other realms take the late antique
+`regnum` default. A realm without a row resolves to the stamp, or to `territorial`
+in a save without one, never to the current era default; see
+[state and saves](state-and-saves.md). Realms created during play take the stamped
+default.
+
+Activation resolves the era and each realm's form before the world is built. An
+unknown era, a start year outside a declared era, an unknown form or a form
+whose strategy is not registered fails with a named fault, for example
+`realm my_realm uses government my_form, whose holders strategy my_holders is not
+registered.` Generation that needs a culture the map does not supply (a ruler
+without a capital county, a usurper without a seat) uses the era's
+`defaultCulture`.
+
 ## Canonical de jure title IDs (476 Phase 3)
 
 Each de jure rank has its own ID namespace. The slug `sicily` can denote a
@@ -714,7 +768,8 @@ See [war.md](war.md).
 `liege` (realm id or null). `state.owner[pid]` is the SOVEREIGN top realm (map color,
 war target); `state.holder[pid]` is the county's direct holder. Authored realms are
 kings/emperors/independent dukes plus a few authored vassal kingdoms; the dukes and
-counts inside them are generated at `FB.initPolitics` (`FB.makeVassalRealm`). De jure
+counts inside a realm whose form uses the `feudal_vassals` holders strategy are
+generated at `FB.initPolitics` (`FB.makeVassalRealm`). De jure
 data (`FBDATA.empires/kingdoms/duchies` + each county's `duchy` field) drives eligibility
 for rank claims (majority of a duchy/kingdom/empire), realm naming, and the Land panel's
 hierarchy block. Helpers: `FB.topRealm`, `FB.liegeChain`,

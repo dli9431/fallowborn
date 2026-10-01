@@ -7,6 +7,7 @@ window.FB = window.FB || {};
   FB.world = null;
   FB.activeBookmark = null;
   FB.activeBookmarkId = null;
+  FB.activeEra = null;
   FB.activeBookmarkDiagnostics = [];
 
   var worldCache = {};
@@ -46,6 +47,133 @@ window.FB = window.FB || {};
         (a.date.day - b.date.day);
     });
     return out;
+  };
+
+  /* ================= ERAS AND GOVERNMENT FORMS =================
+     A bookmark declares its era (FBDATA.eras) and each realm its government
+     form; a realm without one takes the era's default. The engine reads
+     these declarations, never the bookmark id. */
+  function ownKey(o, key) {
+    return !!o && Object.prototype.hasOwnProperty.call(o, key);
+  }
+
+  /* The bookmark's declared era. A bookmark that declares none (an older
+     mod) runs in the era whose year window holds its start year, or failing
+     that the nearest one, so a working legacy world keeps loading. */
+  FB.bookmarkEra = function (definition) {
+    var eras = FBDATA.eras || {};
+    if (!definition) return null;
+    if (definition.era !== undefined) {
+      return typeof definition.era === 'string' && ownKey(eras, definition.era)
+        ? definition.era : null;
+    }
+    var year = definition.date && definition.date.year;
+    if (!isFinite(year)) return null;
+    var best = null, bestGap = Infinity;
+    for (var id in eras) {
+      if (!ownKey(eras, id) || !eras[id]) continue;
+      var gap = year < eras[id].from ? eras[id].from - year
+        : year > eras[id].to ? year - eras[id].to : 0;
+      if (gap < bestGap) { best = id; bestGap = gap; }
+    }
+    return best;
+  };
+
+  /* A campaign's era: its creation stamp, or for a save without one, the
+     era of its bookmark. */
+  FB.campaignEra = function (state) {
+    var eras = FBDATA.eras || {}, start = state && state.start;
+    if (start && typeof start.era === 'string' && ownKey(eras, start.era)) {
+      return start.era;
+    }
+    var bookmark = start && start.id ? bookmarkDefinition(String(start.id)) : null;
+    return FB.bookmarkEra(bookmark || FB.activeBookmark);
+  };
+
+  /* The culture generation falls back on when the map supplies none. */
+  FB.eraDefaultCulture = function (state) {
+    var eras = FBDATA.eras || {};
+    var ids = [FB.campaignEra(state), FB.bookmarkEra(FB.activeBookmark)];
+    for (var i = 0; i < ids.length; i++) {
+      var era = ids[i] && eras[ids[i]];
+      if (era && ownKey(FBDATA.cultures, era.defaultCulture)) return era.defaultCulture;
+    }
+    return Object.keys(FBDATA.cultures)[0];
+  };
+
+  FB.validateEraData = function () {
+    var errors = [], eras = FBDATA.eras, windows = [];
+    if (!eras || typeof eras !== 'object' || Array.isArray(eras)) {
+      return [FB.T('Eras are missing.')];
+    }
+    for (var id in eras) {
+      if (!ownKey(eras, id)) continue;
+      var era = eras[id];
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !era || typeof era !== 'object' ||
+          !Number.isInteger(era.from) || !Number.isInteger(era.to) ||
+          era.from > era.to) {
+        errors.push(FB.T('Invalid era {id}.', { id:id }));
+        continue;
+      }
+      if (!ownKey(FBDATA.governmentForms, era.defaultGovernment)) {
+        errors.push(FB.T('Era {id} has unknown default government {form}.',
+          { id:id, form:String(era.defaultGovernment) }));
+      }
+      if (!ownKey(FBDATA.cultures, era.defaultCulture)) {
+        errors.push(FB.T('Era {id} has unknown default culture {culture}.',
+          { id:id, culture:String(era.defaultCulture) }));
+      }
+      for (var wi = 0; wi < windows.length; wi++) {
+        if (era.from <= windows[wi].to && windows[wi].from <= era.to) {
+          errors.push(FB.T('Eras {a} and {b} overlap.', { a:windows[wi].id, b:id }));
+        }
+      }
+      windows.push({ id:id, from:era.from, to:era.to });
+    }
+    return errors;
+  };
+
+  /* The resolve step of activation: the bookmark's era and each authored
+     realm's government form, with a named fault for anything unknown or
+     unregistered. A faulty form is reported once, at its first realm. */
+  FB.resolveBookmarkPlatform = function (definition) {
+    var eras = FBDATA.eras || {}, faults = [], governments = {}, reported = {};
+    var eraId = FB.bookmarkEra(definition), era = eraId ? eras[eraId] : null;
+    var year = definition && definition.date ? definition.date.year : undefined;
+    if (definition && definition.era !== undefined && !eraId) {
+      faults.push('unknown era ' + definition.era + '.');
+    } else if (!eraId) {
+      faults.push('no era resolves for start year ' + year + '.');
+    } else if (definition.era !== undefined && !(year >= era.from && year <= era.to)) {
+      faults.push('start year ' + year + ' is outside era ' + eraId + ' (' +
+        era.from + '–' + era.to + ').');
+    }
+    var realms = definition && Array.isArray(definition.realms) ? definition.realms : [];
+    for (var i = 0; i < realms.length; i++) {
+      var realm = realms[i];
+      if (!realm || !realm.id) continue;
+      var formId = realm.government !== undefined ? realm.government
+        : era ? era.defaultGovernment : undefined;
+      if (formId === undefined) continue;
+      governments[realm.id] = formId;
+      if (ownKey(reported, formId)) continue;
+      reported[formId] = true;
+      var problems = FB.governments.problems(formId);
+      for (var pi = 0; pi < problems.length; pi++) {
+        var problem = problems[pi];
+        if (problem.kind === 'unknown_form') {
+          faults.push('realm ' + realm.id + ' has unknown government ' + formId + '.');
+        } else if (problem.kind === 'missing') {
+          faults.push('realm ' + realm.id + ' uses government ' + formId +
+            ', which names no ' + problem.slot + ' strategy.');
+        } else {
+          faults.push('realm ' + realm.id + ' uses government ' + formId +
+            ', whose ' + problem.slot + ' strategy ' + problem.id +
+            ' is not registered.');
+        }
+      }
+    }
+    return { era:eraId, governments:governments, faults:faults };
   };
 
   /* Every settled county has at least its principal culture/faith pair.
@@ -136,10 +264,14 @@ window.FB = window.FB || {};
       var religionErrors = FB.validateReligionData(null);
       for (var re = 0; re < religionErrors.length; re++) errors.push(religionErrors[re]);
     }
+    var governmentErrors = FB.governments.validate().concat(FB.validateEraData());
+    for (var ge = 0; ge < governmentErrors.length; ge++) errors.push(governmentErrors[ge]);
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');
     var date = definition.date || {};
     if (!isFinite(date.year) || date.season < 0 || date.season > 3 ||
         date.day < 1 || date.day > 90) fault('invalid start date.');
+    var platformFaults = FB.resolveBookmarkPlatform(definition).faults;
+    for (var pf = 0; pf < platformFaults.length; pf++) fault(platformFaults[pf]);
     if (definition.greatHolyWars !== undefined &&
         typeof definition.greatHolyWars !== 'boolean') {
       fault('greatHolyWars must be a boolean.');
@@ -596,6 +728,7 @@ window.FB = window.FB || {};
     }
     FB.activeBookmark = definition;
     FB.activeBookmarkId = definition.id;
+    FB.activeEra = FB.bookmarkEra(definition);
     FB.activeBookmarkDiagnostics = FB.communityShareDiagnostics
       ? FB.communityShareDiagnostics(definition) : [];
     if (FB.resetWorldDataCaches) FB.resetWorldDataCaches();
@@ -1503,10 +1636,30 @@ window.FB = window.FB || {};
     if (FB.ui && FB.ui.resetLocationSearchCache) FB.ui.resetLocationSearchCache();
   };
 
+  /* Creation stamps the campaign's era, its geography once the bookmark
+     declares one, and its default government form from the era. A stamp is
+     never replaced, so a later data edit cannot move a running campaign.
+     Returns the default form realms take when they declare none. */
+  function stampCampaign(state) {
+    const bookmark = FB.activeBookmark, eraId = FB.bookmarkEra(bookmark);
+    const era = eraId ? FBDATA.eras[eraId] : null;
+    if (!state.start || !era) return era ? era.defaultGovernment : null;
+    if (state.start.era === undefined) state.start.era = eraId;
+    if (state.start.geography === undefined && typeof bookmark.geography === 'string') {
+      state.start.geography = bookmark.geography;
+    }
+    if (state.start.defaultGovernment === undefined) {
+      state.start.defaultGovernment = era.defaultGovernment;
+    }
+    return state.start.defaultGovernment;
+  }
+
   FB.initPolitics = function (state) {
     state.owner = {}; state.dev = {}; state.realms = {}; state.holder = {};
     state.wastelandSettlements = {};
     FB.restoreWastelandSettlements(state);
+    const defaultForm = stampCampaign(state);
+    const forms = {};
     // authored realms (kings, emperors, independent dukes, authored vassals)
     for (const r of FBDATA.realms) {
       const cap = FB.world.byId[r.capital];
@@ -1518,23 +1671,24 @@ window.FB = window.FB || {};
         techTraditions:Array.isArray(r.techTraditions) ? r.techTraditions.slice() : null,
         techSeed:r.techSeed || null,
         religion: r.religion || (cap ? cap.religion : null),
-        alive: true, ruler: makeRuler(cap ? cap.culture : 'frankish', r.ruler, state.date.year),
+        alive: true,
+        ruler: makeRuler(cap ? cap.culture : FB.eraDefaultCulture(state), r.ruler,
+          state.date.year),
         war: null, op: 0
       };
+      forms[r.id] = r.government !== undefined ? r.government : defaultForm;
     }
+    // a realm whose form differs from the campaign default keeps a saved row
+    if (FB.authoritySeedGovernments) FB.authoritySeedGovernments(state, forms);
     // sovereignty (map color) = the top of each county's realm chain
     for (const pr of FB.world.provs) {
       if (pr.wasteland) continue;
       state.dev[pr.id] = pr.dev0;
       state.owner[pr.id] = FB.topRealm(state, pr.realm0);
     }
-    // generate the dukes and counts inside each authored realm
-    if (FB.activeBookmarkId === '476') {
-      for (const pr of FB.world.provs) {
-        if (!pr.wasteland) state.holder[pr.id] = pr.realm0;
-      }
-    } else {
-      for (const r of FBDATA.realms) buildVassals(state, r.id);
+    // each authored realm's government form places its county holders
+    for (const r of FBDATA.realms) {
+      FB.governments.resolve(forms[r.id]).use.holders.assign(state, r.id);
     }
     FB.invalidateRealmCache();
     FB.ensureReligiousHeads(state);
@@ -1584,6 +1738,20 @@ window.FB = window.FB || {};
     }
   }
 
+  /* Holders strategies place an authored realm's counties at creation.
+     feudal_vassals generates dukes and counts beneath the ruler; direct
+     leaves every county in the realm's own hand. */
+  FB.governments.register('holders', 'feudal_vassals', {
+    assign:function (state, rid) { buildVassals(state, rid); }
+  });
+  FB.governments.register('holders', 'direct', {
+    assign:function (state, rid) {
+      for (const pr of FB.world.provs) {
+        if (!pr.wasteland && pr.realm0 === rid) state.holder[pr.id] = rid;
+      }
+    }
+  });
+
   /* spawn a sub-realm (generated duke/count, or a player-granted county) */
   FB.makeVassalRealm = function (state, opts) {
     const top = FB.topRealm(state, opts.liege);
@@ -1592,7 +1760,7 @@ window.FB = window.FB || {};
       ? FB.countyDominantCommunity(state, opts.capital) : null;
     const culture = opts.culture ||
       (localIdentity && localIdentity.culture) || capitalProvince.culture ||
-      'frankish';
+      FB.eraDefaultCulture(state);
     const r = {
       id: opts.id, name: opts.name,
       color: shade(state.realms[top] ? state.realms[top].color : '#888888', opts.id),
@@ -2563,7 +2731,7 @@ window.FB = window.FB || {};
       const cap = FB.world.byId[r.capital];
       const culture = cap && FB.countyCulture
         ? FB.countyCulture(state, r.capital) : cap && cap.culture;
-      r.ruler = makeRuler(culture || 'frankish', null,
+      r.ruler = makeRuler(culture || FB.eraDefaultCulture(state), null,
         state.date && state.date.year);
     }
     if (r.ruler.generation === undefined) r.ruler.generation = 1;
@@ -2611,7 +2779,7 @@ window.FB = window.FB || {};
       const cap = FB.world.byId[r.capital];
       const culture = cap && FB.countyCulture
         ? FB.countyCulture(state, r.capital) : cap && cap.culture;
-      r.ruler = makeRuler(culture || 'frankish', null,
+      r.ruler = makeRuler(culture || FB.eraDefaultCulture(state), null,
         state.date && state.date.year);
     }
     if (r.ruler.generation === undefined) r.ruler.generation = 1;
@@ -7594,7 +7762,7 @@ window.FB = window.FB || {};
           id: uid, name: old ? old.name : 'Realm of ' + (pr ? pr.name : 'the Usurper'),
           capital: cap, rank: old ? old.rank : Math.max(1, p.tier - 3), liege: null,
           culture:identity && identity.culture ||
-            (pr ? pr.culture : 'frankish'),
+            (pr ? pr.culture : FB.eraDefaultCulture(state)),
           religion:identity && identity.religion ||
             (pr ? pr.religion : null)
         });

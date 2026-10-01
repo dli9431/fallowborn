@@ -29,10 +29,21 @@ FBDATA.legitimacySources = {
 FBDATA.customaryBases = {
   tenure:{}, judgment:{}, recognition:{}, possession:{}
 };
+/* A government form names the registered strategy (js/governments.js) that
+   answers each behavior slot for a realm of that form. A slot the form leaves
+   out uses its engine default, today's shared code path. consent says whether
+   local civic consent follows territorial rule or a delegated office.
+   regnum is the late antique kingdom: territorial consent, but its counties
+   are held directly by the realm rather than by generated vassals. */
 FBDATA.governmentForms = {
-  territorial:{ civicConsent:'territorial' },
-  roman_civic:{ civicConsent:'delegated' },
-  federate_polity:{ civicConsent:'delegated' }
+  territorial:{ holders:'feudal_vassals', succession:'dynastic',
+    territory:'fixed', consent:'territorial' },
+  regnum:{ holders:'direct', succession:'dynastic',
+    territory:'fixed', consent:'territorial' },
+  roman_civic:{ holders:'direct', succession:'office',
+    territory:'fixed', consent:'delegated' },
+  federate_polity:{ holders:'direct', succession:'acclamation',
+    territory:'non_territorial', consent:'delegated' }
 };
 
 /* Great offices are stable save ids. Added seats receive the Council's
