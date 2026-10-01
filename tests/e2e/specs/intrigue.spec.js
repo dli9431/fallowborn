@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/save.js', 'js/save_v4.js',
   'js/intrigue.js',
   'js/justice.js',
   'js/ui_modals.js',
@@ -257,7 +258,7 @@ test('hostile plots survive save restore and never retarget after invalidation',
     expect(result.afterDeath).toBeNull();
     expect(result.afterConquest).toBeNull();
     expect(result.secondAlive).toBe(true);
-    expect(result.saveVersion).toBe(3);
+    expect(result.saveVersion).toBe(4);
     expect(result.intrigueArrays).toEqual([true, true, true]);
   });
 

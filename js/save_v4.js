@@ -1,7 +1,9 @@
-/* Opt-in save-v4 migration prototype. The normal save/export format remains v3. */
+/* Save-v4 compatibility boundary. Migration is detached and never pays or ticks. */
 (function () {
   'use strict';
   var P = {};
+  FB.save.v4 = P;
+  // Keep development tools using the former prototype entry point compatible.
   FB.save.prototypeV4 = P;
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
@@ -20,6 +22,10 @@
     if (!plain(value) || typeof value.id !== 'string' || !value.id ||
         own(value, 'effective') || own(value, 'quote') ||
         own(value, 'projection')) invalid(where);
+  }
+  function endTurn(value, where) {
+    if (value.endTurn !== null && (!Number.isInteger(value.endTurn) ||
+        value.endTurn < value.startTurn)) invalid(where + '.endTurn');
   }
   function rows(authority, key, seen, check) {
     if (!Array.isArray(authority[key])) invalid('authority.' + key);
@@ -55,6 +61,10 @@
       ref(value.appointer, ['realm'], where + '.appointer');
       ref(value.holder, ['realm','character'], where + '.holder');
       ref(value.scope, ['realm','host','county'], where + '.scope');
+      if (value.appointer.id !== value.institutionId ||
+          FBDATA.authorityOffices[value.officeId].scopes.indexOf(value.scope.kind) < 0)
+        invalid(where + '.scope');
+      endTurn(value, where);
     });
     rows(authority, 'recognitions', seen, function (value, where) {
       if (!FBDATA.legitimacySources[value.source] ||
@@ -65,6 +75,7 @@
       ref(value.subject, ['realm','character'], where + '.subject');
       if (value.scope !== null) ref(value.scope, ['realm','host','county'],
         where + '.scope');
+      endTurn(value, where);
     });
     rows(authority, 'contracts', seen, function (value, where) {
       if (typeof value.patronRealmId !== 'string' ||
@@ -84,9 +95,16 @@
           !Array.isArray(value.settlementAwards)) invalid(where);
       if (value.hostId !== null &&
           (typeof value.hostId !== 'string' || !value.hostId)) invalid(where + '.hostId');
+      if (value.patronRealmId === value.federateRealmId ||
+          value.settlementCountyIds.some(function (id) {
+            return typeof id !== 'string' || !id;
+          })) invalid(where);
+      for (var rid in value.approvals) if (own(value.approvals, rid) &&
+          (rid !== value.patronRealmId && rid !== value.federateRealmId ||
+            !Number.isInteger(value.approvals[rid]))) invalid(where + '.approvals');
       value.settlementAwards.forEach(function (award, index) {
         if (!plain(award) || typeof award.provinceId !== 'string' ||
-            !Number.isInteger(award.settlement) ||
+            !Number.isInteger(award.settlement) || award.settlement < 0 ||
             typeof award.recipientId !== 'string' ||
             typeof award.fulfilled !== 'boolean' ||
             award.fulfilled && !Number.isInteger(award.fulfilledTurn))
@@ -133,16 +151,26 @@
             typeof value.countyId !== 'string') invalid(where);
       });
     }
+    for (var id in seen) if (own(seen, id)) {
+      var serial = /^(?:appointment|recognition|federate|custom|render)-(\d+)$/.exec(id);
+      if (serial && Number(serial[1]) >= authority.nextId) invalid('authority.nextId');
+    }
     return true;
   };
   P.migrate = function (data) {
-    if (!plain(data) || (data.v !== 3 && data.v !== 4) ||
-        data.v === 4 && data.authoritySchema !== 4 ||
+    if (!plain(data) || !FB.save.isSupported(data) ||
         !plain(data.state) || !plain(data.state.realms) ||
         !plain(data.state.owner) || !plain(data.state.holder) ||
         !plain(data.state.chars) || !plain(data.state.player) ||
-        !plain(data.state.date)) throw new Error(FB.T('Save v4 migration needs a v3 or v4 game state.'));
+        !plain(data.state.date) ||
+        typeof data.state.player.charId !== 'string' ||
+        !plain(data.state.chars[data.state.player.charId]) ||
+        !Number.isInteger(data.rng) || !Number.isInteger(data.uid))
+      throw new Error(FB.T('Save v4 migration needs a v3 or v4 game state.'));
     var currentMods = FB.mods.sig();
+    if ((FB.platform.isCrazyGames || /^crazygames-content-/.test(data.mods || '')) &&
+        data.mods !== currentMods)
+      throw new Error(FB.T('This save belongs to a different edition of the game.'));
     if (data.mods !== undefined ? data.mods !== currentMods : !!currentMods)
       throw new Error(FB.T('This save uses a different mod set and cannot be migrated.'));
     var bookmarkId = data.state.start && data.state.start.id || '867';
@@ -156,10 +184,9 @@
       state:state });
   };
   P.serialize = function () {
-    return JSON.stringify(P.migrate(JSON.parse(FB.save.serialize())));
+    return FB.save.serialize();
   };
   P.restore = function (data) {
-    var migrated = P.migrate(data);
-    return FB.save.restore(Object.assign({}, migrated, { v:3 }));
+    return FB.save.restore(data);
   };
 })();

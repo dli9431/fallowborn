@@ -1,6 +1,6 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['index.html', 'js/crazygames.js', 'js/save.js', 'js/main.js',
+dependsOnRuntime(__filename, ['index.html', 'js/crazygames.js', 'js/save.js', 'js/save_v4.js', 'js/main.js',
   'js/ui_misc.js', 'js/ui_modals.js', 'js/util.js', 'js/mods.js']);
 const { test, expect } = require('../support/fixture');
 const { openGame, targetUrl } = require('../support/game/navigation');
@@ -22,6 +22,47 @@ async function save(page) {
   return page.evaluate(function () {
     return new Promise(function (resolve) { FB.save.toSlot('auto', resolve); });
   });
+}
+
+for (const mode of ['sdk', 'localstorage']) {
+  test('CrazyGames ' + mode + ' resumes v3 and writes readable v4 campaigns',
+    async function ({ page }, testInfo) {
+      if (mode === 'localstorage') await page.addInitScript(function () {
+        window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+      });
+      await boot(page, testInfo);
+      await startDeterministicGame(page);
+      expect(await save(page)).toBe(true);
+      expect(await page.evaluate(async function () {
+        const old = JSON.parse(FB.save.serialize());
+        old.v = 3;
+        delete old.titleIds;
+        delete old.authoritySchema;
+        old.state.player.gold = 4321;
+        const written = await new Promise(function (resolve) {
+          FB.crazySave.write(JSON.stringify(old), resolve);
+        });
+        // Model a title boot with an existing legacy save; hiding the current
+        // game must not replace that fixture with its newer live state.
+        FB.state = null;
+        return written;
+      })).toBe(true);
+      await page.reload();
+      await page.waitForFunction(function () { return FB.game.bootReady; });
+      expect(await page.evaluate(function () { return FB.save.read('auto').v; })).toBe(3);
+      await page.locator('#btn-continue').click();
+      await expect.poll(function () {
+        return page.evaluate(function () { return FB.state && FB.state.player.gold; });
+      }).toBe(4321);
+      expect(await save(page)).toBe(true);
+      await page.reload();
+      await page.waitForFunction(function () { return FB.game.bootReady; });
+      expect(await page.evaluate(function () {
+        const data = FB.save.read('auto');
+        return { version:data.v, schema:data.authoritySchema,
+          gold:data.state.player.gold, edition:data.mods };
+      })).toEqual({ version:4, schema:4, gold:4321, edition:'crazygames-content-1' });
+    });
 }
 
 test('CrazyGames saves a campaign and earned starts across reload without local slot writes', async function ({ page }, testInfo) {

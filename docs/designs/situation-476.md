@@ -23,3 +23,17 @@ All situation facts and outcome flags are serializable under `state.situation476
 Technology impact: civic clerk service, clerical mediation, and conditional regional campaigns are each `none` because living actors, recognition, existing careers, ordinary travel and war resolve them. Court escort, claimant recognition, and city settlement are each `none` in the forward-review ledger. Their constraints are route, living issuer, treasury, community, consent and existing site grant rules. The ordinary historical technology graph seeds period knowledge; no new research gate is attached to baseline service or civic negotiation.
 
 The exact historical label for the detachment commission, the placement of Zeno's displaced court, Gundobad's partition and the two Theoderics remain source-review tasks for the release gate. See [the scenario fixture](../plans/v2-476-phase-0/scenario.md) and [the phased plan](../plans/v2-476-phased-implementation.md).
+
+## Phase 6 save integration
+
+The branch now carries this campaign through the normal v4 save, slot, autosave
+and portable import/export paths. V3 prototype saves migrate their existing
+situation and authority records without restarting the opening or repeating a
+payment, award, campaign declaration or ruler replacement. The same boundary
+preserves 867/1066 saves without adding 476 state. The authority schema remains
+separate from population communities and ordinary property. This persistence
+integration changes no gameplay eligibility and needs no technology-impact entry.
+
+See the [Phase 6 record](../plans/v2-476-phase-6.md) for authored coverage and the
+remaining historical, device, performance and owner-run release gates. The branch
+is an integration candidate, not evidence that those gates have passed.

@@ -1,14 +1,22 @@
 # Game state & saves
 
-## 476 authority and title migration prototype (Phases 1–3)
+## Save v4 and 476 integration (Phase 6)
 
 The [authority contract](authority.md) separates appointments, contracts,
 recognition and customary rights from county ownership and settlement communities.
-The ordinary save and export format remains version 3 while the 476 bookmark is
-incomplete. `FB.save.serialize()` writes `titleIds:1` to mark rank-scoped
-title references. The opt-in `FB.save.prototypeV4` API migrates, serializes,
-validates and restores version-4 envelopes for development; ordinary slot reads
-and imports do not accept v4 yet.
+The 476 branch now writes version-4 saves with `titleIds:1` and
+`authoritySchema:4` through the normal serializer, slots, autosave and export.
+Version-3 slots and FBS1/FBS2 exports remain readable and migrate on restore;
+reading a slot or showing its metadata never rewrites the campaign. The next
+successful save writes v4. `FB.save.v4.migrate` is the detached compatibility
+boundary; `FB.save.prototypeV4` remains an alias for existing development tools.
+Publication remains subject to the [Phase 6 acceptance gate](../plans/v2-476-phase-6.md).
+
+The field-level format-3 notes below record when additive systems were introduced.
+Those records retain their schemas inside v4; they do not require separate migrations.
+The compression prefixes, slot keys, IndexedDB store and Chronicle artifact format
+are unchanged. Both CrazyGames storage modes accept the two supported envelope
+versions while retaining their edition fingerprint, quota and recovery rules.
 
 De jure IDs are slugs scoped by rank: `duchies.essex`, `kingdoms.england`,
 `empires.britannia`. Legacy `d_essex`, `k_england` and `e_britannia` are
@@ -25,17 +33,19 @@ recognitions, contracts, rights, render receipts, governments and optional
 site-keyed civic actors. Government rows may reserve `eliteCultureId`,
 `eliteFaithId` and `legalIdentityId` separately from county communities; no
 existing save receives these fields by inference. Each row keeps its semantic
-ID, status, scoped references and turn or period stamps. The v4 validator rejects duplicate IDs, duplicate
-render obligations, invalid forms and derived `effective`, `quote` or
+ID, status, scoped references and turn or period stamps. The v4 validator rejects
+duplicate IDs, duplicate render obligations, stale ID counters, invalid office
+scopes and terms, invalid forms and derived `effective`, `quote` or
 `projection` fields. Absent authority remains absent; migration does not
 invent political records or replay payments. Repeated migration yields the same
-v4 envelope. The prototype requires the active mod fingerprint to match; an
+v4 envelope. Ordinary restore requires the active mod fingerprint to match; an
 unknown bookmark, title or malformed authority record fails before state/RNG
 adoption. Existing deterministic optional-field repairs remain in the normal
 restore path.
 
-The [Phase 3 implementation record](../plans/v2-476-phase-3.md) lists the
-prototype boundary and owner-run acceptance evidence. The
+The [Phase 3 implementation record](../plans/v2-476-phase-3.md) records the
+original prototype; [Phase 6](../plans/v2-476-phase-6.md) integrates its normal
+entry points. The
 [baseline corpus](../plans/v2-476-phase-0/baselines.md) records local export
 hashes and the required restore/succession comparisons. Derived views,
 permission quotes, render data and revision stamps stay out of serialized
@@ -722,15 +732,16 @@ first inspects that field, activates the matching complete world, and only then 
 state and RNG. A missing field means the legacy 867 bookmark, preserving every old
 version-3 slot and export. A bookmark hidden from new-game choices by an incompatible
 legacy map mod remains addressable for a matching stamped save.
-Saves are
-version 3; older saves are rejected. Raising that save-format version rejects every existing
-life, so it is a deliberate, owner-reviewed decision — never a routine bump, and separate
-from the displayed `FB.VERSION` (see [../VERSIONS.md](../VERSIONS.md)). The additive-migration
-discipline throughout this doc is what lets new state land without touching it. A boot-time probe (`S.available`) detects browsers
+Saves are version 4, with explicit migration from supported version-3 lives;
+older and unknown future envelopes are rejected. The format is independent of
+the displayed `FB.VERSION` (see [../VERSIONS.md](../VERSIONS.md)). Normal restore
+validates a detached copy before adopting state, RNG and the uid counter. Missing
+bookmark or typed title references, a different mod fingerprint, and malformed
+authority data produce compatibility errors without modifying the source save. A boot-time probe (`S.available`) detects browsers
 that refuse localStorage outright (iOS in-app webviews, blocked cookies) so the UI can
 warn instead of failing silently; ephemeral storage (private mode, third-party-iframe
 eviction) passes the probe. For those, `S.exportState` / `S.parseExport` carry a life
-as compressed base64 text (`FBS2.` prefix, same v3 payload). Save Game downloads that
+as compressed base64 text (`FBS2.` prefix, v4 payload). Save Game downloads that
 payload as a `.txt` file, and Load Game reads it with `FileReader` before waking it through
 the same `G.loadData` path as a slot load and planting it back into the autosave slot.
 The visible text and paste path remain as fallbacks, and the legacy uncompressed `FBS1.`
@@ -1812,15 +1823,16 @@ retry window; the stored faith and culture outlive the player's conversion.
 
 Scheduled games add state.tournaments and player.circuit without changing save format 3. Frozen budgets, finite payment keys, exact participants and round contexts survive restoration. Restoration reconciles host and visitor eligibility before travel; cancelled editions never revive at peace. Full editions expire after closure and the return window; summaries, four income samples and eight circuit contacts are bounded. Active host/participant ids protect court records until their commitments end. See tournaments.md.
 
-## 476 authority prototype on the development branch
+## 476 authority persistence
 
 Phase 2 creates `state.authority` only after a successful authority
 transaction. It stores semantic IDs and transitions for appointments,
 recognitions, federate contracts, customary rights and render receipts.
 Contract payment, render and settlement-fulfillment stamps prevent duplicate effects. Pure queries and
-rendered terms stay out of state. The existing version-3 serializer carries
-these branch-local records for prototype reloads; canonical title aliases and an opt-in v4 migration prototype are now
-available; ordinary v4 publication waits for the completed 2.0 bookmark. Old saves do not acquire fabricated offices or contracts on restore.
+rendered terms stay out of state. The normal serializer validates these records
+and writes `schema:4` on its detached authority projection, leaving live state
+unchanged. Restore does not replay appointments, grants or fiscal transactions.
+Old saves do not acquire fabricated offices or contracts on restore.
 
 ## Spring 476 situation persistence
 

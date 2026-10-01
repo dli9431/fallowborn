@@ -7,7 +7,7 @@ dependsOnRuntime(__filename, [
   'js/model.js',
   'js/parliament.js',
   'js/politics.js',
-  'js/save.js',
+  'js/save.js', 'js/save_v4.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
@@ -1551,7 +1551,7 @@ test('an exported Parliament campaign reloads the same active chamber',
     expect(loaded.parsed).toBe(true);
     expect(loaded.accepted).not.toBe(false);
     expect(loaded.loadError).toBeFalsy();
-    expect(loaded.version).toBe(3);
+    expect(loaded.version).toBe(4);
     expect(loaded.tier).toBe(4);
     expect(loaded.gold).toBeGreaterThanOrEqual(500);
     expect(loaded.pendingMotion).toBe('redress');

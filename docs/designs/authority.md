@@ -3,7 +3,10 @@
 Status: Phase 1 shared facts and Phase 2 scoped authority are implemented on the
 476 branch. [Phase 1 record](../plans/v2-476-phase-1.md) and
 [Phase 2 record](../plans/v2-476-phase-2.md). Existing 867/1066 behavior remains
-the compatibility reference. Phase 3 owns the final save-v4 migration.
+the compatibility reference. [Phase 6](../plans/v2-476-phase-6.md) integrates
+the save-v4 boundary. Authority validation preserves expired and historical
+references while rejecting duplicate identities, reused sequence numbers, invalid
+office scopes and malformed payment records before restore adopts state.
 
 ## Facts, permissions and transactions
 

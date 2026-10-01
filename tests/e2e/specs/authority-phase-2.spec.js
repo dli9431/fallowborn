@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/authority.js', 'js/politics.js', 'js/armies.js', 'js/justice.js',
-  'js/council.js', 'js/treasury.js', 'js/main.js', 'js/save.js',
+  'js/council.js', 'js/treasury.js', 'js/main.js', 'js/save.js', 'js/save_v4.js',
   'js/world.js', 'js/model.js', 'js/lordships.js', 'js/ui_misc.js',
   'js/ui_modals.js', 'js/i18n.js', 'css/style.css',
   'data/political_institutions.js', 'data/technology.js',
@@ -336,6 +336,6 @@ for (const bookmark of ['867', '1066']) {
       customRevenue:true, weakened:true, rightOnce:true, rightRestored:true,
       playerPaid:true, rightRevoked:true, succession:true, expired:true,
       recognitionLost:true, breach:true, offerExpired:true,
-      land:true, saveRestored:true, saveVersion:3 });
+      land:true, saveRestored:true, saveVersion:4 });
   });
 }

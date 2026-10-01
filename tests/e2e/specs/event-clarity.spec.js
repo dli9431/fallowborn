@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/save.js', 'js/save_v4.js',
   'css/style.css',
   'js/events.js',
   'js/messages.js',
@@ -677,7 +678,7 @@ test('Chronicle filters typed receipts, caps each view, and preserves metadata',
     await expect(page.locator('#tab-log .logentry').last())
       .toContainText('Ordinary news 10');
 
-    expect(saved.v).toBe(3);
+    expect(saved.v).toBe(4);
     var metadata = await page.evaluate(function () {
       var choices = FB.state.log.filter(function (entry) {
         return entry.kind === 'choice';

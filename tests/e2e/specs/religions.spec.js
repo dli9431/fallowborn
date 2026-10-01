@@ -9,7 +9,7 @@ dependsOnRuntime(__filename, [
   'js/messages.js',
   'js/i18n.js',
   'js/population.js',
-  'js/save.js',
+  'js/save.js', 'js/save_v4.js',
   'js/technology.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -337,7 +337,7 @@ test('runtime faiths and relations round-trip while old v3 saves self-heal',
     });
 
     expect(result.createdId).toBe('living_way');
-    expect(result.restored.version).toBe(3);
+    expect(result.restored.version).toBe(4);
     expect(result.restored.stored).toBe(true);
     expect(result.restored.playerFaith).toBe('living_way');
     expect(result.restored.lineage).toEqual([

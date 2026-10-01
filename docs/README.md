@@ -20,6 +20,14 @@ Federate Soldier beginning at Ravenna, then open **The Western Court, 476** in
 Deeds to negotiate service, seek recognition, escort the court, or contest the
 city. Its counties are a focused test area rather than a complete period map.
 
+## Save compatibility on the 476 branch
+
+Existing version-3 campaigns remain loadable. New saves use version 4, including
+867 and 1066 campaigns; builds that only support version 3 cannot reopen them.
+Keep an exported copy from your older build if you may return to it. Loading an
+old campaign does not erase its source file. The normal Save/Load and text-file
+controls handle migration, and modded campaigns still require the same mods.
+
 ## Play
 
 Open `index.html` in any modern browser. That's it — no build step, no server, no dependencies.

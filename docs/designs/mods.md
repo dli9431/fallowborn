@@ -19,7 +19,9 @@ before use. A mod must not declare both an alias and its canonical ID at the sam
 rank. Missing county-to-duchy, duchy-to-kingdom or kingdom-to-empire links fail
 with a specific error. Realm IDs are unaffected even if they resemble a title
 alias. A migrated save requires the exact active mod fingerprint; a changed mod
-world cannot be mapped by guessing.
+world cannot be mapped by guessing. Normal v3/v4 restore enforces that same
+fingerprint even when called directly, before adopting state or RNG. A legacy
+mod using title aliases remains supported when its stored fingerprint matches.
 
 **Bookmarks are atomic world definitions.** A mod may provide `bookmarks` keyed by
 bookmark id; each value replaces that entire bookmark and must include its date,

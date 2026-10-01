@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/save_v4.js',
   'index.html',
   'css/style.css',
   'data/actions.js',
@@ -1006,7 +1007,7 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     });
     await waitForUiRefresh(page);
 
-    expect(record.wrapper).toBe(3);
+    expect(record.wrapper).toBe(4);
     expect(record.restored).toEqual(record.offer);
     await expect(page.locator('[data-freedom-routes]')).toBeVisible();
     await expect(page.locator('[data-freedom-routes]'))

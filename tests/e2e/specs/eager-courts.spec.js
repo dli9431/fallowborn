@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
   'js/model.js',
-  'js/save.js',
+  'js/save.js', 'js/save_v4.js',
   'js/world.js',
   'js/wars.js',
   'data/bookmarks.js'
@@ -846,14 +846,14 @@ test('the serialized payload carries no derived court data',
         })
       };
     })).toEqual({
-      version:3,
+      version:4,
       derived:[],
       missing:[],
       derivedInSuccession:[]
     });
   });
 
-test('a save without courts loads, grows them, and stays version 3',
+test('a save without courts loads, grows them, and writes version 4',
   async function ({ page }) {
     expect(await page.evaluate(function () {
       /* Build a save shaped like one written before eager courts: no consort
@@ -896,7 +896,7 @@ test('a save without courts loads, grows them, and stays version 3',
         strippedConsorts:strippedConsorts > 0,
         grewRecords:Object.keys(FB.state.chars).length > beforeRecords,
         everyRealmHasARuler:rulers === realms && realms > 0,
-        versionUnchanged:rewritten.v === 3
+        versionUnchanged:rewritten.v === 4
       };
     })).toEqual({
       strippedConsorts:true,

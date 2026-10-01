@@ -13,7 +13,7 @@ dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/events.js',
   'js/technology.js',
-  'js/save.js',
+  'js/save.js', 'js/save_v4.js',
   'js/mods.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -555,7 +555,7 @@ test('legacy saves acquire story ledgers and preserve staggered records', async 
     };
   });
 
-  expect(result.version).toBe(3);
+  expect(result.version).toBe(4);
   expect(result.missing).toBe(true);
   expect(result.accrued).toEqual({ lea:1 });
   expect(result.cleared).toBe(true);

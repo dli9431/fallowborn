@@ -6,7 +6,7 @@ dependsOnRuntime(__filename, [
   'js/economy.js', 'js/armies.js', 'js/wars.js', 'js/council.js', 'js/papacy.js',
   'js/actions.js', 'js/agency.js', 'js/institutions.js', 'js/settlement.js',
   'js/population.js', 'js/modifiers.js', 'js/technology.js', 'js/treasury.js',
-  'js/save.js', 'js/main.js', 'js/util.js', 'js/ui_modals.js', 'js/ui_misc.js',
+  'js/save.js', 'js/save_v4.js', 'js/main.js', 'js/util.js', 'js/ui_modals.js', 'js/ui_misc.js',
   'data/bookmarks.js', 'data/map_data.js', 'data/counties.js',
   'data/settlements.js', 'data/settlements_real.js', 'data/economy.js',
   'data/cultures.js', 'data/technology.js', 'data/political_institutions.js'
@@ -205,7 +205,7 @@ for (const bookmark of ['867', '1066']) {
     });
     expect(result).toEqual({ compact:true, directLiege:true, directVassal:true, council:true,
       dismissed:false, assigned:true, successor:true, stale:true, previous:null, transferred:true, role:true,
-      contains:true, version:3, replaced:true, sameTurn:true, restore:true, pure:true, noSavedQueries:true });
+      contains:true, version:4, replaced:true, sameTurn:true, restore:true, pure:true, noSavedQueries:true });
   });
 
   test(bookmark + ' grant permission, quote and confirmation retain terms and invalidate once', async function ({ page }, testInfo) {

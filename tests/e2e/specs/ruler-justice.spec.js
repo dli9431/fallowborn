@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/authority.js','index.html', 'js/justice.js', 'js/intrigue.js',
   'js/events.js', 'js/model.js', 'js/items.js', 'js/i18n.js', 'js/world.js', 'js/wars.js', 'js/actions.js',
-  'js/travel.js', 'js/treasury.js', 'js/modifiers.js', 'js/save.js',
+  'js/travel.js', 'js/treasury.js', 'js/modifiers.js', 'js/save.js', 'js/save_v4.js',
   'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/keys.js', 'js/portrait.js', 'data/intrigue.js', 'data/events_intrigue.js',
   'data/technology.js', 'js/agency.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
@@ -263,7 +263,7 @@ test('judicial save repair preserves sentences and multiple prisoners, then expi
     return { count:count, end:restored.endTurn, due:due, version:payload.v,
       gone:!FB.justiceCustodyOf(s, f.target), support:FB.countySupportBase(s, f.home) };
   });
-  expect(result).toMatchObject({ count:2, version:3, gone:true, support:-40 });
+  expect(result).toMatchObject({ count:2, version:4, gone:true, support:-40 });
   expect(result.end).toBe(result.due);
 });
 

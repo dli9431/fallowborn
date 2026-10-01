@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/save.js', 'js/save_v4.js',
   'js/modifiers.js',
   'data/actions.js',
   'js/actions.js',
@@ -376,7 +377,7 @@ test('invalid capital targets and ruler conditions reject without partial mutati
     }
   });
 
-test('save format 3 preserves the marker, old saves remain eligible, and succession resets it',
+test('save format 4 preserves the marker, old saves remain eligible, and succession resets it',
   async function ({ page }, testInfo) {
     await startCapitalRealm(page, testInfo);
     const result = await page.evaluate(function () {

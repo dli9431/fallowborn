@@ -141,9 +141,16 @@ for (const bookmark of ['867','1066']) {
       await start(page, testInfo, bookmark);
       const result = await page.evaluate(function () {
         const old = JSON.parse(FB.save.serialize());
+        old.v = 3;
+        delete old.authoritySchema;
         delete old.titleIds;
         const titleRealmId = Object.keys(old.state.realms)[0];
         old.state.realms[titleRealmId].ambitionTitleRegion = 'd_essex';
+        old.state.titleMigrationFixture = {
+          assets:[{ id:'duchy:d_essex', kind:'duchy', titleId:'d_essex' }],
+          claims:[{ asset:'duchy:d_essex', claimant:'d_essex' }],
+          selection:{ kind:'duchy', id:'d_essex' }
+        };
         old.state.greatHolyWarHistory = {
           sequence:1, firstCall:{}, firstLaunched:{}, campaigns:[
             { id:'ghw_1', target:'k_syria', outcome:'collapsed', turn:old.state.turn }
@@ -157,8 +164,8 @@ for (const bookmark of ['867','1066']) {
           provs:old.state.player.provs, treasury:old.state.treasuryAccounting
         });
         const input = JSON.stringify(old);
-        const v4 = FB.save.prototypeV4.migrate(old);
-        const twice = FB.save.prototypeV4.migrate(v4);
+        const v4 = FB.save.v4.migrate(old);
+        const twice = FB.save.v4.migrate(v4);
         const rng = FB.getRngState();
         FB.save.restore(old);
         return {
@@ -167,6 +174,7 @@ for (const bookmark of ['867','1066']) {
           header:[v4.v,v4.titleIds,v4.authoritySchema],
           region:FB.state.realms[titleRealmId].ambitionTitleRegion,
           history:FB.state.greatHolyWarHistory.campaigns[0].target,
+          settlement:FB.state.titleMigrationFixture,
           facts:JSON.stringify({
             owner:FB.state.owner, holder:FB.state.holder,
             charId:FB.state.player.charId, family:(function () { const c = FB.state.chars[FB.state.player.charId];
@@ -183,13 +191,18 @@ for (const bookmark of ['867','1066']) {
       expect(result.header).toEqual([4,1,4]);
       expect(result.region).toBe('essex');
       expect(result.history).toBe('syria');
+      expect(result.settlement).toEqual({
+        assets:[{ id:'duchy:d_essex', kind:'duchy', titleId:'essex' }],
+        claims:[{ asset:'duchy:d_essex', claimant:'d_essex' }],
+        selection:{ kind:'duchy', id:'essex' }
+      });
       expect(result.facts).toBe(true);
       expect(result.rng).toBe(true);
-      expect(result.ordinaryVersion).toBe(3);
+      expect(result.ordinaryVersion).toBe(4);
     });
 }
 
-test('v4 prototype preserves durable records and rejects incompatible input before restore',
+test('normal v4 restore preserves durable records and rejects incompatible input before restore',
   async function ({ page }, testInfo) {
     await start(page, testInfo, '867');
     const result = await page.evaluate(function () {
@@ -224,17 +237,17 @@ test('v4 prototype preserves durable records and rejects incompatible input befo
         eliteCultureId:ruler.culture, eliteFaithId:ruler.religion,
         legalIdentityId:'customary'
       };
-      const migrated = FB.save.prototypeV4.migrate(source);
+      const migrated = FB.save.v4.migrate(source);
       const originalRecords = JSON.stringify(migrated.state.authority);
-      FB.save.prototypeV4.restore(migrated);
+      FB.save.v4.restore(migrated);
       const first = JSON.stringify(FB.state.authority);
-      FB.save.prototypeV4.restore(migrated);
+      FB.save.v4.restore(migrated);
       const second = JSON.stringify(FB.state.authority);
       function failure(change) {
         const data = JSON.parse(JSON.stringify(source));
         change(data);
         const live = FB.state, rng = FB.getRngState();
-        try { FB.save.prototypeV4.restore(data); return ''; }
+        try { FB.save.v4.restore(data); return ''; }
         catch (error) {
           if (FB.state !== live || FB.getRngState() !== rng)
             return 'MUTATED: ' + error.message;
@@ -253,8 +266,10 @@ test('v4 prototype preserves durable records and rejects incompatible input befo
             d.state.authority.receipts[0], { id:'render-3' }));
         }),
         unknownTitle:failure(function (d) {
-          delete d.titleIds;
           d.state.realms[rid].ambitionTitleRegion = 'd_missing_title';
+        }),
+        unknownCanonicalTitle:failure(function (d) {
+          d.state.selectedTitle = { kind:'kingdom', id:'missing_title' };
         }),
         wrongMod:failure(function (d) { d.mods = 'different-mod-set'; }),
         missingHolder:failure(function (d) { delete d.state.holder; }),
@@ -272,8 +287,9 @@ test('v4 prototype preserves durable records and rejects incompatible input befo
     expect(result.duplicateId).toContain('Duplicate v4 authority id');
     expect(result.duplicate).toContain('Invalid v4 authority record');
     expect(result.unknownTitle).toContain('Missing duchy title d_missing_title');
+    expect(result.unknownCanonicalTitle).toContain('Missing kingdom title missing_title');
     expect(result.wrongMod).toContain('different mod set');
     expect(result.missingHolder).toContain('v3 or v4 game state');
     expect(result.wrongIdentity).toContain('authority.governments');
-    expect(result.directV4).toContain('migration prototype');
+    expect(result.directV4).toBe('');
   });

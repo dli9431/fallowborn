@@ -20,7 +20,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/council.js',
   'js/intrigue.js',
-  'js/save.js',
+  'js/save.js', 'js/save_v4.js',
   'js/mods.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
@@ -660,7 +660,7 @@ test('milestone-two religious paths route, advance, localize, and restore by ind
     expect(result.resources).toEqual({
       gold:16, prestige:9, flag:1, station:1, title:'Keeper'
     });
-    expect(result.restore).toEqual({ version:3, index:1, title:'Keeper' });
+    expect(result.restore).toEqual({ version:4, index:1, title:'Keeper' });
     expect(result.missingPath).toEqual({ inactive:true, progress:4 });
   });
 
@@ -850,7 +850,7 @@ test('milestone-three council seats activate, appoint, localize, and restore by 
       ui:true
     });
     expect(result.restore).toEqual({
-      version:3, holder:result.seat.holder, visible:true
+      version:4, holder:result.seat.holder, visible:true
     });
     expect(result.removed).toEqual({
       saved:result.seat.holder, visible:false
@@ -1284,7 +1284,7 @@ test('milestone-four phase B composes bounded overrides with protected action ha
       expectedCooldown:result.execution.expectedCooldown
     });
     expect(result.restored).toEqual({
-      version:3,
+      version:4,
       focus:'rest',
       cooldown:result.execution.expectedCooldown,
       label:'🕯 Chartered alms'
@@ -1638,7 +1638,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
       }
     });
     expect(execution.restored).toEqual({
-      version:3,
+      version:4,
       exchange:execution.beforeTurn,
       story:execution.storyTurn,
       day:execution.dayTurn
@@ -1968,7 +1968,7 @@ test('milestone-four phase D adds deterministic declarative focuses and restores
     expect(execution.tick.health).toBeCloseTo(0.01, 10);
     expect(execution.tick.exactDrawCount).toBe(true);
     expect(execution.restored).toEqual({
-      version:3, focus:'e2e_declarative_study',
+      version:4, focus:'e2e_declarative_study',
       label:'Keep the charter books'
     });
     expect(execution.fallback).toEqual({
@@ -2323,7 +2323,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
       };
     });
     expect(openState).toEqual(Object.assign({}, beforeOpen, {
-      version:3, noPending:true
+      version:4, noPending:true
     }));
     await page.locator('#declarative-choice-cancel').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
@@ -2371,7 +2371,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
       tutorial:1,
       rng:beforeOpen.rng,
       restored:{
-        version:3, cooldown:beforeOpen.turn,
+        version:4, cooldown:beforeOpen.turn,
         gold:beforeOpen.gold - 5, prestige:beforeOpen.prestige,
         piety:beforeOpen.piety + 4
       }

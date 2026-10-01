@@ -6,6 +6,10 @@ window.FB = window.FB || {};
 
   const S = {};
   FB.save = S;
+  S.isSupported = function (data) {
+    return !!data && (data.v === 3 || data.v === 4 &&
+      data.titleIds === 1 && data.authoritySchema === 4);
+  };
   const PREFIX = 'fb_';
   const crazy = FB.crazySave || null;
   const START_PROGRESSION_KEY = PREFIX + 'progression';
@@ -656,6 +660,7 @@ window.FB = window.FB || {};
 
   S.serialize = function () {
     const s = FB.state;
+    S.v4.validateAuthority(s.authority, s);
     if (FB.pruneChronicle) FB.pruneChronicle(s);
     serializingBuildingRecords = new WeakSet();
     serializingCompletedTech = new WeakMap();
@@ -670,7 +675,7 @@ window.FB = window.FB || {};
       }
     }
     try {
-      const header = JSON.stringify({ v:3, titleIds:1, rng:FB.getRngState(),
+      const header = JSON.stringify({ v:4, titleIds:1, authoritySchema:4, rng:FB.getRngState(),
         uid:FB.getUidCounter(), mods:FB.mods.sig() });
       const metaData = {
         name:FB.fullName(s.chars[s.player.charId]), titleData:FB.titleSnapshot(s),
@@ -682,6 +687,9 @@ window.FB = window.FB || {};
       }
       const meta = JSON.stringify(metaData, saveReplacer);
       let stateJson = JSON.stringify(s, function (key, value) {
+        if (this === s && key === 'authority' && value) {
+          return Object.assign({}, value, { schema:4 });
+        }
         return this === s && key === 'chronicle' ? undefined : saveReplacer.call(this, key, value);
       });
       if (Object.prototype.hasOwnProperty.call(s, 'chronicle') && s.chronicle !== undefined) {
@@ -813,7 +821,7 @@ window.FB = window.FB || {};
               if (!raw) return;
               let data;
               try { data = JSON.parse(decodeStored(raw)); } catch (error) { return; }
-              if (!data || data.v !== 3) return;
+              if (!S.isSupported(data)) return;
               databaseWrite(name, raw, function () {});
             });
           } catch (error) { /* legacy storage may be blocked independently */ }
@@ -1122,7 +1130,7 @@ window.FB = window.FB || {};
         json = decodeURIComponent(escape(atob(t.slice(XPRE.length))));
       }
       const d = json ? JSON.parse(json) : null;
-      return d && d.v === 3 ? d : null;
+      return S.isSupported(d) ? d : null;
     } catch (e) { return null; }
   };
 
@@ -1295,7 +1303,7 @@ window.FB = window.FB || {};
      active bookmark remain unchanged. */
   S.chronicleFromSave = function (data) {
     try {
-      if (!data || data.v !== 3 || !data.state ||
+      if (!S.isSupported(data) || !data.state ||
           typeof data.state !== 'object') return null;
       const state = inflateState(data.state);
       if (!state.player || !state.chars || !state.date ||
@@ -1328,7 +1336,7 @@ window.FB = window.FB || {};
         (localSlot(name) || databaseSlots[name] || null));
       const d = raw ? JSON.parse(raw) : null;
       // saves from before the county-map & liege-hierarchy rework are unreadable
-      return d && d.v === 3 ? d : null;
+      return S.isSupported(d) ? d : null;
     } catch (e) { return null; }
   };
 
@@ -1501,30 +1509,13 @@ window.FB = window.FB || {};
   }
 
   S.restore = function (data) {
-    if (!data || !data.state || typeof data.state !== 'object') {
-      throw new Error('The save has no readable game state.');
-    }
-    if (data.v === 4) throw new Error(FB.T('Save v4 is available only through the 476 migration prototype.'));
-    var restoredState = data.state;
-    if (data.titleIds !== 1) {
-      var bookmarkId = restoredState.start && restoredState.start.id || '867';
-      var bookmark = FBDATA.bookmarks && FBDATA.bookmarks[bookmarkId];
-      if (!bookmark) throw new Error(FB.T('Missing bookmark {id} for title migration.',
-        { id:bookmarkId }));
-      restoredState = FB.titleIds.migrateState(restoredState, bookmark);
-    }
-    if ((FB.platform.isCrazyGames || /^crazygames-content-/.test(data.mods || '')) &&
-        data.mods !== FB.mods.sig()) {
-      throw new Error(FB.T('This save belongs to a different edition of the game.'));
-    }
+    // Prepare a detached, validated state before adopting its RNG or identity.
+    data = S.v4.migrate(data);
+    var restoredState = inflateState(data.state);
     S.lastRestoreWarnings = [];
     FB.setRngState(data.rng);
     FB.setUidCounter(data.uid);
-    FB.state = inflateState(restoredState);
-    if (!FB.state.player || !FB.state.chars || !FB.state.date ||
-        !FB.state.realms || !FB.state.owner) {
-      throw new Error('The save is missing required world or player records.');
-    }
+    FB.state = restoredState;
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }

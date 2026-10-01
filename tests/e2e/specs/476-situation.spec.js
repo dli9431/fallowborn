@@ -12,7 +12,7 @@ dependsOnRuntime(__filename, [
   'js/politics.js', 'js/technology.js', 'js/settlement.js',
   'js/population.js', 'js/wars.js',
   'js/i18n.js', 'js/portrait.js', 'js/ui_panels.js', 'js/ui_misc.js',
-  'js/ui_modals.js', 'js/save.js',
+  'js/ui_modals.js', 'js/save.js', 'js/save_v4.js',
   'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -201,7 +201,10 @@ test('negotiation uses scoped command, treasury, civic consent and saved contrac
       const saved = JSON.parse(FB.save.serialize());
       const owner = s.owner.ravenna;
       FB.save.restore(saved);
+      const authority = JSON.stringify(FB.state.authority);
+      FB.save.restore(saved);
       return {
+        format:saved.v, stableAuthority:authority === JSON.stringify(FB.state.authority),
         phase:sc.phase, result:sc.result, owner:owner,
         westOffice:FB.state.authority.appointments.some(function (a) {
           return a.id === sc.westOfficeId && a.status === 'active';
@@ -217,6 +220,8 @@ test('negotiation uses scoped command, treasury, civic consent and saved contrac
       };
     });
     expect(result.phase).toBe('complete');
+    expect(result.format).toBe(4);
+    expect(result.stableAuthority).toBe(true);
     expect(result.result).toBe('negotiated');
     expect(result.owner).toBe('italy');
     expect(result.westOffice).toBe(true);
@@ -313,7 +318,7 @@ test('backed Zeno issues a commission only after returning to office',
   });
 
 
-test('seasonal service share is paid from the body exactly once',
+test('seasonal service share is paid from the body exactly once across v4 restore',
   async function ({ page }, testInfo) {
     await start476(page, testInfo);
     await choose(page, 'remain_service');
@@ -327,11 +332,12 @@ test('seasonal service share is paid from the body exactly once',
       const first = { household:s.player.gold,
         body:FB.treasuryAvailable(s, 'federates_476'),
         period:sc.lastAllocatedPeriod };
-      FB.authoritySeason(s);
-      FB.situation476Season(s);
+      FB.save.restore(FB.save.parseExport(FB.save.exportState()));
+      FB.authoritySeason(FB.state);
+      FB.situation476Season(FB.state);
       return { first:first,
-        household:s.player.gold,
-        body:FB.treasuryAvailable(s, 'federates_476') };
+        household:FB.state.player.gold,
+        body:FB.treasuryAvailable(FB.state, 'federates_476') };
     });
     expect(result).toEqual({ first:{ household:22, body:38, period:1 },
       household:22, body:38 });

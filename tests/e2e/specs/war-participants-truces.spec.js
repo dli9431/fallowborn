@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/wars.js', 'js/world.js', 'js/actions.js', 'js/armies.js', 'js/save.js', 'js/ui_misc.js',
+  'js/wars.js', 'js/world.js', 'js/actions.js', 'js/armies.js', 'js/save.js', 'js/save_v4.js', 'js/ui_misc.js',
   'js/ui_modals.js', 'js/events.js', 'data/technology.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -136,7 +136,7 @@ test('save restore preserves active concurrent wars and the canonical truce ledg
         liege:restored.realms[ids.liege].war.enemy,
         expiry:expiry, restoredExpiry:FB.truceExpiry(restored, ids.other, ids.enemy) };
     }, ids);
-    expect(result.version).toBe(3);
+    expect(result.version).toBe(4);
     expect(result.personal).toBe(ids.enemy);
     expect(result.liege).toBe(ids.other);
     expect(result.restoredExpiry).toBe(result.expiry);

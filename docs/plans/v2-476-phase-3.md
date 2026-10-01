@@ -1,7 +1,9 @@
 # 476 Phase 3: durable IDs and migration prototype
 
-Phase 3 implementation record for the [v2.0 plan](v2-476-phased-implementation.md).
-The 476 bookmark and ordinary v4 save publication remain Phase 4–6 work.
+Historical Phase 3 implementation record for the [v2.0 plan](v2-476-phased-implementation.md).
+The normal save path now uses v4 on the 476 branch; see the
+[Phase 6 integration record](v2-476-phase-6.md). The prototype boundaries below
+describe Phase 3, before that integration.
 
 ## Title identity
 

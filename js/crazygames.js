@@ -27,7 +27,7 @@
   }
   function valid(json) {
     var data = JSON.parse(json);
-    if (!data || data.v !== 3 || data.mods !== 'crazygames-content-1' || !data.state) {
+    if (!FB.save.isSupported(data) || data.mods !== 'crazygames-content-1' || !data.state) {
       throw error(FB.T('The CrazyGames save could not be read. Your saved data has been kept.'));
     }
     return json;

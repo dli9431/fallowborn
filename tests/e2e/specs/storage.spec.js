@@ -6,7 +6,7 @@ dependsOnRuntime(__filename, [
   'js/messages.js',
   'js/model.js',
   'js/population.js',
-  'js/save.js',
+  'js/save.js', 'js/save_v4.js',
   'js/technology.js',
   'js/world.js',
   'js/economy.js',
@@ -111,9 +111,9 @@ test('served origin provides persistent storage for save slots',
       };
     })).toEqual({
       stored: true,
-      autoVersion: 3,
+      autoVersion: 4,
       autoSeed: START_CODE,
-      slotVersion: 3,
+      slotVersion: 4,
       slotSeed: START_CODE
     });
 
@@ -423,7 +423,7 @@ test('an eager-court save stays within the storage budget and reloads whole',
       const reread = FB.save.read(1);
       return {
         stored:stored,
-        rereadable:!!reread && reread.v === 3,
+        rereadable:!!reread && reread.v === 4,
         elapsedYears:elapsedYears,
         records:records,
         courtRecords:courtRecords,
@@ -782,7 +782,7 @@ test('save and load dialogs exchange a life through a text file',
     }).toBe(originalGold);
   });
 
-test('save-format-3 restore lazily repairs malformed intrigue state and conduct',
+test('save-format-4 restore lazily repairs malformed intrigue state and conduct',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -833,8 +833,8 @@ test('save-format-3 restore lazily repairs malformed intrigue state and conduct'
       };
     });
 
-    expect(result.incomingVersion).toBe(3);
-    expect(result.outgoingVersion).toBe(3);
+    expect(result.incomingVersion).toBe(4);
+    expect(result.outgoingVersion).toBe(4);
     expect(result.arrays).toEqual([true, true, true]);
     expect(result.lengths).toEqual([0, 0, 0]);
     expect(result.cooldownObject).toBe(true);
@@ -927,7 +927,7 @@ test('autosave snapshots synchronously, writes on a later task, and flushes safe
     }, START_CODE)).toEqual({
       deferred:true,
       landedPlain:true,
-      landedVersion:3,
+      landedVersion:4,
       landedSeed:START_CODE,
       superseded:true,
       pagehideFlush:true,
@@ -978,7 +978,7 @@ test('autosave compresses only when a plain write reaches storage quota',
     });
   });
 
-test('serf customary tenure round-trips through format-3 serialization and restore',
+test('serf customary tenure round-trips through format-4 serialization and restore',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'The storage contract belongs to the served origin.');
@@ -1023,7 +1023,7 @@ test('serf customary tenure round-trips through format-3 serialization and resto
         omitsRenderedPanel: serialized.indexOf('data-serf-tenure') < 0
       };
     })).toEqual({
-      saveFormatVersion: 3,
+      saveFormatVersion: 4,
       restoredValid: true,
       status: 'active',
       archetypeId: expect.any(String),

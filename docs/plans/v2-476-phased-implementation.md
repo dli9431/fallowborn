@@ -8,7 +8,9 @@ the existing notes, saves and benchmarks. [Phase 1](v2-476-phase-1.md), the
 [Phase 3 migration prototype](v2-476-phase-3.md), and the Phase 4–5 regional
 implementation described in [the 476 design](../designs/situation-476.md) are
 authored on the 476 branch; runtime parity and device comparisons remain
-owner-controlled.
+owner-controlled. Phase 6 save integration and acceptance coverage are now
+authored; see [the Phase 6 record](v2-476-phase-6.md). Publication and runtime
+acceptance are still pending.
 
 ## Outcome
 
@@ -246,6 +248,8 @@ recognition, migration and western-office chains can each reach a durable
 resolution.
 
 ## Phase 6: integration and release gate
+
+Implementation and outstanding acceptance: [Phase 6 record](v2-476-phase-6.md).
 
 - Finalize and release the save-v4 migration only with the completed bookmark.
   Validate load, save, export/import, autosave and supported old-save paths.

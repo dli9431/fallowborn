@@ -1,6 +1,6 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/save.js', 'js/main.js', 'js/messages.js', 'js/ui_modals.js']);
+dependsOnRuntime(__filename, ['js/save.js', 'js/save_v4.js', 'js/main.js', 'js/messages.js', 'js/ui_modals.js']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
@@ -41,22 +41,33 @@ test('manual saves confirm committed data and survive reload without a localStor
   expect(await page.evaluate(function () { return FB.save.read(1).state.player.gold; })).toBe(4321);
 });
 
-test('legacy slots migrate only after commit and a local recovery copy wins on reload', async function ({ page }, testInfo) {
-  await start(page, testInfo);
-  await page.evaluate(function () {
-    FB.state.player.gold = 100;
-    return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+for (const version of [3, 4]) {
+  test('v' + version + ' slots migrate only after commit and a local recovery copy wins on reload', async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    await page.evaluate(function () {
+      FB.state.player.gold = 100;
+      return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+    });
+    await page.evaluate(function (version) {
+      FB.state.player.gold = 200;
+      const data = JSON.parse(FB.save.serialize());
+      if (version === 3) {
+        data.v = 3;
+        delete data.titleIds;
+        delete data.authoritySchema;
+      }
+      localStorage.setItem('fb_slot1', JSON.stringify(data));
+    }, version);
+    await page.reload();
+    await page.waitForFunction(function () { return FB.game.bootReady; });
+    await expect.poll(function () { return storedGold(page, 'fb_slot1'); }).toBe(200);
+    await expect.poll(function () { return page.evaluate(function () { return localStorage.getItem('fb_slot1'); }); }).toBe(null);
+    expect(await page.evaluate(function () {
+      const data = FB.save.read(1);
+      return { version:data.v, gold:data.state.player.gold };
+    })).toEqual({ version:version, gold:200 });
   });
-  await page.evaluate(function () {
-    FB.state.player.gold = 200;
-    localStorage.setItem('fb_slot1', FB.save.serialize());
-  });
-  await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady; });
-  await expect.poll(function () { return storedGold(page, 'fb_slot1'); }).toBe(200);
-  await expect.poll(function () { return page.evaluate(function () { return localStorage.getItem('fb_slot1'); }); }).toBe(null);
-  expect(await page.evaluate(function () { return FB.save.read(1).state.player.gold; })).toBe(200);
-});
+}
 
 test('newer autosave snapshots win and do not require localStorage capacity', async function ({ page }, testInfo) {
   await start(page, testInfo);

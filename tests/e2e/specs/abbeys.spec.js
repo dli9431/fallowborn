@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'index.html', 'data/economy.js', 'data/actions.js', 'data/technology.js', 'data/papacy.js',
   'js/abbeys.js', 'js/economy.js', 'js/actions.js', 'js/model.js',
   'js/events.js', 'js/lordships.js', 'js/papacy.js', 'js/main.js',
-  'js/world.js', 'js/save.js', 'js/messages.js', 'js/ui_modals.js',
+  'js/world.js', 'js/save.js', 'js/save_v4.js', 'js/messages.js', 'js/ui_modals.js',
   'js/ui_panels.js', 'js/ui_misc.js', 'js/keys.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -376,7 +376,7 @@ test('save restore preserves offices, vows and endowments without RNG or land gr
         return FBDATA.techImpactReviews.features[id].mode === 'none';
       }) };
   });
-  expect(result).toMatchObject({ capital:100, rank:3, vows:true, sites:0, rng:true, uid:true, version:3, ledger:true });
+  expect(result).toMatchObject({ capital:100, rank:3, vows:true, sites:0, rng:true, uid:true, version:4, ledger:true });
 });
 
 test('the Work election discloses vows and opens the endowed office after acceptance', async function ({ page }) {

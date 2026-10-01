@@ -65,8 +65,8 @@ window.FB = window.FB || {};
     if (typeof out.titleId === 'string' && prefixes[titleRank])
       out.titleId = resolve(titleRank, out.titleId,
         tables[plurals[titleRank]], where + '.titleId');
-    if (typeof out.id === 'string' && prefixes[out.kind] &&
-        /^[dke]_[a-z]/.test(out.id))
+    // A settlement asset has its own opaque id and a separate typed titleId.
+    if (typeof out.id === 'string' && prefixes[out.kind] && !own(out, 'titleId'))
       out.id = resolve(out.kind, out.id, tables[plurals[out.kind]], where + '.id');
     if (typeof out.ambitionTitleRegion === 'string') {
       var regionRank = out.ambitionTitleRegion.slice(0, 2) === 'd_' ? 'duchy'
