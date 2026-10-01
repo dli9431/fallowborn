@@ -9857,11 +9857,12 @@ window.FB = window.FB || {};
       local.standing[id] = (local.standing[id] || 0) + 1;
       index.standingTotal++;
       index.standing[id] = (index.standing[id] || 0) + 1;
-      if (id !== 'walls' || (Number(entry.level) || 0) > 0) {
+      const fortification = FB.isFortificationBuilding(id);
+      if (!fortification || (Number(entry.level) || 0) > 0) {
         index.usable[id] = (index.usable[id] || 0) + 1;
       }
       const def = FBDATA.buildings[id];
-      if (id !== 'walls' && !(def && def.fort)) index.standingNonFort++;
+      if (!fortification && !(def && def.fort)) index.standingNonFort++;
       if (!def || def.fort) continue;
       for (const key in def) {
         const amount = def[key];
@@ -9909,7 +9910,7 @@ window.FB = window.FB || {};
 
   FB.buildingCount = function (state, id, includeRuins) {
     let count = 0;
-    if (id === 'walls' || (FBDATA.buildings[id] && FBDATA.buildings[id].fort)) {
+    if (FB.isFortificationBuilding(id) || (FBDATA.buildings[id] && FBDATA.buildings[id].fort)) {
       for (const pid of FB.realmHeldCounties(state, 'player')) count += FB.buildingCountIn(state, pid, id, includeRuins);
       return count;
     }
@@ -9920,10 +9921,21 @@ window.FB = window.FB || {};
     return count;
   };
   FB.hasBuilding = function (state, id) {
-    if (id === 'walls') return FB.realmHeldCounties(state, 'player').some(function (pid) {
+    if (FB.isFortificationBuilding(id)) return FB.realmHeldCounties(state, 'player').some(function (pid) {
       return FB.hasBuildingIn(state, pid, id);
     });
     return FB.buildingCount(state, id) > 0;
+  };
+
+  /* A standing building with this role anywhere in the player's demesne,
+     read like FB.hasBuilding (events gate on it through buildingRoles). */
+  FB.hasBuildingRole = function (state, role) {
+    const table = FBDATA.buildings || {};
+    for (const id in table) {
+      if (Object.prototype.hasOwnProperty.call(table, id) &&
+          FB.buildingRole(id) === role && FB.hasBuilding(state, id)) return true;
+    }
+    return false;
   };
 
   /* built in ONE province (walls guard the county they stand in) */
@@ -10171,8 +10183,9 @@ window.FB = window.FB || {};
 
   FB.demolishBuilding = function (state, pid, idx, id) {
     if (!state) return false;
-    if (id !== 'walls' && !FB.settlementConstructionAuthority(state, pid, idx).direct) return false;
-    if (id === 'walls') return !!FB.demolishFort && FB.demolishFort(state, pid, idx);
+    const fortification = FB.isFortificationBuilding(id);
+    if (!fortification && !FB.settlementConstructionAuthority(state, pid, idx).direct) return false;
+    if (fortification) return !!FB.demolishFort && FB.demolishFort(state, pid, idx);
     const done = FB.builtIn(state, pid);
     for (let i = 0; i < done.length; i++) {
       if (done[i].id === id && done[i].s === idx && !done[i].ruined) {

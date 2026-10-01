@@ -687,44 +687,49 @@ FBDATA.titles = {
    War keys: levy (untrained foot, mustered with the host), retinue
    (professional men-at-arms — few, hard to kill), archers (bowmen) —
    all three join the host's composition at muster (see docs/designs/war.md). */
+/* Every building declares a role (see FB.BUILDING_ROLES in
+   js/fortifications.js): the engine checks roles, never building ids, so a
+   regional building is data. aiBuildOrder ranks what AI rulers raise first
+   (absent = never AI-built); settlementDraw weights a settlement's share of
+   county population growth. */
 FBDATA.buildings = {
-  mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2, dev:1, populationCapacity:0.05, requiresTech:'undershot_watermill',
+  mill:    { role:'milling', aiBuildOrder:8, settlementDraw:true, name:'Watermill', icon:'⚙', cost:40, tax:2, dev:1, populationCapacity:0.05, requiresTech:'undershot_watermill',
     desc:'Grinds the valley’s grain for a fee.' },
-  granary: { name:'Granary', icon:'🌾', cost:40, upkeep:1, maxDemesne:1, populationFamineProtection:0.35, requiresTech:'warehouses',
+  granary: { role:'food_store', aiBuildOrder:12, name:'Granary', icon:'🌾', cost:40, upkeep:1, maxDemesne:1, populationFamineProtection:0.35, requiresTech:'warehouses',
     desc:'Grain laid up against the hungry years.' },
-  bridge:  { name:'Stone Bridge', icon:'🌉', cost:50, upkeep:1, dev:1, pop:10, migrationAttraction:1, requiresTech:'stone_bridgebuilding',
+  bridge:  { role:'crossing', aiBuildOrder:13, settlementDraw:true, name:'Stone Bridge', icon:'🌉', cost:50, upkeep:1, dev:1, pop:10, migrationAttraction:1, requiresTech:'stone_bridgebuilding',
     desc:'Trade crosses where the ford once drowned it.' },
-  walls:   { name:'Fortification', icon:'🏰', maxCounty:1, fort:true,
+  walls:   { role:'fortification', name:'Fortification', icon:'🏰', maxCounty:1, fort:true,
     desc:'A county strongpoint that blocks hostile passage until its defenses are breached.' },
-  market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3, dev:1, migrationAttraction:2, requiresTech:'urban_markets',
+  market:  { role:'marketplace', aiBuildOrder:10, settlementDraw:true, name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3, dev:1, migrationAttraction:2, requiresTech:'urban_markets',
     desc:'Tolls, stalls, and strangers’ silver.' },
-  temple:  { name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5, populationCrisisProtection:0.10, communityFaithPressure:0.12, requiresTech:'lime_mortar',
+  temple:  { role:'worship', aiBuildOrder:14, name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5, populationCrisisProtection:0.10, communityFaithPressure:0.12, requiresTech:'lime_mortar',
     desc:'Stone raised toward heaven — and remembered on earth.' },
-  harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4, dev:1, populationCapacity:0.03, migrationAttraction:2, requiresTech:'harbor_works',
+  harbor:  { role:'port', aiBuildOrder:11, settlementDraw:true, name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4, dev:1, populationCapacity:0.03, migrationAttraction:2, requiresTech:'harbor_works',
     desc:'Every tide brings someone who owes you a toll.' },
-  library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, upkeep:1, devMin:4, research:1, requiresTech:'paper_scholarship',
+  library: { role:'scholarship', aiBuildOrder:15, name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, upkeep:1, devMin:4, research:1, requiresTech:'paper_scholarship',
     desc:'Shelves of knowledge — and the people who argue over it. (+1 national research per season)' },
-  keep:    { name:'Stone Keep', icon:'🏰', cost:100, upkeep:2, devMin:5, levy:60, retinue:20, prestige:10, requiresTech:'stone_castles',
+  keep:    { role:'stronghold', aiBuildOrder:16, name:'Stone Keep', icon:'🏰', cost:100, upkeep:2, devMin:5, levy:60, retinue:20, prestige:10, requiresTech:'stone_castles',
     desc:'The last argument of a lord — and the first thing raiders see. (+60 levy, +20 men-at-arms)' },
-  barracks:{ name:'Barracks', icon:'🛡', cost:120, upkeep:3, devMin:6, retinue:40, requiresTech:'martial_drill',
+  barracks:{ role:'garrison', aiBuildOrder:17, name:'Barracks', icon:'🛡', cost:120, upkeep:3, devMin:6, retinue:40, requiresTech:'martial_drill',
     desc:'A drill-yard and paid men who fight for wages, not for forty days. (+40 men-at-arms)' },
-  archery_butts: { name:'Archery Butts', icon:'🏹', cost:70, upkeep:1, archers:50, requiresTech:'crossbows',
+  archery_butts: { role:'training', name:'Archery Butts', icon:'🏹', cost:70, upkeep:1, archers:50, requiresTech:'crossbows',
     desc:'Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)' },
-  university: { name:{ default:'University', muslim:'Madrasa and College' }, icon:'🎓', cost:180, upkeep:3, devMin:7, maxDemesne:1, research:2, prestige:10, pop:5, migrationAttraction:2, requiresTech:'universities',
+  university: { role:'scholarship', aiBuildOrder:2, name:{ default:'University', muslim:'Madrasa and College' }, icon:'🎓', cost:180, upkeep:3, devMin:7, maxDemesne:1, research:2, prestige:10, pop:5, migrationAttraction:2, requiresTech:'universities',
     desc:'A corporate community of masters and scholars granting recognized degrees. (+2 national research per season)' },
-  cathedral: { name:{ default:'Cathedral', muslim:'Great Friday Mosque', pagan:'Grand Sanctuary' }, icon:'⛪', cost:240, upkeep:3, devMin:7, maxCounty:1, piety:4, prestige:15, pop:10, dev:1, populationCrisisProtection:0.15, communityFaithPressure:0.20, requiresTech:'ribbed_vaulting',
+  cathedral: { role:'worship', aiBuildOrder:1, name:{ default:'Cathedral', muslim:'Great Friday Mosque', pagan:'Grand Sanctuary' }, icon:'⛪', cost:240, upkeep:3, devMin:7, maxCounty:1, piety:4, prestige:15, pop:10, dev:1, populationCrisisProtection:0.15, communityFaithPressure:0.20, requiresTech:'ribbed_vaulting',
     desc:'Soaring vaults and stained glass raised to God — a monumental beacon across the land.' },
-  guildhall: { name:{ default:'Civic Guildhall', italian:'Palazzo Comunale' }, icon:'🏛', cost:120, upkeep:2, devMin:5, maxCounty:1, tax:4, dev:1, migrationAttraction:1, retinue:15, requiresTech:'guild_charters',
+  guildhall: { role:'civic', aiBuildOrder:3, name:{ default:'Civic Guildhall', italian:'Palazzo Comunale' }, icon:'🏛', cost:120, upkeep:2, devMin:5, maxCounty:1, tax:4, dev:1, migrationAttraction:1, retinue:15, requiresTech:'guild_charters',
     desc:'The sworn council hall of civic magistrates, guilds, and urban defense. (+15 men-at-arms)' },
-  arsenal: { name:'Naval Arsenal', icon:'⚓', cost:140, upkeep:3, coastal:true, devMin:5, maxCounty:1, tax:5, dev:1, retinue:20, requiresTech:'dry_docks',
+  arsenal: { role:'shipyard', aiBuildOrder:4, name:'Naval Arsenal', icon:'⚓', cost:140, upkeep:3, coastal:true, devMin:5, maxCounty:1, tax:5, dev:1, retinue:20, requiresTech:'dry_docks',
     desc:'Enclosed basins, roperies, and slips for outfitting warships and armed merchantmen. (+20 men-at-arms)' },
-  foundry: { name:'Foundry and Forge Works', icon:'🔥', cost:130, upkeep:2, devMin:6, maxCounty:1, tax:3, retinue:30, requiresTech:'blast_furnace',
+  foundry: { role:'industry', aiBuildOrder:5, name:'Foundry and Forge Works', icon:'🔥', cost:130, upkeep:2, devMin:6, maxCounty:1, tax:3, retinue:30, requiresTech:'blast_furnace',
     desc:'Water-driven bellows and heavy finery hearths working molten iron and bronze. (+30 men-at-arms)' },
-  windmill: { name:'Post Windmill', icon:'🌬', cost:45, maxCounty:2, tax:2, dev:1, populationCapacity:0.05, requiresTech:'windmill',
+  windmill: { role:'milling', aiBuildOrder:9, name:'Post Windmill', icon:'🌬', cost:45, maxCounty:2, tax:2, dev:1, populationCapacity:0.05, requiresTech:'windmill',
     desc:'A timber mill rotating with the breeze to grind grain on ridges and open plains.' },
-  hospital: { name:{ default:'Endowed Hospital', muslim:'Bimaristan' }, icon:'🏥', cost:90, upkeep:2, devMin:5, maxCounty:1, piety:1, pop:5, populationCrisisProtection:0.10, populationFamineProtection:0.05, requiresTech:'hospitals',
+  hospital: { role:'care', aiBuildOrder:7, name:{ default:'Endowed Hospital', muslim:'Bimaristan' }, icon:'🏥', cost:90, upkeep:2, devMin:5, maxCounty:1, piety:1, pop:5, populationCrisisProtection:0.10, populationFamineProtection:0.05, requiresTech:'hospitals',
     desc:'Endowed wards and herbal dispensaries tending the sick, poor, and plague-stricken.' },
-  exchange: { name:{ default:'Merchant Exchange', muslim:'Caravan Bourse' }, icon:'💰', cost:160, upkeep:1, devMin:6, maxCounty:1, tax:6, dev:1, migrationAttraction:3, requiresTech:'bills_of_exchange',
+  exchange: { role:'banking', aiBuildOrder:6, name:{ default:'Merchant Exchange', muslim:'Caravan Bourse' }, icon:'💰', cost:160, upkeep:1, devMin:6, maxCounty:1, tax:6, dev:1, migrationAttraction:3, requiresTech:'bills_of_exchange',
     desc:'A bustling bourse where distant traders balance bills of exchange and settle international coin.' }
 };
 

@@ -7690,7 +7690,7 @@ window.FB = window.FB || {};
     if (d.migrationAttraction) fx.push(FB.T('+{amount} migration attraction', {
       amount: d.migrationAttraction
     }));
-    if (id === 'granary') fx.push(FB.T('Unlocks granary choices during famine'));
+    if (FB.buildingRole(id) === 'food_store') fx.push(FB.T('Unlocks granary choices during famine'));
     return fx;
   }
 
@@ -7699,7 +7699,7 @@ window.FB = window.FB || {};
     const province = FB.world.byId[pid];
     const place = settlements[idx] ? settlements[idx].name :
       (province ? province.name : pid);
-    if (id === 'walls') {
+    if (FB.isFortificationBuilding(id)) {
       return FB.T('{place}; controls hostile movement through its county', {
         place:place
       });
@@ -8449,8 +8449,8 @@ window.FB = window.FB || {};
       '<button type="button" class="btn small settcard-info"' +
       ' aria-expanded="false" aria-controls="' + detId + '"' +
       ' aria-label="' + esc(FB.T('Details')) + '">?</button>' +
-      (own && s.player.tier >= 3 ? demolishCardButton('walls',
-        dt(s, 'building', 'walls', FBDATA.buildings.walls, 'name')) : '') +
+      (own && s.player.tier >= 3 ? demolishCardButton(fort.id,
+        dt(s, 'building', fort.id, FBDATA.buildings[fort.id], 'name')) : '') +
       '</span></div>' +
       '<div class="adesc settcard-fx">' + esc(fxLine) + '</div>';
     if (target) {
@@ -9013,7 +9013,7 @@ window.FB = window.FB || {};
     }
     const done = [];
     for (const e of FB.builtIn(s, pid)) if (e.s === idx &&
-        (e.id === 'walls' ? managesCounty : managesSettlement)) done.push(e);
+        (FB.isFortificationBuilding(e.id) ? managesCounty : managesSettlement)) done.push(e);
     if (done.length) {
       let cardSeq = 0;
       for (const e of done) {
@@ -9022,7 +9022,7 @@ window.FB = window.FB || {};
         if (!d) continue;
         const detId = 'settcard-details-' + (++cardSeq);
         const name = dt(s, 'building', id, d, 'name');
-        if (id === 'walls' && !e.ruined) {
+        if (FB.isFortificationBuilding(id) && !e.ruined) {
           h += fortAssetHtml(s, pid, idx, e, true, detId);
           continue;
         }

@@ -1243,7 +1243,7 @@ window.FB = window.FB || {};
         const bp = site.provinceId, cells = {};
         for (const e of FB.builtIn(s, bp)) {
           if (e.s !== site.settlement || e.ruined || !FBDATA.buildings[e.id]) continue;
-          if (e.id === 'walls' && !FB.canManageCountyBuildings(s, bp)) continue;
+          if (FB.isFortificationBuilding(e.id) && !FB.canManageCountyBuildings(s, bp)) continue;
           cells[e.id] = (cells[e.id] || 0) + 1;
           bldTypes[e.id] = true;
         }

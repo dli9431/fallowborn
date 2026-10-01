@@ -219,6 +219,8 @@ Events still gate on `buildings` / `notBuildings` triggers demesne-wide (`FB.has
 `state.buildings` is keyed by province id, so conquest moves buildings and ruins with the
 land.
 
+Building roles. Every building declares a role, and engine code checks the role rather than a building id, so a period or regional building is a data entry with an existing role. The roles are fortification, milling, food_store, crossing, marketplace, worship, port, shipyard, scholarship, stronghold, garrison, training, civic, industry, care and banking (FB.BUILDING_ROLES in js/fortifications.js). Exactly one building has the fortification role and it alone sets fort; the strategic fortification system below creates and reads records of that building (walls in the shipped data). The food_store role unlocks the famine relief choice through the buildingRoles event requirement. Two further fields replace former id lists: aiBuildOrder ranks what AI rulers raise first in the annual construction pass (a building without it is never autobuilt), and settlementDraw marks the buildings that add weight to their settlement's share of county population growth (watermill, stone bridge, market square and harbor). These keep the previous behavior exactly. A legacy runtime-mod building without a role is treated as a fortification when it sets fort and as unassigned otherwise. Technology impact: none; this is an internal data refactor that changes no gameplay eligibility.
+
 ## Fortifications
 
 The settlement-scoped `walls` id is the county's one strategic fortification rather than
