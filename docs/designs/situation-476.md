@@ -24,6 +24,8 @@ Technology impact: civic clerk service, clerical mediation, and conditional regi
 
 The exact historical label for the detachment commission, the placement of Zeno's displaced court, Gundobad's partition and the two Theoderics remain source-review tasks for the release gate. See [the scenario fixture](../plans/v2-476-phase-0/scenario.md) and [the phased plan](../plans/v2-476-phased-implementation.md).
 
+These questions are now answered in docs/research/476-bookmark.md, which also records period offices, ladder, legal traditions, religious institutions, names, dress, place names and corrections to the current 476 data. The data changes it recommends are applied when the 476 map and cast are re-authored, not by the note itself.
+
 ## Phase 6 save integration
 
 The branch now carries this campaign through the normal v4 save, slot, autosave
