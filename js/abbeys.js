@@ -178,7 +178,8 @@ window.FB = window.FB || {};
     const rank = Math.max(c && c.religiousRanks && c.religiousRanks.catholic_monastic || 0,
       c && c.id === s.player.charId && s.player.flags.abbot ? 3 : 0);
     const age = c ? FB.ageOf(c, s.date.year) : 0;
-    const vocation = rank >= 2 && career && career.profession === 'monk' && career.experience >= 10;
+    const vocation = rank >= 2 && career && FB.professionHasRole(career.profession, 'cloister') &&
+      career.experience >= 10;
     const mature = c && age >= 35 && FB.stationOf(c) >= 2 && FB.skillOf(c, 'ste') >= 10;
     check(c && available(s, c) && c.sex === 'f', FB.T('An available Catholic woman'), missing);
     check(age >= 24, FB.T('Age 24'), missing);
@@ -296,7 +297,7 @@ window.FB = window.FB || {};
     check(c && FB.stationOf(c) >= 2, FB.T('A noble family'), missing);
     check(c && !FB.isHouseholdCharacter(s, c.id) && !FB.realmIdForRulerCharacter(s, c), FB.T('A guest from another household, without a ruling office'), missing);
     check(c && available(s, c) && unmarried(s, c) && !c.abbeyVows && !FB.abbeyOf(s, c) && !FB.abbeyResidentHouse(s, c.id), FB.T('Available for a temporary stay'), missing);
-    check(c && (!c.career || ['monk', 'priest'].indexOf(c.career.profession) < 0), FB.T('A lay resident'), missing);
+    check(c && (!c.career || !FB.professionHasRole(c.career.profession, ['cloister', 'clergy'])), FB.T('A lay resident'), missing);
     const age = c ? FB.ageOf(c, s.date.year) : 0;
     check(kind === 'pupil' ? age >= 6 && age < 16 : (kind === 'guest' || kind === 'refuge') && age >= 16, FB.T('Pupils are ages 6–15; adult guests are at least 16'), missing);
     check(c && FB.characterResidence(s, c) === h.provinceId, FB.T('A resident of this county'), missing);
@@ -492,7 +493,7 @@ window.FB = window.FB || {};
       if (!h.holderId && !recentPetition && s.turn - h.vacancyTurn >= cfg().vacancyDays) {
         const c = FB.makeCharacter(s, { sex:'f', culture:h.culture, religion:h.religion,
           born:s.date.year - 40, dyn:null });
-        c.skills.lea = 12; c.career = { profession:'monk', rank:'master', experience:20,
+        c.skills.lea = 12; c.career = { profession:FB.roleCareer('cloister'), rank:'master', experience:20,
           startedYear:s.date.year - 20, chosen:true, guildRank:'none', guildStanding:0 };
         install(s, h, c);
       }

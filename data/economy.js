@@ -199,15 +199,20 @@ FBDATA.rankPrestigeYearly = {
   }
 };
 
+/* role says what kind of work a career is: clergy, cloister, labor, craft,
+   trading, arms, noble, learned or civic. Engine rules ask for the role, so
+   a new career joins the behavior of its role. The first career declared
+   with a role is that role's default career (labor for commoners, noble for
+   gentle dependents). An optional roles array lists secondary roles. */
 FBDATA.careers = {
   farmer: {
-    name:'Farming', icon:'🌾', skill:'ste', apprenticeAge:10, apprenticeCost:0, requiresTech:'scratch_plough',
+    role:'labor', name:'Farming', icon:'🌾', skill:'ste', apprenticeAge:10, apprenticeCost:0, requiresTech:'scratch_plough',
     wage:1.2, masterWage:2,
     ranks:{ apprentice:'Farm servant', journeyman:'Farmer', master:'Master farmer' },
     desc:'Fields, herds, orchards, and the patient arithmetic of the seasons.'
   },
   craftsman: {
-    name:'Craft', icon:'🔨', skill:'ste', apprenticeAge:10, apprenticeCost:8, tierMin:1, requiresTech:'bloomery_iron',
+    role:'craft', name:'Craft', icon:'🔨', skill:'ste', apprenticeAge:10, apprenticeCost:8, tierMin:1, requiresTech:'bloomery_iron',
     wage:1.8, masterWage:3, guild:true,
     ranks:{ apprentice:'Apprentice', journeyman:'Journeyman', master:'Master craftsman' },
     specializations:{
@@ -230,7 +235,7 @@ FBDATA.careers = {
     desc:'Learn a skilled trade, earn a mark, and one day keep a bench of your own.'
   },
   merchant: {
-    name:'Trade', icon:'⚖', skill:'ste', apprenticeAge:12, apprenticeCost:10, tierMin:1, requiresTech:'weights_measures',
+    role:'trading', name:'Trade', icon:'⚖', skill:'ste', apprenticeAge:12, apprenticeCost:10, tierMin:1, requiresTech:'weights_measures',
     wage:2, masterWage:3.5, guild:true,
     ranks:{ apprentice:'Merchant’s clerk', journeyman:'Peddler', master:'Merchant' },
     specializations:{
@@ -253,7 +258,7 @@ FBDATA.careers = {
     desc:'Weights, ledgers, roads, and the trust that lets silver travel.'
   },
   civic_clerk: {
-    name:'Civic Service', icon:'🏛', skill:'ste', apprenticeAge:16,
+    role:'civic', name:'Civic Service', icon:'🏛', skill:'ste', apprenticeAge:16,
     bookmarkIds:['476'],
     apprenticeCost:0, tierMin:1, wage:1.5, masterWage:2.5,
     ranks:{ apprentice:'Council pupil', journeyman:'Civic clerk',
@@ -261,7 +266,7 @@ FBDATA.careers = {
     desc:'Petitions, local judgments, records, and service to a city council.'
   },
   administration: {
-    name:'Administration', icon:'📜', skill:'ste', apprenticeAge:12, apprenticeCost:10,
+    role:'learned', name:'Administration', icon:'📜', skill:'ste', apprenticeAge:12, apprenticeCost:10,
     tierMin:1, requiresTech:'bureaucratic_offices', wage:2, masterWage:3.5,
     learned:true, literacyYears:2,
     ranks:{ apprentice:'Copyist', journeyman:'Clerk', master:'Learned administrator' },
@@ -284,7 +289,7 @@ FBDATA.careers = {
     desc:'Charters, accounts, judgments, and the written machinery of rule.'
   },
   physician: {
-    name:'Medicine', icon:'🌿', skill:'lea', apprenticeAge:12, apprenticeCost:8,
+    role:'learned', name:'Medicine', icon:'🌿', skill:'lea', apprenticeAge:12, apprenticeCost:8,
     tierMin:1, requiresTech:'herbals', wage:1.5, masterWage:2.5,
     learned:true, literacyYears:2,
     ranks:{ apprentice:'Healer’s pupil', journeyman:'Practitioner', master:'Medical master' },
@@ -307,7 +312,7 @@ FBDATA.careers = {
     desc:'Diagnosis, remedies, regimen, and the uncertain care of the sick.'
   },
   scholar: {
-    name:'Scholarship', icon:'📚', skill:'lea', apprenticeAge:10, apprenticeCost:5,
+    role:'learned', name:'Scholarship', icon:'📚', skill:'lea', apprenticeAge:10, apprenticeCost:5,
     tierMin:1, requiresTech:'manuscript_codex', wage:1, masterWage:1.75,
     learned:true, literacyYears:2,
     ranks:{ apprentice:'Student', journeyman:'Scholar', master:'Learned master' },
@@ -330,26 +335,26 @@ FBDATA.careers = {
     desc:'Books, disputation, observation, and works meant to outlive their author.'
   },
   soldier: {
-    name:'Soldiering', icon:'🛡', skill:'mar', apprenticeAge:14, apprenticeCost:0, tierMin:1, requiresTech:'spear_shield_drill',
+    role:'arms', name:'Soldiering', icon:'🛡', skill:'mar', apprenticeAge:14, apprenticeCost:0, tierMin:1, requiresTech:'spear_shield_drill',
     wage:1.5, masterWage:2.5, maleOnly:true,
     ranks:{ apprentice:'Garrison page', journeyman:'Man-at-arms', master:'Veteran retainer' },
     desc:'Drill, guard duty, and paid service beneath another person’s banner.'
   },
   monk: {
-    name:'Letters & Faith', icon:'✒', skill:'lea', apprenticeAge:10, apprenticeCost:5, tierMin:1, requiresTech:'manuscript_codex',
+    role:'cloister', name:'Letters & Faith', icon:'✒', skill:'lea', apprenticeAge:10, apprenticeCost:5, tierMin:1, requiresTech:'manuscript_codex',
     wage:0.5, masterWage:1, piety:1.5,
     ranks:{ apprentice:'Religious student', journeyman:'Scribe', master:'Learned scholar' },
     desc:'Letters, law, worship, and the learned work of a religious house.'
   },
   priest: {
-    name:'Clerical Service', icon:'🕯', skill:'lea', apprenticeAge:16, apprenticeCost:0,
+    role:'clergy', name:'Clerical Service', icon:'🕯', skill:'lea', apprenticeAge:16, apprenticeCost:0,
     wage:0.5, masterWage:1, piety:2, maleOnly:true,
     religionGroups:['christian','muslim'],
     ranks:{ apprentice:'Clerical student', journeyman:'Clerical servant', master:'Senior cleric' },
     desc:'Public worship, teaching, judgment, and the care of souls.'
   },
   noble: {
-    name:'Estate service', icon:'🏡', skill:'dip', apprenticeAge:12, apprenticeCost:5, tierMin:2,
+    role:'noble', name:'Estate service', icon:'🏡', skill:'dip', apprenticeAge:12, apprenticeCost:5, tierMin:2,
     wage:1.5, masterWage:2.5,
     ranks:{ apprentice:'Household page', journeyman:'Estate servant', master:'Steward' },
     desc:'Learn the conduct, accounts, and obligations of a great household.'

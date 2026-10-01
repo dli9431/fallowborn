@@ -454,7 +454,7 @@ window.FB = window.FB || {};
         needed:def.stewardship, current:stewardship
       }));
     }
-    if (career.profession === 'merchant' && finite(def.merchantLearning, 0)) {
+    if (FB.professionHasRole(career.profession, 'trading') && finite(def.merchantLearning, 0)) {
       var learning = FB.skillOf(c, 'lea');
       if (!c.traits || c.traits.indexOf('literate') < 0) {
         missing.push(FB.T('Lettered'));
@@ -544,7 +544,7 @@ window.FB = window.FB || {};
     out.termDays = status.termDays;
     out.need = finite(status.def.stewardship, 0);
     out.prestige = finite(status.def.prestige, 0);
-    out.learning = status.career.profession === 'merchant'
+    out.learning = FB.professionHasRole(status.career.profession, 'trading')
       ? finite(status.def.merchantLearning, 0) : 0;
     out.lettered = !out.learning ||
       (c.traits && c.traits.indexOf('literate') >= 0);

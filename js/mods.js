@@ -783,6 +783,23 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  /* Engine rules ask for a career's role, so every career a mod adds or
+     replaces declares one from the engine's role list. */
+  function validateCareers(mod) {
+    if (!plainObject(mod.careers)) fail('careers', 'must be an object.');
+    const known = FB.CAREER_ROLES;
+    for (const id in mod.careers) {
+      if (!own(mod.careers, id)) continue;
+      const def = mod.careers[id];
+      const path = 'careers.' + id;
+      if (!plainObject(def)) fail(path, 'must be an object.');
+      if (typeof def.role !== 'string' || !own(known, def.role)) {
+        fail(path + '.role', 'must be one of ' + Object.keys(known).join(', ') + '.');
+      }
+      if (own(def, 'roles')) validateIdList(def.roles, path + '.roles', known, true);
+    }
+  }
+
   function validateRulerTraits(mod) {
     const traits = combinedTable(FBDATA.traits, mod.traits, 'traits');
     validateIdList(mod.rulerTraits, 'rulerTraits', traits, false);
@@ -1191,6 +1208,7 @@ window.FBMODS = window.FBMODS || [];
     }
     if (own(mod, 'intrigue') || own(mod, 'plots')) validateIntrigue(mod);
     if (own(mod, 'itemPools')) validateItemPools(mod);
+    if (own(mod, 'careers')) validateCareers(mod);
     if (own(mod, 'rulerTraits')) validateRulerTraits(mod);
     if (own(mod, 'raidingTraditions')) validateRaidingTraditions(mod);
     if (own(mod, 'startScenarios')) validateStartScenarios(mod);

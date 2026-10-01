@@ -6971,7 +6971,8 @@ window.FB = window.FB || {};
     if (FB.activeMilitaryCommand && FB.activeMilitaryCommand(state)) return true;
     if (p.flags.on_campaign) return true;
     if (p.flags.with_liege_host && p.liege && FB.isRealmAtWar(state, p.liege)) return true;
-    if (p.profession === 'soldier' && FB.isRealmAtWar(state, state.owner[p.provinceId])) return true;
+    if (FB.professionHasRole(p.profession, 'arms') &&
+        FB.isRealmAtWar(state, state.owner[p.provinceId])) return true;
     return false;
   };
 

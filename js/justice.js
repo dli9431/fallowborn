@@ -468,8 +468,8 @@
     ensure(s).exiles[c.id] = { counties:p.counties.slice(), destination:p.destination, endTurn:s.turn + 1800 };
     if (FB.noteLifeEvent) FB.noteLifeEvent(s, c.id, 'exile', {});
     if (p.sentence === 'monastic_exile') {
-      c.career = { profession:'monk' };
-      if (c.id === s.player.charId) s.player.profession = 'monk';
+      c.career = { profession:FB.roleCareer('cloister') };
+      if (c.id === s.player.charId) s.player.profession = c.career.profession;
     }
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(s, c.id);
   }

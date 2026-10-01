@@ -128,10 +128,10 @@ window.FB = window.FB || {};
       options.push('marry_well');
     }
     if (traits.indexOf('zealous') >= 0 ||
-        c.career && (c.career.profession === 'monk' ||
-          c.career.profession === 'priest')) options.push('serve_faith');
+        c.career && FB.professionHasRole(c.career.profession,
+          ['cloister', 'clergy'])) options.push('serve_faith');
     if (traits.indexOf('greedy') >= 0 ||
-        c.career && c.career.profession === 'merchant') options.push('prosper');
+        c.career && FB.professionHasRole(c.career.profession, 'trading')) options.push('prosper');
     if (traits.indexOf('ambitious') >= 0 || traits.indexOf('proud') >= 0) {
       options.push('serve_house');
     }
@@ -492,7 +492,7 @@ window.FB = window.FB || {};
           (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
           !FB.isAgencyFamilyMember(state, cid, familySnapshot) ||
           FB.ageOf(c, state.date.year) < 16 ||
-          !career || career.profession !== def.profession ||
+          !career || !FB.professionDoesWork(career.profession, def.profession) ||
           (def.maleOnly && c.sex !== 'm') ||
           (FB.retainerOfficeRecord && FB.retainerOfficeRecord(state, office)) ||
           state.player.tier < (def.minTier || 0)) {
@@ -534,7 +534,7 @@ window.FB = window.FB || {};
         FB.ageOf(c, state.date.year) < 16 ||
         state.player.tier < (def.minTier || 0) ||
         (def.maleOnly && c.sex !== 'm') ||
-        !career || career.profession !== def.profession ||
+        !career || !FB.professionDoesWork(career.profession, def.profession) ||
         FB.familyOfficeRecord(state, cid)) return false;
     if (FB.retainerOfficeRecord && FB.retainerOfficeRecord(state, office)) return false;
     return !FB.familyOfficeHolder(state, office);

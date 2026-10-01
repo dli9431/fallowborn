@@ -542,11 +542,11 @@ window.FB = window.FB || {};
     };
   }
   function clothColors(tier, profession, variation, period476) {
-    var byProfession = {
-      monk:{kind:'habit',base:[96,80,58]},priest:{kind:'cassock',base:[60,56,62]},
-      soldier:{kind:'gambeson',base:[128,110,80]},
-      merchant:{kind:'doublet',base:[70,108,96]},farmer:{kind:'tunic',base:[112,92,61]},
-      craftsman:{kind:'tunic',base:[91,89,72]},noble:{kind:'cote',base:[76,91,119]}
+    var byRole = {
+      cloister:{kind:'habit',base:[96,80,58]},clergy:{kind:'cassock',base:[60,56,62]},
+      arms:{kind:'gambeson',base:[128,110,80]},
+      trading:{kind:'doublet',base:[70,108,96]},labor:{kind:'tunic',base:[112,92,61]},
+      craft:{kind:'tunic',base:[91,89,72]},noble:{kind:'cote',base:[76,91,119]}
     };
     var byTier = [
       {kind:'tunic',base:[122,102,72]},{kind:'tunic',base:[104,100,66]},
@@ -554,9 +554,10 @@ window.FB = window.FB || {};
       {kind:'court',base:[140,64,58]},{kind:'court',base:[126,48,56]},
       {kind:'royal',base:[106,58,126]},{kind:'royal',base:[88,44,116]}
     ];
-    var pick = byProfession[profession] || byTier[tier];
+    var role = FB.professionRole(profession);
+    var pick = (role && byRole[role]) || byTier[tier];
     if (period476) {
-      if (profession === 'priest' || profession === 'monk')
+      if (FB.professionHasRole(profession, ['clergy', 'cloister']))
         pick = {kind:'lateVestment',base:[164,153,126]};
       else if (tier >= 6)
         pick = {kind:'lateMantle',base:[104,65,118]};
@@ -641,7 +642,8 @@ window.FB = window.FB || {};
     var male = ['crop','sidePart','curly','longLoose','receding'];
     var female = ['longLoose','braids','bun','sidePart','curly'];
     var style;
-    if (!spec.female && spec.profession === 'monk' && spec.faith === 'christian') {
+    if (!spec.female && FB.professionHasRole(spec.profession, 'cloister') &&
+        spec.faith === 'christian') {
       style = 'tonsure';
     } else {
       style = (spec.female ? female : male)[saltedByte(identity,'wardrobe-hair',0)%5];
@@ -700,7 +702,7 @@ window.FB = window.FB || {};
   function generatedHeadwear(spec, identity) {
     if (spec.period476) {
       if (spec.tier >= 6) return 'circlet';
-      if (spec.profession === 'soldier' && !spec.child &&
+      if (FB.professionHasRole(spec.profession, 'arms') && !spec.child &&
           saltedByte(identity,'wardrobe-head',2) > 128) return 'helm';
       if (spec.female && !spec.child &&
           saltedByte(identity,'wardrobe-head',1) > 150) return 'veil';
@@ -708,7 +710,7 @@ window.FB = window.FB || {};
     }
     if (spec.child && spec.tier >= 6) return 'circlet';
     if (spec.faith === 'muslim' && !spec.female && !spec.child &&
-        spec.profession !== 'monk') return 'turban';
+        !FB.professionHasRole(spec.profession, 'cloister')) return 'turban';
     if (spec.faith === 'muslim' && spec.female && !spec.child) return 'veil';
     if (spec.tier >= 7) return 'imperial';
     if (spec.tier >= 6) return 'crown';
@@ -717,14 +719,14 @@ window.FB = window.FB || {};
         saltedByte(identity,'wardrobe-head',1) > 84) return 'wimple';
     if (spec.female && !spec.child &&
         saltedByte(identity,'wardrobe-head',1) > 168) return 'veil';
-    if (spec.profession === 'soldier' &&
+    if (FB.professionHasRole(spec.profession, 'arms') &&
         saltedByte(identity,'wardrobe-head',2) > 96) return 'helm';
-    if ((spec.profession === 'merchant' || spec.faith === 'jewish') &&
+    if ((FB.professionHasRole(spec.profession, 'trading') || spec.faith === 'jewish') &&
         !spec.child && saltedByte(identity,'wardrobe-head',2) > 96) return 'cap';
     if (spec.tier <= 1 && !spec.female && !spec.child &&
         saltedByte(identity,'wardrobe-head',2) > 208) return 'coif';
     var roll = saltedByte(identity,'wardrobe-extra',0);
-    if (spec.profession === 'priest' && spec.tier >= 2) return 'mitre';
+    if (FB.professionHasRole(spec.profession, 'clergy') && spec.tier >= 2) return 'mitre';
     if (spec.female && !spec.child && spec.tier >= 2 && roll > 150) return 'crespine';
     if (spec.female && !spec.child && spec.tier >= 2 && roll > 96) return 'fillet';
     if (spec.female && spec.child && roll > 176) return 'garland';
@@ -892,7 +894,9 @@ window.FB = window.FB || {};
       (tier >= 4 ? .2 : 0),0,1);
     spec.headwear = generatedHeadwear(spec,identity);
     if (authored && authored.bareheadedSerf && tier === 0 &&
-        (profession === 'farmer' || profession === 'none')) spec.headwear = 'none';
+        (FB.professionHasRole(profession, 'labor') || profession === 'none')) {
+      spec.headwear = 'none';
+    }
     if (opts.suppressHeadwear) spec.headwear = 'none';
     var hwVariants = HEADWEAR_VARIANTS[spec.headwear];
     spec.headwearVariant = hwVariants
@@ -3978,7 +3982,7 @@ window.FB = window.FB || {};
       drawItemArt(ctx,descriptor.loadout.neck,f.throatX,f.collarY+14,
         .68,0,false);
     }else if(descriptor.frame==='figure'&&
-      (spec.tier>=4||((spec.profession==='priest'||spec.profession==='monk')&&
+      (spec.tier>=4||(FB.professionHasRole(spec.profession,['clergy','cloister'])&&
         spec.faith==='christian'))){
       var chainY=f.collarY+8*u;
       ink(ctx,1.2*u,GOLD,.9,q);
@@ -4054,7 +4058,7 @@ window.FB = window.FB || {};
     ctx.quadraticCurveTo(xh,b.kneeY+hh*.035,xh+b.legKnee*.82,
       b.kneeY-hh*.025);
     ctx.stroke();
-    if(spec.tier<=2||spec.profession==='soldier'){
+    if(spec.tier<=2||FB.professionHasRole(spec.profession,'arms')){
       ink(ctx,hh*.038,shadeV2(hose,-.36),.85,q);
       for(g=0;g<3;g++){
         t=.18+g*.26;

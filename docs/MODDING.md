@@ -633,6 +633,7 @@ and at least one of these fields:
 | `tierMin`, `tierMax` | integer 0–7; the minimum cannot exceed the maximum |
 | `sex` | `m` or `f` |
 | `professions` | non-empty array of effective career ids |
+| careerRoles | non-empty array of career roles; the player's career must have one of them |
 | `traitsAll`, `traitsAny`, `traitsNone` | non-empty arrays of effective trait ids |
 | `faiths` | non-empty array of effective religion ids |
 | `cultures` | non-empty array of effective culture ids |
@@ -788,7 +789,7 @@ never supports a daily focus, and a focus is unavailable while afield unless it 
 includes `afield`. `vocational`, `requiresTech`, `visibility`, and `eligibility` are
 optional and use the same effective career, technology, and static-condition references
 as declarative deeds. `vocational` accepts one effective career id or a non-empty array of
-unique career ids; its multiplier applies when the player's current profession matches.
+unique career ids; its multiplier applies when the player's current career does that work (see Careers and apprenticeships: a named career accepts any career with its role, except learned careers).
 A focus must then declare at least one of:
 
 - `seasonal`: one or more non-zero `gold`, `prestige`, or `piety` yields. Each is a
@@ -1399,6 +1400,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `tierMin` / `tierMax` | rank 0 serf … 7 emperor |
 | `societalRoles` | any of `serf commoner gentry lord crowned`; these map to tiers 0, 1, 2, 3–5, and 6–7 |
 | `professions` | any actively practiced vocation from `farmer craftsman merchant administration physician scholar soldier monk priest noble`; landed players (tier 3+) retain their career as biography but do not pass profession gates |
+| careerRoles | any actively practiced career with one of the listed roles (clergy cloister labor craft trading arms noble learned civic); like professions, landed players (tier 3+) do not pass. Prefer it over professions unless the event belongs to one career |
 | `career` | nested active-work career requirement `{profession?,specialization?,guildRankMin?,guildStandingMin?}`; uses the protagonist's resolved career and likewise excludes landed or unassigned/apprentice work |
 | `minAge` / `maxAge`, `sex` | `"m"`/`"f"` |
 | `seasons` | array of 0 spring … 3 winter |
@@ -2596,11 +2598,12 @@ in `player.holdings` and **persist across generations** — property passes to h
 
 ```json
 { "holdings": { "fishing_boat": {
-  "name": "Fishing Boat", "icon": "🛶", "cost": 40, "tierMax": 2, "professions": ["farmer"],
+  "name": "Fishing Boat", "icon": "🛶", "cost": 40, "tierMax": 2, "careerRoles": ["labor"],
   "desc": "The sea pays no rent.", "fx": { "gold": 1.5 } } } }
 ```
 
 - `cost` gold · gates: `tierMin`/`tierMax`, `professions`, `req` (prerequisite holding id).
+  careerRoles gates on the roles of the household head's career; core holdings use it.
 - `eventOnly: true` hides a holding from the Better the household picker; it can still
   be granted by an event's `holding` effect (the inherited Rights of Common use this).
 - `fx` keys, summed by `FB.holdingBonus`: `gold`/`prestige`/`piety` per season, `battle`
@@ -2675,7 +2678,7 @@ ordered level array:
   `grandfatherTech:true` on a level when an already purchased establishment should remain
   active after the household changes to a realm that lacks that technology.
 - A work outfit is dormant without an adult resident family member practicing that
-  profession, or a matching retainer currently staffing an enterprise. Dormant levels
+  profession (or another career with its role), or a matching retainer currently staffing an enterprise. Dormant levels
   keep their saved purchase but have no upkeep or effect.
 - General and ruler `fx` keys are `mortality` (subtracted from yearly household mortality chance),
   `education` (added to yearly directed-learning chance), `retainers` (flat household
@@ -2715,6 +2718,7 @@ character can learn and perform:
 
 ```json
 { "careers": { "brewer": {
+  "role": "craft",
   "name": "Brewing", "icon": "🍺", "skill": "ste",
   "apprenticeAge": 10, "apprenticeCost": 6,
   "wage": 1.5, "masterWage": 2.5, "guild": true,
@@ -2727,6 +2731,7 @@ character can learn and perform:
 } } }
 ```
 
+- role is required and says what kind of work the career is: clergy, cloister, labor, craft, trading, arms, noble, learned or civic. Engine rules ask for the role, so the brewer above earns Craft's work focus, guild and monopoly rules, finance offers, dress and careerRoles events. The first career declared with a role is that role's default career (core: farmer for labor, noble for noble). An optional roles array adds secondary roles. A mod career without a known role is rejected. Data that names a career for work (an enterprise, work outfit or retainer office profession, a focus vocational and a tournament job career) accepts that career or any career with its role; work naming a learned career (learned:true) accepts only that career, because Administration, Medicine and Scholarship are distinct practices. Scripts can read FB.careerRole(state, character), FB.careerHasRole(state, character, role), FB.professionRole(id), FB.professionHasRole(id, role), FB.professionDoesWork(id, namedId) and FB.roleCareer(role); a role argument may be a list, which matches any of them.
 - `skill` is trained during apprenticeship and occasionally during adult work.
 - `apprenticeAge` / `apprenticeCost` gate a child's entry.
 - `tierMin` can keep a career closed until the household reaches sufficient station.
@@ -2735,8 +2740,8 @@ character can learn and perform:
 - `wage` / `masterWage` are seasonal contributions from resident non-player
   household workers who are not staffing an enterprise.
 - `guild: true` enables member → master → officer → guildmaster progression.
-  Core monopoly petitions are intentionally limited to the `craftsman` and `merchant`
-  profession ids; adding `guild:true` to another career does not make it charter-eligible.
+  Core monopoly petitions are limited to careers with the craft or trading role; adding
+  `guild:true` to a career with another role does not make it charter-eligible.
 - `maleOnly: true` is reserved for historically sex-gated training such as arms.
 - `religionGroups` limits a career to characters whose faith belongs to one of the listed
   groups; core Clerical Service uses `christian` and `muslim`.
@@ -2814,7 +2819,7 @@ as councilman and sergeant, or paid household service:
   `player.flags` id is true; a retainer position is active while a paid contract exists.
   The core `councilman` id is special: its flag is compatibility state, while
   `player.localCouncil` validates locality and carries the active motion.
-- `profession` optionally determines the career of a newly generated retainer.
+- `profession` optionally determines the career of a newly generated retainer. A family member fills the office when their career has that career's role.
   `minTier` and `maleOnly` gate hiring.
 - `pay` is charged every season per retained character; `quality` weights generated
   candidates and defaults to 1.
@@ -3004,7 +3009,7 @@ productive property:
 ```
 
 - `profession` identifies eligible workers; resident family and paid retainers with
-  that career may staff the enterprise only while their resolved residence is the
+  that career, or another career with its role, may staff the enterprise only while their resolved residence is the
   enterprise province. `guildRank` optionally sets the minimum guild rank.
 - Siting gates are `devMin`, `coastal`, and `terrains`, matching building gates.
 - `requiresTech` optionally requires a completed technology in the household's effective

@@ -392,9 +392,13 @@ window.FB = window.FB || {};
     c.health = 8;
     c.skills.lea = Math.max(14, c.skills.lea || 0);
     c.skills.dip = Math.max(7, c.skills.dip || 0);
-    if (FB.setCareer) FB.setCareer(state, c, index % 3 === 0 ? 'monk' : 'priest', 'master');
+    if (FB.setCareer) {
+      FB.setCareer(state, c, FB.roleCareer(index % 3 === 0 ? 'cloister' : 'clergy'), 'master');
+    }
     c.religiousRanks = c.religiousRanks || {};
-    if (c.career && c.career.profession === 'monk') c.religiousRanks.catholic_monastic = 4;
+    if (c.career && FB.professionHasRole(c.career.profession, 'cloister')) {
+      c.religiousRanks.catholic_monastic = 4;
+    }
     else c.religiousRanks.catholic_clerical = 5;
     c.clericalPiety = FB.ri(250, 900);
     c.clericalPrestige = FB.ri(150, 600);
@@ -425,7 +429,7 @@ window.FB = window.FB || {};
   }
 
   function cardinalBloc(c) {
-    if (c.career && c.career.profession === 'monk') return 'monastic';
+    if (c.career && FB.professionHasRole(c.career.profession, 'cloister')) return 'monastic';
     if (c.traits && (c.traits.indexOf('zealous') >= 0 ||
         c.traits.indexOf('honest') >= 0)) return 'reform';
     return 'curial';

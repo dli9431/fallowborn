@@ -10775,14 +10775,14 @@ window.FB = window.FB || {};
   function interactionCareerTitle(s, c) {
     let career = c && c.career;
     if (!career) {
-      let profession = 'farmer';
+      let profession = FB.roleCareer('labor');
       const isPlayer = c && c.id === s.player.charId;
       if (isPlayer) {
         profession = s.player.professionBack ||
-          s.player.profession || 'farmer';
+          s.player.profession || profession;
       } else if (FB.stationOf(c) >= 2 ||
           (s.player.tier >= 2 && FB.isHouseholdCharacter(s, c.id))) {
-        profession = 'noble';
+        profession = FB.roleCareer('noble');
       }
       career = {
         profession:profession,
@@ -11898,13 +11898,14 @@ window.FB = window.FB || {};
   function guildMonopolyScopePicker(profession, petition) {
     const s = FB.state;
     const craftGoods = { wares:1, materials:1, transport:1 };
-    let h = '<div class="gm-body-text"><p>' + esc(profession === 'craftsman'
+    const craft = FB.professionHasRole(profession, 'craft');
+    let h = '<div class="gm-body-text"><p>' + esc(craft
       ? FB.T('Choose the workshop output protected by this local craft privilege.')
       : FB.T('Choose a commodity and whether the privilege covers local exchange or one exact corridor.')) +
       '</p></div><div class="gm-list">';
     for (const goodId in FBDATA.marketGoods) {
-      if (profession === 'craftsman' && !craftGoods[goodId]) continue;
-      if (profession === 'craftsman') {
+      if (craft && !craftGoods[goodId]) continue;
+      if (craft) {
         h += '<button class="actionbtn" data-charter-local="' + goodId + '">' +
           esc(guildMonopolyGoodName(s, goodId)) + '<span class="adesc">' +
           esc(FB.T('Matching local workshop output only.')) + '</span></button>';
@@ -11924,7 +11925,7 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-charter-local]').forEach(function (button) {
       button.addEventListener('click', function () {
         const spec = {
-          mode:profession === 'craftsman' ? 'craft' : 'local',
+          mode:craft ? 'craft' : 'local',
           goodId:button.getAttribute('data-charter-local'),
           originId:s.player.provinceId
         };
@@ -11984,8 +11985,8 @@ window.FB = window.FB || {};
           opinion:status.terms.popularOpinion
         });
     }
-    if (profession !== 'craftsman' && profession !== 'merchant') {
-      const h = reviewActionsHtml(['craftsman', 'merchant'].map(function (id) {
+    if (!FB.professionHasRole(profession, ['craft', 'trading'])) {
+      const h = reviewActionsHtml([FB.roleCareer('craft'), FB.roleCareer('trading')].map(function (id) {
         const def = FBDATA.careers[id];
         return reviewActionCardHtml({ data:{ monopolyProfession:id },
           labelHtml:esc(def.icon + ' ' + professionName(id)), note:termsSummary() });
@@ -12011,7 +12012,7 @@ window.FB = window.FB || {};
     const advocate = FB.householdWorkers(s).filter(function (c) {
       if (c.id === s.player.charId || c.dead) return false;
       const career = FB.careerOf(s, c);
-      return career && career.profession === profession &&
+      return career && FB.professionDoesWork(career.profession, profession) &&
         career.guildRank === 'guildmaster';
     })[0];
     const scope = spec.mode === 'corridor'
@@ -18575,9 +18576,10 @@ window.FB = window.FB || {};
   }
 
   function enterpriseCategoryName(profession) {
-    if (profession === 'farmer') return FB.T('Farming');
-    if (profession === 'craftsman') return FB.T('Craft');
-    if (profession === 'merchant') return FB.T('Trade');
+    const role = FB.professionRole(profession);
+    if (role === 'labor') return FB.T('Farming');
+    if (role === 'craft') return FB.T('Craft');
+    if (role === 'trading') return FB.T('Trade');
     return FB.T('Other enterprises');
   }
 

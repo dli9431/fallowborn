@@ -317,14 +317,37 @@ window.FB = window.FB || {};
     if (s.turn < e.startTurn) return status(false,FB.T('Festivities begin on the opening date.'));
     return status(true);
   };
-  function trained(c, profession) {
-    var career = c && c.career && c.career.profession === profession ? c.career : c && c.careerHistory && c.careerHistory[profession];
+  function trainedRank(career) {
     return !!career && ['journeyman','master'].indexOf(career.rank) >= 0;
+  }
+  /* Trained for work naming a career: the current career if it does that
+     work, otherwise a past career that did. */
+  function trained(c, named) {
+    if (!c) return false;
+    if (c.career && FB.professionDoesWork(c.career.profession, named)) return trainedRank(c.career);
+    var history = c.careerHistory || {};
+    for (var profession in history) {
+      if (Object.prototype.hasOwnProperty.call(history, profession) &&
+          FB.professionDoesWork(profession, named) && trainedRank(history[profession])) return true;
+    }
+    return false;
+  }
+  /* Trained in any career of a role: the current career if it has the role,
+     otherwise a past career that did. */
+  function trainedInRole(c, role) {
+    if (!c) return false;
+    if (c.career && FB.professionHasRole(c.career.profession, role)) return trainedRank(c.career);
+    var history = c.careerHistory || {};
+    for (var profession in history) {
+      if (Object.prototype.hasOwnProperty.call(history, profession) &&
+          FB.professionHasRole(profession, role) && trainedRank(history[profession])) return true;
+    }
+    return false;
   }
   function sponsorship(s, id, e) {
     var c = character(s, id), circuit = player(s, id) && s.player.circuit;
     var standing = player(s, id) ? FB.standingOf(s, { kind:'character', id:e.hostId }) : 0;
-    return tier(s, id) === 1 && c.sex === 'm' && trained(c, 'soldier') && FB.skillSnapshot(s,c, 'mar') >= 8 && ((circuit && circuit.openWins > 0) || standing >= 40);
+    return tier(s, id) === 1 && c.sex === 'm' && trainedInRole(c, 'arms') && FB.skillSnapshot(s,c, 'mar') >= 8 && ((circuit && circuit.openWins > 0) || standing >= 40);
   }
   function tech(s, e) {
     var sovereign = FB.topRealm(s, holder(s, e.provinceId));

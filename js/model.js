@@ -2719,8 +2719,8 @@ window.FB = window.FB || {};
     }
     if (FB.stationOf(c) >= 2 || c.role === 'lord' || c.role === 'notable' ||
         c.royalLine) return 'landed';
-    if (c.abbeyVows || (c.career && (c.career.profession === 'monk' ||
-        c.career.profession === 'priest'))) return 'vowed';
+    if (c.abbeyVows || (c.career &&
+        FB.professionHasRole(c.career.profession, ['cloister', 'clergy']))) return 'vowed';
     if (FB.characterResidence(state, c) !== state.player.provinceId) {
       return 'away';
     }
@@ -2855,8 +2855,11 @@ window.FB = window.FB || {};
 
   function faithRoleRecord(state, religionId, profession, sex) {
     let path = null;
-    if (profession === 'monk') path = 'roles.monastic' + (sex === 'f' ? 'F' : 'M');
-    else if (profession === 'priest') path = 'roles.priest' + (sex === 'f' ? 'F' : 'M');
+    if (FB.professionHasRole(profession, 'cloister')) {
+      path = 'roles.monastic' + (sex === 'f' ? 'F' : 'M');
+    } else if (FB.professionHasRole(profession, 'clergy')) {
+      path = 'roles.priest' + (sex === 'f' ? 'F' : 'M');
+    }
     if (!path) return null;
     const found = FB.faithValue(state, religionId, path);
     return found.value ? { path:path, sourceId:found.sourceId || religionId,
@@ -2904,13 +2907,14 @@ window.FB = window.FB || {};
     if (FB.castellanyOf && FB.castellanyOf(state)) return FB.T('Castellan');
     let t = FB.titleWordFor(state, p.tier);
     if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) return FB.abbeyTitle(FB.abbeyOf(state));
-    if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
-      const profNames = {
-        craftsman:'Craftsman', merchant:'Merchant', soldier:'Soldier'
+    if (p.tier <= 1 && p.profession && !FB.professionHasRole(p.profession, 'labor')) {
+      const roleNames = {
+        craft:'Craftsman', trading:'Merchant', arms:'Soldier'
       };
+      const workRole = FB.professionRole(p.profession);
       const role = faithRoleRecord(state, me.religion, p.profession, me.sex);
       if (role) t = FB.faithDataText(state, p.charId, me.religion, role.path, {});
-      else if (profNames[p.profession]) t = FB.T(profNames[p.profession]);
+      else if (workRole && roleNames[workRole]) t = FB.T(roleNames[workRole]);
     }
     if (state.player.flags.bishop &&
         (!FB.playerBishopricOnly || FB.playerBishopricOnly(state))) {
@@ -2980,15 +2984,16 @@ window.FB = window.FB || {};
       snap.place = castleCounty ? castleCounty.name : castellany.provinceId;
       return snap;
     }
-    if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
+    if (p.tier <= 1 && p.profession && !FB.professionHasRole(p.profession, 'labor')) {
       const role = faithRoleRecord(state, me.religion, p.profession, me.sex);
+      const workRole = FB.professionRole(p.profession);
       if (role) {
         snap.faithRolePath = role.path;
         snap.faithRoleReligion = role.sourceId;
         snap.faithRoleWord = role.word;
-      } else if (p.profession === 'craftsman' || p.profession === 'merchant' ||
-        p.profession === 'soldier') {
-        snap.special = p.profession;
+      } else if (workRole === 'craft' || workRole === 'trading' || workRole === 'arms') {
+        /* The saved title word names the role's default career. */
+        snap.special = FB.roleCareer(workRole);
       }
     }
     if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) {

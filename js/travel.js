@@ -1411,7 +1411,7 @@ window.FB = window.FB || {};
     if (!servicePatronAlive(state, t)) return false;
     if (!FB.isRealmAtWar(state, t.destinationRealm)) return false;
     const career = FB.careerOf && FB.careerOf(state, me(state));
-    if (!career || !career.chosen || career.profession !== 'soldier') return false;
+    if (!career || !career.chosen || !FB.professionHasRole(career.profession, 'arms')) return false;
     return career.rank === 'journeyman' || career.rank === 'master';
   };
 

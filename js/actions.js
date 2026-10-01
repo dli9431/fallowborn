@@ -23,9 +23,11 @@ window.FB = window.FB || {};
     if (focus && focus.id === 'toil' && service && service.status === 'active') return 1;
     if (!focus || !focus.vocational || !FB.householdWorkMultiplier) return 1;
     const profession = state.player.profession;
-    const relevant = Array.isArray(focus.vocational)
-      ? focus.vocational.indexOf(profession) >= 0
-      : focus.vocational === profession;
+    const vocations = Array.isArray(focus.vocational) ? focus.vocational : [focus.vocational];
+    let relevant = false;
+    for (let i = 0; i < vocations.length && !relevant; i++) {
+      relevant = FB.professionDoesWork(profession, vocations[i]);
+    }
     return relevant ? FB.householdWorkMultiplier(state, profession) : 1;
   }
   // disguised in the ranks: any live chapter of the Sweet Polly Oliver chain
@@ -66,10 +68,18 @@ window.FB = window.FB || {};
   function activeCareer(state) {
     return FB.careerOf ? FB.careerOf(state, me(state)) : null;
   }
-  function qualifiedCareer(state, profession) {
+  function workingCareer(state) {
     const career = activeCareer(state);
-    return !!(career && career.chosen && career.profession === profession &&
-      career.rank !== 'apprentice' && career.rank !== 'unassigned');
+    return career && career.chosen &&
+      career.rank !== 'apprentice' && career.rank !== 'unassigned' ? career : null;
+  }
+  function qualifiedCareer(state, profession) {
+    const career = workingCareer(state);
+    return !!(career && career.profession === profession);
+  }
+  function qualifiedRole(state, role) {
+    const career = workingCareer(state);
+    return !!(career && FB.professionHasRole(career.profession, role));
   }
   function specializationFx(state) {
     const specialization = FB.careerSpecialization &&
@@ -234,13 +244,15 @@ window.FB = window.FB || {};
   { id: 'militia',
     show: function (s) {
       return s.player.tier <= 1 && adult(s) &&
-        s.player.profession !== 'monk' && !female(s) &&
-        !qualifiedCareer(s, 'soldier');
+        !FB.professionHasRole(s.player.profession, 'cloister') && !female(s) &&
+        !qualifiedRole(s, 'arms');
     },
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
 
   { id: 'work_land',
-    show: function (s) { return s.player.tier === 1 && s.player.profession === 'farmer'; },
+    show: function (s) {
+      return s.player.tier === 1 && FB.professionHasRole(s.player.profession, 'labor');
+    },
     tick: function (s) {
       let g = FB.rf(FBDATA.balance.freeWage[0], FBDATA.balance.freeWage[1]);
       if (s.player.flags.own_ox) g += 1;
@@ -267,7 +279,9 @@ window.FB = window.FB || {};
     gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
 
   { id: 'craft_work',
-    show: function (s) { return s.player.profession === 'craftsman' && s.player.tier <= 2; },
+    show: function (s) {
+      return FB.professionHasRole(s.player.profession, 'craft') && s.player.tier <= 2;
+    },
     tick: function (s) {
       s.player.gold += (FB.rf(2, 5) + (s.player.flags.guild_member ? 1 : 0) +
         craftTradeFocusGold(s)) / D;
@@ -279,7 +293,9 @@ window.FB = window.FB || {};
     } },
   { id: 'trade_run',
     desc: function (s) { return s.player.gold < 10 ? 'Little stock, little profit — but a start.' : 'Buy low here, sell high there.'; },
-    show: function (s) { return s.player.profession === 'merchant' && s.player.tier <= 2; },
+    show: function (s) {
+      return FB.professionHasRole(s.player.profession, 'trading') && s.player.tier <= 2;
+    },
     tick: function (s) {
       const ste = FB.skillOf(me(s), 'ste');
       const c = 0.55 + ste * 0.015;
@@ -343,7 +359,7 @@ window.FB = window.FB || {};
   { id: 'drill',
     show: function (s) {
       return afield(s) ||
-        (s.player.tier <= 2 && qualifiedCareer(s, 'soldier') && !female(s));
+        (s.player.tier <= 2 && qualifiedRole(s, 'arms') && !female(s));
     },
     tick: function (s) {
       s.player.gold += 1 / D;
@@ -352,7 +368,7 @@ window.FB = window.FB || {};
     gain: function () { return { gold: 1 }; } },
   { id: 'stand_guard',
     show: function (s) {
-      return s.player.tier <= 2 && qualifiedCareer(s, 'soldier') && !female(s);
+      return s.player.tier <= 2 && qualifiedRole(s, 'arms') && !female(s);
     },
     tick: function (s) {
       s.player.gold += 2 / D;
@@ -365,7 +381,7 @@ window.FB = window.FB || {};
   { id: 'copy_books',
     show: function (s) {
       return !!(FB.abbeyOf && FB.abbeyOf(s)) || (s.player.tier <= 2 &&
-        (s.player.profession === 'monk' || s.player.profession === 'priest'));
+        FB.professionHasRole(s.player.profession, ['cloister', 'clergy']));
     },
     tick: function (s) {
       s.player.piety += 2 / D;
@@ -376,7 +392,7 @@ window.FB = window.FB || {};
   { id: 'serve_church',
     show: function (s) {
       return !!(FB.abbeyOf && FB.abbeyOf(s)) || (s.player.tier <= 2 &&
-        (s.player.profession === 'monk' || s.player.profession === 'priest'));
+        FB.professionHasRole(s.player.profession, ['cloister', 'clergy']));
     },
     tick: function (s) {
       s.player.piety += 4 / D;
@@ -432,7 +448,7 @@ window.FB = window.FB || {};
   { id: 'train_arms',
     show: function (s) {
       return s.player.tier >= 2 && adult(s) && !female(s) &&
-        !(s.player.tier <= 2 && qualifiedCareer(s, 'soldier'));
+        !(s.player.tier <= 2 && qualifiedRole(s, 'arms'));
     },
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
   { id: 'lead_host',
@@ -2992,7 +3008,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       const m = me(s);
-      const clergyCelibate = s.player.profession === 'monk' &&
+      const clergyCelibate = FB.professionHasRole(s.player.profession, 'cloister') &&
         !FB.religionOf(m.religion, s).clergyMarriage;
       return FB.canWed(s) && !s.player.courtingId && !clergyCelibate;
     },
@@ -3317,7 +3333,7 @@ window.FB = window.FB || {};
         // (investiture, sanctions), the ordained (monks/priests), and
         // office-holding clergy (bishops, cardinals, popes).
         (s.player.tier >= 3 ||
-          s.player.profession === 'monk' || s.player.profession === 'priest' ||
+          FB.professionHasRole(s.player.profession, ['cloister', 'clergy']) ||
           !!(FB.hasBishopric && FB.hasBishopric(s, c)) ||
           !!(FB.papalOfficeOf && FB.papalOfficeOf(s, c)));
     },
@@ -4462,7 +4478,7 @@ window.FB = window.FB || {};
     }
     const allowed = {
       reason:1, ageMin:1, ageMax:1, tierMin:1, tierMax:1, sex:1,
-      professions:1, traitsAll:1, traitsAny:1, traitsNone:1,
+      professions:1, careerRoles:1, traitsAll:1, traitsAny:1, traitsNone:1,
       faiths:1, cultures:1, flagsAll:1, flagsAny:1, flagsNone:1,
       atWar:1, independent:1, traveling:1
     };
@@ -4511,6 +4527,7 @@ window.FB = window.FB || {};
     }
     const lists = {
       professions:references.careers,
+      careerRoles:FB.CAREER_ROLES,
       traitsAll:references.traits,
       traitsAny:references.traits,
       traitsNone:references.traits,
@@ -4998,6 +5015,8 @@ window.FB = window.FB || {};
     if (eligibility.sex && character.sex !== eligibility.sex) return false;
     if (eligibility.professions &&
         eligibility.professions.indexOf(state.player.profession) < 0) return false;
+    if (eligibility.careerRoles &&
+        !FB.professionHasRole(state.player.profession, eligibility.careerRoles)) return false;
     if (eligibility.traitsAll && !eligibility.traitsAll.every(function (id) {
       return traits.indexOf(id) >= 0;
     })) return false;
@@ -5483,7 +5502,8 @@ window.FB = window.FB || {};
   }
 
   function localCouncilCareer(profession) {
-    return ['merchant', 'craftsman', 'administration'].indexOf(profession) >= 0;
+    return FB.professionHasRole(profession, ['trading', 'craft']) ||
+      profession === 'administration';
   }
 
   FB.localCouncilOf = function (state) {
@@ -9063,6 +9083,7 @@ window.FB = window.FB || {};
       if (def.tierMin !== undefined && p.tier < def.tierMin) continue;
       if (def.tierMax !== undefined && p.tier > def.tierMax) continue;
       if (def.professions && def.professions.indexOf(p.profession) < 0) continue;
+      if (def.careerRoles && !FB.professionHasRole(p.profession, def.careerRoles)) continue;
       if (def.req && done.indexOf(def.req) < 0) continue;
       out.push({ id: id, def: def });
     }
@@ -12287,14 +12308,16 @@ window.FB = window.FB || {};
     }
     else if (p.tier >= 3) want = 'govern';
     else if (p.tier === 2) want = 'manage_manor';
-    else if (p.profession === 'monk') want = 'copy_books';
-    else if (p.profession === 'priest') want = 'serve_church';
-    else if (p.profession === 'soldier' && p.professionBack) want = 'militia';
+    else if (FB.professionHasRole(p.profession, 'cloister')) want = 'copy_books';
+    else if (FB.professionHasRole(p.profession, 'clergy')) want = 'serve_church';
+    else if (FB.professionHasRole(p.profession, 'arms') && p.professionBack) want = 'militia';
     else {
-      want = ({ farmer: p.tier === 0 ? 'toil' : 'work_land', craftsman: 'craft_work',
-        merchant: 'trade_run', administration:'keep_records',
-        physician:'practice_physic', scholar:'scholarly_work',
-        soldier: 'drill', noble: 'train_arms' })[p.profession];
+      /* Each learned career has its own focus; other careers work by role. */
+      want = ({ administration:'keep_records', physician:'practice_physic',
+        scholar:'scholarly_work' })[p.profession] ||
+        ({ labor: p.tier === 0 ? 'toil' : 'work_land', craft: 'craft_work',
+          trading: 'trade_run', arms: 'drill', noble: 'train_arms'
+        })[FB.professionRole(p.profession)];
       /* martial training is gated male: women are steered to the household or
          the court instead of drill/train_arms (validateFocus self-heals saves
          where a female heir still holds a now-hidden martial focus) */

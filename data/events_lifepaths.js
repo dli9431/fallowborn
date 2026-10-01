@@ -15,7 +15,7 @@ FBDATA.events.push(
 
 /* ================= SOLDIER: command & operational decisions ================= */
 { id:'soldier_command_scouts', title:'Before the Army Moves',
-  trigger:{ professions:['soldier'], flags:['seen_battle'], realmAtWar:true, chance:0.35 }, wartime:true, weight:8, cooldown:6,
+  trigger:{ careerRoles:['arms'], flags:['seen_battle'], realmAtWar:true, chance:0.35 }, wartime:true, weight:8, cooldown:6,
   text:'The army halts at the edge of unknown country. The captain needs the ground ahead read — fords, woods, and where the enemy’s outriders water their horses. His eye travels down the line and stops at you. “Take six riders. Bring me back the truth.”',
   options:[
     { label:'Lead the scouting party.', desc:'A command of your own — and the first blades of the war.', chance:'battle',
@@ -24,7 +24,7 @@ FBDATA.events.push(
     { label:'Another man’s turn.', desc:'Let someone hungrier take the risk.', effects:{ prestige:-2 } }
   ]},
 { id:'soldier_command_rearguard', title:'The Rearguard',
-  trigger:{ professions:['soldier'], flags:['seen_battle'], realmAtWar:true, chance:0.3 }, wartime:true, weight:7, cooldown:6,
+  trigger:{ careerRoles:['arms'], flags:['seen_battle'], realmAtWar:true, chance:0.3 }, wartime:true, weight:7, cooldown:6,
   text:'The army crosses the marsh at first light, and someone must hold the baggage and the wounded against whoever comes sniffing after. The captain names you. “Nothing passes you. Nothing.”',
   options:[
     { label:'Hold the crossing until the last cart is over.', desc:'Slow, thankless work — until it is suddenly very sharp.', chance:'battle',
@@ -33,7 +33,7 @@ FBDATA.events.push(
     { label:'Abandon the baggage and save the men.', desc:'Coin can be replaced. The captain will not see it that way.', effects:{ prestige:-4, opinion:{role:'lord', amt:-6}, health:1 } }
   ]},
 { id:'soldier_muster_drill', title:'The Quiet Muster',
-  trigger:{ professions:['soldier'], custom:'lifepath_realm_at_peace', chance:0.3 }, weight:7, cooldown:6,
+  trigger:{ careerRoles:['arms'], custom:'lifepath_realm_at_peace', chance:0.3 }, weight:7, cooldown:6,
   text:'Peace has come, and with it the green levy: boys from the lanes who hold a spear like a hoe. The sergeant asks you to knock them into shape before the next war does it for you.',
   options:[
     { label:'Drill them honestly.', desc:'Hard days on the green; the village will thank you when it matters.', effects:{ skills:{mar:1}, prestige:3, popularOpinion:3, log:'Drilled the levy in peacetime.' } },
