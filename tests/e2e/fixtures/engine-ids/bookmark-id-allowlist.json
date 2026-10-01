@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "about": "Engine lines allowed to compare start.id or activeBookmarkId with a literal, or to quote a registered bookmark id. Matched by file and trimmed source line. Kinds: legacy_default and legacy_contract keep old saves, start codes and mods working; identity_key uses the id as a stable seed or message key; pending is bookmark-specific behavior that should move into bookmark data. Pending entries may only be removed. New behavior belongs in bookmark data, not in a new entry.",
+  "entries": [
+    {
+      "file": "js/ambitions.js",
+      "source": "const bookmark = state.start && state.start.id || '867';",
+      "kind": "legacy_default",
+      "reason": "A save without start data belongs to the original 867 bookmark."
+    },
+    {
+      "file": "js/armies.js",
+      "source": "if (a.scenarioStanding && state.start && state.start.id === '476' &&",
+      "kind": "pending",
+      "reason": "Scenario standing hosts are tied to the 476 start instead of bookmark or story data."
+    },
+    {
+      "file": "js/events.js",
+      "source": "const bookmarkId = (state.start && state.start.id) || '867';",
+      "kind": "identity_key",
+      "reason": "Serf tenure selection keys on the bookmark id with the legacy 867 default."
+    },
+    {
+      "file": "js/events.js",
+      "source": "return 'news.world.scripted.' + scriptedPart(FB.activeBookmarkId || '867') + '.' +",
+      "kind": "identity_key",
+      "reason": "Saved scripted-history message keys include the bookmark id."
+    },
+    {
+      "file": "js/localfolk.js",
+      "source": "const bookmark = state && state.start && state.start.id || '867';",
+      "kind": "identity_key",
+      "reason": "Local folk generation seeds from the world seed and bookmark id."
+    },
+    {
+      "file": "js/main.js",
+      "source": "if (scenario.id === 'federate_476') return selected === '476';",
+      "kind": "pending",
+      "reason": "The start picker hardcodes the only 476 start."
+    },
+    {
+      "file": "js/main.js",
+      "source": "const bookmarkId = legacy ? '867' : parts[1].toLowerCase();",
+      "kind": "legacy_contract",
+      "reason": "Legacy five-part start codes imply the 867 bookmark."
+    },
+    {
+      "file": "js/main.js",
+      "source": "if (bookmark.id === '476' && sc.id !== 'federate_476' ||",
+      "kind": "pending",
+      "reason": "The start picker hides other starts in 476."
+    },
+    {
+      "file": "js/main.js",
+      "source": "bookmark.id !== '476' && sc.id === 'federate_476' ||",
+      "kind": "pending",
+      "reason": "The start picker hides the 476 start in other bookmarks."
+    },
+    {
+      "file": "js/mods.js",
+      "source": "return id !== '1066' || !legacyBookmarkLimited;",
+      "kind": "legacy_contract",
+      "reason": "Legacy mods that predate 1066 support limit that bookmark."
+    },
+    {
+      "file": "js/mods.js",
+      "source": "if (definition.id === '1066') supplies1066 = true;",
+      "kind": "legacy_contract",
+      "reason": "Legacy mod contract: detects a mod that supplies the 1066 bookmark."
+    },
+    {
+      "file": "js/mods.js",
+      "source": "if (bookmarkId === '1066') supplies1066 = true;",
+      "kind": "legacy_contract",
+      "reason": "Legacy mod contract: detects a mod that supplies the 1066 bookmark."
+    },
+    {
+      "file": "js/papacy.js",
+      "source": "return state && state.date && state.date.year >= 1000 ? '1066' : '867';",
+      "kind": "pending",
+      "reason": "Papal seeds fall back to a bookmark chosen by year."
+    },
+    {
+      "file": "js/papacy.js",
+      "source": "(state.date && state.date.year >= 1000 ? seeds['1066'] : seeds['867']) ||",
+      "kind": "pending",
+      "reason": "Papal regnal-name seeds fall back to a bookmark chosen by year."
+    },
+    {
+      "file": "js/portrait.js",
+      "source": "period476:!!(state && state.start && state.start.id === '476'),",
+      "kind": "pending",
+      "reason": "Period costume is selected by the 476 start id."
+    },
+    {
+      "file": "js/portrait.js",
+      "source": "!!(state && state.start && state.start.id === '476'))",
+      "kind": "pending",
+      "reason": "Period costume is selected by the 476 start id."
+    },
+    {
+      "file": "js/save.js",
+      "source": "return start && start.id ? String(start.id) : '867';",
+      "kind": "legacy_default",
+      "reason": "A save without start data belongs to the original 867 bookmark."
+    },
+    {
+      "file": "js/save.js",
+      "source": "FB.state.start = { id:'867', year:867, season:0, day:1 };",
+      "kind": "legacy_default",
+      "reason": "Restoring a save without start data repairs it to the original 867 bookmark."
+    },
+    {
+      "file": "js/save_v4.js",
+      "source": "var bookmarkId = data.state.start && data.state.start.id || '867';",
+      "kind": "legacy_default",
+      "reason": "A save without start data belongs to the original 867 bookmark."
+    },
+    {
+      "file": "js/situation476.js",
+      "source": "function is476(s) { return !!(s && s.start && s.start.id === '476'); }",
+      "kind": "pending",
+      "reason": "The 476 situation checks its own bookmark id."
+    },
+    {
+      "file": "js/util.js",
+      "source": "id:start.id || '867',",
+      "kind": "legacy_default",
+      "reason": "A save without start data belongs to the original 867 bookmark."
+    },
+    {
+      "file": "js/util.js",
+      "source": "} : { id:'867', year:867, season:0, day:1 };",
+      "kind": "legacy_default",
+      "reason": "A save without start data belongs to the original 867 bookmark."
+    },
+    {
+      "file": "js/world.js",
+      "source": "? '867' : String(FBDATA.defaultBookmark);",
+      "kind": "legacy_default",
+      "reason": "Data without a declared default bookmark falls back to 867."
+    },
+    {
+      "file": "js/world.js",
+      "source": "if (FB.activeBookmarkId === '476') {",
+      "kind": "pending",
+      "reason": "County holder generation skips vassals for the 476 bookmark."
+    },
+    {
+      "file": "js/world.js",
+      "source": "const bookmark = (state && state.start && state.start.id) || '867';",
+      "kind": "identity_key",
+      "reason": "Court generation seeds from the world seed and bookmark id."
+    },
+    {
+      "file": "js/world.js",
+      "source": "return 'scripted_' + (FB.activeBookmarkId || '867') + '_' +",
+      "kind": "identity_key",
+      "reason": "Scripted-history identities include the bookmark id."
+    }
+  ]
+}

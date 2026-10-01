@@ -389,6 +389,34 @@ Automated browser tests do not replace release testing by a person. Continue man
 The owner chooses when to run the fast Chromium suite and when to run the Firefox and WebKit
 matrix.
 
+Parity baselines and engine-id checks
+
+These four specifications let a refactor prove that behavior did not change and keep new hardcoded ids out of engine code. bookmark-id-lint.spec.js and content-id-ratchet.spec.js run in the ordinary Chromium-served suite. parity-fresh.spec.js and parity-corpus.spec.js hold owner-run journeys that skip unless FB_PARITY is set; only the start-scenario coverage check in parity-fresh.spec.js runs every time. None of them imports or executes a game script in Node.
+
+Snapshots. tests/e2e/support/game/parity.js captures a compact world snapshot inside the page: owner and holder per province; each living realm's rank, liege, ruler and ruler generation; government form counts; the player's tier, station, career and career rank; treasury totals; a fixed sample of FB.political.power and FB.political.permission answers; the costs shown for a fixed list of deeds and focuses, plus the freedom, land plot and rank elevation quotes; the RNG state and the next uid. readsArePure records whether capturing left state, RNG and uid unchanged. Derived caches are not captured.
+
+Fresh journeys start 867 and 1066 with every ordinary start scenario and 476 with its federate start, all from seed PARITY, and snapshot at day 0, at the next season boundary and at the next year boundary after that. Automation preferences are fixed and events resolve with their first option. A day that cannot pass, or the player's death, ends the journey early and is recorded in that checkpoint's advance field. The coverage check fails when a start scenario is added or retargeted without a matching journey.
+
+Corpus journeys import each save listed in docs/plans/v2-476-phase-0/save-manifest.json through the ordinary loader and snapshot on load, at the next season boundary and at the next year boundary. Each export is hashed first; one that no longer matches its manifest SHA-256 fails the journey. The exports are not part of this repository. FB_PARITY_CORPUS (or --corpus) names the directory the manifest paths are relative to and defaults to the parent of the game checkout. A missing export is skipped with its expected path.
+
+Baselines are JSON files in tests/e2e/fixtures/parity/, one per journey, written so a changed province or realm is a one-line diff. The owner captures the first baselines on the integration branch tip and commits them.
+
+Owner commands, run from tests/e2e/. Paths may be absolute or relative to tests/e2e/. Playwright options such as --workers=2 or -g "fresh-867" pass through.
+
+npm run parity:capture -- --dir <candidate checkout>/tests/e2e/fixtures/parity --corpus <directory containing notes/>
+
+npm run parity:compare -- --corpus <directory containing notes/>
+
+npm run ids:update
+
+How a change uses parity. First capture from the baseline tree (for example the integration branch tip the change started from), writing into the change's own fixtures/parity with --dir. Then run parity:compare in the change's checkout. Unchanged behavior passes; any difference is listed by path with its baseline and current values. A change that intentionally alters behavior recaptures from its own tree and commits the updated fixtures with the change, saying what differs and why. Keep support/game/parity.js unchanged in such a branch: a harness change lands on its own and every baseline is recaptured, because snapshots are only comparable when the same harness took them.
+
+RNG. Where a change promises no change in random draw order, rng and uid must match exactly, which is the default. --facts-only (FB_PARITY_FACTS_ONLY=1) ignores rng and uid and compares the remaining facts. Outcomes after the first changed draw will usually differ too, so a change that uses it must say which facts it expects to keep.
+
+Bookmark-id lint. bookmark-id-lint.spec.js reads js/*.js as text with comments removed and flags every line that compares start.id or activeBookmarkId with a string literal, or quotes a bookmark id registered in FBDATA.bookmarks. Each flagged line must appear, by file and trimmed source text, in tests/e2e/fixtures/engine-ids/bookmark-id-allowlist.json with a kind and a reason: legacy_default and legacy_contract keep old saves, start codes and mods working; identity_key uses the id as a stable seed or message key; pending is bookmark-specific behavior that should move into bookmark data. An entry whose line disappears or changes fails as stale, so the list only shrinks. New behavior belongs in bookmark data, never in a new pending entry. The lint reads one line at a time and does not follow an id through a local variable.
+
+Content-id ratchet. content-id-ratchet.spec.js loads the page and collects the ids of every FBDATA table: the string id of each record in an array, the keys of an object whose values are all records, and tables nested up to two levels inside other objects. It counts exact quoted string literals in js/*.js that equal an id of at least three characters and compares each id's count with tests/e2e/fixtures/engine-ids/content-id-counts.json. Any increase fails. A decrease also fails until the count file is regenerated, so the lower count becomes the new limit. tests/e2e/fixtures/engine-ids/content-id-allowlist.json lists ignored tables (tuning values and generated catalogs) and hooks, the ids the engine deliberately names, such as an event it triggers by id. Hooks are not counted and each needs a reason. Run npm run ids:update to record the first counts or to lower them after removing references, then review and commit the regenerated file with the change. Until the count file exists the ratchet fails with that instruction. Raising a count is an owner decision; prefer a hook with its reason.
+
 ## Profiling a reported save
 
 `save-season-profile.spec.js` is an opt-in Chromium diagnostic. It imports the
