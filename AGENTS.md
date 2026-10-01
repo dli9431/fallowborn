@@ -199,6 +199,8 @@ docs-only commits do not assign one, so those commits are exempt.
 **Never manage git worktrees.** Their lifecycle is owner-controlled. Do not create, add, remove,
 move, prune, repair, or otherwise modify a worktree or its registration.
 
+Exception: when the owner explicitly asks for a new worktree, an agent may create exactly that one with git worktree add, on a new branch from the base the owner names, at the location the owner names, and then work and commit in it. Removing, moving, pruning or repairing worktrees, and touching any other worktree or its registration, remain owner-controlled.
+
 **When the owner explicitly asks for a new branch and a merge into `main` or `dev`:**
 
 1. Create the requested temporary branch in the current checkout and commit the work there.
