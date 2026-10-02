@@ -123,8 +123,9 @@ with the sheet printed beside it. `FB.makeCharacter` fills all of it; the court 
 not bypass it.
 
 Portrait invalidation is narrower than the character record. One normalized descriptor
-resolves the exact visual outputs: identity DNA, age, sex, culture palette, faith group,
-station, profession, three health classes, visible expression traits, permanent marks,
+resolves the exact visual outputs: identity DNA, age, sex, culture palette (and the
+culture it was borrowed from), faith group and faith, station, profession, the resolved
+wardrobe id, three health classes, visible expression traits, permanent marks,
 marked ailments, and frame-visible equipment. `FB.characterVisualKey` returns that
 descriptor's key. Unrelated traits and exact health changes inside one visual class do
 not evict a face; adding or curing a visible wound or sickness does. Bust keys include
@@ -218,8 +219,9 @@ visual key, so cached faces cannot cross appearance boundaries.
 renderer constructs a direct analytic scaffold of named face/body anchors and paints it
 with raw Canvas 2D; it has no mesh vertices, faces, contour cache, external art, or game
 RNG calls. Identity variations use separately salted hashes, so adding a wardrobe detail
-does not reshuffle wounds or facial DNA. Unknown mod cultures resolve through
-`FB.cultureOf` to a deterministic nearby palette.
+does not reshuffle wounds or facial DNA.
+
+Portraits choose nothing by culture, faith or bookmark id. Faces come from data: each culture's appearance profile (skin tone, fair and red hair chances, a hair tendency, headwear tendencies) is inherited through its parent cultures, and a culture with none in its lineage borrows the campaign era's default culture. Faith attire, inherited down the faith tree, supplies the tonsure, the pendant, the headwear a faith expects, garment substitutions and beard customs. Clothing comes from a wardrobe (data/wardrobes.js): the campaign's government form may name one through its costume, otherwise its era's costume applies. A wardrobe's ordered rules pick the garment and cloth color by career role and station band, the trim and fur colors, the headwear and the neck chain, testing named station queries, career roles, faith attire flags, culture and faith headwear tendencies and salted identity bytes. The garments themselves are named shapes in the portrait's garment library: tunic, robe, cote, court, royal, habit, cassock, gambeson, doublet, lateTunic, lateMantle and lateVestment, with the mail, lamellar and plate shapes reserved for worn armor. Each shape declares its hem length, its identifying detail, drape folds, hem seam, waist cord, court cuffs and quilting, so a new garment is a registry entry rather than a new branch in the painter. The 867 and 1066 wardrobe and data reproduce the earlier tables exactly; the Roman and Gothic profiles keep the palettes those cultures received from the earlier fallback. Validation (FB.validateWardrobeData) runs with bookmark activation.
 
 Compact opaque busts share one state-local 8×8 atlas of 96×108 cells. Its 64 entries use
 LRU replacement and fixed 2,654,208-byte raw pixel storage. Persistent target canvases
@@ -1312,10 +1314,11 @@ Regression coverage: `tests/e2e/specs/rank-prestige.spec.js`.
 
 ## Spring 476 dress and service
 
-The 476 bookmark selects late antique tunics, vertical clavi, mantles and
-clerical vestments from the existing portrait renderer. Station controls the
-mantle palette and brooch, while the visual cache key includes the bookmark
-period so 476 dress cannot leak into later starts. The civic clerk is an ordinary
+The late antique era's costume is the late_antique wardrobe: tunics with
+vertical clavi, mantles and clerical vestments. Station controls the mantle
+palette and brooch, and only rulers wear a circlet. The visual cache key includes
+the resolved wardrobe id, so late antique dress cannot leak into later starts and
+any bookmark of the era (not only 476) dresses the same way. The civic clerk is an ordinary
 career whose local appointment is a separate authority record; the career alone
 does not grant land, revenue or jurisdiction.
 

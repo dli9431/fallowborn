@@ -12,7 +12,7 @@ dependsOnRuntime(__filename, [
   'js/armies.js', 'js/treasury.js', 'js/lordships.js', 'js/model.js',
   'js/politics.js', 'js/technology.js', 'js/settlement.js',
   'js/population.js', 'js/wars.js',
-  'js/i18n.js', 'js/portrait.js', 'js/ui_panels.js', 'js/ui_misc.js',
+  'js/i18n.js', 'js/portrait.js', 'data/wardrobes.js', 'js/ui_panels.js', 'js/ui_misc.js',
   'js/ui_modals.js', 'js/save.js', 'js/save_v4.js',
   'js/governments.js', 'data/eras.js',
   'css/style.css'
@@ -409,7 +409,7 @@ test('476 regional assignments and dress stay local to the bookmark',
         faith:byId('coruna').communities.map(function (c) {
           return c.religion;
         }),
-        dress:[look.period476, look.cloth.kind, high.cloth.kind],
+        dress:[look.wardrobe, look.cloth.kind, high.cloth.kind],
         frankHeir:s.realms.franks_476.succession.members[
           s.realms.franks_476.succession.heirId].charId ===
           s.stories.western_court_476.clovisId,
@@ -433,7 +433,7 @@ test('476 regional assignments and dress stay local to the bookmark',
     expect(result.constantine).toBe('mauri_476');
     expect(result.pliska).toBe('byzantium');
     expect(result.faith).toEqual(['nicene','homoian']);
-    expect(result.dress).toEqual([true,'lateTunic','lateMantle']);
+    expect(result.dress).toEqual(['late_antique','lateTunic','lateMantle']);
     expect(result.strait).toBe(true);
     expect(result.frankHeir).toBe(true);
     expect(result.older[0]).toBe('west_francia');
