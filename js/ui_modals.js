@@ -12885,6 +12885,7 @@ window.FB = window.FB || {};
     });
     let h = kv('Development', esc(String(s.dev[pid] || 1))) +
       kv('Terrain', esc(terrainName(province.terrain))) +
+      kv('Local season', esc(FB.localSeasonText(s, pid))) +
       kv('Holder', esc(holder
         ? (holder.ruler ? holder.ruler.name : holder.name)
         : FB.T('No settled holder'))) +

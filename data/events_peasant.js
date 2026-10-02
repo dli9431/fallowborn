@@ -114,7 +114,7 @@ FBDATA.events.push(
 
 /* ---------- the farming year ---------- */
 { id:'spring_sowing', title:'Sowing Season',
-  trigger:{ tierMax:1, careerRoles:['labor'], seasons:[0], chance:0.5 }, weight:10, cooldown:3,
+  trigger:{ tierMax:1, careerRoles:['labor'], seasonKinds:['spring'], chance:0.5 }, weight:10, cooldown:3,
   text:'The thaw has come and the earth turns soft. What goes into the ground now decides who eats next winter.',
   options:[
     { label:'Sow the proven barley.', desc:'The sure loaf never made a song, but it fills the belly.', effects:{ setFlag:'crop_safe', log:'Sowed barley.' } },
@@ -122,7 +122,7 @@ FBDATA.events.push(
     { label:'Sow little, hire out your back instead.', desc:'Coin today, and let another man fret at the sky.', effects:{ gold:3 } }
   ]},
 { id:'summer_storm', title:'Black Clouds Over the Fields',
-  trigger:{ tierMax:1, careerRoles:['labor'], seasons:[1], chance:0.3 }, weight:8, cooldown:3,
+  trigger:{ tierMax:1, careerRoles:['labor'], seasonKinds:['summer'], chance:0.3 }, weight:8, cooldown:3,
   text:'Hail-heavy clouds pile up beyond the hills. A summer storm could flatten every stalk you own.',
   options:[
     { label:'Rush the early cutting.', desc:'Take what the field offers before the sky takes it back.', effects:{ gold:2, clearFlag:'crop_risky', setFlag:'crop_safe', health:-1 } },
@@ -131,7 +131,7 @@ FBDATA.events.push(
       failure:{ text:'Hail like slingstones. The crop is battered flat.', effects:{ clearFlag:'crop_safe', clearFlag2:'crop_risky', setFlag:'crop_ruined' } } }
   ]},
 { id:'harvest', title:'The Harvest',
-  trigger:{ tierMax:1, careerRoles:['labor'], seasons:[2] }, weight:25, cooldown:3,
+  trigger:{ tierMax:1, careerRoles:['labor'], seasonKinds:['autumn'] }, weight:25, cooldown:3,
   text:'Scythes hiss in the fields from first light to last. The whole village works, prays, and counts.',
   options:[
     { label:'Bring it in.', desc:'Sweat now, and winter will tell you what it was worth.', chance:'harvest',
@@ -143,7 +143,7 @@ FBDATA.events.push(
             flow:-0.12, severe:true, seasons:8 } } } }
   ]},
 { id:'lean_winter', title:'The Hungry Months',
-  trigger:{ tierMax:1, seasons:[3], flags:['lean_winter'] }, weight:25,
+  trigger:{ tierMax:1, seasonKinds:['winter'], flags:['lean_winter'] }, weight:25,
   text:'The grain jar echoes. Your household chews bark-bread and watches the snow.',
   options:[
     { label:'Buy grain at winter prices.', require:{ goldMin:6 }, desc:'Silver staves off hunger — at the season’s bitter price.', effects:{ gold:-6, clearFlag:'lean_winter' } },
@@ -671,7 +671,7 @@ FBDATA.events.push(
   title:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
     pastoral_steppe:'The Herd Stores Are Opened', woodland_dependence:'The Woodland Stores Are Opened', norse_coastal_service:'The Shore Stores Are Opened', other:'The Granary Is Opened'
   }}}, once:true, wartime:true,
-  trigger:{ tierMax:0, minAge:16, realmAtWar:true, seasons:[2,3], chance:0.05 },
+  trigger:{ tierMax:0, minAge:16, realmAtWar:true, seasonKinds:['autumn','winter'], chance:0.05 },
   weight:2, cooldown:24,
   text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
     pastoral_steppe:'War has eaten the authority’s stores. Armed riders claim fodder, dried food, and household animals for the host; what they leave will not sustain every seasonal turn.',
@@ -701,7 +701,7 @@ FBDATA.events.push(
   ]},
 
 { id:'tax_collector', title:'The Taxman Cometh',
-  trigger:{ tierMax:1, seasons:[2], chance:0.4 }, weight:12, cooldown:3,
+  trigger:{ tierMax:1, seasonKinds:['autumn'], chance:0.4 }, weight:12, cooldown:3,
   text:'The lord’s man arrives with his ledger and his soldiers, tallying hearths and hens alike.',
   options:[
     { label:'Pay what is owed.', require:{ goldMin:3 }, desc:'The ledger closes, and the soldiers move on.', effects:{ gold:-3, opinion:{role:'lord', amt:3} } },
@@ -756,7 +756,7 @@ FBDATA.events.push(
 
 /* ---------- village life ---------- */
 { id:'village_festival', title:'Festival Day',
-  trigger:{ tierMax:2, seasons:[1], chance:0.35 }, weight:8, cooldown:4,
+  trigger:{ tierMax:2, seasonKinds:['summer'], chance:0.35 }, weight:8, cooldown:4,
   text:'Garlands on the well, a lamb on the spit, and the musicians already flushed with cheer. {province} forgets its burdens for a day.',
   options:[
     { label:'Dance, eat, laugh.', desc:'A day of joy costs little and pays in strength.', effects:{ health:1, opinion:{role:'friend', amt:5} } },
@@ -767,7 +767,7 @@ FBDATA.events.push(
     { label:'Sell sweets and sherbet to the crowd.', require:{ goldMin:2, religionGroups:['muslim'] }, desc:'Sweet water for sweet coin.', effects:{ gold:4, skills:{ste:1} } }
   ]},
 { id:'wolves', title:'Wolves at the Fold',
-  trigger:{ tierMax:1, seasons:[3], terrains:['forest','hills','mountains'], chance:0.25 }, weight:8, cooldown:8,
+  trigger:{ tierMax:1, seasonKinds:['winter'], terrains:['forest','hills','mountains'], chance:0.25 }, weight:8, cooldown:8,
   text:'Tracks in the snow, big as your palm. Something has been at the sheep, and the dogs whine at dusk.',
   options:[
     { label:'Hunt the beast.', desc:'A pelt and a name — or a scar to carry home.', chance:0.55,
@@ -818,7 +818,7 @@ FBDATA.events.push(
     { label:'Pay them to move on.', require:{ goldMin:5 }, desc:'Buy quiet, and hope quiet stays bought.', effects:{ gold:-5 } }
   ]},
 { id:'good_ox_year', title:'A Strong Team',
-  trigger:{ tierMax:1, flags:['own_ox'], seasons:[2], chance:0.5 }, weight:6, cooldown:3,
+  trigger:{ tierMax:1, flags:['own_ox'], seasonKinds:['autumn'], chance:0.5 }, weight:6, cooldown:3,
   text:'With the ox pulling, you plough deeper and faster than any neighbor. The extra furlongs pay.',
   options:[ { label:'The beast earns its hay.', desc:'Let the plough do the boasting.', effects:{ gold:4 } } ]},
 
@@ -1012,7 +1012,7 @@ FBDATA.events.push(
 
 /* ================= MEDIUM STORIES — two events each ================= */
 { id:'mill_will_not_turn', title:'The Wheel Will Not Turn',
-  trigger:{ tierMax:2, minAge:16, seasons:[1,2], chance:0.25 }, weight:10, once:true,
+  trigger:{ tierMax:2, minAge:16, seasonKinds:['summer','autumn'], chance:0.25 }, weight:10, once:true,
   text:'The mill wheel shudders to a stop with half the village’s grain waiting and rain in the air. Spoiled grain feeds nobody, but the miller still speaks of his toll.',
   options:[
     { label:'Put shoulder and tools to the gearing.', desc:'Fix it yourself and be owed — or limp home.', chance:'skill_ste', effects:{ setFlag:'mill_path_repair', queue:'mill_reckoning' },
@@ -1140,7 +1140,7 @@ FBDATA.events.push(
 
 /* ================= LOWER-STATION ONE-OFFS ================= */
 { id:'after_reapers', title:'After the Reapers',
-  trigger:{ tierMax:2, minAge:16, seasons:[2], chance:0.12 }, weight:6, cooldown:12,
+  trigger:{ tierMax:2, minAge:16, seasonKinds:['autumn'], chance:0.12 }, weight:6, cooldown:12,
   text:'A poor household moves through the stubble, gathering fallen stalks before everyone agrees the harvest is finished. There is little grain in their sack, but less in their house.',
   options:[
     { label:'Let them glean in peace.', desc:'Mercy costs a handful of stalks.', effects:{ piety:5, popularOpinion:4 } },
@@ -1187,7 +1187,7 @@ FBDATA.events.push(
   ]},
 
 { id:'swarm_in_eaves', title:'A Swarm in the Eaves',
-  trigger:{ tierMax:2, minAge:16, seasons:[0,1], chance:0.1 }, weight:5, cooldown:16,
+  trigger:{ tierMax:2, minAge:16, seasonKinds:['spring','summer'], chance:0.1 }, weight:5, cooldown:16,
   text:'A cloud of bees settles beneath the eaves, heavy with promise and noise. Honey keeps; wax sells; stings swell.',
   options:[
     { label:'Hive them with smoke and patience.', desc:'Sweet gold hangs heavy — and stings.', chance:'swarm',
@@ -1199,7 +1199,7 @@ FBDATA.events.push(
   ]},
 
 { id:'ford_in_flood', title:'The Ford in Flood',
-  trigger:{ tierMax:2, minAge:16, seasons:[0], terrains:['farmland','forest','hills','mountains','marsh'], chance:0.12 }, weight:6, cooldown:12,
+  trigger:{ tierMax:2, minAge:16, seasonKinds:['spring'], terrains:['farmland','forest','hills','mountains','marsh'], chance:0.12 }, weight:6, cooldown:12,
   text:'Snowmelt has turned the ford brown and violent. A cart has slewed sideways in the current, with a family clinging to it as the water rises.',
   options:[
     { label:'Ride or swim out to them.', desc:'Heroism the whole road will remember — if you live.', chance:'battle',
@@ -1217,7 +1217,7 @@ FBDATA.events.push(
 
 /* ================= GENTRY LIFE ================= */
 { id:'gentry_rent_arrears', title:'The Rent-Day Tally',
-  trigger:{ societalRoles:['gentry'], minAge:16, seasons:[2], chance:0.16 },
+  trigger:{ societalRoles:['gentry'], minAge:16, seasonKinds:['autumn'], chance:0.16 },
   weight:7, cooldown:12,
   text:'Rent day closes with one household absent from the tally. Their crop failed, the reeve says, but your own roof and obligations do not wait upon better weather.',
   options:[

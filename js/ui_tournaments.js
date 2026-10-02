@@ -331,24 +331,32 @@
     }); });
   };
   UI.showHostGames = function (pid, slot, back, draft) {
-    var s = FB.state, sites = FB.directSettlements(s,'player'), dates = T.dates(s,s.player.charId);
+    var s = FB.state, sites = FB.directSettlements(s,'player');
     if (!sites.length) { show(FB.T('Host games'),text(FB.T('Direct ownership of an established settlement is required.')),{ back:back }); return; }
     draft = draft || {};
     function option(value, name, selected) { return '<option value="' + esc(value) + '"' + (selected ? ' selected' : '') + '>' + esc(name) + '</option>'; }
-    var h = '<label for="games-venue">' + esc(FB.T('Venue')) + '</label><select id="games-venue">';
+    var chosen = 0;
     sites.forEach(function (site,i) {
-      h += option(i, T.venueName(site), draft.venue !== undefined ? draft.venue === String(i) : pid === site.provinceId && slot === site.settlement);
+      if (draft.venue !== undefined ? draft.venue === String(i) : pid === site.provinceId && slot === site.settlement) chosen = i;
     });
+    // opening dates follow the venue's local fair-weather seasons
+    var dates = T.dates(s,s.player.charId,sites[chosen].provinceId);
+    var h = '<label for="games-venue">' + esc(FB.T('Venue')) + '</label><select id="games-venue">';
+    sites.forEach(function (site,i) { h += option(i, T.venueName(site), i === chosen); });
     h += '</select>';
     ['scales','programmes'].forEach(function (group) {
       h += '<label for="games-' + group + '">' + esc(group === 'scales' ? FB.T('Scale') : FB.T('Programme')) + '</label><select id="games-' + group + '">';
       Object.keys(D[group]).forEach(function (key) { h += option(key, label(group,key), draft[group] === key); });
       h += '</select>';
     });
+    function dateOptions(list, selected) {
+      return list.map(function (turn) { return option(turn, date(turn), selected === String(turn)); }).join('');
+    }
     h += '<label for="games-date">' + esc(FB.T('Opening date')) + '</label><select id="games-date">';
-    dates.forEach(function (turn) { h += option(turn, date(turn), draft.date === String(turn)); });
+    h += dateOptions(dates, draft.date);
     h += '</select>';
-    if (!dates.length) h += text(FB.T('No spring or summer date currently meets the notice and host-spacing rules.'));
+    h += '<div id="games-no-date"' + (dates.length ? ' class="hidden"' : '') + '>' +
+      text(FB.T('No spring or summer date currently meets the notice and host-spacing rules.')) + '</div>';
     h += '<label><input type="checkbox" id="games-annual"' + (draft.annual ? ' checked' : '') + '> ' + esc(FB.T('Repeat annually, subject to renewal')) + '</label>';
     h += '<div id="games-ceiling-row"' + (draft.annual ? '' : ' class="hidden"') + '><label for="games-ceiling">' + esc(FB.T('Annual spending ceiling')) +
       '</label><input id="games-ceiling" type="number" min="0" step="25" value="' + esc(draft.ceiling || '500') + '"></div>';
@@ -359,6 +367,10 @@
     if (!draft.programmes) el('games-programmes').value = T.defaultProgramme(s,s.player.charId,venue());
     el('games-venue').addEventListener('change', function () {
       if (!touched) el('games-programmes').value = T.defaultProgramme(FB.state,FB.state.player.charId,venue());
+      var list = T.dates(FB.state,FB.state.player.charId,venue().provinceId), field = el('games-date');
+      field.innerHTML = dateOptions(list, field.value);
+      el('games-no-date').classList.toggle('hidden', list.length > 0);
+      el('games-review').disabled = !list.length;
     });
     el('games-programmes').addEventListener('change', function () { touched = true; });
     el('games-annual').addEventListener('change', function () { el('games-ceiling-row').classList.toggle('hidden', !this.checked); });

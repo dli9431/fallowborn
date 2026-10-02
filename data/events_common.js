@@ -473,7 +473,7 @@ FBDATA.events.push(
 
 /* ---------- health ---------- */
 { id:'winter_fever', title:'The Coughing Sickness',
-  trigger:{ seasons:[3], chance:0.16, notFlags:['ill'] }, childhood:true, weight:10, cooldown:8,
+  trigger:{ seasonKinds:['winter'], chance:0.16, notFlags:['ill'] }, childhood:true, weight:10, cooldown:8,
   text:{ forms:{ select:'value', param:'societalRole', cases:{
     serf:'A wet cough settles in your chest as the cold bites. Half the village is abed with it.',
     commoner:'A wet cough settles in your chest as the cold bites. Half the street is abed with it.',
@@ -836,7 +836,7 @@ FBDATA.events.push(
   text:'A white hart crosses your path at dawn and pauses, regarding you. The old folk say such beasts mark men for great things.',
   options:[ { label:'Great things, then.', desc:'Take the sign and carry it lightly.', effects:{ prestige:3 } } ]},
 { id:'harsh_winter', title:'A Killing Cold',
-  trigger:{ seasons:[3], chance:0.12, tierMax:2 }, weight:8, cooldown:12,
+  trigger:{ seasonKinds:['winter'], chance:0.12, tierMax:2 }, weight:8, cooldown:12,
   text:'The frost comes early and stays like an unwanted guest. Firewood dwindles; the old and the weak begin to die.',
   options:[
     { label:'Share your wood with the neighbors.', desc:'Warmth given is remembered when the thaw comes.', effects:{ gold:-3, opinion:{role:'friend', amt:10}, piety:4, prestige:3 } },
@@ -1038,7 +1038,7 @@ FBDATA.events.push(
       failure:{ text:'Caught lingering behind the arras. The steward’s cuff rings your ear.', effects:{ health:-1, opinion:{role:'lord', amt:-3} } } }
   ]},
 { id:'child_festival', title:'Festival, Waist-High',
-  trigger:{ maxAge:15, minAge:6, societalRoles:['serf','commoner'], seasons:[1], chance:0.3 }, childhood:true, weight:7, cooldown:8,
+  trigger:{ maxAge:15, minAge:6, societalRoles:['serf','commoner'], seasonKinds:['summer'], chance:0.3 }, childhood:true, weight:7, cooldown:8,
   text:'Festival day, seen from below: a forest of legs, the smell of honey-cakes, and the children’s footrace at noon.',
   options:[
     { label:'Run the race.', chance:0.5, desc:'Win or lose, the day is sweet.',
@@ -1057,7 +1057,7 @@ FBDATA.events.push(
     { label:'Guard the baggage (a basket).', desc:'Every army needs someone sensible.', effects:{ } }
   ]},
 { id:'child_winter_tales', title:'Tales by the Fire',
-  trigger:{ maxAge:15, minAge:6, seasons:[3], chance:0.3 }, childhood:true, weight:7, cooldown:6,
+  trigger:{ maxAge:15, minAge:6, seasonKinds:['winter'], chance:0.3 }, childhood:true, weight:7, cooldown:6,
   text:'Snow seals the doors, and the old ones talk: wars and wonders, debts and dooms, and who really owns the far field.',
   options:[
     { label:'Remember every word.', desc:'Old tales are lessons wearing cloaks.', effects:{ skills:{lea:1} } },

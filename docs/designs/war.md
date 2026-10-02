@@ -250,7 +250,7 @@ independent of the purchasing switch. Neutral counties permit paid trade, never
 unpaid seizure. Purchases cannot overdraw the payer or county stock.
 
 Supply is a carried reserve, not a penalty for distance from the homeland.
-Terrain, winter and supply technology affect daily consumption; available local
+Terrain, local winter (a season of hardship in the host's county, see time.md) and supply technology affect daily consumption; available local
 food covers it before reserves run out. Loading is bounded per host and county.
 Actual withdrawals are recorded where each host passes, including between season
 boundaries. Food is removed daily and is not charged again as seasonal demand or

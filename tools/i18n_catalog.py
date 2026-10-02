@@ -73,6 +73,8 @@ STRUCTURED_DATA = {
     "tenureArchetypes": "tenureArchetype",
     "tenureDuties": "tenureDuty",
     "tenureRights": "tenureRight",
+    "seasonKinds": "seasonKind",
+    "climateZones": "climateZone",
 }
 DATA_FIELDS = ("name", "desc")
 EVENT_FIELDS = ("title", "text", "desc")
@@ -739,6 +741,8 @@ def extract_structured(inv: Inventory) -> None:
             path = DATA / "markets.js"
         elif data_name == "justiceSentences":
             path = DATA / "intrigue.js"
+        elif data_name in ("seasonKinds", "climateZones"):
+            path = DATA / "climate.js"
         else:
             path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                            "modifiers.js" if data_name == "modifiers" else

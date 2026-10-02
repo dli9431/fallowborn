@@ -439,7 +439,7 @@ chosen.
 
 ## Geography bases
 
-A geography base (FBDATA.geographies, data/geographies.js) owns the physical world a bookmark is drawn on: the projection window (bounds), the raster width (gridWidth), land, sea and river geometry, the county seed points and terrain, straits and crossing classes, the settlement site table, the default settlement layout, map-scale tuning, place names by year, and optional knowledge hooks. A bookmark names its base in its geography field; politics (realms, owners, holders, hierarchy, communities) stay authored per bookmark. 867, 1066 and 476 all use europe_regional, which references the long-standing tables in data/map_data.js and data/counties.js instead of copying them, so the cold boot carries one geometry and no second copy. A bookmark that names no base uses FBDATA.defaultGeography. Saves stamp the base id in state.start.geography at creation.
+A geography base (FBDATA.geographies, data/geographies.js) owns the physical world a bookmark is drawn on: the projection window (bounds), the raster width (gridWidth), land, sea and river geometry, the county seed points and terrain, straits and crossing classes, the settlement site table, the default settlement layout, map-scale tuning, place names by year, climate zones, and optional knowledge hooks. A bookmark names its base in its geography field; politics (realms, owners, holders, hierarchy, communities) stay authored per bookmark. 867, 1066 and 476 all use europe_regional, which references the long-standing tables in data/map_data.js and data/counties.js instead of copying them, so the cold boot carries one geometry and no second copy. A bookmark that names no base uses FBDATA.defaultGeography. Saves stamp the base id in state.start.geography at creation.
 
 Engine code reads geometry only through the active base (FB.activeGeography). The world build projects with the base's bounds and gridWidth, fills its land and seas, and draws its rivers; switching to a cached world of another base restores that base's projection. The settlement snap ceiling and the raid and AI sea-raid pixel reaches are map-scale values (FB.mapScale) because they are measured in raster pixels; a base of a different scale sets its own, and a base that leaves one out takes the default base's.
 
@@ -451,6 +451,8 @@ Activation resolves a bookmark against its base before validation and the raster
 The 476 period names (Barcino, Salona, Carthage and the rest) are dated names on europe_regional rather than rename code, and its period county heads are the 476 layout in data/settlements.js. Dated names are display data and reach the localization catalogs like county names.
 
 Legacy mods that set bounds, land, seas or rivers replace that geometry on the default base, so every bookmark on it changes as before; a mod may also add or replace whole bases through geographies. Knowledge hooks (knowledge.basins of county lists and knowledge.routes joining two basins) are validated when present and unused until player knowledge exists.
+
+Climate (geography.climate) gives every county of the base a climate zone, with per-county exceptions; a zone maps the global calendar season to the county's local season kind. europe_regional assigns northern_temperate everywhere, which keeps the long-standing seasons. Zones are derived, never saved. See time.md, Calendar and local seasons.
 
 At minimum zoom, a mobile viewport can be larger than the permitted map span on one
 axis. `mapview.js` centers that surplus axis instead of passing reversed bounds to the

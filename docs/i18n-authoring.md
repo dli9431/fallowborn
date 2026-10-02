@@ -59,6 +59,10 @@ though the game still *runs*.
   extractor reads both without running the bookmark builder. Keep authored province
   display names as quoted strings so exact-source aliases can translate them. Ruler and
   physical-site names remain proper names.
+- Climate labels: season kind and climate zone names in data/climate.js are structured
+  data, extracted as seasonKind.<id>.name.default and climateZone.<id>.name.default and
+  rendered through FB.seasonKindName and FB.climateZoneName (FB.dataText). The calendar
+  season in dates keeps FB.seasonName.
 - **Historical ambitions:** `data/ambitions.js` owns structured `name` and `desc`
   fields, extracted as `ambition.<id>.<field>.default`. Render them with
   `FB.dataText(state, viewer, 'ambition', id, definition, field, {})`. Requirement

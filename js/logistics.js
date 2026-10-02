@@ -90,7 +90,9 @@
   FB.armyProvisionUse = function (state, army, pid, supplyTech) {
     const pr = FB.world.byId[pid || army.at] || {};
     const terrain = FBDATA.balance.supplyDrainTerrain || {};
-    const winter = state.date.season === 3 ? B('supplyWinterDrainMult', 1.5) : 1;
+    // a season of hardship in the county the host draws on (winter in temperate zones)
+    const winter = FB.localSeasonHas(state, pid || army.at, 'hardship')
+      ? B('supplyWinterDrainMult', 1.5) : 1;
     const campaign = army.realm === 'player' && army.warId === 'holy' && FB.campaignHostModBonus
       ? Math.max(0.1, 1 + FB.campaignHostModBonus(state, 'supplyUse')) : 1;
     return B('supplyDrainBase', 1.2) * (terrain[pr.terrain] || 1) * winter *

@@ -55,10 +55,11 @@ window.FB = window.FB || {};
      A bookmark names the geography base (FBDATA.geographies) that owns its
      physical map: projection window, grid width, land, sea and river
      geometry, county seeds and terrain, settlement sites, the default
-     settlement layout, map-scale tuning and place names by year. A bookmark
-     that names none (an older mod) uses FBDATA.defaultGeography, the base the
-     legacy top-level geometry tables describe. Engine code reads geometry
-     only through the active base. */
+     settlement layout, map-scale tuning, place names by year and climate
+     zones (read through js/climate.js). A bookmark that names none (an
+     older mod) uses FBDATA.defaultGeography, the base the legacy top-level
+     geometry tables describe. Engine code reads geometry only through the
+     active base. */
   FB.bookmarkGeography = function (definition) {
     if (definition && definition.geography !== undefined) return definition.geography;
     return FBDATA.defaultGeography === undefined ? null : FBDATA.defaultGeography;
@@ -187,6 +188,9 @@ window.FB = window.FB || {};
         }
         seedIds[seed.id] = true;
       }
+    }
+    if (geography.climate !== undefined && FB.climateAssignmentFaults) {
+      FB.climateAssignmentFaults(geography.climate, seedIds).forEach(fault);
     }
     if (geography.sites !== undefined && !plainRecord(geography.sites)) {
       fault('sites must be an object keyed by site id.');
