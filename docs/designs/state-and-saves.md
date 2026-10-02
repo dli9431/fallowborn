@@ -1,5 +1,17 @@
 # Game state & saves
 
+## Rebellion campaign identity
+
+Ordinary rebellion wars retain optional `casus.rebel`, `casus.formerLiege`, and
+`casus.rebelCharId` identifiers. Peace can therefore settle the original ruler's
+rebellion cases after succession, including cases before an intermediate lord
+or the player's court. Realm remapping updates realm ids without changing the
+original accused character. Repair recognizes old AI independence and named
+breakaway wars from their existing endpoints, without consuming RNG or resetting
+objectives and siege progress. A missing old arrest court can be recovered from
+the exact resistance source and campaign start turn. No save-version bump or
+new historical offenses are required. See [war](war.md) and [justice](justice.md).
+
 CrazyGames Continue preview
 
 The version-3 save envelope may carry optional meta.household with version 1, numeric tier, enterprise and land counts, a marriage boolean, and a detached objective record. Objectives store stable phase and enterprise IDs, settlement index and proper name, money amounts, readiness booleans and remaining in-game days. They never store localized prose, UI nodes or callbacks. The preview is generated from the live campaign at serialization and rendered in the active locale on the title. It is informational; loading reconstructs progress from authoritative state. Missing preview metadata is compatible with older saves, and a preview calculation failure cannot prevent the campaign from saving. Standard distributions do not add this metadata. The save version and campaign simulation are unchanged.

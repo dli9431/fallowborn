@@ -222,6 +222,7 @@
       '<p>' + esc(w.defending
         ? FB.T('{wins} field victories force the attacker to sue for peace; {wins} defeats can cost you an objective.', { wins:need })
         : FB.T('{wins} field defeats break the campaign; field victories can bring tribute offers but never take an objective.', { wins:need })) + '</p>' +
+      (FB.playerRebellionWar(w) ? '<p>' + esc(FB.T('If {enemy} never brings a host into your lands or fights you in the field, your independence stands when exhaustion ends the war.', { enemy:name(s, w.enemy) })) + '</p>' : '') +
       '<p>' + esc(FB.T('After 32 seasons the war ends in white peace.')) + '</p>');
     let hostHtml = '';
     const hosts = (s.armies || []).filter(function (a) { return a.realm === 'player'; });

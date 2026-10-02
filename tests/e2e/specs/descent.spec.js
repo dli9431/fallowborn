@@ -5,6 +5,9 @@ dependsOnRuntime(__filename, [
   'js/events.js',
   'js/model.js',
   'js/world.js',
+  'js/wars.js',
+  'js/armies.js',
+  'js/treasury.js',
   'data/events_noble.js',
   'data/events_world.js'
 ]);
@@ -228,8 +231,8 @@ test('a losing defender may kneel and keep his lands', async function ({ page },
     }
     FB.invalidateRealmCache();
 
-    p.war = { enemy:'great_king', target:null, wins:0, losses:0, seasons:2,
-      defending:true, casus:{ type:'conquest' }, enemySiege:2 };
+    FB.registerOrdinaryWar(s, 'player', { enemy:'great_king', target:null, wins:0, losses:0, seasons:2,
+      defending:true, casus:{ type:'conquest' }, enemySiege:2 });
 
     out.eligible = FB.submissionOfferEligible(s);
     FB.maybeOfferSubmission(s);
@@ -286,10 +289,11 @@ test('no homage is offered by a weaker or equal foe', async function ({ page }, 
     s.dev[settled[0].id] = 1;
     FB.invalidateRealmCache();
 
-    p.war = { enemy:'petty_foe', target:null, wins:0, losses:2, seasons:2,
-      defending:true, casus:{ type:'conquest' }, enemySiege:2 };
+    var peerWar = FB.registerOrdinaryWar(s, 'player', { enemy:'petty_foe', target:null, wins:0, losses:2, seasons:2,
+      defending:true, casus:{ type:'conquest' }, enemySiege:2 });
     FB.maybeOfferSubmission(s);
     var peerOffered = DSC.queueIds(s).indexOf('war_submission_offer') >= 0;
+    FB.settleOrdinaryWar(s, peerWar.id, 'invalid');
 
     // a strong but equal-rank foe is no lord to kneel to
     DSC.makeRealm(s, 'strong_peer', 'Strong March', 1, null, homeId, me.religion, me.culture);
@@ -299,8 +303,8 @@ test('no homage is offered by a weaker or equal foe', async function ({ page }, 
       s.dev[settled[i].id] = 12;
     }
     FB.invalidateRealmCache();
-    p.war = { enemy:'strong_peer', target:null, wins:0, losses:2, seasons:2,
-      defending:true, casus:{ type:'conquest' }, enemySiege:2 };
+    FB.registerOrdinaryWar(s, 'player', { enemy:'strong_peer', target:null, wins:0, losses:2, seasons:2,
+      defending:true, casus:{ type:'conquest' }, enemySiege:2 });
     FB.maybeOfferSubmission(s);
     var equalOffered = DSC.queueIds(s).indexOf('war_submission_offer') >= 0;
 
@@ -415,6 +419,40 @@ test('resisting the sentence raises a rebellion against the liege', async functi
   });
 });
 
+for (const truceRealm of ['attainder_liege', 'attainder_crown']) {
+  test('attainder resistance respects a truce with ' + truceRealm, async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await configureAttainder(page);
+    var result = await page.evaluate(function (truceRealm) {
+      var s = FB.state, p = s.player, me = s.chars[p.charId];
+      DSC.makeRealm(s, 'attainder_crown', 'High Kingdom', 3, null, p.provinceId, me.religion, me.culture);
+      s.realms.attainder_liege.liege = 'attainder_crown';
+      s.owner[p.provinceId] = 'attainder_crown';
+      p.flags.felony_doom = 1;
+      FB.invalidateRealmCache();
+      s.truces = s.truces || {};
+      var until = s.turn + 720;
+      s.truces[JSON.stringify(['player', truceRealm].sort())] = until;
+      var before = JSON.stringify(s), rng = FB.getRngState();
+      var risk = FB.fns.attainder_risk(s);
+      var resisted = FB.fns.attainder_resist(s);
+      var unchanged = before === JSON.stringify(s) && rng === FB.getRngState();
+      s.turn = until - 1;
+      var protectedUntilExpiry = !FB.fns.attainder_risk(s) && FB.fns.attainder_resist(s) === false;
+      s.turn = until;
+      var riskAfterExpiry = FB.fns.attainder_risk(s);
+      FB.fns.attainder_resist(s);
+      var war = FB.ordinaryWarBetween(s, 'player', 'attainder_crown');
+      return { risk:risk, resisted:resisted, unchanged:unchanged,
+        protectedUntilExpiry:protectedUntilExpiry, riskAfterExpiry:riskAfterExpiry,
+        war:!!war && war.casus.type === 'independence', liege:p.liege,
+        marksCleared:!p.flags.felony_mark && !p.flags.felony_doom };
+    }, truceRealm);
+    expect(result).toEqual({ risk:false, resisted:false, unchanged:true,
+      protectedUntilExpiry:true, riskAfterExpiry:true, war:true, liege:null, marksCleared:true });
+  });
+}
+
 test('a beaten lord is taken, ransomed, or freed with the peace', async function ({ page }, testInfo) {
   await startGame(page, testInfo);
   var result = await page.evaluate(function () {
@@ -426,8 +464,8 @@ test('a beaten lord is taken, ransomed, or freed with the peace', async function
     var oldChance = FBDATA.balance.captureChanceBase;
 
     DSC.makeRealm(s, 'captor', 'Captor March', 1, null, homeId, me.religion, me.culture);
-    p.war = { enemy:'captor', target:null, wins:0, losses:1, seasons:1,
-      defending:true, casus:{ type:'conquest' } };
+    FB.registerOrdinaryWar(s, 'player', { enemy:'captor', target:null, wins:0, losses:1, seasons:1,
+      defending:true, casus:{ type:'conquest' } });
 
     // certain capture when the dice leave no escape
     FBDATA.balance.captureChanceBase = 2;
@@ -453,9 +491,9 @@ test('a beaten lord is taken, ransomed, or freed with the peace', async function
     out.realmDead = !s.realms.player || !s.realms.player.alive;
 
     // the peace opens a cell too
-    p.tier = 4;
-    p.war = { enemy:'captor', target:null, wins:0, losses:1, seasons:1,
-      defending:true, casus:{ type:'conquest' } };
+    DSC.resetLanded(s);
+    FB.registerOrdinaryWar(s, 'player', { enemy:'captor', target:null, wins:0, losses:1, seasons:1,
+      defending:true, casus:{ type:'conquest' } });
     FB.maybeCapturePlayer(s);
     out.takenOnceMore = p.flags.in_prison === 1;
     FB.endPlayerWar(s);
@@ -463,8 +501,8 @@ test('a beaten lord is taken, ransomed, or freed with the peace', async function
 
     // commoners are robbed, not ransomed: no capture below tier 3
     p.tier = 2;
-    p.war = { enemy:'captor', target:null, wins:0, losses:1, seasons:1,
-      defending:true, casus:{ type:'conquest' } };
+    FB.registerOrdinaryWar(s, 'player', { enemy:'captor', target:null, wins:0, losses:1, seasons:1,
+      defending:true, casus:{ type:'conquest' } });
     FB.maybeCapturePlayer(s);
     out.commonerSafe = !p.flags.in_prison;
 
@@ -710,8 +748,8 @@ test('raiders burn the home parish and the lord sells his wall', async function 
     var oldChance = FBDATA.balance.devastationChance;
 
     DSC.makeRealm(s, 'raid_realm', 'Raid Host', 3, null, homeId, me.religion, me.culture);
-    s.realms.raid_realm.war = { enemy:sovereignId };
-    s.armies = [{ realm:'raid_realm', at:homeId, men:120 }];
+    var raid = FB.registerOrdinaryWar(s, 'raid_realm', { enemy:sovereignId });
+    s.armies = [{ realm:'raid_realm', warId:raid.id, at:homeId, men:120 }];
     s.greatHolyWar = null;
 
     out.sovereignFound = !!sovereignId && sovereignId !== 'player';

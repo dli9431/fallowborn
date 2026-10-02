@@ -6579,6 +6579,7 @@ window.FB = window.FB || {};
             FB.intrigueRealmRulerCaptive(state, id)) continue;
         const top = FB.topRealm(state, id);
         if (top === id || yearWars.has(top)) continue;
+        if (FB.truceExpiry(state, id, top) || FB.truceExpiry(state, id, r.liege)) continue;
         // the 1.5% gate first: realmTerritory walks the whole realm table, and
         // ~98.5% of that work was thrown away when the roll failed
         if (!FB.chance(FB.vassalBreakawayChance(state, id))) continue;
@@ -6586,8 +6587,9 @@ window.FB = window.FB || {};
         if (terr.length < 3) continue;
         if (FB.realmStrength(state, top) < 8) continue;
         if (timing) timing.count('World annual: breakaways');
+        const formerLiege = r.liege;
+        const rebel = FB.realmRulerCharacterSnapshot(state, id) || FB.materializeRealmRuler(state, id);
         if (FB.justiceRecordRebellion) {
-          const rebel = FB.realmRulerCharacterSnapshot(state, id) || FB.materializeRealmRuler(state, id);
           if (rebel) FB.justiceRecordRebellion(state, top, rebel.id, 'breakaway:' + id + ':' + state.turn);
         }
         r.liege = null;
@@ -6601,7 +6603,8 @@ window.FB = window.FB || {};
           // player, so a war parked there could neither resolve nor be fought
           if (tr && tr.alive && !state.player.war) {
             state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
-              defending: true, casus: { type: 'independence' } };
+              defending: true, casus: { type: 'independence', rebel: id,
+                formerLiege:formerLiege, rebelCharId:rebel && rebel.id } };
             yearWars.addPlayerWar(state.player.war);
             FB.warFooting(state);
             FB.announcePlayerDefense(state);
@@ -6613,7 +6616,8 @@ window.FB = window.FB || {};
           }
         } else if (tr && tr.alive && !tr.war) {
           tr.war = { enemy: id, years: 0, captures: 0,
-            casus: { type: 'border', label: 'Breakaway war' } };
+            casus: { type: 'border', label: 'Breakaway war', rebel:id,
+              formerLiege:formerLiege, rebelCharId:rebel && rebel.id } };
           yearWars.addWar(top, tr.war);
         }
         yearWars.rebuild();
@@ -7188,6 +7192,15 @@ window.FB = window.FB || {};
       }, 0).delay;
     }
     if (w.seasons > 8 + exhaustionDelay) {
+      /* A sovereign who never comes to contest a rising has let it stand.
+         Exhaustion is a failed rebellion only after the crown pressed it. */
+      if (FB.playerRebellionWar(w) && !FB.rebellionContested(w)) {
+        w.independenceSecured = 1;
+        FB.news(state, FB.msg('news.war.independence_uncontested',
+          '👑 {enemy} never came to bring you to heel. Your independence stands.',
+          { enemy: enemy.name }));
+        FB.endPlayerWar(state); return;
+      }
       FB.news(state, FB.msg('news.war.exhausted',
         '🕊 Exhaustion ends the war with nothing gained.', {}));
       FB.endPlayerWar(state); return;
@@ -7198,6 +7211,7 @@ window.FB = window.FB || {};
       const invader = FB.enemyHostInPlayerLandsArmy
         ? FB.enemyHostInPlayerLandsArmy(state) : null;
       if (invader) {
+        w.sovereignPressed = 1;
         if (w.enemyTarget && w.enemyTarget !== invader.at && (w.enemySiege || 0) > 0) {
           w.enemySiege = Math.max(0, w.enemySiege - 1);
           if (!w.enemySiege) {
@@ -8387,9 +8401,22 @@ window.FB = window.FB || {};
      the player to the lord actually renounced when that lord still lives
      inside the same realm; otherwise to the sovereign fought. Null means the
      war is not a failed player rebellion. */
+  /* A defending independence war is the player's own rising unless its casus
+     names another rebel: a vassal renouncing the player (casus.rebel). Older
+     saves carry no marker and keep their former reading. */
+  FB.playerRebellionWar = function (w) {
+    return !!(w && w.defending && w.casus && w.casus.type === 'independence' &&
+      (!w.casus.rebel || w.casus.rebel === 'player'));
+  };
+  /* Did the sovereign ever bring force against the rising? The sticky
+     sovereignPressed mark is set while an enemy host stands in the rebel's
+     lands; any battle or siege work also counts, which covers older saves. */
+  FB.rebellionContested = function (w) {
+    return !!(w && (w.sovereignPressed || (w.wins || 0) > 0 || (w.losses || 0) > 0 ||
+      (w.enemySiege || 0) > 0 || w.enemyTarget || (w.battles || []).length));
+  };
   FB.independenceReturnLiege = function (state, w) {
-    if (!w || !w.defending || !w.casus || w.casus.type !== 'independence' ||
-        w.independenceSecured || w.rebellionSettled) return null;
+    if (!FB.playerRebellionWar(w) || w.independenceSecured || w.rebellionSettled) return null;
     const former = w.casus.formerLiege;
     if (former && former !== 'player' && state.realms[former] && state.realms[former].alive &&
         FB.topRealm(state, former) === w.enemy) return former;
@@ -8520,9 +8547,18 @@ window.FB = window.FB || {};
 
   /* attainder resolutions (docs/designs/descent.md): the felony chains end
      here — mercy bought, the fief yielded, or the judgment denied by arms */
+  /* A truce between the player and the liege's crown binds its courts too:
+     a felony prosecuted now could only be answered by a war the truce forbids. */
+  function liegeTruce(state) {
+    const liege = state.player.liege;
+    if (!liege) return 0;
+    return FB.truceExpiry(state, 'player', FB.topRealm(state, liege)) ||
+      FB.truceExpiry(state, 'player', liege);
+  }
   FB.fns.attainder_risk = function (state) {
     const p = state.player;
     if (!p.liege || !state.realms[p.liege] || !state.realms[p.liege].alive) return false;
+    if (liegeTruce(state)) return false;
     return FB.standingOf(state, { kind:'realm', id:p.liege }) <=
       (FBDATA.balance.attainderStandingGate === undefined ? -30 : FBDATA.balance.attainderStandingGate);
   };
@@ -8555,6 +8591,8 @@ window.FB = window.FB || {};
   FB.fns.attainder_resist = function (state) {
     const p = state.player;
     const oldTop = p.liege ? FB.topRealm(state, p.liege) : null;
+    // A queued sentence cannot raise a war through a truce; the felony waits.
+    if (liegeTruce(state)) return false;
     delete p.flags.felony_mark;
     delete p.flags.felony_doom;
     if (!oldTop || !state.realms[oldTop] || !state.realms[oldTop].alive || FB.ordinaryWarBetween(state, 'player', oldTop)) return;

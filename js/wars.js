@@ -41,6 +41,47 @@
   // Return fresh arrays so query callers cannot mutate the retained indexes.
   FB.ordinaryWars = function (state) { return rows(state).slice(); };
   function endpoint(w, rid) { return w.attacker === rid || w.defender === rid; }
+  function rebellionRealm(w) {
+    const cause = w.casus;
+    if (!cause || (cause.type !== 'independence' &&
+        !(cause.type === 'border' && cause.label === 'Breakaway war'))) return null;
+    return cause.rebel || (endpoint(w, 'player') ?
+      (FB.playerRebellionWar(w) ? 'player' : null) : w.defender);
+  }
+  function repairRebellionCause(state, w) {
+    const rebel = rebellionRealm(w);
+    if (!rebel) return;
+    w.casus.rebel = rebel;
+    // Keep the person who rose even if the realm later passes to an heir.
+    if (!w.casus.rebelCharId) {
+      const c = rebel === 'player' ? state.chars[state.player.charId] :
+        FB.realmRulerCharacterSnapshot(state, rebel);
+      if (c) w.casus.rebelCharId = c.id;
+    }
+  }
+  function settleRebellionCases(state, w) {
+    const rebel = rebellionRealm(w);
+    if (!rebel || !FB.justiceSettleRebellion) return;
+    const crown = w.attacker === rebel ? w.defender : w.attacker;
+    const c = rebel === 'player' ? state.chars[state.player.charId] :
+      FB.realmRulerCharacterSnapshot(state, rebel);
+    const accused = [w.casus.rebelCharId, c && c.id];
+    accused.forEach(function (id, i) {
+      if (id && accused.indexOf(id) === i) {
+        const courts = [crown, w.casus.formerLiege];
+        // Old AI arrest wars did not save the renounced lord. The original
+        // resistance offense still identifies its exact court and start turn.
+        if (!w.casus.formerLiege) {
+          (state.justice && state.justice.offenses || []).forEach(function (o) {
+            if (o.accusedId === id && o.kind === 'rebellion' && o.turn === w.startedTurn &&
+                o.sourceId === 'arrest-resistance:' + o.actorId + ':' + id + ':' + w.startedTurn &&
+                FB.warRealmContains(state, crown, o.authority)) courts.push(o.authority);
+          });
+        }
+        FB.justiceSettleRebellion(state, id, courts);
+      }
+    });
+  }
   function current(state, rid) {
     const c = context(state);
     if (c) {
@@ -144,6 +185,7 @@
     war.enemy = endpoint(war, 'player') ? (attacker === 'player' ? defender : attacker) : defender;
     war.defending = defender === 'player';
     war.status = 'active';
+    repairRebellionCause(state, war);
     war.startedTurn = war.startedTurn === undefined ? state.turn : war.startedTurn;
     war.seasons = Number(war.seasons) || (Number(war.years) || 0) * 4;
     war.years = Number(war.years) || 0;
@@ -209,8 +251,10 @@
       if (rid !== 'player') bind(state, state.realms[rid], rid);
     });
     rows(state).forEach(function (w) {
+      repairRebellionCause(state, w);
       const a = state.realms[w.attacker], b = state.realms[w.defender];
       if (!a || !a.alive || !b || !b.alive || w.attacker === w.defender) {
+        settleRebellionCases(state, w);
         w.status = 'ended'; w.endedTurn = state.turn; invalidateWars(state);
         if (w.countyChallenge) FB.finishCountyChallenge(state, w);
         return;
@@ -415,6 +459,8 @@
     w.occupations = {};
     if (w.countyChallenge) FB.finishCountyChallenge(state, w);
     if (returnLiege) FB.restoreRenouncedLiege(state, returnLiege);
+    // However the rising ends, the war settles it; no court tries it again.
+    settleRebellionCases(state, w);
     if (FB.realmWars(state, 'player').length || FB.greatHolyWarCamp(state, 'player')) {
       state.player.focus = retainedFocus; state.player.focusBack = retainedBack;
     } else delete (state.military || {}).player;
@@ -428,6 +474,7 @@
     if (endpoint(w, 'player')) FB.endPlayerWar(state, result === 'invalid', id);
     else {
       FB.concludeOrdinaryWar(state, w.attacker, w, result === 'invalid');
+      settleRebellionCases(state, w);
       w.status = 'ended'; w.endedTurn = state.turn;
       invalidateWars(state);
     }
@@ -486,8 +533,8 @@
     const exhaustion = Math.min(1, balance.seasons / 32);
     const offerReason = captive ? FB.T('You cannot negotiate while held captive.')
       : cooldown ? FB.T('The enemy will hear another offer in {days} days.', { days:cooldown }) : '';
-    const rebellion = !!(w.defending && w.casus && w.casus.type === 'independence');
-    const out = { balance:balance, enemy:enemy, cooldown:cooldown, rebellion:rebellion,
+    const rebellion = !!(FB.playerRebellionWar && FB.playerRebellionWar(w));
+    const out ={ balance:balance, enemy:enemy, cooldown:cooldown, rebellion:rebellion,
       // who the player answers to if this war ends without securing independence
       returnLiege:FB.independenceReturnLiege ? FB.independenceReturnLiege(state, w) : null,
       terms:FB.warTermsCost ? FB.warTermsCost(state, w) : null };
@@ -871,7 +918,12 @@
     return true;
   };
 
-  function territorial(w) { return ['claims', 'dejure', 'fabricated', 'aggression', 'border', 'consolidation', 'enforcement', 'county_replacement'].indexOf(w.casus && w.casus.type || 'border') >= 0; }
+  function territorial(w) {
+    // AI arrest resistance follows the same occupation/peace path as annual
+    // AI breakaways. Player independence keeps its dedicated outcome handler.
+    return (!endpoint(w, 'player') && w.casus && w.casus.type === 'independence') ||
+      ['claims', 'dejure', 'fabricated', 'aggression', 'border', 'consolidation', 'enforcement', 'county_replacement'].indexOf(w.casus && w.casus.type || 'border') >= 0;
+  }
   function finishObjectives(state, w) {
     return withPeaceReceipt(state, w, function () { return finishObjectivesApply(state, w); });
   }
@@ -1391,6 +1443,8 @@
       if (w.attacker === from) w.attacker = to;
       if (w.defender === from) w.defender = to;
       if (w.legacyOwner === from) w.legacyOwner = to;
+      if (w.casus && w.casus.rebel === from) w.casus.rebel = to;
+      if (w.casus && w.casus.formerLiege === from) w.casus.formerLiege = to;
       w.defending = w.defender === 'player';
       w.enemy = endpoint(w, 'player') ? (w.attacker === 'player' ? w.defender : w.attacker) : w.defender;
       bindMilitary(state, w);

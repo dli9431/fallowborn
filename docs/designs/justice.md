@@ -149,13 +149,29 @@ Blackmail and sabotage have severity 1; abduction and false charges have severit
 severity 3. Independence declarations, annual vassal breakaways, and resistance
 to arrest register rebellion. Ordinary foreign war participation is not guilt.
 Cases belong to the sentencing authority and pass with it at succession.
+A concluded independence or AI breakaway campaign settles that rising: every open
+rebellion case against the rebel before the crown's and renounced lord's courts,
+and their lieges, closes as settled by peace (`FB.justiceSettleRebellion`). This
+includes the player's court when an AI vassal rises against the player. The war
+remembers the original rebel ruler so succession cannot leave that person's
+cases open; the current ruler's rebellion cases in those courts also close. A failed
+rebel who kneels again has renewed the oath; a successful one is beyond the
+court. Other crimes stay open. Without this, a returned rebel faced arrest for
+the same rising one season later, and resistance restarted the war indefinitely.
 
 Arrest success is `clamp(0.60 + 0.02 * (ruler Martial - target Intrigue), .15, .90)`.
 It uses seeded RNG. Failure grants 90 days of protection from that same ruler's
 arrest attempts. A landed subordinate who escapes can start the existing
-independence campaign; non-rulers remain at liberty. Wrongful arrest attempts
+independence campaign; non-rulers remain at liberty. Because that resistance is
+a war against the crown, no arrest of a resistance-capable subordinate is made
+while they hold a truce with that crown (blocker `truce`). Wrongful arrest attempts
 cost 10 county support, with another 10 on successful capture. Provisional
 custody expires after 90 days unless a sentence is imposed.
+
+The same truce projection gates AI seasonal arrests, including those by an
+intermediate lord beneath the crown. Annual breakaways also check the crown's
+and immediate lord's truces before rolling, so they cannot bypass the peace.
+These are settlement and restart fixes, with no new technology dependency.
 
 ## Sentences
 

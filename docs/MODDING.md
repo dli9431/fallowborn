@@ -140,7 +140,9 @@ Read-only APIs are `FB.justiceRulerEligible(state, actorId)`,
 Projections include `ready`, a machine-readable `blocker`, exact odds/amounts,
 `counties` (full jurisdiction), `supportCounties` (direct holdings receiving
 support changes), justification/evidence, and applicable expiry/destination.
-`FB.justiceSentenceOptions` returns the regional sentence projections.
+An arrest projection reports blocker `truce` and its `truceUntil` turn when the
+target could resist and holds a truce with the crown that the resistance would
+fight. `FB.justiceSentenceOptions` returns the regional sentence projections.
 
 `FB.justiceAttemptArrest` and `FB.justiceApplyPunishment` accept the same actor,
 target, and offense identities and revalidate at mutation. Results return `ok`,
@@ -154,7 +156,24 @@ custom effects `justice_submit`, `justice_resist`, `justice_challenge`,
 `FB.justiceRecordOffense` accepts `(state, authorityCharacterId, accusedId,
 kind, evidence, successful, victimId, sourceId)`. Reusing a source id within the
 same court does not create another cause. This is a trusted simulation-authoring
-API, not a player-facing way to manufacture evidence. `FB.escheatRealm` accepts
+API, not a player-facing way to manufacture evidence.
+`FB.justiceSettleRebellion(state, accusedId, realmIds)` closes the accused's open
+`rebellion` cases before the listed realms' courts and their lieges, marking each
+`settled:'peace'`, and returns the number closed; other offense kinds stay open.
+The listed courts may include `'player'`. AI rebellion settlement calls the same
+helper as player peace, using the crown and the renounced immediate lord.
+Defensive independence campaigns may name the rising realm in `casus.rebel`; when
+it is absent or `'player'`, `FB.playerRebellionWar(war)` treats the war as the
+player's own rebellion. AI independence and annual breakaway records also store
+`casus.formerLiege` and `casus.rebelCharId` (the character who started the rising).
+The latter keeps peace settlement attached to that person across ruler succession.
+Older AI `independence` and `border`/`Breakaway war` records infer the rebel from
+the defender during registration or repair; ordinary border wars do not pardon
+rebellion cases. A legacy arrest-resistance case's source and start turn recover
+its court when the war lacks `formerLiege`. AI independence uses ordinary
+territorial objectives and the 32-season exhaustion limit, while player
+independence keeps its dedicated rules.
+`FB.escheatRealm` accepts
 an optional `recipientId` for an already-authorized judicial forfeiture; ordinary
 calls retain their existing heirless-estate behavior. See
 [the justice design](designs/justice.md) for sentencing, jurisdiction, and save rules.

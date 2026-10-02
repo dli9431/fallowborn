@@ -106,8 +106,10 @@ to the sentence. At the sentence: **yield** (`attainder_yield`) and the
 fiefs escheat to the liege through `FB.loseAllLand`'s existing vassal branch
 — a baron simply loses his place — or **resist** (`attainder_resist`), which
 raises the player's banner in a defensive independence war against the old
-sovereign. The marks live in `player.flags`, so succession buries a pending
-attainder exactly like a `df_*` slide.
+sovereign. A truce between the player and the liege's crown suspends the
+prosecution: `attainder_risk` is false and `attainder_resist` raises no war
+while it lasts, leaving the marks in place. The marks live in `player.flags`,
+so succession buries a pending attainder exactly like a `df_*` slide.
 
 ## Capture & ransom (war, tiers 3+)
 

@@ -25243,6 +25243,7 @@ window.FB = window.FB || {};
       target:FB.T('Invalid target'), confined:FB.T('You are confined'),
       already_held:FB.T('Already in custody'), outside:FB.T('Outside your domain'),
       authority:FB.T('Outside your arrest authority'), cooldown:FB.T('The target recently evaded this ruler’s arrest.'),
+      truce:FB.T('A truce with the crown forbids this arrest'),
       case:FB.T('Case no longer available'), custody:FB.T('Requires your custody'),
       regional:FB.T('Unavailable in this legal tradition'), title:FB.T('No local titles to forfeit'),
       destination:FB.T('No exile destination'), already_sentenced:FB.T('Sentence already imposed'),

@@ -112,6 +112,21 @@ private intrigue custody intact. Existing anonymous raid captives do not become
 named prisoners. Arrest resistance reuses ordinary independence campaigns;
 ordinary foreign war alone is not a punishable offense. See [justice](justice.md).
 
+AI arrest-resistance campaigns use the same territorial occupation and peace
+rules as annual AI breakaways: occupied objectives can settle the campaign,
+and 32 seasons exhaust it into white peace. They no longer fall between the
+territorial and player-only seasonal handlers. This preserves the AI breakaway
+land settlement rules; the player's return-to-liege rule remains player-only.
+Both AI causes record `casus.rebel`, `formerLiege`, and `rebelCharId`. Every
+ending settles the rising's cases in the crown's and former lord's courts,
+including a player crown, without closing other crimes or unrelated courts'
+cases. Annual breakaways respect crown and immediate-lord truces.
+Repair infers the opposing rebel for older AI `independence` wars and `border`
+wars labelled `Breakaway war`; it retains their objectives and progress.
+Legacy arrest-resistance cases identify a missing court by their saved source
+and exact campaign start turn, without inventing a former liege.
+These are fixes to existing campaigns, with no technology-impact ledger entry.
+
 Generic player-facing wording uses Holy War. Campaign names use the calling
 faith's resolved group: Christian Crusade, Muslim Jihad, pagan Sacred War, and
 Holy War otherwise. Pagan wording is game flavor, not a claim that diverse pagan
@@ -1600,7 +1615,17 @@ by winning in the field or by an accepted **Demand recognition of independence**
 rebellion, white peace or submission) returns the player to that lord while
 they live inside the same realm (`FB.independenceReturnLiege`), otherwise to the
 sovereign. The player's counties are owned by the new top realm again. Invalid
-endings, where the enemy realm disappears, leave the player independent. Conquest still requires every objective to be held
+endings, where the enemy realm disappears, leave the player independent.
+Exhaustion is the exception for an uncontested rising: when the sovereign never
+fought a battle, besieged a fort, or stood a host in the rebel's lands
+(`FB.rebellionContested`, with the sticky `sovereignPressed` mark), exhaustion
+secures independence instead of returning the player. A broke or absent crown
+cannot otherwise lose, since rebellions have no objectives and the strength term
+alone stays below the recognition threshold. Every ending also settles the
+rising's rebellion cases (see [justice](justice.md)). A vassal who renounces the
+player is marked `casus.rebel`; `FB.playerRebellionWar` excludes those wars, so
+the player is never returned to a rebel vassal and demands reparations rather
+than recognition. Conquest still requires every objective to be held
 together; no settlement awards land to the player. Captivity blocks negotiation.
 Technology review: `war_white_peace_offers`, `war_victory_demands`,
 `war_objective_concessions` and `war_player_submission` are all `none`.

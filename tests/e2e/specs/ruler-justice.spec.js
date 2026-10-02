@@ -203,7 +203,7 @@ test('failed arrest charges the attempt, enforces a cooldown, and never grants c
     custody:null, support:-10, retry:true });
 });
 
-test('failed arrest of a vassal starts an ordinary independence campaign', async function ({ page }) {
+test('failed arrest of a vassal starts a rebellion that peace settles without subordinating the player', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, f = window.justiceFixture;
     const rid = f.enemy, r = s.realms[rid];
@@ -216,10 +216,42 @@ test('failed arrest of a vassal starts an ordinary independence campaign', async
     try { FB.chance = function () { return false; }; attempt = FB.justiceAttemptArrest(s, f.actor, target.id); }
     finally { FB.chance = old; }
     const war = FB.ordinaryWarBetween(s, 'player', rid);
+    const offense = FB.justiceOffenseFor(s, f.actor, target.id);
+    const demand = FB.warPeaceOptions(s, war.id).demand.kind;
+    FB.endPlayerWar(s, false, war.id);
     return { ok:attempt.ok, captured:attempt.captured, liege:r.liege, war:!!war,
-      casus:war && war.casus.type, offense:FB.justiceOffenseFor(s, f.actor, target.id).kind };
+      casus:war.casus.type, offense:offense.kind, settled:offense.closed && offense.settled,
+      playerLiege:s.player.liege, demand:demand };
   });
-  expect(result).toEqual({ ok:true, captured:false, liege:null, war:true, casus:'independence', offense:'rebellion' });
+  expect(result).toEqual({ ok:true, captured:false, liege:null, war:true, casus:'independence',
+    offense:'rebellion', settled:'peace', playerLiege:null, demand:'reparations' });
+});
+
+test('a failed rebellion settles its rebellion case and the truce blocks a new arrest', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, f = window.justiceFixture;
+    s.truces = {};
+    FB.changePlayerLiege(s, f.enemy, 'test');
+    FB.foundPlayerRealm(s);
+    s.realms.player.liege = f.enemy;
+    FB.doIndependence(s);
+    s.eventQueue = [];
+    const ruler = FB.materializeRealmRuler(s, f.enemy);
+    const murder = FB.justiceRecordOffense(s, ruler.id, f.actor, 'assassination', 'material', false, ruler.id);
+    const rebellion = FB.justiceOffenseFor(s, ruler.id, f.actor);
+    const w = FB.realmWars(s, 'player')[0];
+    FB.endPlayerWar(s, false, w.id);
+    const rebellionRow = s.justice.offenses.filter(function (o) {
+      return o.kind === 'rebellion' && o.accusedId === f.actor;
+    })[0];
+    const arrest = FB.justiceArrestProjection(s, ruler.id, f.actor);
+    return { liege:s.player.liege, hadRebellion:rebellion.kind, settled:rebellionRow.closed,
+      marker:rebellionRow.settled, murderOpen:!murder.closed,
+      blocker:arrest.blocker, truceUntil:arrest.truceUntil > s.turn, resistance:arrest.resistance };
+  });
+  expect(result.liege).not.toBeNull();
+  expect(result).toMatchObject({ hadRebellion:'rebellion', settled:true,
+    marker:'peace', murderOpen:true, blocker:'truce', truceUntil:true, resistance:true });
 });
 
 test('regional sentencing reads the ruler and qisas requires a proven killing', async function ({ page }) {

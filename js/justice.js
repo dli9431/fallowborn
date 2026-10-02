@@ -153,6 +153,26 @@
     var a = ruler(s, authorityRealm) || FB.materializeRealmRuler(s, authorityRealm);
     return a && FB.justiceRecordOffense(s, a.id, rebelId, 'rebellion', 'redhanded', true, a.id, sourceId);
   };
+  /* A concluded rising settles its rebellion cases before the courts of the
+     realms it was fought against, and of their lieges: a renewed oath is the
+     settlement, and won independence leaves nothing to prosecute. Other
+     crimes stay open. Returns the number of cases closed. */
+  FB.justiceSettleRebellion = function (s, accusedId, realmIds) {
+    var j = s.justice, courts = {}, closed = 0;
+    if (!j || !Array.isArray(j.offenses)) return 0;
+    (realmIds || []).forEach(function (rid) {
+      var seen = {};
+      while (rid && !seen[rid]) {
+        seen[rid] = true; courts[rid] = true;
+        rid = rid === 'player' ? s.player.liege : s.realms[rid] && s.realms[rid].liege;
+      }
+    });
+    j.offenses.forEach(function (o) {
+      if (o.closed || o.kind !== 'rebellion' || o.accusedId !== accusedId || !courts[o.authority]) return;
+      o.closed = true; o.settled = 'peace'; closed++;
+    });
+    return closed;
+  };
   function available(s, id) {
     if (id === s.player.charId) return Math.max(0, num(s.player.gold, 0));
     var rid = realmOf(s, id);
@@ -197,12 +217,23 @@
         amount:FB.rulerRegard(s, row.realmId, row.actorRealmId) - row.before };
     });
   }
+  /* Resisting a landed subordinate becomes a rising against the sovereign.
+     A truce with that crown binds its courts as well, so no such arrest is
+     attempted until it expires. Returns the truce expiry turn, or 0. */
+  function arrestTruce(s, target, rid) {
+    var rebel = target === s.player.charId ? 'player' : rid;
+    var liege = rebel === 'player' ? s.player.liege : rebel && s.realms[rebel] && s.realms[rebel].liege;
+    if (!liege) return 0;
+    return FB.truceExpiry(s, rebel, FB.topRealm(s, liege)) || FB.truceExpiry(s, rebel, liege);
+  }
   FB.justiceArrestProjection = function (s, actor, target, offenseId) {
     var a = person(s, actor), t = person(s, target);
     var counties = FB.justiceCounties(s, actor), offense = caseFor(s, actor, target, offenseId);
     var rid = realmOf(s, target), arid = realmOf(s, actor);
     var targetBaron = target === s.player.charId && s.player.tier === 3;
     var subordinateBaron = targetBaron && !!arid && under(s, s.player.liege, arid);
+    var resistance = subordinateBaron || !!rid && !!arid && under(s, rid, arid);
+    var truce = resistance ? arrestTruce(s, target, rid) : 0;
     var cooldown = (records(s).cooldowns || {})[actor + ':' + target] || 0;
     var blocker = !FB.justiceRulerEligible(s, actor) ? 'ruler' :
       !t || t.dead || actor === target ? 'target' :
@@ -211,14 +242,16 @@
       counties.indexOf(location(s, target)) < 0 ? 'outside' :
       (rid && (!arid || rid === arid || !under(s, rid, arid))) ||
       (targetBaron && !subordinateBaron) || (!arid && t && t.role === 'lord') ? 'authority' :
+      truce ? 'truce' :
       cooldown > s.turn ? 'cooldown' :
       offenseId && !offense ? 'case' : null;
     return { ready:!blocker, blocker:blocker, actorId:actor, targetId:target,
       offenseId:offense && offense.id, evidence:offense && offense.evidence,
       justified:!!offense, counties:counties, supportCounties:FB.justiceSupportCounties(s, actor), cooldownUntil:cooldown,
+      truceUntil:truce,
       chance:a && t ? FB.clamp(0.60 + 0.02 * (FB.skillOf(a, 'mar') - FB.skillOf(t, 'int')), 0.15, 0.90) : 0,
       attemptSupport:offense ? 0 : -10, captureSupport:offense ? 0 : -10,
-      resistance:subordinateBaron || !!rid && !!arid && under(s, rid, arid) };
+      resistance:resistance };
   };
   function news(s, actor, target, action, effects) {
     var a = person(s, actor), t = person(s, target);
@@ -276,7 +309,7 @@
       if (FB.fns.attainder_resist) FB.fns.attainder_resist(s);
     } else if (rid && arid) {
       var r = s.realms[rid], territory = FB.realmTerritory(s, rid).slice();
-      var top = FB.topRealm(s, rid);
+      var top = FB.topRealm(s, rid), formerLiege = r.liege;
       if (FB.ordinaryWarBetween(s, rid, top)) return;
       r.liege = null;
       territory.forEach(function (pid) { s.owner[pid] = rid; });
@@ -284,11 +317,13 @@
       if (FB.mergeRealmTech) FB.mergeRealmTech(s, rid, top);
       if (top === 'player') {
         FB.registerOrdinaryWar(s, 'player', { enemy:rid, target:null, wins:0, losses:0,
-          seasons:0, defending:true, casus:{ type:'independence' } });
+          seasons:0, defending:true, casus:{ type:'independence', rebel:rid,
+            formerLiege:formerLiege, rebelCharId:p.targetId } });
         FB.warFooting(s);
         FB.announcePlayerDefense(s);
       } else if (s.realms[top]) {
-        FB.registerOrdinaryWar(s, top, { enemy:rid, years:0, captures:0, casus:{ type:'independence' } });
+        FB.registerOrdinaryWar(s, top, { enemy:rid, years:0, captures:0,
+          casus:{ type:'independence', rebel:rid, formerLiege:formerLiege, rebelCharId:p.targetId } });
       }
     }
     FB.justiceRecordOffense(s, p.actorId, p.targetId, 'rebellion', 'redhanded', true,
