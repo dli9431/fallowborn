@@ -414,6 +414,10 @@ window.FB = window.FB || {};
         errors.push(FB.T('Era {id} has unknown default culture {culture}.',
           { id:id, culture:String(era.defaultCulture) }));
       }
+      /* the technology and military slots (js/technology.js, js/armies.js) */
+      var slotErrors = (FB.validateEraTechnology ? FB.validateEraTechnology(id, era) : [])
+        .concat(FB.validateEraMilitary ? FB.validateEraMilitary(id, era) : []);
+      for (var se = 0; se < slotErrors.length; se++) errors.push(slotErrors[se]);
       for (var wi = 0; wi < windows.length; wi++) {
         if (era.from <= windows[wi].to && windows[wi].from <= era.to) {
           errors.push(FB.T('Eras {a} and {b} overlap.', { a:windows[wi].id, b:id }));
@@ -576,8 +580,15 @@ window.FB = window.FB || {};
     var date = definition.date || {};
     if (!isFinite(date.year) || date.season < 0 || date.season > 3 ||
         date.day < 1 || date.day > 90) fault('invalid start date.');
-    var platformFaults = FB.resolveBookmarkPlatform(definition).faults;
-    for (var pf = 0; pf < platformFaults.length; pf++) fault(platformFaults[pf]);
+    var platform = FB.resolveBookmarkPlatform(definition);
+    for (var pf = 0; pf < platform.faults.length; pf++) fault(platform.faults[pf]);
+    /* coverage, the era's technology window and realm traditions; a realm
+       fault the catalogue-wide check already reported is not repeated */
+    var technologyFaults = FB.bookmarkTechnologyFaults
+      ? FB.bookmarkTechnologyFaults(definition, platform.era) : [];
+    for (var tf = 0; tf < technologyFaults.length; tf++) {
+      if (errors.indexOf(technologyFaults[tf]) < 0) errors.push(technologyFaults[tf]);
+    }
     if (definition.greatHolyWars !== undefined &&
         typeof definition.greatHolyWars !== 'boolean') {
       fault('greatHolyWars must be a boolean.');

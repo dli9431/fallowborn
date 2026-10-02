@@ -119,7 +119,11 @@ test('unknown eras, dates outside a declared era and unknown forms are rejected'
     expect(result.inferred).toBe('early_medieval');
     expect(result.inferredErrors).toEqual([]);
     expect(result.nearest).toBe('high_medieval');
-    expect(result.nearestErrors).toEqual([]);
+    /* the nearest era resolves, but the start lies past the technology
+       catalogue's authored coverage */
+    expect(result.nearestErrors).toEqual([
+      'Bookmark 867: start year 1400 is outside the technology catalogue coverage (476–1300).'
+    ]);
     expect(result.unknownRealmForm).toContain('Bookmark 867: realm ' +
       result.firstRealm + ' has unknown government e2e_missing_form.');
     expect(result.overlap).toContain('Eras early_medieval and e2e_overlap overlap.');

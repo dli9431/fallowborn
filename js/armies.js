@@ -325,9 +325,63 @@ window.FB = window.FB || {};
       : 0;
   };
 
+  /* The campaign era's military slot (data/eras.js), or null. An era is
+     stamped at creation, so its restrictions hold for the whole campaign. */
+  FB.eraMilitary = function (state) {
+    const eraId = FB.campaignEra ? FB.campaignEra(state) : null;
+    const eras = (typeof FBDATA !== 'undefined' && FBDATA.eras) || {};
+    const era = eraId && Object.prototype.hasOwnProperty.call(eras, eraId)
+      ? eras[eraId] : null;
+    return era && era.military && typeof era.military === 'object'
+      ? era.military : null;
+  };
+
+  /* False when the campaign era never fields the class's role. */
+  FB.unitClassEraAllowed = function (state, classId) {
+    const military = FB.eraMilitary(state);
+    const excluded = military && Array.isArray(military.excludeRoles)
+      ? military.excludeRoles : null;
+    if (!excluded || !excluded.length) return true;
+    const role = FB.unitClassRole(classId);
+    return !role || excluded.indexOf(role) < 0;
+  };
+
+  /* An era's military slot: excluded roles must be known and not core (a
+     core role is part of every host), and an equipment window names whole
+     years, from first. */
+  FB.validateEraMilitary = function (eraId, era) {
+    const errors = [];
+    const military = era && era.military;
+    if (military === undefined || military === null) return errors;
+    if (typeof military !== 'object' || Array.isArray(military)) {
+      return ['Era ' + eraId + ': military must be an object.'];
+    }
+    if (military.excludeRoles !== undefined) {
+      if (!Array.isArray(military.excludeRoles)) {
+        errors.push('Era ' + eraId + ': excludeRoles must be a list of unit roles.');
+      } else {
+        for (const role of military.excludeRoles) {
+          if (!knownUnitRole(role)) {
+            errors.push('Era ' + eraId + ' excludes unknown unit role ' + role + '.');
+          } else if (FB.UNIT_ROLES[role].core) {
+            errors.push('Era ' + eraId + ' cannot exclude the core unit role ' + role + '.');
+          }
+        }
+      }
+    }
+    const equipment = military.equipment;
+    if (equipment !== undefined && equipment !== null &&
+        !(typeof equipment === 'object' && Number.isInteger(equipment.from) &&
+          Number.isInteger(equipment.to) && equipment.from <= equipment.to)) {
+      errors.push('Era ' + eraId + ': equipment must name whole years from and to, from first.');
+    }
+    return errors;
+  };
+
   FB.unitClassUnlocked = function (state, classId, realmId) {
     const def = unitClassDef(classId);
     if (!def) return false;
+    if (!FB.unitClassEraAllowed(state, classId)) return false;
     const culture = realmUnitCulture(state, realmId);
     if (def.cultureDoctrine && FB.cultureValue &&
         FB.cultureValue(state, culture, 'doctrines.military').value !==

@@ -2692,8 +2692,9 @@ window.FB = window.FB || {};
     for (const id in units) {
       const unit = units[id];
       if (!unit.cultureDoctrine || unit.cultureDoctrine !== military) continue;
-      const reason = unit.requiresTech && !FB.techRequirementMet(s, unit.requiresTech, 'player')
-        ? FB.techRequirementReason(s, unit.requiresTech, 'player') : '';
+      const reason = !FB.unitClassEraAllowed(s, id) ? FB.T('Not fielded in this era')
+        : unit.requiresTech && !FB.techRequirementMet(s, unit.requiresTech, 'player')
+          ? FB.techRequirementReason(s, unit.requiresTech, 'player') : '';
       h += kv(FB.T(unit.name), esc(FB.unitClassUnlocked(s, id, 'player')
         ? FB.T('Available; strength scales with local adoption')
         : reason || FB.T('Unavailable until people in your recruiting lands adopt this culture')));

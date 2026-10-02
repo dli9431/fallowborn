@@ -925,7 +925,8 @@ window.FBMODS = window.FBMODS || [];
 
   function validateRaidingTraditions(mod) {
     onlyFields(mod.raidingTraditions, {
-      cultures:true, faiths:true, faithGroups:true
+      cultures:true, faiths:true, faithGroups:true,
+      victims:true, profiles:true, fallbackProfile:true
     }, 'raidingTraditions');
     const rules = {};
     const base = FBDATA.raidingTraditions || {};
@@ -947,6 +948,46 @@ window.FBMODS = window.FBMODS || [];
         fail('raidingTraditions.faithGroups[' + i + ']',
           'must name a root faith group.');
       }
+    }
+    validateHistoricRaids(mod.raidingTraditions, base, cultures, religions);
+  }
+
+  /* The historic raid families: profiles, the ordered victims rules that
+     choose one, and the fallback. Each is replaced whole; the composed
+     result must still resolve every profile it names. */
+  function validateHistoricRaids(raids, base, cultures, religions) {
+    const profiles = own(raids, 'profiles') ? raids.profiles : base.profiles;
+    const victims = own(raids, 'victims') ? raids.victims : base.victims;
+    const fallback = own(raids, 'fallbackProfile')
+      ? raids.fallbackProfile : base.fallbackProfile;
+    if (!plainObject(profiles)) fail('raidingTraditions.profiles', 'must be an object.');
+    for (const id in profiles) {
+      if (!own(profiles, id)) continue;
+      const path = 'raidingTraditions.profiles.' + id;
+      onlyFields(profiles[id], { cultures:true, faiths:true }, path);
+      if (own(profiles[id], 'cultures')) {
+        validateIdList(profiles[id].cultures, path + '.cultures', cultures, true);
+      }
+      if (own(profiles[id], 'faiths')) {
+        validateIdList(profiles[id].faiths, path + '.faiths', religions, true);
+      }
+    }
+    if (!Array.isArray(victims)) fail('raidingTraditions.victims', 'must be an array.');
+    for (let i = 0; i < victims.length; i++) {
+      const path = 'raidingTraditions.victims[' + i + ']';
+      const rule = victims[i];
+      onlyFields(rule, { cultures:true, faiths:true, profile:true }, path);
+      if (!own(rule, 'cultures') && !own(rule, 'faiths')) {
+        fail(path, 'must name cultures, faiths or both.');
+      }
+      if (own(rule, 'cultures')) validateIdList(rule.cultures, path + '.cultures', cultures, false);
+      if (own(rule, 'faiths')) validateIdList(rule.faiths, path + '.faiths', religions, false);
+      if (typeof rule.profile !== 'string' || !own(profiles, rule.profile)) {
+        fail(path + '.profile', 'must name a raidingTraditions profile.');
+      }
+    }
+    if (typeof fallback !== 'string' || !own(profiles, fallback)) {
+      fail('raidingTraditions.fallbackProfile', 'must name a raidingTraditions profile.');
     }
   }
 
@@ -1741,6 +1782,12 @@ window.FBMODS = window.FBMODS || [];
         if (own(mod.raidingTraditions, key)) {
           FBDATA.raidingTraditions[key] = mod.raidingTraditions[key].slice();
         }
+      }
+      const raids = mod.raidingTraditions;
+      if (own(raids, 'victims')) FBDATA.raidingTraditions.victims = raids.victims.slice();
+      if (own(raids, 'profiles')) FBDATA.raidingTraditions.profiles = raids.profiles;
+      if (own(raids, 'fallbackProfile')) {
+        FBDATA.raidingTraditions.fallbackProfile = raids.fallbackProfile;
       }
     }
     if (mod.intrigue) {

@@ -625,9 +625,15 @@ Norse and Baltic pagans face Christian march forces; Slavic pagans and Iranian
 traditions face steppe riders; Tengri and Turkic/Khazar Jewish traditions face Rus
 raiders; remaining cultures receive a foreign rival war-band. The selector falls
 back to a culturally or religiously foreign county when a modded map contains no
-profile match. Every later chapter carries that exact `{raidProfile,destinationId}`
-through `historic_raid_context_valid`, so the prose and captivity destination never
-change midway through the chase.
+profile match. These pairings are data, not engine checks: `FBDATA.raidingTraditions`
+holds the ordered `victims` rules (the first rule whose faiths, cultures or both match
+the protagonist names the family), the `profiles` table of captor cultures and faiths,
+and the `fallbackProfile` used when no rule matches or no captor county exists. A family
+with neither list is any county of another culture or faith. Faith and culture ids
+include their groups and branches. Every later chapter carries that exact
+`{raidProfile,destinationId}` through `historic_raid_context_valid`, which accepts any
+profile in the table, so the prose and captivity destination never change midway
+through the chase.
 
 The opener and `historic_raid_pursuit` each provide two kinds of survival: a skilled
 clean escape with no loss, or a guaranteed escape bought by `raid_plunder`. Plunder

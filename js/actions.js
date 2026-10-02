@@ -8560,9 +8560,11 @@ window.FB = window.FB || {};
 
   /* Extraordinary raids choose a historical enemy family from the current
      protagonist's faith and culture, then snapshot one plausible captor
-     county. The selector is deliberately geographic and read-only: no realm
-     or county is changed, and the event picker owns the one seeded draw after
-     it has chosen the story. */
+     county. The families and both matching rules are data
+     (FBDATA.raidingTraditions victims, profiles and fallbackProfile). The
+     selector is deliberately geographic and read-only: no realm or county
+     is changed, and the event picker owns the one seeded draw after it has
+     chosen the story. */
   function historicCultureIs(state, cultureId, ids) {
     for (let i = 0; i < ids.length; i++) {
       if (cultureId === ids[i] ||
@@ -8571,30 +8573,38 @@ window.FB = window.FB || {};
     return false;
   }
 
+  function historicFaithIs(state, faithId, ids) {
+    for (let i = 0; i < ids.length; i++) {
+      if (FB.faithIsA(faithId, ids[i], state)) return true;
+    }
+    return false;
+  }
+
+  function historicRaidRules() {
+    return (typeof FBDATA !== 'undefined' && FBDATA.raidingTraditions) || {};
+  }
+
+  FB.historicRaidProfiles = function () {
+    const profiles = historicRaidRules().profiles;
+    return profiles && typeof profiles === 'object' ? profiles : {};
+  };
+
+  function historicRaidFallback() {
+    return historicRaidRules().fallbackProfile || null;
+  }
+
   function historicRaidProfile(state) {
     const c = state.chars[state.player.charId];
-    if (!c) return 'rival_raiders';
-    if (FB.faithIsA(c.religion, 'christian', state)) return 'northmen';
-    if (FB.faithIsA(c.religion, 'muslim', state)) return 'cross_banners';
-    if (FB.faithIsA(c.religion, 'zoroastrian', state)) return 'steppe_riders';
-    if (FB.faithIsA(c.religion, 'norse_pagan', state)) return 'saxon_host';
-    if (FB.faithIsA(c.religion, 'baltic_pagan', state)) return 'saxon_host';
-    if (FB.faithIsA(c.religion, 'slavic_pagan', state)) return 'steppe_riders';
-    if (FB.faithIsA(c.religion, 'tengri', state)) return 'rus_raiders';
-    if (FB.faithIsA(c.religion, 'jewish', state) &&
-        historicCultureIs(state, c.culture, ['turkic','magyar','khazar'])) {
-      return 'rus_raiders';
+    if (!c) return historicRaidFallback();
+    const victims = historicRaidRules().victims || [];
+    for (let i = 0; i < victims.length; i++) {
+      const rule = victims[i];
+      if (!rule || !rule.profile || (!rule.faiths && !rule.cultures)) continue;
+      if (rule.faiths && !historicFaithIs(state, c.religion, rule.faiths)) continue;
+      if (rule.cultures && !historicCultureIs(state, c.culture, rule.cultures)) continue;
+      return rule.profile;
     }
-    if (historicCultureIs(state, c.culture,
-        ['persian','armenian','georgian','slavic'])) {
-      return 'steppe_riders';
-    }
-    if (historicCultureIs(state, c.culture, ['norse','baltic'])) return 'saxon_host';
-    if (historicCultureIs(state, c.culture,
-        ['turkic','magyar','khazar'])) return 'rus_raiders';
-    if (historicCultureIs(state, c.culture,
-        ['arabic','andalusi','berber'])) return 'cross_banners';
-    return 'rival_raiders';
+    return historicRaidFallback();
   }
 
   function historicRaidCountyMatches(state, pr, profile, player) {
@@ -8605,21 +8615,15 @@ window.FB = window.FB || {};
       ? FB.countyCulture(state, pr.id) : pr.culture;
     const religion = FB.countyReligion
       ? FB.countyReligion(state, pr.id) : pr.religion;
-    if (profile === 'northmen') return historicCultureIs(
-      state, culture, ['norse']) ||
-      FB.faithIsA(religion, 'norse_pagan', state);
-    if (profile === 'cross_banners') return FB.faithIsA(
-      religion, 'christian', state);
-    if (profile === 'saxon_host') return historicCultureIs(
-      state, culture, ['german','frankish','english']) ||
-      FB.faithIsA(religion, 'christian', state);
-    if (profile === 'steppe_riders') return historicCultureIs(
-      state, culture, ['turkic','magyar','khazar']) ||
-      FB.faithIsA(religion, 'tengri', state);
-    if (profile === 'rus_raiders') return historicCultureIs(
-      state, culture, ['slavic','norse']) ||
-      FB.faithIsA(religion, 'slavic_pagan', state) ||
-      FB.faithIsA(religion, 'orthodox', state);
+    const profiles = FB.historicRaidProfiles();
+    const raiders = Object.prototype.hasOwnProperty.call(profiles, profile)
+      ? profiles[profile] : null;
+    const cultures = raiders && raiders.cultures || [];
+    const faiths = raiders && raiders.faiths || [];
+    if (cultures.length || faiths.length) {
+      return historicCultureIs(state, culture, cultures) ||
+        historicFaithIs(state, religion, faiths);
+    }
     return culture !== player.culture || religion !== player.religion;
   }
 
@@ -8635,8 +8639,8 @@ window.FB = window.FB || {};
         provinceId:p.provinceId, culture:c.culture, religion:c.religion
       });
     });
-    if (!candidates.length) {
-      profile = 'rival_raiders';
+    if (!candidates.length && profile !== historicRaidFallback()) {
+      profile = historicRaidFallback();
       candidates = FB.world.provs.filter(function (pr) {
         return historicRaidCountyMatches(state, pr, profile, {
           provinceId:p.provinceId, culture:c.culture, religion:c.religion
