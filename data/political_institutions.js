@@ -34,7 +34,9 @@ FBDATA.customaryBases = {
    out uses its engine default, today's shared code path. consent says whether
    local civic consent follows territorial rule or a delegated office.
    regnum is the late antique kingdom: territorial consent, but its counties
-   are held directly by the realm rather than by generated vassals. */
+   are held directly by the realm rather than by generated vassals. A form
+   may also name a costume (FBDATA.wardrobes id) that dresses portraits in a
+   campaign of that default government instead of its era's costume. */
 FBDATA.governmentForms = {
   territorial:{ holders:'feudal_vassals', succession:'dynastic',
     territory:'fixed', consent:'territorial' },

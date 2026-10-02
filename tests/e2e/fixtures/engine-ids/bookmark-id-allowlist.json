@@ -63,18 +63,6 @@
       "reason": "Papal regnal-name seeds fall back to a bookmark chosen by year."
     },
     {
-      "file": "js/portrait.js",
-      "source": "period476:!!(state && state.start && state.start.id === '476'),",
-      "kind": "pending",
-      "reason": "Period costume is selected by the 476 start id."
-    },
-    {
-      "file": "js/portrait.js",
-      "source": "!!(state && state.start && state.start.id === '476'))",
-      "kind": "pending",
-      "reason": "Period costume is selected by the 476 start id."
-    },
-    {
       "file": "js/save.js",
       "source": "return start && start.id ? String(start.id) : '867';",
       "kind": "legacy_default",

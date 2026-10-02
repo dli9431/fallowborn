@@ -562,6 +562,10 @@ window.FB = window.FB || {};
       var religionErrors = FB.validateReligionData(null);
       for (var re = 0; re < religionErrors.length; re++) errors.push(religionErrors[re]);
     }
+    if (FB.validateWardrobeData) {
+      var wardrobeErrors = FB.validateWardrobeData();
+      for (var we = 0; we < wardrobeErrors.length; we++) errors.push(wardrobeErrors[we]);
+    }
     var governmentErrors = FB.governments.validate().concat(FB.validateEraData());
     for (var ge = 0; ge < governmentErrors.length; ge++) errors.push(governmentErrors[ge]);
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');

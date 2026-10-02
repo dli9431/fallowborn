@@ -410,28 +410,9 @@ window.FB = window.FB || {};
   FB.PORTRAIT_HAIR_STYLES = ORDINARY_HAIR_STYLES.slice();
   FB.PORTRAIT_BEARD_KINDS = APPEARANCE_BEARD_KINDS.slice();
   FB.PORTRAIT_BEARD_CUTS = APPEARANCE_BEARD_CUTS.slice();
-  var CULTURE_TONE = {
-    norse:.3,english:.5,german:.5,frankish:.6,norman:.55,ashkenazi:1,
-    slavic:.7,rus:.65,baltic:.65,finnic:.45,sami:.55,
-    gaelic:.4,brezhon:.5,magyar:.8,khazar:1.3,iberian:1.3,basque:1.2,
-    occitan:1.1,italian:1.2,lombard:1.1,greek:1.3,armenian:1.4,
-    georgian:1.35,turkic:1.5,andalusi:1.9,arabic:2.2,syriac:1.8,
-    berber:2.3,persian:2,coptic:2.4,nubian:3.7,abyssinian:3.7
-  };
-  var CULTURE_FAIR = {
-    norse:.68,english:.48,german:.55,frankish:.42,norman:.45,ashkenazi:.18,
-    slavic:.46,rus:.5,baltic:.5,finnic:.6,sami:.45,
-    gaelic:.4,brezhon:.42,magyar:.32,khazar:.08,iberian:.08,basque:.1,
-    occitan:.12,italian:.1,lombard:.12,greek:.07,armenian:.05,georgian:.06,
-    turkic:.05,andalusi:.04,arabic:.02,syriac:.03,berber:.02,persian:.03,
-    coptic:.02,nubian:.01,abyssinian:.01
-  };
-  var CULTURE_RED = {
-    norse:.18,english:.1,german:.07,frankish:.07,norman:.08,ashkenazi:.08,
-    slavic:.05,rus:.06,baltic:.06,finnic:.08,sami:.08,
-    gaelic:.34,brezhon:.2,magyar:.05,khazar:.03,basque:.05,occitan:.06,
-    lombard:.05,syriac:.02,coptic:.02
-  };
+  /* Skin, fairness and complexion come from culture appearance profiles
+     (data/cultures.js); a profile missing every value paints this face. */
+  var NEUTRAL_APPEARANCE = {tone:1,fair:0,red:.02};
   var TONE_RGB = [[241,205,175],[219,172,128],[184,132,92],
     [136,92,62],[94,63,47]];
   var HAIR_RGB = {
@@ -466,6 +447,37 @@ window.FB = window.FB || {};
   var HEADWEAR_RISE = {crown:12,imperial:19,turban:14,mitre:22,strawHat:14,
     furHat:16,cap:11,helm:9,chaperon:9,veil:8,wimple:8,crespine:7,
     garland:7,kerchief:6,coif:6,fillet:6,circlet:6,none:6};
+  /* The garment library: every body garment the standing figure can paint,
+     named by wardrobe data (data/wardrobes.js). length places the hem
+     (floor, knee, or short above the hip); detail names the one feature
+     that tells the garment apart (topDetail); folds draws drape lines,
+     hemLine the hem seam, cord a knotted cord when no belt is worn, cuffs
+     banded court trim at the wrists, quilted quilting down the sleeves.
+     Worn body items swap in the jack (gambeson) and the armor shapes. */
+  var GARMENTS = {
+    tunic:{length:'knee',detail:'slit',folds:1,hemLine:1},
+    robe:{length:'floor',detail:'slit',folds:1,hemLine:1},
+    cote:{length:'knee',detail:'slit',placket:1,folds:1,hemLine:1},
+    court:{length:'floor',detail:'banded',cuffs:1,folds:1,hemLine:1},
+    royal:{length:'floor',detail:'banded',ermine:1,cuffs:1,folds:1,hemLine:1},
+    habit:{length:'floor',detail:'scapular',cord:1},
+    cassock:{length:'floor',detail:'buttons',cord:1,folds:1,hemLine:1},
+    gambeson:{length:'knee',detail:'quilted',quilted:1,hemLine:1},
+    doublet:{length:'short',detail:'buttoned',folds:1,hemLine:1},
+    lateTunic:{length:'knee',detail:'clavi',folds:1,hemLine:1},
+    lateMantle:{length:'floor',detail:'clavi',mantle:1,folds:1,hemLine:1},
+    lateVestment:{length:'floor',detail:'clavi',folds:1,hemLine:1},
+    mail:{length:'knee',detail:'armor',hemLine:1},
+    lamellar:{length:'knee',detail:'armor',hemLine:1},
+    plate:{length:'knee',detail:'armor',hemLine:1}
+  };
+  var PLAIN_GARMENT = GARMENTS.tunic;
+  /* Worn armor replaces a garment through its item, never by wardrobe. */
+  var ITEM_GARMENTS = {mail:1,lamellar:1,plate:1};
+  function garmentShape(kind) {
+    return Object.prototype.hasOwnProperty.call(GARMENTS, kind)
+      ? GARMENTS[kind] : PLAIN_GARMENT;
+  }
 
   function clampV2(value, low, high) {
     return value < low ? low : (value > high ? high : value);
@@ -502,25 +514,100 @@ window.FB = window.FB || {};
   function hasTrait(c, id) {
     return !!(c.traits && c.traits.indexOf(id) >= 0);
   }
-  function cultureProfile(id) {
-    if (Object.prototype.hasOwnProperty.call(CULTURE_TONE, id)) {
-      return {tone:CULTURE_TONE[id],fair:CULTURE_FAIR[id] || 0,
-        red:CULTURE_RED[id] || .02};
+  function plainObjectV2(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+  function cultureAppearance(state, id) {
+    var found = FB.cultureValue ? FB.cultureValue(state, id, 'appearance').value : null;
+    return plainObjectV2(found) ? found : null;
+  }
+  /* A culture's face profile is its appearance data, inherited through its
+     parent cultures. A culture without one borrows the campaign era's
+     default culture, so a mod culture still looks like its period. */
+  function cultureProfile(state, id) {
+    var source = id, look = cultureAppearance(state, id);
+    if (!look && FB.eraDefaultCulture) {
+      source = FB.eraDefaultCulture(state);
+      look = source === id ? null : cultureAppearance(state, source);
     }
-    var lineage = FB.cultureLineage ? FB.cultureLineage(id) : [];
-    for (var i = 1; i < lineage.length; i++) {
-      if (Object.prototype.hasOwnProperty.call(CULTURE_TONE, lineage[i])) {
-        return {tone:CULTURE_TONE[lineage[i]],fair:CULTURE_FAIR[lineage[i]] || 0,
-          red:CULTURE_RED[lineage[i]] || .02};
-      }
+    look = look || {};
+    return {
+      tone:isFinite(look.tone) ? Number(look.tone) : NEUTRAL_APPEARANCE.tone,
+      fair:isFinite(look.fair) ? Number(look.fair) : NEUTRAL_APPEARANCE.fair,
+      red:isFinite(look.red) ? Number(look.red) : NEUTRAL_APPEARANCE.red,
+      hair:plainObjectV2(look.hair) ? look.hair : null,
+      tends:Array.isArray(look.tends) ? look.tends : [],
+      source:source
+    };
+  }
+  /* Faith attire (religion properties.attire) is inherited down the faith
+     tree: tonsure, pendant, covers, garment swaps, beard and tends. */
+  function faithAttire(religion) {
+    return religion && plainObjectV2(religion.attire) ? religion.attire : {};
+  }
+  /* The wardrobe dressing a campaign: its government form's costume, then
+     its era's, then the first wardrobe declared. */
+  function wardrobeIdOf(state) {
+    var tables = FBDATA.wardrobes || {}, own = Object.prototype.hasOwnProperty;
+    var eras = FBDATA.eras || {}, forms = FBDATA.governmentForms || {};
+    var eraId = FB.campaignEra ? FB.campaignEra(state) : null;
+    var era = eraId && own.call(eras, eraId) ? eras[eraId] : null;
+    var start = state && state.start;
+    var formId = start && typeof start.defaultGovernment === 'string'
+      ? start.defaultGovernment : era && era.defaultGovernment;
+    var form = typeof formId === 'string' && own.call(forms, formId) ? forms[formId] : null;
+    if (form && typeof form.costume === 'string' && own.call(tables, form.costume)) {
+      return form.costume;
     }
-    /* Resolve the mod culture through the public fallback, then choose a
-       deterministic nearby palette rather than throwing or consuming RNG. */
-    var fallback = FB.cultureOf ? FB.cultureOf(id) : null;
-    var seed = hashOf(id + '|' + (fallback && fallback.name || 'Frankish'));
-    var nearest = ['frankish','iberian','persian','nubian'][seed % 4];
-    return {tone:CULTURE_TONE[nearest],fair:CULTURE_FAIR[nearest] || 0,
-      red:CULTURE_RED[nearest] || .02};
+    if (era && typeof era.costume === 'string' && own.call(tables, era.costume)) {
+      return era.costume;
+    }
+    return Object.keys(tables)[0] || '';
+  }
+  function stationHolds(name, spec) {
+    var query = FB.station && Object.prototype.hasOwnProperty.call(FB.station, name)
+      ? FB.station[name] : null;
+    return typeof query === 'function' && !!query(spec);
+  }
+  /* One wardrobe rule against a character (data/wardrobes.js lists the
+     conditions). Every condition is a pure read of the descriptor. */
+  function dressRuleHolds(rule, spec, dress) {
+    if (!plainObjectV2(rule)) return false;
+    if (rule.child !== undefined && !!rule.child !== spec.child) return false;
+    if (rule.female !== undefined && !!rule.female !== spec.female) return false;
+    if (rule.minAge !== undefined && !(spec.age >= rule.minAge)) return false;
+    if (rule.station !== undefined && !stationHolds(rule.station, spec)) return false;
+    if (rule.notStation !== undefined && stationHolds(rule.notStation, spec)) return false;
+    if (rule.role !== undefined && FB.professionRole(spec.profession) !== rule.role) return false;
+    if (rule.roles !== undefined && !FB.professionHasRole(spec.profession, rule.roles)) return false;
+    if (rule.notRoles !== undefined && FB.professionHasRole(spec.profession, rule.notRoles)) return false;
+    if (rule.faith !== undefined && !dress.attire[rule.faith]) return false;
+    if (rule.tends !== undefined && dress.tends.indexOf(rule.tends) < 0) return false;
+    if (plainObjectV2(rule.roll)) {
+      var rolled = saltedByte(spec.identity, String(rule.roll.salt), rule.roll.index || 0);
+      if (rule.roll.above !== undefined && !(rolled > rule.roll.above)) return false;
+      if (rule.roll.below !== undefined && !(rolled < rule.roll.below)) return false;
+    }
+    if (Array.isArray(rule.any) && !rule.any.some(function (part) {
+      return dressRuleHolds(part, spec, dress);
+    })) return false;
+    return true;
+  }
+  function firstDressRule(rules, spec, dress) {
+    if (!Array.isArray(rules)) return null;
+    for (var i = 0; i < rules.length; i++) {
+      if (dressRuleHolds(rules[i], spec, dress)) return rules[i];
+    }
+    return null;
+  }
+  function dressColor(rules, spec, dress, fallback) {
+    var rule = firstDressRule(rules, spec, dress);
+    return rule && validColorV2(rule.color) ? rule.color.slice() : fallback.slice();
+  }
+  function validColorV2(color) {
+    return Array.isArray(color) && color.length === 3 && color.every(function (part) {
+      return Number.isInteger(part) && part >= 0 && part <= 255;
+    });
   }
   /* The full reference skin ramp, kept as RGB arrays because the painter
      stamps them at many alphas. */
@@ -541,38 +628,29 @@ window.FB = window.FB || {};
       lipLine:rgbMixV2(shadeV2(base,-.26),[110,46,46],.5)
     };
   }
-  function clothColors(tier, profession, variation, period476) {
-    var byRole = {
-      cloister:{kind:'habit',base:[96,80,58]},clergy:{kind:'cassock',base:[60,56,62]},
-      arms:{kind:'gambeson',base:[128,110,80]},
-      trading:{kind:'doublet',base:[70,108,96]},labor:{kind:'tunic',base:[112,92,61]},
-      craft:{kind:'tunic',base:[91,89,72]},noble:{kind:'cote',base:[76,91,119]}
-    };
-    var byTier = [
-      {kind:'tunic',base:[122,102,72]},{kind:'tunic',base:[104,100,66]},
-      {kind:'tunic',base:[88,104,66]},{kind:'cote',base:[72,96,130]},
-      {kind:'court',base:[140,64,58]},{kind:'court',base:[126,48,56]},
-      {kind:'royal',base:[106,58,126]},{kind:'royal',base:[88,44,116]}
-    ];
-    var role = FB.professionRole(profession);
-    var pick = (role && byRole[role]) || byTier[tier];
-    if (period476) {
-      if (FB.professionHasRole(profession, ['clergy', 'cloister']))
-        pick = {kind:'lateVestment',base:[164,153,126]};
-      else if (FB.station.isRoyal(tier))
-        pick = {kind:'lateMantle',base:[104,65,118]};
-      else if (FB.station.isLanded(tier))
-        pick = {kind:'lateMantle',base:[124,81,69]};
-      else pick = {kind:'lateTunic',base:[129,117,91]};
-    }
+  /* Garment, cloth and trim come from the wardrobe's first matching rules;
+     the faith may then swap the garment (attire.garments). */
+  var NEUTRAL_CLOTH = [122,102,72];
+  var NEUTRAL_TRIM = [146,126,92], NEUTRAL_FUR = [122,104,84];
+  function clothColors(spec, dress, variation) {
+    var pick = firstDressRule(dress.wardrobe.garments, spec, dress) || {};
+    var kind = typeof pick.garment === 'string' &&
+      Object.prototype.hasOwnProperty.call(GARMENTS, pick.garment) &&
+      !ITEM_GARMENTS[pick.garment] ? pick.garment : 'tunic';
+    var swaps = dress.attire.garments;
+    if (plainObjectV2(swaps) && Object.prototype.hasOwnProperty.call(swaps, kind) &&
+        Object.prototype.hasOwnProperty.call(GARMENTS, swaps[kind]) &&
+        !ITEM_GARMENTS[swaps[kind]]) kind = swaps[kind];
+    var color = validColorV2(pick.color) ? pick.color : NEUTRAL_CLOTH;
     var shift = clampV2(variation, -1, 1) * 12;
-    var base = [clampV2(Math.round(pick.base[0] + shift),0,255),
-      clampV2(Math.round(pick.base[1] - shift*.25),0,255),
-      clampV2(Math.round(pick.base[2] - shift*.4),0,255)];
-    return {kind:pick.kind,base:cssV2(base),dark:cssV2(shadeV2(base,-.12)),
+    var base = [clampV2(Math.round(color[0] + shift),0,255),
+      clampV2(Math.round(color[1] - shift*.25),0,255),
+      clampV2(Math.round(color[2] - shift*.4),0,255)];
+    var trim = dressColor(dress.wardrobe.trim, spec, dress, NEUTRAL_TRIM);
+    var fur = dressColor(dress.wardrobe.fur, spec, dress, NEUTRAL_FUR);
+    return {kind:kind,base:cssV2(base),dark:cssV2(shadeV2(base,-.12)),
       deep:cssV2(shadeV2(base,-.22)),light:cssV2(shadeV2(base,.11)),
-      trim:FB.station.isLanded(tier) ? '#bea04e' : '#927e5c',
-      fur:FB.station.isRoyal(tier) ? '#e8e2d6' : '#7a6854',raw:base};
+      trim:cssV2(trim),fur:cssV2(fur),raw:base,trimRaw:trim,furRaw:fur};
   }
   function normalizedArt(item) {
     var source = item && item.art || {};
@@ -638,12 +716,12 @@ window.FB = window.FB || {};
     return {base:hair,dark:shadeV2(hair,-.14),
       deep:shadeV2(hair,-.22),light:shadeV2(hair,.13),gray:gray};
   }
-  function generatedHairStyle(spec, identity) {
+  function generatedHairStyle(spec, identity, profile, dress) {
     var male = ['crop','sidePart','curly','longLoose','receding'];
     var female = ['longLoose','braids','bun','sidePart','curly'];
-    var style;
+    var style, tendency = profile.hair;
     if (!spec.female && FB.professionHasRole(spec.profession, 'cloister') &&
-        spec.faith === 'christian') {
+        dress.attire.tonsure) {
       style = 'tonsure';
     } else {
       style = (spec.female ? female : male)[saltedByte(identity,'wardrobe-hair',0)%5];
@@ -662,9 +740,13 @@ window.FB = window.FB || {};
         saltedUnit(identity,'wardrobe-recede',0) > .62) style = 'receding';
     if (!spec.female && spec.age > 52 &&
         saltedUnit(identity,'wardrobe-recede',0) > .87) style = 'bald';
-    if (!spec.female && (spec.culture === 'norse' ||
-        (FB.cultureIsA && FB.cultureIsA(spec.culture, 'norse'))) &&
-        saltedByte(identity,'wardrobe-hair',1) > 120) style = 'longLoose';
+    /* A culture's hair tendency (appearance.hair) claims the identities
+       whose hair byte clears its threshold. */
+    if (tendency && hasAppearanceValue(ORDINARY_HAIR_STYLES, tendency.style) &&
+        (tendency.sex === undefined || (tendency.sex === 'f') === spec.female) &&
+        saltedByte(identity,'wardrobe-hair',1) > (Number(tendency.above) || 0)) {
+      style = tendency.style;
+    }
     if (spec.child) style = spec.female ? 'braids' : 'crop';
     return style;
   }
@@ -699,46 +781,24 @@ window.FB = window.FB || {};
     }
     return out;
   }
-  function generatedHeadwear(spec, identity) {
-    if (spec.period476) {
-      if (FB.station.isRoyal(spec)) return 'circlet';
-      if (FB.professionHasRole(spec.profession, 'arms') && !spec.child &&
-          saltedByte(identity,'wardrobe-head',2) > 128) return 'helm';
-      if (spec.female && !spec.child &&
-          saltedByte(identity,'wardrobe-head',1) > 150) return 'veil';
-      return 'none';
+  /* Headwear is the wardrobe's first matching rule. A faithCover rule wears
+     what the character's faith expects of that sex (attire.covers) and is
+     skipped when the faith expects nothing. */
+  function generatedHeadwear(spec, dress) {
+    var rules = dress.wardrobe.headwear;
+    if (!Array.isArray(rules)) return 'none';
+    for (var i = 0; i < rules.length; i++) {
+      var rule = rules[i];
+      if (!dressRuleHolds(rule, spec, dress)) continue;
+      if (rule.faithCover) {
+        var covers = dress.attire.covers;
+        var cover = plainObjectV2(covers) ? covers[spec.female ? 'f' : 'm'] : null;
+        if (typeof cover === 'string' &&
+            Object.prototype.hasOwnProperty.call(HEADWEAR_VARIANTS, cover)) return cover;
+        continue;
+      }
+      if (typeof rule.headwear === 'string') return rule.headwear;
     }
-    if (spec.child && FB.station.isRoyal(spec)) return 'circlet';
-    if (spec.faith === 'muslim' && !spec.female && !spec.child &&
-        !FB.professionHasRole(spec.profession, 'cloister')) return 'turban';
-    if (spec.faith === 'muslim' && spec.female && !spec.child) return 'veil';
-    if (FB.station.isImperial(spec)) return 'imperial';
-    if (FB.station.isRoyal(spec)) return 'crown';
-    if (FB.station.rulesRealm(spec)) return 'circlet';
-    if (spec.female && spec.age >= 46 &&
-        saltedByte(identity,'wardrobe-head',1) > 84) return 'wimple';
-    if (spec.female && !spec.child &&
-        saltedByte(identity,'wardrobe-head',1) > 168) return 'veil';
-    if (FB.professionHasRole(spec.profession, 'arms') &&
-        saltedByte(identity,'wardrobe-head',2) > 96) return 'helm';
-    if ((FB.professionHasRole(spec.profession, 'trading') || spec.faith === 'jewish') &&
-        !spec.child && saltedByte(identity,'wardrobe-head',2) > 96) return 'cap';
-    if (!FB.station.isGentle(spec) && !spec.female && !spec.child &&
-        saltedByte(identity,'wardrobe-head',2) > 208) return 'coif';
-    var roll = saltedByte(identity,'wardrobe-extra',0);
-    if (FB.professionHasRole(spec.profession, 'clergy') && FB.station.isGentle(spec)) return 'mitre';
-    if (spec.female && !spec.child && FB.station.isGentle(spec) && roll > 150) return 'crespine';
-    if (spec.female && !spec.child && FB.station.isGentle(spec) && roll > 96) return 'fillet';
-    if (spec.female && spec.child && roll > 176) return 'garland';
-    if ((spec.culture === 'norse' || spec.culture === 'slavic' ||
-        spec.culture === 'baltic' || (FB.cultureIsA &&
-          (FB.cultureIsA(spec.culture, 'norse') ||
-           FB.cultureIsA(spec.culture, 'slavic') ||
-           FB.cultureIsA(spec.culture, 'baltic')))) &&
-        !spec.child && roll > 168) return 'furHat';
-    if (spec.female && !FB.station.isLanded(spec) && !spec.child && roll > 88) return 'kerchief';
-    if (!FB.station.isGentle(spec) && !spec.child && roll > 200) return 'strawHat';
-    if (!FB.station.rulesRealm(spec) && !spec.female && !spec.child && roll < 40) return 'chaperon';
     return 'none';
   }
   function portraitDescriptor(state, c, year, opts) {
@@ -756,10 +816,18 @@ window.FB = window.FB || {};
         (isPlayer && state.player.profession) || c.role || 'none';
     if (child) profession = 'none';
     profession = profession || 'none';
-    var culture = c.culture || 'frankish';
-    var profile = cultureProfile(culture);
-    var religion = FB.religionOf ? FB.religionOf(c.religion) : {group:'christian'};
-    var faith = religion && religion.group || 'christian';
+    var culture = c.culture || (FB.eraDefaultCulture ? FB.eraDefaultCulture(state) : '');
+    var profile = cultureProfile(state,culture);
+    var religion = FB.religionOf ? FB.religionOf(c.religion) : null;
+    var faith = religion && religion.group || '';
+    var wardrobeId = wardrobeIdOf(state);
+    var attire = faithAttire(religion);
+    var dress = {
+      wardrobe:plainObjectV2(FBDATA.wardrobes && FBDATA.wardrobes[wardrobeId])
+        ? FBDATA.wardrobes[wardrobeId] : {},
+      attire:attire,
+      tends:profile.tends.concat(Array.isArray(attire.tends) ? attire.tends : [])
+    };
     var ailments = visibleAilments(c);
     var legacyIll = opts.ill !== undefined ? !!opts.ill
       : !!(isPlayer && state.player.flags && state.player.flags.ill);
@@ -799,7 +867,7 @@ window.FB = window.FB || {};
       identity:identity,age:age,child:child,adult:age>=16,
       maturity:smoothV2(3,19,age),elder:smoothV2(48,78,age),
       female:female,sex:c.sex||'m',culture:culture,faith:faith,tier:tier,
-      period476:!!(state && state.start && state.start.id === '476'),
+      wardrobe:wardrobeId,
       profession:profession,health:health,expressionClass:expressionClass,
       expression:expressionClass === 'guarded' ? -.52
         : expressionClass === 'warm' ? .45 : neutralExpression,
@@ -832,11 +900,9 @@ window.FB = window.FB || {};
       hwDrape:.25+saltedUnit(identity,'wardrobe-hw-drape',0)*.5,
       hwTrim:0,
       bgHue:hashOf(c.dyn||portraitName||'fallow')%360,
-      cultureHue:hashOf(culture)%360,skin:skinColors({tone:pigment},health),
-      cloth:clothColors(tier,profession,
-        saltedUnit(identity,'wardrobe-cloth',0)*2-1,
-        !!(state && state.start && state.start.id === '476'))
+      cultureHue:hashOf(culture)%360,skin:skinColors({tone:pigment},health)
     };
+    spec.cloth = clothColors(spec,dress,saltedUnit(identity,'wardrobe-cloth',0)*2-1);
     if (authored) {
       ['faceWidth','jaw','chin','cheek','eyeSize','eyeSpacing','browWeight',
         'noseW','noseLen','mouthW','lipFull','yaw','bgHue'].forEach(function (key) {
@@ -851,12 +917,14 @@ window.FB = window.FB || {};
     spec.background={top:'hsl('+spec.bgHue+',24%,29%)',
       bottom:'hsl('+((spec.bgHue+22)%360)+',27%,12%)'};
     spec.cloth.culture='hsl('+spec.cultureHue+',28%,54%)';
-    if(faith==='muslim'&&spec.cloth.kind==='tunic')spec.cloth.kind='robe';
-    spec.hairStyle = generatedHairStyle(spec,identity);
+    spec.hairStyle = generatedHairStyle(spec,identity,profile,dress);
     spec.beardAmount = !female && spec.adult
       ? clampV2(saltedUnit(identity,'identity-beard',0)*1.25-.12,0,1) : 0;
-    if (faith === 'muslim' && !female && spec.adult) {
-      spec.beardAmount = Math.max(.45,spec.beardAmount);
+    /* Faith beard customs (attire.beard): a floor on the beard and the
+       cuts it allows, rerolled deterministically when one is not. */
+    var beardCustom = plainObjectV2(attire.beard) ? attire.beard : null;
+    if (beardCustom && isFinite(beardCustom.min) && !female && spec.adult) {
+      spec.beardAmount = Math.max(Number(beardCustom.min),spec.beardAmount);
     }
     spec.beardKind = spec.beardAmount < .06 ? 'none'
       : spec.beardAmount < .2 ? 'stubble' : spec.beardAmount < .45 ? 'short'
@@ -865,11 +933,12 @@ window.FB = window.FB || {};
        rendering of it read as a strap, not a beard */
     spec.beardCut = ['full','square','spade','forked','goatee','square','chops','stache'][
       saltedByte(identity,'identity-beard-cut',0)%8];
-    if (faith === 'muslim' && !female && spec.adult &&
-        (spec.beardCut === 'stache' || spec.beardCut === 'goatee' ||
-         spec.beardCut === 'chinstrap' || spec.beardCut === 'chops')) {
-      spec.beardCut = ['full','square','spade','forked'][
-        saltedByte(identity,'identity-beard-cut',1)%4];
+    var allowedCuts = beardCustom && Array.isArray(beardCustom.cuts) &&
+      beardCustom.cuts.length ? beardCustom.cuts : null;
+    if (allowedCuts && !female && spec.adult &&
+        allowedCuts.indexOf(spec.beardCut) < 0) {
+      spec.beardCut = allowedCuts[
+        saltedByte(identity,'identity-beard-cut',1)%allowedCuts.length];
     }
     var appearanceSource = Object.prototype.hasOwnProperty.call(opts,'appearance')
       ? opts.appearance : c.appearance;
@@ -892,7 +961,10 @@ window.FB = window.FB || {};
         (spec.child ? 1.6 : 1) : 0;
     spec.hwTrim = clampV2(.2+saltedUnit(identity,'wardrobe-hw-trim',0)*.6+
       (FB.station.rulesRealm(tier) ? .2 : 0),0,1);
-    spec.headwear = generatedHeadwear(spec,identity);
+    spec.headwear = generatedHeadwear(spec,dress);
+    spec.neckChain = Array.isArray(dress.wardrobe.chain) &&
+      dress.wardrobe.chain.some(function (rule) { return dressRuleHolds(rule,spec,dress); });
+    spec.pendant = typeof attire.pendant === 'string' ? attire.pendant : '';
     if (authored && authored.bareheadedSerf && FB.station.isSerf(tier) &&
         (FB.professionHasRole(profession, 'labor') || profession === 'none')) {
       spec.headwear = 'none';
@@ -907,8 +979,9 @@ window.FB = window.FB || {};
       return keyToken(mark.id)+':'+keyToken(mark.mark)+':'+mark.severity;
     }).join(',');
     var parts = ['portrait-v2',frame,keyToken(c.id),keyToken(portraitName),
-      keyToken(c.dyn||''),keyToken(c.sex||''),age,keyToken(culture),keyToken(faith),
-      tier,keyToken(profession),spec.period476?1:0,health,expressionClass,spec.scarred?1:0,
+      keyToken(c.dyn||''),keyToken(c.sex||''),age,keyToken(culture),
+      keyToken(profile.source),keyToken(faith),keyToken(religion && religion.id || ''),
+      tier,keyToken(profession),keyToken(wardrobeId),health,expressionClass,spec.scarred?1:0,
       spec.oneEyed?1:0,ailments.sickness||legacyIll?1:0,markKey,
       keyToken(spec.hairStyle),keyToken(spec.beardKind),keyToken(spec.beardCut),
       equipmentKeys.join(','),opts.transparent?'transparent':'opaque',
@@ -918,6 +991,123 @@ window.FB = window.FB || {};
     return {key:parts.join('|'),frame:frame,spec:spec,loadout:loadout,
       transparent:!!opts.transparent,suppressEquipment:!!opts.suppressEquipment};
   }
+
+  /* Checks wardrobes, the costumes eras and government forms name, culture
+     appearance profiles and faith attire against the shapes this painter
+     knows. Returns readable faults; an empty list means valid. */
+  FB.validateWardrobeData = function () {
+    var errors = [], own = Object.prototype.hasOwnProperty;
+    var wardrobes = FBDATA.wardrobes, beardRenders = {};
+    for (var cutId in APPEARANCE_BEARD_RENDER) {
+      if (own.call(APPEARANCE_BEARD_RENDER, cutId)) beardRenders[APPEARANCE_BEARD_RENDER[cutId]] = 1;
+    }
+    function knownHeadwear(kind) {
+      return typeof kind === 'string' && own.call(HEADWEAR_VARIANTS, kind);
+    }
+    function knownGarment(kind) {
+      return typeof kind === 'string' && own.call(GARMENTS, kind) && !ITEM_GARMENTS[kind];
+    }
+    function stationName(name) {
+      return typeof name === 'string' && !!FB.station && own.call(FB.station, name) &&
+        typeof FB.station[name] === 'function';
+    }
+    function ruleValid(rule) {
+      if (!plainObjectV2(rule)) return false;
+      if (rule.station !== undefined && !stationName(rule.station)) return false;
+      if (rule.notStation !== undefined && !stationName(rule.notStation)) return false;
+      if (rule.minAge !== undefined && !isFinite(rule.minAge)) return false;
+      if (rule.roles !== undefined && !Array.isArray(rule.roles)) return false;
+      if (rule.notRoles !== undefined && !Array.isArray(rule.notRoles)) return false;
+      if (rule.roll !== undefined && (!plainObjectV2(rule.roll) ||
+          typeof rule.roll.salt !== 'string' ||
+          (rule.roll.above === undefined && rule.roll.below === undefined))) return false;
+      if (rule.any !== undefined && (!Array.isArray(rule.any) ||
+          !rule.any.every(ruleValid))) return false;
+      return true;
+    }
+    function invalidRule(id) {
+      errors.push(FB.T('Wardrobe {id} has an invalid rule.', { id:id }));
+    }
+    function checkRules(id, list, kind) {
+      if (list === undefined) return;
+      if (!Array.isArray(list)) { invalidRule(id); return; }
+      list.forEach(function (rule) {
+        if (!ruleValid(rule)) invalidRule(id);
+        else if (kind === 'garment' && !knownGarment(rule.garment)) {
+          errors.push(FB.T('Wardrobe {id} names unknown garment {garment}.',
+            { id:id, garment:String(rule.garment) }));
+        } else if (kind === 'headwear' && !rule.faithCover && !knownHeadwear(rule.headwear)) {
+          errors.push(FB.T('Wardrobe {id} names unknown headwear {headwear}.',
+            { id:id, headwear:String(rule.headwear) }));
+        } else if ((kind === 'garment' || kind === 'color') && !validColorV2(rule.color)) {
+          invalidRule(id);
+        }
+      });
+    }
+    if (!plainObjectV2(wardrobes) || !Object.keys(wardrobes).length) {
+      return [FB.T('Wardrobes are missing.')];
+    }
+    Object.keys(wardrobes).forEach(function (id) {
+      var wardrobe = wardrobes[id];
+      if (!plainObjectV2(wardrobe)) { invalidRule(id); return; }
+      checkRules(id, wardrobe.garments, 'garment');
+      checkRules(id, wardrobe.trim, 'color');
+      checkRules(id, wardrobe.fur, 'color');
+      checkRules(id, wardrobe.headwear, 'headwear');
+      checkRules(id, wardrobe.chain, 'chain');
+    });
+    function unknownCostume(owner) {
+      var costume = owner && owner.costume;
+      return costume !== undefined && costume !== null &&
+        !(typeof costume === 'string' && own.call(wardrobes, costume));
+    }
+    Object.keys(FBDATA.eras || {}).forEach(function (id) {
+      if (unknownCostume(FBDATA.eras[id])) {
+        errors.push(FB.T('Era {id} has unknown costume {costume}.',
+          { id:id, costume:String(FBDATA.eras[id].costume) }));
+      }
+    });
+    Object.keys(FBDATA.governmentForms || {}).forEach(function (id) {
+      if (unknownCostume(FBDATA.governmentForms[id])) {
+        errors.push(FB.T('Government form {id} has unknown costume {costume}.',
+          { id:id, costume:String(FBDATA.governmentForms[id].costume) }));
+      }
+    });
+    Object.keys(FBDATA.cultures || {}).forEach(function (id) {
+      var look = FBDATA.cultures[id] && FBDATA.cultures[id].appearance;
+      if (look === undefined) return;
+      var valid = plainObjectV2(look) &&
+        ['tone','fair','red'].every(function (key) {
+          return look[key] === undefined || isFinite(look[key]);
+        }) &&
+        (look.hair === undefined || (plainObjectV2(look.hair) &&
+          hasAppearanceValue(ORDINARY_HAIR_STYLES, look.hair.style))) &&
+        (look.tends === undefined ||
+          (Array.isArray(look.tends) && look.tends.every(knownHeadwear)));
+      if (!valid) errors.push(FB.T('Culture {id} has an invalid appearance profile.', { id:id }));
+    });
+    Object.keys(FBDATA.religions || {}).forEach(function (id) {
+      var def = FBDATA.religions[id];
+      var attire = def && plainObjectV2(def.properties) ? def.properties.attire : undefined;
+      if (attire === undefined) return;
+      var valid = plainObjectV2(attire);
+      var covers = valid ? attire.covers : null, swaps = valid ? attire.garments : null;
+      var beard = valid ? attire.beard : null;
+      valid = valid &&
+        (covers === undefined || (plainObjectV2(covers) &&
+          Object.keys(covers).every(function (sex) { return knownHeadwear(covers[sex]); }))) &&
+        (swaps === undefined || (plainObjectV2(swaps) &&
+          Object.keys(swaps).every(function (from) { return knownGarment(swaps[from]); }))) &&
+        (beard === undefined || (plainObjectV2(beard) &&
+          (beard.min === undefined || isFinite(beard.min)) &&
+          (beard.cuts === undefined || (Array.isArray(beard.cuts) &&
+            beard.cuts.every(function (cut) { return own.call(beardRenders, cut); }))))) &&
+        (attire.tends === undefined ||
+          (Array.isArray(attire.tends) && attire.tends.every(knownHeadwear)));
+      if (!valid) errors.push(FB.T('Faith {id} has invalid attire.', { id:id }));
+    });
+    return errors;
+  };
 
   FB.characterLook = function (c, year, state, opts) {
     return portraitDescriptor(state,c,year,opts || {}).spec;
@@ -1049,8 +1239,7 @@ window.FB = window.FB || {};
     function at(heads){return f.top+(1+(heads-1)*k)*headH;}
     var bw=.86+spec.build*.3,tw=.92+spec.build*.17;
     var leg=.94+spec.stature*.12,kind=spec.cloth.kind;
-    var floor=kind==='habit'||kind==='cassock'||kind==='court'||kind==='royal'||
-      kind==='robe'||kind==='lateMantle'||kind==='lateVestment';
+    var length=garmentShape(kind).length,floor=length==='floor';
     return {cx:f.throatX,headH:headH,floorLength:floor,kind:kind,fem:spec.female,
       shoulderY:at(1.3),chestY:at(2),waistY:at(2.82),hipY:at(3.75),
       kneeY:at(3.75+(5.5-3.75)*leg),ankleY:at(7.24),soleY:at(7.5),
@@ -1067,7 +1256,7 @@ window.FB = window.FB || {};
       handW:headH*(spec.female ? .135 : .15)*youth,
       shoeW:headH*(spec.female ? .17 : .185),shoeH:headH*(spec.female ? .26 : .29),
       stance:headH*(spec.female ? .32 : .34),
-      hemY:floor?at(7.15):at(kind==='doublet'?3.15:4.45)};
+      hemY:floor?at(7.15):at(length==='short'?3.15:4.45)};
   }
   function shiftScaffold(scaffold, dy) {
     var key;
@@ -3981,16 +4170,14 @@ window.FB = window.FB || {};
     if(descriptor.frame==='figure'&&descriptor.loadout.neck){
       drawItemArt(ctx,descriptor.loadout.neck,f.throatX,f.collarY+14,
         .68,0,false);
-    }else if(descriptor.frame==='figure'&&
-      (FB.station.rulesRealm(spec)||(FB.professionHasRole(spec.profession,['clergy','cloister'])&&
-        spec.faith==='christian'))){
+    }else if(descriptor.frame==='figure'&&spec.neckChain){
       var chainY=f.collarY+8*u;
       ink(ctx,1.2*u,GOLD,.9,q);
       ctx.beginPath();
       ctx.moveTo(f.throatX-11*u,chainY-3*u);
       ctx.quadraticCurveTo(f.throatX,chainY+5*u,f.throatX+11*u,chainY-3*u);
       ctx.stroke();
-      if(spec.faith==='christian'){
+      if(spec.pendant==='cross'){
         ctx.fillStyle=cssV2(GOLD_L);
         ctx.fillRect(f.throatX-1*u,chainY+3*u,2*u,7*u);
         ctx.fillRect(f.throatX-3*u,chainY+5*u,6*u,1.8*u);
@@ -4016,8 +4203,7 @@ window.FB = window.FB || {};
     var raw=spec.cloth.raw;
     return {base:raw,dark:shadeV2(raw,-.12),deep:shadeV2(raw,-.22),
       light:shadeV2(raw,.11),
-      trim:FB.station.isLanded(spec)?[190,160,78]:[146,126,92],
-      fur:FB.station.isRoyal(spec)?[232,226,214]:[122,104,84]};
+      trim:spec.cloth.trimRaw.slice(),fur:spec.cloth.furRaw.slice()};
   }
   function legPath(ctx, b, side) {
     var xh=b.cx+side*b.stance,xa=b.cx+side*b.stance*.92;
@@ -4127,18 +4313,18 @@ window.FB = window.FB || {};
   function topDetail(ctx, b, spec, cl, q) {
     var hh=b.headH;
     var nHalf=b.shoulderHalf*.34,nY=b.shoulderY-4;
-    var kind=b.kind;
+    var kind=b.kind,shape=garmentShape(kind),detail=shape.detail;
     var seam=shadeV2(cl.deep,-.12);
     var i,x,y,n,qx;
-    if(kind==='lateTunic'||kind==='lateMantle'||kind==='lateVestment'){
+    if(detail==='clavi'){
       /* Vertical clavi and a fastened mantle identify late antique rank. */
-      ink(ctx,kind==='lateMantle'?2.4:1.5,cl.trim,.78,q);
+      ink(ctx,shape.mantle?2.4:1.5,cl.trim,.78,q);
       for(i=-1;i<=1;i+=2){
         x=b.cx+i*b.waistHalf*.43;
         ctx.beginPath();ctx.moveTo(x,b.shoulderY+hh*.14);
         ctx.lineTo(x,b.hemY-hh*.07);ctx.stroke();
       }
-      if(kind==='lateMantle'){
+      if(shape.mantle){
         ctx.beginPath();
         ctx.moveTo(b.cx-b.shoulderHalf*.9,b.shoulderY+hh*.1);
         ctx.quadraticCurveTo(b.cx,b.chestY+hh*.1,
@@ -4151,7 +4337,7 @@ window.FB = window.FB || {};
         gemDot(ctx,b.cx+b.shoulderHalf*.67,b.shoulderY+hh*.1,
           hh*.05,cl.trim,q);
       }
-    }else if(kind==='mail'||kind==='lamellar'||kind==='plate'){
+    }else if(detail==='armor'){
       ink(ctx,1,seam,.75,q);
       if(kind==='plate'){
         ctx.beginPath();ctx.moveTo(b.cx,b.shoulderY);ctx.lineTo(b.cx,b.waistY);ctx.stroke();
@@ -4168,7 +4354,7 @@ window.FB = window.FB || {};
           }
         }
       }
-    }else if(kind==='gambeson'){
+    }else if(detail==='quilted'){
       ink(ctx,1.15,seam,.6,q);
       for(x=-3;x<=3;x++){
         qx=b.cx+x*hh*.155;
@@ -4183,7 +4369,7 @@ window.FB = window.FB || {};
       ctx.moveTo(b.cx-nHalf*1.15,nY+hh*.06);
       ctx.quadraticCurveTo(b.cx,nY+hh*.16,b.cx+nHalf*1.15,nY+hh*.06);
       ctx.stroke();
-    }else if(kind==='doublet'){
+    }else if(detail==='buttoned'){
       ink(ctx,1.1,seam,.6,q);
       ctx.beginPath();
       ctx.moveTo(b.cx-hh*.055,nY+2);
@@ -4193,7 +4379,7 @@ window.FB = window.FB || {};
         y=nY+hh*.09+(b.hemY-nY-hh*.16)*(i/5);
         gemDot(ctx,b.cx+hh*.012,y,hh*.016,cl.trim,q);
       }
-    }else if(kind==='cassock'){
+    }else if(detail==='buttons'){
       n=b.floorLength?11:7;
       for(i=0;i<n;i++){
         y=nY+hh*.09+(b.hemY-nY-hh*.18)*(i/(n-1));
@@ -4204,7 +4390,7 @@ window.FB = window.FB || {};
       ctx.moveTo(b.cx-nHalf,nY+hh*.04);
       ctx.quadraticCurveTo(b.cx,nY+hh*.13,b.cx+nHalf,nY+hh*.04);
       ctx.stroke();
-    }else if(kind==='habit'){
+    }else if(detail==='scapular'){
       var sw=b.waistHalf*.58;
       ctx.beginPath();
       ctx.moveTo(b.cx-sw,nY+hh*.05);
@@ -4213,7 +4399,7 @@ window.FB = window.FB || {};
       ctx.lineTo(b.cx+sw,nY+hh*.05);
       ctx.closePath();
       fillStrokeA(ctx,shadeV2(cl.dark,-.07),shadeV2(cl.deep,-.16),1.3,.75,q);
-    }else if(kind==='court'||kind==='royal'){
+    }else if(detail==='banded'){
       ink(ctx,2.6,cl.trim,.85,q);
       ctx.beginPath();
       ctx.moveTo(b.cx-nHalf-hh*.06,nY+hh*.05);
@@ -4224,7 +4410,7 @@ window.FB = window.FB || {};
       ctx.moveTo(b.cx,nY+hh*.17);
       ctx.lineTo(b.cx,b.hemY-hh*.05);
       ctx.stroke();
-      if(kind==='royal'){
+      if(shape.ermine){
         /* the ermine mantle hangs over the shoulders and dips at the
            breast, ticked rather than drawn hair by hair */
         var sh2=b.shoulderHalf;
@@ -4264,7 +4450,7 @@ window.FB = window.FB || {};
         if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);
       }
       ctx.stroke();
-      if(kind==='cote'){
+      if(shape.placket){
         ink(ctx,1.1,seam,.5,q);
         ctx.beginPath();
         ctx.moveTo(b.cx,nY+hh*.19);
@@ -4272,7 +4458,7 @@ window.FB = window.FB || {};
         ctx.stroke();
       }
     }
-    if(kind!=='habit'){
+    if(shape.hemLine){
       ink(ctx,1.2,seam,.45,q);
       hemLine(ctx,b,b.headH*.05);
       ctx.stroke();
@@ -4314,14 +4500,14 @@ window.FB = window.FB || {};
   }
   function sleeveDetail(ctx, b, side, cl, q) {
     var a=armPoints(b,side),hh=b.headH;
-    var court=b.kind==='court'||b.kind==='royal';
+    var court=!!garmentShape(b.kind).cuffs;
     if(b.kind==='plate'){
       ink(ctx,1.2,shadeV2(cl.deep,-.12),.8,q);
       ctx.beginPath();ctx.moveTo(a.shoulderX,a.shoulderY);
       ctx.lineTo(a.elbowX,a.elbowY);ctx.lineTo(a.wristX,a.wristY);ctx.stroke();
       ctx.beginPath();ctx.ellipse(a.elbowX,a.elbowY,b.armR*.86,hh*.06,0,0,Math.PI*2);ctx.stroke();
     }
-    if(b.kind==='gambeson'){
+    if(garmentShape(b.kind).quilted){
       var eR=b.armR*.84,g;
       ink(ctx,1.05,shadeV2(cl.deep,-.12),.5,q);
       for(g=-1;g<=1;g+=2){
@@ -4512,7 +4698,7 @@ window.FB = window.FB || {};
     ctx.closePath();
     ctx.fill();
     ctx.globalAlpha=1;
-    if(['gambeson','habit','plate','mail','lamellar'].indexOf(b.kind)<0){
+    if(garmentShape(b.kind).folds){
       ink(ctx,1.1,shadeV2(cl.deep,-.05),.45,q);
       var fold,fx;
       for(fold=-2;fold<=2;fold++){
@@ -4560,7 +4746,7 @@ window.FB = window.FB || {};
       if(ringGem)gemDot(ctx,rx,ry-b.handW*.06,b.handW*.12,ringGem,q);
     }
     var waistItem=descriptor.loadout.waist;
-    if(!waistItem&&(b.kind==='habit'||b.kind==='cassock')){
+    if(!waistItem&&garmentShape(b.kind).cord){
       /* the cord, knotted and hanging at the hip */
       ink(ctx,2.2,[176,158,118],.9,q);
       ctx.beginPath();

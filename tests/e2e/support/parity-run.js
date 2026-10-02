@@ -49,7 +49,7 @@ if (mode === 'ids') {
 } else {
   env.FB_PARITY = mode;
   specs = ['specs/parity-fresh.spec.js', 'specs/parity-corpus.spec.js',
-    'specs/parity-raster.spec.js'];
+    'specs/parity-raster.spec.js', 'specs/parity-portraits.spec.js'];
 }
 
 const playwrightPackage = require.resolve('playwright/package.json');

@@ -271,6 +271,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   (regional historical foundations), `data/units.js` (the unit-class table:
   composition quality, upkeep, casualty order, counters, and tech/culture gates),
   `data/eras.js` (eras: year windows, default government form and culture),
+  `data/wardrobes.js` (portrait wardrobes that eras and government forms name),
   `data/bookmarks.js` (the atomic 867/1066 world
   definitions), `data/settlements.js` (the shared physical-site table plus the per-bookmark
   county settlement layouts it clones onto those bookmark provinces),

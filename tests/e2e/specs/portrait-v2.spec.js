@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/starts.js',
   'js/portrait.js',
+  'data/wardrobes.js',
+  'data/cultures.js',
   'js/ui_modals.js',
   'js/ui_topbar.js',
   'css/style.css'
