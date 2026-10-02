@@ -58,14 +58,16 @@
       ? { kind:'realm', id:value.id } : null;
     return null;
   }
+  /* A realm without a row takes the campaign's stamped default form;
+     saves without that stamp keep the legacy territorial fallback. */
+  function defaultForm(s) {
+    return s.start && s.start.defaultGovernment || 'territorial';
+  }
   Q.government = function (s, realmRef) {
     if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
     var a = records(s), stored = a && a.governments &&
       own(a.governments, realmRef.id) ? a.governments[realmRef.id] : null;
-    /* A realm without a row takes the campaign's stamped default form;
-       saves without that stamp keep the legacy territorial fallback. */
-    var formId = stored && stored.formId ||
-      s.start && s.start.defaultGovernment || 'territorial';
+    var formId = stored && stored.formId || defaultForm(s);
     var rules = FBDATA.governmentForms[formId];
     return rules ? { realmId:realmRef.id, formId:formId,
       rules:copy(rules), sinceTurn:stored && stored.sinceTurn !== undefined
@@ -77,6 +79,16 @@
         current.formId === formId) return false;
     ensure(s).governments[rid] = { formId:formId, sinceTurn:s.turn };
     return true;
+  };
+  /* World creation seeds the bookmark's form for each realm (realm id ->
+     form id) whose form differs from the campaign default. The realms are
+     still being made, so no actor query runs here. */
+  FB.authoritySeedGovernments = function (s, forms) {
+    for (var rid in forms) if (own(forms, rid)) {
+      if (forms[rid] === defaultForm(s) || !own(s.realms, rid) ||
+          !own(FBDATA.governmentForms, forms[rid])) continue;
+      ensure(s).governments[rid] = { formId:forms[rid], sinceTurn:s.turn };
+    }
   };
   function validIssuer(s, issuer, source) {
     if (!issuer || typeof issuer.id !== 'string') return false;
@@ -564,7 +576,9 @@
         return basis('direct_receipt', rid);
     } else if (power === 'consent') {
       var government = rid && Q.government(s, { kind:'realm', id:rid });
-      if (government && government.rules.civicConsent === 'territorial' &&
+      var consent = government &&
+        FB.governments.strategy('consent', government.rules.consent);
+      if (consent && consent.territorialConsent &&
           FB.realmTerritory(s, rid).indexOf(pid) >= 0)
         return basis('territorial_consent', rid);
     }
@@ -698,9 +712,10 @@
     else {
       if (!own(governments, 'territorial'))
         errors.push(FB.T('Territorial government form is missing.'));
+      /* Each form's strategies are checked by FB.governments.validate. */
       for (var formId in governments) if (own(governments, formId)) {
         if (!/^[a-z][a-z0-9_]*$/.test(formId) || !governments[formId] ||
-            ['territorial','delegated'].indexOf(governments[formId].civicConsent) < 0)
+            typeof governments[formId] !== 'object')
           errors.push(FB.T('Invalid government form {id}.', { id:formId }));
       }
     }

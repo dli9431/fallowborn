@@ -162,10 +162,6 @@
       path:[], goal:null, moveLeft:0,
       scenarioStanding:true, scenarioEndTurn:361 };
     s.armies.push(italianHost, federateHost);
-    FB.authoritySetGovernment(s, 'italy', 'roman_civic');
-    FB.authoritySetGovernment(s, 'croatia', 'roman_civic');
-    FB.authoritySetGovernment(s, 'byzantium', 'roman_civic');
-    FB.authoritySetGovernment(s, 'federates_476', 'federate_polity');
     s.religiousHeads.rome_bishop = bishop.id;
     s.religiousHeads.ravenna_homoian_bishop = homoianBishop.id;
     var westClaim = recognize(s, 'dynastic_succession', actor('italy'), person(west.id));
@@ -926,6 +922,10 @@
           '🏛 The court’s route is broken; its requested settlement must be reviewed again.', {});
       }
     }
+    /* The escort's own flag keeps its route only while the court travels;
+       arrival, interruption and displacement all release it to the AI. */
+    var released = sc.courtMove !== 'travelling' && host(s, 'host_476_italy');
+    if (released && released.scenarioCourtEscort) released.scenarioCourtEscort = false;
     if ((sc.easternReturn === 'pending' || sc.easternReturn === 'delayed') &&
         s.turn >= (sc.backedClaimant === 'zeno' ? 150 : 180)) {
       var sitting = ruler(s, 'byzantium');

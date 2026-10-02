@@ -43,12 +43,15 @@ window.FBDATA = window.FBDATA || {};
   var realms = [
     { id:'italy', name:'Western Roman Court', color:'#9c5647', capital:'ravenna',
       aggression:0, rank:4, religion:'nicene', techTraditions:['latin'],
+      government:'roman_civic',
       ruler:{ name:'Romulus Augustulus', sex:'m', culture:'roman', born:461, mar:3, trait:'patient' } },
     { id:'croatia', name:'Dalmatian Roman Court', color:'#7b699b', capital:'split',
       aggression:0, rank:3, religion:'nicene', techTraditions:['latin','byzantine'],
+      government:'roman_civic',
       ruler:{ name:'Julius Nepos', sex:'m', culture:'roman', born:430, mar:9, trait:'proud' } },
     { id:'byzantium', name:'Eastern Roman Court', color:'#a04fb0', capital:'constantinople',
       aggression:0, rank:4, religion:'chalcedonian', techTraditions:['byzantine'],
+      government:'roman_civic',
       ruler:{ name:'Basiliscus', sex:'m', culture:'greek', born:430, mar:8, trait:'proud' } },
     { id:'west_francia', name:'Roman Domain in Gaul', color:'#758aa0', capital:'paris',
       aggression:0, rank:3, religion:'nicene', techTraditions:['latin'],
@@ -82,6 +85,7 @@ window.FBDATA = window.FBDATA || {};
       ruler:{ name:'Rhenish Chieftain', sex:'m', culture:'frankish', born:440, mar:8, trait:'patient' } },
     { id:'federates_476', name:'Federate Host in Italy', color:'#717d65', capital:'pavia',
       nonTerritorial:true, aggression:0, rank:1, religion:'homoian',
+      government:'federate_polity',
       ruler:{ name:'Odoacer', sex:'m', culture:'gothic', born:433, mar:12, trait:'ambitious' } }
   ];
   var provinces = base.provinces.map(function (source) {
@@ -249,7 +253,8 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.bookmarks['476'] = {
     id:'476', name:'The Last Western Court',
     desc:'An emperor sits at Ravenna while federate soldiers demand a settlement.',
-    date:{ year:476, season:0, day:1 }, religiousHeads:{},
+    date:{ year:476, season:0, day:1 }, era:'late_antique',
+    religiousHeads:{},
     greatHolyWars:false,
     provinces:provinces, realms:realms,
     duchies:Object.assign({}, base.duchies),

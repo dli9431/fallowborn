@@ -4,7 +4,8 @@ dependsOnRuntime(__filename, [
   'index.html', 'js/save.js', 'js/save_v4.js', 'js/title_ids.js',
   'js/main.js', 'js/world.js', 'js/model.js', 'js/mods.js', 'js/messages.js',
   'js/authority.js', 'js/politics.js', 'js/situation476.js', 'js/ui_modals.js',
-  'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js'
+  'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js',
+  'data/eras.js', 'js/governments.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');

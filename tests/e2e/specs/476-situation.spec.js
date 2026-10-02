@@ -13,6 +13,7 @@ dependsOnRuntime(__filename, [
   'js/population.js', 'js/wars.js',
   'js/i18n.js', 'js/portrait.js', 'js/ui_panels.js', 'js/ui_misc.js',
   'js/ui_modals.js', 'js/save.js', 'js/save_v4.js',
+  'js/governments.js', 'data/eras.js',
   'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');

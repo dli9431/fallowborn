@@ -9,7 +9,8 @@ dependsOnRuntime(__filename, [
   'js/save.js', 'js/save_v4.js', 'js/main.js', 'js/util.js', 'js/ui_modals.js', 'js/ui_misc.js',
   'data/bookmarks.js', 'data/map_data.js', 'data/counties.js',
   'data/settlements.js', 'data/settlements_real.js', 'data/economy.js',
-  'data/cultures.js', 'data/technology.js', 'data/political_institutions.js'
+  'data/cultures.js', 'data/technology.js', 'data/political_institutions.js',
+  'data/eras.js', 'js/governments.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');

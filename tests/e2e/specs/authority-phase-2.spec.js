@@ -7,7 +7,8 @@ dependsOnRuntime(__filename, [
   'js/ui_modals.js', 'js/i18n.js', 'css/style.css',
   'data/political_institutions.js', 'data/technology.js',
   'data/bookmarks.js', 'data/map_data.js', 'data/counties.js',
-  'data/settlements.js', 'data/settlements_real.js'
+  'data/settlements.js', 'data/settlements_real.js',
+  'js/governments.js', 'data/eras.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
