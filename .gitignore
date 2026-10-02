@@ -60,6 +60,7 @@ saves/
 # Private workspace notes must never land here. They live beside this repo,
 # not in it; this guard keeps a stray copy from being committed.
 notes/
+saves/
 
 # Owner-derived local stress exports; root placement makes manual import easy.
 /logistics-stress-save*.txt

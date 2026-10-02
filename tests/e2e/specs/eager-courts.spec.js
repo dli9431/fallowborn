@@ -1046,9 +1046,11 @@ test('two worlds on one seed produce identical courts',
     }
   });
 
-test('an annual step registers a breakaway before checking its county vassals',
+for (const truce of [false, true]) {
+test(truce ? 'an annual breakaway cannot restart war during a crown truce' :
+  'an annual step registers a breakaway before checking its county vassals',
   async function ({ page }) {
-    const result = await page.evaluate(function () {
+    const result = await page.evaluate(function (truce) {
       /* A detached live snapshot has no campaign accessors, matching a new
          world before its first daily campaign tick. Do not initialize wars
          in the setup: the annual simulation owns that boundary. */
@@ -1061,6 +1063,9 @@ test('an annual step registers a breakaway before checking its county vassals',
       FB.invalidateRealmCache();
       const rebelId = 'd_apulia';
       const formerTop = FB.topRealm(s, rebelId);
+      const formerLiege = s.realms[rebelId].liege;
+      s.truces = s.truces || {};
+      if (truce) s.truces[JSON.stringify([formerTop, rebelId].sort())] = s.turn + 720;
       const countyVassals = Object.keys(s.realms).filter(function (rid) {
         return s.realms[rid].alive && s.realms[rid].liege === rebelId;
       });
@@ -1085,18 +1090,27 @@ test('an annual step registers a breakaway before checking its county vassals',
         independent:s.realms[rebelId].liege === null,
         registered:!!war && s.wars[war.id] === war,
         saved:!!war && !!saved.wars[war.id],
+        cause:war ? { rebel:war.casus.rebel, formerLiege:war.casus.formerLiege,
+          ruler:!!war.casus.rebelCharId } : null,
+        formerLiege:formerLiege,
+        candidate:candidates.indexOf(rebelId) >= 0,
         repeatedCountyRolls:countyVassals.filter(function (rid) {
           return candidates.indexOf(rid) >= 0;
         })
       };
-    });
+    }, truce);
     expect(result.formerTop).toBe('byzantium');
     expect(result.countyCount).toBeGreaterThan(0);
-    expect(result.independent).toBe(true);
-    expect(result.registered).toBe(true);
-    expect(result.saved).toBe(true);
-    expect(result.repeatedCountyRolls).toEqual([]);
+    expect(result.independent).toBe(!truce);
+    expect(result.registered).toBe(!truce);
+    expect(result.saved).toBe(!truce);
+    expect(result.candidate).toBe(!truce);
+    if (!truce) {
+      expect(result.cause).toEqual({ rebel:'d_apulia', formerLiege:result.formerLiege, ruler:true });
+      expect(result.repeatedCountyRolls).toEqual([]);
+    }
   });
+}
 
 test('a save-load-forward run matches an uninterrupted one',
   async function ({ page }) {

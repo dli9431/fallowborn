@@ -201,6 +201,14 @@ helper with only those importers. In particular, `support/game/navigation.js`, `
 and `support/page-contract.js` are suite-wide fan-out boundaries and should change only when their
 shared contract changes.
 
+War scenarios should create campaigns through `FB.registerOrdinaryWar`, including
+wars assigned to newly fabricated AI realms. The legacy `.war` accessors are bound
+at initialization boundaries; a raw assignment before then can leave an object
+that event validators and hostility queries cannot find in `state.wars`. Use raw
+legacy objects only when testing migration itself. When a scenario replaces a war,
+settle its exact active id first and allow for a preceding peace step having
+already ended it.
+
 Playwright starts and stops the test server automatically. Tests run headlessly unless a
 Playwright command-line option requests another mode.
 

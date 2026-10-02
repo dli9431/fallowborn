@@ -7,18 +7,21 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
-/* Replaces the fixture's offensive war with a defensive one over the second
-   home county, so concessions and submission have a real objective. */
+/* Starts a defensive war over the second home county, closing the fixture's
+   offensive war if it is still active. */
 async function defendSecondCounty(page, ids) {
   return page.evaluate(function (ids) {
-    const s = FB.state, p = s.player;
-    FB.settleOrdinaryWar(s, FB.realmWars(s, 'player')[0].id, 'invalid');
+    const s = FB.state;
+    FB.realmWars(s, 'player').forEach(function (w) {
+      FB.settleOrdinaryWar(s, w.id, 'invalid');
+    });
     s.truces = {};
-    p.war = { enemy:ids.enemy, target:ids.second, wins:0, losses:2, seasons:6, strength:1,
-      defending:true, casus:{ type:'fabricated' } };
+    const war = FB.registerOrdinaryWar(s, 'player', {
+      enemy:ids.enemy, target:ids.second, wins:0, losses:2, seasons:6, strength:1,
+      defending:true, casus:{ type:'fabricated' } });
     FB.warFooting(s);
     s.eventQueue = [];
-    return FB.realmWars(s, 'player')[0].id;
+    return war.id;
   }, ids);
 }
 
@@ -197,6 +200,24 @@ test('abandoning a rebellion against an intermediate lord returns the player to 
   expect(result).toEqual({ quoted:setup.duke, demand:'recognition', liege:setup.duke,
     realmLiege:setup.duke, owner:setup.king, top:setup.king });
 });
+
+for (const pressed of [false, true]) {
+  test('exhaustion of a ' + (pressed ? 'contested' : 'never contested') + ' rebellion ' +
+      (pressed ? 'returns the rebel' : 'secures independence'), async function ({ page }, testInfo) {
+    await startWarSafety(page, testInfo);
+    const setup = await renounceIntermediateLord(page);
+    const result = await page.evaluate(function (args) {
+      const s = FB.state, w = FB.ordinaryWarById(s, args.setup.id), chance = FB.chance;
+      w.seasons = 9; w.wins = 0; w.losses = 0; w.enemySiege = 0; w.enemyTarget = null; w.battles = [];
+      if (args.pressed) w.sovereignPressed = 1;
+      FB.chance = function () { return false; };
+      try { FB.playerWarTick(s); } finally { FB.chance = chance; }
+      return { ended:!FB.ordinaryWarById(s, args.setup.id) || FB.ordinaryWarById(s, args.setup.id).status === 'ended',
+        liege:s.player.liege };
+    }, { setup:setup, pressed:pressed });
+    expect(result).toEqual({ ended:true, liege:pressed ? setup.duke : null });
+  });
+}
 
 test('a rebel who submits kneels to the renounced lord', async function ({ page }, testInfo) {
   await startWarSafety(page, testInfo);
