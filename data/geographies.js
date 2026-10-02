@@ -4,9 +4,10 @@
    A geography base owns the physical world a bookmark is drawn on: the
    projection window and grid width, landmass, sea and river geometry,
    county seed points and terrain, straits and crossing classes, settlement
-   sites, the default settlement layout, map-scale tuning and place names
-   by year. Every bookmark names one base in its `geography` field; politics
-   (realms, owners, hierarchy, communities) stay authored per bookmark.
+   sites, the default settlement layout, map-scale tuning, place names by
+   year and climate zones (data/climate.js). Every bookmark names one base
+   in its `geography` field; politics (realms, owners, hierarchy,
+   communities) stay authored per bookmark.
 
    europe_regional references the long-standing tables of data/map_data.js
    and data/counties.js rather than copying them, so the legacy top-level
@@ -80,7 +81,10 @@ window.FBDATA = window.FBDATA || {};
       /* no sites table: this base uses the shared FBDATA.settlementSites,
          which data/settlements*.js fill and runtime mods extend */
       defaultLayout:'867',
-      names:{ provinces:PROVINCE_NAMES, sites:{} }
+      names:{ provinces:PROVINCE_NAMES, sites:{} },
+      /* One zone for every county keeps the long-standing single meaning of
+         each season; regional climates are a per-bookmark content decision. */
+      climate:{ zone:'northern_temperate', provinces:{} }
     }
   };
   FBDATA.defaultGeography = 'europe_regional';

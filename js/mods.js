@@ -185,7 +185,7 @@ window.FBMODS = window.FBMODS || [];
     policies:true, elections:true, privileges:true, collectiveDemands:true,
     settlementNames:true, settlementSites:true, titles:true, papacy:true,
     currency:true, balance:true, land:true, seas:true, rivers:true,
-    bounds:true, geographies:true
+    bounds:true, geographies:true, seasonKinds:true, climateZones:true
   };
 
   function plainObject(value) {
@@ -1320,10 +1320,12 @@ window.FBMODS = window.FBMODS || [];
   function validateGeographies(mod) {
     if (!plainObject(mod.geographies)) fail('geographies', 'must be an object keyed by id.');
     const composed = Object.assign({}, FBDATA.geographies, mod.geographies);
-    const saved = FBDATA.geographies;
+    const saved = FBDATA.geographies, savedZones = FBDATA.climateZones;
     let errors = [];
     try {
       FBDATA.geographies = composed;
+      // a base may assign a zone the same mod adds
+      FBDATA.climateZones = combinedTable(savedZones, mod.climateZones, 'climateZones');
       for (const id in mod.geographies) {
         if (!own(mod.geographies, id)) continue;
         if (!/^[a-z][a-z0-9_]*$/.test(id)) fail('geographies.' + id, 'needs a snake_case id.');
@@ -1331,8 +1333,23 @@ window.FBMODS = window.FBMODS || [];
       }
     } finally {
       FBDATA.geographies = saved;
+      FBDATA.climateZones = savedZones;
     }
     if (errors.length) fail('geographies', 'are invalid: ' + errors[0]);
+  }
+
+  /* Season kinds and climate zones merge by id; the composed tables must
+     stay valid, and mod event triggers may name only known season kinds. */
+  function validateClimate(mod) {
+    const kinds = combinedTable(FBDATA.seasonKinds, mod.seasonKinds, 'seasonKinds');
+    const zones = combinedTable(FBDATA.climateZones, mod.climateZones, 'climateZones');
+    const errors = FB.validateClimateData(kinds, zones, FBDATA.defaultClimateZone);
+    if (errors.length) fail('climate', 'is invalid: ' + errors[0]);
+    if (!own(mod, 'events') || !Array.isArray(mod.events)) return;
+    for (let i = 0; i < mod.events.length; i++) {
+      const fault = FB.seasonKindTriggerFault(mod.events[i] && mod.events[i].trigger, kinds);
+      if (fault) fail('events[' + i + '].trigger', fault);
+    }
   }
 
   /* Mod unit classes merge by id, so check the composed table: known roles,
@@ -1422,6 +1439,9 @@ window.FBMODS = window.FBMODS || [];
     }
     if (own(mod, 'buildings')) validateBuildings(mod);
     if (own(mod, 'geographies')) validateGeographies(mod);
+    if (own(mod, 'seasonKinds') || own(mod, 'climateZones') || own(mod, 'events')) {
+      validateClimate(mod);
+    }
     if (own(mod, 'unitClasses')) validateUnitClasses(mod);
     if (own(mod, 'capabilities') || own(mod, 'tech')) validateCapabilities(mod);
     validateCommunityPolicies(mod);
@@ -1790,6 +1810,8 @@ window.FBMODS = window.FBMODS || [];
         FBDATA.balance[k] = mod.balance[k];
       }
     }
+    if (mod.seasonKinds) mergeTable(FBDATA.seasonKinds, mod.seasonKinds);
+    if (mod.climateZones) mergeTable(FBDATA.climateZones, mod.climateZones);
     if (mod.geographies) mergeTable(FBDATA.geographies, mod.geographies);
     /* The legacy top-level geometry keys replace the geometry of the default
        geography base, the base those tables describe, so every bookmark on

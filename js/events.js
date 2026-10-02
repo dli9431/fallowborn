@@ -4,6 +4,15 @@ window.FB = window.FB || {};
 (function () {
   'use strict';
 
+  /* Calendar season names, used by authored due dates (tenure duties). A
+     due date names the global calendar season, not a local season kind. */
+  const CALENDAR_SEASONS = { spring:0, summer:1, autumn:2, winter:3 };
+  function calendarSeasonIndex(name) {
+    return typeof name === 'string' &&
+      Object.prototype.hasOwnProperty.call(CALENDAR_SEASONS, name)
+      ? CALENDAR_SEASONS[name] : undefined;
+  }
+
   /* ---------- supporting cast (roles) ---------- */
   FB.crazyGamesFirstCharacter = function (state) {
     const p = state && state.player;
@@ -5056,7 +5065,11 @@ window.FB = window.FB || {};
     if (tg.minAge !== undefined && age < tg.minAge) return false;
     if (tg.maxAge !== undefined && age > tg.maxAge) return false;
     if (tg.sex && me.sex !== tg.sex) return false;
+    /* seasons lists legacy calendar indices; seasonKinds lists local season
+       kinds of the event's county (the player's unless it has a location) */
     if (tg.seasons && tg.seasons.indexOf(state.date.season) < 0) return false;
+    if (tg.seasonKinds &&
+        tg.seasonKinds.indexOf(FB.localSeason(state, provinceId)) < 0) return false;
     if (tg.yearMin !== undefined && state.date.year < tg.yearMin) return false;
     if (tg.yearMax !== undefined && state.date.year > tg.yearMax) return false;
     if (tg.married !== undefined) {
@@ -6149,8 +6162,7 @@ window.FB = window.FB || {};
               'eventId,firstDueSeason,id,intervalTurns' ||
             !dutiesCatalogue[additional.id] ||
             !additional.eventId || !FB.eventById(additional.eventId) ||
-            ['spring','summer','autumn','winter'].indexOf(
-              additional.firstDueSeason) < 0 ||
+            calendarSeasonIndex(additional.firstDueSeason) === undefined ||
             additional.intervalTurns !== 1440) {
           throw new Error('Archetype ' + archKey +
             ' has invalid additional transition duty terms.');
@@ -6463,11 +6475,12 @@ window.FB = window.FB || {};
       state: state
     });
 
-    const seasonMap = { spring: 0, summer: 1, autumn: 2, winter: 3 };
     function calculateFirstDue(firstDue, intervalTurns) {
       firstDue = firstDue || { season: 0, day: 30, cycle: 0 };
+      const named = typeof firstDue.season === 'string'
+        ? calendarSeasonIndex(firstDue.season.toLowerCase()) : undefined;
       const sIdx = typeof firstDue.season === 'string'
-        ? (seasonMap[firstDue.season.toLowerCase()] !== undefined ? seasonMap[firstDue.season.toLowerCase()] : 0)
+        ? (named !== undefined ? named : 0)
         : (firstDue.season || 0);
       const targetYear = state.date.year + (firstDue.cycle || 0);
       const targetDay = firstDue.day || 30;
@@ -7199,8 +7212,7 @@ window.FB = window.FB || {};
   }
 
   function nextTransitionDutyTurn(state, firstDueSeason) {
-    const seasons = { spring:0, summer:1, autumn:2, winter:3 };
-    const targetSeason = seasons[firstDueSeason];
+    const targetSeason = calendarSeasonIndex(firstDueSeason);
     const earliest = FB.dateAtTurn(state, (state.turn || 0) + 180);
     let year = earliest.year;
     let ordinal = year * 360 + targetSeason * 90 + 29;

@@ -203,16 +203,19 @@ window.FB = window.FB || {};
     return { total:total, prizes:prizes, services:services, preparation:total - sum - services };
   };
   function dayOfYear(s, turn) { return ((s.date.season * 90 + s.date.day - 1 + turn - s.turn) % 360 + 360) % 360; }
+  /* Games open only in a fair-weather season of the venue's climate
+     (spring or summer in temperate zones). */
+  function fairWeather(s, turn, provinceId) { return FB.seasonKindHasAt(provinceId, Math.floor(dayOfYear(s, turn) / 90), 'fairWeather'); }
   T.date = function (s, turn) {
     var offset = s.date.season * 90 + s.date.day - 1 + turn - s.turn;
     var day = ((offset % 360) + 360) % 360;
     return { year:s.date.year + Math.floor(offset / 360), season:Math.floor(day / 90), day:day % 90 + 1 };
   };
-  T.dates = function (s, id) {
+  T.dates = function (s, id, provinceId) {
     var out = [], last = root(s).starts[id];
     for (var d = D.noticeMin; d <= D.noticeMax; d++) {
       var turn = s.turn + d;
-      if (dayOfYear(s, turn) < 180 && (last === undefined || turn - last >= D.spacing)) out.push(turn);
+      if (fairWeather(s, turn, provinceId) && (last === undefined || turn - last >= D.spacing)) out.push(turn);
     }
     return out;
   };
@@ -231,7 +234,7 @@ window.FB = window.FB || {};
     if (!prog) reasons.push(FB.T('Choose a programme.'));
     if (prog && prog.requiresTech && !tech(s, e)) reasons.push(FB.T('Formal lists require the venue sovereign’s Couched Cavalry Lance.'));
     var start = spec.startTurn, last = root(s).starts[id];
-    if (!Number.isInteger(start) || start - s.turn < D.noticeMin || start - s.turn > D.noticeMax || dayOfYear(s, start) >= 180) reasons.push(FB.T('Choose a spring or summer date with 60 to 180 days’ notice.'));
+    if (!Number.isInteger(start) || start - s.turn < D.noticeMin || start - s.turn > D.noticeMax || !fairWeather(s, start, e.provinceId)) reasons.push(FB.T('Choose a spring or summer date with 60 to 180 days’ notice.'));
     if (last !== undefined && start - last < D.spacing) reasons.push(FB.T('A host’s editions must start at least 360 days apart.'));
     if (T.active(s).some(function (row) { return row.hostId === id; })) reasons.push(FB.T('This host already funds an edition.'));
     var cap = T.capacity(s, e.provinceId, spec.scale);
@@ -741,7 +744,7 @@ window.FB = window.FB || {};
       var list = groups[key], start = num(r.cursors[key]) % list.length;
       r.cursors[key] = (start + 1) % list.length;
       for (var i = 0; i < list.length; i++) {
-        var candidate = list[(start + i) % list.length], id = candidate.id, dates = T.dates(s, id);
+        var candidate = list[(start + i) % list.length], id = candidate.id, dates = T.dates(s, id, candidate.site.provinceId);
         if (!dates.length || !T.eligibility(s, id).ok || T.active(s).some(function (e) { return e.hostId === id; })) continue;
         var reserve = Math.max(500, Math.max(0, nets[id]) * 4, num(account(s, id) && account(s, id).reserveTarget));
         if (available(s, id) < reserve + 500) continue;

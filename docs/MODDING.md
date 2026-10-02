@@ -457,6 +457,9 @@ A JSON mod is one object with any of these keys:
     "freedomRelativeFactor": 0.5,
     "coinageSymbol": "£"
   },
+  "geographies": { "my_region": { ...complete geography base... } },
+  "seasonKinds": { "wet": { "name": "Wet season", "hardship": true } },
+  "climateZones": { "monsoon": { "name": "Monsoon", "seasons": ["spring", "wet", "wet", "winter"] } },
   "land": [ ... ], "seas": [ ... ], "rivers": [ ... ], "bounds": { ... }
 }
 ```
@@ -1436,6 +1439,7 @@ A geography base is the physical world a bookmark is drawn on. FBDATA.geographie
         "provinces": { "edo": [ { "from": 1457, "to": 1867, "name": "Edo" } ] },
         "sites": {}
       },
+      "climate": { "zone": "northern_temperate", "provinces": {} },
       "knowledge": {
         "basins": { "kanto": { "provinces": ["edo"] }, "kinai": { "provinces": ["kyoto"] } },
         "routes": [ { "from": "kanto", "to": "kinai" } ]
@@ -1453,9 +1457,43 @@ Fields:
 - sites: a settlement site table of the base's own; without it the base uses the shared FBDATA.settlementSites.
 - defaultLayout: the FBDATA.settlementLayouts entry bookmarks fall back to, or null.
 - names: dated names for counties (provinces, keyed by county id) and sites (sites, keyed by site id). Each list holds {from, to, name, culture}: from and to are inclusive whole years and optional, and culture is optional. At activation the first entry whose window holds the bookmark's start year replaces the authored name; an entry with a culture applies only to a county of that culture and wins over an unmarked one. A province row's or site record's own names list takes the place of the base's list for that id. Dated county names are display text and are localized like county names; settlement names stay proper names.
+- climate: the climate zone of every county on the base (zone) and per-county exceptions (provinces, county id to zone id). A base without climate, or a county it leaves out, takes FBDATA.defaultClimateZone. See Climate zones and season kinds below.
 - knowledge (optional, unused by the engine for now): basins, each a list of the base's county ids, and contact routes joining two different basins. Activation validates them when present.
 
 Only one base is active at a time (FB.activeGeography). Engine code reads geometry through it, never through the legacy top-level tables.
+
+### Climate zones and season kinds
+
+The calendar is global: every county shares state.date.season (0 Spring to 3 Winter), and the top bar names it. What a season means is local. data/climate.js defines season kinds (FBDATA.seasonKinds) and climate zones (FBDATA.climateZones), and each geography base assigns zones to its counties through its climate field. Mods add or replace kinds and zones by id through the top-level seasonKinds and climateZones keys; the composed tables are validated before anything is applied.
+
+```json
+{
+  "seasonKinds": {
+    "wet": { "name": "Wet season", "hardship": true },
+    "dry": { "name": "Dry season", "fairWeather": true }
+  },
+  "climateZones": {
+    "tropical_savanna": { "name": "Tropical savanna", "seasons": ["dry", "wet", "wet", "dry"] }
+  }
+}
+```
+
+A base then assigns them in its climate field, for example "climate": { "zone": "southern_temperate", "provinces": { "north_coast": "tropical_savanna" } }. Geography bases are replaced whole, so a base supplied by a mod carries its complete record.
+
+Season kinds:
+- name (required): the display name, localized like other data names.
+- hardship: armies in the field draw extra supply (balance.supplyWinterDrainMult) where the host stands.
+- fairWeather: scheduled games may open at a venue in this season.
+
+The shipped kinds are spring and summer (fair weather), autumn, and winter (hardship).
+
+Climate zones:
+- name (required): the display name shown on province sheets.
+- seasons (required): four season kind ids, for calendar seasons 0 (Spring) to 3 (Winter) in order.
+
+The shipped zones are northern_temperate (today's seasons), mediterranean, arid and steppe (the same four seasons for now; regional variation is content for a bookmark's geography), and southern_temperate, which turns the calendar half a year around (calendar Spring is local autumn). FBDATA.defaultClimateZone (northern_temperate) is the zone of any county no base assigns. europe_regional assigns northern_temperate everywhere, so 867, 1066 and 476 keep their long-standing seasons.
+
+Engine rules ask for a county's local season kind (FB.localSeason(state, provinceId)) and read the kind's properties; they never compare the calendar index for a climate meaning. Province sheets show the local season with its zone. Zones and local seasons are derived from data and never saved, so a data change applies to running campaigns.
 
 ## Events
 
@@ -1464,7 +1502,7 @@ Only one base is active at a time (FB.activeGeography). Engine code reads geomet
   "id": "lucky_cow", "title": "A Lucky Cow",
   "tags": ["livestock"],
   "text": "A fine cow wanders onto your land, ownerless. {lord} has not noticed.",
-  "trigger": { "tierMax": 1, "seasons": [1, 2], "chance": 0.2 },
+  "trigger": { "tierMax": 1, "seasonKinds": ["summer", "autumn"], "chance": 0.2 },
   "weight": 6, "cooldown": 12,
   "options": [
     { "label": "Keep it quietly.", "chance": 0.7,
@@ -1491,7 +1529,8 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | careerRoles | any actively practiced career with one of the listed roles (clergy cloister labor craft trading arms noble learned civic); like professions, landed players (tier 3+) do not pass. Prefer it over professions unless the event belongs to one career |
 | `career` | nested active-work career requirement `{profession?,specialization?,guildRankMin?,guildStandingMin?}`; uses the protagonist's resolved career and likewise excludes landed or unassigned/apprentice work |
 | `minAge` / `maxAge`, `sex` | `"m"`/`"f"` |
-| `seasons` | array of 0 spring … 3 winter |
+| seasonKinds | array of season kind ids (spring summer autumn winter, plus any a mod adds); passes when the local season of the event's county (the player's county unless the event has a location) is one of them. See Climate zones and season kinds |
+| seasons | legacy: array of calendar seasons 0 spring to 3 winter, ignoring climate. Kept for older mods; prefer seasonKinds |
 | `yearMin` / `yearMax` | calendar gate |
 | `married`, `hasChildren`, `hasYoungChild` | booleans |
 | `maxSeasonsSinceMarriage` | requires a recorded marriage no more than this many 90-day seasons ago |
@@ -4754,7 +4793,7 @@ that terrain; sea crossings are untouched). Composition counters come from each 
 multiplier in a friendly-fort county), `supplyDevastatedRecoverFloor` (the resupply
 multiplier floor on a war-worn county), `supplyDrainBase` (daily drain on neutral or
 hostile land), `supplyDrainTerrain` (per-terrain drain multipliers),
-`supplyWinterDrainMult`, `supplyDistanceDepth` (added drain per county of distance
+`supplyWinterDrainMult` (the drain multiplier in a local season of hardship, which is winter in temperate zones), `supplyDistanceDepth` (added drain per county of distance
 from friendly land), `supplyAttritionPerDay` (fraction of the host lost daily at 0
 supply), `supplyLowThreshold`, and `supplyLowPowerMult` / `supplyStarvedPowerMult`
 (battle-power penalties below the threshold and at 0). Every host carries the saved

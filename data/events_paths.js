@@ -481,7 +481,7 @@ FBDATA.events.push(
       effects:{ gold:4, addModifier:{id:'market_charter'} } }
   ]},
 { id:'smith_bridge_irons', title:'Iron at the Bridge',
-  trigger:{ career:{ profession:'craftsman', specialization:'smith', guildRankMin:'guildmaster' }, seasons:[1,2], chance:0.18 }, weight:3, cooldown:18,
+  trigger:{ career:{ profession:'craftsman', specialization:'smith', guildRankMin:'guildmaster' }, seasonKinds:['summer','autumn'], chance:0.18 }, weight:3, cooldown:18,
   text:'The bridge master needs fresh chains and pins before the autumn carts arrive. A shoddy repair would be cheaper, and nobody would know until floodwater comes.',
   options:[
     { label:'Charge the full lawful price.', desc:'Good iron brings good money.', effects:{ gold:12 } },
@@ -509,7 +509,7 @@ FBDATA.events.push(
       effects:{ gold:-3, prestige:7, addModifier:{id:'market_charter'} } }
   ]},
 { id:'cooper_vintage_casks', title:'Casks Before the Vintage',
-  trigger:{ career:{ profession:'craftsman', specialization:'cooper', guildRankMin:'guildmaster' }, seasons:[2], chance:0.22 }, weight:3, cooldown:16,
+  trigger:{ career:{ profession:'craftsman', specialization:'cooper', guildRankMin:'guildmaster' }, seasonKinds:['autumn'], chance:0.22 }, weight:3, cooldown:16,
   text:'Wine merchants discover their cellars are short of sound casks. Every vineyard wants your hoops and staves before the first pressing.',
   options:[
     { label:'Auction your casks to the highest bidder.', desc:'The shortage pays in hard coin.', effects:{ gold:15 } },

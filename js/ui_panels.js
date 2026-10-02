@@ -7526,6 +7526,7 @@ window.FB = window.FB || {};
         }))) +
         landKv('Terrain', esc(terrainName(pr.terrain)) +
           (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
+        landKv('Local season', esc(FB.localSeasonText(s, pid))) +
         landKv('County levy (gross)', '~' + esc(menText(s, Math.round(
           (s.dev[pid] || 1) * (FB.countyPopulationFactor ? FB.countyPopulationFactor(s, pid) : 1) * B.levyPerDev *
           (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pid)) : 1)))));

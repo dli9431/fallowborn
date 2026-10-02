@@ -4200,7 +4200,8 @@ window.FB = window.FB || {};
     }
     const bal = B();
     const base = bal.supplyDrainBase === undefined ? 1.2 : bal.supplyDrainBase;
-    const winter = state.date && state.date.season === 3; // FB.SEASONS[3]
+    // a season of hardship where the host stands (winter in temperate zones)
+    const winter = !!state.date && FB.localSeasonHas(state, army.at, 'hardship');
     const winterMult = winter
       ? (bal.supplyWinterDrainMult === undefined ? 1.5 : bal.supplyWinterDrainMult)
       : 1;
