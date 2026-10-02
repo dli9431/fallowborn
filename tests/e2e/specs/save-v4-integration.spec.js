@@ -3,7 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/save.js', 'js/save_v4.js', 'js/title_ids.js',
   'js/main.js', 'js/world.js', 'js/model.js', 'js/mods.js', 'js/messages.js',
-  'js/authority.js', 'js/politics.js', 'js/situation476.js', 'js/ui_modals.js',
+  'js/authority.js', 'js/politics.js', 'js/stories.js',
+  'js/story_western_court_476.js', 'js/story_federate_track_476.js', 'js/ui_modals.js',
   'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js',
   'data/eras.js', 'js/governments.js'
 ]);
@@ -45,7 +46,7 @@ for (const bookmark of ['476', '867', '1066']) {
               state.player.provs, state.player.gold, state.player.tier],
             population:state.population, buildings:state.buildings,
             treasury:state.treasuryAccounting, authority:state.authority,
-            situation:state.situation476, armies:state.armies,
+            stories:state.stories, armies:state.armies,
             wars:state.wars,
             family:Object.keys(state.chars).sort().map(function (id) {
               const c = state.chars[id];
@@ -130,7 +131,7 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
           d.state.authority.governments[rid].formId = 'missing_form';
         },
         function (d) { d.state.stories = { missing_story:{} }; },
-        function (d) { d.state.stories = {}; },
+        function (d) { d.state.situation476 = {}; },
         function (d) { d.state.start.defaultGovernment = 'missing_default'; }
       ];
       return changes.map(function (change) {

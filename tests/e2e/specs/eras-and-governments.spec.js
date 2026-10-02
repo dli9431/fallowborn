@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/political_institutions.js', 'data/cultures.js',
   'js/governments.js', 'js/world.js', 'js/authority.js', 'js/politics.js',
-  'js/armies.js', 'js/situation476.js', 'js/main.js',
+  'js/armies.js', 'js/stories.js', 'js/story_western_court_476.js', 'js/main.js',
   'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -278,7 +278,7 @@ test('scenario hosts follow their own standing and escort flags',
   async function ({ page }, testInfo) {
     await start(page, testInfo, '476');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, sc = s.stories.western_court_476;
       function host(id) {
         return s.armies.filter(function (army) { return army.id === id; })[0] || null;
       }
@@ -294,7 +294,7 @@ test('scenario hosts follow their own standing and escort flags',
       sc.courtMove = 'travelling';
       s.owner.pavia = 'aquitaine';
       FB.invalidateRealmCache();
-      FB.situation476Day(s);
+      FB.stories.day(s);
       return { standing:standing, released:released, move:sc.courtMove,
         escort:escort.scenarioCourtEscort };
     });

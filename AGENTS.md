@@ -284,7 +284,8 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   model → station → music → portrait → siteart → governments → world → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
   technology → council → agency → politics → authority → parliament → institutions →
-  ui (ui_misc → ui_panels → ui_topbar) → keys → save → save_v4 → mods → main`. The generated English
+  ui (ui_misc → ui_panels → ui_topbar) → keys → save → save_v4 → mods → stories →
+  story modules (each registers itself, a required story first) → main`. The generated English
   catalog is absent from an ordinary English boot; a translated boot dynamically loads it
   before the selected locale. The four `ui_*.js` files are one system split for size:
   `ui_misc.js` loads first and owns the shared internals (`FB.ui._shared`) the other three
@@ -317,6 +318,8 @@ about to touch, and update it when you change that system.**
 - `docs/designs/state-and-saves.md` — one serializable state object; save versioning.
 - `docs/designs/seeds.md` — shareable start seeds.
 - `docs/designs/events.md` — events are declarative data; interpreter rules.
+- docs/designs/stories.md: the story registry, world stories and player tracks, the
+  shared story card, and data-declared start scenarios.
 - `docs/designs/historical-ambitions.md` — regional foundations, recognition, timed rewards, and seasonal AI.
 - `docs/designs/justice.md` — custody, ruler arrests, regional sentences, justification, and support penalties.
 - `docs/designs/descent.md` — the way down: title lapse, submission, attainder, capture & ransom, distraint & bondage, devastation.
@@ -445,6 +448,9 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/util.js` — RNG, projection, helpers.
 - `js/keys.js`, `js/save.js`, `js/save_v4.js`, `js/mods.js` — keyboard,
   version-3 persistence, opt-in version-4 migration prototype, runtime mods.
+- js/stories.js: the story registry (world stories and player tracks) and the shared
+  Deeds story card and story sheet. Story modules such as js/story_western_court_476.js
+  register through it; engine code never names a story.
 - `js/title_ids.js` — rank-scoped de jure title aliases and typed migration.
 - `js/messages.js`, `js/i18n.js` — durable saved-message descriptors; localization catalog lookup and locale lifecycle.
 - `i18n/` — tracked translation caches, extraction coverage reports, and historical translation logs.

@@ -1149,6 +1149,19 @@ def extract_structured(inv: Inventory) -> None:
                     f"New-game scenario {item_id}, {field}.",
                     TOKEN_RE.findall(record["text"]),
                 )
+        # A scenario's familyPresets map relabels the shapes it allows.
+        scenario_presets = node_object(item.get("familyPresets")) or {}
+        for preset_id, preset_node in scenario_presets.items():
+            preset = node_object(preset_node) or {}
+            for field in ("name", "diff", "desc"):
+                for branch, record, line in branch_records(preset.get(field)):
+                    inv.add(
+                        f"scenario.{item_id}.familyPresets.{preset_id}.{field}.{branch}",
+                        record,
+                        f"data/starts.js:{line}",
+                        f"New-game scenario {item_id}, family preset {preset_id}, {field}.",
+                        TOKEN_RE.findall(record["text"]),
+                    )
 
     family_presets = node_array(
         find_assignment(STARTS_FILE, "FBDATA", "familyPresets")

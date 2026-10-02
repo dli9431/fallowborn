@@ -276,6 +276,16 @@ window.FB = window.FB || {};
         typeof definition.greatHolyWars !== 'boolean') {
       fault('greatHolyWars must be a boolean.');
     }
+    /* World stories the bookmark attaches at creation (js/stories.js). */
+    if (definition.stories !== undefined) {
+      if (!Array.isArray(definition.stories)) fault('stories must be a list.');
+      else for (var si = 0; si < definition.stories.length; si++) {
+        var storyDef = FB.stories && FB.stories.get(definition.stories[si]);
+        if (!storyDef || storyDef.kind !== 'world') {
+          fault('story ' + definition.stories[si] + ' is not a registered world story.');
+        }
+      }
+    }
     for (var wf = 0; wf < WORLD_FIELDS.length; wf++) {
       var worldField = WORLD_FIELDS[wf];
       if (worldField === 'crossingClasses') continue;

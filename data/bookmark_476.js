@@ -256,6 +256,7 @@ window.FBDATA = window.FBDATA || {};
     date:{ year:476, season:0, day:1 }, era:'late_antique',
     religiousHeads:{},
     greatHolyWars:false,
+    stories:['western_court_476'],
     provinces:provinces, realms:realms,
     duchies:Object.assign({}, base.duchies),
     kingdoms:Object.assign({}, base.kingdoms),
