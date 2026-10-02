@@ -767,6 +767,21 @@ defines (a removed mod) keeps its headcount, fights at the fallback quality 1, t
 losses after every known class in the casualty allocation, and is never mustered
 fresh; re-adding the class restores it.
 
+**Unit roles.** Every class declares a `role` from `FB.UNIT_ROLES` (js/armies.js):
+`levy_infantry`, `missile`, `polearm`, `heavy_infantry`, `household`, `cavalry`,
+`horse_archer`, `heavy_cavalry` or `mercenary`. Engine rules ask for the role, never a
+class id. The first class declared with a role is that role's default class: the levy
+pool every muster fills, the household class that receives retinue sources and great
+holy war adventurers, the missile class fed by archery buildings and flat archer
+effects, and the hired mercenary companies. Role sets drive the rest: any household
+men give the `_steel` battle report, mounted roles eat as horsemen on campaign, levy
+infantry is exempt from fiscal-settlement paid limits, and mercenary men are costed as
+contracted companies. A `counters` key may name a role, covering every enemy class of
+that role without an entry of its own. `hired` is set exactly for the mercenary role,
+and each of the five core roles needs a class. A legacy mod class without a role is
+accepted (hired companies count as mercenaries); a mod replacement that omits `role`
+keeps the replaced class's role. Role names never equal class ids.
+
 **Slain professionals are replaced through a realm-owned cohort ledger.**
 `state.armyCohorts[<realmId>][<classId>] = { batches:[{ n, readyTurn }], ready }`
 records every battle, siege, starvation, and desertion loss of a class flagged
@@ -796,7 +811,8 @@ reviews are `none` (data/technology.js).
 `{base, levy, archers, cavalry, retinue, mercenaries, byClass, reinforcement, reinforceByClass, campaignModifier, total}` from the
 live player hosts — the main body and every detachment; each fielded banner pays its own
 camp base, and hired companies are contracted once for the whole war. `byClass` carries the per-class charge for every table class (the four
-named fields are compatibility aliases for the baseline mustered classes). `reinforcement`
+named fields are compatibility aliases for the default classes of the levy_infantry,
+missile, cavalry and household roles). `reinforcement`
 is the professional replacement premium (above), charged while cohort batches drill even
 when no host is fielded, and folded into `total` before the campaign-supply adjustment. The camp and
 per-class components are tangible provisions/materials/transport baskets quoted in the

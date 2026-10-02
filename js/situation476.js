@@ -14,13 +14,17 @@
       if (field === 'desc') return FB.T('Drill, guard duty, and paid service in a federate host.');
     }
     if (field !== 'name') return null;
-    if (kind === 'unitClass') {
-      if (id === 'levy') return FB.T('Local militia');
-      if (id === 'arch') return FB.T('Bowmen');
-      if (id === 'cav') return FB.T('Mounted retainers');
-      if (id === 'ret') return FB.T('Household soldiers');
-      if (id === 'mercs') return FB.T('Contracted bands');
-      if (id === 'pike') return FB.T('Spearmen');
+    /* the period name of each role's default class */
+    if (kind === 'unitClass' && FB.unitClassRole) {
+      var role = FB.unitClassRole(id);
+      if (role && FB.unitRoleClass(role) === id) {
+        if (role === 'levy_infantry') return FB.T('Local militia');
+        if (role === 'missile') return FB.T('Bowmen');
+        if (role === 'cavalry') return FB.T('Mounted retainers');
+        if (role === 'household') return FB.T('Household soldiers');
+        if (role === 'mercenary') return FB.T('Contracted bands');
+        if (role === 'polearm') return FB.T('Spearmen');
+      }
     }
     if (kind === 'holding') {
       if (id === 'common_rights') return FB.T('Communal grazing rights');

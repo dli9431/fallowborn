@@ -467,7 +467,27 @@ for a landlocked one. Technology details label overland and sea-crossing speed s
 and show the concrete men-per-cycle capacity supplied by a transport tier.
 
 For mod compatibility, flat `build`, `retinue`, and `archers` effects remain aliases for a
-building-cost discount, `units.ret`, and `units.arch`.
+building-cost discount and the household and missile roles' default classes.
+
+### Capabilities and effect caps
+
+Technology does two different things, kept in two tables. `FBDATA.techCaps` caps the
+numeric effect domains (tax, levy, battle, unit additions and so on) summed from `fx`.
+`FBDATA.capabilities` names features a realm may use. Each technology lists the
+capabilities it grants in `capabilities`; engine features ask `FB.hasCapability(state,
+capability, realmId)`, never a technology id, so a regional technology that grants an
+existing capability unlocks the same feature. A capability marked `stacks:true` has a
+level (`FB.capabilityLevel`) equal to the number of known technologies granting it;
+any other capability is present or absent. The shipped capabilities are
+`seafaring_raids` (Longships), `oceanic_navigation` (Celestial Navigation, Sailing
+Directions, Mariner's Compass; stacking raid sea reach), `mounted_reach` (Mounted
+Archery, Couched Cavalry Lance; stacking overland raid reach), `couched_lance`
+(tournament jousting), `chartered_guilds` (Guild Charters), `assayed_coinage` (Mint
+Assaying), `customary_law_courts` (Recorded Customary Law), `permanent_markets` (Urban
+Markets) and `sealed_documents` (Authenticated Seals; market charters need both), and
+`parallel_research` (Scholarly Networks and Universities; one research slot each).
+Capability ids never equal technology ids; nothing is saved, since the answer derives
+from completed records.
 
 ## Saves and legacy definitions
 

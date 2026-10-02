@@ -66,6 +66,36 @@ window.FBDATA = window.FBDATA || {};
     aiUnits:{ arch:0.20, cav:0.20, ret:0.20 }
   };
 
+  /* Capabilities are the other half of what technology does: techCaps caps
+     numeric effect domains, while a capability names a feature a realm may
+     use. A technology grants capabilities through its `capabilities` list;
+     engine features ask for the capability (FB.hasCapability), never a
+     technology id, so a regional technology granting an existing capability
+     unlocks the same feature. A stacking capability's level
+     (FB.capabilityLevel) counts each known technology that grants it.
+     Capability ids never equal technology ids. */
+  FBDATA.capabilities = {
+    /* deep overseas and upriver raiding without a seafaring tradition */
+    seafaring_raids:{},
+    /* each grant extends sea raiding reach */
+    oceanic_navigation:{ stacks:true },
+    /* each grant extends overland raiding reach */
+    mounted_reach:{ stacks:true },
+    /* formal couched-lance jousting at tournaments */
+    couched_lance:{},
+    /* guild monopoly petitions and grants */
+    chartered_guilds:{},
+    /* coinage debasement and recoinage */
+    assayed_coinage:{},
+    /* written confirmation of custom before the Estates */
+    customary_law_courts:{},
+    /* town shops and, with sealed_documents, formal market charters */
+    permanent_markets:{},
+    sealed_documents:{},
+    /* each grant opens one more research slot */
+    parallel_research:{ stacks:true }
+  };
+
   /* Forward-only design ledger. The v1.127.1 audit is the baseline: older
      capabilities do not need a metadata backfill. Every independently
      gateable core capability added or materially expanded after that audit
@@ -764,6 +794,7 @@ window.FBDATA = window.FBDATA || {};
       confidence:options.confidence || 'high',
       sources:(options.sources || DOMAIN_SOURCE[domain]).slice(),
       unlocks:(options.unlocks || ['practice:' + id]).slice(),
+      capabilities:(options.capabilities || []).slice(),
       fx:options.fx || {}
     };
     if (options.reqAny) def.reqAny = options.reqAny.slice();
@@ -988,7 +1019,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['persianate','islamic','caucasian'], unlocks:['rule:caravan_network'], fx:{ trade:0.015 } });
   add('urban_markets','Permanent Urban Markets','🏪','commerce',[600,1000],[760,1010],['market_tolls','warehouses'],
     'Permanent stalls and oversight concentrate exchange in growing towns.',
-    { leaders:['islamic','byzantine','latin'], unlocks:['enterprise:market_stall_business','building:market'], fx:{ tax:0.01 } });
+    { leaders:['islamic','byzantine','latin'], unlocks:['enterprise:market_stall_business','building:market'], capabilities:['permanent_markets'], fx:{ tax:0.01 } });
   add('merchant_guilds','Merchant Guilds','🤝','commerce',[750,1100],[880,1120],['urban_markets'],
     'Sworn merchant associations defend privileges and enforce trust.',
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:merchant_guilds'], fx:{ trade:0.015 } });
@@ -1015,7 +1046,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin','islamic'], unlocks:['rule:marine_insurance'], fx:{ finance:0.025 }, sources:['SPUFFORD','LOPEZ'] });
   add('mint_assay','Mint Assaying','🪙','commerce',[800,1150],[940,1170],['standardized_coinage','weights_measures'],
     'Touchstones, balances, and cupellation test the fineness of coin.',
-    { leaders:['islamic','byzantine','latin'], unlocks:['rule:mint_assay'], fx:{ finance:0.015 } });
+    { leaders:['islamic','byzantine','latin'], unlocks:['rule:mint_assay'], capabilities:['assayed_coinage'], fx:{ finance:0.015 } });
   add('paved_causeways','Paved Causeways','🛣','commerce',[850,1200],[1010,1230],['road_surveys','stone_bridgebuilding'],
     'Raised and drained roadbeds keep important routes usable in wet seasons.',
     { leaders:['byzantine','latin','islamic'], unlocks:['rule:paved_routes'], fx:{ movement:0.025, migrationAttraction:1.0 } });
@@ -1086,10 +1117,10 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','persianate'], unlocks:['rule:optics'], fx:{ research:0.15 }, sources:['LINDBERG','GRANT'] });
   add('scholarly_networks','Scholarly Networks','🤝','learning',[750,1150],[930,1160],['scriptoria'],
     'Correspondence, travel, and patronage connect learned communities across realms.',
-    { leaders:['islamic','byzantine','latin'], unlocks:['research_slot:2','schooling:master'], fx:{ research:0.25 } });
+    { leaders:['islamic','byzantine','latin'], unlocks:['research_slot:2','schooling:master'], capabilities:['parallel_research'], fx:{ research:0.25 } });
   add('universities',{ default:'Universities', muslim:'Madrasas and Colleges' },'🎓','learning',[1000,1250],[1100,1270],['scholarly_networks','paper_scholarship'],
     'Corporate schools secure teachers, curricula, privileges, and durable communities.',
-    { leaders:['islamic','latin'], unlocks:['research_slot:3','building:university'], fx:{ research:0.35, education:0.03 }, sources:['RASHDALL','MAKDISI'] });
+    { leaders:['islamic','latin'], unlocks:['research_slot:3','building:university'], capabilities:['parallel_research'], fx:{ research:0.35, education:0.03 }, sources:['RASHDALL','MAKDISI'] });
   add('scholastic_method','Scholastic Method','❓','learning',[1050,1250],[1150,1280],['universities','translation_schools'],
     'Ordered questions and disputation expose contradictions and sharpen argument.',
     { leaders:['latin','islamic'], unlocks:['rule:scholastic_method'], fx:{ research:0.2, education:0.02 } });
@@ -1145,16 +1176,16 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin'], unlocks:['rule:manorial_courts'], fx:{ tax:0.01 } });
   add('customary_law','Recorded Customary Law','📖','governance',[800,1150],[950,1170],['written_law'],
     'Written statements stabilize customs once carried mainly by memory.',
-    { leaders:['latin','slavic','nordic'], unlocks:['rule:recorded_custom'], fx:{ tax:0.005 } });
+    { leaders:['latin','slavic','nordic'], unlocks:['rule:recorded_custom'], capabilities:['customary_law_courts'], fx:{ tax:0.005 } });
   add('royal_judges','Itinerant Royal Judges','⚖','governance',[900,1200],[1030,1220],['customary_law','diplomatic_correspondence'],
     'Delegated judges carry royal pleas and procedure into the provinces.',
     { leaders:['latin','byzantine'], unlocks:['rule:itinerant_justice'], fx:{ tax:0.01 } });
   add('guild_charters','Guild Charters','📯','governance',[900,1200],[1030,1220],['merchant_guilds','written_law'],
     'Public charters define corporate privileges and monopolies: guildmasters may petition a superior, while barons and greater rulers may grant one local Craft or Trade monopoly.',
-    { leaders:['latin','byzantine','islamic'], unlocks:['rule:guild_charters','building:guildhall'], fx:{ costs:{ enterprise:-0.04, training:-0.03 } } });
+    { leaders:['latin','byzantine','islamic'], unlocks:['rule:guild_charters','building:guildhall'], capabilities:['chartered_guilds'], fx:{ costs:{ enterprise:-0.04, training:-0.03 } } });
   add('authenticated_seals','Authenticated Seals','🕯','governance',[750,1100],[900,1120],['diplomatic_correspondence'],
     'Recognized seals authenticate commands and agreements without the issuer present.',
-    { leaders:['byzantine','islamic','latin'], unlocks:['rule:documentary_seals'], fx:{ finance:0.01 } });
+    { leaders:['byzantine','islamic','latin'], unlocks:['rule:documentary_seals'], capabilities:['sealed_documents'], fx:{ finance:0.01 } });
   add('royal_catalogue','Royal Catalogue','📚','governance',[950,1200],[1080,1230],['authenticated_seals','land_registers'],
     'A central catalogue makes charters and obligations retrievable.',
     { leaders:['byzantine','latin','islamic'], unlocks:['rule:royal_archive'], fx:{ research:0.2 } });
@@ -1225,10 +1256,10 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin','nordic','byzantine','islamic'], unlocks:['rule:mail_armor'], fx:{ units:{ ret:15 }, aiUnits:{ ret:0.02 }, battle:0.01 } });
   add('mounted_archery','Mounted Archery','🏹','warfare',[200,900],[450,850],['composite_bow','cavalry_saddles'],
     'Riders train to maneuver and loose arrows as a coordinated arm.',
-    { leaders:['steppe','persianate','islamic','byzantine'], unlocks:['rule:mounted_archery'], fx:{ units:{ cav:10, arch:10 }, aiUnits:{ cav:0.015, arch:0.01 } } });
+    { leaders:['steppe','persianate','islamic','byzantine'], unlocks:['rule:mounted_archery'], capabilities:['mounted_reach'], fx:{ units:{ cav:10, arch:10 }, aiUnits:{ cav:0.015, arch:0.01 } } });
   add('cavalry_lances','Couched Cavalry Lance','🐎','warfare',[850,1150],[980,1160],['stirrups','mail_hauberks'],
     'A braced lance focuses horse and rider into a disciplined shock charge.',
-    { leaders:['latin','byzantine'], unlocks:['rule:lance_charge'], fx:{ battle:0.012 } });
+    { leaders:['latin','byzantine'], unlocks:['rule:lance_charge'], capabilities:['mounted_reach','couched_lance'], fx:{ battle:0.012 } });
   add('castle_towers','Flanking Castle Towers','🏰','warfare',[750,1100],[900,1120],['ringworks','lime_mortar'],
     'Projecting towers cover walls and gates with crossing fire.',
     { leaders:['byzantine','islamic','latin','caucasian'], unlocks:['rule:flanking_towers'], fx:{ battle:0.005 } });
@@ -1323,16 +1354,16 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','persianate','northeast_african'], unlocks:['rule:dhow_routes'], fx:{ trade:0.015, seaTransport:1500 } });
   add('longships','Longships','🛶','seafaring',[650,1000],[730,990],['clinker_shipbuilding','square_sail'],
     'Shallow, double-ended hulls combine oars, sail, speed, and beach landings.',
-    { leaders:['nordic','baltic_finnic'], unlocks:['rule:longships'], fx:{ seaMovement:0.02, seaTransport:1500 } });
+    { leaders:['nordic','baltic_finnic'], unlocks:['rule:longships'], capabilities:['seafaring_raids'], fx:{ seaMovement:0.02, seaTransport:1500 } });
   add('knarrs','Ocean-Going Knarrs','⛵','seafaring',[750,1050],[830,1040],['clinker_shipbuilding','square_sail'],
     'Deep-bellied sailing ships carry cargo and livestock across northern oceans.',
     { leaders:['nordic','latin'], unlocks:['enterprise:fishing_boat_business','rule:knarr_trade'], fx:{ trade:0.015, seaTransport:1500 } });
   add('celestial_navigation','Celestial Navigation','🌟','seafaring',[700,1100],[850,1120],['astronomical_observation','coastal_piloting'],
     'Observed stars and solar height extend direction finding beyond sight of land.',
-    { leaders:['islamic','nordic','byzantine'], unlocks:['rule:celestial_navigation'], fx:{ seaMovement:0.015 } });
+    { leaders:['islamic','nordic','byzantine'], unlocks:['rule:celestial_navigation'], capabilities:['oceanic_navigation'], fx:{ seaMovement:0.015 } });
   add('naval_logbooks','Sailing Directions','📖','seafaring',[850,1200],[1000,1230],['scriptoria','coastal_piloting'],
     'Written routes preserve distances, hazards, winds, and harbor approaches.',
-    { leaders:['islamic','byzantine','latin'], unlocks:['rule:sailing_directions'], fx:{ seaMovement:0.01 } });
+    { leaders:['islamic','byzantine','latin'], unlocks:['rule:sailing_directions'], capabilities:['oceanic_navigation'], fx:{ seaMovement:0.01 } });
   add('convoy_systems','Merchant Convoys','🛡','seafaring',[850,1200],[1010,1230],['merchant_guilds','naval_levies'],
     'Scheduled group sailings share protection and information.',
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:merchant_convoys'], fx:{ trade:0.015, seaTransport:8000 } });
@@ -1341,7 +1372,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin','islamic'], unlocks:['rule:sternpost_rudder'], fx:{ seaMovement:0.02 } });
   add('mariners_compass','Mariner’s Compass','🧭','seafaring',[1050,1250],[1160,1280],['celestial_navigation'],
     'A magnetized direction indicator gives a heading in cloud or poor visibility.',
-    { leaders:['islamic','latin'], unlocks:['rule:mariners_compass'], fx:{ seaMovement:0.02 }, confidence:'medium', sources:['UNGER','NEEDHAM'] });
+    { leaders:['islamic','latin'], unlocks:['rule:mariners_compass'], capabilities:['oceanic_navigation'], fx:{ seaMovement:0.02 }, confidence:'medium', sources:['UNGER','NEEDHAM'] });
   add('portolan_charts','Portolan Charts','🗺','seafaring',[1200,1320],[1270,1380],['naval_logbooks','mariners_compass'],
     'Coastline charts and rhumb networks turn accumulated sailing directions into a graphic tool.',
     { leaders:['latin','islamic'], unlocks:['rule:portolan_charts'], fx:{ seaMovement:0.02 }, confidence:'medium', sources:['UNGER','CAMPBELL'] });

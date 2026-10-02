@@ -5,5 +5,16 @@
     { "table": "balance", "reason": "Tuning knobs, not content records." },
     { "table": "musicCatalog", "reason": "Generated soundtrack catalog." }
   ],
-  "hooks": []
+  "hooks": [
+    { "id": "seafaring_raids", "reason": "Technology capability; raiding asks for it instead of a technology id." },
+    { "id": "oceanic_navigation", "reason": "Technology capability; raid sea reach counts its grants instead of naming navigation technologies." },
+    { "id": "mounted_reach", "reason": "Technology capability; raid overland reach counts its grants instead of naming cavalry technologies." },
+    { "id": "couched_lance", "reason": "Technology capability; tournament jousting asks for it instead of a technology id." },
+    { "id": "chartered_guilds", "reason": "Technology capability; guild monopoly petitions and grants ask for it instead of a technology id." },
+    { "id": "assayed_coinage", "reason": "Technology capability; debasement and recoinage ask for it instead of a technology id." },
+    { "id": "customary_law_courts", "reason": "Technology capability; the written confirmation of custom before the Estates asks for it instead of a technology id." },
+    { "id": "permanent_markets", "reason": "Technology capability; town shops and market charters ask for it instead of a technology id." },
+    { "id": "sealed_documents", "reason": "Technology capability; market charters ask for it instead of a technology id." },
+    { "id": "parallel_research", "reason": "Technology capability; research slots count its grants instead of naming learning technologies." }
+  ]
 }

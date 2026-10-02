@@ -19,22 +19,19 @@ window.FB = window.FB || {};
   var COST_KEYS = { build:1, enterprise:1, training:1 };
   /* Unit-effect key sets follow the unit-class table (data/units.js):
      fx.units accepts every mustered class (never hired companies); fx.aiUnits
-     accepts any of those but the levy remainder. The five baseline classes
-     are the fallback when the table itself is missing. */
+     accepts any of those but the levy remainder (the levy_infantry role's
+     default class). */
   function unitEffectKeys() {
     var out = {}, table = (typeof FBDATA !== 'undefined' && FBDATA.unitClasses) || {};
     for (var id in table) {
       if (own(table, id) && !(table[id] && table[id].hired)) out[id] = 1;
     }
-    for (var baselineIndex = 0;
-        baselineIndex < ['levy','arch','cav','ret'].length; baselineIndex++) {
-      out[['levy','arch','cav','ret'][baselineIndex]] = 1;
-    }
     return out;
   }
   function aiUnitEffectKeys() {
     var out = unitEffectKeys();
-    delete out.levy;
+    var levy = FB.unitRoleClass ? FB.unitRoleClass('levy_infantry') : null;
+    if (levy) delete out[levy];
     return out;
   }
   /* Technology records are engine-owned after their first access. Remember
@@ -533,6 +530,59 @@ window.FB = window.FB || {};
         });
   };
 
+  /* Capabilities (FBDATA.capabilities) name what a technology lets a realm
+     do; FBDATA.techCaps instead caps the numeric effect domains. A
+     technology grants capabilities through its `capabilities` list, and
+     engine features ask for a capability, never a technology id, so a
+     regional technology granting an existing capability unlocks the same
+     feature. A stacking capability's level counts each known technology
+     that grants it; any other capability is simply present (level 1) or
+     absent. Nothing is saved: the answer derives from completed records. */
+  var capabilityCache = new WeakMap();
+  function capabilityCounts(list) {
+    var signature = list.join('|');
+    var cached = capabilityCache.get(list);
+    if (cached && cached.signature === signature &&
+        cached.definitions === FBDATA.tech) return cached.counts;
+    var counts = Object.create(null);
+    for (var i = 0; i < list.length; i++) {
+      var def = own(FBDATA.tech, list[i]) ? FBDATA.tech[list[i]] : null;
+      var granted = unique(def && Array.isArray(def.capabilities) ? def.capabilities : []);
+      for (var j = 0; j < granted.length; j++) {
+        counts[granted[j]] = (counts[granted[j]] || 0) + 1;
+      }
+    }
+    capabilityCache.set(list, { signature:signature, definitions:FBDATA.tech, counts:counts });
+    return counts;
+  }
+
+  FB.techListCapabilityLevel = function (list, capability) {
+    var count = Array.isArray(list) ? capabilityCounts(list)[capability] || 0 : 0;
+    if (!count) return 0;
+    var table = FBDATA.capabilities || {};
+    var def = own(table, capability) ? table[capability] : null;
+    return def && def.stacks ? count : 1;
+  };
+
+  FB.capabilityLevel = function (state, capability, realmId) {
+    return FB.techListCapabilityLevel(FB.techList(state, realmId), capability);
+  };
+
+  FB.hasCapability = function (state, capability, realmId) {
+    return FB.capabilityLevel(state, capability, realmId) > 0;
+  };
+
+  /* technology ids that grant a capability, in catalogue order */
+  FB.capabilityTechIds = function (capability) {
+    var out = [];
+    for (var id in FBDATA.tech) {
+      if (!own(FBDATA.tech, id)) continue;
+      var granted = FBDATA.tech[id] && FBDATA.tech[id].capabilities;
+      if (Array.isArray(granted) && granted.indexOf(capability) >= 0) out.push(id);
+    }
+    return out;
+  };
+
   FB.techAnyRequirementMet = function (state, requirement, realmId) {
     var list = asList(requirement);
     if (!list.length) return true;
@@ -751,6 +801,7 @@ window.FB = window.FB || {};
   var bonusCache = new WeakMap();
   FB.invalidateTechBonuses = function () {
     bonusCache = new WeakMap();
+    capabilityCache = new WeakMap();
     FB.militaryInputRevision = (FB.militaryInputRevision || 0) + 1;
   };
   function combinedBonuses(state, realmId) {
@@ -806,13 +857,16 @@ window.FB = window.FB || {};
   FB.techUnits = function (state, realmId) {
     var units = {}, keys = unitEffectKeys();
     for (var key0 in keys) if (own(keys, key0)) units[key0] = 0;
+    /* legacy flat retinue/archers effects feed the household and missile
+       roles' default classes */
+    var household = FB.unitRoleClass('household'), missile = FB.unitRoleClass('missile');
     var list = FB.techList(state, realmId);
     for (var i = 0; i < list.length; i++) {
       var fx = FBDATA.tech[list[i]] && FBDATA.tech[list[i]].fx;
       if (!fx) continue;
       if (fx.units) for (var key in units) units[key] += Number(fx.units[key]) || 0;
-      if (fx.retinue) units.ret += Number(fx.retinue) || 0;
-      if (fx.archers) units.arch += Number(fx.archers) || 0;
+      if (fx.retinue && household) units[household] += Number(fx.retinue) || 0;
+      if (fx.archers && missile) units[missile] += Number(fx.archers) || 0;
     }
     var caps = FBDATA.techCaps && FBDATA.techCaps.units || {};
     for (var unit in units) if (own(units, unit) && caps[unit] !== undefined) {
@@ -851,10 +905,7 @@ window.FB = window.FB || {};
   };
 
   FB.techSlotCount = function (state, realmId) {
-    var slots = 1;
-    if (FB.hasTech(state, 'scholarly_networks', realmId)) slots++;
-    if (FB.hasTech(state, 'universities', realmId)) slots++;
-    return slots;
+    return 1 + FB.capabilityLevel(state, 'parallel_research', realmId);
   };
 
   FB.techArmyMarchDays = function (state, realmId) {
@@ -1480,6 +1531,7 @@ window.FB = window.FB || {};
     }
     def.fx = def.fx && typeof def.fx === 'object' ? def.fx : {};
     def.unlocks = Array.isArray(def.unlocks) ? def.unlocks : [];
+    def.capabilities = Array.isArray(def.capabilities) ? def.capabilities : [];
     def.sources = Array.isArray(def.sources) && def.sources.length ?
       def.sources : ['MOD'];
     def.confidence = def.confidence || 'modded';
@@ -1512,11 +1564,8 @@ window.FB = window.FB || {};
     if (kind === 'unit') {
       /* unit-class ids (FBDATA.unitClasses); the pre-table targets
          unit:archers / unit:cavalry / unit:retinue resolve through the
-         alias table */
-      var aliases = FBDATA.unitClassAliases || {};
-      var classes = FBDATA.unitClasses || {};
-      var classTarget = own(aliases, target) ? aliases[target] : target;
-      if (!classes[classTarget]) {
+         alias table to a role's default class */
+      if (!FB.unitClassForTarget || !FB.unitClassForTarget(target)) {
         errors.push('Technology ' + id + ': invalid unit unlock ' + target + '.');
       }
     }
@@ -1578,6 +1627,26 @@ window.FB = window.FB || {};
             errors.push('Technology cap ' + capTableName + '.' + capKey +
               ' must be a non-negative number.');
           }
+        }
+      }
+    }
+    var capabilityTable = FBDATA.capabilities;
+    if (!capabilityTable || typeof capabilityTable !== 'object' ||
+        Array.isArray(capabilityTable)) {
+      errors.push('Technology capabilities are invalid.');
+      capabilityTable = {};
+    } else {
+      for (var capabilityId in capabilityTable) {
+        if (!own(capabilityTable, capabilityId)) continue;
+        var capability = capabilityTable[capabilityId];
+        if (!capability || typeof capability !== 'object' || Array.isArray(capability)) {
+          errors.push('Technology capability ' + capabilityId + ' is invalid.');
+        } else if (capability.stacks !== undefined && typeof capability.stacks !== 'boolean') {
+          errors.push('Technology capability ' + capabilityId + ': stacks must be a boolean.');
+        }
+        if (own(FBDATA.tech || {}, capabilityId)) {
+          errors.push('Technology capability ' + capabilityId +
+            ' must not share its id with a technology.');
         }
       }
     }
@@ -1645,13 +1714,12 @@ window.FB = window.FB || {};
         Array.isArray(unitClasses)) {
       errors.push('Unit class table is invalid.');
     } else {
-      var baselineClasses = ['levy','arch','cav','ret','mercs'];
-      for (var baselineClassIndex = 0;
-          baselineClassIndex < baselineClasses.length; baselineClassIndex++) {
-        if (!unitClasses[baselineClasses[baselineClassIndex]]) {
-          errors.push('Unit class table is missing baseline class ' +
-            baselineClasses[baselineClassIndex] + '.');
-        }
+      /* known roles, hired exactly for the mercenary role, and a class for
+         every core role (the five baseline arms) */
+      var roleErrors = FB.validateUnitClassRoles
+        ? FB.validateUnitClassRoles(unitClasses, false) : [];
+      for (var roleErrorIndex = 0; roleErrorIndex < roleErrors.length; roleErrorIndex++) {
+        errors.push(roleErrors[roleErrorIndex]);
       }
       var balanceData = FBDATA.balance || {};
       var knownTerrains = balanceData.terrainMarchMult || {};
@@ -1749,9 +1817,10 @@ window.FB = window.FB || {};
           } else {
             for (var counterKey in unitClass.counters) {
               if (!own(unitClass.counters, counterKey)) continue;
-              if (!unitClasses[counterKey]) {
+              if (!own(unitClasses, counterKey) &&
+                  !(FB.UNIT_ROLES && own(FB.UNIT_ROLES, counterKey))) {
                 errors.push('Unit class ' + classId +
-                  ': counter references unknown class ' + counterKey + '.');
+                  ': counter references unknown class or role ' + counterKey + '.');
               } else if (!isFinite(Number(unitClass.counters[counterKey]))) {
                 errors.push('Unit class ' + classId +
                   ': counter ' + counterKey + ' must be numeric.');
@@ -1840,6 +1909,13 @@ window.FB = window.FB || {};
         errors.push('Technology ' + id + ': invalid confidence.');
       }
       for (var u = 0; u < def.unlocks.length; u++) validateUnlock(id, def.unlocks[u], errors);
+      for (var capabilityIndex = 0; capabilityIndex < def.capabilities.length;
+          capabilityIndex++) {
+        var granted = def.capabilities[capabilityIndex];
+        if (typeof granted !== 'string' || !own(capabilityTable, granted)) {
+          errors.push('Technology ' + id + ': unknown capability ' + granted + '.');
+        }
+      }
       for (var fxKey in def.fx) if (own(def.fx, fxKey)) {
         if (SCALAR_KEYS[fxKey] || fxKey === 'seaTransport' ||
             fxKey === 'costs' || fxKey === 'units' ||

@@ -133,20 +133,133 @@ window.FB = window.FB || {};
      culture/technology gating. The five baseline classes remain the migration
      baseline: any class missing from a saved units record defaults to 0. */
 
-  const FALLBACK_CLASSES = ['levy', 'arch', 'cav', 'ret', 'mercs'];
-
   function unitClassTable() {
     return (typeof FBDATA !== 'undefined' && FBDATA.unitClasses) || {};
   }
 
   FB.unitClassIds = function () {
-    const ids = Object.keys(unitClassTable());
-    return ids.length ? ids : FALLBACK_CLASSES.slice();
+    return Object.keys(unitClassTable());
   };
 
   function unitClassDef(key) {
-    return unitClassTable()[key] || null;
+    const table = unitClassTable();
+    return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : null;
   }
+
+  /* Unit roles. A class says what it is; engine rules ask for the role,
+     never a class id, so a period or regional class is data. Role names
+     deliberately differ from class ids. `core` roles must each have a class
+     (the five migration-baseline arms); `mounted` roles eat as horsemen on
+     campaign; the mercenary role is exactly the hired companies. The first
+     class declared with a role is that role's default class: the levy pool
+     every muster fills, the household retinue, the hired companies, and the
+     class that receives role-named manpower from buildings, technology and
+     events. */
+  FB.UNIT_ROLES = {
+    levy_infantry:{ core:true },
+    missile:{ core:true },
+    polearm:{},
+    heavy_infantry:{},
+    household:{ core:true },
+    cavalry:{ core:true, mounted:true },
+    horse_archer:{ mounted:true },
+    heavy_cavalry:{ mounted:true },
+    mercenary:{ core:true, hired:true }
+  };
+
+  function knownUnitRole(role) {
+    return typeof role === 'string' &&
+      Object.prototype.hasOwnProperty.call(FB.UNIT_ROLES, role);
+  }
+
+  function definitionRole(def) {
+    if (!def) return null;
+    if (knownUnitRole(def.role)) return def.role;
+    /* a legacy runtime-mod class without a role: hired companies are
+       mercenaries, anything else has no role */
+    return def.hired ? 'mercenary' : null;
+  }
+
+  FB.unitClassRole = function (classId) {
+    return definitionRole(unitClassDef(classId));
+  };
+
+  FB.unitClassHasRole = function (classId, role) {
+    return !!role && FB.unitClassRole(classId) === role;
+  };
+
+  FB.unitRoleClass = function (role) {
+    for (const id of FB.unitClassIds()) {
+      if (FB.unitClassRole(id) === role) return id;
+    }
+    return null;
+  };
+
+  FB.unitRoleClassIds = function (role) {
+    return FB.unitClassIds().filter(function (id) {
+      return FB.unitClassRole(id) === role;
+    });
+  };
+
+  /* men of every class with the role in a units record */
+  FB.unitRoleMen = function (units, role) {
+    let men = 0;
+    for (const key in (units || {})) {
+      if (key !== 'total' && FB.unitClassRole(key) === role) {
+        men += Math.max(0, Number(units[key]) || 0);
+      }
+    }
+    return men;
+  };
+
+  FB.unitClassMounted = function (classId) {
+    const role = FB.unitClassRole(classId);
+    return !!(role && FB.UNIT_ROLES[role].mounted);
+  };
+
+  /* A legacy `unit:*` target or alias names a class id or a role; a role
+     resolves to its default class. */
+  FB.unitClassForTarget = function (target) {
+    const aliases = (typeof FBDATA !== 'undefined' && FBDATA.unitClassAliases) || {};
+    const named = Object.prototype.hasOwnProperty.call(aliases, target)
+      ? aliases[target] : target;
+    if (unitClassDef(named)) return named;
+    return knownUnitRole(named) ? FB.unitRoleClass(named) : null;
+  };
+
+  /* Validation errors for a unit-class table (an empty list when valid).
+     requireRole: shipped data must declare every role explicitly. */
+  FB.validateUnitClassRoles = function (table, requireRole) {
+    const errors = [];
+    const roles = {};
+    table = table || {};
+    for (const id in table) {
+      if (!Object.prototype.hasOwnProperty.call(table, id)) continue;
+      const def = table[id];
+      if (!def || typeof def !== 'object' || Array.isArray(def)) continue;
+      if (def.role !== undefined && !knownUnitRole(def.role)) {
+        errors.push('Unit class ' + id + ' has unknown role ' + def.role + '.');
+        continue;
+      }
+      if (def.role === undefined && requireRole) {
+        errors.push('Unit class ' + id + ' needs a role.');
+      }
+      if (knownUnitRole(id)) {
+        errors.push('Unit class ' + id + ' must not share its id with a unit role.');
+      }
+      const role = definitionRole(def);
+      if (def.role !== undefined && !!def.hired !== !!FB.UNIT_ROLES[role].hired) {
+        errors.push('Unit class ' + id + ' must set hired exactly when its role is mercenary.');
+      }
+      if (role && !roles[role]) roles[role] = id;
+    }
+    for (const role in FB.UNIT_ROLES) {
+      if (FB.UNIT_ROLES[role].core && !roles[role]) {
+        errors.push('Unit class table needs a class with the ' + role + ' role.');
+      }
+    }
+    return errors;
+  };
 
   function unitClassQuality(key) {
     const def = unitClassDef(key);
@@ -400,7 +513,9 @@ window.FB = window.FB || {};
     const counters = [];
     if (def && def.counters) {
       for (const enemyId of FB.unitClassIds()) {
-        const mult = Number(def.counters[enemyId]);
+        const role = FB.unitClassRole(enemyId);
+        const mult = Number(Object.prototype.hasOwnProperty.call(def.counters, enemyId)
+          ? def.counters[enemyId] : role && def.counters[role]);
         if (isFinite(mult) && mult > 1) counters.push({ id:enemyId, mult:mult });
       }
     }
@@ -497,10 +612,13 @@ window.FB = window.FB || {};
     const bal = B();
     const tech = FB.techAIUnits ? FB.techAIUnits(state, rid) : {};
     const fracs = {};
-    fracs.ret = (bal.aiRetinueFrac || 0) + (tech.ret || 0);
-    fracs.arch = (bal.aiArcherFrac || 0) + (tech.arch || 0);
+    const household = FB.unitRoleClass('household');
+    const missile = FB.unitRoleClass('missile');
+    const levy = FB.unitRoleClass('levy_infantry');
+    if (household) fracs[household] = (bal.aiRetinueFrac || 0) + (tech[household] || 0);
+    if (missile) fracs[missile] = (bal.aiArcherFrac || 0) + (tech[missile] || 0);
     for (const id of musteredClassIds()) {
-      if (id === 'levy') continue;
+      if (id === levy) continue;
       if (tech[id]) fracs[id] = (fracs[id] || 0) + tech[id];
       const def = unitClassDef(id);
       const share = def && Number(def.share);
@@ -524,7 +642,8 @@ window.FB = window.FB || {};
       levyFrac -= f[id];
       sum += f[id] * unitClassQuality(id);
     }
-    return Math.max(0, levyFrac) * unitClassQuality('levy') + sum;
+    return Math.max(0, levyFrac) *
+      unitClassQuality(FB.unitRoleClass('levy_infantry')) + sum;
   };
 
   function B() { return FBDATA.balance; }
@@ -766,6 +885,11 @@ window.FB = window.FB || {};
     }
     return cost * (B().fieldNonFoodCostMultiplier === undefined ? 1 : B().fieldNonFoodCostMultiplier);
   }
+  /* the legacy per-arm summary reads each core role's default class */
+  function roleEntry(byClass, role) {
+    const id = FB.unitRoleClass(role);
+    return id && byClass[id] || 0;
+  }
   function hostUpkeepParts(units, mercenaryCompanies) {
     const bal = B();
     const base = (bal.hostLogisticsBase === undefined ? 2 : bal.hostLogisticsBase) *
@@ -783,8 +907,9 @@ window.FB = window.FB || {};
       (bal.hostLogisticsMercenaryCompany === undefined
         ? 4 : bal.hostLogisticsMercenaryCompany);
     return {
-      base:base, levy:byClass.levy || 0, archers:byClass.arch || 0,
-      cavalry:byClass.cav || 0, retinue:byClass.ret || 0,
+      base:base, levy:roleEntry(byClass, 'levy_infantry'),
+      archers:roleEntry(byClass, 'missile'),
+      cavalry:roleEntry(byClass, 'cavalry'), retinue:roleEntry(byClass, 'household'),
       mercenaries:mercenaries, byClass:byClass,
       total:base + soldiers + mercenaries
     };
@@ -817,15 +942,17 @@ window.FB = window.FB || {};
       const parts = FB.hostFieldUpkeepParts(state, host, batch);
       out.base += parts.base;
       out.campaignModifier += parts.campaignModifier;
-      mercs += FB.hostUnits(host).mercs || 0;
+      mercs += FB.unitRoleMen(FB.hostUnits(host), 'mercenary');
       for (const key in parts.byClass) out.byClass[key] = (out.byClass[key] || 0) + parts.byClass[key];
     }
     if (hosts.length) {
       const contracted = state.military && state.military.player && state.military.player.mercCos;
       out.mercenaries = (contracted || Math.ceil(mercs / (B().mercCompanySize || 150))) * B().hostLogisticsMercenaryCompany;
     }
-    out.levy = out.byClass.levy || 0; out.archers = out.byClass.arch || 0;
-    out.cavalry = out.byClass.cav || 0; out.retinue = out.byClass.ret || 0;
+    out.levy = roleEntry(out.byClass, 'levy_infantry');
+    out.archers = roleEntry(out.byClass, 'missile');
+    out.cavalry = roleEntry(out.byClass, 'cavalry');
+    out.retinue = roleEntry(out.byClass, 'household');
     out.total = out.base + out.mercenaries + out.reinforcement + out.campaignModifier;
     for (const key in out.byClass) out.total += out.byClass[key];
     return out;
@@ -1989,9 +2116,10 @@ window.FB = window.FB || {};
     const u = FB.hostUnits(host);
     const allied = (host.allied && host.allied.men) || 0;
     const pool = {};
+    const levy = FB.unitRoleClass('levy_infantry');
     for (const key of musteredClassIds()) {
       pool[key] = Math.max(0, Math.round(
-        (key === 'levy' ? u.levy - allied : u[key]) * frac));
+        (key === levy ? u[key] - allied : u[key]) * frac));
     }
     return pool;
   }
@@ -3428,6 +3556,19 @@ window.FB = window.FB || {};
         per += (mult - 1) *
           (Math.max(0, Number(enemyUnits[enemyKey]) || 0) / enemyTotal);
       }
+      /* a role key covers every enemy class of that role without an entry
+         of its own (role names never equal class ids) */
+      for (const roleKey in counters) {
+        if (unitClassDef(roleKey) || !knownUnitRole(roleKey)) continue;
+        const mult = Number(counters[roleKey]);
+        if (!isFinite(mult)) continue;
+        for (const enemyKey in enemyUnits) {
+          if (Object.prototype.hasOwnProperty.call(counters, enemyKey) ||
+              FB.unitClassRole(enemyKey) !== roleKey) continue;
+          per += (mult - 1) *
+            (Math.max(0, Number(enemyUnits[enemyKey]) || 0) / enemyTotal);
+        }
+      }
       bonus += count * per;
     }
     if (ownTotal <= 0 || !bonus) return 1;
@@ -3743,7 +3884,7 @@ window.FB = window.FB || {};
          ordinary bilateral war (if malformed legacy state supplied one)
          must not also resolve this battle. */
     } else if (pInvolved) {
-      const steel = sideUnits(playerSide).ret > 0;
+      const steel = FB.unitRoleMen(sideUnits(playerSide), 'household') > 0;
       /* Only the main banner produces a blocking, protagonist-facing report.
          Detached actions still score the war and enter the campaign ledger
          through war_win/war_loss below. */

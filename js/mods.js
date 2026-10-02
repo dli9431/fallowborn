@@ -173,6 +173,7 @@ window.FBMODS = window.FBMODS || [];
     traits:true,
     ailments:true, modifiers:true, buildings:true, forts:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
+    capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
     positions:true, localCouncilMotions:true, feudalServiceCharters:true,
     schooling:true, enterprises:true, auctionLotTypes:true,
@@ -1217,6 +1218,68 @@ window.FBMODS = window.FBMODS || [];
     if (errors.length) fail('geographies', 'are invalid: ' + errors[0]);
   }
 
+  /* Mod unit classes merge by id, so check the composed table: known roles,
+     hired exactly for the mercenary role, and a class for every core role.
+     A legacy class without a role is accepted. */
+  /* A legacy replacement of an existing class that omits `role` keeps the
+     replaced class's role, as a replaced culture keeps its tradition. */
+  function unitClassWithRole(previous, next) {
+    if (!previous || typeof previous.role !== 'string' || !plainObject(next) ||
+        own(next, 'role')) return next;
+    const compatible = {};
+    for (const field in next) if (own(next, field)) compatible[field] = next[field];
+    compatible.role = previous.role;
+    return compatible;
+  }
+
+  function validateUnitClasses(mod) {
+    if (!plainObject(mod.unitClasses)) fail('unitClasses', 'must be an object.');
+    const composed = {};
+    for (const k in FBDATA.unitClasses) {
+      if (own(FBDATA.unitClasses, k)) composed[k] = FBDATA.unitClasses[k];
+    }
+    for (const k in mod.unitClasses) {
+      if (own(mod.unitClasses, k)) {
+        composed[k] = unitClassWithRole(composed[k], mod.unitClasses[k]);
+      }
+    }
+    const errors = FB.validateUnitClassRoles(composed, false);
+    if (errors.length) fail('unitClasses', 'are invalid: ' + errors[0]);
+  }
+
+  /* Capabilities are records; a technology may only grant a capability the
+     composed table defines. */
+  function validateCapabilities(mod) {
+    const composed = {};
+    for (const k in FBDATA.capabilities) {
+      if (own(FBDATA.capabilities, k)) composed[k] = FBDATA.capabilities[k];
+    }
+    if (own(mod, 'capabilities')) {
+      if (!plainObject(mod.capabilities)) fail('capabilities', 'must be an object.');
+      for (const k in mod.capabilities) {
+        if (!own(mod.capabilities, k)) continue;
+        const def = mod.capabilities[k];
+        if (!plainObject(def)) fail('capabilities.' + k, 'must be an object.');
+        if (def.stacks !== undefined && typeof def.stacks !== 'boolean') {
+          fail('capabilities.' + k + '.stacks', 'must be true or false.');
+        }
+        composed[k] = def;
+      }
+    }
+    if (!plainObject(mod.tech)) return;
+    for (const id in mod.tech) {
+      if (!own(mod.tech, id) || !plainObject(mod.tech[id])) continue;
+      const granted = mod.tech[id].capabilities;
+      if (granted === undefined) continue;
+      if (!Array.isArray(granted)) fail('tech.' + id + '.capabilities', 'must be an array.');
+      for (const capability of granted) {
+        if (typeof capability !== 'string' || !own(composed, capability)) {
+          fail('tech.' + id + '.capabilities', 'references unknown capability ' + capability + '.');
+        }
+      }
+    }
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1242,6 +1305,8 @@ window.FBMODS = window.FBMODS || [];
     }
     if (own(mod, 'buildings')) validateBuildings(mod);
     if (own(mod, 'geographies')) validateGeographies(mod);
+    if (own(mod, 'unitClasses')) validateUnitClasses(mod);
+    if (own(mod, 'capabilities') || own(mod, 'tech')) validateCapabilities(mod);
     validateCommunityPolicies(mod);
     validateCommunityEvents(mod);
     validateSerfFreedomEventEffects(mod);
@@ -1463,12 +1528,21 @@ window.FBMODS = window.FBMODS || [];
       }
       if (FB.invalidateFortIndex) FB.invalidateFortIndex();
     }
-    if ((mod.tech || mod.techCaps) && FB.invalidateTechBonuses) FB.invalidateTechBonuses();
+    if ((mod.tech || mod.techCaps || mod.capabilities) && FB.invalidateTechBonuses) {
+      FB.invalidateTechBonuses();
+    }
     if (mod.tech) for (const k in mod.tech) FBDATA.tech[k] = mod.tech[k];
     if (mod.techDomains) mergeTable(FBDATA.techDomains, mod.techDomains);
     if (mod.techTraditions) mergeTable(FBDATA.techTraditions, mod.techTraditions);
     if (mod.techCaps) mergeTechCaps(mod.techCaps);
-    if (mod.unitClasses) mergeTable(FBDATA.unitClasses, mod.unitClasses);
+    if (mod.capabilities) mergeTable(FBDATA.capabilities, mod.capabilities);
+    if (mod.unitClasses) {
+      for (const k in mod.unitClasses) {
+        if (!own(mod.unitClasses, k)) continue;
+        FBDATA.unitClasses[k] = unitClassWithRole(
+          own(FBDATA.unitClasses, k) ? FBDATA.unitClasses[k] : null, mod.unitClasses[k]);
+      }
+    }
     if (mod.techImpactReviews && mod.techImpactReviews.features) {
       mergeTable(FBDATA.techImpactReviews.features,
         mod.techImpactReviews.features);

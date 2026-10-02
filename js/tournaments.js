@@ -353,7 +353,8 @@ window.FB = window.FB || {};
     var sovereign = FB.topRealm(s, holder(s, e.provinceId));
     var record = s.realmTech && s.realmTech[sovereign];
     // The existing technology reader handles bookmark knowledge on an isolated copy.
-    return record ? record.completed.indexOf('cavalry_lances') >= 0 : FB.hasTech(copy(s), 'cavalry_lances', sovereign);
+    return record ? FB.techListCapabilityLevel(record.completed, 'couched_lance') > 0
+      : FB.hasCapability(copy(s), 'couched_lance', sovereign);
   }
   T.entry = function (s, eventId, id, track) {
     var e = T.get(s, eventId), c = character(s, id), d = D.tracks[track], reasons = [], terms = { fee:0, forfeit:0, contract:0, stake:0 };

@@ -4855,7 +4855,7 @@ window.FB = window.FB || {};
     const targets = [];
     const seafaring = FB.cultureValue &&
       FB.cultureValue(state, cult, 'doctrines.seafaring').value;
-    const longships = FB.hasTech && FB.hasTech(state, 'longships', rid);
+    const longships = FB.hasCapability && FB.hasCapability(state, 'seafaring_raids', rid);
     for (let i = 0; i < ownProvs.length; i++) {
       const op = ownProvs[i];
       const adj = FB.world.adj && FB.world.adj[op];
@@ -7185,12 +7185,16 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     const p = state.player;
     const comp = {};
-    const mustered = FB.unitClassIds
-      ? FB.unitClassIds().filter(function (id) {
-          const def = (FBDATA.unitClasses || {})[id];
-          return !def || !def.hired;
-        })
-      : ['levy', 'arch', 'cav', 'ret'];
+    const mustered = FB.unitClassIds().filter(function (id) {
+      const def = (FBDATA.unitClasses || {})[id];
+      return !def || !def.hired;
+    });
+    /* Role-named manpower lands in each role's default class
+       (data/units.js): the levy pool, the household retinue and the
+       missile arm that archery buildings and flat archer effects feed. */
+    const levyClass = FB.unitRoleClass('levy_infantry');
+    const householdClass = FB.unitRoleClass('household');
+    const missileClass = FB.unitRoleClass('missile');
     for (const classId of mustered) comp[classId] = 0;
     const entries = [];
     function add(unit, kind, amount, data) {
@@ -7249,37 +7253,37 @@ window.FB = window.FB || {};
       let support = FB.countySupportFactor(state, pid);
       if (FB.hasModifier(state, 'commons_uprising', pid)) support *= 1 - FB.commonsUprisingReduction(state, pid);
       const own = factor ? f.amounts.levy / factor : 0;
-      add('levy', 'county', own - localBuildings * support, { pid:pid });
+      add(levyClass, 'county', own - localBuildings * support, { pid:pid });
       settlementService += f.amounts.levyDues;
       countyLevyPenalty += own * (f.amounts.countyPenalty - 1);
       settlementLevyPenalty += own * f.amounts.countyPenalty * (f.amounts.settlementPenalty - 1);
     }
     if (!territorial.length && FB.station.isLanded(p) && FB.castellanyOf && FB.castellanyOf(state)) {
-      add('ret', 'castellany_retinue', B.baronyRetinue || 120);
+      add(householdClass, 'castellany_retinue', B.baronyRetinue || 120);
     }
     if (FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId])) {
-      add('ret', 'episcopal_household',
+      add(householdClass, 'episcopal_household',
         FB.bishopricRetinue ? FB.bishopricRetinue(state) : 120);
     }
-    if (FB.abbeyRetinue) add('ret', 'abbey_household', FB.abbeyRetinue(state));
+    if (FB.abbeyRetinue) add(householdClass, 'abbey_household', FB.abbeyRetinue(state));
     if (FB.enterpriseUpgradeEffect) {
       const privateCounties = {};
       for (const enterprise of FB.enterpriseList(state)) privateCounties[enterprise.provinceId] = true;
       for (const pid of Object.keys(privateCounties)) {
         if (FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
-        add('levy', 'enterprise', FB.enterpriseUpgradeEffect(state, 'levy', pid), { pid:pid });
-        add('ret', 'enterprise', FB.enterpriseUpgradeEffect(state, 'retinue', pid), { pid:pid });
+        add(levyClass, 'enterprise', FB.enterpriseUpgradeEffect(state, 'levy', pid), { pid:pid });
+        add(householdClass, 'enterprise', FB.enterpriseUpgradeEffect(state, 'retinue', pid), { pid:pid });
       }
     }
     if (FB.householdStandardEffect) {
-      add('levy', 'household_standard',
+      add(levyClass, 'household_standard',
         FB.householdStandardEffect(state, 'levy'));
-      add('ret', 'household_standard',
+      add(householdClass, 'household_standard',
         FB.householdStandardEffect(state, 'retinue'));
     }
 
     if (FB.station.isLanded(p)) {
-      buildingEntries('levy', 'levy');
+      buildingEntries('levy', levyClass);
       for (const site of territorial) {
         const pid = site.provinceId;
         if (FB.recruitmentCountyBlocked && FB.recruitmentCountyBlocked(state, 'player', pid)) continue;
@@ -7287,13 +7291,13 @@ window.FB = window.FB || {};
         if (!levy) continue;
         let factor = FB.countySupportFactor(state, pid);
         if (FB.hasModifier(state, 'commons_uprising', pid)) factor *= 1 - FB.commonsUprisingReduction(state, pid);
-        add('levy', 'popular_support', levy * (factor - 1), { pid:pid, rate:factor - 1 });
+        add(levyClass, 'popular_support', levy * (factor - 1), { pid:pid, rate:factor - 1 });
       }
-      if (countyLevyPenalty) add('levy', 'domain_penalty', countyLevyPenalty);
-      if (settlementLevyPenalty) add('levy', 'settlement_penalty', settlementLevyPenalty);
-      if (settlementService) add('levy', 'settlement_service', -settlementService);
-      buildingEntries('retinue', 'ret');
-      buildingEntries('archers', 'arch');
+      if (countyLevyPenalty) add(levyClass, 'domain_penalty', countyLevyPenalty);
+      if (settlementLevyPenalty) add(levyClass, 'settlement_penalty', settlementLevyPenalty);
+      if (settlementService) add(levyClass, 'settlement_service', -settlementService);
+      buildingEntries('retinue', householdClass);
+      buildingEntries('archers', missileClass);
       const techUnits = FB.techUnits ? FB.techUnits(state) :
         { levy:0, arch:FB.techBonus(state, 'archers'), cav:0,
           ret:FB.techBonus(state, 'retinue') };
@@ -7304,11 +7308,11 @@ window.FB = window.FB || {};
       /* Technology and Council percentages share one multiplier in the
          historical calculation. Itemizing both against the same base keeps
          that arithmetic exact. */
-      const ownBase = comp.levy;
+      const ownBase = comp[levyClass];
       const techRate = FB.techBonus(state, 'levy');
       const councilRate = FB.councilBonus ? FB.councilBonus(state, 'levy') : 0;
-      if (techRate) add('levy', 'technology_rate', ownBase * techRate, { rate:techRate });
-      if (councilRate) add('levy', 'council_rate', ownBase * councilRate, {
+      if (techRate) add(levyClass, 'technology_rate', ownBase * techRate, { rate:techRate });
+      if (councilRate) add(levyClass, 'council_rate', ownBase * councilRate, {
         rate:councilRate, seatId:'constable'
       });
 
@@ -7317,15 +7321,15 @@ window.FB = window.FB || {};
         const trait = FBDATA.traits[tid];
         const traitRate = trait && trait.war && Number(trait.war.levy);
         if (isFinite(traitRate) && traitRate) {
-          add('levy', 'trait_rate', ownBase * traitRate, {
+          add(levyClass, 'trait_rate', ownBase * traitRate, {
             rate:traitRate, traitId:tid
           });
         }
       }
       const martialRate = (me ? FB.skillOf(me, 'mar') : 0) * (B.levyPerMartial || 0);
       if (martialRate) {
-        const beforeMartial = comp.levy;
-        add('levy', 'martial_rate', beforeMartial * martialRate, { rate:martialRate });
+        const beforeMartial = comp[levyClass];
+        add(levyClass, 'martial_rate', beforeMartial * martialRate, { rate:martialRate });
       }
 
       if (p.liege && (p.provs || []).length) {
@@ -7337,7 +7341,7 @@ window.FB = window.FB || {};
           const a = FB.settlementFiscalProjection(state, site.provinceId, site.settlement, fiscalContext).amounts;
           service += (a.availableLevy + a.specialists - a.specialistDues) * rate;
         }
-        if (service) add('levy', 'settlement_service', -Math.min(comp.levy, service));
+        if (service) add(levyClass, 'settlement_service', -Math.min(comp[levyClass], service));
       }
       let localDues = 0;
       for (const pid of FB.realmHeldCounties(state, 'player')) {
@@ -7347,7 +7351,7 @@ window.FB = window.FB || {};
           localDues += a.levyDues + a.specialistDues;
         }
       }
-      if (localDues) add('levy', 'settlement_contribution', localDues);
+      if (localDues) add(levyClass, 'settlement_contribution', localDues);
 
       /* Vassal men arrive after own-domain modifiers. A called favor raises
          only that named vassal's contribution and stays visible here. */
@@ -7356,7 +7360,7 @@ window.FB = window.FB || {};
           ? FB.vassalLevyRate(state, vid) : (B.vassalLevyRate || 0);
         const amount = FB.vassalLevyContribution
           ? FB.vassalLevyContribution(state, vid, 'player') : 0;
-        add('levy', 'vassal', amount, {
+        add(levyClass, 'vassal', amount, {
           rid:vid, rate:rate,
           favored:!!(FB.vassalLevyFavor && FB.vassalLevyFavor(state, vid))
         });
@@ -7366,15 +7370,15 @@ window.FB = window.FB || {};
          named negative levy source, clamped so a sparse domain never turns
          the deployable levy below zero. */
       const garrison = FB.fortGarrisonBurden
-        ? Math.min(comp.levy, FB.fortGarrisonBurden(state, 'player', 'player')) : 0;
-      if (garrison) add('levy', 'fort_garrison', -garrison);
+        ? Math.min(comp[levyClass], FB.fortGarrisonBurden(state, 'player', 'player')) : 0;
+      if (garrison) add(levyClass, 'fort_garrison', -garrison);
     }
 
     /* Earned posts and paid household offices add named professionals. They
        are outside the levy percentages because they are already sworn. */
     if (FB.positionContributions) {
       for (const source of FB.positionContributions(state, 'retinue')) {
-        add('ret', source.kind, source.amount, {
+        add(householdClass, source.kind, source.amount, {
           positionId:source.id, charId:source.charId || null
         });
       }
@@ -7400,20 +7404,20 @@ window.FB = window.FB || {};
        mustered levy into their own companies (FBDATA.unitClasses `share`);
        the host's headcount is unchanged. */
     for (const unit of mustered) {
-      if (unit === 'levy') continue;
+      if (unit === levyClass) continue;
       const def = (FBDATA.unitClasses || {})[unit];
       const share = def && Number(def.share);
-      if (!share || share <= 0 || !comp.levy) continue;
+      if (!share || share <= 0 || !comp[levyClass]) continue;
       if (!(FB.unitClassUnlocked && FB.unitClassUnlocked(state, unit))) {
         continue;
       }
       const territorialShare = FB.unitClassTerritorialShare
         ? FB.unitClassTerritorialShare(state, unit, 'player') : 1;
-      const converted = Math.min(comp.levy,
-        Math.round(comp.levy * Math.min(1, share) *
+      const converted = Math.min(comp[levyClass],
+        Math.round(comp[levyClass] * Math.min(1, share) *
           FB.clamp(territorialShare, 0, 1)));
       if (!converted) continue;
-      add('levy', 'unit_class_conversion', -converted, { unitClassId:unit });
+      add(levyClass, 'unit_class_conversion', -converted, { unitClassId:unit });
       add(unit, 'unit_class', converted, { unitClassId:unit });
     }
 

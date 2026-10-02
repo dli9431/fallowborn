@@ -6855,7 +6855,7 @@ window.FB = window.FB || {};
     let targets = targetView.targets;
     const maxRange = FB.raidRange ? FB.raidRange(s) : 2;
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
-    const hasLongships = FB.hasTech && FB.hasTech(s, 'longships', playerRealm);
+    const hasLongships = FB.hasCapability && FB.hasCapability(s, 'seafaring_raids', playerRealm);
     const titleDetails = '<p>' + esc(FB.T(
       'Plunder foreign wealth, provisions, and thralls across borders or waterways without formal war. Raids cause market shortages, drain population, and risk damaging settlement buildings.'
     )) + '</p><p>' + esc(FB.T(
@@ -22622,11 +22622,9 @@ window.FB = window.FB || {};
     if (fx.units) for (const unit in fx.units) {
       if (!fx.units[unit]) continue;
       const unitClassDef = FBDATA.unitClasses && FBDATA.unitClasses[unit];
+      /* a class the table no longer defines (a removed mod) shows its id */
       const unitName = unitClassDef
-        ? dt(FB.state, 'unitClass', unit, unitClassDef, 'name')
-        : unit === 'arch' ? FB.T('archers') :
-          unit === 'cav' ? FB.T('cavalry') :
-          unit === 'ret' ? FB.T('men-at-arms') : FB.T('levy');
+        ? dt(FB.state, 'unitClass', unit, unitClassDef, 'name') : unit;
       out.push(FB.T('+{men} {unit}', { men:fx.units[unit], unit:unitName }));
     }
     return out;
@@ -22689,8 +22687,8 @@ window.FB = window.FB || {};
       return FB.T('Makes the {content} household standard available.', { content:content });
     }
     if (kind === 'unit') {
-      const alias = (FBDATA.unitClassAliases || {})[target] || target;
-      const unitDef = FBDATA.unitClasses && FBDATA.unitClasses[alias];
+      const alias = FB.unitClassForTarget(target);
+      const unitDef = alias && FBDATA.unitClasses && FBDATA.unitClasses[alias];
       if (!unitDef) return '';
       const unitName = dt(s, 'unitClass', alias, unitDef, 'name');
       return FB.T('Hosts muster {content} when the realm qualifies.', {
