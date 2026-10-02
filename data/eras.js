@@ -16,6 +16,10 @@
 
      costume: FBDATA.wardrobes id (data/wardrobes.js) that dresses portraits
        in this era, unless the campaign's government form names its own
+     balance: optional overrides of existing FBDATA.balance keys for every
+       campaign of the era, applied over the global table and beneath the
+       government form, bookmark and mod layers (js/balance.js); a value must
+       keep its default's type, and an unknown key fails validation
 
      technology: the years the era's technology content supports and how a
        fresh campaign's starting knowledge is seeded (js/technology.js):
@@ -47,20 +51,23 @@ FBDATA.eras = {
     defaultGovernment:'regnum', defaultCulture:'roman',
     costume:'late_antique', vocabulary:null, ladder:null, systems:null,
     technology:{ from:476, to:649, startingKnowledge:'historical' },
-    military:null, eventEras:null, currency:null, architecture:null
+    military:null, eventEras:null, currency:null, architecture:null,
+    balance:null
   },
   early_medieval:{
     from:650, to:999,
     defaultGovernment:'territorial', defaultCulture:'frankish',
     costume:'medieval', vocabulary:null, ladder:null, systems:null,
     technology:{ from:650, to:999, startingKnowledge:'historical' },
-    military:null, eventEras:null, currency:null, architecture:null
+    military:null, eventEras:null, currency:null, architecture:null,
+    balance:null
   },
   high_medieval:{
     from:1000, to:1300,
     defaultGovernment:'territorial', defaultCulture:'frankish',
     costume:'medieval', vocabulary:null, ladder:null, systems:null,
     technology:{ from:1000, to:1300, startingKnowledge:'historical' },
-    military:null, eventEras:null, currency:null, architecture:null
+    military:null, eventEras:null, currency:null, architecture:null,
+    balance:null
   }
 };

@@ -1848,14 +1848,11 @@ window.FBMODS = window.FBMODS || [];
       FBDATA.currency = mod.currency;
       currencySupplied = true;
     }
+    /* Mod balance is the last layer over the global, era and bookmark
+       values (js/balance.js); project policies merge by policy id. */
     if (mod.balance) for (const k in mod.balance) {
-      if (k === 'countyCommunityProjectPolicies' &&
-          plainObject(mod.balance[k])) {
-        mergeTable(FBDATA.balance.countyCommunityProjectPolicies,
-          mod.balance[k]);
-      } else {
-        FBDATA.balance[k] = mod.balance[k];
-      }
+      FB.balanceLayers.applyMod(k, mod.balance[k],
+        k === 'countyCommunityProjectPolicies' && plainObject(mod.balance[k]));
     }
     if (mod.seasonKinds) mergeTable(FBDATA.seasonKinds, mod.seasonKinds);
     if (mod.climateZones) mergeTable(FBDATA.climateZones, mod.climateZones);

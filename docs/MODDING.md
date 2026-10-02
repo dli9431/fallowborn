@@ -1351,6 +1351,8 @@ are engine tables, not runtime-mod roots: a mod selects eras and forms by id.
 
 An era's costume names the wardrobe (FBDATA.wardrobes, data/wardrobes.js) that dresses portraits in that era: medieval for early_medieval and high_medieval, late_antique for late_antique. A government form may name its own costume, which then wins for a campaign whose default government is that form. A wardrobe holds ordered rules, the first match choosing: garments (a garment from the portrait's garment library with its cloth color), trim and fur colors, headwear (a headwear kind, or faithCover for the headwear the character's faith expects), and chain (when any rule matches, a full figure wears a neck chain). Rules test child, female, minAge, a named station query (station, notStation), the career's primary role (role) or any of its roles (roles, notRoles), a faith attire flag (faith), a headwear tendency of the culture or faith (tends), a deterministic identity roll (roll: salt, index, above or below) and alternatives (any). The comment at the top of data/wardrobes.js lists the garments and conditions. A new period dresses differently by declaring a wardrobe and naming it from its era, with no portrait code change. Wardrobes are engine tables like eras, not runtime-mod roots. Activation rejects an unknown garment, headwear kind, station query or costume, a malformed rule, an invalid culture appearance profile and invalid faith attire.
 
+A bookmark may also carry a balance object that overrides existing FBDATA.balance keys for every campaign started on it, for example "balance": { "levyPerDev": 70, "mortalityBase": 0.014 }. Activation rejects a key the balance table does not hold, a non-number where the default is a number, and any other change of a value's type. See Layered balance below for the order the layers apply in.
+
 geography names the geography base the bookmark is drawn on (see Geography bases below); a bookmark that omits it uses FBDATA.defaultGeography (europe_regional), and an unknown id is rejected. A campaign stamps the base id at creation. Province rows may leave out x, y and terrain to take the base's seed for that county id, and may carry their own dated names list. settlementLayout optionally names the entry of FBDATA.settlementLayouts the bookmark draws its settlement presentations from; without it the bookmark uses the layout stored under its own id, or else its base's default layout (the 867 layout on europe_regional). A settled county with no settlements list then takes its layout entry, unless it sits off the base's seed point. Set settlementLayout to null to keep generated settlements everywhere a county has no list of its own. This fallback is new: a complete mod bookmark that reuses county ids at their usual seeds now shows the curated and real-world sites of the default layout where it previously showed generated ones.
 `crossingClasses` is optional and missing entries default to `narrow`.
 `religiousHeads` is optional; when
@@ -4621,6 +4623,23 @@ normal composition quality, siege strength, reinforcement, and logistics immedia
 but are not saved anywhere outside that exact host.
 
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
+
+### Layered balance
+
+FBDATA.balance is the active table the engine reads. It is composed in a fixed order, each layer replacing the whole value of the keys it names:
+
+1. global: the table in data/map_data.js;
+2. era: the balance object of the campaign's era in FBDATA.eras (data/eras.js);
+3. government form: the balance object of a realm's form in FBDATA.governmentForms (data/political_institutions.js), for that realm only;
+4. bookmark: the bookmark's own balance object;
+5. mod: the balance object of each runtime or bundled mod, in mod order. As before, a countyCommunityProjectPolicies object merges by policy id instead of replacing the table.
+
+The era, bookmark and mod layers are campaign-wide: activating a bookmark composes them into FBDATA.balance, so every read of a key sees the result, and a key no layer names keeps its global value. A restored save recomposes the table from its stamped era (state.start.era) and its bookmark, so it plays with the same values it was saved with. Nothing about the layers is saved.
+
+The government-form layer is realm-scoped. It applies only where the engine reads a value through FB.balanceFor(state, realmId, key) for a specific realm, and only when neither the bookmark nor a mod names the key. These sites read through FB.balanceFor today: the AI campaign host (levyPerDev, aiHostPerDev) and the AI construction reserve (realmReserveSeasons). Other reads of a key a form overrides take the campaign-wide value.
+
+Era, government-form and bookmark overrides may name existing keys only. Validation rejects an unknown key, a non-number where the default is a number, and any other change of a value's type; for an era or a form the fault appears among the data faults that block bookmark activation. A mod's own balance object may still add new keys, and era, form and bookmark overrides may then name them.
+
 Settlement fiscal output and AI construction tuning uses:
 `settlementVillageTax` (0.75g/season),
 `settlementTownTax` (2.00g/season),

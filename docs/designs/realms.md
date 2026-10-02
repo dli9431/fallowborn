@@ -68,6 +68,21 @@ registered.` Generation that needs a culture the map does not supply (a ruler
 without a capital county, a usurper without a seat) uses the era's
 `defaultCulture`.
 
+### Layered balance
+
+An era, a government form or a bookmark can tune any existing balance value without code. js/balance.js (FB.balanceLayers) composes the layers in this order: global (FBDATA.balance as authored), era, government form, bookmark, mod. Each layer replaces the whole value of the keys it names; a mod's countyCommunityProjectPolicies still merges by policy id.
+
+Campaign-wide layers. Activation composes the era, bookmark and mod layers into FBDATA.balance itself, so the roughly 430 existing reads of FBDATA.balance and the local B() accessors keep working with no edit and no extra cost. Only keys some layer names are rewritten: the table object keeps its identity and every other key keeps its value, so a campaign with no overrides runs exactly as before. Keys the previous bookmark set and the next one does not return to the global value with mods reapplied. Mods now record their balance values as the last layer instead of writing the table directly, so a later activation cannot bury them. FB.save.restore recomposes the table from the save's stamped era and its bookmark (FB.balanceLayers.applyCampaign), so a save made in one era restores the same active table even if the bookmark's declared era has since changed.
+
+Realm-scoped layer. FB.balanceFor(state, realmId, key) returns the realm's government-form override when its form names the key and neither the bookmark nor a mod does, and otherwise the active value. When no form names the key it is a single table read. Call sites are converted only where a specific realm is the subject and a later plan needs the knob. Converted so far:
+
+- FB.aiBaseHost (js/world.js): levyPerDev and aiHostPerDev for the mustering realm.
+- AI construction (js/world.js, the annual building pass): realmReserveSeasons for the building realm's reserve.
+
+Every other read takes the campaign-wide value, so a form override of an unconverted key has no effect until its site is converted.
+
+Validation. Override tables may name existing keys only. FB.balanceLayers.problems rejects an unknown key, a non-number where the default is a number, and any other change of value type. Era faults come from FB.validateEraData, form faults from FB.governments.validate and bookmark faults from FB.validateBookmark; all three block activation. None of the shipped eras, forms or bookmarks declares an override yet.
+
 ## Station and rank queries
 
 Engine code never compares a tier or a realm rank with a number. Every such check

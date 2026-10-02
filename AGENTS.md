@@ -286,7 +286,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   after `events_paths.js`, and
   `events_intrigue.js` after tournament events and before ruler-agency events).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → title_ids →
-  model → station → music → portrait → siteart → governments → world → climate → settlement → fortifications → holywar → population → modifiers →
+  model → station → music → portrait → siteart → balance → governments → world → climate → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
   technology → council → agency → politics → authority → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar) → keys → save → save_v4 → mods → stories →
@@ -431,6 +431,9 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/intrigue.js` — hostile schemes, accomplices, AI intrigue, evidence hearings,
   captivity, leverage, and conduct.
 - `js/council.js` — the royal council (tier 6+): great officers, crown authority, council event customs.
+- js/balance.js: layered balance. Composes era, bookmark and mod overrides into
+  FBDATA.balance at activation and restore; FB.balanceFor adds a realm's
+  government-form override at realm-scoped sites.
 - `js/governments.js`: the government strategy registry. Each government form names
   a registered strategy per behavior slot (holders, succession, consent, ...).
 - `js/authority.js` — scoped Ban, Peace, Revenue and Consent, appointments,
