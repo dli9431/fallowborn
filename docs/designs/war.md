@@ -784,6 +784,15 @@ and each of the five core roles needs a class. A legacy mod class without a role
 accepted (hired companies count as mercenaries); a mod replacement that omits `role`
 keeps the replaced class's role. Role names never equal class ids.
 
+**Era unit sets.** An era's `military.excludeRoles` (data/eras.js) lists roles its
+campaigns never field. `FB.unitClassEraAllowed` answers from the campaign's stamped era,
+and `FB.unitClassUnlocked` refuses every class of an excluded role, so the player
+muster, AI musters and the culture sheet all drop it (the sheet says it is not fielded
+in this era). Only roles that are not core may be excluded: a core role is part of
+every host. The era is stamped at creation, so the restriction holds for the whole
+campaign; content that should arrive or leave by date keeps using technology and
+culture gates. The shipped eras exclude nothing.
+
 **Slain professionals are replaced through a realm-owned cohort ledger.**
 `state.armyCohorts[<realmId>][<classId>] = { batches:[{ n, readyTurn }], ready }`
 records every battle, siege, starvation, and desertion loss of a class flagged
@@ -1479,6 +1488,9 @@ counties, casualties return to the selected origin, and its doctrine cannot turn
 German county into raiders instantly. A raiding faith remains an independent source of the
 tradition. AI sovereigns using a campaign culture likewise scale raid pressure by that branch's
 realm-wide following and project cultural seafaring only from follower counties.
+Both lists, like the historic raids on lower-station lives ([events.md](events.md)), are
+data in `FBDATA.raidingTraditions` together with the culture doctrine
+`doctrines.raiding`; no engine code names a raiding culture or faith.
 
 Raiding does not declare a formal conquest war, nor does it occupy land permanently:
 

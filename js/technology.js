@@ -303,19 +303,55 @@ window.FB = window.FB || {};
     return true;
   }
 
+  /* Starting-knowledge policies, named by each era's technology slot
+     (data/eras.js). A policy receives the seeding year and two seeding
+     actions: expose(id) and complete(id), which also completes the
+     entry's prerequisites. The realm's authored techSeed exceptions and the
+     prerequisite repair apply after the policy. */
+  FB.techStartingKnowledge = {
+    /* What the realm's traditions had widely adopted by the year is
+       complete; what had emerged there is exposed. */
+    historical:function (state, rid, year, seeding) {
+      for (var id in FBDATA.tech) {
+        if (!own(FBDATA.tech, id)) continue;
+        var window = FB.techHistoricalWindow(state, id, rid);
+        if (!window) continue;
+        if (window.emergence <= year) seeding.expose(id);
+        if (window.widespread <= year) seeding.complete(id);
+      }
+    }
+  };
+
+  /* The campaign era's technology slot, or null for an era without one. */
+  FB.eraTechnology = function (state) {
+    var eraId = FB.campaignEra ? FB.campaignEra(state) : null;
+    var era = eraId && FBDATA.eras && own(FBDATA.eras, eraId) ? FBDATA.eras[eraId] : null;
+    return era && era.technology && typeof era.technology === 'object'
+      ? era.technology : null;
+  };
+
+  function startingKnowledgePolicy(state) {
+    var slot = FB.eraTechnology(state);
+    var id = slot && slot.startingKnowledge;
+    return typeof id === 'string' && own(FB.techStartingKnowledge, id) &&
+      typeof FB.techStartingKnowledge[id] === 'function'
+      ? FB.techStartingKnowledge[id] : FB.techStartingKnowledge.historical;
+  }
+
   function applySeedToRecord(state, rid, record) {
     var realm = state.realms && state.realms[rid] || {};
     var seed = realm.techSeed || {};
     var omitted = {}, i;
     for (i = 0; i < asList(seed.omit).length; i++) omitted[asList(seed.omit)[i]] = 1;
     var year = Number(state.date && state.date.year) || 867;
-    for (var id in FBDATA.tech) {
-      if (!own(FBDATA.tech, id) || omitted[id]) continue;
-      var window = FB.techHistoricalWindow(state, id, rid);
-      if (!window) continue;
-      if (window.emergence <= year) addUnique(record.exposed, id);
-      if (window.widespread <= year) prerequisiteClosure(record, id, omitted, {});
-    }
+    startingKnowledgePolicy(state)(state, rid, year, {
+      expose:function (id) {
+        if (FBDATA.tech[id] && !omitted[id]) addUnique(record.exposed, id);
+      },
+      complete:function (id) {
+        if (FBDATA.tech[id] && !omitted[id]) prerequisiteClosure(record, id, omitted, {});
+      }
+    });
     var expose = asList(seed.expose);
     for (i = 0; i < expose.length; i++) {
       if (FBDATA.tech[expose[i]] && !omitted[expose[i]]) addUnique(record.exposed, expose[i]);
@@ -1571,6 +1607,114 @@ window.FB = window.FB || {};
     }
   }
 
+  /* A bookmark realm's authored traditions and seed exceptions. */
+  function realmTechnologyErrors(bookmarkId, realm) {
+    var errors = [], traditions = FBDATA.techTraditions || {};
+    if (!realm) return errors;
+    if (realm.techTraditions !== undefined &&
+        !Array.isArray(realm.techTraditions)) {
+      errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
+        ': technology traditions must be an array.');
+    }
+    var explicit = asList(realm.techTraditions);
+    for (var ti = 0; ti < explicit.length; ti++) if (!traditions[explicit[ti]]) {
+      errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
+        ': invalid technology tradition ' + explicit[ti] + '.');
+    }
+    var seed = realm.techSeed || {};
+    if (realm.techSeed !== undefined &&
+        (!realm.techSeed || typeof realm.techSeed !== 'object' ||
+         Array.isArray(realm.techSeed))) {
+      errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
+        ': technology seed must be an object.');
+      seed = {};
+    }
+    for (var seedFieldIndex = 0;
+      seedFieldIndex < ['complete','expose','omit'].length; seedFieldIndex++) {
+      var seedField = ['complete','expose','omit'][seedFieldIndex];
+      if (seed[seedField] !== undefined && !Array.isArray(seed[seedField])) {
+        errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
+          ': technology seed ' + seedField + ' must be an array.');
+      }
+    }
+    var seedRefs = asList(seed.complete).concat(asList(seed.expose),asList(seed.omit));
+    for (var si = 0; si < seedRefs.length; si++) if (!FBDATA.tech[seedRefs[si]]) {
+      errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
+        ': invalid technology seed ' + seedRefs[si] + '.');
+    }
+    return errors;
+  }
+
+  function validYearWindow(window) {
+    return !!window && typeof window === 'object' && !Array.isArray(window) &&
+      Number.isInteger(window.from) && Number.isInteger(window.to) &&
+      window.from <= window.to;
+  }
+
+  function techCoverageErrors() {
+    return validYearWindow(FBDATA.techCoverage) ? []
+      : ['Technology coverage must name whole years from and to, from first.'];
+  }
+
+  /* An era's technology slot (data/eras.js): a window inside the era and
+     inside the catalogue's coverage, and a registered starting-knowledge
+     policy. An era without the slot adds no window of its own. */
+  FB.validateEraTechnology = function (eraId, era) {
+    var errors = [];
+    if (!era || era.technology === undefined || era.technology === null) return errors;
+    var slot = era.technology;
+    if (!validYearWindow(slot)) {
+      return ['Era ' + eraId + ': technology must name whole years from and to, from first.'];
+    }
+    if (slot.from < era.from || slot.to > era.to) {
+      errors.push('Era ' + eraId + ': technology window ' + slot.from + '–' + slot.to +
+        ' lies outside the era (' + era.from + '–' + era.to + ').');
+    }
+    var coverage = FBDATA.techCoverage;
+    if (validYearWindow(coverage) && (slot.from < coverage.from || slot.to > coverage.to)) {
+      errors.push('Era ' + eraId + ': technology window ' + slot.from + '–' + slot.to +
+        ' lies outside the technology catalogue coverage (' + coverage.from + '–' +
+        coverage.to + ').');
+    }
+    var policy = slot.startingKnowledge;
+    if (policy !== undefined && !(typeof policy === 'string' &&
+        own(FB.techStartingKnowledge, policy) &&
+        typeof FB.techStartingKnowledge[policy] === 'function')) {
+      errors.push('Era ' + eraId + ': unknown starting-knowledge policy ' + policy + '.');
+    }
+    return errors;
+  };
+
+  /* The technology part of a bookmark's requirement check: its start year
+     inside the catalogue's authored coverage and inside its era's technology
+     window, and every realm tradition and seed exception known. A year
+     already outside the era's own window is reported by the era check. */
+  FB.bookmarkTechnologyFaults = function (definition, eraId) {
+    var faults = [];
+    if (!definition || typeof definition !== 'object') return faults;
+    var label = definition.id ? definition.id : '?';
+    var year = definition.date && definition.date.year;
+    var coverage = FBDATA.techCoverage;
+    var era = eraId && FBDATA.eras && own(FBDATA.eras, eraId) ? FBDATA.eras[eraId] : null;
+    var slot = era && validYearWindow(era.technology) ? era.technology : null;
+    if (isFinite(year) && validYearWindow(coverage) &&
+        (year < coverage.from || year > coverage.to)) {
+      faults.push('Bookmark ' + label + ': start year ' + year +
+        ' is outside the technology catalogue coverage (' + coverage.from + '–' +
+        coverage.to + ').');
+    } else if (isFinite(year) && slot && year >= era.from && year <= era.to &&
+        (year < slot.from || year > slot.to)) {
+      faults.push('Bookmark ' + label + ': start year ' + year + ' is outside era ' +
+        eraId + ' technology window (' + slot.from + '–' + slot.to + ').');
+    }
+    var realms = Array.isArray(definition.realms) ? definition.realms : [];
+    for (var i = 0; i < realms.length; i++) {
+      var realmErrors = realmTechnologyErrors(label, realms[i]);
+      for (var j = 0; j < realmErrors.length; j++) faults.push(realmErrors[j]);
+    }
+    return faults;
+  };
+
   FB.validateTechnologyData = function () {
     var errors = [], domains = FBDATA.techDomains || {};
     var traditions = FBDATA.techTraditions || {};
@@ -2088,44 +2232,15 @@ window.FB = window.FB || {};
         }
       }
     }
+    var coverageErrors = techCoverageErrors();
+    for (var ce = 0; ce < coverageErrors.length; ce++) errors.push(coverageErrors[ce]);
     var bookmarks = FBDATA.bookmarks || {};
     for (var bookmarkId in bookmarks) {
       if (!own(bookmarks, bookmarkId)) continue;
       var realms = bookmarks[bookmarkId] && bookmarks[bookmarkId].realms || [];
       for (var ri = 0; ri < realms.length; ri++) {
-        var realm = realms[ri];
-        if (!realm) continue;
-        if (realm.techTraditions !== undefined &&
-            !Array.isArray(realm.techTraditions)) {
-          errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
-            ': technology traditions must be an array.');
-        }
-        var explicit = asList(realm.techTraditions);
-        for (var ti = 0; ti < explicit.length; ti++) if (!traditions[explicit[ti]]) {
-          errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
-            ': invalid technology tradition ' + explicit[ti] + '.');
-        }
-        var seed = realm.techSeed || {};
-        if (realm.techSeed !== undefined &&
-            (!realm.techSeed || typeof realm.techSeed !== 'object' ||
-             Array.isArray(realm.techSeed))) {
-          errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
-            ': technology seed must be an object.');
-          seed = {};
-        }
-        for (var seedFieldIndex = 0;
-          seedFieldIndex < ['complete','expose','omit'].length; seedFieldIndex++) {
-          var seedField = ['complete','expose','omit'][seedFieldIndex];
-          if (seed[seedField] !== undefined && !Array.isArray(seed[seedField])) {
-            errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
-              ': technology seed ' + seedField + ' must be an array.');
-          }
-        }
-        var seedRefs = asList(seed.complete).concat(asList(seed.expose),asList(seed.omit));
-        for (var si = 0; si < seedRefs.length; si++) if (!FBDATA.tech[seedRefs[si]]) {
-          errors.push('Bookmark ' + bookmarkId + ' realm ' + realm.id +
-            ': invalid technology seed ' + seedRefs[si] + '.');
-        }
+        var realmErrors = realmTechnologyErrors(bookmarkId, realms[ri]);
+        for (var re = 0; re < realmErrors.length; re++) errors.push(realmErrors[re]);
       }
     }
     return errors;

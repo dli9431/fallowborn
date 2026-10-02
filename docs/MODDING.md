@@ -435,7 +435,10 @@ A JSON mod is one object with any of these keys:
   "rulerTraits": ["ambitious", "patient"],
   "raidingTraditions": {
     "cultures": ["norse"], "faiths": ["norse_pagan"],
-    "faithGroups": ["pagan"]
+    "faithGroups": ["pagan"],
+    "victims": [{ "faiths": ["christian"], "profile": "northmen" }],
+    "profiles": { "northmen": { "cultures": ["norse"] }, "rival_raiders": {} },
+    "fallbackProfile": "rival_raiders"
   },
   "politicalBlocs": {
     "crown": { "name": "Crown", "motions": { "redress": -20, "scutage": -10 }, ... }
@@ -1324,16 +1327,24 @@ to all three maps.
 Activation rejects a bookmark with duplicate ids; missing or cyclic lieges; missing
 capitals; invalid province realm/de-jure/culture/faith references; development outside
 1–10; broken straits; invalid crossing classifications; invalid scripted targets; an
-unknown `era` or a start year outside that era's window; or a realm `government` that
-is unknown or names an unregistered strategy.
+unknown `era` or a start year outside that era's window; a start year outside the
+technology catalogue's coverage (`FBDATA.techCoverage`, 476–1300) or outside the era's
+technology window; a realm `techTraditions` entry or `techSeed` reference the catalogue
+does not know; or a realm `government` that is unknown or names an unregistered strategy.
 `era` names an entry of `FBDATA.eras` (`data/eras.js`): `late_antique` (375–649),
 `early_medieval` (650–999) or `high_medieval` (1000–1300). It sets the default
 government form of realms that declare none and the culture used when generation
 finds none on the map. A bookmark that omits `era` runs in the era whose window holds
 its start year, or the nearest era when none does, so older mods keep working. A
 declared `era` must hold the start year. A campaign stamps its era at creation, so a
-later data edit never moves it to another period. Eras and government forms are
-engine tables, not runtime-mod roots: a mod selects them by id.
+later data edit never moves it to another period. An era's `technology` slot names
+its technology window and starting-knowledge policy (late_antique 476–649, early_medieval
+650–999, high_medieval 1000–1300, all `historical`), and its optional `military` slot may
+exclude unit roles that are not core and set an equipment window
+([tech](designs/tech.md#traditions-and-bookmark-seeding), [war](designs/war.md)). Because
+a start must fall inside the catalogue's coverage, an older bookmark without an `era`
+dated before 476 or after 1300 is now rejected. Eras, government forms and the coverage
+are engine tables, not runtime-mod roots: a mod selects eras and forms by id.
 
 geography names the geography base the bookmark is drawn on (see Geography bases below); a bookmark that omits it uses FBDATA.defaultGeography (europe_regional), and an unknown id is rejected. A campaign stamps the base id at creation. Province rows may leave out x, y and terrain to take the base's seed for that county id, and may carry their own dated names list. settlementLayout optionally names the entry of FBDATA.settlementLayouts the bookmark draws its settlement presentations from; without it the bookmark uses the layout stored under its own id, or else its base's default layout (the 867 layout on europe_regional). A settled county with no settlements list then takes its layout entry, unless it sits off the base's seed point. Set settlementLayout to null to keep generated settlements everywhere a county has no list of its own. This fallback is new: a complete mod bookmark that reuses county ids at their usual seeds now shows the curated and real-world sites of the default layout where it previously showed generated ones.
 `crossingClasses` is optional and missing entries default to `narrow`.
@@ -4131,6 +4142,16 @@ record. These lists do not change raid range, spoils, cooldown, or technology ef
 The culture doctrine `doctrines.raiding` grants the same eligibility and is inherited by
 campaign culture branches. `doctrines.seafaring` controls long-range raid reach.
 
+The same record holds the historic raid families used by the `historic_raider` event
+selector. `profiles` maps each family id to the captor counties it raids from: any of its
+`cultures` or `faiths` (an empty family means any county of another culture or faith).
+`victims` is an ordered list of rules; the first rule matching the protagonist names the
+family, and a rule with both `faiths` and `cultures` needs both to match. Faith and culture
+ids include their groups and branches. `fallbackProfile` is the family used when no rule
+matches or no captor county exists. Each of the three is replaced whole; every named
+family must exist in the resulting `profiles`. The family id is the `raidProfile` an
+event's text and title forms select on, so a new family also needs its cases there.
+
 A trait definition may use this extended shape:
 
 ```json
@@ -4810,7 +4831,7 @@ and `leathers` palettes. Matching core knightly sets share technology, year, cul
 and market rules across head/body/feet: mail uses `mail_hauberks` and 1200, plate uses
 `plate_armor` and 1400. These remain ordinary independently equipped items.
 
-Items may declare `requiresTech` (one technology id or an all-of array), `yearMin`, and `cultures` (county culture ids, inheritance-aware). These gate new random stock and finds through `FB.itemAvailability(state,id,pid)`, never existing ownership or explicit story grants. `militaryMarket:true` reserves market Masterworks for auctions while stalls and peddlers produce Plain/Well-made instances. Open offers are grandfathered. Item requirements participate in technology validation and detail discovery. Art additionally accepts `mail`, `lamellar`, `plate`, and `coif`.
+Items may declare `requiresTech` (one technology id or an all-of array), `yearMin`, `yearMax` (the last production year), and `cultures` (county culture ids, inheritance-aware). An era's equipment window also skips an item whose own `yearMin`-`yearMax` window lies wholly outside it. These gate new random stock and finds through `FB.itemAvailability(state,id,pid)`, never existing ownership or explicit story grants. `militaryMarket:true` reserves market Masterworks for auctions while stalls and peddlers produce Plain/Well-made instances. Open offers are grandfathered. Item requirements participate in technology validation and detail discovery. Art additionally accepts `mail`, `lamellar`, `plate`, and `coif`.
 
 ## Cultural marriage lineage
 

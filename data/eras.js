@@ -14,10 +14,28 @@
      defaultCulture: FBDATA.cultures id used when generation needs a culture
        and the map supplies none
 
+     technology: the years the era's technology content supports and how a
+       fresh campaign's starting knowledge is seeded (js/technology.js):
+         from, to: inclusive year window inside the era window and inside
+           the catalogue's authored coverage (FBDATA.techCoverage); a
+           bookmark's start year must fall inside it
+         startingKnowledge: a registered starting-knowledge policy
+           (FB.techStartingKnowledge). historical completes what each
+           realm's traditions had widely adopted by the start year and
+           exposes what had emerged there; at 476 that is the inherited
+           late-antique foundations
+     military: null, or the unit and equipment sets the era restricts for
+       its whole campaign (a campaign keeps its stamped era as years pass):
+         excludeRoles: unit roles (FB.UNIT_ROLES) the era never fields; only
+           roles that are not core may be excluded
+         equipment: { from, to }: the era's equipment window; fresh stock and
+           finds skip an item whose own production window (yearMin, yearMax)
+           lies wholly outside it
+
    The remaining slots are declared here and filled by later systems:
-   costume, vocabulary, ladder, systems, technology (window and starting
-   knowledge), eventEras, currency and architecture. null means the era adds
-   nothing and today's shared behavior applies.
+   costume, vocabulary, ladder, systems, eventEras, currency and
+   architecture. null means the era adds nothing and today's shared
+   behavior applies.
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
 
@@ -26,18 +44,21 @@ FBDATA.eras = {
     from:375, to:649,
     defaultGovernment:'regnum', defaultCulture:'roman',
     costume:null, vocabulary:null, ladder:null, systems:null,
-    technology:null, eventEras:null, currency:null, architecture:null
+    technology:{ from:476, to:649, startingKnowledge:'historical' },
+    military:null, eventEras:null, currency:null, architecture:null
   },
   early_medieval:{
     from:650, to:999,
     defaultGovernment:'territorial', defaultCulture:'frankish',
     costume:null, vocabulary:null, ladder:null, systems:null,
-    technology:null, eventEras:null, currency:null, architecture:null
+    technology:{ from:650, to:999, startingKnowledge:'historical' },
+    military:null, eventEras:null, currency:null, architecture:null
   },
   high_medieval:{
     from:1000, to:1300,
     defaultGovernment:'territorial', defaultCulture:'frankish',
     costume:null, vocabulary:null, ladder:null, systems:null,
-    technology:null, eventEras:null, currency:null, architecture:null
+    technology:{ from:1000, to:1300, startingKnowledge:'historical' },
+    military:null, eventEras:null, currency:null, architecture:null
   }
 };

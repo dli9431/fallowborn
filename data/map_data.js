@@ -1838,5 +1838,34 @@ FBDATA.balance.fiscalCrisis = {
 FBDATA.raidingTraditions = {
   cultures: ['norse', 'magyar', 'turkic', 'khazar', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'],
   faiths: ['norse_pagan', 'tengri', 'baltic_pagan', 'slavic_pagan'],
-  faithGroups: ['pagan']
+  faithGroups: ['pagan'],
+  /* Historic raids on a lower-station protagonist (the historic_raider
+     event selector). The first victims rule the protagonist matches names
+     the raiding family; a rule with both lists needs a faith and a culture
+     match, and faith and culture ids include their groups and branches.
+     The family's captor counties match any of its cultures or faiths; a
+     family with neither is any county of another culture or faith. */
+  victims: [
+    { faiths: ['christian'], profile: 'northmen' },
+    { faiths: ['muslim'], profile: 'cross_banners' },
+    { faiths: ['zoroastrian'], profile: 'steppe_riders' },
+    { faiths: ['norse_pagan', 'baltic_pagan'], profile: 'saxon_host' },
+    { faiths: ['slavic_pagan'], profile: 'steppe_riders' },
+    { faiths: ['tengri'], profile: 'rus_raiders' },
+    { faiths: ['jewish'], cultures: ['turkic', 'magyar', 'khazar'], profile: 'rus_raiders' },
+    { cultures: ['persian', 'armenian', 'georgian', 'slavic'], profile: 'steppe_riders' },
+    { cultures: ['norse', 'baltic'], profile: 'saxon_host' },
+    { cultures: ['turkic', 'magyar', 'khazar'], profile: 'rus_raiders' },
+    { cultures: ['arabic', 'andalusi', 'berber'], profile: 'cross_banners' }
+  ],
+  profiles: {
+    northmen: { cultures: ['norse'], faiths: ['norse_pagan'] },
+    cross_banners: { faiths: ['christian'] },
+    saxon_host: { cultures: ['german', 'frankish', 'english'], faiths: ['christian'] },
+    steppe_riders: { cultures: ['turkic', 'magyar', 'khazar'], faiths: ['tengri'] },
+    rus_raiders: { cultures: ['slavic', 'norse'], faiths: ['slavic_pagan', 'orthodox'] },
+    rival_raiders: {}
+  },
+  /* the family when no rule matches or no captor county exists */
+  fallbackProfile: 'rival_raiders'
 };

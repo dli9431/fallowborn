@@ -240,7 +240,12 @@ for version-3 migration.
 
 Fresh production and random acquisition use `FB.itemAvailability`: all `requiresTech`
 innovations must be completed by the effective player sovereign, `yearMin` is a hard
-historical floor, and `cultures` matches the market county (including derived cultures).
+historical floor, an optional `yearMax` is the last production year, and `cultures`
+matches the market county (including derived cultures). An era may also declare an
+equipment window (`military.equipment` in data/eras.js); its campaigns never produce an
+item whose own `yearMin`–`yearMax` window lies wholly outside it, and the shop says the
+item is not made in this era. The shipped eras declare no window and no shipped item sets
+`yearMax`, so availability is unchanged.
 This is a regional production rule, not an ethnic restriction on the wearer. Explicit
 story grants, existing possessions, and already materialized shop/peddler/auction offers
 are grandfathered. Relocation never prevents wearing, inheriting, gifting, or selling gear.

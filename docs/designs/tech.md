@@ -157,6 +157,26 @@ bookmark, `FB.seedRealmTechnologies`:
 This produces distinct 867 and 1066 starting knowledge for Byzantine, Islamic, Latin,
 Nordic, Slavic, Steppe, and other realms without treating a single calendar as universal.
 
+Steps 1 and 2 are the era's starting-knowledge policy. Each era's `technology` slot
+(data/eras.js) names the years its technology content supports (`from`, `to`) and a
+`startingKnowledge` policy registered in `FB.techStartingKnowledge`; seeding asks the
+campaign's stamped era (`FB.eraTechnology`), and the authored exceptions and the
+prerequisite closure apply after the policy. The one registered policy, `historical`,
+is the regional-adoption rule above; all three shipped eras use it, and at 476 it yields
+the inherited late-antique foundations, whose regional adoption precedes that year.
+The shipped windows are 476–649 (late_antique), 650–999 (early_medieval) and 1000–1300
+(high_medieval).
+
+`FBDATA.techCoverage` (476–1300) records the years the catalogue's attested and
+regional windows are authored for. Bookmark validation rejects, with a named error, a
+start year outside that coverage or outside its era's technology window, and a realm
+`techTraditions` entry or `techSeed` reference the catalogue does not know. A start
+before 476 or after 1300 therefore needs its technologies authored first rather than
+being seeded from windows nobody wrote; this also applies to an older mod bookmark
+without a declared era. Era data validation requires each technology window to lie
+inside its era and inside the coverage, and the policy to be registered. Eras and the
+coverage are engine tables, not runtime-mod roots.
+
 ## Soft historical cost
 
 Prerequisites are hard. Dates are not. `FB.techCostBreakdown` starts from the authored

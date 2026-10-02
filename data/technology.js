@@ -10,6 +10,12 @@ window.FBDATA = window.FBDATA || {};
 (function () {
   'use strict';
 
+  /* The years the catalogue's attested and regional adoption windows are
+     authored for. A bookmark dated outside them is rejected rather than
+     seeded from windows nobody wrote; an earlier or later start needs its
+     technologies authored first. Each era's technology window lies inside. */
+  FBDATA.techCoverage = { from:476, to:1300 };
+
   FBDATA.techDomains = {
     agriculture:{ name:'Agriculture and animal power', icon:'🌾', order:0 },
     crafts:{ name:'Crafts, materials, and industry', icon:'⚒', order:1 },

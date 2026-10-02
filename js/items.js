@@ -1728,6 +1728,16 @@ window.FB = window.FB || {};
       reason:FB.techRequirementReason(state, def.requiresTech) };
     if (def.yearMin && state.date.year < def.yearMin) return { ready:false,
       reason:FB.T('Available from {year}.', { year:def.yearMin }) };
+    if (def.yearMax && state.date.year > def.yearMax) return { ready:false,
+      reason:FB.T('No longer made after {year}.', { year:def.yearMax }) };
+    /* the campaign era's equipment window (data/eras.js): an item whose own
+       production window lies wholly outside it is never made in the era */
+    const military = FB.eraMilitary ? FB.eraMilitary(state) : null;
+    const equipment = military && military.equipment;
+    if (equipment && ((def.yearMin && def.yearMin > equipment.to) ||
+        (def.yearMax && def.yearMax < equipment.from))) {
+      return { ready:false, reason:FB.T('Not made in this era.') };
+    }
     if (!def.cultures) return { ready:true, missing:[], reason:'' };
     const location = !pid && FB.travelLocation && FB.travelLocation(state);
     const province = FB.world && FB.world.byId[pid || (location && location.id) || state.player.provinceId];

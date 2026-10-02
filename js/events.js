@@ -12766,16 +12766,12 @@ window.FB = window.FB || {};
     FB.recordLiegeGrant(state);
   };
 
-  const HISTORIC_RAID_PROFILES = {
-    northmen:1, cross_banners:1, saxon_host:1,
-    steppe_riders:1, rus_raiders:1, rival_raiders:1
-  };
-
   FB.fns.historic_raid_context_valid = function (state, ctx) {
     const p = state.player;
     const target = ctx && ctx.destinationId && FB.world.byId[ctx.destinationId];
     return !!(p && !FB.station.isLanded(p) && ctx &&
-      ctx.protagonistId === p.charId && HISTORIC_RAID_PROFILES[ctx.raidProfile] &&
+      ctx.protagonistId === p.charId && typeof ctx.raidProfile === 'string' &&
+      Object.prototype.hasOwnProperty.call(FB.historicRaidProfiles(), ctx.raidProfile) &&
       target && !target.wasteland && target.id !== p.provinceId);
   };
 
