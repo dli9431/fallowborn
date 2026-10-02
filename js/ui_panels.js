@@ -1156,12 +1156,12 @@ window.FB = window.FB || {};
         (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints)) {
       h += tutorialCardHtml(s);
     }
-    if (FB.situation476Status) {
-      const situation = FB.situation476Status(s);
-      if (situation) h += '<button type="button" class="actionbtn" ' +
-        'id="deeds-476-situation"><b>' + esc(FB.T('The Western Court, 476')) +
-        '</b><br><span class="hint">' + esc(situation.name) +
-        '</span></button>';
+    /* One shared card per attached story with a status; it opens the
+       shared story sheet. */
+    for (const card of FB.stories ? FB.stories.cards(s) : []) {
+      h += '<button type="button" class="actionbtn" data-story-card="' +
+        esc(card.id) + '"><b>' + esc(card.title) +
+        '</b><br><span class="hint">' + esc(card.name) + '</span></button>';
     }
     h += ongoingCommitmentsHtml(s);
     if (FB.station.isLanded(s.player)) {
@@ -1293,9 +1293,10 @@ window.FB = window.FB || {};
       h += nextStepHint(s);
     }
     box.innerHTML = h;
-    const situationButton = $('deeds-476-situation');
-    if (situationButton) situationButton.addEventListener('click', function () {
-      UI.show476Situation();
+    box.querySelectorAll('[data-story-card]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showStorySheet(btn.getAttribute('data-story-card'));
+      });
     });
     box.querySelectorAll('[data-bldprov]').forEach(function (btn) {
       btn.addEventListener('click', function () {

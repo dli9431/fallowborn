@@ -239,6 +239,9 @@
       if (!own(state.start, key) && typeof bookmark[key] === 'string')
         state.start[key] = bookmark[key];
     });
+    /* Registered stories move their legacy records into state.stories on
+       this detached copy before validation (state-and-saves.md). */
+    if (FB.stories) FB.stories.migrate(state);
     P.validateAuthority(state.authority, state);
     P.validatePlatform(state);
     if (state.authority) state.authority.schema = 4;

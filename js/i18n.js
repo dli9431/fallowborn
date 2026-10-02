@@ -681,7 +681,7 @@ window.FBDATA = window.FBDATA || {};
     return FB.message(key, params);
   };
   FB.dataText = function (state, viewer, kind, id, def, path, ctx) {
-    const period = FB.period476Text && FB.period476Text(state, kind, id, path);
+    const period = FB.stories && FB.stories.text(state, kind, id, path);
     if (period !== null && period !== undefined) return period;
     const selected = branchOf(state, viewer, path ? getPath(def, path) : def);
     const suffix = path ? '.' + path : '';

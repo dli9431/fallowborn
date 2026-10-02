@@ -235,6 +235,7 @@ window.FBDATA = window.FBDATA || {};
     geography:'europe_regional',
     religiousHeads:{},
     greatHolyWars:false,
+    stories:['western_court_476'],
     provinces:provinces, realms:realms,
     duchies:Object.assign({}, base.duchies),
     kingdoms:Object.assign({}, base.kingdoms),

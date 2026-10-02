@@ -6,7 +6,8 @@ dependsOnRuntime(__filename, [
   'data/settlements_real.js', 'data/cultures.js', 'data/starts.js',
   'data/technology.js', 'data/political_institutions.js', 'data/units.js',
   'data/economy.js',
-  'js/main.js', 'js/situation476.js', 'js/authority.js', 'js/world.js',
+  'js/main.js', 'js/stories.js', 'js/story_western_court_476.js',
+  'js/story_federate_track_476.js', 'js/authority.js', 'js/world.js',
   'js/holywar.js', 'js/actions.js',
   'js/armies.js', 'js/treasury.js', 'js/lordships.js', 'js/model.js',
   'js/politics.js', 'js/technology.js', 'js/settlement.js',
@@ -18,6 +19,8 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+
+const CARD = '[data-story-card="federate_track_476"]';
 
 async function start476(page, testInfo) {
   await openGame(page, testInfo);
@@ -31,27 +34,28 @@ async function start476(page, testInfo) {
   await page.getByRole('button', { name:'Begin', exact:true }).click();
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   await page.locator('[data-tab="actions"]').click();
-  await expect(page.locator('#deeds-476-situation')).toBeVisible();
+  await expect(page.locator(CARD)).toBeVisible();
 }
 
 async function choose(page, id) {
-  await page.locator('#deeds-476-situation').click();
-  await page.locator('[data-476-choice="' + id + '"]').click();
-  await expect(page.locator('#gm-476-confirm')).toBeVisible();
-  await page.locator('#gm-476-confirm').click();
-  await page.locator('#gm-476-continue').click();
+  await page.locator(CARD).click();
+  await page.locator('[data-story-choice="' + id + '"]').click();
+  await expect(page.locator('#gm-story-confirm')).toBeVisible();
+  await page.locator('#gm-story-confirm').click();
+  await page.locator('#gm-story-continue').click();
 }
 
 test('476 bookmark and free federate start preserve 867 and 1066 data',
   async function ({ page }, testInfo) {
     await start476(page, testInfo);
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, w = s.stories.western_court_476,
+        t = s.stories.federate_track_476;
       const inhabited = FB.bookmark('476').provinces.filter(function (p) {
         return !p.wasteland;
       });
       const before = JSON.stringify(s), rng = FB.getRngState();
-      const quote = FB.situation476Quote(s, 'accept_delegate');
+      const quote = FB.stories.quote(s, 'federate_track_476', 'accept_delegate');
       const ordinary = FB.bookmark('867');
       const brokenSacred = Object.assign({}, ordinary, {
         provinces:ordinary.provinces.map(function (province) {
@@ -81,10 +85,12 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
         sites:FB.world.sitesByProv.ravenna.list.map(function (site) {
           return site.site;
         }),
+        stories:FB.stories.attached(s),
+        legacy:s.situation476,
         age:FB.ageOf(s.chars[s.player.charId], s.date.year),
         station:s.player.tier, gold:s.player.gold, land:s.player.provs.length,
-        role:sc.role, sitting:FB.realmRulerCharacterSnapshot(s, 'byzantium').name,
-        claimant:s.chars[sc.zenoId].name,
+        role:t.role, sitting:FB.realmRulerCharacterSnapshot(s, 'byzantium').name,
+        claimant:s.chars[w.zenoId].name,
         periodCareer:FB.careerTitle(s, s.chars[s.player.charId]),
         periodRank:FB.rankTitleSnapshot(s, 1).word,
         periodTroops:FB.dataText(s, s.player.charId, 'unitClass',
@@ -103,6 +109,8 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
     expect(result.older).toEqual([[], []]);
     expect(result.noIslam).toBe(true);
     expect(result.sites).toEqual(['ravenna_476', 'classis_476']);
+    expect(result.stories).toEqual(['western_court_476', 'federate_track_476']);
+    expect(result.legacy).toBeUndefined();
     expect(result.age).toBe(24);
     expect(result.station).toBe(1);
     expect(result.gold).toBe(20);
@@ -154,6 +162,26 @@ test('invalid bookmark dialog has one Close action',
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
+test('shared story sheet Back returns to the choice list and Close to the Deeds card',
+  async function ({ page }, testInfo) {
+    await start476(page, testInfo);
+    await page.locator(CARD).click();
+    await expect(page.locator('#gm-title')).toHaveText('The Western Court, 476');
+    await expect(page.locator('#gm-body')).toContainText('Soldiers seek a spokesman');
+    await page.locator('[data-story-choice="accept_delegate"]').click();
+    await expect(page.locator('#gm-title')).toHaveText(
+      'Review Serve as the soldiers’ delegate');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#gm-title')).toHaveText('The Western Court, 476');
+    await expect(page.locator('[data-story-choice="accept_delegate"]')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator(CARD)).toBeFocused();
+    expect(await page.evaluate(function () {
+      return FB.state.stories.federate_track_476.phase;
+    })).toBe('delegate');
+  });
+
 test('negotiation uses scoped command, treasury, civic consent and saved contract',
   async function ({ page }, testInfo) {
     await start476(page, testInfo);
@@ -165,9 +193,10 @@ test('negotiation uses scoped command, treasury, civic consent and saved contrac
     await choose(page, 'uphold_nepos');
     await choose(page, 'escort_court');
     const beforeArrival = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, w = s.stories.western_court_476,
+        t = s.stories.federate_track_476;
       return {
-        phase:sc.phase, court:sc.courtAt, owner:s.owner.ravenna,
+        phase:t.phase, court:w.courtAt, owner:s.owner.ravenna,
         command:FB.political.permission(s,
           { kind:'character', id:s.player.charId }, 'command_host',
           { hostId:'host_476_federates' }).allowed,
@@ -182,13 +211,14 @@ test('negotiation uses scoped command, treasury, civic consent and saved contrac
       owner:'italy', command:true, peace:false,
       westernGold:90, bodyGold:30 });
     const arrived = await page.evaluate(function () {
-      for (let n = 0; n < 75 && FB.state.situation476.courtAt !== 'pavia'; n++) {
+      for (let n = 0; n < 75 &&
+          FB.state.stories.western_court_476.courtAt !== 'pavia'; n++) {
         FB.state.turn++;
         FB.armyTick(FB.state);
-        FB.situation476Day(FB.state);
+        FB.stories.day(FB.state);
       }
       FB.ui.refresh();
-      return { court:FB.state.situation476.courtAt,
+      return { court:FB.state.stories.western_court_476.courtAt,
         capital:FB.state.realms.italy.capital };
     });
     expect(arrived).toEqual({ court:'pavia', capital:'pavia' });
@@ -197,8 +227,9 @@ test('negotiation uses scoped command, treasury, civic consent and saved contrac
     await choose(page, 'move_to_ratification');
     await choose(page, 'ratify');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
-      const row = FB.political.contract(s, sc.contractId);
+      const s = FB.state, w = s.stories.western_court_476,
+        t = s.stories.federate_track_476;
+      const row = FB.political.contract(s, t.contractId);
       const saved = JSON.parse(FB.save.serialize());
       const owner = s.owner.ravenna;
       FB.save.restore(saved);
@@ -206,17 +237,17 @@ test('negotiation uses scoped command, treasury, civic consent and saved contrac
       FB.save.restore(saved);
       return {
         format:saved.v, stableAuthority:authority === JSON.stringify(FB.state.authority),
-        phase:sc.phase, result:sc.result, owner:owner,
+        phase:t.phase, result:t.result, owner:owner,
         westOffice:FB.state.authority.appointments.some(function (a) {
-          return a.id === sc.westOfficeId && a.status === 'active';
+          return a.id === w.westOfficeId && a.status === 'active';
         }),
         award:row.settlementAwards[0].fulfilled,
         veteran:FB.settlementHolder(FB.state, 'ravenna', 1),
-        veteranId:sc.veteranId,
-        veteranHome:FB.state.chars[sc.veteranId].homeProvinceId,
-        migration:sc.veteranMigration && sc.veteranMigration.settlement,
-        civicRights:(sc.cityRightIds || []).length,
-        restored:FB.state.situation476.result,
+        veteranId:w.veteranId,
+        veteranHome:FB.state.chars[w.veteranId].homeProvinceId,
+        migration:t.veteranMigration && t.veteranMigration.settlement,
+        civicRights:(w.cityRightIds || []).length,
+        restored:FB.state.stories.federate_track_476.result,
         communities:FB.countyCultureShare(FB.state, 'ravenna', 'roman')
       };
     });
@@ -243,9 +274,10 @@ test('contest waits for a real host result and does not erase communities',
     await choose(page, 'refuse_pay');
     await choose(page, 'demand_force');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, w = s.stories.western_court_476,
+        t = s.stories.federate_track_476;
       const before = s.owner.ravenna;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       const noInstantConquest = s.owner.ravenna === before;
       const federates = s.armies.filter(function (a) {
         return a.id === 'host_476_federates';
@@ -255,9 +287,9 @@ test('contest waits for a real host result and does not erase communities',
       })[0];
       federates.at = 'ravenna'; federates.moveLeft = 0;
       italian.men = 0;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       return { noInstantConquest:noInstantConquest,
-        owner:s.owner.ravenna, result:sc.result, deposed:sc.romulusDeposed,
+        owner:s.owner.ravenna, result:t.result, deposed:w.romulusDeposed,
         communities:FB.countyCultureShare(s, 'ravenna', 'roman'),
         household:s.player.tier };
     });
@@ -279,11 +311,12 @@ test('Zeno return depends on living rulers and invalidates Basiliscus recognitio
     await choose(page, 'present_civic');
     await choose(page, 'petition_basiliscus');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
-      const old = sc.imperialRecognitionId;
+      const s = FB.state, w = s.stories.western_court_476,
+        t = s.stories.federate_track_476;
+      const old = t.imperialRecognitionId;
       s.turn = 180;
-      FB.situation476Day(s);
-      return { return:sc.easternReturn,
+      FB.stories.day(s);
+      return { return:w.easternReturn,
         ruler:FB.realmRulerCharacterSnapshot(s, 'byzantium').name,
         oldEffective:FB.political.legitimacy(s,
           { kind:'realm', id:'federates_476' },
@@ -304,14 +337,15 @@ test('backed Zeno issues a commission only after returning to office',
     await choose(page, 'present_civic');
     await choose(page, 'back_zeno');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, w = s.stories.western_court_476,
+        t = s.stories.federate_track_476;
       s.turn = 150;
-      FB.situation476Day(s);
-      const recognized = sc.imperialRecognitionId &&
+      FB.stories.day(s);
+      const recognized = t.imperialRecognitionId &&
         FB.political.legitimacy(s, { kind:'realm', id:'federates_476' },
           { kind:'realm', id:'federates_476' }, 'imperial_commission')
-          .some(function (row) { return row.id === sc.imperialRecognitionId; });
-      return { return:sc.easternReturn, ruler:
+          .some(function (row) { return row.id === t.imperialRecognitionId; });
+      return { return:w.easternReturn, ruler:
         FB.realmRulerCharacterSnapshot(s, 'byzantium').name,
         recognized:recognized };
     });
@@ -326,16 +360,16 @@ test('seasonal service share is paid from the body exactly once across v4 restor
     await choose(page, 'keep_serving');
     await choose(page, 'offer_pay');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, t = s.stories.federate_track_476;
       s.turn = 90;
       FB.authoritySeason(s);
-      FB.situation476Season(s);
+      FB.stories.season(s);
       const first = { household:s.player.gold,
         body:FB.treasuryAvailable(s, 'federates_476'),
-        period:sc.lastAllocatedPeriod };
+        period:t.lastAllocatedPeriod };
       FB.save.restore(FB.save.parseExport(FB.save.exportState()));
       FB.authoritySeason(FB.state);
-      FB.situation476Season(FB.state);
+      FB.stories.season(FB.state);
       return { first:first,
         household:FB.state.player.gold,
         body:FB.treasuryAvailable(FB.state, 'federates_476') };
@@ -378,7 +412,7 @@ test('476 regional assignments and dress stay local to the bookmark',
         dress:[look.period476, look.cloth.kind, high.cloth.kind],
         frankHeir:s.realms.franks_476.succession.members[
           s.realms.franks_476.succession.heirId].charId ===
-          s.situation476.clovisId,
+          s.stories.western_court_476.clovisId,
         strait:b.straits.some(function (pair) {
           return pair[0] === 'siracusa' && pair[1] === 'tunis';
         }),
@@ -411,16 +445,16 @@ test('civic service grants a scoped court appointment without land or revenue',
     await choose(page, 'seek_city_service');
     await choose(page, 'petition_city_office');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, t = s.stories.federate_track_476;
       const who = { kind:'character', id:s.player.charId };
-      return { phase:sc.phase, result:sc.result,
+      return { phase:t.phase, result:t.result,
         career:FB.careerOf(s, s.chars[s.player.charId]).profession,
         peace:FB.political.permission(s, who, 'judge',
           { provinceId:'ravenna' }).allowed,
         revenue:FB.political.permission(s, who, 'collect_revenue',
           { provinceId:'ravenna' }).allowed,
         owner:s.owner.ravenna, land:s.player.provs.length,
-        office:sc.cityOfficeId };
+        office:t.cityOfficeId };
     });
     expect(result.phase).toBe('complete');
     expect(result.result).toBe('civic_office');
@@ -438,7 +472,8 @@ test('clerical mediation uses a late antique path and leaves faiths intact',
     const otherFaithBlocked = await page.evaluate(function () {
       const s = FB.state, me = s.chars[s.player.charId];
       me.religion = 'nicene';
-      const blocked = !FB.situation476Quote(s, 'seek_church_service').allowed;
+      const blocked = !FB.stories.quote(s, 'federate_track_476',
+        'seek_church_service').allowed;
       me.religion = 'homoian';
       return blocked;
     });
@@ -447,12 +482,12 @@ test('clerical mediation uses a late antique path and leaves faiths intact',
     await choose(page, 'seek_homoian_commission');
     await choose(page, 'mediate_communities');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, t = s.stories.federate_track_476;
       const me = s.chars[s.player.charId];
-      return { phase:sc.phase, career:FB.careerOf(s, me).profession,
+      return { phase:t.phase, career:FB.careerOf(s, me).profession,
         path:FB.religiousPathOf(s, me).id, faith:me.religion,
         local:FB.countyReligionShare(s, 'ravenna', 'nicene'),
-        recognition:!!sc.interfaithRecognitionId,
+        recognition:!!t.interfaithRecognitionId,
         owner:s.owner.ravenna };
     });
     expect(result.phase).toBe('civic_service');
@@ -468,29 +503,30 @@ test('later campaigns register ordinary wars only with their living political pr
   async function ({ page }, testInfo) {
     await start476(page, testInfo);
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, w = s.stories.western_court_476;
       s.date.year = 486;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       const noForcedClovis = !FB.ordinaryWarBetween(s,
         'franks_476', 'west_francia');
       FB.advanceRealmSuccession(s, 'franks_476');
       const clovisInherited = FB.realmRulerCharacterSnapshot(s,
-        'franks_476').id === sc.clovisId;
-      FB.situation476Day(s);
+        'franks_476').id === w.clovisId;
+      FB.stories.day(s);
       const frankWar = FB.ordinaryWarBetween(s,
         'franks_476', 'west_francia');
       s.turn = 180; s.date.year = 489;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       const gothicWar = FB.ordinaryWarBetween(s,
         'pannonia', s.owner.ravenna);
       const saved = JSON.parse(FB.save.serialize());
       FB.save.restore(saved);
+      const restored = FB.state.stories.western_court_476;
       return { noForcedClovis:noForcedClovis,
         clovisInherited:clovisInherited,
         frankTarget:frankWar && frankWar.objectives[0].target,
         gothicTarget:gothicWar && gothicWar.objectives[0].target,
-        frankStatus:FB.state.situation476.historical.clovis,
-        gothicStatus:FB.state.situation476.historical.theoderic };
+        frankStatus:restored.historical.clovis,
+        gothicStatus:restored.historical.theoderic };
     });
     expect(result).toEqual({ noForcedClovis:true, clovisInherited:true,
       frankTarget:'paris',
@@ -504,11 +540,11 @@ test('reconquest targets current owners and never awards a county at declaration
       const s = FB.state;
       s.date.year = 533;
       const before = s.owner.tunis;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       const war = FB.ordinaryWarBetween(s, 'byzantium', before);
       return { before:before, after:s.owner.tunis,
         target:war && war.objectives[0].target,
-        status:s.situation476.historical.africa };
+        status:s.stories.western_court_476.historical.africa };
     });
     expect(result).toEqual({ before:'aghlabids', after:'aghlabids',
       target:'tunis', status:'started' });
@@ -520,24 +556,30 @@ test('declining involvement leaves AI courts bound by pay and city rights',
     await start476(page, testInfo);
     await choose(page, 'refuse_involvement');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, w = s.stories.western_court_476,
+        t = s.stories.federate_track_476;
       s.turn = 90;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       const gold = s.player.gold;
       FB.authoritySeason(s);
-      FB.situation476Season(s);
-      return { phase:sc.phase, result:sc.result,
-        ai:sc.aiResolution, contract:FB.political.contract(s, sc.contractId).status,
+      FB.stories.season(s);
+      return { phase:t.phase, result:t.result, ownContract:t.contractId,
+        ai:w.aiResolution, contract:FB.political.contract(s, w.contractId).status,
         westernGold:FB.treasuryAvailable(s, 'italy'),
-        rights:(sc.cityRightIds || []).length,
+        rights:(w.cityRightIds || []).length,
+        status:FB.stories.status(s, 'federate_track_476').lines,
         householdBefore:gold, householdAfter:s.player.gold };
     });
     expect(result.phase).toBe('complete');
-    expect(result.result).toBe('ai_negotiated');
+    expect(result.result).toBe('declined');
+    expect(result.ownContract).toBeNull();
     expect(result.ai).toBe('negotiated');
     expect(result.contract).toBe('active');
     expect(result.westernGold).toBe(90);
     expect(result.rights).toBe(2);
+    expect(result.status).toContain('Ravenna civic consent: recorded.');
+    expect(result.status).toContain(
+      'The courts agreed on service after you declined involvement.');
     expect(result.householdAfter).toBe(result.householdBefore);
   });
 
@@ -549,14 +591,15 @@ test('succession reopens stale service terms without trapping the household',
     await choose(page, 'keep_serving');
     await choose(page, 'offer_pay');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
-      const old = sc.contractId;
-      FB.assignRealmRulerCharacter(s, 'italy', sc.senatorId,
+      const s = FB.state, w = s.stories.western_court_476,
+        t = s.stories.federate_track_476;
+      const old = t.contractId;
+      FB.assignRealmRulerCharacter(s, 'italy', w.senatorId,
         { replaceAuthored:true });
       s.turn++;
-      FB.situation476Day(s);
-      return { phase:sc.phase, oldEffective:FB.political.contract(s, old).effective,
-        escape:FB.situation476Quote(s, 'leave_dispute').allowed };
+      FB.stories.day(s);
+      return { phase:t.phase, oldEffective:FB.political.contract(s, old).effective,
+        escape:FB.stories.quote(s, 'federate_track_476', 'leave_dispute').allowed };
     });
     expect(result).toEqual({ phase:'contract', oldEffective:false,
       escape:true });
@@ -568,16 +611,16 @@ test('loss of Ravenna moves a surviving court and records exile on extinction',
     await choose(page, 'remain_service');
     await choose(page, 'keep_serving');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
+      const s = FB.state, w = s.stories.western_court_476;
       FB.transferProvince(s, 'ravenna', 'pannonia');
-      FB.situation476Day(s);
-      const displaced = { court:sc.courtAt, capital:s.realms.italy.capital,
+      FB.stories.day(s);
+      const displaced = { court:w.courtAt, capital:s.realms.italy.capital,
         owner:s.owner[s.realms.italy.capital],
-        escape:FB.situation476Quote(s, 'leave_dispute').allowed };
+        escape:FB.stories.quote(s, 'federate_track_476', 'leave_dispute').allowed };
       s.realms.italy.alive = false;
-      FB.situation476Day(s);
-      return { displaced:displaced, exile:sc.displacedCourts.italy,
-        court:sc.courtAt };
+      FB.stories.day(s);
+      return { displaced:displaced, exile:w.displacedCourts.italy,
+        court:w.courtAt };
     });
     expect(result.displaced.court).toBe('displaced');
     expect(result.displaced.capital).not.toBe('ravenna');
@@ -604,22 +647,22 @@ test('a federate victory can preserve civic Peace and acknowledge Nepos',
       })[0];
       federates.at = 'ravenna'; federates.moveLeft = 0;
       italian.men = 0;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       FB.ui.refresh();
     });
     await choose(page, 'accept_aftermath');
     await choose(page, 'adopt_civic_rule');
     await choose(page, 'recognize_nepos_west');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
-      return { owner:s.owner.ravenna, governance:sc.governanceResolved,
+      const s = FB.state, w = s.stories.western_court_476;
+      return { owner:s.owner.ravenna, governance:w.governanceResolved,
         government:FB.political.government(s,
           { kind:'realm', id:'federates_476' }).formId,
-        rights:(sc.cityRightIds || []).length,
-        office:sc.westernOfficeResolved,
+        rights:(w.cityRightIds || []).length,
+        office:w.westernOfficeResolved,
         holder:s.authority.appointments.filter(function (a) {
-          return a.id === sc.westOfficeId;
-        })[0].holder.id, nepos:sc.neposId };
+          return a.id === w.westOfficeId;
+        })[0].holder.id, nepos:w.neposId };
     });
     expect(result.owner).toBe('federates_476');
     expect(result.governance).toBe('civic');
@@ -637,9 +680,9 @@ test('AI contest begins through an ordinary war if no pay is available',
       const s = FB.state;
       s.realms.italy.treasury.gold = 0;
       s.turn = 90;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       const war = FB.ordinaryWarBetween(s, 'federates_476', 'italy');
-      return { status:s.situation476.aiResolution,
+      return { status:s.stories.western_court_476.aiResolution,
         target:war && war.objectives[0].target,
         owner:s.owner.ravenna };
     });
@@ -664,20 +707,21 @@ test('western office can be restored after Ravenna returns from a rival claim',
       })[0];
       federates.at = 'ravenna'; federates.moveLeft = 0;
       italian.men = 0;
-      FB.situation476Day(s);
+      FB.stories.day(s);
       FB.ui.refresh();
     });
     await choose(page, 'accept_aftermath');
     await choose(page, 'recognize_nepos_west');
     const result = await page.evaluate(function () {
-      const s = FB.state, sc = s.situation476;
-      const formerOffice = sc.westOfficeId;
-      const before = FB.situation476Quote(s, 'restore_western_office').allowed;
+      const s = FB.state, w = s.stories.western_court_476;
+      const track = 'federate_track_476';
+      const formerOffice = w.westOfficeId;
+      const before = FB.stories.quote(s, track, 'restore_western_office').allowed;
       FB.transferProvince(s, 'ravenna', 'italy');
-      const review = FB.situation476Quote(s, 'restore_western_office');
-      const applied = FB.situation476Apply(s, 'restore_western_office', review);
+      const review = FB.stories.quote(s, track, 'restore_western_office');
+      const applied = FB.stories.apply(s, track, 'restore_western_office', review);
       return { before:before, reviewed:review.allowed, applied:applied,
-        outcome:sc.westernOfficeResolved, owner:s.owner.ravenna,
+        outcome:w.westernOfficeResolved, owner:s.owner.ravenna,
         former:s.authority.appointments.filter(function (row) {
           return row.id === formerOffice;
         })[0].status };

@@ -28,27 +28,9 @@
     },
     {
       "file": "js/main.js",
-      "source": "if (scenario.id === 'federate_476') return selected === '476';",
-      "kind": "pending",
-      "reason": "The start picker hardcodes the only 476 start."
-    },
-    {
-      "file": "js/main.js",
       "source": "const bookmarkId = legacy ? '867' : parts[1].toLowerCase();",
       "kind": "legacy_contract",
       "reason": "Legacy five-part start codes imply the 867 bookmark."
-    },
-    {
-      "file": "js/main.js",
-      "source": "if (bookmark.id === '476' && sc.id !== 'federate_476' ||",
-      "kind": "pending",
-      "reason": "The start picker hides other starts in 476."
-    },
-    {
-      "file": "js/main.js",
-      "source": "bookmark.id !== '476' && sc.id === 'federate_476' ||",
-      "kind": "pending",
-      "reason": "The start picker hides the 476 start in other bookmarks."
     },
     {
       "file": "js/mods.js",
@@ -109,12 +91,6 @@
       "source": "var bookmarkId = data.state.start && data.state.start.id || '867';",
       "kind": "legacy_default",
       "reason": "A save without start data belongs to the original 867 bookmark."
-    },
-    {
-      "file": "js/situation476.js",
-      "source": "function is476(s) { return !!(s && s.start && s.start.id === '476'); }",
-      "kind": "pending",
-      "reason": "The 476 situation checks its own bookmark id."
     },
     {
       "file": "js/util.js",

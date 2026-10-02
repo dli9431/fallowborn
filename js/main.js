@@ -2059,13 +2059,40 @@ FB.CHANGELOG = [
 
   const START_TIER_NAMES = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
 
+  /* A scenario is offered where its data allows: an optional bookmarkIds
+     list and an optional eras list, matched against the bookmark's era. */
+  function scenarioOffered(scenario, bookmarkId) {
+    if (!scenario) return false;
+    if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
+    return !scenario.eras ||
+      scenario.eras.indexOf(FB.bookmarkEra(FB.bookmark(bookmarkId))) >= 0;
+  }
+
   function scenarioUnlocked(scenario, bookmarkId) {
     if (!scenario) return false;
     const selected = bookmarkId || FB.activeBookmarkId || FBDATA.defaultBookmark;
-    if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(selected) < 0) return false;
-    if (scenario.id === 'federate_476') return selected === '476';
+    if (!scenarioOffered(scenario, selected)) return false;
+    if (scenario.alwaysUnlocked) return true;
     return !FB.startProgression ||
       FB.startProgression.isTierUnlocked(scenario.tier);
+  }
+
+  /* A scenario may limit and relabel its family shapes: familyPresets maps
+     the allowed preset ids, in picker order, to optional authored name,
+     diff and desc labels. The first allowed shape is the default. */
+  function scenarioFamilyPresets(scenario) {
+    const limited = scenario && scenario.familyPresets;
+    if (!limited) return FBDATA.familyPresets;
+    return Object.keys(limited).map(familyPresetById).filter(Boolean);
+  }
+
+  function familyPresetLabel(scenario, preset, field) {
+    const authored = scenario && scenario.familyPresets &&
+      scenario.familyPresets[preset.id];
+    return authored && authored[field]
+      ? FB.dataText(null, null, 'scenario', scenario.id, scenario,
+        'familyPresets.' + preset.id + '.' + field, {})
+      : FB.dataText(null, null, 'familyPreset', preset.id, preset, field, {});
   }
 
   function scenarioUnlockText(scenario, startCode) {
@@ -2174,7 +2201,7 @@ FB.CHANGELOG = [
       const namePart = legacy ? 4 : 5;
       const scen = FBDATA.startScenarios.filter(function (s) {
         return s.id === parts[scenarioPart].toLowerCase() &&
-          (!s.bookmarkIds || s.bookmarkIds.indexOf(bookmarkId) >= 0) &&
+          scenarioOffered(s, bookmarkId) &&
           (!s.fixedProvinceId || s.fixedProvinceId === parts[provincePart].toLowerCase());
       })[0];
       const prov = bookmark && bookmark.provinces.filter(function (p) {
@@ -2195,7 +2222,9 @@ FB.CHANGELOG = [
       let familyPreset = 'standard';
       if (!legacy && parts.length >= 7) {
         familyPreset = parts[6].toLowerCase();
-        if (!familyPresetById(familyPreset)) return { error: bad };
+        if (scenarioFamilyPresets(scen).indexOf(familyPresetById(familyPreset)) < 0) {
+          return { error: bad };
+        }
       }
       let settlementIdx = 0;
       if (!legacy && parts.length >= 8) {
@@ -2294,6 +2323,7 @@ FB.CHANGELOG = [
     document.querySelectorAll('#title button[disabled]').forEach(function (button) {
       button.disabled = false;
     });
+    if (FB.stories) FB.stories.seal(); // stories register at load time only
     G.bootReady = true;
     /* CrazyGames: build Play as Osric's world after the title paints, so the
        click only sets up the campaign. The title itself stays world-free. */
@@ -2764,9 +2794,7 @@ FB.CHANGELOG = [
     const box = $('scenariolist');
     box.innerHTML = '';
     for (const sc of FBDATA.startScenarios) {
-      if (bookmark.id === '476' && sc.id !== 'federate_476' ||
-          bookmark.id !== '476' && sc.id === 'federate_476' ||
-          sc.bookmarkIds && sc.bookmarkIds.indexOf(bookmark.id) < 0) continue;
+      if (!scenarioOffered(sc, bookmark.id)) continue;
       const el = document.createElement('button');
       const locked = !scenarioUnlocked(sc);
       el.type = 'button';
@@ -3042,23 +3070,20 @@ FB.CHANGELOG = [
        code's preset (or a pick made before stepping Back) survives */
     const famBox = $('cg-family');
     famBox.innerHTML = '';
-    for (const fp of FBDATA.familyPresets) {
-      if (G.pending.scenario.id === 'federate_476' && fp.id !== 'standard') continue;
+    const familyChoices = scenarioFamilyPresets(G.pending.scenario);
+    for (const fp of familyChoices) {
       const label = document.createElement('label');
       label.className = 'radio cgfamily-card';
-      const is476Family = G.pending.scenario.id === 'federate_476';
       label.innerHTML = '<input type="radio" name="cg-family" value="' + fp.id + '">' +
-        '<span><b>' + FB.esc(is476Family ? FB.T('Free household') :
-          FB.dataText(null, null, 'familyPreset', fp.id, fp, 'name', {})) + '</b> — ' +
-        FB.esc(is476Family ? FB.T('age 24 · federate service') :
-          FB.dataText(null, null, 'familyPreset', fp.id, fp, 'diff', {})) +
+        '<span><b>' + FB.esc(familyPresetLabel(G.pending.scenario, fp, 'name')) +
+        '</b> — ' + FB.esc(familyPresetLabel(G.pending.scenario, fp, 'diff')) +
         '<br><span class="hint">' +
-        FB.esc(FB.dataText(null, null, 'familyPreset', fp.id, fp, 'desc', {})) +
+        FB.esc(familyPresetLabel(G.pending.scenario, fp, 'desc')) +
         '</span></span>';
       famBox.appendChild(label);
     }
-    const wantedPreset = G.pending.scenario.id === 'federate_476' ? 'standard' :
-      (familyPresetById(G.pending.familyPreset) ? G.pending.familyPreset : 'standard');
+    const wantedPreset = familyChoices.indexOf(familyPresetById(G.pending.familyPreset)) >= 0
+      ? G.pending.familyPreset : familyChoices[0].id;
     document.querySelector('input[name=cg-family][value="' + wantedPreset + '"]').checked = true;
     famBox.querySelectorAll('input[name=cg-family]').forEach(function (r) {
       r.addEventListener('change', function () {
@@ -3443,7 +3468,7 @@ FB.CHANGELOG = [
     if (FB.ensureIntrigue) FB.ensureIntrigue(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
-    if (FB.init476) FB.init476(state);
+    if (FB.stories) FB.stories.start(state, { tracks:sc.tracks });
     state.player.focus = startEffects.focus || FB.defaultFocus(state);
     const firstPlayerOnboarding = !G.uiPrefs.tipsGrandfathered &&
       !G.uiPrefs.onboardingStarted;
@@ -3608,7 +3633,8 @@ FB.CHANGELOG = [
       FB.ensureFaithStandingBaselines(state);
     }
 
-    if (FB.init476) FB.init476(state);
+    // A watcher has no scenario, so only the bookmark's world stories attach.
+    if (FB.stories) FB.stories.start(state, {});
     G.observe = true;
     G.paused = false;
     document.body.classList.add('observing');
@@ -3917,7 +3943,7 @@ FB.CHANGELOG = [
       if (seasonBoundary && FB.marketSeason) FB.marketSeason(s);
       if (seasonBoundary && FB.treasurySeason) FB.treasurySeason(s);
       if (seasonBoundary && FB.authoritySeason) FB.authoritySeason(s);
-      if (seasonBoundary && FB.situation476Season) FB.situation476Season(s);
+      if (seasonBoundary && FB.stories) FB.stories.season(s);
       if (seasonBoundary && newYear && FB.treasuryRevalue) FB.treasuryRevalue(s, 1);
       if (seasonBoundary && FB.intrigueSeason) FB.intrigueSeason(s);
       if (seasonBoundary && FB.techSeason) FB.techSeason(s, false);
@@ -3926,9 +3952,10 @@ FB.CHANGELOG = [
       if (seasonBoundary && newYear) {
         FB.worldTick(s);
         if (FB.authorityYear) FB.authorityYear(s);
+        if (FB.stories) FB.stories.year(s);
       }
       FB.armyTick(s);
-      if (FB.situation476Day) FB.situation476Day(s);
+      if (FB.stories) FB.stories.day(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
       if (FB.tournaments) {
         FB.tournaments.reconcile(s);
@@ -3955,7 +3982,7 @@ FB.CHANGELOG = [
       if (FB.tournaments) FB.tournaments.samplePlayer(s);
       if (FB.treasurySeason) FB.treasurySeason(s, taxParts);
       if (FB.authoritySeason) FB.authoritySeason(s);
-      if (FB.situation476Season) FB.situation476Season(s);
+      if (FB.stories) FB.stories.season(s);
       const buildingUpkeep = FB.station.isLanded(p)
         ? FB.buildingBonus(s, 'upkeep') + (FB.fortUpkeep ? FB.fortUpkeep(s) : 0)
         : 0;
@@ -4022,6 +4049,7 @@ FB.CHANGELOG = [
       if (newYear) {
         annualContext = FB.worldTick(s);
         if (FB.authorityYear) FB.authorityYear(s);
+        if (FB.stories) FB.stories.year(s);
       }
       if (FB.tournaments) FB.tournaments.season(s);
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
@@ -4034,7 +4062,7 @@ FB.CHANGELOG = [
     FB.fiscalDay(s);
     birthTick(s);
     FB.armyTick(s); // hosts march and fight on the map every day
-    if (FB.situation476Day) FB.situation476Day(s);
+    if (FB.stories) FB.stories.day(s);
     if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
     if (FB.tournaments) FB.tournaments.reconcile(s);
     if (FB.travelTick) FB.travelTick(s);

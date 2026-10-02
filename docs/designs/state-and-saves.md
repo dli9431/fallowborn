@@ -138,14 +138,13 @@ accepted slot. A present id that its registry does not know fails with
 "Unknown era", "Unknown geography", "Unknown government form" or "Unknown
 story"; a registry that has not loaded knows no ids. A malformed field fails
 with its path. `state.stories` and the legacy `state.situation476` cannot both
-be present.
+be present. Each registered story checks its own record through its validate hook, so a malformed story record also fails with its path, for example state.stories.federate_track_476.phase.
 
 Migration from version 3 adds no authority, government, office, contract, right
 or story record and no default government stamp; it only takes the era and
 geography from the bookmark as above. Branch saves that still hold `state.situation476` move it, in the
 detached copy, to the two 476 story keys and drop the old field, only when
-neither key exists; other campaigns receive no story. Until the story registry
-owns that state, `state.situation476` remains the live 476 path. Repeated
+neither key exists; other campaigns receive no story. The registry runs each story's migrate hook before validation, and the western court story performs this split: the household's own choices, bargain records and outcome go to state.stories.federate_track_476, and everything else to state.stories.western_court_476. A household that declined involvement made no bargain, so its contract and recognitions belong to the courts' record and an AI result reads as declined. Live 476 campaigns save only state.stories. Repeated
 migration returns the same envelope, and repeated restore of one input yields
 the same state.
 
@@ -1930,4 +1929,4 @@ Old saves do not acquire fabricated offices or contracts on restore.
 
 ## Spring 476 situation persistence
 
-The [476 prototype](situation-476.md) stores its actors, phase, court location, claimant choice, contract link, payment allocation and outcome under `state.situation476`. It is created once at a new 476 start, survives the ordinary save envelope, and is not synthesized on old 867/1066 saves. UI quotes and rendered language are recomputed from saved facts. Authored eastern ruler replacement advances its generation so reaffirmation-dependent authority records lapse.
+The 476 prototype (situation-476.md) stores its world facts (actors, offices, court location, displaced courts, the eastern return, the courts' own settlement and historical campaigns) under state.stories.western_court_476 and the household's phase, role, claimant choice, contract link, payment allocation and outcome under state.stories.federate_track_476 (stories.md). They are created once at a new 476 start, survives the ordinary save envelope, and is not synthesized on old 867/1066 saves. UI quotes and rendered language are recomputed from saved facts. Authored eastern ruler replacement advances its generation so reaffirmation-dependent authority records lapse.
