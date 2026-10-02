@@ -298,7 +298,7 @@ window.FB = window.FB || {};
       target.strokeStyle = 'rgba(60,110,160,0.75)';
       target.lineWidth = 1.2;
       target.lineJoin = 'round';
-      for (const rv of (FBDATA.rivers || [])) {
+      for (const rv of ((FB.activeGeography && FB.activeGeography.rivers) || [])) {
         target.beginPath();
         for (let i = 0; i < rv.length; i += 2) {
           const x = FB.lonToX(rv[i]), y = FB.latToY(rv[i + 1]);

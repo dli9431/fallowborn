@@ -103,8 +103,10 @@ window.FB = window.FB || {};
 
   FB.proj = { W: 0, H: 0, scale: 0, lonMin: 0, mercTop: 0 };
 
-  FB.initProjection = function (gridW) {
-    const b = FBDATA.bounds;
+  /* The projection window and grid width come from the active geography
+     base (data/geographies.js); the world build passes them explicitly. */
+  FB.initProjection = function (gridW, bounds) {
+    const b = bounds || FB.activeGeography.bounds;
     const spanLon = b.lonMax - b.lonMin;
     const top = mercY(b.latMax), bot = mercY(b.latMin);
     FB.proj.W = gridW;

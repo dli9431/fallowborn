@@ -5,7 +5,8 @@
    an atomic world definition; activation swaps one definition into those
    legacy top-level fields before the raster or political state is created.
 
-   Coastline, inland seas, rivers, and projection bounds are shared. The 1066
+   Coastline, inland seas, rivers, projection bounds, seeds, and sites belong
+   to the geography base each bookmark names (data/geographies.js). The 1066
    definition owns separate province, hierarchy, realm, strait, and scripted
    objects so activating or replacing it never mutates the 867 source.
    ========================================================================= */
@@ -890,6 +891,7 @@ window.FBDATA = window.FBDATA || {};
     desc:'The old kingdoms stand divided while raiders, caliphs, and emperors contend.',
     date:{ year:867, season:0, day:1 },
     era:'early_medieval',
+    geography:'europe_regional',
     religiousHeads:{ catholic:'papacy', sunni:'abbasid' },
     provinces:FBDATA.provinces,
     realms:FBDATA.realms,
@@ -907,6 +909,7 @@ window.FBDATA = window.FBDATA || {};
     desc:'Harold wears England’s crown; Normandy and Norway have not yet crossed the sea.',
     date:{ year:1066, season:0, day:1 },
     era:'high_medieval',
+    geography:'europe_regional',
     religiousHeads:{ catholic:'papacy_1066', sunni:'abbasid_1066' },
     provinces:provinces1066,
     realms:REALMS_1066,

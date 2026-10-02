@@ -1286,6 +1286,7 @@ to all three maps.
       "desc": "A complete alternate world.",
       "date": { "year": 1000, "season": 0, "day": 1 },
       "era": "high_medieval",
+      "geography": "europe_regional",
       "religiousHeads": { "catholic": "my_papacy", "sunni": "my_caliphate" },
       "provinces": [ "...every province object..." ],
       "realms": [ "...every authored realm object..." ],
@@ -1313,6 +1314,8 @@ its start year, or the nearest era when none does, so older mods keep working. A
 declared `era` must hold the start year. A campaign stamps its era at creation, so a
 later data edit never moves it to another period. Eras and government forms are
 engine tables, not runtime-mod roots: a mod selects them by id.
+
+geography names the geography base the bookmark is drawn on (see Geography bases below); a bookmark that omits it uses FBDATA.defaultGeography (europe_regional), and an unknown id is rejected. A campaign stamps the base id at creation. Province rows may leave out x, y and terrain to take the base's seed for that county id, and may carry their own dated names list. settlementLayout optionally names the entry of FBDATA.settlementLayouts the bookmark draws its settlement presentations from; without it the bookmark uses the layout stored under its own id, or else its base's default layout (the 867 layout on europe_regional). A settled county with no settlements list then takes its layout entry, unless it sits off the base's seed point. Set settlementLayout to null to keep generated settlements everywhere a county has no list of its own. This fallback is new: a complete mod bookmark that reuses county ids at their usual seeds now shows the curated and real-world sites of the default layout where it previously showed generated ones.
 `crossingClasses` is optional and missing entries default to `narrow`.
 `religiousHeads` is optional; when
 present it maps a faith id or stable `head.officeId` to an authored realm id. The
@@ -1333,7 +1336,9 @@ Its 867 games still work. Ordinary non-world mods expose both built-in dates, an
 matching stamped saves retain access to their recorded bookmark even when it is hidden
 from new-game selection. A `rivers`-only mod does not hide 1066 because rivers are
 decorative and shared by every bookmark; replacing rivers together with any listed
-world-shaping key still follows that key's restriction.
+world-shaping key still follows that key's restriction. Replacing the default base
+through geographies (for example geographies.europe_regional) counts as a world change
+too; adding a new base does not.
 
 ### Scripted history
 
@@ -1384,6 +1389,53 @@ it never tests unfinished ambitions. See
 `land` is a list of polygons (`[lon,lat, lon,lat, ...]` flattened); `seas` are polygons carved
 *out* of land (inland seas); `rivers` are decorative polylines; `bounds` sets the world window.
 Provide any of these to reshape or replace the whole map — e.g. a fantasy continent.
+These legacy top-level keys replace the matching geometry of the default geography base
+(FBDATA.defaultGeography), so every bookmark drawn on it changes, exactly as before
+geography bases existed. FBDATA.bounds, land, seas and rivers keep naming the same objects.
+
+### Geography bases
+
+A geography base is the physical world a bookmark is drawn on. FBDATA.geographies (data/geographies.js) holds the bases; mods add or replace whole bases by id through the top-level geographies key, and each supplied base is validated before it is applied.
+
+```json
+{
+  "geographies": {
+    "my_region": {
+      "bounds": { "lonMin": 120, "lonMax": 150, "latMin": 28, "latMax": 46 },
+      "gridWidth": 1100,
+      "land": [ [125, 30, 145, 30, 145, 44, 125, 44] ],
+      "seas": [],
+      "rivers": [],
+      "mapScale": { "siteSnapMax": 45 },
+      "provinces": [
+        { "id": "edo", "x": 139.7, "y": 35.7, "terrain": "farmland" },
+        { "id": "kyoto", "x": 135.77, "y": 35.01, "terrain": "farmland" }
+      ],
+      "defaultLayout": null,
+      "names": {
+        "provinces": { "edo": [ { "from": 1457, "to": 1867, "name": "Edo" } ] },
+        "sites": {}
+      },
+      "knowledge": {
+        "basins": { "kanto": { "provinces": ["edo"] }, "kinai": { "provinces": ["kyoto"] } },
+        "routes": [ { "from": "kanto", "to": "kinai" } ]
+      }
+    }
+  }
+}
+```
+
+Fields:
+- bounds (required): the longitude and latitude window, inside ±85° latitude. gridWidth (required): the raster width in pixels, 100 to 4000; the height follows from the Mercator projection.
+- land (required), seas, rivers: flat [lon, lat, ...] lists, at least three points per polygon and two per river.
+- mapScale: pixel-distance tuning measured on this base's raster: siteSnapMax (how far an authored site may snap into its county), raidOverlandPx, raidCavalryPx, raidNavalPx, raidNavigationPx, raidNavalInlandPx and aiSeaRaidReachSq (a squared distance). A value left out takes the default base's, which suits a region of similar scale.
+- provinces: the county seed points and terrain bookmarks on this base may inherit. straits and crossingClasses record the base's usual crossings for bookmark authors; each bookmark still lists its own.
+- sites: a settlement site table of the base's own; without it the base uses the shared FBDATA.settlementSites.
+- defaultLayout: the FBDATA.settlementLayouts entry bookmarks fall back to, or null.
+- names: dated names for counties (provinces, keyed by county id) and sites (sites, keyed by site id). Each list holds {from, to, name, culture}: from and to are inclusive whole years and optional, and culture is optional. At activation the first entry whose window holds the bookmark's start year replaces the authored name; an entry with a culture applies only to a county of that culture and wins over an unmarked one. A province row's or site record's own names list takes the place of the base's list for that id. Dated county names are display text and are localized like county names; settlement names stay proper names.
+- knowledge (optional, unused by the engine for now): basins, each a list of the base's county ids, and contact routes joining two different basins. Activation validates them when present.
+
+Only one base is active at a time (FB.activeGeography). Engine code reads geometry through it, never through the legacy top-level tables.
 
 ## Events
 
@@ -3431,6 +3483,10 @@ GeoNames `PPLX` city-section records are excluded at ingestion, while
 If no eligible real candidate remains, the normal generated fallback is
 preserved. County-head entries are exempt and keep the county's name.
 An optional `--topup` pass adds places from OpenStreetMap.
+Layouts are keyed by bookmark id in FBDATA.settlementLayouts (curated entries first, then
+the real-world fill). The tool emits the 867 and 1066 layouts by default and accepts any
+bookmark ids through --bookmarks; a requested bookmark without a curated layout of its own
+is filled on top of the geography's default layout, matching the activation fallback.
 Settlement data: GeoNames geographical database (CC BY 4.0);
 top-up data © OpenStreetMap contributors, ODbL.
 

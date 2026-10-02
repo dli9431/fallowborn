@@ -1,5 +1,8 @@
 /* Spring 476 regional bookmark. The borrowed county grid is a geographic
-   scaffold, not a claim that later county borders existed in this period. */
+   scaffold, not a claim that later county borders existed in this period.
+   Period county names come from the geography base's names by year
+   (data/geographies.js); the period county heads are the 476 settlement
+   layout in data/settlements.js. */
 window.FBDATA = window.FBDATA || {};
 (function () {
   'use strict';
@@ -27,19 +30,6 @@ window.FBDATA = window.FBDATA || {};
   var alpineBurgundy = { strasbourg:1, basel:1, geneva:1 };
   var rhenishFranks = { aachen:1, trier:1, luxembourg:1,
     liege:1, cologne:1 };
-  var curatedSites = {
-    barcelona:'Barcino', tarragona:'Tarraco', toledo:'Toletum',
-    sevilla:'Hispalis', cordoba:'Corduba', merida:'Emerita Augusta',
-    zaragoza:'Caesaraugusta', valencia:'Valentia',
-    coruna:'Brigantium', santiago:'Iria Flavia',
-    fes:'Volubilis', tahert:'Mauretanian highlands',
-    algiers:'Icosium', constantine:'Cirta',
-    nantes:'Condevincum', rennes:'Condate',
-    metz:'Divodurum', trier:'Augusta Treverorum',
-    reims:'Durocortorum', lyon:'Lugdunum',
-    milano:'Mediolanum', torino:'Augusta Taurinorum',
-    siracusa:'Syracuse', pliska:'Abritus'
-  };
   var realms = [
     { id:'italy', name:'Western Roman Court', color:'#9c5647', capital:'ravenna',
       aggression:0, rank:4, religion:'nicene', techTraditions:['latin'],
@@ -187,18 +177,15 @@ window.FBDATA = window.FBDATA || {};
       p.settlements = [{ site:'pavia', name:'Ticinum', kind:'town' }];
       p.dev = 5;
     } else if (p.id === 'split') {
-      p.name = 'Salona';
       p.settlements = [
         { site:'salona_476', name:'Salona', kind:'city' },
         { site:'split', name:'Spalatum', kind:'village' }
       ];
       p.dev = 6;
     } else if (p.id === 'tunis') {
-      p.name = 'Carthage';
       p.settlements = [{ site:'carthage_476', name:'Carthage', kind:'city' }];
       p.dev = 7;
     } else if (p.id === 'kairouan') {
-      p.name = 'Byzacena';
       p.settlements = [{ site:'sufetula_476', name:'Sufetula', kind:'town' }];
       p.dev = 3;
     } else if (p.id === 'constantinople') {
@@ -212,15 +199,6 @@ window.FBDATA = window.FBDATA || {};
       p.settlements = [{ site:'roma', name:'Rome', kind:'city' },
         { site:'ostia', name:'Ostia', kind:'town' }];
       p.dev = 8;
-    }
-    if (!p.settlements && curatedSites[p.id]) {
-      p.name = curatedSites[p.id];
-      p.settlements = [{ site:p.id + '_476', name:p.name, kind:'town' }];
-      FBDATA.settlementSites[p.id + '_476'] = { x:p.x, y:p.y };
-      if (p.id === 'fes') FBDATA.settlementSites[p.id + '_476'] =
-        { x:-5.55, y:34.07 };
-      if (p.id === 'pliska') FBDATA.settlementSites[p.id + '_476'] =
-        { x:26.53, y:43.52 };
     }
     return p;
   });
@@ -254,6 +232,7 @@ window.FBDATA = window.FBDATA || {};
     id:'476', name:'The Last Western Court',
     desc:'An emperor sits at Ravenna while federate soldiers demand a settlement.',
     date:{ year:476, season:0, day:1 }, era:'late_antique',
+    geography:'europe_regional',
     religiousHeads:{},
     greatHolyWars:false,
     provinces:provinces, realms:realms,

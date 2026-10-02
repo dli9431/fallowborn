@@ -1058,21 +1058,23 @@ def extract_structured(inv: Inventory) -> None:
                 f"{period_rel}:{line}",
                 f"476 realm {realm_id}, display name.", ()
             )
-    curated = node_object(find_local_assignment(period_path, "curatedSites")) or {}
-    for province_id, place_node in curated.items():
-        for branch, record, line in branch_records(place_node):
+    # Dated county names of the geography bases replace a county's display
+    # name for the years they cover, so each is a display label of its own.
+    geography_path = DATA / "geographies.js"
+    geography_rel = geography_path.relative_to(ROOT).as_posix()
+    dated = node_object(find_local_assignment(geography_path, "PROVINCE_NAMES")) or {}
+    for province_id, names_node in dated.items():
+        for index, entry_node in enumerate(node_array(names_node) or []):
+            entry = node_object(entry_node) or {}
+            name_node = entry.get("name")
+            name = node_string(name_node)
+            if not name:
+                continue
             inv.add(
-                f"province.476.{province_id}.name.{branch}", record,
-                f"{period_rel}:{line}",
-                f"476 province {province_id}, period display name.", ()
+                f"province.{province_id}.name.dated.{index}", {"text": name},
+                f"{geography_rel}:{name_node.line}",
+                f"Province {province_id}, period display name by year.", ()
             )
-    period_text = period_path.read_text(encoding="utf-8")
-    province_text = period_text.split("var provinces =", 1)[-1]
-    for place in sorted(set(re.findall(r"\bp\.name\s*=\s*'([^']*)'", province_text))):
-        inv.add(
-            source_key(place), {"text": place}, period_rel,
-            "476 authored province display name.", ()
-        )
 
     currency = node_object(
         find_assignment(DATA / "map_data.js", "FBDATA", "currency")

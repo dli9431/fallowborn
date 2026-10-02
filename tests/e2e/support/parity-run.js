@@ -48,7 +48,8 @@ if (mode === 'ids') {
   specs = ['specs/content-id-ratchet.spec.js'];
 } else {
   env.FB_PARITY = mode;
-  specs = ['specs/parity-fresh.spec.js', 'specs/parity-corpus.spec.js'];
+  specs = ['specs/parity-fresh.spec.js', 'specs/parity-corpus.spec.js',
+    'specs/parity-raster.spec.js'];
 }
 
 const playwrightPackage = require.resolve('playwright/package.json');

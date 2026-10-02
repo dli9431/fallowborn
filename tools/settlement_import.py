@@ -34,6 +34,12 @@ Usage:
   python tools/settlement_import.py --limit 10     # first 10 counties
   python tools/settlement_import.py --county blois # one county
   python tools/settlement_import.py --offline      # cache only, no network
+  python tools/settlement_import.py --bookmarks 867,1066,711  # other bookmarks
+
+Layouts are keyed by bookmark id (default 867 and 1066). A requested bookmark
+without a curated layout of its own in data/settlements.js is filled on top of
+the geography's default layout (DEFAULT_LAYOUT, the 867 layout), matching the
+engine's fallback at activation.
 
 GeoNames zips cache in tools/geonames_cache/ and Overpass responses in
 tools/osm_overpass_cache.json (both gitignored), so an interrupted run
@@ -82,8 +88,11 @@ OVERPASS_MIRRORS = [
     'https://overpass.kumi.systems/api/interpreter',
 ]
 
-GRID_W = 1100
-SNAP_SAFE_PX = 44          # engine snap ceiling is 45; keep one pixel of margin
+GRID_W = 1100              # data/geographies.js europe_regional.gridWidth
+SNAP_SAFE_PX = 44          # mapScale.siteSnapMax is 45; keep one pixel of margin
+DEFAULT_BOOKMARKS = ('867', '1066')
+DEFAULT_LAYOUT = '867'     # data/geographies.js europe_regional.defaultLayout
+SHARED_LAYOUTS = ('867', '1066')  # the bookmarks a curated both(...) call fills
 RADII_M = (8000, 16000, 32000)
 PLACE_BASE = '^(city|town|village)$'
 PLACE_FALLBACK = '^(city|town|village|hamlet)$'
@@ -136,9 +145,9 @@ def parse_settlements(path):
     for m in re.finditer(r"^\s*([a-z0-9_]+): \{ x: (-?[0-9.]+), y: (-?[0-9.]+) \},?\s*$",
                          sblock, re.M):
         sites[m.group(1)] = (float(m.group(2)), float(m.group(3)))
-    curated = {'867': {}, '1066': {}}
+    curated = {}
     call = re.compile(
-        r"(?:layout\('(867|1066)', '([a-z0-9_]+)'|both\('([a-z0-9_]+)')\s*,\s*\[(.*?)\]\s*\)",
+        r"(?:layout\('([a-z0-9_]+)', '([a-z0-9_]+)'|both\('([a-z0-9_]+)')\s*,\s*\[(.*?)\]\s*\)",
         re.S)
     entry = re.compile(
         r"\[\s*'([a-z0-9_]+)',\s*'((?:[^'\\]|\\.)*)',\s*'(village|town|city)'\s*\]")
@@ -146,12 +155,20 @@ def parse_settlements(path):
         entries = [{'site': e.group(1), 'name': js_unescape(e.group(2)),
                     'kind': e.group(3)} for e in entry.finditer(m.group(4))]
         if m.group(3):
-            pids_bookmarks = [('867', m.group(3)), ('1066', m.group(3))]
+            pids_bookmarks = [(b, m.group(3)) for b in SHARED_LAYOUTS]
         else:
             pids_bookmarks = [(m.group(1), m.group(2))]
         for bookmark, pid in pids_bookmarks:
-            curated[bookmark][pid] = [dict(e) for e in entries]
+            curated.setdefault(bookmark, {})[pid] = [dict(e) for e in entries]
     return sites, curated
+
+
+def curated_layout(curated, bookmark):
+    """A bookmark's own curated layout, or the geography's default layout
+    when it has none (the engine applies the same fallback)."""
+    if bookmark in curated:
+        return curated[bookmark]
+    return curated.get(DEFAULT_LAYOUT, {})
 
 
 def parse_bounds_and_land(path):
@@ -1046,10 +1063,16 @@ def main():
                     help='also query the Overpass API around short counties')
     ap.add_argument('--sleep', type=float, default=2.0)
     ap.add_argument('--out', default=OUT_JS)
+    ap.add_argument('--bookmarks', default=','.join(DEFAULT_BOOKMARKS),
+                    help='comma-separated bookmark ids to emit layouts for')
     args = ap.parse_args()
+    bookmarks = [b.strip() for b in args.bookmarks.split(',') if b.strip()]
+    if not bookmarks or any(not re.match(r'^[a-z0-9_]+$', b) for b in bookmarks):
+        raise SystemExit('--bookmarks needs comma-separated ids such as 867,1066')
 
     counties = parse_counties(COUNTIES_JS)
-    sites_cur, curated = parse_settlements(SETTLEMENTS_JS)
+    sites_cur, curated_all = parse_settlements(SETTLEMENTS_JS)
+    curated = {b: curated_layout(curated_all, b) for b in bookmarks}
     bounds, land, seas = parse_bounds_and_land(MAP_DATA_JS)
     proj = Projection(bounds)
     landmass = Landmass(land, seas)
@@ -1086,8 +1109,7 @@ def main():
           (len(gameplay), len(seeds) - len(gameplay)))
 
     def needed(pid):
-        cur = max(len(curated['867'].get(pid, [])),
-                  len(curated['1066'].get(pid, [])))
+        cur = max(len(curated[b].get(pid, [])) for b in bookmarks)
         legacy_base = 2 + str_hash(pid) % 2
         return max(0, legacy_base + VILLAGE_BONUS_MAX - cur)
 
@@ -1256,7 +1278,7 @@ def main():
         pid = seed['id']
         limit = needed(pid)  # total fill entries (head + OSM picks)
         out = {}
-        for bookmark in ('867', '1066'):
+        for bookmark in bookmarks:
             cur = curated[bookmark].get(pid, [])
             entries = []
             cur_names = {norm_name(e['name']) for e in cur}
@@ -1306,7 +1328,7 @@ def main():
     all_entries = {}
     for seed in sorted(targets, key=lambda s: s['id']):
         all_entries[seed['id']] = county_entries(seed)
-        for bookmark in ('867', '1066'):
+        for bookmark in bookmarks:
             for e in all_entries[seed['id']][bookmark]:
                 emitted_sites[e['site']] = (e['lon'], e['lat'])
     for slug in sorted(emitted_sites):
@@ -1316,47 +1338,59 @@ def main():
             ('%.5f' % lat).rstrip('0').rstrip('.')))
     lines.append('  };')
     lines.append('')
-    lines.append("  var LAYOUTS = { '867': {}, '1066': {} };")
+    lines.append("  var LAYOUTS = { %s };" % ', '.join("'%s': {}" % b for b in bookmarks))
     lines.append('  function layout(bookmarkId, pid, list) {')
     lines.append('    LAYOUTS[bookmarkId][pid] = list.map(function (e) {')
     lines.append("      return { site: e[0], name: e[1], kind: e[2], fill: true };")
     lines.append('    });')
     lines.append('  }')
     lines.append('  function both(pid, list) {')
-    lines.append("    layout('867', pid, list);")
-    lines.append("    layout('1066', pid, list);")
+    for bookmark in bookmarks:
+        lines.append("    layout('%s', pid, list);" % bookmark)
     lines.append('  }')
     lines.append('')
     for pid in sorted(all_entries):
         pair = all_entries[pid]
-        if not pair['867'] and not pair['1066']:
+        if not any(pair[b] for b in bookmarks):
             continue
         def fmt(entries):
             return ['      [%s, %s, %s]' % (js_escape(e['site']), js_escape(e['name']),
                                            js_escape(e['kind']))
                     for e in entries]
-        if pair['867'] == pair['1066']:
+        if all(pair[b] == pair[bookmarks[0]] for b in bookmarks):
             lines.append("  both(%s, [" % js_escape(pid))
-            lines.extend(',\n'.join(fmt(pair['867'])).split('\n'))
+            lines.extend(',\n'.join(fmt(pair[bookmarks[0]])).split('\n'))
             lines.append('    ]);')
         else:
-            for bookmark in ('867', '1066'):
+            for bookmark in bookmarks:
                 if not pair[bookmark]:
                     continue
                 lines.append("  layout('%s', %s, [" % (bookmark, js_escape(pid)))
                 lines.extend(',\n'.join(fmt(pair[bookmark])).split('\n'))
                 lines.append('    ]);')
     lines.append('')
-    lines.append('  /* Append after the curated layouts; never replace them. */')
+    lines.append('  /* Append after the curated layouts; never replace them. The layout table')
+    lines.append("     keeps every bookmark's full list for activation; a bookmark already")
+    lines.append('     registered also receives it on its provinces now. */')
     lines.append('  FBDATA.settlementSites = FBDATA.settlementSites || {};')
     lines.append('  for (var siteId in SITES) {')
     lines.append('    if (!Object.prototype.hasOwnProperty.call(SITES, siteId)) continue;')
     lines.append('    FBDATA.settlementSites[siteId] = SITES[siteId];')
     lines.append('  }')
+    lines.append('  FBDATA.settlementLayouts = FBDATA.settlementLayouts || {};')
     lines.append('  for (var bookmarkId in LAYOUTS) {')
     lines.append('    if (!Object.prototype.hasOwnProperty.call(LAYOUTS, bookmarkId)) continue;')
+    lines.append('    if (!Object.prototype.hasOwnProperty.call(FBDATA.settlementLayouts, bookmarkId)) {')
+    lines.append('      FBDATA.settlementLayouts[bookmarkId] = {};')
+    lines.append('    }')
+    lines.append('    var table = FBDATA.settlementLayouts[bookmarkId];')
+    lines.append('    for (var layoutPid in LAYOUTS[bookmarkId]) {')
+    lines.append('      if (!Object.prototype.hasOwnProperty.call(LAYOUTS[bookmarkId], layoutPid)) continue;')
+    lines.append('      table[layoutPid] = (Object.prototype.hasOwnProperty.call(table, layoutPid)')
+    lines.append('        ? table[layoutPid] : []).concat(LAYOUTS[bookmarkId][layoutPid]);')
+    lines.append('    }')
     lines.append('    var bookmark = FBDATA.bookmarks && FBDATA.bookmarks[bookmarkId];')
-    lines.append('    if (!bookmark) throw new Error(\'data/settlements_real.js: missing bookmark \' + bookmarkId);')
+    lines.append('    if (!bookmark) continue;')
     lines.append('    var byId = {};')
     lines.append('    for (var i = 0; i < bookmark.provinces.length; i++) {')
     lines.append('      byId[bookmark.provinces[i].id] = bookmark.provinces[i];')
@@ -1383,8 +1417,7 @@ def main():
     overpass.save()
 
     full = sum(1 for s in targets if len(selected.get(s['id'], [])) >= needed(s['id']))
-    rows = sum(len(pair['867']) + len(pair['1066'])
-               for pair in all_entries.values())
+    rows = sum(len(pair[b]) for pair in all_entries.values() for b in bookmarks)
     print('wrote %s: %d sites, %d layout entries; %d/%d counties fully covered'
           % (args.out, len(emitted_sites), rows, full, len(targets)))
 

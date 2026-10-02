@@ -1,5 +1,5 @@
 /* =========================================================================
-   Fallowborn — HISTORICAL SETTLEMENT SITES (867 & 1066)
+   Fallowborn — HISTORICAL SETTLEMENT SITES AND LAYOUTS
    =========================================================================
    Two identities exist for a settlement:
 
@@ -25,9 +25,12 @@
    does not force early visibility — development reveals it on the normal
    thresholds.
 
-   This file defines the shared physical table, keeps the base 867 and 1066
-   layouts in file-local tables, and attaches freshly cloned arrays to the
-   already-built bookmark province objects (data/bookmarks.js loads first).
+   This file defines the shared physical table and the layout table
+   FBDATA.settlementLayouts, keyed by bookmark id. A layout may name any
+   bookmark id. Bookmarks already registered (data/bookmarks.js loads first)
+   receive freshly cloned arrays here; a bookmark registered later receives
+   its layout at activation, and a bookmark without a layout of its own falls
+   back to its geography's default layout (data/geographies.js).
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
 
@@ -204,18 +207,45 @@ window.FBDATA = window.FBDATA || {};
     nizwa: { x: 57.53, y: 22.93 },
     zaranj: { x: 61.86, y: 30.96 },
     ghazni: { x: 68.42, y: 33.55 },
-    tiz: { x: 60.64, y: 25.29 }
+    tiz: { x: 60.64, y: 25.29 },
+
+    /* 476 county heads at the county seed, or at the period site where it
+       stood apart from the later town (Volubilis, Abritus) */
+    barcelona_476: { x: 2.17, y: 41.39 },
+    tarragona_476: { x: 1.25, y: 41.12 },
+    toledo_476: { x: -4.03, y: 39.86 },
+    sevilla_476: { x: -5.99, y: 37.39 },
+    cordoba_476: { x: -4.78, y: 37.88 },
+    merida_476: { x: -6.34, y: 38.92 },
+    zaragoza_476: { x: -0.88, y: 41.65 },
+    valencia_476: { x: -0.38, y: 39.47 },
+    coruna_476: { x: -8.4, y: 43.4 },
+    santiago_476: { x: -8.55, y: 42.9 },
+    fes_476: { x: -5.55, y: 34.07 },
+    tahert_476: { x: 1.34, y: 35.37 },
+    algiers_476: { x: 3.06, y: 36.77 },
+    constantine_476: { x: 6.61, y: 36.36 },
+    nantes_476: { x: -1.55, y: 47.22 },
+    rennes_476: { x: -1.68, y: 48.11 },
+    metz_476: { x: 6.18, y: 49.12 },
+    trier_476: { x: 6.64, y: 49.75 },
+    reims_476: { x: 4.03, y: 49.26 },
+    lyon_476: { x: 4.83, y: 45.76 },
+    milano_476: { x: 9.19, y: 45.46 },
+    torino_476: { x: 7.69, y: 45.07 },
+    siracusa_476: { x: 15.29, y: 37.07 },
+    pliska_476: { x: 26.53, y: 43.52 }
   };
 
   /* ---- bookmark layouts --------------------------------------------------
      LAYOUTS[bookmarkId][provinceId] = ordered [[site, name, kind], ...].
-     Built through the helpers below so the two bookmarks never share one
-     mutable array; attachment clones once more onto the province objects. */
-  var LAYOUTS = { '867': {}, '1066': {} };
+     Built through the helpers below so bookmarks never share one mutable
+     array; attachment clones once more onto the province objects. */
+  var LAYOUTS = {};
 
   function layout(bookmarkId, pid, list) {
+    if (!Object.prototype.hasOwnProperty.call(LAYOUTS, bookmarkId)) LAYOUTS[bookmarkId] = {};
     var target = LAYOUTS[bookmarkId];
-    if (!target) throw new Error('data/settlements.js: unknown layout bookmark ' + bookmarkId);
     if (target[pid]) {
       throw new Error('data/settlements.js: duplicate layout for ' + pid + ' in ' + bookmarkId);
     }
@@ -811,15 +841,44 @@ window.FBDATA = window.FBDATA || {};
       ['tiz', 'Tiz', 'village']
     ]);
 
+  /* 476 county heads under their period names. The rest of the 476 map keeps
+     generated settlements or the presentations data/bookmark_476.js authors. */
+  layout('476', 'barcelona', [['barcelona_476', 'Barcino', 'town']]);
+  layout('476', 'tarragona', [['tarragona_476', 'Tarraco', 'town']]);
+  layout('476', 'toledo', [['toledo_476', 'Toletum', 'town']]);
+  layout('476', 'sevilla', [['sevilla_476', 'Hispalis', 'town']]);
+  layout('476', 'cordoba', [['cordoba_476', 'Corduba', 'town']]);
+  layout('476', 'merida', [['merida_476', 'Emerita Augusta', 'town']]);
+  layout('476', 'zaragoza', [['zaragoza_476', 'Caesaraugusta', 'town']]);
+  layout('476', 'valencia', [['valencia_476', 'Valentia', 'town']]);
+  layout('476', 'coruna', [['coruna_476', 'Brigantium', 'town']]);
+  layout('476', 'santiago', [['santiago_476', 'Iria Flavia', 'town']]);
+  layout('476', 'fes', [['fes_476', 'Volubilis', 'town']]);
+  layout('476', 'tahert', [['tahert_476', 'Mauretanian highlands', 'town']]);
+  layout('476', 'algiers', [['algiers_476', 'Icosium', 'town']]);
+  layout('476', 'constantine', [['constantine_476', 'Cirta', 'town']]);
+  layout('476', 'nantes', [['nantes_476', 'Condevincum', 'town']]);
+  layout('476', 'rennes', [['rennes_476', 'Condate', 'town']]);
+  layout('476', 'metz', [['metz_476', 'Divodurum', 'town']]);
+  layout('476', 'trier', [['trier_476', 'Augusta Treverorum', 'town']]);
+  layout('476', 'reims', [['reims_476', 'Durocortorum', 'town']]);
+  layout('476', 'lyon', [['lyon_476', 'Lugdunum', 'town']]);
+  layout('476', 'milano', [['milano_476', 'Mediolanum', 'town']]);
+  layout('476', 'torino', [['torino_476', 'Augusta Taurinorum', 'town']]);
+  layout('476', 'siracusa', [['siracusa_476', 'Syracuse', 'town']]);
+  layout('476', 'pliska', [['pliska_476', 'Abritus', 'town']]);
+
   /* ---- attach ------------------------------------------------------------
-     Clone each layout onto its bookmark province. Fail loudly during
-     development when a layout names a missing bookmark or province so a
-     rename in counties.js cannot silently drop authored data. */
+     Clone each layout onto the provinces of a bookmark that is already
+     registered. Fail loudly during development when a layout names a missing
+     province so a rename in counties.js cannot silently drop authored data.
+     Layouts for bookmarks registered later stay in the table for activation. */
   FBDATA.settlementSites = SITES;
+  FBDATA.settlementLayouts = LAYOUTS;
   for (var bookmarkId in LAYOUTS) {
     if (!Object.prototype.hasOwnProperty.call(LAYOUTS, bookmarkId)) continue;
     var bookmark = FBDATA.bookmarks && FBDATA.bookmarks[bookmarkId];
-    if (!bookmark) throw new Error('data/settlements.js: missing bookmark ' + bookmarkId);
+    if (!bookmark) continue;
     var byId = {};
     for (var i = 0; i < bookmark.provinces.length; i++) {
       byId[bookmark.provinces[i].id] = bookmark.provinces[i];

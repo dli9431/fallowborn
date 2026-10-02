@@ -53,11 +53,12 @@ though the game still *runs*.
   and historical `desc` live in `data/technology.js` and render through `FB.dataText`;
   domain and tradition labels are id-keyed structured data too; cost explanations remain
   UI chrome and use explicit `FB.T` keys.
-- **476 world labels:** `data/bookmark_476.js` has literal bookmark and realm labels
-  plus curated period province names. The static extractor reads these without
-  running the bookmark builder. Keep authored province display names as quoted
-  strings so exact-source aliases can translate them. Ruler and physical-site
-  names remain proper names.
+- **476 world labels:** `data/bookmark_476.js` has literal bookmark and realm labels.
+  Period county names by year live in the `PROVINCE_NAMES` table of
+  `data/geographies.js`, extracted as province.<id>.name.dated.<index>. The static
+  extractor reads both without running the bookmark builder. Keep authored province
+  display names as quoted strings so exact-source aliases can translate them. Ruler and
+  physical-site names remain proper names.
 - **Historical ambitions:** `data/ambitions.js` owns structured `name` and `desc`
   fields, extracted as `ambition.<id>.<field>.default`. Render them with
   `FB.dataText(state, viewer, 'ambition', id, definition, field, {})`. Requirement

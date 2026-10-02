@@ -184,7 +184,7 @@ window.FBMODS = window.FBMODS || [];
     policies:true, elections:true, privileges:true, collectiveDemands:true,
     settlementNames:true, settlementSites:true, titles:true, papacy:true,
     currency:true, balance:true, land:true, seas:true, rivers:true,
-    bounds:true
+    bounds:true, geographies:true
   };
 
   function plainObject(value) {
@@ -1196,6 +1196,27 @@ window.FBMODS = window.FBMODS || [];
     if (errors.length) fail('buildings', 'are invalid: ' + errors[0]);
   }
 
+  /* Geography bases merge by id. Each supplied base is checked against the
+     composed table before anything is applied; bookmarks that name it are
+     checked again at activation. */
+  function validateGeographies(mod) {
+    if (!plainObject(mod.geographies)) fail('geographies', 'must be an object keyed by id.');
+    const composed = Object.assign({}, FBDATA.geographies, mod.geographies);
+    const saved = FBDATA.geographies;
+    let errors = [];
+    try {
+      FBDATA.geographies = composed;
+      for (const id in mod.geographies) {
+        if (!own(mod.geographies, id)) continue;
+        if (!/^[a-z][a-z0-9_]*$/.test(id)) fail('geographies.' + id, 'needs a snake_case id.');
+        errors = errors.concat(FB.validateGeography(id));
+      }
+    } finally {
+      FBDATA.geographies = saved;
+    }
+    if (errors.length) fail('geographies', 'are invalid: ' + errors[0]);
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1220,6 +1241,7 @@ window.FBMODS = window.FBMODS || [];
       validateCouncilDefinitions(mod);
     }
     if (own(mod, 'buildings')) validateBuildings(mod);
+    if (own(mod, 'geographies')) validateGeographies(mod);
     validateCommunityPolicies(mod);
     validateCommunityEvents(mod);
     validateSerfFreedomEventEffects(mod);
@@ -1319,6 +1341,10 @@ window.FBMODS = window.FBMODS || [];
     let changesLegacyWorld = false;
     for (let wi = 0; wi < legacyWorldKeys.length; wi++) {
       if (own(mod, legacyWorldKeys[wi])) { changesLegacyWorld = true; break; }
+    }
+    // replacing the default base redraws every bookmark on it, like bounds
+    if (plainObject(mod.geographies) && own(mod.geographies, FBDATA.defaultGeography)) {
+      changesLegacyWorld = true;
     }
     let supplies1066 = false;
     if (mod.bookmarks) {
@@ -1573,10 +1599,27 @@ window.FBMODS = window.FBMODS || [];
         FBDATA.balance[k] = mod.balance[k];
       }
     }
-    if (mod.bounds) FBDATA.bounds = mod.bounds;
-    if (mod.land) FBDATA.land = mod.land;
-    if (mod.seas) FBDATA.seas = mod.seas;
-    if (mod.rivers) FBDATA.rivers = mod.rivers;
+    if (mod.geographies) mergeTable(FBDATA.geographies, mod.geographies);
+    /* The legacy top-level geometry keys replace the geometry of the default
+       geography base, the base those tables describe, so every bookmark on
+       it changes exactly as the shared global geometry did before. */
+    const legacyGeography = FB.geography(FBDATA.defaultGeography);
+    if (mod.bounds) {
+      FBDATA.bounds = mod.bounds;
+      if (legacyGeography) legacyGeography.bounds = mod.bounds;
+    }
+    if (mod.land) {
+      FBDATA.land = mod.land;
+      if (legacyGeography) legacyGeography.land = mod.land;
+    }
+    if (mod.seas) {
+      FBDATA.seas = mod.seas;
+      if (legacyGeography) legacyGeography.seas = mod.seas;
+    }
+    if (mod.rivers) {
+      FBDATA.rivers = mod.rivers;
+      if (legacyGeography) legacyGeography.rivers = mod.rivers;
+    }
     if (own(mod, 'defaultBookmark')) FBDATA.defaultBookmark = mod.defaultBookmark;
     if (prepared.actions) {
       FB.installActionData(prepared.actions.focuses, prepared.actions.deeds);
