@@ -503,7 +503,10 @@
   function accrueHost(state, host, batch) {
     const parts = FB.hostFieldUpkeepParts(state, host, batch);
     batch.costs[host.realm] = (batch.costs[host.realm] || 0) + parts.total / 90;
-    if (host.realm === 'player') batch.playerMercs = (batch.playerMercs || 0) + positive(FB.hostUnits(host).mercs);
+    if (host.realm === 'player') {
+      batch.playerMercs = (batch.playerMercs || 0) +
+        FB.unitRoleMen(FB.hostUnits(host), 'mercenary');
+    }
   }
   FB.hostFieldUpkeepParts = function (state, host, batch) {
     batch = batch || { prices:Object.create(null), baskets:Object.create(null) };
@@ -543,7 +546,7 @@
     if (host.realm === 'player' && host.warId === 'holy' && FB.campaignHostModBonus) {
       out.campaignModifier = cost * Math.max(-1, FB.campaignHostModBonus(state, 'supplyUse'));
     }
-    out.mercenaries = (positive(units.mercs) / (FBDATA.balance.mercCompanySize || 150)) *
+    out.mercenaries = (FB.unitRoleMen(units, 'mercenary') / (FBDATA.balance.mercCompanySize || 150)) *
       (FBDATA.balance.hostLogisticsMercenaryCompany === undefined ? 4 : FBDATA.balance.hostLogisticsMercenaryCompany);
     out.total = cost + out.campaignModifier + out.mercenaries;
     return out;

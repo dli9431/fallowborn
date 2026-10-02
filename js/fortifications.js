@@ -672,8 +672,7 @@ window.FB = window.FB || {};
 
   function lossTotals() {
     var totals = { total:0 };
-    var ids = FB.unitClassIds ? FB.unitClassIds() :
-      ['levy', 'arch', 'cav', 'ret', 'mercs'];
+    var ids = FB.unitClassIds ? FB.unitClassIds() : [];
     for (var i = 0; i < ids.length; i++) totals[ids[i]] = 0;
     return totals;
   }

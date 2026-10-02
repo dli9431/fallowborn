@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'css/style.css',
   'data/map_data.js',
   'data/markets.js',
+  'data/technology.js',
   'data/events_common.js'
 ]);
 
@@ -162,27 +163,29 @@ test('urban_markets widens the stock without gating the baseline shop',
       /* pin the size range so the technology bonus is exact */
       const oldSizes = FBDATA.balance.shopStockSize;
       FBDATA.balance.shopStockSize = { town:[5, 5], city:[5, 5] };
-      const oldHasTech = FB.hasTech;
+      const oldHasCapability = FB.hasCapability;
       try {
-        FB.hasTech = function () { return false; };
+        FB.hasCapability = function () { return false; };
         delete s.player.shopStock;
         const baseline = FB.shopStock(s, pid, 'town').offers.length;
-        FB.hasTech = function (st, id) { return id === 'urban_markets'; };
+        FB.hasCapability = function (st, id) { return id === 'permanent_markets'; };
         delete s.player.shopStock;
         const widened = FB.shopStock(s, pid, 'town').offers.length;
         return {
           baseline:baseline,
           widened:widened,
-          bonus:FBDATA.balance.shopStockTechBonus
+          bonus:FBDATA.balance.shopStockTechBonus,
+          granted:FB.capabilityTechIds('permanent_markets')
         };
       } finally {
-        FB.hasTech = oldHasTech;
+        FB.hasCapability = oldHasCapability;
         FBDATA.balance.shopStockSize = oldSizes;
       }
     });
 
     expect(result.baseline).toBe(5);
     expect(result.widened).toBe(5 + result.bonus);
+    expect(result.granted).toEqual(['urban_markets']);
   });
 
 test('the shop modal lists every offer and sells through the UI',

@@ -10887,37 +10887,38 @@ window.FB = window.FB || {};
     let range = (FBDATA.balance && FBDATA.balance.raidBaseRange) || 2;
     const realmId = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
 
-    if (FB.hasTech && FB.hasTech(state, 'longships', realmId)) {
+    if (FB.hasCapability && FB.hasCapability(state, 'seafaring_raids', realmId)) {
       range += (FBDATA.balance && FBDATA.balance.raidLongshipRange) || 4;
     } else if (FB.raidHasSupportedSeafaring(state, charId)) {
       range += (FBDATA.balance && FBDATA.balance.raidLongshipRange) || 4;
     }
-    if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) range += 1;
-    if (FB.hasTech && FB.hasTech(state, 'naval_logbooks', realmId)) range += 1;
-    if (FB.hasTech && FB.hasTech(state, 'mariners_compass', realmId)) range += 1;
-    if (FB.hasTech && (FB.hasTech(state, 'mounted_archery', realmId) || FB.hasTech(state, 'cavalry_lances', realmId))) range += 1;
+    if (FB.capabilityLevel) {
+      range += FB.capabilityLevel(state, 'oceanic_navigation', realmId);
+      if (FB.hasCapability(state, 'mounted_reach', realmId)) range += 1;
+    }
 
     return range;
   };
 
   FB.raidRangePx = function (state, charId) {
     const realmId = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
-    const hasLongships = (FB.hasTech &&
-      FB.hasTech(state, 'longships', realmId)) ||
+    const hasLongships = (FB.hasCapability &&
+      FB.hasCapability(state, 'seafaring_raids', realmId)) ||
       FB.raidHasSupportedSeafaring(state, charId);
 
     // Overland baseline: 85px radius (~2.4 standard county widths)
     let overlandPx = 85;
-    if (FB.hasTech && FB.hasTech(state, 'mounted_archery', realmId)) overlandPx += 35;
-    if (FB.hasTech && FB.hasTech(state, 'cavalry_lances', realmId)) overlandPx += 35;
+    if (FB.capabilityLevel) {
+      overlandPx += 35 * FB.capabilityLevel(state, 'mounted_reach', realmId);
+    }
 
     // Naval reach with longships: 200px across open water
     let navalPx = 0;
     if (hasLongships) {
       navalPx = 200;
-      if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) navalPx += 40;
-      if (FB.hasTech && FB.hasTech(state, 'naval_logbooks', realmId)) navalPx += 40;
-      if (FB.hasTech && FB.hasTech(state, 'mariners_compass', realmId)) navalPx += 40;
+      if (FB.capabilityLevel) {
+        navalPx += 40 * FB.capabilityLevel(state, 'oceanic_navigation', realmId);
+      }
     }
 
     return { overland: overlandPx, naval: navalPx };
@@ -10956,7 +10957,8 @@ window.FB = window.FB || {};
 
   function raidOriginContext(state, charId) {
     const realmId = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
-    const nationalLongships = FB.hasTech && FB.hasTech(state, 'longships', realmId);
+    const nationalLongships = FB.hasCapability &&
+      FB.hasCapability(state, 'seafaring_raids', realmId);
     const range = FB.raidRangePx(state, charId);
     return {
       range:range,
@@ -11104,8 +11106,8 @@ window.FB = window.FB || {};
     if (!fromPr || !toPr) return [toPid];
 
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
-    const hasLongships = (FB.hasTech &&
-      FB.hasTech(state, 'longships', playerRealm)) ||
+    const hasLongships = (FB.hasCapability &&
+      FB.hasCapability(state, 'seafaring_raids', playerRealm)) ||
       (FB.raidHasSupportedSeafaring &&
         FB.raidHasSupportedSeafaring(state, charId, fromPid));
 

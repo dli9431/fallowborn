@@ -297,8 +297,8 @@ window.FB = window.FB || {};
       pledges:{},
       lobby:{ used:false, blocId:null, success:null },
       technologyApproved:true,
-      customaryLawAtStart:FB.techRequirementMet
-        ? FB.techRequirementMet(state, 'customary_law') : false,
+      customaryLawAtStart:FB.hasCapability
+        ? FB.hasCapability(state, 'customary_law_courts') : false,
       result:null
     };
     return true;
@@ -447,8 +447,9 @@ window.FB = window.FB || {};
     if (FB.isRealmAtWar(state, state.player.liege)) {
       out.push('parliament_subsidy', 'parliament_levy_concession');
     } else {
-      if ((!FB.techRequirementMet || FB.techRequirementMet(state,
-          ['urban_markets','authenticated_seals'])) &&
+      if ((!FB.hasCapability ||
+          (FB.hasCapability(state, 'permanent_markets') &&
+           FB.hasCapability(state, 'sealed_documents'))) &&
           !has('market_charter') && !has('contested_tolls')) {
         out.push('parliament_market_charter');
       }

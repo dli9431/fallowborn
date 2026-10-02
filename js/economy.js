@@ -5782,7 +5782,7 @@ window.FB = window.FB || {};
       ready:false,
       reason:FB.T('The household already holds an incoming guild monopoly.')
     };
-    if (!FB.hasTech || !FB.hasTech(state, 'guild_charters')) return {
+    if (!FB.hasCapability || !FB.hasCapability(state, 'chartered_guilds')) return {
       ready:false,
       reason:FB.T('Your sovereign nation has not completed Guild Charters.')
     };
@@ -5959,7 +5959,7 @@ window.FB = window.FB || {};
       ready:false,
       reason:FB.T('Your realm has already granted a local guild monopoly.')
     };
-    if (!FB.hasTech || !FB.hasTech(state, 'guild_charters')) return {
+    if (!FB.hasCapability || !FB.hasCapability(state, 'chartered_guilds')) return {
       ready:false,
       reason:FB.T('Your sovereign nation has not completed Guild Charters.')
     };
@@ -7802,7 +7802,7 @@ window.FB = window.FB || {};
   FB.financeCanDebase = function (state) {
     const e = FB.ensureEconomy(state);
     const cooldown = FBDATA.balance.financeDebaseCooldown || 1800;
-    return FB.techRequirementMet(state, 'mint_assay') &&
+    return FB.hasCapability(state, 'assayed_coinage') &&
       FB.station.isRoyal(state.player) && !state.player.liege &&
       (e.lastDebasementTurn === undefined ||
         state.turn - e.lastDebasementTurn >= cooldown);
@@ -7844,7 +7844,7 @@ window.FB = window.FB || {};
   FB.financeCanRecoin = function (state) {
     const e = FB.ensureEconomy(state);
     const cost = Math.max(30, Math.round((FB.playerTax ? FB.playerTax(state) : 15) * 2));
-    return FB.techRequirementMet(state, 'mint_assay') &&
+    return FB.hasCapability(state, 'assayed_coinage') &&
       FB.station.isRoyal(state.player) && !state.player.liege && e.debasements > e.recoinages &&
       e.price > 1.02 && state.player.gold >= cost &&
       (e.lastRecoinTurn === undefined || state.turn - e.lastRecoinTurn >= 1800);

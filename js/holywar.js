@@ -3104,7 +3104,7 @@ window.FB = window.FB || {};
   function reinforcePlayerGreatHolyWarHost(state, unit, men) {
     var host = playerGreatHolyWarFieldHost(state);
     var add = Math.max(0, Math.round(Number(men) || 0));
-    if (!host || !add || !FB.hostUnits) return false;
+    if (!host || !add || !unit || !FB.hostUnits) return false;
     var units = FB.hostUnits(host);
     units[unit] = (units[unit] || 0) + add;
     host.men += add;
@@ -3116,23 +3116,24 @@ window.FB = window.FB || {};
   FB.fns.ghw_has_field_host = function (state) {
     return !!playerGreatHolyWarFieldHost(state);
   };
+  /* Recruits join the default class of their role (data/units.js). */
   FB.fns.ghw_recruit_volunteers = function (state) {
-    return reinforcePlayerGreatHolyWarHost(state, 'levy',
+    return reinforcePlayerGreatHolyWarHost(state, FB.unitRoleClass('levy_infantry'),
       B('greatHolyWarVolunteerMen', 120));
   };
   FB.fns.ghw_recruit_mercenaries = function (state) {
     if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
-    return reinforcePlayerGreatHolyWarHost(state, 'mercs',
+    return reinforcePlayerGreatHolyWarHost(state, FB.unitRoleClass('mercenary'),
       B('mercCompanySize', 150));
   };
   FB.fns.ghw_recruit_knights = function (state) {
     if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
-    return reinforcePlayerGreatHolyWarHost(state, 'cav',
+    return reinforcePlayerGreatHolyWarHost(state, FB.unitRoleClass('cavalry'),
       B('greatHolyWarKnightMen', 75));
   };
   FB.fns.ghw_recruit_adventurers = function (state) {
     if (FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
-    return reinforcePlayerGreatHolyWarHost(state, 'ret',
+    return reinforcePlayerGreatHolyWarHost(state, FB.unitRoleClass('household'),
       B('greatHolyWarAdventurerMen', 100));
   };
 

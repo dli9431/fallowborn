@@ -389,6 +389,7 @@ A JSON mod is one object with any of these keys:
   "techTraditions": { "id": { "name": "...", "cultures": [], "religions": [] } },
   "tech":      { "id": { ... } },
   "techCaps":  { "seaMovement": 0.5, "units": { "arch": 250 } },
+  "capabilities": { "id": { "stacks": false } },
   "techImpactReviews": { "features": { "feature_id": { ... } } },
   "unitClasses": { "id": { ... } },
   "holdings":  { "id": { ... } },
@@ -3753,7 +3754,52 @@ maps merge one member at a time, so `{ "techCaps": { "units": { "arch": 250 } } 
 leaves every other built-in cap intact. Caps must be finite non-negative numbers. Scalar
 cap keys are the scalar `fx` keys below; `costFloor` accepts `build`, `enterprise`, and
 `training`; `units` accepts any mustered class id from `FBDATA.unitClasses`; and
-`aiUnits` accepts any of those but `levy`.
+`aiUnits` accepts any of those but the levy remainder (the `levy_infantry` role's default
+class, `levy` in the shipped data).
+
+`capabilities` names features a technology lets a realm use, as opposed to the numeric
+effect domains capped by `techCaps`. Each record is an object; optional `stacks:true`
+makes the capability's level count every known technology that grants it, while any other
+capability is simply present or absent. The table merges by id. A technology grants
+capabilities through its own `capabilities` array, and engine features ask for the
+capability rather than a technology id, so a regional technology that grants an existing
+capability unlocks the same feature:
+
+```json
+{
+  "tech": {
+    "ribat_seafaring": {
+      "name": "Ribat Seafaring", "icon": "⛵", "domain": "seafaring", "cost": 100,
+      "req": ["coastal_piloting"],
+      "history": { "attested": [700, 900], "adoption": { "default": [760, 920] } },
+      "desc": "Coastal fortresses man raiding galleys.",
+      "sources": ["MOD"], "unlocks": [],
+      "capabilities": ["seafaring_raids"]
+    }
+  }
+}
+```
+
+The shipped capabilities are:
+
+- `seafaring_raids` (Longships): deep overseas and upriver raiding without a seafaring
+  tradition.
+- `oceanic_navigation` (stacking; Celestial Navigation, Sailing Directions, Mariner's
+  Compass): each grant adds one province and 40 px of sea raiding reach.
+- `mounted_reach` (stacking; Mounted Archery, Couched Cavalry Lance): one province of
+  raid range while present, plus 35 px of overland reach per grant.
+- `couched_lance` (Couched Cavalry Lance): formal tournament jousting.
+- `chartered_guilds` (Guild Charters): guild monopoly petitions and grants.
+- `assayed_coinage` (Mint Assaying): coinage debasement and recoinage.
+- `customary_law_courts` (Recorded Customary Law): written county confirmation before
+  the Estates.
+- `permanent_markets` (Urban Markets): wider town shop stock; with `sealed_documents`
+  (Authenticated Seals), formal market charters.
+- `parallel_research` (stacking; Scholarly Networks, Universities): one more research
+  slot per grant.
+
+A mod technology may only grant a capability present after the mod merges; capability ids
+must not equal technology ids.
 
 `techImpactReviews` is the forward-only core design ledger rather than a gameplay or save
 contract. Mods need not classify arbitrary custom code, but may merge optional entries
@@ -3816,7 +3862,8 @@ non-empty `fallback`, and none entries must not name technologies. The core base
 - `unlocks` names discrete content or rule hooks. Every referenced `building:*`,
   `enterprise:*`, and `career:*` target is validated. `unit:<id>` targets validate
   against `FBDATA.unitClasses`; the pre-table targets `unit:archers`, `unit:cavalry`,
-  and `unit:retinue` remain valid through `FBDATA.unitClassAliases`.
+  and `unit:retinue` remain valid through `FBDATA.unitClassAliases`, which resolve them
+  to the default class of the `missile`, `cavalry`, and `household` roles.
 - `confidence` and `sources` are research metadata; core source codes are expanded in
   `docs/research/medieval-technology-catalogue.md`.
 - Optional `cultures` / `notCultures` arrays select mutually exclusive definitions when
@@ -3839,7 +3886,8 @@ non-empty `fallback`, and none entries must not name technologies. The core base
   (`levy`, `arch`, `cav`, `ret`, and any unlocked mod or core class).
   `fx.aiUnits` adds AI host composition fractions for any of those but `levy`. Compatibility
   aliases remain readable: flat `build:0.20` means a twenty-percent building discount,
-  while flat `retinue` and `archers` add those player-host classes.
+  while flat `retinue` and `archers` add to the default class of the `household` and
+  `missile` roles.
 - `name`/`desc` accept text tokens and religion-variant objects.
 - Events grant national progress with the `research` effect and gate on effective
   completed ids with `techs`/`notTechs`. Buildings may carry a `research` per-season key
@@ -3874,14 +3922,34 @@ prerequisites.
 
 `FBDATA.unitClasses` (`data/units.js`, merged by id like other tables) is the single
 source of truth for host composition: every field host's saved `units` record is keyed
-by these class ids, with `men` always the total. The five baseline classes — `levy`,
-`arch`, `cav`, `ret`, `mercs` — are the migration baseline and must always exist; any
-class a save predates defaults to 0 on load.
+by these class ids, with `men` always the total. The five baseline classes (`levy`,
+`arch`, `cav`, `ret`, `mercs`) are the migration baseline; any class a save predates
+defaults to 0 on load.
+
+Every class declares a `role`, and the engine asks for roles rather than class ids, so a
+regional class with an existing role musters, fights and supplies like that role. Roles:
+
+- `levy_infantry`: the levy. Its default class is the levy pool every muster fills, and
+  levy infantry is exempt from fiscal-settlement paid limits.
+- `missile`: archers and crossbowmen. The default class receives archery buildings and
+  flat `archers` effects.
+- `polearm`, `heavy_infantry`: pike blocks and elite foot.
+- `household`: sworn household troops. The default class receives retinue sources
+  (war buildings, a baron's household, posts, flat `retinue` effects); any household men
+  in a won or lost field battle select the `_steel` battle report.
+- `cavalry`, `horse_archer`, `heavy_cavalry`: the mounted roles, which eat as horsemen on
+  campaign whatever their basket.
+- `mercenary`: hired companies, costed per contract.
+
+The first class declared with a role is that role's default class. The `levy_infantry`,
+`missile`, `household`, `cavalry`, and `mercenary` roles must each have a class. Role names
+never equal class ids.
 
 ```json
 {
   "unitClasses": {
     "pike": {
+      "role": "polearm",
       "name": "Pikemen", "icon": "🔱",
       "quality": 1.1, "attack": 1.0, "defense": 1.2,
       "upkeepPer100": 0.8, "casualtyOrder": 2,
@@ -3918,7 +3986,10 @@ class a save predates defaults to 0 on load.
 - `counters: { "<enemyClassId>": <multiplier> }` fights the class above its quality
   against that enemy class. A side's counter multiplier is its composition-weighted
   average against the enemy's composition shares, capped at ±`balance.battleCounterMaxSwing`
-  (0.2). Counter targets must be known class ids.
+  (0.2). A counter key may also name a role, which covers every enemy class of that
+  role without an entry of its own: `{ "cavalry": 1.6 }` answers every cavalry-role
+  class, including a mod's regional horsemen. Counter targets must be known class ids or
+  roles.
 - `terrainFactors` optionally overrides the class's `balance.terrainBattleFactors` row;
   terrain keys must match the shared terrain set (`balance.terrainMarchMult`), and a
   missing terrain reads as 1.
@@ -3928,14 +3999,18 @@ class a save predates defaults to 0 on load.
   `notCultures` gate on `FBDATA.cultures` ids (the player's own character culture for
   the player, the ruler or capital culture for AI realms).
 - `hired: true` marks contract troops (`mercs`): never mustered from the levy, charged
-  per company instead of per head.
+  per company instead of per head. It is set exactly when the role is `mercenary`.
 - `basket` is the class's provisions/materials/transport mix for market-quoted upkeep.
 
-The validator checks the whole table: baseline presence, name/quality/attack/defense/
+The validator checks the whole table: known roles, `hired` matching the mercenary role, a
+class for every required role, name/quality/attack/defense/
 casualtyOrder shape, `professional`/`replaceDays` shape, resolved `requiresTech`,
 `cultures`/`notCultures`, `counters`, and
-`terrainFactors` references. Mods replace a class wholesale by id or add new classes;
-deleting a baseline class is a validation error. Removing a non-baseline class that a
+`terrainFactors` references. Mods replace a class wholesale by id or add new classes; a
+mod that leaves a required role without a class is rejected. A legacy mod class without
+`role` is accepted (hired classes count as mercenaries, others have no role), and a
+replacement of an existing class that omits `role` keeps the replaced class's role.
+Removing a non-baseline class that a
 save still fields is safe: the saved men keep their headcount, fight at the fallback
 quality 1, fall last in the casualty allocation (in id order, after every known
 class), are never mustered fresh, and return to full behavior if the class is

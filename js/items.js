@@ -1939,7 +1939,7 @@ window.FB = window.FB || {};
   }
 
   function shopHasMarketTech(state) {
-    return !!(FB.hasTech && FB.hasTech(state, 'urban_markets'));
+    return !!(FB.hasCapability && FB.hasCapability(state, 'permanent_markets'));
   }
 
   function shopQualityRoll(odds) {

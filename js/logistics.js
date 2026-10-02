@@ -71,13 +71,18 @@
     const protection = defended ? Math.min(0.8, number(fort.level) * B('armyProvisionFortProtection', 0.2)) : 0;
     return { owner:owner, hostile:hostile, protection:protection };
   }
-  // Horses and pack-dependent classes consume more of the provisions basket.
+  // Mounted roles (and, for a legacy class without a role, a pack-heavy
+  // basket) consume more of the provisions basket.
   function unitsPerPoint(army) {
     let mouths = number(army.men);
     const units = army.units || {};
     Object.keys(units).forEach(function (id) {
       const def = FBDATA.unitClasses[id];
-      if (def && def.basket && number(def.basket.transport) >= 0.4) mouths += number(units[id]);
+      if (!def) return;
+      const mounted = def.role !== undefined
+        ? FB.unitClassMounted(id)
+        : !!(def.basket && number(def.basket.transport) >= 0.4);
+      if (mounted) mouths += number(units[id]);
     });
     return mouths / Math.max(1, B('armyProvisionMenPerUnit', 30)) / 90 /
       Math.max(0.01, B('supplyDrainBase', 1.2));

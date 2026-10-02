@@ -4119,11 +4119,8 @@ window.FB = window.FB || {};
 
   function networkUnitName(s, unit) {
     const def = FBDATA.unitClasses && FBDATA.unitClasses[unit];
-    if (def) return dt(s, 'unitClass', unit, def, 'name');
-    if (unit === 'arch') return FB.T('archers');
-    if (unit === 'cav') return FB.T('cavalry');
-    if (unit === 'ret') return FB.T('men-at-arms');
-    return FB.T('levy');
+    /* a class the table no longer defines (a removed mod) shows its id */
+    return def ? dt(s, 'unitClass', unit, def, 'name') : unit;
   }
 
   function networkStatePresentation(record, detailsKey, fallbackLabel) {

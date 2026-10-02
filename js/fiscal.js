@@ -285,7 +285,8 @@
     if (!FB.fiscalSettlementActive(state)) return units;
     const limits = record(state).settlement.paidLimits || {};
     for (const key of Object.keys(units)) {
-      if (key !== 'levy' && key !== 'total' && typeof units[key] === 'number')
+      if (!FB.unitClassHasRole(key, 'levy_infantry') && key !== 'total' &&
+          typeof units[key] === 'number')
         units[key] = Math.min(units[key], limits[key] || 0);
     }
     return units;
