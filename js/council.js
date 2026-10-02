@@ -30,14 +30,14 @@ window.FB = window.FB || {};
     for (const id in table) {
       if (!Object.prototype.hasOwnProperty.call(table, id)) continue;
       const def = table[id];
-      if (!def || (state && state.player.tier < def.tierMin)) continue;
+      if (!def || (state && !FB.station.reaches(state.player, def.tierMin))) continue;
       out.push(seatRecord(id, def));
     }
     return out;
   };
   FB.councilSeat = function (id, state) {
     const def = FBDATA.councilSeats && FBDATA.councilSeats[id];
-    if (!def || (state && state.player.tier < def.tierMin)) return null;
+    if (!def || (state && !FB.station.reaches(state.player, def.tierMin))) return null;
     return seatRecord(id, def);
   };
   FB.councilSeatName = function (state, id) {

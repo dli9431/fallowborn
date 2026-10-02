@@ -557,15 +557,15 @@
       return denied('no_command');
     }
     var pid = at.id, rid = a.kind === 'realm' ? a.id :
-      a.id === s.player.charId ? (s.player.tier >= 4 ? 'player' : null) :
+      a.id === s.player.charId ? (FB.station.rulesRealm(s.player) ? 'player' : null) :
       FB.realmIdForRulerCharacter(s, s.chars[a.id]);
     if (power === 'peace') {
       if (a.kind === 'character' && a.id === s.player.charId &&
-          s.player.tier >= 3 && FB.governanceEligible(s) &&
+          FB.station.isLanded(s.player) && FB.governanceEligible(s) &&
           (rid && FB.realmTerritory(s, rid).indexOf(pid) >= 0 ||
             !rid && s.player.provinceId === pid))
         return basis('territory', rid || 'barony:' + pid);
-      if (rid && s.realms[rid] && s.realms[rid].rank >= 1 &&
+      if (rid && s.realms[rid] && FB.realmRank.isTerritorial(s.realms[rid]) &&
           FB.realmTerritory(s, rid).indexOf(pid) >= 0)
         return basis('territory', rid);
       if (a.kind === 'character' && s.chars[a.id].role === 'lord' &&

@@ -1413,7 +1413,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 
 | key | meaning |
 |---|---|
-| `tierMin` / `tierMax` | rank 0 serf … 7 emperor |
+| `tierMin` / `tierMax` | rank 0 serf … 7 emperor; read through `FB.station.reaches` and `FB.station.exceeds` (see [realms.md](designs/realms.md#station-and-rank-queries)), so an absent bound never blocks |
 | `societalRoles` | any of `serf commoner gentry lord crowned`; these map to tiers 0, 1, 2, 3–5, and 6–7 |
 | `professions` | any actively practiced vocation from `farmer craftsman merchant administration physician scholar soldier monk priest noble`; landed players (tier 3+) retain their career as biography but do not pass profession gates |
 | careerRoles | any actively practiced career with one of the listed roles (clergy cloister labor craft trading arms noble learned civic); like professions, landed players (tier 3+) do not pass. Prefer it over professions unless the event belongs to one career |

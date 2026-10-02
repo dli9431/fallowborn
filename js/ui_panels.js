@@ -658,7 +658,7 @@ window.FB = window.FB || {};
       const stayed = FB.travelStayDays(s);
       status += ' · ' + (travel.purpose === 'relationship'
         ? FB.T('{days} days into the visit', { days:stayed })
-        : (s.player.tier >= 3
+        : (FB.station.isLanded(s.player)
           ? FB.T('{days} days in guest residence', { days:stayed })
           : FB.T('{days} days living and working here', { days:stayed })));
     }
@@ -754,7 +754,7 @@ window.FB = window.FB || {};
   function ongoingCommitmentsHtml(s) {
     /* Serfs keep almost none of these levers (no travel, no research say,
        no political attention), so the whole section stays out of their way. */
-    if (s.player.tier === 0) return '';
+    if (FB.station.isSerf(s.player)) return '';
     const focus = currentFocusDef(s);
     const travel = s.player.travel;
     const attentionTarget = FB.socialAttentionTarget(s);
@@ -1164,7 +1164,7 @@ window.FB = window.FB || {};
         '</span></button>';
     }
     h += ongoingCommitmentsHtml(s);
-    if (s.player.tier >= 3) {
+    if (FB.station.isLanded(s.player)) {
       h += renderDeedsWarCard(s);
     }
     if (s.greatHolyWar && FB.playerGreatHolyWarCamp(s)) {
@@ -1213,7 +1213,7 @@ window.FB = window.FB || {};
           gold:Math.round(FB.landYield(s) * 10) / 10
         })) + '</div>';
     }
-    if (s.player.tier >= 3) {
+    if (FB.station.isLanded(s.player)) {
       const lg = s.player.liege && s.player.liege !== 'player' && s.realms[s.player.liege];
       h += '<div class="progressnote">' + esc(FB.T('💰 Seasonal revenue ~{money:gold} · 🛡 levy ~{men} men', {
         gold: FB.playerTax(s), men: FB.playerLevy(s)
@@ -1865,12 +1865,12 @@ window.FB = window.FB || {};
   }
 
   function nextStepHint(s) {
-    if (s.player.tier === 0) {
+    if (FB.station.isSerf(s.player)) {
       return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
         'Path: save {money:gold} to buy freedom outright, or reach +20 Standing with your lord and petition for exact terms.',
         { gold: FB.freedomPurchasePrice(s) })) + '</div>';
     }
-    if (s.player.tier === 1) {
+    if (FB.station.isFreeholder(s.player)) {
       const cluster = FB.largestLandCluster(s);
       return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
         'Path: an heir of a later generation must inherit Freeholder standing. Assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and fund recognition of the manor. Soldiering and the church offer other roads.',
@@ -1881,7 +1881,7 @@ window.FB = window.FB || {};
         })) + ' ' + esc(FB.rankElevationCostText(
           FB.rankElevationCost(s, 1, 2))) + '</div>';
     }
-    if (s.player.tier === 2) {
+    if (FB.station.isGentry(s.player)) {
       const command = FB.militaryCommandStatus && FB.militaryCommandStatus(s);
       const foundingPath = FB.T('An established gentle house may also fund a new settlement charter to become Baron. Both ordinary routes require an heir of a later generation to inherit Gentry standing.');
       const text = FB.gentryEstablished(s)
@@ -1905,7 +1905,7 @@ window.FB = window.FB || {};
       6: 'Path: hold the majority of two kingdoms of one empire, then claim imperial recognition.',
       7: 'You stand at the summit of the world.'
     };
-    const nextCost = s.player.tier >= 3 && s.player.tier <= 6
+    const nextCost = FB.station.isLanded(s.player) && !FB.station.isImperial(s.player)
       ? FB.rankElevationCostText(FB.rankElevationCost(
         s, s.player.tier, s.player.tier + 1)) : '';
     return '<div class="progressnote path-hint">🧭 ' +
@@ -2106,7 +2106,7 @@ window.FB = window.FB || {};
     if (!def) return '';
     let detail = FB.careerTitle(s, c);
     if (def.guild) detail += ' · ' + FB.guildTitle(career);
-    const former = c.id === s.player.charId && s.player.tier >= 3;
+    const former = c.id === s.player.charId && FB.station.isLanded(s.player);
     const workLabel = esc(former
       ? FB.T('🧰 Former calling — {career}', { career:detail })
       : FB.T('🧰 Work — {career}', { career:detail }));
@@ -2441,7 +2441,7 @@ window.FB = window.FB || {};
 
   function rankDetailsLink(s) {
     const rank = FB.styledTitle(s);
-    const landed = s.player.tier >= 3;
+    const landed = FB.station.isLanded(s.player);
     return '<button type="button" class="linklike" id="self-rank-details" ' +
       'aria-label="' + esc(FB.T(landed
         ? 'Open realm and demesne details for {rank}'
@@ -2629,7 +2629,7 @@ window.FB = window.FB || {};
   function doctrineHomeSpread(s, kind, identityId) {
     const generated = kind === 'faith' ? s.faiths : s.cultures;
     if (!generated || !Object.prototype.hasOwnProperty.call(
-        generated, identityId) || !s.player || s.player.tier < 3) return null;
+        generated, identityId) || !s.player || !FB.station.isLanded(s.player)) return null;
     const pid = s.player.provinceId;
     const settlement = s.player.homeSettlement !== undefined
       ? s.player.homeSettlement
@@ -3091,7 +3091,7 @@ window.FB = window.FB || {};
     options = options || {};
     const s = FB.state;
     if (!s || !s.player) return;
-    const landed = s.player.tier >= 3;
+    const landed = FB.station.isLanded(s.player);
     const replacing = !!options.replaceView;
     const oldBody = replacing ? $('gm-body') : null;
     const oldScroll = oldBody ? oldBody.scrollTop : 0;
@@ -3161,7 +3161,7 @@ window.FB = window.FB || {};
         ? FB.fullName(countyRuler) + (countyRealm ? ' (' + countyRealm.name + ')' : '')
         : (countyRealm ? countyRealm.name : FB.T('None'));
       let view = null;
-      if (s.player.tier === 0) {
+      if (FB.station.isSerf(s.player)) {
         if (FB.ensureSerfTenure) FB.ensureSerfTenure(s, 'legacy_repair');
         view = FB.tenureView && FB.tenureView(s);
       }
@@ -3184,15 +3184,15 @@ window.FB = window.FB || {};
       }
 
       let homeInfo = '';
-      if (s.player.tier === 0) {
+      if (FB.station.isSerf(s.player)) {
         homeInfo = FB.T(
           'Your household is bound to this home; customary service appears as events when it needs your decision.');
-      } else if (s.player.tier === 1) {
+      } else if (FB.station.isFreeholder(s.player)) {
         homeInfo = FB.T('Your household lives here as free commoners.');
       } else {
         homeInfo = FB.T('Your gentle household holds its local estate here.');
       }
-      if (s.player.tier === 0) {
+      if (FB.station.isSerf(s.player)) {
         if (view) {
           h += '<section class="serf-tenure" data-serf-tenure>';
           acknowledgeTenure = true;
@@ -4292,9 +4292,9 @@ window.FB = window.FB || {};
     if (!p) return null;
     const localLordId = s.roles && s.roles.lord;
     const localLord = localLordId && s.chars && s.chars[localLordId];
-    if (p.tier < 3 && localLord && !localLord.dead) return localLord;
+    if (!FB.station.isLanded(p) && localLord && !localLord.dead) return localLord;
     let rid = p.liege || null;
-    if (!rid && p.tier < 3) {
+    if (!rid && !FB.station.isLanded(p)) {
       rid = s.holder && s.holder[p.provinceId] ||
         s.owner && s.owner[p.provinceId] || null;
     }
@@ -4451,7 +4451,7 @@ window.FB = window.FB || {};
       '📋 ' + esc(FB.T('Household Plan…')),
       esc(FB.T(
         'Review education, work, assignments, matches, and equipment for every managed person.')));
-    if (s.player.tier <= 2) {
+    if (!FB.station.isLanded(s.player)) {
       const service = FB.householdServiceRecord(s);
       householdSummary += networkActionHtml('service-household',
         'id="network-service" data-network-action', esc(FB.T('Service household…')),
@@ -4598,10 +4598,10 @@ window.FB = window.FB || {};
       '</div>';
 
     function monopolyTierName(tier) {
-      if (tier === 4) return FB.T('Count');
-      if (tier === 5) return FB.T('Duke');
-      if (tier === 6) return FB.T('King');
-      if (tier === 7) return FB.T('Emperor');
+      if (FB.station.isCount(tier)) return FB.T('Count');
+      if (FB.station.isDuke(tier)) return FB.T('Duke');
+      if (FB.station.isKing(tier)) return FB.T('King');
+      if (FB.station.isEmperor(tier)) return FB.T('Emperor');
       return FB.T('Baron');
     }
     function monopolyProfessionName(record) {
@@ -5529,10 +5529,10 @@ window.FB = window.FB || {};
     /* A living former ruler no longer owns the rank word. Their current
        standing is Noble/Royalty, while the next line preserves the crown. */
     const formerLivingRuler = !c.dead && !isPlayer && !realm &&
-      c.highestTitleData && exactTier !== null && exactTier >= 3;
+      c.highestTitleData && exactTier !== null && FB.station.isLanded(exactTier);
     const livingPersonalStation = !c.dead && !isPlayer && !realm &&
       c.station !== undefined && c.station !== null &&
-      (exactTier === null || exactTier < 3);
+      (exactTier === null || !FB.station.isLanded(exactTier));
     if (formerLivingRuler) {
       status = FB.stationName(FB.clamp(exactTier, 0, 4));
     } else if (livingPersonalStation) {
@@ -5546,7 +5546,7 @@ window.FB = window.FB || {};
     }
 
     let highest = c.highestTitleData || familyTreeLegendTitle(s, c);
-    if (!highest && isPlayer && s.player.tier >= 3 &&
+    if (!highest && isPlayer && FB.station.isLanded(s.player) &&
         FB.playerStatusTitleSnapshot) {
       highest = FB.playerStatusTitleSnapshot(s);
     } else if (!highest && realm && FB.realmRulerTitleSnapshot) {
@@ -7443,11 +7443,11 @@ window.FB = window.FB || {};
       const myRealm = rid === 'player';
       const playerCharacter = s.chars && s.chars[s.player.charId];
       const canControlCommunityProjects = !s.player.dead && playerCharacter &&
-        !playerCharacter.dead && s.player.tier >= 4 &&
+        !playerCharacter.dead && FB.station.rulesRealm(s.player) &&
         FB.playerDirectlyHoldsCounty &&
         FB.playerDirectlyHoldsCounty(s, pid);
       const realmHostDisplay = realmHostText(s, rid);
-      const ownHostDisplay = !myRealm && s.player.tier >= 3
+      const ownHostDisplay = !myRealm && FB.station.isLanded(s.player)
         ? realmHostText(s, 'player') : null;
       // the feudal ladder: who holds this county directly, and above them whom
       const holdId = (s.holder && s.holder[pid]) || rid;

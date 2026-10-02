@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "about": "Engine lines outside js/station.js allowed to compare a .tier or .rank member with a number. Matched by file and trimmed source line. Kinds: save keeps an old save readable; validation checks authored or mod data against the fixed tier and rank scales. Every other check asks a named FB.station or FB.realmRank query.",
+  "entries": []
+}

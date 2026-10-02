@@ -97,7 +97,7 @@ window.FB = window.FB || {};
   }
   function ambitions(rows, tables) {
     for (var record of rows || []) {
-      var rank = record.tier === 5 ? 'duchy' : record.tier === 6 ? 'kingdom' : null;
+      var rank = FB.station.isDuke(record) ? 'duchy' : FB.station.isKing(record) ? 'kingdom' : null;
       if (rank && record.region) record.region = resolve(rank, record.region,
         tables[plurals[rank]], 'historicalAmbitions.' + record.id + '.region');
       if (record.island) record.island = resolve('duchy', record.island,

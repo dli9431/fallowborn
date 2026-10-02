@@ -129,7 +129,7 @@ window.FB = window.FB || {};
           bd.coinAdjustment < 0 ? 'op-bad' : '') + '">' +
         esc(fmtAmt(bd.coinAdjustment, true)) + '</span></div>';
     }
-    if (stat === 'gold' && FB.fiscalCrisisQuote && FB.state.player.tier >= 3) {
+    if (stat === 'gold' && FB.fiscalCrisisQuote && FB.station.isLanded(FB.state.player)) {
       const fiscal = FB.fiscalCrisisQuote(FB.state);
       if (fiscal.warning || fiscal.active || fiscal.settlement) h += '<div class="bd-note op-bad">' + esc(FB.T('Fiscal pressure: {stage}/4. Open Coin & Credit for recovery options and settlement terms.', { stage:fiscal.stage })) + '</div>';
     }

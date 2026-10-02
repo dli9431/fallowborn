@@ -251,7 +251,7 @@ window.FB = window.FB || {};
     const def = FBDATA.householdStandards &&
       FBDATA.householdStandards.transport;
     const standards = p && p.householdStandards;
-    if (!p || p.tier > 2 || !def || !standards ||
+    if (!p || FB.station.isLanded(p) || !def || !standards ||
         typeof standards !== 'object' || Array.isArray(standards) ||
         !Array.isArray(def.levels)) return out;
     let level = Number(standards.transport);
@@ -886,11 +886,11 @@ window.FB = window.FB || {};
     if (purposeId !== undefined && !def) {
       return FB.T('That travel purpose is unavailable.');
     }
-    if (purposeId === undefined && (p.tier < 1 || p.tier > 2)) {
+    if (purposeId === undefined && !FB.station.isFreeUnlanded(p)) {
       return FB.T('The road is open to freeholders and gentry.');
     }
     if (purposeId !== undefined && !purposeTierAllowed(state, def)) {
-      if (p.tier < 1) return FB.T('Serfs cannot take to the road.');
+      if (!FB.station.isFree(p)) return FB.T('Serfs cannot take to the road.');
       const range = purposeTierRange(def);
       if (range.min === 1 && range.max === 2) {
         return FB.T('This journey is open to freeholders and gentry.');
@@ -1339,10 +1339,8 @@ window.FB = window.FB || {};
       if (ev.travel.purpose && ev.travel.purpose !== travel.purpose) continue;
       if (kind === 'work' && def && def.targeted &&
           ev.travel.purpose !== travel.purpose) continue;
-      if (ev.travel.minTier !== undefined &&
-          state.player.tier < ev.travel.minTier) continue;
-      if (ev.travel.maxTier !== undefined &&
-          state.player.tier > ev.travel.maxTier) continue;
+      if (!FB.station.reaches(state.player, ev.travel.minTier)) continue;
+      if (FB.station.exceeds(state.player, ev.travel.maxTier)) continue;
       /* contract:true stories exist only while a mercenary contract is
          served; contract:false stories stand down for its duration. */
       if (ev.travel.contract === true && !travel.contract) continue;
@@ -1704,7 +1702,7 @@ window.FB = window.FB || {};
         days:remaining
       });
     }
-    if (state.player.tier >= 3) {
+    if (FB.station.isLanded(state.player)) {
       return FB.T('Remain in guest residence for {days} more days before returning home.', {
         days:remaining
       });
@@ -1719,7 +1717,7 @@ window.FB = window.FB || {};
     const t = FB.travelEnsure(state);
     if (t && t.purpose === 'tournament') return FB.T('A games journey preserves the household home.');
     if (!t || t.phase !== 'arrived') return FB.T('Reach the destination first.');
-    if (p.tier < 1 || p.tier > 2) {
+    if (!FB.station.isFreeUnlanded(p)) {
       return FB.T('Only freeholders and gentry may relocate the household this way.');
     }
     /* A frontier withdrawal never relocates into empty land through the
@@ -1790,7 +1788,7 @@ window.FB = window.FB || {};
           (spouse.spouseId === protagonist.id))) {
       return FB.T('The marriage that created this choice is no longer in force.');
     }
-    if (p.tier < 3) {
+    if (!FB.station.isLanded(p)) {
       return FB.T('Only a baron or greater ruler may abdicate through this decision.');
     }
     if (!settled(residence.destinationId)) {
@@ -1804,7 +1802,7 @@ window.FB = window.FB || {};
 
     const heir = marriageResidenceHeir(state);
     if (mode === 'self') {
-      if (p.tier >= 4) {
+      if (FB.station.rulesRealm(p)) {
         if (!heir) {
           return FB.T('No living lawful heir can receive the realm.');
         }
@@ -1817,7 +1815,7 @@ window.FB = window.FB || {};
       if (!heir) {
         return FB.T('No living lawful heir can continue the family’s story.');
       }
-      if (p.tier >= 4 &&
+      if (FB.station.rulesRealm(p) &&
           (!state.realms.player || !state.realms.player.alive ||
             !p.provs || !p.provs.length)) {
         return FB.T('Your landed realm cannot pass through a living abdication.');
@@ -1912,7 +1910,7 @@ window.FB = window.FB || {};
     const heir = marriageResidenceHeir(state); // recomputed at confirmation
     if (mode === 'self') {
       let handedRealm = null;
-      if (p.tier >= 4) {
+      if (FB.station.rulesRealm(p)) {
         handedRealm = FB.abdicatePlayerRealmToHeir
           ? FB.abdicatePlayerRealmToHeir(state, heir) : null;
         if (!handedRealm) return false;
@@ -2027,7 +2025,7 @@ window.FB = window.FB || {};
     if (!frontierAttemptValid(state, t)) {
       return FB.T('This frontier attempt can no longer be completed.');
     }
-    if (p.tier < 1 || p.tier > 2) {
+    if (!FB.station.isFreeUnlanded(p)) {
       return FB.T('Only freeholders and gentry may homestead the frontier.');
     }
     if (p.travelSettlement) {
@@ -2196,7 +2194,7 @@ window.FB = window.FB || {};
       ? 'travel_arrival_choice_relationship'
       : (t.purpose === 'frontier'
         ? 'travel_arrival_choice_frontier'
-        : (state.player.tier >= 3
+        : (FB.station.isLanded(state.player)
           ? 'travel_arrival_choice_ruler' : 'travel_arrival_choice')), t);
   };
 

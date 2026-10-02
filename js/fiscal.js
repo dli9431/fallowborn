@@ -30,7 +30,7 @@
   function news(state, key) { FB.news(state, FB.message(key, {})); }
   FB.fiscalSettlementActive = function (state) {
     const r = record(state), s = r && r.settlement;
-    return !!(s && !s.closed && state.turn < s.endTurn && state.player.tier >= 3);
+    return !!(s && !s.closed && state.turn < s.endTurn && FB.station.isLanded(state.player));
   };
   FB.fiscalRestriction = function (state) {
     return FB.fiscalSettlementActive(state) ? FB.T(
@@ -38,18 +38,18 @@
   };
   FB.fiscalSupport = function (state, pid) {
     const r = record(state);
-    return r && state.player.tier >= 3 && state.holder && state.holder[pid] === 'player'
+    return r && FB.station.isLanded(state.player) && state.holder && state.holder[pid] === 'player'
       ? -r.stage * rules().supportStep : 0;
   };
   FB.fiscalStanding = function (state, rid) {
     const r = record(state), realm = state.realms && state.realms[rid];
-    return r && state.player.tier >= 3 && rid !== 'player' &&
+    return r && FB.station.isLanded(state.player) && rid !== 'player' &&
       (rid === state.player.liege || realm && realm.liege === 'player')
       ? -r.stage * rules().standingStep : 0;
   };
   FB.fiscalAuthority = function (state) {
     const r = record(state);
-    return r && state.player.tier >= 6 ? -r.stage * rules().authorityStep : 0;
+    return r && FB.station.mayHoldCouncil(state.player) ? -r.stage * rules().authorityStep : 0;
   };
   FB.fiscalCrisisQuote = function (state) {
     const r = record(state), b = rules(), debt = Math.max(0, -state.player.gold);
@@ -62,12 +62,12 @@
       remaining:r && r.settlement ? r.settlement.remaining : 0,
       endTurn:r && r.settlement ? r.settlement.endTurn : null,
       nextSettlement:r ? r.nextSettlement : 0,
-      canSettle:!!(state.player.tier >= 3 && r && r.active && debt > 0 &&
+      canSettle:!!(FB.station.isLanded(state.player) && r && r.active && debt > 0 &&
         !FB.fiscalSettlementActive(state) && state.turn >= r.nextSettlement) };
   };
   FB.fiscalDay = function (state) {
     let r = record(state);
-    if (state.player.tier < 3) {
+    if (!FB.station.isLanded(state.player)) {
       if (r && (r.active || r.settlement && !r.settlement.closed)) {
         state.player.gold = Math.max(0, state.player.gold);
         if (r.settlement) { r.settlement.remaining = 0; r.settlement.closed = true; }
@@ -101,7 +101,7 @@
     }
   };
   FB.fiscalSeason = function (state, economy) {
-    if (state.player.tier < 3) { FB.fiscalDay(state); return; }
+    if (!FB.station.isLanded(state.player)) { FB.fiscalDay(state); return; }
     const r = ensure(state), b = rules();
     const season = Math.floor(state.turn / 90);
     if (r.lastSeason === season) return;
@@ -157,7 +157,7 @@
       lastPayment:0, closed:false };
     r.nextSettlement = q.nextSettlement;
     state.player.gold = 0;
-    if (state.player.tier >= 6 && FB.grantPrivilege) FB.grantPrivilege(state, 'office_confirmation', {
+    if (FB.station.mayHoldCouncil(state.player) && FB.grantPrivilege) FB.grantPrivilege(state, 'office_confirmation', {
       sourceType:'charter', sourceId:'fiscal_settlement', grantorType:'realm', grantorId:'player'
     });
     FB.fiscalDay(state);
@@ -178,7 +178,7 @@
     const protection = state.fiscalLandSales && state.fiscalLandSales[pid];
     const revolt = FB.countyInOpenRevolt && FB.countyInOpenRevolt(state, pid);
     const occupied = revolt && revolt.counties[pid] && revolt.counties[pid].occupied;
-    return p.tier >= 4 && p.provs.length > 1 && p.provs.indexOf(pid) >= 0 &&
+    return FB.station.holdsCounty(p) && p.provs.length > 1 && p.provs.indexOf(pid) >= 0 &&
       state.holder[pid] === 'player' && pid !== capital &&
       !FB.isProtected(state, 'grantCounty', pid) &&
       !(protection && state.turn < protection.resaleAfter) &&
@@ -199,7 +199,7 @@
   FB.fiscalLandSaleCandidates = function (state) {
     count('buyer searches');
     const out = [];
-    if (state.player.tier < 4 || state.player.provs.length < 2 ||
+    if (!FB.station.holdsCounty(state.player) || state.player.provs.length < 2 ||
         !state.treasuryAccounting || state.treasuryAccounting.mode !== 'active') return out;
     const reserves = FB.treasuryConstructionReserves(state);
     const taxes = {};

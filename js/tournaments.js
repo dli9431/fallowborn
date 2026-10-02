@@ -162,7 +162,7 @@ window.FB = window.FB || {};
         var hostEligibility = T.eligibility(s,e.hostId);
         if (!hostEligibility.ok) return status(false,FB.T('The host cannot hold games: {reason}',{reason:hostEligibility.reason}));
       }
-      if (e.scale && (tier(s,e.hostId) < D.scales[e.scale].tier ||
+      if (e.scale && (!FB.station.reaches(tier(s,e.hostId), D.scales[e.scale].tier) ||
           !FB.settlementConstructionAuthority(s,e.provinceId,e.settlement,actor(s,e.hostId)).direct)) {
         return status(false,FB.T('The host no longer qualifies or directly owns the venue.'));
       }
@@ -379,7 +379,7 @@ window.FB = window.FB || {};
     if (d && d.career) {
       var careerDef = FBDATA.careers[d.career];
       if (!trained(c,d.career)) reasons.push(FB.T('Complete training in the required career first.'));
-      if (careerDef && (tier(s,id) < num(careerDef.tierMin) || careerDef.maleOnly && c && c.sex !== 'm')) {
+      if (careerDef && (!FB.station.reaches(tier(s,id), num(careerDef.tierMin)) || careerDef.maleOnly && c && c.sex !== 'm')) {
         reasons.push(FB.T('The existing career rank and sex requirements still apply.'));
       }
     }
@@ -676,16 +676,16 @@ window.FB = window.FB || {};
           close(s, e, true); return;
         }
       }
-      if (tier(s, e.hostId) < D.scales[e.scale].tier || !T.eligibility(s, e.hostId, e).ok) { close(s, e, true); return; }
+      if (!FB.station.reaches(tier(s, e.hostId), D.scales[e.scale].tier) || !T.eligibility(s, e.hostId, e).ok) { close(s, e, true); return; }
       e.participants.forEach(function (p) {
         if (p.status === 'active' && ((p.household && p.charId !== s.player.charId) || !T.eligibility(s, p.charId, e).ok ||
-            (tier(s, p.charId) === 0 && home(s, p.charId) !== e.provinceId))) T.withdraw(s, e.id, p.charId, true);
+            (FB.station.isSerf(tier(s, p.charId)) && home(s, p.charId) !== e.provinceId))) T.withdraw(s, e.id, p.charId, true);
       });
       e.guests = (e.guests || []).filter(function (id) { return T.eligibility(s,id,e).ok; });
     });
     root(s).annual = root(s).annual.filter(function (a) {
       if (a.household && a.hostId !== s.player.charId) {
-        if (tier(s,s.player.charId) < D.scales[a.scale].tier ||
+        if (!FB.station.reaches(tier(s,s.player.charId), D.scales[a.scale].tier) ||
             !FB.settlementConstructionAuthority(s,a.provinceId,a.settlement,'player').direct) return false;
         a.hostId = s.player.charId;
       }
@@ -821,7 +821,7 @@ window.FB = window.FB || {};
     if (!live(e)) { out.reasons.push(FB.T('This edition has closed.')); return out; }
     var el = T.eligibility(s, id, e), origin = t ? t.currentId : s.player.provinceId;
     if (!el.ok) out.reasons.push(el.reason);
-    if (s.player.tier < 1) out.reasons.push(FB.T('Serfs cannot take to the road.'));
+    if (!FB.station.isFree(s.player)) out.reasons.push(FB.T('Serfs cannot take to the road.'));
     if (t && (t.purpose !== 'tournament' || t.phase !== 'arrived')) out.reasons.push(FB.T('Finish the current journey before booking this road.'));
     var p = t && T.participant(T.get(s, t.tournamentId), id);
     if (p && p.status === 'active' && t.tournamentId !== eventId) out.reasons.push(FB.T('Withdraw from the current activity before travelling onward.'));

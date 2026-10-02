@@ -1453,7 +1453,7 @@ window.FB = window.FB || {};
     }
     var field = kind === 'faith' ? 'religion' : 'culture';
     if ((realmId === undefined || realmId === null || realmId === 'player') &&
-        state.player && state.player.tier === 3) {
+        state.player && FB.station.isBaron(state.player)) {
       var home = state.player.homeSettlement !== undefined
         ? state.player.homeSettlement
         : (state.player.settlement !== undefined ? state.player.settlement : 0);

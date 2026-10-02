@@ -2053,11 +2053,11 @@ window.FB = window.FB || {};
     if (!c || FB.stationOf(c) !== 0) return false;
     if (c.unfree === true) return true;
     if (!state || !state.player || !state.chars) return false;
-    if (c.id === state.player.charId) return state.player.tier === 0;
+    if (c.id === state.player.charId) return FB.station.isSerf(state.player);
     /* Legacy tier-0 saves predate personal bondage. Their generated and
        household kin shared the active serf tenure even though the character
        record had no marker. */
-    if (state.player.tier === 0) {
+    if (FB.station.isSerf(state.player)) {
       if (c.role === 'parent' || c.role === 'grandparent' ||
           c.role === 'sibling' || c.role === 'spouse') return true;
       if (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id)) {
@@ -2907,7 +2907,7 @@ window.FB = window.FB || {};
     if (FB.castellanyOf && FB.castellanyOf(state)) return FB.T('Castellan');
     let t = FB.titleWordFor(state, p.tier);
     if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) return FB.abbeyTitle(FB.abbeyOf(state));
-    if (p.tier <= 1 && p.profession && !FB.professionHasRole(p.profession, 'labor')) {
+    if (!FB.station.isGentle(p) && p.profession && !FB.professionHasRole(p.profession, 'labor')) {
       const roleNames = {
         craft:'Craftsman', trading:'Merchant', arms:'Soldier'
       };
@@ -2925,12 +2925,12 @@ window.FB = window.FB || {};
       t = renderFaithRole(state, p.charId, me.religion,
         'grandQadi', 'Grand Qadi');
     }
-    else if (state.player.flags.abbot && p.tier === 2) {
+    else if (state.player.flags.abbot && FB.station.isGentry(p)) {
       t = renderFaithRole(state, p.charId, me.religion,
         me.sex === 'f' ? 'abbotF' : 'abbotM',
         me.sex === 'f' ? 'Abbess' : 'Abbot');
     }
-    else if (state.player.flags.qadi && p.tier === 2) {
+    else if (state.player.flags.qadi && FB.station.isGentry(p)) {
       t = renderFaithRole(state, p.charId, me.religion, 'qadi', 'Qadi');
     }
     return t;
@@ -2984,7 +2984,7 @@ window.FB = window.FB || {};
       snap.place = castleCounty ? castleCounty.name : castellany.provinceId;
       return snap;
     }
-    if (p.tier <= 1 && p.profession && !FB.professionHasRole(p.profession, 'labor')) {
+    if (!FB.station.isGentle(p) && p.profession && !FB.professionHasRole(p.profession, 'labor')) {
       const role = faithRoleRecord(state, me.religion, p.profession, me.sex);
       const workRole = FB.professionRole(p.profession);
       if (role) {
@@ -3012,21 +3012,21 @@ window.FB = window.FB || {};
     else if (p.flags.chief_qadi) {
       snap.special = 'grand_qadi';
       snapshotFaithRole(snap, state, me.religion, 'grandQadi');
-    } else if (p.flags.abbot && p.tier === 2) {
+    } else if (p.flags.abbot && FB.station.isGentry(p)) {
       snap.special = me.sex === 'f' ? 'abbess' : 'abbot';
       snapshotFaithRole(snap, state, me.religion,
         me.sex === 'f' ? 'abbotF' : 'abbotM');
-    } else if (p.flags.qadi && p.tier === 2) {
+    } else if (p.flags.qadi && FB.station.isGentry(p)) {
       snap.special = 'qadi';
       snapshotFaithRole(snap, state, me.religion, 'qadi');
     }
-    if (!snap.place && p.tier === 4 && p.provs && p.provs.length) {
+    if (!snap.place && FB.station.isCount(p) && p.provs && p.provs.length) {
       const pr = FB.world && FB.world.byId[p.provs[0]];
       if (pr) snap.place = pr.name;
-    } else if (p.tier === 5 && FB.playerDuchy) {
+    } else if (FB.station.isDuke(p) && FB.playerDuchy) {
       const did = FB.playerDuchy(state);
       if (did && FBDATA.duchies[did]) snap.place = FBDATA.duchies[did].name;
-    } else if (p.tier >= 6 && state.realms.player && state.realms.player.alive) {
+    } else if (FB.station.isRoyal(p) && state.realms.player && state.realms.player.alive) {
       const rn = state.realms.player.name;
       if (rn.indexOf('Kingdom of ') === 0) snap.place = rn.slice(11);
       else if (rn.indexOf('Empire of ') === 0) snap.place = rn.slice(10);
@@ -3117,8 +3117,8 @@ window.FB = window.FB || {};
       }
     }
     let achieved = titleData && Number(titleData.tier);
-    if (!isFinite(achieved) && isFinite(tier) && tier >= 3) achieved = tier;
-    if (!isFinite(achieved) || achieved < 3) return changed;
+    if (!isFinite(achieved) && isFinite(tier) && FB.station.isLanded(tier)) achieved = tier;
+    if (!isFinite(achieved) || !FB.station.isLanded(achieved)) return changed;
     const snapshot = titleData || FB.characterRankTitleSnapshot(
       state, c, achieved, '');
     const former = c.highestTitleData;
@@ -3138,14 +3138,14 @@ window.FB = window.FB || {};
     const c = state.chars[p.charId];
     if (!c) return null;
     const snap = FB.titleSnapshot(state);
-    if (p.tier < 3 || snap.place || snap.headReligion) return snap;
+    if (!FB.station.isLanded(p) || snap.place || snap.headReligion) return snap;
     let place = '';
-    if (p.tier <= 4) {
-      const pid = p.tier === 4 && p.provs && p.provs.length
+    if (!FB.station.isDucal(p)) {
+      const pid = FB.station.isCount(p) && p.provs && p.provs.length
         ? p.provs[0] : p.provinceId;
       const province = FB.world && FB.world.byId[pid];
       place = province ? province.name : '';
-    } else if (p.tier === 5 && FB.playerDuchy) {
+    } else if (FB.station.isDuke(p) && FB.playerDuchy) {
       const did = FB.playerDuchy(state);
       place = did && FBDATA.duchies[did] ? FBDATA.duchies[did].name : '';
     } else {
@@ -3247,7 +3247,7 @@ window.FB = window.FB || {};
     if (role === 'consort') {
       return realmTemporalRankTitle(state, realm, character.sex);
     }
-    const royal = (realm.rank || 1) >= 3;
+    const royal = FB.realmRank.isRoyal(realm);
     if (royal) return FB.T(character.sex === 'f' ? 'Princess' : 'Prince');
     return FB.T(character.sex === 'f' ? 'Lady' : 'Lord');
   };

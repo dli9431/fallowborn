@@ -191,7 +191,7 @@ window.FB = window.FB || {};
       return {
         kind:'realm', id:target.id, realmId:target.id,
         character:ruler,
-        station:realm.rank <= 2 ? 3 : 4
+        station:FB.realmRank.isRoyal(realm) ? 4 : 3
       };
     }
     if (kind !== 'character') return null;
@@ -948,7 +948,7 @@ window.FB = window.FB || {};
     else if (role === 'notable') {
       opts.quality = 1;
       opts.born = state.date.year - FB.ri(25, 55);
-      opts.station = state.player.tier === 0 ? 0 :
+      opts.station = FB.station.isSerf(state.player) ? 0 :
         Math.min(1, FB.playerStation(state));
     }
     else if (role === 'rival') {
@@ -2193,7 +2193,7 @@ window.FB = window.FB || {};
         (FB.isReigningRealmRuler &&
           (FB.isReigningRealmRuler(state, a) ||
             FB.isReigningRealmRuler(state, b)))) return true;
-    if (state.player.tier < 3 || !FB.kinOf) return false;
+    if (!FB.station.isLanded(state.player) || !FB.kinOf) return false;
     const children = FB.kinOf(state).children || [];
     for (let i = 0; i < children.length; i++) {
       if (!children[i].c.dead && children[i].c.dyn === a.dyn) return false;
@@ -4809,8 +4809,8 @@ window.FB = window.FB || {};
       }
       case 'liege_grant': {
         // no land adjoining the player's to give → the suit fails outright
-        if (p.tier === 3 && !FB.liegeHomeCountyGrantAuthority(state)) return 0;
-        if (p.tier >= 4 && !FB.liegeGrantCandidates(state).length) return 0;
+        if (FB.station.isBaron(p) && !FB.liegeHomeCountyGrantAuthority(state)) return 0;
+        if (FB.station.rulesRealm(p) && !FB.liegeGrantCandidates(state).length) return 0;
         const aim = p.liege && FB.rulerAimSnapshot &&
           FB.rulerAimSnapshot(state, p.liege);
         const aimValue = aim && aim.id === 'expand_realm' ? 0.04 :
@@ -5020,17 +5020,17 @@ window.FB = window.FB || {};
     const provinceId = ctx && ctx.locationId || p.provinceId;
     const pr = FB.world.byId[provinceId];
 
-    if (tg.tierMin !== undefined && p.tier < tg.tierMin) return false;
-    if (tg.tierMax !== undefined && p.tier > tg.tierMax) return false;
+    if (!FB.station.reaches(p, tg.tierMin)) return false;
+    if (FB.station.exceeds(p, tg.tierMax)) return false;
     if (tg.societalRoles && tg.societalRoles.indexOf(
       triggerSnapshotValue(snapshot, 'societalRole', function () {
         return FB.societalRole(state);
       })) < 0) return false;
     /* Profession requirements describe personally practicing a vocation.
        Landed careers survive as biography, but no longer satisfy work gates. */
-    if (tg.professions && (p.tier >= 3 ||
+    if (tg.professions && (FB.station.isLanded(p) ||
       tg.professions.indexOf(p.profession) < 0)) return false;
-    if (tg.careerRoles && (p.tier >= 3 ||
+    if (tg.careerRoles && (FB.station.isLanded(p) ||
       !FB.professionHasRole(p.profession, tg.careerRoles))) return false;
     /* A specialty path is an active vocation requirement, deliberately
        separate from broad profession gates. It is evaluated only by events
@@ -5041,7 +5041,7 @@ window.FB = window.FB || {};
         return FB.careerOf ? FB.careerOf(state, me) : null;
       });
       const guildOrder = { none:0, member:1, master:2, officer:3, guildmaster:4 };
-      if (p.tier >= 3 || !career || !career.chosen ||
+      if (FB.station.isLanded(p) || !career || !career.chosen ||
           career.rank === 'unassigned' || career.rank === 'apprentice') return false;
       if (requirement.profession && career.profession !== requirement.profession) return false;
       if (requirement.specialization &&
@@ -5292,7 +5292,7 @@ window.FB = window.FB || {};
      freedom records the generation that actually acquired it. */
   FB.freeholderEstablished = function (state) {
     const p = state.player;
-    if (!p || p.tier < 1) return false;
+    if (!p || !FB.station.isFree(p)) return false;
     if (p.freeholderGeneration === undefined) return true;
     if (p.freeholderGeneration === null) return false;
     if (p.lineDepth !== undefined) {
@@ -5320,7 +5320,7 @@ window.FB = window.FB || {};
      number keep the original counter comparison. */
   FB.gentryEstablished = function (state) {
     const p = state.player;
-    if (!p || p.tier < 2) return false;
+    if (!p || !FB.station.isGentle(p)) return false;
     if (p.gentryGeneration === undefined) return true;
     if (p.gentryGeneration === null) return false;
     if (p.lineDepth !== undefined) {
@@ -5495,7 +5495,7 @@ window.FB = window.FB || {};
     const record = state.player.stationFarewell;
     if (!record || record.queued || record.charId !== state.player.charId ||
       (state.player.fired && state.player.fired.station_farewell) ||
-      state.player.tier < 3 || lowerStationStoryActive(state)) return false;
+      !FB.station.isLanded(state.player) || lowerStationStoryActive(state)) return false;
     FB.queueEvent(state, 'station_farewell', {
       societalRole:record.fromRole,
       formerProfession:record.formerProfession
@@ -5550,10 +5550,10 @@ window.FB = window.FB || {};
     const current = state.chars && state.chars[p.charId];
     if (current) {
       current.station = FB.clamp(tier, 0, 4);
-      if (tier === 0) current.unfree = true;
+      if (FB.station.isSerf(tier)) current.unfree = true;
       else delete current.unfree;
     }
-    if (tier === 0 && current) {
+    if (FB.station.isSerf(tier) && current) {
       const seen = {};
       const queue = [current];
       for (let i = 0; i < queue.length; i++) {
@@ -5573,7 +5573,7 @@ window.FB = window.FB || {};
         }
       }
     }
-    if (oldTier === 0 && tier > 0) {
+    if (FB.station.isSerf(oldTier) && FB.station.isFree(tier)) {
       releaseSerfFamilyOnPromotion(state, current);
     }
     if (tier === oldTier) return false;
@@ -5590,13 +5590,13 @@ window.FB = window.FB || {};
         });
       }
     }
-    if (oldTier === 2 && tier !== 2 && p.militaryCommand) {
+    if (FB.station.isGentry(oldTier) && !FB.station.isGentry(tier) && p.militaryCommand) {
       delete p.militaryCommand;
     }
-    if (oldTier < 1 && tier >= 1) FB.markFreeholderRise(state);
-    if (oldTier < 2 && tier >= 2) FB.markGentryRise(state);
+    if (!FB.station.isFree(oldTier) && FB.station.isFree(tier)) FB.markFreeholderRise(state);
+    if (!FB.station.isGentle(oldTier) && FB.station.isGentle(tier)) FB.markGentryRise(state);
 
-    if (oldTier < 3 && tier >= 3 && opts.stationFarewell !== false) {
+    if (!FB.station.isLanded(oldTier) && FB.station.isLanded(tier) && opts.stationFarewell !== false) {
       p.stationFarewell = p.fired && p.fired.station_farewell ? null : {
           charId:p.charId,
           fromRole:oldRole,
@@ -5608,20 +5608,20 @@ window.FB = window.FB || {};
       if (FB.unassignEnterpriseWorker) {
         FB.unassignEnterpriseWorker(state, p.charId);
       }
-    } else if (oldTier >= 3 && tier < 3) {
+    } else if (FB.station.isLanded(oldTier) && !FB.station.isLanded(tier)) {
       p.stationFarewell = null;
       state.eventQueue = (state.eventQueue || []).filter(function (item) {
         return item.id !== 'station_farewell';
       });
     }
 
-    if (tier >= 3 && !p.liege && opts.attachLiege !== false) {
+    if (FB.station.isLanded(tier) && !p.liege && opts.attachLiege !== false) {
       const rid = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
       if (rid && rid !== 'player') {
         FB.changePlayerLiege(state, rid, 'tier:attach_liege');
       }
     }
-    if (oldTier === 0 && tier > 0) {
+    if (FB.station.isSerf(oldTier) && FB.station.isFree(tier)) {
       if (FB.closeSerfTenure) FB.closeSerfTenure(state, opts.tenureEndReason || 'rank_change');
       if (FB.serfParticipantRankChanged) {
         FB.serfParticipantRankChanged(state, !!opts.freedomResolution);
@@ -5632,7 +5632,7 @@ window.FB = window.FB || {};
             freedomOffer.status === 'service')) {
         freedomOffer.status = 'invalid';
       }
-    } else if (oldTier > 0 && tier === 0) {
+    } else if (FB.station.isFree(oldTier) && FB.station.isSerf(tier)) {
       if (opts.formTenure !== false && FB.ensureSerfTenure) {
         FB.ensureSerfTenure(state, opts.tenureFormationReason || 'rank_change');
       }
@@ -6418,7 +6418,7 @@ window.FB = window.FB || {};
   }
 
   FB.ensureSerfTenure = function (state, formedBy) {
-    if (!state || !state.player || state.player.tier !== 0) return null;
+    if (!state || !state.player || !FB.station.isSerf(state.player)) return null;
     const p = state.player;
     if (p.tenure && p.tenure.status === 'active') {
       normalizeSerfTenure(state, p.tenure);
@@ -6541,7 +6541,7 @@ window.FB = window.FB || {};
   };
 
   FB.activeSerfTenure = function (state) {
-    return (state && state.player && state.player.tier === 0 &&
+    return (state && state.player && FB.station.isSerf(state.player) &&
       state.player.tenure && state.player.tenure.status === 'active')
       ? state.player.tenure : null;
   };
@@ -7376,7 +7376,7 @@ window.FB = window.FB || {};
   };
 
   FB.replaceSerfTenure = function (state, formedBy, priorReason) {
-    if (!state || !state.player || state.player.tier !== 0) return null;
+    if (!state || !state.player || !FB.station.isSerf(state.player)) return null;
     const old = state.player.tenure;
     let priorClosure = null;
     if (old && old.status === 'active') {
@@ -7730,7 +7730,7 @@ window.FB = window.FB || {};
   }
 
   FB.tenureDay = function (state) {
-    if (!state || !state.player || state.player.tier !== 0) return;
+    if (!state || !state.player || !FB.station.isSerf(state.player)) return;
     if (state.player.travel) return;
 
     if (!state.player.tenure || state.player.tenure.status !== 'active') {
@@ -8097,7 +8097,7 @@ window.FB = window.FB || {};
     if (!protagonist || protagonist.dead) {
       out.reason = 'invalid_protagonist'; return out;
     }
-    if (p.tier !== 0) { out.reason = 'not_serf'; return out; }
+    if (!FB.station.isSerf(p)) { out.reason = 'not_serf'; return out; }
     const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
     const home = serfFreedomHome(state);
     if (!tenure || tenure.provinceId !== home.provinceId ||
@@ -8373,7 +8373,7 @@ window.FB = window.FB || {};
         return;
       }
       const lord = serfFreedomLord(state);
-      if (p.tier !== 0 || offer.protagonistId !== p.charId ||
+      if (!FB.station.isSerf(p) || offer.protagonistId !== p.charId ||
           !tenure || tenure.formedTurn !== offer.tenureFormedTurn ||
           home.provinceId !== offer.provinceId ||
           home.settlementIndex !== offer.settlementIndex ||
@@ -8381,7 +8381,7 @@ window.FB = window.FB || {};
           term.serviceDays !== offer.serviceDays) offer.status = 'invalid';
       return;
     }
-    if (p.tier !== 0 || !tenure ||
+    if (!FB.station.isSerf(p) || !tenure ||
         tenure.formedTurn !== offer.tenureFormedTurn ||
         home.provinceId !== offer.provinceId ||
         home.settlementIndex !== offer.settlementIndex ||
@@ -8557,7 +8557,7 @@ window.FB = window.FB || {};
     const witness = story && story.participants &&
       state.chars[story.participants.witness];
     return !!(oldCustomRecordValid(state, story) && pending && tenure &&
-      state.player.tier === 0 &&
+      FB.station.isSerf(state.player) &&
       tenure.formedTurn === story.tenureFormedTurn &&
       tenure.provinceId === story.homeProvinceId &&
       state.player.provinceId === story.homeProvinceId &&
@@ -8638,7 +8638,7 @@ window.FB = window.FB || {};
         !state.chars[story.lordId] || state.chars[story.lordId].dead) {
       clearOldCustom(state, 'authority'); return;
     }
-    if (p.tier !== 0) {
+    if (!FB.station.isSerf(p)) {
       clearOldCustom(state, 'rank'); return;
     }
     const witness = state.chars[story.participants.witness];
@@ -8753,7 +8753,7 @@ window.FB = window.FB || {};
       clearNeighborConsequence(state, null); return;
     }
     const tenure = FB.activeSerfTenure(state);
-    if (state.player.tier !== 0 || !tenure ||
+    if (!FB.station.isSerf(state.player) || !tenure ||
         tenure.formedTurn !== record.tenureFormedTurn ||
         state.player.provinceId !== record.homeProvinceId) {
       clearNeighborConsequence(state, 'tenure'); return;
@@ -8813,7 +8813,7 @@ window.FB = window.FB || {};
 
   FB.fns = FB.fns || {};
   FB.fns.serf_tenure_context_valid = function (state, ctx, ev) {
-    if (!state || !state.player || state.player.tier !== 0) return false;
+    if (!state || !state.player || !FB.station.isSerf(state.player)) return false;
     if (state.player.travel) return false;
     const tenure = state.player.tenure;
     if (!tenure || typeof tenure !== 'object' || tenure.status !== 'active') return false;
@@ -11050,7 +11050,7 @@ window.FB = window.FB || {};
           g = Math.round(g * 1.6);
         }
       }
-      if (fx.clearHarvestFlags && p.tier === 0 && FB.serfHarvestQuote) {
+      if (fx.clearHarvestFlags && FB.station.isSerf(p) && FB.serfHarvestQuote) {
         g = FB.serfHarvestQuote(state, g).gold;
       }
       if (fx.goldCounterparty === 'context') {
@@ -12010,7 +12010,7 @@ window.FB = window.FB || {};
     if (ctx && ctx.dutyId) {
       ctx._tenureResolved = true;
       const tenure = state.player && state.player.tenure;
-      if (tenure && tenure.status === 'active' && state.player.tier === 0) {
+      if (tenure && tenure.status === 'active' && FB.station.isSerf(state.player)) {
         let regularDuty = null;
         for (let i = 0; i < (tenure.duties || []).length; i++) {
           if (tenure.duties[i].id === ctx.dutyId) {
@@ -12136,7 +12136,7 @@ window.FB = window.FB || {};
     const legacyPledge = me.betrothedId === s.id && s.betrothedId === me.id &&
       !FB.marriageLineageContract(me, s);
     if (!legacyPledge && !FB.sealMarriageLineage(state, me, s, lineage)) return false;
-    const weddingTravel = p.travel && p.tier >= 3 &&
+    const weddingTravel = p.travel && FB.station.isLanded(p) &&
       p.travel.purpose === 'relationship' &&
       p.travel.phase === 'arrived' &&
       p.travel.currentId === p.travel.destinationId &&
@@ -12290,7 +12290,7 @@ window.FB = window.FB || {};
         promptPending:true
       };
     }
-    if (p.tier === 0 && p.tenure && p.tenure.status === 'active' && p.tenure.conditional) {
+    if (FB.station.isSerf(p) && p.tenure && p.tenure.status === 'active' && p.tenure.conditional) {
       for (let c = 0; c < p.tenure.conditional.length; c++) {
         const cd = p.tenure.conditional[c];
         if (cd.id === 'marriage_leave') {
@@ -12747,7 +12747,7 @@ window.FB = window.FB || {};
   };
   FB.fns.military_settlement_available = function (state, ctx) {
     const q = ctx && ctx.settlementGrant;
-    if (!q || ctx.protagonistId !== state.player.charId || state.player.tier !== 2) return false;
+    if (!q || ctx.protagonistId !== state.player.charId || !FB.station.isGentry(state.player)) return false;
     const current = FB.settlementGrantQuote(state, q.provinceId, q.settlement, q.recipientId, q.realmId);
     return !!current && JSON.stringify(current) === JSON.stringify(q);
   };
@@ -12774,7 +12774,7 @@ window.FB = window.FB || {};
   FB.fns.historic_raid_context_valid = function (state, ctx) {
     const p = state.player;
     const target = ctx && ctx.destinationId && FB.world.byId[ctx.destinationId];
-    return !!(p && p.tier <= 2 && ctx &&
+    return !!(p && !FB.station.isLanded(p) && ctx &&
       ctx.protagonistId === p.charId && HISTORIC_RAID_PROFILES[ctx.raidProfile] &&
       target && !target.wasteland && target.id !== p.provinceId);
   };
@@ -12932,7 +12932,7 @@ window.FB = window.FB || {};
       }
       const rid = (state.holder && state.holder[dest]) || state.owner[dest];
       FB.changePlayerLiege(state,
-        p.tier >= 3 && rid && rid !== 'player' ? rid : null,
+        FB.station.isLanded(p) && rid && rid !== 'player' ? rid : null,
         'travel:permanent_move');
       if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
       if (FB.enterpriseList) FB.enterpriseList(state);
@@ -12959,7 +12959,7 @@ window.FB = window.FB || {};
       // a baron who renounces his lord seizes the home county he was
       // enfeoffed in — transferProvince buries the old holder if landless
       p.provs = [p.provinceId];
-      if (p.tier < 4) FB.setPlayerTier(state, 4, { attachLiege:false });
+      if (!FB.station.rulesRealm(p)) FB.setPlayerTier(state, 4, { attachLiege:false });
       FB.transferProvince(state, p.provinceId, 'player');
     }
     FB.changePlayerLiege(state, null, 'realm:independence');
@@ -13009,12 +13009,12 @@ window.FB = window.FB || {};
   FB.grantByLiege = function (state) {
     const p = state.player;
     let granted = false;
-    if (p.tier === 3) {
+    if (FB.station.isBaron(p)) {
       const offer = FB.countyGrantCandidates(state)[0];
       if (!offer || !FB.countyInvestiture(state, offer.provinceId, offer.grantorId, offer.grantorId)) return false;
       FB.recordLiegeGrant(state);
       granted = true;
-    } else if (p.tier >= 4 && p.liege) {
+    } else if (FB.station.rulesRealm(p) && p.liege) {
       const cands = FB.liegeGrantCandidates(state);
       if (cands.length) {
         const got = FB.pick(cands);

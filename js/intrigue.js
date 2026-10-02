@@ -2242,7 +2242,7 @@ window.FB = window.FB || {};
 
   FB.fns.intrigue_hearing_can_resist = function (state, ctx) {
     return !!(activeHearing(state, ctx) && state.player.liege &&
-      state.player.tier >= 3 && !state.player.war);
+      FB.station.isLanded(state.player) && !state.player.war);
   };
 
   FB.fns.intrigue_hearing_challenge = function (state, ctx) {

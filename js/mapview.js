@@ -183,7 +183,7 @@ window.FB = window.FB || {};
     }
     const player = s.player;
     const pid = player.provinceId;
-    if (player.tier < 4) {
+    if (!FB.station.holdsCounty(player)) {
       const slot = typeof player.homeSettlement === 'number'
         ? player.homeSettlement : 0;
       const county = FB.world.sitesByProv && FB.world.sitesByProv[pid];
@@ -193,7 +193,7 @@ window.FB = window.FB || {};
         return;
       }
     }
-    M.centerOn(pid, player.tier <= 4 ? SITE_Z_DETAIL : 2.2);
+    M.centerOn(pid, FB.station.isDucal(player) ? 2.2 : SITE_Z_DETAIL);
   };
 
   /* ---------- base image ---------- */

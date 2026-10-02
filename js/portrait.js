@@ -559,9 +559,9 @@ window.FB = window.FB || {};
     if (period476) {
       if (FB.professionHasRole(profession, ['clergy', 'cloister']))
         pick = {kind:'lateVestment',base:[164,153,126]};
-      else if (tier >= 6)
+      else if (FB.station.isRoyal(tier))
         pick = {kind:'lateMantle',base:[104,65,118]};
-      else if (tier >= 3)
+      else if (FB.station.isLanded(tier))
         pick = {kind:'lateMantle',base:[124,81,69]};
       else pick = {kind:'lateTunic',base:[129,117,91]};
     }
@@ -571,8 +571,8 @@ window.FB = window.FB || {};
       clampV2(Math.round(pick.base[2] - shift*.4),0,255)];
     return {kind:pick.kind,base:cssV2(base),dark:cssV2(shadeV2(base,-.12)),
       deep:cssV2(shadeV2(base,-.22)),light:cssV2(shadeV2(base,.11)),
-      trim:tier >= 3 ? '#bea04e' : '#927e5c',
-      fur:tier >= 6 ? '#e8e2d6' : '#7a6854',raw:base};
+      trim:FB.station.isLanded(tier) ? '#bea04e' : '#927e5c',
+      fur:FB.station.isRoyal(tier) ? '#e8e2d6' : '#7a6854',raw:base};
   }
   function normalizedArt(item) {
     var source = item && item.art || {};
@@ -701,20 +701,20 @@ window.FB = window.FB || {};
   }
   function generatedHeadwear(spec, identity) {
     if (spec.period476) {
-      if (spec.tier >= 6) return 'circlet';
+      if (FB.station.isRoyal(spec)) return 'circlet';
       if (FB.professionHasRole(spec.profession, 'arms') && !spec.child &&
           saltedByte(identity,'wardrobe-head',2) > 128) return 'helm';
       if (spec.female && !spec.child &&
           saltedByte(identity,'wardrobe-head',1) > 150) return 'veil';
       return 'none';
     }
-    if (spec.child && spec.tier >= 6) return 'circlet';
+    if (spec.child && FB.station.isRoyal(spec)) return 'circlet';
     if (spec.faith === 'muslim' && !spec.female && !spec.child &&
         !FB.professionHasRole(spec.profession, 'cloister')) return 'turban';
     if (spec.faith === 'muslim' && spec.female && !spec.child) return 'veil';
-    if (spec.tier >= 7) return 'imperial';
-    if (spec.tier >= 6) return 'crown';
-    if (spec.tier >= 4) return 'circlet';
+    if (FB.station.isImperial(spec)) return 'imperial';
+    if (FB.station.isRoyal(spec)) return 'crown';
+    if (FB.station.rulesRealm(spec)) return 'circlet';
     if (spec.female && spec.age >= 46 &&
         saltedByte(identity,'wardrobe-head',1) > 84) return 'wimple';
     if (spec.female && !spec.child &&
@@ -723,12 +723,12 @@ window.FB = window.FB || {};
         saltedByte(identity,'wardrobe-head',2) > 96) return 'helm';
     if ((FB.professionHasRole(spec.profession, 'trading') || spec.faith === 'jewish') &&
         !spec.child && saltedByte(identity,'wardrobe-head',2) > 96) return 'cap';
-    if (spec.tier <= 1 && !spec.female && !spec.child &&
+    if (!FB.station.isGentle(spec) && !spec.female && !spec.child &&
         saltedByte(identity,'wardrobe-head',2) > 208) return 'coif';
     var roll = saltedByte(identity,'wardrobe-extra',0);
-    if (FB.professionHasRole(spec.profession, 'clergy') && spec.tier >= 2) return 'mitre';
-    if (spec.female && !spec.child && spec.tier >= 2 && roll > 150) return 'crespine';
-    if (spec.female && !spec.child && spec.tier >= 2 && roll > 96) return 'fillet';
+    if (FB.professionHasRole(spec.profession, 'clergy') && FB.station.isGentle(spec)) return 'mitre';
+    if (spec.female && !spec.child && FB.station.isGentle(spec) && roll > 150) return 'crespine';
+    if (spec.female && !spec.child && FB.station.isGentle(spec) && roll > 96) return 'fillet';
     if (spec.female && spec.child && roll > 176) return 'garland';
     if ((spec.culture === 'norse' || spec.culture === 'slavic' ||
         spec.culture === 'baltic' || (FB.cultureIsA &&
@@ -736,9 +736,9 @@ window.FB = window.FB || {};
            FB.cultureIsA(spec.culture, 'slavic') ||
            FB.cultureIsA(spec.culture, 'baltic')))) &&
         !spec.child && roll > 168) return 'furHat';
-    if (spec.female && spec.tier <= 2 && !spec.child && roll > 88) return 'kerchief';
-    if (spec.tier <= 1 && !spec.child && roll > 200) return 'strawHat';
-    if (spec.tier <= 3 && !spec.female && !spec.child && roll < 40) return 'chaperon';
+    if (spec.female && !FB.station.isLanded(spec) && !spec.child && roll > 88) return 'kerchief';
+    if (!FB.station.isGentle(spec) && !spec.child && roll > 200) return 'strawHat';
+    if (!FB.station.rulesRealm(spec) && !spec.female && !spec.child && roll < 40) return 'chaperon';
     return 'none';
   }
   function portraitDescriptor(state, c, year, opts) {
@@ -891,9 +891,9 @@ window.FB = window.FB || {};
       ? Math.max(0,saltedUnit(identity,'incidental-freckle',0)*1.4-.7)*
         (spec.child ? 1.6 : 1) : 0;
     spec.hwTrim = clampV2(.2+saltedUnit(identity,'wardrobe-hw-trim',0)*.6+
-      (tier >= 4 ? .2 : 0),0,1);
+      (FB.station.rulesRealm(tier) ? .2 : 0),0,1);
     spec.headwear = generatedHeadwear(spec,identity);
-    if (authored && authored.bareheadedSerf && tier === 0 &&
+    if (authored && authored.bareheadedSerf && FB.station.isSerf(tier) &&
         (FB.professionHasRole(profession, 'labor') || profession === 'none')) {
       spec.headwear = 'none';
     }
@@ -1679,7 +1679,7 @@ window.FB = window.FB || {};
     ctx.strokeStyle=spec.cloth.light;ctx.lineWidth=1.4;
     ctx.beginPath();ctx.moveTo(f.throatX-f.neckBaseW,f.collarY);
     ctx.quadraticCurveTo(f.throatX,f.collarY+18,f.throatX+f.neckBaseW,f.collarY);ctx.stroke();
-    if(spec.tier>=3){
+    if(FB.station.isLanded(spec)){
       ctx.strokeStyle=spec.cloth.trim;ctx.lineWidth=4;
       ctx.beginPath();ctx.moveTo(f.throatX-f.neckBaseW-2,f.collarY+3);
       ctx.quadraticCurveTo(f.throatX,f.collarY+22,f.throatX+f.neckBaseW+2,f.collarY+3);ctx.stroke();
@@ -3415,12 +3415,12 @@ window.FB = window.FB || {};
       ctx.stroke();
       if(K.studs){
         gemDot(ctx,f.right-4*u,f.hairY+1*u+K.drop,1.8*u,
-          spec.tier>=4?GOLD_L:[136,62,58],q);
+          FB.station.rulesRealm(spec)?GOLD_L:[136,62,58],q);
       }
       return;
     }
     band(ctx,f,f.hairY+1*u+K.drop,5,
-      spec.tier>=4&&K.studs?GOLD:shadeV2(LINEN,-.08),undefined,q);
+      FB.station.rulesRealm(spec)&&K.studs?GOLD:shadeV2(LINEN,-.08),undefined,q);
   }
   function hwWimple(ctx, f, spec, K, vr, q) {
     var u=K.u;
@@ -3456,7 +3456,7 @@ window.FB = window.FB || {};
     ctx.quadraticCurveTo(f.cx+7*u,top+10*u,
       f.cx+2*u,f.hairY+8*u+K.drop);
     ctx.stroke();
-    if(spec.tier>=5&&K.studs){
+    if(FB.station.isDucal(spec)&&K.studs){
       gemDot(ctx,f.cx+2*u,f.hairY+2*u+K.drop,2.6*u,[42,104,82],q);
     }
   }
@@ -3982,7 +3982,7 @@ window.FB = window.FB || {};
       drawItemArt(ctx,descriptor.loadout.neck,f.throatX,f.collarY+14,
         .68,0,false);
     }else if(descriptor.frame==='figure'&&
-      (spec.tier>=4||(FB.professionHasRole(spec.profession,['clergy','cloister'])&&
+      (FB.station.rulesRealm(spec)||(FB.professionHasRole(spec.profession,['clergy','cloister'])&&
         spec.faith==='christian'))){
       var chainY=f.collarY+8*u;
       ink(ctx,1.2*u,GOLD,.9,q);
@@ -4016,8 +4016,8 @@ window.FB = window.FB || {};
     var raw=spec.cloth.raw;
     return {base:raw,dark:shadeV2(raw,-.12),deep:shadeV2(raw,-.22),
       light:shadeV2(raw,.11),
-      trim:spec.tier>=3?[190,160,78]:[146,126,92],
-      fur:spec.tier>=6?[232,226,214]:[122,104,84]};
+      trim:FB.station.isLanded(spec)?[190,160,78]:[146,126,92],
+      fur:FB.station.isRoyal(spec)?[232,226,214]:[122,104,84]};
   }
   function legPath(ctx, b, side) {
     var xh=b.cx+side*b.stance,xa=b.cx+side*b.stance*.92;
@@ -4058,7 +4058,7 @@ window.FB = window.FB || {};
     ctx.quadraticCurveTo(xh,b.kneeY+hh*.035,xh+b.legKnee*.82,
       b.kneeY-hh*.025);
     ctx.stroke();
-    if(spec.tier<=2||FB.professionHasRole(spec.profession,'arms')){
+    if(!FB.station.isLanded(spec)||FB.professionHasRole(spec.profession,'arms')){
       ink(ctx,hh*.038,shadeV2(hose,-.36),.85,q);
       for(g=0;g<3;g++){
         t=.18+g*.26;
@@ -4572,8 +4572,8 @@ window.FB = window.FB || {};
       ctx.lineTo(cx+b.waistHalf*.62,b.waistY+b.headH*.38);
       ctx.stroke();
     }else{
-      var beltC=spec.tier>=4?cl.trim:shadeV2(cl.deep,-.1);
-      var buckle=spec.tier>=3?GOLD:null;
+      var beltC=FB.station.rulesRealm(spec)?cl.trim:shadeV2(cl.deep,-.1);
+      var buckle=FB.station.isLanded(spec)?GOLD:null;
       if(waistItem){
         var wc=hexToRgbV2(pickArt(waistItem,['leathers','cloths'],'#5b402b',2));
         if(wc)beltC=wc;
@@ -4594,7 +4594,7 @@ window.FB = window.FB || {};
         fillStrokeA(ctx,buckle,shadeV2(buckle,-.3),1.2,.9,q);
       }
     }
-    if(spec.tier>=4){
+    if(FB.station.rulesRealm(spec)){
       ink(ctx,2.4,cl.trim,.85,q);
       hemLine(ctx,b,3);
       ctx.stroke();

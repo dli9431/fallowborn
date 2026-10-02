@@ -68,6 +68,66 @@ registered.` Generation that needs a culture the map does not supply (a ruler
 without a capital county, a usurper without a seat) uses the era's
 `defaultCulture`.
 
+## Station and rank queries
+
+Engine code never compares a tier or a realm rank with a number. Every such check
+asks a named query in `js/station.js` (loaded after `model.js`) that says what the
+check means: `FB.station` for a household's ladder tier and `FB.realmRank` for a
+realm's rank. Each query is exactly the numeric comparison it replaced, so 867, 1066
+and 476 behave as before; a later change can answer the same questions from a
+government form's ladder without touching the callers again. A query takes a
+subject with a `tier` (or `rank`) field, such as `state.player`, a scenario, a
+portrait spec or a holy-war crown award, or a bare tier or rank number read on the
+same ladder. The source lint in `tests/e2e/specs/station-queries.spec.js` fails on
+any `.tier` or `.rank` member compared with a number outside `js/station.js`,
+except lines on its save and validation allowlist
+(`tests/e2e/fixtures/engine-ids/station-allowlist.json`, empty today).
+
+The ladder: tier 0 serf, 1 freeholder, 2 gentry, 3 baron, 4 count, 5 duke, 6 king,
+7 emperor. Realm rank: 0 a non-territorial rebel or holy-war faction, 1 county,
+2 duchy, 3 kingdom, 4 empire.
+
+| Query | Today's answer | Meaning | Call sites (count by file) |
+| --- | --- | --- | --- |
+| `station.isSerf` | tier 0 | unfree, bound to the land | events 20, actions 12, main 12, ui_misc 5, ui_modals 5, ui_panels 5, model 2, portrait, save, tournaments, world |
+| `station.isFreeholder` | tier 1 | the freeholder band | actions 6, economy 2, main 2, ui_modals 2, ui_panels 2, world 2 |
+| `station.isGentry` | tier 2 | the gentry band | actions 11, economy 4, lordships 4, model 4, events 3, armies 2, ui_modals 2, abbeys, ui_panels |
+| `station.isBaron` | tier 3 | the barony band, a status inside a county | actions 14, world 5, justice 3, lordships 3, abbeys 2, events 2, armies, economy, main, population, technology, ui_modals |
+| `station.isCount` | tier 4 | the count band | model 2, actions, ui_panels, world |
+| `station.isDuke` | tier 5 | the duke band; a duchy ambition | ambitions 6, actions 3, model 2, title_ids, ui_panels, world |
+| `station.isKing` | tier 6 | the king band; a kingdom ambition | actions 2, world 2, ambitions, title_ids, ui_panels |
+| `station.isEmperor` | tier 7 | the emperor band | actions, ui_panels, world |
+| `station.isFree` | tier 1+ | free of servile obligation | events 6, abbeys 2, actions 2, ui_modals 2, economy, holywar, main, tournaments, travel, ui_misc |
+| `station.isGentle` | tier 2+ | gentle standing, a manor or better | portrait 5, actions 4, main 4, economy 3, events 3, model 2, lordships, ui_modals |
+| `station.isFreeUnlanded` | tiers 1 to 2 | free but below the landed nobility: the road, ventures, local council | actions 3, travel 3, economy |
+| `station.isLanded` | tier 3+ | a titled, landed lord: governance, revenue, retinue, war | actions 40, economy 26, ui_panels 15, ui_modals 14, events 13, main 7, portrait 7, fiscal 6, justice 6, world 5, institutions 4, travel 4, ui_misc 4, agency 3, model 3, treasury 3, and 13 more files once or twice |
+| `station.sitsInEstates` | tiers 3 to 5 | a sworn lord below the crown who sits in the estates | parliament, politics |
+| `station.rulesRealm` | tier 4+ | rules a realm of one's own | actions 25, portrait 8, world 6, ui_modals 4, events 3, travel 3, ambitions 2, institutions 2, authority, justice, lordships, messages, papacy, rebellions, ui_panels, wars |
+| `station.holdsCounty` | tier 4+ | holds counties on the map (`state.player.provs`) | lordships 4, actions 2, fiscal 2, mapview, papacy, rebellions, ui_modals, world |
+| `station.isDucal` | tier 5+ | duke or above | actions 2, wars 2, world 2, mapview, model, portrait, ui_wars |
+| `station.isRoyal` | tier 6+ | wears a crown | actions 8, portrait 6, economy 2, institutions 2, ui_modals 2, world 2, main, model, wars |
+| `station.mayHoldCouncil` | tier 6+ | keeps a royal council, crown authority and council confirmation | institutions 3, ui_modals 3, fiscal 2, actions, economy, world |
+| `station.isImperial` | tier 7 | emperor | actions 7, portrait, ui_modals, ui_panels, wars, world |
+| `station.reaches` | tier not below a data minimum | `tierMin` and `minTier` thresholds, including `councilSeats` | economy 5, tournaments 4, ui_modals 3, actions 2, agency 2, council 2, events, institutions, mods, travel |
+| `station.exceeds` | tier above a data maximum | `tierMax` and `maxTier` caps | actions 2, events, institutions, mods, travel |
+| `station.societalRole` | serf, commoner, gentry, lord, crowned | the event audience behind `FB.societalRole` | util |
+| `realmRank.isCounty` | rank 1 | a county realm | world 3, actions |
+| `realmRank.isDuchy` | rank 2 | a duchy realm or award | holywar 4, ui_modals 2 |
+| `realmRank.isKingdom` | rank 3 | a kingdom | world |
+| `realmRank.isTerritorial` | rank 1+ | a territorial realm, not a faction | armies 2, authority, justice, treasury, wars, world |
+| `realmRank.isDucal` | rank 2+ | duchy or above | lordships 2, fortifications, wars |
+| `realmRank.isRoyal` | rank 3+ | a crown: kingdom or empire | holywar 12, world 11, actions 9, ui_modals 6, agency 2, ambitions, events, model, wars |
+| `realmRank.isImperial` | rank 4 | an empire | wars |
+
+Data thresholds stay data: `councilSeats` `tierMin`, action and event `tierMin` and
+`tierMax`, career and venture minimums, travel purpose ranges and tournament scales
+are read through `reaches` and `exceeds`, and an absent threshold never blocks.
+Relative comparisons between two tiers or two ranks (an outranking liege, a
+promotion target above the current tier) and tier arithmetic (realm rank plus
+three, title array indexes) remain ordinary code. Non-player character `station`
+values, a 0 to 4 social class, are not ladder tiers and are not routed through
+these queries.
+
 ## Canonical de jure title IDs (476 Phase 3)
 
 Each de jure rank has its own ID namespace. The slug `sicily` can denote a

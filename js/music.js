@@ -982,7 +982,7 @@ window.FB = window.FB || {};
     if (realmAtWar || player.war || player.greatHolyWar ||
         FB.professionHasRole(player.profession, 'arms') ||
         (player.flags && player.flags.on_campaign)) return 'war';
-    if (player.tier >= 3) return 'court';
+    if (FB.station.isLanded(player)) return 'court';
     return 'folk';
   }
 

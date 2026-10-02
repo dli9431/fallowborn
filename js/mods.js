@@ -583,8 +583,8 @@ window.FBMODS = window.FBMODS || [];
       if (career.maleOnly && scenario.sex !== 'm') {
         fail(path + '.profession', 'requires a male-only scenario.');
       }
-      if ((career.tierMin !== undefined && scenario.tier < career.tierMin) ||
-          (career.tierMax !== undefined && scenario.tier > career.tierMax)) {
+      if ((!FB.station.reaches(scenario, career.tierMin)) ||
+          (FB.station.exceeds(scenario, career.tierMax))) {
         fail(path + '.profession', 'is unavailable at tier ' + scenario.tier + '.');
       }
       for (const resource of ['gold','prestige','piety']) {

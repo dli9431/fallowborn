@@ -281,7 +281,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   after `events_paths.js`, and
   `events_intrigue.js` after tournament events and before ruler-agency events).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → title_ids →
-  model → music → portrait → siteart → governments → world → settlement → fortifications → holywar → population → modifiers →
+  model → station → music → portrait → siteart → governments → world → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
   technology → council → agency → politics → authority → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar) → keys → save → save_v4 → mods → main`. The generated English
@@ -436,6 +436,8 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
   (pickers, coin & credit, household, technology, character sheets, menu,
   settings, save/load, the Guide) — largest file.
 - `js/model.js` — characters, dynasties, traits, titles.
+- `js/station.js` — named station (`FB.station`) and realm rank (`FB.realmRank`) queries; the
+  only engine code that compares a tier or rank with a number.
 - `js/music.js` - Opus playback, contextual banks, shuffle history, preferences, and offline downloads.
 - `js/portrait.js` — procedural portraits/heraldry.
 - `js/siteart.js` — procedural settlement emblems for the detailed map (deterministic per

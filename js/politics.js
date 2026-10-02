@@ -255,7 +255,7 @@ window.FB = window.FB || {};
      trees, and generated realms without a ruler or territory never enter. */
   FB.politicalCourt = function (state) {
     if (!state || !state.player || !state.realms ||
-        state.player.dead || state.player.tier < 3 ||
+        state.player.dead || !FB.station.isLanded(state.player) ||
         (FB.game && FB.game.observe)) return null;
     var polityId = state.player.liege || (
       state.realms.player && state.realms.player.alive ? 'player' : null);
@@ -698,7 +698,7 @@ window.FB = window.FB || {};
       (pending.result ||
        state.turn < Number(pending.expiresTurn)) &&
       state.player.liege === court.polityId &&
-      state.player.tier >= 3 && state.player.tier <= 5);
+      FB.station.sitsInEstates(state.player));
   }
 
   function repairPendingRecord(pending) {
@@ -850,7 +850,7 @@ window.FB = window.FB || {};
       ? FB.realmStateRevision() : state.turn;
     var expectedPolity = null;
     if (state && state.player && !state.player.dead &&
-        state.player.tier >= 3 && !(FB.game && FB.game.observe)) {
+        FB.station.isLanded(state.player) && !(FB.game && FB.game.observe)) {
       expectedPolity = state.player.liege ||
         (state.realms.player && state.realms.player.alive ? 'player' : null);
       var expectedRealm = expectedPolity && state.realms[expectedPolity];

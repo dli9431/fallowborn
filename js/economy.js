@@ -205,7 +205,7 @@ window.FB = window.FB || {};
       const age = FB.ageOf(c, state.date.year);
       if (isPlayer) {
         profession = state.player.professionBack || state.player.profession || profession;
-      } else if (FB.stationOf(c) >= 2 || (state.player.tier >= 2 && dependentOfPlayer(state, c))) {
+      } else if (FB.stationOf(c) >= 2 || (FB.station.isGentle(state.player) && dependentOfPlayer(state, c))) {
         profession = FB.roleCareer('noble');
       }
       c.career = {
@@ -444,7 +444,7 @@ window.FB = window.FB || {};
 
   FB.careerExamOptions = function (state, c) {
     if (!managedCareerCharacter(state, c)) return [];
-    if (c.id === state.player.charId && state.player.tier >= 3) return [];
+    if (c.id === state.player.charId && FB.station.isLanded(state.player)) return [];
     const career = FB.careerOf(state, c);
     const def = career && FBDATA.careers[career.profession];
     if (!def || !def.learned || career.rank === 'unassigned' ||
@@ -536,7 +536,7 @@ window.FB = window.FB || {};
 
   FB.careerSpecializationOptions = function (state, c) {
     if (!managedCareerCharacter(state, c)) return [];
-    if (c.id === state.player.charId && state.player.tier >= 3) return [];
+    if (c.id === state.player.charId && FB.station.isLanded(state.player)) return [];
     const career = FB.careerOf(state, c);
     const def = career && FBDATA.careers[career.profession];
     if (!career || !def || career.specialization ||
@@ -755,7 +755,7 @@ window.FB = window.FB || {};
 
   FB.careerChoices = function (state, c) {
     if (!managedCareerCharacter(state, c)) return [];
-    if (c.id === state.player.charId && state.player.tier >= 3) return [];
+    if (c.id === state.player.charId && FB.station.isLanded(state.player)) return [];
     const age = FB.ageOf(c, state.date.year);
     const current = FB.careerOf(state, c);
     const playerClericalOffice = (c.id === state.player.charId &&
@@ -768,7 +768,7 @@ window.FB = window.FB || {};
       if (def.hiddenChoice) continue;
       if (def.bookmarkIds && def.bookmarkIds.indexOf(
           state.start && state.start.id) < 0) continue;
-      if (def.tierMin !== undefined && state.player.tier < def.tierMin) continue;
+      if (!FB.station.reaches(state.player, def.tierMin)) continue;
       if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) continue;
       if (def.maleOnly && c.sex !== 'm') continue;
       if (def.religionGroups && !def.religionGroups.some(function (id) {
@@ -1104,7 +1104,7 @@ window.FB = window.FB || {};
     c.station = Math.max(3, FB.stationOf(c));
     if (c.id === state.player.charId) {
       state.player.flags.bishop = 1;
-      if (state.player.tier < 3) {
+      if (!FB.station.isLanded(state.player)) {
         FB.setPlayerTier(state, 3, { stationFarewell:false });
       }
       if (!opts.noReward) state.player.prestige += 25;
@@ -1125,7 +1125,7 @@ window.FB = window.FB || {};
     c.bishopricVacatedTurn = state.turn;
     if (playerOffice) {
       delete state.player.flags.bishop;
-      if (bishopricOnly && state.player.tier === 3) {
+      if (bishopricOnly && FB.station.isBaron(state.player)) {
         FB.setPlayerTier(state, Math.max(2, record.previousTier || 2), {
           attachLiege:false
         });
@@ -1141,7 +1141,7 @@ window.FB = window.FB || {};
     if (!record || c.id !== state.player.charId) return false;
     state.player.flags.bishop = 1;
     if (!(state.player.provs && state.player.provs.length) &&
-        state.player.tier < 3) {
+        !FB.station.isLanded(state.player)) {
       FB.setPlayerTier(state, 3, { stationFarewell:false });
     }
     return true;
@@ -1223,7 +1223,7 @@ window.FB = window.FB || {};
     c.station = Math.max(2, FB.stationOf(c));
     if (c.id === state.player.charId) {
       state.player.flags.abbot = 1;
-      if (state.player.tier < 2) {
+      if (!FB.station.isGentle(state.player)) {
         FB.setPlayerTier(state, 2, { stationFarewell:false });
       }
     }
@@ -1340,7 +1340,7 @@ window.FB = window.FB || {};
         province:reservedSee ? reservedSee.name : seeProvinceId
       }));
     }
-    if (c.id === state.player.charId && (state.player.tier > 2 ||
+    if (c.id === state.player.charId && (FB.station.isLanded(state.player) ||
         (state.player.provs && state.player.provs.length))) {
       missing.push(FB.T('not already holding secular land or baronial rank'));
     } else if (c.id !== state.player.charId && FB.stationOf(c) > 2) {
@@ -1414,7 +1414,7 @@ window.FB = window.FB || {};
   function promotePlayerReligiously(state, step) {
     const p = state.player;
     if (step.flag) p.flags[step.flag] = 1;
-    if (!step.tier || step.tier <= p.tier) return;
+    if (!step.tier || FB.station.reaches(p, step.tier)) return;
     FB.setPlayerTier(state, step.tier);
   }
 
@@ -1448,7 +1448,7 @@ window.FB = window.FB || {};
   FB.beginCareer = function (state, c, profession) {
     const def = FBDATA.careers[profession];
     if (!managedCareerCharacter(state, c) || !def) return false;
-    if (c.id === state.player.charId && state.player.tier >= 3) return false;
+    if (c.id === state.player.charId && FB.station.isLanded(state.player)) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     const age = FB.ageOf(c, state.date.year);
     const choices = FB.careerChoices(state, c);
@@ -1592,7 +1592,7 @@ window.FB = window.FB || {};
   FB.householdStandardActive = function (state, id) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
     if (!def || !FB.householdStandardLevel(state, id)) return false;
-    if (def.kind === 'ruler' && state.player.tier < 3) return false;
+    if (def.kind === 'ruler' && !FB.station.isLanded(state.player)) return false;
     const current = FB.householdStandardLevelDef(state, id);
     if (current && current.requiresTech && !current.grandfatherTech &&
         !FB.techRequirementMet(state, current.requiresTech)) return false;
@@ -1695,7 +1695,7 @@ window.FB = window.FB || {};
           : next.requiresTech
       });
     }
-    if (state.player.tier < tierMin) {
+    if (!FB.station.reaches(state.player, tierMin)) {
       return FB.T('Requires {rank} rank.', {
         rank:FB.titleWordFor(state, tierMin)
       });
@@ -1742,7 +1742,7 @@ window.FB = window.FB || {};
     if (!def || !Array.isArray(def.levels) || def.kind === 'work' ||
         def.kind === 'ruler' ||
         def.titleFloor === false ||
-        state.player.tier < 3) return 0;
+        !FB.station.isLanded(state.player)) return 0;
     return Math.min(def.levels.length, Math.max(1, state.player.tier - 2));
   };
 
@@ -1831,7 +1831,7 @@ window.FB = window.FB || {};
       upkeep = FB.householdStandardsUpkeep(state);
     }
     available = Math.max(0, state.player.gold);
-    const paid = state.player.tier >= 3 ? upkeep : Math.min(available, upkeep);
+    const paid = FB.station.isLanded(state.player) ? upkeep : Math.min(available, upkeep);
     state.player.gold -= paid;
     state.player.prestige += FB.householdStandardEffect(state, 'prestige');
     return { paid:paid, reduced:reduced };
@@ -2000,7 +2000,7 @@ window.FB = window.FB || {};
 
   FB.canHireRetainer = function (state, office, cid) {
     const def = FB.positionDef(office);
-    if (!def || def.kind !== 'retainer' || state.player.tier < (def.minTier || 0)) return false;
+    if (!def || def.kind !== 'retainer' || !FB.station.reaches(state.player, def.minTier || 0)) return false;
     const candidate = cid && state.chars[cid];
     if (candidate && FB.isExternalHouseholdAuthority &&
         FB.isExternalHouseholdAuthority(state, candidate)) return false;
@@ -2337,7 +2337,7 @@ window.FB = window.FB || {};
     if (!FB.educationStudentEligible(state, c)) {
       return { available:false, reason:'student' };
     }
-    if (def.tierMin !== undefined && state.player.tier < def.tierMin) {
+    if (!FB.station.reaches(state.player, def.tierMin)) {
       return { available:false, reason:'tier' };
     }
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) {
@@ -3703,7 +3703,7 @@ window.FB = window.FB || {};
     for (const c of candidates) {
       if (!c || seen[c.id]) continue;
       seen[c.id] = 1;
-      if (c.id === state.player.charId && state.player.tier >= 3) continue;
+      if (c.id === state.player.charId && FB.station.isLanded(state.player)) continue;
       if (FB.familyOfficeRecord && FB.familyOfficeRecord(state, c.id)) continue;
       const career = FB.careerOf(state, c);
       if (!enterpriseCareerWorkerEligible(state, c, def)) continue;
@@ -3758,7 +3758,7 @@ window.FB = window.FB || {};
     }
     const residents = [];
     for (const c of FB.householdWorkers(state)) {
-      if (c.id === state.player.charId && state.player.tier >= 3) continue;
+      if (c.id === state.player.charId && FB.station.isLanded(state.player)) continue;
       if (FB.familyOfficeRecord && FB.familyOfficeRecord(state, c.id)) continue;
       if (FB.characterResidence(state, c) !== enterprise.provinceId ||
           !enterpriseCareerWorkerEligible(state, c, def)) continue;
@@ -5280,7 +5280,7 @@ window.FB = window.FB || {};
     for (const c of FB.householdWorkers(state)) {
       if (!c || c.dead || FB.ageOf(c, state.date.year) < 16) continue;
       if (c.id === state.player.charId &&
-          (state.player.tier >= 3 || state.player.travel)) continue;
+          (FB.station.isLanded(state.player) || state.player.travel)) continue;
       if (FB.characterResidence(state, c) !== state.player.provinceId) continue;
       const career = FB.careerOf(state, c);
       if (!career || !career.chosen || career.profession !== 'physician' ||
@@ -5322,7 +5322,7 @@ window.FB = window.FB || {};
       const def = career && FBDATA.careers[career.profession];
       if (!def) continue;
       const age = FB.ageOf(c, state.date.year);
-      if (c.id === state.player.charId && state.player.tier >= 3) {
+      if (c.id === state.player.charId && FB.station.isLanded(state.player)) {
         /* Office-holding clergy still accumulate the years required for
            religious standing; every secular hands-on career freezes. */
         if (age >= 16 && FB.professionHasRole(career.profession,
@@ -5349,7 +5349,7 @@ window.FB = window.FB || {};
       if (!career.chosen && age >= 16) {
         career.chosen = true;
         career.rank = 'journeyman';
-        career.profession = FB.roleCareer(state.player.tier >= 2 &&
+        career.profession = FB.roleCareer(FB.station.isGentle(state.player) &&
           dependentOfPlayer(state, c) ? 'noble' : 'labor');
       } else if (career.chosen && career.rank === 'apprentice' && age >= (def.apprenticeAge || 10)) {
         career.experience++;
@@ -5391,7 +5391,7 @@ window.FB = window.FB || {};
 
   FB.guildAdvance = function (state, c) {
     if (!managedCareerCharacter(state, c)) return null;
-    if (c && c.id === state.player.charId && state.player.tier >= 3) return null;
+    if (c && c.id === state.player.charId && FB.station.isLanded(state.player)) return null;
     const career = FB.careerOf(state, c);
     const def = career && FBDATA.careers[career.profession];
     if (!def || !def.guild || career.rank === 'apprentice' || career.rank === 'unassigned') return null;
@@ -5426,7 +5426,7 @@ window.FB = window.FB || {};
   FB.takeGuildStep = function (state, c) {
     c = c || playerChar(state);
     if (!managedCareerCharacter(state, c)) return false;
-    if (c.id === state.player.charId && state.player.tier >= 3) return false;
+    if (c.id === state.player.charId && FB.station.isLanded(state.player)) return false;
     const career = FB.careerOf(state, c);
     const step = FB.guildAdvance(state, c);
     if (!step || step.blocked || state.player.gold < step.cost) return false;
@@ -5630,7 +5630,7 @@ window.FB = window.FB || {};
         state.player.provinceId !== record.scopeId) return 'relocation';
     if (slot === 'incoming' && record.scope === 'liege' &&
         state.player.liege !== record.scopeId) return 'liege';
-    if (slot === 'outgoing' && state.player.tier < 3) return 'authority';
+    if (slot === 'outgoing' && !FB.station.isLanded(state.player)) return 'authority';
     return null;
   }
 
@@ -5742,7 +5742,7 @@ window.FB = window.FB || {};
      Landed vassals address their exact direct liege and use that realm's tier. */
   FB.guildMonopolyGrantor = function (state, createLocal) {
     const p = state.player;
-    if (p.tier <= 2) {
+    if (!FB.station.isLanded(p)) {
       const lord = FB.getRole ? FB.getRole(state, 'lord', !!createLocal) : null;
       if (!lord || lord.dead) return null;
       return {
@@ -5795,7 +5795,7 @@ window.FB = window.FB || {};
     const grantor = FB.guildMonopolyGrantor(state, createLocal);
     if (!grantor) return {
       ready:false,
-      reason:state.player.tier >= 3 && !state.player.liege
+      reason:FB.station.isLanded(state.player) && !state.player.liege
         ? FB.T('An independent landed ruler has no superior to petition.')
         : FB.T('No valid local grantor can hear this petition.')
     };
@@ -5950,7 +5950,7 @@ window.FB = window.FB || {};
   }
 
   FB.guildMonopolyIssueStatus = function (state) {
-    if (state.player.tier < 3) return {
+    if (!FB.station.isLanded(state.player)) return {
       ready:false,
       reason:FB.T('Only a baron or higher ruler may grant a monopoly.')
     };
@@ -6525,16 +6525,16 @@ window.FB = window.FB || {};
       ? FB.reliableGoldIncome(state, false, e) : 0;
     if (defs.merchant && (!defs.merchant.requiresTech ||
       FB.techRequirementMet(state, defs.merchant.requiresTech)) &&
-      state.player.tier <= 2 && income > 0 && career &&
+      !FB.station.isLanded(state.player) && income > 0 && career &&
       (FB.professionHasRole(career.profession, ['trading', 'craft']) ||
-        state.player.tier === 2)) {
+        FB.station.isGentry(state.player))) {
       const principal = Math.floor(Math.min(defs.merchant.maxPrincipal || 100,
         FB.financeCreditCapacity(state, null, false, e)));
       if (principal >= 10) out.push({ kind:'merchant', principal:principal, collateral:null });
     }
     if (defs.revenue && (!defs.revenue.requiresTech ||
       FB.techRequirementMet(state, defs.revenue.requiresTech)) &&
-      state.player.tier >= 3 && income > 0) {
+      FB.station.isLanded(state.player) && income > 0) {
       const principal = Math.floor(Math.min(defs.revenue.maxPrincipal || 500,
         FB.financeCreditCapacity(state, null, true, e)));
       if (principal >= 20) out.push({ kind:'revenue', principal:principal, collateral:null });
@@ -6550,7 +6550,7 @@ window.FB = window.FB || {};
      serf can neither borrow on income nor trade — the sheet matters only once
      shortfall, booked obligation, or eligible pledge offer makes it relevant. */
   FB.financeUiRelevant = function (state) {
-    if (state.player.tier >= 1) return true;
+    if (FB.station.isFree(state.player)) return true;
     if (state.armyLogistics && state.armyLogistics.producerLast) return true;
     const e = FB.ensureEconomy(state);
     return state.player.gold < -0.0001 || activeLoans(e).length > 0 ||
@@ -6665,7 +6665,7 @@ window.FB = window.FB || {};
           FB.landCountAt(state, manor.provinceId, manor.settlement) <
             (FBDATA.balance.manorPlotRequirement || 5)) {
         state.player.manor = null;
-        if (state.player.tier === 2 && FB.setPlayerTier) FB.setPlayerTier(state, 1);
+        if (FB.station.isGentry(state.player) && FB.setPlayerTier) FB.setPlayerTier(state, 1);
       }
       return removed > 0;
     }
@@ -6713,7 +6713,7 @@ window.FB = window.FB || {};
       (FBDATA.balance.financeDefaultBanSeasons || 4) * 90);
     state.player.prestige = Math.max(0, state.player.prestige -
       (FBDATA.balance.financeDefaultPrestige || 15));
-    if (state.player.tier >= 6 && FB.councilAuthority) {
+    if (FB.station.mayHoldCouncil(state.player) && FB.councilAuthority) {
       FB.councilAuthority(state, -5);
       if (FB.councilMembers) {
         for (const member of FB.councilMembers(state)) {
@@ -6721,7 +6721,7 @@ window.FB = window.FB || {};
             'finance:default');
         }
       }
-    } else if (state.player.tier >= 3 && state.player.liege) {
+    } else if (FB.station.isLanded(state.player) && state.player.liege) {
       FB.adjustStanding(state, {
         kind:'realm', id:state.player.liege
       }, -5, 'finance:default');
@@ -6884,7 +6884,7 @@ window.FB = window.FB || {};
   }
   FB.fns.finance_in_default = function (state) {
     const p = state.player;
-    if (p.tier > 2) return false;
+    if (FB.station.isLanded(p)) return false;
     const grace = FBDATA.balance.distraintGraceDays || 90;
     for (const loan of defaultedLoans(state)) {
       if (loan.defaultTurn !== undefined && state.turn - loan.defaultTurn >= grace) return true;
@@ -6922,8 +6922,8 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.finance.distraint_cleared',
         '⚖ The distraint is satisfied; what is left is yours again.', {}));
     } else {
-      const eventId = p.tier === 2 ? 'manor_forfeit' :
-        (p.tier === 1 ? 'bondage_sentence' : 'debt_labor_sentence');
+      const eventId = FB.station.isGentry(p) ? 'manor_forfeit' :
+        (FB.station.isFreeholder(p) ? 'bondage_sentence' : 'debt_labor_sentence');
       FB.queueEvent(state, eventId, {});
     }
   };
@@ -6933,12 +6933,12 @@ window.FB = window.FB || {};
     const p = state.player;
     for (const loan of defaultedLoans(state)) { loan.status = 'settled'; loan.face = 0; }
     delete p.flags.debt_distraint;
-    if (p.tier === 2) {
+    if (FB.station.isGentry(p)) {
       p.manor = null;
       FB.setPlayerTier(state, 1);
       FB.news(state, FB.msg('news.economy.bondage_gentry',
         '⛓ The manor passes to the creditor. The debt is extinguished, and the family falls to freeholder.', {}));
-    } else if (p.tier === 1) {
+    } else if (FB.station.isFreeholder(p)) {
       FB.setPlayerTier(state, 0, { tenureFormationReason: 'debt_bondage' });
       FB.news(state, FB.msg('news.economy.bondage',
         '⛓ The court binds your family to the land for the debt. You are the lord’s now, body and plow.', {}));
@@ -7054,7 +7054,7 @@ window.FB = window.FB || {};
     if (!c || FB.ageOf(c, state.date.year) < 16) {
       return FB.T('Only an adult can form a trade venture.');
     }
-    if (p.tier < 1 || p.tier > 2) {
+    if (!FB.station.isFreeUnlanded(p)) {
       return FB.T('Only freeholders and gentry can form a trade venture.');
     }
     if (p.travel) return FB.T('A traveler cannot organize another venture.');
@@ -7803,7 +7803,7 @@ window.FB = window.FB || {};
     const e = FB.ensureEconomy(state);
     const cooldown = FBDATA.balance.financeDebaseCooldown || 1800;
     return FB.techRequirementMet(state, 'mint_assay') &&
-      state.player.tier >= 6 && !state.player.liege &&
+      FB.station.isRoyal(state.player) && !state.player.liege &&
       (e.lastDebasementTurn === undefined ||
         state.turn - e.lastDebasementTurn >= cooldown);
   };
@@ -7845,7 +7845,7 @@ window.FB = window.FB || {};
     const e = FB.ensureEconomy(state);
     const cost = Math.max(30, Math.round((FB.playerTax ? FB.playerTax(state) : 15) * 2));
     return FB.techRequirementMet(state, 'mint_assay') &&
-      state.player.tier >= 6 && !state.player.liege && e.debasements > e.recoinages &&
+      FB.station.isRoyal(state.player) && !state.player.liege && e.debasements > e.recoinages &&
       e.price > 1.02 && state.player.gold >= cost &&
       (e.lastRecoinTurn === undefined || state.turn - e.lastRecoinTurn >= 1800);
   };
@@ -7974,7 +7974,7 @@ window.FB = window.FB || {};
       workReady:false, reason:'', renewal:!!(r && r.status !== 'ended' && roleId === r.roleId &&
         (r.status === 'review' || r.employerId !== (patron && patron.id))) };
     if (!c || c.dead || p.dead) out.reason = FB.T('This life has ended.');
-    else if (p.tier >= 3) out.reason = FB.T('A landed ruler cannot hold a household service appointment.');
+    else if (FB.station.isLanded(p)) out.reason = FB.T('A landed ruler cannot hold a household service appointment.');
     else if (FB.ageOf(c, state.date.year) < 16) out.reason = FB.T('Household service begins at age 16.');
     else if (p.travel) out.reason = FB.T('Return home to serve this household.');
     else if (p.flags.in_prison) out.reason = FB.T('Service is suspended during captivity.');
@@ -8063,7 +8063,7 @@ window.FB = window.FB || {};
     const r = FB.householdServiceRecord(state);
     if (!r || r.status === 'ended') return;
     const p = state.player, c = state.chars[p.charId];
-    if (!c || c.dead || p.dead || p.tier >= 3 ||
+    if (!c || c.dead || p.dead || FB.station.isLanded(p) ||
         r.provinceId !== serviceHome(p) || r.settlement !== serviceSettlement(p)) {
       FB.endHouseholdService(state, 'circumstances', silent); return;
     }

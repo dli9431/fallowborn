@@ -304,7 +304,7 @@ window.FB = window.FB || {};
     join(state, group, pid, true);
     if (FB.tournaments) FB.tournaments.reconcile(state);
     var row = state.collectiveDemands && state.collectiveDemands.uprising;
-    if (!row && target === 'player' && state.player.tier >= 4) {
+    if (!row && target === 'player' && FB.station.rulesRealm(state.player)) {
       var demands = state.collectiveDemands || (state.collectiveDemands = {});
       row = demands.uprising = { id:'uprising:' + group.id, stage:'active', scopeId:pid,
         privilegeId:'tax_concession', countyIds:[pid], visitedCountyIds:[pid], countyStates:{},
@@ -432,7 +432,7 @@ window.FB = window.FB || {};
       // The new polity uses its capital's proper name and the normal rank label.
       notice(state, 'independence', { counties:component.map(countyName).join(', ') });
     }
-    if (state.player.tier >= 4 && !state.player.provs.length && FB.loseAllLand) FB.loseAllLand(state);
+    if (FB.station.holdsCounty(state.player) && !state.player.provs.length && FB.loseAllLand) FB.loseAllLand(state);
     finish(state, group, 'independence');
   }
   FB.rebellionsAfterArmies = function (state) {

@@ -3235,8 +3235,8 @@ FB.CHANGELOG = [
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: startEffects.warService || 0,
-        liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
-        freeholderGeneration: sc.tier >= 2 ? 0 : (sc.tier === 1 ? 1 : null),
+        liegeGrants: 0, gentryGeneration: FB.station.isGentle(sc) ? 0 : null,
+        freeholderGeneration: FB.station.isGentle(sc) ? 0 : (FB.station.isFreeholder(sc) ? 1 : null),
         developmentBaselineMigration: 1,
         militaryCommand:null,
         lineDepth: 1,
@@ -3282,8 +3282,8 @@ FB.CHANGELOG = [
     const me = FB.makeCharacter(state, {
       name: name, sex: sex, culture: cultureId, religion: religionId,
       born: start.year - (sc.startAge || preset.age || FBDATA.balance.startAge),
-      quality: sc.tier >= 2 ? 2 : 0, traitsN: 2,
-      station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
+      quality: FB.station.isGentle(sc) ? 2 : 0, traitsN: 2,
+      station:FB.clamp(sc.tier, 0, 4), unfree:FB.station.isSerf(sc)
     });
     me.health = 8;
     /* Match ordinary start-code choices too, so replay preserves the face
@@ -3322,12 +3322,12 @@ FB.CHANGELOG = [
     const dad = FB.makeCharacter(state, {
       sex: 'm', culture: cultureId, religion: religionId,
       born: me.born - FB.ri(20, 40), role: 'parent', quality: 1, dyn: me.dyn,
-      station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
+      station:FB.clamp(sc.tier, 0, 4), unfree:FB.station.isSerf(sc)
     });
     const mom = FB.makeCharacter(state, {
       sex: 'f', culture: cultureId, religion: religionId,
       born: me.born - FB.ri(20, 34), role: 'parent',
-      station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
+      station:FB.clamp(sc.tier, 0, 4), unfree:FB.station.isSerf(sc)
     });
     dad.health = 8; mom.health = 8;
     if (FB.permitsMatrilinealMarriage(state, cultureId)) mom.dyn = me.dyn;
@@ -3343,12 +3343,12 @@ FB.CHANGELOG = [
         sex:'m', culture:cultureId, religion:religionId,
         born:dad.born - FB.ri(20, 40), role:'grandparent',
         quality:1, dyn:me.dyn, byname:'', station:FB.clamp(sc.tier, 0, 4),
-        unfree:sc.tier === 0
+        unfree:FB.station.isSerf(sc)
       });
       const grandmom = FB.makeCharacter(state, {
         sex:'f', culture:cultureId, religion:religionId,
         born:dad.born - FB.ri(18, 34), role:'grandparent',
-        station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
+        station:FB.clamp(sc.tier, 0, 4), unfree:FB.station.isSerf(sc)
       });
       granddad.health = 8; grandmom.health = 8;
       if (FB.permitsMatrilinealMarriage(state, cultureId)) grandmom.dyn = dad.dyn;
@@ -3368,7 +3368,7 @@ FB.CHANGELOG = [
         born: me.born + (FB.ri(-6, 6) || 2), // never a same-year twin
         role: 'sibling', dyn: me.dyn,
         fatherId:dad.id, motherId:mom.id,
-        station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
+        station:FB.clamp(sc.tier, 0, 4), unfree:FB.station.isSerf(sc)
       });
       sib.health = 8;
       sib.fatherId = dad.id; sib.motherId = mom.id;
@@ -3384,7 +3384,7 @@ FB.CHANGELOG = [
         culture: cultureId, religion: religionId,
         born: me.born - FB.ri(preset.spouseAge[0], preset.spouseAge[1]),
         role: 'spouse', station:FB.clamp(sc.tier, 0, 4),
-        unfree:sc.tier === 0
+        unfree:FB.station.isSerf(sc)
       });
       spouse.health = 8;
       me.spouseId = spouse.id; spouse.spouseId = me.id;
@@ -3402,7 +3402,7 @@ FB.CHANGELOG = [
           dyn: FB.childDynastySource(state, me, spouse, true).dyn,
           fatherId: me.sex === 'm' ? me.id : spouse.id,
           motherId: me.sex === 'm' ? spouse.id : me.id,
-          station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
+          station:FB.clamp(sc.tier, 0, 4), unfree:FB.station.isSerf(sc)
         });
         child.health = 8;
         me.childrenIds.push(child.id); spouse.childrenIds.push(child.id);
@@ -3415,7 +3415,7 @@ FB.CHANGELOG = [
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
     if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
     if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
-    if (sc.tier === 3 && !FB.initializeBaronyStart(state)) {
+    if (FB.station.isBaron(sc) && !FB.initializeBaronyStart(state)) {
       FB.state = previousState;
       FB.setRngState(previousRng);
       FB.setUidCounter(previousUid);
@@ -3424,7 +3424,7 @@ FB.CHANGELOG = [
       showScenarios();
       return false;
     }
-    if (sc.tier === 0) {
+    if (FB.station.isSerf(sc)) {
       /* The integrated tenure sheet and lawful-freedom routes name the exact
          home authority from the first playable frame. Establish the bounded
          local lord/steward cast before tenure snapshots that authority. */
@@ -3432,7 +3432,7 @@ FB.CHANGELOG = [
       if (FB.ensureSerfTenure) FB.ensureSerfTenure(state, 'new_game');
     }
 
-    if (sc.tier >= 3) {
+    if (FB.station.isLanded(sc)) {
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
       state.player.liegeOp = 10;
     }
@@ -3950,13 +3950,13 @@ FB.CHANGELOG = [
       if (FB.intrigueSeason) FB.intrigueSeason(s);
       if (p.dead) return 'dead';
       if (FB.marketSeason) FB.marketSeason(s);
-      const taxParts = p.tier >= 3 ? FB.playerTaxParts(s) : null;
+      const taxParts = FB.station.isLanded(p) ? FB.playerTaxParts(s) : null;
       const income = taxParts ? FB.playerTax(s, taxParts) : 0;
       if (FB.tournaments) FB.tournaments.samplePlayer(s);
       if (FB.treasurySeason) FB.treasurySeason(s, taxParts);
       if (FB.authoritySeason) FB.authoritySeason(s);
       if (FB.situation476Season) FB.situation476Season(s);
-      const buildingUpkeep = p.tier >= 3
+      const buildingUpkeep = FB.station.isLanded(p)
         ? FB.buildingBonus(s, 'upkeep') + (FB.fortUpkeep ? FB.fortUpkeep(s) : 0)
         : 0;
       const modifierUpkeep = FB.modifierUpkeep ? FB.modifierUpkeep(s, 'gold') : 0;
@@ -3981,7 +3981,7 @@ FB.CHANGELOG = [
       p.prestige += FB.holdingBonus(s, 'prestige') + FB.itemBonus(s, 'prestige');
       if (newYear) p.prestige += FB.rankPrestigeYearly(s).total;
       p.piety += FB.holdingBonus(s, 'piety') + FB.itemBonus(s, 'piety');
-      if (p.tier >= 3) {
+      if (FB.station.isLanded(p)) {
         p.piety += FB.buildingBonus(s, 'piety') + (FB.councilBonus ? FB.councilBonus(s, 'piety') : 0);
         // Building research is credited once through national techResearchRate.
         if (FB.councilEnsure) FB.councilEnsure(s); // the royal council forms at a coronation — and heals old saves
@@ -4426,7 +4426,7 @@ FB.CHANGELOG = [
       title:function () { return FB.T('Making a living'); },
       // livelihoods and enterprises belong to the lower stations — landed
       // rulers (tier 3+) finish with the family track instead
-      when:function (s) { return s.player.tier <= 2; },
+      when:function (s) { return !FB.station.isLanded(s.player); },
       note:function (s) {
         const flags = s.player.flags || {};
         if (!flags.tut_successor_child && !flags.tut_successor_relative) {
@@ -4479,7 +4479,7 @@ FB.CHANGELOG = [
             flags.tut_successor_relative;
           const me = s.chars[s.player.charId];
           const minor = successor && me && FB.ageOf(me, s.date.year) < 16;
-          if (s.player.tier === 0 && !FB.platform.isCrazyGames) {
+          if (FB.station.isSerf(s.player) && !FB.platform.isCrazyGames) {
             return minor
               ? FB.T('Come of age, petition or buy freedom, then acquire land')
               : FB.T('Petition or buy freedom, then acquire your first land plot');
@@ -4523,7 +4523,7 @@ FB.CHANGELOG = [
       return !!p.profession;
     }
     if (id === 'enterprise') return (p.enterprises || []).length > 0;
-    if (id === 'freedom') return p.tier > 0;
+    if (id === 'freedom') return FB.station.isFree(p);
     if (id === 'land') return FB.landPlots(s).length > 0;
     if (id === 'kin_tab') return !!flags.tut_kin_tab;
     if (id === 'wed' || id === 'heir') {
@@ -5709,9 +5709,9 @@ FB.CHANGELOG = [
       'Died owing a goat. The goat has not forgotten.', {}));
     if (s.player.prestige >= 400) pool.push(FB.msg('legend.condition.famous',
       'So famous that strangers are mourning professionally.', {}));
-    if (s.player.tier === 0) pool.push(FB.msg('legend.condition.serf',
+    if (FB.station.isSerf(s.player)) pool.push(FB.msg('legend.condition.serf',
       'Born a serf, died a serf, and outstubborned everyone in between.', {}));
-    if (s.player.tier >= 6) pool.push(FB.msg('legend.condition.emperor',
+    if (FB.station.isRoyal(s.player)) pool.push(FB.msg('legend.condition.emperor',
       'Ruled an empire; the empire has been formally notified.', {}));
     let best = null, bestV = 0;
     for (const k of FB.SKILLS) {
@@ -5834,7 +5834,7 @@ FB.CHANGELOG = [
     let inheritedHoldings = (papalCustody &&
       Array.isArray(papalCustody.holdings)
       ? papalCustody.holdings : FB.holdingList(s)).slice();
-    const successionTier = FB.playerAbbeyOnly && FB.playerAbbeyOnly(s) ? 2 : outgoingTier <= 1
+    const successionTier = FB.playerAbbeyOnly && FB.playerAbbeyOnly(s) ? 2 : !FB.station.isGentle(outgoingTier)
       ? (FB.isUnfreeCharacter(s, heir)
         ? 0 : FB.clamp(FB.stationOf(heir), 0, 1)) : outgoingTier;
     const tutorialCarry = FB.tutorialActive(s) ? {} : null;
@@ -6039,7 +6039,7 @@ FB.CHANGELOG = [
     p.focus = FB.defaultFocus(s);
 
     // heirs of ruling houses keep the liege bond
-    if (p.tier >= 3 && !p.liege && !FB.isPlayerSovereign(s)) {
+    if (FB.station.isLanded(p) && !p.liege && !FB.isPlayerSovereign(s)) {
       const rid = (s.holder && s.holder[p.provinceId]) || s.owner[p.provinceId];
       if (rid && rid !== 'player') {
         FB.changePlayerLiege(s, rid, 'succession:restore_liege');
@@ -6077,7 +6077,7 @@ FB.CHANGELOG = [
     }
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     if (FB.papacyPlayerSuccession) FB.papacyPlayerSuccession(s, old.id);
-    if (p.tier >= 3 && FB.noteLifeAccession) {
+    if (FB.station.isLanded(p) && FB.noteLifeAccession) {
       FB.noteLifeAccession(s, heir, FB.playerStatusTitleSnapshot(s));
     }
     p.holdings = inheritedHoldings.slice();
@@ -6110,7 +6110,7 @@ FB.CHANGELOG = [
         '👤 {name} takes up the family’s story. Generation {generation}.',
         { name: FB.fullName(heir), generation: s.generation }));
     }
-    if (outgoingTier === 1 && successionTier === 0) {
+    if (FB.station.isFreeholder(outgoingTier) && FB.station.isSerf(successionTier)) {
       FB.news(s, FB.msg('news.life.unfree_successor',
         '⛓ {name} was never included in the family’s manumission. Property passes on, but the new household head remains a serf.', {
           name:FB.fullName(heir)

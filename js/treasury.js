@@ -9,7 +9,7 @@
     return state.treasuryAccounting && state.treasuryAccounting.mode === 'active' && account(state, rid);
   }
   function eligible(realm, rid) {
-    return rid !== 'player' && realm && realm.alive && !realm.rebelFaction && realm.rank >= 1;
+    return rid !== 'player' && realm && realm.alive && !realm.rebelFaction && FB.realmRank.isTerritorial(realm);
   }
   function count(key, amount) {
     const timing = FB.game && FB.game._fastForwardTiming;
@@ -93,7 +93,7 @@
   // Shared public-government expenses; household and military costs stay separate.
   FB.governmentCostParts = function (revenue, counties, vassals, tier) {
     const b = FBDATA.balance, r = positive(revenue);
-    if (tier < 3) return { revenue:0, administration:0, court:0, total:0 };
+    if (!FB.station.isLanded(tier)) return { revenue:0, administration:0, court:0, total:0 };
     const allowances = b.governmentCourtAllowance;
     const administration = r * b.governmentAdministrationRate + Math.min(
       r * b.governmentScaleRate, (positive(counties) + positive(vassals)) * b.governmentSeatCost);
@@ -103,7 +103,7 @@
   };
   FB.playerGovernmentCosts = function (state, tax) {
     const p = state.player;
-    if (p.tier < 3) return FB.governmentCostParts(0, 0, 0, p.tier);
+    if (!FB.station.isLanded(p)) return FB.governmentCostParts(0, 0, 0, p.tier);
     return FB.governmentCostParts(FB.playerTax(state, tax),
       (p.provs || []).length, FB.playerVassals(state).length, p.tier);
   };
@@ -129,7 +129,7 @@
       fiscal ? governmentCosts(state, rid, fiscal) :
         governmentCosts(state, rid, FB.treasurySnapshot(state).rows[rid] || {});
     const next = payer && positive(payer.distributionNextTurn);
-    const eligible = !!(payer && counties.length && (rid !== 'player' || state.player.tier >= 3));
+    const eligible = !!(payer && counties.length && (rid !== 'player' || FB.station.isLanded(state.player)));
     return { eligible:eligible, counties:counties,
       minimum:Math.max(FBDATA.balance.distributionMinimum, government.total),
       nextTurn:next || 0, ready:eligible && !(next > state.turn),

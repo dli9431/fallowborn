@@ -154,7 +154,7 @@
     var legDays = FB.travelLegDaysSnapshot(s), cards = '';
     rows.forEach(function (e) { cards += gameCard(s, e, legDays); });
     h += cards ? SH.reviewActionsHtml(cards) : text(FB.T('No funded games match this view.'));
-    if (s.player.tier >= 3) h += button('games-host', FB.T('Host games…'));
+    if (FB.station.isLanded(s.player)) h += button('games-host', FB.T('Host games…'));
     var annual = (s.tournaments && s.tournaments.annual || []).filter(function (a) { return a.hostId === s.player.charId; })[0];
     if (annual) h += fact(FB.T('Annual spending ceiling'), money(annual.ceiling)) + fact(FB.T('Next intended edition'), date(annual.nextTurn)) + button('games-stop', FB.T('Stop annual recurrence…'));
     var journey = s.player.travel && s.player.travel.purpose === 'tournament' && s.player.travel.phase !== 'return' ? s.player.travel : null;

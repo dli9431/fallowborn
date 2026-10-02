@@ -37,7 +37,7 @@ window.FB = window.FB || {};
   /* the estates sit for sworn lords below the crown: baron, count, duke */
   FB.parliamentActive = function (state) {
     const p = state.player;
-    if (p.tier < 3 || p.tier > 5 || !p.liege) return false;
+    if (!FB.station.sitsInEstates(p) || !p.liege) return false;
     const liege = state.realms[p.liege];
     return !!(liege && liege.alive);
   };

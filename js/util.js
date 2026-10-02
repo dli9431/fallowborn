@@ -87,11 +87,7 @@ window.FB = window.FB || {};
     const tier = typeof stateOrTier === 'number'
       ? stateOrTier
       : (stateOrTier && stateOrTier.player ? stateOrTier.player.tier : 0);
-    if (tier <= 0) return 'serf';
-    if (tier === 1) return 'commoner';
-    if (tier === 2) return 'gentry';
-    if (tier <= 5) return 'lord';
-    return 'crowned';
+    return FB.station.societalRole(tier);
   };
 
   /* deterministic 2D hash noise in [0,1), independent of the RNG stream */

@@ -358,7 +358,7 @@ window.FB = window.FB || {};
     }
     if (active.kind === 'council') {
       var realm = state.realms[active.nomineeRealmId];
-      return !!(state.player.tier >= 6 && realm && realm.alive &&
+      return !!(FB.station.isRoyal(state.player) && realm && realm.alive &&
         realm.liege === 'player' &&
         !(FB.intrigueRealmRulerCaptive &&
           FB.intrigueRealmRulerCaptive(state, active.nomineeRealmId)) &&
@@ -440,7 +440,7 @@ window.FB = window.FB || {};
     if (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) {
       missing.push(FB.T('A captive cannot seek a new guild office.'));
     }
-    if (c.id === state.player.charId && state.player.tier >= 3) {
+    if (c.id === state.player.charId && FB.station.isLanded(state.player)) {
       missing.push(FB.T('A landed ruler keeps the calling as biography and cannot seek a local guild office.'));
     }
     if (GUILD_ORDER[career.guildRank] < GUILD_ORDER[def.requiredRank]) {
@@ -1081,8 +1081,8 @@ window.FB = window.FB || {};
     if (sourceEventId && sourceEventId.indexOf('council_') === 0) {
       return { type:'realm', id:'player' };
     }
-    return { type:state.player.tier >= 3 ? 'realm' : 'local',
-      id:state.player.tier >= 3 ? 'player' : null };
+    return { type:FB.station.isLanded(state.player) ? 'realm' : 'local',
+      id:FB.station.isLanded(state.player) ? 'player' : null };
   }
 
   FB.recordModifierPrivilege = function (state, modifierId, pid, options) {
@@ -1187,7 +1187,7 @@ window.FB = window.FB || {};
         realm.obl && realm.obl.revocationConsent);
     }
     if (record.effectKind === 'council_confirmation') {
-      return state.player.tier >= 6 && record.scopeId === 'player';
+      return FB.station.mayHoldCouncil(state.player) && record.scopeId === 'player';
     }
     return false;
   }
@@ -1358,7 +1358,7 @@ window.FB = window.FB || {};
       realm.obl.revocationConsent = true;
       return upsertPrivilege(state, consentPrivilegeRecord(state));
     }
-    if (effect.kind === 'council_confirmation' && state.player.tier >= 6) {
+    if (effect.kind === 'council_confirmation' && FB.station.mayHoldCouncil(state.player)) {
       var record = {
         id:'privilege:council_confirmation:office_confirmation:player',
         defId:defId,
@@ -1391,7 +1391,7 @@ window.FB = window.FB || {};
     }
     var local = record.scopeId === state.player.provinceId ||
       (state.player.provs || []).indexOf(record.scopeId) >= 0;
-    if (state.player.tier < 3 || !local) {
+    if (!FB.station.isLanded(state.player) || !local) {
       return { ready:false, reason:FB.T('The privilege lies outside your present territorial authority.') };
     }
     return {
@@ -1548,7 +1548,7 @@ window.FB = window.FB || {};
   };
 
   FB.fns.collective_demand_magnates = function (state) {
-    if (state.player.tier < 6 || FB.hasPrivilege(state, 'office_confirmation', 'player')) {
+    if (!FB.station.mayHoldCouncil(state.player) || FB.hasPrivilege(state, 'office_confirmation', 'player')) {
       return false;
     }
     var vassals = FB.playerVassals ? FB.playerVassals(state) : [];
@@ -1581,8 +1581,8 @@ window.FB = window.FB || {};
     for (var id in defs) {
       if (!own(defs, id)) continue;
       var def = demandDef(id);
-      if (!def || state.player.tier < finite(def.minTier, 0) ||
-          state.player.tier > finite(def.maxTier, 7)) continue;
+      if (!def || !FB.station.reaches(state.player, finite(def.minTier, 0)) ||
+          FB.station.exceeds(state.player, finite(def.maxTier, 7))) continue;
       var privilegeStatus = FB.privilegeGrantStatus
         ? FB.privilegeGrantStatus(state, def.privilege) : { ready:true };
       if (!privilegeStatus.ready) continue;
@@ -1794,7 +1794,7 @@ window.FB = window.FB || {};
   }
 
   function uprisingHeld(state, pid) {
-    return !!(state.player.tier >= 4 && !state.player.dead &&
+    return !!(FB.station.rulesRealm(state.player) && !state.player.dead &&
       playerChar(state) && !playerChar(state).dead && FB.world.byId[pid] &&
       state.holder && state.holder[pid] === 'player' &&
       state.player.provs && state.player.provs.indexOf(pid) >= 0);
@@ -1806,7 +1806,7 @@ window.FB = window.FB || {};
   }
 
   function uprisingInRealm(state, pid) {
-    if (state.player.tier < 4 || state.player.dead || !playerChar(state) ||
+    if (!FB.station.rulesRealm(state.player) || state.player.dead || !playerChar(state) ||
         playerChar(state).dead || !FB.world.byId[pid]) return false;
     var sovereign = FB.topRealm(state, 'player');
     if (!state.owner || state.owner[pid] !== sovereign) return false;
@@ -2384,7 +2384,7 @@ window.FB = window.FB || {};
 
   FB.realmPolicyActive = function (state) {
     return !!(state && state.player && !state.player.dead &&
-      state.player.tier >= 6 &&
+      FB.station.isRoyal(state.player) &&
       FB.isPlayerSovereign && FB.isPlayerSovereign(state));
   };
 

@@ -602,9 +602,9 @@
     if (!r || !r.alive) return out;
     if (rid === 'player') {
       const p = state.player;
-      const titles = { duchy:p.tier >= 5 ? FB.playerDuchies(state) : [],
-        kingdom:p.tier >= 6 ? FB.playerKingdoms(state) : [],
-        empire:p.tier >= 7 ? FB.playerEmpires(state) : [] };
+      const titles = { duchy:FB.station.isDucal(p) ? FB.playerDuchies(state) : [],
+        kingdom:FB.station.isRoyal(p) ? FB.playerKingdoms(state) : [],
+        empire:FB.station.isImperial(p) ? FB.playerEmpires(state) : [] };
       ['duchy', 'kingdom', 'empire'].forEach(function (kind) {
         if (dj[kind] && titles[kind].indexOf(dj[kind]) >= 0) out.push({
           type:'dejure', target:pid, titleKind:kind, titleId:dj[kind] });
@@ -613,7 +613,7 @@
     } else {
       // AI houses press the region of their recognized principal dignity.
       const capital = FB.dejureOf(r.capital);
-      const kind = r.rank >= 4 ? 'empire' : r.rank >= 3 ? 'kingdom' : r.rank >= 2 ? 'duchy' : null;
+      const kind = FB.realmRank.isImperial(r) ? 'empire' : FB.realmRank.isRoyal(r) ? 'kingdom' : FB.realmRank.isDucal(r) ? 'duchy' : null;
       if (kind && capital[kind] && capital[kind] === dj[kind]) out.push({
         type:'dejure', target:pid, titleKind:kind, titleId:dj[kind] });
     }
@@ -655,7 +655,7 @@
     if (rid === 'player' && FB.fiscalRestriction && FB.fiscalRestriction(state)) return fail(FB.fiscalRestriction(state));
     const realm = state.realms[rid];
     if (!realm || !realm.alive || !causes || !causes.length) return fail(FB.T('A landed ruler and a war objective are required.'));
-    if (rid === 'player' && (state.player.tier < 4 || state.player.flags.in_prison) &&
+    if (rid === 'player' && (!FB.station.rulesRealm(state.player) || state.player.flags.in_prison) &&
         causes[0].type !== 'restoration') return fail(FB.T('You must rule a county and be free to command.'));
     const enemy = causes[0].enemy;
     if (!enemy || !state.realms[enemy] || !state.realms[enemy].alive || enemy === rid) return fail(FB.T('That opponent is no longer available.'));
@@ -1040,7 +1040,7 @@
     state.warAISeason = state.turn;
     Object.keys(state.realms).sort().forEach(function (rid) {
       const r = state.realms[rid];
-      if (rid === 'player' || !r || !r.alive || !r.ruler || r.rank < 1) return;
+      if (rid === 'player' || !r || !r.alive || !r.ruler || !FB.realmRank.isTerritorial(r)) return;
       const holy = state.greatHolyWar;
       const holyCommitment = holy && holy.phase === 'active' && ['attackers', 'defenders'].some(function (camp) {
         return (holy.participants[camp] || []).some(function (p) { return p.realm === rid; });
@@ -1132,7 +1132,7 @@
     let reason = '';
     if (['customary', 'permission', 'prohibited'].indexOf(level) < 0) reason = FB.T('Unknown law level.');
     else if (currentLevel === level) reason = FB.T('This is already the standing policy.');
-    else if (!r || !r.alive || r.liege || state.player.liege || state.player.tier < 5) reason = FB.T('Only an independent duke or crowned sovereign may proclaim war laws.');
+    else if (!r || !r.alive || r.liege || state.player.liege || !FB.station.isDucal(state.player)) reason = FB.T('Only an independent duke or crowned sovereign may proclaim war laws.');
     else if (record && record.setYear === state.date.year) reason = FB.T('This law has already changed this year.');
     else if (state.player.gold < cost) reason = FB.T('Requires {money:cost}.', { cost:cost });
     return { ready:!reason, current:level === currentLevel, reason:reason, cost:cost };

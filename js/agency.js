@@ -495,7 +495,7 @@ window.FB = window.FB || {};
           !career || !FB.professionDoesWork(career.profession, def.profession) ||
           (def.maleOnly && c.sex !== 'm') ||
           (FB.retainerOfficeRecord && FB.retainerOfficeRecord(state, office)) ||
-          state.player.tier < (def.minTier || 0)) {
+          !FB.station.reaches(state.player, def.minTier || 0)) {
         delete p.familyOffices[office];
         continue;
       }
@@ -532,7 +532,7 @@ window.FB = window.FB || {};
         (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
         !FB.isAgencyFamilyMember(state, cid) ||
         FB.ageOf(c, state.date.year) < 16 ||
-        state.player.tier < (def.minTier || 0) ||
+        !FB.station.reaches(state.player, def.minTier || 0) ||
         (def.maleOnly && c.sex !== 'm') ||
         !career || !FB.professionDoesWork(career.profession, def.profession) ||
         FB.familyOfficeRecord(state, cid)) return false;
@@ -613,8 +613,8 @@ window.FB = window.FB || {};
       (state.player.liege || 'player');
     if (FB.topRealm && FB.topRealm(state, rid) === playerRealm) return true;
     return !!(FB.isPlayerSovereign && FB.isPlayerSovereign(state) &&
-      state.realms.player && state.realms.player.rank >= 3 &&
-      !realm.liege && realm.rank >= 3 && FB.realmsAdjacent &&
+      state.realms.player && FB.realmRank.isRoyal(state.realms.player) &&
+      !realm.liege && FB.realmRank.isRoyal(realm) && FB.realmsAdjacent &&
       FB.realmsAdjacent(state, 'player', rid));
   }
 
@@ -1135,7 +1135,7 @@ window.FB = window.FB || {};
       var relevance = FB.rulerPlayerRelevance(state, rid);
       if (!relevance.eligible) continue;
       var marriage = marriagePair(state, rid, familySnapshot);
-      if (!marriage && state.player.tier < 3) continue;
+      if (!marriage && !FB.station.isLanded(state.player)) continue;
       candidates.push({ rid:rid, relevance:relevance, marriage:marriage });
     }
     if (!candidates.length) return;
@@ -1388,7 +1388,7 @@ window.FB = window.FB || {};
   function communitySituationCandidates(state) {
     var out = [];
     var p = state.player;
-    if (!p || p.tier < 3 || p.war) return out;
+    if (!p || !FB.station.isLanded(p) || p.war) return out;
     var held = FB.buildingCounties(state);
     held.sort();
     function add(id, ctx) {
@@ -1470,7 +1470,7 @@ window.FB = window.FB || {};
   };
 
   FB.fns.agency_overture_context_valid = function (state, ctx) {
-    return !!(state.player && state.player.tier >= 3 &&
+    return !!(state.player && FB.station.isLanded(state.player) &&
       FB.fns.agency_ruler_context_valid(state, ctx));
   };
 

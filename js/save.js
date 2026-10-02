@@ -1577,7 +1577,7 @@ window.FB = window.FB || {};
       if (current && (current.station === undefined || current.station === null)) {
         current.station = FB.clamp(player.tier, 0, 4);
       }
-      if (current && player.tier === 0) current.unfree = true;
+      if (current && FB.station.isSerf(player)) current.unfree = true;
       else if (current) delete current.unfree;
     });
     if (FB.ensureCharacterBynames) restoreRepair('character bynames', function () {

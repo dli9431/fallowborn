@@ -89,7 +89,7 @@ window.FB = window.FB || {};
   }
   function automationAccess(s) {
     const player = s && s.player;
-    const landed = !!(player && player.tier >= 3);
+    const landed = !!(player && FB.station.isLanded(player));
     const activeHost = !!(s && FB.playerHost && FB.playerHost(s));
     const greatHost = !!(s && FB.playerGreatHolyWarHostActive &&
       FB.playerGreatHolyWarHostActive(s));
@@ -3001,7 +3001,7 @@ window.FB = window.FB || {};
   function openingPoachDone(s) {
     const flags = (s && s.player && s.player.flags) || {};
     const cooldowns = (s && s.player && s.player.cooldowns) || {};
-    return !!(s && s.player && s.player.tier !== 0) || !!flags.tut_poach ||
+    return !!(s && s.player && !FB.station.isSerf(s.player)) || !!flags.tut_poach ||
       Object.prototype.hasOwnProperty.call(cooldowns, 'poach');
   }
 
@@ -3221,11 +3221,11 @@ window.FB = window.FB || {};
     if (p.dead || me.dead) return { id:'succession' };
     const age = FB.ageOf(me, s.date.year);
     if (age < 16) return { id:'adulthood', age:age };
-    const offer = p.tier === 0 ? FB.freedomOfferView(s) : null;
+    const offer = FB.station.isSerf(p) ? FB.freedomOfferView(s) : null;
     if (offer && offer.status === 'service') {
       return { id:'service', days:offer.serviceDaysRemaining };
     }
-    if (p.tier > 2) return null;
+    if (FB.station.isLanded(p)) return null;
     if (!flags.tut_seen_wed && !flags.tut_family_established &&
         !flags.tut_track_family_legacy && !FB.spousesSnapshot(s, me).length) {
       const match = flags.courting && p.courtingId && s.chars[p.courtingId];
@@ -3249,7 +3249,7 @@ window.FB = window.FB || {};
         place:enterprise.site.name, funds:enterprise.funds, cost:enterprise.cost }
         : { id:'work' };
     }
-    if (p.tier === 0) {
+    if (FB.station.isSerf(p)) {
       if (offer && offer.status === 'offered') {
         return { id:'freedom-offer', funds:Math.floor(p.gold), cost:offer.price,
           days:offer.serviceDays };
@@ -3309,7 +3309,7 @@ window.FB = window.FB || {};
   UI.crazyGamesAchievementText = function (summary) {
     if (!summary) return '';
     if (summary.plots) return FB.T('Family property: land plots {plots}, enterprises {enterprises}.', summary);
-    if (summary.tier > 0) return FB.T('Your household is free. Enterprises: {enterprises}.', summary);
+    if (FB.station.isFree(summary)) return FB.T('Your household is free. Enterprises: {enterprises}.', summary);
     if (summary.enterprises) return FB.T('Family businesses established: {enterprises}.', summary);
     return summary.married ? FB.T('Your household is established.')
       : FB.T('Your household’s story has begun.');
@@ -3329,7 +3329,7 @@ window.FB = window.FB || {};
 
   function crazyGamesFreedomAndLandTips(s) {
     const p = s.player;
-    if (p.tier === 0) {
+    if (FB.station.isSerf(p)) {
       const offer = FB.freedomOfferView(s);
       if (offer && offer.status === 'service') {
         return crazyGamesProgressTip('cg-freedom-service', FB.T(
@@ -3381,7 +3381,7 @@ window.FB = window.FB || {};
     const flags = p && p.flags || {};
     const me = p && s.chars[p.charId];
     if (!FB.tutorialLife(s) || !flags.tut_track_first_steps ||
-        flags.tut_track_making_a_living || p.tier > 2 ||
+        flags.tut_track_making_a_living || FB.station.isLanded(p) ||
         !me || FB.ageOf(me, s.date.year) < 16) return false;
     if (coachItem || coachQueue.length ||
         (UI.eventsBusy && UI.eventsBusy()) ||
@@ -3456,7 +3456,7 @@ window.FB = window.FB || {};
 
   UI.maybeMakingLandTip = function () {
     const s = FB.state;
-    const needsFreedom = s && s.player && s.player.tier === 0;
+    const needsFreedom = s && s.player && FB.station.isSerf(s.player);
     const deed = needsFreedom ? 'review_serf_tenure' : 'buy_land';
     const exposed = UI.revealDeedAction && UI.revealDeedAction(deed);
     const text = needsFreedom
@@ -3473,7 +3473,7 @@ window.FB = window.FB || {};
     if (tipsSilenced()) return false;
     if (FB.platform.isCrazyGames) return UI.resumeCrazyGamesHouseholdTips();
     const s = FB.state;
-    if (!s || !s.player || s.player.tier > 2) return false;
+    if (!s || !s.player || FB.station.isLanded(s.player)) return false;
     const flags = s.player.flags || {};
     if (!flags.tut_track_family_legacy) return false;
     const seen = FB.game.uiPrefs.tipsSeen || {};
