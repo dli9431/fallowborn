@@ -1521,6 +1521,8 @@ window.FB = window.FB || {};
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }
+    // the active balance follows the stamped era, not the bookmark's current one
+    FB.balanceLayers.applyCampaign(FB.state);
     // Repairs establish present facts, never invented historical achievements.
     if (FB.suspendLifeHistories) FB.suspendLifeHistories(FB.state);
     if (FB.ensureChronicle) restoreRepair('Chronicle archive', function () {

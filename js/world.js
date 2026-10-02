@@ -418,6 +418,8 @@ window.FB = window.FB || {};
       var slotErrors = (FB.validateEraTechnology ? FB.validateEraTechnology(id, era) : [])
         .concat(FB.validateEraMilitary ? FB.validateEraMilitary(id, era) : []);
       for (var se = 0; se < slotErrors.length; se++) errors.push(slotErrors[se]);
+      errors.push.apply(errors, FB.balanceLayers.validate(era.balance,
+        FB.T('Era {id}', { id:id })));
       for (var wi = 0; wi < windows.length; wi++) {
         if (era.from <= windows[wi].to && windows[wi].from <= era.to) {
           errors.push(FB.T('Eras {a} and {b} overlap.', { a:windows[wi].id, b:id }));
@@ -588,6 +590,10 @@ window.FB = window.FB || {};
       ? FB.bookmarkTechnologyFaults(definition, platform.era) : [];
     for (var tf = 0; tf < technologyFaults.length; tf++) {
       if (errors.indexOf(technologyFaults[tf]) < 0) errors.push(technologyFaults[tf]);
+    }
+    var balanceProblems = FB.balanceLayers.problems(definition.balance);
+    for (var bp = 0; bp < balanceProblems.length; bp++) {
+      fault(FB.balanceLayers.describe(balanceProblems[bp]));
     }
     if (definition.greatHolyWars !== undefined &&
         typeof definition.greatHolyWars !== 'boolean') {
@@ -1070,6 +1076,7 @@ window.FB = window.FB || {};
     FB.activeGeographyId = FB.bookmarkGeography(definition);
     FB.activeGeography = FB.geography(FB.activeGeographyId);
     FB.activeEra = FB.bookmarkEra(definition);
+    FB.balanceLayers.activate(FB.activeEra, definition);
     FB.activeBookmarkDiagnostics = FB.communityShareDiagnostics
       ? FB.communityShareDiagnostics(definition) : [];
     if (FB.resetWorldDataCaches) FB.resetWorldDataCaches();
@@ -4735,7 +4742,7 @@ window.FB = window.FB || {};
       ? FB.papacyRealmStrengthMultiplier(state, rid) : 1) : FB.realmStrength(state, rid);
     const minimum = territory ? 60 * Math.min(1, supportDevelopment / Math.max(1, development)) : 60;
     const base = Math.max(territory && territory.blocked.length ? 0 : minimum, Math.round(strength *
-      FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
+      FB.balanceFor(state, rid, 'levyPerDev') * (FB.balanceFor(state, rid, 'aiHostPerDev') || 0.3) *
       (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
     const burden = FB.fortGarrisonBurden
       ? FB.fortGarrisonBurden(state, rid, rid, territory) : 0;
@@ -6741,6 +6748,7 @@ window.FB = window.FB || {};
       const held = heldByRealm[rid] || [];
       if (!held.length) continue;
       if (reserves && (reserves[rid] === undefined || FB.treasuryAvailable(state, rid) <= reserves[rid])) continue;
+      const reserveSeasons = FB.balanceFor(state, rid, 'realmReserveSeasons');
 
       let builtThisYear = 0;
       const sortedCounties = held.slice().sort(function (a, b) {
@@ -6785,7 +6793,7 @@ window.FB = window.FB || {};
           if (bdef.requiresTech && FB.techRequirementMet &&
               !FB.techRequirementMet(state, bdef.requiresTech, rid)) continue;
           const cost = reserves ? FB.buildCost(state, pid, bid, rid) : 0;
-          if (reserves && cost + reserves[rid] + (bdef.upkeep || 0) * FBDATA.balance.realmReserveSeasons > FB.treasuryAvailable(state, rid)) continue;
+          if (reserves && cost + reserves[rid] + (bdef.upkeep || 0) * reserveSeasons > FB.treasuryAvailable(state, rid)) continue;
 
           for (let sIdx = 0; sIdx < settlements.length; sIdx++) {
             if (FB.aiCanBuildAt(state, rid, pid, sIdx, bid)) {
@@ -6798,8 +6806,8 @@ window.FB = window.FB || {};
 
         if (chosen) {
           if (reserves && !FB.treasurySpendOptional(state, rid, chosen.cost,
-              reserves[rid] + (chosen.def.upkeep || 0) * FBDATA.balance.realmReserveSeasons)) continue;
-          if (reserves) reserves[rid] += (chosen.def.upkeep || 0) * FBDATA.balance.realmReserveSeasons;
+              reserves[rid] + (chosen.def.upkeep || 0) * reserveSeasons)) continue;
+          if (reserves) reserves[rid] += (chosen.def.upkeep || 0) * reserveSeasons;
           state.buildings = state.buildings || {};
           if (annualBudget) annualBudget.snapshot = null;
           const list = state.buildings[chosen.pid] = state.buildings[chosen.pid] || [];
