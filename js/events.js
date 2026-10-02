@@ -2265,7 +2265,7 @@ window.FB = window.FB || {};
     const doctrine = FB.religionOf(c.religion, state);
     const profession = player ? state.player.profession :
       (c.career && c.career.profession);
-    return (profession === 'monk' || profession === 'priest') &&
+    return FB.professionHasRole(profession, ['cloister', 'clergy']) &&
       !doctrine.clergyMarriage;
   }
 
@@ -2907,7 +2907,7 @@ window.FB = window.FB || {};
       return blocked('vocation_vow',
         FB.T('Religious vows forbid this marriage.'));
     }
-    if (state.player.profession === 'monk' &&
+    if (FB.professionHasRole(state.player.profession, 'cloister') &&
         !FB.religionOf(me.religion, state).clergyMarriage) {
       return blocked('vocation_vow', FB.T('Your vows forbid marriage.'));
     }
@@ -4712,7 +4712,7 @@ window.FB = window.FB || {};
       case 'skill_lea': {
         let c = 0.30 + FB.skillOf(me, 'lea') * 0.04;
         if (FB.holdingList(state).indexOf('letters') >= 0) c += 0.08;
-        if (p.profession === 'monk' || p.profession === 'priest') c += 0.05;
+        if (FB.professionHasRole(p.profession, ['cloister', 'clergy'])) c += 0.05;
         return FB.clamp(c, 0.1, 0.9);
       }
       case 'rights_dip': {
@@ -4725,7 +4725,7 @@ window.FB = window.FB || {};
       case 'rights_ste': {
         let c = 0.25 + FB.skillOf(me, 'ste') * 0.04;
         if (f.rights_evidence) c += 0.18;
-        if (p.profession === 'farmer' || p.profession === 'craftsman' || p.profession === 'merchant') c += 0.05;
+        if (FB.professionHasRole(p.profession, ['labor', 'craft', 'trading'])) c += 0.05;
         return FB.clamp(c, 0.1, 0.9);
       }
       case 'rights_int': {
@@ -4739,7 +4739,7 @@ window.FB = window.FB || {};
         const hs = FB.holdingList(state);
         if (f.rights_evidence) c += 0.18;
         if (hs.indexOf('letters') >= 0) c += 0.08;
-        if (p.profession === 'monk' || p.profession === 'priest') c += 0.05;
+        if (FB.professionHasRole(p.profession, ['cloister', 'clergy'])) c += 0.05;
         return FB.clamp(c, 0.1, 0.9);
       }
       case 'swarm': {
@@ -5030,6 +5030,8 @@ window.FB = window.FB || {};
        Landed careers survive as biography, but no longer satisfy work gates. */
     if (tg.professions && (p.tier >= 3 ||
       tg.professions.indexOf(p.profession) < 0)) return false;
+    if (tg.careerRoles && (p.tier >= 3 ||
+      !FB.professionHasRole(p.profession, tg.careerRoles))) return false;
     /* A specialty path is an active vocation requirement, deliberately
        separate from broad profession gates. It is evaluated only by events
        which declare it, and a landed former calling never qualifies. */
@@ -11238,7 +11240,9 @@ window.FB = window.FB || {};
       FB.adjustCountySupport(state, ctx && ctx.locationId || state.player.provinceId, amount);
     }
     if (fx.profession) {
-      if (!p.professionBack && p.profession !== 'soldier') p.professionBack = p.profession;
+      if (!p.professionBack && !FB.professionHasRole(p.profession, 'arms')) {
+        p.professionBack = p.profession;
+      }
       p.profession = fx.profession;
       if (fx.setFlag !== 'on_campaign' && fx.setFlag2 !== 'on_campaign' && FB.setCareer) {
         p.professionBack = null;
@@ -11247,7 +11251,7 @@ window.FB = window.FB || {};
     }
     if (fx.focusSet) p.focus = fx.focusSet;
     if (fx.restoreProfession) {
-      p.profession = p.professionBack || 'farmer';
+      p.profession = p.professionBack || FB.roleCareer('labor');
       p.professionBack = null;
       if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     }
@@ -12886,9 +12890,9 @@ window.FB = window.FB || {};
     if (FB.setCareer) {
       const me = state.chars[p.charId];
       const rank = FB.ageOf(me, state.date.year) < 16 ? 'apprentice' : 'journeyman';
-      FB.setCareer(state, me, 'farmer', rank);
+      FB.setCareer(state, me, FB.roleCareer('labor'), rank);
     } else {
-      p.profession = 'farmer';
+      p.profession = FB.roleCareer('labor');
     }
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);

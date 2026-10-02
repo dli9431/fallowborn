@@ -135,16 +135,78 @@ window.FB = window.FB || {};
     return c.careerHistory;
   }
 
+  /* ================= career roles =================
+     A career's role says what kind of work it is. Engine rules ask for a
+     role rather than a career id, so a period career joins the behavior of
+     its role by declaring it. A role argument may be one role or a list,
+     which matches any of them. */
+  FB.CAREER_ROLES = {
+    clergy:1, cloister:1, labor:1, craft:1, trading:1, arms:1, noble:1,
+    learned:1, civic:1
+  };
+
+  function careerDefHasRole(def, role) {
+    if (def.role === role) return true;
+    return Array.isArray(def.roles) && def.roles.indexOf(role) >= 0;
+  }
+
+  FB.professionRole = function (profession) {
+    const def = profession && FBDATA.careers[profession];
+    return def && typeof def.role === 'string' ? def.role : null;
+  };
+
+  FB.professionHasRole = function (profession, role) {
+    const def = profession && FBDATA.careers[profession];
+    if (!def || !def.role) return false;
+    if (!Array.isArray(role)) return careerDefHasRole(def, role);
+    for (let i = 0; i < role.length; i++) {
+      if (careerDefHasRole(def, role[i])) return true;
+    }
+    return false;
+  };
+
+  /* The first career declared with a role as its primary role. */
+  FB.roleCareer = function (role) {
+    for (const id in FBDATA.careers) {
+      const def = FBDATA.careers[id];
+      if (def && def.role === role) return id;
+    }
+    return null;
+  };
+
+  /* Data that names a career for work (an enterprise, work outfit, retainer
+     office, vocational focus or tournament job) accepts that career or any
+     career sharing its role. Learned careers are distinct practices, so work
+     naming one accepts only that career. */
+  FB.professionDoesWork = function (profession, named) {
+    if (!profession || !named) return false;
+    if (profession === named) return true;
+    const def = FBDATA.careers[named];
+    if (!def || def.learned || typeof def.role !== 'string') return false;
+    return FB.professionHasRole(profession, def.role);
+  };
+
+  FB.careerRole = function (state, c) {
+    const career = FB.careerOf(state, c);
+    return career ? FB.professionRole(career.profession) : null;
+  };
+
+  FB.careerHasRole = function (state, c, role) {
+    const career = FB.careerOf(state, c);
+    return !!career && FB.professionHasRole(career.profession, role);
+  };
+
   FB.careerOf = function (state, c) {
     if (!c) return null;
     careerHistory(c);
     if (!c.career) {
-      let profession = 'farmer';
+      let profession = FB.roleCareer('labor');
       const isPlayer = state.player && c.id === state.player.charId;
       const age = FB.ageOf(c, state.date.year);
-      if (isPlayer) profession = state.player.professionBack || state.player.profession || 'farmer';
-      else if (FB.stationOf(c) >= 2 || (state.player.tier >= 2 && dependentOfPlayer(state, c))) {
-        profession = 'noble';
+      if (isPlayer) {
+        profession = state.player.professionBack || state.player.profession || profession;
+      } else if (FB.stationOf(c) >= 2 || (state.player.tier >= 2 && dependentOfPlayer(state, c))) {
+        profession = FB.roleCareer('noble');
       }
       c.career = {
         profession: profession,
@@ -1507,14 +1569,14 @@ window.FB = window.FB || {};
       const career = FB.careerOf(state, c);
       if (!career || !career.chosen || career.rank === 'unassigned' ||
           career.rank === 'apprentice') continue;
-      if (career.profession === def.profession) return true;
+      if (FB.professionDoesWork(career.profession, def.profession)) return true;
     }
     /* Contracted workers can use the maintained outfit while staffing a
        matching family enterprise. Their pay remains on its own ledger. */
     const enterprises = state.player.enterprises || [];
     for (const e of enterprises) {
       const enterprise = FBDATA.enterprises && FBDATA.enterprises[e.type];
-      if (!enterprise || enterprise.profession !== def.profession) continue;
+      if (!enterprise || !FB.professionDoesWork(enterprise.profession, def.profession)) continue;
       for (const workerId of enterpriseAssignedIds(e)) {
         const worker = state.chars[workerId];
         if (!worker || worker.dead) continue;
@@ -1584,7 +1646,11 @@ window.FB = window.FB || {};
 
   FB.householdWorkMultiplier = function (state, profession) {
     const work = FB.householdStandardEffects(state).work;
-    return 1 + (work[profession] || 0);
+    let bonus = 0;
+    for (const named in work) {
+      if (FB.professionDoesWork(profession, named)) bonus += work[named] || 0;
+    }
+    return 1 + bonus;
   };
 
   FB.householdStandardsUpkeepParts = function (state) {
@@ -1922,7 +1988,7 @@ window.FB = window.FB || {};
           FB.standingOf(state, { kind:'character', id:c.id }) <= -40 ||
           (def.maleOnly && c.sex !== 'm')) continue;
       const career = FB.careerOf(state, c);
-      if (career && career.profession === def.profession) out.push(c);
+      if (career && FB.professionDoesWork(career.profession, def.profession)) out.push(c);
     }
     out.sort(function (a, b) {
       return FB.standingOf(state, { kind:'character', id:b.id }) -
@@ -3616,7 +3682,7 @@ window.FB = window.FB || {};
 
   function enterpriseCareerWorkerEligible(state, c, def) {
     const career = FB.careerOf(state, c);
-    if (!career || career.profession !== def.profession) return false;
+    if (!career || !FB.professionDoesWork(career.profession, def.profession)) return false;
     const age = FB.ageOf(c, state.date.year);
     const careerDef = FBDATA.careers[career.profession];
     if (age < 16) {
@@ -4560,7 +4626,7 @@ window.FB = window.FB || {};
     const def = FBDATA.enterprises[e.type];
     if (!def || !worker || worker.dead) return 0;
     const career = FB.careerOf(state, worker);
-    if (!career || career.profession !== def.profession) return 0;
+    if (!career || !FB.professionDoesWork(career.profession, def.profession)) return 0;
     const careerDef = FBDATA.careers[career.profession];
     const skill = careerDef && careerDef.skill ? careerDef.skill : 'ste';
     let amount = def.yield * (0.75 + FB.skillOf(worker, skill) / 20);
@@ -4582,7 +4648,7 @@ window.FB = window.FB || {};
       }
       if (matches) amount *= 1 + Math.max(0, Number(enterpriseFx.bonus) || 0);
     }
-    if (career.profession === 'merchant' || career.profession === 'craftsman') {
+    if (FB.professionHasRole(career.profession, ['trading', 'craft'])) {
       amount *= 1 + (FB.techBonus ? FB.techBonus(state, 'trade') : 0);
     }
     amount *= 1 + enterpriseChainFactor(state, e, chainSeen || {});
@@ -5176,7 +5242,7 @@ window.FB = window.FB || {};
       if (FB.ageOf(c, state.date.year) < 16) continue;
       const career = FB.careerOf(state, c);
       const profession = career && career.profession;
-      const workMult = profession === 'monk' || profession === 'priest'
+      const workMult = FB.professionHasRole(profession, ['cloister', 'clergy'])
         ? FB.householdWorkMultiplier(state, profession) : 1;
       let bestYield = 0;
       const abbey = FB.abbeyOf && FB.abbeyOf(state, c);
@@ -5259,8 +5325,8 @@ window.FB = window.FB || {};
       if (c.id === state.player.charId && state.player.tier >= 3) {
         /* Office-holding clergy still accumulate the years required for
            religious standing; every secular hands-on career freezes. */
-        if (age >= 16 && (career.profession === 'monk' ||
-          career.profession === 'priest')) career.experience++;
+        if (age >= 16 && FB.professionHasRole(career.profession,
+          ['cloister', 'clergy'])) career.experience++;
         continue;
       }
       if (age >= 16 && career.chosen &&
@@ -5283,8 +5349,8 @@ window.FB = window.FB || {};
       if (!career.chosen && age >= 16) {
         career.chosen = true;
         career.rank = 'journeyman';
-        career.profession = state.player.tier >= 2 && dependentOfPlayer(state, c) ?
-          'noble' : 'farmer';
+        career.profession = FB.roleCareer(state.player.tier >= 2 &&
+          dependentOfPlayer(state, c) ? 'noble' : 'labor');
       } else if (career.chosen && career.rank === 'apprentice' && age >= (def.apprenticeAge || 10)) {
         career.experience++;
         if (FB.chance(0.65)) FB.gainSkill(c, def.skill, 1);
@@ -5335,7 +5401,7 @@ window.FB = window.FB || {};
       return { to:'master', cost:40, prestige:0, need:8, blocked:ste < 8 };
     }
     if (career.guildRank === 'master') {
-      const merchantLearning = career.profession === 'merchant' ? 6 : 0;
+      const merchantLearning = FB.professionHasRole(career.profession, 'trading') ? 6 : 0;
       const lettered = !merchantLearning || hasTrait(c, 'literate');
       const learning = FB.skillOf(c, 'lea');
       const step = { to:'officer', cost:25, prestige:60, need:10,
@@ -5345,7 +5411,7 @@ window.FB = window.FB || {};
       return FB.guildElectionStep ? FB.guildElectionStep(state, c, step) : step;
     }
     if (career.guildRank === 'officer') {
-      const merchantLearning = career.profession === 'merchant' ? 8 : 0;
+      const merchantLearning = FB.professionHasRole(career.profession, 'trading') ? 8 : 0;
       const lettered = !merchantLearning || hasTrait(c, 'literate');
       const learning = FB.skillOf(c, 'lea');
       const step = { to:'guildmaster', cost:50, prestige:120, need:12,
@@ -5436,8 +5502,7 @@ window.FB = window.FB || {};
      an active charter never changes because balance data changes later. */
 
   function monopolyProfession(profession) {
-    return profession === 'craftsman' || profession === 'merchant'
-      ? profession : null;
+    return FB.professionHasRole(profession, ['craft', 'trading']) ? profession : null;
   }
 
   function finiteNumber(value, fallback) {
@@ -5450,8 +5515,9 @@ window.FB = window.FB || {};
     const mode = source.mode;
     const goodId = source.goodId;
     if (!FBDATA.marketGoods || !FBDATA.marketGoods[goodId]) return false;
-    if ((profession === 'craftsman' && mode !== 'craft') ||
-        (profession === 'merchant' && mode !== 'local' && mode !== 'corridor')) {
+    if ((FB.professionHasRole(profession, 'craft') && mode !== 'craft') ||
+        (FB.professionHasRole(profession, 'trading') && mode !== 'local' &&
+          mode !== 'corridor')) {
       return false;
     }
     if (mode === 'craft' && ['wares','materials','transport'].indexOf(goodId) < 0) {
@@ -5877,7 +5943,7 @@ window.FB = window.FB || {};
     for (const c of FB.householdWorkers(state)) {
       if (c.id === state.player.charId || c.dead) continue;
       const career = FB.careerOf(state, c);
-      if (career && career.profession === profession &&
+      if (career && FB.professionDoesWork(career.profession, profession) &&
           career.guildRank === 'guildmaster') return c;
     }
     return null;
@@ -6082,7 +6148,7 @@ window.FB = window.FB || {};
       return false;
     }
     const career = FB.careerOf(state, playerChar(state));
-    if (career && career.profession === target.record.profession) {
+    if (career && FB.professionDoesWork(career.profession, target.record.profession)) {
       career.guildStanding = FB.clamp((career.guildStanding || 0) + 10, 0, 100);
     }
     state.player.prestige += 4;
@@ -6118,15 +6184,17 @@ window.FB = window.FB || {};
     if (!c || !epithet || !epithet.key) return;
     const m = /\.([0-9]+)$/.exec(epithet.key);
     const n = m ? parseInt(m[1], 10) : 0;
-    let profession = station >= 3 ? 'noble' : 'farmer';
+    /* The epithet names the family's kind of work; each kind uses the
+       default career of its role. */
+    let role = station >= 3 ? 'noble' : 'labor';
     const background = {};
-    if (station === 1 && (n === 1 || n === 2)) profession = 'craftsman';
+    if (station === 1 && (n === 1 || n === 2)) role = 'craft';
     if (station === 2) {
-      profession = (n === 0) ? 'merchant' : (n === 1 || n === 2) ? 'craftsman' : 'noble';
+      role = (n === 0) ? 'trading' : (n === 1 || n === 2) ? 'craft' : 'noble';
       if (n === 1) background.guildmasterFamily = true;
     }
     c.career = {
-      profession:profession, rank:station >= 2 ? 'master' : 'journeyman',
+      profession:FB.roleCareer(role), rank:station >= 2 ? 'master' : 'journeyman',
       experience:station * 3, startedYear:null,
       guildRank:background.guildmasterFamily ? 'member' : 'none',
       guildStanding:background.guildmasterFamily ? 30 : 0, chosen:true
@@ -6458,7 +6526,7 @@ window.FB = window.FB || {};
     if (defs.merchant && (!defs.merchant.requiresTech ||
       FB.techRequirementMet(state, defs.merchant.requiresTech)) &&
       state.player.tier <= 2 && income > 0 && career &&
-      (career.profession === 'merchant' || career.profession === 'craftsman' ||
+      (FB.professionHasRole(career.profession, ['trading', 'craft']) ||
         state.player.tier === 2)) {
       const principal = Math.floor(Math.min(defs.merchant.maxPrincipal || 100,
         FB.financeCreditCapacity(state, null, false, e)));
@@ -7103,8 +7171,7 @@ window.FB = window.FB || {};
     const stewardship = FB.skillOf(c, 'ste') /
       Math.max(1, tradeVentureNumber(mods.stewardshipDivisor, 200));
     let guild = 0;
-    if (career && (career.profession === 'merchant' ||
-        career.profession === 'craftsman')) {
+    if (career && FB.professionHasRole(career.profession, ['trading', 'craft'])) {
       guild = (FB.guildIncomeMultiplier(career) - 1) /
         Math.max(1, tradeVentureNumber(mods.guildDivisor, 2));
     }
@@ -7503,7 +7570,7 @@ window.FB = window.FB || {};
     if (partnership && partnership.requiresTech &&
         !FB.techRequirementMet(state, partnership.requiresTech)) return [];
     const career = currentCareer(state);
-    if (!career || (career.profession !== 'merchant' && career.profession !== 'craftsman')) return [];
+    if (!career || !FB.professionHasRole(career.profession, ['trading', 'craft'])) return [];
     const stakes = [20];
     if (hasTradeHouse(state) || career.guildRank === 'master' ||
       career.guildRank === 'officer' || career.guildRank === 'guildmaster') stakes.push(50);

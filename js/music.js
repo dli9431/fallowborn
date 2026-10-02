@@ -979,7 +979,8 @@ window.FB = window.FB || {};
     const player = state.player;
     const realmAtWar = FB.playerRealmAtWar && state.realms &&
       FB.playerRealmAtWar(state);
-    if (realmAtWar || player.war || player.greatHolyWar || player.profession === 'soldier' ||
+    if (realmAtWar || player.war || player.greatHolyWar ||
+        FB.professionHasRole(player.profession, 'arms') ||
         (player.flags && player.flags.on_campaign)) return 'war';
     if (player.tier >= 3) return 'court';
     return 'folk';

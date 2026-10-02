@@ -154,7 +154,7 @@ FBDATA.events.push(
 
 /* ---------- life on campaign (soldiers and levied men) ---------- */
 { id:'camp_forage', title:'Empty Wagons',
-  trigger:{ professions:['soldier'], realmAtWar:true, chance:0.4 }, wartime:true, weight:8, cooldown:2,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, chance:0.4 }, wartime:true, weight:8, cooldown:2,
   text:'The supply wagons are late again, and the host eats the countryside as it goes. A farmstead ahead has full cribs and frightened eyes.',
   options:[
     { label:'Take what the host needs.', desc:'Their hunger against yours — and yours is armed.', effects:{ gold:2, piety:-4, popularOpinion:-3 } },
@@ -162,7 +162,7 @@ FBDATA.events.push(
     { label:'March hungry.', desc:'An empty belly, but a clean one.', effects:{ health:-1, piety:2 } }
   ]},
 { id:'night_sortie', title:'Volunteers for the Night',
-  trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:7, cooldown:3,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:7, cooldown:3,
   text:'The captain wants men for a night raid on the enemy pickets — quiet feet, quick knives, and no promises about the morning.',
   options:[
     { label:'Step forward.', chance:'battle', desc:'Loot and stories favor the bold — if the dark allows.',
@@ -173,7 +173,7 @@ FBDATA.events.push(
     { label:'Let braver fools go.', desc:'The cautious live to be levied again.', effects:{ } }
   ]},
 { id:'camp_fires', title:'The Long Wait',
-  trigger:{ professions:['soldier'], realmAtWar:true, chance:0.4 }, wartime:true, weight:6, cooldown:2,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, chance:0.4 }, wartime:true, weight:6, cooldown:2,
   text:'Armies are mostly waiting. Around the fires the veterans dice, wrestle, and retell battles that grow with every telling.',
   options:[
     { label:'Dice with the veterans.', require:{ religionGroups:['christian','pagan','jewish'] }, chance:0.5, desc:'The bones care nothing for your purse.',
@@ -185,7 +185,7 @@ FBDATA.events.push(
     { label:'Listen, and learn the old tricks.', desc:'Old soldiers’ tales are lessons in disguise.', effects:{ skills:{mar:1} } }
   ]},
 { id:'campaign_fear_before_dawn', title:'Before the Horns',
-  trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:7, cooldown:4,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:7, cooldown:4,
   text:'Before dawn the word passes down the line: battle today. Your hands will not stop shaking. No one speaks of fear, which leaves it everywhere.',
   options:[
     { label:'Name the fear, then master it.', desc:'Courage is what remains after fear is admitted.', effects:{ prestige:3, skills:{mar:1} } },
@@ -195,7 +195,7 @@ FBDATA.events.push(
     { label:'Find duty with the baggage.', desc:'Safer work, if the others let you forget why you chose it.', effects:{ prestige:-3 } }
   ]},
 { id:'campaign_wound_watch', title:'The Wound Will Not Close',
-  trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], healthMax:7, chance:0.25 }, wartime:true, weight:6, cooldown:4,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, flags:['seen_battle'], healthMax:7, chance:0.25 }, wartime:true, weight:6, cooldown:4,
   text:'The old wound has opened beneath sweat and mail. The surgeon says one quiet week may close it; the captain says the line is already short.',
   options:[
     { label:'Report to the surgeon.', desc:'Protect your health and accept the muttering.', effects:{ health:1, prestige:-2 } },
@@ -204,7 +204,7 @@ FBDATA.events.push(
       failure:{ text:'Blood soaks the binding before noon.', effects:{ health:-2, prestige:2 } } }
   ]},
 { id:'campaign_orders_in_mud', title:'Two Orders in the Rain',
-  trigger:{ professions:['soldier'], realmAtWar:true, flags:['sergeant'], chance:0.25 }, wartime:true, weight:6, cooldown:4,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, flags:['sergeant'], chance:0.25 }, wartime:true, weight:6, cooldown:4,
   text:'One officer orders your file to the ford; another shouts for it at the ridge. Rain eats both voices while the soldiers wait for yours.',
   options:[
     { label:'Choose the ford and take the blame.', chance:0.6, desc:'A clear wrong order can be better than two right ones.',
@@ -213,7 +213,7 @@ FBDATA.events.push(
     { label:'Hold until the officers agree.', desc:'Discipline preserved; opportunity surrendered.', effects:{ prestige:-1, skills:{int:1} } }
   ]},
 { id:'campaign_camp_fever', title:'Heat Beneath the Blanket',
-  trigger:{ professions:['soldier'], realmAtWar:true, chance:0.22 }, wartime:true, weight:6, cooldown:5,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, chance:0.22 }, wartime:true, weight:6, cooldown:5,
   text:'A sour fever moves from tent to tent. Men who marched yesterday cannot stand today, and tonight your own skin feels too hot.',
   options:[
     { label:'Go to the infirmary before it worsens.', desc:'Lose a little standing and perhaps save your life.', effects:{ health:-1, setFlag:'ill', prestige:-1 } },
@@ -222,7 +222,7 @@ FBDATA.events.push(
       failure:{ text:'You collapse against the spear-rack before relief comes.', effects:{ health:-2, setFlag:'ill' } } }
   ]},
 { id:'campaign_name_on_the_roll', title:'A Name the Captain Knows',
-  trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], prestigeMin:25, chance:0.2 }, wartime:true, weight:5, cooldown:6,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, flags:['seen_battle'], prestigeMin:25, chance:0.2 }, wartime:true, weight:5, cooldown:6,
   text:'The captain reads the night-watch roll, pauses at your name, and looks up. Around you, strangers now know whom he means.',
   options:[
     { label:'Use the name to steady the new men.', desc:'Reputation becomes responsibility.', effects:{ prestige:5, skills:{dip:1}, warService:1 } },

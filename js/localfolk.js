@@ -142,19 +142,20 @@ window.FB = window.FB || {};
       (state.roles.friend === cid || state.roles.rival === cid));
   };
 
+  /* Local households follow the default career of each role in the pool. */
   function professionFor(kind, generation, householdIndex, memberIndex) {
     const pools = {
-      village:['farmer', 'farmer', 'craftsman'],
-      town:['craftsman', 'merchant', 'farmer'],
-      city:['merchant', 'craftsman', 'administration']
+      village:['labor', 'labor', 'craft'],
+      town:['craft', 'trading', 'labor'],
+      city:['trading', 'craft', 'learned']
     };
     const pool = pools[kind] || pools.village;
-    return pool[(generation + householdIndex + memberIndex) % pool.length];
+    return FB.roleCareer(pool[(generation + householdIndex + memberIndex) % pool.length]);
   }
 
   function stationFor(profession, kind) {
-    if (profession === 'farmer') return FB.chance(0.6) ? 0 : 1;
-    if (profession === 'merchant' && kind === 'city' && FB.chance(0.25)) {
+    if (FB.professionHasRole(profession, 'labor')) return FB.chance(0.6) ? 0 : 1;
+    if (FB.professionHasRole(profession, 'trading') && kind === 'city' && FB.chance(0.25)) {
       return 2;
     }
     return 1;
@@ -197,7 +198,7 @@ window.FB = window.FB || {};
       settlement:household.settlement,
       role:role
     };
-    installCareer(state, c, spec.profession || 'farmer',
+    installCareer(state, c, spec.profession || FB.roleCareer('labor'),
       FB.ageOf(c, state.date.year) >= 16);
     household.memberIds.push(c.id);
     return c;
@@ -268,7 +269,7 @@ window.FB = window.FB || {};
             fatherId:father.id, motherId:mother.id,
             station:Math.max(fatherStation, motherStation),
             unfree:fatherStation === 0 && motherStation === 0,
-            profession:'farmer', health:7
+            profession:FB.roleCareer('labor'), health:7
           }, household, 'child', childIndex + 2);
           father.childrenIds.push(child.id);
           mother.childrenIds.push(child.id);

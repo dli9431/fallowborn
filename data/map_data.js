@@ -785,28 +785,28 @@ FBDATA.holdings = {
   letters:       { name:'Letters in the Family', icon:'📖', cost:30, tierMax:2,
     desc:'Someone under this roof can read — and the children learn young.', fx:{ edu:0.08 } },
   /* the land */
-  orchard:    { name:'Orchard', icon:'🌳', cost:30, tierMax:2, professions:['farmer'], eventOnly:true,
+  orchard:    { name:'Orchard', icon:'🌳', cost:30, tierMax:2, careerRoles:['labor'], eventOnly:true,
     desc:'Trees bear fruit long after their planter is gone.', fx:{ gold:1 } },
-  press:      { name:{ default:'Cider Press', muslim:'Oil Press' }, icon:'🏺', cost:60, tierMax:2, professions:['farmer'], req:'orchard', eventOnly:true,
+  press:      { name:{ default:'Cider Press', muslim:'Oil Press' }, icon:'🏺', cost:60, tierMax:2, careerRoles:['labor'], req:'orchard', eventOnly:true,
     desc:'The fruit is good; what the fruit becomes is better.', fx:{ gold:2 } },
   /* the bench */
-  fine_tools: { name:'Fine Tools', icon:'🛠', cost:25, tierMax:2, professions:['craftsman'],
+  fine_tools: { name:'Fine Tools', icon:'🛠', cost:25, tierMax:2, careerRoles:['craft'],
     desc:'Good steel in skilled hands.', fx:{ gold:1 } },
-  workshop:   { name:'A Shop of Your Own', icon:'⚒', cost:80, tierMax:2, professions:['craftsman'], req:'fine_tools', eventOnly:true,
+  workshop:   { name:'A Shop of Your Own', icon:'⚒', cost:80, tierMax:2, careerRoles:['craft'], req:'fine_tools', eventOnly:true,
     desc:'Your name over your own door.', fx:{ gold:2.5 } },
-  famed_mark: { name:'A Famed Mark', icon:'🏅', cost:150, tierMax:2, professions:['craftsman'], req:'fine_tools',
+  famed_mark: { name:'A Famed Mark', icon:'🏅', cost:150, tierMax:2, careerRoles:['craft'], req:'fine_tools',
     desc:'Buyers ask for your mark by name.', fx:{ gold:3, prestige:1 } },
   /* the road */
-  pack_mule:  { name:'Pack Mule', icon:'🐴', cost:20, tierMax:2, professions:['merchant'],
+  pack_mule:  { name:'Pack Mule', icon:'🐴', cost:20, tierMax:2, careerRoles:['trading'],
     desc:'Stubborn, surefooted, profitable.', fx:{ gold:1.5 } },
-  stall:      { name:'Market Stall', icon:'⛺', cost:60, tierMax:2, professions:['merchant'], req:'pack_mule', eventOnly:true,
+  stall:      { name:'Market Stall', icon:'⛺', cost:60, tierMax:2, careerRoles:['trading'], req:'pack_mule', eventOnly:true,
     desc:'A fixed place in the market square.', fx:{ gold:2.5 } },
-  trade_house:{ name:'Trading House', icon:'🏛', cost:150, tierMax:2, professions:['merchant'], req:'stall', eventOnly:true,
+  trade_house:{ name:'Trading House', icon:'🏛', cost:150, tierMax:2, careerRoles:['trading'], req:'stall', eventOnly:true,
     desc:'Ledgers, agents, and a name that opens doors.', fx:{ gold:4, prestige:1 } },
   /* the sword */
-  good_mail:  { name:'A Hauberk That Fits', icon:'🛡', cost:30, tierMax:2, professions:['soldier'],
+  good_mail:  { name:'A Hauberk That Fits', icon:'🛡', cost:30, tierMax:2, careerRoles:['arms'],
     desc:'Dead men earn no wages.', fx:{ battle:0.04 } },
-  warhorse:   { name:'Warhorse', icon:'🐎', cost:80, tierMax:2, professions:['soldier'], req:'good_mail', pledge:false,
+  warhorse:   { name:'Warhorse', icon:'🐎', cost:80, tierMax:2, careerRoles:['arms'], req:'good_mail', pledge:false,
     desc:'Half a knight is the horse.', fx:{ battle:0.06, prestige:0.5 } }
 };
 

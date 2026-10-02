@@ -114,7 +114,7 @@ FBDATA.events.push(
 
 /* ---------- the farming year ---------- */
 { id:'spring_sowing', title:'Sowing Season',
-  trigger:{ tierMax:1, professions:['farmer'], seasons:[0], chance:0.5 }, weight:10, cooldown:3,
+  trigger:{ tierMax:1, careerRoles:['labor'], seasons:[0], chance:0.5 }, weight:10, cooldown:3,
   text:'The thaw has come and the earth turns soft. What goes into the ground now decides who eats next winter.',
   options:[
     { label:'Sow the proven barley.', desc:'The sure loaf never made a song, but it fills the belly.', effects:{ setFlag:'crop_safe', log:'Sowed barley.' } },
@@ -122,7 +122,7 @@ FBDATA.events.push(
     { label:'Sow little, hire out your back instead.', desc:'Coin today, and let another man fret at the sky.', effects:{ gold:3 } }
   ]},
 { id:'summer_storm', title:'Black Clouds Over the Fields',
-  trigger:{ tierMax:1, professions:['farmer'], seasons:[1], chance:0.3 }, weight:8, cooldown:3,
+  trigger:{ tierMax:1, careerRoles:['labor'], seasons:[1], chance:0.3 }, weight:8, cooldown:3,
   text:'Hail-heavy clouds pile up beyond the hills. A summer storm could flatten every stalk you own.',
   options:[
     { label:'Rush the early cutting.', desc:'Take what the field offers before the sky takes it back.', effects:{ gold:2, clearFlag:'crop_risky', setFlag:'crop_safe', health:-1 } },
@@ -131,7 +131,7 @@ FBDATA.events.push(
       failure:{ text:'Hail like slingstones. The crop is battered flat.', effects:{ clearFlag:'crop_safe', clearFlag2:'crop_risky', setFlag:'crop_ruined' } } }
   ]},
 { id:'harvest', title:'The Harvest',
-  trigger:{ tierMax:1, professions:['farmer'], seasons:[2] }, weight:25, cooldown:3,
+  trigger:{ tierMax:1, careerRoles:['labor'], seasons:[2] }, weight:25, cooldown:3,
   text:'Scythes hiss in the fields from first light to last. The whole village works, prays, and counts.',
   options:[
     { label:'Bring it in.', desc:'Sweat now, and winter will tell you what it was worth.', chance:'harvest',
@@ -777,7 +777,7 @@ FBDATA.events.push(
     { label:'Pen the flock and wait for spring.', desc:'The wolf eats what patience costs.', effects:{ gold:-2 } }
   ]},
 { id:'boundary_dispute', title:'The Moved Stone',
-  trigger:{ tierMin:1, tierMax:1, professions:['farmer'], chance:0.15 }, weight:6, cooldown:12,
+  trigger:{ tierMin:1, tierMax:1, careerRoles:['labor'], chance:0.15 }, weight:6, cooldown:12,
   participants:[
     {slot:'neighbor', source:'local_neighbor', required:true, createFallback:true, sameHome:true}
   ],
@@ -1055,7 +1055,7 @@ FBDATA.events.push(
   ]},
 
 { id:'masters_empty_bench', title:'The Master’s Empty Bench',
-  trigger:{ tierMin:1, tierMax:2, minAge:16, professions:['craftsman'], chance:0.3 }, weight:12, once:true,
+  trigger:{ tierMin:1, tierMax:2, minAge:16, careerRoles:['craft'], chance:0.3 }, weight:12, once:true,
   text:'Your old master dies with a commission unfinished, debts in the ledger, and a widow facing men who have already begun measuring the workshop.',
   options:[
     { label:'Finish the commission yourself.', desc:'Your hands against the master’s shadow.', chance:'skill_ste', effects:{ setFlag:'bench_path_finish', queue:'bench_mark' },
@@ -1172,7 +1172,7 @@ FBDATA.events.push(
   text:'Men wearing the lord’s colors fill the lane. They require food, fodder, and dry floor before they march again — and requirement sounds very much like command.',
   options:[
     { label:'Host them properly. ({money:5})', require:{ goldMin:5 }, desc:'A full table buys the captain’s goodwill.', effects:{ gold:-5, opinion:{role:'lord', amt:10}, prestige:3 } },
-    { label:'Repair their gear for payment.', require:{ professions:['craftsman'] }, desc:'Earn from the war instead of feeding it.', chance:'skill_ste',
+    { label:'Repair their gear for payment.', require:{ careerRoles:['craft'] }, desc:'Earn from the war instead of feeding it.', chance:'skill_ste',
       success:{ text:'Straps, rivets, and wheels leave sounder than they arrived.', effects:{ gold:4, opinion:{role:'lord', amt:8}, skills:{ste:1} } },
       failure:{ text:'A hasty repair fails inspection. They take food in place of payment.', effects:{ gold:-3 } } },
     { label:'Trade supper for campaign gossip.', desc:'News is worth a meal — if the tales are true.', chance:'skill_int',

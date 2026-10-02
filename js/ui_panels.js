@@ -4723,7 +4723,7 @@ window.FB = window.FB || {};
       const unlocked = [];
       for (const eid in FBDATA.enterprises) {
         const enterpriseDef = FBDATA.enterprises[eid];
-        if (enterpriseDef.profession !== career.profession) continue;
+        if (!FB.professionDoesWork(career.profession, enterpriseDef.profession)) continue;
         if (enterpriseDef.guildRank &&
             (rankOrder[career.guildRank] || 0) <
             (rankOrder[enterpriseDef.guildRank] === undefined
@@ -4779,7 +4779,7 @@ window.FB = window.FB || {};
           enterprises:unlocked.join(', ')
         }));
       }
-      if (c.id === me.id && career.profession === 'craftsman') {
+      if (c.id === me.id && FB.professionHasRole(career.profession, 'craft')) {
         meta.push(FB.T(
           'Personal work perk: guild membership adds {money:amount} to each season at the bench.',
           { amount:1 }));

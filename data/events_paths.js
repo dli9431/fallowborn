@@ -31,7 +31,7 @@ FBDATA.events.push(
       effects:{} }
   ]},
 { id:'guild_entry', title:'The Guild Bench',
-  trigger:{ professions:['craftsman'], tierMin:1, chance:0.3, notFlags:['guild_member'] }, weight:10,
+  trigger:{ careerRoles:['craft'], tierMin:1, chance:0.3, notFlags:['guild_member'] }, weight:10,
   text:{ default:'The masters of the craft drink together, set prices together, and bury each other’s dead. A seat at their bench costs silver — and buys a future.',
     muslim:'The masters of the craft eat together, set prices together, and bury each other’s dead. A seat at their bench costs silver — and buys a future.' },
   options:[
@@ -39,7 +39,7 @@ FBDATA.events.push(
     { label:'Work outside the guild.', desc:'Freedom, and no friends at the bench.', effects:{ } }
   ]},
 { id:'masterwork', title:'The Masterwork',
-  trigger:{ professions:['craftsman'], flags:['guild_member'], chance:0.2 }, weight:8, cooldown:12,
+  trigger:{ careerRoles:['craft'], flags:['guild_member'], chance:0.2 }, weight:8, cooldown:12,
   text:'A commission worthy of your best: fine work for a great house. Succeed, and your name travels farther than you ever have.',
   options:[
     { label:'Labor over it for months.', desc:'Patient work could make your name — or waste the season.', chance:'skill_ste',
@@ -47,7 +47,7 @@ FBDATA.events.push(
       failure:{ text:'A flaw in the final hour ruins it. The patron pays half, scowling.', effects:{ gold:5, prestige:-4 } } }
   ]},
 { id:'caravan_venture', title:'The Caravan',
-  trigger:{ professions:['merchant','craftsman'], tierMin:1, goldMin:20, chance:0.35,
+  trigger:{ careerRoles:['trading','craft'], tierMin:1, goldMin:20, chance:0.35,
     custom:'finance_can_invest' }, weight:10, cooldown:6,
   text:'A caravan is forming for the long route — spice, cloth, and salt. Shares are open to any with silver and a strong stomach for risk.',
   options:[
@@ -58,7 +58,7 @@ FBDATA.events.push(
     { label:'Keep your coin at home.', desc:'No risk, no profit, no stories.', effects:{ } }
   ]},
 { id:'shop_fire', title:'Fire!',
-  trigger:{ professions:['craftsman','merchant'], tierMin:1, chance:0.08 }, weight:5, cooldown:20,
+  trigger:{ careerRoles:['craft','trading'], tierMin:1, chance:0.08 }, weight:5, cooldown:20,
   text:'You wake to shouting and an orange glow. Fire is eating through the workshop quarter, leaping thatch to thatch.',
   options:[
     { label:'Fight the flames for your stock.', desc:'Brave the fire to save your stock — or lose more trying.', chance:0.5,
@@ -67,7 +67,7 @@ FBDATA.events.push(
     { label:'Help the neighbors first.', desc:'Let yours burn; the town remembers who came.', effects:{ gold:-10, prestige:8, opinion:{role:'friend', amt:15} } }
   ]},
 { id:'moneylending', title:'Silver Breeds Silver',
-  trigger:{ professions:['merchant'], goldMin:30, chance:0.25 }, weight:8, cooldown:8,
+  trigger:{ careerRoles:['trading'], goldMin:30, chance:0.25 }, weight:8, cooldown:8,
   text:'A landowner needs thirty pieces before harvest and will pledge his mill as surety. Usury is frowned upon — profit rarely is.',
   options:[
     { label:'Lend at hard interest.', desc:'Good profit, poor prayers — and his mill if he fails.', chance:0.7,
@@ -77,7 +77,7 @@ FBDATA.events.push(
     { label:'Decline.', desc:'Let some other purse take the risk.', effects:{ } }
   ]},
 { id:'become_merchant', title:'From Bench to Ledger',
-  trigger:{ professions:['craftsman'], tierMin:1, goldMin:40, chance:0.2 }, weight:6, once:true,
+  trigger:{ careerRoles:['craft'], tierMin:1, goldMin:40, chance:0.2 }, weight:6, once:true,
   text:'You know the roads now, the prices, the men who move goods. Why make one chair when you can sell a hundred?',
   options:[
     { label:'Take up the merchant’s life.', desc:'Trade the workbench for the open road.', effects:{ profession:'merchant', log:'Became a merchant.' } },
@@ -96,7 +96,7 @@ FBDATA.events.push(
 
 /* ================= SOLDIERING ================= */
 { id:'first_muster', title:'The Muster Field',
-  trigger:{ professions:['soldier'], chance:0.4, notFlags:['seen_battle'] }, wartime:true, weight:10, cooldown:6,
+  trigger:{ careerRoles:['arms'], chance:0.4, notFlags:['seen_battle'] }, wartime:true, weight:10, cooldown:6,
   text:'Drill, drill, and drill again. The sergeant’s stick finds every lazy elbow. “Sloppy lines die,” he says. “Neat lines kill.”',
   options:[
     { label:'Sweat now, live later.', desc:'Hard drill today keeps you breathing tomorrow.', effects:{ skills:{mar:1}, health:0 } },
@@ -105,7 +105,7 @@ FBDATA.events.push(
       failure:{ text:'They take your pay and laugh you back to the drill-yard.', effects:{ gold:-3 } } }
   ]},
 { id:'first_battle', title:'The Shield-Wall',
-  trigger:{ professions:['soldier'], realmAtWar:true, chance:0.5 }, wartime:true, weight:15, cooldown:4,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, chance:0.5 }, wartime:true, weight:15, cooldown:4,
   text:'Horns. Mud. A line of strangers who mean to kill you, close enough now to see their teeth. The man beside you is praying; the man beyond him is laughing.',
   options:[
     { label:'Stand in the line.', desc:'Glory and scars both wait in the shield-wall.', chance:'battle',
@@ -114,7 +114,7 @@ FBDATA.events.push(
     { label:'Hang back among the baggage.', desc:'Live quiet, and let men name it.', effects:{ prestige:-5, addTrait:'craven' } }
   ]},
 { id:'save_the_lord', title:'A Lord Unhorsed',
-  trigger:{ professions:['soldier'], flags:['seen_battle'], realmAtWar:true, chance:0.2 }, wartime:true, weight:8, once:true,
+  trigger:{ careerRoles:['arms'], flags:['seen_battle'], realmAtWar:true, chance:0.2 }, wartime:true, weight:8, once:true,
   text:'Through the din you see it: {lord} down, horse screaming, enemies closing like crows. No one else is near enough. You are.',
   options:[
     { label:'Charge to the rescue.', desc:'Risk your neck; a grateful lord pays for years.', chance:0.55,
@@ -123,7 +123,7 @@ FBDATA.events.push(
     { label:'A dead lord pays no wages. Keep formation.', desc:'Cold sense — and men will see that it was cold.', effects:{ prestige:-2 } }
   ]},
 { id:'loot_temptation', title:'The Sacked Town',
-  trigger:{ professions:['soldier'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:8, cooldown:6,
+  trigger:{ careerRoles:['arms'], realmAtWar:true, flags:['seen_battle'], chance:0.3 }, wartime:true, weight:8, cooldown:6,
   text:'The town has fallen and discipline with it. Doors splinter; men stagger past with armfuls of plate and cloth. The {temple} stands unguarded.',
   options:[
     { label:'Take your share of houses — not the {temple}.', desc:'Honest plunder, if plunder can be honest.', effects:{ gold:10, piety:-2 } },
@@ -131,7 +131,7 @@ FBDATA.events.push(
     { label:'Guard the {temple} door.', desc:'No coin in it, but the priests will remember.', effects:{ piety:12, prestige:6, opinion:{role:'priest', amt:10} } }
   ]},
 { id:'wardeath_friend', title:'An Empty Place at the Fire',
-  trigger:{ professions:['soldier'], flags:['seen_battle'], hasRole:'friend', chance:0.15 }, wartime:true, weight:5, once:true,
+  trigger:{ careerRoles:['arms'], flags:['seen_battle'], hasRole:'friend', chance:0.15 }, wartime:true, weight:5, once:true,
   text:'{friend} does not answer the roll. You find them at last among the rows of the dead, looking almost surprised.',
   options:[
     { label:'Dig the grave yourself.', desc:'Hard labor, and a little peace beside it.', effects:{ killRole:'friend', piety:5, health:-1, log:'Buried a friend after battle.' } },
@@ -139,7 +139,7 @@ FBDATA.events.push(
     { label:'Keep vigil by the grave until dawn.', require:{ religionGroups:['muslim'] }, desc:'A cold night’s watch for a warm friend.', effects:{ killRole:'friend', piety:2 } }
   ]},
 { id:'sergeant', title:'Stripes of a Sort',
-  trigger:{ professions:['soldier'], flags:['seen_battle'], prestigeMin:30, chance:0.3 }, wartime:true, weight:8, once:true,
+  trigger:{ careerRoles:['arms'], flags:['seen_battle'], prestigeMin:30, chance:0.3 }, wartime:true, weight:8, once:true,
   text:'The captain needs a steady hand over the new levies. Your name is spoken.',
   options:[
     { label:'Take the post.', desc:'More coin, more blame, a louder voice.', effects:{ prestige:8, gold:2, skills:{mar:1}, setFlag:'sergeant', log:'Promoted to sergeant.' } },
@@ -148,7 +148,7 @@ FBDATA.events.push(
 
 /* ================= THE CLOTH ================= */
 { id:'scriptorium', title:'Ink and Vellum',
-  trigger:{ professions:['monk'], religionGroups:['christian'], chance:0.5 }, weight:10, cooldown:4,
+  trigger:{ careerRoles:['cloister'], religionGroups:['christian'], chance:0.5 }, weight:10, cooldown:4,
   text:'Cold fingers, aching eyes, and the slow miracle of letters spreading down the page. The abbot watches your copying with interest.',
   options:[
     { label:'Perfect your hand.', desc:'Steady work that sharpens the mind.', effects:{ skills:{lea:1}, addTraitOnce:'literate', piety:2 } },
@@ -157,7 +157,7 @@ FBDATA.events.push(
       failure:{ text:'“Is that a DOG in the Gospel?” Scraping vellum for a month.', effects:{ piety:1 } } }
   ]},
 { id:'tend_sick', title:'The Infirmary',
-  trigger:{ professions:['monk','priest'], chance:0.3 }, weight:8, cooldown:6,
+  trigger:{ careerRoles:['cloister','clergy'], chance:0.3 }, weight:8, cooldown:6,
   text:'Fever season fills the infirmary. The sick call for water, for prayers, for their mothers.',
   options:[
     { label:'Nurse them day and night.', desc:'Their gratitude is likely; their fevers are catching.', chance:0.8,
@@ -166,7 +166,7 @@ FBDATA.events.push(
     { label:'Pray for them from a safe distance.', desc:'Pious, prudent, and a little hollow.', effects:{ piety:2 } }
   ]},
 { id:'relic_found', title:'Bones in the Crypt',
-  trigger:{ professions:['monk','priest'], religionGroups:['christian'], chance:0.08 }, weight:4, once:true,
+  trigger:{ careerRoles:['cloister','clergy'], religionGroups:['christian'], chance:0.08 }, weight:4, once:true,
   text:'Workmen shoring the crypt uncover an ancient coffer: bones, a rusted ring, a scrap of cloth. The prior’s eyes gleam. Relics draw pilgrims — and pilgrims draw silver.',
   options:[
     { label:'Declare them a saint’s remains.', desc:'Pilgrims and silver — unless the bishop counts sheep bones.', chance:0.6,
@@ -305,7 +305,7 @@ FBDATA.events.push(
       effects:{ papalOpinion:6, popularOpinion:-5 } }
   ]},
 { id:'heresy_whiff', title:'Dangerous Questions',
-  trigger:{ professions:['monk','priest'], leaMin:6, chance:0.1 }, weight:4, once:true,
+  trigger:{ careerRoles:['cloister','clergy'], leaMin:6, chance:0.1 }, weight:4, once:true,
   text:'Late study breeds late thoughts. In the margin of an old text you have written something that, read coldly, smells of heresy. Another hand has underlined it.',
   options:[
     { label:'Burn the page and recant privately.', desc:'Burn the evidence, keep your skin.', effects:{ piety:3 } },
@@ -316,7 +316,7 @@ FBDATA.events.push(
 
 /* ================= THE PATH OF LEARNING (Muslim lands) ================= */
 { id:'madrasa_study', title:'Reed Pen and Paper',
-  trigger:{ professions:['monk','priest'], religionGroups:['muslim'], chance:0.5 }, weight:10, cooldown:4,
+  trigger:{ careerRoles:['cloister','clergy'], religionGroups:['muslim'], chance:0.5 }, weight:10, cooldown:4,
   text:'Cool tiles, murmured recitation, and the scratch of reed pens. Your calligraphy improves line by line, and the master of the madrasa watches your progress with interest.',
   options:[
     { label:'Perfect your hand.', desc:'Steady work that sharpens the mind.', effects:{ skills:{lea:1}, addTraitOnce:'literate', piety:2 } },
@@ -337,7 +337,7 @@ FBDATA.events.push(
       failure:{ text:'His friends pull you apart — after the worst of it.', effects:{ health:-1, prestige:-2 } } }
   ]},
 { id:'hawk_with_emir', title:'The Emir’s Hawking',
-  trigger:{ tierMin:2, tierMax:2, chance:0.25, professions:['noble'], religionGroups:['muslim'] }, weight:8, cooldown:6,
+  trigger:{ tierMin:2, tierMax:2, chance:0.25, careerRoles:['noble'], religionGroups:['muslim'] }, weight:8, cooldown:6,
   text:'An invitation to ride with {lord} and his falcons — swift horses, gazelle on the plain, and the quiet talk between great men that shapes small futures.',
   options:[
     { label:'Ride well, speak better.', desc:'Charm is safer than glory in a great man’s company.', effects:{ opinion:{role:'lord', amt:10}, skills:{dip:1} } },
@@ -355,7 +355,7 @@ FBDATA.events.push(
 
 /* ================= GENTRY (tier 2) ================= */
 { id:'melee_games', title:'The War-Games',
-  trigger:{ tierMin:2, tierMax:2, chance:0.3, professions:['noble'] }, weight:10, cooldown:6,
+  trigger:{ tierMin:2, tierMax:2, chance:0.3, careerRoles:['noble'] }, weight:10, cooldown:6,
   text:'{lord} holds a gathering of arms: mock battle with blunted steel, wagers, and every ambitious sword in the province watching.',
   options:[
     { label:'Fight in the melee.', desc:'Prize and glory for the winner; bruises for the rest.', chance:'battle',
@@ -366,7 +366,7 @@ FBDATA.events.push(
       failure:{ text:'Your chosen champion loses, and so does your wager.', effects:{ gold:-5 } } }
   ]},
 { id:'hunt_with_lord', title:'The Lord’s Hunt',
-  trigger:{ tierMin:2, tierMax:2, chance:0.25, professions:['noble'], religionGroups:['christian','pagan','jewish'] }, weight:8, cooldown:6,
+  trigger:{ tierMin:2, tierMax:2, chance:0.25, careerRoles:['noble'], religionGroups:['christian','pagan','jewish'] }, weight:8, cooldown:6,
   text:'An invitation to ride with {lord}’s hunt — hounds, horns, and the talk between great men that shapes small futures.',
   options:[
     { label:'Ride well, speak better.', desc:'Charm is safer than glory in a great man’s company.', effects:{ opinion:{role:'lord', amt:10}, skills:{dip:1} } },
@@ -389,7 +389,7 @@ FBDATA.events.push(
 
 /* ================= MORE STATION LIFE ================= */
 { id:'apprentice_trouble', title:'The Apprentice’s Mistake',
-  trigger:{ professions:['craftsman'], chance:0.2 }, weight:6, cooldown:8,
+  trigger:{ careerRoles:['craft'], chance:0.2 }, weight:6, cooldown:8,
   text:'A week of work lies in pieces on the floor, and your apprentice stands over it, white as chalk.',
   options:[
     { label:'Make him redo it beside you.', desc:'Slow teaching, well learned.', effects:{ skills:{ste:1}, prestige:1 } },
@@ -397,7 +397,7 @@ FBDATA.events.push(
     { label:'“I broke worse at your age.”', desc:'Mercy costs a little coin and buys goodwill.', effects:{ popularOpinion:2, gold:-2 } }
   ]},
 { id:'iron_shortage', title:'No Iron at Any Price',
-  trigger:{ professions:['craftsman'], chance:0.15 }, weight:5, cooldown:12,
+  trigger:{ careerRoles:['craft'], chance:0.15 }, weight:5, cooldown:12,
   text:'The ore caravans have not come — war or weather, nobody knows. Every smith and joiner in town is bidding for the same scraps.',
   options:[
     { label:'Pay the famine price.', require:{ goldMin:6 }, desc:'Dear iron, but the work goes on.', effects:{ gold:-6, skills:{ste:1} } },
@@ -407,7 +407,7 @@ FBDATA.events.push(
     { label:'Let the bench stand idle.', desc:'No work, no scandal, no bread.', effects:{ gold:-2 } }
   ]},
 { id:'partner_offer', title:'A Partner from Far Off',
-  trigger:{ professions:['merchant'], goldMin:15, chance:0.15 }, weight:5, cooldown:12,
+  trigger:{ careerRoles:['trading'], goldMin:15, chance:0.15 }, weight:5, cooldown:12,
   text:'A foreign merchant — silk cuffs, careful eyes — proposes a joint venture: your local knowledge, his distant markets.',
   options:[
     { label:'Shake on it. (risk {money:15})', desc:'His markets could pay richly — or swallow your stake.', chance:0.6,
@@ -417,7 +417,7 @@ FBDATA.events.push(
     { label:'Decline politely.', desc:'Suspicious silk is cheap to refuse.', effects:{ } }
   ]},
 { id:'wreck_auction', title:'Salvage on the Block',
-  trigger:{ professions:['merchant'], goldMin:8, chance:0.15 }, weight:5, cooldown:10,
+  trigger:{ careerRoles:['trading'], goldMin:8, chance:0.15 }, weight:5, cooldown:10,
   text:'A storm-broken cargo goes under the hammer, sight unseen: sodden bales that might be ruined wool — or sea-stained silk.',
   options:[
     { label:'Bid on the lot. ({money:8})', require:{ goldMin:8 }, desc:'Silk or rotten wool — the hammer decides.', chance:0.5,
@@ -426,7 +426,7 @@ FBDATA.events.push(
     { label:'Watch others gamble.', desc:'Learn what a wreck is worth at no cost.', effects:{ skills:{ste:1} } }
   ]},
 { id:'sparring_challenge', title:'The Old Sergeant’s Wager',
-  trigger:{ professions:['soldier'], chance:0.2 }, weight:6, cooldown:8,
+  trigger:{ careerRoles:['arms'], chance:0.2 }, weight:6, cooldown:8,
   text:'A grizzled sergeant taps your shoulder with a practice blade: “Young ones always think it’s about strength. Care to learn otherwise, for a wager?”',
   options:[
     { label:'Take the wager. ({money:2})', require:{ goldMin:2 }, desc:'{money:2} says youth beats cunning.', chance:'battle',
@@ -435,7 +435,7 @@ FBDATA.events.push(
     { label:'Watch him school someone else.', desc:'Free lessons from the safe side of the yard.', effects:{ skills:{mar:1} } }
   ]},
 { id:'quiet_garrison', title:'Long Watches',
-  trigger:{ professions:['soldier'], realmAtWar:false, chance:0.2 }, weight:5, cooldown:8,
+  trigger:{ careerRoles:['arms'], realmAtWar:false, chance:0.2 }, weight:5, cooldown:8,
   text:'No war, no drills worth the name — just walls, weather, and wages. A soldier’s enemy in peacetime is the calendar.',
   options:[
     { label:'Keep your edge regardless.', desc:'Rust is for lazy blades.', effects:{ skills:{mar:1} } },
@@ -445,7 +445,7 @@ FBDATA.events.push(
     { label:'Court the quartermaster’s favor.', desc:'Friendship with the man who counts the loaves.', effects:{ skills:{dip:1}, opinion:{role:'lord', amt:3} } }
   ]},
 { id:'judgment_at_door', title:'Two Families, One Gate',
-  trigger:{ professions:['monk','priest'], chance:0.2 }, weight:6, cooldown:8,
+  trigger:{ careerRoles:['cloister','clergy'], chance:0.2 }, weight:6, cooldown:8,
   text:'Two families arrive at the {temple} gate with one dispute, three witnesses, and absolute certainty on both sides. They will take your word as {god}’s.',
   options:[
     { label:'Hear both sides fully.', desc:'A fair ear could satisfy both — or make one an enemy.', chance:0.65,
@@ -454,7 +454,7 @@ FBDATA.events.push(
     { label:'Send them to the lord’s court.', desc:'Pass the thorn uphill, and lose a little grace.', effects:{ opinion:{role:'lord', amt:3}, piety:-2 } }
   ]},
 { id:'gentry_feuding_neighbors', title:'A Feud on Your Doorstep',
-  trigger:{ tierMin:2, tierMax:2, professions:['noble'], chance:0.15 }, weight:6, cooldown:12,
+  trigger:{ tierMin:2, tierMax:2, careerRoles:['noble'], chance:0.15 }, weight:6, cooldown:12,
   text:'Two neighboring houses have fallen out over a mill-race, and both send riders to your hall the same afternoon, seeking your name for their cause.',
   options:[
     { label:'Broker a peace between them.', desc:'Both houses could owe you — or hate you together.', chance:0.55,

@@ -2644,11 +2644,11 @@ FB.CHANGELOG = [
       religion:details.community.religion,
       born:details.bookmark.date.year - FBDATA.balance.startAge,
       station:0,
-      role:'farmer',
+      role:FB.roleCareer('labor'),
       health:8,
       traits:[]
     }, details.bookmark.date.year, {
-      state:null, tier:0, profession:'farmer', suppressEquipment:true
+      state:null, tier:0, profession:FB.roleCareer('labor'), suppressEquipment:true
     });
   }
 
@@ -3553,7 +3553,7 @@ FB.CHANGELOG = [
       siblingCourtships: {},
       politics: null,
       player: {
-        charId: null, tier: 0, profession: 'farmer', professionBack: null,
+        charId: null, tier: 0, profession: FB.roleCareer('labor'), professionBack: null,
         gold: 0, prestige: 0, piety: 0,
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {},
         faithStandingMigration:0, realmStandingFaithBases:{},

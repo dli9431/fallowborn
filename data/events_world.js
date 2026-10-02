@@ -134,7 +134,7 @@ FBDATA.events.push(
   ]},
 
 { id:'levy_call', title:'The Levy Is Called',
-  trigger:{ tierMax:1, sex:'m', minAge:16, maxAge:45, realmAtWar:true, notFlags:['on_campaign'], professions:['farmer','craftsman','merchant'], chance:0.35 }, weight:12, cooldown:8,
+  trigger:{ tierMax:1, sex:'m', minAge:16, maxAge:45, realmAtWar:true, notFlags:['on_campaign'], careerRoles:['labor','craft','trading'], chance:0.35 }, weight:12, cooldown:8,
   text:'War. The reeve reads the summons at the {temple} door: every able man of {province} to muster with spear, shield, and three weeks’ bread.',
   options:[
     { label:'March with the levy.', desc:'Three weeks’ bread, and whatever the war leaves of you.', effects:{ setFlag:'on_campaign', profession:'soldier', setFlag2:'was_civilian', log:'Marched to war with the levy.' } },
