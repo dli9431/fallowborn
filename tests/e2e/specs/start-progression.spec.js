@@ -30,7 +30,7 @@ test.beforeEach(async function ({ page }, testInfo) {
 async function openScenarioPicker(page) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
-  await page.locator('#bookmarklist .scencard').first().click();
+  await page.locator('#bookmarklist .scencard', { hasText:/\b867:/ }).click();
   await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
 }
 

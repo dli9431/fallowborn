@@ -1123,9 +1123,9 @@ test('phone-sized birthplace and character screens yield the corner to Back',
     const controls = page.locator('#title-music-controls');
     await expect(controls).toBeVisible();
 
-    // title → New Game (fresh seed) → first bookmark → Free Farmer → birthplace
+    // title → New Game (fresh seed) → the 867 bookmark → Free Farmer → birthplace
     await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await page.locator('#bookmarklist .scencard').first().click();
+    await page.locator('#bookmarklist .scencard', { hasText:/\b867:/ }).click();
     await page.getByRole('button', { name:/Free Farmer/ }).click();
     await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
     await expect(controls).toBeHidden();

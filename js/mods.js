@@ -529,6 +529,104 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  /* Bookmark definitions after this mod: its own replace or add by id. */
+  function combinedBookmarks(mod) {
+    const out = combinedTable(FBDATA.bookmarks, undefined, 'bookmarks');
+    if (Array.isArray(mod.bookmarks)) {
+      for (const definition of mod.bookmarks) {
+        if (plainObject(definition) && typeof definition.id === 'string') {
+          out[definition.id] = definition;
+        }
+      }
+    } else if (plainObject(mod.bookmarks)) {
+      for (const id in mod.bookmarks) {
+        if (own(mod.bookmarks, id) && plainObject(mod.bookmarks[id])) {
+          out[id] = mod.bookmarks[id];
+        }
+      }
+    }
+    return out;
+  }
+
+  /* Start rules a scenario carries as data (docs/MODDING.md): where it is
+     offered, its fixed birthplace and identity, its family shapes and its
+     player-track stories. */
+  function validateStartRules(scenario, rules, path) {
+    if (own(scenario, 'bookmarkIds')) {
+      validateIdList(scenario.bookmarkIds, path + '.bookmarkIds', rules.bookmarks);
+    }
+    if (own(scenario, 'eras')) {
+      validateIdList(scenario.eras, path + '.eras', FBDATA.eras || {});
+    }
+    if (own(scenario, 'alwaysUnlocked') && typeof scenario.alwaysUnlocked !== 'boolean') {
+      fail(path + '.alwaysUnlocked', 'must be true or false.');
+    }
+    if (own(scenario, 'startAge')) integerRange(scenario.startAge, 16, 80, path + '.startAge');
+    for (const field of ['startCulture', 'startReligion']) {
+      if (!own(scenario, field)) continue;
+      const known = field === 'startCulture' ? rules.cultures : rules.religions;
+      if (typeof scenario[field] !== 'string' || !own(known, scenario[field])) {
+        fail(path + '.' + field, 'references unknown id ' + scenario[field] + '.');
+      }
+    }
+    if (own(scenario, 'fixedProvinceId')) {
+      if (typeof scenario.fixedProvinceId !== 'string' || !scenario.fixedProvinceId) {
+        fail(path + '.fixedProvinceId', 'must be a county id.');
+      }
+      if (!own(scenario, 'bookmarkIds') || !own(scenario, 'startCulture') ||
+          !own(scenario, 'startReligion')) {
+        fail(path + '.fixedProvinceId',
+          'needs bookmarkIds, startCulture and startReligion.');
+      }
+      /* the fixed county and its culture/faith pair exist in each bookmark */
+      for (const bookmarkId of scenario.bookmarkIds) {
+        const provinces = rules.bookmarks[bookmarkId].provinces || [];
+        const county = provinces.filter(function (province) {
+          return province && province.id === scenario.fixedProvinceId &&
+            !province.wasteland;
+        })[0];
+        if (!county) {
+          fail(path + '.fixedProvinceId', 'is not a settled county of bookmark ' +
+            bookmarkId + '.');
+        }
+        const paired = FB.provinceCommunities(county).some(function (community) {
+          return community.culture === scenario.startCulture &&
+            community.religion === scenario.startReligion;
+        });
+        if (!paired) {
+          fail(path + '.startCulture', 'and startReligion must be a community of ' +
+            scenario.fixedProvinceId + ' in bookmark ' + bookmarkId + '.');
+        }
+      }
+    }
+    if (own(scenario, 'familyPresets')) {
+      const presets = scenario.familyPresets;
+      if (!plainObject(presets) || !Object.keys(presets).length) {
+        fail(path + '.familyPresets', 'must be a non-empty object keyed by family preset id.');
+      }
+      for (const presetId in presets) {
+        if (!own(presets, presetId)) continue;
+        const presetPath = path + '.familyPresets.' + presetId;
+        if (!own(rules.familyPresets, presetId)) {
+          fail(presetPath, 'references unknown family preset ' + presetId + '.');
+        }
+        onlyFields(presets[presetId], { name:true, diff:true, desc:true }, presetPath);
+        for (const field of ['name', 'diff', 'desc']) {
+          if (own(presets[presetId], field)) {
+            requiredText(presets[presetId][field], presetPath + '.' + field);
+          }
+        }
+      }
+    }
+    if (own(scenario, 'tracks')) {
+      const tracks = {};
+      for (const story of (FB.stories ? FB.stories.list() : [])) {
+        if (story.kind === 'track') tracks[story.id] = story;
+      }
+      validateIdList(scenario.tracks, path + '.tracks', tracks);
+    }
+  }
+
   function validateStartScenarios(mod) {
     const scenarios = combinedList(FBDATA.startScenarios,
       mod.startScenarios, 'startScenarios');
@@ -547,6 +645,22 @@ window.FBMODS = window.FBMODS || [];
         }
       }
     }
+    const rules = {
+      bookmarks:combinedBookmarks(mod),
+      cultures:combinedTable(FBDATA.cultures, mod.cultures, 'cultures'),
+      religions:combinedTable(FBDATA.religions, mod.religions, 'religions'),
+      familyPresets:{}
+    };
+    if (own(mod, 'familyPresets')) {
+      for (const preset of combinedList(FBDATA.familyPresets,
+        mod.familyPresets, 'familyPresets')) {
+        rules.familyPresets[preset.id] = preset;
+      }
+    } else {
+      for (const preset of (FBDATA.familyPresets || [])) {
+        if (preset && preset.id) rules.familyPresets[preset.id] = preset;
+      }
+    }
     const baselineTiers = {
       serf:0, farmer:1, apprentice:1, monk:1, soldier:1, knight:2, baron:3
     };
@@ -558,7 +672,9 @@ window.FBMODS = window.FBMODS || [];
         id:true, name:true, desc:true, tier:true, profession:true,
         gold:true, prestige:true, piety:true, sex:true,
         intro:true, intro_f:true, intro_muslim:true, intro_other:true,
-        startEffects:true
+        startEffects:true, bookmarkIds:true, eras:true, alwaysUnlocked:true,
+        fixedProvinceId:true, startAge:true, startCulture:true,
+        startReligion:true, familyPresets:true, tracks:true
       }, path);
       if (!/^[a-z][a-z0-9_]*$/.test(scenario.id || '')) {
         fail(path + '.id', 'must be a lowercase start-code id.');
@@ -598,6 +714,7 @@ window.FBMODS = window.FBMODS || [];
       }
       validateStartEffects(scenario.startEffects, scenario, refs,
         path + '.startEffects');
+      validateStartRules(scenario, rules, path);
     }
     for (const id in baselineTiers) {
       if (!found[id]) fail('startScenarios', 'must retain baseline id ' + id + '.');

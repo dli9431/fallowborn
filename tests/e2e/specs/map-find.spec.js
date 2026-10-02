@@ -48,6 +48,7 @@ test('map find location button exists below market lens and opens autocomplete o
       'btn-home',
       'btn-mapmode',
       'btn-marketlens',
+      'btn-events',
       'btn-find'
     ]);
 
@@ -219,7 +220,7 @@ test('all right-hand HUD buttons stay in a single column without wrapping',
     });
 
     expect(layout.direction).toBe('column');
-    expect(layout.buttonCount).toBe(7);
+    expect(layout.buttonCount).toBe(8);
     expect(layout.isSingleColumn).toBe(true);
   });
 
@@ -273,7 +274,7 @@ test('map HUD buttons and map overlays fit balanced portrait and shallow viewpor
         };
       });
 
-      expect(fitsMap.buttonCount).toBe(7);
+      expect(fitsMap.buttonCount).toBe(8);
       expect(fitsMap.hudInside).toBe(true);
       expect(fitsMap.allButtonsInside).toBe(true);
       if (vp.width <= 820 || vp.height <= 520) {

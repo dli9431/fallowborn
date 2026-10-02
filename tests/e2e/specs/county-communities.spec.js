@@ -231,7 +231,7 @@ async function useStartCode(page, code) {
 
 async function reachIonaCommunityPicker(page) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
-  await page.locator('#bookmarklist .scencard').nth(1).click();
+  await page.locator('#bookmarklist .scencard', { hasText:/\b1066:/ }).click();
   await page.getByRole('button', { name:/Free Farmer/ }).click();
   await page.evaluate(function () {
     FB.game.pickProvince(FB.world.byId.iona);
@@ -918,7 +918,7 @@ test('legacy five-part and current six-, seven-, and eight-part codes remain acc
 test('867 Pamplona initializes with Basque Catholic primary identity and Iberian Catholic secondary community',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await page.locator('#bookmarklist .scencard').first().click();
+    await page.locator('#bookmarklist .scencard', { hasText:/\b867:/ }).click();
     await page.getByRole('button', { name:/Free Farmer/ }).click();
     await page.evaluate(function () {
       FB.game.pickProvince(FB.world.byId.pamplona);
@@ -949,7 +949,7 @@ test('867 Pamplona initializes with Basque Catholic primary identity and Iberian
 test('1066 Granada provides Andalusi, Berber, and Iberian community options',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await page.locator('#bookmarklist .scencard').nth(1).click();
+    await page.locator('#bookmarklist .scencard', { hasText:/\b1066:/ }).click();
     await page.getByRole('button', { name:/Free Farmer/ }).click();
     await page.evaluate(function () {
       FB.game.pickProvince(FB.world.byId.granada);

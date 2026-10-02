@@ -212,7 +212,7 @@ test('a quick start creates its authored Serf life in one selection',
     }
   });
 
-/* Title → New Game (fresh seed) → first bookmark → Free Farmer → pick screen */
+/* Title → New Game (fresh seed) → the 867 bookmark → Free Farmer → pick screen */
 async function reachPickScreen(page) {
   await page.getByRole('button', { name: 'New Game', exact: true }).click();
   await expect(page.getByRole('heading', {
@@ -220,7 +220,7 @@ async function reachPickScreen(page) {
   }))
     .toBeVisible();
   await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
-  await page.locator('#bookmarklist .scencard').first().click();
+  await page.locator('#bookmarklist .scencard', { hasText:/\b867:/ }).click();
   await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name: /Free Farmer/ }).click();
   await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();

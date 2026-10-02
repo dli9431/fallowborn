@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/map_data.js',
   'data/starts.js',
+  'data/eras.js',
+  'data/bookmark_476.js',
   'data/cultures.js',
   'data/economy.js',
   'data/political_institutions.js',
@@ -22,6 +24,9 @@ dependsOnRuntime(__filename, [
   'js/intrigue.js',
   'js/save.js', 'js/save_v4.js',
   'js/mods.js',
+  'js/stories.js',
+  'js/story_western_court_476.js',
+  'js/story_federate_track_476.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
@@ -491,8 +496,11 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
 
     const result = await page.evaluate(function () {
       function copy(value) { return JSON.parse(JSON.stringify(value)); }
+      /* the serf start carries no fixed birthplace or story track */
       function scenario(id) {
-        const out = copy(FBDATA.startScenarios[0]);
+        const out = copy(FBDATA.startScenarios.filter(function (entry) {
+          return entry.id === 'serf';
+        })[0]);
         out.id = id;
         out.name = 'Validation fixture';
         out.desc = 'Rejected before application.';
@@ -511,6 +519,21 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
       badItem.startEffects = { items:[{ item:'missing_item' }] };
       const badHolding = scenario('e2e_bad_holding');
       badHolding.startEffects = { holdings:['missing_holding'] };
+      const badEra = scenario('e2e_bad_era');
+      badEra.eras = ['missing_era'];
+      const badTrack = scenario('e2e_bad_track');
+      badTrack.tracks = ['missing_track'];
+      const worldAsTrack = scenario('e2e_world_track');
+      worldAsTrack.tracks = ['western_court_476'];
+      const badFamily = scenario('e2e_bad_family');
+      badFamily.familyPresets = { missing_preset:{ name:'Nobody' } };
+      const badFixed = scenario('e2e_bad_fixed');
+      badFixed.bookmarkIds = ['867'];
+      badFixed.fixedProvinceId = 'london';
+      badFixed.startCulture = 'gothic';
+      badFixed.startReligion = 'homoian';
+      const loneFixed = scenario('e2e_lone_fixed');
+      loneFixed.fixedProvinceId = 'london';
       const badRange = copy(FBDATA.familyPresets.filter(function (entry) {
         return entry.id === 'established';
       })[0]);
@@ -530,6 +553,13 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
         { data:{ startScenarios:[badFocus] }, includes:'unknown focus' },
         { data:{ startScenarios:[badItem] }, includes:'unknown item' },
         { data:{ startScenarios:[badHolding] }, includes:'unknown id missing_holding' },
+        { data:{ startScenarios:[badEra] }, includes:'unknown id missing_era' },
+        { data:{ startScenarios:[badTrack] }, includes:'unknown id missing_track' },
+        { data:{ startScenarios:[worldAsTrack] }, includes:'unknown id western_court_476' },
+        { data:{ startScenarios:[badFamily] }, includes:'unknown family preset missing_preset' },
+        { data:{ startScenarios:[badFixed] }, includes:'must be a community of london' },
+        { data:{ startScenarios:[loneFixed] },
+          includes:'needs bookmarkIds, startCulture and startReligion' },
         { data:{ familyPresets:[badRange] }, includes:'minimum to maximum' },
         { data:{ familyPresets:[badStandard] }, includes:'historical age' }
       ];
@@ -541,17 +571,38 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
           return error.message.indexOf(entry.includes) >= 0;
         }
       });
-      return {
-        errors:errors,
-        unchanged:before === JSON.stringify({
-          scenarios:FBDATA.startScenarios,
-          presets:FBDATA.familyPresets
-        })
-      };
+      const unchanged = before === JSON.stringify({
+        scenarios:FBDATA.startScenarios,
+        presets:FBDATA.familyPresets
+      });
+      /* the shipped start rules validate, so a mod may carry them too */
+      const ruled = scenario('e2e_ruled_start');
+      ruled.bookmarkIds = ['476'];
+      ruled.eras = ['late_antique'];
+      ruled.alwaysUnlocked = true;
+      ruled.fixedProvinceId = 'ravenna';
+      ruled.startAge = 30;
+      ruled.startCulture = 'gothic';
+      ruled.startReligion = 'homoian';
+      ruled.familyPresets = { standard:{ name:'Ravenna household' } };
+      ruled.tracks = ['federate_track_476'];
+      let accepted;
+      try {
+        FB.mods.apply({ startScenarios:[ruled] });
+        accepted = FBDATA.startScenarios.some(function (entry) {
+          return entry.id === 'e2e_ruled_start';
+        });
+      } catch (error) {
+        accepted = error.message;
+      }
+      return { errors:errors, unchanged:unchanged, accepted:accepted };
     });
 
-    expect(result.errors).toEqual([true, true, true, true, true, true, true]);
+    expect(result.errors).toEqual([
+      true, true, true, true, true, true, true, true, true, true, true, true, true
+    ]);
     expect(result.unchanged).toBe(true);
+    expect(result.accepted).toBe(true);
   });
 
 test('milestone-two religious paths route, advance, localize, and restore by index',
@@ -1170,11 +1221,11 @@ test('milestone-four phase B composes bounded overrides with protected action ha
           { id:'pray', order:2 }
         ],
         deeds:[
-          { id:'give_alms', order:27, label:'🕯 Chartered alms',
+          { id:'give_alms', order:29, label:'🕯 Chartered alms',
             desc:'Give alms under the action charter.', group:'work',
             layoutGroup:'personal',
             cooldownDays:7, requiresTech:[], eligibility:eligibility },
-          { id:'begin_plot', order:26 },
+          { id:'begin_plot', order:28 },
           { id:'seek_match', label:'💍 Chartered match',
             desc:'Use the chartered marriage search.' }
         ]
@@ -1194,7 +1245,7 @@ test('milestone-four phase B composes bounded overrides with protected action ha
         focusOrder:FB.focuses.map(function (focus) { return focus.id; })
           .slice(0, 4),
         deedOrder:FB.instants.map(function (deed) { return deed.id; })
-          .slice(25, 28),
+          .slice(27, 30),
         focusLabel:FB.dataText(s, p.charId, 'focus', 'rest', rest, 'label'),
         focusDesc:rest.desc(s),
         deedLabel:FB.dataText(s, p.charId, 'action', 'give_alms', alms, 'label'),

@@ -603,7 +603,9 @@ test('the host card shows attack, defense, and replacement state',
     const panel = page.locator('#tab-prov');
     await expect(panel).toContainText('attack 2.4');
     await expect(panel).toContainText('defense 2.6');
-    await expect(panel).toContainText('upkeep 1.1 per 100');
+    /* men-at-arms upkeepPer100 2, less the 45% provisions share of the
+       basket, times balance.fieldNonFoodCostMultiplier 3 */
+    await expect(panel).toContainText('upkeep 3.3 per 100');
     await expect(panel).toContainText('Replacing 30 Men-at-arms');
     await expect(panel).toContainText('ready in 120 days');
     await expect(panel).toContainText('replacement drilling');

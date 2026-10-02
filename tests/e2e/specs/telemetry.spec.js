@@ -95,7 +95,7 @@ test('New Game telemetry reports each setup screen once per attempt',
       await page.locator('#btn-bm-seed').click();
       await page.getByRole('button', { name:'Close', exact:true }).click();
     }
-    await page.locator('#bookmarklist .scencard').first().click();
+    await page.locator('#bookmarklist .scencard', { hasText:/\b867:/ }).click();
     await page.getByRole('button', { name:/Free Farmer/ }).click();
     await page.getByRole('button', { name:'Random Province', exact:true }).click();
     await page.getByRole('button', { name:'Continue', exact:true }).click();
@@ -106,7 +106,7 @@ test('New Game telemetry reports each setup screen once per attempt',
     await page.locator('#btn-pick-back').click();
     await page.locator('#btn-pick-back').click();
     await page.locator('#btn-ng-back').click();
-    await page.locator('#bookmarklist .scencard').first().click();
+    await page.locator('#bookmarklist .scencard', { hasText:/\b867:/ }).click();
 
     const events = await page.evaluate(function () {
       return window.__telemetryEvents.filter(function (event) {

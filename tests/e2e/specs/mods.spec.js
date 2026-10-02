@@ -269,7 +269,9 @@ test('runtime mods merge definitions and the complete technology configuration',
       FB.mods.apply({ techCaps:{ movement:'fast' } });
       const invalidCapErrors = FB.validateTechnologyData();
       return {
-        eventReplaced:FBDATA.events[0] === replacementEvent &&
+        /* apply installs title-id-normalized copies of events */
+        eventReplaced:FBDATA.events[0].id === eventId &&
+          FBDATA.events[0].title === replacementEvent.title &&
           FBDATA.events[0] !== oldEvent,
         eventAdded:FBDATA.events.some(function (event) {
           return event.id === addedEvent.id;
@@ -511,14 +513,18 @@ test('a legacy world mod that supplies a complete 1066 bookmark keeps it availab
     await openGame(page, testInfo);
 
     expect(await page.evaluate(function () {
-      const complete1066 = JSON.parse(JSON.stringify(FBDATA.bookmarks['1066']));
+      const original1066 = FBDATA.bookmarks['1066'];
+      const complete1066 = JSON.parse(JSON.stringify(original1066));
+      complete1066.desc = 'A modded 1066.';
       FB.mods.apply({
         straits:[],
         bookmarks:{ '1066':complete1066 }
       });
       return {
         available:FB.mods.bookmarkAvailable('1066'),
-        replacement:FBDATA.bookmarks['1066'] === complete1066,
+        /* apply installs a title-id-normalized copy of the bookmark */
+        replacement:FBDATA.bookmarks['1066'] !== original1066 &&
+          FBDATA.bookmarks['1066'].desc === 'A modded 1066.',
         id:FBDATA.bookmarks['1066'].id
       };
     })).toEqual({
