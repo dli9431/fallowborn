@@ -185,7 +185,7 @@ for (const [bookmark, era] of [['867', 'early_medieval'], ['1066', 'high_medieva
         });
         return {
           era:s.start.era, defaultGovernment:s.start.defaultGovernment,
-          geography:Object.prototype.hasOwnProperty.call(s.start, 'geography'),
+          geography:s.start.geography,
           authority:Object.prototype.hasOwnProperty.call(s, 'authority'),
           forms:Object.keys(forms),
           generatedVassals:Object.keys(s.realms).some(function (rid) {
@@ -195,7 +195,7 @@ for (const [bookmark, era] of [['867', 'early_medieval'], ['1066', 'high_medieva
         };
       });
       expect(result).toEqual({ era:era, defaultGovernment:'territorial',
-        geography:false, authority:false, forms:['territorial'],
+        geography:'europe_regional', authority:false, forms:['territorial'],
         generatedVassals:true, culture:'frankish', campaignEra:era });
     });
 }

@@ -57,11 +57,11 @@ class StructuredDataExtractionTests(unittest.TestCase):
             "Suevic Kingdom",
         )
         self.assertEqual(
-            inventory.entries["province.476.fes.name.default"]["text"],
+            inventory.entries["province.fes.name.dated.0"]["text"],
             "Volubilis",
         )
         self.assertEqual(
-            inventory.entries[i18n_catalog.source_key("Salona")]["text"],
+            inventory.entries["province.split.name.dated.0"]["text"],
             "Salona",
         )
         self.assertNotIn(

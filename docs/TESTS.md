@@ -391,7 +391,7 @@ matrix.
 
 Parity baselines and engine-id checks
 
-These four specifications let a refactor prove that behavior did not change and keep new hardcoded ids out of engine code. bookmark-id-lint.spec.js and content-id-ratchet.spec.js run in the ordinary Chromium-served suite. parity-fresh.spec.js and parity-corpus.spec.js hold owner-run journeys that skip unless FB_PARITY is set; only the start-scenario coverage check in parity-fresh.spec.js runs every time. None of them imports or executes a game script in Node.
+These five specifications let a refactor prove that behavior did not change and keep new hardcoded ids out of engine code. bookmark-id-lint.spec.js and content-id-ratchet.spec.js run in the ordinary Chromium-served suite. parity-fresh.spec.js, parity-corpus.spec.js and parity-raster.spec.js hold owner-run journeys that skip unless FB_PARITY is set; only the start-scenario coverage check in parity-fresh.spec.js runs every time. None of them imports or executes a game script in Node.
 
 Snapshots. tests/e2e/support/game/parity.js captures a compact world snapshot inside the page: owner and holder per province; each living realm's rank, liege, ruler and ruler generation; government form counts; the player's tier, station, career and career rank; treasury totals; a fixed sample of FB.political.power and FB.political.permission answers; the costs shown for a fixed list of deeds and focuses, plus the freedom, land plot and rank elevation quotes; the RNG state and the next uid. readsArePure records whether capturing left state, RNG and uid unchanged. Derived caches are not captured.
 
@@ -410,6 +410,8 @@ npm run parity:compare -- --corpus <checkout containing saves/>
 npm run ids:update
 
 How a change uses parity. First capture from the baseline tree (for example the integration branch tip the change started from), writing into the change's own fixtures/parity with --dir. Then run parity:compare in the change's checkout. Unchanged behavior passes; any difference is listed by path with its baseline and current values. A change that intentionally alters behavior recaptures from its own tree and commits the updated fixtures with the change, saying what differs and why. Keep support/game/parity.js unchanged in such a branch: a harness change lands on its own and every baseline is recaptured, because snapshots are only comparable when the same harness took them.
+
+Raster parity. parity-raster.spec.js activates 867, 1066 and 476 and records each compiled world: its size and a hash of the province grid, and per province its name, area, centroid, seed, coastal flag, landmass, adjacency and water crossings, plus every compiled settlement site with its position, name and kind. The parity commands run it with the journeys. It reads only APIs older than geography bases, so a baseline can be captured from a tree that predates them: copy the spec file into that checkout's tests/e2e/specs/ and run it there with FB_PARITY=capture and FB_PARITY_DIR pointing at the change's fixtures/parity, then compare in the change's checkout.
 
 RNG. Where a change promises no change in random draw order, rng and uid must match exactly, which is the default. --facts-only (FB_PARITY_FACTS_ONLY=1) ignores rng and uid and compares the remaining facts. Outcomes after the first changed draw will usually differ too, so a change that uses it must say which facts it expects to keep.
 

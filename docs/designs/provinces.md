@@ -416,8 +416,8 @@ missing entries default to `narrow`. Raster compilation keeps the edge in unchan
 through `FB.waterCrossing`. Personal travel, political adjacency, and other plain path
 callers therefore retain their old behavior.
 
-The authored coastline, inland seas, rivers, and projection bounds are shared because
-the physical map window is the same. One land polygon is a deliberate geographic
+The coastline, inland seas, rivers, and projection bounds belong to the geography base
+the bookmark names (see Geography bases below); 867, 1066 and 476 share one. One land polygon is a deliberate geographic
 exception to the simplified coastline: Venice's lagoon barrier islands sit just off
 the lagoon-mouth coast vertex as their own tiny landmass. They carry no county seed,
 so the unseeded-landmass fallback assigns every island pixel to the nearest seed —
@@ -425,8 +425,8 @@ Venezia's — and the county keeps its mainland strip while gaining the island; 
 curated Venice site (its one deliberately non-real coordinate) sits on the island,
 and the settlement sea-margin walk never crosses water to drag it back ashore.
 `FB.activateBookmark` validates the complete
-definition, installs it in the legacy top-level fields, and lazily caches one raster per
-bookmark id. Switching dates replaces `FB.world` and the map's backing canvases but
+definition, resolves it against its geography base, installs it in the legacy top-level
+fields, and lazily caches one raster per bookmark and geography base. Switching dates replaces `FB.world` and the map's backing canvases but
 does not install a second set of pointer or keyboard listeners. Activations run one at
 a time, because a build installs its definition and yields between steps: a caller for
 the bookmark already being built follows its progress and finishes with it, and any
@@ -436,6 +436,21 @@ ends the build with an error rather than leaving later activations waiting.
 cached or running. Only the CrazyGames title uses it, for Play as Osric's 867 world,
 once the title has painted. Other titles still build no world until a start or save is
 chosen.
+
+## Geography bases
+
+A geography base (FBDATA.geographies, data/geographies.js) owns the physical world a bookmark is drawn on: the projection window (bounds), the raster width (gridWidth), land, sea and river geometry, the county seed points and terrain, straits and crossing classes, the settlement site table, the default settlement layout, map-scale tuning, place names by year, and optional knowledge hooks. A bookmark names its base in its geography field; politics (realms, owners, holders, hierarchy, communities) stay authored per bookmark. 867, 1066 and 476 all use europe_regional, which references the long-standing tables in data/map_data.js and data/counties.js instead of copying them, so the cold boot carries one geometry and no second copy. A bookmark that names no base uses FBDATA.defaultGeography. Saves stamp the base id in state.start.geography at creation.
+
+Engine code reads geometry only through the active base (FB.activeGeography). The world build projects with the base's bounds and gridWidth, fills its land and seas, and draws its rivers; switching to a cached world of another base restores that base's projection. The settlement snap ceiling and the raid and AI sea-raid pixel reaches are map-scale values (FB.mapScale) because they are measured in raster pixels; a base of a different scale sets its own, and a base that leaves one out takes the default base's.
+
+Activation resolves a bookmark against its base before validation and the raster build, on copies, never on the shared data:
+- a province that leaves out x, y or terrain takes the base's seed for that county id;
+- names follow the start year. A province's own names list, or the base's names.provinces entry for its id, is a list of {from, to, name, culture} with inclusive, optional years. The first entry whose window holds the start year replaces the authored name; an entry with a culture applies only to a county of that culture and wins over an unmarked one. Site names work the same way through a site record's names list or the base's names.sites table, renaming the presentations that use the site;
+- a settled county with no settlements list takes its entry from the bookmark's settlement layout: the layout the bookmark names in settlementLayout, else FBDATA.settlementLayouts under its own id, else the base's defaultLayout. settlementLayout:null opts out. A county moved off the base's seed point is a different place and keeps generated settlements, and a county replaced by a legacy mod keeps its legacy presentation.
+
+The 476 period names (Barcino, Salona, Carthage and the rest) are dated names on europe_regional rather than rename code, and its period county heads are the 476 layout in data/settlements.js. Dated names are display data and reach the localization catalogs like county names.
+
+Legacy mods that set bounds, land, seas or rivers replace that geometry on the default base, so every bookmark on it changes as before; a mod may also add or replace whole bases through geographies. Knowledge hooks (knowledge.basins of county lists and knowledge.routes joining two basins) are validated when present and unused until player knowledge exists.
 
 At minimum zoom, a mobile viewport can be larger than the permitted map span on one
 axis. `mapview.js` centers that surplus axis instead of passing reversed bounds to the
@@ -545,8 +560,9 @@ The bounded [476 prototype](situation-476.md) uses existing county polygons only
 The 476 bookmark maps later county polygons to a bounded set of late antique
 political regions. Visigothic Iberia, a separate Suevic northwest, Armorican
 communities, Rhenish Franks, and Moorish communities fill parts of the earlier
-prototype gap. Explicit settlement names replace several visibly later names,
-including Fez and Tahert; the polygon remains an approximate geographic anchor.
+prototype gap. Dated county names on the geography base and the 476 settlement
+layout replace several visibly later names, including Fez and Tahert; the polygon
+remains an approximate geographic anchor.
 Counties outside the authored regional campaign stay wasteland rather than
 receiving an 867 ruler or faith. The 867 and 1066 province records are not
 modified by the 476 remapping.

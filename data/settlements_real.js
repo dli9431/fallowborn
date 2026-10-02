@@ -6883,16 +6883,28 @@ window.FBDATA = window.FBDATA || {};
       ['geo_rapperswil_2659099', 'Rapperswil', 'village']
     ]);
 
-  /* Append after the curated layouts; never replace them. */
+  /* Append after the curated layouts; never replace them. The layout table
+     keeps every bookmark's full list for activation; a bookmark already
+     registered also receives it on its provinces now. */
   FBDATA.settlementSites = FBDATA.settlementSites || {};
   for (var siteId in SITES) {
     if (!Object.prototype.hasOwnProperty.call(SITES, siteId)) continue;
     FBDATA.settlementSites[siteId] = SITES[siteId];
   }
+  FBDATA.settlementLayouts = FBDATA.settlementLayouts || {};
   for (var bookmarkId in LAYOUTS) {
     if (!Object.prototype.hasOwnProperty.call(LAYOUTS, bookmarkId)) continue;
+    if (!Object.prototype.hasOwnProperty.call(FBDATA.settlementLayouts, bookmarkId)) {
+      FBDATA.settlementLayouts[bookmarkId] = {};
+    }
+    var table = FBDATA.settlementLayouts[bookmarkId];
+    for (var layoutPid in LAYOUTS[bookmarkId]) {
+      if (!Object.prototype.hasOwnProperty.call(LAYOUTS[bookmarkId], layoutPid)) continue;
+      table[layoutPid] = (Object.prototype.hasOwnProperty.call(table, layoutPid)
+        ? table[layoutPid] : []).concat(LAYOUTS[bookmarkId][layoutPid]);
+    }
     var bookmark = FBDATA.bookmarks && FBDATA.bookmarks[bookmarkId];
-    if (!bookmark) throw new Error('data/settlements_real.js: missing bookmark ' + bookmarkId);
+    if (!bookmark) continue;
     var byId = {};
     for (var i = 0; i < bookmark.provinces.length; i++) {
       byId[bookmark.provinces[i].id] = bookmark.provinces[i];

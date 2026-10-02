@@ -8,6 +8,8 @@ window.FB = window.FB || {};
   FB.activeBookmark = null;
   FB.activeBookmarkId = null;
   FB.activeEra = null;
+  FB.activeGeography = null;
+  FB.activeGeographyId = null;
   FB.activeBookmarkDiagnostics = [];
 
   var worldCache = {};
@@ -48,6 +50,291 @@ window.FB = window.FB || {};
     });
     return out;
   };
+
+  /* ================= GEOGRAPHY BASES =================
+     A bookmark names the geography base (FBDATA.geographies) that owns its
+     physical map: projection window, grid width, land, sea and river
+     geometry, county seeds and terrain, settlement sites, the default
+     settlement layout, map-scale tuning and place names by year. A bookmark
+     that names none (an older mod) uses FBDATA.defaultGeography, the base the
+     legacy top-level geometry tables describe. Engine code reads geometry
+     only through the active base. */
+  FB.bookmarkGeography = function (definition) {
+    if (definition && definition.geography !== undefined) return definition.geography;
+    return FBDATA.defaultGeography === undefined ? null : FBDATA.defaultGeography;
+  };
+
+  FB.geography = function (id) {
+    var geographies = FBDATA.geographies || {};
+    return typeof id === 'string' && ownKey(geographies, id) &&
+      geographies[id] && typeof geographies[id] === 'object' ? geographies[id] : null;
+  };
+
+  /* A map-scale tuning value of the active base. A base that leaves a value
+     out takes the default base's, so a region of similar scale needs none. */
+  FB.mapScale = function (key) {
+    var sources = [FB.activeGeography, FB.geography(FBDATA.defaultGeography)];
+    for (var i = 0; i < sources.length; i++) {
+      var scale = sources[i] && sources[i].mapScale;
+      if (scale && isFinite(scale[key])) return scale[key];
+    }
+    return NaN;
+  };
+
+  /* The physical site table of a base; a base without its own shares the
+     global table that runtime mods extend. */
+  function geographySites(geography) {
+    return geography && geography.sites && typeof geography.sites === 'object'
+      ? geography.sites : FBDATA.settlementSites || {};
+  }
+
+  /* The name a dated list gives for a year. from and to are inclusive and
+     optional. An entry with a culture applies only to a county of that
+     culture and wins over an unmarked entry; otherwise the first entry whose
+     window holds the year wins. Null when no entry applies. */
+  FB.datedPlaceName = function (list, year, culture) {
+    if (!Array.isArray(list) || !isFinite(year)) return null;
+    var unmarked = null;
+    for (var i = 0; i < list.length; i++) {
+      var entry = list[i];
+      if (!entry || typeof entry.name !== 'string' || !entry.name) continue;
+      if (entry.from !== undefined && year < entry.from) continue;
+      if (entry.to !== undefined && year > entry.to) continue;
+      if (entry.culture !== undefined) {
+        if (entry.culture === culture) return entry.name;
+        continue;
+      }
+      if (unmarked === null) unmarked = entry.name;
+    }
+    return unmarked;
+  };
+
+  function nameListFaults(list, where, fault) {
+    if (list === undefined) return;
+    if (!Array.isArray(list)) {
+      fault(where + ' names must be an array.');
+      return;
+    }
+    for (var i = 0; i < list.length; i++) {
+      var entry = list[i];
+      if (!entry || typeof entry !== 'object' || typeof entry.name !== 'string' ||
+          !entry.name || (entry.from !== undefined && !Number.isInteger(entry.from)) ||
+          (entry.to !== undefined && !Number.isInteger(entry.to)) ||
+          (entry.from !== undefined && entry.to !== undefined && entry.from > entry.to) ||
+          (entry.culture !== undefined && !ownKey(FBDATA.cultures, entry.culture))) {
+        fault(where + ' has an invalid dated name at index ' + i + '.');
+      }
+    }
+  }
+
+  function plainRecord(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function polygonFaults(list, label, minPoints, required, fault) {
+    if (!Array.isArray(list) || (required && !list.length)) {
+      fault(label + ' must be ' + (required ? 'a non-empty' : 'an') + ' array of polylines.');
+      return;
+    }
+    for (var i = 0; i < list.length; i++) {
+      var flat = list[i], bad = !Array.isArray(flat) || flat.length < minPoints * 2 ||
+        flat.length % 2 !== 0;
+      for (var k = 0; !bad && k < flat.length; k++) {
+        if (typeof flat[k] !== 'number' || !isFinite(flat[k])) bad = true;
+      }
+      if (bad) fault(label + ' entry ' + i + ' must be a flat [lon, lat, ...] list.');
+    }
+  }
+
+  /* The schema gate for one base. Knowledge hooks (interaction basins and
+     contact routes) are optional and unused until player knowledge exists;
+     when present they must name the base's own counties and basins. */
+  FB.validateGeography = function (id) {
+    var errors = [], geography = FB.geography(id);
+    function fault(text) { errors.push('Geography ' + id + ': ' + text); }
+    if (!geography) return ['Unknown geography ' + id + '.'];
+    var b = geography.bounds;
+    if (!plainRecord(b) || !isFinite(b.lonMin) || !isFinite(b.lonMax) ||
+        !isFinite(b.latMin) || !isFinite(b.latMax) || b.lonMin >= b.lonMax ||
+        b.latMin >= b.latMax || b.latMin <= -85 || b.latMax >= 85) {
+      fault('bounds need lonMin < lonMax and latMin < latMax inside ±85° latitude.');
+    }
+    if (!Number.isInteger(geography.gridWidth) || geography.gridWidth < 100 ||
+        geography.gridWidth > 4000) {
+      fault('gridWidth must be a whole number from 100 to 4000.');
+    }
+    polygonFaults(geography.land, 'land', 3, true, fault);
+    polygonFaults(geography.seas || [], 'seas', 3, false, fault);
+    polygonFaults(geography.rivers || [], 'rivers', 2, false, fault);
+    if (geography.mapScale !== undefined) {
+      if (!plainRecord(geography.mapScale)) fault('mapScale must be an object.');
+      else for (var key in geography.mapScale) {
+        if (!ownKey(geography.mapScale, key)) continue;
+        var value = geography.mapScale[key];
+        if (typeof value !== 'number' || !isFinite(value) || value < 0) {
+          fault('mapScale ' + key + ' must be a non-negative number.');
+        }
+      }
+    }
+    var seedIds = {};
+    if (geography.provinces !== undefined) {
+      if (!Array.isArray(geography.provinces)) fault('provinces must be an array of seeds.');
+      else for (var pi = 0; pi < geography.provinces.length; pi++) {
+        var seed = geography.provinces[pi];
+        if (!seed || !seed.id || !isFinite(seed.x) || !isFinite(seed.y)) {
+          fault('seed at index ' + pi + ' needs an id and a lon/lat point.');
+          continue;
+        }
+        seedIds[seed.id] = true;
+      }
+    }
+    if (geography.sites !== undefined && !plainRecord(geography.sites)) {
+      fault('sites must be an object keyed by site id.');
+    }
+    if (geography.defaultLayout !== undefined && geography.defaultLayout !== null &&
+        !ownKey(FBDATA.settlementLayouts || {}, geography.defaultLayout)) {
+      fault('unknown default settlement layout ' + geography.defaultLayout + '.');
+    }
+    if (geography.names !== undefined) {
+      var names = geography.names;
+      if (!plainRecord(names) ||
+          (names.provinces !== undefined && !plainRecord(names.provinces)) ||
+          (names.sites !== undefined && !plainRecord(names.sites))) {
+        fault('names must hold provinces and sites tables of dated names.');
+      } else {
+        var provinceNames = names.provinces || {}, siteNames = names.sites || {};
+        for (var namedProvince in provinceNames) {
+          if (ownKey(provinceNames, namedProvince)) {
+            nameListFaults(provinceNames[namedProvince], 'province ' + namedProvince, fault);
+          }
+        }
+        for (var namedSite in siteNames) {
+          if (ownKey(siteNames, namedSite)) {
+            nameListFaults(siteNames[namedSite], 'site ' + namedSite, fault);
+          }
+        }
+      }
+    }
+    var knowledge = geography.knowledge;
+    if (knowledge !== undefined) {
+      var basins = knowledge && knowledge.basins;
+      if (!plainRecord(knowledge) || (basins !== undefined && !plainRecord(basins))) {
+        fault('knowledge must be an object with a basins table.');
+      } else {
+        basins = basins || {};
+        for (var basinId in basins) {
+          if (!ownKey(basins, basinId)) continue;
+          var members = basins[basinId] && basins[basinId].provinces;
+          if (!Array.isArray(members) || !members.length) {
+            fault('basin ' + basinId + ' needs a list of provinces.');
+            continue;
+          }
+          for (var mi = 0; mi < members.length; mi++) {
+            if (!ownKey(seedIds, members[mi])) {
+              fault('basin ' + basinId + ' names unknown province ' + members[mi] + '.');
+            }
+          }
+        }
+        if (knowledge.routes !== undefined && !Array.isArray(knowledge.routes)) {
+          fault('knowledge routes must be an array.');
+        } else {
+          var routes = knowledge.routes || [];
+          for (var ri = 0; ri < routes.length; ri++) {
+            var route = routes[ri];
+            if (!route || !ownKey(basins, route.from) || !ownKey(basins, route.to) ||
+                route.from === route.to) {
+              fault('contact route ' + ri + ' must join two different known basins.');
+            }
+          }
+        }
+      }
+    }
+    return errors;
+  };
+
+  /* The settlement layout a bookmark draws on: the one it names, else its own
+     (FBDATA.settlementLayouts keyed by bookmark id), else its base's default.
+     settlementLayout:null opts out, leaving generated settlements. */
+  function settlementLayoutFor(definition, geography) {
+    var layouts = FBDATA.settlementLayouts || {};
+    var id = definition.settlementLayout !== undefined ? definition.settlementLayout
+      : ownKey(layouts, definition.id) ? definition.id : geography.defaultLayout;
+    return typeof id === 'string' && ownKey(layouts, id) ? layouts[id] : null;
+  }
+
+  /* Activation's geography step, applied to a normalized definition. A
+     province that leaves out its seed or terrain takes the base's; names
+     follow the start year; a settled county without presentations takes its
+     layout entry when it sits on the base's seed for that county (a moved
+     county is a different place and keeps generated settlements), unless a
+     legacy mod replaced it; and authored settlement names follow their sites'
+     dated names. Rows and lists are copied before any change, so shared
+     bookmark and base data is never mutated. */
+  function resolveGeography(definition, source, geography) {
+    var year = definition.date ? definition.date.year : undefined;
+    var seeds = {}, baseRows = Array.isArray(geography.provinces) ? geography.provinces : [];
+    for (var i = 0; i < baseRows.length; i++) {
+      if (baseRows[i] && baseRows[i].id) seeds[baseRows[i].id] = baseRows[i];
+    }
+    var names = plainRecord(geography.names) ? geography.names : {};
+    var provinceNames = names.provinces || {}, siteNames = names.sites || {};
+    var siteTable = geographySites(geography);
+    var layout = settlementLayoutFor(definition, geography);
+    var sourceRows = Array.isArray(source.provinces) ? source.provinces : [];
+    var out = Object.assign({}, definition);
+    if (!Array.isArray(definition.provinces)) return out;
+    out.provinces = definition.provinces.map(function (row, index) {
+      if (!row || !row.id) return row;
+      var next = row;
+      function edit() {
+        if (next === row) next = Object.assign({}, row);
+        return next;
+      }
+      var seed = ownKey(seeds, row.id) ? seeds[row.id] : null;
+      if (seed) {
+        if (row.x === undefined) edit().x = seed.x;
+        if (row.y === undefined) edit().y = seed.y;
+        if (row.terrain === undefined && seed.terrain !== undefined) edit().terrain = seed.terrain;
+      }
+      var name = FB.datedPlaceName(row.names !== undefined ? row.names
+        : ownKey(provinceNames, row.id) ? provinceNames[row.id] : null, year, row.culture);
+      if (name && name !== row.name) edit().name = name;
+      var replaced = sourceRows[index] && sourceRows[index]._legacySettlementPresentation;
+      if (!next.wasteland && next.settlements === undefined && layout &&
+          ownKey(layout, row.id) && Array.isArray(layout[row.id]) && !replaced &&
+          seed && next.x === seed.x && next.y === seed.y) {
+        edit().settlements = layout[row.id].map(function (entry) {
+          return Object.assign({}, entry);
+        });
+      }
+      if (Array.isArray(next.settlements)) {
+        var renamed = null;
+        for (var si = 0; si < next.settlements.length; si++) {
+          var entry = next.settlements[si];
+          if (!entry || typeof entry.site !== 'string') continue;
+          var site = ownKey(siteTable, entry.site) ? siteTable[entry.site] : null;
+          var siteName = FB.datedPlaceName(site && site.names !== undefined ? site.names
+            : ownKey(siteNames, entry.site) ? siteNames[entry.site] : null,
+            year, next.culture);
+          if (!siteName || siteName === entry.name) continue;
+          if (!renamed) renamed = next.settlements.slice();
+          renamed[si] = Object.assign({}, entry, { name:siteName });
+        }
+        if (renamed) edit().settlements = renamed;
+      }
+      return next;
+    });
+    return out;
+  }
+
+  /* Normalized and geography-resolved: what activation installs and what
+     validation checks. Throws on a title-id fault; a definition whose base is
+     unknown comes back normalized only (validation reports the base). */
+  function preparedDefinition(definition) {
+    var normalized = FB.titleIds.normalizeBookmark(definition);
+    var geography = FB.geography(FB.bookmarkGeography(definition));
+    return geography ? resolveGeography(normalized, definition, geography) : normalized;
+  }
 
   /* ================= ERAS AND GOVERNMENT FORMS =================
      A bookmark declares its era (FBDATA.eras) and each realm its government
@@ -246,7 +533,18 @@ window.FB = window.FB || {};
     var label = definition && definition.id ? definition.id : '?';
     function fault(text) { errors.push('Bookmark ' + label + ': ' + text); }
     if (!definition || typeof definition !== 'object') return ['Bookmark definition is missing.'];
-    try { definition = FB.titleIds.normalizeBookmark(definition); }
+    var geographyId = FB.bookmarkGeography(definition);
+    if (!FB.geography(geographyId)) {
+      fault('unknown geography ' + geographyId + '.');
+    } else {
+      var geographyErrors = FB.validateGeography(geographyId);
+      for (var gx = 0; gx < geographyErrors.length; gx++) errors.push(geographyErrors[gx]);
+    }
+    if (definition.settlementLayout !== undefined && definition.settlementLayout !== null &&
+        !ownKey(FBDATA.settlementLayouts || {}, definition.settlementLayout)) {
+      fault('unknown settlement layout ' + definition.settlementLayout + '.');
+    }
+    try { definition = preparedDefinition(definition); }
     catch (error) { return [error.message]; }
     if (FB.validateTechnologyData) {
       var technologyErrors = FB.validateTechnologyData();
@@ -293,6 +591,10 @@ window.FB = window.FB || {};
       if (!province || !province.id) { fault('province at index ' + pi + ' has no id.'); continue; }
       if (provinceIds[province.id]) fault('duplicate province id ' + province.id + '.');
       provinceIds[province.id] = province;
+      if (!isFinite(province.x) || !isFinite(province.y)) {
+        fault('province ' + province.id + ' has no seed point and its geography has none.');
+      }
+      nameListFaults(province.names, 'province ' + province.id, fault);
       if (province.population0 !== undefined) {
         if (typeof province.population0 !== 'number' || !isFinite(province.population0) ||
             province.population0 <= 0 || Math.floor(province.population0) !== province.population0) {
@@ -467,10 +769,13 @@ window.FB = window.FB || {};
        is built. A province without a `settlements` list is valid — it keeps
        deterministic generated settlements. */
     var siteSlug = /^[a-z0-9]+(_[a-z0-9]+)*$/;
-    var siteTable = FBDATA.settlementSites;
+    var siteGeography = FB.geography(FB.bookmarkGeography(definition));
+    var ownSites = !!siteGeography && siteGeography.sites !== undefined;
+    var siteTable = ownSites ? siteGeography.sites : FBDATA.settlementSites;
     if (siteTable !== undefined) {
       if (!siteTable || typeof siteTable !== 'object' || Array.isArray(siteTable)) {
-        fault('FBDATA.settlementSites must be an object keyed by site id.');
+        fault((ownSites ? 'geography sites' : 'FBDATA.settlementSites') +
+          ' must be an object keyed by site id.');
         siteTable = null;
       } else {
         for (var siteId in siteTable) {
@@ -722,12 +1027,19 @@ window.FB = window.FB || {};
     return errors;
   };
 
+  /* Raster results are cached per bookmark and geography base. */
+  function worldCacheKey(definition) {
+    return definition.id + '|' + FB.bookmarkGeography(definition);
+  }
+
   function installDefinition(definition) {
     for (var i = 0; i < WORLD_FIELDS.length; i++) {
       FBDATA[WORLD_FIELDS[i]] = definition[WORLD_FIELDS[i]];
     }
     FB.activeBookmark = definition;
     FB.activeBookmarkId = definition.id;
+    FB.activeGeographyId = FB.bookmarkGeography(definition);
+    FB.activeGeography = FB.geography(FB.activeGeographyId);
     FB.activeEra = FB.bookmarkEra(definition);
     FB.activeBookmarkDiagnostics = FB.communityShareDiagnostics
       ? FB.communityShareDiagnostics(definition) : [];
@@ -737,6 +1049,8 @@ window.FB = window.FB || {};
   }
 
   function bindWorld(world) {
+    /* a cached world of another base needs its own projection back */
+    FB.initProjection(FB.activeGeography.gridWidth, FB.activeGeography.bounds);
     FB.world = world;
     FB.restoreWastelandSettlements(null);
     if (FB.map && FB.map.canvas && FB.map.useWorld) FB.map.useWorld();
@@ -774,11 +1088,12 @@ window.FB = window.FB || {};
 
   /* Async world build. progress(frac, msg), done(world) */
   function buildWorld(progress, done) {
-    const gridW = 1100;
-    FB.initProjection(gridW);
+    const geography = FB.activeGeography;
+    FB.initProjection(geography.gridWidth, geography.bounds);
+    const landPolys = geography.land, seaPolys = geography.seas || [];
     const W = FB.proj.W, H = FB.proj.H;
     const land = new Uint8Array(W * H);
-    const landmass = new Uint16Array(W * H); // 0 = sea, else FBDATA.land index+1
+    const landmass = new Uint16Array(W * H); // 0 = sea, else land polygon index+1
     const grid = new Uint16Array(W * H); // 0 = sea, else provinceIndex+1
 
     const provs = FBDATA.provinces.map(function (p, i) {
@@ -801,17 +1116,17 @@ window.FB = window.FB || {};
     steps.push(function () {
       progress(0.1, 'Raising the continents…');
       const li = landPolyAt++;
-      const pts = projectPoly(FBDATA.land[li]);
+      const pts = projectPoly(landPolys[li]);
       fillPolyScanline(land, W, H, pts, 1);
       fillPolyScanline(landmass, W, H, pts, li + 1);
-      return landPolyAt < FBDATA.land.length ? 'repeat' : null;
+      return landPolyAt < landPolys.length ? 'repeat' : null;
     });
 
     let seaPolyAt = 0, seedSnapAt = 0;
     steps.push(function () {
       progress(0.25, 'Filling the seas…');
-      if (seaPolyAt < FBDATA.seas.length) {
-        const pts = projectPoly(FBDATA.seas[seaPolyAt++]);
+      if (seaPolyAt < seaPolys.length) {
+        const pts = projectPoly(seaPolys[seaPolyAt++]);
         fillPolyScanline(land, W, H, pts, 0);
         fillPolyScanline(landmass, W, H, pts, 0);
         return 'repeat';
@@ -1099,10 +1414,11 @@ window.FB = window.FB || {};
       if (next) FB.activateBookmark(next[0], next[1], next[2]);
     }
     try {
-      definition = FB.titleIds.normalizeBookmark(definition);
+      definition = preparedDefinition(definition);
       installDefinition(definition);
-      if (worldCache[definition.id]) {
-        bindWorld(worldCache[definition.id]);
+      var cacheKey = worldCacheKey(definition);
+      if (worldCache[cacheKey]) {
+        bindWorld(worldCache[cacheKey]);
         progress(1, 'The world is made.');
         setTimeout(function () { finish(null); }, 0);
         return;
@@ -1113,7 +1429,7 @@ window.FB = window.FB || {};
         for (var i = 0; i < current.listeners.length; i++) current.listeners[i](frac, msg);
       }, function (error, world) {
         if (!error) {
-          worldCache[definition.id] = world;
+          worldCache[cacheKey] = world;
           bindWorld(world);
         }
         finish(error);
@@ -1129,7 +1445,7 @@ window.FB = window.FB || {};
      first click reuses it. No-op when it is cached or an activation runs. */
   FB.prepareBookmark = function (id) {
     var definition = FB.bookmark(id);
-    if (!definition || worldCache[definition.id] || activation) return;
+    if (!definition || worldCache[worldCacheKey(definition)] || activation) return;
     FB.activateBookmark(definition.id);
   };
 
@@ -1163,11 +1479,11 @@ window.FB = window.FB || {};
      development reveal never projects or searches during play. The compiled
      records are derived world data and are never written into a save. */
   var SETTLEMENT_MAX_SLOTS = 8;
-  /* World-pixel snap ceiling for an authored coordinate. The 1100px raster
-     spans roughly 12 px per degree of longitude, so 45 px is about 3–4
-     degrees: a larger displacement means a wrong site-to-county assignment,
+  /* World-pixel snap ceiling for an authored coordinate, from the active
+     base's map scale (45 px on the 1100px europe_regional raster, about 3–4
+     degrees): a larger displacement means a wrong site-to-county assignment,
      not ordinary raster simplification. */
-  var SETTLEMENT_SNAP_MAX = 45;
+  function siteSnapMax() { return FB.mapScale('siteSnapMax'); }
 
   function siteGridIndex(world, x, y) {
     var gx = Math.floor(x), gy = Math.floor(y);
@@ -1181,7 +1497,7 @@ window.FB = window.FB || {};
   function nearestCountyCell(world, pr, x, y) {
     var W = world.W, H = world.H, grid = world.grid;
     var cx = Math.round(x), cy = Math.round(y);
-    for (var r = 1; r <= SETTLEMENT_SNAP_MAX; r++) {
+    for (var r = 1; r <= siteSnapMax(); r++) {
       var found = false, bd = Infinity, bx = 0, by = 0;
       for (var dy = -r; dy <= r; dy++) {
         for (var dx = -r; dx <= r; dx++) {
@@ -1250,7 +1566,7 @@ window.FB = window.FB || {};
        a sea gap or another county, which preserves deliberate islands such as
        Venice. Prefer an uncrowded point, but keeping the emblem on land wins
        over the small inter-site clearance when the fragment is constrained. */
-    var radius = SETTLEMENT_SNAP_MAX;
+    var radius = siteSnapMax();
     var width = radius * 2 + 1;
     var seen = new Uint8Array(width * width);
     var qx = [x], qy = [y], qd = [0], head = 0, crowded = null;
@@ -1324,7 +1640,7 @@ window.FB = window.FB || {};
           }
         }
       }
-      for (var r = 1; r <= SETTLEMENT_SNAP_MAX; r++) {
+      for (var r = 1; r <= siteSnapMax(); r++) {
         for (var dy = -r; dy <= r; dy++) {
           for (var dx = -r; dx <= r; dx++) {
             if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
@@ -1350,7 +1666,7 @@ window.FB = window.FB || {};
      its records instead of installing them. */
   function compileProvinceSites(world, pr) {
     var faults = [];
-    var siteTable = FBDATA.settlementSites || {};
+    var siteTable = geographySites(FB.activeGeography);
     var authored = pr.settlements || [];
     /* A legacy province replacement may deliberately omit site data. It
        still inherits the former slot labels, while all physical records are
@@ -1375,7 +1691,7 @@ window.FB = window.FB || {};
         if (!snapped) {
           faults.push('Bookmark ' + (FB.activeBookmarkId || '?') +
             ': settlement site ' + entry.site + ' is assigned to ' + pr.id +
-            ' but lies more than ' + SETTLEMENT_SNAP_MAX +
+            ' but lies more than ' + siteSnapMax() +
             ' map units outside that county — fix its coordinates or its county assignment.');
           continue;
         }
@@ -4557,13 +4873,14 @@ window.FB = window.FB || {};
       if ((localSeafaring || longships) && FB.world.byId[op] &&
           FB.world.byId[op].coastal) {
         const curPr = FB.world.byId[op];
+        const seaReach = FB.mapScale('aiSeaRaidReachSq');
         for (let j = 0; j < FB.world.provs.length; j++) {
           const pr = FB.world.provs[j];
           if (!pr.coastal || pr.id === op || pr.wasteland) continue;
           const owner = state.owner && state.owner[pr.id];
           if (!owner || owner === rid || owner === 'player') continue;
           const dx = pr.sx - curPr.sx, dy = pr.sy - curPr.sy;
-          if (dx * dx + dy * dy <= 28000 && targets.indexOf(pr.id) < 0) {
+          if (dx * dx + dy * dy <= seaReach && targets.indexOf(pr.id) < 0) {
             targets.push(pr.id);
           }
         }

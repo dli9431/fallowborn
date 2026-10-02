@@ -10906,18 +10906,21 @@ window.FB = window.FB || {};
       FB.hasTech(state, 'longships', realmId)) ||
       FB.raidHasSupportedSeafaring(state, charId);
 
-    // Overland baseline: 85px radius (~2.4 standard county widths)
-    let overlandPx = 85;
-    if (FB.hasTech && FB.hasTech(state, 'mounted_archery', realmId)) overlandPx += 35;
-    if (FB.hasTech && FB.hasTech(state, 'cavalry_lances', realmId)) overlandPx += 35;
+    // Pixel reaches come from the geography base's map scale
+    // (europe_regional: 85px overland, about 2.4 county widths; 200px by sea)
+    const cavalryPx = FB.mapScale('raidCavalryPx');
+    const navigationPx = FB.mapScale('raidNavigationPx');
+    let overlandPx = FB.mapScale('raidOverlandPx');
+    if (FB.hasTech && FB.hasTech(state, 'mounted_archery', realmId)) overlandPx += cavalryPx;
+    if (FB.hasTech && FB.hasTech(state, 'cavalry_lances', realmId)) overlandPx += cavalryPx;
 
-    // Naval reach with longships: 200px across open water
+    // Naval reach with longships across open water
     let navalPx = 0;
     if (hasLongships) {
-      navalPx = 200;
-      if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) navalPx += 40;
-      if (FB.hasTech && FB.hasTech(state, 'naval_logbooks', realmId)) navalPx += 40;
-      if (FB.hasTech && FB.hasTech(state, 'mariners_compass', realmId)) navalPx += 40;
+      navalPx = FB.mapScale('raidNavalPx');
+      if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) navalPx += navigationPx;
+      if (FB.hasTech && FB.hasTech(state, 'naval_logbooks', realmId)) navalPx += navigationPx;
+      if (FB.hasTech && FB.hasTech(state, 'mariners_compass', realmId)) navalPx += navigationPx;
     }
 
     return { overland: overlandPx, naval: navalPx };
@@ -10932,6 +10935,7 @@ window.FB = window.FB || {};
     }
     const reachable = {};
     const coasts = [];
+    const inlandPx = FB.mapScale('raidNavalInlandPx');
     for (let i = 0; i < FB.world.provs.length; i++) {
       if (FB.world.provs[i].coastal) coasts.push(FB.world.provs[i]);
     }
@@ -10943,7 +10947,7 @@ window.FB = window.FB || {};
       }
       for (let k = 0; k < coasts.length; k++) {
         if (Math.hypot(province.sx - coasts[k].sx,
-            province.sy - coasts[k].sy) <= 55) {
+            province.sy - coasts[k].sy) <= inlandPx) {
           reachable[province.id] = true;
           break;
         }
