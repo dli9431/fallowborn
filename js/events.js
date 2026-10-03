@@ -2795,6 +2795,7 @@ window.FB = window.FB || {};
       if (state.roles[r] === c.id) delete state.roles[r];
     }
     if (state.player.courtingId === c.id) FB.clearCourtship(state);
+    if (FB.religiousHeadCharacterDied) FB.religiousHeadCharacterDied(state, c.id);
     if (FB.papacyCharacterDied) FB.papacyCharacterDied(state, c);
     /* Again at the end: the spouse and betrothal links above were severed
        after the first bump, and the family index reads exactly those. */
@@ -5896,7 +5897,7 @@ window.FB = window.FB || {};
     const knownTerrains = ['farmland', 'forest', 'hills', 'mountains', 'desert', 'steppe', 'marsh', 'tundra', 'plains', 'oasis', 'coast', 'floodplain'];
     const knownSettlementKinds = ['village', 'town', 'castle', 'monastery', 'city', 'camp'];
     const knownTraditions = FBDATA.cultureTraditions ? Object.keys(FBDATA.cultureTraditions) : [];
-    const knownFaithAncestors = ['catholic', 'orthodox', 'muslim', 'pagan', 'sunni', 'shia', 'jewish', 'tengri', 'christian'];
+    const knownFaithAncestors = Object.keys(FBDATA.religions || {});
     const knownBookmarks = FBDATA.bookmarks ? Object.keys(FBDATA.bookmarks) : [];
     const knownCultures = FBDATA.cultures ? Object.keys(FBDATA.cultures) : [];
     const knownProvinceIds = [];

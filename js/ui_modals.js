@@ -1325,7 +1325,8 @@ window.FB = window.FB || {};
     const terms = FB.warPeaceTerms(state, custom);
     const quote = JSON.stringify(terms), optionQuote = JSON.stringify(opt);
     const objectiveText = terms.cause === 'restoration' ? FB.T('Restore the rightful crown') :
-      terms.cause === 'caliphate' ? FB.T('Claim the Caliphate') :
+      terms.cause === 'caliphate' ? FB.T('Claim the office of {title}', {
+        title:FB.religiousHeadTitle(state, FB.religiousHeadWarFaith(state, war)) }) :
       terms.cause === 'independence' ? FB.T('Independence') :
       war.defending ? FB.T('Defend your lands') :
       objective ? FB.T('Conquer {province}', { province:objective.name }) : FB.T('The current campaign');
@@ -3575,20 +3576,26 @@ window.FB = window.FB || {};
   UI.showAbsolution = function () {
     const s = FB.state;
     if (!s || !FB.canSeekAbsolution(s)) return;
-    const gold = FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100);
-    const piety = FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100);
-    const standing = FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20);
+    const religionId = FB.playerHeadFaith(s);
+    const quote = FB.faithValue(s, religionId, 'systems.papacy').value && FB.papalAbsolutionStatus(s, s.player.charId);
+    const gold = quote ? quote.offering : FB.religiousHeadRuleBalance(s, religionId,
+      'head.absolution.gold', 'religiousHeadAbsolutionGold', 100);
+    const piety = quote ? quote.piety : FB.religiousHeadRuleBalance(s, religionId,
+      'head.absolution.piety', 'religiousHeadAbsolutionPiety', 100);
+    const standing = FB.religiousHeadRuleBalance(s, religionId,
+      'head.absolution.opinion', 'religiousHeadAbsolutionOpinion', 20);
+    const title = FB.religiousHeadTitle(s, religionId);
     const h = reviewFactsCard(FB.T('Absolution'), kv('Cost', esc(FB.T('{money:gold} and {piety} piety', {
         gold:gold, piety:piety }))) +
       kv('Excommunication', esc(FB.T('Lifted'))) +
-      kv('Catholic realms', esc(FB.T('+{standing} Standing with each', { standing:standing }))),
+      kv('Rulers of the faith', esc(FB.T('+{standing} Standing with each', { standing:standing }))),
       ' data-absolution') +
       reviewActionsHtml(reviewActionCardHtml({
-        id:'absolution-confirm', labelHtml:'🕊 ' + esc(FB.T('Accept the Pope’s absolution')),
+        id:'absolution-confirm', labelHtml:'🕊 ' + esc(FB.T('Accept absolution from {title}', { title:title })),
         note:FB.T('{money:gold} and {piety} piety now', { gold:gold, piety:piety }),
         details:'<p>' + esc(FB.T(
-          'The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {standing} Standing with every Catholic realm.', {
-            gold:gold, piety:piety, standing:standing
+          '{title} will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {standing} Standing with rulers recognizing the office.', {
+            title:title, gold:gold, piety:piety, standing:standing
           })) + '</p>'
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="absolution-cancel">' +
@@ -3606,7 +3613,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || !FB.canRestoreReligiousHead(s, religionId, 'player')) return;
     const meta = FB.religionOf(religionId, s).head;
-    const seat = FB.world.byId[meta.seat];
+    const seat = FB.world.byId[FB.religiousHeadSeat(s, religionId)];
     const title = FB.religiousHeadTitle(s, religionId);
     const piety = FB.religiousHeadBalance('religiousHeadRestorePiety', 200);
     const prestige = FB.religiousHeadBalance('religiousHeadRestorePrestige', 150);
@@ -3629,7 +3636,7 @@ window.FB = window.FB || {};
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="head-restore-cancel">' +
       esc(FB.T('Keep {seat}', { seat:seat.name })) + '</button></div>';
-    openModal(FB.T('Restore the Papacy?'), h);
+    openModal(FB.T('Restore the office of {title}?', { title:title }), h);
     $('head-restore-confirm').addEventListener('click', function () {
       FB.restoreReligiousHead(s, religionId, 'player');
       UI.closeModal();
@@ -3642,25 +3649,25 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || !FB.canClaimReligiousHead(s, religionId, 'player')) return;
     const title = FB.religiousHeadTitle(s, religionId);
-    const piety = FB.religiousHeadBalance('religiousHeadClaimPiety', 300);
+    const piety = FB.religiousHeadRuleBalance(s, religionId, 'head.claim.piety', 'religiousHeadClaimPiety', 300);
     const h = reviewFactsCard(FB.T('Vacant office'), kv('Office', esc(title)) +
       kv('Cost', esc(FB.T('{piety} piety', { piety:piety }))) +
       kv('Territory', esc(FB.T('No county changes hands'))),
       ' data-head-claim') +
       reviewActionsHtml(reviewActionCardHtml({
-        id:'head-claim-confirm', labelHtml:'☪ ' + esc(FB.T('Claim the Caliphate')),
+        id:'head-claim-confirm', labelHtml:'☪ ' + esc(FB.T('Claim the office of {title}', { title:title })),
         note:FB.T('{piety} piety now', { piety:piety }),
         details:'<p>' + esc(FB.T(
           'Spend {piety} piety to claim the vacant office of {title}. The office attaches to your existing realm; no county changes hands and your {prestige} prestige is not spent. Your demesne must hold at least {counties} counties.', {
             piety:piety,
             title:title,
-            prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
-            counties:FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6)
+            prestige:FB.religiousHeadRuleBalance(s, religionId, 'head.claim.prestige', 'religiousHeadClaimPrestige', 500),
+            counties:FB.religiousHeadRuleBalance(s, religionId, 'head.claim.minRealm', 'religiousHeadClaimMinRealm', 6)
           })) + '</p>'
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="head-claim-cancel">' +
       esc(FB.T('Not yet')) + '</button></div>';
-    openModal(FB.T('Claim the Caliphate?'), h);
+    openModal(FB.T('Claim the office of {title}?', { title:title }), h);
     $('head-claim-confirm').addEventListener('click', function () {
       FB.claimReligiousHead(s, religionId, 'player');
       UI.closeModal();
@@ -3678,14 +3685,14 @@ window.FB = window.FB || {};
     const enemy = s.realms[cause.enemy];
     const capital = FB.world.byId[cause.target];
     const warDetails = FB.T(
-      'Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it by siege and the Caliphate passes to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands — the loser keeps their kingdom, but not the office.', {
+      'Declare war on {realm} for the office of {title}. Besiege their capital, {capital}, to transfer the office to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands; the loser keeps their kingdom, but loses the office.', {
         realm:enemy ? enemy.name : '',
-        title:FB.religiousHeadTitle(s, 'sunni'),
+        title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)),
         capital:capital ? capital.name : ''
       });
     const h = reviewFactsCard(FB.T('Succession war'), kv('Enemy', esc(enemy ? enemy.name : '')) +
       kv('Objective', esc(FB.T('Take {capital} by siege', { capital:capital ? capital.name : '' }))) +
-      kv('Prize', esc(FB.religiousHeadTitle(s, 'sunni'))) +
+      kv('Prize', esc(FB.religiousHeadTitle(s, FB.playerHeadFaith(s)))) +
       kv('Territory', esc(FB.T('No land changes hands'))),
       ' data-caliph-war') +
       reviewActionsHtml(reviewActionCardHtml({
@@ -3695,7 +3702,7 @@ window.FB = window.FB || {};
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="caliph-war-cancel">' +
       esc(FB.T('Not yet')) + '</button></div>';
-    openModal(FB.T('Contest the Caliphate?'), h);
+    openModal(FB.T('Contest the office of {title}?', { title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)) }), h);
     $('caliph-war-confirm').addEventListener('click', function () {
       const liveCause = FB.caliphateWarCause(s);
       if (!liveCause || !FB.startPlayerWar(s, liveCause)) {
@@ -3779,12 +3786,11 @@ window.FB = window.FB || {};
   }
 
   function conversionFaithGroup(s, fid) {
-    const g = FB.faithGroup ? FB.faithGroup(fid, s) : '';
-    if (g === 'christian') return { id:'christian', icon:'✝', name:FB.T('Christian Traditions'), order:1 };
-    if (g === 'muslim') return { id:'muslim', icon:'☪', name:FB.T('Islamic Traditions'), order:2 };
-    if (g === 'pagan') return { id:'pagan', icon:'☀', name:FB.T('Pagan Traditions'), order:3 };
-    if (g === 'zoroastrian') return { id:'zoroastrian', icon:'🔥', name:FB.T('Zoroastrianism'), order:4 };
-    if (g === 'jewish') return { id:'jewish', icon:'✡', name:FB.T('Jewish Traditions'), order:5 };
+    const category = FB.faithValue(s, fid, 'conversionCategory');
+    if (category.value) return {
+      id:category.sourceId, icon:category.value.icon || '', order:category.value.order || 7,
+      name:FB.faithDataText(s, s.player.charId, fid, 'conversionCategory.name', {})
+    };
     const rel = FB.religionOf(fid, s);
     if (rel && (rel.founderId !== undefined || rel.originProvinceId !== undefined)) {
       return { id:'reformed', icon:'👑', name:FB.T('Custom & Reformed Faiths'), order:6 };
@@ -3814,12 +3820,13 @@ window.FB = window.FB || {};
     const desc = dt(s, 'religion', fid, rel, 'desc') || '';
     const lines = [];
 
-    if (FB.faithHasSystem && FB.faithHasSystem(fid, 'papacy', s)) {
-      lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(FB.T('Papacy (Pope in Rome) · Excommunication authority')));
-    } else if (rel.properties && rel.properties.head && rel.properties.head.officeId === 'sunni') {
-      lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(FB.T('Caliphate (Caliph in Baghdad) · Sacred leadership')));
-    } else if (rel.properties && rel.properties.head && rel.properties.head.title) {
-      lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(rel.properties.head.title));
+    const head = rel.head;
+    if (head) {
+      const seatId = FB.religiousHeadSeat(s, fid);
+      const seat = seatId && FB.world.byId[seatId];
+      lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(seat
+        ? FB.T('{title} in {seat}', { title:FB.religiousHeadTitle(s, fid), seat:seat.name })
+        : FB.religiousHeadTitle(s, fid)));
     } else {
       lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(FB.T('Autonomous hierarchy')));
     }
@@ -10955,7 +10962,7 @@ window.FB = window.FB || {};
     }
     if (cause.type === 'caliphate') {
       return FB.T('Succession claim to {title}', {
-        title:FB.religiousHeadTitle(s, 'sunni')
+        title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s))
       });
     }
     const def = cause.titleKind === 'duchy'
@@ -20908,7 +20915,7 @@ window.FB = window.FB || {};
       'This sheet follows the Papal obedience recognized by your character. Rival obediences retain separate claimants, Colleges, authority, supporters, sanctions, and elections.')) +
       '</p><p><b>' + esc(FB.T('Authority gates')) + '</b><br>' +
       esc(FB.T(
-        '{sanctions} enables justified sanctions and investiture demands; {arbitrary} enables arbitrary sanctions and Catholic holy wars; {council} enables a general council.', {
+        '{sanctions} enables justified sanctions and investiture demands; {arbitrary} enables arbitrary sanctions and great holy wars; {council} enables a general council.', {
           sanctions:FBDATA.papacy.authority.gates.sanctions,
           arbitrary:FBDATA.papacy.authority.gates.arbitrarySanction,
           council:FBDATA.papacy.authority.gates.council
@@ -20990,7 +20997,7 @@ window.FB = window.FB || {};
       h += '<section class="papacy-alert" role="status">' +
         panelh('A rival claimant seeks your backing') +
         '<p>' + esc(FB.T(
-          '{name} asks your realm to sponsor a rival obedience. This will divide the Church and cancel any gathering Catholic holy war.', {
+          '{name} asks your realm to sponsor a rival obedience. This will divide the Church and cancel any gathering holy war called by the office.', {
             name:rival ? FB.fullName(rival) : FB.T('The runner-up')
           })) + '</p><div class="modal-actions">' +
         '<button class="btn danger" data-schism-sponsor="yes">' +
@@ -21177,9 +21184,9 @@ window.FB = window.FB || {};
           'Choose a ruler and review justified or arbitrary sentences, their recorded grounds, piety cost, authority requirement, and cooldown.'),
         obedience.authority < FBDATA.papacy.authority.gates.sanctions);
       h += papalActionCardHtml('papal-great-holy-war', '📯',
-        FB.T('Call a Catholic holy war'), FB.T(
-          'Open the Catholic holy war target review. Authority, schism, faith, campaign, and target eligibility are checked before the call.'),
-        !FB.canCallGreatHolyWar(s, 'catholic', null, 'player'));
+        FB.T('Call a great holy war'), FB.T(
+          'Open the holy war target review. Authority, schism, faith, campaign, and target eligibility are checked before the call.'),
+        !FB.canCallGreatHolyWar(s, FB.playerHeadFaith(s), null, 'player'));
       if (FB.papacyInSchism(s)) {
         h += papalActionCardHtml('papal-council', '🕊',
           FB.T('Call a general council'), FB.T(
@@ -21228,7 +21235,7 @@ window.FB = window.FB || {};
       modalClass:'fullsheet-modal papacy-modal',
       titleDetailsHtml:titleDetails,
       onDismiss:pendingSchism ? function () {
-        if (s.papacy && s.papacy.pendingSchism === pendingSchism) {
+        if (FB.papacyState(s) && FB.papacyState(s).pendingSchism === pendingSchism) {
           FB.resolvePapalSchismSponsorship(s, false);
           UI.refresh();
         }
@@ -24501,7 +24508,7 @@ window.FB = window.FB || {};
         });
     }
     if (type === 'caliphate') {
-      const title = FB.religiousHeadTitle(s, 'sunni');
+      const title = FB.religiousHeadTitle(s, FB.religiousHeadWarFaith(s, war));
       return attackerGoal
         ? FB.T('Claim {title} from {defender}.', {
           title:title, defender:defender

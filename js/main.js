@@ -3494,14 +3494,10 @@ FB.CHANGELOG = [
     FB.news(state, FB.msg('news.life.chronicle_begins',
       '📖 The chronicle of {dynasty} begins in {province}, {year} AD.',
       { dynasty: me.dyn, province: pr.name, year: state.date.year }));
-    const introGroup = FB.religionOf(religionId).group;
+    const intro = FB.faithValue(state, religionId, 'intro').value || { path:'intro_other' };
     let introPath = 'intro';
-    if (introGroup === 'muslim' && sc.intro_muslim) introPath = 'intro_muslim';
-    else if (introGroup === 'christian' && sex === 'f' && sc.intro_f) {
-      introPath = 'intro_f';
-    } else if (introGroup !== 'christian' && sc.intro_other) {
-      introPath = 'intro_other';
-    }
+    if (intro.path && sc[intro.path]) introPath = intro.path;
+    else if (intro.female && sex === 'f' && sc.intro_f) introPath = 'intro_f';
     const introHint = !firstPlayerOnboarding ||
       (G.uiPrefs && G.uiPrefs.hideBeginnerHints)
       ? FB.T('The Deeds tab lists your daily focus and one-shot deeds.')
@@ -5860,8 +5856,8 @@ FB.CHANGELOG = [
        but personal and office cleanup hooks may replace collections while
        handing authority over. Snapshot the canonical family property before
        any of those hooks run, including property held in papal custody. */
-    const papalCustody = s.papacy && s.papacy.custody &&
-      s.papacy.custody[old.id];
+    const papalCustody = FB.papacyState(s, old.religion) && FB.papacyState(s, old.religion).custody &&
+      FB.papacyState(s, old.religion).custody[old.id];
     let inheritedHoldings = (papalCustody &&
       Array.isArray(papalCustody.holdings)
       ? papalCustody.holdings : FB.holdingList(s)).slice();

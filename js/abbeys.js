@@ -61,7 +61,7 @@ window.FB = window.FB || {};
     return FB.realmRulerCharacterSnapshot(s, rid);
   }
   function pope(s) {
-    const p = s.papacy;
+    const p = FB.papacyState(s);
     const oid = p && FB.papalObedienceForCharacter(s, me(s));
     const o = p && p.obediences[oid || p.romanObedience];
     return o && s.chars[o.claimantId] || null;
@@ -523,7 +523,7 @@ window.FB = window.FB || {};
       if (!h || !FB.world.byId[h.provinceId] || seen[h.provinceId]) return false;
       seen[h.provinceId] = true;
       h.id = 'abbey:' + h.provinceId;
-      if (typeof h.religion !== 'string' || !FB.faithHasSystem(h.religion, 'papacy', s)) h.religion = 'catholic';
+      if (typeof h.religion !== 'string' || !FB.faithHasSystem(h.religion, 'papacy', s)) h.religion = (FB.religiousOfficeForStrategy(s, 'papal_election') || {}).religionId || me(s).religion;
       if (typeof h.culture !== 'string') h.culture = me(s).culture;
       if (typeof h.patronDyn !== 'string') h.patronDyn = null;
       ['capital','rents','treasury','support','foundedTurn','lastSeason','lastDispute','appointedTurn'].forEach(function (key) {

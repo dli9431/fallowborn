@@ -291,3 +291,7 @@ removal, issuer succession, recognition loss or conquest invalidates future
 arrests immediately. The existing territorial and local-lord paths retain
 their 867/1066 outcomes. AI arrest attempts use the same projection.
 Baseline judicial appointment has technology impact `none`.
+
+Faith legal tradition selection
+
+The effective legalTradition property supplies the sentence form instead of a named faith or root comparison. Existing latin, muslim and customary forms and their outcomes remain unchanged. Greek culture and Byzantine realm precedence remain ahead of the faith form in justice; the separate intrigue hearing preserves its existing precedence. This is a selector refactor with no new technology requirement.

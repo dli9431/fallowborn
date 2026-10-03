@@ -3738,7 +3738,7 @@ window.FB = window.FB || {};
     if (!FB.papalOfficeOf) return '';
     const office = FB.papalOfficeOf(s, c);
     if (!office) return '';
-    const papacy = s.papacy;
+    const papacy = FB.papacyState(s);
     const obedience = papacy && papacy.obediences &&
       papacy.obediences[office.obedienceId];
     if (office.office === 'pope') {

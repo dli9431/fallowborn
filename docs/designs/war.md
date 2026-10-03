@@ -2115,3 +2115,7 @@ conquest. The 476 bookmark alone has a Syracuse–Carthage open crossing for the
 African route.
 
 Hosting and every scheduled-games attendance track require peace throughout personal, home, host and venue ruling chains. Ordinary campaigns, active holy wars and armed revolts count; holy-war preparation, threats and truces do not. War cancels an ineligible host edition or withdraws only affected visitors, releases reserved capacity, preserves earned rewards and refunds unused commitments. Tournament travellers physically return using their prepaid allowance before generic travel cancellation. See tournaments.md.
+
+Data-defined religious office contests
+
+The legacy caliphate cause now applies to any faith whose registered head strategy permits a contest. casus.officeId preserves the contested office across saves and conversions. Victory assigns that office and applies its referenced warPrestige reward without transferring territory. A claimant changing to another office loses the claim and ends the war; followers of an inherited faith recognizing the same office retain it. Territorial protection and great holy wars require realm-held offices. Papal campaign checks use the calling office's election, authority and obedience state rather than another office's model.

@@ -15,7 +15,8 @@ window.FB = window.FB || {};
 
   function config(state, religionId) {
     var religion = FB.religionOf(religionId, state);
-    return religion && religion.head && religion.head.greatHolyWar || null;
+    return religion && religion.head && religion.head.holderKind !== 'character' &&
+      religion.head.greatHolyWar || null;
   }
 
   FB.greatHolyWarsEnabled = function (state) {
@@ -33,9 +34,7 @@ window.FB = window.FB || {};
   }
 
   FB.holyWarCampaignType = function (state, religionId) {
-    var group = callingGroup(state, religionId);
-    return group === 'christian' ? 'crusade' : group === 'muslim' ? 'jihad' :
-      group === 'pagan' ? 'sacred' : 'other';
+    return FB.faithValue(state, religionId, 'holyWarTradition').value || 'other';
   };
   FB.holyWarName = function (state, religionId) {
     var type = FB.holyWarCampaignType(state, religionId);
@@ -309,13 +308,13 @@ window.FB = window.FB || {};
     if (FB.intrigueRealmRulerCaptive &&
         FB.intrigueRealmRulerCaptive(state, head.id)) return false;
     if (papalFaith(state, religionId) && FB.ensurePapacy) {
-      var papacy = FB.ensurePapacy(state);
+      var papacy = FB.ensurePapacy(state, religionId);
       var obedience = papacy && papacy.obediences[papacy.romanObedience];
       var authorityGate = FBDATA.papacy &&
         FBDATA.papacy.authority && FBDATA.papacy.authority.gates
         ? FBDATA.papacy.authority.gates.greatHolyWar : 50;
       if (!obedience || !obedience.claimantId ||
-          FB.papacyInSchism(state) ||
+          FB.papacyInSchism(state, religionId) ||
           obedience.authority < authorityGate) return false;
       var playerCaller = callerRealm === 'player' &&
         obedience.claimantId === state.player.charId;
@@ -704,7 +703,7 @@ window.FB = window.FB || {};
       callingReligion:religionId,
       callerRealm:head.id,
       callerClaimantId:papalFaith(state, religionId) && FB.romanPope
-        ? (FB.romanPope(state) || {}).id || null : null,
+        ? (FB.romanPope(state, religionId) || {}).id || null : null,
       callerObedienceId:papalFaith(state, religionId) &&
         FB.papalObedienceForRealm
         ? FB.papalObedienceForRealm(state, head.id) : null,
@@ -3249,7 +3248,7 @@ window.FB = window.FB || {};
       }
       if (papalFaith(state, campaign.callingReligion) &&
           campaign.callerClaimantId && FB.ensurePapacy) {
-        var papacy = FB.ensurePapacy(state);
+        var papacy = FB.ensurePapacy(state, campaign.callingReligion);
         var callingObedience = papacy.obediences[
           campaign.callerObedienceId || papacy.romanObedience
         ];

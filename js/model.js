@@ -544,8 +544,26 @@ window.FB = window.FB || {};
   const FAITH_RELATION_BASELINES = {
     same:15, in_fold:10, schismatic:5, hostile:-25, foreign:-10
   };
-  const LEGACY_FAITH_GROUPS = {
-    christian:true, muslim:true, pagan:true, jewish:true
+  const LEGACY_FAITH_GROUPS = {};
+  (FBDATA.faithDefaults.legacyGroups || []).forEach(function (id) { LEGACY_FAITH_GROUPS[id] = true; });
+  /* Office strategies are registered at script load, like government rules.
+     Saves contain office assignments and faith data, never executable rules. */
+  const headStrategies = {};
+  FB.religiousHeads = {
+    register:function (id, strategy) {
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || own(headStrategies, id) ||
+          !strategy || typeof strategy !== 'object' || typeof strategy.succeed !== 'function') {
+        throw new Error('Invalid or duplicate religious head strategy ' + id + '.');
+      }
+      headStrategies[id] = strategy;
+      return strategy;
+    },
+    strategy:function (id) { return headStrategies[id] || null; },
+    forFaith:function (state, faithId) {
+      if (!FB.faithExists(faithId, state)) return null;
+      const head = FB.religionOf(faithId, state).head;
+      return head && headStrategies[head.succession] || null;
+    }
   };
   let staticFaithCompiled = null;
   let liveFaithState = null;
@@ -639,6 +657,14 @@ window.FB = window.FB || {};
         out[key] = cloneFaithValue(def[key]);
       }
     }
+    /* Legacy raid selectors become authored ancestry properties. Explicit
+       faith doctrine, including false, takes precedence over those lists. */
+    const raids = FBDATA.raidingTraditions || {};
+    if (!own(out, 'raidingTradition') &&
+        ((raids.faiths || []).indexOf(def.id) >= 0 ||
+          (raids.faithGroups || []).indexOf(def.id) >= 0)) {
+      out.raidingTradition = true;
+    }
     return out;
   }
 
@@ -723,6 +749,24 @@ window.FB = window.FB || {};
       } else if (plainObject(properties.head) && !own(properties.head, 'officeId')) {
         properties.head.officeId = id;
         sources['head.officeId'] = id;
+      }
+      if (plainObject(properties.head)) {
+        /* Old authored heads attach to a realm and follow its ruler. */
+        if (!properties.head.holderKind) properties.head.holderKind = 'realm';
+        if (!properties.head.succession) properties.head.succession =
+          properties.systems && properties.systems.papacy ? 'papal_election' :
+            properties.head.recovery === FBDATA.faithDefaults.claimRecovery ? 'caliphal_claim' : 'hereditary';
+        if (properties.head.succession !== 'papal_election' &&
+            properties.systems && properties.systems.papacy) {
+          properties.systems.papacy = false;
+          sources['systems.papacy'] = id;
+        }
+        if (properties.head.succession === 'papal_election' &&
+            (!properties.systems || properties.systems.papacy === undefined)) {
+          properties.systems = properties.systems || {};
+          properties.systems.papacy = true;
+          sources['systems.papacy'] = id;
+        }
       }
       const effective = {
         id:id,
@@ -844,6 +888,40 @@ window.FB = window.FB || {};
             rel.head.holderSex !== 'm' && rel.head.holderSex !== 'f') {
           fault(id, 'head.holderSex must be m or f when supplied.');
         }
+        if (plainObject(rel.head)) {
+          if (rel.head.title !== undefined &&
+              (typeof rel.head.title !== 'string' || !rel.head.title)) {
+            fault(id, 'head.title must be non-empty display text.');
+          }
+          if (['realm','character'].indexOf(rel.head.holderKind) < 0) {
+            fault(id, 'head.holderKind must be realm or character.');
+          }
+          if (!headStrategies[rel.head.succession]) {
+            fault(id, 'head.succession names an unregistered strategy.');
+          }
+          if (rel.head.holderKind === 'character' &&
+              ['papal_election','caliphal_claim'].indexOf(rel.head.succession) >= 0) {
+            fault(id, 'this succession strategy requires a realm holder.');
+          }
+          if (rel.head.seat !== undefined &&
+              !(typeof rel.head.seat === 'string' && rel.head.seat ||
+                plainObject(rel.head.seat) &&
+                (typeof rel.head.seat.province === 'string' && rel.head.seat.province ||
+                  typeof rel.head.seat.site === 'string' && rel.head.seat.site))) {
+            fault(id, 'head.seat must name a province or site.');
+          }
+          for (const rules of ['head.claim','head.absolution']) {
+            const record = rules === 'head.claim' ? rel.head.claim : rel.head.absolution;
+            if (record === undefined || record === null) continue;
+            if (!plainObject(record)) { fault(id, rules + ' must be an object.'); continue; }
+            for (const key in record) {
+              if (typeof record[key] !== 'string' ||
+                  !own(FBDATA.balance || {}, record[key])) {
+                fault(id, rules + '.' + key + ' must reference a balance key.');
+              }
+            }
+          }
+        }
       }
     }
     return { raw:raw, resolved:resolved, errors:errors };
@@ -934,7 +1012,7 @@ window.FB = window.FB || {};
 
   FB.religionOf = function (id, state) {
     const compiled = compiledFaiths(requestedFaithState(state));
-    return compiled.resolved[id] || compiled.resolved.catholic ||
+    return compiled.resolved[id] || compiled.resolved[(FBDATA.faithDefaults || {}).religion] ||
       compiled.resolved[Object.keys(compiled.resolved)[0]] || null;
   };
 
@@ -1299,7 +1377,10 @@ window.FB = window.FB || {};
     return id;
   };
 
+  let officeGraph = null, officeDefinitions = null;
   function religiousOfficeDefinitions(state) {
+    const graph = compiledFaiths(requestedFaithState(state));
+    if (officeGraph === graph && officeDefinitions) return officeDefinitions;
     const out = {};
     const ids = FB.religionIds(state, false);
     for (let i = 0; i < ids.length; i++) {
@@ -1313,8 +1394,144 @@ window.FB = window.FB || {};
         out[officeId] = { id:officeId, religionId:source, head:rel.head };
       }
     }
+    officeGraph = graph;
+    officeDefinitions = out;
     return out;
   }
+
+  FB.religiousOffices = function (state) {
+    return religiousOfficeDefinitions(state);
+  };
+
+  FB.religiousOfficeForStrategy = function (state, strategyId, faithId) {
+    const offices = religiousOfficeDefinitions(state);
+    const preferred = faithId && FB.faithOfficeId(faithId, state);
+    if (preferred && offices[preferred] &&
+        offices[preferred].head.succession === strategyId) return offices[preferred];
+    const defaultId = (FBDATA.faithDefaults || {}).offices &&
+      FBDATA.faithDefaults.offices[strategyId];
+    if (defaultId && offices[defaultId] &&
+        offices[defaultId].head.succession === strategyId) return offices[defaultId];
+    const ids = Object.keys(offices).sort();
+    for (let i = 0; i < ids.length; i++) {
+      if (offices[ids[i]].head.succession === strategyId) return offices[ids[i]];
+    }
+    return null;
+  };
+
+  FB.religiousHeadRealmIds = function (state, strategyId) {
+    const out = {}, offices = religiousOfficeDefinitions(state);
+    for (const id in offices) {
+      const office = offices[id];
+      if (office.head.holderKind !== 'realm' || office.head.succession !== strategyId) continue;
+      const holder = FB.religiousHeadSnapshot(state, office.religionId);
+      if (holder) out[holder.id] = office.religionId;
+    }
+    return out;
+  };
+
+  FB.religiousHeadSeat = function (state, religionId) {
+    const head = FB.faithExists(religionId, state) && FB.religionOf(religionId, state).head;
+    const seat = head && head.seat;
+    if (typeof seat === 'string') return seat;
+    if (seat && seat.province) return seat.province;
+    /* Site ids are physical slugs shared by bookmark layouts. */
+    const provinces = FB.world && FB.world.provs || [];
+    for (let i = 0; seat && seat.site && i < provinces.length; i++) {
+      const settlements = provinces[i].settlements || [];
+      for (let j = 0; j < settlements.length; j++) {
+        if (settlements[j].site === seat.site || settlements[j].id === seat.site) {
+          return provinces[i].id;
+        }
+      }
+    }
+    return null;
+  };
+
+  FB.religiousHeadRuleBalance = function (state, religionId, path, fallbackKey, fallback) {
+    const balanceKey = FB.faithExists(religionId, state) &&
+      FB.faithValue(state, religionId, path).value || fallbackKey;
+    const value = (FBDATA.balance || {})[balanceKey];
+    return value === undefined ? fallback : value;
+  };
+
+  FB.succeedReligiousHead = function (state, religionId, options) {
+    const strategy = FB.religiousHeads.forFaith(state, religionId);
+    return strategy && strategy.succeed ? strategy.succeed(state, religionId, options || {}) : false;
+  };
+
+  FB.religiousHeadCharacterDied = function (state, charId) {
+    const offices = religiousOfficeDefinitions(state);
+    for (const id in offices) {
+      if (offices[id].head.holderKind !== 'character' ||
+          !state.religiousHeads || state.religiousHeads[id] !== charId) continue;
+      state.religiousHeads[id] = null;
+      state.religiousHeadVacancies = state.religiousHeadVacancies || {};
+      state.religiousHeadVacancies[id] = { turn:state.turn || 0, formerHolder:charId };
+      FB.succeedReligiousHead(state, offices[id].religionId, {
+        formerHolder:charId, reason:'death'
+      });
+    }
+  };
+
+  function ordinaryHeadSuccession(state, religionId, options, hereditary) {
+    const head = FB.religionOf(religionId, state).head;
+    if (options.holderId) return FB.assignReligiousHead(state, religionId, options.holderId);
+    const vacancy = FB.religiousHeadVacancy(state, religionId);
+    if (head.holderKind === 'realm') {
+      const rid = options.formerHolder || vacancy && vacancy.formerHolder ||
+        state.religiousHeads[head.officeId] || FB.religiousHeadDefaultRealm(state, religionId);
+      return !!rid && FB.assignReligiousHead(state, religionId, rid);
+    }
+    const formerId = options.formerHolder || vacancy && vacancy.formerHolder;
+    const former = formerId && state.chars[formerId];
+    const candidates = hereditary ? former && former.childrenIds || [] : Object.keys(state.chars);
+    const eligible = candidates.filter(function (id) {
+      return FB.religiousHeadHolderEligible(state, religionId, id);
+    }).sort(function (a, b) {
+      return (state.chars[a].born - state.chars[b].born) || (a < b ? -1 : a > b ? 1 : 0);
+    });
+    return !!eligible.length && FB.assignReligiousHead(state, religionId, eligible[0]);
+  }
+
+  FB.religiousHeads.register('hereditary', {
+    succeed:function (state, religionId, options) {
+      return ordinaryHeadSuccession(state, religionId, options, true);
+    }
+  });
+  FB.religiousHeads.register('appointment', {
+    succeed:function (state, religionId, options) {
+      return ordinaryHeadSuccession(state, religionId, options, false);
+    }
+  });
+  FB.religiousHeads.register('papal_election', {
+    recover:'grant_seat',
+    succeed:function (state, religionId, options) {
+      return FB.withPapalOffice && FB.withPapalOffice(state, religionId, function () {
+        FB.ensurePapacy(state);
+        return FB.startPapalElection(state, options.obedienceId || null, options.reason || 'death');
+      });
+    }
+  });
+  FB.religiousHeads.register('caliphal_claim', {
+    recover:FBDATA.faithDefaults.claimRecovery, contest:true,
+    succeed:function (state, religionId, options) {
+      return !!options.holderId && FB.claimReligiousHead &&
+        FB.claimReligiousHead(state, religionId, options.holderId);
+    }
+  });
+
+  FB.playerHeadFaith = function (state) {
+    const c = state && state.player && state.chars && state.chars[state.player.charId];
+    return c && c.religion || null;
+  };
+  FB.religiousHeadWarFaith = function (state, war) {
+    war = war || state && state.player && state.player.war;
+    const savedId = war && war.casus && war.casus.officeId;
+    if (savedId) return FB.religiousOfficeReligion(state, savedId);
+    const office = FB.religiousOfficeForStrategy(state, 'caliphal_claim');
+    return office && office.religionId || null;
+  };
 
   FB.religiousOfficeReligion = function (state, officeId) {
     const office = religiousOfficeDefinitions(state)[officeId];
@@ -1327,6 +1544,11 @@ window.FB = window.FB || {};
      becoming Pope or Caliph. */
   function religiousHeadHolderEligible(state, office, realmId) {
     const requiredSex = office && office.head && office.head.holderSex;
+    if (office && office.head.holderKind === 'character') {
+      const c = state && state.chars && state.chars[realmId];
+      return !!(c && !c.dead && (!requiredSex || c.sex === requiredSex) &&
+        FB.faithOfficeId(c.religion, state) === office.id);
+    }
     if (!requiredSex) return true;
     const realm = state && state.realms && state.realms[realmId];
     if (!realm || !realm.alive) return false;
@@ -1365,7 +1587,8 @@ window.FB = window.FB || {};
             mappedFaith.head.officeId === officeId) return mapping[mappedFaithId];
       }
     }
-    return rel && rel.head ? rel.head.realm : null;
+    return rel && rel.head ? (rel.head.holderKind === 'character'
+      ? rel.head.character || null : rel.head.realm || null) : null;
   }
 
   FB.religiousHeadDefaultRealm = function (state, religionId) {
@@ -1396,15 +1619,17 @@ window.FB = window.FB || {};
         state.religiousHeads[officeId] = bookmarkReligiousHead(state, religionId);
       }
       const assigned = state.religiousHeads[officeId];
-      if (assigned !== null && state.realms &&
+      const characterOffice = office.head.holderKind === 'character';
+      if (assigned !== null && (characterOffice ?
+          !religiousHeadHolderEligible(state, office, assigned) : state.realms &&
           (!state.realms[assigned] || !state.realms[assigned].alive ||
-           !religiousHeadHolderEligible(state, office, assigned))) {
+           !religiousHeadHolderEligible(state, office, assigned)))) {
         const bookmarkDefault = bookmarkReligiousHead(state, religionId);
         /* Older 1066 saves were seeded with the global 867 ids even though
            those realm records never existed in their bookmark. Repair only
            that missing-default signature; a realm that existed and died is
            a genuine vacancy and must keep its clock. */
-        if (!state.realms[assigned] && assigned === rel.head.realm &&
+        if (!characterOffice && !state.realms[assigned] && assigned === rel.head.realm &&
             bookmarkDefault && bookmarkDefault !== assigned &&
             state.realms[bookmarkDefault] && state.realms[bookmarkDefault].alive &&
             !state.religiousHeadVacancies[officeId]) {
@@ -1446,7 +1671,8 @@ window.FB = window.FB || {};
     const officeId = rel && rel.head && rel.head.officeId;
     const realm = state && state.realms && state.realms[realmId];
     const office = officeId && religiousOfficeDefinitions(state)[officeId];
-    if (!state || !rel || !officeId || !realm || !realm.alive ||
+    if (!state || !rel || !officeId || !office ||
+        (office.head.holderKind !== 'character' && (!realm || !realm.alive)) ||
         !religiousHeadHolderEligible(state, office, realmId)) return false;
     FB.ensureReligiousHeads(state);
     state.religiousHeads[officeId] = realmId;
@@ -1517,6 +1743,10 @@ window.FB = window.FB || {};
     const heads = FB.ensureReligiousHeads(state);
     if (!Object.prototype.hasOwnProperty.call(heads, officeId)) return null;
     const rid = heads[officeId];
+    if (rel.head.holderKind === 'character') {
+      return religiousHeadHolderEligible(state, religiousOfficeDefinitions(state)[officeId], rid)
+        ? state.chars[rid] : null;
+    }
     const realm = rid !== null && state.realms ? state.realms[rid] : null;
     const office = officeId && religiousOfficeDefinitions(state)[officeId];
     return realm && realm.alive &&
@@ -1534,6 +1764,10 @@ window.FB = window.FB || {};
     let rid = saved ? heads[officeId] :
       bookmarkReligiousHead(state, religionId);
     if (rid === null) return null;
+    if (rel.head.holderKind === 'character') {
+      return religiousHeadHolderEligible(state, religiousOfficeDefinitions(state)[officeId], rid)
+        ? state.chars[rid] : null;
+    }
     let realm = state.realms && state.realms[rid];
     if ((!realm || !realm.alive) && saved) {
       const bookmarkDefault = bookmarkReligiousHead(state, religionId);
@@ -2010,8 +2244,7 @@ window.FB = window.FB || {};
     if (!marriage) {
       const g = FB.faithGroup(religionId, state);
       const wives = (FBDATA.balance.wivesByGroup || {})[g] || 1;
-      const legacyKind = g === 'muslim' ? 'talaq' :
-        (g === 'pagan' ? 'sunder' : (g === 'jewish' ? 'get' : 'annulment'));
+      const legacyKind = (FBDATA.faithDefaults.marriageByGroup || {})[g] || 'annulment';
       const legacyEnding = legacyKind === 'annulment'
         ? { kind:'annulment', direct:false, gold:15, piety:20,
           failurePiety:25, prestige:0, cooldownDays:360 }
@@ -2947,7 +3180,7 @@ window.FB = window.FB || {};
     const p = state.player;
     const me = state.chars[p.charId];
     const rank = rankTitleRecord(state, me.religion, me.sex, p.tier, { viewer:me });
-    let group = FB.faithGroup(me.religion, state) || 'christian';
+    let group = FB.faithGroup(me.religion, state) || FBDATA.faithDefaults.titleGroup;
     if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
     const snap = rankSnapshotFields({ group:group, religion:me.religion }, rank);
     if (FB.playerPope && FB.playerPope(state)) {
@@ -3042,7 +3275,7 @@ window.FB = window.FB || {};
   FB.characterRankTitleSnapshot = function (state, c, tier, place) {
     if (!c) return null;
     const rank = rankTitleRecord(state, c.religion, c.sex, tier, { viewer:c });
-    let group = FB.faithGroup(c.religion, state) || 'christian';
+    let group = FB.faithGroup(c.religion, state) || FBDATA.faithDefaults.titleGroup;
     if (c.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
     const snap = rankSnapshotFields({ group:group, religion:c.religion }, rank);
     if (place) snap.place = place;
@@ -3172,7 +3405,7 @@ window.FB = window.FB || {};
           { text: source }, {});
       }
     }
-    const arr = FBDATA.titles[snapshot.group] || FBDATA.titles.christian;
+    const arr = FBDATA.titles[snapshot.group] || FBDATA.titles[FBDATA.faithDefaults.titleGroup];
     const index = FB.clamp(snapshot.tier || 0, 0, arr.length - 1);
     const specialWords = {
       craftsman: 'Craftsman', merchant: 'Merchant', soldier: 'Soldier',
@@ -3206,7 +3439,7 @@ window.FB = window.FB || {};
     const religionId = realm.religion ||
       (stored && FB.realmReligionId
         ? FB.realmReligionId(state, realm.id) : null) ||
-      (pr ? pr.religion : 'catholic');
+      (pr ? pr.religion : FBDATA.faithDefaults.religion);
     return renderRankTitle(rankTitleRecord(state, religionId, sex,
       FB.clamp((realm.rank || 3) + 3, 4, 7), { realm:realm.id,
         culture:realm.culture || (pr ? pr.culture : null) }));

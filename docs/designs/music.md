@@ -156,3 +156,7 @@ The play.fallowborn.com Docker build validates and ships the full catalog. The p
 uses `stage-itch` to require and stage the same complete catalog beneath a 200,000,000-byte
 gameplay-audio cap, with the intro themes outside the cap. If the complete catalog exceeds that
 boundary, deployment fails instead of silently dropping tracks or leaving contextual banks incomplete.
+
+Faith bank properties
+
+The context resolver reads effective music.lineage and music.fallback. Exact faith selectors retain priority, followed by the ordered authored lineage and remaining faith ancestry within the existing culture and role loops. The configured fallback supplies the general bank before the final catalog fallback. A custom child may override music lineage independently of its legal or marriage doctrine. Playback, title themes, offline banks and distribution flags retain their existing behavior; no new audio assets or dependencies are introduced.

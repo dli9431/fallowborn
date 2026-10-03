@@ -1934,3 +1934,7 @@ Old saves do not acquire fabricated offices or contracts on restore.
 ## Spring 476 situation persistence
 
 The 476 prototype (situation-476.md) stores its world facts (actors, offices, court location, displaced courts, the eastern return, the courts' own settlement and historical campaigns) under state.stories.western_court_476 and the household's phase, role, claimant choice, contract link, payment allocation and outcome under state.stories.federate_track_476 (stories.md). They are created once at a new 476 start, survives the ordinary save envelope, and is not synthesized on old 867/1066 saves. UI quotes and rendered language are recomputed from saved facts. Authored eastern ruler replacement advances its generation so reaffirmation-dependent authority records lapse.
+
+Religious office persistence
+
+state.religiousHeads and state.religiousHeadVacancies remain keyed by stable officeId. Pointers may refer to realms or characters according to the compiled head.holderKind. The original Papal office retains state.papacy; additional papal_election offices persist their independent model at state.religiousOfficeStates[officeId].papacy. Missing extra models initialize lazily, without replacing incumbent or election records from a save. These additive JSON records use the existing save envelope. A succession war saves casus.officeId; older caliphate causes without that key resolve the configured legacy office. Derived office tables and strategy functions are not serialized.

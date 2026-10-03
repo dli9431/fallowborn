@@ -5,8 +5,7 @@
 Catholic leadership is both a personal elective office and a territorial institution.
 `state.religiousHeads.catholic` remains the compatibility pointer to the realm controlling
 the Roman office and Papal States. `state.papacy` owns the people, elections, authority,
-policies, sanctions, and rival obediences behind that pointer. Other religious heads keep
-the ordinary religious-head rules.
+policies, sanctions, and rival obediences behind that pointer. Other papal_election offices use the same strategy with independent saved state, holder assignment and seat; appointment, hereditary and caliphal_claim heads use their registered rules.
 
 The calendar milestones are gameplay abstractions grounded in the Vatican's
 [history of the College](https://press.vatican.va/news_services/press/documentazione/documents/cardinali_documentazione/cardinali_documentazione_generale_en.html),
@@ -24,7 +23,7 @@ excommunication costs, schism limits, and Papal income. Game logic belongs to
 
 Faith fracture is separate from a rival-Pope schism inside Latin Christianity. Papal
 obedience is available only when a character or realm's effective faith retains both its
-Catholic office and `systems.papacy` capability. A campaign-founded child drops that
+declared office and systems.papacy capability. A campaign-founded child drops that
 office by default, even when its relation to the parent is `in_fold`; Papal obedience and
 recognized-Pope lookups then return `null`, and Papal absolution is unavailable. A faith
 definition that deliberately remains under Rome must explicitly retain
@@ -274,3 +273,7 @@ two-year cooldown. A grant adds 20 prestige, raises personal station to at least
 4, and increases resident capacity by one, retinue by 20, and seasonal estate
 revenue and the allowance ceiling by 2. Privileges reduce encroachment chance.
 These are rights of the house and survive a change of abbess. See [abbeys.md](abbeys.md).
+
+Office strategy scope
+
+The detailed model resolves its office through head.succession papal_election rather than a named faith. FB.withPapalOffice selects an exact office for synchronous operations; FB.papacyState is a read-only lookup for that model. Additional offices store their model at state.religiousOfficeStates[officeId].papacy, while the original office keeps state.papacy. Daily, seasonal, yearly, death and territory hooks visit each office once. Colleges admit followers recognizing the selected office and obey its holderSex restriction. Restoration resolves the authored province or site seat. Queued petitions preserve religiousOfficeId so later decisions use the originating office. Existing election laws, name seeds and college tuning remain the shared strategy data in data/papacy.js.

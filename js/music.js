@@ -992,8 +992,9 @@ window.FB = window.FB || {};
       if (value && candidates.indexOf(value) < 0) candidates.push(value);
     }
     add(religion);
+    const lineage = FB.faithValue(state, religion, 'music.lineage').value;
+    if (Array.isArray(lineage)) lineage.forEach(add);
     if (FB.faithLineage) FB.faithLineage(religion, state).forEach(add);
-    if (FB.faithGroup) add(FB.faithGroup(religion, state));
     return candidates;
   }
 
@@ -1012,13 +1013,12 @@ window.FB = window.FB || {};
         const allFaith = 'all/' + cultures[c] + '/' + roles[r];
         if (banksById[allFaith]) return banksById[allFaith];
       }
-      const group = FB.faithGroup ? FB.faithGroup(me.religion, state) : '';
-      const fallback = group === 'jewish' || group === 'zoroastrian'
-        ? 'muslim' : (group || 'christian');
+      const fallback = FB.faithValue(state, me.religion, 'music.fallback').value ||
+        FBDATA.faithDefaults.musicFallback;
       const fallbackId = fallback + '/all/' + roles[r];
       if (banksById[fallbackId]) return banksById[fallbackId];
-      const christian = 'christian/all/' + roles[r];
-      if (banksById[christian]) return banksById[christian];
+      const general = FBDATA.faithDefaults.musicFallback + '/all/' + roles[r];
+      if (banksById[general]) return banksById[general];
     }
     for (let i = 0; i < (catalog.banks || []).length; i++) {
       if (catalog.banks[i].role === role) return catalog.banks[i];

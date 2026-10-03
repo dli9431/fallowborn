@@ -1474,14 +1474,13 @@ window.FB = window.FB || {};
     var rid = authorityId === 'player' ? FB.playerRealmId(state) : authorityId;
     var religion = rid && FB.realmReligionId ? FB.realmReligionId(state, rid) :
       target && target.religion;
-    var group = religion && FB.faithGroup ? FB.faithGroup(religion, state) : '';
+    var tradition = religion && FB.faithValue(state, religion, 'legalTradition').value;
     var culture = target && target.culture || '';
-    if (group === 'muslim') return 'muslim';
-    if (group === 'pagan') return 'customary';
+    if (tradition && tradition !== FBDATA.faithDefaults.legalTradition) return tradition;
     if (/greek|byzant/i.test(culture) || /byzant/i.test(String(rid))) {
       return 'byzantine';
     }
-    return 'latin';
+    return tradition || 'latin';
   }
 
   FB.intrigueSentenceProjection = function (state, hearing) {
