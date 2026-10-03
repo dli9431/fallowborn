@@ -201,7 +201,7 @@ explicit office ids. Bookmark validation also rejects abstract or unknown faith 
 people-facing world records and validates each effective great-holy-war definition once
 at its authoring source.
 
-The save envelope remains strict version 3. New games initialize `faiths:{}`,
+Faith records use the existing version-4 save envelope, with legacy version-3 saves still accepted. New games initialize `faiths:{}`,
 `faithRelations:{}`, and `faithNextId:1`. Restore supplies those defaults when absent,
 then rebuilds the derived graph before repairing religious offices. Generated definitions
 and relationship changes therefore round-trip, while every older version-3 save behaves
@@ -225,3 +225,21 @@ remains in its own faith while living local and Nicene bishops may recognize a
 mediator. Neither recognition creates a religious head, a papal office or a
 great holy war. The regional Moorish communities use an assignable Amazigh
 traditional faith under the existing pagan root.
+
+Religious head strategies
+
+A central office is effective faith data. properties.head declares officeId, localized title, holderKind (realm or character), succession, optional holderSex, and optional seat. A string seat names a province; an object names province or site, with sites resolved against the active bookmark's settlements. Realm offices use head.realm as their initial holder; character offices may name head.character or begin vacant. Descendants sharing an officeId share its assignment and institutional state. The faith supplying officeId owns the office definition; give a changed institution a new officeId instead of redefining a shared office through a descendant.
+
+FB.religiousHeads registers succession strategies in the same style as government strategies. FB.succeedReligiousHead dispatches using the effective faith. papal_election retains the existing college, laws, ballots, sanctions and schism model, scoped to that office. caliphal_claim retains the existing territorial qualifications, vacant-office claim and capital-siege succession war. Neither strategy requires a named faith. Both require realm holders. A papal_election head supplies systems.papacy when unspecified; explicit false remains respected. Removing the head or choosing another succession strategy disables an inherited Papacy capability.
+
+appointment and hereditary support realm and character holders. A realm office follows the assigned realm's ordinary ruler succession. Explicit appointment supplies holderId through FB.succeedReligiousHead. Vacant character appointment chooses the oldest eligible living follower, breaking equal birth years by id; hereditary chooses the oldest eligible living child of the former holder. Character eligibility includes the office's optional sex restriction and recognition of the same office. Character death dispatches succession immediately; an unfilled office retains its vacancy for the existing annual recovery rule. Recovery runs once per shared office and keeps the no-due-vacancy fast path.
+
+head.claim and head.absolution reference FBDATA.balance keys, not inline prices. Claim keys are prestige, piety, minRealm and warPrestige. Absolution keys are gold, piety and opinion. Existing claim prestige remains a qualification, and only piety is spent. Papal absolution retains the existing offering formula (one half of the gold reference plus one quarter per realm rank), sentence checks and obedience-scoped Standing remedy. A generic office with absolution uses the referenced flat prices and faith Standing remedy. Existing heads without holderKind or succession infer realm plus their prior Papal, claim or hereditary behavior.
+
+Technology impact is none for religious_head_appointment and religious_head_hereditary. These are relationships and kinship, independent of discovery. Existing election, claim, war and recovery capabilities are refactored without adding eligibility or technology requirements.
+
+Inherited faith traditions
+
+Engine decisions read legalTradition, tournamentTradition, holyWarTradition, raidingTradition, music.lineage and music.fallback through the compiled faith graph. Existing marriage, clergyMarriage, roles, religiousPaths and attire remain inherited doctrine. legalTradition selects the existing latin, muslim or customary sentence form; Greek and Byzantine cultural precedence is preserved. tournamentTradition furusiyya selects mounted programmes. holyWarTradition selects campaign vocabulary without granting a head or a campaign capability. Explicit false raidingTradition overrides inherited eligibility; old raidingTraditions faith and group selectors compile into inherited true values so existing mods retain their settings.
+
+Music checks the exact faith, its authored music.lineage, then remaining ancestry, preserving culture and role precedence and the configured fallback. intro chooses the start-scenario text path and female variant; conversionCategory owns localized conversion-group name, icon and order. feastDescription provides optional localized feast copy. Defaults and compatibility group selectors live in FBDATA.faithDefaults. The faith-id allowance in tests/e2e/fixtures/engine-ids/faith-id-allowlist.json is limited to durable message selectors, existing legal strategy names and explicitly authored historical story identities; office behavior is never selected by a faith id.

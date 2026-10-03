@@ -406,9 +406,21 @@ FBDATA.settlementNames = {
   nubian:   { pre:['Fara','Dong','Soba','Napa','Kerm','Atba','Mer','Abu','Wadi','Kass'], suf:['ola','ata','osha','ara','uba','eya','uri','gash','dab','rat'] }
 };
 
+FBDATA.faithDefaults = {
+  religion:'catholic', titleGroup:'christian', legacyGroups:['christian','muslim','pagan','jewish'],
+  legalTradition:'latin', claimRecovery:'claim',
+  offices:{ papal_election:'catholic', caliphal_claim:'sunni' },
+  musicFallback:'christian',
+  marriageByGroup:{ muslim:'talaq', pagan:'sunder', jewish:'get' }
+};
+
 FBDATA.religions = {
   christian: { name:'Christianity', assignable:false, icon:'✝',
     properties:{
+      legalTradition:'latin', holyWarTradition:'crusade',
+      music:{ lineage:['christian'], fallback:'christian' },
+      intro:{ female:true },
+      conversionCategory:{ name:'Christian Traditions', icon:'✝', order:1 },
       doctrines:{ observance:2 },
       marriage:{
         spouseLimit:{ m:1, f:1 },
@@ -450,6 +462,9 @@ FBDATA.religions = {
       roles:{ bishop:'Bishop', cardinal:'Cardinal' },
       head:{
         officeId:'catholic', realm:'papacy', title:'Pope', holderSex:'m',
+        holderKind:'realm', succession:'papal_election',
+        absolution:{ gold:'religiousHeadAbsolutionGold', piety:'religiousHeadAbsolutionPiety',
+          opinion:'religiousHeadAbsolutionOpinion' },
         recovery:'grant_seat', seat:'roma', restoredRank:3,
         sameFaithWar:'sacrilege',
         greatHolyWar:{
@@ -471,6 +486,11 @@ FBDATA.religions = {
     relationToParent:'schismatic', icon:'☧' },
   muslim: { name:'Islam', assignable:false, icon:'☪',
     properties:{
+      legalTradition:'muslim', tournamentTradition:'furusiyya', holyWarTradition:'jihad',
+      feastDescription:'Meat, sherbet, and politics.',
+      music:{ lineage:['muslim'], fallback:'muslim' },
+      intro:{ path:'intro_muslim' },
+      conversionCategory:{ name:'Islamic Traditions', icon:'☪', order:2 },
       doctrines:{ charity:1 },
       marriage:{
         spouseLimit:{ m:4, f:1 },
@@ -496,6 +516,9 @@ FBDATA.religions = {
     properties:{
       head:{
         officeId:'sunni', realm:'abbasid', title:'Caliph', holderSex:'m', recovery:'claim',
+        holderKind:'realm', succession:'caliphal_claim',
+        claim:{ prestige:'religiousHeadClaimPrestige', piety:'religiousHeadClaimPiety',
+          minRealm:'religiousHeadClaimMinRealm', warPrestige:'religiousHeadClaimWarPrestige' },
         claimCounties:[['baghdad'],['mecca','medina']], sameFaithWar:'ordinary',
         greatHolyWar:{
           name:'Jihad',
@@ -517,6 +540,9 @@ FBDATA.religions = {
     relationToParent:'schismatic', icon:'☪' },
   pagan: { name:'Paganism', assignable:false, icon:'☀',
     properties:{
+      legalTradition:'customary', holyWarTradition:'sacred',
+      music:{ lineage:['pagan'], fallback:'pagan' }, intro:{ path:'intro_other' },
+      conversionCategory:{ name:'Pagan Traditions', icon:'☀', order:3 },
       marriage:{
         spouseLimit:{ m:3, f:1 },
         divorce:{ kind:'sunder', direct:true, gold:0, piety:0,
@@ -540,6 +566,9 @@ FBDATA.religions = {
   zoroastrian: { name:'Zoroastrianism', adjective:'Zoroastrian',
     collective:'Zoroastrians', icon:'🔥',
     properties:{
+      legalTradition:'latin', music:{ lineage:['zoroastrian'], fallback:'muslim' },
+      intro:{ path:'intro_other' },
+      conversionCategory:{ name:'Zoroastrianism', icon:'🔥', order:4 },
       marriage:{
         spouseLimit:{ m:1, f:1 },
         divorce:{ kind:'sunder', direct:true, gold:0, piety:15,
@@ -555,6 +584,9 @@ FBDATA.religions = {
     } },
   jewish: { name:'Judaism', icon:'✡',
     properties:{
+      legalTradition:'latin', music:{ lineage:['jewish'], fallback:'muslim' },
+      intro:{ path:'intro_other' },
+      conversionCategory:{ name:'Jewish Traditions', icon:'✡', order:5 },
       marriage:{
         spouseLimit:{ m:1, f:1 },
         divorce:{ kind:'get', direct:true, gold:'dowry', piety:0,

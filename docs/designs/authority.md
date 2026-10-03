@@ -286,3 +286,7 @@ outcomes arrive with the 476 scenario.
 ## Spring 476 situation
 
 The first playable client of these records is the [spring 476 prototype](situation-476.md). The western and eastern imperial offices are realm-scoped ceremonial appointments with no Ban, Peace, Revenue or Consent power. Orestes, the federate commander and the Ravenna civic delegate hold distinct scoped offices. The Ravenna contract and its Classis award use the shared consent and grant quotes; Basiliscus and Zeno recognition follows the issuer generation. The bishop of Rome is a living character issuer whose support lapses on death.
+
+Character-held religious heads
+
+Political office queries include character-held religious head offices once per officeId. Their holders use character references and the same religious-office scope as realm-held heads. Existing recognition issuer and generation checks already accept either living character or living realm pointers. Clergy policy Standing targets the declared holder kind. These projections remain read-only and do not create an office assignment.

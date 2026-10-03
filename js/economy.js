@@ -990,9 +990,11 @@ window.FB = window.FB || {};
   }
 
   function bishopricSeeReserved(state, provinceId) {
-    const catholic = FB.religionOf('catholic', state);
-    const head = catholic && catholic.head;
-    return !!(provinceId && head && head.seat === provinceId);
+    const offices = FB.religiousOffices(state);
+    return !!provinceId && Object.keys(offices).some(function (id) {
+      return offices[id].head.succession === 'papal_election' &&
+        FB.religiousHeadSeat(state, offices[id].religionId) === provinceId;
+    });
   }
 
   /* A see is personal church office, not dynasty land. Old Bishop flags and

@@ -1873,9 +1873,9 @@ window.FBMODS = window.FBMODS || [];
            ladder, the other groups are faith-layer entries. */
         const female = k.slice(-2) === '_f';
         const rootId = female ? k.slice(0, -2) : k;
-        if (['christian','muslim','pagan','jewish'].indexOf(rootId) < 0) continue;
+        if (FBDATA.faithDefaults.legacyGroups.indexOf(rootId) < 0) continue;
         const lex = FBDATA.lexicons;
-        const owner = rootId === 'christian' ? lex.base
+        const owner = rootId === FBDATA.faithDefaults.titleGroup ? lex.base
           : (lex.faiths[rootId] = lex.faiths[rootId] || {});
         const rank = owner.rank = Object.assign({}, owner.rank);
         rank[female ? 'f' : 'm'] = mod.titles[k];
@@ -1944,7 +1944,7 @@ window.FBMODS = window.FBMODS || [];
     }
     if ((mod.items || mod.cultures || mod.religions || mod.traits || mod.ailments) &&
         FB.clearPortraitCache) FB.clearPortraitCache();
-    if ((mod.religions || mod.titles) && FB.invalidateReligionData) {
+    if ((mod.religions || mod.titles || mod.raidingTraditions) && FB.invalidateReligionData) {
       FB.invalidateReligionData();
     }
     if ((mod.cultures || mod.cultureTraditions || mod.cultureDoctrineDefaults ||

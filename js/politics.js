@@ -1382,6 +1382,16 @@ window.FB = window.FB || {};
     }
     if (!c) return out;
     var holder = { kind:'character', id:c.id };
+    var characterOffices = FB.religiousOffices(state);
+    for (var headOfficeId in characterOffices) {
+      var headOffice = characterOffices[headOfficeId];
+      if (headOffice.head.holderKind !== 'character') continue;
+      var characterHead = FB.religiousHeadSnapshot(state, headOffice.religionId);
+      if (characterHead && characterHead.id === c.id) {
+        add('religion:' + headOfficeId, headOfficeId, holder,
+          { kind:'religious-office', id:headOfficeId }, 'religiousHeads', null, 'active');
+      }
+    }
     var bishop = FB.bishopricSnapshot(state, c);
     if (bishop) add('see:' + (bishop.seeProvinceId || a.provinceId || c.id),
       'bishop', holder, { kind:'county', id:bishop.seeProvinceId || a.provinceId },

@@ -82,8 +82,8 @@ window.FB = window.FB || {};
     return site && site.name || county && county.name || e.provinceId;
   };
   T.defaultProgramme = function (s, id, venue) {
-    var c = character(s,id), religion = c && FBDATA.religions[c.religion], culture = c && FBDATA.cultures[c.culture];
-    if (religion && religion.group === 'muslim' || culture && culture.tradition === 'steppe') return 'mounted';
+    var c = character(s,id), religion = c && FB.religionOf(c.religion, s), culture = c && FBDATA.cultures[c.culture];
+    if (religion && religion.tournamentTradition === 'furusiyya' || culture && culture.tradition === 'steppe') return 'mounted';
     if (s.date.year >= 1100 && tech(s, venue)) return 'lists';
     return 'martial';
   };

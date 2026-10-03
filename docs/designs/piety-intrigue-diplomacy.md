@@ -334,3 +334,7 @@ management surface. Royal protection and papal exemption improve the institution
 without ordination, a secular county grant or an independent realm. Private-war,
 independence and generic baron-government shortcuts use the shared church-only
 office guard. Territorial secular titles may still coexist with an abbacy.
+
+Faith office and tradition selection
+
+Absolution and religious head claims use the current faith's effective head office, registered succession strategy and balance references. Papal sanctions and remedies remain scoped to the recognized office's obedience; other offices may author flat-price absolution. Intrigue sentence forms read legalTradition while preserving existing cultural precedence. Character-held heads participate in clergy-policy Standing changes as characters, without requiring a temporal realm.

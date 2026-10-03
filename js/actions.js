@@ -1036,7 +1036,7 @@ window.FB = window.FB || {};
        encountered faith. Creation/load already normalizes the Papacy, so the
        ordinary preview path can read its saved Roman obedience directly;
        reserve the world-wide repair for an incomplete legacy/modded shape. */
-    const saved = state && state.papacy;
+    const saved = state && FB.papacyState(state);
     const papacy = saved && saved.romanObedience && saved.obediences &&
       typeof saved.obediences === 'object' && !Array.isArray(saved.obediences) &&
       saved.obediences[saved.romanObedience]
@@ -3280,38 +3280,40 @@ window.FB = window.FB || {};
     run: function (s) { FB.queueEvent(s, 'seek_blessing', {}); } },
   { id: 'seek_absolution', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
-      const status = FB.papalAbsolutionStatus &&
+      const status = FB.faithHasSystem(FB.playerHeadFaith(s), 'papacy', s) && FB.papalAbsolutionStatus &&
         FB.papalAbsolutionStatus(s, s.player.charId);
       if (status) {
         return FB.T('Petition your recognized Pope for absolution. The offering is {money:gold} and the penance costs {piety} piety.', {
           gold:status.offering, piety:status.piety
         });
       }
-      return FB.T('Ask the Pope to lift your excommunication. Costs {money:gold} and {piety} piety; Standing with Catholic rulers recovers by {standing}.', {
-        gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100),
-        piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100),
-        standing:FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20)
+      return FB.T('Ask {title} to lift your excommunication. Costs {money:gold} and {piety} piety; Standing with rulers of the faith recovers by {standing}.', {
+        title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)),
+        gold:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.absolution.gold', 'religiousHeadAbsolutionGold', 100),
+        piety:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.absolution.piety', 'religiousHeadAbsolutionPiety', 100),
+        standing:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.absolution.opinion', 'religiousHeadAbsolutionOpinion', 20)
       });
     },
     show: function (s) {
       const c = me(s);
-      return c && FB.faithHasSystem(c.religion, 'papacy', s) &&
+      const rules = c && FB.faithValue(s, c.religion, 'head.absolution').value;
+      return c && rules !== null && (rules || FB.faithValue(s, c.religion, 'systems.papacy').value) &&
         FB.playerExcommunicated && FB.playerExcommunicated(s);
     },
     can: function (s) {
-      if (FB.papalAbsolutionStatus) {
+      if (FB.faithHasSystem(FB.playerHeadFaith(s), 'papacy', s) && FB.papalAbsolutionStatus) {
         const status = FB.papalAbsolutionStatus(s, s.player.charId);
         return status.ready ? true : status.reason;
       }
       if (s.player.war) return FB.T('You must first make peace.');
-      if (!FB.religiousHeadOf(s, 'catholic')) return FB.T('The Papacy is vacant; no Pope can absolve you.');
-      if (s.player.gold < FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100)) {
+      if (!FB.religiousHeadOf(s, FB.playerHeadFaith(s))) return FB.T('The office of {title} is vacant; no head can absolve you.', { title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)) });
+      if (s.player.gold < FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.absolution.gold', 'religiousHeadAbsolutionGold', 100)) {
         return FB.T('Absolution requires {money:gold}.',
-          { gold:FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100) });
+          { gold:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.absolution.gold', 'religiousHeadAbsolutionGold', 100) });
       }
-      if (s.player.piety < FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100)) {
+      if (s.player.piety < FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.absolution.piety', 'religiousHeadAbsolutionPiety', 100)) {
         return FB.T('Absolution requires {piety} piety.',
-          { piety:FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100) });
+          { piety:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.absolution.piety', 'religiousHeadAbsolutionPiety', 100) });
       }
       return true;
     },
@@ -3341,8 +3343,11 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showPapacy) FB.ui.showPapacy();
     } },
   { id: 'restore_papacy', opensChoices:true, noConsume: true, requiresAdult:true,
-    desc: function () {
-      return FB.T('Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication.', {
+    uiLabel:function (s) { return FB.T('Restore {title}', { title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)) }); },
+    desc: function (s) {
+      const seat = FB.world.byId[FB.religiousHeadSeat(s, FB.playerHeadFaith(s))];
+      return FB.T('Grant {seat} to restore {title}. Gain {piety} piety and {prestige} prestige, reconcile rulers of the faith, and clear excommunication.', {
+        seat:seat ? seat.name : '', title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)),
         piety:FB.religiousHeadBalance('religiousHeadRestorePiety', 200),
         prestige:FB.religiousHeadBalance('religiousHeadRestorePrestige', 150)
       });
@@ -3350,56 +3355,57 @@ window.FB = window.FB || {};
     show: function (s) {
       return FB.faithHasSystem(me(s).religion, 'papacy', s) &&
         FB.isPlayerSovereign(s) &&
-        !!FB.religiousHeadVacancy(s, 'catholic');
+        !!FB.religiousHeadVacancy(s, FB.playerHeadFaith(s));
     },
     can: function (s) {
-      const catholic = FB.religionOf('catholic', s);
-      const seat = catholic && catholic.head && catholic.head.seat;
-      if (!FB.isPlayerSovereign(s)) return FB.T('Only a sovereign may restore the Papacy.');
+      const seat = FB.religiousHeadSeat(s, FB.playerHeadFaith(s));
+      if (!FB.isPlayerSovereign(s)) return FB.T('Only a sovereign may restore this office.');
       if (!s.holder || s.holder[seat] !== 'player' ||
           s.player.provs.indexOf(seat) < 0) {
-        return FB.T('You must hold Roma personally.');
+        return FB.T('You must hold {seat} personally.', { seat:(FB.world.byId[seat] || {}).name || '' });
       }
       if (s.player.provs.length < 2) {
-        return FB.T('You need another county before granting Roma away.');
+        return FB.T('You need another county before granting {seat} away.', { seat:(FB.world.byId[seat] || {}).name || '' });
       }
-      return FB.canRestoreReligiousHead(s, 'catholic', 'player')
-        ? true : FB.T('The Papacy cannot be restored from this world state.');
+      return FB.canRestoreReligiousHead(s, FB.playerHeadFaith(s), 'player')
+        ? true : FB.T('This office cannot be restored from this world state.');
     },
     run: function () {
       if (FB.ui && FB.ui.showReligiousHeadRestoration) {
-        FB.ui.showReligiousHeadRestoration('catholic');
+        FB.ui.showReligiousHeadRestoration(FB.playerHeadFaith(FB.state));
       }
     } },
   { id: 'claim_caliphate', opensChoices:true, noConsume: true, requiresAdult:true,
+    uiLabel:function (s) { return FB.T('Claim the office of {title}', { title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)) }); },
     desc: function (s) {
-      if (s && !FB.religiousHeadVacancy(s, 'sunni')) {
+      if (s && !FB.religiousHeadVacancy(s, FB.playerHeadFaith(s))) {
         const cause = FB.caliphateWarCause(s);
         const enemy = cause && s.realms[cause.enemy];
         if (enemy) {
-          return FB.T('Wrest the Sunni office from {realm} in a succession war — the Caliphate passes to the victor, the loser keeps his lands.', {
-            realm:enemy.name
+          return FB.T('Wrest the office of {title} from {realm} in a succession war. The office passes to the victor; the loser keeps their lands.', {
+            realm:enemy.name, title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s))
           });
         }
       }
-      return FB.T('Attach the vacant Sunni office to your realm. Requires {prestige} prestige and a demesne of {counties} counties, and spends {piety} piety.', {
-        prestige:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
-        counties:FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6),
-        piety:FB.religiousHeadBalance('religiousHeadClaimPiety', 300)
+      return FB.T('Attach the vacant office of {title} to your realm. Requires {prestige} prestige and a demesne of {counties} counties, and spends {piety} piety.', {
+        title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)),
+        prestige:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.prestige', 'religiousHeadClaimPrestige', 500),
+        counties:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.minRealm', 'religiousHeadClaimMinRealm', 6),
+        piety:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.piety', 'religiousHeadClaimPiety', 300)
       });
     },
     show: function (s) {
-      return FB.faithOfficeId(me(s).religion, s) === 'sunni' &&
+      return !!(FB.religiousHeads.forFaith(s, me(s).religion) || {}).contest &&
         FB.station.isRoyal(s.player, s) &&
-        (!!FB.religiousHeadVacancy(s, 'sunni') || !!FB.caliphateWarCause(s));
+        (!!FB.religiousHeadVacancy(s, FB.playerHeadFaith(s)) || !!FB.caliphateWarCause(s));
     },
     can: function (s) {
-      if (!FB.isPlayerSovereign(s)) return FB.T('Only an independent king or emperor may claim the Caliphate.');
+      if (!FB.isPlayerSovereign(s)) return FB.T('Only an independent king or emperor may claim this office.');
       if (!(FB.religiousHeadHolderEligible &&
-          FB.religiousHeadHolderEligible(s, 'sunni', 'player'))) {
-        return FB.T('Sunni law reserves the Caliphate for a male ruler.');
+          FB.religiousHeadHolderEligible(s, FB.playerHeadFaith(s), 'player'))) {
+        return FB.T('Your ruler does not meet this office’s holder requirements.');
       }
-      if (!FB.religiousHeadVacancy(s, 'sunni')) {
+      if (!FB.religiousHeadVacancy(s, FB.playerHeadFaith(s))) {
         const playerRealm = FB.playerRealmId(s);
         if (s.player.war ||
             (FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, 'player')) ||
@@ -3407,48 +3413,48 @@ window.FB = window.FB || {};
           return FB.warLockedReason(s);
         }
         const cause = FB.caliphateWarCause(s);
-        if (!cause) return FB.T('The sitting Caliph cannot be contested from this world state.');
+        if (!cause) return FB.T('The sitting head cannot be contested from this world state.');
         const blocked = diplomacyBlocksWar(s, cause.enemy);
         if (blocked === 'truce') return FB.truceText(s, 'player', cause.enemy);
         if (blocked === 'war') return activeWarReason(s, cause.enemy);
-        if (blocked === 'alliance') return FB.T('Your defensive alliance forbids an attack on the Caliph’s realm.');
-        if (blocked === 'pact') return FB.T('A sworn peace pact protects the Caliph’s realm.');
+        if (blocked === 'alliance') return FB.T('Your defensive alliance forbids an attack on the head’s realm.');
+        if (blocked === 'pact') return FB.T('A sworn peace pact protects the head’s realm.');
         return true;
       }
-      if (s.player.prestige < FB.religiousHeadBalance('religiousHeadClaimPrestige', 500)) {
+      if (s.player.prestige < FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.prestige', 'religiousHeadClaimPrestige', 500)) {
         return FB.T('You need {needed} prestige (now {current}).', {
-          needed:FB.religiousHeadBalance('religiousHeadClaimPrestige', 500),
+          needed:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.prestige', 'religiousHeadClaimPrestige', 500),
           current:Math.round(s.player.prestige)
         });
       }
-      if (s.player.piety < FB.religiousHeadBalance('religiousHeadClaimPiety', 300)) {
+      if (s.player.piety < FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.piety', 'religiousHeadClaimPiety', 300)) {
         return FB.T('You need {needed} piety (now {current}).', {
-          needed:FB.religiousHeadBalance('religiousHeadClaimPiety', 300),
+          needed:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.piety', 'religiousHeadClaimPiety', 300),
           current:Math.round(s.player.piety)
         });
       }
-      if ((s.player.provs ? s.player.provs.length : 0) < FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6)) {
+      if ((s.player.provs ? s.player.provs.length : 0) < FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.minRealm', 'religiousHeadClaimMinRealm', 6)) {
         return FB.T('Your demesne needs at least {needed} counties (now {current}).', {
-          needed:FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6),
+          needed:FB.religiousHeadRuleBalance(s, FB.playerHeadFaith(s), 'head.claim.minRealm', 'religiousHeadClaimMinRealm', 6),
           current:s.player.provs ? s.player.provs.length : 0
         });
       }
-      if (!FB.controlsReligiousHeadClaim(s, 'sunni', 'player')) {
-        return FB.T('Control Baghdad, or both Mecca and Medina.');
+      if (!FB.controlsReligiousHeadClaim(s, FB.playerHeadFaith(s), 'player')) {
+        return FB.T('Control one of these county groups: {counties}.', { counties:(FB.religionOf(FB.playerHeadFaith(s), s).head.claimCounties || []).map(function (set) { return set.map(function (id) { return (FB.world.byId[id] || {}).name || id; }).join(', '); }).join(' / ') });
       }
-      return FB.canClaimReligiousHead(s, 'sunni', 'player')
-        ? true : FB.T('Your realm is not eligible to claim the Caliphate.');
+      return FB.canClaimReligiousHead(s, FB.playerHeadFaith(s), 'player')
+        ? true : FB.T('Your realm is not eligible to claim this office.');
     },
     run: function () {
       const s = FB.state;
-      if (s && !FB.religiousHeadVacancy(s, 'sunni')) {
+      if (s && !FB.religiousHeadVacancy(s, FB.playerHeadFaith(s))) {
         if (FB.ui && FB.ui.showCaliphateWarConfirmation) {
           FB.ui.showCaliphateWarConfirmation();
         }
         return;
       }
       if (FB.ui && FB.ui.showReligiousHeadClaim) {
-        FB.ui.showReligiousHeadClaim('sunni');
+        FB.ui.showReligiousHeadClaim(FB.playerHeadFaith(FB.state));
       }
     } },
   { id: 'convert_faith', opensChoices:true, noConsume: true, requiresAdult:true,
@@ -3952,8 +3958,9 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showTech) FB.ui.showTech(); } },
   { id: 'hold_feast',
     desc: function (s) {
-      return FB.faithIsA(me(s).religion, 'muslim', s)
-        ? 'Meat, sherbet, and politics.' : 'Meat, mead, and politics.';
+      return FB.faithValue(s, me(s).religion, 'feastDescription').value
+        ? FB.faithDataText(s, s.player.charId, me(s).religion, 'feastDescription', {})
+        : FB.T('Meat, mead, and politics.');
     },
     show: function (s) { return FB.station.isLanded(s.player, s); },
     can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; },
@@ -10288,24 +10295,26 @@ window.FB = window.FB || {};
   FB.caliphateWarClaimantEligible = function (state) {
     const p = state.player;
     const c = state.chars[p.charId];
-    return !!(c && !c.dead && FB.faithOfficeId(c.religion, state) === 'sunni' &&
+    return !!(c && !c.dead && !!(FB.religiousHeads.forFaith(state, c.religion) || {}).contest &&
       FB.religiousHeadHolderEligible &&
-      FB.religiousHeadHolderEligible(state, 'sunni', 'player') &&
+      FB.religiousHeadHolderEligible(state, c.religion, 'player') &&
       FB.station.isRoyal(p, state) &&
       FB.isPlayerSovereign(state));
   };
 
   FB.caliphateWarCause = function (state, readOnly) {
+    const c = state.chars[state.player.charId];
     if (!adult(state) || !FB.caliphateWarClaimantEligible(state)) return null;
     const head = readOnly && FB.religiousHeadSnapshot
-      ? FB.religiousHeadSnapshot(state, 'sunni')
-      : FB.religiousHeadOf(state, 'sunni');
+      ? FB.religiousHeadSnapshot(state, c.religion)
+      : FB.religiousHeadOf(state, c.religion);
     if (!head) return null;
     const enemy = FB.topRealm(state, head.id);
     if (!enemy || enemy === 'player' || enemy === FB.playerRealmId(state)) return null;
     const enemyRealm = state.realms[enemy];
     if (!enemyRealm || !enemyRealm.alive || !enemyRealm.capital) return null;
-    return { type: 'caliphate', enemy: enemy, target: enemyRealm.capital };
+    return { type: 'caliphate', enemy:enemy, target:enemyRealm.capital,
+      officeId:FB.faithOfficeId(c.religion, state) };
   };
 
   function diplomacyBlocksWar(state, enemy, readOnly) {
@@ -12082,7 +12091,8 @@ window.FB = window.FB || {};
     if (cause.type === 'caliphate') {
       const liveCaliphate = FB.caliphateWarCause(state);
       if (!liveCaliphate || liveCaliphate.enemy !== cause.enemy ||
-          liveCaliphate.target !== cause.target) return false;
+          liveCaliphate.target !== cause.target ||
+          (cause.officeId && liveCaliphate.officeId !== cause.officeId)) return false;
       cause = liveCaliphate;
     }
     const enemy = cause.enemy || state.owner[cause.target];
@@ -12102,6 +12112,7 @@ window.FB = window.FB || {};
         titleKind: cause.titleKind || null,
         titleId: cause.titleId || null,
         titleName: cause.titleName || null,
+        officeId:cause.officeId || null,
         sacrilegious:sameFaithPolicy === 'sacrilege'
       }
     };

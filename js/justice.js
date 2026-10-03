@@ -384,11 +384,9 @@
   };
   function form(s, actor) {
     var c = person(s, actor), rid = realmOf(s, actor);
-    var group = FB.faithGroup(c.religion, s);
+    var tradition = FB.faithValue(s, c.religion, 'legalTradition').value;
     if (/greek|byzant/i.test(c.culture || '') || /byzant/i.test(rid || '')) return 'byzantine';
-    if (group === 'muslim') return 'muslim';
-    if (group === 'pagan') return 'customary';
-    return 'latin';
+    return tradition || 'latin';
   }
   function exileDestination(s, counties, origin) {
     var queue = origin ? [origin] : counties.slice(), seen = {};

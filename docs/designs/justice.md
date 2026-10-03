@@ -295,3 +295,7 @@ Baseline judicial appointment has technology impact `none`.
 Government ladder eligibility
 
 The player's baseline jurisdiction asks mayAdministerJustice on the era/form ladder and retains the physical governance checks. Existing scoped Peace grants remain an independent route. Realm eligibility resolves its own form's territorial rank meaning. A permission never creates custody, evidence, counties or an office. Ordinary landed punishment still checks actual landed station before removing land. All shipped ladders retain their existing permissions; this internal refactor adds no technology gate.
+
+Faith legal tradition selection
+
+The effective legalTradition property supplies the sentence form instead of a named faith or root comparison. Existing latin, muslim and customary forms and their outcomes remain unchanged. Greek culture and Byzantine realm precedence remain ahead of the faith form in justice; the separate intrigue hearing preserves its existing precedence. This is a selector refactor with no new technology requirement.

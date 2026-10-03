@@ -2623,7 +2623,7 @@ window.FB = window.FB || {};
     if (headFaith && FB.religiousHeadOf) {
       var head = FB.religiousHeadOf(state, religion);
       if (head && head.id && head.id !== 'player') {
-        FB.adjustStanding(state, { kind:'realm', id:head.id }, headFaith,
+        FB.adjustStanding(state, { kind:FB.religionOf(religion, state).head.holderKind, id:head.id }, headFaith,
           'realm_policy:clergy');
       }
     }

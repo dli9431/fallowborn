@@ -1,0 +1,16 @@
+{
+  "about": "Exact remaining faith-id literals in engine scripts. These are durable message selectors, legal strategy identifiers or authored historical story identities, never central-office dispatch.",
+  "entries": [
+    { "file": "js/events.js", "id": "muslim", "count": 2, "reason": "Durable cleric/deity message selectors chosen from effective faith words." },
+    { "file": "js/events.js", "id": "pagan", "count": 2, "reason": "Durable cleric/deity message selectors chosen from effective faith words." },
+    { "file": "js/events.js", "id": "jewish", "count": 2, "reason": "Durable cleric/deity message selectors chosen from effective faith words." },
+    { "file": "js/intrigue.js", "id": "muslim", "count": 2, "reason": "Existing legal-form strategy id, selected by the legalTradition property." },
+    { "file": "js/justice.js", "id": "muslim", "count": 3, "reason": "Existing legal-form strategy id, selected by the legalTradition property." },
+    { "file": "js/story_federate_track_476.js", "id": "homoian", "count": 3, "reason": "The authored historical federate story explicitly distinguishes Homoian actors." },
+    { "file": "js/story_federate_track_476.js", "id": "nicene", "count": 4, "reason": "The authored historical story requires Nicene community recognition." },
+    { "file": "js/story_western_court_476.js", "id": "nicene", "count": 8, "reason": "Authored historical actor identities and Nicene church recognition in this story." },
+    { "file": "js/story_western_court_476.js", "id": "homoian", "count": 2, "reason": "Authored historical actor identities." },
+    { "file": "js/story_western_court_476.js", "id": "chalcedonian", "count": 1, "reason": "Authored historical actor identity." },
+    { "file": "js/story_western_court_476.js", "id": "germanic_pagan", "count": 1, "reason": "Authored historical actor identity." }
+  ]
+}

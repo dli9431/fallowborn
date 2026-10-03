@@ -560,3 +560,7 @@ Scheduled-games coverage is authored in tests/e2e/specs/scheduled-games.spec.js,
 Station ladder coverage
 
 station-ladders.spec.js adds 867/1066 eight-band eligibility and restore checks, isolated government and era overrides, independent landless command/council/justice/marriage meanings, NPC social-class mapping, named action restrictions, unrelated realm/campaign isolation, unused-band behavior, sparse label fallback, campaign-specific faith label validation, reordered promotion costs and malformed-data rejection. station-queries.spec.js extends the numeric comparison lint to NPC station and direct stationOf/playerStation reads. lexicon.spec.js uses the used-band label validation contract. Existing parity-fresh.spec.js, parity-corpus.spec.js and parity-portraits.spec.js cover the complete journeys and appearance comparison.
+
+Faith-id allowance
+
+faith-id-ratchet.spec.js scans exact engine string literals against the registered faith ids. tests/e2e/fixtures/engine-ids/faith-id-allowlist.json records each remaining file/id count and its reason. Only durable message selectors, existing legal strategy identifiers and authored historical actor identities remain allowed. Both new uses and stale allowances fail. religious-head-strategies.spec.js covers seeded parity, independent data-only offices, character succession, save restoration, custom costs, contested-office persistence and inherited tradition overrides.

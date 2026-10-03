@@ -7,6 +7,8 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/events.js',
   'js/model.js',
+  'js/world.js',
+  'js/papacy.js',
   'js/messages.js',
   'js/i18n.js',
   'js/lexicon.js',
@@ -16,7 +18,6 @@ dependsOnRuntime(__filename, [
   'js/technology.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
-  'js/world.js'
 ]);
 
 const { test, expect } = require('../support/fixture');

@@ -178,8 +178,8 @@
     });
   };
   function programme(e) {
-    var host = FB.state.chars[e.hostId], religion = host && FBDATA.religions[host.religion];
-    if (e.programme === 'mounted' && religion && religion.group === 'muslim') return FB.T('Furusiyya and open games');
+    var host = FB.state.chars[e.hostId], religion = host && FB.religionOf(host.religion, FB.state);
+    if (e.programme === 'mounted' && religion && religion.tournamentTradition === 'furusiyya') return FB.T('Furusiyya and open games');
     if (e.programme === 'martial' && FB.state.date.year < 1100) return FB.T('Martial exercises and open games');
     return label('programmes', e.programme);
   }

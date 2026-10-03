@@ -2345,7 +2345,7 @@ window.FB = window.FB || {};
       state, attackerReligionId, defenderRealmId, pid, readOnly) {
     const rel = FB.religionOf(attackerReligionId, state);
     const policy = rel && rel.head && rel.head.sameFaithWar;
-    if (!policy || policy === 'ordinary') return null;
+    if (!policy || policy === 'ordinary' || rel.head.holderKind === 'character') return null;
     const head = readOnly && FB.religiousHeadSnapshot
       ? FB.religiousHeadSnapshot(state, attackerReligionId)
       : FB.religiousHeadOf(state, attackerReligionId);
@@ -2363,7 +2363,7 @@ window.FB = window.FB || {};
 
   FB.playerExcommunicated = function (state) {
     const c = state && state.chars && state.chars[state.player.charId];
-    if (c && FB.faithHasSystem(c.religion, 'papacy', state) && state.papacy &&
+    if (c && FB.faithHasSystem(c.religion, 'papacy', state) && FB.papacyState(state, c.religion) &&
         FB.playerExcommunicatedBy) {
       return !!FB.playerExcommunicatedBy(state);
     }
@@ -2405,36 +2405,41 @@ window.FB = window.FB || {};
   };
 
   FB.canSeekAbsolution = function (state) {
-    if (FB.papalAbsolutionStatus) {
+    const religionId = FB.playerHeadFaith(state);
+    const meta = FB.faithExists(religionId, state) && FB.religionOf(religionId, state).head;
+    if (!meta || meta.absolution === null || (!meta.absolution &&
+        !FB.faithValue(state, religionId, 'systems.papacy').value)) return false;
+    if (FB.faithHasSystem(religionId, 'papacy', state) && FB.papalAbsolutionStatus) {
       return !!FB.papalAbsolutionStatus(
         state, state.player.charId
       ).ready;
     }
     if (!FB.playerExcommunicated(state) || state.player.war) return false;
-    if (!FB.religiousHeadOf(state, 'catholic')) return false;
-    if (state.player.gold < FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100)) {
+    if (!FB.religiousHeadOf(state, religionId)) return false;
+    if (state.player.gold < FB.religiousHeadRuleBalance(state, religionId, 'head.absolution.gold', 'religiousHeadAbsolutionGold', 100)) {
       return false;
     }
-    if (state.player.piety < FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100)) {
+    if (state.player.piety < FB.religiousHeadRuleBalance(state, religionId, 'head.absolution.piety', 'religiousHeadAbsolutionPiety', 100)) {
       return false;
     }
     return true;
   };
 
   FB.seekAbsolution = function (state) {
-    if (FB.papalAbsolve) return FB.papalAbsolve(state, state.player.charId);
+    const religionId = FB.playerHeadFaith(state);
     if (!FB.canSeekAbsolution(state)) return false;
+    if (FB.faithHasSystem(religionId, 'papacy', state) && FB.papalAbsolve) return FB.papalAbsolve(state, state.player.charId);
     const c = state.chars[state.player.charId];
-    const gold = FB.religiousHeadBalance('religiousHeadAbsolutionGold', 100);
-    const piety = FB.religiousHeadBalance('religiousHeadAbsolutionPiety', 100);
+    const gold = FB.religiousHeadRuleBalance(state, religionId, 'head.absolution.gold', 'religiousHeadAbsolutionGold', 100);
+    const piety = FB.religiousHeadRuleBalance(state, religionId, 'head.absolution.piety', 'religiousHeadAbsolutionPiety', 100);
     state.player.gold -= gold;
     state.player.piety -= piety;
     FB.removeTrait(c, 'excommunicated');
-    FB.adjustReligionRealmOpinions(state, 'catholic',
-      FB.religiousHeadBalance('religiousHeadAbsolutionOpinion', 20));
+    FB.adjustReligionRealmOpinions(state, religionId,
+      FB.religiousHeadRuleBalance(state, religionId, 'head.absolution.opinion', 'religiousHeadAbsolutionOpinion', 20));
     FB.news(state, FB.msg('news.religion.absolution',
       '🕊 {title} grants you absolution. The sentence of excommunication is lifted.', {
-        title:FB.dataParam('religion', 'catholic', 'head.title')
+        title:FB.dataParam('religion', religionId, 'head.title')
       }));
     return true;
   };
@@ -2475,21 +2480,22 @@ window.FB = window.FB || {};
     const rel = FB.religionOf(religionId, state);
     const meta = rel && rel.head;
     const vacancy = FB.religiousHeadVacancy(state, religionId);
-    if (!state || !meta || meta.recovery !== 'grant_seat' || !meta.seat || !vacancy) {
+    const seatId = FB.religiousHeadSeat(state, religionId);
+    if (!state || !meta || ((FB.religiousHeads.forFaith(state, religionId) || {}).recover || meta.recovery) !== 'grant_seat' || !seatId || !vacancy) {
       return false;
     }
     const canonicalId = FB.religiousHeadDefaultRealm(state, religionId);
     const definition = canonicalId && activeBookmarkRealmDefinition(state, canonicalId);
-    if (!definition || !FB.world.byId[meta.seat] ||
+    if (!definition || !FB.world.byId[seatId] ||
         (state.realms[canonicalId] && state.realms[canonicalId].alive)) {
       return false;
     }
-    if (state.owner[meta.seat] !== FB.topRealm(state, controllerId)) return false;
+    if (state.owner[seatId] !== FB.topRealm(state, controllerId)) return false;
     if (!FB.faithInFold(state, FB.realmReligionId(state, controllerId), religionId)) return false;
     if (controllerId === 'player') {
       return FB.isPlayerSovereign(state) &&
-        state.holder[meta.seat] === 'player' &&
-        state.player.provs.indexOf(meta.seat) >= 0 &&
+        state.holder[seatId] === 'player' &&
+        state.player.provs.indexOf(seatId) >= 0 &&
         state.player.provs.length >= 2;
     }
     const controller = state.realms[controllerId];
@@ -2500,9 +2506,10 @@ window.FB = window.FB || {};
   FB.restoreReligiousHead = function (state, religionId, controllerId) {
     if (!FB.canRestoreReligiousHead(state, religionId, controllerId)) return false;
     const meta = FB.religionOf(religionId, state).head;
+    const seatId = FB.religiousHeadSeat(state, religionId);
     const canonicalId = FB.religiousHeadDefaultRealm(state, religionId);
     const definition = activeBookmarkRealmDefinition(state, canonicalId);
-    const seat = FB.world.byId[meta.seat];
+    const seat = FB.world.byId[seatId];
     const controller = state.realms[controllerId];
     const controllerName = controller ? controller.name : controllerId;
     const controllerSovereign = FB.topRealm(state, controllerId);
@@ -2510,7 +2517,7 @@ window.FB = window.FB || {};
       id:canonicalId,
       name:definition.name,
       color:definition.color,
-      capital:meta.seat,
+      capital:seatId,
       aggression:definition.aggression !== undefined ? definition.aggression : 0,
       rank:meta.restoredRank || 3,
       liege:null,
@@ -2520,18 +2527,18 @@ window.FB = window.FB || {};
       religion:religionId,
       alive:true,
       ruler:makeRuler(FB.countyCulture
-        ? FB.countyCulture(state, meta.seat) : seat.culture,
+        ? FB.countyCulture(state, seatId) : seat.culture,
         null, state.date.year),
       war:null,
       op:0
     };
     state.realms[canonicalId] = restored;
-    if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, canonicalId, [meta.seat]);
+    if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, canonicalId, [seatId]);
     if (FB.mergeRealmTech && controllerSovereign) {
       FB.mergeRealmTech(state, canonicalId, controllerSovereign);
     }
     FB.ensureRealmSuccession(state, canonicalId);
-    FB.transferProvince(state, meta.seat, canonicalId);
+    FB.transferProvince(state, seatId, canonicalId);
     if (!FB.assignReligiousHead(state, religionId, canonicalId)) return false;
     if (FB.papacyReligiousHeadRestored) {
       FB.papacyReligiousHeadRestored(state, religionId, canonicalId);
@@ -2569,7 +2576,7 @@ window.FB = window.FB || {};
     const rel = FB.religionOf(religionId, state);
     const meta = rel && rel.head;
     const realm = state && state.realms && state.realms[rid];
-    if (!meta || meta.recovery !== 'claim' ||
+    if (!meta || ((FB.religiousHeads.forFaith(state, religionId) || {}).recover || meta.recovery) !== 'claim' ||
         !realm || !realm.alive || realm.liege ||
         (knownVacancy === undefined ? !FB.religiousHeadVacancy(state, religionId) : !knownVacancy) ||
         !(FB.religiousHeadHolderEligible &&
@@ -2581,20 +2588,20 @@ window.FB = window.FB || {};
     if (rid !== 'player') {
       return FB.realmRank.isRoyal(realm, state) &&
         FB.realmProvinces(state, rid).length >=
-          FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6);
+          FB.religiousHeadRuleBalance(state, religionId, 'head.claim.minRealm', 'religiousHeadClaimMinRealm', 6);
     }
     return FB.isPlayerSovereign(state) && FB.station.isRoyal(state.player, state) &&
-      state.player.prestige >= FB.religiousHeadBalance('religiousHeadClaimPrestige', 500) &&
-      state.player.piety >= FB.religiousHeadBalance('religiousHeadClaimPiety', 300) &&
+      state.player.prestige >= FB.religiousHeadRuleBalance(state, religionId, 'head.claim.prestige', 'religiousHeadClaimPrestige', 500) &&
+      state.player.piety >= FB.religiousHeadRuleBalance(state, religionId, 'head.claim.piety', 'religiousHeadClaimPiety', 300) &&
       (state.player.provs ? state.player.provs.length : 0) >=
-        FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6);
+        FB.religiousHeadRuleBalance(state, religionId, 'head.claim.minRealm', 'religiousHeadClaimMinRealm', 6);
   };
 
   FB.claimReligiousHead = function (state, religionId, rid) {
     if (!FB.canClaimReligiousHead(state, religionId, rid)) return false;
     const realm = state.realms[rid];
     if (rid === 'player') {
-      state.player.piety -= FB.religiousHeadBalance('religiousHeadClaimPiety', 300);
+      state.player.piety -= FB.religiousHeadRuleBalance(state, religionId, 'head.claim.piety', 'religiousHeadClaimPiety', 300);
     }
     if (!FB.assignReligiousHead(state, religionId, rid)) return false;
     if (rid === 'player') {
@@ -2649,13 +2656,15 @@ window.FB = window.FB || {};
       const rel = FB.religionOf(religionId, state);
       const meta = rel && rel.head;
       if (!vacancy || !meta || state.turn - vacancy.turn < wait) continue;
-      if (meta.recovery === 'grant_seat') {
-        const controllerId = state.owner[meta.seat];
+      const strategy = FB.religiousHeads.forFaith(state, religionId);
+      const recovery = strategy && strategy.recover || meta.recovery;
+      if (recovery === 'grant_seat') {
+        const controllerId = state.owner[FB.religiousHeadSeat(state, religionId)];
         if (controllerId && controllerId !== 'player' &&
             FB.canRestoreReligiousHead(state, religionId, controllerId)) {
           FB.restoreReligiousHead(state, religionId, controllerId);
         }
-      } else if (meta.recovery === 'claim') {
+      } else if (recovery === 'claim') {
         const candidates = [];
         for (const rid in state.realms) {
           if (rid !== 'player' && state.realms[rid] && state.realms[rid].alive &&
@@ -2671,7 +2680,9 @@ window.FB = window.FB || {};
             (FB.realmStrength(state, b) - FB.realmStrength(state, a)) ||
             (a < b ? -1 : a > b ? 1 : 0);
         });
-        if (candidates.length) FB.claimReligiousHead(state, religionId, candidates[0]);
+        if (candidates.length) FB.succeedReligiousHead(state, religionId, { holderId:candidates[0] });
+      } else {
+        FB.succeedReligiousHead(state, religionId, { formerHolder:vacancy.formerHolder });
       }
     }
   };
@@ -2704,7 +2715,10 @@ window.FB = window.FB || {};
       return FB.papacyTerritorialRealm(state, rid);
     }
     return !!(state && state.religiousHeads &&
-      state.religiousHeads.catholic === rid);
+      Object.keys(FB.religiousOffices(state)).some(function (id) {
+        return FB.religiousOffices(state)[id].head.succession === 'papal_election' &&
+          state.religiousHeads[id] === rid;
+      }));
   }
 
   /* A court character's id is derived from its succession member rather than
@@ -3198,9 +3212,7 @@ window.FB = window.FB || {};
   FB.ensureDynasticState = function (state, opts) {
     opts = opts || {};
     state.alliances = state.alliances || [];
-    const papalTerritorial = FB.religiousHeadSnapshot &&
-      FB.religiousHeadSnapshot(state, 'catholic');
-    const papalTerritorialId = papalTerritorial && papalTerritorial.id;
+    const papalTerritorialIds = FB.religiousHeadRealmIds(state, 'papal_election');
     let made = false;
     for (const rid in state.realms) {
       const r = state.realms[rid];
@@ -3212,9 +3224,7 @@ window.FB = window.FB || {};
           rulerGeneration: r.ruler ? r.ruler.generation : 1,
           heirCharId: null
         };
-      } else if (papalTerritorialId
-          ? rid === papalTerritorialId
-          : isPapalTerritorialRealm(state, rid)) {
+      } else if (papalTerritorialIds[rid]) {
         if (seedInitialPapalRuler(state, rid, { bulk:true })) made = true;
       } else {
         /* New games and restores retain the full defensive refresh. During an
@@ -4851,6 +4861,8 @@ window.FB = window.FB || {};
     const rules = FBDATA.raidingTraditions || {};
     const faiths = rules.faiths || [];
     const faithGroups = rules.faithGroups || [];
+    const inherited = faith && FB.faithValue(state, faith, 'raidingTradition');
+    if (inherited && inherited.value !== undefined) return !!inherited.value;
     return !!(faith && (faiths.indexOf(faith) >= 0 ||
       (FB.faithGroup && faithGroups.indexOf(
         FB.faithGroup(faith, state)) >= 0)));
@@ -6984,9 +6996,7 @@ window.FB = window.FB || {};
       const yearAlliances = worldYearAllianceIndex(state);
       const yearDefensiveStrength = worldYearDefensiveStrengthReader(
         state, yearWars, yearAlliances);
-      const papalTerritorial = FB.religiousHeadSnapshot &&
-        FB.religiousHeadSnapshot(state, 'catholic');
-      const papalTerritorialId = papalTerritorial && papalTerritorial.id;
+      const papalTerritorialIds = FB.religiousHeadRealmIds(state, 'papal_election');
       const annualContext = {
         courtMortalityHandled:Object.create(null)
       };
@@ -6997,9 +7007,7 @@ window.FB = window.FB || {};
         const r = state.realms[id];
         if (!r.alive || id === 'player') continue;
         if (timing) timing.count('World annual: realms processed');
-        const papalTerritorialRealm = papalTerritorialId
-          ? id === papalTerritorialId
-          : (FB.papacyTerritorialRealm && FB.papacyTerritorialRealm(state, id));
+        const papalTerritorialRealm = !!papalTerritorialIds[id];
         const papalClaimantId = papalTerritorialRealm &&
           FB.papacyClaimantForRealm &&
           FB.papacyClaimantForRealm(state, id);
@@ -7071,7 +7079,7 @@ window.FB = window.FB || {};
             }
           } else {
             if (papalClaimantId && FB.startPapalElection) {
-              FB.startPapalElection(state, null, 'death');
+              FB.succeedReligiousHead(state, FB.realmReligionId(state, id), { reason:'death' });
             } else {
               if (rulerMember) rulerMember.alive = false;
               FB.advanceRealmSuccession(state, id);
@@ -7630,19 +7638,21 @@ window.FB = window.FB || {};
      its move, and queues a war-council event. Its options act through the
      FB.fns.war_* handlers below. */
   function caliphateWarEnemyHoldsOffice(state, war) {
-    const head = FB.religiousHeadOf(state, 'sunni');
+    const head = FB.religiousHeadOf(state, FB.religiousHeadWarFaith(state, war));
     return !!(head && FB.topRealm(state, head.id) === war.enemy);
   }
 
   function caliphateWarClaimantEligible(state) {
     return !!(FB.caliphateWarClaimantEligible &&
-      FB.caliphateWarClaimantEligible(state));
+      FB.caliphateWarClaimantEligible(state) &&
+      FB.faithOfficeId(FB.playerHeadFaith(state), state) ===
+        FB.faithOfficeId(FB.religiousHeadWarFaith(state), state));
   }
 
   function endCaliphateWarForLostClaim(state) {
     FB.news(state, FB.msg('news.war.caliphate_claim_lost',
-      '🕊 The succession war ends — your realm no longer has a lawful Sunni claimant to the office of {title}.', {
-        title: FB.dataParam('religion', 'sunni', 'head.title')
+      '🕊 The succession war ends. Your realm no longer has a lawful claimant to the office of {title}.', {
+        title: FB.dataParam('religion', FB.religiousHeadWarFaith(state), 'head.title')
       }));
     FB.endPlayerWar(state, true);
   }
@@ -7650,7 +7660,7 @@ window.FB = window.FB || {};
   function endCaliphateWarForLostOffice(state) {
     FB.news(state, FB.msg('news.war.caliphate_lost',
       '🕊 The office of {title} has passed beyond the enemy’s reach — the succession war ends with nothing gained.', {
-        title: FB.dataParam('religion', 'sunni', 'head.title')
+        title: FB.dataParam('religion', FB.religiousHeadWarFaith(state), 'head.title')
       }));
     FB.endPlayerWar(state, true);
   }
@@ -7966,13 +7976,14 @@ window.FB = window.FB || {};
       }
       const claimantRealm = FB.playerRealmId(state);
       if (claimantRealm &&
-          FB.assignReligiousHead(state, 'sunni', claimantRealm)) {
+          FB.assignReligiousHead(state, FB.religiousHeadWarFaith(state, w), claimantRealm)) {
         FB.damageCountyDevelopment(state, pid);
         if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
-        p.prestige += FB.religiousHeadBalance('religiousHeadClaimWarPrestige', 100);
+        p.prestige += FB.religiousHeadRuleBalance(state, FB.religiousHeadWarFaith(state, w),
+          'head.claim.warPrestige', 'religiousHeadClaimWarPrestige', 100);
         FB.news(state, FB.msg('news.religion.head_seized',
-          '☪ The office of {title} passes to your realm by right of conquest — {realm} keeps its lands, but not the Caliphate.', {
-            title: FB.dataParam('religion', 'sunni', 'head.title'),
+          '☪ The office of {title} passes to your realm by right of conquest. {realm} keeps its lands, but loses the office.', {
+            title: FB.dataParam('religion', FB.religiousHeadWarFaith(state), 'head.title'),
             realm: enemy.name
           }));
         FB.endPlayerWar(state);
@@ -7980,7 +7991,7 @@ window.FB = window.FB || {};
       }
       FB.news(state, FB.msg('news.war.caliphate_unresolved',
         '🕊 The succession war ends without the office of {title} changing hands.', {
-          title: FB.dataParam('religion', 'sunni', 'head.title')
+          title: FB.dataParam('religion', FB.religiousHeadWarFaith(state), 'head.title')
         }));
       FB.endPlayerWar(state);
       return;

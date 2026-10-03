@@ -2119,3 +2119,7 @@ Hosting and every scheduled-games attendance track require peace throughout pers
 Government ladder command
 
 Muster review and campaign navigation read mayCommand from the player's era/form ladder separately from isLanded. Raising a host requires that band permission or an existing explicit military command. Actual rally counties, troop pools, supply and ordinary scoped command grants retain their current contracts. Existing permission checks elsewhere ask the same named station and realm-rank meanings with their subject's campaign state. Tier/rank mappings and relative dignity come from the ladder resolver; a command permission never creates a county or an army. All shipped forms retain the feudal answers, with no technology change.
+
+Data-defined religious office contests
+
+The legacy caliphate cause now applies to any faith whose registered head strategy permits a contest. casus.officeId preserves the contested office across saves and conversions. Victory assigns that office and applies its referenced warPrestige reward without transferring territory. A claimant changing to another office loses the claim and ends the war; followers of an inherited faith recognizing the same office retain it. Territorial protection and great holy wars require realm-held offices. Papal campaign checks use the calling office's election, authority and obedience state rather than another office's model.
