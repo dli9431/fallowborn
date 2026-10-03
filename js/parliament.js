@@ -36,6 +36,7 @@ window.FB = window.FB || {};
 
   /* the estates sit for sworn lords below the crown: baron, count, duke */
   FB.parliamentActive = function (state) {
+    if (!FB.systemEnabled(state, 'estates')) return false;
     const p = state.player;
     if (!FB.station.sitsInEstates(p) || !p.liege) return false;
     const liege = state.realms[p.liege];
@@ -57,7 +58,7 @@ window.FB = window.FB || {};
       const used = liege.obl.lastMotion === state.date.year;
       liege.obl.motionYears = {};
       if (used) {
-        for (const entry of FB.policyList ? FB.policyList() : []) {
+        for (const entry of FB.policyList ? FB.policyList(state) : []) {
           if (entry.def && entry.def.family &&
               (!entry.def.institution || entry.def.institution === 'estates')) {
             liege.obl.motionYears[entry.def.family] = state.date.year;
@@ -75,7 +76,7 @@ window.FB = window.FB || {};
      used for the remainder of that year. */
   FB.parliamentTerms = function (state) {
     const liege = state.player.liege && state.realms[state.player.liege];
-    const stored = liege && liege.obl;
+    const stored = FB.systemEnabled(state, 'estates') && liege && liege.obl;
     let motionYears = null;
     if (stored && stored.motionYears &&
         typeof stored.motionYears === 'object' &&
@@ -84,7 +85,7 @@ window.FB = window.FB || {};
     } else {
       motionYears = {};
       if (stored && stored.lastMotion === state.date.year) {
-        for (const entry of FB.policyList ? FB.policyList() : []) {
+        for (const entry of FB.policyList ? FB.policyList(state) : []) {
           if (entry.def && entry.def.family &&
               (!entry.def.institution || entry.def.institution === 'estates')) {
             motionYears[entry.def.family] = state.date.year;
@@ -95,7 +96,7 @@ window.FB = window.FB || {};
     return {
       aid:stored && stored.aid !== undefined
         ? stored.aid : (FBDATA.balance.parliamentAidBase || 0.25),
-      scutage:!!(stored && stored.scutage),
+      scutage:FB.systemEnabled(state, 'scutage') && !!(stored && stored.scutage),
       lastMotion:stored && stored.lastMotion !== undefined
         ? stored.lastMotion : null,
       motionYears:motionYears,
@@ -191,7 +192,7 @@ window.FB = window.FB || {};
       };
     }
     const def = FB.policyDef ? FB.policyDef(motionId) : null;
-    if (!def) {
+    if (!def || !FB.systemContentEnabled(state, def)) {
       return {
         ready:false,
         reason:FB.T('That motion is not recognized by the Estates.')
@@ -589,6 +590,7 @@ window.FB = window.FB || {};
       }));
   };
   FB.fns.parliament_scutage_pass = function (state, ctx) {
+    if (!FB.systemEnabled(state, 'scutage')) return false;
     const obl = FB.parliamentEnsure(state);
     if (!obl) {
       finishPendingMotion(state, ctx || {});

@@ -60,7 +60,7 @@ abductor:   { name:'Abductor', icon:'⛓', 'class':'reputation', desc:'Known to 
 traitor:    { name:'Traitor', icon:'⚔', 'class':'reputation', desc:'Convicted of plotting against a liege or sovereign.', earned:'Be convicted for a scheme against lawful authority.', opinion:-20, inherit:0, noRandom:true },
 scandalous_union: { name:'Scandalous Union', icon:'🕯', 'class':'reputation', desc:'Their household draws whispers wherever it is known.', earned:'Persist in a marriage the surrounding community refuses to recognize.', opinion:-15, inherit:0, noRandom:true },
 simoniac:   { name:'Simoniac', icon:'🪙', 'class':'reputation', desc:'Bought sacred office with silver.', earned:'Purchase a church office after a rejected appointment.', opinion:-10, inherit:0, noRandom:true },
-excommunicated: { name:'Excommunicated', icon:'⛓', 'class':'reputation', desc:'Cast out by the church.', earned:'Suffer formal condemnation by your faith’s religious authority.', opinion:-15, inherit:0, noRandom:true }
+excommunicated: { systems:['excommunication'], name:'Excommunicated', icon:'⛓', 'class':'reputation', desc:'Cast out by the church.', earned:'Suffer formal condemnation by your faith’s religious authority.', opinion:-15, inherit:0, noRandom:true }
 };
 
 /* =========================================================================

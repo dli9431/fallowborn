@@ -556,3 +556,7 @@ input-guard checks use rendered visibility and retain the one-time payment check
 
 
 Scheduled-games coverage is authored in tests/e2e/specs/scheduled-games.spec.js, scheduled-games-lifecycle.spec.js and scheduled-games-ui.spec.js, with a scenario-local support/game/tournaments.js helper. It covers reserved funding, de jure capacity, wartime interruptions, physical return, annual intentions, exact rounds, admissions, technology grandfathering, save compatibility and the calendar/overlay. tournaments.spec.js retains legacy queued-invitation coverage while asserting exclusion from new random selection. Execution remains owner-controlled.
+
+Systems availability coverage
+
+systems-availability.spec.js covers layer precedence, generated faith inheritance, pure reads, unknown requirements, 867/1066 membership, disabled actions and event options, dormant records, lifecycle scheduling and restore. tests/e2e/fixtures/systems-476.json is the declarative 476 absence baseline. The intentional 476 disable set changes the generated world and RNG trajectory, so the owner must recapture fresh-476-federate_476 with the existing parity:capture workflow and review those differences. Preserve all 867 and 1066 parity snapshots for comparison. The shared parity snapshot helper is unchanged.

@@ -265,6 +265,8 @@ window.FB = window.FB || {};
       if (s && focusArt) refreshFocusArt(s);
       return;
     }
+    const gamesButton = $('btn-events');
+    if (gamesButton) gamesButton.classList.toggle('hidden', !FB.systemEnabled(s, 'tournaments'));
     if (UI.isMapFilterOverlayOpen && UI.isMapFilterOverlayOpen() &&
         UI.renderMapFilterOverlay) UI.renderMapFilterOverlay();
     // the fast-forward button's F hotkey badge (desktop only) — rendered every

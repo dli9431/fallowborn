@@ -105,6 +105,8 @@ window.FB = window.FB || {};
       }
       var problems = G.problems(formId);
       for (var i = 0; i < problems.length; i++) errors.push(describe(formId, problems[i]));
+      errors.push.apply(errors, FB.systems.validateLayer(forms[formId].systems,
+        FB.T('Government form {form}', { form:formId })));
       errors.push.apply(errors, FB.balanceLayers.validate(forms[formId].balance,
         FB.T('Government form {form}', { form:formId })));
     }

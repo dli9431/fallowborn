@@ -174,7 +174,7 @@ FBDATA.events.push(
       failure:{ text:'The bishop’s examiner declares them sheep bones. Humiliation.', effects:{ piety:-8, prestige:-8 } } },
     { label:'Bury them again with honest prayers.', desc:'No profit, but a clear conscience.', effects:{ piety:8 } }
   ]},
-{ id:'bishops_mitre', title:'A Mitre Within Reach',
+{ id:'bishops_mitre', systems:['papacy'], title:'A Mitre Within Reach',
   trigger:{ never:true },
   text:'After the lawful appointment fails, an intermediary returns by a quieter door. For {money:200}, he says, objections can vanish and the mitre can still be yours.',
   options:[
@@ -187,7 +187,7 @@ FBDATA.events.push(
     { label:'Refuse and say nothing.', desc:'Keep clean hands and leave the failed petition behind.',
       effects:{ piety:5, custom:'bishop_simony_clear' } }
   ]},
-{ id:'bishop_visit_diocese', title:'A Circuit of the Diocese',
+{ id:'bishop_visit_diocese', systems:['papacy'], title:'A Circuit of the Diocese',
   trigger:{ never:true },
   text:'Road dust, parish bells, crowded porches: the diocese waits to see what kind of bishop has come among it.',
   options:[
@@ -198,7 +198,7 @@ FBDATA.events.push(
     { label:'Receive the local notables.', desc:'Hospitality turns acquaintance into temporal support.',
       effects:{ prestige:6, opinionLiege:5, gold:3 } }
   ]},
-{ id:'bishop_ecclesiastical_court', title:'The Ecclesiastical Court',
+{ id:'bishop_ecclesiastical_court', systems:['papacy'], title:'The Ecclesiastical Court',
   trigger:{ never:true },
   text:'Petitioners fill the hall with broken vows, disputed penances, and quarrels that no lay court can settle cleanly.',
   options:[
@@ -209,7 +209,7 @@ FBDATA.events.push(
     { label:'Collect the customary fees.', desc:'The court pays for itself, at a spiritual price.',
       effects:{ gold:6, piety:-4, popularOpinion:-5 } }
   ]},
-{ id:'bishop_synod', title:'The Diocesan Synod',
+{ id:'bishop_synod', systems:['papacy'], title:'The Diocesan Synod',
   trigger:{ never:true },
   text:'Clergy and learned advisers assemble beneath your seal. The ten measures of silver spent on the gathering can now be turned toward discipline, learning, or mercy.',
   options:[
@@ -220,7 +220,7 @@ FBDATA.events.push(
     { label:'Organize diocesan alms.', desc:'Make the synod visible in bread rather than decrees.',
       effects:{ popularOpinion:10, piety:8 } }
   ]},
-{ id:'bishop_extraordinary_tithe', title:'An Extraordinary Tithe',
+{ id:'bishop_extraordinary_tithe', systems:['papacy'], title:'An Extraordinary Tithe',
   trigger:{ never:true },
   text:'Repairs, hospitality, and obligations have thinned the episcopal chest. The diocese can be made to answer — or spared.',
   options:[
@@ -233,7 +233,7 @@ FBDATA.events.push(
     { label:'Remit it entirely.', desc:'The poor keep their coin; your pastoral name grows.',
       effects:{ piety:10, popularOpinion:8 } }
   ]},
-{ id:'bishop_sanctuary', title:'Sanctuary at the Cathedral Door',
+{ id:'bishop_sanctuary', systems:['papacy'], title:'Sanctuary at the Cathedral Door',
   trigger:{ flags:['bishop'], notFlags:['pope'], chance:0.15 }, weight:7, cooldown:10,
   text:'A fugitive clings to the cathedral door-ring while armed men demand surrender. Sanctuary, justice, and your liege’s patience pull in different directions.',
   options:[
@@ -247,7 +247,7 @@ FBDATA.events.push(
       failure:{ text:'Both sides leave convinced that you favored the other.',
         effects:{ opinionLiege:-5, popularOpinion:-5 } } }
   ]},
-{ id:'bishop_clergy_misconduct', title:'A Priest’s Scandal',
+{ id:'bishop_clergy_misconduct', systems:['papacy'], title:'A Priest’s Scandal',
   trigger:{ flags:['bishop'], notFlags:['pope'], chance:0.14 }, weight:7, cooldown:12,
   text:'Evidence reaches you of a priest selling favors and neglecting his parish. His patrons call it gossip; his parishioners call it Tuesday.',
   options:[
@@ -258,7 +258,7 @@ FBDATA.events.push(
     { label:'Impose mercy and restitution.', desc:'A lighter correction wins affection, if not awe.',
       effects:{ popularOpinion:6, piety:3 } }
   ]},
-{ id:'bishop_chapter_resistance', title:'The Chapter Resists',
+{ id:'bishop_chapter_resistance', systems:['papacy'], title:'The Chapter Resists',
   trigger:{ flags:['bishop'], notFlags:['pope'], chance:0.14 }, weight:6, cooldown:12,
   text:'The cathedral canons answer your latest order with old privileges, older seals, and the serene confidence of men who expect to outlast you.',
   options:[
@@ -273,7 +273,7 @@ FBDATA.events.push(
       desc:'Patronage makes learned allies where argument could not.',
       effects:{ gold:-10, research:15, papalOpinion:4 } }
   ]},
-{ id:'bishop_tithe_dispute', title:'The Tithe Disputed',
+{ id:'bishop_tithe_dispute', systems:['papacy'], title:'The Tithe Disputed',
   trigger:{ flags:['bishop'], notFlags:['pope'], chance:0.16 }, weight:7, cooldown:10,
   text:'Three villages produce three incompatible tallies and one shared conviction that the cathedral has already received enough.',
   options:[
@@ -287,7 +287,7 @@ FBDATA.events.push(
     { label:'Remit the disputed amount.', desc:'Choose pastoral peace over doubtful revenue.',
       effects:{ piety:8, popularOpinion:8 } }
   ]},
-{ id:'bishop_doubtful_relic', title:'A Doubtful Relic',
+{ id:'bishop_doubtful_relic', systems:['papacy'], title:'A Doubtful Relic',
   trigger:{ flags:['bishop'], notFlags:['pope'], chance:0.08 }, weight:4, once:true,
   text:'A shrine in the diocese draws crowds around a bone no record mentions. Offerings grow while learned clergy exchange uneasy looks.',
   options:[

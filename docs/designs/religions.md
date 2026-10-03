@@ -225,3 +225,7 @@ remains in its own faith while living local and Nicene bishops may recognize a
 mediator. Neither recognition creates a religious head, a papal office or a
 great holy war. The regional Moorish communities use an assignable Amazigh
 traditional faith under the existing pagan root.
+
+Optional faith institutions
+
+Faith properties.systems accepts enable and disable lists as well as the existing boolean map. Compilation normalizes the local layer before merging inherited properties, preserving a parent's requirements unless the child overrides them. FB.faithHasSystem delegates to FB.systemEnabled for the named faith, so a final bookmark disable also applies to inherited and generated faiths. Papacy remains faith-enabled; medieval excommunication preserves the existing nonpapal religious-head sanctions. Catholic vocation paths retain their papacy requirement. See docs/designs/systems.md.

@@ -376,7 +376,7 @@ FBDATA.events.push(
   ]},
 
 /* ---------- holy wars: field offers and queued campaign reports ---------- */
-{ id:'ghw_pilgrims_under_arms', title:'Pilgrims Under Arms',
+{ id:'ghw_pilgrims_under_arms', systems:['great_holy_wars'], title:'Pilgrims Under Arms',
   trigger:{ custom:'ghw_has_field_host', chance:0.01 },
   wartime:true, weight:2, cooldown:36,
   text:'Pilgrims, penitents, and younger sons come straggling beneath the sacred banners. They have brought their own spears and little else, asking only for a place in the line.',
@@ -386,7 +386,7 @@ FBDATA.events.push(
       effects:{ custom:'ghw_recruit_volunteers',
         log:'Accepted armed pilgrims into the holy war host.' } }
   ]},
-{ id:'ghw_swords_seeking_banner', title:'Swords Seeking a Banner',
+{ id:'ghw_swords_seeking_banner', systems:['great_holy_wars'], title:'Swords Seeking a Banner',
   trigger:{ custom:'ghw_has_field_host', goldMin:15, chance:0.25 },
   wartime:true, weight:10, cooldown:4,
   text:'The great camp draws fighting men who own no banner of their own. Three companies send captains to your fire, each naming a different price for service in the holy war.',
@@ -418,7 +418,7 @@ FBDATA.events.push(
       desc:'Keep your coin and the host you already have.',
       effects:{} }
   ]},
-{ id:'ghw_called',
+{ id:'ghw_called', systems:['great_holy_wars'],
   title:{ forms:{ select:'value', param:'campaignType', cases:{
     crusade:'A Crusade Is Called',
     jihad:'The Caliph Calls a Jihad',
@@ -437,7 +437,7 @@ FBDATA.events.push(
       desc:'Eligible freeholders and rulers can answer from the Deeds tab during the 180-day gathering.',
       effects:{} }
   ]},
-{ id:'ghw_muster_complete',
+{ id:'ghw_muster_complete', systems:['great_holy_wars'],
   title:{ forms:{ select:'value', param:'campaignType', cases:{
     crusade:'The Crusade Begins',
     jihad:'The Jihad Begins',
@@ -456,26 +456,26 @@ FBDATA.events.push(
       desc:'The campaign is active and the gathered hosts are now in the field.',
       effects:{} }
   ]},
-{ id:'ghw_field_battle_won', title:'A Victory for the Faith', trigger:{ never:true }, wartime:true,
+{ id:'ghw_field_battle_won', systems:['great_holy_wars'], title:'A Victory for the Faith', trigger:{ never:true }, wartime:true,
   text:'The opposing host breaks at {cname}. Your banner remains among the victorious ranks, and every campfire carries the tale before nightfall.',
   options:[
     { label:'Give thanks, then tend the wounded.', desc:'Your service is written into the campaign’s reckoning.',
       effects:{ prestige:8, piety:4, skills:{mar:1} } }
   ]},
-{ id:'ghw_field_battle_lost', title:'The Faithful Are Driven Back', trigger:{ never:true }, wartime:true,
+{ id:'ghw_field_battle_lost', systems:['great_holy_wars'], title:'The Faithful Are Driven Back', trigger:{ never:true }, wartime:true,
   text:'Your camp’s line buckles at {cname}. You escape with the remnant while the enemy holds the field.',
   options:[
     { label:'Rally beneath the nearest banner.', desc:'The campaign is not decided by one bloody day.',
       effects:{ health:-1, prestige:-3, deathProvenance:{ kind:'battle', province:'context' } } }
   ]},
-{ id:'ghw_expedition_service', title:'A Season Beneath the Banners',
+{ id:'ghw_expedition_service', systems:['great_holy_wars'], title:'A Season Beneath the Banners',
   trigger:{ never:true }, wartime:true,
   text:'You pass a season in the great host: dusty marches, cold watches, and the endless labor that keeps an army together.',
   options:[
     { label:'Continue your service.', desc:'Quiet duty still counts when the spoils are divided.',
       effects:{ custom:'ghw_service_safe', piety:1 } }
   ]},
-{ id:'ghw_expedition_danger', title:'Beyond the Campfires',
+{ id:'ghw_expedition_danger', systems:['great_holy_wars'], title:'Beyond the Campfires',
   trigger:{ never:true }, wartime:true,
   text:'Scouts need volunteers to cross dangerous ground before dawn. Success would bring useful intelligence; failure may leave no road home.',
   options:[

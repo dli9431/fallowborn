@@ -500,7 +500,7 @@ FBDATA.events.push(
       effects:{ standingRealm:6 } }
   ]},
 
-{ id:'papal_absolution_petition', title:'A Petition for Absolution',
+{ id:'papal_absolution_petition', systems:['papacy','excommunication'], title:'A Petition for Absolution',
   trigger:{ flags:['papal_event_only'] }, childhood:true, wartime:true, weight:0,
   text:'{target}, ruler of {realm}, asks you to lift a sentence of excommunication. The envoys claim the recorded offense has been remedied and offer submission to your judgment.',
   options:[

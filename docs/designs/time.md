@@ -741,3 +741,5 @@ repeat the payment on its next ordinary day. Observe mode skips it. See
 
 
 Scheduled games reconcile war and lifecycle eligibility before travel, then progress after travel and before daily event selection. Ordinary war registration, holy-war launch and armed revolt creation also reconcile immediately. Season boundaries sample recurring income and plan AI editions; annual intentions renew at their saved opening minus 60 days. Observe mode resolves fields without player modal chains. See tournaments.md.
+
+Optional institution hooks consult the system resolver before daily, seasonal and annual work. Disabled events are filtered before participant binding or random eligibility evaluation, and disabled focuses cannot remain active through the ordinary focus validation path. Availability does not consume RNG or add a save stamp. See docs/designs/systems.md.

@@ -500,3 +500,7 @@ plots and their existing consolidated yield. This never transfers county or
 settlement lordship, holdings, enterprises or another person's property. Gifts
 remain with the religious community through dynasty succession. Cash enlarges
 the permanent endowment rather than the spendable treasury. See [abbeys.md](abbeys.md).
+
+Customary tenure availability
+
+The manorial_tenure system guards dependent household tenure templates, duty scheduling, tenure review events and the associated Deed. When disabled, existing tenure records are inactive and no duties are created or collected. Ordinary household property and station rules continue to apply. Abbey donations and office effects use the abbeys system and the existing faith eligibility. See docs/designs/systems.md.

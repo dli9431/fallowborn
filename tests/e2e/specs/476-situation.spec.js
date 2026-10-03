@@ -5,7 +5,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476.js', 'data/settlements.js',
   'data/settlements_real.js', 'data/cultures.js', 'data/starts.js',
   'data/technology.js', 'data/political_institutions.js', 'data/units.js',
-  'data/economy.js',
+  'data/economy.js', 'data/systems.js', 'js/systems.js',
   'js/main.js', 'js/stories.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/authority.js', 'js/world.js',
   'js/holywar.js', 'js/actions.js',
@@ -66,6 +66,11 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
       return {
         errors:FB.validateBookmark(FB.bookmark('476')),
         greatHolyWarsEnabled:FB.greatHolyWarsEnabled(s),
+        disabledSystems:['papacy','scutage','manorial_tenure','excommunication',
+          'feudal_service','crown_bloc','tournaments','great_holy_wars'].every(function (id) {
+          return !FB.systemEnabled(s, id, { faith:'catholic' });
+        }),
+        noPapalState:!s.papacy,
         olderHolyWarsEnabled:['867','1066'].every(function (id) {
           return FB.greatHolyWarsEnabled({ start:{ id:id } });
         }),
@@ -104,6 +109,8 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
     });
     expect(result.errors).toEqual([]);
     expect(result.greatHolyWarsEnabled).toBe(false);
+    expect(result.disabledSystems).toBe(true);
+    expect(result.noPapalState).toBe(true);
     expect(result.olderHolyWarsEnabled).toBe(true);
     expect(result.rejectsActiveSacredTarget).toBe(true);
     expect(result.older).toEqual([[], []]);

@@ -1543,3 +1543,7 @@ promise must pass that same transaction when fulfilled. Office and patron
 succession are explicit, with reaffirmation where the office definition
 requires it. Technology impact: the political appointments and rights are
 `none` decisions in the ledger.
+
+Optional service and political institutions
+
+Feudal service contracts and the crown political bloc now consult the availability resolver in docs/designs/systems.md. Disabled contracts do not schedule renewals, lapse titles or supply special charter modifiers. Ordinary hereditary title grants remain available through their existing transfer checks. A disabled crown bloc has no scored interest or affiliation; houses retain their ordinary independent, magnate and commercial political relationships. Availability follows the scoped government and faith beneath the bookmark override.

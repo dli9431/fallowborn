@@ -13,7 +13,7 @@ FBDATA.events = FBDATA.events || [];
 FBDATA.events.push(
 
 /* ---- the ordinary sitting: mixed business and court gossip ---- */
-{ id:'parliament_session', title:'The Estates Assemble',
+{ id:'parliament_session', systems:['estates'], title:'The Estates Assemble',
   trigger:{ never:true }, /* queued by FB.parliamentYearly */
   text:'The lords of the realm gather at {liege}’s summons: petty business mostly — a boundary dispute, a widow’s dower, a reading of old charters — but every bench is a pair of ears, and every recess a market of favors.',
   options:[
@@ -25,7 +25,7 @@ FBDATA.events.push(
   ]},
 
 /* ---- the liege's demand: a greater aid ---- */
-{ id:'parliament_aid_hike', title:'The Liege Demands an Aid',
+{ id:'parliament_aid_hike', systems:['estates'], title:'The Liege Demands an Aid',
   trigger:{ never:true }, /* queued by FB.parliamentYearly */
   text:'The hall is full and the mood is sour before the first word: {liege}’s steward reads the demand twice over — a greater aid from every vassal, a heavier cut of every rent and toll, “for the good of the realm.” The benches turn to look at the men who will answer first. One of them is you.',
   options:[
@@ -37,7 +37,7 @@ FBDATA.events.push(
   ]},
 
 /* ---- the player's own motions (the 🏛 Estates deed) ---- */
-{ id:'parliament_redress', title:'A Motion for Redress',
+{ id:'parliament_redress', systems:['estates'], title:'A Motion for Redress',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'Your own parchment is read to the assembled lords: a motion for redress of grievances — that the aid exacted by {liege} is heavier than custom allows, and should be lowered. The benches murmur. The liege’s face gives nothing away, which says everything.',
@@ -47,7 +47,7 @@ FBDATA.events.push(
     { label:'Accept the failed vote.', desc:'The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall.', require:{ custom:'parliament_motion_failed' },
       effects:{ custom:'parliament_redress_lost', prestige:-4, removeTrait:'moot_speaker' } }
   ]},
-{ id:'parliament_scutage', title:'A Motion for Scutage',
+{ id:'parliament_scutage', systems:['estates','scutage'], title:'A Motion for Scutage',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'Your motion before the estates: that the lords of the realm may answer {liege}’s banner call with silver instead of service — scutage, the shield-tax, as the old charters name it. The young lords who love a campaign scoff; the old ones with roofs to mend lean forward.',
@@ -59,7 +59,7 @@ FBDATA.events.push(
   ]},
 
 /* ---- policy catalog result events (data/policies.js) ---- */
-{ id:'parliament_emergency_subsidy', title:'A Motion for an Emergency Subsidy',
+{ id:'parliament_emergency_subsidy', systems:['estates'], title:'A Motion for an Emergency Subsidy',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'With the realm at war, your parchment asks the assembled lords to open their purses for {liege}: an emergency subsidy, voted here and now, to keep the campaign fed. The benches count the cost in their heads; every eye that turns to you is weighing your loyalty against your purse.',
@@ -70,7 +70,7 @@ FBDATA.events.push(
       effects:{ custom:'parliament_motion_done', opinionLiege:-4, prestige:-3, removeTrait:'moot_speaker' } }
   ]},
 
-{ id:'parliament_levy_relief', title:'A Motion for Levy Relief',
+{ id:'parliament_levy_relief', systems:['estates'], title:'A Motion for Levy Relief',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'Your motion before the estates: that your home county, thinned by years of musters, be spared the levy for a season of seasons — and that the aid rise in exchange, so {liege}’s chest loses nothing. The lords with villages of their own to strip listen closely.',
@@ -81,7 +81,7 @@ FBDATA.events.push(
       effects:{ custom:'parliament_motion_done', prestige:-2, removeTrait:'moot_speaker' } }
   ]},
 
-{ id:'parliament_market_charter_grant', title:'A Motion for a Market Charter',
+{ id:'parliament_market_charter_grant', systems:['estates'], title:'A Motion for a Market Charter',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'Your motion asks {liege}’s grace for a chartered market in your home county: stalls by the church door, tolls honestly taken, building timber bought without a week’s bargaining. The guild men smile; the lords who farm their own tolls do not.',
@@ -92,7 +92,7 @@ FBDATA.events.push(
       effects:{ custom:'parliament_motion_done', prestige:-2, removeTrait:'moot_speaker' } }
   ]},
 
-{ id:'parliament_local_custom', title:'A Motion to Confirm Local Custom',
+{ id:'parliament_local_custom', systems:['estates'], title:'A Motion to Confirm Local Custom',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'Your motion is a quiet one: that the old customs of your home county — the gleaning rights, the mill tolls, the parish feasts — be written and confirmed, so no steward’s whim can tax them away. The commons will hear of whoever speaks for this, and of whoever does not.',
@@ -103,7 +103,7 @@ FBDATA.events.push(
       effects:{ custom:'parliament_motion_done', prestige:-2, removeTrait:'moot_speaker' } }
   ]},
 
-{ id:'parliament_revocation_consent', title:'A Motion for the Consent of the Estates',
+{ id:'parliament_revocation_consent', systems:['estates'], title:'A Motion for the Consent of the Estates',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'This is no small parchment. Your motion would bind {liege} by oath: no aid raised, no new exaction laid, without the consent of the assembled estates. The hall has gone very quiet. Every lord here has dreamed of such a law; few have dared to move it.',
@@ -114,7 +114,7 @@ FBDATA.events.push(
       effects:{ custom:'parliament_motion_done', opinionLiege:-8, prestige:-3, removeTrait:'moot_speaker' } }
   ]},
 
-{ id:'parliament_war_authorization', title:'A Motion to Authorize the War',
+{ id:'parliament_war_authorization', systems:['estates'], title:'A Motion to Authorize the War',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'Your motion asks the estates to say aloud what the crown wants heard: that {liege}’s war is just, necessary, and backed by the assembled lords of the realm. The hawks are already nodding. The older lords are counting their sons.',
@@ -125,7 +125,7 @@ FBDATA.events.push(
       effects:{ custom:'parliament_motion_done', opinionLiege:-4, prestige:-3, removeTrait:'moot_speaker' } }
   ]},
 
-{ id:'parliament_war_condemnation', title:'A Motion to Condemn the War',
+{ id:'parliament_war_condemnation', systems:['estates'], title:'A Motion to Condemn the War',
   trigger:{ never:true }, /* queued from the Estates deed */
   contextValidator:'parliament_motion_context_valid',
   text:'Your motion is the dangerous one: that the estates declare {liege}’s war a waste of the realm’s blood and silver, and call for its end. Some lords meet your eye and nod. Others are already composing their report to the crown.',
@@ -137,7 +137,7 @@ FBDATA.events.push(
   ]},
 
 /* ---- wartime: the subsidy vote ---- */
-{ id:'parliament_subsidy', title:'A Subsidy for the Liege’s War',
+{ id:'parliament_subsidy', systems:['estates'], title:'A Subsidy for the Liege’s War',
   trigger:{ never:true }, /* queued by FB.parliamentYearly while the liege fights */
   text:'War has emptied {liege}’s coffers, and the estates are summoned to refill them: a subsidy, voted lord by lord, “for the defense of the realm.” The steward’s clerk has already written your name on the roll, with a space beside it for a number.',
   options:[
@@ -146,7 +146,7 @@ FBDATA.events.push(
   ]},
 
 /* ---- a fellow lord's grievance ---- */
-{ id:'parliament_grievance', title:'A Fellow Lord’s Grievance',
+{ id:'parliament_grievance', systems:['estates'], title:'A Fellow Lord’s Grievance',
   trigger:{ never:true }, /* queued by FB.parliamentYearly */
   text:'In the recess, a hoarse old lord corners you by the wine: his grandson’s inheritance was shaved by {liege}’s courts, and he means to stand up in the hall and say so. He wants voices beside his — yours, loudly. The liege’s clerks are watching who nods.',
   options:[
@@ -157,7 +157,7 @@ FBDATA.events.push(
   ]},
 
 /* ---- intrigue around the obligation record ---- */
-{ id:'plot_feudal_obligation', title:'The Sealed Tally',
+{ id:'plot_feudal_obligation', systems:['estates','feudal_service'], title:'The Sealed Tally',
   trigger:{ never:true }, contextValidator:'plot_event_context_valid',
   text:'Your agents have copied the rolls behind {liege}’s aid: double-counted rents, convenient omissions, and one seal impressed on a night its keeper was elsewhere. The evidence could strengthen a later motion, or the rolls could simply change.',
   options:[
@@ -177,7 +177,7 @@ FBDATA.events.push(
   ]},
 
 /* ---- authored institution consequences: trade, service, redress, faith ---- */
-{ id:'parliament_market_charter', title:'The Market Charter',
+{ id:'parliament_market_charter', systems:['estates'], title:'The Market Charter',
   trigger:{ never:true }, /* selected by FB.parliamentSessionCandidates */
   text:'Merchants and guild masters crowd the lower end of the hall while {liege}’s officers argue over tolls. A fixed charter would make trade predictable; a failed settlement would leave every bridge and market claiming a different due.',
   options:[
@@ -204,7 +204,7 @@ FBDATA.events.push(
       desc:'No one yields a right; no trader knows which right will be demanded next.',
       effects:{ opinionLiege:-4, addModifier:{id:'contested_tolls'} } }
   ]},
-{ id:'parliament_levy_concession', title:'Service Beyond Custom',
+{ id:'parliament_levy_concession', systems:['estates'], title:'Service Beyond Custom',
   trigger:{ never:true }, /* selected while the liege realm is at war */
   wartime:true,
   text:'The liege’s captains ask the estates for service beyond custom. The benches answer with three prices: men now, silver every season, or guarded roads that keep the host supplied without stripping another field.',
@@ -224,7 +224,7 @@ FBDATA.events.push(
       effects:{ gold:-18, opinionLiege:6, prestige:3,
         addModifier:{id:'roads_patrolled'} } }
   ]},
-{ id:'parliament_local_redress', title:'Redress for the County',
+{ id:'parliament_local_redress', systems:['estates'], title:'Redress for the County',
   trigger:{ never:true }, /* selected when a local dispute is active */
   text:'A delegation from {province} waits while the estates read the petitions. The quarrel is no abstraction now: toll receipts, sworn grievances, and names of households that still remember the last settlement.',
   options:[
@@ -248,7 +248,7 @@ FBDATA.events.push(
       desc:'The active local consequence remains until another settlement or its natural expiry.',
       effects:{ prestige:-2 } }
   ]},
-{ id:'parliament_sanctuary_relief', title:'Sanctuary, Aid, and the Poor',
+{ id:'parliament_sanctuary_relief', systems:['estates'], title:'Sanctuary, Aid, and the Poor',
   trigger:{ never:true }, /* selected in a peacetime sitting */
   text:'The clergy ask the estates to protect sanctuary and relief in {province}; the liege’s officers answer that every exemption leaves another household to serve. The hall must decide whether legitimacy is bought with spears, silver, or mercy.',
   options:[

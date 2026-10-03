@@ -418,6 +418,7 @@ window.FB = window.FB || {};
       var slotErrors = (FB.validateEraTechnology ? FB.validateEraTechnology(id, era) : [])
         .concat(FB.validateEraMilitary ? FB.validateEraMilitary(id, era) : []);
       for (var se = 0; se < slotErrors.length; se++) errors.push(slotErrors[se]);
+      errors.push.apply(errors, FB.systems.validateLayer(era.systems, FB.T('Era {id}', { id:id })));
       errors.push.apply(errors, FB.balanceLayers.validate(era.balance,
         FB.T('Era {id}', { id:id })));
       for (var wi = 0; wi < windows.length; wi++) {
@@ -577,7 +578,8 @@ window.FB = window.FB || {};
       for (var we = 0; we < wardrobeErrors.length; we++) errors.push(wardrobeErrors[we]);
     }
     var governmentErrors = FB.governments.validate().concat(FB.validateEraData(),
-      FB.lexicon.validate());
+      FB.lexicon.validate(), FB.systems.validateCatalogs(),
+      FB.systems.validateLayer(definition.systems, FB.T('Bookmark {id}', { id:definition.id })));
     for (var ge = 0; ge < governmentErrors.length; ge++) errors.push(governmentErrors[ge]);
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');
     var date = definition.date || {};
@@ -875,7 +877,7 @@ window.FB = window.FB || {};
 
     /* Enabled campaigns need sacred counties in this bookmark. A bounded
        world may opt out of this system and its global target definitions. */
-    var ghwReligionIds = definition.greatHolyWars === false ? [] :
+    var ghwReligionIds = !FB.systemEnabled(null, 'great_holy_wars', { bookmark:definition, faith:null }) ? [] :
       (FB.religionIds ? FB.religionIds(null, false) : Object.keys(FBDATA.religions));
     for (var ghwReligionIndex = 0; ghwReligionIndex < ghwReligionIds.length;
         ghwReligionIndex++) {
@@ -2361,6 +2363,7 @@ window.FB = window.FB || {};
   };
 
   FB.playerExcommunicated = function (state) {
+    if (!FB.systemEnabled(state, 'excommunication')) return false;
     const c = state && state.chars && state.chars[state.player.charId];
     if (c && FB.faithHasSystem(c.religion, 'papacy', state) && state.papacy &&
         FB.playerExcommunicatedBy) {
@@ -2392,14 +2395,18 @@ window.FB = window.FB || {};
         FB.papalObedienceForCharacter(state, c);
       FB.addPapalGround(state, c, 'attack_pope', obedienceId);
     }
-    FB.addTrait(c, 'excommunicated');
+    if (FB.systemEnabled(state, 'excommunication', { character:c })) FB.addTrait(c, 'excommunicated', state);
     if (papalFaith && FB.ensureLegacyPapalSentence) {
       FB.ensureLegacyPapalSentence(state);
     }
-    FB.news(state, FB.msg('news.religion.sacrilegious_war',
+    FB.news(state, FB.systemEnabled(state, 'excommunication', { character:c })
+      ? FB.msg('news.religion.sacrilegious_war',
       '⛓ The faithful condemn your attack upon {realm}. Your piety is forfeit, and you are excommunicated.', {
         realm:(FB.religiousHeadOf(state, religionId) || {}).name || ''
-      }));
+      }) : FB.msg('news.religion.sacrilegious_war_unsanctioned',
+        'The faithful condemn your attack upon {realm}. Your piety is forfeit.', {
+          realm:(FB.religiousHeadOf(state, religionId) || {}).name || ''
+        }));
     return true;
   };
 
@@ -6971,8 +6978,8 @@ window.FB = window.FB || {};
       if (FB.fortAIYear) FB.fortAIYear(state);
       if (FB.populationYear) FB.populationYear(state);
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: religion'); }
-      if (FB.papacyYearly) FB.papacyYearly(state);
-      if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
+      if (FB.papacyYearly && FB.systemAvailable(state, 'papacy')) FB.papacyYearly(state);
+      if (FB.greatHolyWarYearly && FB.systemAvailable(state, 'great_holy_wars')) FB.greatHolyWarYearly(state);
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: indexes and family links'); }
       /* Family deaths invalidate the live index. This read-only snapshot stays
          valid for retention and reverse-link cleanup for the rest of this

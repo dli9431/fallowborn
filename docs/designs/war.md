@@ -2115,3 +2115,5 @@ conquest. The 476 bookmark alone has a Syracuse–Carthage open crossing for the
 African route.
 
 Hosting and every scheduled-games attendance track require peace throughout personal, home, host and venue ruling chains. Ordinary campaigns, active holy wars and armed revolts count; holy-war preparation, threats and truces do not. War cancels an ineligible host edition or withdraws only affected visitors, releases reserved capacity, preserves earned rewards and refunds unused commitments. Tournament travellers physically return using their prepaid allowance before generic travel cancellation. See tournaments.md.
+
+The great_holy_wars system replaces the standalone bookmark flag as the availability boundary for global religious campaigns. Calls resolve the caller realm and faith, and saved campaigns are dormant when their calling faith is disabled. Daily, seasonal and annual hooks are skipped when unavailable. Ordinary bilateral war is independent of this rule. See docs/designs/systems.md.

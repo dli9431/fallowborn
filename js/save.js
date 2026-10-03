@@ -1610,10 +1610,10 @@ window.FB = window.FB || {};
     }
     /* The elective Papacy is an additive subsystem. Old saves retain their
        reigning Roman Pope and receive a date-appropriate College around him. */
-    if (FB.ensurePapacyState) restoreRepair('papacy state', function () {
+    if (FB.ensurePapacyState && FB.systemAvailable(FB.state, 'papacy')) restoreRepair('papacy state', function () {
       FB.ensurePapacyState(FB.state);
     });
-    if (FB.repairAbbeys) restoreRepair('abbey institutions', function () {
+    if (FB.repairAbbeys && FB.systemAvailable(FB.state, 'abbeys')) restoreRepair('abbey institutions', function () {
       FB.repairAbbeys(FB.state);
     });
     /* Dynasty scholarship and innovations from older version-3 lives become
@@ -1675,7 +1675,7 @@ window.FB = window.FB || {};
     else if (FB.ensureGuildMonopolies) restoreRepair('guild monopolies', function () {
       FB.ensureGuildMonopolies(FB.state);
     });
-    if (FB.repairGreatHolyWar) restoreRepair('holy war', function () {
+    if (FB.repairGreatHolyWar && FB.systemAvailable(FB.state, 'great_holy_wars')) restoreRepair('holy war', function () {
       FB.repairGreatHolyWar(FB.state);
     });
     if (FB.repairWars) restoreRepair('wars', function () {
@@ -1706,7 +1706,7 @@ window.FB = window.FB || {};
     if (FB.ensureJustice) restoreRepair('justice state', function () {
       FB.ensureJustice(FB.state);
     });
-    if (FB.tournaments) restoreRepair('scheduled games', function () {
+    if (FB.tournaments && FB.systemAvailable(FB.state, 'tournaments')) restoreRepair('scheduled games', function () {
       FB.tournaments.ensure(FB.state);
       FB.tournaments.reconcile(FB.state);
     });

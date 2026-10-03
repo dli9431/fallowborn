@@ -5019,6 +5019,7 @@ window.FB = window.FB || {};
      one synchronous pass. The optional snapshot retains shared, pure reads
      for that pass only; standalone trigger checks keep their old behavior. */
   FB.checkTrigger = function (state, tg, ctx, snapshot) {
+    if (tg && !FB.systemContentEnabled(state, tg)) return false;
     if (!tg) return true;
     if (tg.never) return false;
     const p = state.player;
@@ -5427,6 +5428,7 @@ window.FB = window.FB || {};
   };
 
   FB.ensureEventParticipants = function (state, ev, ctx) {
+    if (ev && !FB.systemContentEnabled(state, ev)) return null;
     ctx = ctx || {};
     /* Direct UI callers and old queue records can predate the event-context
        defaults as well as participant binding. Repair only missing defaults
@@ -5444,6 +5446,7 @@ window.FB = window.FB || {};
 
   FB.queueEvent = function (state, id, ctx, extra) {
     const ev = FB.eventById(id);
+    if (!FB.systemContentEnabled(state, ev)) return null;
     const eventCtx = FB.eventContextFor(state, ev, ctx);
     if (!eventCtx) return null;
     const item = { id:id, ctx:eventCtx };
@@ -5465,7 +5468,7 @@ window.FB = window.FB || {};
   }
 
   FB.eventContextStillValid = function (state, ev, ctx) {
-    if (!ev) return false;
+    if (!ev || !FB.systemContentEnabled(state, ev)) return false;
     if (!FB.eventParticipantsStillValid(state, ev, ctx || {})) return false;
     if (!tenureAwareContextStillValid(state, ev, ctx || {})) return false;
     if (ev.educationStory) {
@@ -5693,6 +5696,8 @@ window.FB = window.FB || {};
        so pausing after a choice really stops the event stream. */
     while (state.eventQueue.length && !out.length) {
       const qev = state.eventQueue.shift();
+      const queuedDef = FB.eventById(qev.id);
+      if (!FB.systemContentEnabled(state, queuedDef)) continue;
       /* queueEvent already stamps all five context defaults — only a queued
          item from a legacy save needs the repair copy */
       const qctx = qev.ctx || {};
@@ -5701,7 +5706,6 @@ window.FB = window.FB || {};
           qctx.locationId === undefined) {
         qev.ctx = FB.eventContext(state, qev.ctx);
       }
-      const queuedDef = FB.eventById(qev.id);
       if (queuedDef && !FB.ensureEventParticipants(state, queuedDef, qev.ctx)) {
         continue;
       }
@@ -5756,6 +5760,7 @@ window.FB = window.FB || {};
       return contextOptions[selector];
     }
     for (const ev of randomEventPool(wartime, child)) {
+      if (!FB.systemContentEnabled(state, ev)) continue;
       if (ev.once && state.player.fired[ev.id]) continue;
       if (ev.cooldown && state.player.cooldowns[ev.id] !== undefined &&
         state.turn - state.player.cooldowns[ev.id] < ev.cooldown * 90) continue;
@@ -6250,7 +6255,11 @@ window.FB = window.FB || {};
   }
 
   function tenureSelectionReport(state, context, catalogue) {
-    const archetypes = sortedTenureArchetypes(catalogue);
+    const systemState = state || (context.bookmarkId ? { start:{ id:context.bookmarkId } } : null);
+    const actor = state && state.player && state.chars && state.chars[state.player.charId];
+    const archetypes = sortedTenureArchetypes(catalogue).filter(function (item) {
+      return FB.systemContentEnabled(systemState, item.arch, { character:actor, faith:context.faith });
+    });
     const matched = [];
     const rejected = [];
     let selected = null;
@@ -6265,7 +6274,10 @@ window.FB = window.FB || {};
       }
     }
     if (!selected) {
-      selected = catalogue.dependent_farming || archetypes[archetypes.length - 1].arch;
+      selected = archetypes.length ? archetypes[archetypes.length - 1].arch : null;
+      if (catalogue.dependent_farming && archetypes.some(function (item) {
+        return item.arch === catalogue.dependent_farming;
+      })) selected = catalogue.dependent_farming;
     }
     return {
       selected:selected,
@@ -6296,6 +6308,7 @@ window.FB = window.FB || {};
     catalogue = catalogue || _validatedTenureCatalogue || FB.validateTenureData();
     context = context || {};
     const selected = tenureSelectionReport(context.state, context, catalogue).selected;
+    if (!selected) return null;
 
     const resolvedDuties = [];
     const slotsMap = {};
@@ -6430,6 +6443,7 @@ window.FB = window.FB || {};
   }
 
   FB.ensureSerfTenure = function (state, formedBy) {
+    if (!FB.systemEnabled(state, 'manorial_tenure')) return null;
     if (!state || !state.player || !FB.station.isSerf(state.player)) return null;
     const p = state.player;
     if (p.tenure && p.tenure.status === 'active') {
@@ -6474,6 +6488,7 @@ window.FB = window.FB || {};
       houseId: houseId,
       state: state
     });
+    if (!selected) return null;
 
     function calculateFirstDue(firstDue, intervalTurns) {
       firstDue = firstDue || { season: 0, day: 30, cycle: 0 };
@@ -6554,6 +6569,7 @@ window.FB = window.FB || {};
   };
 
   FB.activeSerfTenure = function (state) {
+    if (!FB.systemEnabled(state, 'manorial_tenure')) return null;
     return (state && state.player && FB.station.isSerf(state.player) &&
       state.player.tenure && state.player.tenure.status === 'active')
       ? state.player.tenure : null;
@@ -7742,6 +7758,7 @@ window.FB = window.FB || {};
   }
 
   FB.tenureDay = function (state) {
+    if (!FB.systemEnabled(state, 'manorial_tenure')) return;
     if (!state || !state.player || !FB.station.isSerf(state.player)) return;
     if (state.player.travel) return;
 
@@ -11706,8 +11723,10 @@ window.FB = window.FB || {};
 
   FB.eventOptionStatus = function (state, ev, option, ctx) {
     ctx = ctx || {};
-    if (!option) {
-      return { visible:false, ready:false, techLocked:false, missingTech:[] };
+    if (!option || (ev && !FB.systemContentEnabled(state, ev)) ||
+        !FB.systemContentEnabled(state, option) ||
+        (option.require && !FB.systemContentEnabled(state, option.require))) {
+      return { visible:false, ready:false, systemLocked:true, techLocked:false, missingTech:[] };
     }
     const fiscalReason = FB.fiscalEventRestriction && FB.fiscalEventRestriction(state, option, ctx);
     if (fiscalReason) return { visible:true, ready:false, fiscalLocked:true, techLocked:false, requiredTech:[], missingTech:[], reason:fiscalReason };
@@ -11960,7 +11979,7 @@ window.FB = window.FB || {};
     if (meta.automated && option.manualOnly) return false;
     if (FB.eventOptionStatus) {
       const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);
-      if (optionStatus.techLocked || optionStatus.fiscalLocked ||
+      if (optionStatus.systemLocked || optionStatus.techLocked || optionStatus.fiscalLocked ||
           (ev && ['commons_uprising_valid', 'commons_uprising_local_valid'].indexOf(ev.contextValidator) >= 0 && !optionStatus.ready) ||
           (option.effects &&
             (option.effects.custom === 'freedom_accept_offer' ||

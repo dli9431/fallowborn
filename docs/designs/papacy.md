@@ -274,3 +274,7 @@ two-year cooldown. A grant adds 20 prestige, raises personal station to at least
 4, and increases resident capacity by one, retinue by 20, and seasonal estate
 revenue and the allowance ceiling by 2. Privileges reduce encroachment chance.
 These are rights of the house and survive a change of abbess. See [abbeys.md](abbeys.md).
+
+Availability boundary
+
+The papacy system gates initialization, restore repair, world hooks, office queries, player decisions and the Papacy sheet. A disabled Papacy creates no college and consumes no election RNG. Excommunication is a separate system: sentences, absolution, sanctioned traits and AI sanction rolls stop when it is disabled, while an enabled Papacy may continue its other work. Transfer and extinction callbacks tolerate an unavailable Papacy. Existing saved records remain dormant when their institution is disabled. See docs/designs/systems.md.

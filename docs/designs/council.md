@@ -264,3 +264,7 @@ undo unrelated changes. Consent, charter and political tactic readers use effect
 authority. A five-year fiscal composition blocks extraordinary taxation and
 voluntary title revocation, and grants the existing enduring office-confirmation
 privilege. Fiscal concessions are ungated recovery (`fiscal_settlements`: **none**).
+
+Availability boundary
+
+The royal_council system gates seats, office confirmation elections, formation, bonuses, yearly authority drift, council events and the Council sheet. Disabled offices supply no bonuses and old seats are not filled by repair. The estates and scutage systems separately control assembly motions and silver-for-service terms. A guild election can likewise exist only where guild_elections is enabled; ordinary guild membership and mastery remain career mechanics. See docs/designs/systems.md.

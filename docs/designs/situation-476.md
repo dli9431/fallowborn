@@ -41,3 +41,7 @@ integration changes no gameplay eligibility and needs no technology-impact entry
 See the [Phase 6 record](../plans/v2-476-phase-6.md) for authored coverage and the
 remaining historical, device, performance and owner-run release gates. The branch
 is an integration candidate, not evidence that those gates have passed.
+
+Optional institutions in this campaign
+
+The 476 bookmark explicitly disables papacy, scutage, manorial_tenure, excommunication, feudal_service, crown_bloc and tournaments. Its previous greatHolyWars:false rule is now the great_holy_wars disable in the same layer. These institutions stay disabled as campaign years pass, including for an inherited or converted Catholic faith. The shared availability contract is documented in docs/designs/systems.md.

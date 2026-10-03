@@ -25,19 +25,23 @@ window.FB = window.FB || {};
      activation tier has not been reached; no-state callers receive the full
      catalogue for validation and compatibility inspection. */
   FB.councilSeats = function (state) {
+    if (state && !FB.systemEnabled(state, 'royal_council')) return [];
     const out = [];
     const table = FBDATA.councilSeats || {};
     for (const id in table) {
       if (!Object.prototype.hasOwnProperty.call(table, id)) continue;
       const def = table[id];
-      if (!def || (state && !FB.station.reaches(state.player, def.tierMin))) continue;
+      if (!def || (state && (!FB.station.reaches(state.player, def.tierMin) ||
+          !FB.systemContentEnabled(state, def)))) continue;
       out.push(seatRecord(id, def));
     }
     return out;
   };
   FB.councilSeat = function (id, state) {
+    if (state && !FB.systemEnabled(state, 'royal_council')) return null;
     const def = FBDATA.councilSeats && FBDATA.councilSeats[id];
-    if (!def || (state && !FB.station.reaches(state.player, def.tierMin))) return null;
+    if (!def || (state && (!FB.station.reaches(state.player, def.tierMin) ||
+        !FB.systemContentEnabled(state, def)))) return null;
     return seatRecord(id, def);
   };
   FB.councilSeatName = function (state, id) {

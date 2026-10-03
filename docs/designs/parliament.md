@@ -350,3 +350,7 @@ privilege sheets expose its temporary restrictions and remaining obligation.
 Liege Standing receives the capped fiscal contribution while the base remains
 unchanged. Existing incoming Estates obligations and creditor rights still apply.
 This baseline recovery capability has technology impact **none**.
+
+Availability boundary
+
+The estates system gates membership, assembly events, motions, policies and consent privileges. Scutage additionally requires the scutage system; a saved scutage vote supplies no silver-for-service entitlement while disabled. Policy listings and motion forecasts filter content requirements before calculating or presenting a vote. See docs/designs/systems.md.

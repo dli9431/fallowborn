@@ -297,21 +297,23 @@ window.FBMODS = window.FBMODS || [];
     if (additions === undefined) return out;
     if (!Array.isArray(additions)) fail(kind, 'must be an array.');
     const baselineAllowed = kind === 'focuses'
-      ? { id:true, label:true, desc:true, order:true, eligibility:true }
+      ? { id:true, label:true, desc:true, order:true, eligibility:true,
+          system:true, systems:true }
       : { id:true, label:true, desc:true, order:true, group:true, layoutGroup:true,
-          cooldownDays:true, requiresTech:true, eligibility:true };
+          cooldownDays:true, requiresTech:true, eligibility:true,
+          system:true, systems:true };
     const declarativeDeedAllowed = {
       id:true, handler:true, label:true, desc:true, order:true, group:true,
       layoutGroup:true,
       cooldownDays:true, spendsDay:true, requiresTech:true, visibility:true,
       eligibility:true, costs:true, effects:true, queueEvent:true,
-      capability:true, choices:true
+      capability:true, choices:true, system:true, systems:true
     };
     const declarativeFocusAllowed = {
       id:true, handler:true, label:true, desc:true, order:true, contexts:true,
       vocational:true, requiresTech:true, visibility:true, eligibility:true,
       seasonal:true, dailyEffects:true, skillChances:true,
-      capability:true, fallbackScore:true
+      capability:true, fallbackScore:true, system:true, systems:true
     };
     const indexes = {};
     const supplied = {};
@@ -1025,7 +1027,7 @@ window.FBMODS = window.FBMODS || [];
       }
       const def = paths[pathId];
       onlyFields(def, {
-        kind:true, faiths:true, systems:true, professions:true, ranks:true
+        kind:true, faiths:true, system:true, systems:true, professions:true, ranks:true
       }, path);
       if (def.kind !== 'lay' && def.kind !== 'vocation') {
         fail(path + '.kind', 'must be lay or vocation.');
@@ -1036,7 +1038,7 @@ window.FBMODS = window.FBMODS || [];
       if (own(def, 'systems')) {
         validateIdList(def.systems, path + '.systems', null, false);
         for (let i = 0; i < def.systems.length; i++) {
-          if (!/^[a-z][a-z0-9_]*$/.test(def.systems[i])) {
+          if (!FB.systems.known(def.systems[i])) {
             fail(path + '.systems[' + i + ']',
               'must be a lowercase system id.');
           }
@@ -1172,7 +1174,7 @@ window.FBMODS = window.FBMODS || [];
       const def = seats[seatId];
       onlyFields(def, {
         name:true, desc:true, icon:true, bonusKey:true, bonusAmount:true,
-        tierMin:true, holderEligibility:true
+        tierMin:true, holderEligibility:true, system:true, systems:true
       }, path);
       requiredText(def.name, path + '.name');
       requiredText(def.desc, path + '.desc');
@@ -1549,6 +1551,24 @@ window.FBMODS = window.FBMODS || [];
     validateSerfFreedomEventEffects(mod);
     validateEventParticipants(mod);
     validateEducationEvents(mod);
+    for (const tableId of ['events','traits','policies','privileges','elections',
+        'politicalBlocs','religiousPaths','feudalServiceCharters','councilSeats']) {
+      const table = mod[tableId] || {};
+      for (const id in table) if (own(table, id)) {
+        const errors = FB.systems.validateContent(table[id], tableId + '.' + id);
+        if (errors.length) fail(tableId + '.' + id, errors.join(' '));
+      }
+    }
+    for (const id in mod.religions || {}) if (own(mod.religions, id)) {
+      const def = mod.religions[id];
+      const layer = own(def, 'systems') ? def.systems : def.properties && def.properties.systems;
+      const errors = FB.systems.validateLayer(layer, 'religions.' + id);
+      if (errors.length) fail('religions.' + id, errors.join(' '));
+    }
+    for (const id in mod.bookmarks || {}) if (own(mod.bookmarks, id)) {
+      const errors = FB.systems.validateLayer(mod.bookmarks[id].systems, 'bookmarks.' + id);
+      if (errors.length) fail('bookmarks.' + id, errors.join(' '));
+    }
     return { actions:prepareActionCatalogs(mod) };
   }
 

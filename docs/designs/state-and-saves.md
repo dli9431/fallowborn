@@ -1934,3 +1934,7 @@ Old saves do not acquire fabricated offices or contracts on restore.
 ## Spring 476 situation persistence
 
 The 476 prototype (situation-476.md) stores its world facts (actors, offices, court location, displaced courts, the eastern return, the courts' own settlement and historical campaigns) under state.stories.western_court_476 and the household's phase, role, claimant choice, contract link, payment allocation and outcome under state.stories.federate_track_476 (stories.md). They are created once at a new 476 start, survives the ordinary save envelope, and is not synthesized on old 867/1066 saves. UI quotes and rendered language are recomputed from saved facts. Authored eastern ruler replacement advances its generation so reaffirmation-dependent authority records lapse.
+
+Derived system availability
+
+System availability is derived from the campaign's existing start stamp and scoped government and faith definitions, with the bookmark as the final layer. It adds no save field or format change. Load repair skips disabled Papacy, abbey and tournament initialization; their existing records remain dormant. Disabled tenure, office and contract queries expose inert results rather than reactivating records. Existing greatHolyWars bookmark flags remain compatible with the resolver. See docs/designs/systems.md.

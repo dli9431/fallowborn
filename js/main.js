@@ -3437,7 +3437,7 @@ FB.CHANGELOG = [
       }
     }
 
-    if (FB.ensurePapacyState) FB.ensurePapacyState(state);
+    if (FB.ensurePapacyState && FB.systemAvailable(state, 'papacy')) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
@@ -3457,7 +3457,7 @@ FB.CHANGELOG = [
          home authority from the first playable frame. Establish the bounded
          local lord/steward cast before tenure snapshots that authority. */
       if (FB.getRole) FB.getRole(state, 'lord', true);
-      if (FB.ensureSerfTenure) FB.ensureSerfTenure(state, 'new_game');
+      if (FB.ensureSerfTenure && FB.systemEnabled(state, 'manorial_tenure')) FB.ensureSerfTenure(state, 'new_game');
     }
 
     if (FB.station.isLanded(sc)) {
@@ -3627,7 +3627,7 @@ FB.CHANGELOG = [
       born: start.year - 30, quality: 0, traitsN: 0
     });
     state.player.charId = me.id;
-    if (FB.ensurePapacyState) FB.ensurePapacyState(state);
+    if (FB.ensurePapacyState && FB.systemAvailable(state, 'papacy')) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
@@ -3881,7 +3881,7 @@ FB.CHANGELOG = [
     if (!s || s.player.dead) return undefined;
     if (FB.ui.eventsBusy()) return undefined;
     if (FB.ui.travelPickerOpen && FB.ui.travelPickerOpen()) return undefined;
-    const papalDecision = FB.papacyPendingDecision &&
+    const papalDecision = FB.systemAvailable(s, 'papacy') && FB.papacyPendingDecision &&
       FB.papacyPendingDecision(s);
     if (!G.observe && papalDecision) {
       G.setPaused(true);
@@ -3933,7 +3933,7 @@ FB.CHANGELOG = [
     if (FB.fortificationDay) FB.fortificationDay(s);
     if (FB.settlementFoundingDay) FB.settlementFoundingDay(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
-    if (FB.papacyDay) FB.papacyDay(s);
+    if (FB.papacyDay && FB.systemAvailable(s, 'papacy')) FB.papacyDay(s);
     if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
     if (FB.modifierTick) FB.modifierTick(s);
     if (FB.intrigueDay) FB.intrigueDay(s);
@@ -3959,8 +3959,8 @@ FB.CHANGELOG = [
       }
       FB.armyTick(s);
       if (FB.stories) FB.stories.day(s);
-      if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
-      if (FB.tournaments) {
+      if (FB.greatHolyWarTick && FB.systemAvailable(s, 'great_holy_wars')) FB.greatHolyWarTick(s);
+      if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) {
         FB.tournaments.reconcile(s);
         if (seasonBoundary) FB.tournaments.season(s);
         FB.tournaments.tick(s);
@@ -3982,7 +3982,7 @@ FB.CHANGELOG = [
       if (FB.marketSeason) FB.marketSeason(s);
       const taxParts = FB.station.isLanded(p) ? FB.playerTaxParts(s) : null;
       const income = taxParts ? FB.playerTax(s, taxParts) : 0;
-      if (FB.tournaments) FB.tournaments.samplePlayer(s);
+      if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.samplePlayer(s);
       if (FB.treasurySeason) FB.treasurySeason(s, taxParts);
       if (FB.authoritySeason) FB.authoritySeason(s);
       if (FB.stories) FB.stories.season(s);
@@ -4002,8 +4002,8 @@ FB.CHANGELOG = [
       if (FB.marketSettleHouseholdNecessities) {
         FB.marketSettleHouseholdNecessities(s);
       } else p.gold -= Math.min(Math.max(0, p.gold), FB.householdUpkeep(s));
-      if (FB.papacySeason) FB.papacySeason(s);
-      if (FB.abbeySeason) FB.abbeySeason(s);
+      if (FB.papacySeason && FB.systemAvailable(s, 'papacy')) FB.papacySeason(s);
+      if (FB.abbeySeason && FB.systemAvailable(s, 'abbeys')) FB.abbeySeason(s);
       if (FB.householdStandardsSeason) FB.householdStandardsSeason(s);
       if (FB.retainerSeason) FB.retainerSeason(s);
       if (FB.enterpriseLaborSeason) FB.enterpriseLaborSeason(s);
@@ -4014,8 +4014,8 @@ FB.CHANGELOG = [
       if (FB.station.isLanded(p)) {
         p.piety += FB.buildingBonus(s, 'piety') + (FB.councilBonus ? FB.councilBonus(s, 'piety') : 0);
         // Building research is credited once through national techResearchRate.
-        if (FB.councilEnsure) FB.councilEnsure(s); // the royal council forms at a coronation — and heals old saves
-        if (FB.parliamentEnsure) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
+        if (FB.councilEnsure && FB.systemEnabled(s, 'royal_council')) FB.councilEnsure(s); // the royal council forms at a coronation — and heals old saves
+        if (FB.parliamentEnsure && FB.systemEnabled(s, 'estates')) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
         if (G.auto.build) FB.autoBuild(s);
       }
       if (FB.realmPolicySeason) FB.realmPolicySeason(s); // standing royal policy: piety trickle, settler development
@@ -4027,8 +4027,8 @@ FB.CHANGELOG = [
       if (FB.techSeason) FB.techSeason(s, G.auto.research);
       FB.playerWarTick(s);
       if (FB.devastationSeason) FB.devastationSeason(s);
-      if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);
-      if (FB.sacredCustodySeason) FB.sacredCustodySeason(s);
+      if (FB.greatHolyWarSeason && FB.systemAvailable(s, 'great_holy_wars')) FB.greatHolyWarSeason(s);
+      if (FB.sacredCustodySeason && FB.systemAvailable(s, 'great_holy_wars')) FB.sacredCustodySeason(s);
       FB.tickForeignPolicy(s);
       const seasonEconomy = FB.financeSeason(s);
       FB.fiscalSeason(s, seasonEconomy);
@@ -4054,7 +4054,7 @@ FB.CHANGELOG = [
         if (FB.authorityYear) FB.authorityYear(s);
         if (FB.stories) FB.stories.year(s);
       }
-      if (FB.tournaments) FB.tournaments.season(s);
+      if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.season(s);
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
       if (newYear) {
         yearlyLife(s, annualContext);
@@ -4066,10 +4066,10 @@ FB.CHANGELOG = [
     birthTick(s);
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.stories) FB.stories.day(s);
-    if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
-    if (FB.tournaments) FB.tournaments.reconcile(s);
+    if (FB.greatHolyWarTick && FB.systemAvailable(s, 'great_holy_wars')) FB.greatHolyWarTick(s);
+    if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.reconcile(s);
     if (FB.travelTick) FB.travelTick(s);
-    if (FB.tournaments) FB.tournaments.tick(s);
+    if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.tick(s);
     if (FB.giftDeliveryTick) FB.giftDeliveryTick(s);
     if (s.peakTier === undefined || p.tier > s.peakTier) {
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
@@ -4077,7 +4077,7 @@ FB.CHANGELOG = [
 
     if (FB.freedomDay) FB.freedomDay(s);
     if (FB.householdServiceDay) FB.householdServiceDay(s);
-    if (FB.tenureDay) FB.tenureDay(s);
+    if (FB.tenureDay && FB.systemEnabled(s, 'manorial_tenure')) FB.tenureDay(s);
     if (FB.reconcileSerfStory) FB.reconcileSerfStory(s);
     if (FB.reconcileSerfNeighborConsequence) {
       FB.reconcileSerfNeighborConsequence(s);
@@ -5141,9 +5141,9 @@ FB.CHANGELOG = [
       FB.adjustStanding(s, { kind:'realm', id:rid },
         settled - standing, 'time:annual_drift');
     }
-    if (FB.councilYearly) FB.councilYearly(s); // crown authority settles back toward custom
+    if (FB.councilYearly && FB.systemEnabled(s, 'royal_council')) FB.councilYearly(s); // crown authority settles back toward custom
     if (FB.politicsYearly) FB.politicsYearly(s);
-    if (FB.parliamentYearly) FB.parliamentYearly(s); // the liege may summon the estates to sit
+    if (FB.parliamentYearly && FB.systemEnabled(s, 'estates')) FB.parliamentYearly(s); // the liege may summon the estates to sit
     if (FB.institutionsYearly) FB.institutionsYearly(s);
   }
 
@@ -5614,7 +5614,7 @@ FB.CHANGELOG = [
     if (!heirs.length && FB.settlementLordshipsPlayerSuccession) {
       FB.settlementLordshipsPlayerSuccession(s, me.id, null);
     }
-    if (FB.tournaments) FB.tournaments.reconcile(s);
+    if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.reconcile(s);
     const deathTelemetry = {
       entry_type:telemetryEntryType,
       active_seconds:activeSeconds,
@@ -6162,7 +6162,7 @@ FB.CHANGELOG = [
       FB.ui.maybeTip('succession', successionTip,
         '#sidetabs .tab[data-tab="log"]');
     }
-    if (FB.tournaments) FB.tournaments.reconcile(s);
+    if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.reconcile(s);
     G.paused = true; // a new life begins at rest
     FB.ui.refresh();
     FB.save.autosave();

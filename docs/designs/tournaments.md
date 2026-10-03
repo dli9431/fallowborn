@@ -49,3 +49,7 @@ Technology and distribution
 scheduled_games, tournament_circuit_travel, regional_open_games, tournament_sponsorship and festival_livelihoods have technology impact none. tournament_jousting has hard cavalry_lances under the venue sovereign, with open games, melee and company as visible alternatives. Accepted jousts grandfather that permission. Existing careers and equipment production retain their own gates.
 
 All three new scripts are classic local scripts registered in index.html. Offline asset discovery follows those references; existing directory allowlists include the data and engine/UI files. There are no new assets, external requests, build dependencies or private packaged files. Both standard and explicitly flagged CrazyGames builds use the same scheduling engine. New structured labels have extraction support and English fallback; generated catalogs remain integration-owned. Owner-controlled coverage lives in the scheduled-games, scheduled-games-lifecycle and scheduled-games-ui specifications, alongside legacy invitation regressions.
+
+Availability boundary
+
+The tournaments system gates scheduling, daily work, seasonal sampling, restore repair, invitations, Deeds, calendar sheets and the map Events control. World hooks use FB.systemAvailable, while host and participant eligibility use their own scopes. A disabled saved edition or annual intention remains dormant; it is not cancelled, charged or refunded. See docs/designs/systems.md.
